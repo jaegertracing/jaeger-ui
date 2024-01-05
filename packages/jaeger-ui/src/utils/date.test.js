@@ -197,18 +197,21 @@ describe('convertToTimeUnit', () => {
 });
 
 describe('formatRelativeDate', () => {
-  const currentTimestamp = Date.now();
-  const currentDate = new Date(currentTimestamp);
+  var currentTimestamp;
+  var currentDate;
+  beforeEach(() => {
+    // Set a fixed date to avoid issues like https://github.com/jaegertracing/jaeger-ui/issues/2090.
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2023, 7, 19, 10, 30));
 
-  it('Displays Date MM-DD-YYY (Different Year) ', () => {
+    currentTimestamp = Date.now();
+    currentDate = new Date(currentTimestamp);
+  });
+
+  it('Displays Date MMM-DD-YYYY (Different Year) ', () => {
     const input = new Date(currentTimestamp);
     input.setFullYear(currentDate.getFullYear() - 2);
-    const output = input.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-    expect(formatRelativeDate(input)).toBe(output);
+    expect(formatRelativeDate(input)).toBe('Aug 19, 2021');
   });
   it('Displays Today (Todays date)', () => {
     expect(formatRelativeDate(currentDate)).toBe('Today');
@@ -218,15 +221,10 @@ describe('formatRelativeDate', () => {
     input.setDate(currentDate.getDate() - 1);
     expect(formatRelativeDate(input)).toBe('Yesterday');
   });
-  it('Displays MM-DAY (Same month different date)', () => {
+  it('Displays MMM-DD (Same month different date)', () => {
     const input = new Date(currentTimestamp);
     input.setDate(currentDate.getDate() - 4);
-    const output = input.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-    expect(formatRelativeDate(input)).toBe(output);
+    expect(formatRelativeDate(input)).toBe('Aug 15');
   });
 });
 
