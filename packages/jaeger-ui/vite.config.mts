@@ -18,6 +18,7 @@ import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
 import vitePluginImp from 'vite-plugin-imp';
 import { visualizer } from 'rollup-plugin-visualizer';
+import path from 'path';
 
 const proxyConfig = {
   target: 'http://localhost:16686',
@@ -84,6 +85,12 @@ export default defineConfig({
       // Ensure we transform modules that contain a mix of ES imports
       // and CommonJS require() calls to avoid stray require() calls in production.
       transformMixedEsModules: true,
+    },
+  },
+  resolve: {
+    alias: {
+      // allow hot reload of Plexus code -- https://github.com/jaegertracing/jaeger-ui/pull/2089
+      '@jaegertracing/plexus': path.resolve(__dirname, '../plexus/src'),
     },
   },
 });
