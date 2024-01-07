@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 import cx from 'classnames';
-import { TLayoutVertex } from '@jaegertracing/plexus/src/types';
+import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 
 import { TDdgVertex, EViewModifier } from '../../../model/ddg/types';
 

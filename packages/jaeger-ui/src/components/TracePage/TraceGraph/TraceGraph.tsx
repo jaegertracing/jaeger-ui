@@ -16,8 +16,7 @@ import * as React from 'react';
 import { Card, Button, Tooltip } from 'antd';
 import { IoClose, IoHelpCircleOutline } from 'react-icons/io5';
 import cx from 'classnames';
-import { Digraph, LayoutManager } from '@jaegertracing/plexus';
-import cacheAs from '@jaegertracing/plexus/src/cacheAs';
+import { Digraph, LayoutManager, cacheAs } from '@jaegertracing/plexus';
 
 import {
   getNodeRenderer,

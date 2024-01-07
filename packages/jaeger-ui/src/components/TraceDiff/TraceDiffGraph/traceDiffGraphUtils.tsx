@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TVertexKey } from '@jaegertracing/plexus/src/types';
+import { TVertexKey } from '@jaegertracing/plexus/lib/types';
 import _get from 'lodash/get';
 import _map from 'lodash/map';
 import memoizeOne from 'memoize-one';

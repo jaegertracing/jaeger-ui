@@ -15,7 +15,7 @@
 import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
-import { TLayoutVertex } from '@jaegertracing/plexus/src/types';
+import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 
 import EmphasizedNode from '../../common/EmphasizedNode';
 import CopyIcon from '../../common/CopyIcon';

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TVertex } from '@jaegertracing/plexus/src/types';
+import { TVertex } from '@jaegertracing/plexus/lib/types';
 
 import TDagNode from './TDagNode';
 

@@ -12,6 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 {
-  "extends": "../../tsconfig",
-  "include": ["src/**/*.tsx", "typings"]
+  "extends": "../../tsconfig.json",
+  "include": [
+    "src/**/*.tsx",
+    "typings"
+  ],
+  "compilerOptions": {
+    "baseUrl": "..",
+    // other options...
+    "paths": {
+      "@jaegertracing/plexus": [
+        "plexus/src"
+      ]
+    }
+  },
 }

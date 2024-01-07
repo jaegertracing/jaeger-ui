@@ -13,9 +13,8 @@
 // limitations under the License.
 
 import React, { ReactNode } from 'react';
-
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
-import { TEdge, TVertex } from '@jaegertracing/plexus/src/types';
+import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
 
 import './dag.css';
 
