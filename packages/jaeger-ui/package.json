@@ -52,7 +52,7 @@
     "@pyroscope/flamegraph": "0.21.4",
     "antd": "^5.10.2",
     "chance": "^1.0.10",
-    "classnames": "^2.3.3",
+    "classnames": "^2.5.1",
     "combokeys": "^3.0.0",
     "copy-to-clipboard": "^3.1.0",
     "dayjs": "^1.11.9",
