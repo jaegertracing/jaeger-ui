@@ -13,15 +13,15 @@ Run `make changelog` to generate content.
 
 #### ✨ New Features:
 
+* Replace implementation of DAG view with Plexus's Digraph ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1981](https://github.com/jaegertracing/jaeger-ui/pull/1981))
 * Support sticky configuration for deep dependency graph ([@Wise-Wizard](https://github.com/Wise-Wizard) in [#2063](https://github.com/jaegertracing/jaeger-ui/pull/2063))
-* Add exact phrase search syntax help ([@kshmidt-digma](https://github.com/kshmidt-digma) in [#2028](https://github.com/jaegertracing/jaeger-ui/pull/2028))
 
 #### 🐞 Bug fixes, Minor Improvements:
 
+* Add exact phrase search syntax help ([@kshmidt-digma](https://github.com/kshmidt-digma) in [#2028](https://github.com/jaegertracing/jaeger-ui/pull/2028))
 * Fix broken hot reload of plexus package ([@Wise-Wizard](https://github.com/Wise-Wizard) in [#2089](https://github.com/jaegertracing/jaeger-ui/pull/2089))
 * Feat: remove `is-promise` library ([@EshaanAgg](https://github.com/EshaanAgg) in [#2080](https://github.com/jaegertracing/jaeger-ui/pull/2080))
 * Feat: remove `reactga` and migrate to `ga4` for tracking ([@EshaanAgg](https://github.com/EshaanAgg) in [#2071](https://github.com/jaegertracing/jaeger-ui/pull/2071))
-* Replace implementation of DAG view with Plexus's Digraph ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1981](https://github.com/jaegertracing/jaeger-ui/pull/1981))
 * Chore: import only lodash submodules ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#2041](https://github.com/jaegertracing/jaeger-ui/pull/2041))
 * Replace reselect with memoize ([@cooleditphoto](https://github.com/cooleditphoto) in [#2042](https://github.com/jaegertracing/jaeger-ui/pull/2042))
 
