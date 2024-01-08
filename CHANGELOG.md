@@ -14,7 +14,7 @@ Run `make changelog` to generate content.
 #### ✨ New Features:
 
 * Updated default configuration for deep dependency graph ([@Wise-Wizard](https://github.com/Wise-Wizard) in [#2063](https://github.com/jaegertracing/jaeger-ui/pull/2063))
-* Add exact phrase search syntax ([@kshmidt-digma](https://github.com/kshmidt-digma) in [#2028](https://github.com/jaegertracing/jaeger-ui/pull/2028))
+* Add exact phrase search syntax help ([@kshmidt-digma](https://github.com/kshmidt-digma) in [#2028](https://github.com/jaegertracing/jaeger-ui/pull/2028))
 
 #### 🐞 Bug fixes, Minor Improvements:
 
