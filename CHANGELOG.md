@@ -9,6 +9,28 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.37.0 (2024-01-08)
+
+#### ✨ New Features:
+
+* Updated default configuration for deep dependency graph ([@Wise-Wizard](https://github.com/Wise-Wizard) in [#2063](https://github.com/jaegertracing/jaeger-ui/pull/2063))
+* Add exact phrase search syntax ([@kshmidt-digma](https://github.com/kshmidt-digma) in [#2028](https://github.com/jaegertracing/jaeger-ui/pull/2028))
+
+#### 🐞 Bug fixes, Minor Improvements:
+
+* Fix broken hot reload of plexus package ([@Wise-Wizard](https://github.com/Wise-Wizard) in [#2089](https://github.com/jaegertracing/jaeger-ui/pull/2089))
+* Feat: remove `is-promise` library ([@EshaanAgg](https://github.com/EshaanAgg) in [#2080](https://github.com/jaegertracing/jaeger-ui/pull/2080))
+* Feat: remove `reactga` and migrate to `ga4` for tracking ([@EshaanAgg](https://github.com/EshaanAgg) in [#2071](https://github.com/jaegertracing/jaeger-ui/pull/2071))
+* Refactoring: dag migrated to plexus's digraph ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1981](https://github.com/jaegertracing/jaeger-ui/pull/1981))
+* Chore: import only lodash submodules ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#2041](https://github.com/jaegertracing/jaeger-ui/pull/2041))
+* Replace reselect with memoize ([@cooleditphoto](https://github.com/cooleditphoto) in [#2042](https://github.com/jaegertracing/jaeger-ui/pull/2042))
+
+#### 👷 CI Improvements:
+
+* Setup ossf scorecard workflow ([@mmorel-35](https://github.com/mmorel-35) in [#2096](https://github.com/jaegertracing/jaeger-ui/pull/2096))
+* Ci: simplify check-label workflow ([@EshaanAgg](https://github.com/EshaanAgg) in [#2068](https://github.com/jaegertracing/jaeger-ui/pull/2068))
+* Fix: fix some linting warnings ([@EshaanAgg](https://github.com/EshaanAgg) in [#2064](https://github.com/jaegertracing/jaeger-ui/pull/2064))
+
 ## v1.36.0 (2023-12-05)
 
 #### ✨ New Features:
