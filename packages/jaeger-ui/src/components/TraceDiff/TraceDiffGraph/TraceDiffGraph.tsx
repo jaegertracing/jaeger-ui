@@ -13,8 +13,6 @@
 // limitations under the License.
 
 import * as React from 'react';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pan-pinch';
 import { cacheAs, Digraph, LayoutManager } from '@jaegertracing/plexus';
 import cx from 'classnames';
 import { connect } from 'react-redux';
@@ -44,20 +42,6 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
   componentWillUnmount() {
     this.layoutManager.stopAndRelease();
   }
-
-  Controls = () => {
-    const { zoomIn, zoomOut } = useControls();
-    return (
-      <>
-        <button className="TraceDiffGraph--zoomButton" type="button" onClick={() => zoomIn()}>
-          +
-        </button>
-        <button className="TraceDiffGraph--zoomButton" type="button" onClick={() => zoomOut()}>
-          -
-        </button>
-      </>
-    );
-  };
 
   render() {
     const { a, b, uiFind = '' } = this.props;
@@ -102,51 +86,46 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
 
     return (
       <div className="TraceDiffGraph--graphWrapper">
-        <TransformWrapper>
-          <TransformComponent>
-            <div className="TraceDiffGraph--zoomWrapper">
-              <Digraph
-                key={`${a.id} vs ${b.id}`}
-                minimap
-                zoom
-                className={dagClassName}
-                minimapClassName="u-miniMap"
-                layoutManager={this.layoutManager}
-                measurableNodesKey="nodes"
-                layers={[
-                  {
-                    key: 'emphasis-nodes',
-                    layerType: 'svg',
-                    renderNode: getNodeEmphasisRenderer(keys),
-                  },
-                  {
-                    key: 'edges',
-                    layerType: 'svg',
-                    edges: true,
-                    defs: [{ localId: 'arrow' }],
-                    markerEndId: 'arrow',
-                    setOnContainer: this.cacheAs('edges/container', [
-                      scaleOpacity,
-                      scaleStrokeOpacity,
-                      { stroke: '#444' },
-                    ]),
-                  },
-                  {
-                    renderNode,
-                    key: 'nodes',
-                    measurable: true,
-                    layerType: 'html',
-                  },
-                ]}
-                setOnGraph={classNameIsSmall}
-                edges={edges}
-                vertices={vertices}
-              />
-              <UiFindInput inputProps={inputProps} />
-            </div>
-          </TransformComponent>
-          <this.Controls />
-        </TransformWrapper>
+        <Digraph
+          // `key` is necessary to see updates to the graph when a or b changes
+          // TODO(joe): debug this issue in Digraph
+          key={`${a.id} vs ${b.id}`}
+          minimap
+          zoom
+          className={dagClassName}
+          minimapClassName="u-miniMap"
+          layoutManager={this.layoutManager}
+          measurableNodesKey="nodes"
+          layers={[
+            {
+              key: 'emphasis-nodes',
+              layerType: 'svg',
+              renderNode: getNodeEmphasisRenderer(keys),
+            },
+            {
+              key: 'edges',
+              layerType: 'svg',
+              edges: true,
+              defs: [{ localId: 'arrow' }],
+              markerEndId: 'arrow',
+              setOnContainer: this.cacheAs('edges/container', [
+                scaleOpacity,
+                scaleStrokeOpacity,
+                { stroke: '#444' },
+              ]),
+            },
+            {
+              renderNode,
+              key: 'nodes',
+              measurable: true,
+              layerType: 'html',
+            },
+          ]}
+          setOnGraph={classNameIsSmall}
+          edges={edges}
+          vertices={vertices}
+        />
+        <UiFindInput inputProps={inputProps} />
       </div>
     );
   }

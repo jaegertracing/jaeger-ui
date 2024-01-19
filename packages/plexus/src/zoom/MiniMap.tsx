@@ -14,7 +14,7 @@
 
 import * as React from 'react';
 
-import resetZoomIcon from './resetZoomIcon';
+import { resetZoomIcon, zoomInIcon, zoomOutIcon } from './resetZoomIcon';
 
 /* eslint-disable react/no-unused-prop-types */
 type TProps = {
@@ -23,6 +23,8 @@ type TProps = {
   contentHeight: number;
   contentWidth: number;
   viewAll: () => void;
+  zoomAll: () => void;
+  trimAll: () => void;
   viewportHeight: number;
   viewportWidth: number;
   k?: number;
@@ -87,6 +89,12 @@ export function MiniMap(props: TProps) {
     <div className={css.root}>
       <div className={`${css.item} ${css.map}`} style={mapSize}>
         <div className={css.mapActive} style={{ ...activeXform, ...mapSize }} />
+      </div>
+      <div className={`${css.item} ${css.button}`} onClick={props.zoomAll} role="button">
+        {zoomInIcon}
+      </div>
+      <div className={`${css.item} ${css.button}`} onClick={props.trimAll} role="button">
+        {zoomOutIcon}
       </div>
       <div className={`${css.item} ${css.button}`} onClick={props.viewAll} role="button">
         {resetZoomIcon}

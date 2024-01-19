@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React, { ReactNode } from 'react';
-import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pan-pinch';
+
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
 
@@ -104,56 +104,35 @@ export default class DAG extends React.Component<TProps> {
     this.layoutManager.stopAndRelease();
   }
 
-  Controls = () => {
-    const { zoomIn, zoomOut } = useControls();
-    return (
-      <>
-        <button className="DAG--zoomButton" type="button" onClick={() => zoomIn()}>
-          +
-        </button>
-        <button className="DAG--zoomButton" type="button" onClick={() => zoomOut()}>
-          -
-        </button>
-      </>
-    );
-  };
-
   render() {
     return (
       <div className="DAG">
-        <TransformWrapper>
-          <TransformComponent>
-            <div className="DAG--zoomWrapper">
-              <Digraph<TVertex>
-                zoom
-                minimap
-                className="DAG--dag"
-                setOnGraph={classNameIsSmall}
-                minimapClassName="u-miniMap"
-                layoutManager={this.layoutManager}
-                measurableNodesKey="nodes"
-                layers={[
-                  {
-                    key: 'edges',
-                    defs: [{ localId: 'arrowHead' }],
-                    edges: true,
-                    layerType: 'svg',
-                    markerEndId: 'arrowHead',
-                  },
-                  {
-                    key: 'nodes',
-                    layerType: 'html',
-                    measurable: true,
-                    renderNode,
-                  },
-                ]}
-                edges={this.data.edges}
-                vertices={this.data.nodes}
-              />
-            </div>
-          </TransformComponent>
-          <this.Controls />
-        </TransformWrapper>
+        <Digraph<TVertex>
+          zoom
+          minimap
+          className="DAG--dag"
+          setOnGraph={classNameIsSmall}
+          minimapClassName="u-miniMap"
+          layoutManager={this.layoutManager}
+          measurableNodesKey="nodes"
+          layers={[
+            {
+              key: 'edges',
+              defs: [{ localId: 'arrowHead' }],
+              edges: true,
+              layerType: 'svg',
+              markerEndId: 'arrowHead',
+            },
+            {
+              key: 'nodes',
+              layerType: 'html',
+              measurable: true,
+              renderNode,
+            },
+          ]}
+          edges={this.data.edges}
+          vertices={this.data.nodes}
+        />
       </div>
     );
   }
