@@ -21,29 +21,6 @@
   position: relative;
 }
 
-.DAG--zoomWrapper {
-  width: 1500px;
-  height: 680px;
-  position: relative;
-  margin-top: -120px;
-}
-
-.DAG--zoomButton {
-  background: #ccc;
-  color: #888;
-  cursor: pointer;
-  font-size: 1.8em;
-  line-height: 0;
-  padding: 0.8rem 0.5rem;
-  position: relative;
-  margin-left: 15px;
-  margin-top: 20px;
-}
-
-button:hover {
-  background: #ddd;
-}
-
 .DAG--dag {
   background: #fafafa;
   stroke-width: 0.85;
