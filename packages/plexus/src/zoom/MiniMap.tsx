@@ -23,8 +23,8 @@ type TProps = {
   contentHeight: number;
   contentWidth: number;
   viewAll: () => void;
-  zoomAll: () => void;
-  trimAll: () => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
   viewportHeight: number;
   viewportWidth: number;
   k?: number;
@@ -90,10 +90,10 @@ export function MiniMap(props: TProps) {
       <div className={`${css.item} ${css.map}`} style={mapSize}>
         <div className={css.mapActive} style={{ ...activeXform, ...mapSize }} />
       </div>
-      <div className={`${css.item} ${css.button}`} onClick={props.zoomAll} role="button">
+      <div className={`${css.item} ${css.button}`} onClick={props.zoomIn} role="button">
         {zoomInIcon}
       </div>
-      <div className={`${css.item} ${css.button}`} onClick={props.trimAll} role="button">
+      <div className={`${css.item} ${css.button}`} onClick={props.zoomOut} role="button">
         {zoomOutIcon}
       </div>
       <div className={`${css.item} ${css.button}`} onClick={props.viewAll} role="button">

@@ -45,8 +45,8 @@ type TZoomProps = {
   contentHeight: number;
   contentWidth: number;
   viewAll: () => void;
-  zoomAll: () => void;
-  trimAll: () => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
   viewportHeight: number;
   viewportWidth: number;
 };
@@ -143,8 +143,8 @@ export default class ZoomManager {
       x,
       y,
       viewAll: this.resetZoom,
-      zoomAll: this.zoomIn,
-      trimAll: this.zoomOut,
+      zoomIn: this.zoomIn,
+      zoomOut: this.zoomOut,
     };
   }
 
