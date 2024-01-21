@@ -45,6 +45,8 @@ type TZoomProps = {
   contentHeight: number;
   contentWidth: number;
   viewAll: () => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
   viewportHeight: number;
   viewportWidth: number;
 };
@@ -96,6 +98,24 @@ export default class ZoomManager {
     this.resetZoom();
   }
 
+  public zoomIn = () => {
+    const selection = this.selection;
+    if (!selection) {
+      this.updateCallback(zoomIdentity);
+      return;
+    }
+    this.zoom.scaleBy(selection, 1.2);
+  };
+
+  public zoomOut = () => {
+    const selection = this.selection;
+    if (!selection) {
+      this.updateCallback(zoomIdentity);
+      return;
+    }
+    this.zoom.scaleBy(selection, 0.8);
+  };
+
   public resetZoom = () => {
     const elem = this.elem;
     const selection = this.selection;
@@ -123,6 +143,8 @@ export default class ZoomManager {
       x,
       y,
       viewAll: this.resetZoom,
+      zoomIn: this.zoomIn,
+      zoomOut: this.zoomOut,
     };
   }
 
