@@ -14,8 +14,8 @@
 
 import * as React from 'react';
 
-import { FaMagnifyingGlassPlus, FaMagnifyingGlassMinus } from 'react-icons/fa6';
-import { HiMiniArrowsPointingOut } from 'react-icons/hi2';
+import { HiMiniArrowsPointingOut, HiMagnifyingGlassPlus, HiMagnifyingGlassMinus } from 'react-icons/hi2';
+
 /* eslint-disable react/no-unused-prop-types */
 type TProps = {
   classNamePrefix?: string | void;
@@ -91,10 +91,10 @@ export function MiniMap(props: TProps) {
         <div className={css.mapActive} style={{ ...activeXform, ...mapSize }} />
       </div>
       <div className={`${css.item} ${css.button}`} onClick={props.zoomIn} role="button">
-        <FaMagnifyingGlassPlus />
+        <HiMagnifyingGlassPlus />
       </div>
       <div className={`${css.item} ${css.button}`} onClick={props.zoomOut} role="button">
-        <FaMagnifyingGlassMinus />
+        <HiMagnifyingGlassMinus />
       </div>
       <div className={`${css.item} ${css.button}`} onClick={props.viewAll} role="button">
         <HiMiniArrowsPointingOut />
