@@ -10,6 +10,9 @@
     "url": "https://github.com/jaegertracing/jaeger-ui.git",
     "directory": "packages/jaeger-ui"
   },
+  "resolutions": {
+    "rollup": "npm:@rollup/wasm-node"
+  },
   "devDependencies": {
     "@babel/core": "^7.23.6",
     "@babel/preset-env": "^7.23.6",
@@ -19,13 +22,13 @@
     "@testing-library/react": "^14.0.0",
     "@types/deep-freeze": "^0.1.1",
     "@types/lodash": "^4.14.123",
+    "@types/object-hash": "^3.0.2",
     "@types/react": "^18.2.45",
-    "@types/react-window": "^1.8.0",
-    "@types/redux-form": "^8.3.10",
     "@types/react-helmet": "^6.1.5",
     "@types/react-router-dom": "^5.1.0",
+    "@types/react-window": "^1.8.0",
     "@types/redux-actions": "2.2.1",
-    "@types/object-hash": "^3.0.2",
+    "@types/redux-form": "^8.3.10",
     "@types/rollup-plugin-visualizer": "^4.2.1",
     "@vitejs/plugin-legacy": "^5.0.0",
     "@vitejs/plugin-react": "^4.2.1",
@@ -50,6 +53,7 @@
     "@ant-design/compatible": "^5.1.2",
     "@jaegertracing/plexus": "0.2.0",
     "@pyroscope/flamegraph": "0.21.4",
+    "@rollup/wasm-node": "^4.9.5",
     "antd": "^5.10.2",
     "chance": "^1.0.10",
     "classnames": "^2.5.1",
