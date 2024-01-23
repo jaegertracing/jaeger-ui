@@ -13,5 +13,5 @@
 // limitations under the License.
 {
   "extends": "../../tsconfig",
-  "include": ["src/**/*.tsx", "typings"]
+  "include": ["src/**/*.tsx", "typings"],
 }

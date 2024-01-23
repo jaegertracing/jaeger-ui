@@ -15,16 +15,16 @@
     "isolatedModules": true,
     "declaration": true,
     "emitDeclarationOnly": true,
-    "jsx": "preserve"
+    "jsx": "preserve",
   },
   "include": [],
   "files": [],
   "references": [
     {
-      "path": "packages/jaeger-ui/tsconfig.lint.json"
+      "path": "packages/jaeger-ui/tsconfig.lint.json",
     },
     {
-      "path": "packages/plexus/tsconfig.json"
-    }
-  ]
+      "path": "packages/plexus/tsconfig.json",
+    },
+  ],
 }
