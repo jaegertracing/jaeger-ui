@@ -17,7 +17,9 @@ import { change } from 'redux-form';
 import { replace } from 'redux-first-history';
 
 import { searchTraces, fetchServiceOperations } from '../actions/jaeger-api';
+import { loadJsonTraces } from '../actions/file-reader-api';
 import { getUrl as getSearchUrl } from '../components/SearchTracePage/url';
+import JaegerAPI from '../api/jaeger';
 
 export { default as trackMiddleware } from './track';
 
@@ -43,6 +45,31 @@ export const historyUpdateMiddleware = store => next => action => {
     store.dispatch(replace(url));
   }
   return next(action);
+};
+
+export const transformOTLPMiddleware = store => next => action => {
+  if (action.type === String([`${loadJsonTraces}_FULFILLED`])) {
+    // Check if action.payload is OTLP and make API call if so
+    // We are allowed to change the action.payload here
+    //
+    if ('resourceSpans' in action.payload) {
+      JaegerAPI.transformOTLP(action.payload)
+        .then(result => {
+          const transformedAction = {
+            ...action,
+            payload: result,
+          };
+          return next(transformedAction);
+        })
+        .catch(() => {
+          return next(action);
+        });
+    } else {
+      return next(action);
+    }
+  } else {
+    return next(action);
+  }
 };
 
 export const promise = promiseMiddleware;
