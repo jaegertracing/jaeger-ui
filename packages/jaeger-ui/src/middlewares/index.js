@@ -47,7 +47,7 @@ export const historyUpdateMiddleware = store => next => action => {
   return next(action);
 };
 
-export const transformOTLPMiddleware = store => next => action => {
+export const loadJsonTracesMiddleware = store => next => action => {
   if (action.type === String([`${loadJsonTraces}_FULFILLED`])) {
     // Check if action.payload is OTLP and make API call if so
     // We are allowed to change the action.payload here
