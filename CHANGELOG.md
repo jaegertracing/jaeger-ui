@@ -9,6 +9,16 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.38.0 (2024-02-06)
+
+#### ✨ New Features:
+
+* [feature]: add zoom in/out controls to plexus graphs ([@Wise-Wizard](https://github.com/Wise-Wizard) in [#2072](https://github.com/jaegertracing/jaeger-ui/pull/2072))
+
+#### 🐞 Bug fixes, Minor Improvements:
+
+* Use import from /dist/ instead of symlink ([@zacanger](https://github.com/zacanger) in [#2135](https://github.com/jaegertracing/jaeger-ui/pull/2135))
+
 ## v1.37.0 (2024-01-08)
 
 #### ✨ New Features:
