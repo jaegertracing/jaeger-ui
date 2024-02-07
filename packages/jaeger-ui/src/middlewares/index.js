@@ -70,6 +70,7 @@ export const loadJsonTracesMiddleware = store => next => action => {
   } else {
     return next(action);
   }
+  return next(action); // Consistent returns
 };
 
 export const promise = promiseMiddleware;

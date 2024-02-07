@@ -37,7 +37,7 @@ jest.spyOn(JaegerAPI, 'transformOTLP').mockImplementation(APICallRequest => {
   if (_.isEqual(APICallRequest, OTLPTrace)) {
     return Promise.resolve(jaegerTrace);
   }
-  // This defines case where API call errors out even after detecting a `resourceSpan` in the request:
+  // This defines case where API call errors out even after detecting a `resourceSpan` in the request
   return Promise.reject();
 });
 
@@ -69,6 +69,13 @@ it('loadJsonTracesMiddleware transformes traces from OTLP to jaeger by making an
     payload: JSON.parse(fs.readFileSync('src/middlewares/fixtures/otlp2jaeger-in.json', 'utf-8')),
   };
 
+  const OTLPFileActionErrored = {
+    type: String([`${loadJsonTraces}_FULFILLED`]),
+    payload: JSON.parse(fs.readFileSync('src/middlewares/fixtures/otlp2jaeger-in-error.json', 'utf-8')),
+  };
+  // We are moking an API failure by take a pseudo input body with no service name
+  // But for testing we are delibertaley sending back a rejected promise
+
   const JaegerAction = {
     type: String([`${loadJsonTraces}_FULFILLED`]),
     payload: JSON.parse(fs.readFileSync('src/middlewares/fixtures/otlp2jaeger-out.json', 'utf-8')),
@@ -81,5 +88,8 @@ it('loadJsonTracesMiddleware transformes traces from OTLP to jaeger by making an
   await loadJsonTracesMiddleware({ dispatch })(next)(JaegerAction);
   expect(JaegerAPI.transformOTLP).not.toHaveBeenCalled();
   expect(next).toHaveBeenCalledWith(JaegerAction);
-  // Errored JSON are caught before any redux action is invoked
+  jest.clearAllMocks();
+  await loadJsonTracesMiddleware({ dispatch })(next)(OTLPFileActionErrored);
+  expect(JaegerAPI.transformOTLP).toHaveBeenCalledWith(OTLPFileActionErrored.payload);
+  // Errored JSON (malformed JSON) are caught before any redux action is invoked
 });
