@@ -47,30 +47,4 @@ export const historyUpdateMiddleware = store => next => action => {
   return next(action);
 };
 
-export const loadJsonTracesMiddleware = store => next => action => {
-  if (action.type === String([`${loadJsonTraces}_FULFILLED`])) {
-    // Check if action.payload is OTLP and make API call if so
-    // We are allowed to change the action.payload here
-    //
-    if ('resourceSpans' in action.payload) {
-      JaegerAPI.transformOTLP(action.payload)
-        .then(result => {
-          const transformedAction = {
-            ...action,
-            payload: result,
-          };
-          return next(transformedAction);
-        })
-        .catch(() => {
-          return next(action);
-        });
-    } else {
-      return next(action);
-    }
-  } else {
-    return next(action);
-  }
-  return undefined;
-};
-
 export const promise = promiseMiddleware;
