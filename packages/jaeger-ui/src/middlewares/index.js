@@ -17,9 +17,7 @@ import { change } from 'redux-form';
 import { replace } from 'redux-first-history';
 
 import { searchTraces, fetchServiceOperations } from '../actions/jaeger-api';
-import { loadJsonTraces } from '../actions/file-reader-api';
 import { getUrl as getSearchUrl } from '../components/SearchTracePage/url';
-import JaegerAPI from '../api/jaeger';
 
 export { default as trackMiddleware } from './track';
 

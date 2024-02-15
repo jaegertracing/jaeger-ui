@@ -24,11 +24,9 @@ jest.mock(
 );
 
 import { change } from 'redux-form';
-import fs from 'fs';
+
 import * as jaegerMiddlewares from './index';
 import { fetchServiceOperations } from '../actions/jaeger-api';
-import { loadJsonTraces } from '../actions/file-reader-api';
-import JaegerAPI from '../api/jaeger';
 
 it('jaegerMiddlewares should contain the promise middleware', () => {
   expect(typeof jaegerMiddlewares.promise).toBe('function');
