@@ -61,6 +61,7 @@ describe('<KeyValuesTable>', () => {
     { key: 'omg', value: 'mos-def', expected: 'mos-def' },
     { key: 'numericString', value: '12345678901234567890', expected: '12345678901234567890' },
     { key: 'numeric', value: 123456789, expected: '123456789' },
+    { key: 'boolean', value: true, expected: 'true' },
     { key: 'http.request.header.accept', value: ['application/json'], expected: 'application/json' },
     {
       key: 'http.response.header.set_cookie',

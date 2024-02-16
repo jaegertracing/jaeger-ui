@@ -52,11 +52,27 @@ const stringListMarkup = (value: any[]) => (
   </div>
 );
 
-const stringMarkup = (value: string) => (
-  <div className="json-markup">
-    <span className="json-markup-string">{value}</span>
-  </div>
-);
+const scalarMarkup = (value: string | Number | Boolean) => {
+  let className;
+  switch (typeof value) {
+    case 'boolean': {
+      className = 'json-markup-bool';
+      break;
+    }
+    case 'number': {
+      className = 'json-markup-number';
+      break;
+    }
+    default: {
+      className = 'json-markup-string';
+    }
+  }
+  return (
+    <div className="json-markup">
+      <span className={className}>{value.toString()}</span>
+    </div>
+  );
+};
 
 function formatValue(key: string, value: any) {
   let content;
@@ -66,11 +82,9 @@ function formatValue(key: string, value: any) {
     parsed = tryParseJson(value);
   }
 
-  if (typeof parsed === 'string') {
-    content = stringMarkup(parsed);
-  } else if (Array.isArray(parsed) && shouldDisplayAsStringList(key)) {
+  if (Array.isArray(parsed) && shouldDisplayAsStringList(key)) {
     content = stringListMarkup(parsed);
-  } else {
+  } else if (typeof parsed === 'object') {
     const shouldJsonTreeExpand = Object.keys(parsed).length <= 10;
 
     content = (
@@ -95,6 +109,8 @@ function formatValue(key: string, value: any) {
         }}
       />
     );
+  } else {
+    content = scalarMarkup(parsed);
   }
 
   return <div className="ub-inline-block">{content}</div>;
