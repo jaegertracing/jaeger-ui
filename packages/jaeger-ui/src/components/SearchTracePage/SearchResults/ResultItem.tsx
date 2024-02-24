@@ -29,9 +29,10 @@ import ResultItemTitle from './ResultItemTitle';
 import colorGenerator from '../../../utils/color-generator';
 import { formatRelativeDate } from '../../../utils/date';
 
-import { KeyValuePair, Trace } from '../../../types/trace';
+import { Trace } from '../../../types/trace';
 
 import './ResultItem.css';
+import { isErrorSpan } from '../../TracePage/TraceTimelineViewer/utils';
 
 dayjs.extend(relativeTime);
 
@@ -52,8 +53,6 @@ type State = {
   fromNow: string | boolean;
 };
 
-const isErrorTag = ({ key, value }: KeyValuePair<boolean | string>) =>
-  key === 'error' && (value === true || value === 'true');
 const trackTraceConversions = () => trackConversions(EAltViewActions.Traces);
 
 export default class ResultItem extends React.PureComponent<Props, State> {
@@ -66,7 +65,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
     const erroredServices: Set<string> = new Set<string>();
 
     const numErredSpans = spans.filter(sp => {
-      const hasError = sp.tags.some(isErrorTag);
+      const hasError = isErrorSpan(sp);
       if (hasError) {
         erroredServices.add(sp.process.serviceName);
       }

@@ -69,12 +69,26 @@ export function spanHasTag(key: string, value: string | boolean, span: Span) {
   return span.tags.some(tag => tag.key === key && tag.value === value);
 }
 
+/**
+ * Returns `true` if the `span` has a log matching `key` = `value`.
+ *
+ * @param   {string}  key   The log key to match on.
+ * @param   {any}     value The log value to match.
+ * @param   {Span}    span  The span object.
+ *
+ * @returns {boolean}       True if a match was found.
+ */
+export function spanHasLog(key: string, value: string, span: Span) {
+  return span.logs.some(log => log.fields.some(field => field.key === key && field.value === value));
+}
+
 export const isClientSpan = spanHasTag.bind(null, 'span.kind', 'client');
 export const isServerSpan = spanHasTag.bind(null, 'span.kind', 'server');
 
 const isErrorBool = spanHasTag.bind(null, 'error', true);
 const isErrorStr = spanHasTag.bind(null, 'error', 'true');
-export const isErrorSpan = (span: Span) => isErrorBool(span) || isErrorStr(span);
+const isExceptionEvent = spanHasLog.bind(null, 'event', 'exception');
+export const isErrorSpan = (span: Span) => isErrorBool(span) || isErrorStr(span) || isExceptionEvent(span);
 
 /**
  * Returns `true` if at least one of the descendants of the `parentSpanIndex`
