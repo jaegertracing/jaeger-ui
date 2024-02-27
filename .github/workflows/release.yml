@@ -32,7 +32,7 @@ jobs:
         if: steps.yarn-build.outcome == 'success'
 
       - name: Upload artifacts
-        uses: svenstaro/upload-release-action@1beeb572c19a9242f4361f4cee78f8e0d9aec5df
+        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd
         with:
           file: 'assets.tar.gz'
           overwrite: true
