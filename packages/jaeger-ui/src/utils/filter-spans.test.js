@@ -118,6 +118,16 @@ describe('filterSpans', () => {
       },
     ],
   };
+
+  // span3 contain empty logs
+  const spanID3 = 'span-id-3';
+  const span3 = {
+    spanID: spanID3,
+    operationName: 'operationName3',
+    process: {
+      serviceName: 'serviceName3',
+    },
+  };
   const spans = [span0, span2];
 
   it('should return `null` if spans is falsy', () => {
@@ -240,6 +250,10 @@ describe('filterSpans', () => {
     expect(filterSpans('processTagValue1 -processTagKey2', spans)).toEqual(new Set([spanID0]));
     expect(filterSpans('processTagValue1 -processTagKey1', spans)).toEqual(new Set([spanID2]));
     expect(filterSpans('"processTag Value3" -processTagKey3', spans)).toEqual(new Set());
+  });
+
+  it("span without log shouldn't break filtering", () => {
+    expect(filterSpans('operationName2', [span2, span3])).toEqual(new Set([spanID2]));
   });
 
   // This test may false positive if other tests are failing

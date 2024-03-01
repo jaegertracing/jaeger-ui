@@ -60,7 +60,7 @@ export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
     isTextInFilters(includeFilters, span.operationName) ||
     isTextInFilters(includeFilters, span.process.serviceName) ||
     isTextInKeyValues(span.tags) ||
-    (span.logs !== null && span.logs.some(log => isTextInKeyValues(log.fields))) ||
+    (Array.isArray(span.logs) && span.logs.some(log => isTextInKeyValues(log.fields))) ||
     isTextInKeyValues(span.process.tags) ||
     includeFilters.some(filter => filter.replace(/^0*/, '') === span.spanID.replace(/^0*/, ''));
 
