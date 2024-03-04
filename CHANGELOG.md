@@ -9,6 +9,18 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.39.0 (2024-03-04)
+
+#### ✨ New Features:
+
+* Support uploading traces in opentelemetry format (otlp json) ([@NavinShrinivas](https://github.com/NavinShrinivas) in [#2145](https://github.com/jaegertracing/jaeger-ui/pull/2145))
+
+#### 🐞 Bug fixes, Minor Improvements:
+
+* Gracefully handle spans without logs field ([@MaXal](https://github.com/MaXal) in [#2191](https://github.com/jaegertracing/jaeger-ui/pull/2191))
+* Prevent keyvaluetable copy column from wrapping ([@bobrik](https://github.com/bobrik) in [#2181](https://github.com/jaegertracing/jaeger-ui/pull/2181))
+* Use json for table values only for objects ([@bobrik](https://github.com/bobrik) in [#2168](https://github.com/jaegertracing/jaeger-ui/pull/2168))
+
 ## v1.38.0 (2024-02-06)
 
 #### ✨ New Features:
