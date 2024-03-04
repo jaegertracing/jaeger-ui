@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import JaegerAPI from '../api/jaeger';
+
 export default function readJsonFile(fileList: { file: File }): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -21,7 +23,18 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
         return;
       }
       try {
-        resolve(JSON.parse(reader.result));
+        const traceObj = JSON.parse(reader.result);
+        if ('resourceSpans' in traceObj) {
+          JaegerAPI.transformOTLP(traceObj)
+            .then((result: string) => {
+              resolve(result);
+            })
+            .catch(() => {
+              reject(new Error(`Error converting traces to OTLP`));
+            });
+        } else {
+          resolve(traceObj);
+        }
       } catch (error: unknown) {
         reject(new Error(`Error parsing JSON: ${(error as Error).message}`));
       }
