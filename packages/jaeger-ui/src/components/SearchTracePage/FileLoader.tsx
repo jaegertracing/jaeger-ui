@@ -28,9 +28,10 @@ export default function FileLoader(props: FileLoaderProps) {
   return (
     <Dragger
       accept=".json"
-      beforeUpload={(file, fileList) =>
-        fileList.forEach(fileFromList => props.loadJsonTraces({ file: fileFromList }))
-      }
+      beforeUpload={(file, fileList) => {
+        fileList.forEach(fileFromList => props.loadJsonTraces({ file: fileFromList }));
+        return false;
+      }}
       multiple
     >
       <IoDocumentAttachOutline className="Dragger--icon" />
