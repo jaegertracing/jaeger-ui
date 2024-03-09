@@ -11,7 +11,7 @@ runDepcheck() {
   local dir="$1"
   local cfg="$2"
   echo "Checking ${dir}"
-  depcheck "${dir}" --config "${cfg}" | sed 's/^\*/⛔/' | sed 's/^/    /g'
+  node node_modules/depcheck/bin/depcheck.js "${dir}" --config "${cfg}" | sed 's/^\*/⛔/' | sed 's/^/    /g'
   return $((! ${PIPESTATUS[0]}))
 }
 
