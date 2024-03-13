@@ -59,7 +59,7 @@ export default function ScatterPlot(props) {
       {containerWidth && (
         <XYPlot
           margin={{
-            left: 50,
+            left: 70,
           }}
           width={containerWidth}
           colorType="literal"
