@@ -24,21 +24,18 @@ type Props = {
   wordRegexp?: RegExp;
 };
 
-// TODO typescript doesn't understand text or null as react nodes
-// https://github.com/Microsoft/TypeScript/issues/21699
-export default function BreakableText(
-  props: Props
-): any /* React.ReactNode /* React.ReactElement | React.ReactElement[] \*\/ */ {
+export default function BreakableText(props: Props) {
   const { className, text, wordRegexp = WORD_RX } = props;
   if (!text) {
     return typeof text === 'string' ? text : null;
   }
   const spans = [];
   wordRegexp.exec('');
-  let match = wordRegexp.exec(text);
+  // if the given text has no words, set the first match to the entire text
+  let match: RegExpExecArray | string[] | null = wordRegexp.exec(text) || [text];
   while (match) {
     spans.push(
-      <span key={`word-${spans.length}`} className={className}>
+      <span key={`${text}-${spans.length}`} className={className}>
         {match[0]}
       </span>
     );

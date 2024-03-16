@@ -33,9 +33,8 @@ export default function getDerivedViewModifiers(
   visEncoding: string | undefined,
   viewModifiers: Map<number, number>
 ) {
-  const vertices = new Map<string, number>();
   const edges = new Map<string, number>();
-
+  const vertices = new Map<string, number>();
   const visibleIndices = this.getVisibleIndices(visEncoding);
 
   const pushVertexVm = (vm: number, key: string) => {
@@ -58,9 +57,8 @@ export default function getDerivedViewModifiers(
       return;
     }
     const hoveredPe = this.visIdxToPathElem[visIdx];
-    if (!hoveredPe) {
-      throw new Error(`Invalid vis index: ${visIdx}`);
-    }
+    /* istanbul ignore next : getKeyFromVisIdx would have thrown if visIdx was invalid */
+    if (!hoveredPe) throw new Error(`Invalid vis index: ${visIdx}`);
     const members = hoveredPe.memberOf.members;
     let lastKey: string | null = null;
     for (let i = 0; i < members.length; i++) {

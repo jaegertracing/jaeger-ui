@@ -27,8 +27,8 @@ import * as codec from '../../../../model/ddg/visibility-codec';
 import HopsSelector from '.';
 
 describe('HopsSelector', () => {
-  const { distanceToPathElems } = transformDdgData([longSimplePath, simplePath].map(wrap), focalPayloadElem);
-  const { distanceToPathElems: shortPathElems } = transformDdgData([shortPath].map(wrap), focalPayloadElem);
+  const { distanceToPathElems } = transformDdgData(wrap([longSimplePath, simplePath]), focalPayloadElem);
+  const { distanceToPathElems: shortPathElems } = transformDdgData(wrap([shortPath]), focalPayloadElem);
 
   describe('without distanceToPathElems', () => {
     it('renders empty div', () => {

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2019-2020 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,19 @@
 
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 
-import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
+import { TDenseSpanMembers } from '../../../model/trace-dag/types';
+import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
 
 export type TSumSpan = {
   count: number;
   errors: number;
-  time: number;
   percent: number;
-  selfTime: number;
   percentSelfTime: number;
+  selfTime: number;
+  time: number;
 };
 
 export type TEv = {
-  edges: TEdge[];
-  vertices: TDagVertex<TSumSpan>[];
+  edges: TEdge<{ followsFrom: boolean }>[];
+  vertices: TDagPlexusVertex<TSumSpan & TDenseSpanMembers>[];
 };

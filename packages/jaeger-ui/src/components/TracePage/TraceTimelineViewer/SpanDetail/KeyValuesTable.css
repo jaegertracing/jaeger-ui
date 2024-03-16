@@ -41,11 +41,12 @@ limitations under the License.
 }
 
 .KeyValueTable--copyColumn {
+  white-space: nowrap;
   text-align: right;
 }
 
 .KeyValueTable--row:not(:hover) > .KeyValueTable--copyColumn > .KeyValueTable--copyIcon {
-  display: none;
+  visibility: hidden;
 }
 
 .KeyValueTable--row > td {

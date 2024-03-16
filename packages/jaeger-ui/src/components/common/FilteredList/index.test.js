@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
+import { Checkbox } from 'antd';
 import { FixedSizeList as VList } from 'react-window';
 import { Key as EKey } from 'ts-key-enum';
 
@@ -79,7 +80,7 @@ describe('<FilteredList>', () => {
   describe('up / down arrow keys', () => {
     let indices;
 
-    beforeAll(jest.useFakeTimers);
+    beforeAll(() => jest.useFakeTimers('modern'));
 
     beforeEach(() => {
       indices = {
@@ -124,6 +125,118 @@ describe('<FilteredList>', () => {
     });
   });
 
+  describe('multi mode checkbox', () => {
+    const addValues = jest.fn();
+    const removeValues = jest.fn();
+    const click = checked => wrapper.find(Checkbox).simulate('change', { target: { checked } });
+    const isChecked = () => wrapper.find(Checkbox).prop('checked');
+    const isIndeterminate = () => wrapper.find(Checkbox).prop('indeterminate');
+
+    beforeEach(() => {
+      wrapper.setProps({ multi: true, addValues, removeValues });
+      addValues.mockReset();
+      removeValues.mockReset();
+    });
+
+    it('is omitted if multi is false or addValues or removeValues is not provided', () => {
+      wrapper.setProps({ multi: false });
+      expect(wrapper.find(Checkbox).length).toBe(0);
+
+      wrapper.setProps({ multi: true, addValues: undefined });
+      expect(wrapper.find(Checkbox).length).toBe(0);
+
+      wrapper.setProps({ addValues, removeValues: undefined });
+      expect(wrapper.find(Checkbox).length).toBe(0);
+    });
+
+    it('is present in multi mode', () => {
+      expect(wrapper.find(Checkbox).length).toBe(1);
+    });
+
+    it('is unchecked if nothing is selected', () => {
+      expect(isChecked()).toBe(false);
+      expect(isIndeterminate()).toBe(false);
+    });
+
+    it('is indeterminate if one is selected', () => {
+      wrapper.setProps({ value: words[0] });
+      expect(isChecked()).toBe(false);
+      expect(isIndeterminate()).toBe(true);
+    });
+
+    it('is indeterminate if some are selected', () => {
+      wrapper.setProps({ value: new Set(words) });
+      expect(isChecked()).toBe(false);
+      expect(isIndeterminate()).toBe(true);
+    });
+
+    it('is checked if all are selected', () => {
+      wrapper.setProps({ value: new Set([...words, ...numbers]) });
+      expect(isChecked()).toBe(true);
+      expect(isIndeterminate()).toBe(false);
+    });
+
+    it('is unchecked if nothing filtered is selected', () => {
+      wrapper.setState({ filterText: numbers[0] });
+      wrapper.setProps({ value: new Set(words) });
+      expect(isChecked()).toBe(false);
+      expect(isIndeterminate()).toBe(false);
+    });
+
+    it('is unchecked if one filtered value is selected', () => {
+      wrapper.setState({ filterText: numbers[0] });
+      wrapper.setProps({ value: new Set(words) });
+      expect(isChecked()).toBe(false);
+      expect(isIndeterminate()).toBe(false);
+    });
+
+    it('is indeterminate if one filtered value is selected', () => {
+      wrapper.setState({ filterText: words[0][0] });
+      wrapper.setProps({ value: words[0] });
+      expect(isChecked()).toBe(false);
+      expect(isIndeterminate()).toBe(true);
+    });
+
+    it('is indeterminate if some filtered values are selected', () => {
+      wrapper.setState({ filterText: words[0][0] });
+      wrapper.setProps({ value: new Set(words.slice(1)) });
+      expect(isChecked()).toBe(false);
+      expect(isIndeterminate()).toBe(true);
+    });
+
+    it('is checked if all filtered values are selected', () => {
+      wrapper.setState({ filterText: words[0][0] });
+      wrapper.setProps({ value: new Set(words) });
+      expect(isChecked()).toBe(true);
+      expect(isIndeterminate()).toBe(false);
+    });
+
+    it('unselects all filtered values when clicked and checked', () => {
+      wrapper.setState({ filterText: words[0][0] });
+      click(false);
+      expect(removeValues).toHaveBeenCalledTimes(1);
+      expect(removeValues).toHaveBeenCalledWith(words);
+      expect(addValues).not.toHaveBeenCalled();
+    });
+
+    it('selects all filtered values when clicked and unchecked', () => {
+      wrapper.setState({ filterText: words[0][0] });
+      click(true);
+      expect(addValues).toHaveBeenCalledTimes(1);
+      expect(addValues).toHaveBeenCalledWith(words);
+      expect(removeValues).not.toHaveBeenCalled();
+    });
+
+    it('selects all unselected filtered values when clicked and unchecked', () => {
+      wrapper.setState({ filterText: words[0][0] });
+      wrapper.setProps({ value: words[0] });
+      click(true);
+      expect(addValues).toHaveBeenCalledTimes(1);
+      expect(addValues).toHaveBeenCalledWith(words.slice(1));
+      expect(removeValues).not.toHaveBeenCalled();
+    });
+  });
+
   it('escape triggers cancel', () => {
     expect(props.cancel.mock.calls.length).toBe(0);
     keyDown(EKey.Escape);
@@ -138,6 +251,14 @@ describe('<FilteredList>', () => {
     expect(props.setValue.mock.calls).toEqual([[props.options[focusedIndex]]]);
   });
 
+  it('enter selects the filteredOption if there is only one option', () => {
+    const value = words[1];
+    wrapper.find('input').simulate('change', { target: { value } });
+    expect(props.setValue.mock.calls.length).toBe(0);
+    keyDown(EKey.Enter);
+    expect(props.setValue.mock.calls).toEqual([[value]]);
+  });
+
   it('enter is ignored when an item is not focused', () => {
     expect(props.setValue.mock.calls.length).toBe(0);
     keyDown(EKey.Enter);
@@ -145,7 +266,7 @@ describe('<FilteredList>', () => {
   });
 
   it('scrolling unsets the focus index', () => {
-    jest.useFakeTimers();
+    jest.useFakeTimers('modern');
     wrapper.setState({ focusedIndex: 0 });
     wrapper.instance().onListScrolled({ scrollUpdateWasRequested: false });
     jest.runAllTimers();

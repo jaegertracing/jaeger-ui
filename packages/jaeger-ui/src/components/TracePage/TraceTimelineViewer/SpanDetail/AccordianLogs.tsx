@@ -15,8 +15,7 @@
 import * as React from 'react';
 import cx from 'classnames';
 import _sortBy from 'lodash/sortBy';
-import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
-import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
+import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import { formatDuration } from '../utils';
@@ -40,12 +39,12 @@ export default function AccordianLogs(props: AccordianLogsProps) {
   const { interactive, isOpen, linksGetter, logs, openedItems, onItemToggle, onToggle, timestamp } = props;
   let arrow: React.ReactNode | null = null;
   let HeaderComponent: 'span' | 'a' = 'span';
-  let headerProps: Object | null = null;
+  let headerProps: object | null = null;
   if (interactive) {
     arrow = isOpen ? (
-      <IoIosArrowDown className="u-align-icon" />
+      <IoChevronDown className="u-align-icon" />
     ) : (
-      <IoIosArrowRight className="u-align-icon" />
+      <IoChevronForward className="u-align-icon" />
     );
     HeaderComponent = 'a';
     headerProps = {

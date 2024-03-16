@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import {
 } from './ddg';
 import { fetchedState } from '../constants';
 import * as transformDdgData from '../model/ddg/transformDdgData';
-import getDdgModelKey from '../model/ddg/getDdgModelKey';
+import getStateEntryKey from '../model/ddg/getStateEntryKey';
 import { EViewModifier } from '../model/ddg/types';
 
 describe('deepDependencyGraph reducers', () => {
@@ -45,8 +45,8 @@ describe('deepDependencyGraph reducers', () => {
       operation,
     },
   };
-  const targetKey = getDdgModelKey(meta.query);
-  const keySansOp = getDdgModelKey(metaSansOp.query);
+  const targetKey = getStateEntryKey(meta.query);
+  const keySansOp = getStateEntryKey(metaSansOp.query);
   const existingState = {
     [targetKey]: 'some pre-existing state on target branch',
     [keySansOp]: 'some pre-existing state on branch without operation',
@@ -241,6 +241,8 @@ describe('deepDependencyGraph reducers', () => {
           state: fetchedState.DONE,
           viewModifiers: new Map(),
         };
+
+        /* eslint-disable @typescript-eslint/no-unused-vars */
         const { operation: _op, ...emphasizedPayloadWithoutOp } = emphasizedPayload;
         const newState = addViewModifier(operationlessDoneState, emphasizedPayloadWithoutOp);
         const expected = _cloneDeep(operationlessDoneState);

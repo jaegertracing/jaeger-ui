@@ -43,11 +43,9 @@ describe('updateUiFind', () => {
     ...location,
     search: `?${queryStringStringifySpyMockReturnValue}`,
   };
-  const trackFindFunction = jest.fn();
 
   beforeEach(() => {
     replaceMock.mockReset();
-    trackFindFunction.mockClear();
     queryStringParseSpy.mockClear();
     queryStringStringifySpy.mockClear();
   });
@@ -92,6 +90,12 @@ describe('updateUiFind', () => {
   });
 
   describe('trackFindFunction provided', () => {
+    const trackFindFunction = jest.fn();
+
+    beforeEach(() => {
+      trackFindFunction.mockClear();
+    });
+
     it('tracks undefined when uiFind value is omitted', () => {
       updateUiFind({
         history,

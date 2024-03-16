@@ -19,9 +19,9 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
   layers={
     Array [
       Object {
-        "key": "nodes/find-emphasis/vector-outline",
+        "key": "nodes/find-emphasis/vector-color-band",
         "layerType": "svg",
-        "renderNode": [Function],
+        "renderNode": null,
       },
       Object {
         "key": "nodes/find-emphasis/html",
@@ -29,14 +29,10 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
         "renderNode": [Function],
       },
       Object {
-        "key": "nodes/find-emphasis/vector-color-band",
-        "layerType": "svg",
-        "renderNode": [Function],
-      },
-      Object {
         "key": "nodes/vector-border",
         "layerType": "svg",
         "renderNode": [Function],
+        "setOnContainer": [Function],
       },
       Object {
         "defs": Array [
@@ -46,7 +42,7 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
           Object {
             "localId": "arrow-hovered",
             "setOnEntry": Object {
-              "className": "DdgArrow is-pathHovered",
+              "className": "Ddg--Arrow is-pathHovered",
             },
           },
         ],
@@ -57,11 +53,12 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
         "setOnContainer": Array [
           [Function],
           Object {
-            "stroke": "#444",
-            "strokeWidth": 0.7,
+            "className": "Ddg--Edges",
           },
         ],
-        "setOnEdge": undefined,
+        "setOnEdge": Object {
+          "className": "Ddg--Edge",
+        },
       },
       Object {
         "key": "nodes/content",
@@ -87,7 +84,10 @@ exports[`<Graph /> render renders provided edges and vertices 1`] = `
       },
       "layoutId": 0,
       "options": Object {
+        "nodesep": 0.55,
         "rankdir": "TB",
+        "ranksep": 1.5,
+        "shape": "circle",
         "splines": "polyline",
         "useDotEdges": true,
       },

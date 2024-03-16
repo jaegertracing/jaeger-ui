@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,14 +15,16 @@
 
 import * as React from 'react';
 import { Form, Input } from 'antd';
-import { RouteComponentProps, Router as RouterHistory, withRouter } from 'react-router-dom';
+import { IoSearch } from 'react-icons/io5';
 
+import { History } from 'history';
 import { getUrl } from '../TracePage/url';
 
 import './TraceIDSearchInput.css';
+import withRouteProps from '../../utils/withRouteProps';
 
-type Props = RouteComponentProps<any> & {
-  history: RouterHistory;
+type Props = {
+  history: History;
 };
 
 class TraceIDSearchInput extends React.PureComponent<Props> {
@@ -36,11 +39,21 @@ class TraceIDSearchInput extends React.PureComponent<Props> {
 
   render() {
     return (
-      <Form layout="horizontal" onSubmit={this.goToTrace} className="TraceIDSearchInput--form">
-        <Input autosize={null} name="idInput" placeholder="Lookup by Trace ID..." />
+      <Form
+        data-testid="TraceIDSearchInput--form"
+        layout="horizontal"
+        onSubmitCapture={this.goToTrace}
+        className="TraceIDSearchInput--form"
+      >
+        <Input
+          data-testid="idInput"
+          name="idInput"
+          placeholder="Lookup by Trace ID..."
+          prefix={<IoSearch />}
+        />
       </Form>
     );
   }
 }
 
-export default withRouter(TraceIDSearchInput);
+export default withRouteProps(TraceIDSearchInput);

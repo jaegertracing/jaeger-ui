@@ -26,8 +26,8 @@ export default function reduxFormFieldAdapter({
   isValidatedInput = false,
 }: {
   AntInputComponent: React.ComponentType;
-  onChangeAdapter: (evt: React.ChangeEvent) => any;
-  isValidatedInput: boolean;
+  onChangeAdapter?: (evt: React.ChangeEvent) => any;
+  isValidatedInput?: boolean;
 }) {
   return function _reduxFormFieldAdapter(props: any) {
     const {
@@ -52,7 +52,7 @@ export default function reduxFormFieldAdapter({
       </AntInputComponent>
     );
     return isValidatedInput ? (
-      <Popover placement="bottomLeft" visible={isInvalid} {...rest.meta.error}>
+      <Popover placement="bottomLeft" open={isInvalid} {...rest.meta.error}>
         {content}
       </Popover>
     ) : (

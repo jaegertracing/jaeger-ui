@@ -15,8 +15,10 @@
 import React from 'react';
 import { Divider } from 'antd';
 
+import { IoLinkOutline } from 'react-icons/io5';
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
+import AccordianReferences from './AccordianReferences';
 import AccordianText from './AccordianText';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
@@ -38,6 +40,8 @@ type SpanDetailProps = {
   tagsToggle: (spanID: string) => void;
   traceStartTime: number;
   warningsToggle: (spanID: string) => void;
+  referencesToggle: (spanID: string) => void;
+  focusSpan: (uiFind: string) => void;
 };
 
 export default function SpanDetail(props: SpanDetailProps) {
@@ -51,9 +55,12 @@ export default function SpanDetail(props: SpanDetailProps) {
     tagsToggle,
     traceStartTime,
     warningsToggle,
+    referencesToggle,
+    focusSpan,
   } = props;
-  const { isTagsOpen, isProcessOpen, logs: logsState, isWarningsOpen } = detailState;
-  const { operationName, process, duration, relativeStartTime, spanID, logs, tags, warnings } = span;
+  const { isTagsOpen, isProcessOpen, logs: logsState, isWarningsOpen, isReferencesOpen } = detailState;
+  const { operationName, process, duration, relativeStartTime, spanID, logs, tags, warnings, references } =
+    span;
   const overviewItems = [
     {
       key: 'svc',
@@ -125,11 +132,21 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => warningsToggle(spanID)}
           />
         )}
+        {references &&
+          references.length > 0 &&
+          (references.length > 1 || references[0].refType !== 'CHILD_OF') && (
+            <AccordianReferences
+              data={references}
+              isOpen={isReferencesOpen}
+              onToggle={() => referencesToggle(spanID)}
+              focusSpan={focusSpan}
+            />
+          )}
         <small className="SpanDetail--debugInfo">
           <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {spanID}
           <CopyIcon
             copyText={deepLinkCopyText}
-            icon="link"
+            icon={<IoLinkOutline />}
             placement="topRight"
             tooltipTitle="Copy deep link to this span"
           />

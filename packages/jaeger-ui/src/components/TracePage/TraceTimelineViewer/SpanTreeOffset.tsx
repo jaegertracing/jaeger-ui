@@ -15,8 +15,7 @@
 import React from 'react';
 import cx from 'classnames';
 import _get from 'lodash/get';
-import IoChevronRight from 'react-icons/lib/io/chevron-right';
-import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
+import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -99,7 +98,7 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<TProps> {
     const { hasChildren, spanID } = span;
     const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
     const icon =
-      showChildrenIcon && hasChildren && (childrenVisible ? <IoIosArrowDown /> : <IoChevronRight />);
+      showChildrenIcon && hasChildren && (childrenVisible ? <IoChevronDown /> : <IoChevronForward />);
     return (
       <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
         {this.ancestorIds.map(ancestorId => (
@@ -137,7 +136,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   return { addHoverIndentGuideId, removeHoverIndentGuideId };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(UnconnectedSpanTreeOffset);
+export default connect(mapStateToProps, mapDispatchToProps)(UnconnectedSpanTreeOffset);

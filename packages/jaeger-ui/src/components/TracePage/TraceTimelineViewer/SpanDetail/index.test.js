@@ -33,10 +33,7 @@ describe('<SpanDetail>', () => {
 
   // use `transformTraceData` on a fake trace to get a fully processed span
   const span = transformTraceData(traceGenerator.trace({ numberOfSpans: 1 })).spans[0];
-  const detailState = new DetailState()
-    .toggleLogs()
-    .toggleProcess()
-    .toggleTags();
+  const detailState = new DetailState().toggleLogs().toggleProcess().toggleReferences().toggleTags();
   const traceStartTime = 5;
   const props = {
     detailState,
@@ -47,19 +44,68 @@ describe('<SpanDetail>', () => {
     processToggle: jest.fn(),
     tagsToggle: jest.fn(),
     warningsToggle: jest.fn(),
+    referencesToggle: jest.fn(),
   };
   span.logs = [
     {
       timestamp: 10,
-      fields: [{ key: 'message', value: 'oh the log message' }, { key: 'something', value: 'else' }],
+      fields: [
+        { key: 'message', value: 'oh the log message' },
+        { key: 'something', value: 'else' },
+      ],
     },
     {
       timestamp: 20,
-      fields: [{ key: 'message', value: 'oh the next log message' }, { key: 'more', value: 'stuff' }],
+      fields: [
+        { key: 'message', value: 'oh the next log message' },
+        { key: 'more', value: 'stuff' },
+      ],
     },
   ];
 
   span.warnings = ['Warning 1', 'Warning 2'];
+
+  span.references = [
+    {
+      refType: 'CHILD_OF',
+      span: {
+        spanID: 'span2',
+        traceID: 'trace1',
+        operationName: 'op1',
+        process: {
+          serviceName: 'service1',
+        },
+      },
+      spanID: 'span1',
+      traceID: 'trace1',
+    },
+    {
+      refType: 'CHILD_OF',
+      span: {
+        spanID: 'span3',
+        traceID: 'trace1',
+        operationName: 'op2',
+        process: {
+          serviceName: 'service2',
+        },
+      },
+      spanID: 'span4',
+      traceID: 'trace1',
+    },
+    {
+      refType: 'CHILD_OF',
+      span: {
+        spanID: 'span6',
+        traceID: 'trace2',
+        operationName: 'op2',
+        process: {
+          serviceName: 'service2',
+        },
+      },
+      spanID: 'span5',
+      traceID: 'trace2',
+    },
+  ];
 
   beforeEach(() => {
     formatDuration.mockReset();
@@ -130,12 +176,14 @@ describe('<SpanDetail>', () => {
     expect(props.warningsToggle).toHaveBeenLastCalledWith(span.spanID);
   });
 
+  it('renders the references', () => {
+    const refElem = wrapper.find({ data: span.references });
+    expect(refElem.length).toBe(1);
+    refElem.simulate('toggle');
+    expect(props.referencesToggle).toHaveBeenLastCalledWith(span.spanID);
+  });
+
   it('renders CopyIcon with deep link URL', () => {
-    expect(
-      wrapper
-        .find(CopyIcon)
-        .prop('copyText')
-        .includes(`?uiFind=${props.span.spanID}`)
-    ).toBe(true);
+    expect(wrapper.find(CopyIcon).prop('copyText').includes(`?uiFind=${props.span.spanID}`)).toBe(true);
   });
 });

@@ -14,6 +14,7 @@
 
 import * as React from 'react';
 import { Checkbox } from 'antd';
+import { LocationDescriptor } from 'history';
 import { Link } from 'react-router-dom';
 
 import TraceName from '../../common/TraceName';
@@ -24,13 +25,14 @@ import { FetchedState, TNil } from '../../../types';
 import { ApiError } from '../../../types/api-error';
 
 import './ResultItemTitle.css';
+import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 
 type Props = {
   duration?: number;
   durationPercent?: number;
   error?: ApiError;
   isInDiffCohort: boolean;
-  linkTo: string | TNil;
+  linkTo: LocationDescriptor | TNil;
   state?: FetchedState | TNil;
   targetBlank?: boolean;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
@@ -40,6 +42,8 @@ type Props = {
 };
 
 const DEFAULT_DURATION_PERCENT = 0;
+
+const stopCheckboxPropagation = (evt: React.MouseEvent) => evt.stopPropagation();
 
 export default class ResultItemTitle extends React.PureComponent<Props> {
   static defaultProps: Partial<Props> = {
@@ -70,28 +74,32 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
     } = this.props;
     // Use a div when the ResultItemTitle doesn't link to anything
     let WrapperComponent: string | typeof Link = 'div';
-    const wrapperProps: Record<string, string> = { className: 'ResultItemTitle--item ub-flex-auto' };
+    const wrapperProps: Record<string, string | LocationDescriptor> = {
+      className: 'ResultItemTitle--item ub-flex-auto',
+    };
     if (linkTo) {
       wrapperProps.to = linkTo;
       WrapperComponent = Link;
       if (targetBlank) {
-        wrapperProps.target = '_blank';
+        wrapperProps.target = getTargetEmptyOrBlank();
         wrapperProps.rel = 'noopener noreferrer';
       }
     }
     const isErred = state === fetchedState.ERROR;
+    // Separate propagation management and toggle manegement due to ant-design#16400
+    const checkboxProps = {
+      className: 'ResultItemTitle--item ub-flex-none',
+      checked: !isErred && isInDiffCohort,
+      disabled: isErred,
+      onChange: this.toggleComparison,
+      onClick: stopCheckboxPropagation,
+    };
+
     return (
       <div className="ResultItemTitle">
-        {!disableComparision && (
-          <Checkbox
-            className="ResultItemTitle--item ub-flex-none"
-            checked={!isErred && isInDiffCohort}
-            disabled={isErred}
-            onChange={this.toggleComparison}
-          />
-        )}
+        {!disableComparision && <Checkbox {...checkboxProps} />}
         {/* TODO: Shouldn't need cast */}
-        <WrapperComponent {...(wrapperProps as { [key: string]: any; to: string })}>
+        <WrapperComponent {...(wrapperProps as { [key: string]: string; to: string })}>
           <span
             className="ResultItemTitle--durationBar"
             style={{ width: `${durationPercent || DEFAULT_DURATION_PERCENT}%` }}

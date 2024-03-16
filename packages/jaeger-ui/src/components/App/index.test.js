@@ -13,10 +13,13 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import shallow from '../../utils/ReactShallowRenderer.test';
 
 import JaegerUIApp from './index';
 
-it('JaegerUIApp does not explode', () => {
-  shallow(<JaegerUIApp />);
+describe('JaegerUIApp', () => {
+  it('does not explode', () => {
+    const wrapper = shallow(<JaegerUIApp />);
+    expect(wrapper).toMatchSnapshot();
+  });
 });

@@ -20,73 +20,67 @@ import { TDdgVertex, EViewModifier } from '../../../model/ddg/types';
 
 import './getNodeRenderers.css';
 
-export default function getNodeRenderers(findMatches: Set<TDdgVertex>, viewModifiers: Map<string, number>) {
-  function renderVectorBorder(lv: TLayoutVertex<TDdgVertex>) {
+export default function getNodeRenderers(findMatches: Set<string>, viewModifiers: Map<string, number>) {
+  function vectorBorder(lv: TLayoutVertex<TDdgVertex>) {
     // eslint-disable-next-line no-bitwise
     const isHovered = (viewModifiers.get(lv.vertex.key) || 0) & EViewModifier.Hovered;
     // eslint-disable-next-line no-bitwise
     const isPathHovered = (viewModifiers.get(lv.vertex.key) || 0) & EViewModifier.PathHovered;
     const className = cx('DdgNode--VectorBorder', {
-      'is-findMatch': !isHovered && findMatches.has(lv.vertex),
+      'is-findMatch': findMatches.has(lv.vertex.key),
       'is-hovered': isHovered,
-      'is-pathHovered': !isHovered && isPathHovered,
+      'is-pathHovered': isPathHovered,
       'is-focalNode': lv.vertex.isFocalNode,
     });
     return (
-      <rect
+      <circle
         className={className}
         vectorEffect="non-scaling-stroke"
-        width={lv.width - 2}
-        height={lv.height - 2}
-        x="1"
-        y="1"
+        r={lv.width / 2 - 1}
+        cx={lv.width / 2}
+        cy={lv.width / 2}
       />
     );
   }
 
-  function renderVectorFindEmphasisOutline(lv: TLayoutVertex<any>) {
-    if (!findMatches.has(lv.vertex)) {
+  function htmlEmphasis(lv: TLayoutVertex<{ isFocalNode: boolean }>) {
+    const matchClasses = cx({
+      'is-findMatch': findMatches.has(lv.vertex.key),
+      'is-focalNode': lv.vertex.isFocalNode,
+    });
+    if (!matchClasses) {
       return null;
     }
-    return (
-      <rect
-        className="DdgNode--VectorFindEmphasis--outline"
-        vectorEffect="non-scaling-stroke"
-        width={lv.width - 2}
-        height={lv.height - 2}
-        x="1"
-        y="1"
-      />
-    );
+    return <div className={`DdgNode--HtmlEmphasis ${matchClasses}`} />;
   }
 
-  function renderHtmlFindEmphasis(lv: TLayoutVertex<any>) {
-    if (!findMatches.has(lv.vertex)) {
-      return null;
-    }
-    return <div className="DdgNode--HtmlFindEmphasis" />;
+  if (!findMatches.size) {
+    return {
+      vectorBorder,
+      htmlEmphasis,
+      vectorFindColorBand: null,
+    };
   }
 
-  function renderVectorFindEmphasisColorBand(lv: TLayoutVertex<any>) {
-    if (!findMatches.has(lv.vertex)) {
+  function vectorFindColorBand(lv: TLayoutVertex) {
+    if (!findMatches.has(lv.vertex.key)) {
       return null;
     }
+
     return (
-      <rect
+      <circle
         className="DdgNode--VectorFindEmphasis--colorBand"
         vectorEffect="non-scaling-stroke"
-        width={lv.width - 2}
-        height={lv.height - 2}
-        x="1"
-        y="1"
+        r={lv.width / 2 - 1}
+        cx={lv.width / 2}
+        cy={lv.width / 2}
       />
     );
   }
 
   return {
-    htmlFindEmphasis: renderHtmlFindEmphasis,
-    vectorBorder: renderVectorBorder,
-    vectorFindColorBand: renderVectorFindEmphasisColorBand,
-    vectorFindOutline: renderVectorFindEmphasisOutline,
+    htmlEmphasis,
+    vectorBorder,
+    vectorFindColorBand,
   };
 }

@@ -43,7 +43,7 @@ const warn = console.warn.bind(console);
 const origin = window.location.origin + prefixUrl('');
 
 // truncate and use "~" instead of ellipsis bc it's shorter
-function truncate(str: string, len: number, front: boolean = false) {
+function truncate(str: string, len: number, front = false) {
   if (str.length > len) {
     if (!front) {
       return `${str.slice(0, len - 1)}~`;
@@ -55,11 +55,7 @@ function truncate(str: string, len: number, front: boolean = false) {
 
 // Replace newlines with "|" and collapse whitespace to " "
 function collapseWhitespace(value: string) {
-  return value
-    .trim()
-    .replace(/\n/g, '|')
-    .replace(/\s\s+/g, ' ')
-    .trim();
+  return value.trim().replace(/\n/g, '|').replace(/\s\s+/g, ' ').trim();
 }
 
 // shorten URLs to eitehr a short code or a word
@@ -88,15 +84,12 @@ function getSym(syms: typeof NAV_SYMBOLS | typeof FETCH_SYMBOLS, str: string) {
 //
 //   The real error message
 //     ! The real error message
-function convErrorMessage(message: string, maxLen: number = 0) {
+function convErrorMessage(message: string, maxLen = 0) {
   let msg = collapseWhitespace(message);
   const parts = ['! '];
   const j = msg.indexOf(':');
   if (j > -1) {
-    const start = msg
-      .slice(0, j)
-      .replace(/error/i, '')
-      .trim();
+    const start = msg.slice(0, j).replace(/error/i, '').trim();
     if (start) {
       parts.push(start, '! ');
     }

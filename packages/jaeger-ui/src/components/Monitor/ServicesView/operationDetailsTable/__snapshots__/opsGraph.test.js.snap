@@ -1,0 +1,80 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<OperationsGraph> "Couldn’t fetch data" displayed 1`] = `
+<div
+  className="ops-graph-placeholder"
+>
+  Couldn’t fetch data
+</div>
+`;
+
+exports[`<OperationsGraph> "Mo data" is displayed 1`] = `
+<div
+  className="ops-graph-placeholder"
+>
+  No Data
+</div>
+`;
+
+exports[`<OperationsGraph> Graph rendered successfully 1`] = `
+<div
+  className="ops-container"
+>
+  <XYPlot
+    className=""
+    height={15}
+    margin={
+      Object {
+        "bottom": 1,
+        "left": 0,
+        "right": 0,
+        "top": 2,
+      }
+    }
+    width={100}
+  >
+    <AreaSeries
+      className="area-series-example ops-graph-style"
+      color="#FFFFFF"
+      curve="curveLinear"
+      data={
+        Array [
+          Object {
+            "x": 1631534436235,
+            "y": 0.01,
+          },
+          Object {
+            "x": 1631534496235,
+            "y": 0.01,
+          },
+        ]
+      }
+      getNull={[Function]}
+      stack={false}
+      style={Object {}}
+    />
+    <LineSeries
+      className="area-elevated-line-series"
+      color="#FFFFFF"
+      curve={null}
+      data={
+        Array [
+          Object {
+            "x": 1631534436235,
+            "y": 0.01,
+          },
+          Object {
+            "x": 1631534496235,
+            "y": 0.01,
+          },
+        ]
+      }
+      getNull={[Function]}
+      opacity={1}
+      stack={false}
+      strokeStyle="solid"
+      style={Object {}}
+    />
+  </XYPlot>
+</div>
+`;

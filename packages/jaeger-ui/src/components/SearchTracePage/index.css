@@ -14,7 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+.SearchTracePage--row {
+  display: flex;
+  flex-grow: 1;
+}
+
 .SearchTracePage--column {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
   padding: 1rem 0.5rem;
 }
 

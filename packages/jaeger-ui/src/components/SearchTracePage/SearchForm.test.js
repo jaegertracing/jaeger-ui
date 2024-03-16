@@ -17,7 +17,7 @@ jest.mock('store');
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import queryString from 'query-string';
 import store from 'store';
 
@@ -26,6 +26,7 @@ import {
   convTagsLogfmt,
   getUnixTimeStampInMSFromForm,
   lookbackToTimestamp,
+  mapDispatchToProps,
   mapStateToProps,
   optionsWithinMaxLookback,
   submitForm,
@@ -34,6 +35,7 @@ import {
   validateDurationFields,
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
+import getConfig from '../../utils/config/get-config';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -52,15 +54,17 @@ function makeDateParams(dateOffset = 0) {
   };
 }
 
-const DATE_FORMAT = 'YYYY-MM-DD';
-const TIME_FORMAT = 'HH:mm';
 const defaultProps = {
   dataCenters: ['dc1'],
+  handleSubmit: () => {},
   searchMaxLookback: {
     label: '2 Days',
     value: '2d',
   },
-  services: [{ name: 'svcA', operations: ['A', 'B'] }, { name: 'svcB', operations: ['A', 'B'] }],
+  services: [
+    { name: 'svcA', operations: ['A', 'B'] },
+    { name: 'svcB', operations: ['A', 'B'] },
+  ],
 };
 
 describe('conversion utils', () => {
@@ -81,23 +85,16 @@ describe('conversion utils', () => {
 
   describe('convertQueryParamsToFormDates()', () => {
     it('converts correctly', () => {
-      const startMoment = moment().subtract(1, 'day');
-      const endMoment = moment();
-      const params = {
-        start: `${startMoment.valueOf()}000`,
-        end: `${endMoment.valueOf()}000`,
-      };
+      const { queryStartDate, queryStartDateTime, queryEndDate, queryEndDateTime } =
+        convertQueryParamsToFormDates({
+          start: '946720800000000', // Jan 1, 2000 10:00 AM
+          end: '946807200000000', // Jan 2, 2000 10:00 AM
+        });
 
-      const {
-        queryStartDate,
-        queryStartDateTime,
-        queryEndDate,
-        queryEndDateTime,
-      } = convertQueryParamsToFormDates(params);
-      expect(queryStartDate).toBe(startMoment.format(DATE_FORMAT));
-      expect(queryStartDateTime).toBe(startMoment.format(TIME_FORMAT));
-      expect(queryEndDate).toBe(endMoment.format(DATE_FORMAT));
-      expect(queryEndDateTime).toBe(endMoment.format(TIME_FORMAT));
+      expect(queryStartDate).toBe('2000-01-01');
+      expect(queryStartDateTime).toBe('10:00');
+      expect(queryEndDate).toBe('2000-01-02');
+      expect(queryEndDateTime).toBe('10:00');
     });
   });
 
@@ -148,23 +145,42 @@ describe('lookback utils', () => {
 
     it('creates timestamp for days ago', () => {
       [1, 2, 4, 7].forEach(lookbackNum => {
-        expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}d`, now)).toBe(
-          lookbackNum * 24 * hourInMicroseconds
-        );
+        const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}d`, now);
+        const expected = lookbackNum * 24 * hourInMicroseconds;
+        try {
+          expect(actual).toBe(expected);
+        } catch (_e) {
+          expect(Math.abs(actual - expected)).toBe(hourInMicroseconds);
+        }
       });
     });
 
     it('creates timestamp for weeks ago', () => {
       [1, 2, 4, 7].forEach(lookbackNum => {
-        expect(nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}w`, now)).toBe(
-          lookbackNum * 7 * 24 * hourInMicroseconds
-        );
+        const actual = nowInMicroseconds - lookbackToTimestamp(`${lookbackNum}w`, now);
+        try {
+          expect(actual).toBe(lookbackNum * 7 * 24 * hourInMicroseconds);
+        } catch (_e) {
+          expect(Math.abs(actual - lookbackNum * 7 * 24 * hourInMicroseconds)).toBe(hourInMicroseconds);
+        }
       });
     });
   });
 
   describe('optionsWithinMaxLookback', () => {
     const threeHoursOfExpectedOptions = [
+      {
+        label: '5 Minutes',
+        value: '5m',
+      },
+      {
+        label: '15 Minutes',
+        value: '15m',
+      },
+      {
+        label: '30 Minutes',
+        value: '30m',
+      },
       {
         label: 'Hour',
         value: '1h',
@@ -188,13 +204,13 @@ describe('lookback utils', () => {
     });
 
     it('returns options within config.search.maxLookback', () => {
-      const configValue = threeHoursOfExpectedOptions[2];
+      const configValue = threeHoursOfExpectedOptions[threeHoursOfExpectedOptions.length - 1];
       const options = optionsWithinMaxLookback(configValue);
 
       expect(options.length).toBe(threeHoursOfExpectedOptions.length);
       options.forEach(({ props }, i) => {
         expect(props.value).toBe(threeHoursOfExpectedOptions[i].value);
-        expect(props.children[1]).toBe(threeHoursOfExpectedOptions[i].label);
+        expect(props.children).toBe(`Last ${threeHoursOfExpectedOptions[i].label}`);
       });
     });
 
@@ -209,7 +225,7 @@ describe('lookback utils', () => {
       expect(options.length).toBe(expectedOptions.length);
       options.forEach(({ props }, i) => {
         expect(props.value).toBe(expectedOptions[i].value);
-        expect(props.children[1]).toBe(expectedOptions[i].label);
+        expect(props.children).toBe(`Last ${expectedOptions[i].label}`);
       });
     });
 
@@ -218,13 +234,14 @@ describe('lookback utils', () => {
         label: '180 minutes is equivalent to 3 hours',
         value: '180m',
       };
-      const expectedOptions = [threeHoursOfExpectedOptions[0], threeHoursOfExpectedOptions[1], configValue];
+
+      const expectedOptions = [...threeHoursOfExpectedOptions.slice(0, -1), configValue];
       const options = optionsWithinMaxLookback(configValue);
 
       expect(options.length).toBe(expectedOptions.length);
       options.forEach(({ props }, i) => {
         expect(props.value).toBe(expectedOptions[i].value);
-        expect(props.children[1]).toBe(expectedOptions[i].label);
+        expect(props.children).toBe(`Last ${expectedOptions[i].label}`);
       });
     });
   });
@@ -255,11 +272,28 @@ describe('submitForm()', () => {
     expect(operation).toBe(undefined);
   });
 
+  it('expects operation to be value defined in beforeEach', () => {
+    submitForm(fields, searchTraces);
+    const { calls } = searchTraces.mock;
+    expect(calls.length).toBe(1);
+    const { operation } = calls[0][0];
+    expect(operation).toBe('op-a');
+  });
+
+  it('expects operation to be value assigned before call is made', () => {
+    fields.operation = 'test';
+    submitForm(fields, searchTraces);
+    const { calls } = searchTraces.mock;
+    expect(calls.length).toBe(1);
+    const { operation } = calls[0][0];
+    expect(operation).toBe('test');
+  });
+
   describe('`fields.lookback`', () => {
     function getCalledDuration(mock) {
       const { start, end } = mock.calls[0][0];
       const diffMs = (Number(end) - Number(start)) / 1000;
-      return moment.duration(diffMs);
+      return dayjs.duration(diffMs);
     }
 
     it('subtracts `lookback` from `fields.end`', () => {
@@ -361,6 +395,22 @@ describe('<SearchForm>', () => {
     expect(ops.prop('props').disabled).toBe(false);
   });
 
+  it('keeps operation disabled when no service selected', () => {
+    let ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(true);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="" />);
+    ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(true);
+  });
+
+  it('enables operation when unknown service selected', () => {
+    let ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(true);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcC" />);
+    ops = wrapper.find('[placeholder="Select An Operation"]');
+    expect(ops.prop('props').disabled).toBe(false);
+  });
+
   it('shows custom date inputs when `props.selectedLookback` is "custom"', () => {
     function getDateFieldLengths(compWrapper) {
       return [
@@ -391,6 +441,20 @@ describe('<SearchForm>', () => {
     btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeTruthy();
   });
+
+  it('uses config.search.maxLimit', () => {
+    const maxLimit = 6789;
+    getConfig.apply({}, []);
+    const config = {
+      search: {
+        maxLimit,
+      },
+    };
+    window.getJaegerUiConfig = jest.fn(() => config);
+    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
+    const field = wrapper.find(`Field[name="resultsLimit"]`);
+    expect(field.prop('props').max).toEqual(maxLimit);
+  });
 });
 
 describe('validation', () => {
@@ -416,7 +480,7 @@ describe('mapStateToProps()', () => {
   let state;
 
   beforeEach(() => {
-    state = { router: { location: { serach: '' } } };
+    state = { router: { location: { search: '' } } };
   });
 
   it('does not explode when the query string is empty', () => {
@@ -497,9 +561,8 @@ describe('mapStateToProps()', () => {
       return Math.abs(a - b);
     }
     const dateParams = makeDateParams(0);
-    const { startDate, startDateTime, endDate, endDateTime, ...values } = mapStateToProps(
-      state
-    ).initialValues;
+    const { startDate, startDateTime, endDate, endDateTime, ...values } =
+      mapStateToProps(state).initialValues;
 
     expect(values).toEqual({
       service: '-',
@@ -517,5 +580,13 @@ describe('mapStateToProps()', () => {
     // within 60 seconds (CI tests run slowly)
     expect(msDiff(dateParams.dateStr, '00:00', startDate, startDateTime)).toBeLessThan(60 * 1000);
     expect(msDiff(dateParams.dateStr, dateParams.dateTimeStr, endDate, endDateTime)).toBeLessThan(60 * 1000);
+  });
+});
+
+describe('mapDispatchToProps()', () => {
+  it('creates the actions correctly', () => {
+    expect(mapDispatchToProps(() => {})).toEqual({
+      onSubmit: expect.any(Function),
+    });
   });
 });

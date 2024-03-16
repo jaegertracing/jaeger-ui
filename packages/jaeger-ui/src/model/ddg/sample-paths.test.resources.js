@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const simplePayloadElemMaker = label => ({
+export const simplePayloadElemMaker = label => ({
   operation: `${label}Operation`,
   service: `${label}Service`,
 });
@@ -20,7 +20,7 @@ const simplePayloadElemMaker = label => ({
 export const focalPayloadElem = simplePayloadElemMaker('focal');
 
 const sameFocalServicePayloadElem = {
-  operation: `not-${focalPayloadElem.operation}`,
+  operation: 'someOtherOperation',
   service: focalPayloadElem.service,
 };
 
@@ -42,11 +42,11 @@ const pathLengthener = path => {
   return [...prequels, ...path, ...sequels];
 };
 
-const firstPayloadElem = simplePayloadElemMaker('first');
-const beforePayloadElem = simplePayloadElemMaker('before');
-const midPayloadElem = simplePayloadElemMaker('mid');
-const afterPayloadElem = simplePayloadElemMaker('after');
-const lastPayloadElem = simplePayloadElemMaker('last');
+export const firstPayloadElem = simplePayloadElemMaker('first');
+export const beforePayloadElem = simplePayloadElemMaker('before');
+export const midPayloadElem = simplePayloadElemMaker('mid');
+export const afterPayloadElem = simplePayloadElemMaker('after');
+export const lastPayloadElem = simplePayloadElemMaker('last');
 
 export const shortPath = [beforePayloadElem, focalPayloadElem];
 export const simplePath = [
@@ -85,8 +85,49 @@ export const almostDoubleFocalPath = [
 
 const divergentPayloadElem = simplePayloadElemMaker('divergentPayloadElem');
 export const convergentPaths = [
-  [firstPayloadElem, focalPayloadElem, midPayloadElem, afterPayloadElem, lastPayloadElem],
   [firstPayloadElem, focalPayloadElem, divergentPayloadElem, afterPayloadElem, lastPayloadElem],
+  [firstPayloadElem, focalPayloadElem, midPayloadElem, afterPayloadElem, lastPayloadElem],
 ];
 
-export const wrap = path => ({ path });
+const generationPayloadElems = {
+  afterFocalMid: simplePayloadElemMaker('afterFocalMid'),
+  afterTarget0: simplePayloadElemMaker('afterTarget0'),
+  afterTarget1: simplePayloadElemMaker('afterTarget1'),
+  beforeFocalMid: simplePayloadElemMaker('beforeFocalMid'),
+  beforeTarget0: simplePayloadElemMaker('beforeTarget0'),
+  beforeTarget1: simplePayloadElemMaker('beforeTarget1'),
+  target: simplePayloadElemMaker('target'),
+};
+
+export const generationPaths = [
+  [
+    generationPayloadElems.beforeTarget0,
+    generationPayloadElems.target,
+    generationPayloadElems.beforeFocalMid,
+    focalPayloadElem,
+  ],
+  [
+    generationPayloadElems.beforeTarget1,
+    generationPayloadElems.target,
+    generationPayloadElems.beforeFocalMid,
+    focalPayloadElem,
+  ],
+  [focalPayloadElem, generationPayloadElems.afterFocalMid, generationPayloadElems.target],
+  [
+    focalPayloadElem,
+    generationPayloadElems.afterFocalMid,
+    generationPayloadElems.target,
+    generationPayloadElems.afterTarget0,
+  ],
+  [
+    focalPayloadElem,
+    generationPayloadElems.afterFocalMid,
+    generationPayloadElems.target,
+    generationPayloadElems.afterTarget1,
+  ],
+  [generationPayloadElems.target, generationPayloadElems.beforeFocalMid, focalPayloadElem],
+];
+
+export const wrap = paths => ({
+  dependencies: paths.map(path => ({ path, attributes: [] })),
+});

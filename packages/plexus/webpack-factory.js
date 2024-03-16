@@ -14,9 +14,8 @@
 
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable @typescript-eslint/no-var-requires */
-
 const { join } = require('path');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const nodeExternals = require('webpack-node-externals');
 
@@ -195,13 +194,14 @@ function makeCommonProdConfig() {
 function makeWorkerConfig() {
   const layoutDir = join(__dirname, 'src/LayoutManager');
   const config = {
+    experiments: {
+      outputModule: true,
+    },
     output: {
       path: layoutDir,
       publicPath: '/',
       filename: '[name].bundled.js',
-      library: 'layout.worker.bundled',
-      libraryTarget: 'umd',
-      umdNamedDefine: true,
+      libraryTarget: 'module',
     },
     entry: {
       'layout.worker': join(layoutDir, 'layout.worker.tsx'),
@@ -214,9 +214,8 @@ function makeWorkerConfig() {
         {
           loader: 'worker-loader',
           options: {
-            inline: true,
-            fallback: false,
-            name: '[name].js',
+            inline: 'no-fallback',
+            filename: '[name].js',
           },
         },
       ],

@@ -30,13 +30,9 @@ export default function updateUiFind({
   uiFind?: string | TNil;
 }) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { uiFind: omittedOldValue, ...queryParams } = queryString.parse(location.search);
-  if (trackFindFunction) {
-    trackFindFunction(uiFind);
-  }
-  if (uiFind) {
-    (queryParams as Record<string, string>).uiFind = uiFind;
-  }
+  const { uiFind: _oldUiFind, ...queryParams } = queryString.parse(location.search);
+  if (trackFindFunction) trackFindFunction(uiFind);
+  if (uiFind) (queryParams as Record<string, string>).uiFind = uiFind;
   history.replace({
     ...location,
     search: `?${queryString.stringify(queryParams)}`,

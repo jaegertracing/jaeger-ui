@@ -19,47 +19,73 @@ import { TSetProps, TFromGraphStateFn, TDefEntry } from '@jaegertracing/plexus/l
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 import TNonEmptyArray from '@jaegertracing/plexus/lib/types/TNonEmptyArray';
 
-import DdgNodeContent from './DdgNodeContent';
+import { getNodeRenderer, measureNode } from './DdgNodeContent';
 import getNodeRenderers from './getNodeRenderers';
 import getSetOnEdge from './getSetOnEdge';
-import { PathElem, TDdgVertex, EViewModifier } from '../../../model/ddg/types';
+import {
+  ECheckedStatus,
+  EDdgDensity,
+  EDirection,
+  EViewModifier,
+  PathElem,
+  TDdgVertex,
+} from '../../../model/ddg/types';
 
 import './index.css';
 
 type TProps = {
+  baseUrl: string;
+  density: EDdgDensity;
   edges: TEdge[];
   edgesViewModifiers: Map<string, number>;
+  extraUrlArgs?: { [key: string]: unknown };
+  focusPathsThroughVertex: (vertexKey: string) => void;
+  getGenerationVisibility: (vertexKey: string, direction: EDirection) => ECheckedStatus | null;
   getVisiblePathElems: (vertexKey: string) => PathElem[] | undefined;
-  setViewModifier: (vertexKey: string, viewModifier: EViewModifier, enable: boolean) => void;
-  uiFindMatches: Set<TDdgVertex> | undefined;
+  hideVertex: (vertexKey: string) => void;
+  selectVertex: (selectedVertex: TDdgVertex) => void;
+  setOperation: (operation: string) => void;
+  setViewModifier: (visIndices: number[], viewModifier: EViewModifier, enable: boolean) => void;
+  uiFindMatches: Set<string> | undefined;
+  updateGenerationVisibility: (vertexKey: string, direction: EDirection) => void;
   vertices: TDdgVertex[];
   verticesViewModifiers: Map<string, number>;
 };
 
-const { scaleStrokeOpacityStrongest } = Digraph.propsFactories;
+// exported for tests
+// The dichotomy between w/ & w/o VMs assumes that any edge VM neccesitates unmodified edges are de-emphasized
+export const setOnEdgesContainer: Record<string, TSetProps<TFromGraphStateFn<unknown, unknown>>> = {
+  withViewModifiers: [{ className: 'Ddg--Edges is-withViewModifiers' }],
+  withoutViewModifiers: [Digraph.propsFactories.scaleStrokeOpacityStrongest, { className: 'Ddg--Edges' }],
+};
 
-const setOnEdgesContainer: TSetProps<TFromGraphStateFn<TDdgVertex, any>> = [
-  scaleStrokeOpacityStrongest,
-  { stroke: '#444', strokeWidth: 0.7 },
-];
+// exported for tests
+// The dichotomy between w/ & w/o VMs assumes that any vertex VM makes unmodified vertices de-emphasized
+export const setOnVectorBorderContainerWithViewModifiers: TSetProps<TFromGraphStateFn<TDdgVertex, unknown>> =
+  {
+    className: 'DdgVectorBorders is-withViewModifiers',
+  };
 
 const edgesDefs: TNonEmptyArray<TDefEntry<TDdgVertex, unknown>> = [
   { localId: 'arrow' },
-  { localId: 'arrow-hovered', setOnEntry: { className: 'DdgArrow is-pathHovered' } },
+  { localId: 'arrow-hovered', setOnEntry: { className: 'Ddg--Arrow is-pathHovered' } },
 ];
 
 export default class Graph extends PureComponent<TProps> {
   private getNodeRenderers = memoize(getNodeRenderers);
-  private getNodeContentRenderer = memoize(DdgNodeContent.getNodeRenderer);
+  private getNodeContentRenderer = memoize(getNodeRenderer);
   private getSetOnEdge = memoize(getSetOnEdge);
 
   private layoutManager: LayoutManager = new LayoutManager({
-    useDotEdges: true,
-    splines: 'polyline',
+    nodesep: 0.55,
+    ranksep: 1.5,
     rankdir: 'TB',
+    shape: 'circle',
+    splines: 'polyline',
+    useDotEdges: true,
   });
 
-  private emptyFindSet: Set<TDdgVertex> = new Set();
+  private emptyFindSet: Set<string> = new Set();
 
   componentWillUnmount() {
     this.layoutManager.stopAndRelease();
@@ -67,15 +93,24 @@ export default class Graph extends PureComponent<TProps> {
 
   render() {
     const {
+      baseUrl,
+      density,
       edges,
       edgesViewModifiers,
+      extraUrlArgs,
+      focusPathsThroughVertex,
+      getGenerationVisibility,
       getVisiblePathElems,
+      hideVertex,
+      selectVertex,
+      setOperation,
       setViewModifier,
       uiFindMatches,
+      updateGenerationVisibility,
       vertices,
       verticesViewModifiers,
     } = this.props;
-    const findRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, verticesViewModifiers);
+    const nodeRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, verticesViewModifiers);
 
     return (
       <Digraph<TDdgVertex>
@@ -88,24 +123,22 @@ export default class Graph extends PureComponent<TProps> {
         measurableNodesKey="nodes/content"
         layers={[
           {
-            key: 'nodes/find-emphasis/vector-outline',
+            key: 'nodes/find-emphasis/vector-color-band',
             layerType: 'svg',
-            renderNode: findRenderers.vectorFindOutline,
+            renderNode: nodeRenderers.vectorFindColorBand,
           },
           {
             key: 'nodes/find-emphasis/html',
             layerType: 'html',
-            renderNode: findRenderers.htmlFindEmphasis,
-          },
-          {
-            key: 'nodes/find-emphasis/vector-color-band',
-            layerType: 'svg',
-            renderNode: findRenderers.vectorFindColorBand,
+            renderNode: nodeRenderers.htmlEmphasis,
           },
           {
             key: 'nodes/vector-border',
             layerType: 'svg',
-            renderNode: findRenderers.vectorBorder,
+            renderNode: nodeRenderers.vectorBorder,
+            setOnContainer: verticesViewModifiers.size
+              ? setOnVectorBorderContainerWithViewModifiers
+              : Digraph.propsFactories.scaleStrokeOpacityStrongest,
           },
           {
             key: 'edges',
@@ -113,15 +146,29 @@ export default class Graph extends PureComponent<TProps> {
             edges: true,
             defs: edgesDefs,
             markerEndId: 'arrow',
-            setOnContainer: setOnEdgesContainer,
+            setOnContainer: edgesViewModifiers.size
+              ? setOnEdgesContainer.withViewModifiers
+              : setOnEdgesContainer.withoutViewModifiers,
             setOnEdge: this.getSetOnEdge(edgesViewModifiers),
           },
           {
             key: 'nodes/content',
             layerType: 'html',
             measurable: true,
-            measureNode: DdgNodeContent.measureNode,
-            renderNode: this.getNodeContentRenderer(getVisiblePathElems, setViewModifier),
+            measureNode,
+            renderNode: this.getNodeContentRenderer({
+              baseUrl,
+              density,
+              extraUrlArgs,
+              focusPathsThroughVertex,
+              getGenerationVisibility,
+              getVisiblePathElems,
+              hideVertex,
+              selectVertex,
+              setOperation,
+              setViewModifier,
+              updateGenerationVisibility,
+            }),
           },
         ]}
       />

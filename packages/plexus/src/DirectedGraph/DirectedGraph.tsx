@@ -63,6 +63,7 @@ export default class DirectedGraph<T> extends React.PureComponent<
   rootSelection: any;
   zoomManager: ZoomManager | null;
 
+  // eslint-disable-next-line react/sort-comp
   static propsFactories = {
     classNameIsSmall,
     mergePropSetters,
@@ -188,7 +189,7 @@ export default class DirectedGraph<T> extends React.PureComponent<
         });
       }
     });
-    const { positions, layout } = layoutManager.getLayout(edges, sizeVertices);
+    const { positions, layout } = layoutManager.getLayout<{}, {}>(edges, sizeVertices);
     positions.then(this._onPositionsDone);
     layout.then(this._onLayoutDone);
     this.setState({ sizeVertices, layoutPhase: PHASE_CALC_POSITIONS });

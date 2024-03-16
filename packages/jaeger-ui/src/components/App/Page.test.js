@@ -17,7 +17,8 @@ jest.mock('./TopNav', () => () => <div />);
 jest.mock('../../utils/tracking');
 
 import React from 'react';
-import { mount } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import { mapStateToProps, PageImpl as Page } from './Page';
 import { trackPageView } from '../../utils/tracking';
@@ -35,7 +36,6 @@ describe('mapStateToProps()', () => {
 
 describe('<Page>', () => {
   let props;
-  let wrapper;
 
   beforeEach(() => {
     trackPageView.mockReset();
@@ -43,23 +43,24 @@ describe('<Page>', () => {
       pathname: String(Math.random()),
       search: String(Math.random()),
     };
-    wrapper = mount(<Page {...props} />);
+    render(<Page {...props} />);
   });
 
-  it('does not explode', () => {
-    expect(wrapper).toBeDefined();
+  it('renders without exploding', () => {
+    expect(screen.getByRole('banner')).toBeInTheDocument();
   });
 
   it('tracks an initial page-view', () => {
     const { pathname, search } = props;
-    expect(trackPageView.mock.calls).toEqual([[pathname, search]]);
+    expect(trackPageView).toHaveBeenCalledWith(pathname, search);
   });
 
   it('tracks a pageView when the location changes', () => {
     trackPageView.mockReset();
-    props = { pathname: 'le-path', search: 'searching' };
-    wrapper.setProps(props);
-    expect(trackPageView.mock.calls).toEqual([[props.pathname, props.search]]);
+    const newProps = { pathname: 'le-path', search: 'searching' };
+    const { rerender } = render(<Page {...props} />);
+    rerender(<Page {...newProps} />);
+    expect(trackPageView).toHaveBeenCalledWith(newProps.pathname, newProps.search);
   });
 
   describe('Page embedded', () => {
@@ -67,17 +68,17 @@ describe('<Page>', () => {
       trackPageView.mockReset();
       props = {
         pathname: String(Math.random()),
-        search: 'embed=v0&hideGraph',
+        search: 'hideGraph',
       };
-      wrapper = mount(<Page {...props} />);
+      render(<Page embedded {...props} />);
     });
 
-    it('does not explode', () => {
-      expect(wrapper).toBeDefined();
+    it('renders without exploding', () => {
+      expect(screen.getByRole('banner')).toBeInTheDocument();
     });
 
     it('does not render Header', () => {
-      expect(wrapper.find('Header').length).toBe(0);
+      expect(screen.queryByText('Header')).toBeNull();
     });
   });
 });

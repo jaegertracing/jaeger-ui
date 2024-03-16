@@ -12,18 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import isPromise from 'is-promise';
-
+import fs from 'fs';
+import lodash from 'lodash';
 import readJsonFile from './readJsonFile';
+import JaegerAPI from '../api/jaeger';
+
+jest.spyOn(JaegerAPI, 'transformOTLP').mockImplementation(APICallRequest => {
+  const OTLPTrace = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-in.json', 'utf-8'));
+  const jaegerTrace = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-out.json', 'utf-8'));
+  if (lodash.isEqual(APICallRequest, OTLPTrace)) {
+    return Promise.resolve(jaegerTrace);
+  }
+  // This defines case where API call errors out even after detecting a `resourceSpan` in the request
+  return Promise.reject();
+});
 
 describe('fileReader.readJsonFile', () => {
-  it('returns a promise', () => {
-    const promise = readJsonFile({ rando: true });
-    // prevent the unhandled rejection warning
-    promise.catch(() => {});
-    expect(isPromise(promise)).toBeTruthy();
-  });
-
   it('rejects when given an invalid file', () => {
     const p = readJsonFile({ rando: true });
     return expect(p).rejects.toMatchObject(expect.any(Error));
@@ -46,6 +50,21 @@ describe('fileReader.readJsonFile', () => {
     const file = new File([JSON.stringify(obj)], 'foo.json');
     const p = readJsonFile({ file });
     return expect(p).resolves.toMatchObject(obj);
+  });
+
+  it('loads JSON data (OTLP), successfully', () => {
+    const inObj = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-in.json', 'utf-8'));
+    const outObj = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-out.json', 'utf-8'));
+    const file = new File([JSON.stringify(inObj)], 'foo.json');
+    const p = readJsonFile({ file });
+    return expect(p).resolves.toMatchObject(outObj);
+  });
+
+  it('rejects an OTLP trace', () => {
+    const inObj = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-in-error.json', 'utf-8'));
+    const file = new File([JSON.stringify(inObj)], 'foo.json');
+    const p = readJsonFile({ file });
+    return expect(p).rejects.toMatchObject(expect.any(Error));
   });
 
   it('rejects on malform JSON', () => {

@@ -13,9 +13,11 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Icon, notification } from 'antd';
+import { notification } from 'antd';
+import { IoTimeOutline } from 'react-icons/io5';
 
-import ErrorMessage from '../../common/ErrorMessage';
+import LoadingIndicator from '../../common/LoadingIndicator';
+import { Details, Message } from '../../common/ErrorMessage';
 import { TNil } from '../../../types';
 import { TraceArchive } from '../../../types/archive';
 
@@ -26,15 +28,8 @@ enum ENotifiedState {
   Outcome = 'ENotifiedState.Outcome',
 }
 
-// const NOTIFIED_PROGRESS = 'NOTIFIED_PROGRESS';
-// const NOTIFIED_OUTCOME = 'NOTIFIED_OUTCOME';
-
-// type NotifiedState = 'NOTIFIED_PROGRESS' | 'NOTIFIED_OUTCOME' | null;
-
 type Props = {
-  // eslint-disable-next-line react/no-unused-prop-types
   archivedState: TraceArchive | TNil;
-  // eslint-disable-next-line react/no-unused-prop-types
   acknowledge: () => void;
 };
 
@@ -58,14 +53,14 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
     return;
   }
   if (oldState) {
-    notification.close(oldState);
+    notification.destroy(oldState);
   }
   if (nextState === ENotifiedState.Progress) {
     notification.info({
       key: ENotifiedState.Progress,
       description: null,
       duration: 0,
-      icon: <Icon type="loading" />,
+      icon: <LoadingIndicator />,
       message: 'Archiving trace...',
     });
     return;
@@ -73,14 +68,14 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
   const { acknowledge, archivedState } = props;
   if (nextState === ENotifiedState.Outcome) {
     if (archivedState && archivedState.error) {
-      const error = typeof archivedState.error === 'string' ? archivedState.error : archivedState.error;
-      notification.warn({
+      const { error } = archivedState;
+      notification.warning({
         key: ENotifiedState.Outcome,
         className: 'ArchiveNotifier--errorNotification',
-        message: <ErrorMessage.Message error={error} wrap />,
-        description: <ErrorMessage.Details error={error} wrap />,
+        message: <Message error={error} wrap />,
+        description: <Details error={error} wrap />,
         duration: null,
-        icon: <Icon type="clock-circle-o" className="ArchiveNotifier--errorIcon" />,
+        icon: <IoTimeOutline className="ArchiveNotifier--errorIcon" />,
         onClose: acknowledge,
       });
     } else if (archivedState && archivedState.isArchived) {
@@ -88,7 +83,7 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
         key: ENotifiedState.Outcome,
         description: null,
         duration: null,
-        icon: <Icon type="clock-circle-o" className="ArchiveNotifier--doneIcon" />,
+        icon: <IoTimeOutline className="ArchiveNotifier--doneIcon" />,
         message: 'This trace has been archived.',
         onClose: acknowledge,
       });
@@ -111,17 +106,15 @@ export default class ArchiveNotifier extends React.PureComponent<Props, State> {
     this.state = { notifiedState };
   }
 
-  componentWillReceiveProps(nextProps: Props) {
-    const notifiedState = processProps(this.state.notifiedState, nextProps);
-    if (this.state.notifiedState !== notifiedState) {
-      this.setState({ notifiedState });
-    }
+  static getDerivedStateFromProps(props: Props, state: State) {
+    const notifiedState = processProps(state.notifiedState, props);
+    return { notifiedState };
   }
 
   componentWillUnmount() {
     const { notifiedState } = this.state;
     if (notifiedState) {
-      notification.close(notifiedState);
+      notification.destroy(notifiedState);
     }
   }
 

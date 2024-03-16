@@ -18,7 +18,8 @@ import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 
 import { TSumSpan } from './types';
 import CopyIcon from '../../common/CopyIcon';
-import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
+import { TDenseSpanMembers } from '../../../model/trace-dag/types';
+import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
 import colorGenerator from '../../../utils/color-generator';
 
 import './OpNode.css';
@@ -75,10 +76,7 @@ export default class OpNode extends React.PureComponent<Props> {
     } else if (mode === MODE_SELFTIME) {
       backgroundColor = [255, 0, 0, percentSelfTime / 100].join();
     } else {
-      backgroundColor = colorGenerator
-        .getRgbColorByKey(service)
-        .concat(0.8)
-        .join();
+      backgroundColor = colorGenerator.getRgbColorByKey(service).concat(0.8).join();
     }
 
     const table = (
@@ -126,14 +124,13 @@ export default class OpNode extends React.PureComponent<Props> {
 }
 
 export function getNodeRenderer(mode: string) {
-  return function drawNode(vertex: TDagVertex<TSumSpan>) {
-    const { data, operation, service } = vertex.data;
-    return <OpNode {...data} mode={mode} operation={operation} service={service} />;
+  return function drawNode(vertex: TDagPlexusVertex<TSumSpan & TDenseSpanMembers>) {
+    return <OpNode {...vertex.data} mode={mode} />;
   };
 }
 
 export function getNodeFindEmphasisRenderer(uiFindVertexKeys: Set<string> | null | undefined) {
-  return function renderFindEmphasis(lv: TLayoutVertex<TDagVertex<TSumSpan>>) {
+  return function renderFindEmphasis(lv: TLayoutVertex<TDagPlexusVertex<TSumSpan & TDenseSpanMembers>>) {
     if (!uiFindVertexKeys || !uiFindVertexKeys.has(lv.vertex.key)) {
       return null;
     }
@@ -141,7 +138,7 @@ export function getNodeFindEmphasisRenderer(uiFindVertexKeys: Set<string> | null
   };
 }
 
-export function renderNodeVectorBorder(lv: TLayoutVertex<TDagVertex<TSumSpan>>) {
+export function renderNodeVectorBorder(lv: TLayoutVertex<TDagPlexusVertex<TSumSpan>>) {
   return (
     <rect
       className="OpNode--vectorBorder"

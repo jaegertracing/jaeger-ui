@@ -453,7 +453,7 @@ export default class ListView extends React.Component<TListViewProps> {
       wrapperProps.style.overflowY = 'auto';
     }
     const scrollerStyle = {
-      position: 'relative' as 'relative',
+      position: 'relative' as const,
       height: this._yPositions.getEstimatedHeight(),
     };
     return (

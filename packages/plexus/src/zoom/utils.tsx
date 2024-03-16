@@ -14,7 +14,7 @@
 
 import { zoomIdentity, ZoomTransform } from 'd3-zoom';
 
-const SCALE_MAX = 1;
+const SCALE_MAX = 10;
 const SCALE_MIN = 0.03;
 const SCALE_MARGIN = 0.05;
 
@@ -76,7 +76,7 @@ export function constrainZoom(
   return transform;
 }
 
-export function getZoomStyle(transform: ZoomTransform | void) {
+export function getZoomStyle(transform: ZoomTransform | void): React.CSSProperties {
   if (transform == null) {
     return DEFAULT_ZOOM_STYLE;
   }

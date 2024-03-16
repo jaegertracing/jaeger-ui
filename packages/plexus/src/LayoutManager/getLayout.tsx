@@ -94,7 +94,8 @@ function getVerticesValidity(
     const word = missingKeys.length > 1 ? 'vertices' : 'vertex';
     return { validity: EValidity.Error, message: `Missing ${word}: ${missingKeys.join(', ')}` };
   }
-  return warn || { validity: EValidity.Ok, message: null };
+  warn ??= { validity: EValidity.Ok, message: null };
+  return warn;
 }
 
 export default function getLayout(

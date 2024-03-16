@@ -54,17 +54,17 @@ describe('<CopyIcon />', () => {
 
   it('updates state when tooltip hides and state.hasCopied is true', () => {
     wrapper.setState({ hasCopied: true });
-    wrapper.find(Tooltip).prop('onVisibleChange')(false);
+    wrapper.find(Tooltip).prop('onOpenChange')(false);
     expect(wrapper.state().hasCopied).toBe(false);
 
     const state = wrapper.state();
-    wrapper.find(Tooltip).prop('onVisibleChange')(false);
+    wrapper.find(Tooltip).prop('onOpenChange')(false);
     expect(wrapper.state()).toBe(state);
   });
 
   it('persists state when tooltip opens', () => {
     wrapper.setState({ hasCopied: true });
-    wrapper.find(Tooltip).prop('onVisibleChange')(true);
+    wrapper.find(Tooltip).prop('onOpenChange')(true);
     expect(wrapper.state().hasCopied).toBe(true);
   });
 });

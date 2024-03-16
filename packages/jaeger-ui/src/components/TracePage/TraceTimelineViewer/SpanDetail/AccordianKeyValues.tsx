@@ -14,8 +14,7 @@
 
 import * as React from 'react';
 import cx from 'classnames';
-import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
-import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
+import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 
 import * as markers from './AccordianKeyValues.markers';
 import KeyValuesTable from './KeyValuesTable';
@@ -65,9 +64,9 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
   let arrow: React.ReactNode | null = null;
-  let headerProps: Object | null = null;
+  let headerProps: object | null = null;
   if (interactive) {
-    arrow = isOpen ? <IoIosArrowDown className={iconCls} /> : <IoIosArrowRight className={iconCls} />;
+    arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
     headerProps = {
       'aria-checked': isOpen,
       onClick: isEmpty ? null : onToggle,

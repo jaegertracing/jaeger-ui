@@ -13,30 +13,33 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen, fireEvent, createEvent } from '@testing-library/react';
 
 import TraceTimelineLink from './TraceTimelineLink';
-import NewWindowIcon from '../../common/NewWindowIcon';
 
 describe('TraceTimelineLink', () => {
   const traceID = 'test-trace-id';
-  let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(<TraceTimelineLink traceID={traceID} />);
+    render(<TraceTimelineLink traceID={traceID} />);
   });
 
   it('renders the NewWindowIcon', () => {
-    expect(wrapper.find(NewWindowIcon).length).toBe(1);
+    expect(screen.getAllByTestId('NewWindowIcon').length).toBe(1);
   });
 
   it('links to the given trace', () => {
-    expect(wrapper.find('a').prop('href')).toBe(`/trace/${traceID}`);
+    const link = screen.getByRole('link');
+    const url = new URL(link.href);
+    expect(url.pathname).toBe(`/trace/${traceID}`);
   });
 
   it('stops event propagation', () => {
-    const stopPropagation = jest.fn();
-    wrapper.find('a').simulate('click', { stopPropagation });
-    expect(stopPropagation).toHaveBeenCalled();
+    // Create an event to capture the click
+    const propogatedEvent = createEvent.click(screen.getByRole('link'));
+    propogatedEvent.stopPropagation = jest.fn();
+
+    fireEvent(screen.getByRole('link'), propogatedEvent);
+    expect(propogatedEvent.stopPropagation).toHaveBeenCalled();
   });
 });

@@ -1,0 +1,86 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DetailTable render renders as expected 1`] = `
+<div>
+  <FilteredList
+    addValues={[Function]}
+    multi={true}
+    options={
+      Array [
+        "foo",
+        "bar",
+        "baz",
+      ]
+    }
+    removeValues={[Function]}
+    setValue={[Function]}
+    value={
+      Set {
+        "bar",
+        "baz",
+      }
+    }
+  />
+  <div
+    className="DetailTableDropdown--Footer"
+  >
+    <Tooltip
+      overlayClassName="DetailTableDropdown--Tooltip"
+      title="Remove filter from this column"
+    >
+      <Button
+        className="DetailTableDropdown--Btn Clear"
+        onClick={[MockFunction]}
+      >
+        <IoTrash
+          size={18}
+        />
+        Clear Filter
+      </Button>
+    </Tooltip>
+    <div
+      className="DetailTableDropdown--Footer--CancelConfirm"
+    >
+      <Tooltip
+        overlayClassName="DetailTableDropdown--Tooltip"
+        title="Cancel changes to this column's filter"
+      >
+        <Button
+          className="DetailTableDropdown--Btn Cancel"
+          onClick={[Function]}
+        >
+          <IoBan
+            size={20}
+          />
+          Cancel
+        </Button>
+      </Tooltip>
+      <Tooltip
+        overlayClassName="DetailTableDropdown--Tooltip"
+        title={
+          <div
+            className="DetailTableDropdown--Tooltip--Body"
+          >
+            <span>
+              Apply changes to this column's filter
+            </span>
+            <span>
+              Same effect as clicking outside the dropdown
+            </span>
+          </div>
+        }
+      >
+        <Button
+          className="DetailTableDropdown--Btn Apply"
+          onClick={[MockFunction]}
+        >
+          <IoCheckmark
+            size={18}
+          />
+          Apply
+        </Button>
+      </Tooltip>
+    </div>
+  </div>
+</div>
+`;

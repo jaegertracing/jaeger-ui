@@ -13,25 +13,28 @@
 // limitations under the License.
 
 import React from 'react';
-import { Icon } from 'antd';
+import { LuLoader2 } from 'react-icons/lu';
 
 import './LoadingIndicator.css';
 
 type LoadingIndicatorProps = {
   centered?: boolean;
+  vcentered?: boolean;
   className?: string;
   small?: boolean;
+  style?: React.CSSProperties;
 };
 
 export default function LoadingIndicator(props: LoadingIndicatorProps) {
-  const { centered, className, small, ...rest } = props;
+  const { centered, vcentered, className, small, ...rest } = props;
   const cls = `
     LoadingIndicator
     ${centered ? 'is-centered' : ''}
+    ${vcentered ? 'is-vcentered' : ''}
     ${small ? 'is-small' : ''}
     ${className || ''}
   `;
-  return <Icon type="loading" className={cls} {...rest} />;
+  return <LuLoader2 className={cls} {...rest} />;
 }
 
 LoadingIndicator.defaultProps = {

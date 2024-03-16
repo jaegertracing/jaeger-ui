@@ -15,8 +15,8 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
+import VerticalResizer from '../../../common/VerticalResizer';
 import TimelineHeaderRow from './TimelineHeaderRow';
-import TimelineColumnResizer from './TimelineColumnResizer';
 import TimelineViewingLayer from './TimelineViewingLayer';
 import Ticks from '../Ticks';
 import TimelineCollapser from './TimelineCollapser';
@@ -86,9 +86,9 @@ describe('<TimelineHeaderRow>', () => {
     expect(wrapper.containsMatchingElement(elm)).toBe(true);
   });
 
-  it('renders the TimelineColumnResizer', () => {
+  it('renders the VerticalResizer', () => {
     const elm = (
-      <TimelineColumnResizer
+      <VerticalResizer
         position={nameColumnWidth}
         onChange={props.onColummWidthChange}
         min={0.15}

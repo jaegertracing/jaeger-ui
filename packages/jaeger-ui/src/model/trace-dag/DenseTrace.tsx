@@ -13,23 +13,23 @@
 // limitations under the License.
 
 import denseTransforms from './denseTransforms';
-import { DenseSpan } from './types';
+import { TDenseSpan } from './types';
 import { Span, Trace } from '../../types/trace';
 
 function convSpans(spans: Span[]) {
-  const map: Map<string, DenseSpan> = new Map();
+  const map: Map<string, TDenseSpan> = new Map();
   const roots: Set<string> = new Set();
   const ids: string[] = [];
   spans.forEach(span => {
     const { spanID: id, operationName: operation, process, references, tags: spanTags } = span;
     ids.push(id);
     const { serviceName: service } = process;
-    const tags = spanTags.reduce((accum: Record<string, any>, tag) => {
+
+    const tags = spanTags.reduce((accum: Record<string, string>, tag) => {
       const { key, value } = tag;
-      // eslint-disable-next-line no-param-reassign
-      accum[key] = value;
-      return accum;
+      return { ...accum, [key]: value };
     }, {});
+
     let parentID: string | null = null;
     if (references && references.length) {
       const { refType, spanID } = references[0];
@@ -63,7 +63,7 @@ function convSpans(spans: Span[]) {
   return { ids, map, roots };
 }
 
-function makeDense(spanIDs: string[], map: Map<string, DenseSpan>) {
+function makeDense(spanIDs: string[], map: Map<string, TDenseSpan>) {
   spanIDs.forEach(id => {
     const denseSpan = map.get(id);
     // make flow happy
@@ -76,7 +76,7 @@ function makeDense(spanIDs: string[], map: Map<string, DenseSpan>) {
 export default class DenseTrace {
   trace: Trace;
   rootIDs: Set<string>;
-  denseSpansMap: Map<string, DenseSpan>;
+  denseSpansMap: Map<string, TDenseSpan>;
 
   constructor(trace: Trace) {
     this.trace = trace;

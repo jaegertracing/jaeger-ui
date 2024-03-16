@@ -15,7 +15,7 @@
 import * as React from 'react';
 
 import Node from './Node';
-import { TNodeRenderer, TLayerType, TRendererUtils } from './types';
+import { TLayerType, TNodeRenderer, TRendererUtils } from './types';
 import { TLayoutVertex } from '../types';
 import { isSamePropSetter } from './utils';
 
@@ -23,6 +23,7 @@ type TProps<T = {}> = TNodeRenderer<T> & {
   getClassName: (name: string) => string;
   layerType: TLayerType;
   layoutVertices: TLayoutVertex<T>[];
+  renderNode: NonNullable<TNodeRenderer<T>['renderNode']>;
   renderUtils: TRendererUtils;
 };
 

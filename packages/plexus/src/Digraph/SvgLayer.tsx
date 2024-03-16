@@ -29,6 +29,7 @@ type TProps<T = {}, U = {}> = Record<string, unknown> &
     graphState: TExposedGraphState<T, U>;
     standalone?: boolean;
     topLayer?: boolean;
+    children: React.ReactNode;
   };
 
 const STYLE: React.CSSProperties = {

@@ -62,7 +62,7 @@ export const getValueScaler = (() => {
     valueMin: 0.3,
   };
 
-  // eslint-disable-next-line no-shadow
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   function getValueScaler(config: Partial<TScalerParams> = {}) {
     const { expAdjuster, factorMax, factorMin, valueMax, valueMin } = { ...DEFAULT_PARAMS, ...config };
     return function scaleValue(factor: number) {

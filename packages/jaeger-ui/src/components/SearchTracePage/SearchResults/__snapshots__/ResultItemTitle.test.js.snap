@@ -8,13 +8,11 @@ exports[`ResultItemTitle renders as expected 1`] = `
     checked={true}
     className="ResultItemTitle--item ub-flex-none"
     disabled={false}
-    indeterminate={false}
     onChange={[Function]}
-    prefixCls="ant-checkbox"
+    onClick={[Function]}
   />
   <Link
     className="ResultItemTitle--item ub-flex-auto"
-    replace={false}
     to="linkToValue"
   >
     <span
@@ -28,7 +26,7 @@ exports[`ResultItemTitle renders as expected 1`] = `
     <span
       className="ub-right ub-relative"
     >
-      0.15ms
+      150μs
     </span>
     <h3
       className="ResultItemTitle--title"

@@ -16,9 +16,9 @@
  * All timestamps are in microseconds
  */
 
-export type KeyValuePair = {
+export type KeyValuePair<ValueType = string> = {
   key: string;
-  value: any;
+  value: ValueType;
 };
 
 export type Link = {
@@ -55,6 +55,7 @@ export type SpanData = {
   tags?: Array<KeyValuePair>;
   references?: Array<SpanReference>;
   warnings?: Array<string> | null;
+  childSpanIds?: Array<string>;
 };
 
 export type Span = SpanData & {
@@ -65,6 +66,8 @@ export type Span = SpanData & {
   tags: NonNullable<SpanData['tags']>;
   references: NonNullable<SpanData['references']>;
   warnings: NonNullable<SpanData['warnings']>;
+  childSpanIds: NonNullable<SpanData['childSpanIds']>;
+  subsidiarilyReferencedBy: Array<SpanReference>;
 };
 
 export type TraceData = {
@@ -79,4 +82,11 @@ export type Trace = TraceData & {
   startTime: number;
   traceName: string;
   services: { name: string; numberOfSpans: number }[];
+};
+
+// It is a section of span that lies on critical path
+export type criticalPathSection = {
+  spanId: string;
+  section_start: number;
+  section_end: number;
 };

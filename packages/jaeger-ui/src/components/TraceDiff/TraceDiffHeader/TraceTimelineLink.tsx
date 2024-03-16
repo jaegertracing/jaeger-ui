@@ -16,6 +16,7 @@ import * as React from 'react';
 
 import { getUrl } from '../../TracePage/url';
 import NewWindowIcon from '../../common/NewWindowIcon';
+import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 
 type PropsType = {
   traceID: string;
@@ -27,7 +28,12 @@ function stopPropagation(event: React.MouseEvent<HTMLAnchorElement>) {
 
 export default function TraceTimelineLink({ traceID }: PropsType) {
   return (
-    <a href={getUrl(traceID)} onClick={stopPropagation} rel="noopener noreferrer" target="_blank">
+    <a
+      href={getUrl(traceID)}
+      onClick={stopPropagation}
+      rel="noopener noreferrer"
+      target={getTargetEmptyOrBlank()}
+    >
       <NewWindowIcon />
     </a>
   );

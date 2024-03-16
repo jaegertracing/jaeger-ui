@@ -14,8 +14,6 @@
 
 import Chance from 'chance';
 
-import { getSpanId } from '../selectors/span';
-
 const chance = new Chance();
 
 export const SERVICE_LIST = ['serviceA', 'serviceB', 'serviceC', 'serviceD', 'serviceE', 'serviceF'];
@@ -40,7 +38,7 @@ function getParentSpanId(span, levels) {
 
   // pick the correct nesting level if allocated by the levels calculation
   levels.forEach((level, idx) => {
-    if (level.indexOf(getSpanId(span)) >= 0) {
+    if (level.indexOf(span.spanID) >= 0) {
       nestingLevel = idx;
     }
   });
@@ -49,18 +47,18 @@ function getParentSpanId(span, levels) {
 }
 
 /* this simulates the hierarchy created by CHILD_OF tags */
-function attachReferences(spans) {
-  const depth = chance.integer({ min: 1, max: 10 });
-  let levels = [[getSpanId(spans[0])]];
+function attachReferences(spans, depth, spansPerLevel) {
+  let levels = [[spans[0].spanID]];
 
-  const duplicateLevelFilter = currentLevels => spanID =>
-    !currentLevels.find(level => level.indexOf(spanID) >= 0);
+  const duplicateLevelFilter = currentLevels => span =>
+    !currentLevels.find(level => level.indexOf(span.spanID) >= 0);
 
   while (levels.length < depth) {
+    const remainingSpans = spans.filter(duplicateLevelFilter(levels));
+    if (remainingSpans.length <= 0) break;
     const newLevel = chance
-      .pickset(spans, chance.integer({ min: 4, max: 8 }))
-      .map(getSpanId)
-      .filter(duplicateLevelFilter(levels));
+      .pickset(remainingSpans, spansPerLevel || chance.integer({ min: 4, max: 8 }))
+      .map(span => span.spanID);
     levels.push(newLevel);
   }
 
@@ -95,6 +93,8 @@ export default chance.mixin({
       Math.ceil(chance.normal({ mean: 45, dev: 15 })) + 1,
     ]),
     numberOfProcesses = chance.integer({ min: 1, max: 10 }),
+    maxDepth = chance.integer({ min: 1, max: 10 }),
+    spansPerLevel = null,
   }) {
     const traceID = chance.guid();
     const duration = chance.integer({ min: 10000, max: 5000000 });
@@ -109,7 +109,7 @@ export default chance.mixin({
       traceStartTime: timestamp,
       traceEndTime: timestamp + duration,
     });
-    spans = attachReferences(spans);
+    spans = attachReferences(spans, maxDepth, spansPerLevel);
     if (spans.length > 1) {
       spans = setupParentSpan(spans, { startTime: timestamp, duration });
     }
@@ -136,7 +136,7 @@ export default chance.mixin({
   }) {
     const startTime = chance.integer({
       min: traceStartTime,
-      max: traceEndTime,
+      max: traceEndTime - 1,
     });
 
     return {

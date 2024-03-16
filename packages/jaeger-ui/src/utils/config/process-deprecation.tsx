@@ -34,11 +34,7 @@ interface IDeprecation {
  * - The value at the deprecated config property is moved to the new property
  * - The value at the deprecated config property is ignored in favor of the value at the new property
  */
-export default function processDeprecation(
-  config: Record<string, any>,
-  deprecation: IDeprecation,
-  issueWarning: boolean
-) {
+export default function processDeprecation(config: object, deprecation: IDeprecation, issueWarning: boolean) {
   const { formerKey, currentKey } = deprecation;
   if (_has(config, formerKey)) {
     let isTransfered = false;

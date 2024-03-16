@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Card, Icon, Button, Tooltip } from 'antd';
+import { Card, Button, Tooltip } from 'antd';
+import { IoClose, IoHelpCircleOutline } from 'react-icons/io5';
 import cx from 'classnames';
-import { Digraph, LayoutManager } from '@jaegertracing/plexus';
-import cacheAs from '@jaegertracing/plexus/lib/cacheAs';
+import { Digraph, LayoutManager, cacheAs } from '@jaegertracing/plexus';
 
 import {
   getNodeRenderer,
@@ -28,8 +28,10 @@ import {
   HELP_TABLE,
 } from './OpNode';
 import { TEv, TSumSpan } from './types';
-import TDagVertex from '../../../model/trace-dag/types/TDagVertex';
+import { TDenseSpanMembers } from '../../../model/trace-dag/types';
+import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
 import { TNil } from '../../../types';
+import { TraceGraphConfig } from '../../../types/config';
 
 import './TraceGraph.css';
 
@@ -38,6 +40,7 @@ type Props = {
   ev?: TEv | TNil;
   uiFind: string | TNil;
   uiFindVertexKeys: Set<string> | TNil;
+  traceGraphConfig?: TraceGraphConfig;
 };
 type State = {
   showHelp: boolean;
@@ -81,7 +84,7 @@ const HELP_CONTENT = (
               </Button>
             </td>
             <td>Selftime</td>
-            <td>Colored by self time</td>
+            <td>Colored by self time (*)</td>
           </tr>
         </tbody>
       </table>
@@ -104,13 +107,15 @@ const HELP_CONTENT = (
         </text>
       </svg>
     </div>
+    <div>
+      (*) <b>Self time</b> is the total time spent in a span when it was not waiting on children. For example,
+      a 10ms span with two 4ms non-overlapping children would have <b>self-time = 10ms - 2 * 4ms = 2ms</b>.
+    </div>
   </div>
 );
 
 export default class TraceGraph extends React.PureComponent<Props, State> {
   state: State;
-
-  cache: any;
 
   layoutManager: LayoutManager;
 
@@ -124,7 +129,11 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
       showHelp: false,
       mode: MODE_SERVICE,
     };
-    this.layoutManager = new LayoutManager({ useDotEdges: true, splines: 'polyline' });
+    this.layoutManager = new LayoutManager({
+      totalMemory: props.traceGraphConfig?.layoutManagerMemory,
+      useDotEdges: true,
+      splines: 'polyline',
+    });
   }
 
   componentWillUnmount() {
@@ -154,7 +163,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
 
     return (
       <div className={wrapperClassName} style={{ paddingTop: headerHeight + 47 }}>
-        <Digraph<TDagVertex<TSumSpan>>
+        <Digraph<TDagPlexusVertex<TSumSpan & TDenseSpanMembers>>
           minimap
           zoom
           className="TraceGraph--dag"
@@ -204,7 +213,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
         <div className="TraceGraph--sidebar-container">
           <ul className="TraceGraph--menu">
             <li>
-              <Icon type="question-circle" onClick={this.showHelp} />
+              <IoHelpCircleOutline onClick={this.showHelp} />
             </li>
             <li>
               <Tooltip placement="left" title="Service">
@@ -252,7 +261,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
               bordered={false}
               extra={
                 <a onClick={this.closeSidebar} role="button">
-                  <Icon type="close" />
+                  <IoClose />
                 </a>
               }
             >

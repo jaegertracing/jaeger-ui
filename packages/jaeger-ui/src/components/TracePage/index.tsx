@@ -13,19 +13,18 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Input } from 'antd';
+import { InputRef } from 'antd';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
-import { connect, Dispatch } from 'react-redux';
-import { match as Match } from 'react-router-dom';
-import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
-import { trackRange } from './index.track';
+import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
 import {
   CombokeysHandler,
   merge as mergeShortcuts,
@@ -41,7 +40,7 @@ import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
-import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from './types';
+import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
 import { getLocation, getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -55,8 +54,14 @@ import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
+import TraceStatistics from './TraceStatistics/index';
+import TraceSpanView from './TraceSpanView/index';
+import TraceFlamegraph from './TraceFlamegraph/index';
+import { StorageCapabilities, TraceGraphConfig } from '../../types/config';
 
 import './index.css';
+import memoizedTraceCriticalPath from './CriticalPath/index';
+import withRouteProps from '../../utils/withRouteProps';
 
 type TDispatchProps = {
   acknowledgeArchive: (id: string) => void;
@@ -68,17 +73,21 @@ type TDispatchProps = {
 type TOwnProps = {
   history: RouterHistory;
   location: Location;
-  match: Match<{ id: string }>;
+  params: { id: string };
 };
 
 type TReduxProps = {
   archiveEnabled: boolean;
+  storageCapabilities: StorageCapabilities | TNil;
   archiveTraceState: TraceArchive | TNil;
+  criticalPathEnabled: boolean;
   embedded: null | EmbeddedState;
   id: string;
   searchUrl: null | string;
+  disableJsonView: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
+  traceGraphConfig?: TraceGraphConfig;
 };
 
 type TProps = TDispatchProps & TOwnProps & TReduxProps;
@@ -86,7 +95,7 @@ type TProps = TDispatchProps & TOwnProps & TReduxProps;
 type TState = {
   headerHeight: number | TNil;
   slimView: boolean;
-  traceGraphView: boolean;
+  viewType: ETraceViewType;
   viewRange: IViewRange;
 };
 
@@ -96,7 +105,7 @@ const VIEW_CHANGE_BASE = 0.005;
 const VIEW_CHANGE_FAST = 0.05;
 
 // export for tests
-export const shortcutConfig = {
+export const shortcutConfig: { [name: string]: [number, number] } = {
   panLeft: [-VIEW_CHANGE_BASE, -VIEW_CHANGE_BASE],
   panLeftFast: [-VIEW_CHANGE_FAST, -VIEW_CHANGE_FAST],
   panRight: [VIEW_CHANGE_BASE, VIEW_CHANGE_BASE],
@@ -124,7 +133,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
   _headerElm: HTMLElement | TNil;
   _filterSpans: typeof filterSpans;
-  _searchBar: React.RefObject<Input>;
+  _searchBar: React.RefObject<InputRef>;
   _scrollManager: ScrollManager;
   traceDagEV: TEv | TNil;
 
@@ -134,7 +143,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     this.state = {
       headerHeight: null,
       slimView: Boolean(embedded && embedded.timeline.collapseTitle),
-      traceGraphView: false,
+      viewType: ETraceViewType.TraceTimelineViewer,
       viewRange: {
         time: {
           current: [0, 1],
@@ -164,12 +173,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     if (!this._scrollManager) {
       throw new Error('Invalid state - scrollManager is unset');
     }
-    const {
-      scrollPageDown,
-      scrollPageUp,
-      scrollToNextVisibleSpan,
-      scrollToPrevVisibleSpan,
-    } = this._scrollManager;
+    const { scrollPageDown, scrollPageUp, scrollToNextVisibleSpan, scrollToPrevVisibleSpan } =
+      this._scrollManager;
     const adjViewRange = (a: number, b: number) => this._adjustViewRange(a, b, 'kbd');
     const shortcutCallbacks = makeShortcutCallbacks(adjViewRange);
     shortcutCallbacks.scrollPageDown = scrollPageDown;
@@ -181,13 +186,11 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     mergeShortcuts(shortcutCallbacks);
   }
 
-  componentWillReceiveProps(nextProps: TProps) {
-    const { trace } = nextProps;
-    this._scrollManager.setTrace(trace && trace.data);
-  }
-
   componentDidUpdate({ id: prevID }: TProps) {
     const { id, trace } = this.props;
+
+    this._scrollManager.setTrace(trace && trace.data);
+
     this.setHeaderHeight(this._headerElm);
     if (!trace) {
       this.ensureTraceFetched();
@@ -240,12 +243,11 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
   clearSearch = () => {
     const { history, location } = this.props;
-    // flow does not allow omitting optional kwargs when using an object literal.
-    const arg = {
+    updateUiFind({
       history,
       location,
-    };
-    updateUiFind(arg);
+      trackFindFunction: trackFilter,
+    });
     if (this._searchBar.current) this._searchBar.current.blur();
   };
 
@@ -275,12 +277,11 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     this.setState({ slimView: !slimView });
   };
 
-  toggleTraceGraphView = () => {
-    const { traceGraphView } = this.state;
-    if (this.props.trace && this.props.trace.data) {
+  setTraceView = (viewType: ETraceViewType) => {
+    if (this.props.trace && this.props.trace.data && viewType === ETraceViewType.TraceGraph) {
       this.traceDagEV = calculateTraceDagEV(this.props.trace.data);
     }
-    this.setState({ traceGraphView: !traceGraphView });
+    this.setState({ viewType });
   };
 
   archiveTrace = () => {
@@ -308,13 +309,36 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   focusUiFindMatches = () => {
     const { trace, focusUiFindMatches, uiFind } = this.props;
     if (trace && trace.data) {
+      trackFocusMatches();
       focusUiFindMatches(trace.data, uiFind);
     }
   };
 
+  nextResult = () => {
+    trackNextMatch();
+    this._scrollManager.scrollToNextVisibleSpan();
+  };
+
+  prevResult = () => {
+    trackPrevMatch();
+    this._scrollManager.scrollToPrevVisibleSpan();
+  };
+
   render() {
-    const { archiveEnabled, archiveTraceState, embedded, id, searchUrl, uiFind, trace } = this.props;
-    const { slimView, traceGraphView, headerHeight, viewRange } = this.state;
+    const {
+      archiveEnabled,
+      storageCapabilities,
+      archiveTraceState,
+      criticalPathEnabled,
+      embedded,
+      id,
+      uiFind,
+      trace,
+      disableJsonView,
+      traceGraphConfig,
+      location: { state: locationState },
+    } = this.props;
+    const { slimView, viewType, headerHeight, viewRange } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
@@ -324,10 +348,10 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
 
     let findCount = 0;
-    let graphFindMatches;
-    let spanFindMatches;
+    let graphFindMatches: Set<string> | null | undefined;
+    let spanFindMatches: Set<string> | null | undefined;
     if (uiFind) {
-      if (traceGraphView) {
+      if (viewType === ETraceViewType.TraceGraph) {
         graphFindMatches = getUiFindVertexKeys(uiFind, _get(this.traceDagEV, 'vertices', []));
         findCount = graphFindMatches ? graphFindMatches.size : 0;
       } else {
@@ -337,33 +361,70 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
 
     const isEmbedded = Boolean(embedded);
+    const hasArchiveStorage = Boolean(storageCapabilities?.archiveStorage);
     const headerProps = {
       focusUiFindMatches: this.focusUiFindMatches,
       slimView,
       textFilter: uiFind,
-      traceGraphView,
+      viewType,
       viewRange,
       canCollapse: !embedded || !embedded.timeline.hideSummary || !embedded.timeline.hideMinimap,
       clearSearch: this.clearSearch,
-      hideMap: Boolean(traceGraphView || (embedded && embedded.timeline.hideMinimap)),
+      hideMap: Boolean(
+        viewType !== ETraceViewType.TraceTimelineViewer || (embedded && embedded.timeline.hideMinimap)
+      ),
       hideSummary: Boolean(embedded && embedded.timeline.hideSummary),
       linkToStandalone: getUrl(id),
-      nextResult: this._scrollManager.scrollToNextVisibleSpan,
+      nextResult: this.nextResult,
       onArchiveClicked: this.archiveTrace,
       onSlimViewClicked: this.toggleSlimView,
-      onTraceGraphViewClicked: this.toggleTraceGraphView,
-      prevResult: this._scrollManager.scrollToPrevVisibleSpan,
+      onTraceViewChange: this.setTraceView,
+      prevResult: this.prevResult,
       ref: this._searchBar,
       resultCount: findCount,
-      showArchiveButton: !isEmbedded && archiveEnabled,
+      disableJsonView,
+      showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
-      toSearch: searchUrl,
+      toSearch: (locationState && locationState.fromSearch) || null,
       trace: data,
       updateNextViewRangeTime: this.updateNextViewRangeTime,
       updateViewRangeTime: this.updateViewRangeTime,
     };
+
+    let view;
+    const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data) : [];
+    if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
+      view = (
+        <TraceTimelineViewer
+          registerAccessors={this._scrollManager.setAccessors}
+          scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
+          findMatchesIDs={spanFindMatches}
+          trace={data}
+          criticalPath={criticalPath}
+          updateNextViewRangeTime={this.updateNextViewRangeTime}
+          updateViewRangeTime={this.updateViewRangeTime}
+          viewRange={viewRange}
+        />
+      );
+    } else if (ETraceViewType.TraceGraph === viewType && headerHeight) {
+      view = (
+        <TraceGraph
+          headerHeight={headerHeight}
+          ev={this.traceDagEV}
+          uiFind={uiFind}
+          uiFindVertexKeys={graphFindMatches}
+          traceGraphConfig={traceGraphConfig}
+        />
+      );
+    } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
+      view = <TraceStatistics trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
+    } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
+      view = <TraceSpanView trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
+    } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
+      view = <TraceFlamegraph trace={trace} />;
+    }
 
     return (
       <div>
@@ -373,29 +434,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
         <div className="Tracepage--headerSection" ref={this.setHeaderHeight}>
           <TracePageHeader {...headerProps} />
         </div>
-        {headerHeight &&
-          (traceGraphView ? (
-            <section style={{ paddingTop: headerHeight }}>
-              <TraceGraph
-                headerHeight={headerHeight}
-                ev={this.traceDagEV}
-                uiFind={uiFind}
-                uiFindVertexKeys={graphFindMatches}
-              />
-            </section>
-          ) : (
-            <section style={{ paddingTop: headerHeight }}>
-              <TraceTimelineViewer
-                registerAccessors={this._scrollManager.setAccessors}
-                scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
-                findMatchesIDs={spanFindMatches}
-                trace={data}
-                updateNextViewRangeTime={this.updateNextViewRangeTime}
-                updateViewRangeTime={this.updateViewRangeTime}
-                viewRange={viewRange}
-              />
-            </section>
-          ))}
+        {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
       </div>
     );
   }
@@ -403,23 +442,30 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { id } = ownProps.match.params;
+  const { id } = ownProps.params;
   const { archive, config, embedded, router } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
   const archiveEnabled = Boolean(config.archiveEnabled);
+  const storageCapabilities = config.storageCapabilities;
+  const { disableJsonView, criticalPathEnabled } = config;
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
+  const { traceGraph: traceGraphConfig } = config;
 
   return {
     ...extractUiFindFromState(state),
     archiveEnabled,
+    storageCapabilities,
     archiveTraceState,
+    criticalPathEnabled,
     embedded,
     id,
     searchUrl,
+    disableJsonView,
     trace,
+    traceGraphConfig,
   };
 }
 
@@ -431,7 +477,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TracePageImpl);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(TracePageImpl));

@@ -108,7 +108,7 @@ export type TMeasurableNodeRenderer<T = Record<string, unknown>> = {
 };
 
 export type TNodeRenderer<T = Record<string, unknown>> = {
-  renderNode: TRenderNodeFn<T>;
+  renderNode: TRenderNodeFn<T> | null;
   setOnNode?: TSetProps<(layoutVertex: TLayoutVertex<T>, utils: TRendererUtils) => TAnyProps | null>;
 };
 
@@ -122,7 +122,8 @@ type TStandaloneNodesLayer<T = Record<string, unknown>, U = Record<string, unkno
     | {
         layerType: Extract<TLayerType, 'svg'>;
         defs?: TNonEmptyArray<TDefEntry<T, U>>;
-      });
+      }
+  );
 
 export type TEdgesLayer<T = Record<string, unknown>, U = Record<string, unknown>> = TKeyed &
   TSetOnContainer<T, U> & {

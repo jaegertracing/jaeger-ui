@@ -30,7 +30,7 @@ const VISIBILITY_BUCKET_SIZE = 31;
  * Converts string csv of base36 numbers into array of visible indices.
  *
  * @param {string} encoded - base36 csv visibility encoding.
- * @returns {number[]} - Visibile indices for this encoding.
+ * @returns {number[]} - Visible indices for this encoding.
  */
 export const decode: (encoded: string) => number[] = memoize(10)((encoded: string): number[] => {
   const rv: number[] = [];
@@ -74,7 +74,7 @@ function convertAbsoluteIdxToRelativeValues(absIdx: number) {
 /*
  * Converts array of visible indices into string csv of base36 numbers.
  *
- * @param {number[]} decoded - Visibile indices for this encoding.
+ * @param {number[]} decoded - Visible indices for this encoding.
  * @returns {string} - base36 csv visibility encoding.
  */
 export const encode = (decoded: number[]): string => {

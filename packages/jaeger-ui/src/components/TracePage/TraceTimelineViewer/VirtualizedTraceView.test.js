@@ -13,6 +13,7 @@
 // limitations under the License.
 import React from 'react';
 import { shallow, mount } from 'enzyme';
+import { render, screen } from '@testing-library/react';
 
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
@@ -21,14 +22,23 @@ import SpanDetailRow from './SpanDetailRow';
 import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
+import updateUiFindSpy from '../../../utils/update-ui-find';
+import * as linkPatterns from '../../../model/link-patterns';
+import memoizedTraceCriticalPath from '../CriticalPath/index';
+
+import criticalPathTest from '../CriticalPath/testCases/test2';
 
 jest.mock('./SpanTreeOffset');
+jest.mock('../../../utils/update-ui-find');
 
 describe('<VirtualizedTraceViewImpl>', () => {
   let wrapper;
   let instance;
+  const focusUiFindMatchesMock = jest.fn();
 
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
+  const criticalPath = memoizedTraceCriticalPath(trace);
+
   const props = {
     childrenHiddenIDs: new Set(),
     childrenToggle: jest.fn(),
@@ -44,11 +54,19 @@ describe('<VirtualizedTraceViewImpl>', () => {
     registerAccessors: jest.fn(),
     scrollToFirstVisibleSpan: jest.fn(),
     setSpanNameColumnWidth: jest.fn(),
+    focusUiFindMatches: focusUiFindMatchesMock,
     setTrace: jest.fn(),
     shouldScrollToFirstUiFindMatch: false,
     spanNameColumnWidth: 0.5,
     trace,
+    criticalPath,
     uiFind: 'uiFind',
+    history: {
+      replace: () => {},
+    },
+    location: {
+      search: null,
+    },
   };
 
   function expandRow(rowIndex) {
@@ -96,7 +114,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 
   it('renders when a trace is not set', () => {
-    wrapper.setProps({ trace: null });
+    wrapper.setProps({ trace: [] });
     expect(wrapper).toBeDefined();
   });
 
@@ -295,7 +313,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(
         rowWrapper.containsMatchingElement(
           <SpanBarRow
-            className={instance.clippingCssClasses}
+            className={instance.getClippingCssClasses()}
             columnDivision={props.spanNameColumnWidth}
             isChildrenExpanded
             isDetailExpanded={false}
@@ -309,6 +327,26 @@ describe('<VirtualizedTraceViewImpl>', () => {
           />
         )
       ).toBe(true);
+    });
+
+    it('renders Critical Path segments when row is not collapsed', () => {
+      wrapper.setProps({
+        trace: criticalPathTest.trace,
+        criticalPath: criticalPathTest.criticalPathSections,
+      });
+      render(instance.renderRow('some-key', {}, 0, {}));
+      expect(screen.getAllByTestId('SpanBar--criticalPath').length).toBe(2);
+    });
+
+    it('renders Critical Path segments are merged if consecutive when row is collapased', () => {
+      const childrenHiddenIDs = new Set([criticalPathTest.trace.spans[0].spanID]);
+      wrapper.setProps({
+        childrenHiddenIDs,
+        trace: criticalPathTest.trace,
+        criticalPath: criticalPathTest.criticalPathSections,
+      });
+      render(instance.renderRow('some-key', {}, 0, {}));
+      expect(screen.getAllByTestId('SpanBar--criticalPath').length).toBe(1);
     });
 
     it('renders a SpanBarRow with a RPC span if the row is collapsed and a client span', () => {
@@ -344,6 +382,35 @@ describe('<VirtualizedTraceViewImpl>', () => {
           />
         )
       ).toBe(true);
+    });
+
+    it('renders a SpanBarRow with a client or producer span and no instrumented server span', () => {
+      const externServiceName = 'externalServiceTest';
+      const leafSpan = trace.spans.find(span => !span.hasChildren);
+      const leafSpanIndex = trace.spans.indexOf(leafSpan);
+      const tags = [
+        [
+          // client span
+          { key: 'span.kind', value: 'client' },
+          { key: 'peer.service', value: externServiceName },
+          ...leafSpan.tags,
+        ],
+        [
+          // producer span
+          { key: 'span.kind', value: 'producer' },
+          { key: 'peer.service', value: externServiceName },
+          ...leafSpan.tags,
+        ],
+      ];
+
+      tags.forEach(tag => {
+        const altTrace = updateSpan(trace, leafSpanIndex, { tags: tag });
+        wrapper.setProps({ trace: altTrace });
+        const rowWrapper = mount(instance.renderRow('some-key', {}, leafSpanIndex, {}));
+        const spanBarRow = rowWrapper.find(SpanBarRow);
+        expect(spanBarRow.length).toBe(1);
+        expect(spanBarRow.prop('noInstrumentedServer')).not.toBeNull();
+      });
     });
   });
 
@@ -388,6 +455,55 @@ describe('<VirtualizedTraceViewImpl>', () => {
       it('returns false if all props are unchanged', () => {
         expect(wrapper.instance().shouldComponentUpdate(props)).toBe(false);
       });
+    });
+  });
+
+  describe('focusSpan', () => {
+    it('calls updateUiFind and focusUiFindMatches', () => {
+      const spanName = 'span1';
+      instance.focusSpan(spanName);
+      expect(updateUiFindSpy).toHaveBeenLastCalledWith({
+        history: props.history,
+        location: props.location,
+        uiFind: spanName,
+      });
+      expect(focusUiFindMatchesMock).toHaveBeenLastCalledWith(trace, spanName, false);
+    });
+  });
+
+  describe('linksGetter()', () => {
+    const span = trace.spans[1];
+    const key = span.tags[0].key;
+    const val = encodeURIComponent(span.tags[0].value);
+    const origLinkPatterns = [...linkPatterns.processedLinks];
+
+    beforeEach(() => {
+      linkPatterns.processedLinks.splice(0, linkPatterns.processedLinks.length);
+    });
+
+    afterAll(() => {
+      linkPatterns.processedLinks.splice(0, linkPatterns.processedLinks.length);
+      linkPatterns.processedLinks.push(...origLinkPatterns);
+    });
+
+    it('linksGetter is expected to receive url and text for a given link pattern', () => {
+      const linkPatternConfig = [
+        {
+          key,
+          type: 'tags',
+          url: `http://example.com/?key1=#{${key}}&traceID=#{trace.traceID}&startTime=#{trace.startTime}`,
+          text: `For first link traceId is - #{trace.traceID}`,
+        },
+      ].map(linkPatterns.processLinkPattern);
+
+      linkPatterns.processedLinks.push(...linkPatternConfig);
+
+      expect(instance.linksGetter(span, span.tags, 0)).toEqual([
+        {
+          url: `http://example.com/?key1=${val}&traceID=${trace.traceID}&startTime=${trace.startTime}`,
+          text: `For first link traceId is - ${trace.traceID}`,
+        },
+      ]);
     });
   });
 });

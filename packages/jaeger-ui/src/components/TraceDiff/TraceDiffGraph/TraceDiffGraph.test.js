@@ -14,11 +14,11 @@
 
 import * as React from 'react';
 import { shallow } from 'enzyme';
-// import _mapValues from 'lodash/mapValues';
 
 import { UnconnectedTraceDiffGraph as TraceDiffGraph } from './TraceDiffGraph';
 import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
+import UiFindInput from '../../common/UiFindInput';
 import { fetchedState } from '../../../constants';
 
 describe('TraceDiffGraph', () => {
@@ -90,12 +90,7 @@ describe('TraceDiffGraph', () => {
     });
 
     expect(wrapper.find(ErrorMessage).length).toBe(2);
-    expect(
-      wrapper
-        .find(ErrorMessage)
-        .at(1)
-        .props()
-    ).toEqual(
+    expect(wrapper.find(ErrorMessage).at(1).props()).toEqual(
       expect.objectContaining({
         error: errorB,
       })
@@ -135,6 +130,7 @@ describe('TraceDiffGraph', () => {
   it('renders an empty div when a or b lack data', () => {
     expect(wrapper.children().length).not.toBe(0);
 
+    /* eslint-disable @typescript-eslint/no-unused-vars */
     const { data: unusedAData, ...aWithoutData } = props.a;
     wrapper.setProps({ a: aWithoutData });
     expect(wrapper.children().length).toBe(0);
@@ -145,6 +141,26 @@ describe('TraceDiffGraph', () => {
 
     wrapper.setProps({ a: props.a });
     expect(wrapper.children().length).toBe(0);
+  });
+
+  it('renders a DiGraph when it has data', () => {
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it('renders current uiFind count when given uiFind', () => {
+    expect(wrapper.find(UiFindInput).prop('inputProps')).toEqual(
+      expect.objectContaining({
+        suffix: undefined,
+      })
+    );
+
+    wrapper.setProps({ uiFind: 'test uiFind' });
+
+    expect(wrapper.find(UiFindInput).prop('inputProps')).toEqual(
+      expect.objectContaining({
+        suffix: '0',
+      })
+    );
   });
 
   it('cleans up layoutManager before unmounting', () => {

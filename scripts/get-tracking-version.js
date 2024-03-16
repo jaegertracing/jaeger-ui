@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// Copyright (c) 2023 The Jaeger Authors
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +15,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// See the comment on `getVersion(..)` for details on what this script does.
+// This script is run during the build and generates strings used to identify
+// the application to Google Analytics tracking (or any tracking).
+//
+// See the comment on `getVersion(..)` function below for details.
+// See also packages/jaeger-ui/src/utils/tracking/README.md
 
+/* eslint-disable @typescript-eslint/no-var-requires */
 const spawnSync = require('child_process').spawnSync;
 
 const version = require('../package.json').version;

@@ -15,12 +15,12 @@
 import transformTraceData from '../../../model/transform-trace-data';
 import calculateTraceDagEV from './calculateTraceDagEV';
 
-const testTrace = require('./testTrace.json');
+import testTrace from './testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
 
 function assertData(nodes, service, operation, count, errors, time, percent, selfTime) {
-  const d = nodes.find(({ data: n }) => n.service === service && n.operation === operation).data.data;
+  const d = nodes.find(({ data: n }) => n.service === service && n.operation === operation).data;
   expect(d).toBeDefined();
   expect(d.count).toBe(count);
   expect(d.errors).toBe(errors);

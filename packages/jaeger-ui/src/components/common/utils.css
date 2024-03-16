@@ -14,6 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+:root {
+  --nav-height: 48px;
+}
+
 .u-width-100 {
   width: 100%;
 }
@@ -132,7 +136,7 @@ limitations under the License.
 
 .u-miniMap > .plexus-MiniMap--button {
   background: #ccc;
-  color: #888;
+  color: #444;
   cursor: pointer;
   font-size: 1.6em;
   line-height: 0;

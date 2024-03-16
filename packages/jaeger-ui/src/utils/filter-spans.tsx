@@ -26,17 +26,18 @@ export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
   // values with keys that include text in any one of the excludeKeys will be ignored
   const excludeKeys: string[] = [];
 
-  // split textFilter by whitespace, remove empty strings, and extract includeFilters and excludeKeys
-  textFilter
-    .split(/\s+/)
-    .filter(Boolean)
-    .forEach(w => {
-      if (w[0] === '-') {
-        excludeKeys.push(w.substr(1).toLowerCase());
-      } else {
-        includeFilters.push(w.toLowerCase());
-      }
-    });
+  // split textFilter by whitespace, but not that in double quotes, remove empty strings, and extract includeFilters and excludeKeys
+  const regex = /[^\s"]+|"([^"]*)"/g;
+  const match = textFilter.match(regex);
+  const results = match ? match.map(e => e.replace(/"(.*)"/, '$1')) : [];
+
+  results.filter(Boolean).forEach(w => {
+    if (w[0] === '-') {
+      excludeKeys.push(w.substr(1).toLowerCase());
+    } else {
+      includeFilters.push(w.toLowerCase());
+    }
+  });
 
   const isTextInFilters = (filters: Array<string>, text: string) =>
     filters.some(filter => text.toLowerCase().includes(filter));
@@ -46,9 +47,11 @@ export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
       ? kvs.some(kv => {
           // ignore checking key and value for a match if key is in excludeKeys
           if (isTextInFilters(excludeKeys, kv.key)) return false;
-          // match if key or value matches an item in includeFilters
+          // match if key, value or key=value string matches an item in includeFilters
           return (
-            isTextInFilters(includeFilters, kv.key) || isTextInFilters(includeFilters, kv.value.toString())
+            isTextInFilters(includeFilters, kv.key) ||
+            isTextInFilters(includeFilters, kv.value.toString()) ||
+            isTextInFilters(includeFilters, `${kv.key}=${kv.value.toString()}`)
           );
         })
       : false;
@@ -57,9 +60,9 @@ export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
     isTextInFilters(includeFilters, span.operationName) ||
     isTextInFilters(includeFilters, span.process.serviceName) ||
     isTextInKeyValues(span.tags) ||
-    span.logs.some(log => isTextInKeyValues(log.fields)) ||
+    (Array.isArray(span.logs) && span.logs.some(log => isTextInKeyValues(log.fields))) ||
     isTextInKeyValues(span.process.tags) ||
-    includeFilters.some(filter => filter === span.spanID);
+    includeFilters.some(filter => filter.replace(/^0*/, '') === span.spanID.replace(/^0*/, ''));
 
   // declare as const because need to disambiguate the type
   const rv: Set<string> = new Set(spans.filter(isSpanAMatch).map((span: Span) => span.spanID));

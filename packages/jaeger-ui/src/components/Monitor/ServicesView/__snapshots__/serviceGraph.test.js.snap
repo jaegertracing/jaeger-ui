@@ -1,0 +1,742 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<ServiceGraph> "Couldn’t fetch data" displayed 1`] = `
+<div
+  className="graph-container "
+  style={
+    Object {
+      "height": 242,
+    }
+  }
+>
+  <h3
+    className="graph-header"
+  >
+    Hello Graph
+  </h3>
+  <div
+    className="center-placeholder"
+    style={
+      Object {
+        "height": 168,
+        "width": 300,
+      }
+    }
+  >
+    Couldn’t fetch data
+  </div>
+</div>
+`;
+
+exports[`<ServiceGraph> "No data" displayed 1`] = `
+<div
+  className="graph-container "
+  style={
+    Object {
+      "height": 242,
+    }
+  }
+>
+  <h3
+    className="graph-header"
+  >
+    Hello Graph
+  </h3>
+  <div
+    className="center-placeholder"
+    style={
+      Object {
+        "height": 168,
+        "width": 300,
+      }
+    }
+  >
+    No Data
+  </div>
+</div>
+`;
+
+exports[`<ServiceGraph> Base graph should be displayed  1`] = `
+<div
+  className="graph-container "
+  style={
+    Object {
+      "height": 242,
+    }
+  }
+>
+  <h3
+    className="graph-header"
+  >
+    Hello Graph
+  </h3>
+  <XYPlot
+    className=""
+    height={168}
+    margin={
+      Object {
+        "bottom": 25,
+      }
+    }
+    onMouseLeave={[Function]}
+    width={300}
+    xDomain={
+      Array [
+        1,
+        2,
+      ]
+    }
+  >
+    <XAxis
+      attr="x"
+      attrAxis="y"
+      orientation="bottom"
+      tickFormat={[Function]}
+      tickTotal={5}
+    />
+    <YAxis
+      attr="y"
+      attrAxis="x"
+      orientation="left"
+    />
+    <AreaSeries
+      className=""
+      color={
+        Array [
+          "#DCA3D2",
+        ]
+      }
+      data={
+        Array [
+          Object {
+            "x": 1631271823806,
+            "y": 0.05,
+          },
+          Object {
+            "x": 1631271883806,
+            "y": 0.05,
+          },
+        ]
+      }
+      getNull={[Function]}
+      key="0"
+      onNearestX={[Function]}
+      opacity={0.1}
+      stack={false}
+      style={Object {}}
+    />
+    <LineSeries
+      className=""
+      color={
+        Array [
+          "#DCA3D2",
+        ]
+      }
+      curve={null}
+      data={
+        Array [
+          Object {
+            "x": 1631271823806,
+            "y": 0.05,
+          },
+          Object {
+            "x": 1631271883806,
+            "y": 0.05,
+          },
+        ]
+      }
+      getNull={[Function]}
+      key="1"
+      opacity={1}
+      stack={false}
+      strokeStyle="solid"
+      style={Object {}}
+    />
+    <Crosshair
+      itemsFormat={[Function]}
+      style={
+        Object {
+          "box": Object {},
+          "line": Object {},
+          "title": Object {},
+        }
+      }
+      titleFormat={[Function]}
+      values={Array []}
+    >
+      <div
+        className="crosshair-value"
+      />
+    </Crosshair>
+  </XYPlot>
+</div>
+`;
+
+exports[`<ServiceGraph> Base graph with custom color should be displayed 1`] = `
+<div
+  className="graph-container "
+  style={
+    Object {
+      "height": 242,
+    }
+  }
+>
+  <h3
+    className="graph-header"
+  >
+    Hello Graph
+  </h3>
+  <XYPlot
+    className=""
+    height={168}
+    margin={
+      Object {
+        "bottom": 25,
+      }
+    }
+    onMouseLeave={[Function]}
+    width={300}
+    xDomain={
+      Array [
+        1,
+        2,
+      ]
+    }
+  >
+    <XAxis
+      attr="x"
+      attrAxis="y"
+      orientation="bottom"
+      tickFormat={[Function]}
+      tickTotal={5}
+    />
+    <YAxis
+      attr="y"
+      attrAxis="x"
+      orientation="left"
+    />
+    <AreaSeries
+      className=""
+      color={
+        Array [
+          "AAAAAA",
+        ]
+      }
+      data={
+        Array [
+          Object {
+            "x": 1631271823806,
+            "y": 0.05,
+          },
+          Object {
+            "x": 1631271883806,
+            "y": 0.05,
+          },
+        ]
+      }
+      getNull={[Function]}
+      key="0"
+      onNearestX={[Function]}
+      opacity={0.1}
+      stack={false}
+      style={Object {}}
+    />
+    <LineSeries
+      className=""
+      color={
+        Array [
+          "AAAAAA",
+        ]
+      }
+      curve={null}
+      data={
+        Array [
+          Object {
+            "x": 1631271823806,
+            "y": 0.05,
+          },
+          Object {
+            "x": 1631271883806,
+            "y": 0.05,
+          },
+        ]
+      }
+      getNull={[Function]}
+      key="1"
+      opacity={1}
+      stack={false}
+      strokeStyle="solid"
+      style={Object {}}
+    />
+    <Crosshair
+      itemsFormat={[Function]}
+      style={
+        Object {
+          "box": Object {},
+          "line": Object {},
+          "title": Object {},
+        }
+      }
+      titleFormat={[Function]}
+      values={Array []}
+    >
+      <div
+        className="crosshair-value"
+      />
+    </Crosshair>
+  </XYPlot>
+</div>
+`;
+
+exports[`<ServiceGraph> Base graph with horizontal lines should be displayed 1`] = `
+<div
+  className="graph-container "
+  style={
+    Object {
+      "height": 242,
+    }
+  }
+>
+  <h3
+    className="graph-header"
+  >
+    Hello Graph
+  </h3>
+  <XYPlot
+    className=""
+    height={168}
+    margin={
+      Object {
+        "bottom": 25,
+      }
+    }
+    onMouseLeave={[Function]}
+    width={300}
+    xDomain={
+      Array [
+        1,
+        2,
+      ]
+    }
+  >
+    <HorizontalGridLines
+      attr="y"
+      direction="horizontal"
+    />
+    <XAxis
+      attr="x"
+      attrAxis="y"
+      orientation="bottom"
+      tickFormat={[Function]}
+      tickTotal={5}
+    />
+    <YAxis
+      attr="y"
+      attrAxis="x"
+      orientation="left"
+    />
+    <AreaSeries
+      className=""
+      color={
+        Array [
+          "#DCA3D2",
+        ]
+      }
+      data={
+        Array [
+          Object {
+            "x": 1631271823806,
+            "y": 0.05,
+          },
+          Object {
+            "x": 1631271883806,
+            "y": 0.05,
+          },
+        ]
+      }
+      getNull={[Function]}
+      key="0"
+      onNearestX={[Function]}
+      opacity={0.1}
+      stack={false}
+      style={Object {}}
+    />
+    <LineSeries
+      className=""
+      color={
+        Array [
+          "#DCA3D2",
+        ]
+      }
+      curve={null}
+      data={
+        Array [
+          Object {
+            "x": 1631271823806,
+            "y": 0.05,
+          },
+          Object {
+            "x": 1631271883806,
+            "y": 0.05,
+          },
+        ]
+      }
+      getNull={[Function]}
+      key="1"
+      opacity={1}
+      stack={false}
+      strokeStyle="solid"
+      style={Object {}}
+    />
+    <Crosshair
+      itemsFormat={[Function]}
+      style={
+        Object {
+          "box": Object {},
+          "line": Object {},
+          "title": Object {},
+        }
+      }
+      titleFormat={[Function]}
+      values={Array []}
+    >
+      <div
+        className="crosshair-value"
+      />
+    </Crosshair>
+  </XYPlot>
+</div>
+`;
+
+exports[`<ServiceGraph> Base graph with legends should be displayed 1`] = `
+<div
+  className="graph-container "
+  style={
+    Object {
+      "height": 242,
+    }
+  }
+>
+  <h3
+    className="graph-header"
+  >
+    Hello Graph
+  </h3>
+  <XYPlot
+    className=""
+    height={168}
+    margin={
+      Object {
+        "bottom": 25,
+      }
+    }
+    onMouseLeave={[Function]}
+    width={300}
+    xDomain={
+      Array [
+        1,
+        2,
+      ]
+    }
+  >
+    <XAxis
+      attr="x"
+      attrAxis="y"
+      orientation="bottom"
+      tickFormat={[Function]}
+      tickTotal={5}
+    />
+    <YAxis
+      attr="y"
+      attrAxis="x"
+      orientation="left"
+    />
+    <AreaSeries
+      className=""
+      color={
+        Array [
+          "#DCA3D2",
+        ]
+      }
+      data={
+        Array [
+          Object {
+            "x": 1631271823806,
+            "y": 0.05,
+          },
+          Object {
+            "x": 1631271883806,
+            "y": 0.05,
+          },
+        ]
+      }
+      getNull={[Function]}
+      key="0"
+      onNearestX={[Function]}
+      opacity={0.1}
+      stack={false}
+      style={Object {}}
+    />
+    <LineSeries
+      className=""
+      color={
+        Array [
+          "#DCA3D2",
+        ]
+      }
+      curve={null}
+      data={
+        Array [
+          Object {
+            "x": 1631271823806,
+            "y": 0.05,
+          },
+          Object {
+            "x": 1631271883806,
+            "y": 0.05,
+          },
+        ]
+      }
+      getNull={[Function]}
+      key="1"
+      opacity={1}
+      stack={false}
+      strokeStyle="solid"
+      style={Object {}}
+    />
+    <Crosshair
+      itemsFormat={[Function]}
+      style={
+        Object {
+          "box": Object {},
+          "line": Object {},
+          "title": Object {},
+        }
+      }
+      titleFormat={[Function]}
+      values={Array []}
+    >
+      <div
+        className="crosshair-value"
+      />
+    </Crosshair>
+    <DiscreteColorLegendItem
+      className="legend-label"
+      colors={
+        Array [
+          "#12939A",
+          "#79C7E3",
+          "#1A3177",
+          "#FF9833",
+          "#EF5D28",
+        ]
+      }
+      items={
+        Array [
+          Object {
+            "color": "#DCA3D2",
+            "title": "95th",
+          },
+        ]
+      }
+      orientation="horizontal"
+    />
+  </XYPlot>
+</div>
+`;
+
+exports[`<ServiceGraph> Crosshair map test 1`] = `
+<div
+  className="graph-container "
+  style={
+    Object {
+      "height": 242,
+    }
+  }
+>
+  <h3
+    className="graph-header"
+  >
+    Hello Graph
+  </h3>
+  <XYPlot
+    className=""
+    height={168}
+    margin={
+      Object {
+        "bottom": 25,
+      }
+    }
+    onMouseLeave={[Function]}
+    width={300}
+    xDomain={
+      Array [
+        1,
+        2,
+      ]
+    }
+  >
+    <XAxis
+      attr="x"
+      attrAxis="y"
+      orientation="bottom"
+      tickFormat={[Function]}
+      tickTotal={5}
+    />
+    <YAxis
+      attr="y"
+      attrAxis="x"
+      orientation="left"
+    />
+    <AreaSeries
+      className=""
+      color={
+        Array [
+          "#DCA3D2",
+        ]
+      }
+      data={
+        Array [
+          Object {
+            "x": 1631271823806,
+            "y": 0.05,
+          },
+          Object {
+            "x": 1631271883806,
+            "y": 0.05,
+          },
+        ]
+      }
+      getNull={[Function]}
+      key="0"
+      onNearestX={[Function]}
+      opacity={0.1}
+      stack={false}
+      style={Object {}}
+    />
+    <LineSeries
+      className=""
+      color={
+        Array [
+          "#DCA3D2",
+        ]
+      }
+      curve={null}
+      data={
+        Array [
+          Object {
+            "x": 1631271823806,
+            "y": 0.05,
+          },
+          Object {
+            "x": 1631271883806,
+            "y": 0.05,
+          },
+        ]
+      }
+      getNull={[Function]}
+      key="1"
+      opacity={1}
+      stack={false}
+      strokeStyle="solid"
+      style={Object {}}
+    />
+    <Crosshair
+      itemsFormat={[Function]}
+      style={
+        Object {
+          "box": Object {},
+          "line": Object {},
+          "title": Object {},
+        }
+      }
+      titleFormat={[Function]}
+      values={Array []}
+    >
+      <div
+        className="crosshair-value"
+      />
+    </Crosshair>
+  </XYPlot>
+</div>
+`;
+
+exports[`<ServiceGraph> Crosshair mouse hover test 1`] = `
+<path
+  class="rv-xy-plot__series rv-xy-plot__series--line "
+  d="M0,0L0,0L0,0L0,0Z"
+  style="opacity:0.1;stroke:#DCA3D2;fill:#DCA3D2"
+  transform="translate(undefined,undefined)"
+/>
+`;
+
+exports[`<ServiceGraph> Crosshair mouse hover test 2`] = `
+<path
+  class="rv-xy-plot__series rv-xy-plot__series--line "
+  d="M0,0L0,0"
+  style="opacity:1;stroke:#DCA3D2"
+  transform="translate(undefined,undefined)"
+/>
+`;
+
+exports[`<ServiceGraph> Loading indicator is displayed 1`] = `
+<div
+  className="graph-container "
+  style={
+    Object {
+      "height": 242,
+    }
+  }
+>
+  <h3
+    className="graph-header"
+  >
+    Hello Graph
+  </h3>
+  <div
+    className="center-placeholder"
+    style={
+      Object {
+        "height": 168,
+        "width": 300,
+      }
+    }
+  >
+    <LoadingIndicator
+      centered={true}
+      small={false}
+    />
+  </div>
+</div>
+`;
+
+exports[`<ServiceGraph> Loading indicator is displayed when xDomain is empty 1`] = `
+<div
+  className="graph-container "
+  style={
+    Object {
+      "height": 242,
+    }
+  }
+>
+  <h3
+    className="graph-header"
+  >
+    Hello Graph
+  </h3>
+  <div
+    className="center-placeholder"
+    style={
+      Object {
+        "height": 168,
+        "width": 300,
+      }
+    }
+  >
+    <LoadingIndicator
+      centered={true}
+      small={false}
+    />
+  </div>
+</div>
+`;

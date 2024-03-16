@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,13 +18,14 @@ import { actionTypes } from '../actions/ddg';
 import { fetchDeepDependencyGraph } from '../actions/jaeger-api';
 import { fetchedState } from '../constants';
 import { ApiError } from '../types/api-error';
-import getDdgModelKey from '../model/ddg/getDdgModelKey';
+import getStateEntryKey from '../model/ddg/getStateEntryKey';
 import transformDdgData from '../model/ddg/transformDdgData';
 import {
   EViewModifier,
   TDdgActionMeta,
   TDdgAddViewModifierPayload,
   TDdgClearViewModifiersFromIndicesPayload,
+  TDdgModel,
   TDdgPayload,
   TDdgRemoveViewModifierFromIndicesPayload,
   TDdgRemoveViewModifierPayload,
@@ -33,16 +34,22 @@ import {
 import TDdgState, { TDdgStateEntry } from '../types/TDdgState';
 import guardReducer, { guardReducerWithMeta } from '../utils/guardReducer';
 
+interface IDoneState {
+  state: typeof fetchedState.DONE;
+  model: TDdgModel;
+  viewModifiers: Map<number, number>;
+}
+
 export function addViewModifier(state: TDdgState, payload: TDdgAddViewModifierPayload) {
   const { visibilityIndices, viewModifier } = payload;
-  const key = getDdgModelKey(payload);
+  const key = getStateEntryKey(payload);
   const stateEntry: TDdgStateEntry | void = state[key];
   if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
     console.warn('Cannot set view modifiers for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
     return state;
   }
 
-  const viewModifiers = new Map(stateEntry.viewModifiers);
+  const viewModifiers = new Map((stateEntry as IDoneState).viewModifiers);
   visibilityIndices.forEach(idx => {
     viewModifiers.set(idx, (viewModifiers.get(idx) || 0) | viewModifier); // eslint-disable-line no-bitwise
   });
@@ -58,14 +65,14 @@ export function addViewModifier(state: TDdgState, payload: TDdgAddViewModifierPa
 
 export function viewModifierRemoval(state: TDdgState, payload: TDdgViewModifierRemovalPayload) {
   const { visibilityIndices, viewModifier } = payload;
-  const key = getDdgModelKey(payload);
+  const key = getStateEntryKey(payload);
   const stateEntry: TDdgStateEntry | void = state[key];
   if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
     console.warn('Cannot change view modifiers for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
     return state;
   }
 
-  const viewModifiers = new Map(stateEntry.viewModifiers);
+  const viewModifiers = new Map((stateEntry as IDoneState).viewModifiers);
   const indicesToUpdate = visibilityIndices || Array.from(viewModifiers.keys());
 
   indicesToUpdate.forEach(idx => {
@@ -91,7 +98,7 @@ export function viewModifierRemoval(state: TDdgState, payload: TDdgViewModifierR
 
 export function fetchDeepDependencyGraphStarted(state: TDdgState, { meta }: { meta: TDdgActionMeta }) {
   const { query } = meta;
-  const key = getDdgModelKey(query);
+  const key = getStateEntryKey(query);
   return {
     ...state,
     [key]: {
@@ -106,7 +113,7 @@ export function fetchDeepDependencyGraphDone(
 ) {
   const { query } = meta;
   const { service, operation } = query;
-  const key = getDdgModelKey(query);
+  const key = getStateEntryKey(query);
   return {
     ...state,
     [key]: {
@@ -122,7 +129,7 @@ export function fetchDeepDependencyGraphErred(
   { meta, payload }: { meta: TDdgActionMeta; payload: ApiError }
 ) {
   const { query } = meta;
-  const key = getDdgModelKey(query);
+  const key = getStateEntryKey(query);
   return {
     ...state,
     [key]: {

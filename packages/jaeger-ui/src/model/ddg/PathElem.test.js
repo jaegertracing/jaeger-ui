@@ -16,6 +16,31 @@ import PathElem from './PathElem';
 import { simplePath } from './sample-paths.test.resources';
 
 describe('PathElem', () => {
+  const getPath = () => {
+    const path = {
+      focalIdx: 2,
+    };
+    const members = simplePath.map(
+      ({ operation, service }, i) =>
+        new PathElem({
+          memberIdx: i,
+          operation: {
+            name: operation,
+            service: {
+              name: service,
+            },
+          },
+          path,
+        })
+    );
+    members[2].visibilityIdx = 0;
+    members[3].visibilityIdx = 1;
+    members[1].visibilityIdx = 2;
+    members[4].visibilityIdx = 3;
+    members[0].visibilityIdx = 4;
+    path.members = members;
+    return path;
+  };
   const testMemberIdx = 3;
   const testOperation = {};
   const testPath = {
@@ -55,6 +80,20 @@ describe('PathElem', () => {
     }).toThrowError();
   });
 
+  it('has externalSideNeighbor if distance is not 0 and it is not external', () => {
+    expect(pathElem.externalSideNeighbor).toBe(testPath.members[testMemberIdx - 1]);
+  });
+
+  it('has a null externalSideNeighbor if distance is 0', () => {
+    pathElem = new PathElem({ path: testPath, operation: testOperation, memberIdx: testPath.focalIdx });
+    expect(pathElem.externalSideNeighbor).toBe(null);
+  });
+
+  it('has an undefined externalSideNeighbor if is external', () => {
+    pathElem = new PathElem({ path: testPath, operation: testOperation, memberIdx: 0 });
+    expect(pathElem.externalSideNeighbor).toBe(undefined);
+  });
+
   it('has focalSideNeighbor if distance is not 0', () => {
     expect(pathElem.focalSideNeighbor).toBe(testPath.members[testMemberIdx + 1]);
   });
@@ -85,29 +124,49 @@ describe('PathElem', () => {
     expect(focalElem.isExternal).toBe(false);
   });
 
+  describe('externalPath', () => {
+    const path = getPath();
+
+    it('returns array of itself if it is focal elem', () => {
+      const targetPathElem = path.members[path.focalIdx];
+      expect(targetPathElem.externalPath).toEqual([targetPathElem]);
+    });
+
+    it('returns path away from focal elem in correct order for upstream elem', () => {
+      const idx = path.focalIdx - 1;
+      const targetPathElem = path.members[idx];
+      expect(targetPathElem.externalPath).toEqual(path.members.slice(0, idx + 1));
+    });
+
+    it('returns path away from focal elem in correct order for downstream elem', () => {
+      const idx = path.focalIdx + 1;
+      const targetPathElem = path.members[idx];
+      expect(targetPathElem.externalPath).toEqual(path.members.slice(idx));
+    });
+  });
+
+  describe('focalPath', () => {
+    const path = getPath();
+
+    it('returns array of itself if it is focal elem', () => {
+      const targetPathElem = path.members[path.focalIdx];
+      expect(targetPathElem.focalPath).toEqual([targetPathElem]);
+    });
+
+    it('returns path to focal elem in correct order for upstream elem', () => {
+      const targetPathElem = path.members[0];
+      expect(targetPathElem.focalPath).toEqual(path.members.slice(0, path.focalIdx + 1));
+    });
+
+    it('returns path to focal elem in correct order for downstream elem', () => {
+      const idx = path.members.length - 1;
+      const targetPathElem = path.members[idx];
+      expect(targetPathElem.focalPath).toEqual(path.members.slice(path.focalIdx, idx + 1));
+    });
+  });
+
   describe('legibility', () => {
-    const path = {
-      focalIdx: 2,
-    };
-    const members = simplePath.map(
-      ({ operation, service }, i) =>
-        new PathElem({
-          memberIdx: i,
-          operation: {
-            name: operation,
-            service: {
-              name: service,
-            },
-          },
-          path,
-        })
-    );
-    members[2].visibilityIdx = 0;
-    members[3].visibilityIdx = 1;
-    members[1].visibilityIdx = 2;
-    members[4].visibilityIdx = 3;
-    members[0].visibilityIdx = 4;
-    path.members = members;
+    const path = getPath();
     const targetPathElem = path.members[1];
 
     it('creates consumable JSON', () => {

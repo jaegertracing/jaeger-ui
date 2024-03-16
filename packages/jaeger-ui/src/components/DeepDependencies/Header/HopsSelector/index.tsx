@@ -29,8 +29,10 @@ export default memo(function HopsSelector({ distanceToPathElems, handleClick, vi
 
   const downstreamHops: THop[] = [];
   const upstreamHops: THop[] = [];
+  let minFullDistance = 0;
   let minVisDistance = 0;
   let minVisDistanceFullness = ECheckedStatus.Empty;
+  let maxFullDistance = 0;
   let maxVisDistance = 0;
   let maxVisDistanceFullness = ECheckedStatus.Empty;
   const visibleIndices = visEncoding && new Set(decode(visEncoding));
@@ -63,6 +65,11 @@ export default memo(function HopsSelector({ distanceToPathElems, handleClick, vi
         minVisDistanceFullness = fullness;
       }
     }
+
+    if (fullness === ECheckedStatus.Full) {
+      if (distance >= maxFullDistance) maxFullDistance = distance;
+      if (distance <= minFullDistance) minFullDistance = distance;
+    }
   });
 
   downstreamHops.sort(({ distance: a }, { distance: b }) => a - b);
@@ -75,6 +82,7 @@ export default memo(function HopsSelector({ distanceToPathElems, handleClick, vi
         handleClick={handleClick}
         hops={upstreamHops}
         furthestDistance={minVisDistance}
+        furthestFullDistance={minFullDistance}
         furthestFullness={minVisDistanceFullness}
       />
       <Selector
@@ -82,6 +90,7 @@ export default memo(function HopsSelector({ distanceToPathElems, handleClick, vi
         handleClick={handleClick}
         hops={downstreamHops}
         furthestDistance={maxVisDistance}
+        furthestFullDistance={maxFullDistance}
         furthestFullness={maxVisDistanceFullness}
       />
     </div>

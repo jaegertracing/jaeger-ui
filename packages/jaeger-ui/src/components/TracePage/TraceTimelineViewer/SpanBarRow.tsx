@@ -13,9 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import IoAlert from 'react-icons/lib/io/alert';
-import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
-
+import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
+import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
@@ -23,13 +22,14 @@ import SpanBar from './SpanBar';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
-import { Span } from '../../../types/trace';
+import { criticalPathSection, Span } from '../../../types/trace';
 
 import './SpanBarRow.css';
 
 type SpanBarRowProps = {
   className?: string;
   color: string;
+  criticalPath: criticalPathSection[];
   columnDivision: number;
   isChildrenExpanded: boolean;
   isDetailExpanded: boolean;
@@ -46,10 +46,17 @@ type SpanBarRowProps = {
         serviceName: string;
       }
     | TNil;
+  noInstrumentedServer?:
+    | {
+        color: string;
+        serviceName: string;
+      }
+    | TNil;
   showErrorIcon: boolean;
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
   span: Span;
+  focusSpan: (spanID: string) => void;
 };
 
 /**
@@ -78,16 +85,19 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
     const {
       className,
       color,
+      criticalPath,
       columnDivision,
       isChildrenExpanded,
       isDetailExpanded,
       isMatchingFilter,
       numTicks,
       rpc,
+      noInstrumentedServer,
       showErrorIcon,
       getViewedBounds,
       traceStartTime,
       span,
+      focusSpan,
     } = this.props;
     const {
       duration,
@@ -142,14 +152,44 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 {serviceName}{' '}
                 {rpc && (
                   <span>
-                    <IoArrowRightA />{' '}
+                    <IoArrowForward className="SpanBarRow--arrowForwardIcon" />{' '}
                     <i className="SpanBarRow--rpcColorMarker" style={{ background: rpc.color }} />
                     {rpc.serviceName}
+                  </span>
+                )}
+                {noInstrumentedServer && (
+                  <span>
+                    <IoArrowForward className="SpanBarRow--arrowForwardIcon" />{' '}
+                    <i
+                      className="SpanBarRow--rpcColorMarker"
+                      style={{ background: noInstrumentedServer.color }}
+                    />
+                    {noInstrumentedServer.serviceName}
                   </span>
                 )}
               </span>
               <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
             </a>
+            {span.references && span.references.length > 1 && (
+              <ReferencesButton
+                references={span.references}
+                tooltipText="Contains multiple references"
+                focusSpan={focusSpan}
+              >
+                <IoGitNetwork />
+              </ReferencesButton>
+            )}
+            {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
+              <ReferencesButton
+                references={span.subsidiarilyReferencedBy}
+                tooltipText={`This span is referenced by ${
+                  span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
+                }`}
+                focusSpan={focusSpan}
+              >
+                <IoCloudUploadOutline />
+              </ReferencesButton>
+            )}
           </div>
         </TimelineRow.Cell>
         <TimelineRow.Cell
@@ -160,6 +200,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
         >
           <Ticks numTicks={numTicks} />
           <SpanBar
+            criticalPath={criticalPath}
             rpc={rpc}
             viewStart={viewStart}
             viewEnd={viewEnd}

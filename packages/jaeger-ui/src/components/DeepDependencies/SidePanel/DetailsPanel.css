@@ -1,0 +1,83 @@
+/*
+Copyright (c) 2020 The Jaeger Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+.Ddg--DetailsPanel {
+  background-color: #fafafa;
+  border-left: solid 1px #ddd;
+  box-shadow: -3px 0 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.Ddg--DetailsPanel--SvcOpHeader {
+  border-bottom: solid 1px #ddd;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.1);
+  font-size: 1.5em;
+  text-align: right;
+  padding: 0.1em 0.3em;
+}
+
+.Ddg--DetailsPanel--DecorationHeader {
+  font-size: 1.3em;
+  text-align: center;
+  padding: 0.3em;
+}
+
+.Ddg--DetailsPanel--DecorationHeader > span {
+  border-bottom: solid 1px #bbb;
+  box-shadow: 0px 3px 3px -3px rgba(0, 0, 0, 0.1);
+}
+
+.Ddg--DetailsPanel--DetailLink {
+  padding-left: 0.2em;
+}
+
+.Ddg--DetailsPanel--errorMsg {
+  color: #e58c33;
+}
+
+.Ddg--DetailsPanel--DetailsCard {
+  background-color: #ffffff;
+  border: solid 2px rgba(0, 0, 0, 0.3);
+  margin: 0.5em;
+  overflow: hidden;
+}
+
+.Ddg--DetailsPanel--DetailsCard.is-error {
+  color: #e58c33;
+}
+
+.Ddg--DetailsPanel--LoadingIndicator {
+  display: block;
+  margin: auto;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  line-height: 0;
+}
+
+.Ddg--DetailsPanel--LoadingWrapper {
+  flex-grow: 1;
+  position: relative;
+}
+
+.Ddg--DetailsPanel--PercentCircleWrapper {
+  margin: 0 auto;
+  max-width: 20vh;
+  padding: 0 3%;
+}

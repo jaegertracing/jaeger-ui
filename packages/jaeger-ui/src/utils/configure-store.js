@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,16 +14,21 @@
 // limitations under the License.
 
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
-import { routerReducer, routerMiddleware } from 'react-router-redux';
-import { window } from 'global';
+import { createReduxHistoryContext } from 'redux-first-history';
+import { createBrowserHistory } from 'history';
 
 import traceDiff from '../components/TraceDiff/duck';
 import archive from '../components/TracePage/ArchiveNotifier/duck';
 import traceTimeline from '../components/TracePage/TraceTimelineViewer/duck';
 import jaegerReducers from '../reducers';
 import * as jaegerMiddlewares from '../middlewares';
+import { getAppEnvironment } from './constants';
 
-export default function configureStore(history) {
+const { createReduxHistory, routerMiddleware, routerReducer } = createReduxHistoryContext({
+  history: createBrowserHistory(),
+});
+
+export default function configureStore() {
   return createStore(
     combineReducers({
       ...jaegerReducers,
@@ -36,11 +42,14 @@ export default function configureStore(history) {
         ...Object.keys(jaegerMiddlewares)
           .map(key => jaegerMiddlewares[key])
           .filter(Boolean),
-        routerMiddleware(history)
+        routerMiddleware
       ),
-      process.env.NODE_ENV !== 'production' && window && window.__REDUX_DEVTOOLS_EXTENSION__
+      getAppEnvironment() !== 'production' && window && window.__REDUX_DEVTOOLS_EXTENSION__
         ? window.__REDUX_DEVTOOLS_EXTENSION__()
         : noop => noop
     )
   );
 }
+
+export const store = configureStore();
+export const history = createReduxHistory(store);

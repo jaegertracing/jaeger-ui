@@ -26,10 +26,10 @@ export type DraggableManagerDemoState = {
   regionDragging: [number, number] | TNil;
 };
 
-export default class DraggableManagerDemo extends React.PureComponent<{}, DraggableManagerDemoState> {
+export default class DraggableManagerDemo extends React.PureComponent<object, DraggableManagerDemoState> {
   state: DraggableManagerDemoState;
 
-  constructor(props: {}) {
+  constructor(props: object) {
     super(props);
     this.state = {
       dividerPosition: 0.25,
@@ -38,7 +38,7 @@ export default class DraggableManagerDemo extends React.PureComponent<{}, Dragga
     };
   }
 
-  _udpateState = (nextState: {}) => {
+  _updateState = (nextState: object) => {
     this.setState(nextState);
   };
 
@@ -52,7 +52,7 @@ export default class DraggableManagerDemo extends React.PureComponent<{}, Dragga
           <p>Click and drag the gray divider in the colored area, below.</p>
           <p>Value: {dividerPosition.toFixed(3)}</p>
           <div className="DraggableManagerDemo--realm">
-            <DividerDemo position={dividerPosition} updateState={this._udpateState} />
+            <DividerDemo position={dividerPosition} updateState={this._updateState} />
           </div>
         </section>
         <section className="DraggableManagerDemo--scenario">
@@ -63,7 +63,7 @@ export default class DraggableManagerDemo extends React.PureComponent<{}, Dragga
             <RegionDemo
               regionCursor={regionCursor}
               regionDragging={regionDragging}
-              updateState={this._udpateState}
+              updateState={this._updateState}
             />
           </div>
         </section>

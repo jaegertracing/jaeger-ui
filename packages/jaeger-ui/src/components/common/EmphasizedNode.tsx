@@ -25,7 +25,7 @@ export default class EmphasizedNode extends React.PureComponent<Props> {
   render() {
     const { height, width } = this.props;
     return (
-      <>
+      <svg>
         <rect
           className="EmphasizedNode--contrast is-non-scaling"
           vectorEffect="non-scaling-stroke"
@@ -40,7 +40,7 @@ export default class EmphasizedNode extends React.PureComponent<Props> {
           height={height}
         />
         <rect className="EmphasizedNode is-scaling" width={width} height={height} />
-      </>
+      </svg>
     );
   }
 }

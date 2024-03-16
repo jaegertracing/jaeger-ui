@@ -15,6 +15,9 @@
 function getBabelConfig(api) {
   const env = api.env();
   return {
+    assumptions: {
+      setPublicClassFields: true,
+    },
     plugins: [
       '@babel/plugin-syntax-dynamic-import',
       [
@@ -23,17 +26,14 @@ function getBabelConfig(api) {
           removeImport: true,
         },
       ],
-      [
-        '@babel/plugin-proposal-class-properties',
-        {
-          loose: true,
-        },
-      ],
+      '@babel/plugin-proposal-class-properties',
     ],
     presets: [
       [
         '@babel/preset-env',
         {
+          // Don't transform ES modules
+          modules: false,
           // this should match the settings in jaeger-ui/package.json
           targets: ['>0.5%', 'not dead', 'not ie <= 11', 'not op_mini all'],
         },

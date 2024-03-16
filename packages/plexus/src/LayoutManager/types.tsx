@@ -34,13 +34,14 @@ export enum EWorkerPhase {
 }
 
 export type TLayoutOptions = {
-  totalMemory?: number;
-  useDotEdges?: boolean;
-  splines?: string;
-  sep?: number;
   rankdir?: 'TB' | 'LR' | 'BT' | 'RL';
   ranksep?: number;
   nodesep?: number;
+  sep?: number;
+  shape?: string;
+  splines?: string;
+  useDotEdges?: boolean;
+  totalMemory?: number;
 };
 
 export type TLayoutWorkerMeta = {

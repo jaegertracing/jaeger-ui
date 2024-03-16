@@ -15,11 +15,12 @@
 import * as React from 'react';
 import { shallow } from 'enzyme';
 import { Input } from 'antd';
+import { IoClose } from 'react-icons/io5';
 import debounceMock from 'lodash/debounce';
-import queryString from 'query-string';
 
 import { UnconnectedUiFindInput, extractUiFindFromState } from './UiFindInput';
 import updateUiFindSpy from '../../utils/update-ui-find';
+import * as parseQuery from '../../utils/parseQuery';
 
 jest.mock('lodash/debounce');
 
@@ -27,12 +28,12 @@ jest.mock('../../utils/update-ui-find');
 
 describe('UiFind', () => {
   const flushMock = jest.fn();
-  const queryStringParseSpy = jest.spyOn(queryString, 'parse');
+  const queryStringParseSpy = jest.spyOn(parseQuery, 'default');
 
   const uiFind = 'uiFind';
   const ownInputValue = 'ownInputValue';
   const props = {
-    uiFind: null,
+    uiFind: undefined,
     history: {
       replace: () => {},
     },
@@ -54,6 +55,7 @@ describe('UiFind', () => {
 
   beforeEach(() => {
     flushMock.mockReset();
+    updateUiFindSpy.mockReset();
     wrapper = shallow(<UnconnectedUiFindInput {...props} />);
   });
 
@@ -109,6 +111,15 @@ describe('UiFind', () => {
         uiFind: newValue,
       });
     });
+
+    it('no-ops if value is unchanged', () => {
+      wrapper.find(Input).simulate('change', { target: { value: '' } });
+      expect(updateUiFindSpy).not.toHaveBeenCalled();
+
+      wrapper.setProps({ uiFind });
+      wrapper.find(Input).simulate('change', { target: { value: uiFind } });
+      expect(updateUiFindSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe('blurring input', () => {
@@ -121,6 +132,43 @@ describe('UiFind', () => {
 
     it('triggers pending queryParameter updates', () => {
       wrapper.find(Input).simulate('blur');
+      expect(flushMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('clear uiFind', () => {
+    const findIcon = () => shallow(<div>{wrapper.find(Input).prop('suffix')}</div>);
+
+    beforeEach(() => {
+      wrapper.setProps({ allowClear: true });
+    });
+
+    it('renders clear icon iff clear is enabled and value is a string with at least one character', () => {
+      expect(findIcon().find(IoClose)).toHaveLength(0);
+
+      wrapper.setProps({ uiFind: '' });
+      expect(findIcon().find(IoClose)).toHaveLength(0);
+
+      wrapper.setProps({ uiFind });
+      expect(findIcon().find(IoClose)).toHaveLength(1);
+
+      wrapper.setProps({ allowClear: false });
+      expect(findIcon().find(IoClose)).toHaveLength(0);
+
+      wrapper.setProps({ allowClear: true });
+      wrapper.setState({ ownInputValue: '' });
+      expect(findIcon().find(IoClose)).toHaveLength(0);
+    });
+
+    it('clears value immediately when clicked', () => {
+      wrapper.setProps({ uiFind });
+      findIcon().find(IoClose).simulate('click');
+
+      expect(updateUiFindSpy).toHaveBeenLastCalledWith({
+        history: props.history,
+        location: props.location,
+        uiFind: undefined,
+      });
       expect(flushMock).toHaveBeenCalledTimes(1);
     });
   });

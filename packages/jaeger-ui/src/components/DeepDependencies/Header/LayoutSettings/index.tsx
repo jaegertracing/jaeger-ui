@@ -14,12 +14,13 @@
 
 import * as React from 'react';
 import { Checkbox, Popover, Radio } from 'antd';
-import { CheckboxChangeEvent } from 'antd/lib/checkbox';
-import { RadioChangeEvent } from 'antd/lib/radio';
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { RadioChangeEvent } from 'antd/es/radio';
 
 import settingsIcon from './settingsIcon';
 import ChevronDown from '../ChevronDown';
 import { EDdgDensity } from '../../../../model/ddg/types';
+import { trackDensityChange, trackToggleShowOp } from '../../index.track';
 
 import './index.css';
 
@@ -35,13 +36,14 @@ const cssCls = (() => {
   return (namePart?: string) => (namePart ? `${CLASSNAME_PREFIX}--${namePart}` : CLASSNAME_PREFIX);
 })();
 
-const densityOptions = [
+// exported for tests
+export const densityOptions = [
   {
     option: EDdgDensity.MostConcise,
     title: 'One node per resource',
     note: 'Most conscise',
     description:
-      "This setting represents each resource one time in the graph, regardless of whether or not it's upstream or downstream of the focal node. This results in the most desnse graph layout, possible.",
+      "This setting represents each resource one time in the graph, regardless of whether or not it's upstream or downstream of the focal node. This results in the most dense graph layout, possible.",
   },
   {
     option: EDdgDensity.UpstreamVsDownstream,
@@ -59,7 +61,7 @@ const densityOptions = [
     option: EDdgDensity.PreventPathEntanglement,
     title: 'Show paths to the focal node',
     description:
-      'Each unique path to the focal node, both upstream and downstream, is represented. A resource (e.g. a service or service:operation) can be represented more than once if it is present in more than one paths to the focal node.',
+      'Each unique path to the focal node, both upstream and downstream, is represented. A resource (e.g. a service or service:operation) can be represented more than once if it is present in more than one path to the focal node.',
   },
   {
     option: EDdgDensity.ExternalVsInternal,
@@ -71,12 +73,35 @@ const densityOptions = [
 ];
 
 export default class LayoutSettings extends React.PureComponent<TProps> {
+  componentDidMount() {
+    // Check local storage for previously selected density
+    const storedDensity = localStorage.getItem(LayoutSettings.STORED_DENSITY_KEY);
+    if (storedDensity && densityOptions.some(option => option.option === storedDensity)) {
+      // Set the stored density as the default if it's a valid option
+      this.props.setDensity(storedDensity as EDdgDensity);
+    }
+  }
+
+  // key used to store density selection in local storage
+  private static readonly STORED_DENSITY_KEY = 'ddg.layout.density';
+
   private updateDensity = (event: RadioChangeEvent) => {
-    this.props.setDensity(event.target.value);
+    const { density: prevDensity } = this.props;
+    const { value: nextDensity } = event.target;
+
+    if (prevDensity === nextDensity) return;
+
+    // Save the selected density in local storage
+    localStorage.setItem(LayoutSettings.STORED_DENSITY_KEY, nextDensity);
+
+    trackDensityChange(prevDensity, nextDensity, densityOptions);
+    this.props.setDensity(nextDensity);
   };
 
   private toggleShowOperations = (event: CheckboxChangeEvent) => {
-    this.props.toggleShowOperations(event.target.checked);
+    const { checked } = event.target;
+    trackToggleShowOp(checked);
+    this.props.toggleShowOperations(checked);
   };
 
   render() {
@@ -96,7 +121,6 @@ export default class LayoutSettings extends React.PureComponent<TProps> {
                   <h4>Show operations</h4>
                   <p>
                     Controls whether or not the operations are considered when creating nodes for the graph.
-                    Note: The operation of the focal node is always shown.
                   </p>
                 </div>
               </Checkbox>
@@ -108,7 +132,7 @@ export default class LayoutSettings extends React.PureComponent<TProps> {
             <tr key={config.option}>
               {i === 0 && (
                 <td className={cssCls('optionGroupTitle')} rowSpan={densityOptions.length}>
-                  Graph desnsity
+                  Graph density
                 </td>
               )}
               <td>

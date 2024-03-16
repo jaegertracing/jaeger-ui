@@ -46,7 +46,7 @@ function renderDefaultMarker(
     <marker
       id={id}
       markerHeight={scale * 8}
-      markerUnits="strokeWidth"
+      markerUnits="userSpaceOnUse"
       markerWidth={scale * 8}
       orient="auto"
       refX={scale * 8}

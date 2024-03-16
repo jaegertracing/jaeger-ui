@@ -25,6 +25,7 @@ jest.mock('./TracePageHeader/SpanGraph');
 jest.mock('./TracePageHeader/TracePageHeader.track');
 jest.mock('./TracePageHeader/TracePageSearchBar');
 jest.mock('./TraceTimelineViewer');
+jest.mock('./CriticalPath/index');
 
 import React from 'react';
 import sinon from 'sinon';
@@ -55,6 +56,7 @@ import traceGenerator from '../../demo/trace-generators';
 import transformTraceData from '../../model/transform-trace-data';
 import filterSpansSpy from '../../utils/filter-spans';
 import updateUiFindSpy from '../../utils/update-ui-find';
+import { ETraceViewType } from './types';
 
 describe('makeShortcutCallbacks()', () => {
   let adjRange;
@@ -80,8 +82,6 @@ describe('makeShortcutCallbacks()', () => {
 });
 
 describe('<TracePage>', () => {
-  TraceTimelineViewer.prototype.shouldComponentUpdate.mockReturnValue(false);
-
   const trace = transformTraceData(traceGenerator.trace({}));
   const defaultProps = {
     acknowledgeArchive: () => {},
@@ -117,6 +117,7 @@ describe('<TracePage>', () => {
       expect(updateUiFindSpy).toHaveBeenCalledWith({
         history: defaultProps.history,
         location: defaultProps.location,
+        trackFindFunction: track.trackFilter,
       });
     });
 
@@ -135,23 +136,76 @@ describe('<TracePage>', () => {
     });
   });
 
-  describe('focusUiFindMatches', () => {
-    beforeEach(() => {
-      defaultProps.focusUiFindMatches.mockReset();
+  describe('viewing uiFind matches', () => {
+    describe('focusUiFindMatches', () => {
+      let trackFocusSpy;
+
+      beforeAll(() => {
+        trackFocusSpy = jest.spyOn(track, 'trackFocusMatches');
+      });
+
+      beforeEach(() => {
+        defaultProps.focusUiFindMatches.mockReset();
+        trackFocusSpy.mockReset();
+      });
+
+      it('calls props.focusUiFindMatches with props.trace.data and uiFind when props.trace.data is present', () => {
+        const uiFind = 'test ui find';
+        wrapper.setProps({ uiFind });
+        wrapper.find(TracePageHeader).prop('focusUiFindMatches')();
+        expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(defaultProps.trace.data, uiFind);
+        expect(trackFocusSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('handles when props.trace.data is absent', () => {
+        const propFn = wrapper.find(TracePageHeader).prop('focusUiFindMatches');
+        wrapper.setProps({ trace: {} });
+        propFn();
+        expect(defaultProps.focusUiFindMatches).not.toHaveBeenCalled();
+        expect(trackFocusSpy).not.toHaveBeenCalled();
+      });
     });
 
-    it('calls props.focusUiFindMatches with props.trace.data and uiFind when props.trace.data is present', () => {
-      const uiFind = 'test ui find';
-      wrapper.setProps({ uiFind });
-      wrapper.find(TracePageHeader).prop('focusUiFindMatches')();
-      expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(defaultProps.trace.data, uiFind);
+    describe('nextResult', () => {
+      let trackNextSpy;
+
+      beforeAll(() => {
+        trackNextSpy = jest.spyOn(track, 'trackNextMatch');
+      });
+
+      beforeEach(() => {
+        trackNextSpy.mockReset();
+      });
+
+      it('calls scrollToNextVisibleSpan and tracks it', () => {
+        const scrollNextSpy = jest
+          .spyOn(wrapper.instance()._scrollManager, 'scrollToNextVisibleSpan')
+          .mockImplementation();
+        wrapper.find(TracePageHeader).prop('nextResult')();
+        expect(trackNextSpy).toHaveBeenCalledTimes(1);
+        expect(scrollNextSpy).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it('handles when props.trace.data is absent', () => {
-      const propFn = wrapper.find(TracePageHeader).prop('focusUiFindMatches');
-      wrapper.setProps({ trace: {} });
-      propFn();
-      expect(defaultProps.focusUiFindMatches).not.toHaveBeenCalled();
+    describe('prevResult', () => {
+      let trackPrevSpy;
+
+      beforeAll(() => {
+        trackPrevSpy = jest.spyOn(track, 'trackPrevMatch');
+      });
+
+      beforeEach(() => {
+        trackPrevSpy.mockReset();
+      });
+
+      it('calls scrollToPrevVisibleSpan and tracks it', () => {
+        const scrollPrevSpy = jest
+          .spyOn(wrapper.instance()._scrollManager, 'scrollToPrevVisibleSpan')
+          .mockImplementation();
+        wrapper.find(TracePageHeader).prop('prevResult')();
+        expect(trackPrevSpy).toHaveBeenCalledTimes(1);
+        expect(scrollPrevSpy).toHaveBeenCalledTimes(1);
+      });
     });
   });
 
@@ -293,7 +347,7 @@ describe('<TracePage>', () => {
     describe('calculates hideMap correctly', () => {
       it('is true if on traceGraphView', () => {
         wrapper.instance().traceDagEV = { vertices: [], nodes: [] };
-        wrapper.setState({ traceGraphView: true });
+        wrapper.setState({ viewType: ETraceViewType.TraceGraph });
         expect(wrapper.find(TracePageHeader).prop('hideMap')).toBe(true);
       });
 
@@ -346,8 +400,12 @@ describe('<TracePage>', () => {
       it('is true when not embedded and archive is enabled', () => {
         [{ timeline: {} }, undefined].forEach(embedded => {
           [true, false].forEach(archiveEnabled => {
-            wrapper.setProps({ embedded, archiveEnabled });
-            expect(wrapper.find(TracePageHeader).prop('showArchiveButton')).toBe(!embedded && archiveEnabled);
+            [{ archiveStorage: false }, { archiveStorage: true }].forEach(storageCapabilities => {
+              wrapper.setProps({ embedded, archiveEnabled, storageCapabilities });
+              expect(wrapper.find(TracePageHeader).prop('showArchiveButton')).toBe(
+                !embedded && archiveEnabled && storageCapabilities.archiveStorage
+              );
+            });
           });
         });
       });
@@ -378,7 +436,7 @@ describe('<TracePage>', () => {
 
         const size = 30;
         getUiFindVertexKeysSpy.mockReturnValueOnce({ size });
-        wrapper.setState({ traceGraphView: true });
+        wrapper.setState({ viewType: ETraceViewType.TraceGraph });
         wrapper.setProps({ uiFind: 'new ui find to bust memo' });
         expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(size);
       });
@@ -573,17 +631,26 @@ describe('<TracePage>', () => {
       expect(header.prop('textFilter')).toBe(s);
     });
 
-    it('propagates traceGraphView changes', () => {
-      const { onTraceGraphViewClicked } = header.props();
-      expect(header.prop('traceGraphView')).toBe(false);
-      onTraceGraphViewClicked();
+    it('propagates traceView changes', () => {
+      const { onTraceViewChange } = header.props();
+      expect(header.prop('viewType')).toBe(ETraceViewType.TraceTimelineViewer);
+      onTraceViewChange(ETraceViewType.TraceGraph);
       wrapper.update();
       refreshWrappers();
-      expect(header.prop('traceGraphView')).toBe(true);
+      expect(header.prop('viewType')).toBe(ETraceViewType.TraceGraph);
       expect(calculateTraceDagEVSpy).toHaveBeenCalledWith(defaultProps.trace.data);
 
+      onTraceViewChange(ETraceViewType.TraceSpansView);
+      wrapper.update();
+      refreshWrappers();
+      expect(header.prop('viewType')).toBe(ETraceViewType.TraceSpansView);
+
+      onTraceViewChange(ETraceViewType.TraceStatistics);
+      wrapper.update();
+      refreshWrappers();
+      expect(header.prop('viewType')).toBe(ETraceViewType.TraceStatistics);
       wrapper.setProps({ trace: {} });
-      onTraceGraphViewClicked();
+      onTraceViewChange(ETraceViewType.TraceTimelineViewer);
       expect(calculateTraceDagEVSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -663,9 +730,7 @@ describe('mapStateToProps()', () => {
   const trace = {};
   const embedded = 'a-faux-embedded-config';
   const ownProps = {
-    match: {
-      params: { id: traceID },
-    },
+    params: { id: traceID },
   };
   let state;
   beforeEach(() => {
@@ -701,10 +766,8 @@ describe('mapStateToProps()', () => {
 
   it('handles falsy ownProps.match.params.id', () => {
     const props = mapStateToProps(state, {
-      match: {
-        params: {
-          id: '',
-        },
+      params: {
+        id: '',
       },
     });
     expect(props).toEqual(
@@ -727,6 +790,22 @@ describe('mapStateToProps()', () => {
       archiveTraceState: undefined,
       searchUrl: fakeUrl,
       trace: { data: {}, state: fetchedState.DONE },
+    });
+  });
+
+  it('propagates layoutManagerMemory correctly', () => {
+    const fakeMemory = 123;
+    state.config.traceGraph = { layoutManagerMemory: fakeMemory };
+    const props = mapStateToProps(state, ownProps);
+    expect(props).toEqual({
+      id: traceID,
+      embedded,
+      archiveEnabled: false,
+      archiveTraceState: undefined,
+      searchUrl: null,
+      uiFind: undefined,
+      trace: { data: {}, state: fetchedState.DONE },
+      traceGraphConfig: { layoutManagerMemory: fakeMemory },
     });
   });
 });

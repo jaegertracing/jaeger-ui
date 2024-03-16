@@ -13,8 +13,10 @@
 // limitations under the License.
 
 import _isEmpty from 'lodash/isEmpty';
-import queryString from 'query-string';
+import memoizeOne from 'memoize-one';
 import { matchPath } from 'react-router-dom';
+import queryString from 'query-string';
+import parseQuery from '../../utils/parseQuery';
 
 import { EDdgDensity, TDdgSparseUrlState } from '../../model/ddg/types';
 import prefixUrl from '../../utils/prefix-url';
@@ -27,17 +29,18 @@ export function matches(path: string) {
   return Boolean(matchPath(path, ROUTE_MATCHER));
 }
 
-export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }) {
+export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }, baseUrl: string = ROUTE_PATH) {
   if (args && !_isEmpty(args)) {
-    const stringifyArgs = Reflect.has(args, 'showOp')
-      ? {
-          ...args,
-          showOp: args.showOp ? 1 : 0,
-        }
-      : args;
-    return `${ROUTE_PATH}?${queryString.stringify(stringifyArgs)}`;
+    const stringifyArgs =
+      Reflect.has(args, 'showOp') && args.showOp !== undefined
+        ? {
+            ...args,
+            showOp: args.showOp ? 1 : 0,
+          }
+        : args;
+    return `${baseUrl}?${queryString.stringify(stringifyArgs)}`;
   }
-  return ROUTE_PATH;
+  return baseUrl;
 }
 
 function firstParam(arg: string | string[]): string {
@@ -49,28 +52,38 @@ function firstParam(arg: string | string[]): string {
   return arg;
 }
 
-export function getUrlState(search: string): TDdgSparseUrlState {
+export const getUrlState = memoizeOne(function getUrlState(search: string): TDdgSparseUrlState {
   const {
     density = EDdgDensity.PreventPathEntanglement,
+    decoration,
     end,
+    hash,
     operation,
     service,
-    showOp = '1',
+    showOp,
     start,
     visEncoding,
-  } = queryString.parse(search);
+  } = parseQuery(search);
   const rv: TDdgSparseUrlState = {
     density: firstParam(density) as EDdgDensity,
-    showOp: Boolean(+firstParam(showOp)),
   };
+  if (decoration) {
+    rv.decoration = firstParam(decoration);
+  }
   if (end) {
     rv.end = Number.parseInt(firstParam(end), 10);
+  }
+  if (hash) {
+    rv.hash = firstParam(hash);
   }
   if (operation) {
     rv.operation = firstParam(operation);
   }
   if (service) {
     rv.service = firstParam(service);
+  }
+  if (showOp) {
+    rv.showOp = Boolean(+firstParam(showOp));
   }
   if (start) {
     rv.start = Number.parseInt(firstParam(start), 10);
@@ -79,4 +92,15 @@ export function getUrlState(search: string): TDdgSparseUrlState {
     rv.visEncoding = firstParam(visEncoding);
   }
   return rv;
-}
+});
+
+export const sanitizeUrlState = memoizeOne(function sanitizeUrlStateImpl(
+  state: TDdgSparseUrlState,
+  hash?: string
+): TDdgSparseUrlState {
+  if (hash && state.hash === hash) {
+    return state;
+  }
+  const { visEncoding, ...sanitized } = state; // eslint-disable-line @typescript-eslint/no-unused-vars
+  return sanitized;
+});
