@@ -30,4 +30,4 @@ jobs:
       - run: yarn lint
       - run: yarn build
       - name: Ensure PR is not on main branch
-        uses: Jaeger/.github/actions/block-main-branch-pr
+        uses: Jaeger/jaeger-ui/.github/actions/block-main-branch-pr
