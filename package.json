@@ -8,7 +8,7 @@
     "url": "https://github.com/jaegertracing/jaeger-ui.git"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.23.10",
+    "@babel/eslint-parser": "^7.24.1",
     "@typescript-eslint/eslint-plugin": "7.1.0",
     "@typescript-eslint/parser": "7.1.0",
     "depcheck": "1.4.7",
