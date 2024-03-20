@@ -158,7 +158,7 @@ export default class LayoutSettings extends React.PureComponent<TProps> {
       </table>
     );
     return (
-      <Popover arrowPointAtCenter content={content} placement="bottomLeft" title="Layout settings">
+      <Popover arrow={{ pointAtCenter: true }} content={content} placement="bottomLeft" title="Layout settings">
         <div className={cssCls()}>
           {settingsIcon}
           Layout

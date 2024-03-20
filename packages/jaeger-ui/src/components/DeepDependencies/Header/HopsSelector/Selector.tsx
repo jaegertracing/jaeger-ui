@@ -103,7 +103,7 @@ export default class Selector extends PureComponent<TProps> {
 
     return (
       <Popover
-        arrowPointAtCenter
+        arrow={{ pointAtCenter: true }}
         content={[decrementBtn, ...hops.map(this.makeBtn), incrementBtn]}
         placement="bottom"
         title={`Visible ${lowercaseLabel}`}
