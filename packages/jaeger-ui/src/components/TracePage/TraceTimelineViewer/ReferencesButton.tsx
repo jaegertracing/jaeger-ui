@@ -57,7 +57,7 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
     const { references, children, tooltipText, focusSpan } = this.props;
 
     const tooltipProps = {
-      arrowPointAtCenter: true,
+      pointAtCenter: true,
       mouseLeaveDelay: 0.5,
       placement: 'bottom' as TooltipPlacement,
       title: tooltipText,
