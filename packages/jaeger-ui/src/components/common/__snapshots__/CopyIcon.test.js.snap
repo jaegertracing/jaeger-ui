@@ -2,7 +2,11 @@
 
 exports[`<CopyIcon /> renders as expected 1`] = `
 <Tooltip
-  arrowPointAtCenter={true}
+  arrow={
+    Object {
+      "pointAtCenter": true,
+    }
+  }
   mouseLeaveDelay={0}
   onOpenChange={[Function]}
   placement="top"
