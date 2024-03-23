@@ -339,7 +339,7 @@ export class SearchFormImpl extends React.PureComponent {
                   <ul key="info" className="SearchForm--tagsHintInfo">
                     <li>Use space for AND conjunctions</li>
                     <li>
-                      Values containing whitespace or equal-sign &apos=&apos should be enclosed in quotes
+                      Values containing whitespace or equal-sign &apos;=&apos; should be enclosed in quotes
                     </li>
                     <li>
                       Elasticsearch/OpenSearch storage supports regexp query, therefore{' '}
