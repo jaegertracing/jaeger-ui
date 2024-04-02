@@ -9,6 +9,18 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.40.0 (2024-04-02)
+
+### 🐞 Bug fixes, Minor Improvements
+
+* Fix html code for apostrophe ([@yurishkuro](https://github.com/yurishkuro) in [#2224](https://github.com/jaegertracing/jaeger-ui/pull/2224))
+* Make scatterplot y-axis margin wider to fit longer durations ([@tico88612](https://github.com/tico88612) in [#2211](https://github.com/jaegertracing/jaeger-ui/pull/2211))
+* Fix upload file into search page unnecessary post ([@tico88612](https://github.com/tico88612) in [#2200](https://github.com/jaegertracing/jaeger-ui/pull/2200))
+
+### 👷 CI Improvements
+
+* Feat: add `depcheck 1.4.7` in `package.json` ([@tico88612](https://github.com/tico88612) in [#2202](https://github.com/jaegertracing/jaeger-ui/pull/2202))
+
 ## v1.39.0 (2024-03-04)
 
 #### ✨ New Features:
