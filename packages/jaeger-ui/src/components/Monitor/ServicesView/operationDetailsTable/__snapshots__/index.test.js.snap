@@ -1301,66 +1301,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,12L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#869ADD",
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,12"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -1384,66 +1335,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,0L0,0Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#4795BA",
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -1467,66 +1369,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#CD513A",
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -2375,66 +2228,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,12L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#869ADD",
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,12"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -2458,66 +2262,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,0L0,0Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#4795BA",
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -2541,66 +2296,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#CD513A",
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -3449,66 +3155,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,12L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#869ADD",
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,12"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -3532,66 +3189,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,0L0,0Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#4795BA",
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -3615,66 +3223,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#CD513A",
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -4523,66 +4082,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,12L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#869ADD",
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,12"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -4606,66 +4116,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,0L0,0Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#4795BA",
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -4689,66 +4150,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#CD513A",
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -5597,66 +5009,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,12L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#869ADD",
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,12"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -5680,66 +5043,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,0L0,0Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#4795BA",
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -5763,66 +5077,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#CD513A",
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -6671,66 +5936,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,12L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#869ADD",
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,12"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -6754,66 +5970,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,0L0,0Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#4795BA",
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -6837,66 +6004,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#CD513A",
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -7745,66 +6863,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,12L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#869ADD",
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,12"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#869ADD",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -7828,66 +6897,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,0L0,0Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#4795BA",
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#4795BA",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"
@@ -7911,66 +6931,17 @@ Array [
                                 className="ops-container"
                               >
                                 <div
-                                  className="rv-xy-plot "
+                                  className="recharts-responsive-container"
                                   style={
                                     Object {
-                                      "height": "15px",
-                                      "width": "100px",
+                                      "height": 15,
+                                      "maxHeight": undefined,
+                                      "minHeight": undefined,
+                                      "minWidth": 0,
+                                      "width": 100,
                                     }
                                   }
-                                >
-                                  <svg
-                                    className="rv-xy-plot__inner"
-                                    height={15}
-                                    onClick={[Function]}
-                                    onDoubleClick={[Function]}
-                                    onMouseDown={[Function]}
-                                    onMouseEnter={[Function]}
-                                    onMouseLeave={[Function]}
-                                    onMouseMove={[Function]}
-                                    onMouseUp={[Function]}
-                                    onTouchCancel={[Function]}
-                                    onTouchEnd={[Function]}
-                                    onTouchMove={[Function]}
-                                    onTouchStart={[Function]}
-                                    onWheel={[Function]}
-                                    width={100}
-                                  >
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                      d="M0,0L100,0L100,12L0,12Z"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "fill": "#CD513A",
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                    <path
-                                      className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                      d="M0,0L100,0"
-                                      onClick={[Function]}
-                                      onContextMenu={[Function]}
-                                      onMouseOut={[Function]}
-                                      onMouseOver={[Function]}
-                                      style={
-                                        Object {
-                                          "opacity": 1,
-                                          "stroke": "#CD513A",
-                                          "strokeDasharray": undefined,
-                                          "strokeWidth": undefined,
-                                        }
-                                      }
-                                      transform="translate(0,2)"
-                                    />
-                                  </svg>
-                                </div>
+                                />
                               </div>
                               <div
                                 className="table-graph-avg"

@@ -51,6 +51,12 @@ window.matchMedia = jest.fn().mockImplementation(query => ({
   dispatchEvent: jest.fn(),
 }));
 
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}))
+
 global.__APP_ENVIRONMENT__ = 'test';
 global.__REACT_APP_GA_DEBUG__ = '';
 global.__REACT_APP_VSN_STATE__ = '';

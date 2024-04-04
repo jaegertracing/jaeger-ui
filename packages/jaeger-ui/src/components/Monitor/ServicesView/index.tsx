@@ -130,8 +130,10 @@ const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMet
 };
 
 // export for tests
-export const yAxisTickFormat = (timeInMS: number, displayTimeUnit: string) =>
-  convertToTimeUnit(timeInMS * 1000, displayTimeUnit);
+export const yAxisTickFormat = (timeInMS: number, displayTimeUnit: string) => {
+  const formattedValue = convertToTimeUnit(timeInMS * 1000, displayTimeUnit);
+  return formattedValue.toString();
+};
 
 const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMetricsObject) => {
   if (!serviceErrorRate) return null;
