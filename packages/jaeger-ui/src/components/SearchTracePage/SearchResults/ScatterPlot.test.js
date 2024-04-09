@@ -14,9 +14,9 @@
 
 import React from 'react';
 import { mount, shallow } from 'enzyme';
-import { XAxis, XYPlot, YAxis, MarkSeries, Hint } from 'react-vis';
+import { Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts';
 
-import ScatterPlot from './ScatterPlot';
+import ScatterPlot, { CustomTooltip } from './ScatterPlot';
 import { ONE_MILLISECOND } from '../../../utils/date';
 
 const generateTimestamp = (hours, minutes, seconds) => {
@@ -99,9 +99,9 @@ it('<ScatterPlot /> should set fixed container width on initial render', () => {
     <ScatterPlot calculateContainerWidth={() => 1200} data={sampleData} onValueClick={() => null} />
   );
 
-  const xyPlot = wrapper.find(XYPlot).getDOMNode();
+  const xyPlot = wrapper.find(ScatterChart);
 
-  expect(xyPlot.style.width).toBe('1200px');
+  expect(xyPlot.prop('width')).toBe(1200);
 });
 
 it('<ScatterPlot /> should update container width on window resize', () => {
@@ -118,28 +118,28 @@ it('<ScatterPlot /> should update container width on window resize', () => {
 
   window.dispatchEvent(new Event('resize'));
 
-  const xyPlot = wrapper.find(XYPlot).getDOMNode();
+  const xyPlot = wrapper.find(ScatterChart);
 
-  expect(xyPlot.style.width).toBe('700px');
+  expect(xyPlot.prop('width')).toBe(700);
 });
 
-it('<ScatterPlot /> should render Hint correctly', () => {
+it('<ScatterPlot /> should render Hint correctly', async () => {
   const wrapper = mount(
     <ScatterPlot calculateContainerWidth={() => 1200} data={sampleData} onValueClick={() => null} />
   );
   expect(wrapper).toBeDefined();
 
-  const markSeries = wrapper.find(MarkSeries);
+  const markSeries = wrapper.find(Scatter);
   expect(markSeries.length).toEqual(1);
 
-  const circle = wrapper.find('.rv-xy-plot__series--mark circle:first-child');
+  const circle = wrapper.find(Tooltip);
   expect(circle.length).toEqual(1);
 
   circle.simulate('mouseOver');
-  const hint = wrapper.find(Hint);
+  const hint = wrapper.find(Tooltip);
   expect(hint.length).toEqual(1);
 
   circle.simulate('mouseOut');
-  const noHint = wrapper.find(Hint);
+  const noHint = wrapper.find(CustomTooltip);
   expect(noHint.length).toEqual(0);
 });
