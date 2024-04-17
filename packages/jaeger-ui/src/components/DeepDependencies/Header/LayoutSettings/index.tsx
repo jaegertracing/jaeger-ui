@@ -72,99 +72,99 @@ export const densityOptions = [
   },
 ];
 
-export default class LayoutSettings extends React.PureComponent<TProps> {
-  componentDidMount() {
+const LayoutSettings: React.FC<TProps> = ({ density, setDensity, showOperations, toggleShowOperations }) => {
+  React.useEffect(() => {
     // Check local storage for previously selected density
-    const storedDensity = localStorage.getItem(LayoutSettings.STORED_DENSITY_KEY);
+    const storedDensity = localStorage.getItem(STORED_DENSITY_KEY);
     if (storedDensity && densityOptions.some(option => option.option === storedDensity)) {
       // Set the stored density as the default if it's a valid option
-      this.props.setDensity(storedDensity as EDdgDensity);
+      setDensity(storedDensity as EDdgDensity);
     }
-  }
+  }, [setDensity]);
 
-  // key used to store density selection in local storage
-  private static readonly STORED_DENSITY_KEY = 'ddg.layout.density';
-
-  private updateDensity = (event: RadioChangeEvent) => {
-    const { density: prevDensity } = this.props;
-    const { value: nextDensity } = event.target;
+  const updateDensity = (event: RadioChangeEvent) => {
+    const prevDensity = density;
+    const nextDensity = event.target.value;
 
     if (prevDensity === nextDensity) return;
 
     // Save the selected density in local storage
-    localStorage.setItem(LayoutSettings.STORED_DENSITY_KEY, nextDensity);
+    localStorage.setItem(STORED_DENSITY_KEY, nextDensity);
 
     trackDensityChange(prevDensity, nextDensity, densityOptions);
-    this.props.setDensity(nextDensity);
+    setDensity(nextDensity);
   };
 
-  private toggleShowOperations = (event: CheckboxChangeEvent) => {
-    const { checked } = event.target;
+  const toggleShowOperations = (event: CheckboxChangeEvent) => {
+    const checked = event.target.checked;
     trackToggleShowOp(checked);
-    this.props.toggleShowOperations(checked);
+    toggleShowOperations(checked);
   };
 
-  render() {
-    const { density, showOperations } = this.props;
-    const content = (
-      <table className={cssCls('optionsTable')}>
-        <tbody>
-          <tr>
-            <td className={cssCls('optionGroupTitle')}>Aggregations</td>
+  const content = (
+    <table className={cssCls('optionsTable')}>
+      <tbody>
+        <tr>
+          <td className={cssCls('optionGroupTitle')}>Aggregations</td>
+          <td>
+            <Checkbox
+              className={cssCls('option')}
+              checked={showOperations}
+              onChange={toggleShowOperations}
+            >
+              <div className={cssCls('optionDescription')}>
+                <h4>Show operations</h4>
+                <p>
+                  Controls whether or not the operations are considered when creating nodes for the graph.
+                </p>
+              </div>
+            </Checkbox>
+          </td>
+        </tr>
+      </tbody>
+      <tbody>
+        {densityOptions.map((config, i) => (
+          <tr key={config.option}>
+            {i === 0 && (
+              <td className={cssCls('optionGroupTitle')} rowSpan={densityOptions.length}>
+                Graph density
+              </td>
+            )}
             <td>
-              <Checkbox
+              <Radio
                 className={cssCls('option')}
-                checked={showOperations}
-                onChange={this.toggleShowOperations}
+                onChange={updateDensity}
+                value={config.option}
+                checked={density === config.option}
               >
                 <div className={cssCls('optionDescription')}>
-                  <h4>Show operations</h4>
+                  <h4>{config.title}</h4>
                   <p>
-                    Controls whether or not the operations are considered when creating nodes for the graph.
+                    {config.note && <em className={cssCls('optionNote')}>{config.note}</em>}
+                    {config.note && ' – '}
+                    {config.description}
                   </p>
                 </div>
-              </Checkbox>
+              </Radio>
             </td>
           </tr>
-        </tbody>
-        <tbody>
-          {densityOptions.map((config, i) => (
-            <tr key={config.option}>
-              {i === 0 && (
-                <td className={cssCls('optionGroupTitle')} rowSpan={densityOptions.length}>
-                  Graph density
-                </td>
-              )}
-              <td>
-                <Radio
-                  className={cssCls('option')}
-                  onChange={this.updateDensity}
-                  value={config.option}
-                  checked={density === config.option}
-                >
-                  <div className={cssCls('optionDescription')}>
-                    <h4>{config.title}</h4>
-                    <p>
-                      {config.note && <em className={cssCls('optionNote')}>{config.note}</em>}
-                      {config.note && ' – '}
-                      {config.description}
-                    </p>
-                  </div>
-                </Radio>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-    return (
-      <Popover arrowPointAtCenter content={content} placement="bottomLeft" title="Layout settings">
-        <div className={cssCls()}>
-          {settingsIcon}
-          Layout
-          <ChevronDown className="ub-ml2" />
-        </div>
-      </Popover>
-    );
-  }
-}
+        ))}
+      </tbody>
+    </table>
+  );
+
+  return (
+    <Popover arrowPointAtCenter content={content} placement="bottomLeft" title="Layout settings">
+      <div className={cssCls()}>
+        {settingsIcon}
+        Layout
+        <ChevronDown className="ub-ml2" />
+      </div>
+    </Popover>
+  );
+};
+
+// key used to store density selection in local storage
+const STORED_DENSITY_KEY = 'ddg.layout.density';
+
+export default LayoutSettings;
