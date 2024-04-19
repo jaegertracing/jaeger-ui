@@ -52,4 +52,4 @@ const mapStateToProps = (state) => {
   return { embedded, pathname, search };
 };
 
-export default connect(mapStateToProps)(withRouteProps(Page)););
+export default connect(mapStateToProps)(withRouteProps(Page));
