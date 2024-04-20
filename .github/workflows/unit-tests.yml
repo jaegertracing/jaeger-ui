@@ -27,7 +27,7 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn coverage
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044 # v4.0.1
+        uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed # v4.3.0
         with:
           fail_ci_if_error: true
           verbose: true
