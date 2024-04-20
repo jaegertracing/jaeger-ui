@@ -148,7 +148,7 @@ module.exports = {
   },
 
   // Add any other files or directories you want to ignore
-  ignores: [
+  ignoresPatterns: [
     'build/',
     'coverage/',
     'packages/plexus/src/LayoutManager/layout.worker*js*',
