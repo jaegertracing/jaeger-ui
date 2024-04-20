@@ -19,6 +19,15 @@ module.exports = {
     jest: true,
     jasmine: true,
   },
+  // Add any other files or directories you want to ignore
+  ignoresPatterns: [
+    'build/',
+    'coverage/',
+    'packages/plexus/src/LayoutManager/layout.worker*js*',
+    'packages/jaeger-ui/index.d.ts',
+    'packages/plexus/dist/',
+    'packages/plexus/lib/',
+  ],
   settings: {
     'import/resolver': {
       node: {
@@ -146,14 +155,4 @@ module.exports = {
     'import/no-named-default': 0,
     'import/extensions': 0,
   },
-
-  // Add any other files or directories you want to ignore
-  ignoresPatterns: [
-    'build/',
-    'coverage/',
-    'packages/plexus/src/LayoutManager/layout.worker*js*',
-    'packages/jaeger-ui/index.d.ts',
-    'packages/plexus/dist/',
-    'packages/plexus/lib/',
-  ],
 };
