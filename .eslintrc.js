@@ -20,7 +20,7 @@ module.exports = {
     jasmine: true,
   },
   // Add any other files or directories you want to ignore
-  ignoresPatterns: [
+  ignorePatterns: [
     'build/',
     'coverage/',
     'packages/plexus/src/LayoutManager/layout.worker*js*',
