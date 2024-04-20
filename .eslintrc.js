@@ -154,6 +154,6 @@ module.exports = {
     'packages/plexus/src/LayoutManager/layout.worker*js*',
     'packages/jaeger-ui/index.d.ts',
     'packages/plexus/dist/',
-    'packages/plexus/lib/'
+    'packages/plexus/lib/',
   ],
 };
