@@ -72,4 +72,20 @@ describe('fileReader.readJsonFile', () => {
     const p = readJsonFile({ file });
     return expect(p).rejects.toMatchObject(expect.any(Error));
   });
+
+  it('loads JSON data with single resourceSpans array successfully', async () => {
+    const obj = { resourceSpans: [{ id: 1 }, { id: 2 }, { id: 3 }] };
+    const file = new File([JSON.stringify(obj)], 'singleResourceSpans.json');
+    const result = await readJsonFile({ file });
+    expect(result).toEqual(JSON.stringify(obj));
+  });
+
+  it('loads JSON data with multiple resourceSpans arrays successfully', async () => {
+    const obj1 = { resourceSpans: [{ id: 1 }, { id: 2 }] };
+    const obj2 = { resourceSpans: [{ id: 3 }, { id: 4 }] };
+    const file = new File([JSON.stringify([obj1, obj2])], 'multipleResourceSpans.json');
+    const expectedResult = { resourceSpans: [...obj1.resourceSpans, ...obj2.resourceSpans] };
+    const result = await readJsonFile({ file });
+    expect(result).toEqual(JSON.stringify(expectedResult));
+  });
 });
