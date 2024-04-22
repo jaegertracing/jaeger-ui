@@ -7,6 +7,9 @@
     "type": "git",
     "url": "https://github.com/jaegertracing/jaeger-ui.git"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
     "@babel/eslint-parser": "^7.24.1",
     "@typescript-eslint/eslint-plugin": "7.4.0",
@@ -23,7 +26,7 @@
     "npm-run-all": "4.1.5",
     "prettier": "3.2.4",
     "rxjs-compat": "6.6.7",
-    "typescript": "5.4.2"
+    "typescript": "5.4.5"
   },
   "resolutions": {
     "**/lodash": "^4.17.21"
