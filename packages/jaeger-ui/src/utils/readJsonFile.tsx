@@ -41,6 +41,9 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
               reject(new Error(`Error converting traces to OTLP`));
             });
         }
+        else{
+          resolve(traceObj);
+        }
       } catch (error: unknown) {
         reject(new Error(`Error parsing JSON: ${(error as Error).message}`));
       }
