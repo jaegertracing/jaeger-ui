@@ -76,3 +76,29 @@ export function getTracePageTitle(spans: Span[]): string {
 
   return parts ? `${parts.operationName} (${parts.serviceName})` : '';
 }
+
+export function getTraceEmoji(spans: Span[]): string {
+  if (!spans.length) return '';
+
+  // prettier-ignore
+  const emojiSet = [
+    '🐶', '🐱', '🐭', '🦊', '🐨', '🐮', '🐷', '🐸', '🐵', '🐔', '🐤', '🦆',
+    '🦉', '🐝', '🦋', '🐢', '🦀', '🐳', '🐊', '🦒', '🪶', '🦩', '🐉', '🍄',
+    '🌸', '🌜', '🔥', '🌪️', '💧', '🍏', '🍊', '🍉', '🍒', '🥦', '🌽', '🍠',
+    '🥐', '🥖', '🥚', '🧀', '🍗', '🍟', '🍕', '🍣', '🍤', '🍙', '🍪', '⚽️',
+    '🏀', '🥎', '🎹', '🎲', '🎮', '🧩', '🚗', '🚲', '🚂', '⛺️', '📞', '⏰',
+    '🔌', '💎', '🪚', '🧲', '🧬', '🎀', '📬', '📘', '🩷', '🎵', '🏴', '🚩', 
+  ];
+
+  const traceID = spans[0].traceID;
+  let index = 0;
+
+  if (traceID) {
+    for (let i = 0; i < traceID.length; i++) {
+      const hexChar = traceID.slice(i, i + 1);
+      index = (index * 16 + parseInt(hexChar, 16)) % emojiSet.length;
+    }
+  }
+
+  return emojiSet[index];
+}

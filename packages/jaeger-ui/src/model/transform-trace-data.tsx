@@ -16,7 +16,7 @@ import _isEqual from 'lodash/isEqual';
 
 import { getTraceSpanIdsAsTree, TREE_ROOT_ID } from '../selectors/trace';
 import { getConfigValue } from '../utils/config/get-config';
-import { getTraceName, getTracePageTitle } from './trace-viewer';
+import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-viewer';
 import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
 
@@ -171,6 +171,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   });
   const traceName = getTraceName(spans);
   const tracePageTitle = getTracePageTitle(spans);
+  const traceEmoji = getTraceEmoji(spans);
   const services = Object.keys(svcCounts).map(name => ({ name, numberOfSpans: svcCounts[name] }));
   return {
     services,
@@ -178,6 +179,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     traceID,
     traceName,
     tracePageTitle,
+    traceEmoji,
     // TODO why not store `tree` here for easier access to tree structure?
     // ...
     // Can't use spread operator for intersection types

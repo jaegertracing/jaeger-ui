@@ -159,7 +159,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
 
   return (
     <header className="TracePageHeader">
-      <Helmet title={`${traceShortID}: ${trace.tracePageTitle} — Jaeger UI`} />
+      <Helmet title={`${trace.traceEmoji} ${traceShortID}: ${trace.tracePageTitle} — Jaeger UI`} />
       <div className="TracePageHeader--titleRow">
         {toSearch && (
           <Link className="TracePageHeader--back" to={toSearch}>
