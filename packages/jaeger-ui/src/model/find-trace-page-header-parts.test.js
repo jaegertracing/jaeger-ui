@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { _getTraceNameImpl as getTraceName } from './trace-viewer';
+import { _getTracePageHeaderPartsImpl as getTracePageHeaderParts } from './trace-viewer';
 
-describe('getTraceName', () => {
+describe('getTracePageHeaderParts', () => {
   const firstSpanId = 'firstSpanId';
   const secondSpanId = 'secondSpanId';
   const thirdSpanId = 'thirdSpanId';
@@ -220,25 +220,29 @@ describe('getTraceName', () => {
     },
   ];
 
-  const fullTraceName = `${serviceName}: ${operationName}`;
+  const fullTracePageHeaderParts = { serviceName, operationName };
 
   it('returns an empty string if given spans with no root among them', () => {
-    expect(getTraceName(spansWithNoRoots)).toEqual('');
+    expect(getTracePageHeaderParts(spansWithNoRoots)).toEqual(null);
   });
 
   it('returns an id of root span with the earliest startTime', () => {
-    expect(getTraceName(spansWithMultipleRootsDifferentByStartTime)).toEqual(fullTraceName);
+    expect(getTracePageHeaderParts(spansWithMultipleRootsDifferentByStartTime)).toEqual(
+      fullTracePageHeaderParts
+    );
   });
 
   it('returns an id of root span without any refs', () => {
-    expect(getTraceName(spansWithMultipleRootsWithOneWithoutRefs)).toEqual(fullTraceName);
+    expect(getTracePageHeaderParts(spansWithMultipleRootsWithOneWithoutRefs)).toEqual(
+      fullTracePageHeaderParts
+    );
   });
 
   it('returns an id of root span with remote ref', () => {
-    expect(getTraceName(spansWithOneRootWithRemoteRef)).toEqual(fullTraceName);
+    expect(getTracePageHeaderParts(spansWithOneRootWithRemoteRef)).toEqual(fullTracePageHeaderParts);
   });
 
   it('returns an id of root span with no refs', () => {
-    expect(getTraceName(spansWithOneRootWithNoRefs)).toEqual(fullTraceName);
+    expect(getTracePageHeaderParts(spansWithOneRootWithNoRefs)).toEqual(fullTracePageHeaderParts);
   });
 });
