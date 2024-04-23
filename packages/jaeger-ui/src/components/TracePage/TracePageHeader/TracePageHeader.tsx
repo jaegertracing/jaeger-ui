@@ -28,7 +28,6 @@ import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceVi
 import LabeledList from '../../common/LabeledList';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
-import { getTraceName } from '../../../model/trace-viewer';
 import { TNil } from '../../../types';
 import { Trace } from '../../../types/trace';
 import { formatDatetime, formatDuration } from '../../../utils/date';
@@ -151,7 +150,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
 
   const title = (
     <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>
-      <TraceName traceName={getTraceName(trace.spans)} />{' '}
+      <TraceName traceName={trace.traceName} />{' '}
       <small className="u-tx-muted">{trace.traceID.slice(0, 7)}</small>
     </h1>
   );
