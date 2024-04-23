@@ -29,7 +29,8 @@
     "typescript": "5.4.5"
   },
   "resolutions": {
-    "**/lodash": "^4.17.21"
+    "**/lodash": "^4.17.21",
+    "rollup": "^4.13.1"
   },
   "workspaces": {
     "packages": [
