@@ -70,3 +70,9 @@ export function getTraceName(spans: Span[]): string {
 
   return parts ? `${parts.serviceName}: ${parts.operationName}` : '';
 }
+
+export function getTracePageTitle(spans: Span[]): string {
+  const parts = getTracePageHeaderParts(spans);
+
+  return parts ? `${parts.operationName} (${parts.serviceName})` : '';
+}

@@ -20,6 +20,7 @@ import _values from 'lodash/values';
 import { IoArrowBack, IoFileTrayFull, IoChevronForward } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 
+import { Helmet } from 'react-helmet';
 import AltViewOptions from './AltViewOptions';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import SpanGraph from './SpanGraph';
@@ -148,15 +149,17 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
       return { ...rest, value: renderer(trace) };
     });
 
+  const traceShortID = trace.traceID.slice(0, 7);
+
   const title = (
     <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>
-      <TraceName traceName={trace.traceName} />{' '}
-      <small className="u-tx-muted">{trace.traceID.slice(0, 7)}</small>
+      <TraceName traceName={trace.traceName} /> <small className="u-tx-muted">{traceShortID}</small>
     </h1>
   );
 
   return (
     <header className="TracePageHeader">
+      <Helmet title={`${traceShortID}: ${trace.tracePageTitle} — Jaeger UI`} />
       <div className="TracePageHeader--titleRow">
         {toSearch && (
           <Link className="TracePageHeader--back" to={toSearch}>
