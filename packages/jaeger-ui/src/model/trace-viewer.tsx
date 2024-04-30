@@ -16,7 +16,12 @@ import _memoize from 'lodash/memoize';
 
 import { Span } from '../types/trace';
 
-export function _getTraceNameImpl(spans: Span[]) {
+export type TracePageHeaderParts = {
+  serviceName: string;
+  operationName: string;
+};
+
+export function _getTracePageHeaderPartsImpl(spans: Span[]): TracePageHeaderParts | null {
   // Use a span with no references to another span in given array
   // prefering the span with the fewest references
   // using start time as a tie breaker
@@ -44,10 +49,56 @@ export function _getTraceNameImpl(spans: Span[]) {
       candidateSpan = spans[i];
     }
   }
-  return candidateSpan ? `${candidateSpan.process.serviceName}: ${candidateSpan.operationName}` : '';
+
+  if (!candidateSpan) {
+    return null;
+  }
+
+  return {
+    serviceName: candidateSpan.process.serviceName,
+    operationName: candidateSpan.operationName,
+  };
 }
 
-export const getTraceName = _memoize(_getTraceNameImpl, (spans: Span[]) => {
+export const getTracePageHeaderParts = _memoize(_getTracePageHeaderPartsImpl, (spans: Span[]) => {
   if (!spans.length) return 0;
   return spans[0].traceID;
 });
+
+export function getTraceName(spans: Span[]): string {
+  const parts = getTracePageHeaderParts(spans);
+
+  return parts ? `${parts.serviceName}: ${parts.operationName}` : '';
+}
+
+export function getTracePageTitle(spans: Span[]): string {
+  const parts = getTracePageHeaderParts(spans);
+
+  return parts ? `${parts.operationName} (${parts.serviceName})` : '';
+}
+
+export function getTraceEmoji(spans: Span[]): string {
+  if (!spans.length) return '';
+
+  // prettier-ignore
+  const emojiSet = [
+    '🐶', '🐱', '🐭', '🦊', '🐨', '🐮', '🐷', '🐸', '🐵', '🐔', '🐤', '🦆',
+    '🦉', '🐝', '🦋', '🐢', '🦀', '🐳', '🐊', '🦒', '🪶', '🦩', '🐉', '🍄',
+    '🌸', '🌜', '🔥', '🌪️', '💧', '🍏', '🍊', '🍉', '🍒', '🥦', '🌽', '🍠',
+    '🥐', '🥖', '🥚', '🧀', '🍗', '🍟', '🍕', '🍣', '🍤', '🍙', '🍪', '⚽️',
+    '🏀', '🥎', '🎹', '🎲', '🎮', '🧩', '🚗', '🚲', '🚂', '⛺️', '📞', '⏰',
+    '🔌', '💎', '🪚', '🧲', '🧬', '🎀', '📬', '📘', '🩷', '🎵', '🏴', '🚩', 
+  ];
+
+  const traceID = spans[0].traceID;
+  let index = 0;
+
+  if (traceID) {
+    for (let i = 0; i < traceID.length; i++) {
+      const hexChar = traceID.slice(i, i + 1);
+      index = (index * 16 + parseInt(hexChar, 16)) % emojiSet.length;
+    }
+  }
+
+  return emojiSet[index];
+}
