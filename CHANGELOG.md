@@ -9,6 +9,13 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.41.0 (2024-05-01)
+
+### 🐞 Bug fixes, Minor Improvements
+
+* Improve trace page title with data and unique emoji (fixes #2256) ([@nox](https://github.com/nox) in [#2275](https://github.com/jaegertracing/jaeger-ui/pull/2275))
+* Require node version 20+ ([@Baalekshan](https://github.com/Baalekshan) in [#2274](https://github.com/jaegertracing/jaeger-ui/pull/2274))
+
 ## v1.40.0 (2024-04-02)
 
 ### 🐞 Bug fixes, Minor Improvements
@@ -23,11 +30,11 @@ Run `make changelog` to generate content.
 
 ## v1.39.0 (2024-03-04)
 
-#### ✨ New Features:
+### ✨ New Features:
 
 * Support uploading traces in opentelemetry format (otlp json) ([@NavinShrinivas](https://github.com/NavinShrinivas) in [#2145](https://github.com/jaegertracing/jaeger-ui/pull/2145))
 
-#### 🐞 Bug fixes, Minor Improvements:
+### 🐞 Bug fixes, Minor Improvements:
 
 * Gracefully handle spans without logs field ([@MaXal](https://github.com/MaXal) in [#2191](https://github.com/jaegertracing/jaeger-ui/pull/2191))
 * Prevent keyvaluetable copy column from wrapping ([@bobrik](https://github.com/bobrik) in [#2181](https://github.com/jaegertracing/jaeger-ui/pull/2181))
@@ -35,22 +42,22 @@ Run `make changelog` to generate content.
 
 ## v1.38.0 (2024-02-06)
 
-#### ✨ New Features:
+### ✨ New Features:
 
 * [feature]: add zoom in/out controls to plexus graphs ([@Wise-Wizard](https://github.com/Wise-Wizard) in [#2072](https://github.com/jaegertracing/jaeger-ui/pull/2072))
 
-#### 🐞 Bug fixes, Minor Improvements:
+### 🐞 Bug fixes, Minor Improvements:
 
 * Use import from /dist/ instead of symlink ([@zacanger](https://github.com/zacanger) in [#2135](https://github.com/jaegertracing/jaeger-ui/pull/2135))
 
 ## v1.37.0 (2024-01-08)
 
-#### ✨ New Features:
+### ✨ New Features:
 
 * Replace implementation of DAG view with Plexus's Digraph ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1981](https://github.com/jaegertracing/jaeger-ui/pull/1981))
 * Support sticky configuration for deep dependency graph ([@Wise-Wizard](https://github.com/Wise-Wizard) in [#2063](https://github.com/jaegertracing/jaeger-ui/pull/2063))
 
-#### 🐞 Bug fixes, Minor Improvements:
+### 🐞 Bug fixes, Minor Improvements:
 
 * Add exact phrase search syntax help ([@kshmidt-digma](https://github.com/kshmidt-digma) in [#2028](https://github.com/jaegertracing/jaeger-ui/pull/2028))
 * Fix broken hot reload of plexus package ([@Wise-Wizard](https://github.com/Wise-Wizard) in [#2089](https://github.com/jaegertracing/jaeger-ui/pull/2089))
@@ -59,7 +66,7 @@ Run `make changelog` to generate content.
 * Chore: import only lodash submodules ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#2041](https://github.com/jaegertracing/jaeger-ui/pull/2041))
 * Replace reselect with memoize ([@cooleditphoto](https://github.com/cooleditphoto) in [#2042](https://github.com/jaegertracing/jaeger-ui/pull/2042))
 
-#### 👷 CI Improvements:
+### 👷 CI Improvements:
 
 * Setup ossf scorecard workflow ([@mmorel-35](https://github.com/mmorel-35) in [#2096](https://github.com/jaegertracing/jaeger-ui/pull/2096))
 * Ci: simplify check-label workflow ([@EshaanAgg](https://github.com/EshaanAgg) in [#2068](https://github.com/jaegertracing/jaeger-ui/pull/2068))
@@ -67,18 +74,18 @@ Run `make changelog` to generate content.
 
 ## v1.36.0 (2023-12-05)
 
-#### ✨ New Features:
+### ✨ New Features:
 
 * [SPM] Add span kind selector ([@albertteoh](https://github.com/albertteoh) in [#2012](https://github.com/jaegertracing/jaeger-ui/pull/2012))
 * Make ArchiveTrace button auto-configurable ([@thecoons](https://github.com/thecoons) in [#1944](https://github.com/jaegertracing/jaeger-ui/pull/1944))
 
-#### 🐞 Bug fixes, Minor Improvements:
+### 🐞 Bug fixes, Minor Improvements:
 
 * Speed up trace statistics view calculation ([@maxgaponov](https://github.com/maxgaponov) in [#1941](https://github.com/jaegertracing/jaeger-ui/pull/1941))
 * Exit `mergeChildrenCriticalPath` early for an empty critical path ([@maxgaponov](https://github.com/maxgaponov) in [#1974](https://github.com/jaegertracing/jaeger-ui/pull/1974))
 * Add link to faq explaining why service map is empty ([@yurishkuro](https://github.com/yurishkuro) in [#1963](https://github.com/jaegertracing/jaeger-ui/pull/1963))
 
-#### 👷 CI Improvements:
+### 👷 CI Improvements:
 
 * Change vite config from cjs to esm ([@ShivamMadlani](https://github.com/ShivamMadlani) in [#1992](https://github.com/jaegertracing/jaeger-ui/pull/1992))
 * Restore scripts/get-tracking-version.js deleted by accident ([@yurishkuro](https://github.com/yurishkuro) in [#1998](https://github.com/jaegertracing/jaeger-ui/pull/1998))
@@ -86,12 +93,12 @@ Run `make changelog` to generate content.
 
 ## v1.35.0 (2023-11-02)
 
-#### ✨ New Features:
+### ✨ New Features:
 
 * Add tooltip when hovering critical path ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1871](https://github.com/jaegertracing/jaeger-ui/pull/1871))
 * Added tooltip when hovered on header column of tracestatistics view ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1902](https://github.com/jaegertracing/jaeger-ui/pull/1902))
 
-#### 🐞 Bug fixes, Minor Improvements:
+### 🐞 Bug fixes, Minor Improvements:
 
 * Upgrade ant-design to v5.x ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1907](https://github.com/jaegertracing/jaeger-ui/pull/1907))
 * [refactor]: enhancement to selftime calculation logic in tracestatistics view ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1901](https://github.com/jaegertracing/jaeger-ui/pull/1901))
@@ -102,7 +109,7 @@ Run `make changelog` to generate content.
 * Replace deprecated visible prop of ant-design v3 with open prop of ant-design v4 ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1855](https://github.com/jaegertracing/jaeger-ui/pull/1855))
 * Replace deprecated usage of ant-design tabs component from searchtracepage ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1857](https://github.com/jaegertracing/jaeger-ui/pull/1857))
 
-#### 👷 CI Improvements:
+### 👷 CI Improvements:
 
 * Ci: add the label-check workflow to verify changelog labels on each pr ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1897](https://github.com/jaegertracing/jaeger-ui/pull/1897))
 
