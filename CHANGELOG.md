@@ -9,7 +9,11 @@ Run `make changelog` to generate content.
 
 </details>
 
-## v1.41.0 (2024-05-01)
+## v1.57.0 (2024-05-01)
+
+Note: the version has been bumped to be inline with the backend.
+
+More details: https://github.com/jaegertracing/jaeger/issues/5323
 
 ### 🐞 Bug fixes, Minor Improvements
 
