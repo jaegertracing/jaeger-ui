@@ -19,6 +19,15 @@ module.exports = {
     jest: true,
     jasmine: true,
   },
+  // Add any other files or directories you want to ignore
+  ignorePatterns: [
+    'build/',
+    'coverage/',
+    'packages/plexus/src/LayoutManager/layout.worker*js*',
+    'packages/jaeger-ui/index.d.ts',
+    'packages/plexus/dist/',
+    'packages/plexus/lib/',
+  ],
   settings: {
     'import/resolver': {
       node: {
