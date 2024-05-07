@@ -104,7 +104,7 @@ Here are some steps to follow:
 
 See the [configuration guide](https://www.jaegertracing.io/docs/latest/frontend-ui/) for details on configuring Google Analytics tracking, menu customizations, and other aspects of UI behavior.
 
-## Debug unit tests from Vscode  (launch.json file given below)
+## Debug unit tests from Vscode (launch.json file given below)
 
 ```javascript
 {
@@ -127,15 +127,13 @@ See the [configuration guide](https://www.jaegertracing.io/docs/latest/frontend-
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}/packages/jaeger-ui",
         },
-          
+
     ]
 }
 
 ```
 
-
 See the [configuration guide](https://www.jaegertracing.io/docs/latest/frontend-ui/) for details on configuring Google Analytics tracking, menu customizations, and other aspects of UI behavior.
-
 
 ## License
 
