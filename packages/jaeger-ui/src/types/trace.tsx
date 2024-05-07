@@ -81,6 +81,8 @@ export type Trace = TraceData & {
   spans: Span[];
   startTime: number;
   traceName: string;
+  tracePageTitle: string;
+  traceEmoji: string;
   services: { name: string; numberOfSpans: number }[];
 };
 

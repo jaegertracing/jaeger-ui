@@ -1,12 +1,34 @@
-#!/bin/sh
-set -ex
+#!/bin/bash
+set -e
 
-# Create a temporary depcheckrc file for 'jaeger-ui'
-tempfile_jaeger=$(mktemp /tmp/depcheckrc.XXXXXX.json)
-node scripts/generateDepcheckrcJaegerUI.js "$tempfile_jaeger"
-depcheck packages/jaeger-ui --config "$tempfile_jaeger"
+tempdir="$(mktemp -d /tmp/depcheckrc.XXXXXX)"
+cleanup_tempdir() {
+  rm -rf "${tempdir}"
+}
+trap 'cleanup_tempdir' EXIT
 
-# Create a temporary depcheckrc file for 'plexus'
-tempfile_plexus=$(mktemp /tmp/depcheckrc.XXXXXX.json)
-node scripts/generateDepcheckrcPlexus.js "$tempfile_plexus"
-depcheck packages/plexus --config "$tempfile_plexus"
+runDepcheck() {
+  local dir="$1"
+  local cfg="$2"
+  echo "Checking ${dir}"
+  node node_modules/depcheck/bin/depcheck.js "${dir}" --config "${cfg}" | sed 's/^\*/⛔/' | sed 's/^/    /g'
+  return $((! ${PIPESTATUS[0]}))
+}
+
+failed="false"
+
+tempfile_jaeger="${tempdir}/DepcheckrcJaegerUI.json"
+node scripts/generateDepcheckrcJaegerUI.js "${tempfile_jaeger}"
+if runDepcheck packages/jaeger-ui "${tempfile_jaeger}"; then
+  failed="true"
+fi
+
+tempfile_plexus="${tempdir}/DepcheckrcPlexus.json"
+node scripts/generateDepcheckrcPlexus.js "${tempfile_plexus}"
+if runDepcheck packages/plexus "${tempfile_plexus}"; then
+  failed="true"
+fi
+
+if [[ "$failed" == "true" ]]; then
+  exit 1
+fi

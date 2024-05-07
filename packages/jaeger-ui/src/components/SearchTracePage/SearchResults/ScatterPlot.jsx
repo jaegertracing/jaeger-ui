@@ -20,7 +20,7 @@ import { XYPlot, XAxis, YAxis, MarkSeries, Hint } from 'react-vis';
 import { FALLBACK_TRACE_NAME } from '../../../constants';
 import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
 
-import './react-vis.css';
+import 'react-vis/dist/style.css';
 import './ScatterPlot.css';
 
 export default function ScatterPlot(props) {
@@ -59,7 +59,7 @@ export default function ScatterPlot(props) {
       {containerWidth && (
         <XYPlot
           margin={{
-            left: 50,
+            left: 70,
           }}
           width={containerWidth}
           colorType="literal"

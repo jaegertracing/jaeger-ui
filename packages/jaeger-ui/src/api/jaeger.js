@@ -103,6 +103,9 @@ const JaegerAPI = {
   fetchServiceOperations(serviceName) {
     return getJSON(`${this.apiRoot}services/${encodeURIComponent(serviceName)}/operations`);
   },
+  transformOTLP(traces) {
+    return getJSON(`${this.apiRoot}transform`, { method: 'POST', body: JSON.stringify(traces) });
+  },
   fetchServiceServerOps(service) {
     return getJSON(`${this.apiRoot}operations`, {
       query: {
