@@ -11,7 +11,7 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.24.1",
+    "@babel/eslint-parser": "^7.24.5",
     "@typescript-eslint/eslint-plugin": "7.4.0",
     "@typescript-eslint/parser": "7.4.0",
     "depcheck": "1.4.7",
@@ -29,7 +29,8 @@
     "typescript": "5.4.5"
   },
   "resolutions": {
-    "**/lodash": "^4.17.21"
+    "**/lodash": "^4.17.21",
+    "rollup": "^4.13.1"
   },
   "workspaces": {
     "packages": [
