@@ -21,7 +21,7 @@
     "@types/lodash": "^4.17.0",
     "@types/react": "^18.3.3",
     "@types/react-window": "^1.8.0",
-    "@types/redux-form": "^8.3.10",
+    "@types/redux-form": "^8.3.11",
     "@types/react-helmet": "^6.1.5",
     "@types/react-router-dom": "^5.1.0",
     "@types/redux-actions": "2.2.1",
