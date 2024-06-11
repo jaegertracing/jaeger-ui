@@ -9,6 +9,16 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.58.0 (2024-06-11)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Document how to debug unit tests in vscode ([@RISHIKESHk07](https://github.com/RISHIKESHk07) in [#2297](https://github.com/jaegertracing/jaeger-ui/pull/2297))
+
+#### 👷 CI Improvements
+
+* Github actions added to block prs from fork/main branch ([@varshith257](https://github.com/varshith257) in [#2296](https://github.com/jaegertracing/jaeger-ui/pull/2296))
+
 ## v1.57.0 (2024-05-01)
 
 Note: the version has been bumped to be inline with the backend.
