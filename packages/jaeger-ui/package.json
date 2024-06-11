@@ -42,7 +42,7 @@
     "react-test-renderer": "^18.3.1",
     "rollup-plugin-visualizer": "^5.11.0",
     "sinon": "^18.0.0",
-    "terser": "^5.31.0",
+    "terser": "^5.31.1",
     "vite": "^5.2.12",
     "vite-plugin-imp": "^2.3.1"
   },
