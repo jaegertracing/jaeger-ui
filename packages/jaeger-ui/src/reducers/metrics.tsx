@@ -192,7 +192,7 @@ function fetchOpsMetricsDone(
             service_operation_error_rate: 0,
           };
           metricDetails.labels.forEach((label: { name: string; value: string }) => {
-            if (label.name === 'operation') {
+            if (label.name === 'span_name') {
               opsName = label.value;
             }
           });

@@ -221,7 +221,7 @@ const serviceOpsLatencies = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/PlaceOrder',
           },
           {
@@ -258,7 +258,7 @@ const serviceOpsLatenciesWithNull = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/PlaceOrder',
           },
           {
@@ -284,7 +284,7 @@ const serviceOpsLatenciesWithNull = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/Checkout',
           },
           {
@@ -320,7 +320,7 @@ const serviceOpsLatenciesZeroDivision = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/PlaceOrder',
           },
           {
@@ -346,7 +346,7 @@ const serviceOpsLatenciesZeroDivision = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/Checkout',
           },
           {
@@ -382,7 +382,7 @@ const serviceOpsErrors = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/PlaceOrder',
           },
           {
@@ -418,7 +418,7 @@ const serviceOpsErrorsWithNull = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/PlaceOrder',
           },
           {
@@ -444,7 +444,7 @@ const serviceOpsErrorsWithNull = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/Checkout',
           },
           {
@@ -480,7 +480,7 @@ const serviceOpsErrorsZeroDivision = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/PlaceOrder',
           },
           {
@@ -506,7 +506,7 @@ const serviceOpsErrorsZeroDivision = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/Checkout',
           },
           {
@@ -542,7 +542,7 @@ const serviceOpsCalls = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/PlaceOrder',
           },
           {
@@ -578,7 +578,7 @@ const serviceOpsCallsWithNull = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/PlaceOrder',
           },
           {
@@ -605,7 +605,7 @@ const serviceOpsCallsWithNull = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/Checkout',
           },
           {
@@ -642,7 +642,7 @@ const serviceOpsCallsZeroDivision = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/PlaceOrder',
           },
           {
@@ -669,7 +669,7 @@ const serviceOpsCallsZeroDivision = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/Checkout',
           },
           {
@@ -1175,7 +1175,7 @@ const serviceOpsLatenciesNoMetrics = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/PlaceOrder',
           },
           {
@@ -1188,7 +1188,7 @@ const serviceOpsLatenciesNoMetrics = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/Checkout',
           },
           {
@@ -1250,7 +1250,7 @@ const serviceOpsCallsNoMetrics = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/PlaceOrder',
           },
           {
@@ -1263,7 +1263,7 @@ const serviceOpsCallsNoMetrics = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/Checkout',
           },
           {
@@ -1286,7 +1286,7 @@ const serviceOpsErrorsNoMetrics = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/PlaceOrder',
           },
           {
@@ -1299,7 +1299,7 @@ const serviceOpsErrorsNoMetrics = {
       {
         labels: [
           {
-            name: 'operation',
+            name: 'span_name',
             value: '/Checkout',
           },
           {
