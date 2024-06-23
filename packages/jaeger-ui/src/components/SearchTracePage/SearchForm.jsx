@@ -328,37 +328,62 @@ export class SearchFormImpl extends React.PureComponent {
               <Popover
                 placement="topLeft"
                 trigger="click"
-                title={[
+                title={
                   <h3 key="title" className="SearchForm--tagsHintTitle">
                     Values should be in the{' '}
                     <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
                       logfmt
                     </a>{' '}
                     format.
-                  </h3>,
-                  <ul key="info" className="SearchForm--tagsHintInfo">
-                    <li>Use space for AND conjunctions</li>
-                    <li>
-                      Values containing whitespace or equal-sign &apos;=&apos; should be enclosed in quotes
-                    </li>
-                    <li>
-                      Elasticsearch/OpenSearch storage supports regexp query, therefore{' '}
-                      <a
-                        href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        reserved characters
-                      </a>{' '}
-                      need to be escaped for exact match queries.
-                    </li>
-                  </ul>,
-                ]}
+                  </h3>
+                }
                 content={
                   <div>
-                    <code className="SearchForm--tagsHintEg">
-                      error=true db.statement=&quot;select * from User&quot;
-                    </code>
+                    <ul key="info" className="SearchForm--tagsHintInfo">
+                      <li>Use space for AND conjunctions.</li>
+                      <li>
+                        Values containing whitespace or equal-sign &apos;=&apos; should be enclosed in quotes.
+                      </li>
+                      <li>
+                        Elasticsearch/OpenSearch storage supports regex query, therefore{' '}
+                        <a
+                          href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          reserved characters
+                        </a>{' '}
+                        need to be escaped for exact match queries.
+                      </li>
+                    </ul>
+                    <p>Examples:</p>
+                    <ul className="SearchForm--tagsHintInfo">
+                      <li>
+                        <code className="SearchForm--tagsHintEg">error=true</code>
+                      </li>
+                      <li>
+                        <code className="SearchForm--tagsHintEg">
+                          db.statement=&quot;select * from User&quot;
+                        </code>
+                      </li>
+                      <li>
+                        <code className="SearchForm--tagsHintEg">
+                          http.url=&quot;http://0.0.0.0:8081/customer\\?customer=123&quot;
+                        </code>
+                        <div>
+                          Note: when using Elasticsearch/OpenSearch the{' '}
+                          <a
+                            href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
+                            rel="noopener noreferrer"
+                            target="_blank"
+                          >
+                            regex-reserved
+                          </a>{' '}
+                          character <code className="SearchForm--tagsHintEg">&quot;?&quot;</code> must be
+                          escaped with <code className="SearchForm--tagsHintEg">&quot;\\&quot;</code>.
+                        </div>
+                      </li>
+                    </ul>
                   </div>
                 }
               >
