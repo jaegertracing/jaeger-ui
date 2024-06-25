@@ -1,0 +1,42 @@
+.IssueContainerWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px
+}
+.PerformanceIssuesHeader {
+  padding: 12px 0;
+  color: #e2e2e2
+}
+.PerformanceIssuesHeader > h3 {
+  background-color: #2b2b2b;
+  padding: 12px 0 12px 12px;
+  font-weight: 700;
+}
+.PerformanceIssuesParameters {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+  background-color: #f8f8f8;
+  color: #454545;
+  height: 36px;
+}
+.PerformanceIssuesParameters > div:first-of-type{
+  background-color: #e1e1e1;
+  height: 100%;
+  padding: 10px 12px;
+}
+.PerformanceIssuesParameter {
+  font-size: 12px;
+}
+.PerformanceIssuesParameter > input{
+  font-size: 12px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #ccc;
+  border-radius: 6px;
+  padding: 4px;
+  width: 64px;
+  text-align: center;
+}

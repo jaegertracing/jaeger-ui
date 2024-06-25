@@ -23,6 +23,7 @@ import {
   trackGraphView,
   trackStatisticsView,
   trackTraceSpansView,
+  trackPerformanceIssuesView,
   trackJsonView,
   trackRawJsonView,
 } from './TracePageHeader.track';
@@ -58,6 +59,10 @@ const MENU_ITEMS = [
     viewType: ETraceViewType.TraceFlamegraph,
     label: 'Trace Flamegraph',
   },
+  {
+    viewType: ETraceViewType.TracePerformanceIssues,
+    label: 'Trace Performance Issues',
+  }
 ];
 
 export default function AltViewOptions(props: Props) {
@@ -72,6 +77,8 @@ export default function AltViewOptions(props: Props) {
       trackStatisticsView();
     } else if (item === ETraceViewType.TraceSpansView) {
       trackTraceSpansView();
+    } else if (item === ETraceViewType.TracePerformanceIssues) {
+      trackPerformanceIssuesView();
     }
     onTraceViewChange(item);
   };

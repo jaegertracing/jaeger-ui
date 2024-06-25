@@ -1,0 +1,71 @@
+.ChartWrapper {
+  border-style: solid;
+  border-width: 0px;
+  border-color: #ccc;
+}
+.ChartDescription {
+  background-color: #ececec;
+  border-style: solid;
+  border-color: #ccc;
+  border-width: 1px;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f8f8;
+  gap: 1px;
+}
+.ChartDescriptionParameter {
+  display: flex;
+  flex-direction: row;
+  font-size: 12px;
+  color: #454545;
+}
+.ChartDescriptionParameter > div {
+  padding: 12px;
+}
+.ChartDescriptionParameter > div:first-of-type {
+  min-width: 160px;
+  background-color: #e1e1e1;
+}
+.ChartDescriptionParameter > div:last-of-type {
+  background-color: #ececec;
+  flex-grow: 1;
+  font-family: 'Courier New', Courier, monospace;
+}
+.ChartSpanRowWrapper {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 2px;
+  padding: 4px 12px;
+}
+.ChartSpanName {
+  display: flex;
+  flex-direction: row;
+  width: 20%;
+  align-items: center;
+  white-space: normal;
+}
+.ChartSpanNameService {
+  font-style: italic;
+  font-weight: 700;
+}
+.ChartSpanNameOperation {
+  color: #454545;
+  font-size: 10px;
+}
+.ChartSpanBarWrapper {
+  position: relative;
+  width: 80%;
+  top: 3px;
+}
+.ChartSpanBar {
+  position: absolute;
+  height: 10px;
+  background-color: rgb(23, 184, 190);
+  border-radius: 3px;
+}
+.ChartSpanDuration {
+  font-size: 10px;
+  color: #454545;
+  position: absolute;
+}
