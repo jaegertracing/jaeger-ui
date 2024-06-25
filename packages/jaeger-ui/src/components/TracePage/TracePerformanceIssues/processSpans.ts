@@ -6,7 +6,7 @@ export type SpanExtended = Span & {
   parentID?: string;
   groupId?: string;
   isQuerySpan?: boolean;
-  queryStatements?: Array<KeyValuePair>;
+  queryStatement?: KeyValuePair;
 };
 
 function areOverlappedSpans(prevSpan: Span | null, newSpan: Span | null): boolean {
@@ -37,7 +37,7 @@ function getChildSpanIndices(span: Span, objectSpans: object, spanCallback: Func
       const childSpan = objectSpans[spanId];
       if (childSpan) {
         if (childSpan.operationName.toUpperCase().includes('SELECT')) {
-          spanCallback(childSpan.tags.filter((tag: KeyValuePair) => tag.key === 'db.statement'));
+          spanCallback(childSpan.tags.find((tag: KeyValuePair) => tag.key === 'db.statement'));
         }
         indices.push(childSpan.spanIndex);
         indices.push(...getChildSpanIndices(childSpan, objectSpans, spanCallback));
@@ -56,10 +56,12 @@ function updateSpansForNPlus1QueryDetection(spans: SpanExtended[], dbObjectSpans
   return spans.map((span: SpanExtended) => {
     // Used to determine if the current span has a query (in their children)
     let isQuerySpan: boolean = false;
-    let queryStatements: string[] = [];
-    const checkQuery = (statements: string[]) => {
-      isQuerySpan = true;
-      queryStatements = statements;
+    let queryStatement: KeyValuePair | null = null;
+    const checkQuery = (statement: KeyValuePair) => {
+      if (statement) {
+        isQuerySpan = true;
+        queryStatement = statement;
+      }
     };
 
     // Concat indices to determine consecutiveness:
@@ -83,8 +85,8 @@ function updateSpansForNPlus1QueryDetection(spans: SpanExtended[], dbObjectSpans
     const newSpan = { ...span };
     newSpan.groupId = spansGroupId;
     newSpan.isQuerySpan = isQuerySpan;
-    if (isQuerySpan && queryStatements.length > 0) {
-      newSpan.queryStatements = queryStatements;
+    if (isQuerySpan && queryStatement) {
+      newSpan.queryStatement = queryStatement;
     }
 
     // Set var for next cycle

@@ -58,7 +58,7 @@ const NPlus1Chart: React.FC<Props> = props => {
         </div>
         <div className="ChartDescriptionParameter">
           <div>Repeating query:</div>
-          <div>{spans?.[0]?.queryStatements?.[0].value}</div>
+          <div>{spans?.[0]?.queryStatement?.value}</div>
         </div>
       </div>
       {spanRows}
