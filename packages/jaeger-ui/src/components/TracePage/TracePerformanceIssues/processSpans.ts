@@ -7,6 +7,13 @@ export type SpanExtended = Span & {
   groupId?: string;
   isQuerySpan?: boolean;
   queryStatement?: KeyValuePair;
+  isRequestSpan?: boolean;
+  serverRequest: { method: string; route: string };
+};
+
+export type IssueThresholds = {
+  minDuration: number;
+  minNumberOfSpans: number;
 };
 
 function areOverlappedSpans(prevSpan: Span | null, newSpan: Span | null): boolean {
@@ -30,14 +37,29 @@ function areConsecutiveIndices(indices: number[]): boolean {
   return true;
 }
 
-function getChildSpanIndices(span: Span, objectSpans: object, spanCallback: Function): number[] {
+function getChildSpanIndices(
+  span: Span,
+  objectSpans: object,
+  spanCallback: { query: Function; request: Function }
+): number[] {
   const indices: number[] = [];
   if (span.hasChildren) {
     span.childSpanIds.forEach((spanId: string) => {
       const childSpan = objectSpans[spanId];
       if (childSpan) {
         if (childSpan.operationName.toUpperCase().includes('SELECT')) {
-          spanCallback(childSpan.tags.find((tag: KeyValuePair) => tag.key === 'db.statement'));
+          spanCallback.query(childSpan.tags.find((tag: KeyValuePair) => tag.key === 'db.statement'));
+        }
+        if (childSpan.operationName.toUpperCase().includes('POST')) {
+          const serverRequest: { method: string; route: string } = { method: '', route: '' };
+          childSpan.tags.forEach((tag: KeyValuePair) => {
+            if (tag.key === 'http.method') {
+              serverRequest.method = tag.value;
+            } else if (tag.key === 'http.route') {
+              serverRequest.route = tag.value;
+            }
+          });
+          spanCallback.request(serverRequest);
         }
         indices.push(childSpan.spanIndex);
         indices.push(...getChildSpanIndices(childSpan, objectSpans, spanCallback));
@@ -64,11 +86,23 @@ function updateSpansForNPlus1QueryDetection(spans: SpanExtended[], dbObjectSpans
       }
     };
 
+    // Used to determine if the current span has a request (in their children)
+    let isRequestSpan: boolean = false;
+    const serverRequest: { method: string; route: string } = { method: '', route: '' };
+    const checkRequest = (request: { method: string; route: string }) => {
+      isRequestSpan = true;
+      serverRequest.method = request?.method !== '' ? request.method : serverRequest.method;
+      serverRequest.route = request?.route !== '' ? request.route : serverRequest.route;
+    };
+
     // Concat indices to determine consecutiveness:
     // - previous span
     // - current span
     // - children of current span
-    const childIndices = getChildSpanIndices(span, dbObjectSpans, checkQuery);
+    const childIndices = getChildSpanIndices(span, dbObjectSpans, {
+      query: checkQuery,
+      request: checkRequest,
+    });
     let allIndices = [span.spanIndex, ...childIndices];
     if (previousSpanIndex >= 0) {
       allIndices = [previousSpanIndex, ...allIndices];
@@ -77,7 +111,12 @@ function updateSpansForNPlus1QueryDetection(spans: SpanExtended[], dbObjectSpans
     // Check criteria to generate new group of spans
     const areSpansConsecutive = areConsecutiveIndices(allIndices);
     const areSpansOverlapped = areOverlappedSpans(previousSpan, span);
-    if (!isQuerySpan || !areSpansConsecutive || areSpansOverlapped) {
+    if (
+      (previousSpan?.isQuerySpan && !isQuerySpan) ||
+      (previousSpan?.isRequestSpan && !isRequestSpan) ||
+      !areSpansConsecutive ||
+      areSpansOverlapped
+    ) {
       spansGroupId = crypto.randomUUID();
     }
 
@@ -89,6 +128,11 @@ function updateSpansForNPlus1QueryDetection(spans: SpanExtended[], dbObjectSpans
       newSpan.queryStatement = queryStatement;
     }
 
+    newSpan.isRequestSpan = isRequestSpan;
+    if (isRequestSpan && serverRequest.method !== '' && serverRequest.route !== '') {
+      newSpan.serverRequest = serverRequest;
+    }
+
     // Set var for next cycle
     previousSpan = span;
     previousSpanIndex = allIndices.pop() || -1;
@@ -97,11 +141,48 @@ function updateSpansForNPlus1QueryDetection(spans: SpanExtended[], dbObjectSpans
   });
 }
 
-export function detectNPlus1Queries(
+function filterGroupOfSpansByThresholds(
+  groupOfSpansWithIssue: object,
+  objectWithGroupsOfSpansWithIssue: object,
+  thresholds: IssueThresholds
+) {
+  Object.entries(groupOfSpansWithIssue).forEach(([groupKey, groupValue]) => {
+    const currentSpans = groupValue || [];
+    let totalSpanDuration = 0;
+    let startTime = Infinity;
+    let endTime = -Infinity;
+    currentSpans.forEach((span: SpanExtended) => {
+      totalSpanDuration += span.duration;
+      startTime = span.relativeStartTime < startTime ? span.relativeStartTime : startTime;
+      const timeEnd = span.relativeStartTime + span.duration;
+      endTime = timeEnd > endTime ? timeEnd : endTime;
+    });
+    totalSpanDuration /= 1000;
+    const totalRangeDuration = endTime - startTime;
+
+    if (groupValue.length >= thresholds.minNumberOfSpans && totalSpanDuration >= thresholds.minDuration) {
+      Object.assign(objectWithGroupsOfSpansWithIssue, {
+        [groupKey]: {
+          spans: groupValue,
+          duration: totalRangeDuration,
+          startTime,
+          endTime,
+        },
+      });
+    }
+  });
+}
+
+export function detectNPlus1Issues(
   spans: Span[],
-  numberOfSpans: number,
-  totalDurationOfSpans: number
-): object {
+  issueThresholds: {
+    queryThresholds: IssueThresholds;
+    requetsThresholds: IssueThresholds;
+  }
+): {
+  SpansWithQueryIssue: object;
+  SpansWithRequestIssue: object;
+} {
   // Spans as object to easy access of a span using its id
   const dbObjectSpans = {};
 
@@ -116,53 +197,37 @@ export function detectNPlus1Queries(
   // Group spans by parentID
   const spansByParent = _.groupBy(dbSpans, 'parentID');
 
-  console.log('spans by parent', spansByParent);
   // Filter spans by number of spans threshold
-  const SpansWithIssue = {};
+  const SpansWithQueryIssue = {};
+  const SpansWithRequestIssue = {};
   Object.keys(spansByParent).forEach((key: string) => {
-    if (spansByParent[key].length >= numberOfSpans) {
+    if (spansByParent[key].length >= 5) {
       const spansByOperationName = _.groupBy(spansByParent[key], 'operationName');
       // In each group of spans, check if they are doing query operations in the db
       Object.keys(spansByOperationName).forEach((operationName: string) => {
-        if (operationName.toUpperCase().includes('SELECT')) {
+        if (operationName.toUpperCase().includes('SELECT') || operationName.toUpperCase().includes('POST')) {
           // TODO: Implement
         } else {
           const spansInOperation = spansByOperationName[operationName];
           const updatedSpansInOperation = updateSpansForNPlus1QueryDetection(spansInOperation, dbObjectSpans);
           const spansWithQueryIssue = updatedSpansInOperation.filter(span => span.isQuerySpan);
           const spansWithQueryIssueByGroup = _.groupBy(spansWithQueryIssue, 'groupId');
+          const spansWithServerRequestIssue = updatedSpansInOperation.filter(span => span.isRequestSpan);
+          const spansWithServerRequestIssueByGroup = _.groupBy(spansWithServerRequestIssue, 'groupId');
 
-          Object.keys(spansWithQueryIssueByGroup).forEach(groupKey => {
-            let totalSpanDuration = 0;
-            const currentSpans = spansWithQueryIssueByGroup[groupKey] || [];
-            let startTime = Infinity;
-            let endTime = -Infinity;
-            currentSpans.forEach(span => {
-              totalSpanDuration += span.duration;
-              startTime = span.relativeStartTime < startTime ? span.relativeStartTime : startTime;
-              const timeEnd = span.relativeStartTime + span.duration;
-              endTime = timeEnd > endTime ? timeEnd : endTime;
-            });
-            totalSpanDuration /= 1000;
-            const totalRangeDuration = endTime - startTime;
-
-            if (
-              spansWithQueryIssueByGroup[groupKey].length >= numberOfSpans &&
-              totalSpanDuration >= totalDurationOfSpans
-            ) {
-              Object.assign(SpansWithIssue, {
-                [groupKey]: {
-                  spans: spansWithQueryIssueByGroup[groupKey],
-                  duration: totalRangeDuration,
-                  startTime,
-                  endTime,
-                },
-              });
-            }
-          });
+          filterGroupOfSpansByThresholds(
+            spansWithQueryIssueByGroup,
+            SpansWithQueryIssue,
+            issueThresholds.queryThresholds
+          );
+          filterGroupOfSpansByThresholds(
+            spansWithServerRequestIssueByGroup,
+            SpansWithRequestIssue,
+            issueThresholds.requetsThresholds
+          );
         }
       });
     }
   });
-  return SpansWithIssue;
+  return { SpansWithQueryIssue, SpansWithRequestIssue };
 }

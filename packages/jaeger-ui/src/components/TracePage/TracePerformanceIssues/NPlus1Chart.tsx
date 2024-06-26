@@ -10,8 +10,17 @@ type Props = {
 };
 
 const NPlus1Chart: React.FC<Props> = props => {
-  const { spans, duration, startTime, endTime } = props;
-  console.log(spans);
+  const { spans, duration, startTime } = props;
+  let repeatingOperation = '';
+  let repeatingCode = '';
+  if (spans?.[0]?.isQuerySpan) {
+    repeatingOperation = 'Repeating query';
+    repeatingCode = spans?.[0]?.queryStatement?.value || '';
+  } else if (spans?.[0]?.isRequestSpan) {
+    repeatingOperation = 'Repeating request';
+    const value = spans?.[0]?.serverRequest;
+    repeatingCode = `${value.method} - ${value.route}`;
+  }
   const spanRows = spans.map((span: SpanExtended, index: number, arr: SpanExtended[]) => {
     const timeStart = span.relativeStartTime - startTime;
 
@@ -53,12 +62,16 @@ const NPlus1Chart: React.FC<Props> = props => {
     <div className="ChartWrapper">
       <div className="ChartDescription">
         <div className="ChartDescriptionParameter">
-          <div>Duration (ms):</div>
-          <div>{duration / 1000}</div>
+          <div>Duration</div>
+          <div>{`${Math.round(duration / 1000)} ms`}</div>
         </div>
         <div className="ChartDescriptionParameter">
-          <div>Repeating query:</div>
-          <div>{spans?.[0]?.queryStatement?.value}</div>
+          <div>Number of repetitions</div>
+          <div>{spans.length}</div>
+        </div>
+        <div className="ChartDescriptionParameter">
+          <div>{repeatingOperation}</div>
+          <div>{repeatingCode}</div>
         </div>
       </div>
       {spanRows}
