@@ -23,7 +23,15 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
         return;
       }
       try {
-        const traceObj = JSON.parse(reader.result);
+        let traceObj = JSON.parse(reader.result);
+        if (Array.isArray(traceObj) && traceObj.every(obj => 'resourceSpans' in obj)) {
+          const mergedResourceSpans = traceObj.reduce((acc, obj) => {
+            acc.push(...obj.resourceSpans);
+            return acc;
+          }, []);
+
+          traceObj = { resourceSpans: mergedResourceSpans };
+        }
         if ('resourceSpans' in traceObj) {
           JaegerAPI.transformOTLP(traceObj)
             .then((result: string) => {
