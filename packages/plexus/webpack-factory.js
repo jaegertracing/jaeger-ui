@@ -72,27 +72,22 @@ function makeDevConfig() {
   const config = {
     entry,
     mode: 'development',
-    devtool: 'cheap-module-eval-source-map',
+    devtool: 'cheap-module-source-map',
     output: {
       path: join(__dirname, 'build'),
       publicPath: '/',
       filename: 'assets/[name].js',
     },
+    stats: 'normal',
     devServer: {
       port: 5000,
       hot: false,
       historyApiFallback: true,
-      overlay: true,
-      index: 'index',
-      contentBase: join(__dirname, 'build'),
-      staticOptions: {
-        extensions: ['.htm', '.html'],
+      client: {
+        overlay: true,
       },
-      stats: {
-        all: false,
-        errors: true,
-        timings: true,
-        warnings: true,
+      static: {
+        directory: join(__dirname, 'build'),
       },
     },
     plugins: Object.keys(entry).map(
