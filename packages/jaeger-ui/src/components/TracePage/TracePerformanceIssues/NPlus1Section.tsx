@@ -25,13 +25,13 @@ const NPlus1Section: React.FC<Props> = props => {
           <div>Thresholds: </div>
           <div className="PerformanceIssuesParameter">
             <span>Min duration (ms): </span>
-            <input ref={durationRef} min={5} type="number" value={duration} onChange={onUpdateDuration} />
+            <input ref={durationRef} min={1} type="number" value={duration} onChange={onUpdateDuration} />
           </div>
           <div className="PerformanceIssuesParameter">
             <span>Min number of spans: </span>
             <input
               ref={numberOfSpansRef}
-              min={5}
+              min={1}
               type="number"
               value={numberOfSpans}
               onChange={onUpdateNumberOfSpans}
