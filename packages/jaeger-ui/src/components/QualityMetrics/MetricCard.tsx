@@ -63,7 +63,7 @@ export default class MetricCard extends React.PureComponent<TProps> {
         <div className="MetricCard--Body">
           <span className="MetricCard--TitleHeader">
             {name}{' '}
-            <Tooltip arrowPointAtCenter title="Metric Documentation">
+            <Tooltip arrow={{ pointAtCenter: true }} title="Metric Documentation">
               <a href={metricDocumentationLink} target="_blank" rel="noreferrer noopener">
                 <NewWindowIcon />
               </a>

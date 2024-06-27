@@ -140,7 +140,7 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
         <div className="Ddg--DetailsPanel--DecorationHeader">
           <span>{stringSupplant(decorationSchema.name, { service, operation })}</span>
           {detailLink && (
-            <Tooltip arrowPointAtCenter title="More Info">
+            <Tooltip arrow={{ pointAtCenter: true }} title="More Info">
               <a
                 className="Ddg--DetailsPanel--DetailLink"
                 href={stringSupplant(detailLink, { service, operation })}

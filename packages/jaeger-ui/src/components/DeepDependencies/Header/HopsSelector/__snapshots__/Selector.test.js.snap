@@ -2,7 +2,11 @@
 
 exports[`Selector renders buttons with expected text and classNames 1`] = `
 <Popover
-  arrowPointAtCenter={true}
+  arrow={
+    Object {
+      "pointAtCenter": true,
+    }
+  }
   content={
     Array [
       <button
@@ -127,7 +131,11 @@ exports[`Selector renders message when there are no options 1`] = `
 
 exports[`Selector renders upstream hops with negative distance correctly 1`] = `
 <Popover
-  arrowPointAtCenter={true}
+  arrow={
+    Object {
+      "pointAtCenter": true,
+    }
+  }
   content={
     Array [
       <button
