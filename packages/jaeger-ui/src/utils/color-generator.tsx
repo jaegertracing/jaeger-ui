@@ -36,7 +36,7 @@ const COLORS_HEX = [
 ];
 
 // TS needs the precise return type
-function strToRgb(s: string): [number, number, number] {
+function strToRgb(s: string): Rgb {
   if (s.length !== 7) {
     return [0, 0, 0];
   }
@@ -46,9 +46,13 @@ function strToRgb(s: string): [number, number, number] {
   return [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16)];
 }
 
+function rgbToStr(rgb: Rgb): string {
+  return `rgb(${rgb.map(c => c.toString()).join(', ')})`;
+}
+
 export class ColorGenerator {
   colorsHex: string[];
-  colorsRgb: [number, number, number][];
+  colorsRgb: Rgb[];
   cache: Map<string, number>;
   currentIdx: number;
 
@@ -84,7 +88,7 @@ export class ColorGenerator {
    * it with a color if the key is not recognized.
    * @return {number[]} An array of three ints [0, 255] representing a color.
    */
-  getRgbColorByKey(key: string): [number, number, number] {
+  getRgbColorByKey(key: string): Rgb {
     const i = this._getColorIndex(key);
     return this.colorsRgb[i];
   }
@@ -92,6 +96,33 @@ export class ColorGenerator {
   clear() {
     this.cache.clear();
     this.currentIdx = 0;
+  }
+}
+
+export type Rgb = [number, number, number];
+export type RgbMapper = (Rgb) => Rgb;
+
+/**
+ * An alternative view of a ColorGenerator with mapped colors.
+ * Shares the same underlying cache.
+ */
+export class ColorGeneratorView {
+  base: ColorGenerator;
+  mapper: RgbMapper;
+
+  constructor(base: ColorGenerator, mapRgb: RgbMapper) {
+    this.base = base;
+    this.mapper = mapRgb;
+  }
+
+  getRgbColorByKey(key: string): Rgb {
+    const rgb = this.base.getRgbColorByKey(key);
+    return this.mapper(rgb);
+  }
+
+  getColorByKey(key: string): string {
+    const rgb = this.getRgbColorByKey(key);
+    return rgbToStr(rgb);
   }
 }
 

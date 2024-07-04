@@ -22,6 +22,7 @@ import SpanBar from './SpanBar';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
+import { ColorGenerator } from '../../../utils/color-generator';
 import { criticalPathSection, Span } from '../../../types/trace';
 
 import './SpanBarRow.css';
@@ -55,6 +56,8 @@ type SpanBarRowProps = {
   showErrorIcon: boolean;
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
+  colorGenerator: ColorGenerator;
+  markerColorKey: string[];
   span: Span;
   focusSpan: (spanID: string) => void;
 };
@@ -98,6 +101,8 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       traceStartTime,
       span,
       focusSpan,
+      colorGenerator,
+      markerColorKey,
     } = this.props;
     const {
       duration,
@@ -211,6 +216,8 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
             hintSide={hintSide}
             traceStartTime={traceStartTime}
             span={span}
+            colorGenerator={colorGenerator}
+            markerColorKey={markerColorKey}
           />
         </TimelineRow.Cell>
       </TimelineRow>

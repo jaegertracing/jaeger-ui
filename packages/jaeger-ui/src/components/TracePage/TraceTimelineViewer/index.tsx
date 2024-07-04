@@ -45,6 +45,7 @@ type TProps = TDispatchProps & {
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: IViewRange;
+  markerColorKey: string[];
 };
 
 const NUM_TICKS = 5;
