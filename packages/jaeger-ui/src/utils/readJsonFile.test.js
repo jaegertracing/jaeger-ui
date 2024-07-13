@@ -72,4 +72,17 @@ describe('fileReader.readJsonFile', () => {
     const p = readJsonFile({ file });
     return expect(p).rejects.toMatchObject(expect.any(Error));
   });
+
+  it('loads multiple JSON data', () => {
+    let fileContent;
+    try {
+      fileContent = fs.readFileSync('src/utils/fixtures/otlp2jaeger-multi-in.json', 'utf-8');
+    } catch (err) {
+      console.error('Error reading file:', err);
+      throw err;
+    }
+    const file = new File([fileContent], 'multi.json', { type: 'application/json' });
+    const p = readJsonFile({ file });
+    expect(p).resolves.toBeDefined();
+  });
 });

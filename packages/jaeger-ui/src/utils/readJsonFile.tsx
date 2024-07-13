@@ -23,20 +23,43 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
         return;
       }
       try {
-        const traceObj = JSON.parse(reader.result);
-        if ('resourceSpans' in traceObj) {
-          JaegerAPI.transformOTLP(traceObj)
-            .then((result: string) => {
-              resolve(result);
-            })
-            .catch(() => {
-              reject(new Error(`Error converting traces to OTLP`));
-            });
-        } else {
-          resolve(traceObj);
+        const resourceSpansArray: any[] = [];
+        let combinedTraceObj: { resourceSpans: any[] } = { resourceSpans: [] };
+
+        try {
+          // Attempt to parse the entire content as a single JSON object
+          const traceObj = JSON.parse(reader.result);
+          if ('resourceSpans' in traceObj) {
+            resourceSpansArray.push(...traceObj.resourceSpans);
+          } else {
+            resolve(traceObj);
+          }
+        } catch (error) {
+          // If parsing fails, handle multi-line JSON objects
+          const jsonStrings = reader.result.split('\n').filter(line => line.trim() !== '');
+          jsonStrings.forEach(jsonString => {
+            try {
+              const traceObj = JSON.parse(jsonString.trim());
+              if ('resourceSpans' in traceObj) {
+                resourceSpansArray.push(...traceObj.resourceSpans);
+              }
+            } catch (error) {
+              throw new Error(`Error parsing JSON: ${(error as Error).message}`);
+            }
+          });
         }
-      } catch (error: unknown) {
-        reject(new Error(`Error parsing JSON: ${(error as Error).message}`));
+
+        combinedTraceObj = { resourceSpans: resourceSpansArray };
+
+        JaegerAPI.transformOTLP(combinedTraceObj)
+          .then((result: string) => {
+            resolve(result);
+          })
+          .catch(() => {
+            reject(new Error('Error converting traces to OTLP'));
+          });
+      } catch (error) {
+        reject(new Error(`Error processing JSON: ${(error as Error).message}`));
       }
     };
     reader.onerror = () => {
@@ -48,7 +71,7 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
     };
     try {
       reader.readAsText(fileList.file);
-    } catch (error: unknown) {
+    } catch (error) {
       reject(new Error(`Error reading the JSON file: ${(error as Error).message}`));
     }
   });
