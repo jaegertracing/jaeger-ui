@@ -9,6 +9,12 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.59.0 (2024-07-09)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Add escaped example to tag search help popup ([@yurishkuro](https://github.com/yurishkuro) in [#2354](https://github.com/jaegertracing/jaeger-ui/pull/2354))
+
 ## v1.58.0 (2024-06-11)
 
 #### 🐞 Bug fixes, Minor Improvements
