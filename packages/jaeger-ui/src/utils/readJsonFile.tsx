@@ -14,22 +14,20 @@
 
 import JaegerAPI from '../api/jaeger';
 
-function tryParseMultiLineInput(input: any) {
-  const jsonStrings: any[] = input.split('\n').filter((line: string) => line.trim() !== '');
-  const resourceSpansArray: any[] = [];
+function tryParseMultiLineInput(input: string): any[] {
+  const jsonStrings = input.split('\n').filter((line: string) => line.trim() !== '');
+  const parsedObjects: any[] = [];
 
   jsonStrings.forEach((jsonString: string) => {
     try {
       const traceObj = JSON.parse(jsonString.trim());
-      if ('resourceSpans' in traceObj) {
-        resourceSpansArray.push(...traceObj.resourceSpans);
-      }
+      parsedObjects.push(traceObj);
     } catch (error) {
       throw new Error(`Error parsing JSON: ${(error as Error).message}`);
     }
   });
 
-  return { resourceSpans: resourceSpansArray };
+  return parsedObjects;
 }
 
 export default function readJsonFile(fileList: { file: File }): Promise<string> {
@@ -44,7 +42,6 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
       try {
         traceObj = JSON.parse(reader.result);
       } catch (error) {
-        // try to interpret input as JSON-per-line
         try {
           traceObj = tryParseMultiLineInput(reader.result);
         } catch (error) {
@@ -52,7 +49,6 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
           return;
         }
       }
-      // 1. check if array and transform to valid OTLP
       if (Array.isArray(traceObj) && traceObj.every(obj => 'resourceSpans' in obj)) {
         const mergedResourceSpans = traceObj.reduce((acc, obj) => {
           acc.push(...obj.resourceSpans);
@@ -62,7 +58,6 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
         traceObj = { resourceSpans: mergedResourceSpans };
       }
 
-      // 2. check if OTLP and transform to Jaeger model
       if ('resourceSpans' in traceObj) {
         JaegerAPI.transformOTLP(traceObj)
           .then((result: string) => {

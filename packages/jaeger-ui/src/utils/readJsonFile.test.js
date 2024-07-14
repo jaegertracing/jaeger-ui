@@ -76,7 +76,7 @@ describe('fileReader.readJsonFile', () => {
   it('loads multiple JSON data', () => {
     let fileContent;
     try {
-      fileContent = fs.readFileSync('src/utils/fixtures/otlp2jaeger-multi-in.json', 'utf-8');
+      fileContent = fs.readFileSync('src/utils/fixtures/otlp2jaeger-multi-in.json.txt', 'utf-8');
     } catch (err) {
       console.error('Error reading file:', err);
       throw err;
