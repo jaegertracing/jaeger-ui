@@ -14,6 +14,24 @@
 
 import JaegerAPI from '../api/jaeger';
 
+function tryParseMultiLineInput(input: any) {
+  const jsonStrings: any[] = input.split('\n').filter((line: string) => line.trim() !== '');
+  const resourceSpansArray: any[] = [];
+
+  jsonStrings.forEach((jsonString: string) => {
+    try {
+      const traceObj = JSON.parse(jsonString.trim());
+      if ('resourceSpans' in traceObj) {
+        resourceSpansArray.push(...traceObj.resourceSpans);
+      }
+    } catch (error) {
+      throw new Error(`Error parsing JSON: ${(error as Error).message}`);
+    }
+  });
+
+  return { resourceSpans: resourceSpansArray };
+}
+
 export default function readJsonFile(fileList: { file: File }): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -22,44 +40,39 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
         reject(new Error('Invalid result type'));
         return;
       }
+      let traceObj;
       try {
-        const resourceSpansArray: any[] = [];
-        let combinedTraceObj: { resourceSpans: any[] } = { resourceSpans: [] };
-
+        traceObj = JSON.parse(reader.result);
+      } catch (error) {
+        // try to interpret input as JSON-per-line
         try {
-          // Attempt to parse the entire content as a single JSON object
-          const traceObj = JSON.parse(reader.result);
-          if ('resourceSpans' in traceObj) {
-            resourceSpansArray.push(...traceObj.resourceSpans);
-          } else {
-            resolve(traceObj);
-          }
+          traceObj = tryParseMultiLineInput(reader.result);
         } catch (error) {
-          // If parsing fails, handle multi-line JSON objects
-          const jsonStrings = reader.result.split('\n').filter(line => line.trim() !== '');
-          jsonStrings.forEach(jsonString => {
-            try {
-              const traceObj = JSON.parse(jsonString.trim());
-              if ('resourceSpans' in traceObj) {
-                resourceSpansArray.push(...traceObj.resourceSpans);
-              }
-            } catch (error) {
-              throw new Error(`Error parsing JSON: ${(error as Error).message}`);
-            }
-          });
+          reject(new Error(`Error processing JSON: ${(error as Error).message}`));
+          return;
         }
+      }
+      // 1. check if array and transform to valid OTLP
+      if (Array.isArray(traceObj) && traceObj.every(obj => 'resourceSpans' in obj)) {
+        const mergedResourceSpans = traceObj.reduce((acc, obj) => {
+          acc.push(...obj.resourceSpans);
+          return acc;
+        }, []);
 
-        combinedTraceObj = { resourceSpans: resourceSpansArray };
+        traceObj = { resourceSpans: mergedResourceSpans };
+      }
 
-        JaegerAPI.transformOTLP(combinedTraceObj)
+      // 2. check if OTLP and transform to Jaeger model
+      if ('resourceSpans' in traceObj) {
+        JaegerAPI.transformOTLP(traceObj)
           .then((result: string) => {
             resolve(result);
           })
           .catch(() => {
             reject(new Error('Error converting traces to OTLP'));
           });
-      } catch (error) {
-        reject(new Error(`Error processing JSON: ${(error as Error).message}`));
+      } else {
+        resolve(traceObj);
       }
     };
     reader.onerror = () => {
