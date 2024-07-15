@@ -74,7 +74,7 @@ describe('fileReader.readJsonFile', () => {
   });
 
   it('loads JSON-per-line data', () => {
-    let fileContent = fs.readFileSync('src/utils/fixtures/otlp2jaeger-multi-in.json.txt', 'utf-8');
+    const fileContent = fs.readFileSync('src/utils/fixtures/otlp2jaeger-multi-in.json.txt', 'utf-8');
     const file = new File([fileContent], 'multi.json', { type: 'application/json' });
     const p = readJsonFile({ file });
     expect(p).resolves.toBeDefined();
