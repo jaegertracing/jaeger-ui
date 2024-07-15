@@ -18,12 +18,12 @@ function tryParseMultiLineInput(input: string): any[] {
   const jsonStrings = input.split('\n').filter((line: string) => line.trim() !== '');
   const parsedObjects: any[] = [];
 
-  jsonStrings.forEach((jsonString: string) => {
+  jsonStrings.forEach((jsonString: string, index: number) => {
     try {
       const traceObj = JSON.parse(jsonString.trim());
       parsedObjects.push(traceObj);
     } catch (error) {
-      throw new Error(`Error parsing JSON: ${(error as Error).message}`);
+      throw new Error(`Error parsing JSON at line ${index+1}: ${(error as Error).message}`);
     }
   });
 
