@@ -23,7 +23,7 @@ function tryParseMultiLineInput(input: string): any[] {
       const traceObj = JSON.parse(jsonString.trim());
       parsedObjects.push(traceObj);
     } catch (error) {
-      throw new Error(`Error parsing JSON at line ${index+1}: ${(error as Error).message}`);
+      throw new Error(`Error parsing JSON at line ${index + 1}: ${(error as Error).message}`);
     }
   });
 
@@ -45,7 +45,7 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
         try {
           traceObj = tryParseMultiLineInput(reader.result);
         } catch (error) {
-          reject(new Error(`Error processing JSON: ${(error as Error).message}`));
+          reject(error);
           return;
         }
       }
