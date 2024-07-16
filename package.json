@@ -11,7 +11,7 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.24.6",
+    "@babel/eslint-parser": "^7.24.8",
     "@typescript-eslint/eslint-plugin": "7.4.0",
     "@typescript-eslint/parser": "7.4.0",
     "depcheck": "1.4.7",
