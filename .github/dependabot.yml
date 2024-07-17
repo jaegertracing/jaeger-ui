@@ -1,8 +1,10 @@
 version: 2
 updates:
   - package-ecosystem: docker
+    schedule:
+      interval: "monthly"
     directories:
-      /.github/workflows/Dockerfile
+      - /.github/workflows/Dockerfile
 
   # - package-ecosystem: "npm"
   #   open-pull-requests-limit: 50
