@@ -14,6 +14,22 @@
 
 import JaegerAPI from '../api/jaeger';
 
+function tryParseMultiLineInput(input: string): any[] {
+  const jsonStrings = input.split('\n').filter((line: string) => line.trim() !== '');
+  const parsedObjects: any[] = [];
+
+  jsonStrings.forEach((jsonString: string, index: number) => {
+    try {
+      const traceObj = JSON.parse(jsonString.trim());
+      parsedObjects.push(traceObj);
+    } catch (error) {
+      throw new Error(`Error parsing JSON at line ${index + 1}: ${(error as Error).message}`);
+    }
+  });
+
+  return parsedObjects;
+}
+
 export default function readJsonFile(fileList: { file: File }): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -22,21 +38,36 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
         reject(new Error('Invalid result type'));
         return;
       }
+      let traceObj;
       try {
-        const traceObj = JSON.parse(reader.result);
-        if ('resourceSpans' in traceObj) {
-          JaegerAPI.transformOTLP(traceObj)
-            .then((result: string) => {
-              resolve(result);
-            })
-            .catch(() => {
-              reject(new Error(`Error converting traces to OTLP`));
-            });
-        } else {
-          resolve(traceObj);
+        traceObj = JSON.parse(reader.result);
+      } catch (error) {
+        try {
+          traceObj = tryParseMultiLineInput(reader.result);
+        } catch (error) {
+          reject(error);
+          return;
         }
-      } catch (error: unknown) {
-        reject(new Error(`Error parsing JSON: ${(error as Error).message}`));
+      }
+      if (Array.isArray(traceObj) && traceObj.every(obj => 'resourceSpans' in obj)) {
+        const mergedResourceSpans = traceObj.reduce((acc, obj) => {
+          acc.push(...obj.resourceSpans);
+          return acc;
+        }, []);
+
+        traceObj = { resourceSpans: mergedResourceSpans };
+      }
+
+      if ('resourceSpans' in traceObj) {
+        JaegerAPI.transformOTLP(traceObj)
+          .then((result: string) => {
+            resolve(result);
+          })
+          .catch(() => {
+            reject(new Error('Error converting traces to OTLP'));
+          });
+      } else {
+        resolve(traceObj);
       }
     };
     reader.onerror = () => {
@@ -48,7 +79,7 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
     };
     try {
       reader.readAsText(fileList.file);
-    } catch (error: unknown) {
+    } catch (error) {
       reject(new Error(`Error reading the JSON file: ${(error as Error).message}`));
     }
   });
