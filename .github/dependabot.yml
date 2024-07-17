@@ -1,5 +1,9 @@
 version: 2
 updates:
+  - package-ecosystem: docker
+    directories:
+      /.github/workflows/Dockerfile
+
   # - package-ecosystem: "npm"
   #   open-pull-requests-limit: 50
   #   labels: [ "changelog:dependencies" ]
