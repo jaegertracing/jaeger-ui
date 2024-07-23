@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import _get from 'lodash/get';
-import Raven, { RavenOptions, RavenTransportOptions } from 'raven-js';
+import * as Sentry from '@sentry/browser';
 
 import convRavenToGa from './conv-raven-to-ga';
 import { TNil } from '../../types';
@@ -28,6 +28,13 @@ import parseQuery from '../parseQuery';
 // eslint-disable-next-line @typescript-eslint/naming-convention
 interface WindowWithGATracking extends Window {
   dataLayer: (string | object)[][] | undefined;
+}
+
+function convertEventToTransportOptions(event: Sentry.Event): { url: string; data: any; } {
+  return {
+    url: event.request?.url || '',
+    data: event,
+  };
 }
 
 declare let window: WindowWithGATracking;
@@ -47,7 +54,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
   const gaID = _get(config, 'tracking.gaID');
   const isErrorsEnabled = isDebugMode || Boolean(_get(config, 'tracking.trackErrors'));
   const cookiesToDimensions = _get(config, 'tracking.cookiesToDimensions');
-  const context = isErrorsEnabled ? Raven : null;
+  const context = isErrorsEnabled ? Sentry.BrowserClient : null;
   const EVENT_LENGTHS = {
     action: 499,
     category: 149,
@@ -119,8 +126,8 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
     });
   };
 
-  const trackRavenError = (ravenData: RavenTransportOptions) => {
-    const { message, category, action, label, value } = convRavenToGa(ravenData);
+  const trackRavenError = (sentryData: { url: string; data: any; }) => {
+    const { message, category, action, label, value } = convRavenToGa(sentryData);
     trackError(message);
     trackEvent(category, action, label, value);
   };
@@ -164,24 +171,30 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       );
     }
     if (isErrorsEnabled) {
-      const ravenConfig: RavenOptions = {
-        autoBreadcrumbs: {
-          xhr: true,
-          console: false,
-          dom: true,
-          location: true,
+      Sentry.init({
+        dsn: 'https://fakedsn@omg.com/1',
+        environment: getAppEnvironment() || 'unknown',
+        integrations: [
+          Sentry.breadcrumbsIntegration({
+            xhr: true,
+            console: false,
+            dom: true,
+          }),
+        ],
+        beforeSend(event) {
+          const transportOptions = convertEventToTransportOptions(event);
+          trackRavenError(transportOptions);
+          return event;
         },
-        environment: getAppEnvironment() || 'unkonwn',
-        transport: trackRavenError,
-      };
-      if (versionShort && versionShort !== 'unknown') {
-        ravenConfig.tags = {
-          git: versionShort,
-        };
-      }
-      Raven.config('https://fakedsn@omg.com/1', ravenConfig).install();
-      window.onunhandledrejection = function trackRejectedPromise(evt: PromiseRejectionEvent) {
-        Raven.captureException(evt.reason);
+        ...(versionShort && versionShort !== 'unknown' && {
+          tags: {
+            git: versionShort,
+          },
+        }),
+      });
+
+      window.onunhandledrejection = function trackRejectedPromise(evt) {
+        Sentry.captureException(evt.reason);
       };
     }
   };

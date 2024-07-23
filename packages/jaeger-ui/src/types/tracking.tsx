@@ -22,7 +22,7 @@ export interface IWebAnalyticsFunc {
 
 export default interface IWebAnalytics {
   init: () => void;
-  context: boolean | Sentry.BrowserClient | null;
+  context: boolean | typeof Sentry.BrowserClient | null;
   isEnabled: () => boolean;
   trackPageView: (pathname: string, search: string | TNil) => void;
   trackError: (description: string) => void;

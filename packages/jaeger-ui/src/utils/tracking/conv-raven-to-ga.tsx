@@ -13,8 +13,7 @@
 // limitations under the License.
 
 /* eslint-disable camelcase */
-import { Event as SentryEvent } from '@sentry/browser';
-import {Stacktrace, Exception, Breadcrumb} from '@sentry/browser'
+import {Exception, Breadcrumb} from '@sentry/browser'
 
 import prefixUrl from '../prefix-url';
 
@@ -36,16 +35,6 @@ const FETCH_SYMBOLS = [
   { sym: 'dp', word: '', rx: /^\/api\/dep/i },
   { sym: '__IGNORE__', word: '', rx: /\.js(\.map)?$/i },
 ];
-
-interface SentryTransportOptions {
-  url: string;
-  data: any;
-  auth: {
-    sentry_version: string;
-    sentry_client: string;
-    sentry_key: string;
-  };
-}
 
 // eslint-disable-next-line no-console
 const warn = console.warn.bind(console);
@@ -350,7 +339,7 @@ function getLabel(message: string, page: string, duration: number, git: string, 
 
 // Convert the Raven exception data to something that can be sent to Google
 // Analytics. See <./README.md> for details.
-export default function convRavenToGa({ data }: SentryTransportOptions) {
+export default function convRavenToGa({ data }: { url: string; data: any; }) {
   const { breadcrumbs, exception, extra, request, tags } = data;
   const { message, stack } = convException(exception?.values?.[0] ?? {});
 
