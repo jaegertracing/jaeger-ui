@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /* eslint-disable camelcase */
-import {Exception, Breadcrumb} from '@sentry/browser'
+import { Exception, Breadcrumb } from '@sentry/browser';
 
 import prefixUrl from '../prefix-url';
 
@@ -236,11 +236,6 @@ function compressCssSelector(selector: string) {
 // The chronological ordering of the breadcrumbs is older events precede newer
 // events. This ordering was kept because it's easier to see which page events
 // occurred on.
-interface ICrumb {
-  category: string;
-  data: TCrumbData;
-  message: string;
-}
 function convBreadcrumbs(crumbs: Breadcrumb[]) {
   if (!Array.isArray(crumbs) || !crumbs.length) {
     return '';
@@ -339,7 +334,7 @@ function getLabel(message: string, page: string, duration: number, git: string, 
 
 // Convert the Raven exception data to something that can be sent to Google
 // Analytics. See <./README.md> for details.
-export default function convRavenToGa({ data }: { url: string; data: any; }) {
+export default function convRavenToGa({ data }: { url: string; data: any }) {
   const { breadcrumbs, exception, extra, request, tags } = data;
   const { message, stack } = convException(exception?.values?.[0] ?? {});
 
@@ -350,7 +345,13 @@ export default function convRavenToGa({ data }: { url: string; data: any; }) {
   const category = `jaeger/${page}/error`;
   let action = [message, tags && tags.git, url, '', stack].filter(v => v != null).join('\n');
   action = truncate(action, 499);
-  const label = getLabel(message, page, value, (tags && tags.git) as string, (breadcrumbs && Array.isArray(breadcrumbs.values) ? breadcrumbs.values : []) as Breadcrumb[]);
+  const label = getLabel(
+    message,
+    page,
+    value,
+    (tags && tags.git) as string,
+    (breadcrumbs && Array.isArray(breadcrumbs.values) ? breadcrumbs.values : []) as Breadcrumb[]
+  );
   return {
     message,
     category,

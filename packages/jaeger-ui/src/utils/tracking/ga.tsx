@@ -30,7 +30,7 @@ interface WindowWithGATracking extends Window {
   dataLayer: (string | object)[][] | undefined;
 }
 
-function convertEventToTransportOptions(event: Sentry.Event): { url: string; data: any; } {
+function convertEventToTransportOptions(event: Sentry.Event): { url: string; data: any } {
   return {
     url: event.request?.url || '',
     data: event,
@@ -126,7 +126,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
     });
   };
 
-  const trackRavenError = (sentryData: { url: string; data: any; }) => {
+  const trackRavenError = (sentryData: { url: string; data: any }) => {
     const { message, category, action, label, value } = convRavenToGa(sentryData);
     trackError(message);
     trackEvent(category, action, label, value);
@@ -186,11 +186,12 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
           trackRavenError(transportOptions);
           return event;
         },
-        ...(versionShort && versionShort !== 'unknown' && {
-          tags: {
-            git: versionShort,
-          },
-        }),
+        ...(versionShort &&
+          versionShort !== 'unknown' && {
+            tags: {
+              git: versionShort,
+            },
+          }),
       });
 
       window.onunhandledrejection = function trackRejectedPromise(evt) {
