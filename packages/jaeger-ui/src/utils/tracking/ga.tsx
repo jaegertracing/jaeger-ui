@@ -21,7 +21,7 @@ import {
   init as SentryInit,
 } from '@sentry/browser';
 
-import convRavenToGa from './conv-raven-to-ga';
+import convSentryToGa from './conv-sentry-to-ga';
 import { TNil } from '../../types';
 import { Config } from '../../types/config';
 import { IWebAnalyticsFunc } from '../../types/tracking';
@@ -132,8 +132,8 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
     });
   };
 
-  const trackRavenError = (sentryData: { url: string; data: any }) => {
-    const { message, category, action, label, value } = convRavenToGa(sentryData);
+  const trackSentryError = (sentryData: { url: string; data: any }) => {
+    const { message, category, action, label, value } = convSentryToGa(sentryData);
     trackError(message);
     trackEvent(category, action, label, value);
   };
@@ -189,7 +189,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
         ],
         beforeSend(event) {
           const transportOptions = convertEventToTransportOptions(event);
-          trackRavenError(transportOptions);
+          trackSentryError(transportOptions);
           return event;
         },
         ...(versionShort &&

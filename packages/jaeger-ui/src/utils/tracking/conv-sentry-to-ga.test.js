@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import convRavenToGa from './conv-raven-to-ga';
-import { RAVEN_PAYLOAD, RAVEN_TO_GA } from './fixtures';
+import convSentryToGa from './conv-sentry-to-ga';
+import { SENTRY_PAYLOAD, SENRTY_TO_GA } from './fixtures';
 
-describe('convRavenToGa()', () => {
-  it('converts the raven-js payload to { category, action, label, value }', () => {
-    const data = convRavenToGa(RAVEN_PAYLOAD);
-    expect(data).toEqual(RAVEN_TO_GA);
+describe('convSentryToGa()', () => {
+  it('converts the sentry payload to { category, action, label, value }', () => {
+    const data = convSentryToGa(SENTRY_PAYLOAD);
+    expect(data).toEqual(SENRTY_TO_GA);
   });
 });

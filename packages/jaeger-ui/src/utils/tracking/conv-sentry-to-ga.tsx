@@ -332,9 +332,9 @@ function getLabel(message: string, page: string, duration: number, git: string, 
   return `${header}\n${truncate(crumbs, 498 - header.length, true)}`;
 }
 
-// Convert the Raven exception data to something that can be sent to Google
+// Convert the exception data to something that can be sent to Google
 // Analytics. See <./README.md> for details.
-export default function convRavenToGa({ data }: { url: string; data: any }) {
+export default function convSentryToGa({ data }: { url: string; data: any }) {
   const { breadcrumbs, exception, extra, request, tags } = data;
   const { message, stack } = convException(exception?.values?.[0] ?? {});
 
