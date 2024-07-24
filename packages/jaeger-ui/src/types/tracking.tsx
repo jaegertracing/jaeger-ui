@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as Sentry from '@sentry/browser';
+import { BrowserClient } from '@sentry/browser';
 import { TNil } from '.';
 import { Config } from './config';
 
@@ -22,7 +22,7 @@ export interface IWebAnalyticsFunc {
 
 export default interface IWebAnalytics {
   init: () => void;
-  context: boolean | typeof Sentry.BrowserClient | null;
+  context: boolean | typeof BrowserClient | null;
   isEnabled: () => boolean;
   trackPageView: (pathname: string, search: string | TNil) => void;
   trackError: (description: string) => void;

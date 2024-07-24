@@ -13,7 +13,13 @@
 // limitations under the License.
 
 import _get from 'lodash/get';
-import * as Sentry from '@sentry/browser';
+import {
+  Event,
+  BrowserClient,
+  breadcrumbsIntegration,
+  captureException,
+  init as SentryInit,
+} from '@sentry/browser';
 
 import convRavenToGa from './conv-raven-to-ga';
 import { TNil } from '../../types';
@@ -30,7 +36,7 @@ interface WindowWithGATracking extends Window {
   dataLayer: (string | object)[][] | undefined;
 }
 
-function convertEventToTransportOptions(event: Sentry.Event): { url: string; data: any } {
+function convertEventToTransportOptions(event: Event): { url: string; data: any } {
   return {
     url: event.request?.url || '',
     data: event,
@@ -54,7 +60,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
   const gaID = _get(config, 'tracking.gaID');
   const isErrorsEnabled = isDebugMode || Boolean(_get(config, 'tracking.trackErrors'));
   const cookiesToDimensions = _get(config, 'tracking.cookiesToDimensions');
-  const context = isErrorsEnabled ? Sentry.BrowserClient : null;
+  const context = isErrorsEnabled ? BrowserClient : null;
   const EVENT_LENGTHS = {
     action: 499,
     category: 149,
@@ -171,11 +177,11 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       );
     }
     if (isErrorsEnabled) {
-      Sentry.init({
+      SentryInit({
         dsn: 'https://fakedsn@omg.com/1',
         environment: getAppEnvironment() || 'unknown',
         integrations: [
-          Sentry.breadcrumbsIntegration({
+          breadcrumbsIntegration({
             xhr: true,
             console: false,
             dom: true,
@@ -195,7 +201,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       });
 
       window.onunhandledrejection = function trackRejectedPromise(evt) {
-        Sentry.captureException(evt.reason);
+        captureException(evt.reason);
       };
     }
   };
