@@ -212,7 +212,7 @@ tr
 ! Type! A very long message that will be truncated and re~
 cic2i2i{.LabeledList.TracePageHeader--overviewItems}`;
 
-export const SENRTY_TO_GA = deepFreeze({
+export const SENTRY_TO_GA = deepFreeze({
   action,
   label,
   message: '! test-sentry',

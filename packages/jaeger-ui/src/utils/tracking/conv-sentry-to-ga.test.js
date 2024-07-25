@@ -13,11 +13,11 @@
 // limitations under the License.
 
 import convSentryToGa from './conv-sentry-to-ga';
-import { SENTRY_PAYLOAD, SENRTY_TO_GA } from './fixtures';
+import { SENTRY_PAYLOAD, SENTRY_TO_GA } from './fixtures';
 
 describe('convSentryToGa()', () => {
   it('converts the sentry payload to { category, action, label, value }', () => {
     const data = convSentryToGa(SENTRY_PAYLOAD);
-    expect(data).toEqual(SENRTY_TO_GA);
+    expect(data).toEqual(SENTRY_TO_GA);
   });
 });
