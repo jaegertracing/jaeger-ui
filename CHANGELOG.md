@@ -9,6 +9,12 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.60.0 (2024-08-05)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Allow uploading json-per-line otlp data ([@BenzeneAlcohol](https://github.com/BenzeneAlcohol) in [#2380](https://github.com/jaegertracing/jaeger-ui/pull/2380))
+
 ## v1.59.0 (2024-07-09)
 
 #### 🐞 Bug fixes, Minor Improvements
