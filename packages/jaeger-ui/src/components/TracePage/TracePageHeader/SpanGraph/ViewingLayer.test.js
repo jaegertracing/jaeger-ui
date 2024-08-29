@@ -325,4 +325,76 @@ describe('<SpanGraph>', () => {
     scrubber = <Scrubber position={viewEnd} />;
     expect(wrapper.containsMatchingElement(scrubber)).toBeTruthy();
   });
+  describe('Scrolling behavior', () => {
+    it('should render scroll bar when view range is not full', () => {
+      const _props = { ...props, viewRange: getViewRange(0.2, 0.8) };
+      wrapper = shallow(<ViewingLayer {..._props} />);
+      expect(wrapper.find('.ViewingLayer--scrollBar').length).toBe(1);
+    });
+
+    it('should not render scroll bar when view range is full', () => {
+      const _props = { ...props, viewRange: getViewRange(0, 1) };
+      wrapper = shallow(<ViewingLayer {..._props} />);
+      expect(wrapper.find('.ViewingLayer--scrollBar').length).toBe(0);
+    });
+
+    it('should position scroll thumb correctly', () => {
+      const _props = { ...props, viewRange: getViewRange(0.2, 0.8) };
+      wrapper = shallow(<ViewingLayer {..._props} />);
+      const scrollThumb = wrapper.find('.ViewingLayer--scrollThumb');
+      expect(scrollThumb.prop('style').left).toBe('20%');
+      expect(scrollThumb.prop('style').width).toBe('60%');
+    });
+
+    it('should update view range on scroll', () => {
+      const _props = { ...props, viewRange: getViewRange(0.2, 0.8) };
+      wrapper = shallow(<ViewingLayer {..._props} />);
+      const scrollBar = wrapper.find('.ViewingLayer--scrollBar');
+
+      // Mock scrollLeft, scrollWidth, and clientWidth
+      const mockEvent = {
+        currentTarget: {
+          scrollLeft: 20,
+          scrollWidth: 200,
+          clientWidth: 100,
+        },
+      };
+
+      scrollBar.simulate('scroll', mockEvent);
+
+      expect(_props.updateViewRangeTime).toHaveBeenCalledWith(0.1, 0.6, 'scroll');
+    });
+
+    it('should update scroll thumb on mouse down and move', () => {
+      const _props = { ...props, viewRange: getViewRange(0.2, 0.8) };
+      wrapper = shallow(<ViewingLayer {..._props} />);
+      const instance = wrapper.instance();
+
+      // Mock DOM elements and event
+      instance._scrollBar = { clientWidth: 200 };
+      instance._scrollThumb = { offsetLeft: 40, clientWidth: 120 };
+      const mockEvent = { clientX: 100, preventDefault: jest.fn() };
+
+      // Simulate mouse down
+      instance._onThumbMouseDown(mockEvent);
+      expect(instance._isDraggingThumb).toBe(true);
+      expect(instance._startX).toBe(100);
+      expect(instance._startLeft).toBe(40);
+
+      // Simulate mouse move
+      const moveEvent = { clientX: 150 };
+      instance._onThumbMouseMove(moveEvent);
+
+      expect(_props.updateViewRangeTime).toHaveBeenCalledWith(0.45, 1.05, 'scroll');
+    });
+
+    it('should stop dragging on mouse up', () => {
+      const instance = wrapper.instance();
+      instance._isDraggingThumb = true;
+
+      instance._onThumbMouseUp();
+
+      expect(instance._isDraggingThumb).toBe(false);
+    });
+  });
 });

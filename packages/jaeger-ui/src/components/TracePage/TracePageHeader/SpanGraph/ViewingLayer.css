@@ -73,3 +73,97 @@ limitations under the License.
 .ViewingLayer:hover > .ViewingLayer--resetZoom {
   display: unset;
 }
+
+/* Scrollbar Styling */
+.ViewingLayer--scrollBar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.ViewingLayer--scrollBar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.ViewingLayer--scrollBar::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+.ViewingLayer--scrollBar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.ViewingLayer--scrollBar {
+  position: relative;
+  overflow: hidden;
+}
+
+.ViewingLayer--scrollBar:hover {
+  overflow-x: auto;
+}
+
+/* Scroll Thumb */
+.ViewingLayer--scrollThumb {
+  position: absolute;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.ViewingLayer--scrollThumb:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.ViewingLayer--scrollBar {
+  position: relative;
+  overflow: hidden;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+
+.ViewingLayer--scrollThumb {
+  position: absolute;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.ViewingLayer--scrollThumb:hover {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.ViewingLayer--scrollThumb {
+  position: absolute;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.ViewingLayer--scrollThumb:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.ViewingLayer--scrollBar {
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  height: 20px;
+  visibility: hidden;
+}
+
+.ViewingLayer--scrollBar:hover {
+  visibility: visible;
+  overflow-x: auto;
+}
+
+.ViewingLayer--scrollThumb {
+  position: absolute;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
