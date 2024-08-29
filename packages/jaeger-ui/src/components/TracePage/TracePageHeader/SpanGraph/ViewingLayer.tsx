@@ -28,6 +28,7 @@ import DraggableManager, {
 
 import './ViewingLayer.css';
 
+// Define prop types for the ViewingLayer component
 type ViewingLayerProps = {
   height: number;
   numTicks: number;
@@ -36,17 +37,19 @@ type ViewingLayerProps = {
   viewRange: IViewRange;
 };
 
+// Define state types for the ViewingLayer component
 type ViewingLayerState = {
   preventCursorLine: boolean;
-  showScrollBar: boolean;
 };
 
+// Define drag types for different interactions
 export const dragTypes = {
   SHIFT_END: 'SHIFT_END',
   SHIFT_START: 'SHIFT_START',
   REFRAME: 'REFRAME',
 };
 
+// Helper function to calculate the next view layout based on start and position
 function getNextViewLayout(start: number, position: number) {
   const [left, right] = start < position ? [start, position] : [position, start];
   return {
@@ -56,12 +59,13 @@ function getNextViewLayout(start: number, position: number) {
   };
 }
 
+// Main ViewingLayer component
 export default class ViewingLayer extends React.PureComponent<ViewingLayerProps, ViewingLayerState> {
   state: ViewingLayerState = {
     preventCursorLine: false,
-    showScrollBar: false,
   };
 
+  // Refs and instance variables
   _root: Element | TNil;
   _scrollBar: HTMLDivElement | TNil;
   _scrollThumb: HTMLDivElement | TNil;
@@ -75,6 +79,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
   constructor(props: ViewingLayerProps) {
     super(props);
 
+    // Initialize draggable managers for different interactions
     this._draggerReframe = new DraggableManager({
       getBounds: this._getDraggingBounds,
       onDragEnd: this._handleReframeDragEnd,
@@ -110,6 +115,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this._scrollThumb = undefined;
   }
 
+  // Lifecycle methods
   componentDidMount() {
     this._updateScrollThumb();
     this._addScrollThumbListeners();
@@ -128,6 +134,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this._removeScrollThumbListeners();
   }
 
+  // Ref setters
   _setRoot = (elm: SVGElement | TNil) => {
     this._root = elm;
   };
@@ -140,6 +147,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this._scrollThumb = elm;
   };
 
+  // Scroll thumb event listeners
   _addScrollThumbListeners() {
     if (this._scrollThumb) {
       this._scrollThumb.addEventListener('mousedown', this._onThumbMouseDown);
@@ -154,6 +162,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     document.removeEventListener('mouseup', this._onThumbMouseUp);
   }
 
+  // Scroll thumb drag handlers
   _onThumbMouseDown = (e: MouseEvent) => {
     e.preventDefault();
     this._isDraggingThumb = true;
@@ -187,6 +196,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     document.removeEventListener('mouseup', this._onThumbMouseUp);
   };
 
+  // Update scroll thumb position and size
   _updateScrollThumb = () => {
     if (this._scrollBar && this._scrollThumb) {
       const { current } = this.props.viewRange.time;
@@ -198,7 +208,8 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     }
   };
 
-  _getDraggingBounds = (tag: string | null): DraggableBounds => {
+  // Get dragging bounds for DraggableManager
+  _getDraggingBounds = (tag: string | TNil): DraggableBounds => {
     if (!this._root) {
       throw new Error('Invalid state: root element is null');
     }
@@ -214,6 +225,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     return { clientXLeft, maxValue, minValue, width };
   };
 
+  // Reframe drag handlers
   _handleReframeMouseMove = ({ value }: DraggingUpdate) => {
     this.props.updateNextViewRangeTime({ cursor: value });
   };
@@ -238,6 +250,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this.props.updateViewRangeTime(start, end, 'minimap');
   };
 
+  // Scrubber drag handlers
   _handleScrubberEnterLeave = ({ type }: DraggingUpdate) => {
     const preventCursorLine = type === EUpdateTypes.MouseEnter;
     this.setState({ preventCursorLine });
@@ -269,6 +282,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this.props.updateViewRangeTime(update[0], update[1], 'minimap');
   };
 
+  // Scroll handler for the scroll bar
   _handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (!this._scrollBar) return;
     const { scrollLeft, scrollWidth, clientWidth } = e.currentTarget;
@@ -278,14 +292,12 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this.props.updateViewRangeTime(viewStart, viewEnd, 'scroll');
   };
 
+  // Reset time zoom handler
   _resetTimeZoomClickHandler = () => {
     this.props.updateViewRangeTime(0, 1);
   };
 
-  _showScrollBar = (visible: boolean) => {
-    this.setState({ showScrollBar: visible });
-  };
-
+  // Generate markers for drag operations
   _getMarkers(from: number, to: number, isShift: boolean) {
     const layout = getNextViewLayout(from, to);
     const cls = cx({
@@ -312,27 +324,52 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     ];
   }
 
+  _getInactiveRects(viewStart: number, viewEnd: number) {
+    const rects = [];
+    if (viewStart > 0) {
+      rects.push(
+        <rect
+          key="left"
+          className="ViewingLayer--inactive"
+          x="0"
+          y="0"
+          width={`${(viewStart * 100).toFixed(6)}%`}
+          height={this.props.height - 2}
+        />
+      );
+    }
+    if (viewEnd < 1) {
+      rects.push(
+        <rect
+          key="right"
+          className="ViewingLayer--inactive"
+          x={`${(viewEnd * 100).toFixed(6)}%`}
+          y="0"
+          width={`${((1 - viewEnd) * 100).toFixed(6)}%`}
+          height={this.props.height - 2}
+        />
+      );
+    }
+    return rects;
+  }
+
   render() {
     const { height, viewRange, numTicks } = this.props;
-    const { preventCursorLine, showScrollBar } = this.state;
+    const { preventCursorLine } = this.state;
     const { current, cursor, shiftStart, shiftEnd, reframe } = viewRange.time;
-    const haveNextTimeRange = shiftStart != null || shiftEnd != null || reframe != null;
     const [viewStart, viewEnd] = current;
+    const haveNextTimeRange = shiftStart != null || shiftEnd != null || reframe != null;
+
+    const showScrollBar = viewStart > 0 || viewEnd < 1;
+    const containerHeight = showScrollBar ? height + 20 : height;
+
     let cursorPosition: string | undefined;
     if (!haveNextTimeRange && cursor != null && !preventCursorLine) {
       cursorPosition = `${cursor * 100}%`;
     }
 
-    const containerHeight = showScrollBar ? height + 20 : height;
-
     return (
-      <div
-        aria-hidden
-        className="ViewingLayer"
-        style={{ height: containerHeight }}
-        onMouseEnter={() => this._showScrollBar(true)}
-        onMouseLeave={() => this._showScrollBar(false)}
-      >
+      <div aria-hidden className="ViewingLayer" style={{ height: containerHeight }}>
         {showScrollBar && (
           <Button
             onClick={this._resetTimeZoomClickHandler}
@@ -350,6 +387,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
           onMouseLeave={this._draggerReframe.handleMouseLeave}
           onMouseMove={this._draggerReframe.handleMouseMove}
         >
+          {this._getInactiveRects(viewStart, viewEnd)}
           <GraphTicks numTicks={numTicks} />
           {cursorPosition && (
             <line
@@ -368,11 +406,11 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
             onMouseDown={this._draggerStart.handleMouseDown}
             onMouseEnter={this._draggerStart.handleMouseEnter}
             onMouseLeave={this._draggerStart.handleMouseLeave}
-            position={viewStart || 0}
+            position={viewStart}
           />
           <Scrubber
             isDragging={shiftEnd != null}
-            position={viewEnd || 1}
+            position={viewEnd}
             onMouseDown={this._draggerEnd.handleMouseDown}
             onMouseEnter={this._draggerEnd.handleMouseEnter}
             onMouseLeave={this._draggerEnd.handleMouseLeave}
@@ -385,14 +423,21 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
           ref={this._setScrollBar}
           onScroll={this._handleScroll}
           style={{
-            overflowX: showScrollBar ? 'auto' : 'hidden',
+            overflowX: 'auto',
             height: '20px',
             position: 'relative',
             visibility: showScrollBar ? 'visible' : 'hidden',
           }}
         >
           <div style={{ width: '100%', height: '1px' }} />
-          <div className="ViewingLayer--scrollThumb" ref={this._setScrollThumb} />
+          <div
+            className="ViewingLayer--scrollThumb"
+            ref={this._setScrollThumb}
+            style={{
+              left: `${viewStart * 100}%`,
+              width: `${(viewEnd - viewStart) * 100}%`,
+            }}
+          />
         </div>
       </div>
     );

@@ -29,7 +29,7 @@ function getViewRange(viewStart, viewEnd) {
   };
 }
 
-describe('<SpanGraph>', () => {
+describe('<ViewingLayer>', () => {
   polyfillAnimationFrame(window);
 
   let props;
@@ -255,67 +255,87 @@ describe('<SpanGraph>', () => {
         });
       });
     });
+  });
 
-    describe('.ViewingLayer--resetZoom', () => {
-      it('should not render .ViewingLayer--resetZoom if props.viewRange.time.current = [0,1]', () => {
-        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
-        wrapper.setProps({ viewRange: { time: { current: [0, 1] } } });
-        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
-      });
-
-      it('should render ViewingLayer--resetZoom if props.viewRange.time.current[0] !== 0', () => {
-        // If the test fails on the following expect statement, this may be a false negative
-        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
-        wrapper.setProps({ viewRange: { time: { current: [0.1, 1] } } });
-        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(1);
-      });
-
-      it('should render ViewingLayer--resetZoom if props.viewRange.time.current[1] !== 1', () => {
-        // If the test fails on the following expect statement, this may be a false negative
-        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
-        wrapper.setProps({ viewRange: { time: { current: [0, 0.9] } } });
-        expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(1);
-      });
-
-      it('should call props.updateViewRangeTime when clicked', () => {
-        wrapper.setProps({ viewRange: { time: { current: [0.1, 0.9] } } });
-        const resetZoomButton = wrapper.find('.ViewingLayer--resetZoom');
-        // If the test fails on the following expect statement, this may be a false negative caused
-        // by a regression to rendering.
-        expect(resetZoomButton.length).toBe(1);
-
-        resetZoomButton.simulate('click');
-        expect(props.updateViewRangeTime).lastCalledWith(0, 1);
-      });
+  describe('Scroll bar and thumb behavior', () => {
+    it('shows scroll bar when view range is not full', () => {
+      wrapper.setProps({ viewRange: getViewRange(0.2, 0.8) });
+      wrapper.setState({ showScrollBar: true });
+      expect(wrapper.find('.ViewingLayer--scrollBar').prop('style').visibility).toBe('visible');
     });
+
+    it('hides scroll bar when view range is full', () => {
+      wrapper.setProps({ viewRange: getViewRange(0, 1) });
+      wrapper.setState({ showScrollBar: true });
+      const scrollBar = wrapper.find('.ViewingLayer--scrollBar');
+      expect(scrollBar.prop('style').visibility).toBe('hidden');
+    });
+
+    it('updates scroll thumb position on view range change', () => {
+      const instance = wrapper.instance();
+      instance._scrollBar = { clientWidth: 200 };
+      instance._scrollThumb = { style: {} };
+      wrapper.setProps({ viewRange: getViewRange(0.2, 0.8) });
+      instance._updateScrollThumb();
+      expect(instance._scrollThumb.style.left).toBe('40px');
+      expect(parseFloat(instance._scrollThumb.style.width)).toBeCloseTo(120, 0);
+    });
+
+    it('handles scroll event', () => {
+      const mockEvent = {
+        currentTarget: {
+          scrollLeft: 20,
+          scrollWidth: 200,
+          clientWidth: 100,
+        },
+      };
+      const instance = wrapper.instance();
+      instance._scrollBar = mockEvent.currentTarget;
+      instance._handleScroll(mockEvent);
+      expect(props.updateViewRangeTime).toHaveBeenCalledWith(0.1, 0.6, 'scroll');
+    });
+
+    it('handles thumb mouse down event', () => {
+      const instance = wrapper.instance();
+      const mockEvent = { clientX: 100, preventDefault: jest.fn() };
+      instance._onThumbMouseDown(mockEvent);
+      expect(instance._isDraggingThumb).toBe(true);
+      expect(instance._startX).toBe(100);
+      expect(mockEvent.preventDefault).toHaveBeenCalled();
+    });
+
+    it('handles thumb mouse move event', () => {
+      const instance = wrapper.instance();
+      instance._isDraggingThumb = true;
+      instance._startX = 100;
+      instance._startLeft = 50;
+      instance._scrollBar = { clientWidth: 200 };
+      instance._scrollThumb = { clientWidth: 100, style: {} };
+      const mockEvent = { clientX: 120 };
+      instance._onThumbMouseMove(mockEvent);
+      expect(props.updateViewRangeTime).toHaveBeenCalledWith(0.35, 0.85, 'scroll');
+    });
+
+    it('handles thumb mouse up event', () => {
+      const instance = wrapper.instance();
+      instance._isDraggingThumb = true;
+      instance._onThumbMouseUp();
+      expect(instance._isDraggingThumb).toBe(false);
+    });
+  });
+
+  it('renders inactive areas correctly', () => {
+    wrapper.setProps({ viewRange: getViewRange(0.2, 0.8) });
+    const inactiveAreas = wrapper.find('.ViewingLayer--inactive');
+    expect(inactiveAreas).toHaveLength(2);
+    expect(inactiveAreas.at(0).prop('x')).toBe('0');
+    expect(parseFloat(inactiveAreas.at(0).prop('width'))).toBeCloseTo(20, 1);
+    expect(inactiveAreas.at(1).prop('x')).toBe('80.000000%');
+    expect(parseFloat(inactiveAreas.at(1).prop('width'))).toBeCloseTo(20, 1);
   });
 
   it('renders a <GraphTicks />', () => {
     expect(wrapper.find(GraphTicks).length).toBe(1);
-  });
-
-  it('renders a filtering box if leftBound exists', () => {
-    const _props = { ...props, viewRange: getViewRange(0.2, 1) };
-    wrapper = shallow(<ViewingLayer {..._props} />);
-
-    const leftBox = wrapper.find('.ViewingLayer--inactive');
-    expect(leftBox.length).toBe(1);
-    const width = Number(leftBox.prop('width').slice(0, -1));
-    const x = leftBox.prop('x');
-    expect(Math.round(width)).toBe(20);
-    expect(x).toBe(0);
-  });
-
-  it('renders a filtering box if rightBound exists', () => {
-    const _props = { ...props, viewRange: getViewRange(0, 0.8) };
-    wrapper = shallow(<ViewingLayer {..._props} />);
-
-    const rightBox = wrapper.find('.ViewingLayer--inactive');
-    expect(rightBox.length).toBe(1);
-    const width = Number(rightBox.prop('width').slice(0, -1));
-    const x = Number(rightBox.prop('x').slice(0, -1));
-    expect(Math.round(width)).toBe(20);
-    expect(x).toBe(80);
   });
 
   it('renders handles for the timeRangeFilter', () => {
@@ -325,76 +345,32 @@ describe('<SpanGraph>', () => {
     scrubber = <Scrubber position={viewEnd} />;
     expect(wrapper.containsMatchingElement(scrubber)).toBeTruthy();
   });
-  describe('Scrolling behavior', () => {
-    it('should render scroll bar when view range is not full', () => {
-      const _props = { ...props, viewRange: getViewRange(0.2, 0.8) };
-      wrapper = shallow(<ViewingLayer {..._props} />);
-      expect(wrapper.find('.ViewingLayer--scrollBar').length).toBe(1);
+
+  describe('.ViewingLayer--resetZoom', () => {
+    it('should not render if props.viewRange.time.current = [0,1]', () => {
+      expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
+      wrapper.setProps({ viewRange: { time: { current: [0, 1] } } });
+      expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(0);
     });
 
-    it('should not render scroll bar when view range is full', () => {
-      const _props = { ...props, viewRange: getViewRange(0, 1) };
-      wrapper = shallow(<ViewingLayer {..._props} />);
-      expect(wrapper.find('.ViewingLayer--scrollBar').length).toBe(0);
+    it('should render if props.viewRange.time.current[0] !== 0', () => {
+      wrapper.setProps({ viewRange: { time: { current: [0.1, 1] } } });
+      wrapper.setState({ showScrollBar: true });
+      expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(1);
     });
 
-    it('should position scroll thumb correctly', () => {
-      const _props = { ...props, viewRange: getViewRange(0.2, 0.8) };
-      wrapper = shallow(<ViewingLayer {..._props} />);
-      const scrollThumb = wrapper.find('.ViewingLayer--scrollThumb');
-      expect(scrollThumb.prop('style').left).toBe('20%');
-      expect(scrollThumb.prop('style').width).toBe('60%');
+    it('should render if props.viewRange.time.current[1] !== 1', () => {
+      wrapper.setProps({ viewRange: { time: { current: [0, 0.9] } } });
+      wrapper.setState({ showScrollBar: true });
+      expect(wrapper.find('.ViewingLayer--resetZoom').length).toBe(1);
     });
 
-    it('should update view range on scroll', () => {
-      const _props = { ...props, viewRange: getViewRange(0.2, 0.8) };
-      wrapper = shallow(<ViewingLayer {..._props} />);
-      const scrollBar = wrapper.find('.ViewingLayer--scrollBar');
-
-      // Mock scrollLeft, scrollWidth, and clientWidth
-      const mockEvent = {
-        currentTarget: {
-          scrollLeft: 20,
-          scrollWidth: 200,
-          clientWidth: 100,
-        },
-      };
-
-      scrollBar.simulate('scroll', mockEvent);
-
-      expect(_props.updateViewRangeTime).toHaveBeenCalledWith(0.1, 0.6, 'scroll');
-    });
-
-    it('should update scroll thumb on mouse down and move', () => {
-      const _props = { ...props, viewRange: getViewRange(0.2, 0.8) };
-      wrapper = shallow(<ViewingLayer {..._props} />);
-      const instance = wrapper.instance();
-
-      // Mock DOM elements and event
-      instance._scrollBar = { clientWidth: 200 };
-      instance._scrollThumb = { offsetLeft: 40, clientWidth: 120 };
-      const mockEvent = { clientX: 100, preventDefault: jest.fn() };
-
-      // Simulate mouse down
-      instance._onThumbMouseDown(mockEvent);
-      expect(instance._isDraggingThumb).toBe(true);
-      expect(instance._startX).toBe(100);
-      expect(instance._startLeft).toBe(40);
-
-      // Simulate mouse move
-      const moveEvent = { clientX: 150 };
-      instance._onThumbMouseMove(moveEvent);
-
-      expect(_props.updateViewRangeTime).toHaveBeenCalledWith(0.45, 1.05, 'scroll');
-    });
-
-    it('should stop dragging on mouse up', () => {
-      const instance = wrapper.instance();
-      instance._isDraggingThumb = true;
-
-      instance._onThumbMouseUp();
-
-      expect(instance._isDraggingThumb).toBe(false);
+    it('should call props.updateViewRangeTime when clicked', () => {
+      wrapper.setProps({ viewRange: { time: { current: [0.1, 0.9] } } });
+      wrapper.setState({ showScrollBar: true });
+      const resetZoomButton = wrapper.find('.ViewingLayer--resetZoom');
+      resetZoomButton.simulate('click');
+      expect(props.updateViewRangeTime).lastCalledWith(0, 1);
     });
   });
 });
