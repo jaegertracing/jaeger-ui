@@ -40,6 +40,12 @@ type ViewingLayerProps = {
 // Define state types for the ViewingLayer component
 type ViewingLayerState = {
   preventCursorLine: boolean;
+  isPanning: boolean;
+  isCreatingAnchors: boolean;
+  panStartX: number;
+  panStartViewStart: number;
+  panStartViewEnd: number;
+  anchorStartX: number;
 };
 
 // Define drag types for different interactions
@@ -63,23 +69,22 @@ function getNextViewLayout(start: number, position: number) {
 export default class ViewingLayer extends React.PureComponent<ViewingLayerProps, ViewingLayerState> {
   state: ViewingLayerState = {
     preventCursorLine: false,
+    isPanning: false,
+    isCreatingAnchors: false,
+    panStartX: 0,
+    panStartViewStart: 0,
+    panStartViewEnd: 0,
+    anchorStartX: 0,
   };
 
-  // Refs and instance variables
   _root: Element | TNil;
-  _scrollBar: HTMLDivElement | TNil;
-  _scrollThumb: HTMLDivElement | TNil;
   _draggerReframe: DraggableManager;
   _draggerStart: DraggableManager;
   _draggerEnd: DraggableManager;
-  _isDraggingThumb: boolean = false;
-  _startX: number = 0;
-  _startLeft: number = 0;
 
   constructor(props: ViewingLayerProps) {
     super(props);
 
-    // Initialize draggable managers for different interactions
     this._draggerReframe = new DraggableManager({
       getBounds: this._getDraggingBounds,
       onDragEnd: this._handleReframeDragEnd,
@@ -111,104 +116,18 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     });
 
     this._root = undefined;
-    this._scrollBar = undefined;
-    this._scrollThumb = undefined;
-  }
-
-  // Lifecycle methods
-  componentDidMount() {
-    this._updateScrollThumb();
-    this._addScrollThumbListeners();
-  }
-
-  componentDidUpdate(prevProps: ViewingLayerProps) {
-    if (prevProps.viewRange !== this.props.viewRange) {
-      this._updateScrollThumb();
-    }
   }
 
   componentWillUnmount() {
     this._draggerReframe.dispose();
     this._draggerEnd.dispose();
     this._draggerStart.dispose();
-    this._removeScrollThumbListeners();
   }
 
-  // Ref setters
   _setRoot = (elm: SVGElement | TNil) => {
     this._root = elm;
   };
 
-  _setScrollBar = (elm: HTMLDivElement | TNil) => {
-    this._scrollBar = elm;
-  };
-
-  _setScrollThumb = (elm: HTMLDivElement | TNil) => {
-    this._scrollThumb = elm;
-  };
-
-  // Scroll thumb event listeners
-  _addScrollThumbListeners() {
-    if (this._scrollThumb) {
-      this._scrollThumb.addEventListener('mousedown', this._onThumbMouseDown);
-    }
-  }
-
-  _removeScrollThumbListeners() {
-    if (this._scrollThumb) {
-      this._scrollThumb.removeEventListener('mousedown', this._onThumbMouseDown);
-    }
-    document.removeEventListener('mousemove', this._onThumbMouseMove);
-    document.removeEventListener('mouseup', this._onThumbMouseUp);
-  }
-
-  // Scroll thumb drag handlers
-  _onThumbMouseDown = (e: MouseEvent) => {
-    e.preventDefault();
-    this._isDraggingThumb = true;
-    this._startX = e.clientX;
-    this._startLeft = this._scrollThumb ? this._scrollThumb.offsetLeft : 0;
-
-    document.addEventListener('mousemove', this._onThumbMouseMove);
-    document.addEventListener('mouseup', this._onThumbMouseUp);
-  };
-
-  _onThumbMouseMove = (e: MouseEvent) => {
-    if (!this._isDraggingThumb || !this._scrollThumb || !this._scrollBar) return;
-
-    const deltaX = e.clientX - this._startX;
-    const newLeft = Math.min(
-      Math.max(0, this._startLeft + deltaX),
-      this._scrollBar.clientWidth - this._scrollThumb.clientWidth
-    );
-
-    const viewStart = newLeft / this._scrollBar.clientWidth;
-    const viewEnd = viewStart + this._scrollThumb.clientWidth / this._scrollBar.clientWidth;
-
-    this._scrollThumb.style.left = `${newLeft}px`;
-
-    this.props.updateViewRangeTime(viewStart, viewEnd, 'scroll');
-  };
-
-  _onThumbMouseUp = () => {
-    this._isDraggingThumb = false;
-    document.removeEventListener('mousemove', this._onThumbMouseMove);
-    document.removeEventListener('mouseup', this._onThumbMouseUp);
-  };
-
-  // Update scroll thumb position and size
-  _updateScrollThumb = () => {
-    if (this._scrollBar && this._scrollThumb) {
-      const { current } = this.props.viewRange.time;
-      const [viewStart, viewEnd] = current;
-      const viewWidth = viewEnd - viewStart;
-
-      this._scrollThumb.style.left = `${viewStart * this._scrollBar.clientWidth}px`;
-      this._scrollThumb.style.width = `${viewWidth * this._scrollBar.clientWidth}px`;
-    }
-  };
-
-  // Get dragging bounds for DraggableManager
   _getDraggingBounds = (tag: string | TNil): DraggableBounds => {
     if (!this._root) {
       throw new Error('Invalid state: root element is null');
@@ -225,7 +144,95 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     return { clientXLeft, maxValue, minValue, width };
   };
 
-  // Reframe drag handlers
+  _handleMouseDown = (event: React.MouseEvent<SVGElement>) => {
+    const { left, width, height } = event.currentTarget.getBoundingClientRect();
+    const clickXPosition = (event.clientX - left) / width;
+    const clickYPosition = event.clientY - event.currentTarget.getBoundingClientRect().top;
+    const [viewStart, viewEnd] = this.props.viewRange.time.current;
+
+    const isFullView = viewStart === 0 && viewEnd === 1;
+    const isInTopArea = clickYPosition < height * 0.4;
+
+    if (isFullView || !isInTopArea) {
+      // Start creating new anchors if there are no anchors or if click is in the bottom 60%
+      this.setState({
+        isCreatingAnchors: true,
+        anchorStartX: clickXPosition,
+      });
+      document.addEventListener('mousemove', this._handleAnchorMove);
+      document.addEventListener('mouseup', this._handleAnchorUp);
+    } else {
+      // Start panning if there are anchors and click is in the top 40%
+      this.setState({
+        isPanning: true,
+        panStartX: event.clientX,
+        panStartViewStart: viewStart,
+        panStartViewEnd: viewEnd,
+      });
+      document.addEventListener('mousemove', this._handlePanMove);
+      document.addEventListener('mouseup', this._handlePanUp);
+    }
+  };
+
+  _handlePanMove = (event: MouseEvent) => {
+    if (!this.state.isPanning) return;
+
+    const { panStartX, panStartViewStart, panStartViewEnd } = this.state;
+    const { left, width } = this._root.getBoundingClientRect();
+    const deltaX = (event.clientX - panStartX) / width;
+    const viewWindow = panStartViewEnd - panStartViewStart;
+
+    let newViewStart = panStartViewStart + deltaX;
+    let newViewEnd = panStartViewEnd + deltaX;
+
+    if (newViewStart < 0) {
+      newViewStart = 0;
+      newViewEnd = viewWindow;
+    } else if (newViewEnd > 1) {
+      newViewEnd = 1;
+      newViewStart = 1 - viewWindow;
+    }
+
+    this.props.updateViewRangeTime(newViewStart, newViewEnd, 'drag');
+  };
+
+  _handlePanUp = () => {
+    this.setState({ isPanning: false });
+    document.removeEventListener('mousemove', this._handlePanMove);
+    document.removeEventListener('mouseup', this._handlePanUp);
+  };
+
+  _handleAnchorMove = (event: MouseEvent) => {
+    if (!this.state.isCreatingAnchors) return;
+
+    const { anchorStartX } = this.state;
+    const { left, width } = this._root.getBoundingClientRect();
+    const currentX = (event.clientX - left) / width;
+
+    let newViewStart = Math.min(anchorStartX, currentX);
+    let newViewEnd = Math.max(anchorStartX, currentX);
+
+    // Ensure the new view range is within bounds
+    if (newViewStart < 0) newViewStart = 0;
+    if (newViewEnd > 1) newViewEnd = 1;
+
+    this.props.updateNextViewRangeTime({ reframe: { anchor: anchorStartX, shift: currentX } });
+  };
+
+  _handleAnchorUp = () => {
+    this.setState({ isCreatingAnchors: false });
+    document.removeEventListener('mousemove', this._handleAnchorMove);
+    document.removeEventListener('mouseup', this._handleAnchorUp);
+
+    const { reframe } = this.props.viewRange.time;
+    if (reframe) {
+      const [start, end] = reframe.anchor < reframe.shift
+        ? [reframe.anchor, reframe.shift]
+        : [reframe.shift, reframe.anchor];
+      this.props.updateViewRangeTime(start, end, 'mouseup');
+    }
+  };
+
   _handleReframeMouseMove = ({ value }: DraggingUpdate) => {
     this.props.updateNextViewRangeTime({ cursor: value });
   };
@@ -250,7 +257,6 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this.props.updateViewRangeTime(start, end, 'minimap');
   };
 
-  // Scrubber drag handlers
   _handleScrubberEnterLeave = ({ type }: DraggingUpdate) => {
     const preventCursorLine = type === EUpdateTypes.MouseEnter;
     this.setState({ preventCursorLine });
@@ -282,22 +288,10 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     this.props.updateViewRangeTime(update[0], update[1], 'minimap');
   };
 
-  // Scroll handler for the scroll bar
-  _handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (!this._scrollBar) return;
-    const { scrollLeft, scrollWidth, clientWidth } = e.currentTarget;
-    const viewStart = scrollLeft / scrollWidth;
-    const viewEnd = (scrollLeft + clientWidth) / scrollWidth;
-
-    this.props.updateViewRangeTime(viewStart, viewEnd, 'scroll');
-  };
-
-  // Reset time zoom handler
   _resetTimeZoomClickHandler = () => {
     this.props.updateViewRangeTime(0, 1);
   };
 
-  // Generate markers for drag operations
   _getMarkers(from: number, to: number, isShift: boolean) {
     const layout = getNextViewLayout(from, to);
     const cls = cx({
@@ -333,7 +327,7 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
           className="ViewingLayer--inactive"
           x="0"
           y="0"
-          width={`${(viewStart * 100).toFixed(6)}%`}
+          width={`${viewStart * 100}%`}
           height={this.props.height - 2}
         />
       );
@@ -343,9 +337,9 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
         <rect
           key="right"
           className="ViewingLayer--inactive"
-          x={`${(viewEnd * 100).toFixed(6)}%`}
+          x={`${viewEnd * 100}%`}
           y="0"
-          width={`${((1 - viewEnd) * 100).toFixed(6)}%`}
+          width={`${(1 - viewEnd) * 100}%`}
           height={this.props.height - 2}
         />
       );
@@ -360,33 +354,47 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
     const [viewStart, viewEnd] = current;
     const haveNextTimeRange = shiftStart != null || shiftEnd != null || reframe != null;
 
-    const showScrollBar = viewStart > 0 || viewEnd < 1;
-    const containerHeight = showScrollBar ? height + 20 : height;
+    const cursorPosition = (!haveNextTimeRange && cursor != null && !preventCursorLine)
+      ? `${cursor * 100}%`
+      : undefined;
 
-    let cursorPosition: string | undefined;
-    if (!haveNextTimeRange && cursor != null && !preventCursorLine) {
-      cursorPosition = `${cursor * 100}%`;
-    }
+    const isFullView = viewStart === 0 && viewEnd === 1;
+    const scrubberHeight = isFullView ? 0 : height * 0.4; // Top 40% for scrubbing when anchors exist
+    const anchorHeight = isFullView ? height : height * 0.6; // Full height for anchor creation when no anchors, otherwise bottom 60%
 
     return (
-      <div aria-hidden className="ViewingLayer" style={{ height: containerHeight }}>
-        {showScrollBar && (
-          <Button
-            onClick={this._resetTimeZoomClickHandler}
-            className="ViewingLayer--resetZoom"
-            htmlType="button"
-          >
-            Reset Selection
-          </Button>
-        )}
+      <div aria-hidden className="ViewingLayer" style={{ height }}>
+        <Button
+          onClick={this._resetTimeZoomClickHandler}
+          className="ViewingLayer--resetZoom"
+          htmlType="button"
+        >
+          Reset Selection
+        </Button>
         <svg
           height={height}
           className="ViewingLayer--graph"
           ref={this._setRoot}
-          onMouseDown={this._draggerReframe.handleMouseDown}
-          onMouseLeave={this._draggerReframe.handleMouseLeave}
-          onMouseMove={this._draggerReframe.handleMouseMove}
+          onMouseDown={this._handleMouseDown}
         >
+          {!isFullView && (
+            <rect
+              x="0"
+              y="0"
+              width="100%"
+              height={scrubberHeight}
+              className="ViewingLayer--scrubber"
+              fill="transparent"
+            />
+          )}
+          <rect
+            x="0"
+            y={isFullView ? 0 : scrubberHeight}
+            width="100%"
+            height={anchorHeight}
+            className="ViewingLayer--anchor"
+            fill="transparent"
+          />
           {this._getInactiveRects(viewStart, viewEnd)}
           <GraphTicks numTicks={numTicks} />
           {cursorPosition && (
@@ -418,27 +426,6 @@ export default class ViewingLayer extends React.PureComponent<ViewingLayerProps,
           {reframe != null && this._getMarkers(reframe.anchor, reframe.shift, false)}
         </svg>
         {haveNextTimeRange && <div className="ViewingLayer--fullOverlay" />}
-        <div
-          className="ViewingLayer--scrollBar"
-          ref={this._setScrollBar}
-          onScroll={this._handleScroll}
-          style={{
-            overflowX: 'auto',
-            height: '20px',
-            position: 'relative',
-            visibility: showScrollBar ? 'visible' : 'hidden',
-          }}
-        >
-          <div style={{ width: '100%', height: '1px' }} />
-          <div
-            className="ViewingLayer--scrollThumb"
-            ref={this._setScrollThumb}
-            style={{
-              left: `${viewStart * 100}%`,
-              width: `${(viewEnd - viewStart) * 100}%`,
-            }}
-          />
-        </div>
       </div>
     );
   }
