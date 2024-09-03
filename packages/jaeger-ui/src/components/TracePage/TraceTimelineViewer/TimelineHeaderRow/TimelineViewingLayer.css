@@ -65,3 +65,7 @@ limitations under the License.
   top: 0;
   user-select: none;
 }
+
+.TimelineViewingLayer:hover {
+  cursor: default;
+}

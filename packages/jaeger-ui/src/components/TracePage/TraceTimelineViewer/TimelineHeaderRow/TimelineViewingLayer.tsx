@@ -193,9 +193,9 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
     const { current, cursor, reframe, shiftEnd, shiftStart } = viewRangeTime;
     const [viewStart, viewEnd] = current;
     const haveNextTimeRange = reframe != null || shiftEnd != null || shiftStart != null;
-    let cusrorPosition: string | TNil;
+    let cursorPosition: string | TNil;
     if (!haveNextTimeRange && cursor != null && cursor >= viewStart && cursor <= viewEnd) {
-      cusrorPosition = `${mapToViewSubRange(viewStart, viewEnd, cursor) * 100}%`;
+      cursorPosition = `${mapToViewSubRange(viewStart, viewEnd, cursor) * 100}%`;
     }
     return (
       <div
@@ -206,8 +206,8 @@ export default class TimelineViewingLayer extends React.PureComponent<TimelineVi
         onMouseLeave={this._draggerReframe.handleMouseLeave}
         onMouseMove={this._draggerReframe.handleMouseMove}
       >
-        {cusrorPosition != null && (
-          <div className="TimelineViewingLayer--cursorGuide" style={{ left: cusrorPosition }} />
+        {cursorPosition != null && (
+          <div className="TimelineViewingLayer--cursorGuide" style={{ left: cursorPosition }} />
         )}
         {reframe != null && getMarkers(viewStart, viewEnd, reframe.anchor, reframe.shift, false)}
         {shiftEnd != null && getMarkers(viewStart, viewEnd, viewEnd, shiftEnd, true)}

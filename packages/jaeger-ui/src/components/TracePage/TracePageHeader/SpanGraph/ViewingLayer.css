@@ -14,28 +14,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/* ViewingLayer main container */
 .ViewingLayer {
   position: relative;
   z-index: 1;
 }
 
 .ViewingLayer--graph {
+  cursor: default;
   border: 1px solid #999;
   overflow: visible !important;
   position: relative;
   transform-origin: 0 0;
   width: 100%;
+  z-index: 1;
 }
 
+/* Inactive areas */
 .ViewingLayer--inactive {
   fill: rgba(214, 214, 214, 0.5);
 }
 
-.ViewingLayer--cursorGuide {
+/* Hover line */
+.ViewingLayer--hoverLine {
   stroke: #f44;
   stroke-width: 1;
+  pointer-events: none;
 }
 
+/* Dragged areas */
 .ViewingLayer--draggedShift {
   fill-opacity: 0.2;
 }
@@ -50,6 +57,7 @@ limitations under the License.
   fill: #f44;
 }
 
+/* Full overlay */
 .ViewingLayer--fullOverlay {
   bottom: 0;
   cursor: col-resize;
@@ -60,26 +68,75 @@ limitations under the License.
   user-select: none;
 }
 
+/* Reset zoom button */
 .ViewingLayer--resetZoom {
-  display: none;
   position: absolute;
   right: 1%;
   top: 10%;
-  z-index: 1;
+  z-index: 2;
+  pointer-events: auto;
+  display: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
-.ViewingLayer:hover > .ViewingLayer--resetZoom {
-  display: unset;
+.ViewingLayer:hover .ViewingLayer--resetZoom {
+  display: block;
 }
 
-.ViewingLayer--scrubber {
+/* Cursor styles */
+.ViewingLayer.has-anchors .ViewingLayer--scrubber,
+.ViewingLayer.has-anchors .ViewingLayer--inactive-top {
   cursor: grab;
 }
 
-.ViewingLayer--scrubber:active {
-  cursor: grabbing;
+.ViewingLayer.has-anchors .ViewingLayer--anchor,
+.ViewingLayer.has-anchors .ViewingLayer--inactive-bottom {
+  cursor: default;
 }
 
+.ViewingLayer.is-scrubbing,
+.ViewingLayer.is-scrubbing .ViewingLayer--scrubber,
+.ViewingLayer.is-scrubbing .ViewingLayer--inactive-top,
+.ViewingLayer.is-scrubbing .ViewingLayer--inactive-bottom,
+.ViewingLayer.is-scrubbing .ViewingLayer--anchor {
+  cursor: grabbing !important;
+}
+
+.ViewingLayer.is-creating-anchors,
+.ViewingLayer.is-creating-anchors .ViewingLayer--scrubber,
+.ViewingLayer.is-creating-anchors .ViewingLayer--anchor,
+.ViewingLayer.is-creating-anchors .ViewingLayer--inactive-top,
+.ViewingLayer.is-creating-anchors .ViewingLayer--inactive-bottom {
+  cursor: col-resize;
+}
+
+/* Hide hover line when scrubbing */
+.ViewingLayer.is-scrubbing .ViewingLayer--hoverLine {
+  display: none;
+}
+
+/* Ensure no gaps between elements */
+.ViewingLayer--scrubber,
 .ViewingLayer--anchor {
-  cursor: crosshair;
+  shape-rendering: crispEdges;
+}
+
+/* Global dragging styles */
+html.is-dragging,
+html.is-dragging * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+.ViewingLayer--cursorGuide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: #f44;
+  pointer-events: none;
 }
