@@ -46,7 +46,9 @@ const computeCriticalPath = (
 ): criticalPathSection[] => {
   const currentSpan: Span = spanMap.get(spanId)!;
 
-  if (currentSpan) {
+  if (!currentSpan) {
+    return criticalPath;
+  }
     const lastFinishingChildSpan = findLastFinishingChildSpan(spanMap, currentSpan, returningChildStartTime);
     let spanCriticalSection: criticalPathSection;
 
