@@ -46,38 +46,40 @@ const computeCriticalPath = (
 ): criticalPathSection[] => {
   const currentSpan: Span = spanMap.get(spanId)!;
 
-  const lastFinishingChildSpan = findLastFinishingChildSpan(spanMap, currentSpan, returningChildStartTime);
-  let spanCriticalSection: criticalPathSection;
+  if (currentSpan) {
+    const lastFinishingChildSpan = findLastFinishingChildSpan(spanMap, currentSpan, returningChildStartTime);
+    let spanCriticalSection: criticalPathSection;
 
-  if (lastFinishingChildSpan) {
-    spanCriticalSection = {
-      spanId: currentSpan.spanID,
-      section_start: lastFinishingChildSpan.startTime + lastFinishingChildSpan.duration,
-      section_end: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
-    };
-    if (spanCriticalSection.section_start !== spanCriticalSection.section_end) {
-      criticalPath.push(spanCriticalSection);
-    }
-    // Now focus shifts to the lastFinishingChildSpan of cuurent span
-    computeCriticalPath(spanMap, lastFinishingChildSpan.spanID, criticalPath);
-  } else {
-    // If there is no last finishing child then total section upto startTime of span is on critical path
-    spanCriticalSection = {
-      spanId: currentSpan.spanID,
-      section_start: currentSpan.startTime,
-      section_end: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
-    };
-    if (spanCriticalSection.section_start !== spanCriticalSection.section_end) {
-      criticalPath.push(spanCriticalSection);
-    }
-    // Now as there are no lfc's focus shifts to parent span from startTime of span
-    // return from recursion and walk backwards to one level depth to parent span
-    // provide span's startTime as returningChildStartTime
-    if (currentSpan.references.length) {
-      const parentSpanId: string = currentSpan.references.filter(
-        reference => reference.refType === 'CHILD_OF'
-      )[0].spanID;
-      computeCriticalPath(spanMap, parentSpanId, criticalPath, currentSpan.startTime);
+    if (lastFinishingChildSpan) {
+      spanCriticalSection = {
+        spanId: currentSpan.spanID,
+        section_start: lastFinishingChildSpan.startTime + lastFinishingChildSpan.duration,
+        section_end: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
+      };
+      if (spanCriticalSection.section_start !== spanCriticalSection.section_end) {
+        criticalPath.push(spanCriticalSection);
+      }
+      // Now focus shifts to the lastFinishingChildSpan of cuurent span
+      computeCriticalPath(spanMap, lastFinishingChildSpan.spanID, criticalPath);
+    } else {
+      // If there is no last finishing child then total section upto startTime of span is on critical path
+      spanCriticalSection = {
+        spanId: currentSpan.spanID,
+        section_start: currentSpan.startTime,
+        section_end: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
+      };
+      if (spanCriticalSection.section_start !== spanCriticalSection.section_end) {
+        criticalPath.push(spanCriticalSection);
+      }
+      // Now as there are no lfc's focus shifts to parent span from startTime of span
+      // return from recursion and walk backwards to one level depth to parent span
+      // provide span's startTime as returningChildStartTime
+      if (currentSpan.references.length) {
+        const parentSpanId: string = currentSpan.references.filter(
+          reference => reference.refType === 'CHILD_OF'
+        )[0].spanID;
+        computeCriticalPath(spanMap, parentSpanId, criticalPath, currentSpan.startTime);
+      }
     }
   }
   return criticalPath;
