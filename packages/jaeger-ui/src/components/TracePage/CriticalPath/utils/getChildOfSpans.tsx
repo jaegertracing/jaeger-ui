@@ -24,7 +24,7 @@ const getChildOfSpans = (spanMap: Map<string, Span>): Map<string, Span> => {
 
   // First find all FOLLOWS_FROM refType spans
   spanMap.forEach(each => {
-    if (each.references[0]?.refType === 'FOLLOWS_FROM') {
+    if (each.references[0]?.refType === 'FOLLOWS_FROM' && each.references[0]?.traceID === each.traceID) {
       followFromSpanIds.push(each.spanID);
       // Remove the spanId from childSpanIds array of its parentSpan
       const parentSpan = spanMap.get(each.references[0].spanID)!;
