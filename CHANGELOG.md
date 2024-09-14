@@ -9,6 +9,10 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.61.0 (2024-09-14)
+
+Dependencies updates only.
+
 ## v1.60.0 (2024-08-05)
 
 #### 🐞 Bug fixes, Minor Improvements
