@@ -83,7 +83,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
     const { loading, error } = this.props;
 
     if (loading) {
-      return <LoadingIndicator centered />;
+      return <LoadingIndicator centered small={false}/>;
     }
 
     if (error.opsCalls && error.opsErrors && error.opsLatencies) {

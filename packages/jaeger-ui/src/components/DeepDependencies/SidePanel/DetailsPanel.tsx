@@ -159,7 +159,7 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
         )}
         {this.state.detailsLoading && (
           <div className="Ddg--DetailsPanel--LoadingWrapper">
-            <LoadingIndicator className="Ddg--DetailsPanel--LoadingIndicator" />
+            <LoadingIndicator centered={false} className="Ddg--DetailsPanel--LoadingIndicator" small={false} />
           </div>
         )}
         {this.state.details && (

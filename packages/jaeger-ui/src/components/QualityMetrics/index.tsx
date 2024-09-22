@@ -188,7 +188,7 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
             </div>
           </>
         )}
-        {loading && <LoadingIndicator centered />}
+        {loading && <LoadingIndicator centered small={false}/>}
         {error && <div className="QualityMetrics--Error">{error.message}</div>}
       </div>
     );

@@ -149,7 +149,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
       yAxisTickFormat,
       xDomain,
     } = this.props;
-    let GraphComponent = this.generatePlaceholder(<LoadingIndicator centered />);
+    let GraphComponent = this.generatePlaceholder(<LoadingIndicator centered small={false} />);
     const noDataComponent = this.generatePlaceholder('No Data');
     const apiErrorComponent = this.generatePlaceholder('Couldn’t fetch data');
 
