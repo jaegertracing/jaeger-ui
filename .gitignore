@@ -19,6 +19,7 @@ npm-debug.log
 .vscode
 .idea
 yarn-error.log
+.yarn/cache
 .eslintcache
 .vscode
 

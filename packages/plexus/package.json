@@ -54,8 +54,8 @@
     "d3-selection": "^3.0.0",
     "d3-zoom": "^3.0.0",
     "memoize-one": "6.0.0",
-    "viz.js": "1.8.1",
-    "react-icons": "^5.0.1"
+    "react-icons": "^5.0.1",
+    "viz.js": "1.8.1"
   },
   "scripts": {
     "_tasks/build/lib/js": "node_modules/.bin/babel src --extensions '.tsx,.js' --out-dir lib",

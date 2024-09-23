@@ -29,7 +29,6 @@
     "typescript": "5.5.2"
   },
   "resolutions": {
-    "**/lodash": "^4.17.21",
     "rollup": "^4.13.1"
   },
   "workspaces": {
@@ -67,5 +66,6 @@
     "hooks": {
       "pre-commit": "npm-run-all -ln --parallel lint test"
     }
-  }
+  },
+  "packageManager": "yarn@3.2.0"
 }
