@@ -88,6 +88,7 @@ export default defineConfig({
     },
   },
   resolve: {
+       preserveSymlinks: true, // this is the fix!
     alias: {
       // allow hot reload of Plexus code -- https://github.com/jaegertracing/jaeger-ui/pull/2089
       '@jaegertracing/plexus': path.resolve(__dirname, '../plexus/src'),
