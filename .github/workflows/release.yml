@@ -21,7 +21,7 @@ jobs:
         with:
           cache: yarn
           node-version: '20'
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --immutable
       - run: yarn lint
       - run: yarn build
         id: yarn-build

@@ -24,11 +24,10 @@ jobs:
         with:
           cache: yarn
           node-version: '20'
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --immutable
       - name: Run depcheck
         run: yarn run depcheck
       - run: yarn lint
       - run: yarn build
       - name: Ensure PR is not on main branch
         uses: jaegertracing/jaeger/.github/actions/block-pr-from-main-branch@main
-

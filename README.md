@@ -47,7 +47,7 @@ nvm use
 Install dependencies via `yarn`:
 
 ```
-yarn install --frozen-lockfile
+yarn install --immutable
 ```
 
 Make sure you have the Jaeger Query service running on http://localhost:16686. For example, you can run Jaeger all-in-one Docker image as described in the [documentation][aio-docs].

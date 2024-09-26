@@ -79,7 +79,7 @@ Holds GitHub Actions workflows used in CI and in release.
 
 CodeCov is integrated into the unit tests workflow to report coverage data from `./packages/jaeger-ui`. When unit tests are added to Plexus, this integration will need to be updated to gather coverage data for Plexus as well.
 
-[`yarn install --frozen-lockfile`](https://yarnpkg.com/lang/en/docs/cli/install/#toc-yarn-install-frozen-lockfile) ensures installs in CI fail if they would typically mutate the lockfile.
+[`yarn install --immutable`](https://yarnpkg.com/cli/install#options) ensures installs in CI fail if they would typically mutate the lockfile.
 
 ## `tsconfig.json`
 

@@ -24,7 +24,7 @@ jobs:
         with:
           cache: yarn
           node-version: '20'
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --immutable
       - run: yarn coverage
       - name: Upload coverage to codecov.io
         uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v4.5.0

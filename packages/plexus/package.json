@@ -54,18 +54,18 @@
     "d3-selection": "^3.0.0",
     "d3-zoom": "^3.0.0",
     "memoize-one": "6.0.0",
-    "viz.js": "1.8.1",
-    "react-icons": "^5.0.1"
+    "react-icons": "^5.0.1",
+    "viz.js": "1.8.1"
   },
   "scripts": {
-    "_tasks/build/lib/js": "node_modules/.bin/babel src --extensions '.tsx,.js' --out-dir lib",
+    "_tasks/build/lib/js": "babel src --extensions '.tsx,.js' --out-dir lib",
     "_tasks/build/lib/types": "../../node_modules/.bin/tsc --build --force",
     "_tasks/build/umd": "webpack --mode $NODE_ENV --config webpack.umd.config.js",
     "_tasks/clean/dirs": "rimraf lib dist",
-    "_tasks/clean/worker": "rimraf src/LayoutManager/layout.worker*js*",
+    "_tasks/clean/worker": "rimraf 'src/LayoutManager/layout.worker*js*'",
     "_tasks/bundle-worker": "webpack --mode $NODE_ENV --config webpack.layout-worker.config.js",
     "_tasks/dev-server": "webpack-dev-server --mode $NODE_ENV --config webpack.dev.config.js",
-    "build": "NODE_ENV=production npm-run-all -ln --serial _tasks/clean/* _tasks/bundle-worker --parallel _tasks/build/**",
+    "build": "NODE_ENV=production npm-run-all -ln --serial '_tasks/clean/*' _tasks/bundle-worker --parallel '_tasks/build/**'",
     "coverage": "echo 'NO TESTS YET'",
     "prepublishOnly": "yarn build",
     "start": "NODE_ENV='development' npm-run-all -ln --serial _tasks/clean/worker _tasks/bundle-worker --parallel '_tasks/bundle-worker --watch' _tasks/dev-server",
