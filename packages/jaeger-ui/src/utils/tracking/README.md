@@ -119,7 +119,7 @@ HTMLBodyElement.r             # also in chunk.6b341ae2.js
 
 The `+33 -56` means there are 33 inserted lines and 56 deleted lines in the edits made to the two tracked files.
 
-Note: The git status is determined when the build is generated or when `yarn start` is initially executed to start the dev server.
+Note: The git status is determined when the build is generated or when `npm run start` is initially executed to start the dev server.
 
 #### Event: Label - Breadcrumbs
 

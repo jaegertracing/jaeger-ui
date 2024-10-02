@@ -25,7 +25,6 @@ Stuck somewhere or found a bug? See [Getting in Touch](https://www.jaegertracing
 - [nvm (Node Version Manager)](https://github.com/nvm-sh/nvm)
 - [Node.JS](https://nodejs.org/en)
 - npm package manager
-- [yarn package manager](https://yarnpkg.com/)
 
 The app was built with [create-react-app](https://github.com/facebookincubator/create-react-app).
 
@@ -44,10 +43,10 @@ Use the recommended Node versions: (defined in [.nvmrc](./.nvmrc) file):
 nvm use
 ```
 
-Install dependencies via `yarn`:
+Install dependencies via `npm`:
 
 ```
-yarn install --frozen-lockfile
+npm install
 ```
 
 Make sure you have the Jaeger Query service running on http://localhost:16686. For example, you can run Jaeger all-in-one Docker image as described in the [documentation][aio-docs].
@@ -73,20 +72,20 @@ const proxyConfig = {
 Start the development server with hot loading:
 
 ```
-yarn start
+npm run start
 ```
 
 The above command will run a web server on `http://localhost:5173` that will serve the UI assets, with hot reloading support, and it will proxy all API requests to `http://localhost:16686` where Jaeger query should be running.
 
 #### Commands
 
-| Command      | Description                                                         |
-| ------------ | ------------------------------------------------------------------- |
-| `yarn start` | Starts development server with hot reloading and api proxy.         |
-| `yarn test`  | Run all the tests                                                   |
-| `yarn lint`  | Lint the project (eslint, prettier, typescript)                     |
-| `yarn fmt`   | Apply Prettier source code formatting                               |
-| `yarn build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
+| Command         | Description                                                         |
+| --------------- | ------------------------------------------------------------------- |
+| `npm run start` | Starts development server with hot reloading and api proxy.         |
+| `npm run test`  | Run all the tests                                                   |
+| `npm run lint`  | Lint the project (eslint, prettier, typescript)                     |
+| `npm run fmt`   | Apply Prettier source code formatting                               |
+| `npm run build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
 
 ### Running on Windows OS
 
@@ -96,9 +95,8 @@ Here are some steps to follow:
 
 1. Install WSL: https://learn.microsoft.com/en-us/windows/wsl/install
 2. Install Node.JS: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl
-3. Install Yarn: https://dev.to/bonstine/installing-yarn-on-wsl-38p2
-4. Connect WSL Environment with VSCode: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl#install-visual-studio-code
-5. Use the WSL Terminal inside VSCode and [follow the Jaeger UI installation steps](#running-the-application)
+3. Connect WSL Environment with VSCode: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl#install-visual-studio-code
+4. Use the WSL Terminal inside VSCode and [follow the Jaeger UI installation steps](#running-the-application)
 
 ## UI Configuration
 

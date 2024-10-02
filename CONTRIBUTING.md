@@ -110,11 +110,11 @@ git config --add alias.c "commit -s"
 
 # Style guide
 
-Use [typescript](https://www.typescriptlang.org/) for new code. Check types via `yarn tsc-lint`.
+Use [typescript](https://www.typescriptlang.org/) for new code. Check types via `npm run tsc-lint`.
 
-We use [`prettier`](https://prettier.io/), an "opinionated" code formatter. It can be applied to both JavaScript and CSS source files via `yarn prettier`.
+We use [`prettier`](https://prettier.io/), an "opinionated" code formatter. It can be applied to both JavaScript and CSS source files via `npm run prettier`.
 
-Then, most issues will be caught by the linter, which can be applied via `yarn eslint`.
+Then, most issues will be caught by the linter, which can be applied via `npm run eslint`.
 
 Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as noted in our `.eslintrc`.
 

@@ -22,13 +22,12 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
-          cache: yarn
+          cache: npm
           node-version: '20'
-      - run: yarn install --frozen-lockfile
+      - run: npm ci
       - name: Run depcheck
-        run: yarn run depcheck
-      - run: yarn lint
-      - run: yarn build
+        run: npm run depcheck
+      - run: npm run lint
+      - run: npm run build
       - name: Ensure PR is not on main branch
         uses: jaegertracing/jaeger/.github/actions/block-pr-from-main-branch@main
-

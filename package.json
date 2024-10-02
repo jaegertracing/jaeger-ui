@@ -41,20 +41,20 @@
     ]
   },
   "scripts": {
-    "build": "yarn workspaces run build",
+    "build": "npm run --workspaces build",
     "check-license": "./scripts/check-license.sh",
-    "coverage": "yarn workspaces run coverage",
+    "coverage": "npm run --workspaces coverage",
     "depcheck": "./scripts/run-depcheck.sh",
     "eslint": "eslint --cache 'scripts/*.{js,jsx,ts,tsx}' 'packages/*/src/**/*.{js,jsx,ts,tsx}' 'packages/*/*.{js,jsx,ts,tsx,mts}'",
-    "fmt": "yarn prettier",
+    "fmt": "npm run prettier",
     "lint": "npm-run-all -ln --parallel prettier-lint tsc-lint eslint check-license",
-    "prepare": "yarn workspace @jaegertracing/plexus prepublishOnly",
+    "prepare": "npm run --workspace @jaegertracing/plexus prepublishOnly",
     "prettier": "prettier --write '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}'",
-    "prettier-lint": "prettier --list-different '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}' || (echo '*** PLEASE RUN yarn prettier AND RESUBMIT ***' && false)",
-    "test": "yarn workspaces run test",
+    "prettier-lint": "prettier --list-different '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}' || (echo '*** PLEASE RUN npm run prettier AND RESUBMIT ***' && false)",
+    "test": "npm run --workspaces test",
     "tsc-lint": "tsc --build",
     "tsc-lint-debug": "tsc --listFiles",
-    "start": "cd packages/jaeger-ui && yarn start"
+    "start": "cd packages/jaeger-ui && npm run start"
   },
   "prettier": {
     "arrowParens": "avoid",
