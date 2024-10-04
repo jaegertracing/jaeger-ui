@@ -51,7 +51,7 @@
     "prepare": "npm run --workspace @jaegertracing/plexus prepublishOnly",
     "prettier": "prettier --write '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}'",
     "prettier-lint": "prettier --list-different '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}' || (echo '*** PLEASE RUN npm run prettier AND RESUBMIT ***' && false)",
-    "test": "npm run --workspaces test",
+    "test": "npm run --workspaces test --",
     "tsc-lint": "tsc --build",
     "tsc-lint-debug": "tsc --listFiles",
     "start": "cd packages/jaeger-ui && npm run start"
