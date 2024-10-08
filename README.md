@@ -46,7 +46,7 @@ nvm use
 Install dependencies via `npm`:
 
 ```
-npm install
+npm ci
 ```
 
 Make sure you have the Jaeger Query service running on http://localhost:16686. For example, you can run Jaeger all-in-one Docker image as described in the [documentation][aio-docs].
@@ -81,8 +81,8 @@ The above command will run a web server on `http://localhost:5173` that will ser
 
 | Command         | Description                                                         |
 | --------------- | ------------------------------------------------------------------- |
-| `npm run start` | Starts development server with hot reloading and api proxy.         |
-| `npm run test`  | Run all the tests                                                   |
+| `npm start`     | Starts development server with hot reloading and api proxy.         |
+| `npm test`      | Run all the tests                                                   |
 | `npm run lint`  | Lint the project (eslint, prettier, typescript)                     |
 | `npm run fmt`   | Apply Prettier source code formatting                               |
 | `npm run build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
