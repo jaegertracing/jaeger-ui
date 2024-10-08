@@ -72,7 +72,7 @@ const proxyConfig = {
 Start the development server with hot loading:
 
 ```
-npm run start
+npm start
 ```
 
 The above command will run a web server on `http://localhost:5173` that will serve the UI assets, with hot reloading support, and it will proxy all API requests to `http://localhost:16686` where Jaeger query should be running.
