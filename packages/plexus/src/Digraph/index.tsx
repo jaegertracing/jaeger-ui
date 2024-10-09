@@ -31,7 +31,6 @@ import {
   TSetProps,
 } from './types';
 import { assignMergeCss, getProps } from './utils';
-// TODO(joe): don't use stuff in ../DirectedGraph
 import LayoutManager from '../LayoutManager';
 import { TCancelled, TEdge, TLayoutDone, TSizeVertex, TVertex } from '../types';
 import TNonEmptyArray from '../types/TNonEmptyArray';
