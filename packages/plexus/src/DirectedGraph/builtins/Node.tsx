@@ -14,12 +14,12 @@
 
 import * as React from 'react';
 
-type TProps = Record<string, any> & {
-  classNamePrefix: string;
+type TProps = {
+  classNamePrefix?: string | null;
   children?: React.ReactNode;
   forwardedRef: any;
   hidden?: boolean;
-  labelFactory: Function;
+  labelFactory: ((vertex: any) => React.ReactNode) | null;
   left?: number;
   top?: number;
   vertex: any;
@@ -44,7 +44,7 @@ class Node extends React.PureComponent<TProps> {
     p.className = `${classNamePrefix}-Node ${p.className || ''}`;
     return (
       <div ref={forwardedRef} {...p}>
-        {labelFactory(vertex)}
+        {labelFactory?.(vertex)}
       </div>
     );
   }
@@ -53,4 +53,6 @@ class Node extends React.PureComponent<TProps> {
 // ghetto fabulous cast because the 16.3 API is not in flow yet
 // https://github.com/facebook/flow/issues/6103
 // eslint-disable-next-line react/no-multi-comp
-export default React.forwardRef<{}, TProps>((props, ref) => <Node {...props} forwardedRef={ref} />);
+export default React.forwardRef<{}, Omit<TProps, 'forwardedRef'>>((props, ref) => (
+  <Node {...props} forwardedRef={ref} />
+));
