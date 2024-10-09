@@ -99,7 +99,7 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
       <div className="ResultItemTitle">
         {!disableComparision && <Checkbox {...checkboxProps} />}
         {/* TODO: Shouldn't need cast */}
-        <WrapperComponent {...(wrapperProps as { [key: string]: string; to: string })}>
+        <WrapperComponent {...(wrapperProps as any)}>
           <span
             className="ResultItemTitle--durationBar"
             style={{ width: `${durationPercent || DEFAULT_DURATION_PERCENT}%` }}
