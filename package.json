@@ -20,7 +20,7 @@
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-import": "2.31.0",
     "eslint-plugin-jsx-a11y": "^6.8.0",
-    "eslint-plugin-react": "7.36.1",
+    "eslint-plugin-react": "7.37.1",
     "husky": "9.1.0",
     "jsdom": "24.1.0",
     "npm-run-all2": "6.2.2",
