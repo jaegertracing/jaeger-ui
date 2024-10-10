@@ -24,7 +24,7 @@
     "@types/redux-form": "^8.3.10",
     "@types/react-helmet": "^6.1.5",
     "@types/react-router-dom": "^5.1.0",
-    "@types/redux-actions": "2.2.1",
+    "@types/redux-actions": "2.6.5",
     "@types/object-hash": "^3.0.2",
     "@vitejs/plugin-legacy": "^5.4.1",
     "@vitejs/plugin-react": "^4.3.1",
