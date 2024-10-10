@@ -94,7 +94,7 @@
   },
   "scripts": {
     "build": "NODE_ENV=production REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite build",
-    "coverage": "yarn run test-ci --coverage",
+    "coverage": "npm run test-ci -- --coverage",
     "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite",
     "start": "vite",
     "test": "jest --maxWorkers=50%",

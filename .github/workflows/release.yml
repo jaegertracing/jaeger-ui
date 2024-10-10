@@ -19,17 +19,17 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
-          cache: yarn
+          cache: npm
           node-version: '20'
-      - run: yarn install --frozen-lockfile
-      - run: yarn lint
-      - run: yarn build
-        id: yarn-build
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+        id: npm-build
 
       - name: Package artifacts
         id: package-artifacts
         run: tar -czvf ./assets.tar.gz --strip-components=3  packages/jaeger-ui/build/
-        if: steps.yarn-build.outcome == 'success'
+        if: steps.npm-build.outcome == 'success'
 
       - name: Upload artifacts
         uses: svenstaro/upload-release-action@1beeb572c19a9242f4361f4cee78f8e0d9aec5df
