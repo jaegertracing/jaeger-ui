@@ -48,7 +48,7 @@ import { extractUiFindFromState } from '../common/UiFindInput';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { fetchedState } from '../../constants';
-import { FetchedTrace, ReduxState, TNil } from '../../types';
+import { FetchedTrace, LocationState, ReduxState, TNil } from '../../types';
 import { Trace } from '../../types/trace';
 import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
@@ -72,7 +72,7 @@ type TDispatchProps = {
 
 type TOwnProps = {
   history: RouterHistory;
-  location: Location;
+  location: Location<LocationState>;
   params: { id: string };
 };
 
