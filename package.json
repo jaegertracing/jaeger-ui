@@ -12,15 +12,15 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.24.6",
-    "@typescript-eslint/eslint-plugin": "7.4.0",
-    "@typescript-eslint/parser": "7.4.0",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
     "depcheck": "1.4.7",
     "eslint": "8.57.0",
     "eslint-config-airbnb": "19.0.4",
     "eslint-config-prettier": "9.1.0",
-    "eslint-plugin-import": "2.30.0",
+    "eslint-plugin-import": "2.31.0",
     "eslint-plugin-jsx-a11y": "^6.8.0",
-    "eslint-plugin-react": "7.36.1",
+    "eslint-plugin-react": "7.37.1",
     "husky": "9.1.0",
     "jsdom": "24.1.0",
     "npm-run-all2": "6.2.2",
@@ -30,7 +30,8 @@
   },
   "resolutions": {
     "**/lodash": "^4.17.21",
-    "rollup": "^4.13.1"
+    "rollup": "^4.13.1",
+    "cheerio": "1.0.0-rc.12"
   },
   "workspaces": {
     "packages": [

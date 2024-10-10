@@ -9,6 +9,12 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.62.0 (2024-10-06)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Support uploads of .jsonl files ([@Saumya40-codes](https://github.com/Saumya40-codes) in [#2461](https://github.com/jaegertracing/jaeger-ui/pull/2461))
+
 ## v1.61.0 (2024-09-14)
 
 Dependencies updates only.
