@@ -22,7 +22,7 @@
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react": "7.37.1",
     "husky": "9.1.0",
-    "jsdom": "24.1.0",
+    "jsdom": "25.0.1",
     "npm-run-all2": "6.2.2",
     "prettier": "3.3.2",
     "rxjs-compat": "6.6.7",
