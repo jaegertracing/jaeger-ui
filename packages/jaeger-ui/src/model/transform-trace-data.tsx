@@ -173,7 +173,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const tracePageTitle = getTracePageTitle(spans);
   const traceEmoji = getTraceEmoji(spans);
   const services = Object.keys(svcCounts).map(name => ({ name, numberOfSpans: svcCounts[name] }));
-  return {
+  const trace = {
     services,
     spans,
     traceID,
@@ -190,4 +190,11 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     startTime: traceStartTime,
     endTime: traceEndTime,
   };
+
+  const traceProcessor = getConfigValue("traceProcessor");
+  if (typeof traceProcessor === 'function') {
+    traceProcessor(trace);
+  }
+
+  return trace;
 }
