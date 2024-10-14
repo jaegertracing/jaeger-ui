@@ -76,7 +76,7 @@
     "react-icons": "^5.0.1",
     "react-is": "^18.2.0",
     "react-json-view-lite": "1.5.0",
-    "react-redux": "^8.1.2",
+    "react-redux": "^9.0.0",
     "react-router-dom": "5.3.4",
     "react-router-dom-v5-compat": "^6.24.0",
     "react-vis": "1.11.12",
