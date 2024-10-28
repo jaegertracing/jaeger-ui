@@ -5,5 +5,6 @@ packages/jaeger-ui/index.d.ts
 scripts/release-notes.py
 scripts/draft-release.py
 
-# Ignore CHANGELOG.md because prettier has different ideas about its formatting.
+# Ignore some docs because prettier has different ideas about its formatting.
 CHANGELOG.md
+RELEASE.md
