@@ -9,6 +9,16 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.63.0 (2024-11-10)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Migrate from yarn v1 to npm ([@andreasgerstmayr](https://github.com/andreasgerstmayr) in [#2462](https://github.com/jaegertracing/jaeger-ui/pull/2462))
+
+#### 👷 CI Improvements
+
+* Run s390x build on push to main only ([@andreasgerstmayr](https://github.com/andreasgerstmayr) in [#2481](https://github.com/jaegertracing/jaeger-ui/pull/2481))
+
 ## v1.62.0 (2024-10-06)
 
 #### 🐞 Bug fixes, Minor Improvements
