@@ -2,7 +2,7 @@
 
 exports[`<FileLoader /> matches the snapshot 1`] = `
 <Dragger
-  accept=".json"
+  accept=".json,.jsonl"
   beforeUpload={[Function]}
   multiple={true}
 >

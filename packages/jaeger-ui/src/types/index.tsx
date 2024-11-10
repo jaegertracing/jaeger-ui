@@ -41,6 +41,10 @@ export type FetchedTrace = {
   state?: FetchedState;
 };
 
+export type LocationState = {
+  fromSearch?: string;
+};
+
 export type ReduxState = {
   archive: TracesArchive;
   type: Action;
@@ -53,7 +57,7 @@ export type ReduxState = {
   };
   embedded: EmbeddedState;
   router: Router & {
-    location: Location;
+    location: Location<LocationState>;
   };
   services: {
     services: string[] | TNil;
