@@ -349,6 +349,11 @@ describe('computeTraceLink()', () => {
       url: 'http://example.com/?traceID=#{traceID}&traceName=#{traceName}&startTime=#{startTime}&endTime=#{endTime}&duration=#{duration}',
       text: 'third link (#{traceID}, #{traceName}, #{startTime}, #{endTime}, #{duration})',
     },
+    {
+      type: 'traces',
+      url: 'http://example.com/?startTime=#{startTime | epoch_micros_to_date_iso}&endTime=#{endTime | epoch_micros_to_date_iso}',
+      text: 'third link (#{startTime | epoch_micros_to_date_iso}, #{endTime | epoch_micros_to_date_iso})',
+    },
   ].map(processLinkPattern);
 
   const trace = {
@@ -357,7 +362,7 @@ describe('computeTraceLink()', () => {
     traceID: 'trc1',
     spans: [],
     startTime: 1000,
-    endTime: 3000,
+    endTime: 3000000000000,
     duration: 2000,
     services: [],
   };
@@ -369,8 +374,12 @@ describe('computeTraceLink()', () => {
         text: 'first link (trc1)',
       },
       {
-        url: 'http://example.com/?traceID=trc1&traceName=theTrace&startTime=1000&endTime=3000&duration=2000',
-        text: 'third link (trc1, theTrace, 1000, 3000, 2000)',
+        url: 'http://example.com/?traceID=trc1&traceName=theTrace&startTime=1000&endTime=3000000000000&duration=2000',
+        text: 'third link (trc1, theTrace, 1000, 3000000000000, 2000)',
+      },
+      {
+        text: 'third link (1970-01-01T00:00:00.001Z, 1970-02-04T17:20:00.000Z)',
+        url: 'http://example.com/?startTime=1970-01-01T00%3A00%3A00.001Z&endTime=1970-02-04T17%3A20%3A00.000Z',
       },
     ]);
   });

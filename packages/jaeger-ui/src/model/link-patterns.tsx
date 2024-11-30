@@ -17,6 +17,7 @@ import memoize from 'lru-memoize';
 
 import { getConfigValue } from '../utils/config/get-config';
 import { encodedStringSupplant, getParamNames } from '../utils/stringSupplant';
+import { getParameterAndFormatter } from '../utils/link-formatting';
 import { getParent } from './span';
 import { TNil } from '../types';
 import { Span, Link, KeyValuePair, Trace } from '../types/trace';
@@ -146,15 +147,19 @@ export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: Tr
     .forEach(pattern => {
       const parameterValues: Record<string, any> = {};
       const allParameters = pattern.parameters.every(parameter => {
-        const traceKV = getParameterInTrace(parameter, trace);
+        const { parameterName, formatFunction } = getParameterAndFormatter(parameter);
+        const traceKV = getParameterInTrace(parameterName, trace);
+
         if (traceKV) {
           // At this point is safe to access to trace object using parameter variable because
           // we validated parameter against validKeys, this implies that parameter a keyof Trace.
-          parameterValues[parameter] = traceKV.value;
+          parameterValues[parameterName] = formatFunction ? formatFunction(traceKV.value) : traceKV.value;
+
           return true;
         }
         return false;
       });
+
       if (allParameters) {
         result.push({
           url: callTemplate(pattern.url, parameterValues),
