@@ -15,16 +15,45 @@
 import { getParameterAndFormatter } from './link-formatting';
 
 describe('getParameterAndFormatter()', () => {
-  test('epoch_micros_to_date_iso', () => {
-    const result = getParameterAndFormatter('startTime | epoch_micros_to_date_iso');
-    expect(result).toEqual({
-      parameterName: 'startTime',
-      formatFunction: expect.any(Function),
+  describe('epoch_micros_to_date_iso', () => {
+    test('epoch_micros_to_date_iso', () => {
+      const result = getParameterAndFormatter('startTime | epoch_micros_to_date_iso');
+      expect(result).toEqual({
+        parameterName: 'startTime',
+        formatFunction: expect.any(Function),
+      });
+
+      expect(result.formatFunction(new Date('2020-01-01').getTime() * 1000)).toEqual(
+        '2020-01-01T00:00:00.000Z'
+      );
     });
 
-    expect(result.formatFunction(new Date('2020-01-01').getTime() * 1000)).toEqual(
-      '2020-01-01T00:00:00.000Z'
-    );
+    test('Non date', () => {
+      const result = getParameterAndFormatter('startTime | epoch_micros_to_date_iso');
+      expect(result.formatFunction('Not a date value')).toEqual('Not a date value');
+    });
+  });
+
+  describe('pad_start', () => {
+    test('Valid desired length', () => {
+      const result = getParameterAndFormatter('traceID | pad_start 10 0');
+      expect(result).toEqual({
+        parameterName: 'traceID',
+        formatFunction: expect.any(Function),
+      });
+
+      expect(result.formatFunction('12345')).toEqual('0000012345');
+    });
+
+    test('Invalid desired length', () => {
+      const result = getParameterAndFormatter('traceID | pad_start invalid 0');
+      expect(result.formatFunction('12345')).toEqual('12345');
+    });
+
+    test('Invalid input', () => {
+      const result = getParameterAndFormatter('traceID | pad_start 32 0');
+      expect(result.formatFunction(12345)).toEqual(12345);
+    });
   });
 
   test('No function', () => {
