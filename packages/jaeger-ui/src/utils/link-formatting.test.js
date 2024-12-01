@@ -56,6 +56,29 @@ describe('getParameterAndFormatter()', () => {
     });
   });
 
+  describe('add', () => {
+    test.each([1000, -1000])('offset: %s', offset => {
+      const result = getParameterAndFormatter(`startTime | add ${offset}`);
+      expect(result).toEqual({
+        parameterName: 'startTime',
+        formatFunction: expect.any(Function),
+      });
+      const startTime = new Date('2020-01-01').getTime() * 1000;
+      expect(result.formatFunction(startTime)).toEqual(startTime + offset);
+    });
+
+    test('Invalid value', () => {
+      const result = getParameterAndFormatter(`startTime | add 1000`);
+      expect(result.formatFunction('invalid')).toEqual('invalid');
+    });
+
+    test('Invalid offset', () => {
+      const result = getParameterAndFormatter('startTime | add invalid');
+      const startTime = new Date('2020-01-01').getTime() * 1000;
+      expect(result.formatFunction(startTime)).toEqual(startTime);
+    });
+  });
+
   test('No function', () => {
     const result = getParameterAndFormatter('startTime');
     expect(result).toEqual({

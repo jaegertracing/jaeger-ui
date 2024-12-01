@@ -16,7 +16,7 @@ import { Trace } from '../types/trace';
 
 function getFormatFunctions<T = Trace[keyof Trace]>(): Record<
   string,
-  (value: T, ...args: string[]) => string | T
+  (value: T, ...args: string[]) => T | string | number
 > {
   return {
     epoch_micros_to_date_iso: microsSinceEpoch => {
@@ -49,6 +49,27 @@ function getFormatFunctions<T = Trace[keyof Trace]>(): Record<
 
       return value.padStart(desiredLength, padCharacter);
     },
+
+    add: (value, offsetString: string) => {
+      if (typeof value !== 'number') {
+        console.error('add can only operate on numbers, ignoring formatting', {
+          value,
+          offsetString,
+        });
+        return value;
+      }
+
+      const offset = parseInt(offsetString, 10);
+      if (Number.isNaN(offset)) {
+        console.error('add needs a valid offset in microseconds as second argument, ignoring formatting', {
+          value,
+          offsetString,
+        });
+        return value;
+      }
+
+      return value + offset;
+    },
   };
 }
 
@@ -56,7 +77,7 @@ export function getParameterAndFormatter<T = Trace[keyof Trace]>(
   parameter: string
 ): {
   parameterName: string;
-  formatFunction: ((value: T) => T | string) | null;
+  formatFunction: ((value: T) => T | string | number) | null;
 } {
   const parts = parameter.split('|').map(part => part.trim());
   const parameterName = parts[0];
