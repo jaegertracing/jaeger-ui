@@ -56,6 +56,63 @@ describe('getParameterAndFormatter()', () => {
     });
   });
 
+  describe('add', () => {
+    test.each([1000, -1000])('offset: %s', offset => {
+      const result = getParameterAndFormatter(`startTime | add ${offset}`);
+      expect(result).toEqual({
+        parameterName: 'startTime',
+        formatFunction: expect.any(Function),
+      });
+      const startTime = new Date('2020-01-01').getTime() * 1000;
+      expect(result.formatFunction(startTime)).toEqual(startTime + offset);
+    });
+
+    test('Invalid value', () => {
+      const result = getParameterAndFormatter(`startTime | add 1000`);
+      expect(result.formatFunction('invalid')).toEqual('invalid');
+    });
+
+    test('Invalid offset', () => {
+      const result = getParameterAndFormatter('startTime | add invalid');
+      const startTime = new Date('2020-01-01').getTime() * 1000;
+      expect(result.formatFunction(startTime)).toEqual(startTime);
+    });
+  });
+
+  describe('Chaining formatting functions', () => {
+    test.each(['', ' ', '  ', '                          '])(
+      'add and epoch_micros_to_date_iso - delimeter: %p',
+      spaceChars => {
+        const expression = ['startTime', 'add 60000000', 'epoch_micros_to_date_iso'].join(
+          `${spaceChars}|${spaceChars}`
+        );
+        const result = getParameterAndFormatter(expression);
+        expect(result).toEqual({
+          parameterName: 'startTime',
+          formatFunction: expect.any(Function),
+        });
+
+        const startTime = new Date('2020-01-01').getTime() * 1000; // Convert to microseconds
+        const expectedDate = new Date('2020-01-01T00:01:00.000Z').toISOString();
+        expect(result.formatFunction(startTime)).toEqual(expectedDate);
+      }
+    );
+
+    test.each([' ', '  ', '                          '])(
+      'add and epoch_micros_to_date_iso with extra spaces between functions and arguments - delimeter: %',
+      spaceChars => {
+        const expression = [`startTime | add${spaceChars}60000000 | epoch_micros_to_date_iso`].join(
+          `${spaceChars}|${spaceChars}`
+        );
+        const result = getParameterAndFormatter(expression);
+
+        const startTime = new Date('2020-01-01').getTime() * 1000; // Convert to microseconds
+        const expectedDate = new Date('2020-01-01T00:01:00.000Z').toISOString();
+        expect(result.formatFunction(startTime)).toEqual(expectedDate);
+      }
+    );
+  });
+
   test('No function', () => {
     const result = getParameterAndFormatter('startTime');
     expect(result).toEqual({
