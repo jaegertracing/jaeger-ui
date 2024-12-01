@@ -14,7 +14,10 @@
 
 import { Trace } from '../types/trace';
 
-function getFormatFunctions<T = Trace[keyof Trace]>(): Record<string, (value: T) => string | T> {
+function getFormatFunctions<T = Trace[keyof Trace]>(): Record<
+  string,
+  (value: T, ...args: string[]) => string | T
+> {
   return {
     epoch_micros_to_date_iso: microsSinceEpoch => {
       if (typeof microsSinceEpoch !== 'number') {
@@ -26,6 +29,26 @@ function getFormatFunctions<T = Trace[keyof Trace]>(): Record<string, (value: T)
 
       return new Date(microsSinceEpoch / 1000).toISOString();
     },
+    pad_start: (value, desiredLengthString: string, padCharacter: string) => {
+      if (typeof value !== 'string') {
+        console.error('pad_start can only operate on strings, ignoring formatting', {
+          value,
+          desiredLength: desiredLengthString,
+          padCharacter,
+        });
+        return value;
+      }
+      const desiredLength = parseInt(desiredLengthString, 10);
+      if (Number.isNaN(desiredLength)) {
+        console.error('pad_start needs a desired length as second argument, ignoring formatting', {
+          value,
+          desiredLength: desiredLengthString,
+          padCharacter,
+        });
+      }
+
+      return value.padStart(desiredLength, padCharacter);
+    },
   };
 }
 
@@ -35,8 +58,12 @@ export function getParameterAndFormatter<T = Trace[keyof Trace]>(
   parameterName: string;
   formatFunction: ((value: T) => T | string) | null;
 } {
-  const [parameterName, formatFunctionName] = parameter.split('|').map(part => part.trim());
-  if (!formatFunctionName) return { parameterName, formatFunction: null };
+  const parts = parameter.split('|').map(part => part.trim());
+  const parameterName = parts[0];
+  if (parts.length === 1) return { parameterName, formatFunction: null };
+
+  const [formatFunctionName, ...args] = parts[1].split(' ');
+
   const formatFunctions = getFormatFunctions<T>();
 
   const formatFunction = formatFunctions[formatFunctionName];
@@ -48,5 +75,5 @@ export function getParameterAndFormatter<T = Trace[keyof Trace]>(
     });
   }
 
-  return { parameterName, formatFunction: formatFunction ?? null };
+  return { parameterName, formatFunction: formatFunction ? val => formatFunction(val, ...args) : null };
 }
