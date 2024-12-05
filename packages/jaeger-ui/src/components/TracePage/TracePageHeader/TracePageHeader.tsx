@@ -23,6 +23,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import AltViewOptions from './AltViewOptions';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
+import TracePageSettings from './TracePageSettings';
 import SpanGraph from './SpanGraph';
 import TracePageSearchBar from './TracePageSearchBar';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from '../types';
@@ -58,6 +59,9 @@ type TracePageHeaderEmbedProps = {
   showViewOptions: boolean;
   slimView: boolean;
   textFilter: string | TNil;
+  availableTagKeys: string[];
+  selectedMarkerColorKey: string[];
+  setMarkerColorKey: (tagKey: string[]) => void;
   toSearch: string | null;
   trace: Trace;
   viewType: ETraceViewType;
@@ -127,6 +131,9 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     disableJsonView,
     slimView,
     textFilter,
+    availableTagKeys,
+    selectedMarkerColorKey,
+    setMarkerColorKey,
     toSearch,
     trace,
     viewType,
@@ -189,6 +196,12 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           resultCount={resultCount}
           textFilter={textFilter}
           navigable={viewType === ETraceViewType.TraceTimelineViewer}
+        />
+        <TracePageSettings
+          className="ub-m2"
+          availableTagKeys={availableTagKeys}
+          selectedMarkerColorKey={selectedMarkerColorKey}
+          onMarkerColorKeyChange={setMarkerColorKey}
         />
         {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
         {showViewOptions && (
