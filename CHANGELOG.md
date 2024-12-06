@@ -9,6 +9,46 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.64.0 (2024-12-06)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Add new formatting function "add" ([@drewcorlin1](https://github.com/drewcorlin1) in [#2507](https://github.com/jaegertracing/jaeger-ui/pull/2507))
+* Add pad_start link formatting function #2505 ([@drewcorlin1](https://github.com/drewcorlin1) in [#2504](https://github.com/jaegertracing/jaeger-ui/pull/2504))
+* Allow formatting link parameter values as iso date #2487 ([@drewcorlin1](https://github.com/drewcorlin1) in [#2501](https://github.com/jaegertracing/jaeger-ui/pull/2501))
+
+## v1.63.0 (2024-11-10)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Migrate from yarn v1 to npm ([@andreasgerstmayr](https://github.com/andreasgerstmayr) in [#2462](https://github.com/jaegertracing/jaeger-ui/pull/2462))
+
+#### 👷 CI Improvements
+
+* Run s390x build on push to main only ([@andreasgerstmayr](https://github.com/andreasgerstmayr) in [#2481](https://github.com/jaegertracing/jaeger-ui/pull/2481))
+
+## v1.62.0 (2024-10-06)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Support uploads of .jsonl files ([@Saumya40-codes](https://github.com/Saumya40-codes) in [#2461](https://github.com/jaegertracing/jaeger-ui/pull/2461))
+
+## v1.61.0 (2024-09-14)
+
+Dependencies updates only.
+
+## v1.60.0 (2024-08-05)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Allow uploading json-per-line otlp data ([@BenzeneAlcohol](https://github.com/BenzeneAlcohol) in [#2380](https://github.com/jaegertracing/jaeger-ui/pull/2380))
+
+## v1.59.0 (2024-07-09)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Add escaped example to tag search help popup ([@yurishkuro](https://github.com/yurishkuro) in [#2354](https://github.com/jaegertracing/jaeger-ui/pull/2354))
+
 ## v1.58.0 (2024-06-11)
 
 #### 🐞 Bug fixes, Minor Improvements

@@ -17,12 +17,29 @@ import lodash from 'lodash';
 import readJsonFile from './readJsonFile';
 import JaegerAPI from '../api/jaeger';
 
+let OTLPTrace;
+let jaegerTrace;
+let OTLPTraceMulti;
+let jaegerTraceMulti;
+
+beforeAll(() => {
+  OTLPTrace = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-in.json', 'utf-8'));
+  jaegerTrace = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-out.json', 'utf-8'));
+  OTLPTraceMulti = JSON.parse(
+    fs.readFileSync('src/utils/fixtures/otlp2jaeger-multi-in-combined.json', 'utf-8')
+  );
+  jaegerTraceMulti = JSON.parse(fs.readFileSync('src/utils/fixtures/oltp2jaeger-multi-out.json', 'utf-8'));
+});
+
 jest.spyOn(JaegerAPI, 'transformOTLP').mockImplementation(APICallRequest => {
-  const OTLPTrace = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-in.json', 'utf-8'));
-  const jaegerTrace = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-out.json', 'utf-8'));
   if (lodash.isEqual(APICallRequest, OTLPTrace)) {
     return Promise.resolve(jaegerTrace);
   }
+
+  if (lodash.isEqual(APICallRequest, OTLPTraceMulti)) {
+    return Promise.resolve(jaegerTraceMulti);
+  }
+
   // This defines case where API call errors out even after detecting a `resourceSpan` in the request
   return Promise.reject();
 });
@@ -53,8 +70,8 @@ describe('fileReader.readJsonFile', () => {
   });
 
   it('loads JSON data (OTLP), successfully', () => {
-    const inObj = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-in.json', 'utf-8'));
-    const outObj = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-out.json', 'utf-8'));
+    const inObj = OTLPTrace;
+    const outObj = jaegerTrace;
     const file = new File([JSON.stringify(inObj)], 'foo.json');
     const p = readJsonFile({ file });
     return expect(p).resolves.toMatchObject(outObj);
@@ -67,9 +84,17 @@ describe('fileReader.readJsonFile', () => {
     return expect(p).rejects.toMatchObject(expect.any(Error));
   });
 
-  it('rejects on malform JSON', () => {
+  it('rejects malformed JSON', () => {
     const file = new File(['not-json'], 'foo.json');
     const p = readJsonFile({ file });
     return expect(p).rejects.toMatchObject(expect.any(Error));
+  });
+
+  it('loads JSON-per-line data', () => {
+    const expectedOutput = jaegerTraceMulti;
+    const fileContent = fs.readFileSync('src/utils/fixtures/otlp2jaeger-multi-in.json.txt', 'utf-8');
+    const file = new File([fileContent], 'multi.json', { type: 'application/json' });
+    const p = readJsonFile({ file });
+    return expect(p).resolves.toMatchObject(expectedOutput);
   });
 });

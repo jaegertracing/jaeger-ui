@@ -73,7 +73,7 @@ class LayoutWorker extends Worker { ... }
 ### Scripts
 
 - `build` — Generates the UMD bundle and ES module production builds
-- `prepublishOnly` — Executed after `yarn install` is run in the project root; runs the `build` script
+- `prepublishOnly` — Executed after `npm install` is run in the project root; runs the `build` script
 - `start` — Starts the Webpack dev server and watches all files, including `layout.worker`
 
 The `_tasks/*` scripts are not intended to be run, directly.

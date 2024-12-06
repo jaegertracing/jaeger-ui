@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { getParameterAndFormatter } from './link-formatting';
+
 const PARAMETER_REG_EXP = /#\{([^{}]*)\}/g;
 
 export function encodedStringSupplant(
@@ -20,8 +22,11 @@ export function encodedStringSupplant(
   map: Record<string, string | number | undefined>
 ) {
   return str.replace(PARAMETER_REG_EXP, (_, name) => {
-    const mapValue = map[name];
-    const value = mapValue != null && encodeFn ? encodeFn(mapValue) : mapValue;
+    const { parameterName, formatFunction } = getParameterAndFormatter<string | number | undefined>(name);
+    const mapValue = map[parameterName];
+    const formattedValue = formatFunction && mapValue ? formatFunction(mapValue) : mapValue;
+
+    const value = formattedValue != null && encodeFn ? encodeFn(formattedValue) : mapValue;
     return value == null ? '' : `${value}`;
   });
 }
