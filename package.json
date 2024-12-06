@@ -12,49 +12,46 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.24.6",
-    "@typescript-eslint/eslint-plugin": "7.4.0",
-    "@typescript-eslint/parser": "7.4.0",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
     "depcheck": "1.4.7",
     "eslint": "8.57.0",
     "eslint-config-airbnb": "19.0.4",
     "eslint-config-prettier": "9.1.0",
-    "eslint-plugin-import": "2.29.1",
+    "eslint-plugin-import": "2.31.0",
     "eslint-plugin-jsx-a11y": "^6.8.0",
-    "eslint-plugin-react": "7.34.1",
-    "husky": "9.0.10",
-    "jsdom": "24.0.0",
-    "npm-run-all": "4.1.5",
+    "eslint-plugin-react": "7.37.1",
+    "husky": "9.1.0",
+    "jsdom": "25.0.1",
+    "npm-run-all2": "7.0.1",
     "prettier": "3.3.2",
     "rxjs-compat": "6.6.7",
-    "typescript": "5.5.2"
+    "typescript": "5.6.2"
   },
-  "resolutions": {
-    "**/lodash": "^4.17.21",
-    "rollup": "^4.13.1"
+  "overrides": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "cheerio": "1.0.0-rc.12"
   },
-  "workspaces": {
-    "packages": [
-      "packages/*"
-    ],
-    "nohoist": [
-      "**/parse5"
-    ]
-  },
+  "workspaces": [
+    "packages/plexus",
+    "packages/jaeger-ui"
+  ],
   "scripts": {
-    "build": "yarn workspaces run build",
+    "build": "npm run --workspaces build",
     "check-license": "./scripts/check-license.sh",
-    "coverage": "yarn workspaces run coverage",
+    "coverage": "npm run --workspaces coverage",
     "depcheck": "./scripts/run-depcheck.sh",
     "eslint": "eslint --cache 'scripts/*.{js,jsx,ts,tsx}' 'packages/*/src/**/*.{js,jsx,ts,tsx}' 'packages/*/*.{js,jsx,ts,tsx,mts}'",
-    "fmt": "yarn prettier",
+    "fmt": "npm run prettier",
     "lint": "npm-run-all -ln --parallel prettier-lint tsc-lint eslint check-license",
-    "prepare": "yarn workspace @jaegertracing/plexus prepublishOnly",
+    "prepare": "npm run --workspace @jaegertracing/plexus prepublishOnly",
     "prettier": "prettier --write '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}'",
-    "prettier-lint": "prettier --list-different '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}' || (echo '*** PLEASE RUN yarn prettier AND RESUBMIT ***' && false)",
-    "test": "yarn workspaces run test",
+    "prettier-lint": "prettier --list-different '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}' || (echo '*** PLEASE RUN npm run prettier AND RESUBMIT ***' && false)",
+    "test": "npm run --workspaces test --",
     "tsc-lint": "tsc --build",
     "tsc-lint-debug": "tsc --listFiles",
-    "start": "cd packages/jaeger-ui && yarn start"
+    "start": "cd packages/jaeger-ui && npm run start"
   },
   "prettier": {
     "arrowParens": "avoid",
