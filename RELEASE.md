@@ -1,7 +1,8 @@
 # Cutting a Jaeger UI release
 
 1. Create and merge, per approval, a PR which preps the release ([example](https://github.com/jaegertracing/jaeger-ui/pull/1767)).
-   1. The PR title should match the format "Prepare release vX.Y.Z".
+   1. The PR title should match the format "Prepare release vX.Y.Z"
+      - Apply the label `changelog:skip`
    2. CHANGELOG.md
       - Change the version of the current release from "Next (unreleased)" to "vX.Y.Z (Month D, YYYY)",
         where "vX.Y.Z" is the [semver](https://semver.org) for this release.
