@@ -9,6 +9,14 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.64.0 (2024-12-06)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Add new formatting function "add" ([@drewcorlin1](https://github.com/drewcorlin1) in [#2507](https://github.com/jaegertracing/jaeger-ui/pull/2507))
+* Add pad_start link formatting function #2505 ([@drewcorlin1](https://github.com/drewcorlin1) in [#2504](https://github.com/jaegertracing/jaeger-ui/pull/2504))
+* Allow formatting link parameter values as iso date #2487 ([@drewcorlin1](https://github.com/drewcorlin1) in [#2501](https://github.com/jaegertracing/jaeger-ui/pull/2501))
+
 ## v1.63.0 (2024-11-10)
 
 #### 🐞 Bug fixes, Minor Improvements
