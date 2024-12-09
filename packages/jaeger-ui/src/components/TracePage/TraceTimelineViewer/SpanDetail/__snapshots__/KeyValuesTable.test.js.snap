@@ -41,6 +41,7 @@ exports[`<KeyValuesTable> renders the expected text for each span value 1`] = `
         "numberValue": "json-markup-number",
         "otherValue": "json-markup-other",
         "punctuation": "json-markup-puncuation",
+        "quotesForFieldNames": false,
         "stringValue": "json-markup-string",
         "undefinedValue": "json-markup-undefined",
       }
