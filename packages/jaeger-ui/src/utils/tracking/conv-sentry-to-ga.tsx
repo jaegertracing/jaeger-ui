@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /* eslint-disable camelcase */
-import { RavenTransportOptions } from 'raven-js';
+import { Exception, Breadcrumb } from '@sentry/browser';
 
 import prefixUrl from '../prefix-url';
 
@@ -116,20 +116,11 @@ function convErrorMessage(message: string, maxLen = 0) {
 //      cFn
 //      dFn
 //
-interface IConvException {
-  type: string;
-  value: number;
-  stacktrace: {
-    frames: {
-      filename: string;
-      function: string;
-    }[];
-  };
-}
-function convException(errValue: IConvException) {
+
+function convException(errValue: Exception) {
   const message = convErrorMessage(`${errValue.type}: ${errValue.value}`, 149);
-  const frames = errValue.stacktrace.frames.map(fr => {
-    const filename = fr.filename.replace(origin, '').replace(/^\/static\/js\//i, '');
+  const frames = (errValue.stacktrace?.frames ?? []).map(fr => {
+    const filename = (fr.filename ?? '').replace(origin, '').replace(/^\/static\/js\//i, '');
     const fn = collapseWhitespace(fr.function || '??');
     return { filename, fn };
   });
@@ -169,9 +160,7 @@ function convNav(to: string) {
 //    "dp" - fetch the dependency data
 // And, "NNN" is a non-200 status code.
 type TCrumbData = {
-  url: string;
-  status_code: number;
-  to: string;
+  [key: string]: any;
 };
 function convFetch(data: TCrumbData) {
   const { url, status_code } = data;
@@ -247,20 +236,14 @@ function compressCssSelector(selector: string) {
 // The chronological ordering of the breadcrumbs is older events precede newer
 // events. This ordering was kept because it's easier to see which page events
 // occurred on.
-interface ICrumb {
-  category: string;
-  data: TCrumbData;
-  message: string;
-  selector: string;
-}
-function convBreadcrumbs(crumbs: ICrumb[]) {
+function convBreadcrumbs(crumbs: Breadcrumb[]) {
   if (!Array.isArray(crumbs) || !crumbs.length) {
     return '';
   }
   // the last UI breadcrumb has the CSS selector included
   let iLastUi = -1;
   for (let i = crumbs.length - 1; i >= 0; i--) {
-    if (crumbs[i].category.slice(0, 2) === 'ui') {
+    if (crumbs[i]?.category?.slice(0, 2) === 'ui') {
       iLastUi = i;
       break;
     }
@@ -270,10 +253,10 @@ function convBreadcrumbs(crumbs: ICrumb[]) {
   let onNewLine = true;
   for (let i = 0; i < crumbs.length; i++) {
     const c = crumbs[i];
-    const cStart = c.category.split('.')[0];
+    const cStart = c.category?.split('.')[0];
     switch (cStart) {
       case 'fetch': {
-        const fetched = convFetch(c.data);
+        const fetched = c.data ? convFetch(c.data) : null;
         if (fetched) {
           joiner.push(fetched);
           onNewLine = false;
@@ -282,17 +265,17 @@ function convBreadcrumbs(crumbs: ICrumb[]) {
       }
 
       case 'navigation': {
-        const nav = `${onNewLine ? '' : '\n'}\n${convNav(c.data.to)}\n`;
+        const nav = `${onNewLine ? '' : '\n'}\n${convNav(c.data?.to)}\n`;
         joiner.push(nav);
         onNewLine = true;
         break;
       }
 
       case 'ui': {
-        if (i === iLastUi) {
-          const selector = compressCssSelector(c.message);
+        if (c.category && i === iLastUi) {
+          const selector = c.message ? compressCssSelector(c.message) : null;
           joiner.push(`${c.category[3]}{${selector}}`);
-        } else {
+        } else if (c.category) {
           joiner.push(c.category[3]);
         }
         onNewLine = false;
@@ -300,7 +283,7 @@ function convBreadcrumbs(crumbs: ICrumb[]) {
       }
 
       case 'sentry': {
-        const msg = convErrorMessage(c.message, 58);
+        const msg = c.message ? convErrorMessage(c.message, 58) : null;
         joiner.push(`${onNewLine ? '' : '\n'}${msg}\n`);
         onNewLine = true;
         break;
@@ -343,24 +326,32 @@ function convBreadcrumbs(crumbs: ICrumb[]) {
 
 // Create the GA label value from the message, page, duration, git info, and
 // breadcrumbs. See <./README.md> for details.
-function getLabel(message: string, page: string, duration: number, git: string, breadcrumbs: ICrumb[]) {
+function getLabel(message: string, page: string, duration: number, git: string, breadcrumbs: Breadcrumb[]) {
   const header = [message, page, duration, git, ''].filter(v => v != null).join('\n');
   const crumbs = convBreadcrumbs(breadcrumbs);
   return `${header}\n${truncate(crumbs, 498 - header.length, true)}`;
 }
 
-// Convert the Raven exception data to something that can be sent to Google
+// Convert the exception data to something that can be sent to Google
 // Analytics. See <./README.md> for details.
-export default function convRavenToGa({ data }: RavenTransportOptions) {
+export default function convSentryToGa({ data }: { url: string; data: any }) {
   const { breadcrumbs, exception, extra, request, tags } = data;
-  const { message, stack } = convException(exception.values[0]);
-  const url = truncate(request.url.replace(origin, ''), 50);
+  const { message, stack } = convException(exception?.values?.[0] ?? {});
+
+  const url = truncate((request?.url ?? '').replace(origin, ''), 50);
   const { word: page } = getSym(NAV_SYMBOLS, url);
-  const value = Math.round(extra['session:duration'] / 1000);
+  const duration = extra?.['session:duration'];
+  const value = typeof duration === 'number' ? Math.round(duration / 1000) : 0;
   const category = `jaeger/${page}/error`;
   let action = [message, tags && tags.git, url, '', stack].filter(v => v != null).join('\n');
   action = truncate(action, 499);
-  const label = getLabel(message, page, value, tags && tags.git, breadcrumbs && breadcrumbs.values);
+  const label = getLabel(
+    message,
+    page,
+    value,
+    (tags && tags.git) as string,
+    (breadcrumbs && Array.isArray(breadcrumbs.values) ? breadcrumbs.values : []) as Breadcrumb[]
+  );
   return {
     message,
     category,

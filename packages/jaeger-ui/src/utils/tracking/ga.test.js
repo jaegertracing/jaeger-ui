@@ -15,7 +15,7 @@
 import * as GA from './ga';
 import { getAppEnvironment } from '../constants';
 
-jest.mock('./conv-raven-to-ga', () => () => ({
+jest.mock('./conv-sentry-to-ga', () => () => ({
   category: 'jaeger/a',
   action: 'some-action',
   message: 'jaeger/a',
@@ -166,7 +166,7 @@ describe('google analytics tracking', () => {
     });
   });
 
-  it('converting raven-js errors', () => {
+  it('converting sentry errors', () => {
     window.onunhandledrejection({
       reason: new Error('abc'),
     });
