@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { RavenStatic } from 'raven-js';
+import { BrowserClient } from '@sentry/browser';
 import { TNil } from '.';
 import { Config } from './config';
 
@@ -22,7 +22,7 @@ export interface IWebAnalyticsFunc {
 
 export default interface IWebAnalytics {
   init: () => void;
-  context: boolean | RavenStatic | null;
+  context: boolean | typeof BrowserClient | null;
   isEnabled: () => boolean;
   trackPageView: (pathname: string, search: string | TNil) => void;
   trackError: (description: string) => void;

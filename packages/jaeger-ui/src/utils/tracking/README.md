@@ -222,3 +222,23 @@ You get a lot for free when using Raven.js:
 - Some global handlers are added
 
 Implementing the above from scratch would require substantial effort. Meanwhile, Raven.js is well tested.
+
+### Steps to Verify the gaID Integration
+
+Setup:
+
+- Ensure you have the repository cloned and all dependencies installed. Run the following command in the terminal
+  - `npm install`
+- Start the local development server
+
+  - `npm start` This will open the application in your default browser
+
+Steps to put gaID:
+
+- Place the GA Measurement ID in `default-config.tsx`.
+
+- Verify navigation events using **TagHound**. Screenshots of the events being tracked are attached.
+
+- **Note**: Ensure GTM tracking is enabled in **TagHound**, otherwise the Google tags will not be tracked.
+
+- This test works in the local environment, but data logs may not appear in Google Analytics. This is likely because the GA dashboard doesn’t collect data from `localhost`.
