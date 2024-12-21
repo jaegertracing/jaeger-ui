@@ -19,6 +19,7 @@ import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
+import _keys from 'lodash/keys';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -97,12 +98,15 @@ type TState = {
   slimView: boolean;
   viewType: ETraceViewType;
   viewRange: IViewRange;
+  selectedMarkerColorKey: string | null;
 };
 
 // export for tests
 export const VIEW_MIN_RANGE = 0.01;
 const VIEW_CHANGE_BASE = 0.005;
 const VIEW_CHANGE_FAST = 0.05;
+
+const MARKER_COLOR_TAG_STORAGE_KEY = 'logMarkerColorKey';
 
 // export for tests
 export const shortcutConfig: { [name: string]: [number, number] } = {
@@ -140,6 +144,12 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   constructor(props: TProps) {
     super(props);
     const { embedded, trace } = props;
+
+    const selectedMarkerColorKeyJson = window.localStorage.getItem(MARKER_COLOR_TAG_STORAGE_KEY);
+    const selectedMarkerColorKey: string[] = selectedMarkerColorKeyJson
+      ? JSON.parse(selectedMarkerColorKeyJson).tagKeys
+      : [];
+
     this.state = {
       headerHeight: null,
       slimView: Boolean(embedded && embedded.timeline.collapseTitle),
@@ -149,6 +159,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           current: [0, 1],
         },
       },
+      selectedMarkerColorKey,
     };
     this._headerElm = null;
     this._filterSpans = _memoize(
@@ -324,6 +335,11 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     this._scrollManager.scrollToPrevVisibleSpan();
   };
 
+  setMarkerColorKey = (tagKeys: string[]) => {
+    window.localStorage.setItem(MARKER_COLOR_TAG_STORAGE_KEY, JSON.stringify({ tagKeys }));
+    this.setState({ selectedMarkerColorKey: tagKeys });
+  };
+
   render() {
     const {
       archiveEnabled,
@@ -338,7 +354,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       traceGraphConfig,
       location: { state: locationState },
     } = this.props;
-    const { slimView, viewType, headerHeight, viewRange } = this.state;
+    const { slimView, viewType, headerHeight, viewRange, selectedMarkerColorKey } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
@@ -391,6 +407,9 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       trace: data,
       updateNextViewRangeTime: this.updateNextViewRangeTime,
       updateViewRangeTime: this.updateViewRangeTime,
+      availableTagKeys: trace ? collectTagKeys(trace.data) : [],
+      selectedMarkerColorKey,
+      setMarkerColorKey: this.setMarkerColorKey,
     };
 
     let view;
@@ -406,6 +425,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           updateNextViewRangeTime={this.updateNextViewRangeTime}
           updateViewRangeTime={this.updateViewRangeTime}
           viewRange={viewRange}
+          markerColorKey={selectedMarkerColorKey}
         />
       );
     } else if (ETraceViewType.TraceGraph === viewType && headerHeight) {
@@ -438,6 +458,22 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       </div>
     );
   }
+}
+
+function collectTagKeys(trace: Trace): string[] {
+  const keys = {};
+
+  for (const span of trace.spans) {
+    for (const log of span.logs) {
+      for (const { key } of log.fields) {
+        keys[key] = true;
+      }
+    }
+  }
+
+  const keysArray = _keys(keys);
+  keysArray.sort();
+  return keysArray;
 }
 
 // export for tests
