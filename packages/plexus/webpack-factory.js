@@ -26,6 +26,7 @@ const extensions = ['.js', '.json', '.tsx'];
 const extensionsRx = /\.(js|json|tsx)$/;
 const extensionsWorkerRx = /\.worker\.(js|json|tsx)$/;
 
+// Base Webpack configuration shared across all modes
 function makeBaseConfig() {
   return {
     mode: 'production',
@@ -63,6 +64,7 @@ function makeBaseConfig() {
   };
 }
 
+// Development-specific configuration with dev server and source maps
 function makeDevConfig() {
   const entry = {
     index: join(__dirname, 'demo/src/index'),
@@ -160,6 +162,7 @@ function makeDevConfig() {
   return { config, rules };
 }
 
+// Common production optimizations
 function makeCommonProdConfig() {
   return {
     optimization: {
@@ -170,6 +173,7 @@ function makeCommonProdConfig() {
   };
 }
 
+// Configuration for workers (e.g., layout.worker.tsx)
 function makeWorkerConfig() {
   const layoutDir = join(__dirname, 'src/LayoutManager');
   const config = {
@@ -203,6 +207,7 @@ function makeWorkerConfig() {
   return { config, rules };
 }
 
+// UMD build for distribution (e.g., library export)
 function makeUmdConfig() {
   const config = {
     ...makeCommonProdConfig(),
@@ -220,6 +225,7 @@ function makeUmdConfig() {
   return { config, rules: [] };
 }
 
+// Factory mapping for different build modes
 const FACTORIES = {
   development: makeDevConfig,
   'layout-worker': makeWorkerConfig,
