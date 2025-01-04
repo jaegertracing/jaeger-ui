@@ -24,6 +24,8 @@ import * as TraceDiffUrl from './url';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
 
+jest.mock('redux', () => ({ __esModule: true, ...jest.requireActual('redux') }));
+
 describe('TraceDiff', () => {
   const defaultA = 'trace-id-a';
   const defaultB = 'trace-id-b';
