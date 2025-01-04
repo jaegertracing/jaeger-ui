@@ -24,6 +24,16 @@ import * as TraceDiffUrl from './url';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
 
+jest.mock('../../actions/jaeger-api', () => ({
+  fetchMultipleTraces: jest.fn(),
+}));
+
+jest.mock('./duck', () => ({
+  actions: {
+    forceState: jest.fn(),
+  },
+}));
+
 describe('TraceDiff', () => {
   const defaultA = 'trace-id-a';
   const defaultB = 'trace-id-b';
@@ -341,30 +351,48 @@ describe('TraceDiff', () => {
   });
 
   describe('mapDispatchToProps', () => {
-    let bindActionCreatorsSpy;
+    const dispatchMock = jest.fn();
+    let boundActions;
 
-    beforeAll(() => {
-      bindActionCreatorsSpy = jest.spyOn(redux, 'bindActionCreators').mockImplementation(actions => {
-        if (actions === jaegerApiActions) {
-          return { fetchMultipleTraces: fetchMultipleTracesMock };
-        }
-        if (actions === diffActions) {
-          return { forceState: forceStateMock };
-        }
-        return {};
-      });
+    beforeEach(() => {
+      dispatchMock.mockClear();
+      boundActions = mapDispatchToProps(dispatchMock);
     });
 
-    afterAll(() => {
-      bindActionCreatorsSpy.mockRestore();
+    it('correctly binds fetchMultipleTraces to dispatch', () => {
+      const testArg = ['trace1', 'trace2'];
+      boundActions.fetchMultipleTraces(testArg);
+      expect(dispatchMock).toHaveBeenCalledWith(fetchMultipleTracesMock(testArg));
     });
 
-    it('correctly binds actions to dispatch', () => {
-      const dispatchMock = () => {};
-      const result = mapDispatchToProps(dispatchMock);
-      expect(result.fetchMultipleTraces).toBe(fetchMultipleTracesMock);
-      expect(result.forceState).toBe(forceStateMock);
-      expect(bindActionCreatorsSpy.mock.calls[0][1]).toBe(dispatchMock);
+    it('correctly binds forceState to dispatch', () => {
+      const testState = { a: 'a', b: 'b', cohort: ['a', 'b'] };
+      boundActions.forceState(testState);
+      expect(dispatchMock).toHaveBeenCalledWith(forceStateMock(testState));
+    });
+  });
+
+  describe('render', () => {
+    it('renders as expected', () => {
+      expect(wrapper).toMatchSnapshot();
+    });
+
+    it('handles a and b not in props.tracesData', () => {
+      const tracesData = new Map(defaultProps.tracesData);
+      tracesData.delete(defaultA);
+      tracesData.delete(defaultB);
+      wrapper.setProps({ tracesData });
+      expect(wrapper.find(TraceDiffHeader).props()).toEqual(
+        expect.objectContaining({
+          a: { id: defaultA },
+          b: { id: defaultB },
+        })
+      );
+    });
+
+    it('handles absent a and b', () => {
+      wrapper.setProps({ a: null, b: null });
+      expect(wrapper.find(TraceDiffHeader).props()).toEqual(expect.objectContaining({ a: null, b: null }));
     });
   });
 });
