@@ -26,6 +26,7 @@ const extensions = ['.js', '.json', '.tsx'];
 const extensionsRx = /\.(js|json|tsx)$/;
 const extensionsWorkerRx = /\.worker\.(js|json|tsx)$/;
 
+// Base Webpack configuration shared across all modes
 function makeBaseConfig() {
   return {
     mode: 'production',
@@ -63,6 +64,7 @@ function makeBaseConfig() {
   };
 }
 
+// Development-specific configuration with dev server and source maps
 function makeDevConfig() {
   const entry = {
     index: join(__dirname, 'demo/src/index'),
@@ -72,27 +74,22 @@ function makeDevConfig() {
   const config = {
     entry,
     mode: 'development',
-    devtool: 'cheap-module-eval-source-map',
+    devtool: 'cheap-module-source-map',
     output: {
       path: join(__dirname, 'build'),
       publicPath: '/',
       filename: 'assets/[name].js',
     },
+    stats: 'normal',
     devServer: {
       port: 5000,
-      hot: false,
       historyApiFallback: true,
-      overlay: true,
-      index: 'index',
-      contentBase: join(__dirname, 'build'),
-      staticOptions: {
-        extensions: ['.htm', '.html'],
+      hot: true,
+      client: {
+        overlay: true,
       },
-      stats: {
-        all: false,
-        errors: true,
-        timings: true,
-        warnings: true,
+      static: {
+        directory: join(__dirname, 'demo'),
       },
     },
     plugins: Object.keys(entry).map(
@@ -104,10 +101,9 @@ function makeDevConfig() {
           meta: {
             viewport: 'width=device-width, initial-scale=1',
           },
-          // intentionally omit the ".html" from the filename
-          filename: `${name}`,
+          filename: `${name}.html`,
           chunks: [name],
-          title: 'React Preview',
+          title: `Plexus - Demo`,
         })
     ),
   };
@@ -119,7 +115,20 @@ function makeDevConfig() {
         {
           loader: 'html-loader',
           options: {
-            attrs: ['img:src', 'link:href'],
+            sources: {
+              list: [
+                {
+                  tag: 'img',
+                  attribute: 'src',
+                  type: 'src',
+                },
+                {
+                  tag: 'link',
+                  attribute: 'href',
+                  type: 'src',
+                },
+              ],
+            },
           },
         },
       ],
@@ -127,60 +136,33 @@ function makeDevConfig() {
     {
       test: /\.css$/,
       exclude: [/\.module\.css$/],
-      use: [
-        {
-          loader: 'style-loader',
-        },
-        {
-          loader: 'css-loader',
-          options: {
-            importLoaders: 0,
-          },
-        },
-      ],
+      use: ['style-loader', 'css-loader'],
     },
     {
       test: /\.module\.css$/,
       use: [
-        {
-          loader: 'style-loader',
-        },
+        'style-loader',
         {
           loader: 'css-loader',
           options: {
-            importLoaders: 0,
             modules: true,
           },
         },
       ],
     },
     {
-      test: /\.(eot|ttf|woff|woff2)(\?v=\d+\.\d+\.\d+)?$/,
-      use: [
-        {
-          loader: 'file-loader',
-          options: {
-            name: 'assets/[name].[ext]',
-          },
-        },
-      ],
-    },
-    {
-      test: /\.(ico|png|jpg|jpeg|gif|svg|webp)(\?v=\d+\.\d+\.\d+)?$/,
-      use: [
-        {
-          loader: 'url-loader',
-          options: {
-            limit: 8192,
-            name: 'assets/[name].[ext]',
-          },
-        },
-      ],
+      test: /\.(eot|ttf|woff|woff2|ico|png|jpg|jpeg|gif|svg|webp)$/,
+      type: 'asset',
+      generator: {
+        filename: 'assets/[name][ext]',
+      },
     },
   ];
+
   return { config, rules };
 }
 
+// Common production optimizations
 function makeCommonProdConfig() {
   return {
     optimization: {
@@ -191,6 +173,7 @@ function makeCommonProdConfig() {
   };
 }
 
+// Configuration for workers (e.g., layout.worker.tsx)
 function makeWorkerConfig() {
   const layoutDir = join(__dirname, 'src/LayoutManager');
   const config = {
@@ -224,6 +207,7 @@ function makeWorkerConfig() {
   return { config, rules };
 }
 
+// UMD build for distribution (e.g., library export)
 function makeUmdConfig() {
   const config = {
     ...makeCommonProdConfig(),
@@ -241,6 +225,7 @@ function makeUmdConfig() {
   return { config, rules: [] };
 }
 
+// Factory mapping for different build modes
 const FACTORIES = {
   development: makeDevConfig,
   'layout-worker': makeWorkerConfig,
