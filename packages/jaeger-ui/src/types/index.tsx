@@ -47,7 +47,7 @@ export type LocationState = {
 
 export type ReduxState = {
   archive: TracesArchive;
-  type: Action;
+  type: string;
   config: Config;
   ddg: TDdgState;
   dependencies: {
