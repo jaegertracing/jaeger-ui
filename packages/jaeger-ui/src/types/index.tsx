@@ -27,6 +27,7 @@ import { Trace } from './trace';
 import TTraceDiffState from './TTraceDiffState';
 import TTraceTimeline from './TTraceTimeline';
 import { MetricsReduxState } from './metrics';
+import { Action } from 'redux';
 
 export type TNil = tNil;
 export type IWebAnalytics = iWebAnalytics;
@@ -46,7 +47,7 @@ export type LocationState = {
 
 export type ReduxState = {
   archive: TracesArchive;
-  type: string;
+  type: Action;
   config: Config;
   ddg: TDdgState;
   dependencies: {
