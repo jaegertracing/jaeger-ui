@@ -17,9 +17,7 @@ import * as React from 'react';
 import { render } from 'react-dom';
 
 import largeDag, { getNodeLabel as getLargeNodeLabel, TLargeNode } from './data-large';
-import { edges as dagEdges, vertices as dagVertices } from './data-dag';
-import { colored as colorData, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
-import { Digraph, DirectedGraph, LayoutManager } from '../../src';
+import { Digraph, LayoutManager } from '../../src';
 import cacheAs from '../../src/cacheAs';
 import { TLayer, TRendererUtils, TMeasureNodeUtils } from '../../src/Digraph/types';
 import { TVertex, TLayoutEdge, TLayoutVertex } from '../../src/types';
@@ -31,7 +29,6 @@ type TState = {
   hoveredEdge: TLayoutEdge<any> | null;
 };
 
-const { classNameIsSmall } = DirectedGraph.propsFactories;
 const { classNameIsSmall: layeredClassNameIsSmall, scaleStrokeOpacity } = Digraph.propsFactories;
 
 const VOWELS = new Set(['a', 'e', 'i', 'o', 'u', 'y']);
@@ -446,87 +443,6 @@ class Demo extends React.PureComponent<{}, TState> {
               }))}
             />
           </div>
-        </div>
-        <h1>Directed graph with cycles - dot edges</h1>
-        <div>
-          <div className="DemoGraph">
-            <DirectedGraph
-              zoom
-              minimap
-              arrowScaleDampener={0.8}
-              className="DemoGraph--dag"
-              getNodeLabel={getLargeNodeLabel}
-              layoutManager={new LayoutManager({ useDotEdges: true })}
-              minimapClassName="Demo--miniMap"
-              setOnNode={setOnNode}
-              setOnRoot={classNameIsSmall}
-              {...largeDag}
-            />
-          </div>
-        </div>
-        <h1>Directed graph with cycles - neato edges</h1>
-        <div>
-          <div className="DemoGraph">
-            <DirectedGraph
-              zoom
-              minimap
-              arrowScaleDampener={0.8}
-              className="DemoGraph--dag"
-              getNodeLabel={getLargeNodeLabel}
-              layoutManager={new LayoutManager()}
-              minimapClassName="Demo--miniMap"
-              setOnNode={setOnNode}
-              setOnRoot={classNameIsSmall}
-              {...largeDag}
-            />
-          </div>
-        </div>
-        <h1>Directed graph with cycles - dot edges - polylines</h1>
-        <div>
-          <div className="DemoGraph">
-            <DirectedGraph
-              zoom
-              minimap
-              arrowScaleDampener={0.8}
-              className="DemoGraph--dag"
-              getNodeLabel={getLargeNodeLabel}
-              layoutManager={
-                new LayoutManager({
-                  useDotEdges: true,
-                  splines: 'polyline',
-                  ranksep: 8,
-                })
-              }
-              minimapClassName="Demo--miniMap"
-              setOnNode={setOnNode}
-              setOnRoot={classNameIsSmall}
-              {...largeDag}
-            />
-          </div>
-        </div>
-        <h1>Small graph with data driven rendering</h1>
-        <DirectedGraph
-          className="DemoGraph--dag"
-          getNodeLabel={colorData ? getColorNodeLabel : null}
-          layoutManager={new LayoutManager()}
-          setOnEdgePath={colorData ? setOnColorEdge : null}
-          setOnEdgesContainer={addAnAttr}
-          setOnNode={colorData ? setOnColorNode : null}
-          setOnNodesContainer={addAnAttr}
-          {...colorData}
-        />
-        <h1>Medium DAG</h1>
-        <div className="DemoGraph">
-          <DirectedGraph
-            className="DemoGraph--dag"
-            edges={dagEdges}
-            layoutManager={new LayoutManager({ useDotEdges: true })}
-            minimapClassName="Demo--miniMap"
-            setOnNode={setOnNode}
-            vertices={dagVertices}
-            minimap
-            zoom
-          />
         </div>
       </div>
     );
