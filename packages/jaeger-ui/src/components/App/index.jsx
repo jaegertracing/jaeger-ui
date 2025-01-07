@@ -14,7 +14,7 @@
 
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
-import { Route, Redirect, Switch, Router } from 'react-router-dom';
+import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
 
 import { ConfigProvider } from 'antd';
 import { defaultTheme } from '@ant-design/compatible';
@@ -42,8 +42,7 @@ import '../common/vars.css';
 import '../common/utils.css';
 import 'antd/dist/reset.css';
 import './index.css';
-import { history, store } from '../../utils/configure-store';
-import { HistoryProvider } from '../../utils/useHistory';
+import { store } from '../../utils/configure-store';
 
 const jaegerTheme = {
   token: {
@@ -88,49 +87,22 @@ export default class JaegerUIApp extends Component {
     return (
       <ConfigProvider theme={jaegerTheme}>
         <Provider store={store}>
-          <HistoryProvider history={history}>
-            <Router history={history}>
-              <Page>
-                <Switch>
-                  <Route path={searchPath}>
-                    <SearchTracePage />
-                  </Route>
-                  <Route path={traceDiffPath}>
-                    <TraceDiff />
-                  </Route>
-                  <Route path={tracePath}>
-                    <TracePage />
-                  </Route>
-                  <Route path={dependenciesPath}>
-                    <DependencyGraph />
-                  </Route>
-                  <Route path={deepDependenciesPath}>
-                    <DeepDependencies />
-                  </Route>
-                  <Route path={qualityMetricsPath}>
-                    <QualityMetrics />
-                  </Route>
-                  <Route path={monitorATMPath}>
-                    <MonitorATMPage />
-                  </Route>
-
-                  <Route exact path="/">
-                    <Redirect to={searchPath} />
-                  </Route>
-                  <Route exact path={prefixUrl()}>
-                    <Redirect to={searchPath} />
-                  </Route>
-                  <Route exact path={prefixUrl('/')}>
-                    <Redirect to={searchPath} />
-                  </Route>
-
-                  <Route>
-                    <NotFound />
-                  </Route>
-                </Switch>
-              </Page>
-            </Router>
-          </HistoryProvider>
+         
+            <Page>
+              <Routes>
+                <Route path={searchPath} element={<SearchTracePage />} />
+                <Route path={traceDiffPath} element={<TraceDiff />} />
+                <Route path={tracePath} element={<TracePage />} />
+                <Route path={dependenciesPath} element={<DependencyGraph />} />
+                <Route path={deepDependenciesPath} element={<DeepDependencies />} />
+                <Route path={qualityMetricsPath} element={<QualityMetrics />} />
+                <Route path={monitorATMPath} element={<MonitorATMPage />} />
+                <Route path="/" element={<Navigate to={searchPath} replace />} />
+                <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
+                <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Page>
         </Provider>
       </ConfigProvider>
     );

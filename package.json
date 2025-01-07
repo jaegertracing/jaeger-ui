@@ -64,5 +64,9 @@
     "hooks": {
       "pre-commit": "npm-run-all -ln --parallel lint test"
     }
+  },
+  "dependencies": {
+    "@types/react-router-dom": "^5.3.3",
+    "react-router-dom": "^7.1.1"
   }
 }

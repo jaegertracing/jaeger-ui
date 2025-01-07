@@ -25,3 +25,5 @@ yarn-error.log
 # scripts
 scripts/release-notes.py
 scripts/draft-release.py
+
+.codegpt
