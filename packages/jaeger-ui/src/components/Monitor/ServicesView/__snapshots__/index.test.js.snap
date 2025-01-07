@@ -16,8 +16,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         </h2>
         <SearchableSelect
           className="select-a-service-input"
-          disabled={null}
-          loading={null}
           onChange={[Function]}
           placeholder="Select A Service"
           value="s1"
@@ -46,8 +44,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         </h2>
         <SearchableSelect
           className="span-kind-selector"
-          disabled={null}
-          loading={null}
           onChange={[Function]}
           placeholder="Select A Span Kind"
           value="server"
@@ -113,8 +109,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
       >
         <SearchableSelect
           className="select-a-timeframe-input"
-          disabled={null}
-          loading={null}
           onChange={[Function]}
           placeholder="Select A Timeframe"
           value={3600000}
@@ -420,7 +414,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
             "opsLatencies": null,
           }
         }
-        loading={null}
         lookback={3600000}
         serviceName="s1"
       />
@@ -465,8 +458,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
         </h2>
         <SearchableSelect
           className="select-a-service-input"
-          disabled={null}
-          loading={null}
           onChange={[Function]}
           placeholder="Select A Service"
           value="s1"
@@ -482,8 +473,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
         </h2>
         <SearchableSelect
           className="span-kind-selector"
-          disabled={null}
-          loading={null}
           onChange={[Function]}
           placeholder="Select A Span Kind"
           value="server"
@@ -549,8 +538,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
       >
         <SearchableSelect
           className="select-a-timeframe-input"
-          disabled={null}
-          loading={null}
           onChange={[Function]}
           placeholder="Select A Timeframe"
           value={3600000}
@@ -775,7 +762,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
             "opsLatencies": null,
           }
         }
-        loading={null}
         lookback={3600000}
         serviceName="s1"
       />
@@ -820,8 +806,6 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
         </h2>
         <SearchableSelect
           className="select-a-service-input"
-          disabled={null}
-          loading={null}
           onChange={[Function]}
           placeholder="Select A Service"
           value="s1"
@@ -837,8 +821,6 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
         </h2>
         <SearchableSelect
           className="span-kind-selector"
-          disabled={null}
-          loading={null}
           onChange={[Function]}
           placeholder="Select A Span Kind"
           value="server"
@@ -904,8 +886,6 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
       >
         <SearchableSelect
           className="select-a-timeframe-input"
-          disabled={null}
-          loading={null}
           onChange={[Function]}
           placeholder="Select A Timeframe"
           value={3600000}
@@ -1131,7 +1111,6 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
             "opsLatencies": null,
           }
         }
-        loading={null}
         lookback={3600000}
         serviceName="s1"
       />
