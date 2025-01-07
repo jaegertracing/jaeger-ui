@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import promiseMiddleware from 'redux-promise-middleware';
-import { change } from 'redux-form';
 import { replace } from 'redux-first-history';
 
 import { searchTraces, fetchServiceOperations } from '../actions/jaeger-api';
@@ -26,13 +25,19 @@ export { default as trackMiddleware } from './track';
  */
 export const loadOperationsForServiceMiddleware = store => next => action => {
   if (
-    action.type === '@@redux-form/CHANGE' &&
+    action.type === 'FORM_CHANGE' &&
     action.meta.form === 'searchSideBar' &&
     action.meta.field === 'service' &&
     action.payload !== '-'
   ) {
     store.dispatch(fetchServiceOperations(action.payload));
-    store.dispatch(change('searchSideBar', 'operation', 'all'));
+    store.dispatch({
+      type: 'FORM_CHANGE',
+      meta: {
+        form: 'searchSideBar',
+        field: 'operation',
+      }
+    })
   }
   return next(action);
 };
