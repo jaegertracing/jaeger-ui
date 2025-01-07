@@ -721,7 +721,7 @@ const originInitialState = {
   },
   isATMActivated: null,
   loading: false,
-  operationMetricsLoading: null,
+  operationMetricsLoading: undefined,
   serviceMetrics: null,
   serviceOpsMetrics: undefined,
 };
