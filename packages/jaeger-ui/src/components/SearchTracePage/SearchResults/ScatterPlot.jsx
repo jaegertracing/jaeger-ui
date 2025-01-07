@@ -15,13 +15,19 @@
 import React, { useRef, useState, useLayoutEffect } from 'react';
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
-import { XYPlot, XAxis, YAxis, MarkSeries, Hint } from 'react-vis';
+import { ScatterChart, XAxis, YAxis, ZAxis, Scatter, Tooltip, ResponsiveContainer, Cell, Label } from 'recharts';
 
 import { FALLBACK_TRACE_NAME } from '../../../constants';
 import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
 
-import 'react-vis/dist/style.css';
 import './ScatterPlot.css';
+
+export const CustomTooltip = ({ overValue }) => {
+  if (overValue) {
+    return <h4 className="scatter-plot-hint">{overValue.current?.name || FALLBACK_TRACE_NAME}</h4>;
+  }
+  return null;
+};
 
 export default function ScatterPlot(props) {
   const { data, onValueClick, calculateContainerWidth } = props;
@@ -29,14 +35,14 @@ export default function ScatterPlot(props) {
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
-  const [overValue, setValueOver] = useState(null);
+  const overValue = useRef();
 
   const onValueOver = value => {
-    setValueOver(value);
+    overValue.current = value;
   };
 
   const onValueOut = () => {
-    setValueOver(null);
+    overValue.current = null;
   };
 
   useLayoutEffect(() => {
@@ -54,37 +60,63 @@ export default function ScatterPlot(props) {
     return () => window.removeEventListener('resize', updateContainerWidth);
   }, []);
 
+  function generateTicks() {
+    const start = data[data.length - 1].x;
+    const end = data[0].x;
+
+    const step = (end - start) / 3; // Divide range into 3 equal steps
+    return [start, start + step, start + 2 * step, end];
+  }
+
   return (
     <div className="TraceResultsScatterPlot" ref={containerRef}>
       {containerWidth && (
-        <XYPlot
-          margin={{
-            left: 70,
-          }}
-          width={containerWidth}
-          colorType="literal"
-          height={200}
-        >
-          <XAxis
-            title="Time"
-            tickTotal={4}
-            tickFormat={t => dayjs(t / ONE_MILLISECOND).format('hh:mm:ss a')}
-          />
-          <YAxis title="Duration" tickTotal={3} tickFormat={t => formatDuration(t)} />
-          <MarkSeries
-            sizeRange={[3, 10]}
-            opacity={0.5}
-            onValueClick={onValueClick}
-            onValueMouseOver={onValueOver}
-            onValueMouseOut={onValueOut}
-            data={data}
-          />
-          {overValue && (
-            <Hint value={overValue}>
-              <h4 className="scatter-plot-hint">{overValue.name || FALLBACK_TRACE_NAME}</h4>
-            </Hint>
-          )}
-        </XYPlot>
+        <ResponsiveContainer width="100%" height={200}>
+          <ScatterChart width={containerWidth} margin={{ bottom: 20, left: 10, right: 30 }}>
+            <Scatter
+              data={data}
+              fillOpacity={0.5}
+              onClick={onValueClick}
+              onMouseOver={onValueOver}
+              onMouseOut={onValueOut}
+            >
+              {data.map(entry => (
+                <Cell key={`cell-${entry.traceID}`} fill={entry.color} />
+              ))}
+            </Scatter>
+
+            <XAxis
+              dataKey="x"
+              reversed
+              tickFormatter={t => dayjs(t / ONE_MILLISECOND).format('hh:mm:ss a')}
+              fontSize="11px"
+              tickLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
+              axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
+              scale="time"
+              ticks={generateTicks()}
+              interval={0}
+              allowDataOverflow={true}
+            >
+              <Label value="Time" fontSize="11px" position="bottom" />
+            </XAxis>
+            <YAxis
+              dataKey="y"
+              tickFormatter={t => formatDuration(t)}
+              fontSize="11px"
+              tickLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
+              axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
+            >
+              <Label value="Trace Duration" angle={-90} fontSize="11px" position="insideLeft" offset={0} style={{ textAnchor: 'middle' }} />
+            </YAxis>
+
+            <ZAxis dataKey="size" type="number" range={[90, 300]} />
+            <Tooltip
+              isAnimationActive={false}
+              cursor={false}
+              content={<CustomTooltip overValue={overValue} />}
+            />
+          </ScatterChart>
+        </ResponsiveContainer>
       )}
     </div>
   );
