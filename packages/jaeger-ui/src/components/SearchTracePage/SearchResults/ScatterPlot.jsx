@@ -30,7 +30,7 @@ export const CustomTooltip = ({ overValue }) => {
 };
 
 export default function ScatterPlot(props) {
-  const { data, onValueClick, calculateContainerWidth } = props;
+  const { data, onValueClick, calculateContainerWidth = container => container.clientWidth } = props;
 
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -134,9 +134,4 @@ ScatterPlot.propTypes = {
   data: PropTypes.arrayOf(valueShape).isRequired,
   onValueClick: PropTypes.func.isRequired,
   calculateContainerWidth: PropTypes.func,
-};
-
-ScatterPlot.defaultProps = {
-  // JSDOM does not, as of 2023, have a layout engine, so allow tests to supply a mock width as a workaround.
-  calculateContainerWidth: container => container.clientWidth,
 };
