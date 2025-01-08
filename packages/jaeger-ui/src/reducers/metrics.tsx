@@ -46,7 +46,7 @@ const initialState: MetricsReduxState = {
   },
   isATMActivated: null,
   loading: false,
-  operationMetricsLoading: null,
+  operationMetricsLoading: undefined,
   serviceMetrics: null,
   serviceOpsMetrics: undefined,
 };
