@@ -21,11 +21,14 @@
     "@babel/preset-env": "^7.25.4",
     "@babel/preset-react": "7.26.3",
     "@babel/preset-typescript": "7.26.0",
+    "@testing-library/react": "^16.1.0",
     "@types/d3-zoom": "3.0.8",
     "@types/react": "^18.3.11",
     "@types/react-dom": "18.3.0",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/web-worker": "^2.1.8",
     "babel-loader": "9.2.1",
     "babel-plugin-transform-react-remove-prop-types": "0.4.24",
     "clean-webpack-plugin": "4.0.0",
@@ -38,6 +41,7 @@
     "react-dom": "^18.3.1",
     "rimraf": "6.0.1",
     "style-loader": "4.0.0",
+    "vitest": "^2.1.8",
     "webpack": "^5.92.0",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.0.4",
@@ -67,6 +71,6 @@
     "coverage": "echo 'NO TESTS YET'",
     "prepublishOnly": "npm run build",
     "start": "NODE_ENV='development' npm-run-all -ln --serial _tasks/clean/worker _tasks/bundle-worker --parallel '_tasks/bundle-worker --watch' _tasks/dev-server",
-    "test": "echo 'NO TESTS YET'"
+    "test": "vitest"
   }
 }
