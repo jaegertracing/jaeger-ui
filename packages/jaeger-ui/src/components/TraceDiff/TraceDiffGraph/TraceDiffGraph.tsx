@@ -121,7 +121,7 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
               layerType: 'html',
             },
           ]}
-          setOnGraph={classNameIsSmall}
+          setOnGraph={[classNameIsSmall, { style: { position: 'static' } }]}
           edges={edges}
           vertices={vertices}
         />
