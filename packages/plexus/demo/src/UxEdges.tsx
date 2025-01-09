@@ -17,7 +17,6 @@ import * as React from 'react';
 import { render } from 'react-dom';
 
 import { LayoutManager } from '../../src';
-// TODO(joe): Update import after killing `DirectedGraph`
 import Digraph from '../../src/Digraph';
 import { TVertex } from '../../src/types';
 

@@ -124,7 +124,7 @@ export type MetricsReduxState = {
   };
   isATMActivated: null | boolean;
   loading: boolean;
-  operationMetricsLoading: null | boolean;
+  operationMetricsLoading: undefined | boolean;
   serviceMetrics: ServiceMetrics | null;
   serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
 };

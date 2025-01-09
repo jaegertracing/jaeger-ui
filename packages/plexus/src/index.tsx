@@ -14,8 +14,7 @@
 
 import cacheAs from './cacheAs';
 import Digraph from './Digraph';
-import DirectedGraph from './DirectedGraph';
 import LayoutManager from './LayoutManager';
 
-export default { cacheAs, Digraph, DirectedGraph, LayoutManager };
-export { cacheAs, Digraph, DirectedGraph, LayoutManager };
+export default { cacheAs, Digraph, LayoutManager };
+export { cacheAs, Digraph, LayoutManager };
