@@ -12,11 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Store } from 'redux';
-
 import * as constants from '../../constants/search-form';
 import { trackEvent } from '../../utils/tracking';
-import { ReduxState } from '../../types';
 
 export const ACTION_SET = 'set';
 export const ACTION_CLEAR = 'clear';
@@ -49,10 +46,6 @@ export function trackFormInput(
   trackEvent(CATEGORY_SERVICE, serviceName);
 }
 
-export const middlewareHooks = {
-  [constants.FORM_CHANGE_ACTION_TYPE]: (_: Store<ReduxState>, action: any) => {
-    if (action.meta.form === 'sortBy') {
-      trackEvent(CATEGORY_SORTBY, action.payload);
-    }
-  },
-};
+export function trackSortByChange(sortBy: string) {
+  trackEvent(CATEGORY_SORTBY, sortBy);
+}

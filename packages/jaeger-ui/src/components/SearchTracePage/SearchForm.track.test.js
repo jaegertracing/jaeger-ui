@@ -16,7 +16,6 @@
 jest.mock('../../utils/tracking');
 
 import {
-  middlewareHooks,
   trackFormInput,
   CATEGORY_LIMIT,
   CATEGORY_LOOKBACK,
@@ -26,16 +25,15 @@ import {
   CATEGORY_SORTBY,
   CATEGORY_TAGS,
   CATEGORY_SERVICE,
+  trackSortByChange,
 } from './SearchForm.track';
-import { FORM_CHANGE_ACTION_TYPE } from '../../constants/search-form';
 import { trackEvent } from '../../utils/tracking';
 
 describe('GA tracking', () => {
   it('tracks changing sort criteria', () => {
-    const action = { meta: { form: 'sortBy' }, payload: 'MOST_RECENT' };
-    middlewareHooks[FORM_CHANGE_ACTION_TYPE]({}, action);
-    expect(trackEvent.mock.calls.length).toBe(1);
-    expect(trackEvent.mock.calls[0]).toEqual([CATEGORY_SORTBY, expect.any(String)]);
+    trackEvent.mockClear();
+    trackSortByChange('MOST_RECENT');
+    expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SORTBY, 'MOST_RECENT');
   });
 
   it('sends form input to GA', () => {

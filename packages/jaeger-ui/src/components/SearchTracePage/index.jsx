@@ -23,10 +23,11 @@ import store from 'store';
 import memoizeOne from 'memoize-one';
 
 import SearchForm from './SearchForm';
-import SearchResults, { sortFormSelector } from './SearchResults';
+import SearchResults from './SearchResults';
 import { isSameQuery, getUrl, getUrlState } from './url';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import * as fileReaderActions from '../../actions/file-reader-api';
+import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { getLocation as getTraceLocation } from '../TracePage/url';
@@ -39,9 +40,14 @@ import FileLoader from './FileLoader';
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
 import withRouteProps from '../../utils/withRouteProps';
+import { trackSortByChange } from './SearchForm.track';
 
 // export for tests
 export class SearchTracePageImpl extends Component {
+  state = {
+    sortBy: orderBy.MOST_RECENT,
+  };
+
   componentDidMount() {
     const {
       diffCohort,
@@ -70,6 +76,11 @@ export class SearchTracePageImpl extends Component {
     }
   }
 
+  handleSortChange = sortBy => {
+    this.setState({ sortBy });
+    trackSortByChange(sortBy);
+  };
+
   goToTrace = traceID => {
     const { queryOfResults } = this.props;
     const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
@@ -89,12 +100,15 @@ export class SearchTracePageImpl extends Component {
       loadingTraces,
       maxTraceDuration,
       services,
-      traceResults,
       traceResultsToDownload,
       queryOfResults,
       loadJsonTraces,
       urlQueryParams,
+      sortedTracesXformer,
+      traces,
     } = this.props;
+    const { sortBy } = this.state;
+    const traceResults = sortedTracesXformer(traces, sortBy);
     const hasTraceResults = traceResults && traceResults.length > 0;
     const showErrors = errors && !loadingTraces;
     const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
@@ -145,6 +159,8 @@ export class SearchTracePageImpl extends Component {
               spanLinks={urlQueryParams && urlQueryParams.spanLinks}
               traces={traceResults}
               rawTraces={traceResultsToDownload}
+              sortBy={this.state.sortBy}
+              handleSortChange={this.handleSortChange}
             />
           )}
           {showLogo && (
@@ -162,8 +178,6 @@ export class SearchTracePageImpl extends Component {
 }
 SearchTracePageImpl.propTypes = {
   isHomepage: PropTypes.bool,
-  // eslint-disable-next-line react/forbid-prop-types
-  traceResults: PropTypes.array,
   // eslint-disable-next-line react/forbid-prop-types
   traceResultsToDownload: PropTypes.array,
   // eslint-disable-next-line react/forbid-prop-types
@@ -270,8 +284,6 @@ export function mapStateToProps(state) {
   if (serviceError) {
     errors.push(serviceError);
   }
-  const sortBy = sortFormSelector(state, 'sortBy');
-  const traceResults = sortedTracesXformer(traces, sortBy);
   return {
     queryOfResults,
     diffCohort,
@@ -281,11 +293,11 @@ export function mapStateToProps(state) {
     disableFileUploadControl,
     loadingTraces,
     services,
-    traceResults,
+    traces,
     traceResultsToDownload: rawTraces,
     errors: errors.length ? errors : null,
     maxTraceDuration: maxDuration,
-    sortTracesBy: sortBy,
+    sortedTracesXformer,
     urlQueryParams: Object.keys(query).length > 0 ? query : null,
   };
 }
