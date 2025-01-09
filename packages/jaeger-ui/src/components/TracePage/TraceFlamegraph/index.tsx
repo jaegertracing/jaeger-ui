@@ -20,6 +20,7 @@ import './index.css';
 
 const TraceFlamegraph = ({ trace }: any) => {
   // Cloned b/c convertJaegerTraceToProfile or FlamegraphRenderer can possibly mutate the trace
+  // https://github.com/jaegertracing/jaeger-ui/issues/2483
   const convertedProfile = trace && trace.data ? convertJaegerTraceToProfile(_cloneDeep(trace.data)) : null;
 
   return (
