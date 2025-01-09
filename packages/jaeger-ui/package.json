@@ -25,7 +25,6 @@
     "@types/react-router-dom": "^5.1.0",
     "@types/react-window": "^1.8.0",
     "@types/redux-actions": "2.2.1",
-    "@types/redux-form": "^8.3.10",
     "@vitejs/plugin-legacy": "^6.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "@wojtekmaj/enzyme-adapter-react-17": "^0.8.0",
