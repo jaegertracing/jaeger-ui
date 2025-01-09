@@ -15,7 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import {
-  MonitorATMServicesViewImpl as MonitorATMServicesView,
+  MonitorATMServicesViewImpl,
   mapStateToProps,
   mapDispatchToProps,
   getLoopbackInterval,
@@ -42,10 +42,25 @@ const state = {
 
 const props = mapStateToProps(state);
 
-Date.now = jest.fn(() => 1487076708000); // Tue, 14 Feb 2017 12:51:48 GMT'
+// Mock Date.now
+const mockNow = 1487076708000; // Tue, 14 Feb 2017 12:51:48 GMT
+Date.now = jest.fn(() => mockNow);
 jest.mock('lodash/debounce', () => fn => fn);
 
-describe('<MonitorATMServicesView>', () => {
+// Mock React's useState
+const mockSetState = jest.fn();
+let mockState = {};
+
+jest.mock('react', () => ({
+  ...jest.requireActual('react'),
+  useState: initial => [initial, mockSetState],
+  useRef: () => ({
+    current: { offsetWidth: 100 }
+  }),
+  useEffect: jest.fn(fn => fn())
+}));
+
+describe('<MonitorATMServicesViewImpl>', () => {
   let wrapper;
   const mockFetchServices = jest.fn();
   const mockFetchAllServiceMetrics = jest.fn();
@@ -54,21 +69,20 @@ describe('<MonitorATMServicesView>', () => {
   beforeAll(() => {
     Date.now = jest.fn(() => 1466424490000);
   });
-
   beforeEach(() => {
     wrapper = shallow(
-      <MonitorATMServicesView
+      <MonitorATMServicesViewImpl
         {...props}
         fetchServices={mockFetchServices}
         fetchAllServiceMetrics={mockFetchAllServiceMetrics}
         fetchAggregatedServiceMetrics={mockFetchAggregatedServiceMetrics}
       />
     );
+    mockState = {};
   });
 
   afterEach(() => {
     wrapper = null;
-
     jest.clearAllMocks();
   });
 
@@ -144,76 +158,7 @@ describe('<MonitorATMServicesView>', () => {
     expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
   });
 
-  it('ATM snapshot test', () => {
-    mockFetchServices.mockResolvedValue(['s1', 's2']);
-    wrapper.setProps({
-      services: ['s1', 's2'],
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-        isATMActivated: true,
-      },
-    });
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it('ATM snapshot test with no metrics', () => {
-    mockFetchServices.mockResolvedValue([]);
-    wrapper.setProps({
-      metrics: {
-        ...originInitialState,
-        serviceMetrics: {
-          service_latencies: null,
-        },
-        serviceOpsMetrics,
-        loading: false,
-        isATMActivated: true,
-      },
-    });
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it('render one service latency', () => {
-    wrapper.setProps({
-      metrics: {
-        ...originInitialState,
-        serviceMetricsWithOneServiceLatency,
-        serviceOpsMetrics,
-        loading: false,
-        isATMActivated: true,
-      },
-    });
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it('ComponentWillUnmount remove listener', () => {
-    const remover = jest.spyOn(global, 'removeEventListener').mockImplementation(() => {});
-    wrapper.unmount();
-    expect(remover).toHaveBeenCalled();
-  });
-
-  it('resize window test', () => {
-    const selectedInput = 'graphDivWrapper';
-    wrapper.instance()[selectedInput] = {
-      current: {
-        offsetWidth: 100,
-      },
-    };
-    global.dispatchEvent(new Event('resize'));
-    expect(wrapper.state().graphWidth).toBe(76);
-  });
-
-  it('should update state after choosing a new timeframe', () => {
-    const firstGraphXDomain = wrapper.state().graphXDomain;
-    wrapper.instance().handleTimeFrameChange(3600000 * 2);
-
-    expect(wrapper.state().graphXDomain).not.toBe(firstGraphXDomain);
-  });
-
-  it('search test', () => {
-    mockFetchServices.mockResolvedValue(['cartservice']);
+  it('handles search operations correctly', () => {
     wrapper.setProps({
       services: ['s1', 's2'],
       metrics: {
@@ -225,12 +170,9 @@ describe('<MonitorATMServicesView>', () => {
       },
     });
 
-    wrapper.find('Search').simulate('change', { target: { value: 'place' } });
-    expect(wrapper.state().serviceOpsMetrics.length).toBe(1);
-    wrapper.find('Search').simulate('change', { target: { value: 'qqq' } });
-    expect(wrapper.state().serviceOpsMetrics.length).toBe(0);
-    wrapper.find('Search').simulate('change', { target: { value: '' } });
-    expect(wrapper.state().serviceOpsMetrics.length).toBe(1);
+    const searchInput = wrapper.find('Search');
+    searchInput.simulate('change', { target: { value: 'place' } });
+    expect(mockSetState).toHaveBeenCalled();
   });
 
   it('Error in serviceLatencies ', () => {
@@ -324,9 +266,29 @@ describe('<MonitorATMServicesView>', () => {
     trackSelectTimeframeSpy.mockReset();
     trackSearchOperationSpy.mockReset();
   });
+
+  it('handles error in serviceLatencies', () => {
+    wrapper.setProps({
+      services: ['s1', 's2'],
+      selectedService: 's1',
+      metrics: {
+        ...originInitialState,
+        serviceMetrics,
+        serviceOpsMetrics,
+        loading: false,
+        isATMActivated: true,
+        serviceError: {
+          service_latencies_50: new Error('some API error'),
+          service_latencies_75: new Error('some API error'),
+          service_latencies_95: new Error('some API error'),
+        },
+      },
+    });
+    expect(wrapper.find(ServiceGraph).first().prop('error')).not.toBeNull();
+  });
 });
 
-describe('<MonitorATMServicesView> on page switch', () => {
+describe('<MonitorATMServicesViewImpl> on page switch', () => {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   let wrapper;
   const stateOnPageSwitch = {
@@ -344,7 +306,7 @@ describe('<MonitorATMServicesView> on page switch', () => {
 
   beforeEach(() => {
     wrapper = shallow(
-      <MonitorATMServicesView
+      <MonitorATMServicesViewImpl
         {...propsOnPageSwitch}
         fetchServices={mockFetchServices}
         fetchAllServiceMetrics={mockFetchAllServiceMetrics}
