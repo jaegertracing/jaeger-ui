@@ -15,7 +15,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import {
-  MonitorATMServicesViewImpl,
+  MonitorATMServicesViewImpl as MonitorATMServicesView,
   mapStateToProps,
   mapDispatchToProps,
   getLoopbackInterval,
@@ -60,7 +60,7 @@ jest.mock('react', () => ({
   useEffect: jest.fn(fn => fn())
 }));
 
-describe('<MonitorATMServicesViewImpl>', () => {
+describe('<MonitorATMServicesView>', () => {
   let wrapper;
   const mockFetchServices = jest.fn();
   const mockFetchAllServiceMetrics = jest.fn();
@@ -71,7 +71,7 @@ describe('<MonitorATMServicesViewImpl>', () => {
   });
   beforeEach(() => {
     wrapper = shallow(
-      <MonitorATMServicesViewImpl
+      <MonitorATMServicesView
         {...props}
         fetchServices={mockFetchServices}
         fetchAllServiceMetrics={mockFetchAllServiceMetrics}
@@ -288,7 +288,7 @@ describe('<MonitorATMServicesViewImpl>', () => {
   });
 });
 
-describe('<MonitorATMServicesViewImpl> on page switch', () => {
+describe('<MonitorATMServicesView> on page switch', () => {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   let wrapper;
   const stateOnPageSwitch = {
@@ -306,7 +306,7 @@ describe('<MonitorATMServicesViewImpl> on page switch', () => {
 
   beforeEach(() => {
     wrapper = shallow(
-      <MonitorATMServicesViewImpl
+      <MonitorATMServicesView
         {...propsOnPageSwitch}
         fetchServices={mockFetchServices}
         fetchAllServiceMetrics={mockFetchAllServiceMetrics}
