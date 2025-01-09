@@ -13,12 +13,14 @@
 // limitations under the License.
 import React from 'react';
 import { FlamegraphRenderer, convertJaegerTraceToProfile } from '@pyroscope/flamegraph';
+import _cloneDeep from 'lodash/cloneDeep';
 
 import '@pyroscope/flamegraph/dist/index.css';
 import './index.css';
 
 const TraceFlamegraph = ({ trace }: any) => {
-  const convertedProfile = trace && trace.data ? convertJaegerTraceToProfile(trace.data) : null;
+  // Cloned b/c convertJaegerTraceToProfile or FlamegraphRenderer can possibly mutate the trace
+  const convertedProfile = trace && trace.data ? convertJaegerTraceToProfile(_cloneDeep(trace.data)) : null;
 
   return (
     <div className="Flamegraph-wrapper">
