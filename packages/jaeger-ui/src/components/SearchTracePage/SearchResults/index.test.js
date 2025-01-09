@@ -15,9 +15,10 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import { createBlob, UnconnectedSearchResults as SearchResults } from '.';
+import { createBlob, UnconnectedSearchResults as SearchResults, SelectSort } from '.';
 import * as markers from './index.markers';
 import * as track from './index.track';
+import * as orderBy from '../../../model/order-by';
 import AltViewOptions from './AltViewOptions';
 import DiffSelection from './DiffSelection';
 import ResultItem from './ResultItem';
@@ -203,6 +204,31 @@ describe('<SearchResults>', () => {
         const contentFile = await readJsonFile({ file });
 
         return expect(JSON.stringify(contentFile)).toBe(content);
+      });
+    });
+
+    describe('<SelectSort>', () => {
+      let selectSortWrapper;
+      let handleSortChange;
+
+      beforeEach(() => {
+        handleSortChange = jest.fn();
+        selectSortWrapper = shallow(
+          <SelectSort sortBy={orderBy.MOST_RECENT} handleSortChange={handleSortChange} />
+        );
+      });
+
+      it('calls handleSortChange when selection changes', () => {
+        const select = selectSortWrapper.find('SearchableSelect');
+        select.simulate('change', orderBy.LONGEST_FIRST);
+        expect(handleSortChange).toHaveBeenCalledTimes(1);
+        expect(handleSortChange).toHaveBeenCalledWith(orderBy.LONGEST_FIRST);
+      });
+
+      it('updates selected value when sortBy prop changes', () => {
+        selectSortWrapper.setProps({ sortBy: orderBy.SHORTEST_FIRST });
+        const select = selectSortWrapper.find('SearchableSelect');
+        expect(select.prop('value')).toBe(orderBy.SHORTEST_FIRST);
       });
     });
   });

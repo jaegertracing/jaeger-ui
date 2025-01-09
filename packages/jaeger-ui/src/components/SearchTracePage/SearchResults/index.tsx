@@ -76,7 +76,7 @@ const Option = Select.Option;
 /**
  * Contains the dropdown to sort and filter trace search results
  */
-function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
+export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   return (
     <label>
       Sort:{' '}
