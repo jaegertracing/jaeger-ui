@@ -159,7 +159,7 @@ export function MonitorATMServicesViewImpl({
     if (currentService) {
       const newEndTime = Date.now();
       setEndTime(newEndTime);
-      
+
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
       store.set('lastAtmSearchService', getSelectedService());

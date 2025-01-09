@@ -55,9 +55,9 @@ jest.mock('react', () => ({
   ...jest.requireActual('react'),
   useState: initial => [initial, mockSetState],
   useRef: () => ({
-    current: { offsetWidth: 100 }
+    current: { offsetWidth: 100 },
   }),
-  useEffect: jest.fn(fn => fn())
+  useEffect: jest.fn(fn => fn()),
 }));
 
 describe('<MonitorATMServicesView>', () => {
