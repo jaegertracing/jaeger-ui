@@ -18,6 +18,7 @@
     "@testing-library/jest-dom": "^6.4.5",
     "@testing-library/react": "^15.0.7",
     "@types/deep-freeze": "^0.1.1",
+    "@types/history": "^4.7.11",
     "@types/lodash": "^4.17.0",
     "@types/object-hash": "^3.0.2",
     "@types/react": "^18.3.11",
