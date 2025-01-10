@@ -114,16 +114,12 @@ export default class JaegerUIApp extends Component {
                     <MonitorATMPage />
                   </Route>
 
-                  <Route exact path="/">
-                    <Redirect to={searchPath} />
-                  </Route>
-                  <Route exact path={prefixUrl()}>
-                    <Redirect to={searchPath} />
-                  </Route>
-                  <Route exact path={prefixUrl('/')}>
-                    <Redirect to={searchPath} />
-                  </Route>
-
+                  <Route exact path='/' render={() => <Redirect to={searchPath}/> }/>
+                    
+                  <Route exact path={prefixUrl()} render={() => <Redirect to={searchPath}/>}/>
+                    
+                  <Route exact path={prefixUrl('/')} render={() =>  <Redirect to={searchPath} />}/>
+                   
                   <Route>
                     <NotFound />
                   </Route>

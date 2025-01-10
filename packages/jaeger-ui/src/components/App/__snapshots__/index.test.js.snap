@@ -142,27 +142,18 @@ exports[`JaegerUIApp does not explode 1`] = `
             <Route
               exact={true}
               path="/"
-            >
-              <Redirect
-                to="/search"
-              />
-            </Route>
+              render={[Function]}
+            />
             <Route
               exact={true}
               path=""
-            >
-              <Redirect
-                to="/search"
-              />
-            </Route>
+              render={[Function]}
+            />
             <Route
               exact={true}
               path="/"
-            >
-              <Redirect
-                to="/search"
-              />
-            </Route>
+              render={[Function]}
+            />
             <Route>
               <NotFound />
             </Route>
