@@ -104,59 +104,59 @@ exports[`JaegerUIApp does not explode 1`] = `
       >
         <Memo(Connect(WithRouteProps))>
           <Switch>
-            <Route
+            <CompatRoute
               path="/search"
             >
               <WithRouteProps />
-            </Route>
-            <Route
+            </CompatRoute>
+            <CompatRoute
               path="/trace/:a?\\\\.\\\\.\\\\.:b?"
             >
               <WithRouteProps />
-            </Route>
-            <Route
+            </CompatRoute>
+            <CompatRoute
               path="/trace/:id"
             >
               <WithRouteProps />
-            </Route>
-            <Route
+            </CompatRoute>
+            <CompatRoute
               path="/dependencies"
             >
               <WithRouteProps />
-            </Route>
-            <Route
+            </CompatRoute>
+            <CompatRoute
               path="/deep-dependencies"
             >
               <WithRouteProps />
-            </Route>
-            <Route
+            </CompatRoute>
+            <CompatRoute
               path="/quality-metrics"
             >
               <WithRouteProps />
-            </Route>
-            <Route
+            </CompatRoute>
+            <CompatRoute
               path="/monitor"
             >
               <MonitorATMPage />
-            </Route>
-            <Route
+            </CompatRoute>
+            <CompatRoute
               exact={true}
               path="/"
               render={[Function]}
             />
-            <Route
+            <CompatRoute
               exact={true}
               path=""
               render={[Function]}
             />
-            <Route
+            <CompatRoute
               exact={true}
               path="/"
               render={[Function]}
             />
-            <Route>
+            <CompatRoute>
               <NotFound />
-            </Route>
+            </CompatRoute>
           </Switch>
         </Memo(Connect(WithRouteProps))>
       </Router>

@@ -14,7 +14,8 @@
 
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
-import { Route, Redirect, Switch, Router } from 'react-router-dom';
+import { Redirect, Switch, Router } from 'react-router-dom';
+import { CompatRoute } from "react-router-dom-v5-compat";
 
 import { ConfigProvider } from 'antd';
 import { defaultTheme } from '@ant-design/compatible';
@@ -92,37 +93,37 @@ export default class JaegerUIApp extends Component {
             <Router history={history}>
               <Page>
                 <Switch>
-                  <Route path={searchPath}>
+                  <CompatRoute path={searchPath}>
                     <SearchTracePage />
-                  </Route>
-                  <Route path={traceDiffPath}>
+                  </CompatRoute>
+                  <CompatRoute path={traceDiffPath}>
                     <TraceDiff />
-                  </Route>
-                  <Route path={tracePath}>
+                  </CompatRoute>
+                  <CompatRoute path={tracePath}>
                     <TracePage />
-                  </Route>
-                  <Route path={dependenciesPath}>
+                  </CompatRoute>
+                  <CompatRoute path={dependenciesPath}>
                     <DependencyGraph />
-                  </Route>
-                  <Route path={deepDependenciesPath}>
+                  </CompatRoute>
+                  <CompatRoute path={deepDependenciesPath}>
                     <DeepDependencies />
-                  </Route>
-                  <Route path={qualityMetricsPath}>
+                  </CompatRoute>
+                  <CompatRoute path={qualityMetricsPath}>
                     <QualityMetrics />
-                  </Route>
-                  <Route path={monitorATMPath}>
+                  </CompatRoute>
+                  <CompatRoute path={monitorATMPath}>
                     <MonitorATMPage />
-                  </Route>
+                  </CompatRoute>
 
-                  <Route exact path='/' render={() => <Redirect to={searchPath}/> }/>
+                  <CompatRoute exact path='/' render={() => <Redirect to={searchPath}/> }/>
                     
-                  <Route exact path={prefixUrl()} render={() => <Redirect to={searchPath}/>}/>
+                  <CompatRoute exact path={prefixUrl()} render={() => <Redirect to={searchPath}/>}/>
                     
-                  <Route exact path={prefixUrl('/')} render={() =>  <Redirect to={searchPath} />}/>
+                  <CompatRoute exact path={prefixUrl('/')} render={() =>  <Redirect to={searchPath} />}/>
                    
-                  <Route>
+                  <CompatRoute>
                     <NotFound />
-                  </Route>
+                  </CompatRoute>
                 </Switch>
               </Page>
             </Router>
