@@ -14,19 +14,11 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         >
           Service
         </h2>
-        <Field
-          component={[Function]}
-          name="service"
+        <SearchableSelect
+          className="select-a-service-input"
           onChange={[Function]}
           placeholder="Select A Service"
-          props={
-            Object {
-              "className": "select-a-service-input",
-              "disabled": null,
-              "loading": null,
-              "value": "s1",
-            }
-          }
+          value="s1"
         >
           <Option
             key="s1"
@@ -40,7 +32,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
           >
             s2
           </Option>
-        </Field>
+        </SearchableSelect>
       </Col>
       <Col
         span={6}
@@ -50,20 +42,11 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         >
           Span Kind
         </h2>
-        <Field
-          component={[Function]}
-          name="spanKind"
+        <SearchableSelect
+          className="span-kind-selector"
           onChange={[Function]}
           placeholder="Select A Span Kind"
-          props={
-            Object {
-              "className": "span-kind-selector",
-              "defaultValue": "server",
-              "disabled": null,
-              "loading": null,
-              "value": "server",
-            }
-          }
+          value="server"
         >
           <Option
             key="client"
@@ -95,7 +78,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
           >
             Consumer
           </Option>
-        </Field>
+        </SearchableSelect>
       </Col>
     </Row>
     <Row
@@ -124,23 +107,11 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
         className="timeframe-selector"
         span={8}
       >
-        <Field
-          component={[Function]}
-          name="timeframe"
+        <SearchableSelect
+          className="select-a-timeframe-input"
           onChange={[Function]}
           placeholder="Select A Timeframe"
-          props={
-            Object {
-              "className": "select-a-timeframe-input",
-              "defaultValue": Object {
-                "label": "Last Hour",
-                "value": 3600000,
-              },
-              "disabled": null,
-              "loading": null,
-              "value": 3600000,
-            }
-          }
+          value={3600000}
         >
           <Option
             key="300000"
@@ -196,7 +167,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
           >
             Last 2 days
           </Option>
-        </Field>
+        </SearchableSelect>
       </Col>
     </Row>
     <Row>
@@ -443,7 +414,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test 1`] = `
             "opsLatencies": null,
           }
         }
-        loading={null}
         lookback={3600000}
         serviceName="s1"
       />
@@ -486,19 +456,11 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
         >
           Service
         </h2>
-        <Field
-          component={[Function]}
-          name="service"
+        <SearchableSelect
+          className="select-a-service-input"
           onChange={[Function]}
           placeholder="Select A Service"
-          props={
-            Object {
-              "className": "select-a-service-input",
-              "disabled": null,
-              "loading": null,
-              "value": "s1",
-            }
-          }
+          value="s1"
         />
       </Col>
       <Col
@@ -509,20 +471,11 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
         >
           Span Kind
         </h2>
-        <Field
-          component={[Function]}
-          name="spanKind"
+        <SearchableSelect
+          className="span-kind-selector"
           onChange={[Function]}
           placeholder="Select A Span Kind"
-          props={
-            Object {
-              "className": "span-kind-selector",
-              "defaultValue": "server",
-              "disabled": null,
-              "loading": null,
-              "value": "server",
-            }
-          }
+          value="server"
         >
           <Option
             key="client"
@@ -554,7 +507,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
           >
             Consumer
           </Option>
-        </Field>
+        </SearchableSelect>
       </Col>
     </Row>
     <Row
@@ -583,23 +536,11 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
         className="timeframe-selector"
         span={8}
       >
-        <Field
-          component={[Function]}
-          name="timeframe"
+        <SearchableSelect
+          className="select-a-timeframe-input"
           onChange={[Function]}
           placeholder="Select A Timeframe"
-          props={
-            Object {
-              "className": "select-a-timeframe-input",
-              "defaultValue": Object {
-                "label": "Last Hour",
-                "value": 3600000,
-              },
-              "disabled": null,
-              "loading": null,
-              "value": 3600000,
-            }
-          }
+          value={3600000}
         >
           <Option
             key="300000"
@@ -655,7 +596,7 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
           >
             Last 2 days
           </Option>
-        </Field>
+        </SearchableSelect>
       </Col>
     </Row>
     <Row>
@@ -821,7 +762,6 @@ exports[`<MonitorATMServicesView> ATM snapshot test with no metrics 1`] = `
             "opsLatencies": null,
           }
         }
-        loading={null}
         lookback={3600000}
         serviceName="s1"
       />
@@ -864,19 +804,11 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
         >
           Service
         </h2>
-        <Field
-          component={[Function]}
-          name="service"
+        <SearchableSelect
+          className="select-a-service-input"
           onChange={[Function]}
           placeholder="Select A Service"
-          props={
-            Object {
-              "className": "select-a-service-input",
-              "disabled": null,
-              "loading": null,
-              "value": "s1",
-            }
-          }
+          value="s1"
         />
       </Col>
       <Col
@@ -887,20 +819,11 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
         >
           Span Kind
         </h2>
-        <Field
-          component={[Function]}
-          name="spanKind"
+        <SearchableSelect
+          className="span-kind-selector"
           onChange={[Function]}
           placeholder="Select A Span Kind"
-          props={
-            Object {
-              "className": "span-kind-selector",
-              "defaultValue": "server",
-              "disabled": null,
-              "loading": null,
-              "value": "server",
-            }
-          }
+          value="server"
         >
           <Option
             key="client"
@@ -932,7 +855,7 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
           >
             Consumer
           </Option>
-        </Field>
+        </SearchableSelect>
       </Col>
     </Row>
     <Row
@@ -961,23 +884,11 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
         className="timeframe-selector"
         span={8}
       >
-        <Field
-          component={[Function]}
-          name="timeframe"
+        <SearchableSelect
+          className="select-a-timeframe-input"
           onChange={[Function]}
           placeholder="Select A Timeframe"
-          props={
-            Object {
-              "className": "select-a-timeframe-input",
-              "defaultValue": Object {
-                "label": "Last Hour",
-                "value": 3600000,
-              },
-              "disabled": null,
-              "loading": null,
-              "value": 3600000,
-            }
-          }
+          value={3600000}
         >
           <Option
             key="300000"
@@ -1033,7 +944,7 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
           >
             Last 2 days
           </Option>
-        </Field>
+        </SearchableSelect>
       </Col>
     </Row>
     <Row>
@@ -1200,7 +1111,6 @@ exports[`<MonitorATMServicesView> render one service latency 1`] = `
             "opsLatencies": null,
           }
         }
-        loading={null}
         lookback={3600000}
         serviceName="s1"
       />

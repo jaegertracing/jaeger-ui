@@ -32,10 +32,10 @@ const ctx: Worker & TMessageErrorTarget = self as any;
 
 let currentMeta: TLayoutWorkerMeta | null;
 
-function handleMessage(event: MessageEvent) {
+async function handleMessage(event: MessageEvent) {
   const { edges, meta, options, vertices } = event.data as TWorkerInputMessage;
   currentMeta = meta;
-  const { layoutError, ...result } = getLayout(meta.phase, edges, vertices, options);
+  const { layoutError, ...result } = await getLayout(meta.phase, edges, vertices, options);
   const type = layoutError ? EWorkerErrorType.LayoutError : meta.phase;
   const message: TWorkerOutputMessage = { meta, type, ...result };
   ctx.postMessage(message);

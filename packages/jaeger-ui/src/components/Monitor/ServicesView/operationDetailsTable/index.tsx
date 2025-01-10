@@ -29,7 +29,7 @@ import { trackSortOperations, trackViewTraces } from './index.track';
 type TProps = {
   data: ServiceOpsMetrics[] | undefined;
   error: MetricsReduxState['opsError'];
-  loading: boolean | null;
+  loading: boolean | undefined;
   endTime: number;
   lookback: number;
   serviceName: string;

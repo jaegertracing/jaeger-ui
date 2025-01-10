@@ -51,7 +51,8 @@
     "test": "npm run --workspaces test --",
     "tsc-lint": "tsc --build",
     "tsc-lint-debug": "tsc --listFiles",
-    "start": "cd packages/jaeger-ui && npm run start"
+    "start": "cd packages/jaeger-ui && npm run start",
+    "update-snapshots": "cd packages/jaeger-ui && npm test -- -u"
   },
   "prettier": {
     "arrowParens": "avoid",

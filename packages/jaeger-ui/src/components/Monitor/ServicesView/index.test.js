@@ -207,9 +207,7 @@ describe('<MonitorATMServicesView>', () => {
 
   it('should update state after choosing a new timeframe', () => {
     const firstGraphXDomain = wrapper.state().graphXDomain;
-    wrapper.setProps({
-      selectedTimeFrame: 3600000 * 2,
-    });
+    wrapper.instance().handleTimeFrameChange(3600000 * 2);
 
     expect(wrapper.state().graphXDomain).not.toBe(firstGraphXDomain);
   });
@@ -308,13 +306,13 @@ describe('<MonitorATMServicesView>', () => {
     wrapper.find('Search').simulate('change', { target: { value: newValue } });
     expect(trackSearchOperationSpy).toHaveBeenCalledWith(newValue);
 
-    wrapper.find('Field').first().simulate('change', null, newValue);
+    wrapper.find('SearchableSelect').first().prop('onChange')(newValue);
     expect(trackSelectServiceSpy).toHaveBeenCalledWith(newValue);
 
-    wrapper.find({ name: 'spanKind' }).simulate('change', null, spanKindOption.value);
+    wrapper.find('.span-kind-selector').prop('onChange')(spanKindOption.value);
     expect(trackSelectSpanKindSpy).toHaveBeenCalledWith(spanKindOption.label);
 
-    wrapper.find('Field').last().simulate('change', null, timeFrameOption.value);
+    wrapper.find('SearchableSelect').last().prop('onChange')(timeFrameOption.value);
     expect(trackSelectTimeframeSpy).toHaveBeenCalledWith(timeFrameOption.label);
 
     wrapper.find({ children: 'View all traces' }).simulate('click');
@@ -367,9 +365,6 @@ describe('mapStateToProps()', () => {
     expect(mapStateToProps(state)).toEqual({
       metrics: originInitialState,
       services: [],
-      selectedService: 's1',
-      selectedSpanKind: 'server',
-      selectedTimeFrame: 3600000,
     });
   });
 });
