@@ -5,6 +5,11 @@ on:
     
   push:
     branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ (github.event.pull_request && github.event.pull_request.number) || github.ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   build-and-check:
     runs-on: ubuntu-latest
@@ -61,7 +66,7 @@ jobs:
           fi
           
       - name: Update bundle size file
-        run: rm -f bundle_size.txt && mv new_bundle_size.txt bundle_size.txt
+        run: mv new_bundle_size.txt bundle_size.txt
         
       - name: Save new bundle size
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
