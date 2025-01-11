@@ -35,10 +35,10 @@ jobs:
           
       - name: Restore previous bundle size
         id: cache-bundle-size
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: bundle_size.txt
-          key: bundle-size-jaeger-ui
+          key: jaeger-ui-bundle-size
           
       - name: Compare bundle sizes
         if: steps.cache-bundle-size.outputs.cache-hit == 'true'
@@ -66,4 +66,4 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: bundle_size.txt
-          key: bundle-size-jaeger-ui
+          key: jaeger-ui-bundle-size
