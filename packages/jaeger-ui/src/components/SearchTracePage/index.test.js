@@ -39,7 +39,7 @@ import SearchForm from './SearchForm';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
-import { MOST_RECENT } from '../../model/order-by';
+import { MOST_RECENT, MOST_SPANS } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
 import { store as globalStore } from '../../utils/configure-store';
 
@@ -58,12 +58,12 @@ const AllProvider = ({ children }) => (
 describe('<SearchTracePage>', () => {
   const queryOfResults = {};
   let wrapper;
-  let traceResults;
+  let traces;
   let traceResultsToDownload;
   let props;
 
   beforeEach(() => {
-    traceResults = [
+    traces = [
       { traceID: 'a', spans: [], processes: {} },
       { traceID: 'b', spans: [], processes: {} },
     ];
@@ -73,7 +73,7 @@ describe('<SearchTracePage>', () => {
     ];
     props = {
       queryOfResults,
-      traceResults,
+      traces,
       traceResultsToDownload,
       diffCohort: [],
       isHomepage: false,
@@ -81,9 +81,9 @@ describe('<SearchTracePage>', () => {
       loadingTraces: false,
       disableFileUploadControl: false,
       maxTraceDuration: 100,
-      numberOfTraceResults: traceResults.length,
+      numberOfTraceResults: traces.length,
       services: null,
-      sortTracesBy: MOST_RECENT,
+      sortedTracesXformer: jest.fn(),
       urlQueryParams: { service: 'svc-a' },
       // actions
       fetchServiceOperations: jest.fn(),
@@ -131,6 +131,18 @@ describe('<SearchTracePage>', () => {
     expect(props.fetchServiceOperations.mock.calls.length).toBe(1);
     expect(props.fetchServiceOperations.mock.calls[0][0]).toBe('svc-a');
     store.get = oldFn;
+  });
+
+  it('calls sortedTracesXformer with correct arguments', () => {
+    const sortBy = MOST_RECENT;
+    wrapper.setState({ sortBy });
+    expect(props.sortedTracesXformer).toHaveBeenCalledWith(traces, sortBy);
+  });
+
+  it('handles sort change correctly', () => {
+    const sortBy = MOST_SPANS;
+    wrapper.instance().handleSortChange(sortBy);
+    expect(wrapper.state('sortBy')).toBe(sortBy);
   });
 
   it('goToTrace pushes the trace URL with {fromSearch: true} to history', () => {
@@ -226,10 +238,9 @@ describe('mapStateToProps()', () => {
       },
     };
 
-    const { maxTraceDuration, traceResults, traceResultsToDownload, diffCohort, ...rest } =
-      mapStateToProps(state);
-    expect(traceResults).toHaveLength(stateTrace.search.results.length);
-    expect(traceResults[0].traceID).toBe(trace.traceID);
+    const { maxTraceDuration, traceResultsToDownload, diffCohort, traces, ...rest } = mapStateToProps(state);
+    expect(traces).toHaveLength(stateTrace.search.results.length);
+    expect(traces[0].traceID).toBe(trace.traceID);
     expect(traceResultsToDownload[0].traceID).toBe(trace.traceID);
     expect(maxTraceDuration).toBe(trace.duration);
     expect(diffCohort).toHaveLength(state.traceDiff.cohort.length);
@@ -241,8 +252,7 @@ describe('mapStateToProps()', () => {
       embedded: undefined,
       queryOfResults: undefined,
       isHomepage: true,
-      // the redux-form `formValueSelector` mock returns `null` for "sortBy"
-      sortTracesBy: null,
+      sortedTracesXformer: expect.any(Function),
       urlQueryParams: null,
       services: [
         {
