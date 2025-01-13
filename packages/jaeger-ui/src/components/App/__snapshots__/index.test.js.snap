@@ -52,115 +52,66 @@ exports[`JaegerUIApp does not explode 1`] = `
       }
     }
   >
-    <HistoryProvider
-      history={
-        Object {
-          "action": "POP",
-          "back": [Function],
-          "block": [Function],
-          "createHref": [Function],
-          "forward": [Function],
-          "go": [Function],
-          "goBack": [Function],
-          "goForward": [Function],
-          "length": 1,
-          "listen": [Function],
-          "listenObject": false,
-          "location": Object {
-            "hash": "",
-            "pathname": "/",
-            "search": "",
-            "state": undefined,
-          },
-          "push": [Function],
-          "replace": [Function],
-        }
-      }
-    >
-      <Router
-        history={
-          Object {
-            "action": "POP",
-            "back": [Function],
-            "block": [Function],
-            "createHref": [Function],
-            "forward": [Function],
-            "go": [Function],
-            "goBack": [Function],
-            "goForward": [Function],
-            "length": 1,
-            "listen": [Function],
-            "listenObject": false,
-            "location": Object {
-              "hash": "",
-              "pathname": "/",
-              "search": "",
-              "state": undefined,
-            },
-            "push": [Function],
-            "replace": [Function],
+    <Memo(Connect(WithRouteProps))>
+      <Routes>
+        <Route
+          element={<WithRouteProps />}
+          path="/search"
+        />
+        <Route
+          element={<WithRouteProps />}
+          path="/trace/:a?\\\\.\\\\.\\\\.:b?"
+        />
+        <Route
+          element={<WithRouteProps />}
+          path="/trace/:id"
+        />
+        <Route
+          element={<WithRouteProps />}
+          path="/dependencies"
+        />
+        <Route
+          element={<WithRouteProps />}
+          path="/deep-dependencies"
+        />
+        <Route
+          element={<WithRouteProps />}
+          path="/quality-metrics"
+        />
+        <Route
+          element={<MonitorATMPage />}
+          path="/monitor"
+        />
+        <Route
+          element={
+            <Navigate
+              to="/search"
+            />
           }
-        }
-      >
-        <Memo(Connect(WithRouteProps))>
-          <Switch>
-            <CompatRoute
-              path="/search"
-            >
-              <WithRouteProps />
-            </CompatRoute>
-            <CompatRoute
-              path="/trace/:a?\\\\.\\\\.\\\\.:b?"
-            >
-              <WithRouteProps />
-            </CompatRoute>
-            <CompatRoute
-              path="/trace/:id"
-            >
-              <WithRouteProps />
-            </CompatRoute>
-            <CompatRoute
-              path="/dependencies"
-            >
-              <WithRouteProps />
-            </CompatRoute>
-            <CompatRoute
-              path="/deep-dependencies"
-            >
-              <WithRouteProps />
-            </CompatRoute>
-            <CompatRoute
-              path="/quality-metrics"
-            >
-              <WithRouteProps />
-            </CompatRoute>
-            <CompatRoute
-              path="/monitor"
-            >
-              <MonitorATMPage />
-            </CompatRoute>
-            <CompatRoute
-              exact={true}
-              path="/"
-              render={[Function]}
+          path="/"
+        />
+        <Route
+          element={
+            <Navigate
+              to="/search"
             />
-            <CompatRoute
-              exact={true}
-              path=""
-              render={[Function]}
+          }
+          path=""
+        />
+        <Route
+          element={
+            <Navigate
+              to="/search"
             />
-            <CompatRoute
-              exact={true}
-              path="/"
-              render={[Function]}
-            />
-            <CompatRoute>
-              <NotFound />
-            </CompatRoute>
-          </Switch>
-        </Memo(Connect(WithRouteProps))>
-      </Router>
-    </HistoryProvider>
+          }
+          path="/"
+        />
+        <Route
+          element={<NotFound />}
+          path="*"
+        />
+      </Routes>
+    </Memo(Connect(WithRouteProps))>
   </Provider>
 </ConfigProvider>
 `;
