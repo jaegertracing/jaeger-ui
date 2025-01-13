@@ -18,7 +18,7 @@ import React from 'react';
 import { createMemoryHistory } from 'history';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { BrowserRouter } from 'react-router-dom-v5-compat';
+import { BrowserRouter } from 'react-router-dom';
 import TraceIDSearchInput from './TraceIDSearchInput';
 import { HistoryProvider } from '../../utils/useHistory';
 

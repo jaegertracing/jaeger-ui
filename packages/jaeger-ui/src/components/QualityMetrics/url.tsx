@@ -20,10 +20,8 @@ import prefixUrl from '../../utils/prefix-url';
 
 export const ROUTE_PATH = prefixUrl('/quality-metrics');
 
-const ROUTE_MATCHER = { path: ROUTE_PATH, strict: true, exact: true };
-
 export function matches(path: string) {
-  return Boolean(matchPath(path, ROUTE_MATCHER));
+  return Boolean(matchPath(path, ROUTE_PATH));
 }
 
 export function getUrl(queryParams?: Record<string, string | number>) {

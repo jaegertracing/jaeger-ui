@@ -17,7 +17,7 @@ import { Dropdown, Menu, MenuProps } from 'antd';
 import { IoChevronDown } from 'react-icons/io5';
 import _has from 'lodash/has';
 import { connect } from 'react-redux';
-import { Link } from 'react-router-dom-v5-compat';
+import { Link } from 'react-router-dom';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
 import * as dependencyGraph from '../DependencyGraph/url';

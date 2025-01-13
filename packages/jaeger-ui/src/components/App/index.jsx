@@ -14,7 +14,7 @@
 
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
-import { Route, Routes, Navigate } from 'react-router-dom-v5-compat';
+import { Route, Routes, Navigate } from 'react-router-dom';
 
 import { ConfigProvider } from 'antd';
 import { defaultTheme } from '@ant-design/compatible';

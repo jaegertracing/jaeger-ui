@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Routes, Route, CompatRouter } from 'react-router-dom-v5-compat';
-import { MemoryRouter } from 'react-router-dom';
+import { Routes, Route, MemoryRouter } from 'react-router-dom';
 
 jest.mock('redux-form', () => {
   function reduxForm() {
@@ -45,13 +44,11 @@ import { store as globalStore } from '../../utils/configure-store';
 
 const AllProvider = ({ children }) => (
   <MemoryRouter>
-    <CompatRouter>
-      <Provider store={globalStore}>
-        <Routes>
-          <Route path="/" element={children} />
-        </Routes>
-      </Provider>
-    </CompatRouter>
+    <Provider store={globalStore}>
+      <Routes>
+        <Route path="/" element={children} />
+      </Routes>
+    </Provider>
   </MemoryRouter>
 );
 
@@ -104,9 +101,7 @@ describe('<SearchTracePage>', () => {
     store.get = jest.fn(() => ({ service: 'svc-b' }));
     wrapper = mount(
       <MemoryRouter>
-        <CompatRouter>
-          <SearchTracePage {...{ ...props, urlQueryParams: {} }} />
-        </CompatRouter>
+        <SearchTracePage {...{ ...props, urlQueryParams: {} }} />
       </MemoryRouter>
     );
     expect(props.fetchServices.mock.calls.length).toBe(1);
@@ -122,9 +117,7 @@ describe('<SearchTracePage>', () => {
     store.get = jest.fn(() => ({ service: 'svc-b' }));
     wrapper = mount(
       <MemoryRouter>
-        <CompatRouter>
-          <SearchTracePage {...props} />
-        </CompatRouter>
+        <SearchTracePage {...props} />
       </MemoryRouter>
     );
     expect(props.fetchServices.mock.calls.length).toBe(1);
@@ -152,9 +145,7 @@ describe('<SearchTracePage>', () => {
     const historyMock = { push: historyPush };
     wrapper = mount(
       <MemoryRouter>
-        <CompatRouter>
-          <SearchTracePage {...props} history={historyMock} query={query} />
-        </CompatRouter>
+        <SearchTracePage {...props} history={historyMock} query={query} />
       </MemoryRouter>
     );
     wrapper.find(SearchTracePage).first().instance().goToTrace(traceID);
