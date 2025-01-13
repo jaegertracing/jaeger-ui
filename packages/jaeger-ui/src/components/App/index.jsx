@@ -87,8 +87,9 @@ export default class JaegerUIApp extends Component {
     return (
       <ConfigProvider theme={jaegerTheme}>
         <Provider store={store}>
-          <Page>
-            <Routes>
+          <Routes>
+            <Route path="/" element={<Page />}>
+              <Route index element={<SearchTracePage />} />
               <Route path={searchPath} element={<SearchTracePage />} />
               <Route path={traceDiffPath} element={<TraceDiff />} />
               <Route path={tracePath} element={<TracePage />} />
@@ -97,13 +98,10 @@ export default class JaegerUIApp extends Component {
               <Route path={qualityMetricsPath} element={<QualityMetrics />} />
               <Route path={monitorATMPath} element={<MonitorATMPage />} />
 
-              <Route path="/" element={<Navigate to={searchPath} />} />
               <Route path={prefixUrl()} element={<Navigate to={searchPath} />} />
-              <Route path={prefixUrl('/')} element={<Navigate to={searchPath} />} />
-
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Page>
+            </Route>
+          </Routes>
         </Provider>
       </ConfigProvider>
     );

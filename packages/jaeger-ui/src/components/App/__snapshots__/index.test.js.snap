@@ -52,8 +52,15 @@ exports[`JaegerUIApp does not explode 1`] = `
       }
     }
   >
-    <Memo(Connect(WithRouteProps))>
-      <Routes>
+    <Routes>
+      <Route
+        element={<Memo(Connect(WithRouteProps)) />}
+        path="/"
+      >
+        <Route
+          element={<WithRouteProps />}
+          index={true}
+        />
         <Route
           element={<WithRouteProps />}
           path="/search"
@@ -88,30 +95,14 @@ exports[`JaegerUIApp does not explode 1`] = `
               to="/search"
             />
           }
-          path="/"
-        />
-        <Route
-          element={
-            <Navigate
-              to="/search"
-            />
-          }
           path=""
-        />
-        <Route
-          element={
-            <Navigate
-              to="/search"
-            />
-          }
-          path="/"
         />
         <Route
           element={<NotFound />}
           path="*"
         />
-      </Routes>
-    </Memo(Connect(WithRouteProps))>
+      </Route>
+    </Routes>
   </Provider>
 </ConfigProvider>
 `;
