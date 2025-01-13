@@ -17,7 +17,7 @@
 import * as React from 'react';
 import { Select } from 'antd';
 import { History as RouterHistory, Location } from 'history';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom-v5-compat';
 import { Field, formValueSelector, reduxForm } from 'redux-form';
 import queryString from 'query-string';
 

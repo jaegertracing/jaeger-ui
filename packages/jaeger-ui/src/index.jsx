@@ -18,8 +18,7 @@
 import './site-prefix';
 
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { CompatRouter } from 'react-router-dom-v5-compat';
+import { CompatRouter, BrowserRouter } from 'react-router-dom-v5-compat';
 import { createRoot } from 'react-dom/client';
 
 import JaegerUIApp from './components/App';

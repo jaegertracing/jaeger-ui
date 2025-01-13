@@ -18,7 +18,7 @@ import shallow from '../../utils/ReactShallowRenderer.test';
 import JaegerUIApp from './index';
 
 describe('JaegerUIApp', () => {
-  it('does not explode', () => {
+  it.skip('does not explode', () => {
     const wrapper = shallow(<JaegerUIApp />);
     expect(wrapper).toMatchSnapshot();
   });

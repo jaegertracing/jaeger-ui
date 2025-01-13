@@ -14,8 +14,7 @@
 
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
-import { Redirect, Switch, Router } from 'react-router-dom';
-import { CompatRoute } from "react-router-dom-v5-compat";
+import { Route, Routes, Navigate } from 'react-router-dom-v5-compat';
 
 import { ConfigProvider } from 'antd';
 import { defaultTheme } from '@ant-design/compatible';
@@ -31,7 +30,7 @@ import SearchTracePage from '../SearchTracePage';
 import { ROUTE_PATH as searchPath } from '../SearchTracePage/url';
 import TraceDiff from '../TraceDiff';
 import { ROUTE_PATH as traceDiffPath } from '../TraceDiff/url';
-import TracePage from '../TracePage';
+import TracePage from '../TracePage/index';
 import { ROUTE_PATH as tracePath } from '../TracePage/url';
 import MonitorATMPage from '../Monitor';
 import { ROUTE_PATH as monitorATMPath } from '../Monitor/url';
@@ -43,8 +42,7 @@ import '../common/vars.css';
 import '../common/utils.css';
 import 'antd/dist/reset.css';
 import './index.css';
-import { history, store } from '../../utils/configure-store';
-import { HistoryProvider } from '../../utils/useHistory';
+import { store } from '../../utils/configure-store';
 
 const jaegerTheme = {
   token: {
@@ -89,45 +87,23 @@ export default class JaegerUIApp extends Component {
     return (
       <ConfigProvider theme={jaegerTheme}>
         <Provider store={store}>
-          <HistoryProvider history={history}>
-            <Router history={history}>
-              <Page>
-                <Switch>
-                  <CompatRoute path={searchPath}>
-                    <SearchTracePage />
-                  </CompatRoute>
-                  <CompatRoute path={traceDiffPath}>
-                    <TraceDiff />
-                  </CompatRoute>
-                  <CompatRoute path={tracePath}>
-                    <TracePage />
-                  </CompatRoute>
-                  <CompatRoute path={dependenciesPath}>
-                    <DependencyGraph />
-                  </CompatRoute>
-                  <CompatRoute path={deepDependenciesPath}>
-                    <DeepDependencies />
-                  </CompatRoute>
-                  <CompatRoute path={qualityMetricsPath}>
-                    <QualityMetrics />
-                  </CompatRoute>
-                  <CompatRoute path={monitorATMPath}>
-                    <MonitorATMPage />
-                  </CompatRoute>
+          <Page>
+            <Routes>
+              <Route path={searchPath} element={<SearchTracePage />} />
+              <Route path={traceDiffPath} element={<TraceDiff />} />
+              <Route path={tracePath} element={<TracePage />} />
+              <Route path={dependenciesPath} element={<DependencyGraph />} />
+              <Route path={deepDependenciesPath} element={<DeepDependencies />} />
+              <Route path={qualityMetricsPath} element={<QualityMetrics />} />
+              <Route path={monitorATMPath} element={<MonitorATMPage />} />
 
-                  <CompatRoute exact path='/' render={() => <Redirect to={searchPath}/> }/>
-                    
-                  <CompatRoute exact path={prefixUrl()} render={() => <Redirect to={searchPath}/>}/>
-                    
-                  <CompatRoute exact path={prefixUrl('/')} render={() =>  <Redirect to={searchPath} />}/>
-                   
-                  <CompatRoute>
-                    <NotFound />
-                  </CompatRoute>
-                </Switch>
-              </Page>
-            </Router>
-          </HistoryProvider>
+              <Route path="/" element={<Navigate to={searchPath} />} />
+              <Route path={prefixUrl()} element={<Navigate to={searchPath} />} />
+              <Route path={prefixUrl('/')} element={<Navigate to={searchPath} />} />
+
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Page>
         </Provider>
       </ConfigProvider>
     );
