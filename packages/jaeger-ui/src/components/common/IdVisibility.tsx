@@ -17,30 +17,42 @@ import React from 'react';
 type IdVisibilityProps = {
   FullId: string;
   className?: string;
-  small?: boolean;
   style?: React.CSSProperties;
+  inputStyle?: React.CSSProperties;
+  isCollapsible?: boolean;
 };
 
 export default function IdVisibility(props: IdVisibilityProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { FullId, className, small, ...rest } = props;
+  const { FullId, className, style, inputStyle, isCollapsible } = props;
   const [isVisible, setIsVisible] = React.useState(false);
-  const cls = `
-      IdVisibility
-      ${className || ''}
-    `;
 
-  const toggleVisibility = () => {
-    setIsVisible(!isVisible);
+  const handleToggle = () => {
+    if (isCollapsible) {
+      setIsVisible(!isVisible);
+    }
   };
 
   return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    <div className={cls} style={{ cursor: 'pointer' }} onClick={toggleVisibility}>
+    <div
+      className={`IdVisibility ${className || ''}`}
+      style={{ cursor: isCollapsible ? 'pointer' : 'default', ...style }}
+      onClick={isCollapsible ? handleToggle : undefined}
+    >
       {isVisible ? (
-        <small className="u-tx-muted">{FullId}</small>
+        <input
+          type="text"
+          value={FullId}
+          readOnly
+          style={{
+            border: 'none',
+            backgroundColor: 'transparent',
+            cursor: 'default',
+            ...inputStyle,
+          }}
+        />
       ) : (
-        <small className="u-tx-muted">Full ID</small>
+        <span className="u-tx-muted">{FullId.slice(0, 7)}</span> // Show short trace ID by default
       )}
     </div>
   );
@@ -48,5 +60,7 @@ export default function IdVisibility(props: IdVisibilityProps) {
 
 IdVisibility.defaultProps = {
   className: undefined,
-  small: false,
+  style: {},
+  inputStyle: {},
+  isCollapsible: true,
 };

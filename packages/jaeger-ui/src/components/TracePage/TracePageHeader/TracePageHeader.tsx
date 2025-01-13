@@ -39,6 +39,7 @@ import ExternalLinks from '../../common/ExternalLinks';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import IdVisibility from '../../common/IdVisibility';
 
+
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
   clearSearch: () => void;
@@ -154,8 +155,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
 
   const title = (
     <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>
-      <TraceName traceName={trace.traceName} /> <small className="u-tx-muted">{traceShortID}</small>{' '}
-      <IdVisibility FullId={trace.traceID} />
+      <TraceName traceName={trace.traceName} /> <IdVisibility FullId={trace.traceID} className='u-tx-muted' style={{fontSize: '19px'}} inputStyle={{color:'blue', fontWeight:'bold'}} isCollapsible/>
     </h1>
   );
 
