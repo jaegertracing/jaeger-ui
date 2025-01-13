@@ -30,7 +30,7 @@ import SearchTracePage from '../SearchTracePage';
 import { ROUTE_PATH as searchPath } from '../SearchTracePage/url';
 import TraceDiff from '../TraceDiff';
 import { ROUTE_PATH as traceDiffPath } from '../TraceDiff/url';
-import TracePage from '../TracePage/index';
+import TracePage from '../TracePage';
 import { ROUTE_PATH as tracePath } from '../TracePage/url';
 import MonitorATMPage from '../Monitor';
 import { ROUTE_PATH as monitorATMPath } from '../Monitor/url';

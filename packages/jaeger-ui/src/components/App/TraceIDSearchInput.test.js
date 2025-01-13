@@ -29,7 +29,7 @@ describe('<TraceIDSearchInput />', () => {
     history = createMemoryHistory();
     render(
       <HistoryProvider history={history}>
-        <BrowserRouter history={history}>
+        <BrowserRouter>
           <TraceIDSearchInput />
         </BrowserRouter>
       </HistoryProvider>
