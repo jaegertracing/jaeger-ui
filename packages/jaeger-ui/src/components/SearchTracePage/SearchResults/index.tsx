@@ -18,7 +18,6 @@ import * as React from 'react';
 import { Select } from 'antd';
 import { History as RouterHistory, Location } from 'history';
 import { Link } from 'react-router-dom';
-import { Field, formValueSelector, reduxForm } from 'redux-form';
 import queryString from 'query-string';
 
 import AltViewOptions from './AltViewOptions';
