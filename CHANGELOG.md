@@ -9,6 +9,14 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.65.0 (2025-01-08)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* [clean-up]: remove deprecated plexus/directedgraph ([@hari45678](https://github.com/hari45678) in [#2548](https://github.com/jaegertracing/jaeger-ui/pull/2548))
+* [fix]: make plexus demo work again ([@hari45678](https://github.com/hari45678) in [#2538](https://github.com/jaegertracing/jaeger-ui/pull/2538))
+* Upgrade from raven-js to sentry/browser ([@avinpy-255](https://github.com/avinpy-255) in [#2509](https://github.com/jaegertracing/jaeger-ui/pull/2509))
+
 ## v1.64.0 (2024-12-06)
 
 #### 🐞 Bug fixes, Minor Improvements

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import viz from 'viz.js/viz.js';
+import { instance } from '@viz-js/viz';
 
 import convPlain from './dot/convPlain';
 import toDot from './dot/toDot';
@@ -98,7 +98,7 @@ function getVerticesValidity(
   return warn;
 }
 
-export default function getLayout(
+export default async function getLayout(
   phase: EWorkerPhase,
   inEdges: TEdge[],
   inVertices: TSizeVertex[] | TLayoutVertex[],
@@ -107,7 +107,10 @@ export default function getLayout(
   const dot = toDot(inEdges, inVertices, layoutOptions);
   const { totalMemory = undefined } = layoutOptions || {};
   const options = { totalMemory, engine: phase === EWorkerPhase.Edges ? 'neato' : 'dot', format: 'plain' };
-  const plainOut = viz(dot, options);
+
+  const viz = await instance();
+  const plainOut = viz.renderString(dot, options);
+
   const { edges, graph, vertices } = convPlain(plainOut, phase !== EWorkerPhase.Positions);
   const result = getVerticesValidity(inVertices, vertices);
   if (result.validity === EValidity.Error) {

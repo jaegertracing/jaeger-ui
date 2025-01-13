@@ -18,7 +18,6 @@ import * as React from 'react';
 import { Select } from 'antd';
 import { History as RouterHistory, Location } from 'history';
 import { Link } from 'react-router-dom';
-import { Field, formValueSelector, reduxForm } from 'redux-form';
 import queryString from 'query-string';
 
 import AltViewOptions from './AltViewOptions';
@@ -36,7 +35,6 @@ import { getLocation } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
 import { stripEmbeddedState } from '../../../utils/embedded-url';
-import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
 
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
@@ -64,6 +62,13 @@ type SearchResultsProps = {
   spanLinks?: Record<string, string> | undefined;
   traces: Trace[];
   rawTraces: TraceData[];
+  sortBy: string;
+  handleSortChange: (sortBy: string) => void;
+};
+
+type SelectSortProps = {
+  sortBy: string;
+  handleSortChange: (sortBy: string) => void;
 };
 
 const Option = Select.Option;
@@ -71,33 +76,20 @@ const Option = Select.Option;
 /**
  * Contains the dropdown to sort and filter trace search results
  */
-function SelectSortImpl() {
+export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   return (
     <label>
       Sort:{' '}
-      <Field
-        name="sortBy"
-        component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
-        props={{}}
-      >
+      <SearchableSelect value={sortBy} onChange={(value: string) => handleSortChange(value)}>
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
         <Option value={orderBy.SHORTEST_FIRST}>Shortest First</Option>
         <Option value={orderBy.MOST_SPANS}>Most Spans</Option>
         <Option value={orderBy.LEAST_SPANS}>Least Spans</Option>
-      </Field>
+      </SearchableSelect>
     </label>
   );
 }
-
-const SelectSort = reduxForm({
-  form: 'traceResultsSort',
-  initialValues: {
-    sortBy: orderBy.MOST_RECENT,
-  },
-})(SelectSortImpl);
-
-export const sortFormSelector = formValueSelector('traceResultsSort');
 
 // export for tests
 export function createBlob(rawTraces: TraceData[]) {
@@ -150,6 +142,8 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
       skipMessage,
       spanLinks,
       traces,
+      sortBy,
+      handleSortChange,
     } = this.props;
 
     const traceResultsView = queryString.parse(location.search).view !== 'ddg';
@@ -205,7 +199,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
             <h2 className="ub-m0 u-flex-1">
               {traces.length} Trace{traces.length > 1 && 's'}
             </h2>
-            {traceResultsView && <SelectSort />}
+            {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
             {traceResultsView && <DownloadResults onDownloadResultsClicked={this.onDownloadResultsClicked} />}
             <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={this.onDdgViewClicked} />
             {showStandaloneLink && (
