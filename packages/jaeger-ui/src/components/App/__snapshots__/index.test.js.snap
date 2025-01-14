@@ -67,7 +67,7 @@ exports[`JaegerUIApp does not explode 1`] = `
         />
         <Route
           element={<WithRouteProps />}
-          path="/trace/:a?\\\\.\\\\.\\\\.:b?"
+          path="/trace-diff/:a?/:b?"
         />
         <Route
           element={<WithRouteProps />}
