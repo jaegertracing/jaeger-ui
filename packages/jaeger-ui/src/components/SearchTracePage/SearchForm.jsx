@@ -37,6 +37,7 @@ import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../consta
 import { getConfigValue } from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
+import { trackSelectService } from '../Monitor/ServicesView/index.track';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -274,6 +275,16 @@ export class SearchFormImpl extends React.PureComponent {
     const noSelectedService = selectedService === '-' || !selectedService;
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
 
+    const handleServiceChange = value => {
+      this.setState({ selectedService: value }, () => {
+        trackSelectService(value);
+      });
+    };
+
+    const getSelectedService = () => {
+      return selectedService || store.get('lastAtmSearchService') || services[0];
+    };
+
     return (
       <Form layout="vertical" onSubmitCapture={handleSubmit}>
         <FormItem
@@ -283,20 +294,18 @@ export class SearchFormImpl extends React.PureComponent {
             </span>
           }
         >
-          <Field
+          <SearchableSelect
             name="service"
-            component={AdaptedSelect}
+            value={getSelectedService}
+            onChange={handleServiceChange}
             placeholder="Select A Service"
-            props={{
-              disabled,
-            }}
           >
             {services.map(service => (
               <Option key={service.name} value={service.name}>
                 {service.name}
               </Option>
             ))}
-          </Field>
+          </SearchableSelect>
         </FormItem>
         <FormItem
           label={
