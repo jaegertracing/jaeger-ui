@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Routes, Route, MemoryRouter } from 'react-router-dom';
+import { Routes, Route, BrowserRouter } from 'react-router-dom';
 
 jest.mock('redux-form', () => {
   function reduxForm() {
@@ -43,13 +43,13 @@ import transformTraceData from '../../model/transform-trace-data';
 import { store as globalStore } from '../../utils/configure-store';
 
 const AllProvider = ({ children }) => (
-  <MemoryRouter>
+  <BrowserRouter>
     <Provider store={globalStore}>
       <Routes>
         <Route path="/" element={children} />
       </Routes>
     </Provider>
-  </MemoryRouter>
+  </BrowserRouter>
 );
 
 describe('<SearchTracePage>', () => {
@@ -100,9 +100,9 @@ describe('<SearchTracePage>', () => {
     const oldFn = store.get;
     store.get = jest.fn(() => ({ service: 'svc-b' }));
     wrapper = mount(
-      <MemoryRouter>
+      <BrowserRouter>
         <SearchTracePage {...{ ...props, urlQueryParams: {} }} />
-      </MemoryRouter>
+      </BrowserRouter>
     );
     expect(props.fetchServices.mock.calls.length).toBe(1);
     expect(props.fetchServiceOperations.mock.calls.length).toBe(1);
@@ -116,9 +116,9 @@ describe('<SearchTracePage>', () => {
     const oldFn = store.get;
     store.get = jest.fn(() => ({ service: 'svc-b' }));
     wrapper = mount(
-      <MemoryRouter>
+      <BrowserRouter>
         <SearchTracePage {...props} />
-      </MemoryRouter>
+      </BrowserRouter>
     );
     expect(props.fetchServices.mock.calls.length).toBe(1);
     expect(props.fetchServiceOperations.mock.calls.length).toBe(1);
@@ -144,9 +144,9 @@ describe('<SearchTracePage>', () => {
     const historyPush = jest.fn();
     const historyMock = { push: historyPush };
     wrapper = mount(
-      <MemoryRouter>
+      <BrowserRouter>
         <SearchTracePage {...props} history={historyMock} query={query} />
-      </MemoryRouter>
+      </BrowserRouter>
     );
     wrapper.find(SearchTracePage).first().instance().goToTrace(traceID);
     expect(historyPush.mock.calls.length).toBe(1);
