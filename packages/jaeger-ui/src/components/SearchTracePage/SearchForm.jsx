@@ -25,19 +25,18 @@ import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Field, reduxForm, formValueSelector } from 'redux-form';
+import { reduxForm, formValueSelector } from 'redux-form';
 import store from 'store';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
-import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
+// import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
 import { getConfigValue } from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
-import { trackSelectService } from '../Monitor/ServicesView/index.track';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -395,11 +394,10 @@ export class SearchFormImpl extends React.PureComponent {
             </div>
           }
         >
-          <Field
+          <Input
             name="tags"
-            component={AdaptedInput}
             placeholder="http.status_code=200 error=true"
-            props={{ disabled }}
+            disabled={disabled}
           />
         </FormItem>
 
@@ -435,10 +433,11 @@ export class SearchFormImpl extends React.PureComponent {
           >
             <Row gutter={16}>
               <Col className="gutter-row" span={14}>
-                <SearchableSelect
+                <Input
                   name="startDate"
                   type="date"
                   placeholder="Start Date"
+                  disabled={disabled}
                 />
               </Col>
 
@@ -469,10 +468,11 @@ export class SearchFormImpl extends React.PureComponent {
           >
             <Row gutter={16}>
               <Col className="gutter-row" span={14}>
-                <SearchableSelect
+                <Input
                   name="endDate"
                   type="date"
                   placeholder="End Date"
+                  disabled={disabled}
                 />
               </Col>
 
@@ -486,27 +486,29 @@ export class SearchFormImpl extends React.PureComponent {
         <Row gutter={16}>
           <Col className="gutter-row" span={12}>
             <FormItem label="Max Duration">
-              <SearchableSelect
+              <Input
                 name="maxDuration"
                 placeholder={placeholderDurationFields}
                 validate={validateDurationFields}
+                disabled={disabled}
               />
             </FormItem>
           </Col>
 
           <Col className="gutter-row" span={12}>
             <FormItem label="Min Duration">
-              <SearchableSelect
+              <Input
                 name="minDuration"
                 placeholder={placeholderDurationFields}
                 validate={validateDurationFields}
+                disabled={disabled}
               />
             </FormItem>
           </Col>
         </Row>
 
         <FormItem label="Limit Results">
-          <SearchableSelect
+          <Input
             name="resultsLimit"
             type="number"
             placeholder="Limit Results"
