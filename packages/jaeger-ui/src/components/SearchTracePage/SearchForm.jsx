@@ -275,16 +275,6 @@ export class SearchFormImpl extends React.PureComponent {
     const noSelectedService = selectedService === '-' || !selectedService;
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
 
-    const handleServiceChange = value => {
-      this.setState({ selectedService: value }, () => {
-        trackSelectService(value);
-      });
-    };
-
-    const getSelectedService = () => {
-      return selectedService || store.get('lastAtmSearchService') || services[0];
-    };
-
     return (
       <Form layout="vertical" onSubmitCapture={handleSubmit}>
         <FormItem
@@ -296,8 +286,10 @@ export class SearchFormImpl extends React.PureComponent {
         >
           <SearchableSelect
             name="service"
-            value={getSelectedService}
-            onChange={handleServiceChange}
+            onChange={(value) => {
+              console.log(value);
+              this.setState({selectedService: value});
+            }}
             placeholder="Select A Service"
           >
             {services.map(service => (
@@ -314,12 +306,14 @@ export class SearchFormImpl extends React.PureComponent {
             </span>
           }
         >
-          <Field
+          <SearchableSelect
             name="operation"
-            component={AdaptedSelect}
             placeholder="Select An Operation"
-            props={{
-              disabled: disabled || noSelectedService,
+            disabled={() => {
+              if (selectedService == '-') {
+                return true;
+              }
+              return false;
             }}
           >
             {['all'].concat(opsForSvc).map(op => (
@@ -327,7 +321,7 @@ export class SearchFormImpl extends React.PureComponent {
                 {op}
               </Option>
             ))}
-          </Field>
+          </SearchableSelect>
         </FormItem>
 
         <FormItem
@@ -410,17 +404,13 @@ export class SearchFormImpl extends React.PureComponent {
         </FormItem>
 
         <FormItem label="Lookback">
-          <Field
+          <SearchableSelect
             name="lookback"
-            component={AdaptedSelect}
-            props={{
-              disabled,
-              defaultValue: '1h',
-            }}
+            defaultValue="1h"
           >
             {optionsWithinMaxLookback(searchMaxLookback)}
             <Option value="custom">Custom Time Range</Option>
-          </Field>
+          </SearchableSelect>
         </FormItem>
 
         {selectedLookback === 'custom' && [
@@ -445,17 +435,15 @@ export class SearchFormImpl extends React.PureComponent {
           >
             <Row gutter={16}>
               <Col className="gutter-row" span={14}>
-                <Field
+                <SearchableSelect
                   name="startDate"
                   type="date"
-                  component={AdaptedInput}
                   placeholder="Start Date"
-                  props={{ disabled }}
                 />
               </Col>
 
               <Col className="gutter-row" span={10}>
-                <Field name="startDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+                <SearchableSelect name="startDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
               </Col>
             </Row>
           </FormItem>,
@@ -481,17 +469,15 @@ export class SearchFormImpl extends React.PureComponent {
           >
             <Row gutter={16}>
               <Col className="gutter-row" span={14}>
-                <Field
+                <SearchableSelect
                   name="endDate"
                   type="date"
-                  component={AdaptedInput}
                   placeholder="End Date"
-                  props={{ disabled }}
                 />
               </Col>
 
               <Col className="gutter-row" span={10}>
-                <Field name="endDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+                <SearchableSelect name="endDateTime" type="time" />
               </Col>
             </Row>
           </FormItem>,
@@ -500,11 +486,9 @@ export class SearchFormImpl extends React.PureComponent {
         <Row gutter={16}>
           <Col className="gutter-row" span={12}>
             <FormItem label="Max Duration">
-              <Field
+              <SearchableSelect
                 name="maxDuration"
-                component={ValidatedAdaptedInput}
                 placeholder={placeholderDurationFields}
-                props={{ disabled }}
                 validate={validateDurationFields}
               />
             </FormItem>
@@ -512,11 +496,9 @@ export class SearchFormImpl extends React.PureComponent {
 
           <Col className="gutter-row" span={12}>
             <FormItem label="Min Duration">
-              <Field
+              <SearchableSelect
                 name="minDuration"
-                component={ValidatedAdaptedInput}
                 placeholder={placeholderDurationFields}
-                props={{ disabled }}
                 validate={validateDurationFields}
               />
             </FormItem>
@@ -524,12 +506,13 @@ export class SearchFormImpl extends React.PureComponent {
         </Row>
 
         <FormItem label="Limit Results">
-          <Field
+          <SearchableSelect
             name="resultsLimit"
             type="number"
-            component={AdaptedInput}
             placeholder="Limit Results"
-            props={{ disabled, min: 1, max: getConfigValue('search.maxLimit') }}
+            disabled={disabled}
+            minDuration={1}
+            maxDuration={getConfigValue('search.maxLimit')}
           />
         </FormItem>
 
