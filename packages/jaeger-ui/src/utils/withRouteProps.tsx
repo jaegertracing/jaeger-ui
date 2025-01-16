@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom-v5-compat';
 import { History, Location } from 'history';
 import { useHistory } from './useHistory';
 

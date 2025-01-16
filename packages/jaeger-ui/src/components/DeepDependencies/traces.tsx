@@ -30,13 +30,19 @@ import transformTracesToPaths from '../../model/ddg/transformTracesToPaths';
 
 import { TDdgStateEntry } from '../../types/TDdgState';
 import { ReduxState } from '../../types';
+import { useLocation } from 'react-router-dom-v5-compat';
 
 // Required for proper memoization of subsequent function calls
 const svcOp = memoizeOne((service, operation) => ({ service, operation }));
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const urlState = getUrlState(ownProps.location.search);
+  // ownProps.location.search !== state.router.location.search
+  // Graph displayed only when the state.router.location.search is used, which contains all the params
+  // ownProps.location.search contains only the `?view=dgg` param
+  // const urlState = getUrlState(ownProps.location.search);
+  const urlState = getUrlState(state.router.location.search);
+
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
   let graphState: TDdgStateEntry | undefined;
@@ -65,10 +71,11 @@ type TOwnProps = {
   location: Location;
 };
 
+type TProps = TOwnProps & TReduxProps;
+
 // export for tests
-export class TracesDdgImpl extends React.PureComponent<TOwnProps & TReduxProps> {
-  render(): React.ReactNode {
-    const { location } = this.props;
+export const TracesDdgImpl: React.FC<TProps> = (props) => {
+    const location = useLocation();
     const urlArgs = queryString.parse(location.search);
     const { end, start, limit, lookback, maxDuration, minDuration, view } = urlArgs;
     const extraArgs = { end, start, limit, lookback, maxDuration, minDuration, view };
@@ -77,10 +84,10 @@ export class TracesDdgImpl extends React.PureComponent<TOwnProps & TReduxProps> 
         baseUrl={ROUTE_PATH}
         extraUrlArgs={extraArgs}
         showSvcOpsHeader={false}
-        {...this.props}
+        {...props}
       />
     );
   }
-}
+// }
 
 export default connect(mapStateToProps)(TracesDdgImpl);
