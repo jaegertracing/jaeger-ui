@@ -161,6 +161,7 @@ export class SearchTracePageImpl extends Component {
               rawTraces={traceResultsToDownload}
               sortBy={this.state.sortBy}
               handleSortChange={this.handleSortChange}
+              urlQueryParams={urlQueryParams}
             />
           )}
           {showLogo && (

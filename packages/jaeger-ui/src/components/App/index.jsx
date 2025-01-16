@@ -42,7 +42,8 @@ import '../common/vars.css';
 import '../common/utils.css';
 import 'antd/dist/reset.css';
 import './index.css';
-import { store } from '../../utils/configure-store';
+import { history, store } from '../../utils/configure-store';
+import { HistoryProvider } from '../../utils/useHistory';
 
 const jaegerTheme = {
   token: {
@@ -87,21 +88,23 @@ export default class JaegerUIApp extends Component {
     return (
       <ConfigProvider theme={jaegerTheme}>
         <Provider store={store}>
-          <Routes>
-            <Route path="/" element={<Page />}>
-              <Route index element={<SearchTracePage />} />
-              <Route path={searchPath} element={<SearchTracePage />} />
-              <Route path={traceDiffPath} element={<TraceDiff />} />
-              <Route path={tracePath} element={<TracePage />} />
-              <Route path={dependenciesPath} element={<DependencyGraph />} />
-              <Route path={deepDependenciesPath} element={<DeepDependencies />} />
-              <Route path={qualityMetricsPath} element={<QualityMetrics />} />
-              <Route path={monitorATMPath} element={<MonitorATMPage />} />
+          <HistoryProvider history={history}>
+            <Routes>
+              <Route path="/" element={<Page />}>
+                <Route index element={<SearchTracePage />} />
+                <Route path={searchPath} element={<SearchTracePage />} />
+                <Route path={traceDiffPath} element={<TraceDiff />} />
+                <Route path={tracePath} element={<TracePage />} />
+                <Route path={dependenciesPath} element={<DependencyGraph />} />
+                <Route path={deepDependenciesPath} element={<DeepDependencies />} />
+                <Route path={qualityMetricsPath} element={<QualityMetrics />} />
+                <Route path={monitorATMPath} element={<MonitorATMPage />} />
 
-              <Route path={prefixUrl()} element={<Navigate to={searchPath} />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
+                <Route path={prefixUrl()} element={<Navigate to={searchPath} />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </HistoryProvider>
         </Provider>
       </ConfigProvider>
     );

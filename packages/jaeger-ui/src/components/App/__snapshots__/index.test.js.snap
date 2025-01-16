@@ -52,57 +52,83 @@ exports[`JaegerUIApp does not explode 1`] = `
       }
     }
   >
-    <Routes>
-      <Route
-        element={<Memo(Connect(WithRouteProps)) />}
-        path="/"
-      >
+    <HistoryProvider
+      history={
+        Object {
+          "action": "POP",
+          "back": [Function],
+          "block": [Function],
+          "createHref": [Function],
+          "forward": [Function],
+          "go": [Function],
+          "goBack": [Function],
+          "goForward": [Function],
+          "length": 1,
+          "listen": [Function],
+          "listenObject": false,
+          "location": Object {
+            "hash": "",
+            "pathname": "/",
+            "search": "",
+            "state": undefined,
+          },
+          "push": [Function],
+          "replace": [Function],
+        }
+      }
+    >
+      <Routes>
         <Route
-          element={<WithRouteProps />}
-          index={true}
-        />
-        <Route
-          element={<WithRouteProps />}
-          path="/search"
-        />
-        <Route
-          element={<WithRouteProps />}
-          path="/trace-diff/:a?/:b?"
-        />
-        <Route
-          element={<WithRouteProps />}
-          path="/trace/:id"
-        />
-        <Route
-          element={<WithRouteProps />}
-          path="/dependencies"
-        />
-        <Route
-          element={<WithRouteProps />}
-          path="/deep-dependencies"
-        />
-        <Route
-          element={<WithRouteProps />}
-          path="/quality-metrics"
-        />
-        <Route
-          element={<MonitorATMPage />}
-          path="/monitor"
-        />
-        <Route
-          element={
-            <Navigate
-              to="/search"
-            />
-          }
-          path=""
-        />
-        <Route
-          element={<NotFound />}
-          path="*"
-        />
-      </Route>
-    </Routes>
+          element={<Memo(Connect(WithRouteProps)) />}
+          path="/"
+        >
+          <Route
+            element={<WithRouteProps />}
+            index={true}
+          />
+          <Route
+            element={<WithRouteProps />}
+            path="/search"
+          />
+          <Route
+            element={<WithRouteProps />}
+            path="/trace-diff/:a?/:b?"
+          />
+          <Route
+            element={<WithRouteProps />}
+            path="/trace/:id"
+          />
+          <Route
+            element={<WithRouteProps />}
+            path="/dependencies"
+          />
+          <Route
+            element={<WithRouteProps />}
+            path="/deep-dependencies"
+          />
+          <Route
+            element={<WithRouteProps />}
+            path="/quality-metrics"
+          />
+          <Route
+            element={<MonitorATMPage />}
+            path="/monitor"
+          />
+          <Route
+            element={
+              <Navigate
+                to="/search"
+              />
+            }
+            path=""
+          />
+          <Route
+            element={<NotFound />}
+            path="*"
+          />
+        </Route>
+      </Routes>
+    </HistoryProvider>
   </Provider>
 </ConfigProvider>
 `;

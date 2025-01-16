@@ -64,6 +64,7 @@ type SearchResultsProps = {
   rawTraces: TraceData[];
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
+  urlQueryParams: Record<string, string | null>;
 };
 
 type SelectSortProps = {
@@ -99,6 +100,8 @@ export function createBlob(rawTraces: TraceData[]) {
 export class UnconnectedSearchResults extends React.PureComponent<SearchResultsProps> {
   static defaultProps = { skipMessage: false, spanLinks: undefined, queryOfResults: undefined };
 
+  state = { traceResultsView: true, navigateTo: '' };
+
   toggleComparison = (traceID: string, remove?: boolean) => {
     const { cohortAddTrace, cohortRemoveTrace } = this.props;
     if (remove) {
@@ -109,11 +112,14 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
   };
 
   onDdgViewClicked = () => {
-    const { location, history } = this.props;
+    const { history, urlQueryParams } = this.props;
     const urlState = queryString.parse(location.search);
     const view = urlState.view && urlState.view === 'ddg' ? EAltViewActions.Traces : EAltViewActions.Ddg;
     trackAltView(view);
-    history.push(getUrl({ ...urlState, view }));
+
+    const navigateToUrl = getUrl({ ...urlQueryParams, view });
+    this.setState({ traceResultsView: view !== 'ddg', navigateTo: navigateToUrl });
+    history.push(navigateToUrl);
   };
 
   onDownloadResultsClicked = () => {
@@ -144,9 +150,10 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
       traces,
       sortBy,
       handleSortChange,
+      urlQueryParams,
     } = this.props;
 
-    const traceResultsView = queryString.parse(location.search).view !== 'ddg';
+    const { traceResultsView } = this.state;
 
     const diffSelection = !disableComparisons && (
       <DiffSelection toggleComparison={this.toggleComparison} traces={diffCohort} />
@@ -216,7 +223,12 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
         </div>
         {!traceResultsView && (
           <div className="SearchResults--ddg-container">
-            <SearchResultsDDG location={location} history={history} />
+            <SearchResultsDDG
+              location={location}
+              history={history}
+              urlQueryParams={urlQueryParams}
+              navigateTo={this.state.navigateTo}
+            />
           </div>
         )}
         {traceResultsView && diffSelection}

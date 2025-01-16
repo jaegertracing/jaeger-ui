@@ -36,7 +36,9 @@ const svcOp = memoizeOne((service, operation) => ({ service, operation }));
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const urlState = getUrlState(ownProps.location.search);
+  const locationUrlState = getUrlState(ownProps.location.search);
+  const urlState = { ...locationUrlState, ...ownProps.urlQueryParams };
+
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
   let graphState: TDdgStateEntry | undefined;
@@ -63,15 +65,19 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 type TOwnProps = {
   history: RouterHistory;
   location: Location;
+  urlQueryParams: Record<string, string | null>;
+  navigateTo: string;
 };
 
 // export for tests
 export class TracesDdgImpl extends React.PureComponent<TOwnProps & TReduxProps> {
   render(): React.ReactNode {
-    const { location } = this.props;
-    const urlArgs = queryString.parse(location.search);
+    const { navigateTo } = this.props;
+
+    const urlArgs = queryString.parse(navigateTo.split('/search?')[1]);
     const { end, start, limit, lookback, maxDuration, minDuration, view } = urlArgs;
     const extraArgs = { end, start, limit, lookback, maxDuration, minDuration, view };
+
     return (
       <DeepDependencyGraphPageImpl
         baseUrl={ROUTE_PATH}
