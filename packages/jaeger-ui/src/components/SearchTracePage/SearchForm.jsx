@@ -25,25 +25,21 @@ import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { reduxForm, formValueSelector } from 'redux-form';
+import { Field, reduxForm, formValueSelector } from 'redux-form';
 import store from 'store';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
-// import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
 import { getConfigValue } from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
+import { trackSelectService } from '../Monitor/ServicesView/index.track';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
-
-const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input });
-const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: SearchableSelect });
-const ValidatedAdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input, isValidatedInput: true });
 
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
   const start = `${startDate} ${startDateTime}`;
@@ -274,6 +270,13 @@ export class SearchFormImpl extends React.PureComponent {
     const noSelectedService = selectedService === '-' || !selectedService;
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
 
+    const handleServiceChange = (value) => {
+      this.setState({ selectedService: value }, () => {
+        trackSelectService(value);
+        console.log(selectedService);
+      });
+    };
+    
     return (
       <Form layout="vertical" onSubmitCapture={handleSubmit}>
         <FormItem
@@ -285,11 +288,10 @@ export class SearchFormImpl extends React.PureComponent {
         >
           <SearchableSelect
             name="service"
-            onChange={(value) => {
-              console.log(value);
-              this.setState({selectedService: value});
-            }}
+            value={selectedService}
             placeholder="Select A Service"
+            onChange={handleServiceChange}
+            disabled={disabled}
           >
             {services.map(service => (
               <Option key={service.name} value={service.name}>
@@ -308,12 +310,7 @@ export class SearchFormImpl extends React.PureComponent {
           <SearchableSelect
             name="operation"
             placeholder="Select An Operation"
-            disabled={() => {
-              if (selectedService == '-') {
-                return true;
-              }
-              return false;
-            }}
+            disabled={disabled || noSelectedService}
           >
             {['all'].concat(opsForSvc).map(op => (
               <Option key={op} value={op}>
@@ -404,6 +401,7 @@ export class SearchFormImpl extends React.PureComponent {
         <FormItem label="Lookback">
           <SearchableSelect
             name="lookback"
+            disabled={disabled}
             defaultValue="1h"
           >
             {optionsWithinMaxLookback(searchMaxLookback)}
@@ -442,7 +440,7 @@ export class SearchFormImpl extends React.PureComponent {
               </Col>
 
               <Col className="gutter-row" span={10}>
-                <SearchableSelect name="startDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+                <Input name="startDateTime" type="time" disabled={disabled} />
               </Col>
             </Row>
           </FormItem>,
@@ -477,7 +475,7 @@ export class SearchFormImpl extends React.PureComponent {
               </Col>
 
               <Col className="gutter-row" span={10}>
-                <SearchableSelect name="endDateTime" type="time" />
+                <Input name="endDateTime" type="time" disabled={disabled} />
               </Col>
             </Row>
           </FormItem>,
@@ -489,8 +487,8 @@ export class SearchFormImpl extends React.PureComponent {
               <Input
                 name="maxDuration"
                 placeholder={placeholderDurationFields}
-                validate={validateDurationFields}
                 disabled={disabled}
+                validate={validateDurationFields}
               />
             </FormItem>
           </Col>
@@ -500,8 +498,8 @@ export class SearchFormImpl extends React.PureComponent {
               <Input
                 name="minDuration"
                 placeholder={placeholderDurationFields}
-                validate={validateDurationFields}
                 disabled={disabled}
+                validate={validateDurationFields}
               />
             </FormItem>
           </Col>
@@ -513,8 +511,8 @@ export class SearchFormImpl extends React.PureComponent {
             type="number"
             placeholder="Limit Results"
             disabled={disabled}
-            minDuration={1}
-            maxDuration={getConfigValue('search.maxLimit')}
+            min="1"
+            max={getConfigValue('search.maxLimit')}
           />
         </FormItem>
 
