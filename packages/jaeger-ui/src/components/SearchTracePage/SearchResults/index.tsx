@@ -112,7 +112,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
   };
 
   onDdgViewClicked = () => {
-    const { history, urlQueryParams } = this.props;
+    const { location, history, urlQueryParams } = this.props;
     const urlState = queryString.parse(location.search);
     const view = urlState.view && urlState.view === 'ddg' ? EAltViewActions.Traces : EAltViewActions.Ddg;
     trackAltView(view);
