@@ -39,9 +39,11 @@ jobs:
         with:
           path: bundle_size.txt
           key: jaeger-ui-bundle-size
+          restore-keys: |
+            jaeger-ui-bundle-size
           
       - name: Compare bundle sizes
-        if: steps.cache-bundle-size.outputs.cache-hit == 'true'
+        if: steps.cache-bundle-size.outputs.cache-matched-key != ''
         run: |
           OLD_BUNDLE_SIZE=$(cat bundle_size.txt)
           NEW_BUNDLE_SIZE=$(cat new_bundle_size.txt)
@@ -62,8 +64,8 @@ jobs:
         run: mv new_bundle_size.txt bundle_size.txt
         
       - name: Save new bundle size
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ (github.event_name == 'push') && (github.ref == 'refs/heads/main') }}
         uses: actions/cache/save@v4
         with:
           path: bundle_size.txt
-          key: jaeger-ui-bundle-size
+          key: jaeger-ui-bundle-size-${{ github.run_id }}
