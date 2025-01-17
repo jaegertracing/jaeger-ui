@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.AdaptedReduxFormField--isValidatedInput.is-invalid {
+.duration-is-invalid {
   background: #fff9f8;
   border: 1px solid #c00;
 }

@@ -30,7 +30,6 @@ exports[`<KeyValuesTable> renders the expected text for each span value 1`] = `
       Object {
         "basicChildStyle": "json-markup-child",
         "booleanValue": "json-markup-bool",
-        "childFieldsContainer": "_1BXBN",
         "clickableLabel": "_2YKJg _1MGIk _1MFti",
         "collapseIcon": "json-markup-icon-collapse",
         "collapsedContent": "json-markup-collapse-content",

@@ -56,7 +56,7 @@ function makeDateParams(dateOffset = 0) {
 
 const defaultProps = {
   dataCenters: ['dc1'],
-  handleSubmit: () => {},
+  handleSubmit: () => { },
   searchMaxLookback: {
     label: '2 Days',
     value: '2d',
@@ -65,6 +65,8 @@ const defaultProps = {
     { name: 'svcA', operations: ['A', 'B'] },
     { name: 'svcB', operations: ['A', 'B'] },
   ],
+  changeServiceHandler: () => { },
+  submitFormHandler: () => { },
 };
 
 describe('conversion utils', () => {
@@ -389,26 +391,26 @@ describe('<SearchForm>', () => {
 
   it('enables operations only when a service is selected', () => {
     let ops = wrapper.find('[placeholder="Select An Operation"]');
-    expect(ops.prop('props').disabled).toBe(true);
-    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
+    expect(ops.prop('disabled')).toBe(true);
+    wrapper.instance().handleChange({ service: 'svcA' });
     ops = wrapper.find('[placeholder="Select An Operation"]');
-    expect(ops.prop('props').disabled).toBe(false);
+    expect(ops.prop('disabled')).toBe(false);
   });
 
   it('keeps operation disabled when no service selected', () => {
     let ops = wrapper.find('[placeholder="Select An Operation"]');
-    expect(ops.prop('props').disabled).toBe(true);
-    wrapper = shallow(<SearchForm {...defaultProps} selectedService="" />);
+    expect(ops.prop('disabled')).toBe(true);
+    wrapper.instance().handleChange({ service: '' });
     ops = wrapper.find('[placeholder="Select An Operation"]');
-    expect(ops.prop('props').disabled).toBe(true);
+    expect(ops.prop('disabled')).toBe(true);
   });
 
   it('enables operation when unknown service selected', () => {
     let ops = wrapper.find('[placeholder="Select An Operation"]');
-    expect(ops.prop('props').disabled).toBe(true);
-    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcC" />);
+    expect(ops.prop('disabled')).toBe(true);
+    wrapper.instance().handleChange({ service: 'svcC' });
     ops = wrapper.find('[placeholder="Select An Operation"]');
-    expect(ops.prop('props').disabled).toBe(false);
+    expect(ops.prop('disabled')).toBe(false);
   });
 
   it('shows custom date inputs when `props.selectedLookback` is "custom"', () => {
@@ -419,20 +421,23 @@ describe('<SearchForm>', () => {
       ];
     }
     expect(getDateFieldLengths(wrapper)).toEqual([0, 0]);
-    wrapper = shallow(<SearchForm {...defaultProps} selectedLookback="custom" />);
+    wrapper = shallow(<SearchForm {...defaultProps} />);
+    wrapper.instance().handleChange({ lookback: "custom" });
     expect(getDateFieldLengths(wrapper)).toEqual([1, 1]);
   });
 
   it('disables the submit button when a service is not selected', () => {
     let btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeTruthy();
-    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
+    wrapper = shallow(<SearchForm {...defaultProps} />);
+    wrapper.instance().handleChange({ service: 'svcA' });
     btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeFalsy();
   });
 
   it('disables the submit button when the form has invalid data', () => {
-    wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
+    wrapper = shallow(<SearchForm {...defaultProps} />);
+    wrapper.instance().handleChange({ service: 'svcA' });
     let btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     // If this test fails on the following expect statement, this may be a false negative caused by a separate
     // regression.
@@ -452,8 +457,8 @@ describe('<SearchForm>', () => {
     };
     window.getJaegerUiConfig = jest.fn(() => config);
     wrapper = shallow(<SearchForm {...defaultProps} selectedService="svcA" />);
-    const field = wrapper.find(`Field[name="resultsLimit"]`);
-    expect(field.prop('props').max).toEqual(maxLimit);
+    const field = wrapper.find(`Input[name="resultsLimit"]`);
+    expect(field.prop('max')).toEqual(maxLimit);
   });
 });
 
@@ -585,8 +590,9 @@ describe('mapStateToProps()', () => {
 
 describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
-    expect(mapDispatchToProps(() => {})).toEqual({
-      onSubmit: expect.any(Function),
+    expect(mapDispatchToProps(() => { })).toEqual({
+      changeServiceHandler: expect.any(Function),
+      submitFormHandler: expect.any(Function),
     });
   });
 });
