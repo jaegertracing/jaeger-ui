@@ -56,7 +56,7 @@ function makeDateParams(dateOffset = 0) {
 
 const defaultProps = {
   dataCenters: ['dc1'],
-  handleSubmit: () => { },
+  handleSubmit: () => {},
   searchMaxLookback: {
     label: '2 Days',
     value: '2d',
@@ -65,8 +65,8 @@ const defaultProps = {
     { name: 'svcA', operations: ['A', 'B'] },
     { name: 'svcB', operations: ['A', 'B'] },
   ],
-  changeServiceHandler: () => { },
-  submitFormHandler: () => { },
+  changeServiceHandler: () => {},
+  submitFormHandler: () => {},
 };
 
 describe('conversion utils', () => {
@@ -422,7 +422,7 @@ describe('<SearchForm>', () => {
     }
     expect(getDateFieldLengths(wrapper)).toEqual([0, 0]);
     wrapper = shallow(<SearchForm {...defaultProps} />);
-    wrapper.instance().handleChange({ lookback: "custom" });
+    wrapper.instance().handleChange({ lookback: 'custom' });
     expect(getDateFieldLengths(wrapper)).toEqual([1, 1]);
   });
 
@@ -590,7 +590,7 @@ describe('mapStateToProps()', () => {
 
 describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
-    expect(mapDispatchToProps(() => { })).toEqual({
+    expect(mapDispatchToProps(() => {})).toEqual({
       changeServiceHandler: expect.any(Function),
       submitFormHandler: expect.any(Function),
     });
