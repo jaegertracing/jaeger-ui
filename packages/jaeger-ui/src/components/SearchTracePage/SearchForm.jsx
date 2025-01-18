@@ -35,7 +35,7 @@ import {
   DEFAULT_OPERATION,
   DEFAULT_LIMIT,
   DEFAULT_LOOKBACK,
-  FORM_CHANGE_ACTION_TYPE,
+  SEARCH_SIDEBAR_CHANGE_SERVICE_ACTION_TYPE,
 } from '../../constants/search-form';
 import { getConfigValue } from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
@@ -727,7 +727,7 @@ export function mapDispatchToProps(dispatch) {
   return {
     changeServiceHandler: service =>
       dispatch({
-        type: FORM_CHANGE_ACTION_TYPE,
+        type: SEARCH_SIDEBAR_CHANGE_SERVICE_ACTION_TYPE,
         payload: service,
       }),
     submitFormHandler: fields => submitForm(fields, searchTraces),

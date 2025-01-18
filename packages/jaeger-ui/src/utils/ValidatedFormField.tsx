@@ -29,7 +29,7 @@ export default function ValidatedFormField(props: any) {
     <Popover placement="bottomLeft" open={isInvalid} {...validationResult}>
       <Input
         className={cx({
-          'duration-is-invalid': isInvalid,
+          'value-is-invalid': isInvalid,
         })}
         onChange={handleChange}
         onBlur={() => {

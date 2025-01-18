@@ -38,7 +38,7 @@ import {
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
 import getConfig from '../../utils/config/get-config';
-import { FORM_CHANGE_ACTION_TYPE } from '../../constants/search-form';
+import { SEARCH_SIDEBAR_CHANGE_SERVICE_ACTION_TYPE } from '../../constants/search-form';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -702,7 +702,7 @@ describe('mapDispatchToProps()', () => {
     changeServiceHandler(service);
 
     expect(dispatch).toHaveBeenCalledWith({
-      type: FORM_CHANGE_ACTION_TYPE,
+      type: SEARCH_SIDEBAR_CHANGE_SERVICE_ACTION_TYPE,
       payload: service,
     });
   });
