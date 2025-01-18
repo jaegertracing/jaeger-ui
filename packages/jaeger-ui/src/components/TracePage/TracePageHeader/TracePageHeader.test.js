@@ -35,6 +35,7 @@ describe('<TracePageHeader>', () => {
     showViewOptions: false,
     textFilter: '',
     updateTextFilter: () => {},
+    traceIDLength: 7,
   };
 
   let wrapper;
@@ -131,5 +132,17 @@ describe('<TracePageHeader>', () => {
       wrapper.setProps(props);
       expect(wrapper.find({ to: linkToStandalone }).length).toBe(0);
     });
+  });
+
+  it('renders trace ID with correct length', () => {
+    const testTrace = {
+      ...trace,
+      traceID: '1234567890abcdef',
+    };
+    wrapper.setProps({
+      trace: testTrace,
+      traceIDLength: 7,
+    });
+    expect(wrapper.find('.u-tx-muted').text()).toHaveLength(7);
   });
 });

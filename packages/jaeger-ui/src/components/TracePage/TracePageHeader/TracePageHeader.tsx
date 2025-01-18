@@ -37,7 +37,7 @@ import { getTraceLinks } from '../../../model/link-patterns';
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
-import { TraceIDLength } from '../../../constants/default-config';
+import { getConfigValue } from '../../../utils/config/get-config';
 
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
@@ -150,7 +150,8 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
       return { ...rest, value: renderer(trace) };
     });
 
-  const traceShortID = trace.traceID.slice(0, TraceIDLength);
+  const traceIDLength = getConfigValue('traceIDLength');
+  const traceShortID = trace.traceID.slice(0, traceIDLength);
 
   const title = (
     <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>

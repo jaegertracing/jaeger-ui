@@ -20,8 +20,6 @@ import getVersion from '../utils/version/get-version';
 import { version } from '../../package.json';
 import { Config } from '../types/config';
 
-export const TraceIDLength = 7;
-
 const defaultConfig: Config = {
   archiveEnabled: true,
   criticalPathEnabled: true,
@@ -79,7 +77,7 @@ const defaultConfig: Config = {
     },
     maxLimit: 1500,
   },
-  traceIDLength: TraceIDLength,
+  traceIDLength: 7,
   storageCapabilities: {
     archiveStorage: false,
   },
