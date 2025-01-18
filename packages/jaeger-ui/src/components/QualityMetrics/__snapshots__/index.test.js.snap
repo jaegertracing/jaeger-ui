@@ -44,7 +44,6 @@ exports[`QualityMetrics UnconnectedQualityMetrics render renders when loading 1`
   />
   <LoadingIndicator
     centered={true}
-    small={false}
   />
 </div>
 `;
