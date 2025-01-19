@@ -23,8 +23,7 @@ import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
 import 'react-vis/dist/style.css';
 import './ScatterPlot.css';
 
-export default function ScatterPlot(props) {
-  const { data, onValueClick, calculateContainerWidth } = props;
+export default function ScatterPlot({ data, onValueClick, calculateContainerWidth = container => container.clientWidth, }) {
 
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -104,7 +103,7 @@ ScatterPlot.propTypes = {
   calculateContainerWidth: PropTypes.func,
 };
 
-ScatterPlot.defaultProps = {
-  // JSDOM does not, as of 2023, have a layout engine, so allow tests to supply a mock width as a workaround.
-  calculateContainerWidth: container => container.clientWidth,
-};
+// ScatterPlot.defaultProps = {
+//   // JSDOM does not, as of 2023, have a layout engine, so allow tests to supply a mock width as a workaround.
+//   calculateContainerWidth: container => container.clientWidth,
+// };
