@@ -14,17 +14,6 @@
 
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 
-jest.mock('redux-form', () => {
-  function reduxForm() {
-    return component => component;
-  }
-  function formValueSelector() {
-    return () => null;
-  }
-  const Field = () => <div />;
-  return { Field, formValueSelector, reduxForm };
-});
-
 jest.mock('store');
 
 /* eslint-disable import/first */
