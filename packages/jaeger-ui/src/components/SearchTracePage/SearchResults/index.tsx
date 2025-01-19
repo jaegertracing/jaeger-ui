@@ -1,3 +1,5 @@
+// TODO: @ flow
+
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -133,10 +135,10 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
       loading,
       location,
       maxTraceDuration,
-      queryOfResults,
+      queryOfResults = undefined,
       showStandaloneLink,
-      skipMessage,
-      spanLinks,
+      skipMessage = false,
+      spanLinks = undefined,
       traces,
       sortBy,
       handleSortChange,

@@ -27,7 +27,7 @@ import './AccordianLogs.css';
 type AccordianLogsProps = {
   interactive?: boolean;
   isOpen: boolean;
-  linksGetter?: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil | undefined;
+  linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
   logs: Log[];
   onItemToggle?: (log: Log) => void;
   onToggle?: () => void;
@@ -35,7 +35,7 @@ type AccordianLogsProps = {
   timestamp: number;
 };
 
-export default function AccordianLogs({ interactive = true, isOpen, linksGetter, logs, openedItems = undefined, onItemToggle = undefined, onToggle = undefined, timestamp }: AccordianLogsProps) {
+export default function AccordianLogs({ interactive = true, isOpen, linksGetter = undefined, logs, openedItems = undefined, onItemToggle = undefined, onToggle = undefined, timestamp }: AccordianLogsProps) {
   let arrow: React.ReactNode | null = null;
   let HeaderComponent: 'span' | 'a' = 'span';
   let headerProps: object | null = null;
