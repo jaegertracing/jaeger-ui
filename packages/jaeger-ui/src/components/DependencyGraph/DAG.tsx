@@ -41,7 +41,7 @@ export const renderNode = (vertex: TVertex): ReactNode => {
 };
 
 const formatServiceCalls = (
-  serviceCalls: TServiceCall[]
+  serviceCalls: TServiceCall[] = []
 ): {
   nodes: TVertex[];
   edges: TEdge[];
@@ -77,10 +77,6 @@ const formatServiceCalls = (
 const { classNameIsSmall } = Digraph.propsFactories;
 
 export default class DAG extends React.Component<TProps> {
-  static defaultProps = {
-    serviceCalls: [],
-  };
-
   private data: {
     nodes: TVertex[];
     edges: TEdge[];
@@ -94,10 +90,10 @@ export default class DAG extends React.Component<TProps> {
     useDotEdges: true,
   });
 
-  constructor(props: TProps) {
-    super(props);
+  constructor({ serviceCalls = [] }: TProps) {
+    super({ serviceCalls });
 
-    this.data = formatServiceCalls(props.serviceCalls);
+    this.data = formatServiceCalls(serviceCalls);
   }
 
   componentWillUnmount() {

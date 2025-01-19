@@ -119,10 +119,6 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
 
   layoutManager: LayoutManager;
 
-  static defaultProps = {
-    ev: null,
-  };
-
   constructor(props: Props) {
     super(props);
     this.state = {

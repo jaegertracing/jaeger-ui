@@ -69,8 +69,7 @@ function getViewTransform(props: TProps, displaySize: { width: number; height: n
   };
 }
 
-function getClassNames(props: TProps) {
-  const { className, classNamePrefix } = props;
+function getClassNames({ className = '', classNamePrefix = 'plexus' }: TProps) {
   const base = `${classNamePrefix || 'plexus'}-MiniMap`;
   return {
     root: `${base} ${className || ''}`,
@@ -102,10 +101,5 @@ export function MiniMap(props: TProps) {
     </div>
   );
 }
-
-MiniMap.defaultProps = {
-  className: '',
-  classNamePrefix: 'plexus',
-};
 
 export default React.memo(MiniMap);

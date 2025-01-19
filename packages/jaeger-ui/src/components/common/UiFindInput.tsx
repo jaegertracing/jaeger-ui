@@ -46,13 +46,6 @@ type StateType = {
 };
 
 export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateType> {
-  static defaultProps: Partial<TProps> = {
-    forwardedRef: undefined,
-    inputProps: {},
-    trackFindFunction: undefined,
-    uiFind: undefined,
-  };
-
   state = {
     ownInputValue: undefined,
   };
@@ -85,7 +78,8 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
   };
 
   render() {
-    const { allowClear, forwardedRef, inputProps } = this.props;
+    const { allowClear, forwardedRef, inputProps = {}, //Destructuring
+    } = this.props;
 
     const inputValue = _isString(this.state.ownInputValue) ? this.state.ownInputValue : this.props.uiFind;
     const suffix = (

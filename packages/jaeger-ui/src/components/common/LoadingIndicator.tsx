@@ -25,8 +25,7 @@ type LoadingIndicatorProps = {
   style?: React.CSSProperties;
 };
 
-export default function LoadingIndicator(props: LoadingIndicatorProps) {
-  const { centered, vcentered, className, small, ...rest } = props;
+export default function LoadingIndicator({ centered = false, vcentered, className = undefined, small = false, ...rest }: LoadingIndicatorProps) {
   const cls = `
     LoadingIndicator
     ${centered ? 'is-centered' : ''}
@@ -36,9 +35,3 @@ export default function LoadingIndicator(props: LoadingIndicatorProps) {
   `;
   return <LuLoader2 className={cls} {...rest} />;
 }
-
-LoadingIndicator.defaultProps = {
-  centered: false,
-  className: undefined,
-  small: false,
-};

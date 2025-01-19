@@ -81,7 +81,6 @@ exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-service"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -96,7 +95,6 @@ exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-operation"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -155,9 +153,7 @@ exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <NewWindowIcon
-          isLarge={false}
-        />
+        <NewWindowIcon />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -232,7 +228,6 @@ exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-service"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -291,9 +286,7 @@ exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <NewWindowIcon
-          isLarge={false}
-        />
+        <NewWindowIcon />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -368,7 +361,6 @@ exports[`<DdgNodeContent> renders correctly when decorationValue is a string 1`]
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-service"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -383,7 +375,6 @@ exports[`<DdgNodeContent> renders correctly when decorationValue is a string 1`]
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-operation"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -442,9 +433,7 @@ exports[`<DdgNodeContent> renders correctly when decorationValue is a string 1`]
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <NewWindowIcon
-          isLarge={false}
-        />
+        <NewWindowIcon />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -519,7 +508,6 @@ exports[`<DdgNodeContent> renders correctly when decorationValue is a string 2`]
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-service"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -534,7 +522,6 @@ exports[`<DdgNodeContent> renders correctly when decorationValue is a string 2`]
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-operation"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -593,9 +580,7 @@ exports[`<DdgNodeContent> renders correctly when decorationValue is a string 2`]
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <NewWindowIcon
-          isLarge={false}
-        />
+        <NewWindowIcon />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -670,7 +655,6 @@ exports[`<DdgNodeContent> renders correctly when given decorationProgressbar 1`]
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-service"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -685,7 +669,6 @@ exports[`<DdgNodeContent> renders correctly when given decorationProgressbar 1`]
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-operation"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -744,9 +727,7 @@ exports[`<DdgNodeContent> renders correctly when given decorationProgressbar 1`]
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <NewWindowIcon
-          isLarge={false}
-        />
+        <NewWindowIcon />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -824,7 +805,6 @@ exports[`<DdgNodeContent> renders correctly when given decorationProgressbar 2`]
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-service"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -839,7 +819,6 @@ exports[`<DdgNodeContent> renders correctly when given decorationProgressbar 2`]
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-operation"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -898,9 +877,7 @@ exports[`<DdgNodeContent> renders correctly when given decorationProgressbar 2`]
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <NewWindowIcon
-          isLarge={false}
-        />
+        <NewWindowIcon />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -975,7 +952,6 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-service"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -990,7 +966,6 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-operation"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -1049,9 +1024,7 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <NewWindowIcon
-          isLarge={false}
-        />
+        <NewWindowIcon />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -1126,7 +1099,6 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-service"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -1141,7 +1113,6 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-operation"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -1159,9 +1130,7 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <NewWindowIcon
-          isLarge={false}
-        />
+        <NewWindowIcon />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -1204,7 +1173,6 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-service"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -1219,7 +1187,6 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-operation"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -1278,9 +1245,7 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <NewWindowIcon
-          isLarge={false}
-        />
+        <NewWindowIcon />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"
@@ -1355,7 +1320,6 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
         }
       >
         <BreakableText
-          className="BreakableText"
           text="some-service"
           wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
         />
@@ -1446,9 +1410,7 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
       <span
         className="DdgNodeContent--actionsItemIconWrapper"
       >
-        <NewWindowIcon
-          isLarge={false}
-        />
+        <NewWindowIcon />
       </span>
       <span
         className="DdgNodeContent--actionsItemText"

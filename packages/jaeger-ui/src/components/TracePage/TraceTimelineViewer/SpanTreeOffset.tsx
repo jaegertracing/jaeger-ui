@@ -42,12 +42,6 @@ type TProps = TDispatchProps & {
 export class UnconnectedSpanTreeOffset extends React.PureComponent<TProps> {
   ancestorIds: string[];
 
-  static defaultProps = {
-    childrenVisible: false,
-    onClick: undefined,
-    showChildrenIcon: true,
-  };
-
   constructor(props: TProps) {
     super(props);
 
@@ -94,7 +88,7 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<TProps> {
   };
 
   render() {
-    const { childrenVisible, onClick, showChildrenIcon, span } = this.props;
+    const { childrenVisible = false, onClick = undefined, showChildrenIcon = true, span } = this.props;
     const { hasChildren, spanID } = span;
     const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
     const icon =

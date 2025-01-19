@@ -1,5 +1,3 @@
-// TODO: @ flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -97,8 +95,6 @@ export function createBlob(rawTraces: TraceData[]) {
 }
 
 export class UnconnectedSearchResults extends React.PureComponent<SearchResultsProps> {
-  static defaultProps = { skipMessage: false, spanLinks: undefined, queryOfResults: undefined };
-
   toggleComparison = (traceID: string, remove?: boolean) => {
     const { cohortAddTrace, cohortRemoveTrace } = this.props;
     if (remove) {

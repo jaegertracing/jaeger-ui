@@ -116,19 +116,15 @@ function formatValue(key: string, value: any) {
   return <div className="ub-inline-block">{content}</div>;
 }
 
-export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
+export const LinkValue = (props: { href: string; title: string | ''; children: React.ReactNode }) => (
   <a href={props.href} title={props.title} target="_blank" rel="noopener noreferrer">
     {props.children} <IoOpenOutline className="KeyValueTable--linkIcon" />
   </a>
 );
 
-LinkValue.defaultProps = {
-  title: '',
-};
-
 const linkValueList = (links: Link[]) => {
   const dropdownItems = links.map(({ text, url }, index) => ({
-    label: <LinkValue href={url}>{text}</LinkValue>,
+    label: <LinkValue href={url} title={''}>{text}</LinkValue>,
     key: `${url}-${index}`,
   }));
   return dropdownItems;

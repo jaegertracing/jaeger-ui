@@ -38,20 +38,20 @@ type SpanBarRowProps = {
   onChildrenToggled: (spanID: string) => void;
   numTicks: number;
   rpc?:
-    | {
-        viewStart: number;
-        viewEnd: number;
-        color: string;
-        operationName: string;
-        serviceName: string;
-      }
-    | TNil;
+  | {
+    viewStart: number;
+    viewEnd: number;
+    color: string;
+    operationName: string;
+    serviceName: string;
+  }
+  | TNil;
   noInstrumentedServer?:
-    | {
-        color: string;
-        serviceName: string;
-      }
-    | TNil;
+  | {
+    color: string;
+    serviceName: string;
+  }
+  | TNil;
   showErrorIcon: boolean;
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
@@ -68,11 +68,6 @@ type SpanBarRowProps = {
  * performance than the stateless function.
  */
 export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
-  static defaultProps = {
-    className: '',
-    rpc: null,
-  };
-
   _detailToggle = () => {
     this.props.onDetailToggled(this.props.span.spanID);
   };
@@ -83,7 +78,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
 
   render() {
     const {
-      className,
+      className = '',
       color,
       criticalPath,
       columnDivision,
@@ -91,7 +86,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       isDetailExpanded,
       isMatchingFilter,
       numTicks,
-      rpc,
+      rpc = null,
       noInstrumentedServer,
       showErrorIcon,
       getViewedBounds,
@@ -182,9 +177,8 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
             {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
               <ReferencesButton
                 references={span.subsidiarilyReferencedBy}
-                tooltipText={`This span is referenced by ${
-                  span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
-                }`}
+                tooltipText={`This span is referenced by ${span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
+                  }`}
                 focusSpan={focusSpan}
               >
                 <IoCloudUploadOutline />

@@ -38,47 +38,46 @@ type TProps = {
   targetRadius?: number;
 };
 
-function linkId(link: TLink) {
+const linkId = (link: TLink) => {
   const { source, target } = link;
   const srcId = typeof source === 'string' ? source : source.id;
   const targetId = typeof target === 'string' ? target : target.id;
   return `${srcId}=>${targetId}`;
-}
+};
 
-export default class ForceGraphArrowLink extends React.PureComponent<TProps> {
-  static defaultProps = {
-    className: '',
-    edgeOffset: 2,
-    opacity: 0.6,
-    stroke: '#999',
-    strokeWidth: 1,
-    targetRadius: 2,
-  };
+const ForceGraphArrowLink: React.FC<TProps> = ({
+  className = '',
+  edgeOffset = 2,
+  opacity = 0.6,
+  stroke = '#999',
+  strokeWidth = 1,
+  targetRadius = 2,
+  link,
+  color,
+  ...spreadable
+}) => {
+  const id = `arrow-${linkId(link)}`;
+  return (
+    <g>
+      <defs>
+        <marker
+          id={id}
+          markerWidth={6}
+          markerHeight={4}
+          refX={5 + (targetRadius || 0)}
+          refY={2}
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          {Number(targetRadius) > 0 && (
+            <path d="M0,0 L0,4 L6,2 z" fill={stroke || color} />
+          )}
+        </marker>
+      </defs>
 
-  render() {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { link, targetRadius, edgeOffset: _, ...spreadable } = this.props;
-    const id = `arrow-${linkId(link)}`;
-    return (
-      <g>
-        <defs>
-          <marker
-            id={id}
-            markerWidth={6}
-            markerHeight={4}
-            refX={5 + (targetRadius || 0)}
-            refY={2}
-            orient="auto"
-            markerUnits="strokeWidth"
-          >
-            {Number(targetRadius) > 0 && (
-              <path d="M0,0 L0,4 L6,2 z" fill={spreadable.stroke || spreadable.color} />
-            )}
-          </marker>
-        </defs>
+      <ForceGraphLink {...spreadable} link={link} markerEnd={`url(#${id})`} />
+    </g>
+  );
+};
 
-        <ForceGraphLink {...spreadable} link={link} markerEnd={`url(#${id})`} />
-      </g>
-    );
-  }
-}
+export default ForceGraphArrowLink;
