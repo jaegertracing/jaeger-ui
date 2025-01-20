@@ -17,7 +17,7 @@ import { replace } from 'redux-first-history';
 
 import { searchTraces, fetchServiceOperations } from '../actions/jaeger-api';
 import { getUrl as getSearchUrl } from '../components/SearchTracePage/url';
-import { SEARCH_SIDEBAR_CHANGE_SERVICE_ACTION_TYPE } from '../constants/search-form';
+import { CHANGE_SERVICE_ACTION_TYPE } from '../constants/search-form';
 
 export { default as trackMiddleware } from './track';
 
@@ -25,7 +25,7 @@ export { default as trackMiddleware } from './track';
  * Middleware to load "operations" for a particular service.
  */
 export const loadOperationsForServiceMiddleware = store => next => action => {
-  if (action.type === SEARCH_SIDEBAR_CHANGE_SERVICE_ACTION_TYPE && action.payload !== '-') {
+  if (action.type === CHANGE_SERVICE_ACTION_TYPE && action.payload !== '-') {
     store.dispatch(fetchServiceOperations(action.payload));
   }
   return next(action);
