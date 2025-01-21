@@ -136,7 +136,7 @@ export type Config = {
   scripts?: readonly TScript[];
 
   // traceIDLength controls the length of the trace ID displayed in the UI.
-  traceIDLength?: number;
+  traceIdDisplayLength?: number;
 
   // storage capabilities given by the query service.
   storageCapabilities?: StorageCapabilities;
