@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { TraceIdDisplayLength } from './TraceIdDisplayLength';
+import { TraceId } from './TraceIdDisplayLength';
 import { getConfigValue } from '../../utils/config/get-config';
 
 jest.mock('../../utils/config/get-config', () => ({
@@ -37,7 +37,7 @@ describe('TraceIdDisplayLength', () => {
   });
 
   const createWrapper = (props = {}) => {
-    return shallow(<TraceIdDisplayLength {...defaultProps} {...props} />);
+    return shallow(<TraceId {...defaultProps} {...props} />);
   };
 
   describe('TraceIdDisplayLength Component', () => {
