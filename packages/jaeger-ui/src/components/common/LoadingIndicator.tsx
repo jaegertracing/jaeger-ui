@@ -17,21 +17,20 @@ import { LuLoader2 } from 'react-icons/lu';
 
 import './LoadingIndicator.css';
 
-type LoadingIndicatorProps = {
-  centered?: boolean;
-  vcentered?: boolean;
-  className?: string;
-  small?: boolean;
-  style?: React.CSSProperties;
-};
-
 export default function LoadingIndicator({
   centered = false,
   vcentered,
   className = undefined,
   small = false,
+  style,
   ...rest
-}: LoadingIndicatorProps) {
+}: {
+  centered?: boolean;
+  vcentered?: boolean;
+  className?: string;
+  small?: boolean;
+  style?: React.CSSProperties;
+}) {
   const cls = `
     LoadingIndicator
     ${centered ? 'is-centered' : ''}
@@ -39,5 +38,6 @@ export default function LoadingIndicator({
     ${small ? 'is-small' : ''}
     ${className || ''}
   `;
-  return <LuLoader2 className={cls} {...rest} />;
+
+  return <LuLoader2 className={cls}{...rest} style={style} />;
 }
