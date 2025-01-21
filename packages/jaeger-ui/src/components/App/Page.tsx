@@ -17,6 +17,7 @@ import { Layout } from 'antd';
 import cx from 'classnames';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
+import { Outlet } from 'react-router-dom';
 
 import TopNav from './TopNav';
 import { ReduxState } from '../../types';
@@ -62,7 +63,9 @@ export class PageImpl extends React.Component<TProps> {
               <TopNav />
             </Header>
           )}
-          <Content className={contentCls}>{this.props.children}</Content>
+          <Content className={contentCls}>
+            <Outlet />
+          </Content>
         </Layout>
       </div>
     );

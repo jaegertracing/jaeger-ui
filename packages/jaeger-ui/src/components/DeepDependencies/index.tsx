@@ -86,6 +86,7 @@ export type TOwnProps = {
   history: RouterHistory;
   location: Location;
   showSvcOpsHeader: boolean;
+  urlQueryParams: Record<string, string | null>;
 };
 
 export type TProps = TDispatchProps & TReduxProps & TOwnProps;
@@ -411,7 +412,10 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { services: stServices } = state;
   const { services, serverOpsForService } = stServices;
-  const urlState = getUrlState(ownProps.location.search);
+
+  const locationUrlState = getUrlState(ownProps.location.search);
+  const urlState = { ...locationUrlState, ...ownProps.extraUrlArgs };
+
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
   let graphState: TDdgStateEntry | undefined;

@@ -18,7 +18,7 @@ import React from 'react';
 import { createMemoryHistory } from 'history';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Router } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import TraceIDSearchInput from './TraceIDSearchInput';
 import { HistoryProvider } from '../../utils/useHistory';
 
@@ -29,9 +29,9 @@ describe('<TraceIDSearchInput />', () => {
     history = createMemoryHistory();
     render(
       <HistoryProvider history={history}>
-        <Router history={history}>
+        <BrowserRouter>
           <TraceIDSearchInput />
-        </Router>
+        </BrowserRouter>
       </HistoryProvider>
     );
   });

@@ -34,11 +34,7 @@ describe('TraceDiff/url', () => {
 
     it('calls matchPath with expected arguments', () => {
       matches(path);
-      expect(matchPathSpy).toHaveBeenLastCalledWith(path, {
-        path: ROUTE_PATH,
-        strict: true,
-        exact: true,
-      });
+      expect(matchPathSpy).toHaveBeenLastCalledWith(path, ROUTE_PATH);
     });
 
     it("returns truthiness of matchPath's return value", () => {

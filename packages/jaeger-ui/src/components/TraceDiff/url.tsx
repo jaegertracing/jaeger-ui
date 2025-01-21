@@ -24,16 +24,15 @@ export type TDiffRouteParams = {
   b?: string | undefined;
 };
 
-export const ROUTE_PATH = prefixUrl('/trace/:a?\\.\\.\\.:b?');
-
-const ROUTE_MATCHER = { path: ROUTE_PATH, strict: true, exact: true };
+export const ROUTE_PATH = prefixUrl('/trace-diff/:a?/:b?');
 
 export function matches(path: string) {
-  return Boolean(matchPath(path, ROUTE_MATCHER));
+  return Boolean(matchPath(path, ROUTE_PATH));
 }
 
 export function getUrl(state: TTraceDiffState) {
   const { a = undefined, b = undefined, cohort } = getValidState(state);
   const search = queryString.stringify({ cohort });
-  return prefixUrl(`/trace/${a || ''}...${b || ''}${search ? '?' : ''}${search}`);
+  const traceDiffPath = `/trace-diff/${a || ''}${b ? `/${b}` : ''}${search ? '?' : ''}${search}`;
+  return prefixUrl(traceDiffPath);
 }

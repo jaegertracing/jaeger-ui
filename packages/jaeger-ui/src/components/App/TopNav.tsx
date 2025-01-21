@@ -17,7 +17,7 @@ import { Dropdown, Menu, MenuProps } from 'antd';
 import { IoChevronDown } from 'react-icons/io5';
 import _has from 'lodash/has';
 import { connect } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
 import * as dependencyGraph from '../DependencyGraph/url';
@@ -119,8 +119,9 @@ const itemsGlobalLeft: MenuProps['items'] = [
 ];
 
 export function TopNavImpl(props: Props) {
-  const { config, router } = props;
-  const { pathname } = router.location;
+  const location = useLocation();
+  const { config } = props;
+  const { pathname } = location;
   const menuItems = Array.isArray(config.menu) ? config.menu : [];
 
   const itemsGlobalRight: MenuProps['items'] = [

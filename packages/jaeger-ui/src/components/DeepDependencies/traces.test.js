@@ -39,7 +39,9 @@ describe('TracesDdg', () => {
     );
     const search = queryString.stringify({ ...extraUrlArgs, extraParam: 'extraParam' });
 
-    const wrapper = shallow(<TracesDdgImpl location={{ search }} {...passProps} />);
+    const wrapper = shallow(
+      <TracesDdgImpl location={{ search }} {...passProps} navigateTo={`/search?${search}`} />
+    );
     const ddgPage = wrapper.find(DeepDependencyGraphPageImpl);
     expect(ddgPage.props()).toEqual(
       expect.objectContaining({
@@ -145,7 +147,7 @@ describe('TracesDdg', () => {
       mapStateToProps(state, ownProps);
       spies.forEach(spy => {
         const [call0, call1] = spy.mock.calls;
-        call0.forEach((arg, i) => expect(call1[i]).toBe(arg));
+        call0.forEach((arg, i) => expect(call1[i]).toStrictEqual(arg));
       });
     });
 

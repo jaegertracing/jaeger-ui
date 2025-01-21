@@ -56,7 +56,7 @@ export type ReduxState = {
     error: ApiError | TNil;
   };
   embedded: EmbeddedState;
-  router: Router & {
+  router: typeof Router & {
     location: Location<LocationState>;
   };
   services: {
