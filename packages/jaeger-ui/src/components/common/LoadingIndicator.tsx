@@ -20,15 +20,15 @@ import './LoadingIndicator.css';
 export default function LoadingIndicator({
   centered = false,
   vcentered,
-  className = undefined,
+  className = '',
   small = false,
   style,
   ...rest
 }: {
-  centered?: boolean;
+  centered: boolean;
   vcentered?: boolean;
-  className?: string;
-  small?: boolean;
+  className: string;
+  small: boolean;
   style?: React.CSSProperties;
 }) {
   const cls = `
@@ -36,7 +36,7 @@ export default function LoadingIndicator({
     ${centered ? 'is-centered' : ''}
     ${vcentered ? 'is-vcentered' : ''}
     ${small ? 'is-small' : ''}
-    ${className || ''}
+    ${className}
   `;
 
   return <LuLoader2 className={cls}{...rest} style={style} />;
