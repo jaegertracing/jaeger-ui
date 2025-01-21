@@ -46,7 +46,7 @@ describe('TraceIdDisplayLength', () => {
       wrapper = createWrapper();
 
       const displayedText = wrapper.text();
-      expect(displayedText).toEqual(MOCK_TRACE_ID.slice(-DEFAULT_LENGTH));
+      expect(displayedText).toEqual(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
     });
 
     it('renders the config length when provided', () => {
@@ -55,7 +55,7 @@ describe('TraceIdDisplayLength', () => {
       wrapper = createWrapper();
 
       const displayedText = wrapper.text();
-      expect(displayedText).toEqual(MOCK_TRACE_ID.slice(-configuredLength));
+      expect(displayedText).toEqual(MOCK_TRACE_ID.slice(0, configuredLength));
     });
   });
 
