@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
-import { TraceId } from './TraceIdDisplayLength';
+import { TraceId } from './TraceId';
 import { getConfigValue } from '../../utils/config/get-config';
 
 jest.mock('../../utils/config/get-config', () => ({

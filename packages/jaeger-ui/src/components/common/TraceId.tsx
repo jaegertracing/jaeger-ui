@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { getConfigValue } from '../../utils/config/get-config';
-import './TraceIdDisplayLength.css';
+import './TraceId.css';
 
 type Props = {
   traceId: string;

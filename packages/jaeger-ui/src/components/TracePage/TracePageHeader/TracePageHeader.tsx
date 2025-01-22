@@ -37,7 +37,7 @@ import { getTraceLinks } from '../../../model/link-patterns';
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
-import TraceId from '../../common/TraceIdDisplayLength';
+import TraceId from '../../common/TraceId';
 
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
