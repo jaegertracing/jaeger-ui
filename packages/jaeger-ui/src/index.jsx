@@ -57,3 +57,7 @@ if (typeof trackingContext === 'object' && trackingContext !== null) {
     </BrowserRouter>
   );
 }
+
+import('./opentelemetry').catch((error) => {
+  console.error('OpenTelemetry import failed:', error);
+});
