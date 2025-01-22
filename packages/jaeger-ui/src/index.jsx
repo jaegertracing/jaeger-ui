@@ -58,6 +58,6 @@ if (typeof trackingContext === 'object' && trackingContext !== null) {
   );
 }
 
-import('./opentelemetry').catch((error) => {
+import('./opentelemetry').catch(error => {
   console.error('OpenTelemetry import failed:', error);
 });
