@@ -120,10 +120,8 @@ const defaultConfig: Config = {
     menuLabel: 'Trace Quality',
   },
   tracing: {
-    otlp: {
       endpoint: '', // Disabled by default
       serviceName: 'jaeger-ui',
-    },
   },
 };
 

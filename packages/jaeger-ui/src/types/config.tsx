@@ -87,12 +87,10 @@ export type StorageCapabilities = {
   archiveStorage?: boolean;
 };
 
+// tracing jaeger-ui configuration
 export type TracingConfig = {
-  // tracing jaeger-ui configuration
-  otlp?: {
     endpoint: string; // OTLP endpoint to send traces to
     serviceName?: string;
-  };
 };
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx

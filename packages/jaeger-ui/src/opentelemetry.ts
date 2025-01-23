@@ -24,15 +24,15 @@ import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import getConfig from './utils/config/get-config';
 
 try {
-  const { otlp } = getConfig().tracing || {};
+  const tracing = getConfig().tracing;
   const exporter = new OTLPTraceExporter({
-    url: otlp?.endpoint,
+    url: tracing?.endpoint,
     headers: {},
   });
 
   const provider = new WebTracerProvider({
     resource: new Resource({
-      [SemanticResourceAttributes.SERVICE_NAME]: otlp?.serviceName,
+      [SemanticResourceAttributes.SERVICE_NAME]: tracing?.serviceName,
     }),
   });
 
