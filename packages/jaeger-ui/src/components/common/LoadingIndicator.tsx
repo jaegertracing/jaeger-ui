@@ -25,10 +25,10 @@ export default function LoadingIndicator({
   style,
   ...rest
 }: {
-  centered: boolean;
+  centered?: boolean;
   vcentered?: boolean;
-  className: string;
-  small: boolean;
+  className?: string;
+  small?: boolean;
   style?: React.CSSProperties;
 }) {
   const cls = `
