@@ -13,9 +13,7 @@ exports[`<SidePanel> render renders 1`] = `
     className="Ddg--DetailsPanel--SvcOpHeader"
   >
     <BreakableText
-      className="BreakableText"
       text="test svc"
-      wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
     />
   </div>
   <div
@@ -53,9 +51,7 @@ exports[`<SidePanel> render renders detailLink 1`] = `
     className="Ddg--DetailsPanel--SvcOpHeader"
   >
     <BreakableText
-      className="BreakableText"
       text="test svc"
-      wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
     />
   </div>
   <div
@@ -113,9 +109,7 @@ exports[`<SidePanel> render renders details 1`] = `
     className="Ddg--DetailsPanel--SvcOpHeader"
   >
     <BreakableText
-      className="BreakableText"
       text="test svc"
-      wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
     />
   </div>
   <div
@@ -158,9 +152,7 @@ exports[`<SidePanel> render renders details error 1`] = `
     className="Ddg--DetailsPanel--SvcOpHeader"
   >
     <BreakableText
-      className="BreakableText"
       text="test svc"
-      wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
     />
   </div>
   <div
@@ -203,9 +195,7 @@ exports[`<SidePanel> render renders omitted array of operations 1`] = `
     className="Ddg--DetailsPanel--SvcOpHeader"
   >
     <BreakableText
-      className="BreakableText"
       text="test svc"
-      wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
     />
   </div>
   <div
@@ -243,9 +233,7 @@ exports[`<SidePanel> render renders while loading 1`] = `
     className="Ddg--DetailsPanel--SvcOpHeader"
   >
     <BreakableText
-      className="BreakableText"
       text="test svc"
-      wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
     />
   </div>
   <div
@@ -290,14 +278,10 @@ exports[`<SidePanel> render renders with operation 1`] = `
     className="Ddg--DetailsPanel--SvcOpHeader"
   >
     <BreakableText
-      className="BreakableText"
       text="test svc"
-      wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
     />
     <BreakableText
-      className="BreakableText"
       text="::test op"
-      wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
     />
   </div>
   <div
@@ -335,9 +319,7 @@ exports[`<SidePanel> render renders with progressbar 1`] = `
     className="Ddg--DetailsPanel--SvcOpHeader"
   >
     <BreakableText
-      className="BreakableText"
       text="test svc"
-      wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
     />
   </div>
   <div
