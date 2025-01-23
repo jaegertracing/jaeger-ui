@@ -32,9 +32,7 @@ exports[`MetricCard renders as expected when passCount is zero 1`] = `
           rel="noreferrer noopener"
           target="_blank"
         >
-          <NewWindowIcon
-            isLarge={false}
-          />
+          <NewWindowIcon />
         </a>
       </Tooltip>
     </span>
@@ -109,9 +107,7 @@ exports[`MetricCard renders as expected with details 1`] = `
           rel="noreferrer noopener"
           target="_blank"
         >
-          <NewWindowIcon
-            isLarge={false}
-          />
+          <NewWindowIcon />
         </a>
       </Tooltip>
     </span>
@@ -228,9 +224,7 @@ exports[`MetricCard renders as expected without details 1`] = `
           rel="noreferrer noopener"
           target="_blank"
         >
-          <NewWindowIcon
-            isLarge={false}
-          />
+          <NewWindowIcon />
         </a>
       </Tooltip>
     </span>
@@ -305,9 +299,7 @@ exports[`MetricCard renders as expected without details 2`] = `
           rel="noreferrer noopener"
           target="_blank"
         >
-          <NewWindowIcon
-            isLarge={false}
-          />
+          <NewWindowIcon />
         </a>
       </Tooltip>
     </span>

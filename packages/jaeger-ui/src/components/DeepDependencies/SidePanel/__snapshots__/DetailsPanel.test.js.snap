@@ -74,9 +74,7 @@ exports[`<SidePanel> render renders detailLink 1`] = `
         rel="noreferrer noopener"
         target="_blank"
       >
-        <NewWindowIcon
-          isLarge={false}
-        />
+        <NewWindowIcon />
       </a>
     </Tooltip>
   </div>
