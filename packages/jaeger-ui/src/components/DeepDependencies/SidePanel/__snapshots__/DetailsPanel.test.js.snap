@@ -89,9 +89,7 @@ exports[`<SidePanel> render renders detailLink 1`] = `
     className="Ddg--DetailsPanel--LoadingWrapper"
   >
     <LoadingIndicator
-      centered={false}
       className="Ddg--DetailsPanel--LoadingIndicator"
-      small={false}
     />
   </div>
   <VerticalResizer
@@ -268,9 +266,7 @@ exports[`<SidePanel> render renders while loading 1`] = `
     className="Ddg--DetailsPanel--LoadingWrapper"
   >
     <LoadingIndicator
-      centered={false}
       className="Ddg--DetailsPanel--LoadingIndicator"
-      small={false}
     />
   </div>
   <VerticalResizer
