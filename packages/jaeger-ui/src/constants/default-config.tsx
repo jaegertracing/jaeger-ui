@@ -119,6 +119,12 @@ const defaultConfig: Config = {
     menuEnabled: false,
     menuLabel: 'Trace Quality',
   },
+  tracing: {
+    otlp: {
+      endpoint: '', // Disabled by default
+      serviceName: 'jaeger-ui',
+    },
+  },
 };
 
 // Fields that should be merged with user-supplied config values rather than overwritten.

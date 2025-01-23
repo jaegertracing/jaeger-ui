@@ -16,35 +16,30 @@ import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { DocumentLoadInstrumentation } from '@opentelemetry/instrumentation-document-load';
-import { FetchInstrumentation } from '@opentelemetry/instrumentation-fetch';
 import { UserInteractionInstrumentation } from '@opentelemetry/instrumentation-user-interaction';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { ZoneContextManager } from '@opentelemetry/context-zone';
 import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+import getConfig from './utils/config/get-config';
 
 try {
+  const { otlp } = getConfig().tracing || {};
   const exporter = new OTLPTraceExporter({
-    url: 'http://localhost:4318/v1/traces', // why relative URL doesn't work? '/v1/traces' ???
+    url: otlp?.endpoint,
     headers: {},
   });
 
   const provider = new WebTracerProvider({
     resource: new Resource({
-      [SemanticResourceAttributes.SERVICE_NAME]: 'jaeger-ui',
+      [SemanticResourceAttributes.SERVICE_NAME]: otlp?.serviceName,
     }),
   });
 
   provider.addSpanProcessor(new BatchSpanProcessor(exporter));
 
   registerInstrumentations({
-    instrumentations: [
-      new DocumentLoadInstrumentation(),
-      new FetchInstrumentation({
-        ignoreUrls: [/localhost:3000\/sockjs-node/],
-      }),
-      new UserInteractionInstrumentation(),
-    ],
+    instrumentations: [new DocumentLoadInstrumentation(), new UserInteractionInstrumentation()],
     tracerProvider: provider,
   });
 
@@ -52,5 +47,6 @@ try {
     contextManager: new ZoneContextManager(),
   });
 } catch (error) {
+  // eslint-disable-next-line no-console
   console.error('OpenTelemetry initialization failed:', error);
 }
