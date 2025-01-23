@@ -704,7 +704,6 @@ exports[`<ServiceGraph> Loading indicator is displayed 1`] = `
   >
     <LoadingIndicator
       centered={true}
-      small={false}
     />
   </div>
 </div>
@@ -735,7 +734,6 @@ exports[`<ServiceGraph> Loading indicator is displayed when xDomain is empty 1`]
   >
     <LoadingIndicator
       centered={true}
-      small={false}
     />
   </div>
 </div>
