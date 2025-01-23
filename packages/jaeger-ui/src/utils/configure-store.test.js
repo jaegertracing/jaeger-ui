@@ -26,5 +26,4 @@ it('configureStore() should return the redux store', () => {
 
   expect({}.hasOwnProperty.call(store.getState(), 'router')).toBeTruthy();
   expect({}.hasOwnProperty.call(store.getState(), 'trace')).toBeTruthy();
-  expect({}.hasOwnProperty.call(store.getState(), 'form')).toBeTruthy();
 });
