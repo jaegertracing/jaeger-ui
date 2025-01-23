@@ -39,5 +39,5 @@ export default function LoadingIndicator({
     ${className}
   `;
 
-  return <LuLoader2 className={cls}{...rest} style={style} />;
+  return <LuLoader2 className={cls} {...rest} style={style} />;
 }
