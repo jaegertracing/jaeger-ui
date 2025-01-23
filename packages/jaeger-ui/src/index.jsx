@@ -33,6 +33,7 @@ import 'u-basscss/css/margin.css';
 import 'u-basscss/css/padding.css';
 import 'u-basscss/css/position.css';
 import 'u-basscss/css/typography.css';
+import getConfig from './utils/config/get-config';
 
 const UI_ROOT_ID = 'jaeger-ui-root';
 
@@ -58,6 +59,12 @@ if (typeof trackingContext === 'object' && trackingContext !== null) {
   );
 }
 
-import('./opentelemetry').catch(error => {
-  console.error('OpenTelemetry import failed:', error);
-});
+if (getConfig().tracing.endpoint !== '') {
+  import('./opentelemetry').catch(error => {
+    // eslint-disable-next-line no-console
+    console.error('opentelemetry.ts import failed:', error);
+  });
+} else {
+  // eslint-disable-next-line no-console
+  console.info('Tracing Jaeger UI is disabled');
+}
