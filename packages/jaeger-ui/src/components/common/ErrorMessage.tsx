@@ -48,8 +48,7 @@ function ErrorAttr({ name, value }: ErrorAttrProps) {
   );
 }
 
-export function Message(props: SubPartProps) {
-  const { className, error, wrap, wrapperClassName } = props;
+export function Message({ className, error, wrap = false, wrapperClassName }: SubPartProps) {
   const cssClass = `ErrorMessage--msg ${className || ''}`;
 
   const msg =
@@ -66,15 +65,7 @@ export function Message(props: SubPartProps) {
   return msg;
 }
 
-Message.defaultProps = {
-  className: undefined,
-  wrap: false,
-  wrapperClassName: undefined,
-};
-
-export function Details(props: SubPartProps) {
-  const { className, error, wrap, wrapperClassName } = props;
-
+export function Details({ className, error, wrap = false, wrapperClassName }: SubPartProps) {
   if (typeof error === 'string') {
     return null;
   }
@@ -113,12 +104,6 @@ export function Details(props: SubPartProps) {
   return details;
 }
 
-Details.defaultProps = {
-  className: undefined,
-  wrap: false,
-  wrapperClassName: undefined,
-};
-
 export default function ErrorMessage({
   className,
   detailClassName,
@@ -140,9 +125,3 @@ export default function ErrorMessage({
     </div>
   );
 }
-
-ErrorMessage.defaultProps = {
-  className: undefined,
-  detailClassName: undefined,
-  messageClassName: undefined,
-};

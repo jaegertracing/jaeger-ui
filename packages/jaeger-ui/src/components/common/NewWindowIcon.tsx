@@ -22,12 +22,7 @@ type Props = {
   isLarge?: boolean;
 };
 
-export default function NewWindowIcon(props: Props) {
-  const { isLarge, ...rest } = props;
+export default function NewWindowIcon({ isLarge = false, ...rest }: Props) {
   const cls = cx('NewWindowIcon', { 'is-large': isLarge });
   return <IoOpenOutline className={cls} {...rest} data-testid="NewWindowIcon" />;
 }
-
-NewWindowIcon.defaultProps = {
-  isLarge: false,
-};
