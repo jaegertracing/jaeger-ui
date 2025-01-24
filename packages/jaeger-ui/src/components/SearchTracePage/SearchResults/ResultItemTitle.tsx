@@ -26,6 +26,7 @@ import { ApiError } from '../../../types/api-error';
 
 import './ResultItemTitle.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import TraceId from '../../common/TraceId';
 
 type Props = {
   duration?: number;
@@ -107,7 +108,7 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
           {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
           <h3 className="ResultItemTitle--title">
             <TraceName error={error} state={state} traceName={traceName} />
-            <small className="ResultItemTitle--idExcerpt">{traceID.slice(0, 7)}</small>
+            <TraceId traceId={traceID} className="ResultItemTitle--idExcerpt" />
           </h3>
         </WrapperComponent>
       </div>

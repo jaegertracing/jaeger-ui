@@ -27,7 +27,7 @@ export function TraceId({ traceId, className = '' }: Props) {
   const lengthClass = traceIdDisplayLength === 7 ? 'TraceIDLength--short' : 'TraceIDLength--full';
 
   return (
-    <small className={`TraceIDLength ${lengthClass} u-tx-muted ub-pr2 ${className} `}>{traceIdDisplay}</small>
+    <small className={`TraceIDLength ${lengthClass} u-tx-muted  ${className} `}>{traceIdDisplay}</small>
   );
 }
 
