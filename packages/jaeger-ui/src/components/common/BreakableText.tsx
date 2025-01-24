@@ -24,8 +24,7 @@ type Props = {
   wordRegexp?: RegExp;
 };
 
-export default function BreakableText(props: Props) {
-  const { className, text, wordRegexp = WORD_RX } = props;
+export default function BreakableText({ className= 'BreakableText', text, wordRegexp = WORD_RX }: Props) {
   if (!text) {
     return typeof text === 'string' ? text : null;
   }
@@ -44,7 +43,3 @@ export default function BreakableText(props: Props) {
   return spans;
 }
 
-BreakableText.defaultProps = {
-  className: 'BreakableText',
-  wordRegexp: WORD_RX,
-};
