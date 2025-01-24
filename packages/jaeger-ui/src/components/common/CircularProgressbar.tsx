@@ -35,12 +35,12 @@ function CircularProgressbar({
   value,
 }: TProps) {
   const { decorationColor, decorationBackgroundColor } = React.useMemo(() => {
-    const scale = Math.pow(value / maxValue, 1 / 4);
+    const scale = (value / maxValue) ** (1 / 4);
     const saturation = 20 + Math.ceil(scale * 80);
     const light = 50 + Math.ceil((1 - scale) * 30);
     const decorationColor = `hsl(${decorationHue}, ${saturation}%, ${light}%)`;
 
-    const backgroundScale = Math.pow((maxValue - value) / maxValue, 1 / 4);
+    const backgroundScale = ((maxValue - value) / maxValue) ** (1 / 4);
     const backgroundSaturation = 20 + Math.ceil(backgroundScale * 80);
     const backgroundLight = 50 + Math.ceil((1 - backgroundScale) * 30);
     const decorationBackgroundColor = `hsl(${backgroundHue}, ${backgroundSaturation}%, ${backgroundLight}%)`;
