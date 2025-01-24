@@ -18,14 +18,15 @@ import './BreakableText.css';
 
 const WORD_RX = /\W*\w+\W*/g;
 
-type Props = {
+export default function BreakableText({
+  className = 'BreakableText',
+  wordRegexp = WORD_RX,
+  text,
+}: {
   text: string;
   className?: string;
   wordRegexp?: RegExp;
-};
-
-export default function BreakableText(props: Props) {
-  const { className, text, wordRegexp = WORD_RX } = props;
+}) {
   if (!text) {
     return typeof text === 'string' ? text : null;
   }
@@ -43,8 +44,3 @@ export default function BreakableText(props: Props) {
   }
   return spans;
 }
-
-BreakableText.defaultProps = {
-  className: 'BreakableText',
-  wordRegexp: WORD_RX,
-};
