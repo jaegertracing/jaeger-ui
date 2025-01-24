@@ -35,11 +35,9 @@ exports[`ResultItemTitle renders as expected 1`] = `
         state="FETCH_DONE"
         traceName="traceNameValue"
       />
-      <small
-        className="ResultItemTitle--idExcerpt"
-      >
-        trace-i
-      </small>
+      <TraceId
+        traceId="trace-id-longer-than-8"
+      />
     </h3>
   </Link>
 </div>
