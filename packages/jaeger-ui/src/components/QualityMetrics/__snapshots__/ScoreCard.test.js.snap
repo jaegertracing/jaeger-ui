@@ -12,7 +12,7 @@ exports[`ScoreCard renders as expected when score is below max 1`] = `
   <div
     className="ScoreCard--CircularProgressbarWrapper"
   >
-    <CircularProgressbar
+    <Memo([object Object])
       decorationHue={120}
       maxValue={108}
       text="38.9%"
@@ -42,7 +42,7 @@ exports[`ScoreCard renders as expected when score is max 1`] = `
   <div
     className="ScoreCard--CircularProgressbarWrapper"
   >
-    <CircularProgressbar
+    <Memo([object Object])
       decorationHue={120}
       maxValue={108}
       text="100.0%"
@@ -72,7 +72,7 @@ exports[`ScoreCard renders as expected when score is zero 1`] = `
   <div
     className="ScoreCard--CircularProgressbarWrapper"
   >
-    <CircularProgressbar
+    <Memo([object Object])
       backgroundHue={0}
       decorationHue={120}
       maxValue={108}

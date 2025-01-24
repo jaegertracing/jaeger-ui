@@ -7,7 +7,7 @@ exports[`MetricCard renders as expected when passCount is zero 1`] = `
   <div
     className="MetricCard--CircularProgressbarWrapper"
   >
-    <CircularProgressbar
+    <Memo(CircularProgressbar)
       backgroundHue={0}
       decorationHue={0}
       maxValue={255}
@@ -83,7 +83,7 @@ exports[`MetricCard renders as expected with details 1`] = `
   <div
     className="MetricCard--CircularProgressbarWrapper"
   >
-    <CircularProgressbar
+    <Memo(CircularProgressbar)
       decorationHue={120}
       maxValue={363}
       text="29.7%"
@@ -200,7 +200,7 @@ exports[`MetricCard renders as expected without details 1`] = `
   <div
     className="MetricCard--CircularProgressbarWrapper"
   >
-    <CircularProgressbar
+    <Memo(CircularProgressbar)
       decorationHue={120}
       maxValue={363}
       text="29.7%"
@@ -275,7 +275,7 @@ exports[`MetricCard renders as expected without details 2`] = `
   <div
     className="MetricCard--CircularProgressbarWrapper"
   >
-    <CircularProgressbar
+    <Memo(CircularProgressbar)
       decorationHue={120}
       maxValue={363}
       text="29.7%"
