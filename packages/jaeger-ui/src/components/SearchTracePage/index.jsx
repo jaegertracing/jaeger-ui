@@ -14,12 +14,11 @@
 
 /* eslint-disable react/require-default-props */
 
-import React, { useState, useEffect } from 'react';
+import React, { Component } from 'react';
 import { Col, Row, Tabs } from 'antd';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { useNavigate } from 'react-router-dom-v5-compat';
 import store from 'store';
 import memoizeOne from 'memoize-one';
 
@@ -40,35 +39,26 @@ import FileLoader from './FileLoader';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
+import withRouteProps from '../../utils/withRouteProps';
 import { trackSortByChange } from './SearchForm.track';
 
-const SearchTracePageImpl = ({
-  cohortAddTrace,
-  cohortRemoveTrace,
-  diffCohort,
-  embedded,
-  errors,
-  isHomepage,
-  disableFileUploadControl,
-  loadingServices,
-  loadingTraces,
-  maxTraceDuration,
-  services,
-  traceResultsToDownload,
-  queryOfResults,
-  loadJsonTraces,
-  urlQueryParams,
-  sortedTracesXformer,
-  traces,
-  searchTraces,
-  fetchMultipleTraces,
-  fetchServiceOperations,
-  fetchServices,
-}) => {
-  const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
-  const navigate = useNavigate();
-  
-  useEffect(() => {
+// export for tests
+export class SearchTracePageImpl extends Component {
+  state = {
+    sortBy: orderBy.MOST_RECENT,
+  };
+
+  componentDidMount() {
+    const {
+      diffCohort,
+      fetchMultipleTraces,
+      fetchServiceOperations,
+      fetchServices,
+      isHomepage,
+      queryOfResults,
+      searchTraces,
+      urlQueryParams,
+    } = this.props;
     if (!isHomepage && urlQueryParams && !isSameQuery(urlQueryParams, queryOfResults)) {
       searchTraces(urlQueryParams);
     }
@@ -84,87 +74,108 @@ const SearchTracePageImpl = ({
     if (service && service !== '-') {
       fetchServiceOperations(service);
     }
-  }, [urlQueryParams, isHomepage, queryOfResults, diffCohort, searchTraces, fetchMultipleTraces, fetchServiceOperations, fetchServices]);
+  }
 
-  const handleSortChange = (sortBy) => {
-    setSortBy(sortBy);
+  handleSortChange = sortBy => {
+    this.setState({ sortBy });
     trackSortByChange(sortBy);
-  }
+  };
 
-  const goToTrace = (traceID) => {
+  goToTrace = traceID => {
+    const { queryOfResults } = this.props;
     const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
-    navigate(getTraceLocation(traceID, { fromSearch: searchUrl }));
-  }
+    this.props.history.push(getTraceLocation(traceID, { fromSearch: searchUrl }));
+  };
 
-  const traceResults = sortedTracesXformer(traces, sortBy);
-  const hasTraceResults = traceResults && traceResults.length > 0;
-  const showErrors = errors && !loadingTraces;
-  const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
-  const tabItems = [];
-  if (!loadingServices && services) {
-    tabItems.push({ label: 'Search', key: 'searchForm', children: <SearchForm services={services} /> });
-  } else {
-    tabItems.push({ label: 'Search', key: 'searchForm', children: <LoadingIndicator /> });
-  }
-  if (!disableFileUploadControl) {
-    tabItems.push({
-      label: 'Upload',
-      key: 'fileLoader',
-      children: <FileLoader loadJsonTraces={loadJsonTraces} />,
-    });
-  }
-
-  return (
-    <Row className="SearchTracePage--row">
-      {!embedded && (
-        <Col span={6} className="SearchTracePage--column">
-          <div className="SearchTracePage--find">
-            <Tabs size="large" items={tabItems} />
-          </div>
+  render() {
+    const {
+      cohortAddTrace,
+      cohortRemoveTrace,
+      diffCohort,
+      embedded,
+      errors,
+      isHomepage,
+      disableFileUploadControl,
+      loadingServices,
+      loadingTraces,
+      maxTraceDuration,
+      services,
+      traceResultsToDownload,
+      queryOfResults,
+      loadJsonTraces,
+      urlQueryParams,
+      sortedTracesXformer,
+      traces,
+    } = this.props;
+    const { sortBy } = this.state;
+    const traceResults = sortedTracesXformer(traces, sortBy);
+    const hasTraceResults = traceResults && traceResults.length > 0;
+    const showErrors = errors && !loadingTraces;
+    const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
+    const tabItems = [];
+    if (!loadingServices && services) {
+      tabItems.push({ label: 'Search', key: 'searchForm', children: <SearchForm services={services} /> });
+    } else {
+      tabItems.push({ label: 'Search', key: 'searchForm', children: <LoadingIndicator /> });
+    }
+    if (!disableFileUploadControl) {
+      tabItems.push({
+        label: 'Upload',
+        key: 'fileLoader',
+        children: <FileLoader loadJsonTraces={loadJsonTraces} />,
+      });
+    }
+    return (
+      <Row className="SearchTracePage--row">
+        {!embedded && (
+          <Col span={6} className="SearchTracePage--column">
+            <div className="SearchTracePage--find">
+              <Tabs size="large" items={tabItems} />
+            </div>
+          </Col>
+        )}
+        <Col span={!embedded ? 18 : 24} className="SearchTracePage--column">
+          {showErrors && (
+            <div className="js-test-error-message">
+              <h2>There was an error querying for traces:</h2>
+              {errors.map(err => (
+                <ErrorMessage key={err.message} error={err} />
+              ))}
+            </div>
+          )}
+          {!showErrors && (
+            <SearchResults
+              cohortAddTrace={cohortAddTrace}
+              cohortRemoveTrace={cohortRemoveTrace}
+              diffCohort={diffCohort}
+              disableComparisons={embedded}
+              goToTrace={this.goToTrace}
+              hideGraph={embedded && embedded.searchHideGraph}
+              loading={loadingTraces}
+              maxTraceDuration={maxTraceDuration}
+              queryOfResults={queryOfResults}
+              showStandaloneLink={Boolean(embedded)}
+              skipMessage={isHomepage}
+              spanLinks={urlQueryParams && urlQueryParams.spanLinks}
+              traces={traceResults}
+              rawTraces={traceResultsToDownload}
+              sortBy={this.state.sortBy}
+              handleSortChange={this.handleSortChange}
+            />
+          )}
+          {showLogo && (
+            <img
+              className="SearchTracePage--logo js-test-logo"
+              alt="presentation"
+              src={JaegerLogo}
+              width="400"
+            />
+          )}
         </Col>
-      )}
-      <Col span={!embedded ? 18 : 24} className="SearchTracePage--column">
-        {showErrors && (
-          <div className="js-test-error-message">
-            <h2>There was an error querying for traces:</h2>
-            {errors.map(err => (
-              <ErrorMessage key={err.message} error={err} />
-            ))}
-          </div>
-        )}
-        {!showErrors && (
-          <SearchResults
-            cohortAddTrace={cohortAddTrace}
-            cohortRemoveTrace={cohortRemoveTrace}
-            diffCohort={diffCohort}
-            disableComparisons={embedded}
-            goToTrace={goToTrace}
-            hideGraph={embedded && embedded.searchHideGraph}
-            loading={loadingTraces}
-            maxTraceDuration={maxTraceDuration}
-            queryOfResults={queryOfResults}
-            showStandaloneLink={Boolean(embedded)}
-            skipMessage={isHomepage}
-            spanLinks={urlQueryParams && urlQueryParams.spanLinks}
-            traces={traceResults}
-            rawTraces={traceResultsToDownload}
-            sortBy={sortBy}
-            handleSortChange={handleSortChange}
-          />
-        )}
-        {showLogo && (
-          <img
-            className="SearchTracePage--logo js-test-logo"
-            alt="presentation"
-            src={JaegerLogo}
-            width="400"
-          />
-        )}
-      </Col>
-    </Row>
-  );
-};
-
+      </Row>
+    );
+  }
+}
 SearchTracePageImpl.propTypes = {
   isHomepage: PropTypes.bool,
   // eslint-disable-next-line react/forbid-prop-types
@@ -195,6 +206,9 @@ SearchTracePageImpl.propTypes = {
     })
   ),
   searchTraces: PropTypes.func,
+  history: PropTypes.shape({
+    push: PropTypes.func,
+  }),
   fetchMultipleTraces: PropTypes.func,
   fetchServiceOperations: PropTypes.func,
   fetchServices: PropTypes.func,
@@ -306,4 +320,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SearchTracePageImpl);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(SearchTracePageImpl));
