@@ -16,7 +16,11 @@ import * as React from 'react';
 
 import './TimelineRow.css';
 
-export default function TimelineRow({ children, className = '', ...rest }: {
+export default function TimelineRow({
+  children,
+  className = '',
+  ...rest
+}: {
   children: React.ReactNode;
   className?: string;
 }) {
@@ -32,17 +36,19 @@ function TimelineRowCell({
   className = '',
   width,
   style = {},
+  onClick,
   ...rest
 }: {
   children: React.ReactNode;
   className?: string;
   width: number;
   style?: object;
+  onClick?: () => void;
 }) {
   const widthPercent = `${width * 100}%`;
   const mergedStyle = { ...style, flexBasis: widthPercent, maxWidth: widthPercent };
   return (
-    <div className={`ub-relative ${className}`} style={mergedStyle} {...rest}>
+    <div className={`ub-relative ${className}`} style={mergedStyle} onClick={onClick} {...rest}>
       {children}
     </div>
   );
