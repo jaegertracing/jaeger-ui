@@ -81,7 +81,34 @@ function getClassNames(props: TProps) {
   };
 }
 
-export function MiniMap(props: TProps) {
+export function MiniMap({
+  className = '',
+  classNamePrefix = 'plexus',
+  contentHeight,
+  contentWidth,
+  viewAll,
+  zoomIn,
+  zoomOut,
+  viewportHeight,
+  viewportWidth,
+  k,
+  x,
+  y,
+}: TProps) {
+  const props = {
+    className,
+    classNamePrefix,
+    contentHeight,
+    contentWidth,
+    viewAll,
+    zoomIn,
+    zoomOut,
+    viewportHeight,
+    viewportWidth,
+    k,
+    x,
+    y,
+  };
   const css = getClassNames(props);
   const mapSize = getMapSize(props);
   const activeXform = getViewTransform(props, mapSize);
@@ -102,10 +129,5 @@ export function MiniMap(props: TProps) {
     </div>
   );
 }
-
-MiniMap.defaultProps = {
-  className: '',
-  classNamePrefix: 'plexus',
-};
 
 export default React.memo(MiniMap);
