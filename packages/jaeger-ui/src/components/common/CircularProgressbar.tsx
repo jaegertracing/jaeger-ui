@@ -26,40 +26,51 @@ type TProps = {
   value: number;
 };
 
-export default class CircularProgressbar extends React.PureComponent<TProps> {
-  render() {
-    const { backgroundHue, decorationHue = 0, maxValue, strokeWidth, text, value } = this.props;
-    const scale = (value / maxValue) ** (1 / 4);
+function CircularProgressbar({
+  backgroundHue,
+  decorationHue = 0,
+  maxValue,
+  strokeWidth,
+  text,
+  value,
+}: TProps) {
+  const { decorationColor, decorationBackgroundColor } = React.useMemo(() => {
+    const scale = Math.pow(value / maxValue, 1 / 4);
     const saturation = 20 + Math.ceil(scale * 80);
     const light = 50 + Math.ceil((1 - scale) * 30);
     const decorationColor = `hsl(${decorationHue}, ${saturation}%, ${light}%)`;
-    const backgroundScale = ((maxValue - value) / maxValue) ** (1 / 4);
+
+    const backgroundScale = Math.pow((maxValue - value) / maxValue, 1 / 4);
     const backgroundSaturation = 20 + Math.ceil(backgroundScale * 80);
     const backgroundLight = 50 + Math.ceil((1 - backgroundScale) * 30);
     const decorationBackgroundColor = `hsl(${backgroundHue}, ${backgroundSaturation}%, ${backgroundLight}%)`;
 
-    return (
-      <div data-testid="circular-progress-bar">
-        <CircularProgressbarImpl
-          styles={{
-            path: {
-              stroke: decorationColor,
-              strokeLinecap: 'butt',
-            },
-            text: {
-              fill: decorationColor,
-            },
-            trail: {
-              stroke: backgroundHue !== undefined ? decorationBackgroundColor : 'transparent',
-              strokeLinecap: 'butt',
-            },
-          }}
-          maxValue={maxValue}
-          strokeWidth={strokeWidth}
-          text={text}
-          value={value}
-        />
-      </div>
-    );
-  }
+    return { decorationColor, decorationBackgroundColor };
+  }, [backgroundHue, decorationHue, maxValue, value]);
+
+  return (
+    <div data-testid="circular-progress-bar">
+      <CircularProgressbarImpl
+        styles={{
+          path: {
+            stroke: decorationColor,
+            strokeLinecap: 'butt',
+          },
+          text: {
+            fill: decorationColor,
+          },
+          trail: {
+            stroke: backgroundHue !== undefined ? decorationBackgroundColor : 'transparent',
+            strokeLinecap: 'butt',
+          },
+        }}
+        maxValue={maxValue}
+        strokeWidth={strokeWidth}
+        text={text}
+        value={value}
+      />
+    </div>
+  );
 }
+
+export default React.memo(CircularProgressbar);

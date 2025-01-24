@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`extractDecorationFromState prefers operation specific decoration over service decoration 1`] = `
-<CircularProgressbar
+<Memo(CircularProgressbar)
   backgroundHue={120}
   decorationHue={0}
   maxValue={108}
@@ -12,7 +12,7 @@ exports[`extractDecorationFromState prefers operation specific decoration over s
 `;
 
 exports[`extractDecorationFromState returns service decoration 1`] = `
-<CircularProgressbar
+<Memo(CircularProgressbar)
   backgroundHue={120}
   decorationHue={0}
   maxValue={108}
