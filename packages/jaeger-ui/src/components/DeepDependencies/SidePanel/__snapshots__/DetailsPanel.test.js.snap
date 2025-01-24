@@ -65,7 +65,11 @@ exports[`<SidePanel> render renders detailLink 1`] = `
       Decorating test svc
     </span>
     <Tooltip
-      arrowPointAtCenter={true}
+      arrow={
+        Object {
+          "pointAtCenter": true,
+        }
+      }
       title="More Info"
     >
       <a

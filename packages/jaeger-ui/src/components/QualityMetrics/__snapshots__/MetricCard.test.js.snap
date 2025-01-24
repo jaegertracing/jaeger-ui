@@ -24,7 +24,11 @@ exports[`MetricCard renders as expected when passCount is zero 1`] = `
       Metric Name
        
       <Tooltip
-        arrowPointAtCenter={true}
+        arrow={
+          Object {
+            "pointAtCenter": true,
+          }
+        }
         title="Metric Documentation"
       >
         <a
@@ -99,7 +103,11 @@ exports[`MetricCard renders as expected with details 1`] = `
       Metric Name
        
       <Tooltip
-        arrowPointAtCenter={true}
+        arrow={
+          Object {
+            "pointAtCenter": true,
+          }
+        }
         title="Metric Documentation"
       >
         <a
@@ -216,7 +224,11 @@ exports[`MetricCard renders as expected without details 1`] = `
       Metric Name
        
       <Tooltip
-        arrowPointAtCenter={true}
+        arrow={
+          Object {
+            "pointAtCenter": true,
+          }
+        }
         title="Metric Documentation"
       >
         <a
@@ -291,7 +303,11 @@ exports[`MetricCard renders as expected without details 2`] = `
       Metric Name
        
       <Tooltip
-        arrowPointAtCenter={true}
+        arrow={
+          Object {
+            "pointAtCenter": true,
+          }
+        }
         title="Metric Documentation"
       >
         <a
