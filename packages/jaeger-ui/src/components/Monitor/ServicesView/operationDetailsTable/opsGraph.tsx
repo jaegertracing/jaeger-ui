@@ -13,12 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import {
-  XYPlot,
-  AreaSeries,
-  LineSeries,
-  // @ts-ignore
-} from 'react-vis';
+import { AreaChart, Area, ResponsiveContainer, YAxis } from 'recharts';
 import { ApiError } from '../../../../types/api-error';
 import { Points } from '../../../../types/metrics';
 
@@ -51,34 +46,28 @@ export class OperationsGraph extends React.PureComponent<TProps> {
     }
 
     const dynProps: {
-      yDomain?: yDomain;
+      domain?: yDomain;
     } = {};
 
     if (yDomain) {
-      dynProps.yDomain = yDomain;
+      dynProps.domain = yDomain;
     }
 
     return (
       <div className="ops-container">
-        <XYPlot
-          margin={{
-            left: 0,
-            right: 0,
-            bottom: 1,
-            top: 2,
-          }}
-          width={100}
-          height={15}
-        >
-          <AreaSeries
-            className="area-series-example ops-graph-style"
-            curve="curveLinear"
-            color={color}
-            data={dataPoints}
-            {...dynProps}
-          />
-          <LineSeries className="area-elevated-line-series" color={color} data={dataPoints} {...dynProps} />
-        </XYPlot>
+        <ResponsiveContainer width={100} height={15}>
+          <AreaChart
+            margin={{
+              left: 0,
+              right: 0,
+              bottom: 0,
+              top: 0,
+            }}
+            data={dataPoints}>
+            <YAxis hide={true} {...dynProps} />
+            <Area type="step" dataKey="y" stroke="none" fill={color} fillOpacity={1} baseValue={0.1} />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     );
   }
