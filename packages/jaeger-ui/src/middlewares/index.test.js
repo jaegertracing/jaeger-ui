@@ -25,7 +25,7 @@ jest.mock(
 
 import * as jaegerMiddlewares from './index';
 import { fetchServiceOperations } from '../actions/jaeger-api';
-import { SEARCH_SIDEBAR_CHANGE_SERVICE_ACTION_TYPE } from '../constants/search-form';
+import { CHANGE_SERVICE_ACTION_TYPE } from '../constants/search-form';
 
 it('jaegerMiddlewares should contain the promise middleware', () => {
   expect(typeof jaegerMiddlewares.promise).toBe('function');
@@ -36,7 +36,7 @@ it('loadOperationsForServiceMiddleware fetches operations for services', () => {
   const dispatch = jest.fn();
   const next = jest.fn();
   const action = {
-    type: SEARCH_SIDEBAR_CHANGE_SERVICE_ACTION_TYPE,
+    type: CHANGE_SERVICE_ACTION_TYPE,
     payload: 'yo',
   };
   loadOperationsForServiceMiddleware({ dispatch })(next)(action);

@@ -38,7 +38,7 @@ import {
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
 import getConfig from '../../utils/config/get-config';
-import { SEARCH_SIDEBAR_CHANGE_SERVICE_ACTION_TYPE } from '../../constants/search-form';
+import { CHANGE_SERVICE_ACTION_TYPE } from '../../constants/search-form';
 
 function makeDateParams(dateOffset = 0) {
   const date = new Date();
@@ -450,6 +450,26 @@ describe('<SearchForm>', () => {
     expect(btn.prop('disabled')).toBeTruthy();
   });
 
+  it('disables the submit button when duration is invalid', () => {
+    wrapper = shallow(<SearchForm {...defaultProps} />);
+    wrapper.instance().handleChange({ service: 'svcA' });
+    wrapper.instance().handleChange({ minDuration: '1ms' });
+    let btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
+    let invalidDuration =
+      validateDurationFields(wrapper.state().formData.minDuration) ||
+      validateDurationFields(wrapper.state().formData.maxDuration);
+    expect(invalidDuration).not.toBeDefined();
+    expect(btn.prop('disabled')).toBeFalsy();
+
+    wrapper.instance().handleChange({ minDuration: '1kg' });
+    btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
+    invalidDuration =
+      validateDurationFields(wrapper.state().formData.minDuration) ||
+      validateDurationFields(wrapper.state().formData.maxDuration);
+    expect(invalidDuration).toBeDefined();
+    expect(btn.prop('disabled')).toBeTruthy();
+  });
+
   it('uses config.search.maxLimit', () => {
     const maxLimit = 6789;
     getConfig.apply({}, []);
@@ -702,7 +722,7 @@ describe('mapDispatchToProps()', () => {
     changeServiceHandler(service);
 
     expect(dispatch).toHaveBeenCalledWith({
-      type: SEARCH_SIDEBAR_CHANGE_SERVICE_ACTION_TYPE,
+      type: CHANGE_SERVICE_ACTION_TYPE,
       payload: service,
     });
   });

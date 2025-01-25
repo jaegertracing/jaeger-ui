@@ -25,9 +25,7 @@ exports[`ScoreCard renders as expected when score is below max 1`] = `
     target="_blank"
   >
     How to improve 
-    <NewWindowIcon
-      isLarge={false}
-    />
+    <NewWindowIcon />
   </a>
 </div>
 `;
@@ -57,9 +55,7 @@ exports[`ScoreCard renders as expected when score is max 1`] = `
     target="_blank"
   >
     Great! What does this mean 
-    <NewWindowIcon
-      isLarge={false}
-    />
+    <NewWindowIcon />
   </a>
 </div>
 `;
@@ -90,9 +86,7 @@ exports[`ScoreCard renders as expected when score is zero 1`] = `
     target="_blank"
   >
     How to improve 
-    <NewWindowIcon
-      isLarge={false}
-    />
+    <NewWindowIcon />
   </a>
 </div>
 `;

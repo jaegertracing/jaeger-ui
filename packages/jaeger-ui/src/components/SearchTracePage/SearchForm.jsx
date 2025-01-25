@@ -35,7 +35,7 @@ import {
   DEFAULT_OPERATION,
   DEFAULT_LIMIT,
   DEFAULT_LOOKBACK,
-  SEARCH_SIDEBAR_CHANGE_SERVICE_ACTION_TYPE,
+  CHANGE_SERVICE_ACTION_TYPE,
 } from '../../constants/search-form';
 import { getConfigValue } from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
@@ -302,13 +302,15 @@ export class SearchFormImpl extends React.PureComponent {
   };
 
   render() {
-    const { invalid, searchMaxLookback, services, submitting: disabled } = this.props;
+    const { invalid, searchMaxLookback, services, submitting } = this.props;
     const { formData } = this.state;
     const { service: selectedService, lookback: selectedLookback } = formData;
     const selectedServicePayload = services.find(s => s.name === selectedService);
     const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
     const noSelectedService = selectedService === '-' || !selectedService;
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
+    const invalidDuration =
+      validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
 
     return (
       <Form layout="vertical" onSubmitCapture={this.handleSubmit}>
@@ -323,7 +325,7 @@ export class SearchFormImpl extends React.PureComponent {
             name="service"
             value={this.state.formData.service}
             placeholder="Select A Service"
-            disabled={disabled}
+            disabled={submitting}
             onChange={value => this.handleChange({ service: value })}
           >
             {services.map(service => (
@@ -343,7 +345,7 @@ export class SearchFormImpl extends React.PureComponent {
           <SearchableSelect
             name="operation"
             value={this.state.formData.operation}
-            disabled={disabled || noSelectedService}
+            disabled={submitting || noSelectedService}
             placeholder="Select An Operation"
             onChange={value => this.handleChange({ operation: value })}
           >
@@ -429,7 +431,7 @@ export class SearchFormImpl extends React.PureComponent {
           <Input
             name="tags"
             value={this.state.formData.tags}
-            disabled={disabled}
+            disabled={submitting}
             placeholder="http.status_code=200 error=true"
             onChange={e => this.handleChange({ tags: e.target.value })}
           />
@@ -439,7 +441,7 @@ export class SearchFormImpl extends React.PureComponent {
           <SearchableSelect
             name="lookback"
             value={this.state.formData.lookback}
-            disabled={disabled}
+            disabled={submitting}
             defaultValue={DEFAULT_LOOKBACK}
             onChange={value => this.handleChange({ lookback: value })}
           >
@@ -473,7 +475,7 @@ export class SearchFormImpl extends React.PureComponent {
                 <Input
                   name="startDate"
                   value={this.state.formData.startDate}
-                  disabled={disabled}
+                  disabled={submitting}
                   type="date"
                   placeholder="Start Date"
                   onChange={e => this.handleChange({ startDate: e.target.value })}
@@ -484,7 +486,7 @@ export class SearchFormImpl extends React.PureComponent {
                 <Input
                   name="startDateTime"
                   value={this.state.formData.startDateTime}
-                  disabled={disabled}
+                  disabled={submitting}
                   type="time"
                   onChange={e => this.handleChange({ startDateTime: e.target.value })}
                 />
@@ -516,7 +518,7 @@ export class SearchFormImpl extends React.PureComponent {
                 <Input
                   name="endDate"
                   value={this.state.formData.endDate}
-                  disabled={disabled}
+                  disabled={submitting}
                   type="date"
                   placeholder="End Date"
                   onChange={e => this.handleChange({ endDate: e.target.value })}
@@ -527,7 +529,7 @@ export class SearchFormImpl extends React.PureComponent {
                 <Input
                   name="endDateTime"
                   value={this.state.formData.endDateTime}
-                  disabled={disabled}
+                  disabled={submitting}
                   type="time"
                   onChange={e => this.handleChange({ endDateTime: e.target.value })}
                 />
@@ -542,7 +544,7 @@ export class SearchFormImpl extends React.PureComponent {
               <ValidatedFormField
                 name="maxDuration"
                 value={this.state.formData.maxDuration}
-                disabled={disabled}
+                disabled={submitting}
                 validate={validateDurationFields}
                 placeholder={placeholderDurationFields}
                 onChange={e => this.handleChange({ maxDuration: e.target.value })}
@@ -555,7 +557,7 @@ export class SearchFormImpl extends React.PureComponent {
               <ValidatedFormField
                 name="minDuration"
                 value={this.state.formData.minDuration}
-                disabled={disabled}
+                disabled={submitting}
                 validate={validateDurationFields}
                 placeholder={placeholderDurationFields}
                 onChange={e => this.handleChange({ minDuration: e.target.value })}
@@ -568,7 +570,7 @@ export class SearchFormImpl extends React.PureComponent {
           <Input
             name="resultsLimit"
             value={this.state.formData.resultsLimit}
-            disabled={disabled}
+            disabled={submitting}
             type="number"
             placeholder="Limit Results"
             min={1}
@@ -580,7 +582,7 @@ export class SearchFormImpl extends React.PureComponent {
         <Button
           htmlType="submit"
           className="SearchForm--submit"
-          disabled={disabled || noSelectedService || invalid}
+          disabled={submitting || noSelectedService || invalid || invalidDuration}
           data-test={markers.SUBMIT_BTN}
         >
           Find Traces
@@ -727,7 +729,7 @@ export function mapDispatchToProps(dispatch) {
   return {
     changeServiceHandler: service =>
       dispatch({
-        type: SEARCH_SIDEBAR_CHANGE_SERVICE_ACTION_TYPE,
+        type: CHANGE_SERVICE_ACTION_TYPE,
         payload: service,
       }),
     submitFormHandler: fields => submitForm(fields, searchTraces),
