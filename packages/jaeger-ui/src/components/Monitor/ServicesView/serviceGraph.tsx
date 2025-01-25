@@ -136,7 +136,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
         graphs.push(
           <Area
             key={i++}
-            type="linear"
+            type="step"
             dataKey={line.quantile.toString()}
             stroke={color || this.colors[idx]}
             strokeWidth={2}
@@ -226,7 +226,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
             tickLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
             axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
             height={30}
-            reversed />
+          />
           <YAxis
             domain={yDomain}
             tickFormatter={yAxisTickFormat}
