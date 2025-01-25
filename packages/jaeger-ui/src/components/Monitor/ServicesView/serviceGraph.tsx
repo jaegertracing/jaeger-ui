@@ -13,21 +13,21 @@
 // limitations under the License.
 
 import * as React from 'react';
-import {
-  XYPlot,
-  XAxis,
-  YAxis,
-  HorizontalGridLines,
-  LineSeries,
-  AreaSeries,
-  Crosshair,
-  DiscreteColorLegend,
-  // @ts-ignore
-} from 'react-vis';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import { ServiceMetricsObject, Points } from '../../../types/metrics';
 import './serviceGraph.css';
 import { ApiError } from '../../../types/api-error';
+import {
+  AreaChart,
+  Area,
+  CartesianGrid,
+  Legend,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 type TProps = {
   width: number;
@@ -40,7 +40,7 @@ type TProps = {
   yDomain?: number[];
   color?: string;
   marginClassName?: string;
-  yAxisTickFormat?: (v: number) => number;
+  yAxisTickFormat?: (v: number) => string;
   xDomain: number[];
 };
 
@@ -57,6 +57,36 @@ export const tickFormat = (v: number) => {
   const minutes = dateObj.getMinutes().toString();
 
   return `${hours.length === 1 ? `0${hours}` : hours}:${minutes.length === 1 ? `0${minutes}` : minutes}`;
+};
+
+type TPlaceholder = {
+  name: string;
+  marginClassName?: string;
+  width: number;
+  height: number;
+  children: string | React.ReactNode;
+};
+
+const Placeholder = ({ name, marginClassName, width, height, children }: TPlaceholder) => {
+  return (
+    <div
+      className={`graph-container ${marginClassName}`}
+      style={{
+        height,
+      }}
+    >
+      <h3 className="graph-header">{name}</h3>
+      <div
+        className="center-placeholder"
+        style={{
+          width,
+          height: height - 74,
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
 };
 
 // export for tests
@@ -78,6 +108,23 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
     return Array.isArray(metricsData) ? metricsData : [metricsData];
   }
 
+  getMetricsData(): number[] {
+    const serviceMetricObjects = this.getData();
+    // Create data array for recharts with length of the first metricPoint
+    let result = Array(serviceMetricObjects[0].metricPoints.length);
+    // Loop through len and create array objects of data
+    for (let i = 0; i < serviceMetricObjects[0].metricPoints.length; i++) {
+      result[i] = {
+        x: serviceMetricObjects[0].metricPoints[i].x,
+        ...serviceMetricObjects.reduce((acc: Record<string, number>, obj) => {
+          acc[obj.quantile.toString()] = obj.metricPoints[i].y ?? 0;
+          return acc;
+        }, {}),
+      };
+    }
+    return result;
+  }
+
   renderLines() {
     const { metricsData, color } = this.props;
 
@@ -87,28 +134,14 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
 
       this.getData().forEach((line: ServiceMetricsObject, idx: number) => {
         graphs.push(
-          <AreaSeries
+          <Area
             key={i++}
-            data={line.metricPoints ? line.metricPoints : []}
-            getNull={(d: Points) => d.y !== null}
-            onNearestX={(_datapoint: Points, { index }: { index: number }) => {
-              this.setState({
-                crosshairValues: this.getData().map((d: ServiceMetricsObject) => ({
-                  ...d.metricPoints[index],
-                  label: d.quantile,
-                })),
-              });
-            }}
-            opacity={0.1}
-            color={[color || this.colors[idx]]}
-          />
-        );
-        graphs.push(
-          <LineSeries
-            getNull={(d: Points) => d.y !== null}
-            key={i++}
-            data={line.metricPoints ? line.metricPoints : []}
-            color={[color || this.colors[idx]]}
+            type="linear"
+            dataKey={line.quantile.toString()}
+            stroke={color || this.colors[idx]}
+            strokeWidth={2}
+            fill={color || this.colors[idx]}
+            fillOpacity={0.1}
           />
         );
       });
@@ -149,74 +182,94 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
       yAxisTickFormat,
       xDomain,
     } = this.props;
-    let GraphComponent = this.generatePlaceholder(<LoadingIndicator centered />);
-    const noDataComponent = this.generatePlaceholder('No Data');
-    const apiErrorComponent = this.generatePlaceholder('Couldn’t fetch data');
 
-    const Plot = (
-      <XYPlot
-        margin={{ bottom: 25 }}
-        onMouseLeave={() => this.setState({ crosshairValues: [] })}
+    if (loading || xDomain.length === 0)
+      return <Placeholder
+        name={name}
+        marginClassName={marginClassName}
         width={width}
-        height={this.height - 74}
-        xDomain={xDomain}
-        yDomain={yDomain}
-      >
-        {showHorizontalLines ? <HorizontalGridLines /> : null}
-        <XAxis tickFormat={tickFormat} tickTotal={Math.floor(width / 60)} />
-        <YAxis tickFormat={yAxisTickFormat} />
-        {this.renderLines()}
-        <Crosshair values={this.state.crosshairValues}>
-          <div className="crosshair-value">
-            {this.state.crosshairValues[0] &&
-              `${new Date(this.state.crosshairValues[0].x).toLocaleDateString()} ${new Date(
-                this.state.crosshairValues[0].x
-              ).toLocaleTimeString()}`}
-            {this.state.crosshairValues.reverse().map((d: TCrossHairValues) =>
-              showLegend ? (
-                <div key={d.label}>
-                  P{d.label * 100}: {d.y}
-                </div>
-              ) : (
-                <div key={d.label}>{d.y}</div>
-              )
-            )}
-          </div>
-        </Crosshair>
-        {showLegend ? (
-          <DiscreteColorLegend
-            className="legend-label"
-            orientation="horizontal"
-            items={this.getData()
-              .map((d: ServiceMetricsObject, idx: number) => ({
-                color: this.colors[idx],
-                title: `${d.quantile * 100}th`,
-              }))
-              .reverse()}
-          />
-        ) : null}
-      </XYPlot>
-    );
+        height={this.height}>
+        <LoadingIndicator centered />
+      </Placeholder>;
 
-    if (!loading && xDomain.length > 0) {
-      GraphComponent = metricsData === null ? noDataComponent : Plot;
-    }
+    if (error)
+      return <Placeholder
+        name={name}
+        marginClassName={marginClassName}
+        width={width}
+        height={this.height}>
+        Couldn't fetch data
+      </Placeholder>;
 
-    if (error) {
-      GraphComponent = apiErrorComponent;
-    }
+    if (metricsData === null)
+      return <Placeholder
+        name={name}
+        marginClassName={marginClassName}
+        width={width}
+        height={this.height}>
+        No Data
+      </Placeholder>;
 
-    return (
-      <div
-        className={`graph-container ${marginClassName}`}
-        style={{
-          height: this.height,
-        }}
-      >
-        <h3 className="graph-header">{name}</h3>
-        {GraphComponent}
-      </div>
-    );
+    return <Placeholder
+      name={name}
+      marginClassName={marginClassName}
+      width={width}
+      height={this.height}>
+      <ResponsiveContainer width="100%" height={this.height}>
+        <AreaChart data={this.getMetricsData()} margin={{ top: 20, bottom: 55 }}>
+          <XAxis
+            domain={xDomain}
+            tickFormatter={tickFormat}
+            tickCount={Math.floor(width / 60)}
+            dataKey="x"
+            fontSize="11px"
+            tickLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
+            axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
+            height={30}
+            reversed />
+          <YAxis
+            domain={yDomain}
+            tickFormatter={yAxisTickFormat}
+            tickLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
+            axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
+            width={30}
+            dataKey="0.95"
+            fontSize="0.625rem" />
+          <CartesianGrid horizontal={showHorizontalLines} vertical={false} />
+
+          {this.renderLines()}
+
+          <Tooltip
+            labelStyle={{ fontSize: "0.625rem" }}
+            itemStyle={{ fontSize: "0.625rem" }}
+            labelFormatter={(value) => {
+              return new Date(value).toLocaleString()
+            }}
+            formatter={(value: number, name: string, props: any) => {
+              if (!showLegend) {
+                return [value];
+              }
+
+              const formattedName = Number(name) * 100;
+              return [value, `P${formattedName}`];
+            }} />
+
+          {showLegend && (
+            <Legend
+              align='left'
+              verticalAlign="bottom"
+              height={10}
+              iconType='plainline'
+              formatter={(value: any, entry: any, index: number) => {
+                const dataVal = this.getData();
+                const idx = dataVal.length - index - 1;
+                return <span style={{ fontSize: "0.625rem" }}>{dataVal[idx].quantile * 100}th</span>;
+              }}
+            />
+          )}
+        </AreaChart>
+      </ResponsiveContainer>
+    </Placeholder>;
   }
 }
 
