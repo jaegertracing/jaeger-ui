@@ -32,7 +32,7 @@ function EmphasizedNode({ height, width }: EmphasizedNodeProps) {
       />
       <rect className="EmphasizedNode--contrast is-scaling" width={width} height={height} />
       <rect
-        className="EmphasizedNoe is-non-scaling"
+        className="EmphasizedNode is-non-scaling"
         vectorEffect="non-scaling-stroke"
         width={width}
         height={height}
