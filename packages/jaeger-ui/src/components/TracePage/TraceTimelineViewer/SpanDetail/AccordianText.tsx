@@ -31,8 +31,16 @@ type AccordianTextProps = {
   onToggle?: null | (() => void);
 };
 
-export default function AccordianText(props: AccordianTextProps) {
-  const { className, data, headerClassName, highContrast, interactive, isOpen, label, onToggle } = props;
+export default function AccordianText({
+  className = null,
+  data,
+  headerClassName,
+  highContrast = false,
+  interactive = true,
+  isOpen,
+  label,
+  onToggle = null,
+}: AccordianTextProps) {
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
 
@@ -64,10 +72,3 @@ export default function AccordianText(props: AccordianTextProps) {
     </div>
   );
 }
-
-AccordianText.defaultProps = {
-  className: null,
-  highContrast: false,
-  interactive: true,
-  onToggle: null,
-};
