@@ -22,11 +22,10 @@ import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
 
 import './ScatterPlot.css';
 
-export const CustomTooltip = ({ overValue }) => {
-  if (overValue) {
-    return <h4 className="scatter-plot-hint">{overValue.current?.name || FALLBACK_TRACE_NAME}</h4>;
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return <h4 className="scatter-plot-hint">{payload[0].payload.name || FALLBACK_TRACE_NAME}</h4>;
   }
-  return null;
 };
 
 export default function ScatterPlot(props) {
@@ -34,16 +33,6 @@ export default function ScatterPlot(props) {
 
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
-
-  const overValue = useRef();
-
-  const onValueOver = value => {
-    overValue.current = value;
-  };
-
-  const onValueOut = () => {
-    overValue.current = null;
-  };
 
   useLayoutEffect(() => {
     function updateContainerWidth() {
@@ -77,8 +66,6 @@ export default function ScatterPlot(props) {
               data={data}
               fillOpacity={0.5}
               onClick={onValueClick}
-              onMouseOver={onValueOver}
-              onMouseOut={onValueOut}
             >
               {data.map(entry => (
                 <Cell key={`cell-${entry.traceID}`} fill={entry.color} />
@@ -113,7 +100,7 @@ export default function ScatterPlot(props) {
             <Tooltip
               isAnimationActive={false}
               cursor={false}
-              content={<CustomTooltip overValue={overValue} />}
+              content={<CustomTooltip />}
             />
           </ScatterChart>
         </ResponsiveContainer>
