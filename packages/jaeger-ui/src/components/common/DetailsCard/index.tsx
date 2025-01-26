@@ -35,7 +35,7 @@ function isList(arr: string[] | TRow[]): arr is string[] {
   return typeof arr[0] === 'string';
 }
 
-function DetailsCard({ className, collapsible, description, header, columnDefs, details }: TProps) {
+function DetailsCard({ className, collapsible = false, description, header, columnDefs, details }: TProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(Boolean(collapsible));
 
   const renderDetails = () => {
