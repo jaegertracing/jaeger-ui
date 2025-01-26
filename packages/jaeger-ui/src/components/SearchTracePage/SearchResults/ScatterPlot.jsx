@@ -68,7 +68,7 @@ export default function ScatterPlot(props) {
               onClick={onValueClick}
             >
               {data.map(entry => (
-                <Cell key={`cell-${entry.traceID}`} fill={entry.color} />
+                <Cell key={`cell-${entry.traceID}`} fill={entry.color} style={{ cursor: "pointer" }} />
               ))}
             </Scatter>
 
