@@ -25,10 +25,8 @@ describe('<AccordianText>', () => {
   const props = {
     compact: false,
     data: warnings,
-    highContrast: false,
     isOpen: false,
     label: 'le-label',
-    onToggle: jest.fn(),
   };
 
   beforeEach(() => {
@@ -51,5 +49,34 @@ describe('<AccordianText>', () => {
     const content = wrapper.find(TextList);
     expect(content.length).toBe(1);
     expect(content.prop('data')).toBe(warnings);
+  });
+
+  it('disables onClick if data is empty', () => {
+    wrapper = shallow(<AccordianText {...props} data={[]} />);
+    const headerProps = wrapper.find('.AccordianText--header').props();
+    expect(headerProps.onClick).toBeNull();
+  });
+
+  it('has role="switch" when interactive = true', () => {
+    wrapper = shallow(<AccordianText {...props} isOpen />);
+    const headerProps = wrapper.find('.AccordianText--header').props();
+    expect(headerProps.role).toBe('switch');
+  });
+
+  it('has class "is-empty" class if data is empty', () => {
+    wrapper = shallow(<AccordianText {...props} data={[]} />);
+    expect(wrapper.find('.AccordianText--header').hasClass('is-empty')).toBe(true);
+  });
+
+  it('has class "is-high-contrast" class if highContrast=true', () => {
+    wrapper = shallow(<AccordianText {...props} highContrast />);
+    expect(wrapper.find('.AccordianText--header').hasClass('is-high-contrast')).toBe(true);
+  });
+
+  it('does not render arrow or clickable header if interactive = false', () => {
+    wrapper = shallow(<AccordianText {...props} interactive={false} />);
+    const header = wrapper.find('.AccordianText--header');
+    expect(header.prop('role')).toBeUndefined();
+    expect(header.find('.u-align-icon').exists()).toBe(false);
   });
 });
