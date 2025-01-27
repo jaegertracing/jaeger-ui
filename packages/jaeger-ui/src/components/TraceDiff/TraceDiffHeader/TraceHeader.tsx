@@ -76,8 +76,15 @@ export function Attrs(props: AttrsProps) {
   );
 }
 
-export default function TraceHeader(props: Props) {
-  const { duration, error, startTime, state, traceID, totalSpans, traceName } = props;
+export default function TraceHeader({
+  duration,
+  error,
+  startTime,
+  state,
+  traceID,
+  totalSpans,
+  traceName,
+}: Props) {
   const AttrsComponent = state === fetchedState.DONE ? Attrs : EmptyAttrs;
 
   return (
@@ -100,7 +107,3 @@ export default function TraceHeader(props: Props) {
     </div>
   );
 }
-
-TraceHeader.defaultProps = {
-  error: undefined,
-};

@@ -1,8 +1,8 @@
 name: Bundle Size Check
 on:
+  merge_group:
   pull_request:
     branches: [main]
-    
   push:
     branches: [main]
 
