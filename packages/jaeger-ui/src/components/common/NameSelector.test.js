@@ -20,7 +20,6 @@ import { shallow } from 'enzyme';
 import BreakableText from './BreakableText';
 import NameSelector, { DEFAULT_PLACEHOLDER } from './NameSelector';
 
-
 describe('<NameSelector>', () => {
   const placeholder = 'This is the placeholder';
   let props;
@@ -35,7 +34,6 @@ describe('<NameSelector>', () => {
       required: true,
       setValue: jest.fn(),
     };
-
 
     wrapper = shallow(<NameSelector {...props} />);
   });
