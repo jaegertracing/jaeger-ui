@@ -36,7 +36,12 @@ describe('<NameSelector>', () => {
       setValue: jest.fn(),
     };
 
+
     wrapper = shallow(<NameSelector {...props} />);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   afterEach(() => {
@@ -92,31 +97,34 @@ describe('<NameSelector>', () => {
   it('hides the popover when the filter calls cancel', () => {
     const popover = wrapper.find(Popover);
     popover.prop('onOpenChange')(true);
+    popover.prop('onOpenChange')(true);
     const list = popover.prop('content');
     list.props.cancel();
+    expect(popover.prop('open')).toBe(false);
     expect(popover.prop('open')).toBe(false);
   });
 
   it('hides the popover when clicking outside of the open popover', () => {
     let mouseWithin = false;
     const popover = wrapper.find(Popover);
-    
+
     popover.prop('onOpenChange')(true);
     wrapper.update();
-    
+
     const mockRef = {
       current: {
+        focusInput: jest.fn(),
         focusInput: jest.fn(),
         isMouseWithin: () => mouseWithin,
       },
     };
-    
+
     React.useRef = jest.fn().mockReturnValue(mockRef);
-    
+
     const bodyClickHandler = wrapper.find(Popover).prop('onOpenChange');
     bodyClickHandler(false);
     wrapper.update();
-    
+
     expect(wrapper.find(Popover).prop('open')).toBe(false);
 
     mouseWithin = true;
@@ -124,7 +132,7 @@ describe('<NameSelector>', () => {
     wrapper.update();
     bodyClickHandler(true);
     wrapper.update();
-    
+
     expect(wrapper.find(Popover).prop('open')).toBe(true);
   });
 
@@ -132,12 +140,22 @@ describe('<NameSelector>', () => {
     wrapper.find(Popover).prop('onOpenChange')(true);
     wrapper.update();
     expect(wrapper.find(Popover).prop('open')).toBe(true);
-    
+
     wrapper.find(Popover).prop('onOpenChange')(false);
     wrapper.update();
     expect(wrapper.find(Popover).prop('open')).toBe(false);
   });
 
+  // it('attempts to focus the filter input when the component updates', () => {
+  //   const mockFocusInput = jest.fn();
+  //   mockRef = { current: { focusInput: mockFocusInput } };
+  //   React.useRef = jest.fn().mockReturnValue(mockRef);
+
+  //   wrapper.setProps({ value: 'new-value' });
+  //   wrapper.update();
+
+  //   expect(mockFocusInput).toHaveBeenCalled();
+  // });
   // it('attempts to focus the filter input when the component updates', () => {
   //   const mockFocusInput = jest.fn();
   //   mockRef = { current: { focusInput: mockFocusInput } };
@@ -167,6 +185,7 @@ describe('<NameSelector>', () => {
 
       expect(clearValue).toHaveBeenCalled();
       expect(wrapper.find(Popover).prop('open')).toBe(false);
+      expect(wrapper.find(Popover).prop('open')).toBe(false);
       expect(stopPropagation).toHaveBeenCalled();
     });
 
@@ -180,6 +199,5 @@ describe('<NameSelector>', () => {
     //   const event = { stopPropagation: jest.fn() };
     //   expect(clearIcon.prop('onClick')).toThrowError('Cannot clear value of required NameSelector');
     // });
-
   });
 });
