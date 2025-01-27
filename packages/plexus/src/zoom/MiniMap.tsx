@@ -69,11 +69,11 @@ function getViewTransform(props: TProps, displaySize: { width: number; height: n
   };
 }
 
-function getClassNames(props: TProps) {
+function getClassNames(props: { className: string; classNamePrefix: string }) {
   const { className, classNamePrefix } = props;
-  const base = `${classNamePrefix || 'plexus'}-MiniMap`;
+  const base = `${classNamePrefix}-MiniMap`;
   return {
-    root: `${base} ${className || ''}`,
+    root: `${base} ${className}`,
     item: `${base}--item`,
     map: `${base}--map`,
     mapActive: `${base}--mapActive`,
@@ -82,9 +82,9 @@ function getClassNames(props: TProps) {
 }
 
 export function MiniMap({ className = '', classNamePrefix = 'plexus', ...props }: TProps) {
-  const css = getClassNames({ className, classNamePrefix, ...props });
-  const mapSize = getMapSize({ className, classNamePrefix, ...props });
-  const activeXform = getViewTransform({ className, classNamePrefix, ...props }, mapSize);
+  const css = getClassNames({ className, classNamePrefix });
+  const mapSize = getMapSize(props);
+  const activeXform = getViewTransform(props, mapSize);
   return (
     <div className={css.root}>
       <div className={`${css.item} ${css.map}`} style={mapSize}>
