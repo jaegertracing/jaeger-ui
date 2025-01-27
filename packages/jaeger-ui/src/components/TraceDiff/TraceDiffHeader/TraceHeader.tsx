@@ -94,7 +94,7 @@ export default function TraceHeader({
           {traceID ? (
             <React.Fragment>
               <TraceName key="name" traceName={traceName} error={error} state={state} />{' '}
-              <TraceId traceId={traceID} />
+              <TraceId traceId={traceID} className="ub-pr2" />
               <TraceTimelineLink traceID={traceID} />
             </React.Fragment>
           ) : (
