@@ -82,6 +82,7 @@
     "react-vis-force": "^0.3.1",
     "react-window": "^1.8.10",
     "redux": "^5.0.1",
+    "recharts": "^2.15.0",
     "redux-actions": "2.6.5",
     "redux-first-history": "^5.2.0",
     "redux-promise-middleware": "^6.1.3",
