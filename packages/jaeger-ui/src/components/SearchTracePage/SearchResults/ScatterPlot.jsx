@@ -26,6 +26,8 @@ import './ScatterPlot.css';
 export default function ScatterPlot({
   data,
   onValueClick,
+  // JSDOM does not, as of 2023, have a layout engine,
+  // so allow tests to supply a mock width as a workaround
   calculateContainerWidth = container => container.clientWidth,
 }) {
   const containerRef = useRef(null);
