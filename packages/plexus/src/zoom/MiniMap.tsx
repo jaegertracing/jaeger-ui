@@ -69,8 +69,7 @@ function getViewTransform(props: TProps, displaySize: { width: number; height: n
   };
 }
 
-function getClassNames(props: { className: string; classNamePrefix: string }) {
-  const { className, classNamePrefix } = props;
+function getClassNames(className: string, classNamePrefix: string) {
   const base = `${classNamePrefix}-MiniMap`;
   return {
     root: `${base} ${className}`,
@@ -82,7 +81,7 @@ function getClassNames(props: { className: string; classNamePrefix: string }) {
 }
 
 export function MiniMap({ className = '', classNamePrefix = 'plexus', ...props }: TProps) {
-  const css = getClassNames({ className, classNamePrefix });
+  const css = getClassNames(className, classNamePrefix);
   const mapSize = getMapSize(props);
   const activeXform = getViewTransform(props, mapSize);
   return (
