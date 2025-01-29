@@ -108,7 +108,7 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
           {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
           <h3 className="ResultItemTitle--title">
             <TraceName error={error} state={state} traceName={traceName} />
-            <TraceId traceId={traceID} />
+            <TraceId traceId={traceID} className="ResultItemTitle--idExcerpt" />
           </h3>
         </WrapperComponent>
       </div>

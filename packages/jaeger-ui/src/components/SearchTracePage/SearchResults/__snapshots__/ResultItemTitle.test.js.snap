@@ -36,6 +36,7 @@ exports[`ResultItemTitle renders as expected 1`] = `
         traceName="traceNameValue"
       />
       <TraceId
+        className="ResultItemTitle--idExcerpt"
         traceId="trace-id-longer-than-8"
       />
     </h3>
