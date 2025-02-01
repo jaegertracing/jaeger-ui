@@ -24,6 +24,13 @@ import * as TraceDiffUrl from './url';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
 
+/* 
+With v5+, redux no longer supports `bindActionCreators` to be configured.
+`configurable: true` has to be supported by the compilers for it to be configured.
+It has to be explicitly told using `__esModule` to babel for compiling it with that property.
+*/
+jest.mock('redux', () => ({ __esModule: true, ...jest.requireActual('redux') }));
+
 describe('TraceDiff', () => {
   const defaultA = 'trace-id-a';
   const defaultB = 'trace-id-b';
