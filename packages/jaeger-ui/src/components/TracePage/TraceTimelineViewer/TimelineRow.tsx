@@ -16,19 +16,14 @@ import * as React from 'react';
 
 import './TimelineRow.css';
 
-type TTimelineRowProps = {
+export default function TimelineRow({
+  children,
+  className = '',
+  ...rest
+}: {
   children: React.ReactNode;
   className?: string;
-};
-
-interface ITimelineRowCellProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode;
-  className?: string;
-  width: number;
-  style?: object;
-}
-
-export default function TimelineRow({ children, className = '', ...rest }: TTimelineRowProps) {
+}) {
   return (
     <div className={`flex-row ${className}`} {...rest}>
       {children}
@@ -36,11 +31,23 @@ export default function TimelineRow({ children, className = '', ...rest }: TTime
   );
 }
 
-function TimelineRowCell({ children, className = '', width, style = {}, ...rest }: ITimelineRowCellProps) {
+function TimelineRowCell({
+  children,
+  className = '',
+  width,
+  style = {},
+  onClick = () => {},
+}: {
+  children: React.ReactNode;
+  className?: string;
+  width: number;
+  style?: object;
+  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
+}) {
   const widthPercent = `${width * 100}%`;
   const mergedStyle = { ...style, flexBasis: widthPercent, maxWidth: widthPercent };
   return (
-    <div className={`ub-relative ${className}`} style={mergedStyle} {...rest}>
+    <div className={`ub-relative ${className}`} style={mergedStyle} onClick={onClick}>
       {children}
     </div>
   );
