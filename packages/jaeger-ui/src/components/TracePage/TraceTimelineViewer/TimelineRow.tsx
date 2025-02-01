@@ -19,16 +19,11 @@ import './TimelineRow.css';
 export default function TimelineRow({
   children,
   className = '',
-  ...rest
 }: {
   children: React.ReactNode;
   className?: string;
 }) {
-  return (
-    <div className={`flex-row ${className}`} {...rest}>
-      {children}
-    </div>
-  );
+  return <div className={`flex-row ${className}`}>{children}</div>;
 }
 
 function TimelineRowCell({
