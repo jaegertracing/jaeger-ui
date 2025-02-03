@@ -43,40 +43,6 @@ Run `make changelog` to generate content.
 * [ci] fix cache resolution and syntax in check binary size workflow ([@chahatsagarmain](https://github.com/chahatsagarmain) in [#2591](https://github.com/jaegertracing/jaeger-ui/pull/2591))
 * [ci]: add workflow to guard against growing bun
 
-## v1.66.0 (2025-02-03)
-
-#### 🐞 Bug fixes, Minor Improvements
-
-* Remove defaultprops from minimap.tsx ([@ADI-ROXX](https://github.com/ADI-ROXX) in [#2615](https://github.com/jaegertracing/jaeger-ui/pull/2615))
-* Remove defaultprops from scatterplot.jsx ([@ADI-ROXX](https://github.com/ADI-ROXX) in [#2618](https://github.com/jaegertracing/jaeger-ui/pull/2618))
-* Migrate empasizednode from class based to function based component ([@AdiIsHappy](https://github.com/AdiIsHappy) in [#2638](https://github.com/jaegertracing/jaeger-ui/pull/2638))
-* Remove defaultprops from accordiantext.tsx ([@ADI-ROXX](https://github.com/ADI-ROXX) in [#2612](https://github.com/jaegertracing/jaeger-ui/pull/2612))
-* Remove defaultprops from ticks.tsx ([@ADI-ROXX](https://github.com/ADI-ROXX) in [#2617](https://github.com/jaegertracing/jaeger-ui/pull/2617))
-* Remove defaultprops from timelinerow.tsx ([@ADI-ROXX](https://github.com/ADI-ROXX) in [#2616](https://github.com/jaegertracing/jaeger-ui/pull/2616))
-* Remove defaultprops from traceheader.jsx ([@ADI-ROXX](https://github.com/ADI-ROXX) in [#2620](https://github.com/jaegertracing/jaeger-ui/pull/2620))
-* Remove defaultprops from accordianlogs.tsx ([@ADI-ROXX](https://github.com/ADI-ROXX) in [#2613](https://github.com/jaegertracing/jaeger-ui/pull/2613))
-* Remove defaultprops fromt breakabletext.tsx ([@ADI-ROXX](https://github.com/ADI-ROXX) in [#2611](https://github.com/jaegertracing/jaeger-ui/pull/2611))
-* Remove defaultprops from errormessage & newwindowicon ([@ADI-ROXX](https://github.com/ADI-ROXX) in [#2609](https://github.com/jaegertracing/jaeger-ui/pull/2609))
-* [loadingindicator]: replace defaultprops with destructuring ([@its-me-abhishek](https://github.com/its-me-abhishek) in [#2601](https://github.com/jaegertracing/jaeger-ui/pull/2601))
-* [fix]: disable submit button on invalid minduration or maxduration ([@hari45678](https://github.com/hari45678) in [#2600](https://github.com/jaegertracing/jaeger-ui/pull/2600))
-* [deps]: remove dependency on redux-form ([@hari45678](https://github.com/hari45678) in [#2593](https://github.com/jaegertracing/jaeger-ui/pull/2593))
-* [fix]: remove redux-form dependency from sort selector ([@hari45678](https://github.com/hari45678) in [#2569](https://github.com/jaegertracing/jaeger-ui/pull/2569))
-* [revert]: revert redux and react-redux dependency upgrades ([@yurishkuro](https://github.com/yurishkuro) in [#2577](https://github.com/jaegertracing/jaeger-ui/pull/2577))
-* Fix: deep clone trace data for consistency ([@Zen-cronic](https://github.com/Zen-cronic) in [#2571](https://github.com/jaegertracing/jaeger-ui/pull/2571))
-* [fix]: remove redux-form dependency from monitor page ([@hari45678](https://github.com/hari45678) in [#2562](https://github.com/jaegertracing/jaeger-ui/pull/2562))
-* Fix tracediff graph pan and zoom issue ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#2566](https://github.com/jaegertracing/jaeger-ui/pull/2566))
-
-#### 👷 CI Improvements
-
-* Remove unused matrix from codeql workflow ([@yurishkuro](https://github.com/yurishkuro) in [#2635](https://github.com/jaegertracing/jaeger-ui/pull/2635))
-* Rename dco->dco check ([@yurishkuro](https://github.com/yurishkuro) in [#2633](https://github.com/jaegertracing/jaeger-ui/pull/2633))
-* Add fake dco check for merge queue events ([@yurishkuro](https://github.com/yurishkuro) in [#2632](https://github.com/jaegertracing/jaeger-ui/pull/2632))
-* Don't run label check in merge queue ([@yurishkuro](https://github.com/yurishkuro) in [#2631](https://github.com/jaegertracing/jaeger-ui/pull/2631))
-* Don't run codeql from merge queue ([@yurishkuro](https://github.com/yurishkuro) in [#2630](https://github.com/jaegertracing/jaeger-ui/pull/2630))
-* Enable workflows to run in merge queue ([@yurishkuro](https://github.com/yurishkuro) in [#2629](https://github.com/jaegertracing/jaeger-ui/pull/2629))
-* [ci] fix cache resolution and syntax in check binary size workflow ([@chahatsagarmain](https://github.com/chahatsagarmain) in [#2591](https://github.com/jaegertracing/jaeger-ui/pull/2591))
-* [ci]: add workflow to guard against growing bun
-
 ## v1.65.0 (2025-01-08)
 
 #### 🐞 Bug fixes, Minor Improvements
