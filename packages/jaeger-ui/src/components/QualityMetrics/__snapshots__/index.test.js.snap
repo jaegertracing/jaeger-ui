@@ -65,55 +65,6 @@ exports[`QualityMetrics UnconnectedQualityMetrics render renders with metrics 1`
     setLookback={[Function]}
     setService={[Function]}
   />
-  <BannerText
-    bannerText="test banner text"
-  />
-  <div
-    className="QualityMetrics--Body"
-  >
-    <div
-      className="QualityMetrics--ScoreCards"
-    >
-      <ScoreCard
-        key="score0"
-        link="trace.quality.documentation/link"
-        score={
-          Object {
-            "key": "score0",
-          }
-        }
-      />
-      <ScoreCard
-        key="score1"
-        link="trace.quality.documentation/link"
-        score={
-          Object {
-            "key": "score1",
-          }
-        }
-      />
-    </div>
-    <div
-      className="QualityMetrics--MetricCards"
-    >
-      <MetricCard
-        key="metric 0"
-        metric={
-          Object {
-            "name": "metric 0",
-          }
-        }
-      />
-      <MetricCard
-        key="metric 1"
-        metric={
-          Object {
-            "name": "metric 1",
-          }
-        }
-      />
-    </div>
-  </div>
 </div>
 `;
 
