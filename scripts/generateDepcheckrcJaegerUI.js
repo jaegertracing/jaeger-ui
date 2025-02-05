@@ -14,9 +14,9 @@
 
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable @typescript-eslint/no-var-requires */
-const fs = require('fs');
-const path = require('path');
-const { babelConfiguration } = require('../packages/jaeger-ui/test/babel-transform');
+import * as fs from 'fs';
+import * as path from 'path';
+import { babelConfiguration } from 'jaeger-ui/test/babel-transform';
 
 const packageNames = [
   ...babelConfiguration.presets.flatMap(preset => {

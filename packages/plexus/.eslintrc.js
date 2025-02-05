@@ -43,7 +43,10 @@ module.exports = {
 
         // @typescript-eslint/eslint-plugin v2+ relaxations
         '@typescript-eslint/explicit-module-boundary-types': 0,
-        '@typescript-eslint/ban-types': 0,
+        // '@typescript-eslint/ban-types': 0,
+        '@typescript-eslint/no-empty-object-type': 0,
+        '@typescript-eslint/no-unsafe-function-type': 0,
+        '@typescript-eslint/no-wrapper-object-types': 0,
         '@typescript-eslint/no-empty-function': 0,
         '@typescript-eslint/no-inferrable-types': 0,
       },

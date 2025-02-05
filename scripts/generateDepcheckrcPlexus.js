@@ -14,9 +14,9 @@
 
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable @typescript-eslint/no-var-requires */
-const fs = require('fs');
-const path = require('path');
-const getBabelConfig = require('../packages/plexus/babel.config');
+import * as fs from 'fs';
+import * as path from 'path';
+import { getBabelConfig } from '@jaegertracing/plexus/babel.config';
 
 const babelConfiguration = getBabelConfig({
   env: () => {
