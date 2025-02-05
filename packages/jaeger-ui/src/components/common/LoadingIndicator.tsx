@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { LuLoader2 } from 'react-icons/lu';
+import { LuLoaderCircle } from 'react-icons/lu';
 
 import './LoadingIndicator.css';
 
@@ -39,5 +39,5 @@ export default function LoadingIndicator({
     ${className}
   `;
 
-  return <LuLoader2 className={cls} {...rest} style={style} />;
+  return <LuLoaderCircle className={cls} {...rest} style={style} />;
 }
