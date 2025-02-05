@@ -14,12 +14,18 @@
 
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { join } from 'path';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import nodeExternals from 'webpack-node-externals';
 
-const babelConfigPath = require.resolve('./babel.config');
+import { fileURLToPath } from 'url';
+import { resolve, dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Now resolve Babel config relative to __dirname
+const babelConfigPath = resolve(join(__dirname, 'babel.config.js'));
 
 // Note: Do not allow *.ts files
 const extensions = ['.js', '.json', '.tsx'];

@@ -15,7 +15,13 @@
 // This file configures eslint for TypeScript, which will be used for this
 // directory and all subdirectories.
 
-module.exports = {
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export default  {
   overrides: [
     {
       files: ['*.ts', '*.tsx'],
@@ -43,10 +49,7 @@ module.exports = {
 
         // @typescript-eslint/eslint-plugin v2+ relaxations
         '@typescript-eslint/explicit-module-boundary-types': 0,
-        // '@typescript-eslint/ban-types': 0,
-        '@typescript-eslint/no-empty-object-type': 0,
-        '@typescript-eslint/no-unsafe-function-type': 0,
-        '@typescript-eslint/no-wrapper-object-types': 0,
+        '@typescript-eslint/ban-types': 0,
         '@typescript-eslint/no-empty-function': 0,
         '@typescript-eslint/no-inferrable-types': 0,
       },

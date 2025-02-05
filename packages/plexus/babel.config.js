@@ -50,4 +50,4 @@ function getBabelConfig(api) {
   };
 }
 
-module.exports = getBabelConfig;
+export default getBabelConfig;

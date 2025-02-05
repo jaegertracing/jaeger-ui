@@ -1,6 +1,7 @@
 {
   "name": "@jaegertracing/plexus",
   "license": "Apache-2.0",
+  "type": "module",
   "version": "0.2.0",
   "description": "Directed Graph React component",
   "main": "lib/index.js",
@@ -61,7 +62,7 @@
     "_tasks/build/umd": "webpack --mode $NODE_ENV --config webpack.umd.config.js",
     "_tasks/clean/dirs": "rimraf lib dist",
     "_tasks/clean/worker": "rimraf src/LayoutManager/layout.worker*js*",
-    "_tasks/bundle-worker": "webpack --mode $NODE_ENV --config webpack.layout-worker.config.js",
+    "_tasks/bundle-worker": "webpack --mode $NODE_ENV --config webpack.layout-worker.config.js --stats-children",
     "_tasks/dev-server": "webpack-dev-server --mode $NODE_ENV --config webpack.dev.config.js",
     "build": "NODE_ENV=production npm-run-all -ln --serial _tasks/clean/* _tasks/bundle-worker --parallel _tasks/build/**",
     "coverage": "echo 'NO TESTS YET'",

@@ -97,12 +97,12 @@ This specific version of [viz.js](https://github.com/mdaines/viz.js) is used to 
 
 Jest is not actually be used, yet. Present as a placeholder. ([Ticket](https://github.com/jaegertracing/jaeger-ui/issues/340))
 
-## `.eslintrc.js`
+## `.eslintrc.mjs`
 
-Configures ESLint for TypeScript. ESLint is executed from the project root, but this file is merged with the project root `.eslintrc.js` and overrides where there is overlap.
+Configures ESLint for TypeScript. ESLint is executed from the project root, but this file is merged with the project root `.eslintrc.mjs` and overrides where there is overlap.
 
 `prettier/@typescript-eslint` needs to be last in the `extends` so it overrides the formatting rules from `plugin:@typescript-eslint/recommended`.
 
 Uses [`@typescript-eslint/parser`](https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/parser) as the parser.
 
-The `tsconfigRootDir: '.'` refers to the project root because that is where ESLint is executed, from. And, the `tsconfig.json` referred to by `./.eslintrc.js` is that in the project root.
+The `tsconfigRootDir: '.'` refers to the project root because that is where ESLint is executed, from. And, the `tsconfig.json` referred to by `./.eslintrc.mjs` is that in the project root.

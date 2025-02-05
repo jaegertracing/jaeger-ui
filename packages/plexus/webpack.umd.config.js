@@ -13,6 +13,6 @@
 // limitations under the License.
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-import factory from './webpack-factory';
+import factory from './webpack-factory.js';
 
 export default factory('umd');
