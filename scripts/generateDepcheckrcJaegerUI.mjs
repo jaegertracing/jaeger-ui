@@ -16,7 +16,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import * as fs from 'fs';
 import * as path from 'path';
-import { babelConfiguration } from 'jaeger-ui/test/babel-transform';
+import { babelConfiguration } from 'jaeger-ui/test/babel-transform.js';
 
 const packageNames = [
   ...babelConfiguration.presets.flatMap(preset => {
@@ -42,7 +42,11 @@ const outputFile = process.argv[2];
 if (!outputFile) {
   process.exit(1);
 }
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const depcheckrcPath = path.resolve(__dirname, outputFile);
 
 fs.writeFileSync(depcheckrcPath, JSON.stringify(depcheckrcContent, null, 2));

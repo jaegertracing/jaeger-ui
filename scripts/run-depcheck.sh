@@ -18,13 +18,13 @@ runDepcheck() {
 failed="false"
 
 tempfile_jaeger="${tempdir}/DepcheckrcJaegerUI.json"
-node scripts/generateDepcheckrcJaegerUI.js "${tempfile_jaeger}"
+node scripts/generateDepcheckrcJaegerUI.mjs "${tempfile_jaeger}"
 if runDepcheck packages/jaeger-ui "${tempfile_jaeger}"; then
   failed="true"
 fi
 
 tempfile_plexus="${tempdir}/DepcheckrcPlexus.json"
-node scripts/generateDepcheckrcPlexus.js "${tempfile_plexus}"
+node scripts/generateDepcheckrcPlexus.mjs "${tempfile_plexus}"
 if runDepcheck packages/plexus "${tempfile_plexus}"; then
   failed="true"
 fi
