@@ -154,7 +154,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
 
   const title = (
     <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>
-      <TraceName traceName={trace.traceName} /> <TraceId traceId={trace.traceID} />
+      <TraceName traceName={trace.traceName} /> <TraceId key="id" traceId={trace.traceID} />
     </h1>
   );
 
