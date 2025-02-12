@@ -142,12 +142,12 @@ describe('QualityMetrics', () => {
         wrapper.setProps({ service: props.service });
         expect(wrapper.state('loading')).toBe(true);
 
-        const qualityMetrics = {};
+        const qualityMetrics = { data: {} };
         res(qualityMetrics);
         await promise;
 
         expect(wrapper.state('loading')).toBe(false);
-        expect(wrapper.state('qualityMetrics')).toBe(qualityMetrics);
+        expect(wrapper.state('qualityMetrics')).toBe(qualityMetrics.data);
       });
 
       it('fetches quality metrics and updates state on error', async () => {
