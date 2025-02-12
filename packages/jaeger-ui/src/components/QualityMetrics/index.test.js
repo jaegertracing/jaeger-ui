@@ -249,7 +249,7 @@ describe('QualityMetrics', () => {
 
       it('renders with metrics', async () => {
         const wrapper = shallow(<UnconnectedQualityMetrics {...props} />);
-        const metrics = {
+        const metrics = { data: {
           bannerText: 'test banner text',
           traceQualityDocumentationLink: 'trace.quality.documentation/link',
           scores: [
@@ -268,7 +268,8 @@ describe('QualityMetrics', () => {
               name: 'metric 1',
             },
           ],
-        };
+        }
+      };
         res(metrics);
         await promise;
         expect(wrapper).toMatchSnapshot();
