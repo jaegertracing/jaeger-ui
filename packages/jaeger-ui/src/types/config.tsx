@@ -135,6 +135,9 @@ export type Config = {
   // TODO when is it useful?
   scripts?: readonly TScript[];
 
+  // traceIdDisplayLength controls the length of the trace ID displayed in the UI.
+  traceIdDisplayLength?: number;
+
   // storage capabilities given by the query service.
   storageCapabilities?: StorageCapabilities;
 
