@@ -18,17 +18,17 @@ import './TimelineRow.css';
 
 export default function TimelineRow({
   children,
-  className = '',
+  className,
 }: {
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={`flex-row ${className}`}>{children}</div>;
+  return <div className={`flex-row ${className || ''}`}>{children}</div>;
 }
 
 function TimelineRowCell({
   children,
-  className = '',
+  className,
   width,
   style = {},
   onClick = () => {},
@@ -42,7 +42,7 @@ function TimelineRowCell({
   const widthPercent = `${width * 100}%`;
   const mergedStyle = { ...style, flexBasis: widthPercent, maxWidth: widthPercent };
   return (
-    <div className={`ub-relative ${className}`} style={mergedStyle} onClick={onClick}>
+    <div className={`ub-relative ${className || ''}`} style={mergedStyle} onClick={onClick}>
       {children}
     </div>
   );
