@@ -18,15 +18,13 @@ import './BreakableText.css';
 
 const WORD_RX = /\W*\w+\W*/g;
 
-export default function BreakableText({
-  className = 'BreakableText',
-  wordRegexp = WORD_RX,
-  text,
-}: {
+type Props = {
   text: string;
   className?: string;
   wordRegexp?: RegExp;
-}) {
+};
+
+export default function BreakableText({ className = 'BreakableText', text, wordRegexp = WORD_RX }: Props) {
   if (!text) {
     return typeof text === 'string' ? text : null;
   }

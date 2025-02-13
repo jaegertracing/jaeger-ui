@@ -23,6 +23,7 @@ import { formatDuration } from '../../../utils/date';
 
 import { FetchedState, TNil } from '../../../types';
 import { ApiError } from '../../../types/api-error';
+import TraceId from '../../common/TraceId';
 
 import './TraceHeader.css';
 
@@ -75,8 +76,15 @@ export function Attrs(props: AttrsProps) {
   );
 }
 
-export default function TraceHeader(props: Props) {
-  const { duration, error, startTime, state, traceID, totalSpans, traceName } = props;
+export default function TraceHeader({
+  duration,
+  error,
+  startTime,
+  state,
+  traceID,
+  totalSpans,
+  traceName,
+}: Props) {
   const AttrsComponent = state === fetchedState.DONE ? Attrs : EmptyAttrs;
 
   return (
@@ -86,9 +94,7 @@ export default function TraceHeader(props: Props) {
           {traceID ? (
             <React.Fragment>
               <TraceName key="name" traceName={traceName} error={error} state={state} />{' '}
-              <small key="id" className="u-tx-muted ub-pr2">
-                {traceID.slice(0, 7)}
-              </small>
+              <TraceId key="id" traceId={traceID} className="ub-pr2" />
               <TraceTimelineLink traceID={traceID} />
             </React.Fragment>
           ) : (
@@ -101,7 +107,3 @@ export default function TraceHeader(props: Props) {
     </div>
   );
 }
-
-TraceHeader.defaultProps = {
-  error: undefined,
-};
