@@ -23,20 +23,9 @@ import { KeyValuePair, Link } from '../../../../types/trace';
 
 import './AccordianKeyValues.css';
 
-type AccordianKeyValuesProps = {
-  className?: string | TNil;
-  data: KeyValuePair[];
-  highContrast?: boolean;
-  interactive?: boolean;
-  isOpen: boolean;
-  label: string;
-  linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
-  onToggle?: null | (() => void);
-};
-
 // export for tests
 export function KeyValuesSummary(props: { data?: KeyValuePair[] }) {
-  const { data } = props;
+  const { data } = props || null;
   if (!Array.isArray(data) || !data.length) {
     return null;
   }
@@ -55,12 +44,25 @@ export function KeyValuesSummary(props: { data?: KeyValuePair[] }) {
   );
 }
 
-KeyValuesSummary.defaultProps = {
-  data: null,
-};
-
-export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
-  const { className, data, highContrast, interactive, isOpen, label, linksGetter, onToggle } = props;
+export default function AccordianKeyValues({
+  className = null,
+  data,
+  highContrast = false,
+  interactive = true,
+  isOpen,
+  label,
+  linksGetter,
+  onToggle = null,
+}: {
+  className?: string | TNil;
+  data: KeyValuePair[];
+  highContrast?: boolean;
+  interactive?: boolean;
+  isOpen: boolean;
+  label: string;
+  linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
+  onToggle?: null | (() => void);
+}) {
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
   let arrow: React.ReactNode | null = null;
@@ -94,10 +96,3 @@ export default function AccordianKeyValues(props: AccordianKeyValuesProps) {
     </div>
   );
 }
-
-AccordianKeyValues.defaultProps = {
-  className: null,
-  highContrast: false,
-  interactive: true,
-  onToggle: null,
-};
