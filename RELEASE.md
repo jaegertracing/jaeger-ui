@@ -23,4 +23,4 @@
      - The title of the release match the format "Jaeger UI vX.Y.Z".
      - Copy the new CHANGELOG.md section into the release notes.
 
-<!-- END_DOC -->
+<!-- END_UI -->
