@@ -95,7 +95,6 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
       .then((qualityMetrics: TQualityMetrics) => {
         this.setState({ qualityMetrics, loading: false });
       })
-
       .catch((error: Error) => {
         this.setState({
           error,
