@@ -142,12 +142,12 @@ describe('QualityMetrics', () => {
         wrapper.setProps({ service: props.service });
         expect(wrapper.state('loading')).toBe(true);
 
-        const qualityMetrics = { data: {} };
+        const qualityMetrics = {};
         res(qualityMetrics);
         await promise;
 
         expect(wrapper.state('loading')).toBe(false);
-        expect(wrapper.state('qualityMetrics')).toBe(qualityMetrics.data);
+        expect(wrapper.state('qualityMetrics')).toBe(qualityMetrics);
       });
 
       it('fetches quality metrics and updates state on error', async () => {
@@ -250,26 +250,24 @@ describe('QualityMetrics', () => {
       it('renders with metrics', async () => {
         const wrapper = shallow(<UnconnectedQualityMetrics {...props} />);
         const metrics = {
-          data: {
-            bannerText: 'test banner text',
-            traceQualityDocumentationLink: 'trace.quality.documentation/link',
-            scores: [
-              {
-                key: 'score0',
-              },
-              {
-                key: 'score1',
-              },
-            ],
-            metrics: [
-              {
-                name: 'metric 0',
-              },
-              {
-                name: 'metric 1',
-              },
-            ],
-          },
+          bannerText: 'test banner text',
+          traceQualityDocumentationLink: 'trace.quality.documentation/link',
+          scores: [
+            {
+              key: 'score0',
+            },
+            {
+              key: 'score1',
+            },
+          ],
+          metrics: [
+            {
+              name: 'metric 0',
+            },
+            {
+              name: 'metric 1',
+            },
+          ],
         };
         res(metrics);
         await promise;
