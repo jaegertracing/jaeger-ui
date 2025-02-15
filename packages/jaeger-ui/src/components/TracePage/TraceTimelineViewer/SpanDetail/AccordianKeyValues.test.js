@@ -55,6 +55,7 @@ describe('<KeyValuesSummary>', () => {
 
 describe('<AccordianKeyValues>', () => {
   let wrapper;
+  const mockToggle = jest.fn();
 
   const props = {
     compact: false,
@@ -62,7 +63,7 @@ describe('<AccordianKeyValues>', () => {
     highContrast: false,
     isOpen: false,
     label: 'le-label',
-    onToggle: jest.fn(),
+    onToggle: mockToggle,
   };
 
   beforeEach(() => {
@@ -72,6 +73,28 @@ describe('<AccordianKeyValues>', () => {
   it('renders without exploding', () => {
     expect(wrapper).toBeDefined();
     expect(wrapper.exists()).toBe(true);
+  });
+
+  it('calls onToggle when clicked', () => {
+    wrapper.find('.AccordianKeyValues--header').simulate('click');
+    expect(mockToggle).toHaveBeenCalled();
+  });
+
+  it('does not call onToggle if interactive is false', () => {
+    mockToggle.mockClear();
+    wrapper.setProps({ interactive: false });
+    wrapper.update();
+    wrapper.find('.AccordianKeyValues--header').simulate('click');
+    expect(mockToggle).not.toHaveBeenCalled();
+  });
+
+  it('does not apply high contrast styles by default', () => {
+    expect(wrapper.find('.AccordianKeyValues--header').hasClass('is-high-contrast')).toBe(false);
+  });
+
+  it('applies high contrast styles when highContrast is true', () => {
+    wrapper.setProps({ highContrast: true });
+    expect(wrapper.find('.AccordianKeyValues--header').hasClass('is-high-contrast')).toBe(true);
   });
 
   it('renders the label', () => {
