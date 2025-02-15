@@ -91,7 +91,7 @@ describe('<AccordianKeyValues>', () => {
   it('does not apply high contrast styles by default', () => {
     expect(wrapper.find('.AccordianKeyValues--header').hasClass('is-high-contrast')).toBe(false);
   });
-  
+
   it('applies high contrast styles when highContrast is true', () => {
     wrapper.setProps({ highContrast: true });
     expect(wrapper.find('.AccordianKeyValues--header').hasClass('is-high-contrast')).toBe(true);
