@@ -59,7 +59,11 @@ describe('DetailsCard', () => {
   });
 
   it('renders as collapsible', () => {
-    expect(shallow(<DetailsCard header={header} />).find('.DetailsCard--DetailsWrapper').hasClass('is-collapsed')).toBe(false);
+    expect(
+      shallow(<DetailsCard header={header} />)
+        .find('.DetailsCard--DetailsWrapper')
+        .hasClass('is-collapsed')
+    ).toBe(false);
 
     const wrapper = shallow(<DetailsCard collapsible header={header} />);
     expect(wrapper.find('.DetailsCard--DetailsWrapper').hasClass('is-collapsed')).toBe(true);
