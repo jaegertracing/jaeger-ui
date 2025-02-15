@@ -200,5 +200,6 @@ export type Config = {
   qualityMetrics?: {
     menuEnabled?: boolean;
     menuLabel?: string;
+    apiEndpoint?: string;
   };
 };
