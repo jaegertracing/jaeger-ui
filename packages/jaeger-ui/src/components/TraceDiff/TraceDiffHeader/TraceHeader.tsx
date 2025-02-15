@@ -27,22 +27,6 @@ import TraceId from '../../common/TraceId';
 
 import './TraceHeader.css';
 
-type Props = {
-  duration: number | TNil;
-  error?: ApiError;
-  startTime: number | TNil;
-  state: FetchedState | TNil;
-  traceID: string | TNil;
-  traceName: string | TNil;
-  totalSpans: number | TNil;
-};
-
-type AttrsProps = {
-  startTime: number | TNil;
-  duration: number | TNil;
-  totalSpans: number | TNil;
-};
-
 // exported for tests
 export function EmptyAttrs() {
   return (
@@ -55,8 +39,15 @@ export function EmptyAttrs() {
 }
 
 // exported for tests
-export function Attrs(props: AttrsProps) {
-  const { startTime, duration, totalSpans } = props;
+export function Attrs({
+  startTime,
+  duration,
+  totalSpans,
+}: {
+  startTime: number | TNil;
+  duration: number | TNil;
+  totalSpans: number | TNil;
+}) {
   return (
     <ul className="TraceDiffHeader--traceAttributes" data-testid="TraceDiffHeader--traceAttributes">
       <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
@@ -84,7 +75,15 @@ export default function TraceHeader({
   traceID,
   totalSpans,
   traceName,
-}: Props) {
+}: {
+  duration: number | TNil;
+  error?: ApiError;
+  startTime: number | TNil;
+  state: FetchedState | TNil;
+  traceID: string | TNil;
+  traceName: string | TNil;
+  totalSpans: number | TNil;
+}) {
   const AttrsComponent = state === fetchedState.DONE ? Attrs : EmptyAttrs;
 
   return (
