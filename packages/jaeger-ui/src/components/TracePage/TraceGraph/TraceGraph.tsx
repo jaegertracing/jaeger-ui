@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Card, Button, Tooltip } from 'antd';
+import { Card, Tooltip } from 'antd';
 import { IoClose, IoHelpCircleOutline } from 'react-icons/io5';
 import cx from 'classnames';
 import { Digraph, LayoutManager, cacheAs } from '@jaegertracing/plexus';
@@ -52,67 +52,6 @@ const { classNameIsSmall, scaleOpacity, scaleStrokeOpacity } = Digraph.propsFact
 export function setOnEdgePath(e: any) {
   return e.followsFrom ? { strokeDasharray: 4 } : {};
 }
-
-const HELP_CONTENT = (
-  <div className="TraceGraph--help-content">
-    {HELP_TABLE}
-    <div>
-      <table>
-        <tbody>
-          <tr>
-            <td>
-              <Button htmlType="button" shape="circle" size="small">
-                S
-              </Button>
-            </td>
-            <td>Service</td>
-            <td>Colored by service</td>
-          </tr>
-          <tr>
-            <td>
-              <Button htmlType="button" shape="circle" size="small">
-                T
-              </Button>
-            </td>
-            <td>Time</td>
-            <td>Colored by total time</td>
-          </tr>
-          <tr>
-            <td>
-              <Button htmlType="button" shape="circle" size="small">
-                ST
-              </Button>
-            </td>
-            <td>Selftime</td>
-            <td>Colored by self time (*)</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div>
-      <svg width="100%" height="40">
-        <line x1="0" y1="10" x2="90" y2="10" style={{ stroke: '#000', strokeWidth: 2 }} />
-        <text alignmentBaseline="middle" x="100" y="10">
-          ChildOf
-        </text>
-        <line
-          x1="0"
-          y1="30"
-          x2="90"
-          y2="30"
-          style={{ stroke: '#000', strokeWidth: 2, strokeDasharray: '4' }}
-        />
-        <text alignmentBaseline="middle" x="100" y="30">
-          FollowsFrom
-        </text>
-      </svg>
-    </div>
-    <div>
-      (*) <b>Self time</b> is the total time spent in a span when it was not waiting on children. For example,
-      a 10ms span with two 4ms non-overlapping children would have <b>self-time = 10ms - 2 * 4ms = 2ms</b>.
-    </div>
-  </div>
-);
 
 export default class TraceGraph extends React.PureComponent<Props, State> {
   state: State;
@@ -158,7 +97,84 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
     if (!ev) {
       return <h1 className="u-mt-vast u-tx-muted ub-tx-center">No trace found</h1>;
     }
-
+    const HELP_CONTENT = (
+      <div className="TraceGraph--help-content">
+        {HELP_TABLE}
+        <div>
+          <table>
+            <tbody>
+              <tr>
+                <td>
+                <label>
+                    <input
+                      type="radio"
+                      name="mode"
+                      value={MODE_SERVICE}
+                      checked={this.state.mode === MODE_SERVICE}
+                      onChange={() => this.toggleNodeMode(MODE_SERVICE)}
+                    />
+                  </label>
+                </td>
+                <td>Service</td>
+                <td>Colored by service</td>
+              </tr>
+              <tr>
+                <td>
+                <label>
+                    <input
+                      type="radio"
+                      name="mode"
+                      value={MODE_TIME}
+                      checked={this.state.mode === MODE_TIME}
+                      onChange={() => this.toggleNodeMode(MODE_TIME)}
+                    />
+                  </label>
+                </td>
+                <td>Time</td>
+                <td>Colored by total time</td>
+              </tr>
+              <tr>
+                <td>
+                <label>
+                    <input
+                      type="radio"
+                      name="mode"
+                      value={MODE_SELFTIME}
+                      checked={this.state.mode === MODE_SELFTIME}
+                      onChange={() => this.toggleNodeMode(MODE_SELFTIME)}
+                    />
+                  </label>
+                </td>
+                <td>Selftime</td>
+                <td>Colored by self time (*)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <svg width="100%" height="40">
+            <line x1="0" y1="10" x2="90" y2="10" style={{ stroke: '#000', strokeWidth: 2 }} />
+            <text alignmentBaseline="middle" x="100" y="10">
+              ChildOf
+            </text>
+            <line
+              x1="0"
+              y1="30"
+              x2="90"
+              y2="30"
+              style={{ stroke: '#000', strokeWidth: 2, strokeDasharray: '4' }}
+            />
+            <text alignmentBaseline="middle" x="100" y="30">
+              FollowsFrom
+            </text>
+          </svg>
+        </div>
+        <div>
+          (*) <b>Self time</b> is the total time spent in a span when it was not waiting on children. For example,
+          a 10ms span with two 4ms non-overlapping children would have <b>self-time = 10ms - 2 * 4ms = 2ms</b>.
+        </div>
+      </div>
+    );
     const wrapperClassName = cx('TraceGraph--graphWrapper', { 'is-uiFind-mode': uiFind });
 
     return (
@@ -217,42 +233,45 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
             </li>
             <li>
               <Tooltip placement="left" title="Service">
-                <Button
-                  className="TraceGraph--btn-service"
-                  htmlType="button"
-                  shape="circle"
-                  size="small"
-                  onClick={() => this.toggleNodeMode(MODE_SERVICE)}
-                >
-                  S
-                </Button>
+              <label>
+                  <input
+                  type="radio"
+                  name = "mode"
+                  value = {MODE_SERVICE}
+                  checked = {this.state.mode === MODE_SERVICE}
+                  onChange={() => this.toggleNodeMode(MODE_SERVICE)}
+                />
+                  <span className="TraceGraph--radio-label">S</span>
+                  </label>
               </Tooltip>
             </li>
             <li>
-              <Tooltip placement="left" title="Time">
-                <Button
-                  className="TraceGraph--btn-time"
-                  htmlType="button"
-                  shape="circle"
-                  size="small"
-                  onClick={() => this.toggleNodeMode(MODE_TIME)}
-                >
-                  T
-                </Button>
-              </Tooltip>
+            <Tooltip placement="left" title="Time">
+      <label>
+        <input
+          type="radio"
+          name="mode"
+          value={MODE_TIME}
+          checked={this.state.mode === MODE_TIME}
+          onChange={() => this.toggleNodeMode(MODE_TIME)}
+        />
+        <span className="TraceGraph--radio-label">T</span>
+          </label>
+            </Tooltip>
             </li>
             <li>
               <Tooltip placement="left" title="Selftime">
-                <Button
-                  className="TraceGraph--btn-selftime"
-                  htmlType="button"
-                  shape="circle"
-                  size="small"
-                  onClick={() => this.toggleNodeMode(MODE_SELFTIME)}
-                >
-                  ST
-                </Button>
-              </Tooltip>
+              <label>
+        <input
+          type="radio"
+          name="mode"
+          value={MODE_SELFTIME}
+          checked={this.state.mode === MODE_SELFTIME}
+          onChange={() => this.toggleNodeMode(MODE_SELFTIME)}
+        />
+        <span className="TraceGraph--radio-label">ST</span>
+      </label>
+            </Tooltip>
             </li>
           </ul>
           {showHelp && (

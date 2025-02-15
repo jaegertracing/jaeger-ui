@@ -57,6 +57,21 @@ limitations under the License.
   padding-bottom: 0.3rem;
 }
 
+.TraceGraph--menu label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.TraceGraph--menu input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.TraceGraph--radio-label {
+  margin-left: 8px;
+}
+
 .TraceGraph--sidebar {
   cursor: default;
   box-shadow: -1px 0 rgba(0, 0, 0, 0.2);
@@ -64,6 +79,16 @@ limitations under the License.
 
 .TraceGraph--help-content > div {
   margin-top: 1rem;
+}
+.TraceGraph--help-content input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.TraceGraph--help-content label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
 }
 
 .TraceGraph--dag {
