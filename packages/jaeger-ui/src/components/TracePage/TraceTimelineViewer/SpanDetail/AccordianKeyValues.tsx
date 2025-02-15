@@ -24,8 +24,7 @@ import { KeyValuePair, Link } from '../../../../types/trace';
 import './AccordianKeyValues.css';
 
 // export for tests
-export function KeyValuesSummary(props: { data?: KeyValuePair[] }) {
-  const { data } = props || null;
+export function KeyValuesSummary({ data }: { data: KeyValuePair[] }) {
   if (!Array.isArray(data) || !data.length) {
     return null;
   }
