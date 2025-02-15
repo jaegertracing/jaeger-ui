@@ -95,7 +95,7 @@ describe('fetchQualityMetrics', () => {
     const service = 'test-service';
     JaegerAPI.fetchQualityMetrics(service, hours);
     expect(fetchMock).toHaveBeenLastCalledWith(
-      `/qualitymetrics-v2?${queryString.stringify({ service, hours })}`,
+      `/api/quality-metrics?${queryString.stringify({ service, hours })}`,
       defaultOptions
     );
   });
