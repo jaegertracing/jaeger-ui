@@ -119,6 +119,7 @@ const defaultConfig: Config = {
   qualityMetrics: {
     menuEnabled: false,
     menuLabel: 'Trace Quality',
+    apiEndpoint: '/api/quality-metrics',
   },
 };
 
