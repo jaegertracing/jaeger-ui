@@ -59,16 +59,20 @@ describe('DetailsCard', () => {
   });
 
   it('renders as collapsible', () => {
-    expect(shallow(<DetailsCard header={header} />).state('collapsed')).toBe(false);
+    expect(
+      shallow(<DetailsCard header={header} />)
+        .find('.DetailsCard--DetailsWrapper')
+        .hasClass('is-collapsed')
+    ).toBe(false);
 
     const wrapper = shallow(<DetailsCard collapsible header={header} />);
-    expect(wrapper.state('collapsed')).toBe(true);
+    expect(wrapper.find('.DetailsCard--DetailsWrapper').hasClass('is-collapsed')).toBe(true);
     expect(wrapper).toMatchSnapshot();
 
     wrapper.find('button').simulate('click');
-    expect(wrapper.state('collapsed')).toBe(false);
+    expect(wrapper.find('.DetailsCard--DetailsWrapper').hasClass('is-collapsed')).toBe(false);
 
     wrapper.find('button').simulate('click');
-    expect(wrapper.state('collapsed')).toBe(true);
+    expect(wrapper.find('.DetailsCard--DetailsWrapper').hasClass('is-collapsed')).toBe(true);
   });
 });

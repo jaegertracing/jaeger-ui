@@ -17,8 +17,8 @@ import cx from 'classnames';
 import { IoChevronDown } from 'react-icons/io5';
 
 import { TColumnDefs, TDetails, TRow } from './types';
-import DetailTable from './DetailTable';
 import DetailList from './DetailList';
+import DetailTable from './DetailTable';
 
 import './index.css';
 
@@ -31,67 +31,46 @@ type TProps = {
   header: string;
 };
 
-type TState = {
-  collapsed: boolean;
-};
-
 function isList(arr: string[] | TRow[]): arr is string[] {
   return typeof arr[0] === 'string';
 }
 
-export default class DetailsCard extends React.PureComponent<TProps> {
-  state: TState;
+function DetailsCard({ className, collapsible = false, description, header, columnDefs, details }: TProps) {
+  const [isCollapsed, setIsCollapsed] = React.useState(Boolean(collapsible));
 
-  constructor(props: TProps) {
-    super(props);
-
-    this.state = { collapsed: Boolean(props.collapsible) };
-  }
-
-  renderDetails() {
-    const { columnDefs, details } = this.props;
-
+  const renderDetails = () => {
     if (Array.isArray(details)) {
       if (details.length === 0) return null;
-
       if (isList(details)) return <DetailList details={details} />;
       return <DetailTable columnDefs={columnDefs} details={details} />;
     }
-
     return <span>{details}</span>;
-  }
-
-  toggleCollapse = () => {
-    this.setState((prevState: TState) => ({
-      collapsed: !prevState.collapsed,
-    }));
   };
 
-  render() {
-    const { collapsed } = this.state;
-    const { className, collapsible, description, header } = this.props;
+  const toggleCollapsed = React.useCallback(() => setIsCollapsed(!isCollapsed), [isCollapsed]);
 
-    return (
-      <div className={cx('DetailsCard', className)}>
-        <div className="DetailsCard--ButtonHeaderWrapper">
-          {collapsible && (
-            <button
-              onClick={this.toggleCollapse}
-              type="button"
-              className={cx('DetailsCard--Collapser', { 'is-collapsed': collapsed })}
-            >
-              <IoChevronDown />
-            </button>
-          )}
-          <div className="DetailsCard--HeaderWrapper">
-            <span className="DetailsCard--Header">{header}</span>
-            {description && <p className="DetailsCard--Description">{description}</p>}
-          </div>
-        </div>
-        <div className={cx('DetailsCard--DetailsWrapper', { 'is-collapsed': collapsed })}>
-          {this.renderDetails()}
+  return (
+    <div className={cx('DetailsCard', className)}>
+      <div className="DetailsCard--ButtonHeaderWrapper">
+        {collapsible && (
+          <button
+            onClick={toggleCollapsed}
+            type="button"
+            className={cx('DetailsCard--Collapser', { 'is-collapsed': isCollapsed })}
+          >
+            <IoChevronDown />
+          </button>
+        )}
+        <div className="DetailsCard--HeaderWrapper">
+          <span className="DetailsCard--Header">{header}</span>
+          {description && <p className="DetailsCard--Description">{description}</p>}
         </div>
       </div>
-    );
-  }
+      <div className={cx('DetailsCard--DetailsWrapper', { 'is-collapsed': isCollapsed })}>
+        {renderDetails()}
+      </div>
+    </div>
+  );
 }
+
+export default DetailsCard;
