@@ -22,4 +22,9 @@ describe('<Ticks>', () => {
     const wrapper = shallow(<Ticks endTime={200} numTicks={5} showLabels startTime={100} />);
     expect(wrapper).toBeDefined();
   });
+
+  it('should match snapshot', () => {
+    const wrapper = shallow(<Ticks endTime={200} numTicks={5} showLabels startTime={100} />);
+    expect(wrapper).toMatchSnapshot()
+  });
 });
