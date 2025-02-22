@@ -178,10 +178,10 @@ describe('OperationTableDetails', () => {
       );
 
       const headers = container.querySelectorAll('.ant-table-column-sorter');
-      await userEvent.click(headers[0]); // Name header
+      await userEvent.click(headers[0]);
       expect(track.trackSortOperations).toHaveBeenCalledWith('Name');
 
-      await userEvent.click(headers[4]); // Impact header
+      await userEvent.click(headers[4]);
       expect(track.trackSortOperations).toHaveBeenCalledWith('Impact');
     });
 

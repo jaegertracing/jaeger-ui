@@ -12,9 +12,6 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.24.6",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.2.0",
-    "@testing-library/user-event": "^14.6.1",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
     "depcheck": "1.4.7",
@@ -28,7 +25,6 @@
     "jsdom": "^26.0.0",
     "npm-run-all2": "7.0.1",
     "prettier": "3.5.0",
-    "rimraf": "^3.0.2",
     "rxjs-compat": "6.6.7",
     "typescript": "5.7.2"
   },
