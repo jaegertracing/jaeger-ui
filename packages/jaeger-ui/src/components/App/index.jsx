@@ -77,11 +77,11 @@ const jaegerTheme = {
   },
 };
 
-// Initialize API and process scripts
-JaegerAPI.apiRoot = DEFAULT_API_ROOT;
-processScripts();
-
 const JaegerUIApp = () => {
+  useEffect(() => {
+    JaegerAPI.apiRoot = DEFAULT_API_ROOT;
+    processScripts();
+  }, []);
   return (
     <ConfigProvider theme={jaegerTheme}>
       <Provider store={store}>
