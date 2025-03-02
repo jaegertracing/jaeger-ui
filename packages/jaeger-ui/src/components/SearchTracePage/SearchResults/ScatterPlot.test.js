@@ -16,8 +16,9 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import ScatterPlot from './ScatterPlot';
+import ScatterPlot, { CustomTooltip } from './ScatterPlot';
 import { ONE_MILLISECOND } from '../../../utils/date';
+import { FALLBACK_TRACE_NAME } from '../../../constants';
 
 // Mock ResizeObserver which is not available in JSDOM but required by Recharts
 class MockResizeObserver {
@@ -255,5 +256,42 @@ describe('ScatterPlot', () => {
 
     expect(firstSymbol).toBeTruthy();
     expect(secondSymbol).toBeTruthy();
+  });
+});
+
+describe('CustomTooltip', () => {
+  it('renders with trace name when active and payload is provided', () => {
+    const traceName = 'Test Trace Name';
+    const { container } = render(<CustomTooltip active payload={[{ payload: { name: traceName } }]} />);
+
+    const tooltipElement = container.querySelector('.scatter-plot-hint');
+    expect(tooltipElement).toBeTruthy();
+    expect(tooltipElement.querySelector('h4').textContent).toBe(traceName);
+  });
+
+  it('renders with fallback name when trace has no name', () => {
+    const { container } = render(<CustomTooltip active payload={[{ payload: {} }]} />);
+
+    const tooltipElement = container.querySelector('.scatter-plot-hint');
+    expect(tooltipElement).toBeTruthy();
+    expect(tooltipElement.querySelector('h4').textContent).toBe(FALLBACK_TRACE_NAME);
+  });
+
+  it('returns null when not active', () => {
+    const { container } = render(<CustomTooltip payload={[{ payload: { name: 'Test' } }]} />);
+
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('returns null when payload is empty', () => {
+    const { container } = render(<CustomTooltip active payload={[]} />);
+
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('returns null when payload is not provided', () => {
+    const { container } = render(<CustomTooltip active />);
+
+    expect(container.firstChild).toBeNull();
   });
 });

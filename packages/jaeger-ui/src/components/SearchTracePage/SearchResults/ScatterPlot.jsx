@@ -32,7 +32,7 @@ import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
 
 import './ScatterPlot.css';
 
-const CustomTooltip = ({ active, payload }) => {
+export const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
       <div className="scatter-plot-hint">
@@ -43,7 +43,7 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-const RenderDot = ({ cx, cy, fill, size }) => {
+export const RenderDot = ({ cx, cy, fill, size }) => {
   const maxSize = Math.min(300, size);
   return (
     <Dot cx={cx} cy={cy} fill={fill} fillOpacity={0.5} r={maxSize * 0.035} style={{ cursor: 'pointer' }} />
