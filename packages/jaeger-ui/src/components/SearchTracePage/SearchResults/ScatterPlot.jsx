@@ -122,18 +122,26 @@ export default function ScatterPlot({
               domain={[xMin, xMax]}
               ticks={generateUniqueTicks(xMin, xMax, 10)}
               tickFormatter={t => dayjs(t / ONE_MILLISECOND).format('hh:mm:ss a')}
-              tick={{ fontSize: 11 }}
+              tick={{ fontSize: 11, dy: 5 }}
               axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
               tickLine={{ stroke: '#e6e6e9', strokeWidth: 1 }}
               allowDecimals={false}
               interval="equidistantPreserveStart"
-            />
+            >
+              <Label
+                value="Time"
+                position="insideTopRight"
+                offset={15}
+                fontSize={11}
+                style={{ textAnchor: 'start' }}
+              />
+            </XAxis>
             <YAxis
               type="number"
               dataKey="y"
               name="Duration"
               tickFormatter={t => formatDuration(t)}
-              tick={{ fontSize: 11 }}
+              tick={{ fontSize: 11, dx: -5 }}
               axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
               tickLine={{ stroke: '#e6e6e9', strokeWidth: 1 }}
               tickCount={4}
@@ -142,11 +150,11 @@ export default function ScatterPlot({
             >
               <Label
                 value="Duration"
-                position="insideLeft"
-                angle={-90}
-                offset={75}
+                position="insideTopLeft"
+                offset={0}
                 fontSize={11}
-                style={{ textAnchor: 'middle' }}
+                style={{ textAnchor: 'end' }}
+                angle={-90}
               />
             </YAxis>
             <ZAxis dataKey="size" type="number" range={[1, 300]} />
@@ -160,7 +168,6 @@ export default function ScatterPlot({
               })}
               onClick={onValueClick}
               shape={<RenderDot />}
-              fill={point => point.fill}
             />
           </ScatterChart>
         </ResponsiveContainer>
