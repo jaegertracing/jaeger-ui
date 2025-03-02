@@ -30,6 +30,114 @@ function tryParseMultiLineInput(input: string): any[] {
   return parsedObjects;
 }
 
+function validateSpan(span: any): boolean {
+  return !!(
+    span.traceID &&
+    span.spanID &&
+    span.operationName &&
+    typeof span.startTime === 'number' &&
+    typeof span.duration === 'number' &&
+    span.processID &&
+    typeof span.processID === 'string'
+  );
+}
+
+function validateProcess(process: any): boolean {
+  return !!(
+    process &&
+    typeof process === 'object' &&
+    process.serviceName &&
+    typeof process.serviceName === 'string'
+  );
+}
+
+function isOTelSpan(obj: any): boolean {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    'context' in obj &&
+    typeof obj.context === 'object' &&
+    'trace_id' in obj.context &&
+    'span_id' in obj.context
+  );
+}
+
+function convertOTelSpanToOTLP(span: any): any {
+  return {
+    resourceSpans: [
+      {
+        resource: span.resource || {
+          attributes: {
+            'service.name': 'unknown_service',
+          },
+        },
+        scopeSpans: [
+          {
+            scope: {},
+            spans: [
+              {
+                traceId: span.context.trace_id.replace('0x', ''),
+                spanId: span.context.span_id.replace('0x', ''),
+                parentSpanId: span.parent_id?.replace('0x', ''),
+                name: span.name,
+                kind: span.kind,
+                startTimeUnixNano: new Date(span.start_time).getTime() * 1000000,
+                endTimeUnixNano: new Date(span.end_time).getTime() * 1000000,
+                attributes: Object.entries(span.attributes || {}).map(([k, v]) => ({
+                  key: k,
+                  value: { stringValue: String(v) },
+                })),
+                status: span.status,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+function validateJaegerTrace(trace: any): boolean {
+  if (!trace) return false;
+
+  if (isOTelSpan(trace)) {
+    return true;
+  }
+
+  if (typeof trace === 'object' && Object.keys(trace).length > 0) {
+    if (!trace.traceID && !trace.spans && !trace.processes && !('resourceSpans' in trace)) {
+      return true;
+    }
+  }
+
+  if ('resourceSpans' in trace) return true;
+
+  if (Array.isArray(trace.data)) {
+    return trace.data.every((item: any) => validateSingleTrace(item));
+  }
+
+  return validateSingleTrace(trace);
+}
+
+function validateSingleTrace(trace: any): boolean {
+  if (
+    !trace.traceID ||
+    !Array.isArray(trace.spans) ||
+    !trace.processes ||
+    typeof trace.processes !== 'object'
+  ) {
+    return false;
+  }
+
+  const validSpans = trace.spans.every(validateSpan);
+  if (!validSpans) return false;
+
+  const validProcesses = Object.values(trace.processes).every(validateProcess);
+  if (!validProcesses) return false;
+
+  return trace.spans.every((span: any) => span.processID && trace.processes[span.processID]);
+}
+
 export default function readJsonFile(fileList: { file: File }): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -45,10 +153,20 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
         try {
           traceObj = tryParseMultiLineInput(reader.result);
         } catch (error) {
-          reject(error);
+          reject(new Error(`Invalid JSON format: ${(error as Error).message}`));
           return;
         }
       }
+
+      if (!validateJaegerTrace(traceObj)) {
+        reject(new Error('Invalid trace format. Expected Jaeger or OTLP trace format'));
+        return;
+      }
+
+      if (isOTelSpan(traceObj)) {
+        traceObj = convertOTelSpanToOTLP(traceObj);
+      }
+
       if (Array.isArray(traceObj) && traceObj.every(obj => 'resourceSpans' in obj)) {
         const mergedResourceSpans = traceObj.reduce((acc, obj) => {
           acc.push(...obj.resourceSpans);
@@ -64,7 +182,7 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
             resolve(result);
           })
           .catch(() => {
-            reject(new Error('Error converting traces to OTLP'));
+            reject(new Error('Error converting traces to Jaeger format'));
           });
       } else {
         resolve(traceObj);
@@ -75,7 +193,7 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
       reject(new Error(`Error reading the JSON file${errMessage}`));
     };
     reader.onabort = () => {
-      reject(new Error(`Reading the JSON file has been aborted`));
+      reject(new Error('Reading the JSON file has been aborted'));
     };
     try {
       reader.readAsText(fileList.file);
