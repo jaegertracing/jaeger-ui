@@ -13,19 +13,9 @@
 // limitations under the License.
 
 import * as React from 'react';
-import {
-  XYPlot,
-  XAxis,
-  YAxis,
-  HorizontalGridLines,
-  LineSeries,
-  AreaSeries,
-  Crosshair,
-  DiscreteColorLegend,
-  // @ts-ignore
-} from 'react-vis';
+import { AreaChart, Area, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import LoadingIndicator from '../../common/LoadingIndicator';
-import { ServiceMetricsObject, Points } from '../../../types/metrics';
+import { ServiceMetricsObject } from '../../../types/metrics';
 import './serviceGraph.css';
 import { ApiError } from '../../../types/api-error';
 
@@ -44,14 +34,12 @@ type TProps = {
   xDomain: number[];
 };
 
-type TCrossHairValues = {
-  label: number;
+type MetricDataPoint = {
   x: number;
-  y: number | null;
+  [key: string]: number | null;
 };
 
-// export for tests
-export const tickFormat = (v: number) => {
+export const tickFormat = (v: number): string => {
   const dateObj = new Date(v);
   const hours = dateObj.getHours().toString();
   const minutes = dateObj.getMinutes().toString();
@@ -59,56 +47,142 @@ export const tickFormat = (v: number) => {
   return `${hours.length === 1 ? `0${hours}` : hours}:${minutes.length === 1 ? `0${minutes}` : minutes}`;
 };
 
-// export for tests
+type TPlaceholder = {
+  name: string;
+  marginClassName?: string;
+  width: number;
+  height: number;
+  children: React.ReactNode;
+};
+
+const Placeholder = ({ name, marginClassName, width, height, children }: TPlaceholder): JSX.Element => {
+  return (
+    <div
+      className={`graph-container ${marginClassName}`}
+      style={{
+        height,
+      }}
+    >
+      <h3 className="graph-header">{name}</h3>
+      <div
+        className="center-placeholder"
+        style={{
+          width,
+          height: height - 74,
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
 export class ServiceGraphImpl extends React.PureComponent<TProps> {
   height = 242;
-  colors: string[] = ['#DCA3D2', '#EA9977', '#869ADD'];
-  state: { crosshairValues: TCrossHairValues[] } = {
-    crosshairValues: [],
-  };
+  colors: string[] = ['#869ADD', '#EA9977', '#DCA3D2'];
 
   getData(): ServiceMetricsObject[] {
     const { metricsData } = this.props;
 
-    // istanbul ignore next : TS required to check, but we do it in render function
     if (metricsData === null) {
       return [];
     }
 
-    return Array.isArray(metricsData) ? metricsData : [metricsData];
+    const data = Array.isArray(metricsData) ? metricsData : [metricsData];
+    return data.sort((a, b) => b.quantile - a.quantile);
   }
 
-  renderLines() {
+  getMetricsData(): MetricDataPoint[] {
+    const serviceMetricObjects = this.getData();
+    if (serviceMetricObjects.length === 0 || !serviceMetricObjects[0].metricPoints) {
+      return [];
+    }
+
+    const result = Array(serviceMetricObjects[0].metricPoints.length);
+    for (let i = 0; i < serviceMetricObjects[0].metricPoints.length; i++) {
+      result[i] = {
+        x: serviceMetricObjects[0].metricPoints[i].x,
+        ...serviceMetricObjects.reduce((acc: Record<string, number | null>, obj) => {
+          acc[obj.quantile.toString()] = obj.metricPoints[i].y;
+          return acc;
+        }, {}),
+      };
+    }
+    return result;
+  }
+
+  calculateYDomain(data: MetricDataPoint[]): number[] {
+    if (!data || data.length === 0) return [0, 1];
+
+    let min = Infinity;
+    let max = -Infinity;
+
+    data.forEach(point => {
+      Object.entries(point).forEach(([key, value]) => {
+        if (key !== 'x' && value !== null) {
+          min = Math.min(min, value);
+          max = Math.max(max, value);
+        }
+      });
+    });
+
+    if (min === Infinity || max === -Infinity) return [0, 1];
+
+    const range = max - min;
+    const padding = range * 0.1;
+    min = Math.max(0, min - padding);
+    max += padding;
+
+    const magnitude = Math.floor(Math.log10(max - min));
+    const roundTo = 10 ** (magnitude - 1);
+
+    return [Math.floor(min / roundTo) * roundTo, Math.ceil(max / roundTo) * roundTo];
+  }
+
+  calculateYAxisTicks(domain: number[]): number[] {
+    const [min, max] = domain;
+    const step = (max - min) / 4;
+    return Array.from({ length: 5 }, (_, i) => min + step * i);
+  }
+
+  formatYAxisTick = (value: number): string => {
+    const { name } = this.props;
+
+    if (this.props.yAxisTickFormat) {
+      return String(this.props.yAxisTickFormat(value));
+    }
+
+    if (name.includes('Error rate')) {
+      return value.toFixed(0);
+    }
+
+    if (value === 0) return '0';
+    if (value < 0.01) return value.toExponential(2);
+    if (value < 1) return value.toFixed(3);
+    if (value < 10) return value.toFixed(2);
+    if (value < 100) return value.toFixed(1);
+    return value.toFixed(0);
+  };
+
+  renderLines(): JSX.Element[] {
     const { metricsData, color } = this.props;
 
     if (metricsData) {
-      const graphs: any = [];
+      const graphs: JSX.Element[] = [];
       let i = 0;
 
       this.getData().forEach((line: ServiceMetricsObject, idx: number) => {
         graphs.push(
-          <AreaSeries
+          <Area
             key={i++}
-            data={line.metricPoints ? line.metricPoints : []}
-            getNull={(d: Points) => d.y !== null}
-            onNearestX={(_datapoint: Points, { index }: { index: number }) => {
-              this.setState({
-                crosshairValues: this.getData().map((d: ServiceMetricsObject) => ({
-                  ...d.metricPoints[index],
-                  label: d.quantile,
-                })),
-              });
-            }}
-            opacity={0.1}
-            color={[color || this.colors[idx]]}
-          />
-        );
-        graphs.push(
-          <LineSeries
-            getNull={(d: Points) => d.y !== null}
-            key={i++}
-            data={line.metricPoints ? line.metricPoints : []}
-            color={[color || this.colors[idx]]}
+            type="linear"
+            dataKey={line.quantile.toString()}
+            stroke={color || this.colors[idx]}
+            strokeWidth={2}
+            fill={color || this.colors[idx]}
+            fillOpacity={0.1}
+            connectNulls={false}
+            isAnimationActive={false}
           />
         );
       });
@@ -119,7 +193,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
     return [];
   }
 
-  generatePlaceholder(placeHolder: string | React.ReactNode) {
+  generatePlaceholder(placeHolder: React.ReactNode): JSX.Element {
     const { width } = this.props;
 
     return (
@@ -135,7 +209,15 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
     );
   }
 
-  render() {
+  calculateNumericTicks(xDomain: number[]): number[] {
+    const [start, end] = xDomain;
+    const count = 7;
+    const step = (end - start) / (count - 1);
+
+    return Array.from({ length: count }, (_, i) => start + step * i);
+  }
+
+  render(): JSX.Element {
     const {
       width,
       yDomain,
@@ -146,76 +228,98 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
       marginClassName,
       name,
       error,
-      yAxisTickFormat,
       xDomain,
     } = this.props;
-    let GraphComponent = this.generatePlaceholder(<LoadingIndicator centered />);
-    const noDataComponent = this.generatePlaceholder('No Data');
-    const apiErrorComponent = this.generatePlaceholder('Couldn’t fetch data');
 
-    const Plot = (
-      <XYPlot
-        margin={{ bottom: 25 }}
-        onMouseLeave={() => this.setState({ crosshairValues: [] })}
-        width={width}
-        height={this.height - 74}
-        xDomain={xDomain}
-        yDomain={yDomain}
-      >
-        {showHorizontalLines ? <HorizontalGridLines /> : null}
-        <XAxis tickFormat={tickFormat} tickTotal={Math.floor(width / 60)} />
-        <YAxis tickFormat={yAxisTickFormat} />
-        {this.renderLines()}
-        <Crosshair values={this.state.crosshairValues}>
-          <div className="crosshair-value">
-            {this.state.crosshairValues[0] &&
-              `${new Date(this.state.crosshairValues[0].x).toLocaleDateString()} ${new Date(
-                this.state.crosshairValues[0].x
-              ).toLocaleTimeString()}`}
-            {this.state.crosshairValues.reverse().map((d: TCrossHairValues) =>
-              showLegend ? (
-                <div key={d.label}>
-                  P{d.label * 100}: {d.y}
-                </div>
-              ) : (
-                <div key={d.label}>{d.y}</div>
-              )
-            )}
-          </div>
-        </Crosshair>
-        {showLegend ? (
-          <DiscreteColorLegend
-            className="legend-label"
-            orientation="horizontal"
-            items={this.getData()
-              .map((d: ServiceMetricsObject, idx: number) => ({
-                color: this.colors[idx],
-                title: `${d.quantile * 100}th`,
-              }))
-              .reverse()}
-          />
-        ) : null}
-      </XYPlot>
-    );
+    if (loading || !xDomain || xDomain[0] === undefined || xDomain[1] === undefined)
+      return (
+        <Placeholder name={name} marginClassName={marginClassName} width={width} height={this.height}>
+          <LoadingIndicator centered />
+        </Placeholder>
+      );
 
-    if (!loading && xDomain.length > 0) {
-      GraphComponent = metricsData === null ? noDataComponent : Plot;
-    }
+    if (error)
+      return (
+        <Placeholder name={name} marginClassName={marginClassName} width={width} height={this.height}>
+          Could not fetch data
+        </Placeholder>
+      );
 
-    if (error) {
-      GraphComponent = apiErrorComponent;
-    }
+    if (metricsData === null)
+      return (
+        <Placeholder name={name} marginClassName={marginClassName} width={width} height={this.height}>
+          No Data
+        </Placeholder>
+      );
+
+    const data = this.getMetricsData();
+    const effectiveYDomain = yDomain || this.calculateYDomain(data);
+
+    const legendFormatter = (value: string): JSX.Element => {
+      const dataVal = this.getData();
+      const foundIdx = dataVal.findIndex(d => d.quantile.toString() === value);
+      if (foundIdx === -1) return <span>N/A</span>;
+      const quantile = dataVal[foundIdx]?.quantile;
+      if (quantile == null) return <span>N/A</span>;
+      return <span>{quantile * 100}th</span>;
+    };
 
     return (
-      <div
-        className={`graph-container ${marginClassName}`}
-        style={{
-          height: this.height,
-        }}
-      >
-        <h3 className="graph-header">{name}</h3>
-        {GraphComponent}
-      </div>
+      <Placeholder name={name} marginClassName={marginClassName} width={width} height={this.height}>
+        <ResponsiveContainer width="100%" height={this.height}>
+          <AreaChart data={data} margin={{ top: 20, bottom: 55, left: 0, right: 0 }}>
+            <XAxis
+              domain={xDomain}
+              tickFormatter={tickFormat}
+              dataKey="x"
+              className="graph-x-axis"
+              tickLine={{ className: 'graph-axis' }}
+              axisLine={{ className: 'graph-axis' }}
+              height={30}
+              type="number"
+              ticks={this.calculateNumericTicks(xDomain)}
+              tickMargin={4}
+              tick={{ dx: 0, dy: 4 }}
+            />
+            <YAxis
+              domain={effectiveYDomain}
+              tickFormatter={this.formatYAxisTick}
+              className="graph-y-axis"
+              tickLine={{ className: 'graph-axis' }}
+              axisLine={{ className: 'graph-axis' }}
+              width={45}
+              ticks={this.calculateYAxisTicks(effectiveYDomain)}
+              tickMargin={4}
+              tick={{ dx: -4, dy: 0 }}
+            />
+            <CartesianGrid horizontal={showHorizontalLines} vertical={false} />
+
+            {this.renderLines()}
+
+            <Tooltip
+              contentStyle={{ fontSize: '0.625rem' }}
+              labelFormatter={(value: number) => new Date(value).toLocaleString()}
+              formatter={(value: number, uname: string) => {
+                if (!showLegend) {
+                  return [this.formatYAxisTick(value)];
+                }
+                const formattedName = Number(uname) * 100;
+                return [this.formatYAxisTick(value), `P${formattedName}`];
+              }}
+            />
+
+            {showLegend && (
+              <Legend
+                align="left"
+                verticalAlign="bottom"
+                height={10}
+                iconType="plainline"
+                formatter={legendFormatter}
+              />
+            )}
+          </AreaChart>
+        </ResponsiveContainer>
+      </Placeholder>
     );
   }
 }

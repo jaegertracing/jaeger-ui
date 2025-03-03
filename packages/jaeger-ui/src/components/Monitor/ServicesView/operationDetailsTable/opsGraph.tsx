@@ -13,12 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import {
-  XYPlot,
-  AreaSeries,
-  LineSeries,
-  // @ts-ignore
-} from 'react-vis';
+import { AreaChart, Area, ResponsiveContainer, YAxis } from 'recharts';
 import { ApiError } from '../../../../types/api-error';
 import { Points } from '../../../../types/metrics';
 
@@ -43,7 +38,7 @@ export class OperationsGraph extends React.PureComponent<TProps> {
     const { dataPoints, yDomain, color, error } = this.props;
 
     if (error) {
-      return OperationsGraph.generatePlaceholder('Couldn’t fetch data');
+      return OperationsGraph.generatePlaceholder("Couldn't fetch data");
     }
 
     if (dataPoints.length === 0) {
@@ -51,34 +46,38 @@ export class OperationsGraph extends React.PureComponent<TProps> {
     }
 
     const dynProps: {
-      yDomain?: yDomain;
+      domain?: yDomain;
     } = {};
 
     if (yDomain) {
-      dynProps.yDomain = yDomain;
+      dynProps.domain = yDomain;
     }
 
     return (
       <div className="ops-container">
-        <XYPlot
-          margin={{
-            left: 0,
-            right: 0,
-            bottom: 1,
-            top: 2,
-          }}
-          width={100}
-          height={15}
-        >
-          <AreaSeries
-            className="area-series-example ops-graph-style"
-            curve="curveLinear"
-            color={color}
+        <ResponsiveContainer width={100} height={15}>
+          <AreaChart
+            margin={{
+              left: 0,
+              right: 0,
+              bottom: 0,
+              top: 0,
+            }}
             data={dataPoints}
-            {...dynProps}
-          />
-          <LineSeries className="area-elevated-line-series" color={color} data={dataPoints} {...dynProps} />
-        </XYPlot>
+          >
+            <YAxis hide {...dynProps} />
+            <Area
+              type="monotone"
+              dataKey="y"
+              stroke={color}
+              fill={color}
+              fillOpacity={1}
+              isAnimationActive={false}
+              dot={false}
+              connectNulls
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     );
   }
