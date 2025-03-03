@@ -30,6 +30,18 @@ function tryParseMultiLineInput(input: string): any[] {
   return parsedObjects;
 }
 
+function isOTLPFormat(obj: any): boolean {
+  return obj && typeof obj === 'object' && 'resourceSpans' in obj;
+}
+
+function isArrayOfOTLPFormat(arr: any[]): boolean {
+  return Array.isArray(arr) && arr.length > 0 && arr.every((obj: any) => isOTLPFormat(obj));
+}
+
+function isJaegerCompatibleFormat(obj: any): boolean {
+  return obj && typeof obj === 'object' && 'data' in obj && Array.isArray(obj.data);
+}
+
 export default function readJsonFile(fileList: { file: File }): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -49,25 +61,51 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
           return;
         }
       }
-      if (Array.isArray(traceObj) && traceObj.every(obj => 'resourceSpans' in obj)) {
-        const mergedResourceSpans = traceObj.reduce((acc, obj) => {
-          acc.push(...obj.resourceSpans);
-          return acc;
-        }, []);
-
-        traceObj = { resourceSpans: mergedResourceSpans };
+      if (!traceObj) {
+        reject(new Error('Empty or invalid trace data'));
+        return;
       }
-
-      if ('resourceSpans' in traceObj) {
+      if (isArrayOfOTLPFormat(Array.isArray(traceObj) ? traceObj : [traceObj])) {
+        try {
+          const mergedResourceSpans = (Array.isArray(traceObj) ? traceObj : [traceObj]).reduce((acc: any[], obj: any) => {
+            if (obj.resourceSpans && Array.isArray(obj.resourceSpans)) {
+              acc.push(...obj.resourceSpans);
+            }
+            return acc;
+          }, []);
+          
+          traceObj = { resourceSpans: mergedResourceSpans };
+        } catch (error) {
+          reject(new Error(`Error merging resourceSpans: ${(error as Error).message}`));
+          return;
+        }
+      }
+      
+      if (isOTLPFormat(traceObj)) {
         JaegerAPI.transformOTLP(traceObj)
           .then((result: string) => {
-            resolve(result);
+            try {
+              const parsedResult = JSON.parse(result);
+              if (!isJaegerCompatibleFormat(parsedResult)) {
+                reject(new Error('Transformed OTLP trace is not in a compatible format'));
+                return;
+              }
+              resolve(result);
+            } catch (error: any) {
+              reject(new Error(`Invalid JSON returned from OTLP transformation: ${(error as Error).message}`));
+            }
           })
-          .catch(() => {
-            reject(new Error('Error converting traces to OTLP'));
+          .catch((error: any) => {
+            reject(new Error(`Error converting traces to OTLP: ${error instanceof Error ? error.message : String(error)}`));
           });
-      } else {
+      } 
+      else if (traceObj && typeof traceObj === 'object' && 'context' in traceObj && 'trace_id' in traceObj.context) {
+        reject(new Error('Single span format detected. This format is not compatible with the viewer. Please provide a Jaeger-compatible trace format.'));
+      }
+      else if (isJaegerCompatibleFormat(traceObj)) {
         resolve(traceObj);
+      } else {
+        reject(new Error('Unrecognized trace format. The file must contain a Jaeger-compatible trace structure with a data array.'));
       }
     };
     reader.onerror = () => {
