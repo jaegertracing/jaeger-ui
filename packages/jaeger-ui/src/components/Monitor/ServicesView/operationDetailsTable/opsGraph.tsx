@@ -17,8 +17,6 @@ import { AreaChart, Area, ResponsiveContainer, YAxis } from 'recharts';
 import { ApiError } from '../../../../types/api-error';
 import { Points } from '../../../../types/metrics';
 
-import './opsGraph.css';
-
 type yDomain = [number, number];
 
 type TProps = {
@@ -51,6 +49,13 @@ export class OperationsGraph extends React.PureComponent<TProps> {
 
     if (yDomain) {
       dynProps.domain = yDomain;
+    } else {
+      const yValues = dataPoints.map(point => point.y).filter((y): y is number => y != null);
+      if (yValues.length > 0) {
+        const minY = Math.min(...yValues);
+        const maxY = Math.max(...yValues);
+        dynProps.domain = [minY * 0.999, maxY];
+      }
     }
 
     return (
@@ -67,14 +72,14 @@ export class OperationsGraph extends React.PureComponent<TProps> {
           >
             <YAxis hide {...dynProps} />
             <Area
-              type="monotone"
+              type="linear"
               dataKey="y"
-              stroke={color}
+              stroke="none"
               fill={color}
               fillOpacity={1}
               isAnimationActive={false}
-              dot={false}
               connectNulls
+              dot={false}
             />
           </AreaChart>
         </ResponsiveContainer>
