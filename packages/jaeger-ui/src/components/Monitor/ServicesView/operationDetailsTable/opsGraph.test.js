@@ -56,7 +56,7 @@ describe('<OperationsGraph>', () => {
     };
     const { container } = render(<OperationsGraph {...props} />);
     expect(container.querySelector('.ops-container')).toBeInTheDocument();
-    expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
+    expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
     expect(container.querySelector('.recharts-area')).toBeInTheDocument();
   });
 
@@ -68,7 +68,7 @@ describe('<OperationsGraph>', () => {
     };
     const { container } = render(<OperationsGraph {...props} />);
     expect(container.querySelector('.ops-container')).toBeInTheDocument();
-    expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
+    expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
   });
 
   it('calculates yDomain from data points when not provided', () => {
@@ -83,7 +83,7 @@ describe('<OperationsGraph>', () => {
     };
     const { container } = render(<OperationsGraph {...props} />);
     expect(container.querySelector('.ops-container')).toBeInTheDocument();
-    expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
+    expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
   });
 
   it('handles empty yValues array when calculating domain', () => {
@@ -96,7 +96,7 @@ describe('<OperationsGraph>', () => {
     };
     const { container } = render(<OperationsGraph {...props} />);
     expect(container.querySelector('.ops-container')).toBeInTheDocument();
-    expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
+    expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
   });
 
   it('handles various y-value types when calculating domain', () => {
@@ -107,7 +107,7 @@ describe('<OperationsGraph>', () => {
       { x: 4, y: 30 },
     ];
     const { container } = render(<OperationsGraph dataPoints={dataPoints} />);
-    expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
+    expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
   });
 
   it('generates placeholder with custom text', () => {

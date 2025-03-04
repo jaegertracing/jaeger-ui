@@ -55,7 +55,13 @@ type TPlaceholder = {
   children: React.ReactNode;
 };
 
-const Placeholder = ({ name, marginClassName, width, height, children }: TPlaceholder): JSX.Element => {
+export const Placeholder = ({
+  name,
+  marginClassName,
+  width,
+  height,
+  children,
+}: TPlaceholder): JSX.Element => {
   return (
     <div
       className={`graph-container ${marginClassName}`}

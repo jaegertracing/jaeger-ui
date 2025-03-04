@@ -54,35 +54,40 @@ export class OperationsGraph extends React.PureComponent<TProps> {
       if (yValues.length > 0) {
         const minY = Math.min(...yValues);
         const maxY = Math.max(...yValues);
-        dynProps.domain = [minY * 0.999, maxY];
+        if (minY === maxY) {
+          dynProps.domain = [minY * 0.8, minY * 2];
+        } else {
+          dynProps.domain = [minY * 0.99, maxY];
+        }
       }
     }
 
     return (
       <div className="ops-container">
-        <ResponsiveContainer width={100} height={15}>
-          <AreaChart
-            margin={{
-              left: 0,
-              right: 0,
-              bottom: 0,
-              top: 0,
-            }}
-            data={dataPoints}
-          >
-            <YAxis hide {...dynProps} />
-            <Area
-              type="linear"
-              dataKey="y"
-              stroke="none"
-              fill={color}
-              fillOpacity={1}
-              isAnimationActive={false}
-              connectNulls
-              dot={false}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        <AreaChart
+          width={100}
+          height={15}
+          margin={{
+            left: 0,
+            right: 0,
+            bottom: 1,
+            top: 0,
+          }}
+          data={dataPoints}
+        >
+          <YAxis hide {...dynProps} />
+          <Area
+            type="linear"
+            dataKey="y"
+            stroke={color}
+            strokeWidth={1}
+            fill={color}
+            fillOpacity={1}
+            isAnimationActive={false}
+            connectNulls
+            dot={false}
+          />
+        </AreaChart>
       </div>
     );
   }
