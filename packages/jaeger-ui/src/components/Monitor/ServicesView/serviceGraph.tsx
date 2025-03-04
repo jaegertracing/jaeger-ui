@@ -62,6 +62,7 @@ const Placeholder = ({ name, marginClassName, width, height, children }: TPlaceh
       style={{
         height,
       }}
+      data-testid="service-graph"
     >
       <h3 className="graph-header">{name}</h3>
       <div

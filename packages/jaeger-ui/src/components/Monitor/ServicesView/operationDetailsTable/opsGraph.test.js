@@ -32,25 +32,29 @@ describe('<OperationsGraph>', () => {
     error: null,
   };
 
-  it('renders placeholder when no data is available', () => {
+  it('does not explode', () => {
     const { container } = render(<OperationsGraph {...defaultProps} />);
+    expect(container).toBeInTheDocument();
+  });
+
+  it('"No Data" is displayed', () => {
+    render(<OperationsGraph {...defaultProps} />);
     expect(screen.getByText('No Data')).toBeInTheDocument();
-    expect(container.querySelector('.ops-container')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('.ops-container')).not.toBeInTheDocument();
   });
 
-  it('renders error message when there is an error', () => {
-    const { container } = render(<OperationsGraph {...defaultProps} error={new Error('API Error')} />);
+  it('"Couldn\'t fetch data" displayed', () => {
+    render(<OperationsGraph {...defaultProps} error={new Error('API Error')} />);
     expect(screen.getByText("Couldn't fetch data")).toBeInTheDocument();
-    expect(container.querySelector('.ops-container')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('.ops-container')).not.toBeInTheDocument();
   });
 
-  it('renders graph when data points are available', () => {
+  it('Graph rendered successfully', () => {
     const props = {
       ...defaultProps,
       dataPoints: serviceOpsMetrics[0].dataPoints.service_operation_call_rate,
     };
     const { container } = render(<OperationsGraph {...props} />);
-
     expect(container.querySelector('.ops-container')).toBeInTheDocument();
     expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
     expect(container.querySelector('.recharts-area')).toBeInTheDocument();
@@ -63,7 +67,6 @@ describe('<OperationsGraph>', () => {
       yDomain: [0, 100],
     };
     const { container } = render(<OperationsGraph {...props} />);
-
     expect(container.querySelector('.ops-container')).toBeInTheDocument();
     expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
   });
@@ -79,7 +82,6 @@ describe('<OperationsGraph>', () => {
       ],
     };
     const { container } = render(<OperationsGraph {...props} />);
-
     expect(container.querySelector('.ops-container')).toBeInTheDocument();
     expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
   });
@@ -93,7 +95,6 @@ describe('<OperationsGraph>', () => {
       ],
     };
     const { container } = render(<OperationsGraph {...props} />);
-
     expect(container.querySelector('.ops-container')).toBeInTheDocument();
     expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
   });
@@ -113,7 +114,6 @@ describe('<OperationsGraph>', () => {
     const customText = 'Custom Placeholder';
     const placeholder = OperationsGraph.generatePlaceholder(customText);
     render(placeholder);
-
     const placeholderElement = screen.getByText(customText);
     expect(placeholderElement).toBeInTheDocument();
     expect(placeholderElement).toHaveClass('ops-graph-placeholder');
