@@ -132,18 +132,23 @@ function loadJsonStarted(state) {
 }
 
 function loadJsonDone(state, { payload }) {
-  const processed = payload.data.map(transformTraceData);
-  const resultTraces = {};
-  const results = new Set(state.search.results);
-  for (let i = 0; i < processed.length; i++) {
-    const data = processed[i];
-    const id = data.traceID;
-    resultTraces[id] = { data, id, state: fetchedState.DONE };
-    results.add(id);
+  try {
+    const processed = payload.data.map(transformTraceData);
+    const resultTraces = {};
+    const results = new Set(state.search.results);
+    for (let i = 0; i < processed.length; i++) {
+      const data = processed[i];
+      const id = data.traceID;
+      resultTraces[id] = { data, id, state: fetchedState.DONE };
+      results.add(id);
+    }
+    const traces = { ...state.traces, ...resultTraces };
+    const search = { ...state.search, results: Array.from(results), state: fetchedState.DONE };
+    return { ...state, search, traces };
+  } catch (error) {
+    const search = { error, results: [], state: fetchedState.ERROR };
+    return { ...state, search };
   }
-  const traces = { ...state.traces, ...resultTraces };
-  const search = { ...state.search, results: Array.from(results), state: fetchedState.DONE };
-  return { ...state, search, traces };
 }
 
 function loadJsonErred(state, { payload }) {
