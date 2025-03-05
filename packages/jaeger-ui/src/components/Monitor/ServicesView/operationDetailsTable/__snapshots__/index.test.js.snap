@@ -1263,64 +1263,71 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,12L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#869ADD",
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,12"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts55-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,3.369834710743838L100,14L0,14Z"
+                                    fill="#869ADD"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,3.369834710743838"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#869ADD"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -1346,64 +1353,71 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,0L0,0Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#4795BA",
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts58-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,11.666666666666668L100,11.666666666666668L100,14L0,14Z"
+                                    fill="#4795BA"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,11.666666666666668L100,11.666666666666668"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#4795BA"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -1429,64 +1443,71 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#CD513A",
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts61-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,0L100,14L0,14Z"
+                                    fill="#CD513A"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,0"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#CD513A"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -2313,64 +2334,71 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,12L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#869ADD",
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,12"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts37-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,3.369834710743838L100,14L0,14Z"
+                                    fill="#869ADD"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,3.369834710743838"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#869ADD"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -2396,64 +2424,71 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,0L0,0Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#4795BA",
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts40-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,11.666666666666668L100,11.666666666666668L100,14L0,14Z"
+                                    fill="#4795BA"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,11.666666666666668L100,11.666666666666668"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#4795BA"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -2479,64 +2514,71 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#CD513A",
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts43-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,0L100,14L0,14Z"
+                                    fill="#CD513A"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,0"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#CD513A"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -3363,64 +3405,71 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,12L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#869ADD",
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,12"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts46-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,3.369834710743838L100,14L0,14Z"
+                                    fill="#869ADD"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,3.369834710743838"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#869ADD"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -3446,64 +3495,71 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,0L0,0Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#4795BA",
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts49-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,11.666666666666668L100,11.666666666666668L100,14L0,14Z"
+                                    fill="#4795BA"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,11.666666666666668L100,11.666666666666668"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#4795BA"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -3529,64 +3585,71 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#CD513A",
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts52-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,0L100,14L0,14Z"
+                                    fill="#CD513A"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,0"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#CD513A"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -4413,64 +4476,71 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,12L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#869ADD",
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,12"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts28-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,3.369834710743838L100,14L0,14Z"
+                                    fill="#869ADD"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,3.369834710743838"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#869ADD"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -4496,64 +4566,71 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,0L0,0Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#4795BA",
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts31-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,11.666666666666668L100,11.666666666666668L100,14L0,14Z"
+                                    fill="#4795BA"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,11.666666666666668L100,11.666666666666668"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#4795BA"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -4579,64 +4656,71 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#CD513A",
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts34-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,0L100,14L0,14Z"
+                                    fill="#CD513A"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,0"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#CD513A"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -5463,64 +5547,71 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,12L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#869ADD",
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,12"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts10-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,3.369834710743838L100,14L0,14Z"
+                                    fill="#869ADD"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,3.369834710743838"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#869ADD"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -5546,64 +5637,71 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,0L0,0Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#4795BA",
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts13-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,11.666666666666668L100,11.666666666666668L100,14L0,14Z"
+                                    fill="#4795BA"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,11.666666666666668L100,11.666666666666668"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#4795BA"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -5629,64 +5727,71 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#CD513A",
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts16-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,0L100,14L0,14Z"
+                                    fill="#CD513A"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,0"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#CD513A"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -6513,64 +6618,71 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,12L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#869ADD",
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,12"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts19-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,3.369834710743838L100,14L0,14Z"
+                                    fill="#869ADD"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,3.369834710743838"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#869ADD"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -6596,64 +6708,71 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,0L0,0Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#4795BA",
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts22-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,11.666666666666668L100,11.666666666666668L100,14L0,14Z"
+                                    fill="#4795BA"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,11.666666666666668L100,11.666666666666668"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#4795BA"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -6679,64 +6798,71 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#CD513A",
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts25-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,0L100,14L0,14Z"
+                                    fill="#CD513A"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,0"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#CD513A"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -7563,64 +7689,71 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,12L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#869ADD",
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,12"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#869ADD",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts1-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,3.369834710743838L100,14L0,14Z"
+                                    fill="#869ADD"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,3.369834710743838"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#869ADD"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -7646,64 +7779,71 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,0L0,0Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#4795BA",
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#4795BA",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts4-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,11.666666666666668L100,11.666666666666668L100,14L0,14Z"
+                                    fill="#4795BA"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,11.666666666666668L100,11.666666666666668"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#4795BA"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
@@ -7729,64 +7869,71 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                           className="ops-container"
                         >
                           <div
-                            className="rv-xy-plot "
+                            className="recharts-wrapper"
                             style={
                               Object {
-                                "height": "15px",
-                                "width": "100px",
+                                "cursor": "default",
+                                "height": 15,
+                                "position": "relative",
+                                "width": 100,
                               }
                             }
                           >
                             <svg
-                              className="rv-xy-plot__inner"
+                              className="recharts-surface"
                               height={15}
-                              onClick={[Function]}
-                              onDoubleClick={[Function]}
-                              onMouseDown={[Function]}
-                              onMouseEnter={[Function]}
-                              onMouseLeave={[Function]}
-                              onMouseMove={[Function]}
-                              onMouseUp={[Function]}
-                              onTouchCancel={[Function]}
-                              onTouchEnd={[Function]}
-                              onTouchMove={[Function]}
-                              onTouchStart={[Function]}
-                              onWheel={[Function]}
+                              style={
+                                Object {
+                                  "height": "100%",
+                                  "width": "100%",
+                                }
+                              }
+                              viewBox="0 0 100 15"
                               width={100}
                             >
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-series-example ops-graph-style"
-                                d="M0,0L100,0L100,12L0,12Z"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "fill": "#CD513A",
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
-                              <path
-                                className="rv-xy-plot__series rv-xy-plot__series--line area-elevated-line-series"
-                                d="M0,0L100,0"
-                                onClick={[Function]}
-                                onContextMenu={[Function]}
-                                onMouseOut={[Function]}
-                                onMouseOver={[Function]}
-                                style={
-                                  Object {
-                                    "opacity": 1,
-                                    "stroke": "#CD513A",
-                                    "strokeDasharray": undefined,
-                                    "strokeWidth": undefined,
-                                  }
-                                }
-                                transform="translate(0,2)"
-                              />
+                              <title />
+                              <desc />
+                              <defs>
+                                <clipPath
+                                  id="recharts7-clip"
+                                >
+                                  <rect
+                                    height={14}
+                                    width={100}
+                                    x={0}
+                                    y={0}
+                                  />
+                                </clipPath>
+                              </defs>
+                              <g
+                                className="recharts-layer recharts-area"
+                              >
+                                <g
+                                  className="recharts-layer"
+                                  clipPath={null}
+                                >
+                                  <path
+                                    className="recharts-curve recharts-area-area"
+                                    d="M0,0L100,0L100,14L0,14Z"
+                                    fill="#CD513A"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="none"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                  <path
+                                    className="recharts-curve recharts-area-curve"
+                                    d="M0,0L100,0"
+                                    fill="none"
+                                    fillOpacity={1}
+                                    height={14}
+                                    stroke="#CD513A"
+                                    strokeWidth={1}
+                                    width={100}
+                                  />
+                                </g>
+                              </g>
                             </svg>
                           </div>
                         </div>
