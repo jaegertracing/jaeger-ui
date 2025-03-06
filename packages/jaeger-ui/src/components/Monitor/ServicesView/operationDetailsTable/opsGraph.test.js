@@ -13,38 +13,109 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import OperationsGraph from './opsGraph';
 import { serviceOpsMetrics } from '../../../../reducers/metrics.mock';
 
-const props = {
-  color: '#FFFFFF',
-  dataPoints: [],
-  error: null,
-};
+class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+window.ResizeObserver = ResizeObserver;
 
 describe('<OperationsGraph>', () => {
-  let wrapper;
-
-  beforeEach(() => {
-    wrapper = shallow(<OperationsGraph {...props} />);
-  });
+  const defaultProps = {
+    color: '#FFFFFF',
+    dataPoints: [],
+    error: null,
+  };
 
   it('does not explode', () => {
-    expect(wrapper.length).toBe(1);
+    const { container } = render(<OperationsGraph {...defaultProps} />);
+    expect(container).toBeInTheDocument();
   });
 
-  it('"Mo data" is displayed', () => {
-    expect(wrapper).toMatchSnapshot();
+  it('"No Data" is displayed', () => {
+    render(<OperationsGraph {...defaultProps} />);
+    expect(screen.getByText('No Data')).toBeInTheDocument();
+    expect(screen.queryByTestId('.ops-container')).not.toBeInTheDocument();
   });
 
-  it('"Couldn’t fetch data" displayed', () => {
-    wrapper.setProps({ ...props, error: new Error('API Error') });
-    expect(wrapper).toMatchSnapshot();
+  it('"Couldn\'t fetch data" displayed', () => {
+    render(<OperationsGraph {...defaultProps} error={new Error('API Error')} />);
+    expect(screen.getByText("Couldn't fetch data")).toBeInTheDocument();
+    expect(screen.queryByTestId('.ops-container')).not.toBeInTheDocument();
   });
 
   it('Graph rendered successfully', () => {
-    wrapper.setProps({ ...props, dataPoints: serviceOpsMetrics[0].dataPoints.service_operation_call_rate });
-    expect(wrapper).toMatchSnapshot();
+    const props = {
+      ...defaultProps,
+      dataPoints: serviceOpsMetrics[0].dataPoints.service_operation_call_rate,
+    };
+    const { container } = render(<OperationsGraph {...props} />);
+    expect(container.querySelector('.ops-container')).toBeInTheDocument();
+    expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
+    expect(container.querySelector('.recharts-area')).toBeInTheDocument();
+  });
+
+  it('renders graph with custom yDomain', () => {
+    const props = {
+      ...defaultProps,
+      dataPoints: [{ x: 1, y: 50 }],
+      yDomain: [0, 100],
+    };
+    const { container } = render(<OperationsGraph {...props} />);
+    expect(container.querySelector('.ops-container')).toBeInTheDocument();
+    expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
+  });
+
+  it('calculates yDomain from data points when not provided', () => {
+    const props = {
+      ...defaultProps,
+      dataPoints: [
+        { x: 1, y: 10 },
+        { x: 2, y: 20 },
+        { x: 3, y: null },
+        { x: 4, y: 30 },
+      ],
+    };
+    const { container } = render(<OperationsGraph {...props} />);
+    expect(container.querySelector('.ops-container')).toBeInTheDocument();
+    expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
+  });
+
+  it('handles empty yValues array when calculating domain', () => {
+    const props = {
+      ...defaultProps,
+      dataPoints: [
+        { x: 1, y: null },
+        { x: 2, y: null },
+      ],
+    };
+    const { container } = render(<OperationsGraph {...props} />);
+    expect(container.querySelector('.ops-container')).toBeInTheDocument();
+    expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
+  });
+
+  it('handles various y-value types when calculating domain', () => {
+    const dataPoints = [
+      { x: 1, y: 10 },
+      { x: 2, y: null },
+      { x: 3, y: undefined },
+      { x: 4, y: 30 },
+    ];
+    const { container } = render(<OperationsGraph dataPoints={dataPoints} />);
+    expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
+  });
+
+  it('generates placeholder with custom text', () => {
+    const customText = 'Custom Placeholder';
+    const placeholder = OperationsGraph.generatePlaceholder(customText);
+    render(placeholder);
+    const placeholderElement = screen.getByText(customText);
+    expect(placeholderElement).toBeInTheDocument();
+    expect(placeholderElement).toHaveClass('ops-graph-placeholder');
   });
 });
