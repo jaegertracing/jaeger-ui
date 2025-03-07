@@ -9,6 +9,24 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.67.0 (2025-03-07)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Replace react-vis with recharts ([@hari45678](https://github.com/hari45678) in [#2679](https://github.com/jaegertracing/jaeger-ui/pull/2679))
+* Add config option to allow displaying full traceid ([@avinpy-255](https://github.com/avinpy-255) in [#2536](https://github.com/jaegertracing/jaeger-ui/pull/2536))
+
+#### 🧹 Refactoring & cleanup
+
+* Migrate detailscard from classbased to function based component ([@yaten2302](https://github.com/yaten2302) in [#2670](https://github.com/jaegertracing/jaeger-ui/pull/2670))
+* [accordiankeyvalues]: replace defaultprops with destructuring ([@its-me-abhishek](https://github.com/its-me-abhishek) in [#2667](https://github.com/jaegertracing/jaeger-ui/pull/2667))
+* Make changes to allow for /api/quality-metrics to work ([@ADI-ROXX](https://github.com/ADI-ROXX) in [#2641](https://github.com/jaegertracing/jaeger-ui/pull/2641))
+* [keyvaluestable]: replace defaultprops with destructuring ([@its-me-abhishek](https://github.com/its-me-abhishek) in [#2666](https://github.com/jaegertracing/jaeger-ui/pull/2666))
+* [traceheader]: replace defaultprops with destructuring ([@its-me-abhishek](https://github.com/its-me-abhishek) in [#2621](https://github.com/jaegertracing/jaeger-ui/pull/2621))
+* [breakabletext]: replace defaultprops with destructuring ([@its-me-abhishek](https://github.com/its-me-abhishek) in [#2619](https://github.com/jaegertracing/jaeger-ui/pull/2619))
+* [timelinerow]: replace defaultprops with destructuring ([@its-me-abhishek](https://github.com/its-me-abhishek) in [#2622](https://github.com/jaegertracing/jaeger-ui/pull/2622))
+
+
 ## v1.66.0 (2025-02-03)
 
 #### 🐞 Bug fixes, Minor Improvements
