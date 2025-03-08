@@ -14,9 +14,15 @@
 
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable @typescript-eslint/no-var-requires */
-const fs = require('fs');
-const path = require('path');
-const { babelConfiguration } = require('../packages/jaeger-ui/test/babel-transform');
+import * as fs from 'fs';
+import * as path from 'path';
+import getBabelConfig from '../packages/plexus/babel.config.js';
+
+const babelConfiguration = getBabelConfig({
+  env: () => {
+    'development';
+  },
+});
 
 const packageNames = [
   ...babelConfiguration.presets.flatMap(preset => {
@@ -25,15 +31,19 @@ const packageNames = [
     }
     return [preset];
   }),
-  ...babelConfiguration.plugins,
+  ...babelConfiguration.plugins.flatMap(plugin => {
+    if (Array.isArray(plugin)) {
+      return [plugin[0]];
+    }
+    return [plugin];
+  }),
 ];
 
-const otherPackages = ['jest-environment-jsdom'];
+const otherPackages = ['rimraf', 'webpack-cli'];
 
 // Use the selected targetPackage for generating depcheckrcContent
 const depcheckrcContent = {
   ignores: [...packageNames, ...otherPackages],
-  'ignore-dirs': ['build'],
 };
 
 // Use the argument provided to the script as the output file path
@@ -42,7 +52,11 @@ const outputFile = process.argv[2];
 if (!outputFile) {
   process.exit(1);
 }
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const depcheckrcPath = path.resolve(__dirname, outputFile);
 
 fs.writeFileSync(depcheckrcPath, JSON.stringify(depcheckrcContent, null, 2));
