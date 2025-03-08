@@ -137,7 +137,7 @@ export class SearchTracePageImpl extends Component {
         <Col span={!embedded ? 18 : 24} className="SearchTracePage--column">
           {showErrors && (
             <div className="js-test-error-message">
-              <h2>There was an error querying for traces:</h2>
+              <h2>Cannot parse uploaded file</h2>
               {errors.map(err => (
                 <ErrorMessage key={err.message} error={err} />
               ))}
