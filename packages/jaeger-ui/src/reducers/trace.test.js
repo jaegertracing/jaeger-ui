@@ -305,7 +305,7 @@ describe('load json traces', () => {
     };
     const corruptedTrace = {
       ...trace,
-      spans: null
+      spans: null,
     };
 
     const state = traceReducer(initialState, {
