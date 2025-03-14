@@ -15,7 +15,6 @@
 import React from 'react';
 import ShallowRenderer from 'react-test-renderer/shallow';
 import { render, screen } from '@testing-library/react';
-import { shallow } from 'enzyme';
 import { LayoutManager } from '@jaegertracing/plexus';
 import DAG, { renderNode } from './DAG';
 
