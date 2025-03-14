@@ -40,6 +40,5 @@ declare module 'combokeys' {
 
 declare module 'react-helmet';
 declare module 'json-markup';
-declare module 'react-vis-force';
 declare module 'tween-functions';
 declare module '*.png' { export default '' as string; }

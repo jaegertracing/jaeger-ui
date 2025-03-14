@@ -16,6 +16,7 @@ import React, { ReactNode } from 'react';
 
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
+import { TLayoutOptions } from '@jaegertracing/plexus/lib/LayoutManager/types';
 
 import './dag.css';
 
@@ -27,6 +28,9 @@ type TServiceCall = {
 
 type TProps = {
   serviceCalls: TServiceCall[];
+  selectedLayout: string;
+  selectedDepth: number;
+  selectedService: string;
 };
 
 export const renderNode = (vertex: TVertex): ReactNode => {
@@ -40,56 +44,119 @@ export const renderNode = (vertex: TVertex): ReactNode => {
   ) as ReactNode;
 };
 
-const formatServiceCalls = (
-  serviceCalls: TServiceCall[]
-): {
-  nodes: TVertex[];
-  edges: TEdge[];
-} => {
-  const nodeMap: Record<string, boolean> = {};
+const findConnectedServices = (
+  serviceCalls: TServiceCall[],
+  startService: string,
+  maxDepth: number
+): { nodes: Set<string>; edges: TServiceCall[] } => {
+  const nodes = new Set<string>([startService]);
+  const edges: TServiceCall[] = [];
+  const queue: { service: string; depth: number }[] = [{ service: startService, depth: 0 }];
 
-  const nodes: TVertex[] = [];
-  const edges: TEdge[] = [];
+  while (queue.length > 0) {
+    const { service, depth } = queue.shift()!;
+    if (depth >= maxDepth) continue;
 
-  serviceCalls.forEach(d => {
-    if (d.parent.trim().length !== 0 && d.child.trim().length !== 0) {
-      if (!nodeMap[d.parent]) {
-        nodes.push({ key: d.parent });
-        nodeMap[d.parent] = true;
+    serviceCalls.forEach(call => {
+      if (call.parent === service && !nodes.has(call.child)) {
+        nodes.add(call.child);
+        edges.push(call);
+        queue.push({ service: call.child, depth: depth + 1 });
       }
-
-      if (!nodeMap[d.child]) {
-        nodes.push({ key: d.child });
-        nodeMap[d.child] = true;
+      if (call.child === service && !nodes.has(call.parent)) {
+        nodes.add(call.parent);
+        edges.push(call);
+        queue.push({ service: call.parent, depth: depth + 1 });
       }
-
-      edges.push({
-        from: d.parent,
-        to: d.child,
-        label: `${d.callCount}`,
-      });
-    }
-  });
+    });
+  }
 
   return { nodes, edges };
 };
 
+const formatServiceCalls = (
+  serviceCalls: TServiceCall[],
+  selectedService: string | null,
+  selectedDepth: number
+): {
+  nodes: TVertex[];
+  edges: TEdge[];
+} => {
+  if (!selectedService) {
+    const nodeMap: Record<string, boolean> = {};
+    const nodes: TVertex[] = [];
+    const edges: TEdge[] = [];
+
+    serviceCalls.forEach(d => {
+      if (d.parent.trim().length !== 0 && d.child.trim().length !== 0) {
+        if (!nodeMap[d.parent]) {
+          nodes.push({ key: d.parent });
+          nodeMap[d.parent] = true;
+        }
+
+        if (!nodeMap[d.child]) {
+          nodes.push({ key: d.child });
+          nodeMap[d.child] = true;
+        }
+
+        edges.push({
+          from: d.parent,
+          to: d.child,
+          label: `${d.callCount}`,
+        });
+      }
+    });
+
+    return { nodes, edges };
+  }
+
+  const { nodes: connectedNodes, edges: connectedEdges } = findConnectedServices(
+    serviceCalls,
+    selectedService,
+    selectedDepth
+  );
+
+  return {
+    nodes: Array.from(connectedNodes).map(key => ({ key })),
+    edges: connectedEdges.map(edge => ({
+      from: edge.parent,
+      to: edge.child,
+      label: `${edge.callCount}`,
+    })),
+  };
+};
+
 const { classNameIsSmall } = Digraph.propsFactories;
 
-export default function DAG({ serviceCalls = [] }: TProps) {
-  const data = React.useMemo(() => formatServiceCalls(serviceCalls), [serviceCalls]);
-
-  const layoutManager = React.useMemo(
-    () =>
-      new LayoutManager({
-        nodesep: 1.5,
-        ranksep: 1.6,
-        rankdir: 'TB',
-        splines: 'polyline',
-        useDotEdges: true,
-      }),
-    []
+export default function DAG({ serviceCalls = [], selectedLayout, selectedDepth, selectedService }: TProps) {
+  const data = React.useMemo(
+    () => formatServiceCalls(serviceCalls, selectedService, selectedDepth),
+    [serviceCalls, selectedService, selectedDepth]
   );
+
+  const layoutManager = React.useMemo(() => {
+    const config: TLayoutOptions =
+      selectedLayout === 'dot'
+        ? {
+            nodesep: 1.5,
+            ranksep: 1.6,
+            rankdir: 'TB',
+            splines: 'polyline',
+            useDotEdges: true,
+          }
+        : {
+            engine: 'sfdp',
+            splines: 'false',
+            sfdpOptions: {
+              maxiter: 1,
+              overlap: false,
+              dim: 2,
+            },
+            dpi: data.nodes.length > 100 ? Math.min(data.nodes.length * 2, 2000) : 300,
+          };
+
+    return new LayoutManager(config);
+  }, [selectedLayout, data.nodes.length]);
 
   React.useEffect(() => {
     return () => {
@@ -100,6 +167,7 @@ export default function DAG({ serviceCalls = [] }: TProps) {
   return (
     <div className="DAG">
       <Digraph<TVertex>
+        key={`${selectedLayout}-${selectedService}-${selectedDepth}`}
         zoom
         minimap
         className="DAG--dag"

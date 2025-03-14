@@ -14,7 +14,7 @@
 
 export const TOP_NAV_HEIGHT = 46;
 
-export const FALLBACK_DAG_MAX_NUM_SERVICES = 100;
+export const FALLBACK_DAG_MAX_NUM_SERVICES = 500;
 export const FALLBACK_TRACE_NAME = '<trace-without-root-span>';
 
 export const FETCH_DONE = 'FETCH_DONE';
