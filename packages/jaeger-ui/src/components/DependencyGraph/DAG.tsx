@@ -76,64 +76,55 @@ const formatServiceCalls = (
 
 const { classNameIsSmall } = Digraph.propsFactories;
 
-export default class DAG extends React.Component<TProps> {
-  static defaultProps = {
-    serviceCalls: [],
-  };
+export default function DAG({ serviceCalls = [] }: TProps) {
+  const data = React.useMemo(() => formatServiceCalls(serviceCalls), [serviceCalls]);
 
-  private data: {
-    nodes: TVertex[];
-    edges: TEdge[];
-  };
+  const layoutManager = React.useMemo(
+    () =>
+      new LayoutManager({
+        nodesep: 1.5,
+        ranksep: 1.6,
+        rankdir: 'TB',
+        splines: 'polyline',
+        useDotEdges: true,
+      }),
+    []
+  );
 
-  private layoutManager: LayoutManager = new LayoutManager({
-    nodesep: 1.5,
-    ranksep: 1.6,
-    rankdir: 'TB',
-    splines: 'polyline',
-    useDotEdges: true,
-  });
+  React.useEffect(() => {
+    return () => {
+      layoutManager.stopAndRelease();
+    };
+  }, [layoutManager]);
 
-  constructor(props: TProps) {
-    super(props);
-
-    this.data = formatServiceCalls(props.serviceCalls);
-  }
-
-  componentWillUnmount() {
-    this.layoutManager.stopAndRelease();
-  }
-
-  render() {
-    return (
-      <div className="DAG">
-        <Digraph<TVertex>
-          zoom
-          minimap
-          className="DAG--dag"
-          setOnGraph={classNameIsSmall}
-          minimapClassName="u-miniMap"
-          layoutManager={this.layoutManager}
-          measurableNodesKey="nodes"
-          layers={[
-            {
-              key: 'edges',
-              defs: [{ localId: 'arrowHead' }],
-              edges: true,
-              layerType: 'svg',
-              markerEndId: 'arrowHead',
-            },
-            {
-              key: 'nodes',
-              layerType: 'html',
-              measurable: true,
-              renderNode,
-            },
-          ]}
-          edges={this.data.edges}
-          vertices={this.data.nodes}
-        />
-      </div>
-    );
-  }
+  return (
+    <div className="DAG">
+      <Digraph<TVertex>
+        zoom
+        minimap
+        className="DAG--dag"
+        setOnGraph={classNameIsSmall}
+        minimapClassName="u-miniMap"
+        layoutManager={layoutManager}
+        measurableNodesKey="nodes"
+        layers={[
+          {
+            key: 'edges',
+            defs: [{ localId: 'arrowHead' }],
+            edges: true,
+            layerType: 'svg',
+            markerEndId: 'arrowHead',
+          },
+          {
+            key: 'nodes',
+            layerType: 'html',
+            measurable: true,
+            renderNode,
+          },
+        ]}
+        edges={data.edges}
+        vertices={data.nodes}
+      />
+    </div>
+  );
 }

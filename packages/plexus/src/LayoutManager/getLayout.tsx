@@ -105,8 +105,11 @@ export default async function getLayout(
   layoutOptions: TLayoutOptions | null
 ) {
   const dot = toDot(inEdges, inVertices, layoutOptions);
-  const { totalMemory = undefined } = layoutOptions || {};
-  const options = { totalMemory, engine: phase === EWorkerPhase.Edges ? 'neato' : 'dot', format: 'plain' };
+  const { totalMemory = undefined, engine } = layoutOptions || {};
+  const defaultEngine = phase === EWorkerPhase.Edges ? 'neato' : 'dot';
+  const selectedEngine = engine || defaultEngine;
+
+  const options = { totalMemory, engine: selectedEngine, format: 'plain' };
 
   const viz = await instance();
   const plainOut = viz.renderString(dot, options);
