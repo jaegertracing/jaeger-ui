@@ -15,7 +15,7 @@
 import React from 'react';
 import ShallowRenderer from 'react-test-renderer/shallow';
 import { render, screen } from '@testing-library/react';
-import { shallow } from 'enzyme';
+import { LayoutManager } from '@jaegertracing/plexus';
 import DAG, { renderNode } from './DAG';
 
 // mock canvas API (we don't care about canvas results)
@@ -171,9 +171,9 @@ describe('renderNode', () => {
 
 describe('clean up', () => {
   it('stops LayoutManager before unmounting', () => {
-    const wrapper = shallow(<DAG serviceCalls={[]} />);
-    const stopAndReleaseSpy = jest.spyOn(wrapper.instance().layoutManager, 'stopAndRelease');
-    wrapper.unmount();
+    const stopAndReleaseSpy = jest.spyOn(LayoutManager.prototype, 'stopAndRelease');
+    const { unmount } = render(<DAG serviceCalls={[]} />);
+    unmount();
     expect(stopAndReleaseSpy).toHaveBeenCalledTimes(1);
   });
 });
