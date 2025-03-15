@@ -57,6 +57,10 @@ export class DependencyGraphPageImpl extends Component {
     error: null,
   };
 
+  debouncedDepthChange = debounce(value => {
+    this.setState({ debouncedDepth: value });
+  }, 1000);
+
   constructor(props) {
     super(props);
     this.state = {
@@ -89,10 +93,6 @@ export class DependencyGraphPageImpl extends Component {
       this.debouncedDepthChange(numValue);
     }
   };
-
-  debouncedDepthChange = debounce(value => {
-    this.setState({ debouncedDepth: value });
-  }, 1000);
 
   handleReset = () => {
     this.setState({

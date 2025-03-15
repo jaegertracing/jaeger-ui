@@ -78,10 +78,20 @@ describe('DAGOptions', () => {
     const selectElement = within(layoutSelect).getByRole('combobox');
     fireEvent.mouseDown(selectElement);
 
-    const forceDirectedOption = screen.getByRole('option', { name: 'Force Directed Layout' });
-    fireEvent.click(forceDirectedOption);
+    const forceDirectedOption = screen.getByTestId('layout-option-sfdp');
+    expect(forceDirectedOption).toHaveClass('ant-select-item ant-select-item-option');
+    const optionContent = forceDirectedOption.querySelector('.ant-select-item-option-content');
+    expect(optionContent).toHaveTextContent('Force Directed Layout');
 
-    expect(defaultProps.onLayoutSelect).toHaveBeenCalledWith('sfdp');
+    fireEvent.click(forceDirectedOption);
+    expect(defaultProps.onLayoutSelect).toHaveBeenCalledWith(
+      'sfdp',
+      expect.objectContaining({
+        value: 'sfdp',
+        children: 'Force Directed Layout',
+        'data-testid': 'layout-option-sfdp',
+      })
+    );
   });
 
   it('handles service selection', () => {
@@ -91,10 +101,20 @@ describe('DAGOptions', () => {
     const selectElement = within(serviceSelect).getByRole('combobox');
     fireEvent.mouseDown(selectElement);
 
-    const serviceOption = screen.getByRole('option', { name: 'service-1' });
-    fireEvent.click(serviceOption);
+    const serviceOption = screen.getByTestId(`service-option-${mockDependencies[0].parent}`);
+    expect(serviceOption).toHaveClass('ant-select-item ant-select-item-option');
+    const optionContent = serviceOption.querySelector('.ant-select-item-option-content');
+    expect(optionContent).toHaveTextContent(mockDependencies[0].parent);
 
-    expect(defaultProps.onServiceSelect).toHaveBeenCalledWith('service-1');
+    fireEvent.click(serviceOption);
+    expect(defaultProps.onServiceSelect).toHaveBeenCalledWith(
+      mockDependencies[0].parent,
+      expect.objectContaining({
+        value: mockDependencies[0].parent,
+        children: mockDependencies[0].parent,
+        'data-testid': `service-option-${mockDependencies[0].parent}`,
+      })
+    );
   });
 
   it('handles depth change', () => {
@@ -130,14 +150,16 @@ describe('DAGOptions', () => {
   });
 
   it('disables hierarchical layout option when isHierarchicalDisabled is true', () => {
-    render(<DAGOptions {...defaultProps} isHierarchicalDisabled={true} />);
+    render(<DAGOptions {...defaultProps} isHierarchicalDisabled />);
     const layoutSelect = screen.getByTestId('layout-select');
 
     const selectElement = within(layoutSelect).getByRole('combobox');
     fireEvent.mouseDown(selectElement);
 
-    const hierarchicalOption = screen.getByRole('option', { name: 'Hierarchical Layout' });
+    const hierarchicalOption = screen.getByTestId('layout-option-dot');
     expect(hierarchicalOption).toHaveClass('ant-select-item-option-disabled');
+    const optionContent = hierarchicalOption.querySelector('.ant-select-item-option-content');
+    expect(optionContent).toHaveTextContent('Hierarchical Layout');
   });
 
   it('displays all unique services in the service selector', () => {
@@ -147,11 +169,14 @@ describe('DAGOptions', () => {
     const selectElement = within(serviceSelect).getByRole('combobox');
     fireEvent.mouseDown(selectElement);
 
-    const options = screen.getAllByRole('option');
-    const serviceNames = options.map(option => option.textContent);
-    expect(serviceNames).toContain('service-1');
-    expect(serviceNames).toContain('service-2');
-    expect(serviceNames).toContain('service-3');
+    mockDependencies.forEach(dependency => {
+      expect(screen.getByTestId(`service-option-${dependency.parent}`)).toBeInTheDocument();
+      expect(screen.getByTitle(dependency.parent)).toBeInTheDocument();
+      const optionContent = screen
+        .getByTestId(`service-option-${dependency.parent}`)
+        .querySelector('.ant-select-item-option-content');
+      expect(optionContent).toHaveTextContent(dependency.parent);
+    });
   });
 
   it('maintains selected values correctly', () => {

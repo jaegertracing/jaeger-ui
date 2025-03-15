@@ -67,116 +67,110 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
 
   return (
     <div className="dag-options" data-testid="dag-options">
-      <div className="selector-group">
-        <div className="selector-container">
-          <div className="selector-label-container">
-            <span className="selector-label">Layout</span>
-            <Popover
-              placement="topLeft"
-              trigger="click"
-              content={
-                <div>
-                  <h3 className="hint-title">Layout Options</h3>
-                  <ul className="hint-info">
-                    <li>Hierarchical Layout: Displays nodes in a top-down tree structure</li>
-                    <li>Force Directed Layout: Uses physics simulation to position nodes</li>
-                  </ul>
-                </div>
-              }
-            >
-              <IoHelp className="hint-trigger" data-testid="layout-help-icon" />
-            </Popover>
-          </div>
-          <Select
-            className="layout-selector-input"
-            value={selectedLayout}
-            onChange={onLayoutSelect}
-            placeholder="Select Layout"
-            data-testid="layout-select"
+      <div className="selector-container">
+        <div className="selector-label-container">
+          <span className="selector-label">Layout</span>
+          <Popover
+            placement="topLeft"
+            trigger="click"
+            content={
+              <div>
+                <h3 className="hint-title">Layout Options</h3>
+                <ul className="hint-info">
+                  <li>Hierarchical Layout: Displays nodes in a top-down tree structure</li>
+                  <li>Force Directed Layout: Uses physics simulation to position nodes</li>
+                </ul>
+              </div>
+            }
           >
-            {LAYOUT_OPTIONS.map(option => (
-              <Option
-                key={option.value}
-                value={option.value}
-                disabled={option.value === 'dot' && isHierarchicalDisabled}
-                data-testid={`layout-option-${option.value}`}
-              >
-                {option.label}
-              </Option>
-            ))}
-          </Select>
+            <IoHelp className="hint-trigger" data-testid="layout-help-icon" />
+          </Popover>
         </div>
-      </div>
-      <div className="selector-group">
-        <div className="selector-container">
-          <div className="selector-label-container">
-            <span className="selector-label">Service</span>
-            <Popover
-              placement="topLeft"
-              trigger="click"
-              content={
-                <div>
-                  <ul className="hint-info">
-                    <li>Select a service to focus on its dependencies</li>
-                    <li>Shows direct connections to other services up to the nearest neighbors</li>
-                  </ul>
-                </div>
-              }
+        <Select
+          className="layout-selector-input"
+          value={selectedLayout}
+          onChange={onLayoutSelect}
+          placeholder="Select Layout"
+          data-testid="layout-select"
+        >
+          {LAYOUT_OPTIONS.map(option => (
+            <Option
+              key={option.value}
+              value={option.value}
+              disabled={option.value === 'dot' && isHierarchicalDisabled}
+              data-testid={`layout-option-${option.value}`}
             >
-              <IoHelp className="hint-trigger" data-testid="service-help-icon" />
-            </Popover>
-          </div>
-          <SearchableSelect
-            value={selectedService}
-            onChange={onServiceSelect}
-            placeholder="Select A Service"
-            className="select-a-service-input"
-            data-testid="service-select"
+              {option.label}
+            </Option>
+          ))}
+        </Select>
+      </div>
+      <div className="selector-container">
+        <div className="selector-label-container">
+          <span className="selector-label">Service</span>
+          <Popover
+            placement="topLeft"
+            trigger="click"
+            content={
+              <div>
+                <ul className="hint-info">
+                  <li>Select a service to focus on its dependencies</li>
+                  <li>Shows direct connections to other services up to the nearest neighbors</li>
+                </ul>
+              </div>
+            }
           >
-            {services.map(service => (
-              <Option key={service} value={service} data-testid={`service-option-${service}`}>
-                {service}
-              </Option>
-            ))}
-          </SearchableSelect>
+            <IoHelp className="hint-trigger" data-testid="service-help-icon" />
+          </Popover>
         </div>
+        <SearchableSelect
+          value={selectedService}
+          onChange={onServiceSelect}
+          placeholder="Select A Service"
+          className="select-a-service-input"
+          data-testid="service-select"
+        >
+          {services.map(service => (
+            <Option key={service} value={service} data-testid={`service-option-${service}`}>
+              {service}
+            </Option>
+          ))}
+        </SearchableSelect>
       </div>
-      <div className="selector-group">
-        <div className="selector-container">
-          <div className="selector-label-container">
-            <span className="selector-label">Depth</span>
-            <Popover
-              placement="topLeft"
-              trigger="click"
-              content={
-                <div>
-                  <ul className="hint-info">
-                    <li>Number of direct service connections to display</li>
-                    <li>Higher values show more dependencies but may be less readable</li>
-                  </ul>
-                </div>
-              }
-            >
-              <IoHelp className="hint-trigger" data-testid="depth-help-icon" />
-            </Popover>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <InputNumber
-              className="number-input"
-              value={selectedDepth}
-              onChange={onDepthChange}
-              min={0}
-              placeholder="Enter number"
-              disabled={!selectedService}
-              data-testid="depth-input"
-            />
-            <IoRefresh
-              className="reset-icon"
-              onClick={onReset}
-              style={{ marginLeft: '8px', cursor: 'pointer' }}
-              data-testid="reset-button"
-            />
-          </div>
+      <div className="selector-container">
+        <div className="selector-label-container">
+          <span className="selector-label">Depth</span>
+          <Popover
+            placement="topLeft"
+            trigger="click"
+            content={
+              <div>
+                <ul className="hint-info">
+                  <li>Number of direct service connections to display</li>
+                  <li>Higher values show more dependencies but may be less readable</li>
+                </ul>
+              </div>
+            }
+          >
+            <IoHelp className="hint-trigger" data-testid="depth-help-icon" />
+          </Popover>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <InputNumber
+            className="number-input"
+            value={selectedDepth}
+            onChange={onDepthChange}
+            min={0}
+            placeholder="Enter number"
+            disabled={!selectedService}
+            data-testid="depth-input"
+          />
+          <IoRefresh
+            className="reset-icon"
+            onClick={onReset}
+            style={{ marginLeft: '8px', cursor: 'pointer' }}
+            data-testid="reset-button"
+          />
         </div>
       </div>
     </div>
