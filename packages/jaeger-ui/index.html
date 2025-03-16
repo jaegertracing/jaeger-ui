@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- prevent caching of this HTML by any server, Go or otherwise -->
     <meta http-equiv="cache-control" content="max-age=0" />
     <meta http-equiv="cache-control" content="no-cache" />
@@ -12,7 +12,7 @@
 
     <!-- NOTE: The document MUST have a <base> element. package.json#homepage is set to "." as part of resolving https://github.com/jaegertracing/jaeger-ui/issues/42 and therefore static assets are linked via relative URLs. This will break on many document URLs, e.g. /trace/abc, unless a valid base URL is provided. The base href defaults to "/" but the query-service can inject an override. -->
     <base href="/" data-inject-target="BASE_URL" />
-    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="shortcut icon" href="/favicon.ico" />
     <title>Jaeger UI</title>
     <script>
       // Jaeger UI config data is embedded by the query-service via search-replace.
@@ -25,7 +25,7 @@
       // JAEGER_CONFIG_JS
 
       function getJaegerUiConfig() {
-        if(typeof window.UIConfig === 'function') {
+        if (typeof window.UIConfig === 'function') {
           return UIConfig();
         }
         const DEFAULT_CONFIG = null;
@@ -35,13 +35,13 @@
       }
       // Jaeger storage compabilities data is embedded by the query-service via search-replace.
       function getJaegerStorageCapabilities() {
-        const DEFAULT_STORAGE_CAPABILITIES = { "archiveStorage": false };
+        const DEFAULT_STORAGE_CAPABILITIES = { archiveStorage: false };
         const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;
         return JAEGER_STORAGE_CAPABILITIES;
       }
       // Jaeger version data is embedded by the query-service via search/replace.
       function getJaegerVersion() {
-        const DEFAULT_VERSION = {'gitCommit':'', 'gitVersion':'', 'buildDate':''};
+        const DEFAULT_VERSION = { gitCommit: '', gitVersion: '', buildDate: '' };
         // Important! Do not alter the following line; query-service looks for that exact pattern.
         const JAEGER_VERSION = DEFAULT_VERSION;
         return JAEGER_VERSION;

@@ -15,7 +15,7 @@
 // For jest
 declare const global: {
   location: Location;
-}
+};
 
 declare interface Window {
   // For setting the site-prefix
@@ -28,7 +28,7 @@ declare interface Window {
 
 declare const __REACT_APP_GA_DEBUG__: string | undefined;
 declare const __REACT_APP_VSN_STATE__: string | undefined;
-declare const __APP_ENVIRONMENT__:? string | undefined;
+declare const __APP_ENVIRONMENT__: ?(string | undefined);
 
 declare module 'combokeys' {
   export default class Combokeys {
@@ -42,4 +42,6 @@ declare module 'react-helmet';
 declare module 'json-markup';
 declare module 'react-vis-force';
 declare module 'tween-functions';
-declare module '*.png' { export default '' as string; }
+declare module '*.png' {
+  export default '' as string;
+}

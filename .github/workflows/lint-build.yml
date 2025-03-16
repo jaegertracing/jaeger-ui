@@ -1,4 +1,4 @@
-name: "Lint and Build"
+name: 'Lint and Build'
 
 on:
   merge_group:
