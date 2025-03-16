@@ -21,7 +21,7 @@ const babelConfiguration = {
     '@babel/preset-typescript',
   ],
   plugins: ['babel-plugin-inline-react-svg'],
-}
+};
 
 module.exports = babelJest.createTransformer(babelConfiguration);
 module.exports.babelConfiguration = babelConfiguration;
