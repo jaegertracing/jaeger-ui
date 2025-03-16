@@ -20,19 +20,19 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build
         run: npm run build
-        
+
       - name: Calculate bundle size
         run: |
           TOTAL_SIZE=$(du -sb packages/jaeger-ui/build | cut -f1)
           echo "$TOTAL_SIZE" > new_bundle_size.txt
           echo "Total bundle size: $TOTAL_SIZE bytes"
-          
+
       - name: Restore previous bundle size
         id: cache-bundle-size
         uses: actions/cache/restore@v4
@@ -41,7 +41,7 @@ jobs:
           key: jaeger-ui-bundle-size
           restore-keys: |
             jaeger-ui-bundle-size
-          
+
       - name: Compare bundle sizes
         if: steps.cache-bundle-size.outputs.cache-matched-key != ''
         run: |
@@ -49,7 +49,7 @@ jobs:
           NEW_BUNDLE_SIZE=$(cat new_bundle_size.txt)
           echo "Previous bundle size: $OLD_BUNDLE_SIZE bytes"
           echo "New bundle size: $NEW_BUNDLE_SIZE bytes"
-          
+
           SIZE_CHANGE=$(( $NEW_BUNDLE_SIZE - $OLD_BUNDLE_SIZE ))
           PERCENTAGE_CHANGE=$(( SIZE_CHANGE * 100 / $OLD_BUNDLE_SIZE ))
           echo "Size change: $PERCENTAGE_CHANGE%"
@@ -59,10 +59,10 @@ jobs:
           else
             echo "✅ Bundle size change is within acceptable range ($PERCENTAGE_CHANGE%)"
           fi
-          
+
       - name: Update bundle size file
         run: mv new_bundle_size.txt bundle_size.txt
-        
+
       - name: Save new bundle size
         if: ${{ (github.event_name == 'push') && (github.ref == 'refs/heads/main') }}
         uses: actions/cache/save@v4

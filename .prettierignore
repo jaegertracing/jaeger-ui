@@ -8,3 +8,7 @@ scripts/draft-release.py
 # Ignore some docs because prettier has different ideas about its formatting.
 CHANGELOG.md
 RELEASE.md
+node_modules
+build
+coverage
+dist
