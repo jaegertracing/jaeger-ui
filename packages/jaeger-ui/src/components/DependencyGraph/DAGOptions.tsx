@@ -107,7 +107,7 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
       </div>
       <div className="selector-container">
         <div className="selector-label-container">
-          <span className="selector-label">Service</span>
+          <span className="selector-label">Focal Service</span>
           <Popover
             placement="topLeft"
             trigger="click"
@@ -146,8 +146,10 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
             content={
               <div>
                 <ul className="hint-info">
-                  <li>Number of direct service connections to display</li>
-                  <li>Higher values show more dependencies but may be less readable</li>
+                  <li>Number of hops from Focal Service to display</li>
+                  <li>
+                    Higher values show more dependencies but may be less readable and take longer to render
+                  </li>
                 </ul>
               </div>
             }

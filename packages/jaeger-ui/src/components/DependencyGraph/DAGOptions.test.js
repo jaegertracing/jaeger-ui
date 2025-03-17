@@ -225,9 +225,11 @@ describe('DAGOptions', () => {
 
     fireEvent.click(screen.getByTestId('depth-help-icon'));
 
-    expect(screen.getByText('Number of direct service connections to display')).toBeInTheDocument();
+    expect(screen.getByText('Number of hops from Focal Service to display')).toBeInTheDocument();
     expect(
-      screen.getByText('Higher values show more dependencies but may be less readable')
+      screen.getByText(
+        'Higher values show more dependencies but may be less readable and take longer to render'
+      )
     ).toBeInTheDocument();
   });
 
