@@ -97,6 +97,95 @@ describe('<DAG>', () => {
     expect(element.props.children.props.vertices.length).toBe(0);
     expect(element.props.children.props.edges.length).toBe(0);
   });
+
+  it('shows filtered graph when selectedService and selectedDepth are provided', () => {
+    const serviceCalls = [
+      { parent: 'service-a', child: 'service-b', callCount: 1 },
+      { parent: 'service-b', child: 'service-c', callCount: 2 },
+      { parent: 'service-c', child: 'service-d', callCount: 3 },
+      { parent: 'service-x', child: 'service-y', callCount: 4 },
+    ];
+
+    renderer.render(
+      <DAG serviceCalls={serviceCalls} selectedService="service-a" selectedDepth={2} selectedLayout="dot" />
+    );
+    const element = renderer.getRenderOutput();
+    expect(element.props.children.props.vertices.length).toBe(3);
+    expect(element.props.children.props.edges.length).toBe(2);
+  });
+
+  it('handles bidirectional connections in depth filtering', () => {
+    const serviceCalls = [
+      { parent: 'service-a', child: 'service-b', callCount: 1 },
+      { parent: 'service-c', child: 'service-b', callCount: 2 },
+    ];
+
+    renderer.render(
+      <DAG serviceCalls={serviceCalls} selectedService="service-b" selectedDepth={1} selectedLayout="dot" />
+    );
+    const element = renderer.getRenderOutput();
+
+    expect(element.props.children.props.vertices.length).toBe(3);
+    expect(element.props.children.props.edges.length).toBe(2);
+  });
+
+  it('respects depth limit', () => {
+    const serviceCalls = [
+      { parent: 'service-a', child: 'service-b', callCount: 1 },
+      { parent: 'service-b', child: 'service-c', callCount: 2 },
+      { parent: 'service-c', child: 'service-d', callCount: 3 },
+    ];
+
+    renderer.render(
+      <DAG serviceCalls={serviceCalls} selectedService="service-a" selectedDepth={1} selectedLayout="dot" />
+    );
+    const element = renderer.getRenderOutput();
+
+    expect(element.props.children.props.vertices.length).toBe(2);
+    expect(element.props.children.props.edges.length).toBe(1);
+  });
+
+  it('uses sfdp layout for large graphs', () => {
+    const serviceCalls = Array.from({ length: 101 }, (_, i) => ({
+      parent: `service-${i}`,
+      child: `service-${i + 1}`,
+      callCount: 1,
+    }));
+
+    renderer.render(<DAG serviceCalls={serviceCalls} selectedLayout="sfdp" />);
+    const element = renderer.getRenderOutput();
+
+    expect(element.props.children.props.layoutManager.options).toMatchObject({
+      engine: 'sfdp',
+      dpi: expect.any(Number),
+    });
+  });
+
+  it('uses dot layout for small graphs', () => {
+    const serviceCalls = [
+      { parent: 'service-a', child: 'service-b', callCount: 1 },
+      { parent: 'service-b', child: 'service-c', callCount: 2 },
+    ];
+
+    renderer.render(<DAG serviceCalls={serviceCalls} selectedLayout="dot" />);
+    const element = renderer.getRenderOutput();
+
+    expect(element.props.children.props.layoutManager.options).toMatchObject({
+      nodesep: 1.5,
+      ranksep: 1.6,
+      rankdir: 'TB',
+      splines: 'polyline',
+      useDotEdges: true,
+    });
+  });
+
+  it('handles empty serviceCalls array', () => {
+    renderer.render(<DAG serviceCalls={[]} selectedLayout="dot" />);
+    const element = renderer.getRenderOutput();
+
+    expect(element.props.children.props.vertices.length).toBe(0);
+    expect(element.props.children.props.edges.length).toBe(0);
+  });
 });
 
 describe('renderNode', () => {

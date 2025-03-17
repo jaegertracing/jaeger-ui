@@ -73,23 +73,84 @@ describe('<DependencyGraph>', () => {
     expect(wrapper.text()).toEqual(matchTest);
   });
 
-  describe('graph types', () => {
-    it('renders a menu with options for the graph types', () => {
-      expect(wrapper.props().items.length).toBe(Object.keys(GRAPH_TYPES).length);
-      expect(wrapper.props().items[0].name).toBe(Object.keys(GRAPH_TYPES)[0].name);
-      expect(wrapper.props().items[1].name).toBe(Object.keys(GRAPH_TYPES)[1].name);
+  describe('DAG options', () => {
+    it('initializes with default values', () => {
+      expect(wrapper.state('selectedService')).toBe(null);
+      expect(wrapper.state('selectedLayout')).toBe('dot');
+      expect(wrapper.state('selectedDepth')).toBe(5);
+      expect(wrapper.state('debouncedDepth')).toBe(5);
     });
 
-    it('renders a force graph when FORCE_GRAPH is the selected type', () => {
-      wrapper.simulate('change', GRAPH_TYPES.FORCE_DIRECTED.type);
-      expect(wrapper.state('graphType')).toBe(GRAPH_TYPES.FORCE_DIRECTED.type);
-      expect(wrapper.props().activeKey).toBe(GRAPH_TYPES.FORCE_DIRECTED.type);
+    it('handles service selection', () => {
+      const service = 'test-service';
+      wrapper.instance().handleServiceSelect(service);
+      expect(wrapper.state('selectedService')).toBe(service);
     });
 
-    it('renders a DAG graph when DAG is the selected type', () => {
-      wrapper.simulate('change', GRAPH_TYPES.DAG.type);
-      expect(wrapper.state('graphType')).toBe(GRAPH_TYPES.DAG.type);
-      expect(wrapper.props().activeKey).toBe(GRAPH_TYPES.DAG.type);
+    it('handles layout selection', () => {
+      const layout = 'sfdp';
+      wrapper.instance().handleLayoutSelect(layout);
+      expect(wrapper.state('selectedLayout')).toBe(layout);
+    });
+
+    it('handles depth change', () => {
+      const depth = 3;
+      wrapper.instance().handleDepthChange(depth);
+      expect(wrapper.state('selectedDepth')).toBe(depth);
+    });
+
+    it('ignores invalid depth values', () => {
+      const initialDepth = wrapper.state('selectedDepth');
+      wrapper.instance().handleDepthChange('invalid');
+      expect(wrapper.state('selectedDepth')).toBe(initialDepth);
+      wrapper.instance().handleDepthChange(-1);
+      expect(wrapper.state('selectedDepth')).toBe(initialDepth);
+    });
+
+    it('handles reset', () => {
+      wrapper.setState({
+        selectedService: 'test-service',
+        selectedDepth: 3,
+        debouncedDepth: 3,
+      });
+      wrapper.instance().handleReset();
+      expect(wrapper.state('selectedService')).toBe(null);
+      expect(wrapper.state('selectedDepth')).toBe(5);
+      expect(wrapper.state('debouncedDepth')).toBe(5);
+    });
+
+    it('uses sfdp layout for large dependency graphs', () => {
+      const manyDependencies = Array(1001)
+        .fill()
+        .map((_, i) => ({
+          callCount: 1,
+          child: `child-${i}`,
+          parent: 'parent',
+        }));
+      const newWrapper = shallow(
+        <DependencyGraph {...props} dependencies={manyDependencies} fetchDependencies={() => {}} />
+      );
+      expect(newWrapper.state('selectedLayout')).toBe('sfdp');
+    });
+
+    it('ignores undefined or null depth values', () => {
+      const initialDepth = wrapper.state('selectedDepth');
+      wrapper.instance().handleDepthChange(undefined);
+      expect(wrapper.state('selectedDepth')).toBe(initialDepth);
+      wrapper.instance().handleDepthChange(null);
+      expect(wrapper.state('selectedDepth')).toBe(initialDepth);
+    });
+
+    it('debounces depth changes', done => {
+      const depth = 3;
+      wrapper.instance().handleDepthChange(depth);
+      expect(wrapper.state('selectedDepth')).toBe(depth);
+      expect(wrapper.state('debouncedDepth')).toBe(5);
+
+      setTimeout(() => {
+        expect(wrapper.state('debouncedDepth')).toBe(depth);
+        done();
+      }, 1100);
     });
   });
 });
