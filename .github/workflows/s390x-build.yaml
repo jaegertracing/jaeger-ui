@@ -1,4 +1,4 @@
-name: 'Build on s390x'
+name: "Build on s390x"
 
 on:
   push:

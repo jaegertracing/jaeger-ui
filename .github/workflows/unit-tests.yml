@@ -1,4 +1,4 @@
-name: 'Unit Tests'
+name: "Unit Tests"
 
 on:
   merge_group:
