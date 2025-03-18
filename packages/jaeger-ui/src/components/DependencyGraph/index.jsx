@@ -13,14 +13,14 @@
 // limitations under the License.
 
 import React, { Component } from 'react';
-import { Tabs } from 'antd';
 import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import memoizeOne from 'memoize-one';
+import debounce from 'lodash/debounce';
 
 import DAG from './DAG';
-import DependencyForceGraph from './DependencyForceGraph';
+import DAGOptions from './DAGOptions';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
@@ -33,7 +33,6 @@ import withRouteProps from '../../utils/withRouteProps';
 
 // export for tests
 export const GRAPH_TYPES = {
-  FORCE_DIRECTED: { type: 'FORCE_DIRECTED', name: 'Force Directed Graph' },
   DAG: { type: 'DAG', name: 'DAG' },
 };
 
@@ -58,10 +57,17 @@ export class DependencyGraphPageImpl extends Component {
     error: null,
   };
 
+  debouncedDepthChange = debounce(value => {
+    this.setState({ debouncedDepth: value });
+  }, 1000);
+
   constructor(props) {
     super(props);
     this.state = {
-      graphType: 'FORCE_DIRECTED',
+      selectedService: null,
+      selectedLayout: props.dependencies.length > dagMaxNumServices ? 'sfdp' : 'dot',
+      selectedDepth: 5,
+      debouncedDepth: 5,
     };
   }
 
@@ -69,11 +75,37 @@ export class DependencyGraphPageImpl extends Component {
     this.props.fetchDependencies();
   }
 
-  handleGraphTypeChange = graphType => this.setState({ graphType });
+  handleServiceSelect = service => {
+    this.setState({ selectedService: service });
+  };
+
+  handleLayoutSelect = layout => {
+    this.setState({ selectedLayout: layout });
+  };
+
+  handleDepthChange = value => {
+    if (value === null || value === undefined) {
+      return;
+    }
+    const numValue = Number(value);
+    if (Number.isInteger(numValue) && numValue >= 0) {
+      this.setState({ selectedDepth: numValue });
+      this.debouncedDepthChange(numValue);
+    }
+  };
+
+  handleReset = () => {
+    this.setState({
+      selectedService: null,
+      selectedDepth: 5,
+      debouncedDepth: 5,
+    });
+  };
 
   render() {
-    const { nodes, links, error, dependencies, loading } = this.props;
-    const { graphType } = this.state;
+    const { nodes, links, error, loading, dependencies } = this.props;
+    const { selectedService, selectedLayout, selectedDepth, debouncedDepth } = this.state;
+
     if (loading) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
@@ -97,33 +129,32 @@ export class DependencyGraphPageImpl extends Component {
       );
     }
 
-    const GRAPH_TYPE_OPTIONS = [GRAPH_TYPES.FORCE_DIRECTED];
-
-    if (dependencies.length <= dagMaxNumServices) {
-      GRAPH_TYPE_OPTIONS.push(GRAPH_TYPES.DAG);
-    }
-    const tabItems = [];
-    GRAPH_TYPE_OPTIONS.forEach(opt => {
-      tabItems.push({
-        label: opt.name,
-        key: opt.type,
-        children: (
-          <div className="DependencyGraph--graphWrapper">
-            {opt.type === 'FORCE_DIRECTED' && <DependencyForceGraph nodes={nodes} links={links} />}
-            {opt.type === 'DAG' && <DAG serviceCalls={dependencies} />}
-          </div>
-        ),
-      });
-    });
+    const isHierarchicalDisabled = dependencies.length > dagMaxNumServices;
 
     return (
-      <Tabs
-        onChange={this.handleGraphTypeChange}
-        activeKey={graphType}
-        type="card"
-        tabBarStyle={{ background: '#f5f5f5', padding: '1rem 1rem 0 1rem' }}
-        items={tabItems}
-      />
+      <div>
+        <div className="ub-m3">
+          <DAGOptions
+            dependencies={dependencies}
+            onServiceSelect={this.handleServiceSelect}
+            onLayoutSelect={this.handleLayoutSelect}
+            onDepthChange={this.handleDepthChange}
+            selectedService={selectedService}
+            selectedLayout={selectedLayout}
+            selectedDepth={selectedDepth}
+            onReset={this.handleReset}
+            isHierarchicalDisabled={isHierarchicalDisabled}
+          />
+        </div>
+        <div className="DependencyGraph--graphWrapper">
+          <DAG
+            serviceCalls={dependencies}
+            selectedLayout={selectedLayout}
+            selectedDepth={debouncedDepth}
+            selectedService={selectedService}
+          />
+        </div>
+      </div>
     );
   }
 }
