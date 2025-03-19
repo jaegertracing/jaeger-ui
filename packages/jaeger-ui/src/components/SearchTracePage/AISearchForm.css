@@ -1,0 +1,23 @@
+.AISearchForm {
+  padding: 16px;
+}
+
+.AISearchForm--translatedQuery {
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+.AISearchForm--examples {
+  margin-top: 16px;
+  color: #666;
+}
+
+.AISearchForm--example {
+  cursor: pointer;
+  color: #1890ff;
+  margin-right: 16px;
+}
+
+.AISearchForm--example:hover {
+  text-decoration: underline;
+} 

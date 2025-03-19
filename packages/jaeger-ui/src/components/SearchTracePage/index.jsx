@@ -1,17 +1,3 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 /* eslint-disable react/require-default-props */
 
 import React, { Component } from 'react';
@@ -23,6 +9,7 @@ import store from 'store';
 import memoizeOne from 'memoize-one';
 
 import SearchForm from './SearchForm';
+import AISearchForm from './AISearchForm';
 import SearchResults from './SearchResults';
 import { isSameQuery, getUrl, getUrlState } from './url';
 import * as jaegerApiActions from '../../actions/jaeger-api';
@@ -114,7 +101,10 @@ export class SearchTracePageImpl extends Component {
     const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
     const tabItems = [];
     if (!loadingServices && services) {
-      tabItems.push({ label: 'Search', key: 'searchForm', children: <SearchForm services={services} /> });
+      tabItems.push(
+        { label: 'Advanced Search', key: 'searchForm', children: <SearchForm services={services} /> },
+        { label: 'AI Search', key: 'aiSearch', children: <AISearchForm /> }
+      );
     } else {
       tabItems.push({ label: 'Search', key: 'searchForm', children: <LoadingIndicator /> });
     }
