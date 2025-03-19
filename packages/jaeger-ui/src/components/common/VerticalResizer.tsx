@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import cx from 'classnames';
 
 import { TNil } from '../../types';
@@ -28,105 +28,82 @@ type VerticalResizerProps = {
   rightSide?: boolean;
 };
 
-type VerticalResizerState = {
-  dragPosition: number | TNil;
-};
+export default function VerticalResizer(props: VerticalResizerProps) {
+  const { max, min, onChange, position, rightSide } = props;
+  const [dragPosition, setDragPosition] = useState<number | TNil>(null);
+  const rootElmRef = useRef<HTMLDivElement | null>(null);
 
-export default class VerticalResizer extends React.PureComponent<VerticalResizerProps, VerticalResizerState> {
-  state: VerticalResizerState;
-
-  _dragManager: DraggableManager;
-  _rootElm: Element | TNil;
-
-  constructor(props: VerticalResizerProps) {
-    super(props);
-    this._dragManager = new DraggableManager({
-      getBounds: this._getDraggingBounds,
-      onDragEnd: this._handleDragEnd,
-      onDragMove: this._handleDragUpdate,
-      onDragStart: this._handleDragUpdate,
-    });
-    this._rootElm = undefined;
-    this.state = {
-      dragPosition: null,
-    };
-  }
-
-  componentWillUnmount() {
-    this._dragManager.dispose();
-  }
-
-  _setRootElm = (elm: Element | TNil) => {
-    this._rootElm = elm;
-  };
-
-  _getDraggingBounds = (): DraggableBounds => {
-    if (!this._rootElm) {
+  const getDraggingBounds = useCallback((): DraggableBounds => {
+    if (!rootElmRef.current) {
       throw new Error('invalid state');
     }
-    const { left: clientXLeft, width } = this._rootElm.getBoundingClientRect();
-    const { rightSide } = this.props;
-    let { min, max } = this.props;
-    if (rightSide) [min, max] = [1 - max, 1 - min];
-    return {
+    const { left: clientXLeft, width } = rootElmRef.current.getBoundingClientRect();
+    const bounds = {
       clientXLeft,
       width,
-      maxValue: max,
-      minValue: min,
+      maxValue: rightSide ? 1 - min : max,
+      minValue: rightSide ? 1 - max : min,
     };
-  };
+    return bounds;
+  }, [max, min, rightSide]);
 
-  _handleDragUpdate = ({ value }: DraggingUpdate) => {
-    const dragPosition = this.props.rightSide ? 1 - value : value;
-    this.setState({ dragPosition });
-  };
+  const handleDragUpdate = useCallback(
+    ({ value }: DraggingUpdate) => {
+      const newDragPosition = rightSide ? 1 - value : value;
+      setDragPosition(newDragPosition);
+    },
+    [rightSide]
+  );
 
-  _handleDragEnd = ({ manager, value }: DraggingUpdate) => {
-    manager.resetBounds();
-    this.setState({ dragPosition: null });
-    const dragPosition = this.props.rightSide ? 1 - value : value;
-    this.props.onChange(dragPosition);
-  };
+  const handleDragEnd = useCallback(
+    ({ manager, value }: DraggingUpdate) => {
+      manager.resetBounds();
+      setDragPosition(null);
+      const newPosition = rightSide ? 1 - value : value;
+      onChange(newPosition);
+    },
+    [onChange, rightSide]
+  );
 
-  render() {
-    let left;
-    let draggerStyle;
-    let isDraggingCls = '';
-    const { position, rightSide } = this.props;
-    const { dragPosition } = this.state;
-    left = `${position * 100}%`;
-    const gripStyle = { left };
+  const dragManagerRef = useRef(
+    new DraggableManager({
+      getBounds: getDraggingBounds,
+      onDragEnd: handleDragEnd,
+      onDragMove: handleDragUpdate,
+      onDragStart: handleDragUpdate,
+    })
+  );
 
-    if (this._dragManager.isDragging() && this._rootElm && dragPosition != null) {
-      isDraggingCls = cx({
-        isDraggingLeft: dragPosition < position,
-        isDraggingRight: dragPosition > position,
-      });
-      left = `${dragPosition * 100}%`;
-      // Draw a highlight from the current dragged position back to the original
-      // position, e.g. highlight the change. Draw the highlight via `left` and
-      // `right` css styles (simpler than using `width`).
-      const draggerLeft = `${Math.min(position, dragPosition) * 100}%`;
-      // subtract 1px for draggerRight to deal with the right border being off
-      // by 1px when dragging left
-      const draggerRight = `calc(${(1 - Math.max(position, dragPosition)) * 100}% - 1px)`;
-      draggerStyle = { left: draggerLeft, right: draggerRight };
-    } else {
-      draggerStyle = gripStyle;
-    }
-    return (
+  useEffect(() => {
+    return () => {
+      dragManagerRef.current.dispose();
+    };
+  }, []);
+
+  const isDragging = dragManagerRef.current.isDragging();
+  const isDraggingCls = cx({
+    isDraggingLeft: isDragging && dragPosition != null && dragPosition < position,
+    isDraggingRight: isDragging && dragPosition != null && dragPosition > position,
+  });
+
+  const gripStyle = { left: `${position * 100}%` };
+  const draggerStyle =
+    isDragging && dragPosition != null
+      ? {
+          left: `${Math.min(position, dragPosition) * 100}%`,
+          right: `calc(${(1 - Math.max(position, dragPosition)) * 100}% - 1px)`,
+        }
+      : gripStyle;
+
+  return (
+    <div className={`VerticalResizer ${isDraggingCls} ${rightSide ? 'is-flipped' : ''}`} ref={rootElmRef}>
+      <div className="VerticalResizer--gripIcon" style={gripStyle} />
       <div
-        className={`VerticalResizer ${isDraggingCls} ${rightSide ? 'is-flipped' : ''}`}
-        ref={this._setRootElm}
-      >
-        <div className="VerticalResizer--gripIcon" style={gripStyle} />
-        <div
-          aria-hidden
-          className="VerticalResizer--dragger"
-          onMouseDown={this._dragManager.handleMouseDown}
-          style={draggerStyle}
-        />
-      </div>
-    );
-  }
+        aria-hidden
+        className="VerticalResizer--dragger"
+        onMouseDown={dragManagerRef.current.handleMouseDown}
+        style={draggerStyle}
+      />
+    </div>
+  );
 }

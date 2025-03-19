@@ -153,7 +153,9 @@ describe('<NameSelector>', () => {
     });
 
     it('throws Error when attempting to clear when required', () => {
-      expect(new NameSelector(props).clearValue).toThrowError('Cannot clear value of required NameSelector');
+      expect(() => wrapper.instance().clearValue({ stopPropagation: jest.fn() })).toThrowError(
+        'Cannot clear value of required NameSelector'
+      );
     });
   });
 });

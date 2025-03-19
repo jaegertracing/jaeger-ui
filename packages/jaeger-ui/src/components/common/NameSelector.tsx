@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
 import { IoChevronDown, IoClose } from 'react-icons/io5';
@@ -40,100 +40,101 @@ type TProps = {
   setValue: (value: string) => void;
 } & (TOptional | TRequired);
 
-type TState = {
-  popoverVisible: boolean;
-};
-
 export const DEFAULT_PLACEHOLDER = 'Select a value…';
 
-export default class NameSelector extends React.PureComponent<TProps, TState> {
-  listRef: React.RefObject<FilteredList> = React.createRef();
-  state: TState = { popoverVisible: false };
+const NameSelector: React.FC<TProps> = ({
+  label,
+  placeholder = false,
+  options,
+  value,
+  setValue,
+  required = false,
+  clearValue,
+}) => {
+  const [popoverVisible, setPopoverVisible] = useState(false);
+  const listRef = useRef<FilteredList>(null);
 
-  componentDidUpdate() {
-    if (this.listRef.current && this.state.popoverVisible) {
-      this.listRef.current.focusInput();
+  useEffect(() => {
+    if (listRef.current && popoverVisible) {
+      listRef.current.focusInput();
     }
-  }
+  }, [popoverVisible]);
 
-  private changeVisible(popoverVisible: boolean) {
-    this.setState({ popoverVisible });
+  const changeVisible = (visible: boolean) => {
+    setPopoverVisible(visible);
 
-    // Defer registering a click handler to hide the selector popover
-    // to avoid handling the click event that triggered opening the popover itself.
     setTimeout(() => {
-      if (popoverVisible) {
-        window.document.body.addEventListener('click', this.onBodyClicked);
+      if (visible) {
+        window.document.body.addEventListener('click', onBodyClicked);
       } else {
-        window.document.body.removeEventListener('click', this.onBodyClicked);
+        window.document.body.removeEventListener('click', onBodyClicked);
       }
     });
-  }
+  };
 
-  private clearValue = (evt: React.MouseEvent) => {
-    if (this.props.required) throw new Error('Cannot clear value of required NameSelector');
+  const handleClearValue = (evt: React.MouseEvent) => {
+    if (required) throw new Error('Cannot clear value of required NameSelector');
 
     evt.stopPropagation();
-    this.props.clearValue();
+    clearValue?.();
   };
 
-  setValue = (value: string) => {
-    this.props.setValue(value);
-    this.changeVisible(false);
+  const handleSetValue = (value: string) => {
+    setValue(value);
+    changeVisible(false);
   };
 
-  private onBodyClicked = () => {
-    if (this.listRef.current && !this.listRef.current.isMouseWithin()) {
-      this.changeVisible(false);
+  const onBodyClicked = () => {
+    if (listRef.current && !listRef.current.isMouseWithin()) {
+      changeVisible(false);
     }
   };
 
-  onFilterCancelled = () => {
-    this.changeVisible(false);
+  const onFilterCancelled = () => {
+    changeVisible(false);
   };
 
-  onPopoverVisibleChanged = (popoverVisible: boolean) => {
-    this.changeVisible(popoverVisible);
+  const onPopoverVisibleChanged = (visible: boolean) => {
+    changeVisible(visible);
   };
 
-  render() {
-    const { label, options, placeholder = false, required = false, value } = this.props;
-    const { popoverVisible } = this.state;
+  const rootCls = cx('NameSelector', {
+    'is-active': popoverVisible,
+    'is-invalid': required && !value,
+  });
 
-    const rootCls = cx('NameSelector', {
-      'is-active': popoverVisible,
-      'is-invalid': required && !value,
-    });
-    let useLabel = true;
-    let text = value || '';
-    if (!value && placeholder) {
-      useLabel = false;
-      text = typeof placeholder === 'string' ? placeholder : DEFAULT_PLACEHOLDER;
-    }
-    return (
-      <Popover
-        overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
-        onOpenChange={this.onPopoverVisibleChanged}
-        placement="bottomLeft"
-        content={
-          <FilteredList
-            ref={this.listRef}
-            cancel={this.onFilterCancelled}
-            options={options}
-            value={value}
-            setValue={this.setValue}
-          />
-        }
-        trigger="click"
-        open={popoverVisible}
-      >
-        <h2 className={rootCls}>
-          {useLabel && <span className="NameSelector--label">{label}:</span>}
-          <BreakableText className="NameSelector--value" text={text} />
-          <IoChevronDown className="NameSelector--chevron" />
-          {!required && value && <IoClose className="NameSelector--clearIcon" onClick={this.clearValue} />}
-        </h2>
-      </Popover>
-    );
+  let useLabel = true;
+  let text = value || '';
+  if (!value && placeholder) {
+    useLabel = false;
+    text = typeof placeholder === 'string' ? placeholder : DEFAULT_PLACEHOLDER;
   }
-}
+
+  return (
+    <Popover
+      overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
+      onOpenChange={onPopoverVisibleChanged}
+      placement="bottomLeft"
+      content={
+        <FilteredList
+          ref={listRef}
+          cancel={onFilterCancelled}
+          options={options}
+          value={value}
+          setValue={handleSetValue}
+        />
+      }
+      trigger="click"
+      open={popoverVisible}
+    >
+      <h2 className={rootCls}>
+        {useLabel && <span className="NameSelector--label">{label}:</span>}
+        <BreakableText className="NameSelector--value" text={text} />
+        <IoChevronDown className="NameSelector--chevron" />
+        {!required && value && <IoClose className="NameSelector--clearIcon" onClick={handleClearValue} />}
+      </h2>
+    </Popover>
+  );
+};
+
+export default NameSelector;
