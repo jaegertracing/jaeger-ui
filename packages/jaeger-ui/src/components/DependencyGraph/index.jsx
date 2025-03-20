@@ -30,6 +30,7 @@ import { getConfigValue } from '../../utils/config/get-config';
 
 import './index.css';
 import withRouteProps from '../../utils/withRouteProps';
+import { shouldUseSampleDAGData } from '../../utils/constants';
 
 // export for tests
 export const GRAPH_TYPES = {
@@ -37,6 +38,16 @@ export const GRAPH_TYPES = {
 };
 
 const dagMaxNumServices = getConfigValue('dependencies.dagMaxNumServices') || FALLBACK_DAG_MAX_NUM_SERVICES;
+
+let sampleDAGDataset = [];
+export async function loadSampleData() {
+  if (shouldUseSampleDAGData() === 'true') {
+    const module = await import('./sample_dag_dataset.json');
+    sampleDAGDataset = module.default;
+    return sampleDAGDataset;
+  }
+  return [];
+}
 
 // export for tests
 export class DependencyGraphPageImpl extends Component {
@@ -73,6 +84,10 @@ export class DependencyGraphPageImpl extends Component {
 
   componentDidMount() {
     this.props.fetchDependencies();
+    loadSampleData().then(data => {
+      const selectedLayout = data.length > dagMaxNumServices ? 'sfdp' : 'dot';
+      this.setState({ selectedLayout });
+    });
   }
 
   handleServiceSelect = service => {
@@ -212,7 +227,13 @@ export function mapStateToProps(state) {
     links = formatted.links;
     nodes = formatted.nodes;
   }
-  return { loading, error, nodes, links, dependencies };
+  return {
+    loading,
+    error,
+    nodes,
+    links,
+    dependencies: shouldUseSampleDAGData() === 'true' ? sampleDAGDataset : dependencies,
+  };
 }
 
 // export for tests

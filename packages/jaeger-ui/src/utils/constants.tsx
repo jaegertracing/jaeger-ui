@@ -33,3 +33,7 @@ export function getVersionInfo() {
 export function shouldDebugGoogleAnalytics() {
   return __REACT_APP_GA_DEBUG__;
 }
+
+export function shouldUseSampleDAGData() {
+  return __REACT_APP_USE_SAMPLE_DATA__;
+}

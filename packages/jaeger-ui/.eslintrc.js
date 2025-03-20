@@ -7,6 +7,7 @@ module.exports = {
     __REACT_APP_GA_DEBUG__: false,
     __REACT_APP_VSN_STATE__: false,
     __APP_ENVIRONMENT__: false,
+    __REACT_APP_USE_SAMPLE_DATA__: false,
   },
   overrides: [
     {

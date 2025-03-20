@@ -93,6 +93,7 @@
     "coverage": "npm run test-ci -- --coverage",
     "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite",
     "start": "vite",
+    "start:with-data": "REACT_APP_USE_SAMPLE_DATA=true vite",
     "test": "jest --maxWorkers=50%",
     "test-ci": "CI=1 jest --silent --color --maxWorkers=4"
   },
