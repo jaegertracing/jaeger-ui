@@ -147,10 +147,24 @@ describe('<DependencyGraph>', () => {
         done();
       }, 1100);
     });
+
+    it('handles sample dataset type change', async () => {
+      const selectedSampleDatasetType = 'Small Graph';
+      await wrapper.instance().handleSampleDatasetTypeChange(selectedSampleDatasetType);
+
+      expect(wrapper.state('selectedSampleDatasetType')).toBe(selectedSampleDatasetType);
+      expect(wrapper.state('selectedLayout')).toBe('dot');
+
+      await wrapper.instance().handleSampleDatasetTypeChange(null);
+      expect(wrapper.state('selectedSampleDatasetType')).toBe(null);
+
+      await wrapper.instance().handleSampleDatasetTypeChange(null);
+    });
   });
 });
 
 describe('mapStateToProps()', () => {
+  global.sampleDAGDataset = [];
   it('refines state to generate the props', () => {
     expect(mapStateToProps(state)).toEqual({
       ...state.dependencies,

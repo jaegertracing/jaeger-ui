@@ -30,7 +30,6 @@ import { getConfigValue } from '../../utils/config/get-config';
 
 import './index.css';
 import withRouteProps from '../../utils/withRouteProps';
-import { shouldUseSampleDAGData } from '../../utils/constants';
 
 // export for tests
 export const GRAPH_TYPES = {
@@ -39,14 +38,18 @@ export const GRAPH_TYPES = {
 
 const dagMaxNumServices = getConfigValue('dependencies.dagMaxNumServices') || FALLBACK_DAG_MAX_NUM_SERVICES;
 
+export const sampleDatasetTypes = ['Small Graph', 'Large Graph'];
+
 let sampleDAGDataset = [];
-export async function loadSampleData() {
-  if (shouldUseSampleDAGData() === 'true') {
-    const module = await import('./sample_dag_dataset.json');
-    sampleDAGDataset = module.default;
-    return sampleDAGDataset;
+export async function loadSampleData(type) {
+  let module = {};
+  if (type === 'Small Graph') {
+    module = await import('./sample_dag_dataset_small.json');
+  } else if (type === 'Large Graph') {
+    module = await import('./sample_dag_dataset_large.json');
   }
-  return [];
+  sampleDAGDataset = module?.default ?? [];
+  return sampleDAGDataset;
 }
 
 // export for tests
@@ -79,15 +82,12 @@ export class DependencyGraphPageImpl extends Component {
       selectedLayout: props.dependencies.length > dagMaxNumServices ? 'sfdp' : 'dot',
       selectedDepth: 5,
       debouncedDepth: 5,
+      selectedSampleDatasetType: null,
     };
   }
 
   componentDidMount() {
     this.props.fetchDependencies();
-    loadSampleData().then(data => {
-      const selectedLayout = data.length > dagMaxNumServices ? 'sfdp' : 'dot';
-      this.setState({ selectedLayout });
-    });
   }
 
   handleServiceSelect = service => {
@@ -109,6 +109,15 @@ export class DependencyGraphPageImpl extends Component {
     }
   };
 
+  handleSampleDatasetTypeChange = selectedSampleDatasetType => {
+    this.setState({ selectedSampleDatasetType });
+    loadSampleData(selectedSampleDatasetType).then(data => {
+      const selectedLayout = data.length > dagMaxNumServices ? 'sfdp' : 'dot';
+      this.setState({ selectedLayout });
+      this.props.fetchDependencies();
+    });
+  };
+
   handleReset = () => {
     this.setState({
       selectedService: null,
@@ -119,7 +128,8 @@ export class DependencyGraphPageImpl extends Component {
 
   render() {
     const { nodes, links, error, loading, dependencies } = this.props;
-    const { selectedService, selectedLayout, selectedDepth, debouncedDepth } = this.state;
+    const { selectedService, selectedLayout, selectedDepth, debouncedDepth, selectedSampleDatasetType } =
+      this.state;
 
     if (loading) {
       return <LoadingIndicator className="u-mt-vast" centered />;
@@ -159,6 +169,9 @@ export class DependencyGraphPageImpl extends Component {
             selectedDepth={selectedDepth}
             onReset={this.handleReset}
             isHierarchicalDisabled={isHierarchicalDisabled}
+            selectedSampleDatasetType={selectedSampleDatasetType}
+            onSampleDatasetTypeChange={this.handleSampleDatasetTypeChange}
+            sampleDatasetTypes={sampleDatasetTypes}
           />
         </div>
         <div className="DependencyGraph--graphWrapper">
@@ -232,7 +245,7 @@ export function mapStateToProps(state) {
     error,
     nodes,
     links,
-    dependencies: shouldUseSampleDAGData() === 'true' ? sampleDAGDataset : dependencies,
+    dependencies: sampleDAGDataset.length > 0 ? sampleDAGDataset : dependencies,
   };
 }
 

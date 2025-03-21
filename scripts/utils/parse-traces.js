@@ -1,21 +1,26 @@
 // Copyright (c) 2025 The Jaeger Authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import { readFileSync, readdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
-// Function to process a single trace file
+/**
+ * This script processes OLTP JSON files to extract and count service dependencies.
+ * It reads all JSON files in a specified directory, processes each trace to find parent-child
+ * service relationships, counts the occurrences of each unique relationship, and writes the
+ * results to an output JSON file.
+ *
+ * Instructions to run this script:
+ * 1. Prepare a directory containing OLTP trace JSON files.
+ * 2. Open a terminal and navigate to the directory containing the script.
+ * 3. Run the script using the following command:
+ *    ```
+ *    node parse-traces.js <input-directory> <output-file>
+ *    ```
+ *    - `<input-directory>`: The directory containing the Jaeger trace JSON files.
+ *    - `<output-file>`: The path to the output JSON file where the dependency array will be saved.
+ *    If these arguments are not provided, the script defaults to `./traces` for input and `./service-dependencies.json` for output.
+ */
 function processTraceFile(filePath) {
   try {
     const fileContent = readFileSync(filePath, 'utf8');

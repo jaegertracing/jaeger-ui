@@ -24,8 +24,10 @@
 
 .dag-options {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .selector-group {
@@ -99,4 +101,10 @@
 
 .reset-icon:hover {
   color: #000;
+}
+
+.data-selector {
+  margin-left: auto;
+  align-self: flex-end;
+  min-width: 200px;
 }
