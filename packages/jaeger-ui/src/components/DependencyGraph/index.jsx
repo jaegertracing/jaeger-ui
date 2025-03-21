@@ -30,6 +30,7 @@ import { getConfigValue } from '../../utils/config/get-config';
 
 import './index.css';
 import withRouteProps from '../../utils/withRouteProps';
+import { getAppEnvironment } from '../../utils/constants';
 
 // export for tests
 export const GRAPH_TYPES = {
@@ -43,9 +44,10 @@ export const sampleDatasetTypes = ['Small Graph', 'Large Graph'];
 let sampleDAGDataset = [];
 export async function loadSampleData(type) {
   let module = {};
-  if (type === 'Small Graph') {
+  const isDev = getAppEnvironment() === 'development';
+  if (isDev && type === 'Small Graph') {
     module = await import('./sample_dag_dataset_small.json');
-  } else if (type === 'Large Graph') {
+  } else if (isDev && type === 'Large Graph') {
     module = await import('./sample_dag_dataset_large.json');
   }
   sampleDAGDataset = module?.default ?? [];
@@ -113,7 +115,7 @@ export class DependencyGraphPageImpl extends Component {
     this.setState({ selectedSampleDatasetType });
     loadSampleData(selectedSampleDatasetType).then(data => {
       const selectedLayout = data.length > dagMaxNumServices ? 'sfdp' : 'dot';
-      this.setState({ selectedLayout });
+      this.setState({ selectedLayout, selectedService: null, selectedDepth: 5, debouncedDepth: 5 });
       this.props.fetchDependencies();
     });
   };

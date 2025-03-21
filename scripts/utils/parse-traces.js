@@ -5,13 +5,13 @@ import { readFileSync, readdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 /**
- * This script processes OLTP JSON files to extract and count service dependencies.
+ * This script processes OLTP JSON files to extract and count service dependencies. (Example dataset: https://zenodo.org/records/13956078)
  * It reads all JSON files in a specified directory, processes each trace to find parent-child
  * service relationships, counts the occurrences of each unique relationship, and writes the
  * results to an output JSON file.
  *
  * Instructions to run this script:
- * 1. Prepare a directory containing OLTP trace JSON files.
+ * 1. Prepare a directory containing OLTP trace JSON files
  * 2. Open a terminal and navigate to the directory containing the script.
  * 3. Run the script using the following command:
  *    ```
