@@ -19,6 +19,7 @@ import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
 import { TLayoutOptions } from '@jaegertracing/plexus/lib/LayoutManager/types';
 
 import './dag.css';
+import { DAG_MAX_NUM_SERVICES } from '../../constants';
 
 type TServiceCall = {
   parent: string;
@@ -134,6 +135,8 @@ export default function DAG({ serviceCalls = [], selectedLayout, selectedDepth, 
     [serviceCalls, selectedService, selectedDepth]
   );
 
+  const forceFocalServiceSelection = data.nodes.length > DAG_MAX_NUM_SERVICES;
+
   const layoutManager = React.useMemo(() => {
     const config: TLayoutOptions =
       selectedLayout === 'dot'
@@ -163,6 +166,16 @@ export default function DAG({ serviceCalls = [], selectedLayout, selectedDepth, 
       layoutManager.stopAndRelease();
     };
   }, [layoutManager]);
+
+  if (forceFocalServiceSelection) {
+    return (
+      <div className="DAG">
+        <div className="DAG--error">
+          {`Too many services to render (${data.nodes.length}). Hierarchical layout is disabled. For the Force-Directed layout, please select a focal service and the depth.`}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="DAG">

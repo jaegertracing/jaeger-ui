@@ -17,6 +17,7 @@ import ShallowRenderer from 'react-test-renderer/shallow';
 import { render, screen } from '@testing-library/react';
 import { LayoutManager } from '@jaegertracing/plexus';
 import DAG, { renderNode } from './DAG';
+import { DAG_MAX_NUM_SERVICES } from '../../constants';
 
 // mock canvas API (we don't care about canvas results)
 
@@ -185,6 +186,22 @@ describe('<DAG>', () => {
 
     expect(element.props.children.props.vertices.length).toBe(0);
     expect(element.props.children.props.edges.length).toBe(0);
+  });
+
+  it('shows error message when too many services to render', () => {
+    const serviceCalls = Array.from({ length: DAG_MAX_NUM_SERVICES + 1 }, (_, i) => ({
+      parent: `service-${i}`,
+      child: `service-${i + 1}`,
+      callCount: 1,
+    }));
+
+    renderer.render(<DAG serviceCalls={serviceCalls} selectedLayout="dot" />);
+    const element = renderer.getRenderOutput();
+
+    expect(element.type).toBe('div');
+    expect(element.props.className).toBe('DAG');
+    expect(element.props.children.type).toBe('div');
+    expect(element.props.children.props.className).toBe('DAG--error');
   });
 });
 

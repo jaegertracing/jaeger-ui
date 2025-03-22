@@ -14,13 +14,9 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
+import * as constants from '../../utils/constants';
 
-import {
-  DependencyGraphPageImpl as DependencyGraph,
-  GRAPH_TYPES,
-  mapDispatchToProps,
-  mapStateToProps,
-} from './index';
+import { DependencyGraphPageImpl as DependencyGraph, mapDispatchToProps, mapStateToProps } from './index';
 import LoadingIndicator from '../common/LoadingIndicator';
 
 const childId = 'boomya';
@@ -74,6 +70,11 @@ describe('<DependencyGraph>', () => {
   });
 
   describe('DAG options', () => {
+    beforeEach(() => {
+      jest.resetAllMocks();
+      jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
+    });
+
     it('initializes with default values', () => {
       expect(wrapper.state('selectedService')).toBe(null);
       expect(wrapper.state('selectedLayout')).toBe('dot');
@@ -89,8 +90,71 @@ describe('<DependencyGraph>', () => {
 
     it('handles layout selection', () => {
       const layout = 'sfdp';
-      wrapper.instance().handleLayoutSelect(layout);
+      const instance = wrapper.instance();
+      jest.spyOn(instance, 'setState');
+
+      instance.handleLayoutSelect(layout);
+      expect(instance.setState).toHaveBeenCalledWith({ selectedLayout: layout });
       expect(wrapper.state('selectedLayout')).toBe(layout);
+    });
+
+    it('calls updateLayout when dependencies prop changes', () => {
+      const instance = wrapper.instance();
+      jest.spyOn(instance, 'updateLayout');
+
+      const newDependencies = [
+        ...dependencies,
+        {
+          callCount: 2,
+          child: 'new-child',
+          parent: 'new-parent',
+        },
+      ];
+
+      wrapper.setProps({ dependencies: newDependencies });
+      expect(instance.updateLayout).toHaveBeenCalledTimes(1);
+    });
+
+    it('updates layout based on dependencies size', () => {
+      const smallWrapper = shallow(
+        <DependencyGraph {...props} dependencies={dependencies} fetchDependencies={() => {}} />
+      );
+      smallWrapper.instance().updateLayout();
+      expect(smallWrapper.state('selectedLayout')).toBe('dot');
+
+      const manyDependencies = Array(1001)
+        .fill()
+        .map((_, i) => ({
+          callCount: 1,
+          child: `child-${i}`,
+          parent: 'parent',
+        }));
+      const largeWrapper = shallow(
+        <DependencyGraph {...props} dependencies={manyDependencies} fetchDependencies={() => {}} />
+      );
+      largeWrapper.instance().updateLayout();
+      expect(largeWrapper.state('selectedLayout')).toBe('sfdp');
+    });
+
+    it('updates layout based on dependencies size', () => {
+      const smallWrapper = shallow(
+        <DependencyGraph {...props} dependencies={dependencies} fetchDependencies={() => {}} />
+      );
+      const instance = smallWrapper.instance();
+      jest.spyOn(instance, 'setState');
+
+      instance.updateLayout();
+      expect(instance.setState).not.toHaveBeenCalled();
+
+      smallWrapper.setState({ selectedLayout: 'sfdp' });
+
+      instance.updateLayout();
+      expect(instance.setState).toHaveBeenCalledWith({
+        selectedLayout: 'dot',
+        selectedService: null,
+        selectedDepth: 5,
+        debouncedDepth: 5,
+      });
     });
 
     it('handles depth change', () => {
@@ -151,6 +215,19 @@ describe('<DependencyGraph>', () => {
         expect(wrapper.state('debouncedDepth')).toBe(depth);
         done();
       }, 1100);
+    });
+
+    it('handles sample dataset type change', async () => {
+      const selectedSampleDatasetType = 'Small Graph';
+      await wrapper.instance().handleSampleDatasetTypeChange(selectedSampleDatasetType);
+
+      expect(wrapper.state('selectedSampleDatasetType')).toBe(selectedSampleDatasetType);
+      expect(wrapper.state('selectedLayout')).toBe('dot');
+
+      await wrapper.instance().handleSampleDatasetTypeChange(null);
+      expect(wrapper.state('selectedSampleDatasetType')).toBe(null);
+
+      await wrapper.instance().handleSampleDatasetTypeChange(null);
     });
   });
 });
