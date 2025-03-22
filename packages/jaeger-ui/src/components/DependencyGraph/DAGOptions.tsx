@@ -17,6 +17,7 @@ import { Select, InputNumber, Popover } from 'antd';
 import { IoHelp, IoRefresh } from 'react-icons/io5';
 import SearchableSelect from '../common/SearchableSelect';
 import './DAGOptions.css';
+import { getAppEnvironment } from '../../utils/constants';
 
 const { Option } = Select;
 
@@ -36,6 +37,9 @@ interface IDAGOptionsProps {
   selectedDepth?: number;
   onReset: () => void;
   isHierarchicalDisabled: boolean;
+  selectedSampleDatasetType: string;
+  onSampleDatasetTypeChange: (type: string) => void;
+  sampleDatasetTypes: string[];
 }
 
 const LAYOUT_OPTIONS = [
@@ -53,6 +57,9 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
   selectedDepth = 0,
   onReset,
   isHierarchicalDisabled,
+  selectedSampleDatasetType,
+  onSampleDatasetTypeChange,
+  sampleDatasetTypes,
 }) => {
   const services = React.useMemo(() => {
     const uniqueServices = new Set<string>();
@@ -175,6 +182,26 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
           />
         </div>
       </div>
+      {getAppEnvironment() === 'development' && (
+        <div className="selector-container data-selector">
+          <div className="selector-label-container">
+            <span className="selector-label">Sample Dataset</span>
+          </div>
+          <SearchableSelect
+            value={selectedSampleDatasetType}
+            onChange={onSampleDatasetTypeChange}
+            placeholder="Select Sample Dataset Type"
+            className="select-sample-dataset-type-input"
+            data-testid="sample-dataset-type-select"
+          >
+            {sampleDatasetTypes.map(type => (
+              <Option key={type} value={type} data-testid={`sample-dataset-type-option-${type}`}>
+                {type}
+              </Option>
+            ))}
+          </SearchableSelect>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,0 +1,37 @@
+[
+  {
+    "parent": "Service1",
+    "child": "Service2",
+    "callCount": 30489
+  },
+  {
+    "parent": "Service1",
+    "child": "Service3",
+    "callCount": 30491
+  },
+  {
+    "parent": "Service1",
+    "child": "Service5",
+    "callCount": 8560
+  },
+  {
+    "parent": "Service8",
+    "child": "Service6",
+    "callCount": 30489
+  },
+  {
+    "parent": "Service6",
+    "child": "Service1",
+    "callCount": 30489
+  },
+  {
+    "parent": "Service2",
+    "child": "Service4",
+    "callCount": 129216
+  },
+  {
+    "parent": "Service3",
+    "child": "Service7",
+    "callCount": 30491
+  }
+]

@@ -15,7 +15,7 @@
 // For jest
 declare const global: {
   location: Location;
-}
+};
 
 declare interface Window {
   // For setting the site-prefix

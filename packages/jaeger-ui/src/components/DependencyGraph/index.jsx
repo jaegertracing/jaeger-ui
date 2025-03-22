@@ -30,13 +30,35 @@ import { getConfigValue } from '../../utils/config/get-config';
 
 import './index.css';
 import withRouteProps from '../../utils/withRouteProps';
+import { getAppEnvironment } from '../../utils/constants';
 
 // export for tests
 export const GRAPH_TYPES = {
   DAG: { type: 'DAG', name: 'DAG' },
 };
+export const sampleDatasetTypes = ['Backend', 'Small Graph', 'Large Graph'];
 
 const dagMaxNumServices = getConfigValue('dependencies.dagMaxNumServices') || FALLBACK_DAG_MAX_NUM_SERVICES;
+
+const createSampleDataManager = () => {
+  let sampleDAGDataset = [];
+  return {
+    getSampleData: () => sampleDAGDataset,
+    loadSampleData: async type => {
+      let module = {};
+      const isDev = getAppEnvironment() === 'development';
+      if (isDev && type === 'Small Graph') {
+        module = await import('./sample_data/small.json');
+      } else if (isDev && type === 'Large Graph') {
+        module = await import('./sample_data/large.json');
+      }
+      sampleDAGDataset = module?.default ?? [];
+      return sampleDAGDataset;
+    },
+  };
+};
+
+const { getSampleData, loadSampleData } = createSampleDataManager();
 
 // export for tests
 export class DependencyGraphPageImpl extends Component {
@@ -65,15 +87,32 @@ export class DependencyGraphPageImpl extends Component {
     super(props);
     this.state = {
       selectedService: null,
-      selectedLayout: props.dependencies.length > dagMaxNumServices ? 'sfdp' : 'dot',
+      selectedLayout: null,
       selectedDepth: 5,
       debouncedDepth: 5,
+      selectedSampleDatasetType: 'Backend',
     };
   }
 
   componentDidMount() {
     this.props.fetchDependencies();
+    this.updateLayout();
   }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.dependencies !== this.props.dependencies) {
+      this.updateLayout();
+    }
+  }
+
+  updateLayout = () => {
+    const { dependencies } = this.props;
+    const dataset = getSampleData().length > 0 ? getSampleData() : dependencies;
+    const selectedLayout = dataset.length > dagMaxNumServices ? 'sfdp' : 'dot';
+    if (selectedLayout !== this.state.selectedLayout) {
+      this.setState({ selectedLayout, selectedService: null, selectedDepth: 5, debouncedDepth: 5 });
+    }
+  };
 
   handleServiceSelect = service => {
     this.setState({ selectedService: service });
@@ -94,6 +133,13 @@ export class DependencyGraphPageImpl extends Component {
     }
   };
 
+  handleSampleDatasetTypeChange = selectedSampleDatasetType => {
+    this.setState({ selectedSampleDatasetType });
+    loadSampleData(selectedSampleDatasetType).then(() => {
+      this.props.fetchDependencies();
+    });
+  };
+
   handleReset = () => {
     this.setState({
       selectedService: null,
@@ -104,7 +150,8 @@ export class DependencyGraphPageImpl extends Component {
 
   render() {
     const { nodes, links, error, loading, dependencies } = this.props;
-    const { selectedService, selectedLayout, selectedDepth, debouncedDepth } = this.state;
+    const { selectedService, selectedLayout, selectedDepth, debouncedDepth, selectedSampleDatasetType } =
+      this.state;
 
     if (loading) {
       return <LoadingIndicator className="u-mt-vast" centered />;
@@ -144,6 +191,9 @@ export class DependencyGraphPageImpl extends Component {
             selectedDepth={selectedDepth}
             onReset={this.handleReset}
             isHierarchicalDisabled={isHierarchicalDisabled}
+            selectedSampleDatasetType={selectedSampleDatasetType}
+            onSampleDatasetTypeChange={this.handleSampleDatasetTypeChange}
+            sampleDatasetTypes={sampleDatasetTypes}
           />
         </div>
         <div className="DependencyGraph--graphWrapper">
@@ -212,7 +262,14 @@ export function mapStateToProps(state) {
     links = formatted.links;
     nodes = formatted.nodes;
   }
-  return { loading, error, nodes, links, dependencies };
+  const dataset = getSampleData().length > 0 ? getSampleData() : dependencies;
+  return {
+    loading,
+    error,
+    nodes,
+    links,
+    dependencies: dataset,
+  };
 }
 
 // export for tests
