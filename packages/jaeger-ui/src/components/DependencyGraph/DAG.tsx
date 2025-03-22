@@ -171,7 +171,7 @@ export default function DAG({ serviceCalls = [], selectedLayout, selectedDepth, 
     return (
       <div className="DAG">
         <div className="DAG--error">
-          {`Too many services to render (${data.nodes.length}). Please select a focal service or reduce the depth.`}
+          {`Too many services to render (${data.nodes.length}). Hierarchical layout is disabled. For the Force-Directed layout, please select a focal service and the depth.`}
         </div>
       </div>
     );

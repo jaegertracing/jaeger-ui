@@ -48,9 +48,9 @@ const createSampleDataManager = () => {
       let module = {};
       const isDev = getAppEnvironment() === 'development';
       if (isDev && type === 'Small Graph') {
-        module = await import('./sample_dag_dataset_small.json');
+        module = await import('./sample_data/small.json');
       } else if (isDev && type === 'Large Graph') {
-        module = await import('./sample_dag_dataset_large.json');
+        module = await import('./sample_data/large.json');
       }
       sampleDAGDataset = module?.default ?? [];
       return sampleDAGDataset;

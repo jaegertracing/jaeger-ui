@@ -49,8 +49,8 @@
     "src/reducers/trace.js",
     "src/utils/configure-store.js",
     "src/utils/sort.js",
-    "src/components/DependencyGraph/sample_dag_dataset_large.json",
-    "src/components/DependencyGraph/sample_dag_dataset_small.json",
+    "src/components/DependencyGraph/sample_data/large.json",
+    "src/components/DependencyGraph/sample_data/small.json",
     "package.json"
   ]
 }
