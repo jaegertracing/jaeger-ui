@@ -28,6 +28,10 @@ exports[`<KeyValuesTable> renders the expected text for each span value 1`] = `
     shouldExpandNode={[Function]}
     style={
       Object {
+        "ariaLables": Object {
+          "collapseJson": "collapse JSON",
+          "expandJson": "expand JSON",
+        },
         "basicChildStyle": "json-markup-child",
         "booleanValue": "json-markup-bool",
         "childFieldsContainer": "_1BXBN",
@@ -44,6 +48,7 @@ exports[`<KeyValuesTable> renders the expected text for each span value 1`] = `
         "punctuation": "json-markup-puncuation",
         "quotesForFieldNames": false,
         "stringValue": "json-markup-string",
+        "stringifyStringValues": false,
         "undefinedValue": "json-markup-undefined",
       }
     }
