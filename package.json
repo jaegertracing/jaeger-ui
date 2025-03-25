@@ -26,7 +26,7 @@
     "npm-run-all2": "7.0.1",
     "prettier": "3.5.0",
     "rxjs-compat": "6.6.7",
-    "typescript": "5.7.2"
+    "typescript": "5.8.2"
   },
   "overrides": {
     "react": "18.3.1",
