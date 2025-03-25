@@ -73,7 +73,7 @@
     "react-helmet": "^6.1.0",
     "react-icons": "^5.0.1",
     "react-is": "^18.2.0",
-    "react-json-view-lite": "2.3.0",
+    "react-json-view-lite": "2.4.1",
     "react-redux": "^9.2.0",
     "react-router-dom": "5.3.4",
     "react-router-dom-v5-compat": "^6.24.0",
