@@ -276,6 +276,14 @@ describe('<DAG>', () => {
     expect(result.props.children[0].props.className).toContain('is-focalNode');
     expect(result.props.children[0].props.className).toContain('is-match');
   });
+
+  it('defaults serviceCalls to empty array when not provided', () => {
+    renderer.render(<DAG selectedLayout="dot" selectedDepth={1} selectedService="" />);
+    const element = renderer.getRenderOutput();
+
+    expect(element.props.children.props.vertices).toHaveLength(0);
+    expect(element.props.children.props.edges).toHaveLength(0);
+  });
 });
 
 describe('renderNode', () => {
