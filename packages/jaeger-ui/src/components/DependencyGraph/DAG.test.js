@@ -19,6 +19,16 @@ import { LayoutManager } from '@jaegertracing/plexus';
 import DAG, { renderNode } from './DAG';
 import { DAG_MAX_NUM_SERVICES } from '../../constants';
 
+// Mock useEffect to handle cleanup functions and uiFind match count
+jest.spyOn(React, 'useEffect').mockImplementation(f => {
+  const cleanup = f();
+  return () => {
+    if (typeof cleanup === 'function') {
+      cleanup();
+    }
+  };
+});
+
 // mock canvas API (we don't care about canvas results)
 
 window.HTMLCanvasElement.prototype.getContext = function getContext() {
@@ -203,6 +213,45 @@ describe('<DAG>', () => {
     expect(element.props.children.type).toBe('div');
     expect(element.props.children.props.className).toBe('DAG--error');
   });
+
+  it('calls onMatchCountChange with correct count when uiFind is provided', () => {
+    const onMatchCountChange = jest.fn();
+    const serviceCalls = [
+      { parent: 'test-service', child: 'other-service', callCount: 1 },
+      { parent: 'test-service-2', child: 'other-service-2', callCount: 1 },
+    ];
+
+    renderer.render(
+      <DAG
+        serviceCalls={serviceCalls}
+        uiFind="test"
+        onMatchCountChange={onMatchCountChange}
+        selectedLayout="dot"
+        selectedDepth={1}
+        selectedService=""
+      />
+    );
+    expect(onMatchCountChange).toHaveBeenCalledWith(2);
+  });
+
+  it('calls onMatchCountChange with 0 when uiFind is not provided', () => {
+    const onMatchCountChange = jest.fn();
+    const serviceCalls = [
+      { parent: 'test-service', child: 'other-service', callCount: 1 },
+      { parent: 'test-service-2', child: 'other-service-2', callCount: 1 },
+    ];
+
+    renderer.render(
+      <DAG
+        serviceCalls={serviceCalls}
+        onMatchCountChange={onMatchCountChange}
+        selectedLayout="dot"
+        selectedDepth={1}
+        selectedService=""
+      />
+    );
+    expect(onMatchCountChange).toHaveBeenCalledWith(0);
+  });
 });
 
 describe('renderNode', () => {
@@ -230,24 +279,16 @@ describe('renderNode', () => {
     expect(element.textContent).toBe('2');
   });
 
-  it('displays nothing if vertext is undefined', async () => {
+  it('displays nothing if vertext is undefined', () => {
     const vertex = undefined;
-
-    render(renderNode(vertex));
-
-    const element = await screen.findByTestId('dagNodeLabel');
-
-    expect(element.textContent).toBe('');
+    const result = renderNode(vertex);
+    expect(result).toBeNull();
   });
 
-  it('displays nothing if vertext is null', async () => {
+  it('displays nothing if vertext is null', () => {
     const vertex = null;
-
-    render(renderNode(vertex));
-
-    const element = await screen.findByTestId('dagNodeLabel');
-
-    expect(element.textContent).toBe('');
+    const result = renderNode(vertex);
+    expect(result).toBeNull();
   });
 
   it('displays nothing if vertext key is undefined', async () => {
@@ -276,10 +317,17 @@ describe('renderNode', () => {
 });
 
 describe('clean up', () => {
+  let renderer;
+
+  beforeEach(() => {
+    renderer = new ShallowRenderer();
+  });
+
   it('stops LayoutManager before unmounting', () => {
     const stopAndReleaseSpy = jest.spyOn(LayoutManager.prototype, 'stopAndRelease');
-    const { unmount } = render(<DAG serviceCalls={[]} />);
-    unmount();
+    renderer.render(<DAG serviceCalls={[]} />);
+    const cleanup = React.useEffect.mock.results[0].value;
+    cleanup();
     expect(stopAndReleaseSpy).toHaveBeenCalledTimes(1);
   });
 });

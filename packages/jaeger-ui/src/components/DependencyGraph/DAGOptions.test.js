@@ -18,6 +18,13 @@ import '@testing-library/jest-dom';
 import DAGOptions from './DAGOptions';
 import * as constants from '../../utils/constants';
 
+// Mock UiFindInput and its store dependencies
+jest.mock('../common/UiFindInput', () => {
+  return function MockUiFindInput({ inputProps }) {
+    return <input data-testid="search-input" className={inputProps?.className} />;
+  };
+});
+
 const mockDependencies = [
   { parent: 'service-1', child: 'service-2', callCount: 1000 },
   { parent: 'service-2', child: 'service-3', callCount: 2000 },
@@ -36,6 +43,8 @@ const defaultProps = {
   selectedSampleDatasetType: null,
   onSampleDatasetTypeChange: jest.fn(),
   sampleDatasetTypes: ['Small Graph', 'Large Graph'],
+  uiFind: 'test',
+  matchCount: 3,
 };
 
 describe('DAGOptions', () => {
@@ -327,5 +336,32 @@ describe('DAGOptions', () => {
     const sampleDatasetTypeValue = within(sampleDatasetTypeSelect).getByRole('combobox');
     expect(sampleDatasetTypeValue).toHaveAttribute('aria-expanded', 'false');
     expect(within(sampleDatasetTypeSelect).getByText('Small Graph')).toBeInTheDocument();
+  });
+
+  it('renders search input with match count when uiFind is provided', () => {
+    render(<DAGOptions {...defaultProps} uiFind="test" matchCount={3} />);
+
+    const searchInput = screen.getByTestId('search-input');
+    expect(searchInput).toBeInTheDocument();
+    expect(searchInput).toHaveClass('search-input');
+    expect(screen.getByText('3 matches')).toBeInTheDocument();
+  });
+
+  it('renders search input without match count when uiFind is not provided', () => {
+    render(<DAGOptions {...defaultProps} uiFind={undefined} matchCount={undefined} />);
+
+    const searchInput = screen.getByTestId('search-input');
+    expect(searchInput).toBeInTheDocument();
+    expect(searchInput).toHaveClass('search-input');
+    expect(screen.queryByText(/match/)).not.toBeInTheDocument();
+  });
+
+  it('renders search input with single match count', () => {
+    render(<DAGOptions {...defaultProps} uiFind="test" matchCount={1} />);
+
+    const searchInput = screen.getByTestId('search-input');
+    expect(searchInput).toBeInTheDocument();
+    expect(searchInput).toHaveClass('search-input');
+    expect(screen.getByText('1 match')).toBeInTheDocument();
   });
 });

@@ -32,12 +32,19 @@ type TProps = {
   selectedLayout: string;
   selectedDepth: number;
   selectedService: string;
+  uiFind?: string;
+  onMatchCountChange?: (count: number) => void;
 };
 
-export const renderNode = (vertex: TVertex): ReactNode => {
+export const renderNode = (vertex: TVertex, selectedService: string | null, uiFind?: string): ReactNode => {
+  if (!vertex) return null;
+
+  const isFocalNode = vertex.key === selectedService;
+  const isMatch = uiFind ? vertex.key.toLowerCase().includes(uiFind.toLowerCase()) : false;
+
   return (
     <div className="DAG--node">
-      <div className="DAG--nodeCircle" />
+      <div className={`DAG--nodeCircle ${isFocalNode ? 'is-focalNode' : ''} ${isMatch ? 'is-match' : ''}`} />
       <div className="DAG--nodeLabel" data-testid="dagNodeLabel">
         {vertex?.key ?? ''}
       </div>
@@ -129,7 +136,14 @@ const formatServiceCalls = (
 
 const { classNameIsSmall } = Digraph.propsFactories;
 
-export default function DAG({ serviceCalls = [], selectedLayout, selectedDepth, selectedService }: TProps) {
+export default function DAG({
+  serviceCalls = [],
+  selectedLayout,
+  selectedDepth,
+  selectedService,
+  uiFind,
+  onMatchCountChange,
+}: TProps) {
   const data = React.useMemo(
     () => formatServiceCalls(serviceCalls, selectedService, selectedDepth),
     [serviceCalls, selectedService, selectedDepth]
@@ -167,6 +181,17 @@ export default function DAG({ serviceCalls = [], selectedLayout, selectedDepth, 
     };
   }, [layoutManager]);
 
+  React.useEffect(() => {
+    if (uiFind && onMatchCountChange) {
+      const matchCount = data.nodes.filter(node =>
+        node.key.toLowerCase().includes(uiFind.toLowerCase())
+      ).length;
+      onMatchCountChange(matchCount);
+    } else {
+      onMatchCountChange?.(0);
+    }
+  }, [data.nodes, uiFind, onMatchCountChange]);
+
   if (forceFocalServiceSelection) {
     return (
       <div className="DAG">
@@ -180,7 +205,7 @@ export default function DAG({ serviceCalls = [], selectedLayout, selectedDepth, 
   return (
     <div className="DAG">
       <Digraph<TVertex>
-        key={`${selectedLayout}-${selectedService}-${selectedDepth}`}
+        key={`${selectedLayout}-${selectedService}-${selectedDepth}-${uiFind}`}
         zoom
         minimap
         className="DAG--dag"
@@ -200,7 +225,7 @@ export default function DAG({ serviceCalls = [], selectedLayout, selectedDepth, 
             key: 'nodes',
             layerType: 'html',
             measurable: true,
-            renderNode,
+            renderNode: (vertex: TVertex) => renderNode(vertex, selectedService, uiFind),
           },
         ]}
         edges={data.edges}

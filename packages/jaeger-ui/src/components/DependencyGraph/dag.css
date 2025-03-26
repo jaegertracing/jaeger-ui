@@ -23,7 +23,14 @@
 
 .DAG--dag {
   background: #fafafa;
-  stroke-width: 0.85;
+  stroke-width: 0.7;
+  stroke: #444;
+}
+
+.DAG--dag marker {
+  stroke-width: 0.7;
+  stroke: #444;
+  fill: #444;
 }
 
 .DAG--node {
@@ -34,11 +41,27 @@
 }
 
 .DAG--nodeCircle {
-  background-color: #10939b;
+  background-color: #dddddd;
   border-radius: 50%;
   height: 3rem;
   width: 3rem;
   margin-bottom: 1.75rem;
+  border: 1px solid #bbb;
+  box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.15);
+}
+
+.DAG--nodeCircle.is-focalNode {
+  border: 2px solid #eb2f96;
+  background-image: repeating-linear-gradient(30deg, transparent, #eb2f96 3px, transparent 5px);
+}
+
+.DAG--nodeCircle.is-match {
+  background-image: repeating-linear-gradient(-60deg, #fffb8f, #fff566 3px, #fffb8f 5px);
+  border: 1px dashed rgba(173, 139, 0, 0.5);
+}
+
+.DAG--nodeCircle.is-match.is-focalNode {
+  background-image: repeating-linear-gradient(30deg, #fffb8f, #eb2f96 3px, #fffb8f 5px);
 }
 
 .DAG--nodeLabel {
