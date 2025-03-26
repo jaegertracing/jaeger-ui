@@ -15,6 +15,7 @@
 import React from 'react';
 import ShallowRenderer from 'react-test-renderer/shallow';
 import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { LayoutManager } from '@jaegertracing/plexus';
 import DAG, { renderNode } from './DAG';
 import { DAG_MAX_NUM_SERVICES } from '../../constants';
@@ -251,6 +252,29 @@ describe('<DAG>', () => {
       />
     );
     expect(onMatchCountChange).toHaveBeenCalledWith(0);
+  });
+
+  it('correctly passes selectedService and uiFind to renderNode in Digraph layers', () => {
+    const serviceCalls = [{ parent: 'test-service', child: 'other-service', callCount: 1 }];
+    const selectedService = 'test-service';
+    const uiFind = 'test';
+
+    renderer.render(
+      <DAG
+        serviceCalls={serviceCalls}
+        selectedService={selectedService}
+        selectedLayout="dot"
+        selectedDepth={1}
+        uiFind={uiFind}
+      />
+    );
+    const element = renderer.getRenderOutput();
+    const renderNodeFn = element.props.children.props.layers[1].renderNode;
+    const result = renderNodeFn({ key: 'test-service' });
+
+    expect(result.props.children[1].props.className).toBe('DAG--nodeLabel');
+    expect(result.props.children[0].props.className).toContain('is-focalNode');
+    expect(result.props.children[0].props.className).toContain('is-match');
   });
 });
 
