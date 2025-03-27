@@ -18,6 +18,8 @@ import * as constants from '../../utils/constants';
 
 import { DependencyGraphPageImpl as DependencyGraph, mapDispatchToProps, mapStateToProps } from './index';
 import LoadingIndicator from '../common/LoadingIndicator';
+import DAGOptions from './DAGOptions';
+import DAG from './DAG';
 
 const childId = 'boomya';
 const parentId = 'elder-one';
@@ -34,6 +36,11 @@ const state = {
     dependencies,
     error: null,
     loading: false,
+  },
+  router: {
+    location: {
+      search: '',
+    },
   },
 };
 
@@ -80,6 +87,7 @@ describe('<DependencyGraph>', () => {
       expect(wrapper.state('selectedLayout')).toBe('dot');
       expect(wrapper.state('selectedDepth')).toBe(5);
       expect(wrapper.state('debouncedDepth')).toBe(5);
+      expect(wrapper.state('matchCount')).toBe(0);
     });
 
     it('handles service selection', () => {
@@ -228,6 +236,23 @@ describe('<DependencyGraph>', () => {
       expect(wrapper.state('selectedSampleDatasetType')).toBe(null);
 
       await wrapper.instance().handleSampleDatasetTypeChange(null);
+    });
+
+    it('handles match count change', () => {
+      const matchCount = 3;
+      wrapper.instance().handleMatchCountChange(matchCount);
+      expect(wrapper.state('matchCount')).toBe(matchCount);
+    });
+
+    it('passes match count to DAGOptions', () => {
+      wrapper.setState({ matchCount: 5 });
+      const dagOptions = wrapper.find(DAGOptions);
+      expect(dagOptions.prop('matchCount')).toBe(5);
+    });
+
+    it('passes onMatchCountChange to DAG', () => {
+      const dag = wrapper.find(DAG);
+      expect(dag.prop('onMatchCountChange')).toBeDefined();
     });
   });
 });

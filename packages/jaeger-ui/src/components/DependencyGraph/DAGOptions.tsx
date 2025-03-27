@@ -16,6 +16,7 @@ import * as React from 'react';
 import { Select, InputNumber, Popover } from 'antd';
 import { IoHelp, IoRefresh } from 'react-icons/io5';
 import SearchableSelect from '../common/SearchableSelect';
+import UiFindInput from '../common/UiFindInput';
 import './DAGOptions.css';
 import { getAppEnvironment } from '../../utils/constants';
 
@@ -40,6 +41,8 @@ interface IDAGOptionsProps {
   selectedSampleDatasetType: string;
   onSampleDatasetTypeChange: (type: string) => void;
   sampleDatasetTypes: string[];
+  uiFind?: string;
+  matchCount?: number;
 }
 
 const LAYOUT_OPTIONS = [
@@ -60,6 +63,8 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
   selectedSampleDatasetType,
   onSampleDatasetTypeChange,
   sampleDatasetTypes,
+  uiFind,
+  matchCount,
 }) => {
   const services = React.useMemo(() => {
     const uniqueServices = new Set<string>();
@@ -180,6 +185,35 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
             style={{ marginLeft: '8px', cursor: 'pointer' }}
             data-testid="reset-button"
           />
+        </div>
+      </div>
+      <div className="selector-container">
+        <div className="selector-label-container">
+          <span className="selector-label">Search</span>
+          <Popover
+            placement="topLeft"
+            trigger="click"
+            content={
+              <div>
+                <ul className="hint-info">
+                  <li>Search for nodes in the graph</li>
+                  <li>Matching nodes will be highlighted</li>
+                </ul>
+              </div>
+            }
+          >
+            <IoHelp className="hint-trigger" data-testid="search-help-icon" />
+          </Popover>
+        </div>
+        <div className="search-input-container">
+          <div className="search-input-wrapper">
+            <UiFindInput allowClear inputProps={{ className: 'search-input' }} />
+            {uiFind && (
+              <div className="search-match-count">
+                {matchCount} match{matchCount !== 1 ? 'es' : ''}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       {getAppEnvironment() === 'development' && (

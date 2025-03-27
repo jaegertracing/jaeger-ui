@@ -27,6 +27,7 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from '../../constants';
 import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
 import { getConfigValue } from '../../utils/config/get-config';
+import { extractUiFindFromState } from '../common/UiFindInput';
 
 import './index.css';
 import withRouteProps from '../../utils/withRouteProps';
@@ -71,12 +72,14 @@ export class DependencyGraphPageImpl extends Component {
     loading: PropTypes.bool.isRequired,
     // eslint-disable-next-line react/forbid-prop-types
     error: PropTypes.object,
+    uiFind: PropTypes.string,
   };
 
   static defaultProps = {
     nodes: null,
     links: null,
     error: null,
+    uiFind: undefined,
   };
 
   debouncedDepthChange = debounce(value => {
@@ -91,6 +94,7 @@ export class DependencyGraphPageImpl extends Component {
       selectedDepth: 5,
       debouncedDepth: 5,
       selectedSampleDatasetType: 'Backend',
+      matchCount: 0,
     };
   }
 
@@ -148,10 +152,20 @@ export class DependencyGraphPageImpl extends Component {
     });
   };
 
+  handleMatchCountChange = count => {
+    this.setState({ matchCount: count });
+  };
+
   render() {
-    const { nodes, links, error, loading, dependencies } = this.props;
-    const { selectedService, selectedLayout, selectedDepth, debouncedDepth, selectedSampleDatasetType } =
-      this.state;
+    const { nodes, links, error, loading, dependencies, uiFind } = this.props;
+    const {
+      selectedService,
+      selectedLayout,
+      selectedDepth,
+      debouncedDepth,
+      selectedSampleDatasetType,
+      matchCount,
+    } = this.state;
 
     if (loading) {
       return <LoadingIndicator className="u-mt-vast" centered />;
@@ -194,6 +208,8 @@ export class DependencyGraphPageImpl extends Component {
             selectedSampleDatasetType={selectedSampleDatasetType}
             onSampleDatasetTypeChange={this.handleSampleDatasetTypeChange}
             sampleDatasetTypes={sampleDatasetTypes}
+            uiFind={uiFind}
+            matchCount={matchCount}
           />
         </div>
         <div className="DependencyGraph--graphWrapper">
@@ -202,6 +218,8 @@ export class DependencyGraphPageImpl extends Component {
             selectedLayout={selectedLayout}
             selectedDepth={debouncedDepth}
             selectedService={selectedService}
+            uiFind={uiFind}
+            onMatchCountChange={this.handleMatchCountChange}
           />
         </div>
       </div>
@@ -269,6 +287,7 @@ export function mapStateToProps(state) {
     nodes,
     links,
     dependencies: dataset,
+    ...extractUiFindFromState(state),
   };
 }
 

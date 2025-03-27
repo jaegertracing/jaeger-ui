@@ -103,6 +103,29 @@
   color: #000;
 }
 
+.search-input-container {
+  min-width: 200px;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-input {
+  flex: 1;
+}
+
+.search-match-count {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background-color: #fffb8f;
+}
+
 .data-selector {
   margin-left: auto;
   align-self: flex-end;
