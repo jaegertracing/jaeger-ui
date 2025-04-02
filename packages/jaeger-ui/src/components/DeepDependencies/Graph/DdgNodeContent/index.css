@@ -90,36 +90,3 @@ limitations under the License.
   pointer-events: all;
   transition-delay: 0s;
 }
-
-.DdgNodeContent--actionsItem {
-  align-items: center;
-  display: flex;
-  padding: 0.5em;
-}
-
-.DdgNodeContent--actionsItem:not(:hover) {
-  color: inherit;
-}
-
-.DdgNodeContent--actionsItemIconWrapper {
-  flex: none;
-  height: 16px;
-  width: 16px;
-}
-
-.DdgNodeContent--actionsItemIconWrapper > * {
-  height: 16px;
-  position: absolute;
-  width: 16px;
-}
-
-.DdgNodeContent--actionsItemIconWrapper > * > .ant-checkbox {
-  vertical-align: unset;
-  top: unset;
-}
-
-.DdgNodeContent--actionsItemText {
-  font-size: 0.9em;
-  line-height: normal;
-  margin-left: 0.5em;
-}

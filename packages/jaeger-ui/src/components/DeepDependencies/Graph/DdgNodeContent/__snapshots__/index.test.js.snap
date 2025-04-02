@@ -101,99 +101,82 @@ exports[`<DdgNodeContent> omits the operation if it is null 1`] = `
       </div>
     </div>
   </div>
-  <div
+  <ActionsMenu
     className="DdgNodeContent--actionsWrapper"
-  >
-    <a
-      className="DdgNodeContent--actionsItem"
-      href="some-url"
-      onClick={[Function]}
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <svg
-          className="DdgNode--SetFocusIcon"
-          height="100"
-          viewBox="0 0 100 100"
-          width="100"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <g>
-            <path
-              d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
-              fill="currentColor"
-            />
-            <path
-              d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
-              fill="currentColor"
-            />
-            <path
-              d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
-              fill="currentColor"
-            />
-            <path
-              d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
-              fill="currentColor"
-            />
-          </g>
-        </svg>
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Set focus
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <NewWindowIcon />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        View traces
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoLocate />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Focus paths through this node
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoEyeOff />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Hide node
-      </span>
-    </a>
-  </div>
+    items={
+      Array [
+        Object {
+          "href": "some-url",
+          "icon": <svg
+            className="DdgNode--SetFocusIcon"
+            height="100"
+            viewBox="0 0 100 100"
+            width="100"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g>
+              <path
+                d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+                fill="currentColor"
+              />
+              <path
+                d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+                fill="currentColor"
+              />
+              <path
+                d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+                fill="currentColor"
+              />
+              <path
+                d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+                fill="currentColor"
+              />
+            </g>
+          </svg>,
+          "id": "set-focus",
+          "isVisible": true,
+          "label": "Set focus",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <NewWindowIcon />,
+          "id": "view-traces",
+          "label": "View traces",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoLocate />,
+          "id": "focus-paths",
+          "isVisible": true,
+          "label": "Focus paths through this node",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoEyeOff />,
+          "id": "hide-node",
+          "isVisible": true,
+          "label": "Hide node",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-parents",
+          "isVisible": false,
+          "label": "View Parents",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-children",
+          "isVisible": false,
+          "label": "View Children",
+          "onClick": [Function],
+        },
+      ]
+    }
+  />
 </div>
 `;
 
@@ -234,99 +217,82 @@ exports[`<DdgNodeContent> omits the operation if it is null 2`] = `
       </h4>
     </div>
   </div>
-  <div
+  <ActionsMenu
     className="DdgNodeContent--actionsWrapper"
-  >
-    <a
-      className="DdgNodeContent--actionsItem"
-      href="some-url"
-      onClick={[Function]}
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <svg
-          className="DdgNode--SetFocusIcon"
-          height="100"
-          viewBox="0 0 100 100"
-          width="100"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <g>
-            <path
-              d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
-              fill="currentColor"
-            />
-            <path
-              d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
-              fill="currentColor"
-            />
-            <path
-              d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
-              fill="currentColor"
-            />
-            <path
-              d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
-              fill="currentColor"
-            />
-          </g>
-        </svg>
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Set focus
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <NewWindowIcon />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        View traces
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoLocate />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Focus paths through this node
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoEyeOff />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Hide node
-      </span>
-    </a>
-  </div>
+    items={
+      Array [
+        Object {
+          "href": "some-url",
+          "icon": <svg
+            className="DdgNode--SetFocusIcon"
+            height="100"
+            viewBox="0 0 100 100"
+            width="100"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g>
+              <path
+                d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+                fill="currentColor"
+              />
+              <path
+                d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+                fill="currentColor"
+              />
+              <path
+                d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+                fill="currentColor"
+              />
+              <path
+                d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+                fill="currentColor"
+              />
+            </g>
+          </svg>,
+          "id": "set-focus",
+          "isVisible": true,
+          "label": "Set focus",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <NewWindowIcon />,
+          "id": "view-traces",
+          "label": "View traces",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoLocate />,
+          "id": "focus-paths",
+          "isVisible": true,
+          "label": "Focus paths through this node",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoEyeOff />,
+          "id": "hide-node",
+          "isVisible": true,
+          "label": "Hide node",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-parents",
+          "isVisible": false,
+          "label": "View Parents",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-children",
+          "isVisible": false,
+          "label": "View Children",
+          "onClick": [Function],
+        },
+      ]
+    }
+  />
 </div>
 `;
 
@@ -381,99 +347,82 @@ exports[`<DdgNodeContent> renders correctly when decorationValue is a string 1`]
       </div>
     </div>
   </div>
-  <div
+  <ActionsMenu
     className="DdgNodeContent--actionsWrapper"
-  >
-    <a
-      className="DdgNodeContent--actionsItem"
-      href="some-url"
-      onClick={[Function]}
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <svg
-          className="DdgNode--SetFocusIcon"
-          height="100"
-          viewBox="0 0 100 100"
-          width="100"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <g>
-            <path
-              d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
-              fill="currentColor"
-            />
-            <path
-              d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
-              fill="currentColor"
-            />
-            <path
-              d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
-              fill="currentColor"
-            />
-            <path
-              d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
-              fill="currentColor"
-            />
-          </g>
-        </svg>
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Set focus
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <NewWindowIcon />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        View traces
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoLocate />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Focus paths through this node
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoEyeOff />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Hide node
-      </span>
-    </a>
-  </div>
+    items={
+      Array [
+        Object {
+          "href": "some-url",
+          "icon": <svg
+            className="DdgNode--SetFocusIcon"
+            height="100"
+            viewBox="0 0 100 100"
+            width="100"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g>
+              <path
+                d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+                fill="currentColor"
+              />
+              <path
+                d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+                fill="currentColor"
+              />
+              <path
+                d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+                fill="currentColor"
+              />
+              <path
+                d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+                fill="currentColor"
+              />
+            </g>
+          </svg>,
+          "id": "set-focus",
+          "isVisible": true,
+          "label": "Set focus",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <NewWindowIcon />,
+          "id": "view-traces",
+          "label": "View traces",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoLocate />,
+          "id": "focus-paths",
+          "isVisible": true,
+          "label": "Focus paths through this node",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoEyeOff />,
+          "id": "hide-node",
+          "isVisible": true,
+          "label": "Hide node",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-parents",
+          "isVisible": false,
+          "label": "View Parents",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-children",
+          "isVisible": false,
+          "label": "View Children",
+          "onClick": [Function],
+        },
+      ]
+    }
+  />
 </div>
 `;
 
@@ -528,99 +477,82 @@ exports[`<DdgNodeContent> renders correctly when decorationValue is a string 2`]
       </div>
     </div>
   </div>
-  <div
+  <ActionsMenu
     className="DdgNodeContent--actionsWrapper"
-  >
-    <a
-      className="DdgNodeContent--actionsItem"
-      href="some-url"
-      onClick={[Function]}
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <svg
-          className="DdgNode--SetFocusIcon"
-          height="100"
-          viewBox="0 0 100 100"
-          width="100"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <g>
-            <path
-              d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
-              fill="currentColor"
-            />
-            <path
-              d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
-              fill="currentColor"
-            />
-            <path
-              d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
-              fill="currentColor"
-            />
-            <path
-              d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
-              fill="currentColor"
-            />
-          </g>
-        </svg>
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Set focus
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <NewWindowIcon />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        View traces
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoLocate />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Focus paths through this node
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoEyeOff />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Hide node
-      </span>
-    </a>
-  </div>
+    items={
+      Array [
+        Object {
+          "href": "some-url",
+          "icon": <svg
+            className="DdgNode--SetFocusIcon"
+            height="100"
+            viewBox="0 0 100 100"
+            width="100"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g>
+              <path
+                d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+                fill="currentColor"
+              />
+              <path
+                d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+                fill="currentColor"
+              />
+              <path
+                d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+                fill="currentColor"
+              />
+              <path
+                d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+                fill="currentColor"
+              />
+            </g>
+          </svg>,
+          "id": "set-focus",
+          "isVisible": true,
+          "label": "Set focus",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <NewWindowIcon />,
+          "id": "view-traces",
+          "label": "View traces",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoLocate />,
+          "id": "focus-paths",
+          "isVisible": true,
+          "label": "Focus paths through this node",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoEyeOff />,
+          "id": "hide-node",
+          "isVisible": true,
+          "label": "Hide node",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-parents",
+          "isVisible": false,
+          "label": "View Parents",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-children",
+          "isVisible": false,
+          "label": "View Children",
+          "onClick": [Function],
+        },
+      ]
+    }
+  />
 </div>
 `;
 
@@ -675,99 +607,82 @@ exports[`<DdgNodeContent> renders correctly when given decorationProgressbar 1`]
       </div>
     </div>
   </div>
-  <div
+  <ActionsMenu
     className="DdgNodeContent--actionsWrapper"
-  >
-    <a
-      className="DdgNodeContent--actionsItem"
-      href="some-url"
-      onClick={[Function]}
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <svg
-          className="DdgNode--SetFocusIcon"
-          height="100"
-          viewBox="0 0 100 100"
-          width="100"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <g>
-            <path
-              d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
-              fill="currentColor"
-            />
-            <path
-              d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
-              fill="currentColor"
-            />
-            <path
-              d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
-              fill="currentColor"
-            />
-            <path
-              d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
-              fill="currentColor"
-            />
-          </g>
-        </svg>
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Set focus
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <NewWindowIcon />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        View traces
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoLocate />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Focus paths through this node
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoEyeOff />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Hide node
-      </span>
-    </a>
-  </div>
+    items={
+      Array [
+        Object {
+          "href": "some-url",
+          "icon": <svg
+            className="DdgNode--SetFocusIcon"
+            height="100"
+            viewBox="0 0 100 100"
+            width="100"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g>
+              <path
+                d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+                fill="currentColor"
+              />
+              <path
+                d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+                fill="currentColor"
+              />
+              <path
+                d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+                fill="currentColor"
+              />
+              <path
+                d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+                fill="currentColor"
+              />
+            </g>
+          </svg>,
+          "id": "set-focus",
+          "isVisible": true,
+          "label": "Set focus",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <NewWindowIcon />,
+          "id": "view-traces",
+          "label": "View traces",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoLocate />,
+          "id": "focus-paths",
+          "isVisible": true,
+          "label": "Focus paths through this node",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoEyeOff />,
+          "id": "hide-node",
+          "isVisible": true,
+          "label": "Hide node",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-parents",
+          "isVisible": false,
+          "label": "View Parents",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-children",
+          "isVisible": false,
+          "label": "View Children",
+          "onClick": [Function],
+        },
+      ]
+    }
+  />
 </div>
 `;
 
@@ -825,99 +740,82 @@ exports[`<DdgNodeContent> renders correctly when given decorationProgressbar 2`]
       </div>
     </div>
   </div>
-  <div
+  <ActionsMenu
     className="DdgNodeContent--actionsWrapper"
-  >
-    <a
-      className="DdgNodeContent--actionsItem"
-      href="some-url"
-      onClick={[Function]}
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <svg
-          className="DdgNode--SetFocusIcon"
-          height="100"
-          viewBox="0 0 100 100"
-          width="100"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <g>
-            <path
-              d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
-              fill="currentColor"
-            />
-            <path
-              d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
-              fill="currentColor"
-            />
-            <path
-              d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
-              fill="currentColor"
-            />
-            <path
-              d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
-              fill="currentColor"
-            />
-          </g>
-        </svg>
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Set focus
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <NewWindowIcon />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        View traces
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoLocate />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Focus paths through this node
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoEyeOff />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Hide node
-      </span>
-    </a>
-  </div>
+    items={
+      Array [
+        Object {
+          "href": "some-url",
+          "icon": <svg
+            className="DdgNode--SetFocusIcon"
+            height="100"
+            viewBox="0 0 100 100"
+            width="100"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g>
+              <path
+                d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+                fill="currentColor"
+              />
+              <path
+                d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+                fill="currentColor"
+              />
+              <path
+                d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+                fill="currentColor"
+              />
+              <path
+                d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+                fill="currentColor"
+              />
+            </g>
+          </svg>,
+          "id": "set-focus",
+          "isVisible": true,
+          "label": "Set focus",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <NewWindowIcon />,
+          "id": "view-traces",
+          "label": "View traces",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoLocate />,
+          "id": "focus-paths",
+          "isVisible": true,
+          "label": "Focus paths through this node",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoEyeOff />,
+          "id": "hide-node",
+          "isVisible": true,
+          "label": "Hide node",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-parents",
+          "isVisible": false,
+          "label": "View Parents",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-children",
+          "isVisible": false,
+          "label": "View Children",
+          "onClick": [Function],
+        },
+      ]
+    }
+  />
 </div>
 `;
 
@@ -972,99 +870,82 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
       </div>
     </div>
   </div>
-  <div
+  <ActionsMenu
     className="DdgNodeContent--actionsWrapper"
-  >
-    <a
-      className="DdgNodeContent--actionsItem"
-      href="some-url"
-      onClick={[Function]}
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <svg
-          className="DdgNode--SetFocusIcon"
-          height="100"
-          viewBox="0 0 100 100"
-          width="100"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <g>
-            <path
-              d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
-              fill="currentColor"
-            />
-            <path
-              d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
-              fill="currentColor"
-            />
-            <path
-              d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
-              fill="currentColor"
-            />
-            <path
-              d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
-              fill="currentColor"
-            />
-          </g>
-        </svg>
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Set focus
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <NewWindowIcon />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        View traces
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoLocate />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Focus paths through this node
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoEyeOff />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Hide node
-      </span>
-    </a>
-  </div>
+    items={
+      Array [
+        Object {
+          "href": "some-url",
+          "icon": <svg
+            className="DdgNode--SetFocusIcon"
+            height="100"
+            viewBox="0 0 100 100"
+            width="100"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g>
+              <path
+                d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+                fill="currentColor"
+              />
+              <path
+                d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+                fill="currentColor"
+              />
+              <path
+                d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+                fill="currentColor"
+              />
+              <path
+                d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+                fill="currentColor"
+              />
+            </g>
+          </svg>,
+          "id": "set-focus",
+          "isVisible": true,
+          "label": "Set focus",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <NewWindowIcon />,
+          "id": "view-traces",
+          "label": "View traces",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoLocate />,
+          "id": "focus-paths",
+          "isVisible": true,
+          "label": "Focus paths through this node",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoEyeOff />,
+          "id": "hide-node",
+          "isVisible": true,
+          "label": "Hide node",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-parents",
+          "isVisible": false,
+          "label": "View Parents",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-children",
+          "isVisible": false,
+          "label": "View Children",
+          "onClick": [Function],
+        },
+      ]
+    }
+  />
 </div>
 `;
 
@@ -1119,26 +1000,82 @@ exports[`<DdgNodeContent> renders correctly when isFocalNode = true and focalNod
       </div>
     </div>
   </div>
-  <div
+  <ActionsMenu
     className="DdgNodeContent--actionsWrapper"
-  >
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <NewWindowIcon />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        View traces
-      </span>
-    </a>
-  </div>
+    items={
+      Array [
+        Object {
+          "href": undefined,
+          "icon": <svg
+            className="DdgNode--SetFocusIcon"
+            height="100"
+            viewBox="0 0 100 100"
+            width="100"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g>
+              <path
+                d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+                fill="currentColor"
+              />
+              <path
+                d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+                fill="currentColor"
+              />
+              <path
+                d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+                fill="currentColor"
+              />
+              <path
+                d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+                fill="currentColor"
+              />
+            </g>
+          </svg>,
+          "id": "set-focus",
+          "isVisible": false,
+          "label": "Set focus",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <NewWindowIcon />,
+          "id": "view-traces",
+          "label": "View traces",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoLocate />,
+          "id": "focus-paths",
+          "isVisible": false,
+          "label": "Focus paths through this node",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoEyeOff />,
+          "id": "hide-node",
+          "isVisible": false,
+          "label": "Hide node",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-parents",
+          "isVisible": false,
+          "label": "View Parents",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-children",
+          "isVisible": false,
+          "label": "View Children",
+          "onClick": [Function],
+        },
+      ]
+    }
+  />
 </div>
 `;
 
@@ -1193,99 +1130,82 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
       </div>
     </div>
   </div>
-  <div
+  <ActionsMenu
     className="DdgNodeContent--actionsWrapper"
-  >
-    <a
-      className="DdgNodeContent--actionsItem"
-      href="some-url"
-      onClick={[Function]}
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <svg
-          className="DdgNode--SetFocusIcon"
-          height="100"
-          viewBox="0 0 100 100"
-          width="100"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <g>
-            <path
-              d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
-              fill="currentColor"
-            />
-            <path
-              d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
-              fill="currentColor"
-            />
-            <path
-              d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
-              fill="currentColor"
-            />
-            <path
-              d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
-              fill="currentColor"
-            />
-          </g>
-        </svg>
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Set focus
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <NewWindowIcon />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        View traces
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoLocate />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Focus paths through this node
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoEyeOff />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Hide node
-      </span>
-    </a>
-  </div>
+    items={
+      Array [
+        Object {
+          "href": "some-url",
+          "icon": <svg
+            className="DdgNode--SetFocusIcon"
+            height="100"
+            viewBox="0 0 100 100"
+            width="100"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g>
+              <path
+                d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+                fill="currentColor"
+              />
+              <path
+                d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+                fill="currentColor"
+              />
+              <path
+                d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+                fill="currentColor"
+              />
+              <path
+                d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+                fill="currentColor"
+              />
+            </g>
+          </svg>,
+          "id": "set-focus",
+          "isVisible": true,
+          "label": "Set focus",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <NewWindowIcon />,
+          "id": "view-traces",
+          "label": "View traces",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoLocate />,
+          "id": "focus-paths",
+          "isVisible": true,
+          "label": "Focus paths through this node",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoEyeOff />,
+          "id": "hide-node",
+          "isVisible": true,
+          "label": "Hide node",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-parents",
+          "isVisible": false,
+          "label": "View Parents",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-children",
+          "isVisible": false,
+          "label": "View Children",
+          "onClick": [Function],
+        },
+      ]
+    }
+  />
 </div>
 `;
 
@@ -1358,98 +1278,81 @@ exports[`<DdgNodeContent> renders the number of operations if there are multiple
       </div>
     </div>
   </div>
-  <div
+  <ActionsMenu
     className="DdgNodeContent--actionsWrapper"
-  >
-    <a
-      className="DdgNodeContent--actionsItem"
-      href="some-url"
-      onClick={[Function]}
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <svg
-          className="DdgNode--SetFocusIcon"
-          height="100"
-          viewBox="0 0 100 100"
-          width="100"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <g>
-            <path
-              d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
-              fill="currentColor"
-            />
-            <path
-              d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
-              fill="currentColor"
-            />
-            <path
-              d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
-              fill="currentColor"
-            />
-            <path
-              d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
-              fill="currentColor"
-            />
-          </g>
-        </svg>
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Set focus
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <NewWindowIcon />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        View traces
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoLocate />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Focus paths through this node
-      </span>
-    </a>
-    <a
-      className="DdgNodeContent--actionsItem"
-      onClick={[Function]}
-      role="button"
-    >
-      <span
-        className="DdgNodeContent--actionsItemIconWrapper"
-      >
-        <IoEyeOff />
-      </span>
-      <span
-        className="DdgNodeContent--actionsItemText"
-      >
-        Hide node
-      </span>
-    </a>
-  </div>
+    items={
+      Array [
+        Object {
+          "href": "some-url",
+          "icon": <svg
+            className="DdgNode--SetFocusIcon"
+            height="100"
+            viewBox="0 0 100 100"
+            width="100"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g>
+              <path
+                d="M50.0001 -1L61.0557 22.1383H38.9444L50.0001 -1Z"
+                fill="currentColor"
+              />
+              <path
+                d="M49.9999 99L38.9443 75.8617L61.0556 75.8617L49.9999 99Z"
+                fill="currentColor"
+              />
+              <path
+                d="M100 49L76.8617 60.0556L76.8617 37.9444L100 49Z"
+                fill="currentColor"
+              />
+              <path
+                d="M1.57361e-06 49L23.1383 37.9444L23.1383 60.0556L1.57361e-06 49Z"
+                fill="currentColor"
+              />
+            </g>
+          </svg>,
+          "id": "set-focus",
+          "isVisible": true,
+          "label": "Set focus",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <NewWindowIcon />,
+          "id": "view-traces",
+          "label": "View traces",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoLocate />,
+          "id": "focus-paths",
+          "isVisible": true,
+          "label": "Focus paths through this node",
+          "onClick": [Function],
+        },
+        Object {
+          "icon": <IoEyeOff />,
+          "id": "hide-node",
+          "isVisible": true,
+          "label": "Hide node",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-parents",
+          "isVisible": false,
+          "label": "View Parents",
+          "onClick": [Function],
+        },
+        Object {
+          "checkboxProps": undefined,
+          "icon": null,
+          "id": "view-children",
+          "isVisible": false,
+          "label": "View Children",
+          "onClick": [Function],
+        },
+      ]
+    }
+  />
 </div>
 `;

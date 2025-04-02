@@ -22,7 +22,6 @@ jest.mock('./calc-positioning', () => () => ({
 /* eslint-disable import/first */
 import React from 'react';
 import { shallow } from 'enzyme';
-import { Checkbox, Popover } from 'antd';
 
 import {
   getNodeRenderer,
@@ -252,301 +251,6 @@ describe('<DdgNodeContent>', () => {
     });
   });
 
-  describe('node interactions', () => {
-    describe('focusPaths', () => {
-      beforeEach(() => {
-        props.focusPathsThroughVertex.mockReset();
-      });
-
-      it('calls this.props.focusPathsThroughVertex with this.props.vertexKey', () => {
-        wrapper.find('.DdgNodeContent--actionsItem').at(2).simulate('click');
-
-        expect(props.focusPathsThroughVertex).toHaveBeenCalledWith(props.vertexKey);
-        expect(props.focusPathsThroughVertex).toHaveBeenCalledTimes(1);
-      });
-    });
-
-    describe('hideVertex', () => {
-      beforeEach(() => {
-        props.hideVertex.mockReset();
-      });
-
-      it('calls this.props.hideVertex with this.props.vertexKey', () => {
-        wrapper.find('.DdgNodeContent--actionsItem').at(3).simulate('click');
-
-        expect(props.hideVertex).toHaveBeenCalledWith(props.vertexKey);
-        expect(props.hideVertex).toHaveBeenCalledTimes(1);
-      });
-    });
-
-    describe('setFocus', () => {
-      let trackSetFocusSpy;
-
-      beforeAll(() => {
-        trackSetFocusSpy = jest.spyOn(track, 'trackSetFocus');
-      });
-
-      it('tracks when setFocus link is clicked', () => {
-        expect(trackSetFocusSpy).toHaveBeenCalledTimes(0);
-        wrapper.find(`[href="${props.focalNodeUrl}"]`).simulate('click');
-        expect(trackSetFocusSpy).toHaveBeenCalledTimes(1);
-      });
-    });
-
-    describe('setOperation', () => {
-      let trackSetOpSpy;
-
-      beforeAll(() => {
-        trackSetOpSpy = jest.spyOn(track, 'trackVertexSetOperation');
-      });
-
-      it('tracks when popover sets a value', () => {
-        wrapper.setProps({ operation: operationArray });
-        expect(trackSetOpSpy).not.toHaveBeenCalled();
-
-        const list = shallow(<div>{wrapper.find(Popover).prop('content')}</div>).find(FilteredList);
-        expect(list.prop('options')).toBe(operationArray);
-        expect(trackSetOpSpy).not.toHaveBeenCalled();
-
-        list.prop('setValue')(operationArray[operationArray.length - 1]);
-        expect(props.setOperation).toHaveBeenCalledWith(operationArray[operationArray.length - 1]);
-        expect(trackSetOpSpy).toHaveBeenCalledTimes(1);
-      });
-    });
-
-    describe('updateChildren', () => {
-      it('renders children visibility status indicator iff state.childrenVisibility is provided', () => {
-        const initialItemCount = wrapper.find('.DdgNodeContent--actionsItem').length;
-
-        wrapper.setState({ childrenVisibility: ECheckedStatus.Empty });
-        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
-        expect(wrapper.find(Checkbox).props()).toEqual(
-          expect.objectContaining({
-            checked: false,
-            indeterminate: false,
-          })
-        );
-
-        wrapper.setState({ childrenVisibility: ECheckedStatus.Partial });
-        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
-        expect(wrapper.find(Checkbox).props()).toEqual(
-          expect.objectContaining({
-            checked: false,
-            indeterminate: true,
-          })
-        );
-
-        wrapper.setState({ childrenVisibility: ECheckedStatus.Full });
-        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
-        expect(wrapper.find(Checkbox).props()).toEqual(
-          expect.objectContaining({
-            checked: true,
-            indeterminate: false,
-          })
-        );
-      });
-
-      it('calls this.props.updateGenerationVisibility with this.props.vertexKey', () => {
-        wrapper.setState({ childrenVisibility: ECheckedStatus.Empty });
-        wrapper.find('.DdgNodeContent--actionsItem').last().simulate('click');
-
-        expect(props.updateGenerationVisibility).toHaveBeenCalledWith(props.vertexKey, EDirection.Downstream);
-        expect(props.updateGenerationVisibility).toHaveBeenCalledTimes(1);
-      });
-    });
-
-    describe('updateParents', () => {
-      it('renders parent visibility status indicator iff state.parentVisibility is provided', () => {
-        const initialItemCount = wrapper.find('.DdgNodeContent--actionsItem').length;
-
-        wrapper.setState({ parentVisibility: ECheckedStatus.Empty });
-        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
-        expect(wrapper.find(Checkbox).props()).toEqual(
-          expect.objectContaining({
-            checked: false,
-            indeterminate: false,
-          })
-        );
-
-        wrapper.setState({ parentVisibility: ECheckedStatus.Partial });
-        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
-        expect(wrapper.find(Checkbox).props()).toEqual(
-          expect.objectContaining({
-            checked: false,
-            indeterminate: true,
-          })
-        );
-
-        wrapper.setState({ parentVisibility: ECheckedStatus.Full });
-        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
-        expect(wrapper.find(Checkbox).props()).toEqual(
-          expect.objectContaining({
-            checked: true,
-            indeterminate: false,
-          })
-        );
-      });
-
-      it('calls this.props.updateGenerationVisibility with this.props.vertexKey', () => {
-        wrapper.setState({ parentVisibility: ECheckedStatus.Empty });
-        wrapper.find('.DdgNodeContent--actionsItem').last().simulate('click');
-
-        expect(props.updateGenerationVisibility).toHaveBeenCalledWith(props.vertexKey, EDirection.Upstream);
-        expect(props.updateGenerationVisibility).toHaveBeenCalledTimes(1);
-      });
-    });
-
-    describe('viewTraces', () => {
-      const click = () => wrapper.find('.DdgNodeContent--actionsItem').at(1).simulate('click');
-      const pad = num => `000${num}`.slice(-4);
-      const mockReturn = ids =>
-        props.getVisiblePathElems.mockReturnValue(ids.map(traceIDs => ({ memberOf: { traceIDs } })));
-      const calcIdxWithinLimit = arr => Math.floor(0.75 * arr.length);
-      const falsifyDuplicateAndMock = ids => {
-        const withFalsyAndDuplicate = ids.map(arr => arr.slice());
-        withFalsyAndDuplicate[0].splice(
-          calcIdxWithinLimit(withFalsyAndDuplicate[0]),
-          0,
-          withFalsyAndDuplicate[1][calcIdxWithinLimit(withFalsyAndDuplicate[1])],
-          ''
-        );
-        withFalsyAndDuplicate[1].splice(
-          calcIdxWithinLimit(withFalsyAndDuplicate[1]),
-          0,
-          withFalsyAndDuplicate[0][calcIdxWithinLimit(withFalsyAndDuplicate[0])],
-          ''
-        );
-        mockReturn(withFalsyAndDuplicate);
-      };
-      const makeIDsAndMock = (idCounts, makeID = count => `test traceID${count}`) => {
-        let idCount = 0;
-        const ids = idCounts.map(count => {
-          const rv = [];
-          for (let i = 0; i < count; i++) {
-            rv.push(makeID(pad(idCount++)));
-          }
-          return rv;
-        });
-        mockReturn(ids);
-        return ids;
-      };
-      let getSearchUrlSpy;
-      let trackViewTracesSpy;
-      const verifyLastIDs = expectedIDs => {
-        const getSearchUrlCallCount = getSearchUrlSpy.mock.calls.length;
-        const actualIDs = getSearchUrlSpy.mock.calls[getSearchUrlCallCount - 1][0].traceID;
-
-        expect(actualIDs.sort()).toEqual(expectedIDs.sort());
-        expect(trackViewTracesSpy).toHaveBeenCalledTimes(getSearchUrlCallCount);
-      };
-      let originalOpen;
-
-      beforeAll(() => {
-        originalOpen = window.open;
-        window.open = jest.fn();
-        getSearchUrlSpy = jest.spyOn(getSearchUrl, 'getUrl');
-        trackViewTracesSpy = jest.spyOn(track, 'trackViewTraces');
-      });
-
-      beforeEach(() => {
-        getSearchUrlSpy.mockClear();
-        window.open.mockReset();
-        trackViewTracesSpy.mockReset();
-      });
-
-      afterAll(() => {
-        window.open = originalOpen;
-      });
-
-      it('no-ops if there are no elems for key', () => {
-        props.getVisiblePathElems.mockReturnValue();
-        click();
-        expect(window.open).not.toHaveBeenCalled();
-      });
-
-      it('opens new tab viewing single traceID from single elem', () => {
-        const ids = makeIDsAndMock([1]);
-        click();
-
-        verifyLastIDs([].concat(...ids));
-        expect(props.getVisiblePathElems).toHaveBeenCalledTimes(1);
-        expect(props.getVisiblePathElems).toHaveBeenCalledWith(vertexKey);
-      });
-
-      it('opens new tab viewing multiple traceIDs from single elem', () => {
-        const ids = makeIDsAndMock([3]);
-        click();
-
-        verifyLastIDs([].concat(...ids));
-      });
-
-      it('opens new tab viewing multiple traceIDs from multiple elems', () => {
-        const ids = makeIDsAndMock([3, 2]);
-        click();
-
-        verifyLastIDs([].concat(...ids));
-      });
-
-      it('ignores falsy and duplicate IDs', () => {
-        const ids = makeIDsAndMock([3, 3]);
-        falsifyDuplicateAndMock(ids);
-        click();
-
-        verifyLastIDs([].concat(...ids));
-      });
-
-      describe('MAX_LINKED_TRACES', () => {
-        const ids = makeIDsAndMock([MAX_LINKED_TRACES, MAX_LINKED_TRACES, 1]);
-        const expected = [
-          ...ids[0].slice(MAX_LINKED_TRACES / 2 + 1),
-          ...ids[1].slice(MAX_LINKED_TRACES / 2 + 1),
-          ids[2][0],
-        ].sort();
-
-        it('limits link to only include MAX_LINKED_TRACES, taking equal from each pathElem', () => {
-          mockReturn(ids);
-          click();
-
-          verifyLastIDs(expected);
-        });
-
-        it('does not count falsy and duplicate IDs towards MAX_LINKED_TRACES', () => {
-          falsifyDuplicateAndMock(ids);
-          click();
-
-          verifyLastIDs(expected);
-        });
-      });
-
-      describe('MAX_LENGTH', () => {
-        const effectiveMaxLength = MAX_LENGTH - MIN_LENGTH;
-        const TARGET_ID_COUNT = 31;
-        const paddingLength = Math.floor(effectiveMaxLength / TARGET_ID_COUNT) - PARAM_NAME_LENGTH;
-        const idPadding = 'x'.repeat(paddingLength - pad(0).length);
-        const ids = makeIDsAndMock([TARGET_ID_COUNT, TARGET_ID_COUNT, 1], num => `${idPadding}${num}`);
-        const expected = [
-          ...ids[0].slice(TARGET_ID_COUNT / 2 + 1),
-          ...ids[1].slice(TARGET_ID_COUNT / 2 + 1),
-          ids[2][0],
-        ].sort();
-
-        it('limits link to only include MAX_LENGTH, taking equal from each pathElem', () => {
-          mockReturn(ids);
-          click();
-
-          verifyLastIDs(expected);
-        });
-
-        it('does not count falsy and duplicate IDs towards MAX_LEN', () => {
-          falsifyDuplicateAndMock(ids);
-          click();
-
-          verifyLastIDs(expected);
-        });
-      });
-    });
-  });
-
   describe('getNodeRenderer()', () => {
     const ddgVertex = {
       isFocalNode: false,
@@ -581,6 +285,152 @@ describe('<DdgNodeContent>', () => {
     it('creates the actions correctly', () => {
       expect(mapDispatchToProps(() => {})).toEqual({
         getDecoration: expect.any(Function),
+      });
+    });
+  });
+
+  describe('event handlers', () => {
+    beforeEach(() => {
+      jest.spyOn(track, 'trackSetFocus');
+      jest.spyOn(track, 'trackViewTraces');
+      jest.spyOn(track, 'trackVertexSetOperation');
+      jest.spyOn(getSearchUrl, 'getUrl');
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    describe('focusPaths', () => {
+      it('calls focusPathsThroughVertex with vertexKey', () => {
+        wrapper.instance().focusPaths();
+        expect(props.focusPathsThroughVertex).toHaveBeenCalledWith(vertexKey);
+      });
+    });
+
+    describe('hideVertex', () => {
+      it('calls hideVertex with vertexKey', () => {
+        wrapper.instance().hideVertex();
+        expect(props.hideVertex).toHaveBeenCalledWith(vertexKey);
+      });
+    });
+
+    describe('setOperation', () => {
+      it('calls setOperation with the provided operation and tracks the event', () => {
+        const newOperation = 'new-operation';
+        wrapper.instance().setOperation(newOperation);
+        expect(props.setOperation).toHaveBeenCalledWith(newOperation);
+        expect(track.trackVertexSetOperation).toHaveBeenCalled();
+      });
+    });
+
+    describe('updateChildren', () => {
+      it('calls updateGenerationVisibility with vertexKey and Downstream direction', () => {
+        wrapper.instance().updateChildren();
+        expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Downstream);
+      });
+    });
+
+    describe('updateParents', () => {
+      it('calls updateGenerationVisibility with vertexKey and Upstream direction', () => {
+        wrapper.instance().updateParents();
+        expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Upstream);
+      });
+    });
+
+    describe('viewTraces', () => {
+      const mockTraceIds = ['trace1', 'trace2', 'trace3'];
+      const mockPathElems = [
+        { memberOf: { traceIDs: ['trace1'] } },
+        { memberOf: { traceIDs: ['trace2'] } },
+        { memberOf: { traceIDs: ['trace3'] } },
+      ];
+
+      beforeEach(() => {
+        props.getVisiblePathElems.mockReturnValue(mockPathElems);
+        getSearchUrl.getUrl.mockImplementation(params => `mock-search-url-${params.traceID.join('-')}`);
+      });
+
+      it('opens search URL with trace IDs and tracks the event', () => {
+        const windowSpy = jest.spyOn(window, 'open').mockImplementation();
+        wrapper.instance().viewTraces();
+
+        expect(track.trackViewTraces).toHaveBeenCalled();
+        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({ traceID: mockTraceIds });
+        expect(windowSpy).toHaveBeenCalledWith('mock-search-url-trace1-trace2-trace3', '_blank');
+        windowSpy.mockRestore();
+      });
+
+      it('handles case when getVisiblePathElems returns undefined', () => {
+        props.getVisiblePathElems.mockReturnValue(undefined);
+        const windowSpy = jest.spyOn(window, 'open').mockImplementation();
+        wrapper.instance().viewTraces();
+
+        expect(track.trackViewTraces).toHaveBeenCalled();
+        expect(getSearchUrl.getUrl).not.toHaveBeenCalled();
+        expect(windowSpy).not.toHaveBeenCalled();
+        windowSpy.mockRestore();
+      });
+
+      it('respects MAX_LINKED_TRACES limit', () => {
+        const mockElems = [];
+        for (let i = 0; i < MAX_LINKED_TRACES + 5; i++) {
+          mockElems.push({
+            memberOf: {
+              traceIDs: [`trace-${i}`],
+            },
+          });
+        }
+        props.getVisiblePathElems.mockReturnValue(mockElems);
+
+        const windowSpy = jest.spyOn(window, 'open').mockImplementation();
+        wrapper.instance().viewTraces();
+
+        const expectedTraceIds = mockElems.slice(0, MAX_LINKED_TRACES).map(elem => elem.memberOf.traceIDs[0]);
+        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
+          traceID: expectedTraceIds,
+        });
+        expect(windowSpy).toHaveBeenCalledWith(`mock-search-url-${expectedTraceIds.join('-')}`, '_blank');
+        windowSpy.mockRestore();
+      });
+
+      it('respects MAX_LENGTH limit', () => {
+        const longTraceId = 'a'.repeat(MAX_LENGTH - MIN_LENGTH - PARAM_NAME_LENGTH);
+        const shortTraceId = 'b'.repeat(10);
+
+        const mockElems = [
+          { memberOf: { traceIDs: [longTraceId] } },
+          { memberOf: { traceIDs: [shortTraceId] } },
+        ];
+        props.getVisiblePathElems.mockReturnValue(mockElems);
+
+        const windowSpy = jest.spyOn(window, 'open').mockImplementation();
+        wrapper.instance().viewTraces();
+
+        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
+          traceID: [longTraceId],
+        });
+        expect(windowSpy).toHaveBeenCalledWith(`mock-search-url-${longTraceId}`, '_blank');
+        windowSpy.mockRestore();
+      });
+
+      it('handles duplicate trace IDs', () => {
+        const traceId = 'duplicate-trace';
+        const mockElems = [
+          { memberOf: { traceIDs: [traceId] } },
+          { memberOf: { traceIDs: [traceId] } },
+          { memberOf: { traceIDs: [null, traceId] } },
+        ];
+        props.getVisiblePathElems.mockReturnValue(mockElems);
+
+        const windowSpy = jest.spyOn(window, 'open').mockImplementation();
+        wrapper.instance().viewTraces();
+
+        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
+          traceID: [traceId],
+        });
+        expect(windowSpy).toHaveBeenCalledWith(`mock-search-url-${traceId}`, '_blank');
+        windowSpy.mockRestore();
       });
     });
   });
