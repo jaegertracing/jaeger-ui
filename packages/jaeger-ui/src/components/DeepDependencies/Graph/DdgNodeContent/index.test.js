@@ -22,7 +22,6 @@ jest.mock('./calc-positioning', () => () => ({
 /* eslint-disable import/first */
 import React from 'react';
 import { shallow } from 'enzyme';
-import { Checkbox, Popover } from 'antd';
 
 import {
   getNodeRenderer,
