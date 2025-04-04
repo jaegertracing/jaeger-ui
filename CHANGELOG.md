@@ -9,6 +9,20 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.68.0 (2025-04-05)
+
+#### ✨ New Features
+
+* Feat: change dag styling and add search functionality ([@hari45678](https://github.com/hari45678) in [#2710](https://github.com/jaegertracing/jaeger-ui/pull/2710))
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Add sample graph data when in dev mode ([@hari45678](https://github.com/hari45678) in [#2698](https://github.com/jaegertracing/jaeger-ui/pull/2698))
+* Add depth and layout controls and sfdp layout to dag view ([@hari45678](https://github.com/hari45678) in [#2691](https://github.com/jaegertracing/jaeger-ui/pull/2691))
+* Add sfdp engine in @jaegertracing/plexus ([@hari45678](https://github.com/hari45678) in [#2690](https://github.com/jaegertracing/jaeger-ui/pull/2690))
+* Add handling or error for invalid json formats and tests ([@rohitlohar45](https://github.com/rohitlohar45) in [#2689](https://github.com/jaegertracing/jaeger-ui/pull/2689))
+
+
 ## v1.67.0 (2025-03-07)
 
 #### 🐞 Bug fixes, Minor Improvements
