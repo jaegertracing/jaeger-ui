@@ -17,6 +17,7 @@ import cx from 'classnames';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 import _isEqual from 'lodash/isEqual';
+import { groupBy } from 'lodash';
 
 // import { History as RouterHistory, Location } from 'history';
 
@@ -199,6 +200,7 @@ function mergeChildrenCriticalPath(
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
+const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: criticalPathSection[]) => groupBy(criticalPath, x => x.spanId));
 
 // export from tests
 export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
@@ -374,6 +376,15 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
   };
 
+  getCriticalPathSections(isCollapsed: boolean, trace: Trace, spanID: string, criticalPath: criticalPathSection[]) {
+    if (isCollapsed) {
+      return mergeChildrenCriticalPath(trace, spanID, criticalPath);
+    }
+
+    const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
+    return spanID in pathBySpanID ? pathBySpanID[spanID] : [];
+  }
+
   renderSpanBarRow(span: Span, spanIndex: number, key: string, style: React.CSSProperties, attrs: object) {
     const { spanID } = span;
     const { serviceName } = span.process;
@@ -396,9 +407,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
     const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
-    const criticalPathSections = isCollapsed
-      ? mergeChildrenCriticalPath(trace, spanID, criticalPath)
-      : criticalPath.filter(each => each.spanId === spanID);
+    const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
