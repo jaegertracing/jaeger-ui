@@ -17,7 +17,7 @@ import cx from 'classnames';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 import _isEqual from 'lodash/isEqual';
-import { groupBy } from 'lodash';
+import _groupBy from 'lodash/groupBy';
 
 // import { History as RouterHistory, Location } from 'history';
 
@@ -201,7 +201,7 @@ const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
 const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: criticalPathSection[]) =>
-  groupBy(criticalPath, x => x.spanId)
+  _groupBy(criticalPath, x => x.spanId)
 );
 
 // export from tests
