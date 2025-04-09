@@ -200,7 +200,9 @@ function mergeChildrenCriticalPath(
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
-const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: criticalPathSection[]) => groupBy(criticalPath, x => x.spanId));
+const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: criticalPathSection[]) =>
+  groupBy(criticalPath, x => x.spanId)
+);
 
 // export from tests
 export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
@@ -376,7 +378,12 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
   };
 
-  getCriticalPathSections(isCollapsed: boolean, trace: Trace, spanID: string, criticalPath: criticalPathSection[]) {
+  getCriticalPathSections(
+    isCollapsed: boolean,
+    trace: Trace,
+    spanID: string,
+    criticalPath: criticalPathSection[]
+  ) {
     if (isCollapsed) {
       return mergeChildrenCriticalPath(trace, spanID, criticalPath);
     }
