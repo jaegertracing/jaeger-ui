@@ -157,7 +157,10 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
       } else {
         // used when a tag is selected
         for (let l = 0; l < allSpans[j].tags.length; l++) {
-          if (allSpans[j].tags[l].value === allDiffColumnValues[i]) {
+          if (
+            allSpans[j].tags[l].key === selectedTagKey &&
+            allSpans[j].tags[l].value === allDiffColumnValues[i]
+          ) {
             resultValue = computeColumnValues(trace, allSpans[j], allSpans, resultValue);
           }
         }
@@ -193,6 +196,10 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
     for (let i = 0; i < allSpans.length; i++) {
       let isIn = false;
       for (let j = 0; j < allSpans[i].tags.length; j++) {
+        if (allSpans[i].tags[j].key !== selectedTagKey) {
+          continue;
+        }
+
         for (let l = 0; l < allDiffColumnValues.length; l++) {
           if (allSpans[i].tags[j].value === allDiffColumnValues[l]) {
             isIn = true;
@@ -280,7 +287,10 @@ function buildDetail(
     for (let l = 0; l < tempArray.length; l++) {
       if (isDetail) {
         for (let a = 0; a < tempArray[l].tags.length; a++) {
-          if (diffNamesA[j] === tempArray[l].tags[a].value) {
+          if (
+            tempArray[l].tags[a].key === selectedTagKeySecond &&
+            diffNamesA[j] === tempArray[l].tags[a].value
+          ) {
             resultValue = computeColumnValues(trace, tempArray[l], allSpans, resultValue);
           }
         }
@@ -422,7 +432,10 @@ function valueSecondDropdown(
           // if first dropdown is a tag
         } else {
           for (let l = 0; l < allSpans[j].tags.length; l++) {
-            if (actualTableValues[i].name === allSpans[j].tags[l].value) {
+            if (
+              allSpans[j].tags[l].key === selectedTagKey &&
+              actualTableValues[i].name === allSpans[j].tags[l].value
+            ) {
               tempArray.push(allSpans[j]);
               if (selectedTagKeySecond === operationName) {
                 diffNamesA.push(allSpans[j].operationName);
