@@ -415,6 +415,10 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
     const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
     const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
+
+    // Improve performance (~300ms for 500 spans) by avoiding rendering critical path tooltip when there are a lot of sections
+    const showCriticalPathTooltip = criticalPath.length < 300;
+
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
@@ -447,6 +451,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           className={this.getClippingCssClasses()}
           color={color}
           criticalPath={criticalPathSections}
+          isCriticalPathTooltipEnabled={showCriticalPathTooltip}
           columnDivision={spanNameColumnWidth}
           isChildrenExpanded={!isCollapsed}
           isDetailExpanded={isDetailExpanded}

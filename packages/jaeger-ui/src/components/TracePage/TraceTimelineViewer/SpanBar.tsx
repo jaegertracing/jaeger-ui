@@ -30,6 +30,7 @@ type TCommonProps = {
   // onClick: (evt: React.MouseEvent<any>) => void;
   onClick?: (evt: React.MouseEvent<any>) => void;
   criticalPath: criticalPathSection[];
+  isCriticalPathTooltipEnabled: boolean;
   viewEnd: number;
   viewStart: number;
   getViewedBounds: ViewedBoundsFunctionType;
@@ -54,9 +55,24 @@ function toPercentInDecimal(value: number) {
   return `${value * 100}%`;
 }
 
+function SpanBarCriticalPath(props: { criticalPathViewStart: number; criticalPathViewEnd: number }) {
+  return (
+    <div
+      data-testid="SpanBar--criticalPath"
+      className="SpanBar--criticalPath"
+      style={{
+        background: 'black',
+        left: toPercentInDecimal(props.criticalPathViewStart),
+        width: toPercentInDecimal(props.criticalPathViewEnd - props.criticalPathViewStart),
+      }}
+    />
+  );
+}
+
 function SpanBar(props: TCommonProps) {
   const {
     criticalPath,
+    isCriticalPathTooltipEnabled,
     viewEnd,
     viewStart,
     getViewedBounds,
@@ -145,26 +161,32 @@ function SpanBar(props: TCommonProps) {
           const criticalPathViewStart = critcalPathViewBounds.start;
           const criticalPathViewEnd = critcalPathViewBounds.end;
           const key = `${each.spanId}-${index}`;
+
+          if (isCriticalPathTooltipEnabled) {
+            return (
+              <Tooltip
+                placement="top"
+                title={
+                  <div>
+                    A segment on the <em>critical path</em> of the overall trace/request/workflow.
+                  </div>
+                }
+              >
+                <SpanBarCriticalPath
+                  criticalPathViewStart={criticalPathViewStart}
+                  criticalPathViewEnd={criticalPathViewEnd}
+                  key={key}
+                />
+              </Tooltip>
+            );
+          }
+
           return (
-            <Tooltip
-              placement="top"
-              title={
-                <div>
-                  A segment on the <em>critical path</em> of the overall trace/request/workflow.
-                </div>
-              }
-            >
-              <div
-                key={key}
-                data-testid="SpanBar--criticalPath"
-                className="SpanBar--criticalPath"
-                style={{
-                  background: 'black',
-                  left: toPercentInDecimal(criticalPathViewStart),
-                  width: toPercentInDecimal(criticalPathViewEnd - criticalPathViewStart),
-                }}
-              />
-            </Tooltip>
+            <SpanBarCriticalPath
+              criticalPathViewStart={criticalPathViewStart}
+              criticalPathViewEnd={criticalPathViewEnd}
+              key={key}
+            />
           );
         })}
     </div>
