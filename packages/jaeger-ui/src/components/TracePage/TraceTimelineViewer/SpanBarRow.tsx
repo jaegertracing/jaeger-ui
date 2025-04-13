@@ -30,7 +30,6 @@ type SpanBarRowProps = {
   className?: string;
   color: string;
   criticalPath: criticalPathSection[];
-  isCriticalPathTooltipEnabled: boolean;
   columnDivision: number;
   isChildrenExpanded: boolean;
   isDetailExpanded: boolean;
@@ -87,7 +86,6 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       className,
       color,
       criticalPath,
-      isCriticalPathTooltipEnabled,
       columnDivision,
       isChildrenExpanded,
       isDetailExpanded,
@@ -203,7 +201,6 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
           <Ticks numTicks={numTicks} />
           <SpanBar
             criticalPath={criticalPath}
-            isCriticalPathTooltipEnabled={isCriticalPathTooltipEnabled}
             rpc={rpc}
             viewStart={viewStart}
             viewEnd={viewEnd}
