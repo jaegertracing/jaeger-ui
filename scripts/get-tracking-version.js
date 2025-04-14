@@ -22,9 +22,10 @@
 // See also packages/jaeger-ui/src/utils/tracking/README.md
 
 /* eslint-disable @typescript-eslint/no-var-requires */
-const spawnSync = require('child_process').spawnSync;
+import { spawnSync } from 'child_process';
+import packageJson from '../package.json';
 
-const version = require('../package.json').version;
+const version = packageJson.version;
 
 function cleanRemoteUrl(url) {
   return url.replace(/^(.*?@|.*?\/\/)|\.git\s*$/gi, '').replace(/:/g, '/');
@@ -140,5 +141,5 @@ if (require.main === module) {
   const vsn = getVersion(process.argv[2] || '.');
   process.stdout.write(JSON.stringify(vsn));
 } else {
-  module.exports = getVersion;
+  export default getVersion;
 }
