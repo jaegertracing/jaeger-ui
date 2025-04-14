@@ -57,6 +57,28 @@ limitations under the License.
   padding-bottom: 0.3rem;
 }
 
+.TraceGraph--menu > li button {
+  padding: 0.3rem; 
+  cursor: pointer;
+  font-size: 1rem;
+  width: 100%;
+  background-color: transparent;
+  border: 1px solid #ddd; 
+  border-radius: 4px;
+  display: block; 
+}
+
+.TraceGraph--menu > li button.active {
+  background-color: #007bff; 
+  color: white; 
+  font-weight: bold;
+  border: none; 
+}
+
+.TraceGraph--menu > li button:hover {
+  background-color: #f0f0f0; /* Change background on hover */
+}
+
 .TraceGraph--sidebar {
   cursor: default;
   box-shadow: -1px 0 rgba(0, 0, 0, 0.2);
