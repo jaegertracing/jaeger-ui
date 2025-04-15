@@ -62,7 +62,7 @@ function computeSelfTime(span: Span, allSpans: Span[]): number {
   return Math.round(spanRange.length / 10);
 }
 
-function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultValue: any) {
+function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultValue: StatsPerTag) {
   const resultValueChange = resultValue;
   resultValueChange.count += 1;
   resultValueChange.total += span.duration;
@@ -106,71 +106,97 @@ function buildOneColumn(oneColumn: ITableSpan) {
   return oneColumnChange;
 }
 
+type StatsPerTag = {
+  selfTotal: number;
+  selfMin: number;
+  selfMax: number;
+  selfAvg: number;
+  total: number;
+  avg: number;
+  min: number;
+  max: number;
+  count: number;
+  percent: number;
+};
+
+function getDefaultStatsValue(trace: Trace) {
+  return {
+    selfTotal: 0,
+    selfMin: trace.duration,
+    selfMax: 0,
+    selfAvg: 0,
+    total: 0,
+    avg: 0,
+    min: trace.duration,
+    max: 0,
+    count: 0,
+    percent: 0,
+  };
+}
+
 /**
  * Is used if only one dropdown is selected.
  */
 function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
-  let color = '';
-  let allDiffColumnValues = [];
   const allSpans = trace.spans;
-  // all possibilities that can be displayed
-  if (selectedTagKey === serviceName) {
-    allDiffColumnValues = _uniq(allSpans.map(x => x.process.serviceName));
-  } else if (selectedTagKey === operationName) {
-    allDiffColumnValues = _uniq(allSpans.map(x => x.operationName));
-  } else {
-    for (let i = 0; i < allSpans.length; i++) {
-      for (let j = 0; j < allSpans[i].tags.length; j++) {
-        if (allSpans[i].tags[j].key === selectedTagKey) {
-          allDiffColumnValues.push(allSpans[i].tags[j].value);
-        }
-      }
-    }
-    allDiffColumnValues = _uniq(allDiffColumnValues);
-  }
+
   // used to build the table
   const allTableValues = [];
   const spanWithNoSelectedTag = []; // is only needed when there are Others
-  for (let i = 0; i < allDiffColumnValues.length; i++) {
-    let resultValue = {
-      selfTotal: 0,
-      selfMin: trace.duration,
-      selfMax: 0,
-      selfAvg: 0,
-      total: 0,
-      avg: 0,
-      min: trace.duration,
-      max: 0,
-      count: 0,
-      percent: 0,
-    };
-    for (let j = 0; j < allSpans.length; j++) {
-      if (selectedTagKey === serviceName) {
-        if (allSpans[j].process.serviceName === allDiffColumnValues[i]) {
-          resultValue = computeColumnValues(trace, allSpans[j], allSpans, resultValue);
-          color = colorGenerator.getColorByKey(allSpans[j].process.serviceName);
+
+  const uniqueValuesForSelectedTag = new Set<string>();
+
+  const statsPerTagValue = {} as Record<string, StatsPerTag>;
+  const spanIdsWithSelectedTag = new Set<string>();
+
+  for (let i = 0; i < allSpans.length; i++) {
+    let tagValue = null as null | string;
+    if (selectedTagKey === operationName) {
+      tagValue = allSpans[i].operationName;
+    } else if (selectedTagKey === serviceName) {
+      tagValue = allSpans[i].process.serviceName;
+    } else {
+      for (let tagIndex = 0; tagIndex < allSpans[i].tags.length; tagIndex++) {
+        const tag = allSpans[i].tags[tagIndex];
+
+        if (tag.key !== selectedTagKey) {
+          continue;
         }
-      } else if (selectedTagKey === operationName) {
-        if (allSpans[j].operationName === allDiffColumnValues[i]) {
-          resultValue = computeColumnValues(trace, allSpans[j], allSpans, resultValue);
-        }
-      } else {
-        // used when a tag is selected
-        for (let l = 0; l < allSpans[j].tags.length; l++) {
-          if (
-            allSpans[j].tags[l].key === selectedTagKey &&
-            allSpans[j].tags[l].value === allDiffColumnValues[i]
-          ) {
-            resultValue = computeColumnValues(trace, allSpans[j], allSpans, resultValue);
-          }
-        }
+
+        tagValue = tag.value;
+        break;
       }
     }
+
+    if (!tagValue) {
+      continue;
+    }
+
+    statsPerTagValue[tagValue] = computeColumnValues(
+      trace,
+      allSpans[i],
+      allSpans,
+      statsPerTagValue[tagValue] ?? getDefaultStatsValue(trace)
+    );
+
+    spanIdsWithSelectedTag.add(allSpans[i].spanID);
+    uniqueValuesForSelectedTag.add(tagValue);
+  }
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const tagValue of uniqueValuesForSelectedTag) {
+    const resultValue = statsPerTagValue[tagValue];
+
+    let color = '';
+    if (selectedTagKey === serviceName) {
+      color = colorGenerator.getColorByKey(tagValue);
+    }
+
     resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
     resultValue.avg = resultValue.total / resultValue.count;
     let tableSpan = {
       hasSubgroupValue: true,
-      name: allDiffColumnValues[i],
+      name: tagValue,
       count: resultValue.count,
       total: resultValue.total,
       avg: resultValue.avg,
@@ -194,35 +220,14 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   // checks if there is OTHERS
   if (selectedTagKey !== serviceName && selectedTagKey !== operationName) {
     for (let i = 0; i < allSpans.length; i++) {
-      let isIn = false;
-      for (let j = 0; j < allSpans[i].tags.length; j++) {
-        if (allSpans[i].tags[j].key !== selectedTagKey) {
-          continue;
-        }
+      const spanHasSelectedTag = spanIdsWithSelectedTag.has(allSpans[i].spanID);
 
-        for (let l = 0; l < allDiffColumnValues.length; l++) {
-          if (allSpans[i].tags[j].value === allDiffColumnValues[l]) {
-            isIn = true;
-          }
-        }
-      }
-      if (!isIn) {
+      if (!spanHasSelectedTag) {
         spanWithNoSelectedTag.push(allSpans[i]);
       }
     }
     // Others is calculated
-    let resultValue = {
-      selfTotal: 0,
-      selfAvg: 0,
-      selfMin: trace.duration,
-      selfMax: 0,
-      total: 0,
-      avg: 0,
-      min: trace.duration,
-      max: 0,
-      count: 0,
-      percent: 0,
-    };
+    let resultValue = getDefaultStatsValue(trace);
     for (let i = 0; i < spanWithNoSelectedTag.length; i++) {
       resultValue = computeColumnValues(trace, spanWithNoSelectedTag[i], allSpans, resultValue);
     }
