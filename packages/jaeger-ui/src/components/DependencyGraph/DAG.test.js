@@ -34,8 +34,6 @@ jest.spyOn(React, 'useState').mockImplementation(initialValue => [initialValue, 
 
 jest.spyOn(React, 'useRef').mockImplementation(() => ({ current: null }));
 
-jest.spyOn(React, 'useCallback').mockImplementation(fn => fn);
-
 // mock canvas API (we don't care about canvas results)
 
 window.HTMLCanvasElement.prototype.getContext = function getContext() {

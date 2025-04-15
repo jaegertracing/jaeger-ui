@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { ReactNode, useState, useCallback, useRef } from 'react';
+import React, { ReactNode, useState, useRef } from 'react';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
 import { TLayoutOptions } from '@jaegertracing/plexus/lib/LayoutManager/types';
@@ -172,7 +172,7 @@ export default function DAG({
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const showMenuTimeout = useRef<NodeJS.Timeout>();
 
-  const handleNodeMouseEnter = useCallback((vertex: TVertex, event: React.MouseEvent) => {
+  const handleNodeMouseEnter = (vertex: TVertex, event: React.MouseEvent) => {
     setHoveredNode(vertex);
     if (showMenuTimeout.current) {
       clearTimeout(showMenuTimeout.current);
@@ -181,9 +181,9 @@ export default function DAG({
       setMenuPosition({ x: event.clientX, y: event.clientY });
       setIsMenuVisible(true);
     }, 1000);
-  }, []);
+  };
 
-  const handleNodeMouseLeave = useCallback(() => {
+  const handleNodeMouseLeave = () => {
     if (showMenuTimeout.current) {
       clearTimeout(showMenuTimeout.current);
     }
@@ -191,35 +191,35 @@ export default function DAG({
       setHoveredNode(null);
       setMenuPosition(null);
     }
-  }, [isMenuHovered, isMenuVisible]);
+  };
 
-  const handleNodeClick = useCallback((vertex: TVertex, event: React.MouseEvent) => {
+  const handleNodeClick = (vertex: TVertex, event: React.MouseEvent) => {
     setHoveredNode(vertex);
     setMenuPosition({ x: event.clientX, y: event.clientY });
     setIsMenuVisible(true);
-  }, []);
+  };
 
-  const handleMenuMouseEnter = useCallback(() => {
+  const handleMenuMouseEnter = () => {
     setIsMenuHovered(true);
-  }, []);
+  };
 
-  const handleMenuMouseLeave = useCallback(() => {
+  const handleMenuMouseLeave = () => {
     setIsMenuHovered(false);
     if (!isMenuVisible) {
       setHoveredNode(null);
       setMenuPosition(null);
     }
-  }, [isMenuVisible]);
+  };
 
   const handleViewTraces = () => {
     window.open(getSearchUrl({ service: hoveredNode?.key }), '_blank');
   };
 
-  const handleCanvasClick = useCallback(() => {
+  const handleCanvasClick = () => {
     setIsMenuVisible(false);
     setHoveredNode(null);
     setMenuPosition(null);
-  }, []);
+  };
 
   React.useEffect(() => {
     return () => {
