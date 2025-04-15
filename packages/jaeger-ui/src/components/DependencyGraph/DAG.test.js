@@ -30,6 +30,12 @@ jest.spyOn(React, 'useEffect').mockImplementation(f => {
   };
 });
 
+jest.spyOn(React, 'useState').mockImplementation(initialValue => [initialValue, jest.fn()]);
+
+jest.spyOn(React, 'useRef').mockImplementation(() => ({ current: null }));
+
+jest.spyOn(React, 'useCallback').mockImplementation(fn => fn);
+
 // mock canvas API (we don't care about canvas results)
 
 window.HTMLCanvasElement.prototype.getContext = function getContext() {
@@ -74,6 +80,7 @@ describe('<DAG>', () => {
 
   beforeEach(() => {
     renderer = new ShallowRenderer();
+    jest.clearAllMocks();
   });
 
   it('shows correct number of nodes and vertices', () => {
@@ -87,9 +94,9 @@ describe('<DAG>', () => {
 
     renderer.render(<DAG serviceCalls={serviceCalls} />);
     const element = renderer.getRenderOutput();
-
-    expect(element.props.children.props.vertices.length).toBe(2);
-    expect(element.props.children.props.edges.length).toBe(1);
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(2);
+    expect(digraph.props.edges).toHaveLength(1);
   });
 
   it('does not show nodes with empty strings or string with only spaces', () => {
@@ -103,11 +110,12 @@ describe('<DAG>', () => {
 
     renderer.render(<DAG serviceCalls={serviceCalls} />);
     const element = renderer.getRenderOutput();
+    const digraph = element.props.children[0];
 
     // Empty or blank strings getting skipped is desirable
     // But should not cause the component to break
-    expect(element.props.children.props.vertices.length).toBe(0);
-    expect(element.props.children.props.edges.length).toBe(0);
+    expect(digraph.props.vertices).toHaveLength(0);
+    expect(digraph.props.edges).toHaveLength(0);
   });
 
   it('shows filtered graph when selectedService and selectedDepth are provided', () => {
@@ -122,8 +130,9 @@ describe('<DAG>', () => {
       <DAG serviceCalls={serviceCalls} selectedService="service-a" selectedDepth={2} selectedLayout="dot" />
     );
     const element = renderer.getRenderOutput();
-    expect(element.props.children.props.vertices.length).toBe(3);
-    expect(element.props.children.props.edges.length).toBe(2);
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(3);
+    expect(digraph.props.edges).toHaveLength(2);
   });
 
   it('handles bidirectional connections in depth filtering', () => {
@@ -136,9 +145,9 @@ describe('<DAG>', () => {
       <DAG serviceCalls={serviceCalls} selectedService="service-b" selectedDepth={1} selectedLayout="dot" />
     );
     const element = renderer.getRenderOutput();
-
-    expect(element.props.children.props.vertices.length).toBe(3);
-    expect(element.props.children.props.edges.length).toBe(2);
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(3);
+    expect(digraph.props.edges).toHaveLength(2);
   });
 
   it('respects depth limit', () => {
@@ -152,9 +161,9 @@ describe('<DAG>', () => {
       <DAG serviceCalls={serviceCalls} selectedService="service-a" selectedDepth={1} selectedLayout="dot" />
     );
     const element = renderer.getRenderOutput();
-
-    expect(element.props.children.props.vertices.length).toBe(2);
-    expect(element.props.children.props.edges.length).toBe(1);
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(2);
+    expect(digraph.props.edges).toHaveLength(1);
   });
 
   it('uses sfdp layout for large graphs', () => {
@@ -166,8 +175,8 @@ describe('<DAG>', () => {
 
     renderer.render(<DAG serviceCalls={serviceCalls} selectedLayout="sfdp" />);
     const element = renderer.getRenderOutput();
-
-    expect(element.props.children.props.layoutManager.options).toMatchObject({
+    const digraph = element.props.children[0];
+    expect(digraph.props.layoutManager.options).toMatchObject({
       engine: 'sfdp',
       dpi: expect.any(Number),
     });
@@ -181,8 +190,8 @@ describe('<DAG>', () => {
 
     renderer.render(<DAG serviceCalls={serviceCalls} selectedLayout="dot" />);
     const element = renderer.getRenderOutput();
-
-    expect(element.props.children.props.layoutManager.options).toMatchObject({
+    const digraph = element.props.children[0];
+    expect(digraph.props.layoutManager.options).toMatchObject({
       nodesep: 1.5,
       ranksep: 1.6,
       rankdir: 'TB',
@@ -194,9 +203,9 @@ describe('<DAG>', () => {
   it('handles empty serviceCalls array', () => {
     renderer.render(<DAG serviceCalls={[]} selectedLayout="dot" />);
     const element = renderer.getRenderOutput();
-
-    expect(element.props.children.props.vertices.length).toBe(0);
-    expect(element.props.children.props.edges.length).toBe(0);
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(0);
+    expect(digraph.props.edges).toHaveLength(0);
   });
 
   it('shows error message when too many services to render', () => {
@@ -269,7 +278,8 @@ describe('<DAG>', () => {
       />
     );
     const element = renderer.getRenderOutput();
-    const renderNodeFn = element.props.children.props.layers[1].renderNode;
+    const digraph = element.props.children[0];
+    const renderNodeFn = digraph.props.layers[1].renderNode;
     const result = renderNodeFn({ key: 'test-service' });
 
     expect(result.props.children[1].props.className).toBe('DAG--nodeLabel');
@@ -280,9 +290,9 @@ describe('<DAG>', () => {
   it('defaults serviceCalls to empty array when not provided', () => {
     renderer.render(<DAG selectedLayout="dot" selectedDepth={1} selectedService="" />);
     const element = renderer.getRenderOutput();
-
-    expect(element.props.children.props.vertices).toHaveLength(0);
-    expect(element.props.children.props.edges).toHaveLength(0);
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(0);
+    expect(digraph.props.edges).toHaveLength(0);
   });
 });
 
@@ -292,7 +302,7 @@ describe('renderNode', () => {
       key: 'Test',
     };
 
-    render(renderNode(vertex));
+    render(renderNode(vertex, null));
 
     const element = await screen.findByTestId('dagNodeLabel');
 
@@ -304,7 +314,7 @@ describe('renderNode', () => {
       key: 2,
     };
 
-    render(renderNode(vertex));
+    render(renderNode(vertex, null));
 
     const element = await screen.findByTestId('dagNodeLabel');
 
@@ -313,13 +323,13 @@ describe('renderNode', () => {
 
   it('displays nothing if vertext is undefined', () => {
     const vertex = undefined;
-    const result = renderNode(vertex);
+    const result = renderNode(vertex, null);
     expect(result).toBeNull();
   });
 
   it('displays nothing if vertext is null', () => {
     const vertex = null;
-    const result = renderNode(vertex);
+    const result = renderNode(vertex, null);
     expect(result).toBeNull();
   });
 
@@ -328,7 +338,7 @@ describe('renderNode', () => {
       key: undefined,
     };
 
-    render(renderNode(vertex));
+    render(renderNode(vertex, null));
 
     const element = await screen.findByTestId('dagNodeLabel');
 
@@ -340,7 +350,7 @@ describe('renderNode', () => {
       key: null,
     };
 
-    render(renderNode(vertex));
+    render(renderNode(vertex, null));
 
     const element = await screen.findByTestId('dagNodeLabel');
 
@@ -353,13 +363,18 @@ describe('clean up', () => {
 
   beforeEach(() => {
     renderer = new ShallowRenderer();
+    jest.clearAllMocks();
   });
 
   it('stops LayoutManager before unmounting', () => {
     const stopAndReleaseSpy = jest.spyOn(LayoutManager.prototype, 'stopAndRelease');
     renderer.render(<DAG serviceCalls={[]} />);
-    const cleanup = React.useEffect.mock.results[0].value;
-    cleanup();
+    const cleanupFunctions = React.useEffect.mock.results
+      .map(result => result.value)
+      .filter(fn => typeof fn === 'function');
+
+    cleanupFunctions.forEach(cleanup => cleanup());
+
     expect(stopAndReleaseSpy).toHaveBeenCalledTimes(1);
   });
 });

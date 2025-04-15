@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { ReactNode } from 'react';
-
+import React, { ReactNode, useState, useCallback, useRef } from 'react';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
 import { TLayoutOptions } from '@jaegertracing/plexus/lib/LayoutManager/types';
+import { IoLocate } from 'react-icons/io5';
+import NewWindowIcon from '../common/NewWindowIcon';
+import ActionsMenu, { IActionMenuItem } from '../common/ActionMenu/ActionsMenu';
+import { getUrl as getSearchUrl } from '../SearchTracePage/url';
 
 import './dag.css';
 import { DAG_MAX_NUM_SERVICES } from '../../constants';
@@ -34,16 +37,34 @@ type TProps = {
   selectedService: string;
   uiFind?: string;
   onMatchCountChange?: (count: number) => void;
+  onServiceSelect?: (service: string) => void;
 };
 
-export const renderNode = (vertex: TVertex, selectedService: string | null, uiFind?: string): ReactNode => {
+export const renderNode = (
+  vertex: TVertex,
+  selectedService: string | null,
+  uiFind?: string,
+  onMouseEnter?: (vertex: TVertex, event: React.MouseEvent) => void,
+  onMouseLeave?: () => void,
+  onClick?: (vertex: TVertex, event: React.MouseEvent) => void
+): ReactNode => {
   if (!vertex) return null;
 
   const isFocalNode = vertex.key === selectedService;
   const isMatch = uiFind ? vertex.key.toLowerCase().includes(uiFind.toLowerCase()) : false;
 
   return (
-    <div className="DAG--node">
+    <div
+      className="DAG--node"
+      role="button"
+      onMouseEnter={e => onMouseEnter?.(vertex, e)}
+      onMouseLeave={onMouseLeave}
+      onClick={e => {
+        e.stopPropagation();
+        onClick?.(vertex, e);
+      }}
+      style={{ cursor: 'pointer' }}
+    >
       <div className={`DAG--nodeCircle ${isFocalNode ? 'is-focalNode' : ''} ${isMatch ? 'is-match' : ''}`} />
       <div className="DAG--nodeLabel" data-testid="dagNodeLabel">
         {vertex?.key ?? ''}
@@ -142,8 +163,93 @@ export default function DAG({
   selectedDepth,
   selectedService,
   uiFind,
+  onServiceSelect,
   onMatchCountChange,
 }: TProps) {
+  const [hoveredNode, setHoveredNode] = useState<TVertex | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isMenuHovered, setIsMenuHovered] = useState(false);
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const showMenuTimeout = useRef<NodeJS.Timeout>();
+
+  const handleNodeMouseEnter = useCallback((vertex: TVertex, event: React.MouseEvent) => {
+    setHoveredNode(vertex);
+    if (showMenuTimeout.current) {
+      clearTimeout(showMenuTimeout.current);
+    }
+    showMenuTimeout.current = setTimeout(() => {
+      setMenuPosition({ x: event.clientX, y: event.clientY });
+      setIsMenuVisible(true);
+    }, 1000);
+  }, []);
+
+  const handleNodeMouseLeave = useCallback(() => {
+    if (showMenuTimeout.current) {
+      clearTimeout(showMenuTimeout.current);
+    }
+    if (!isMenuHovered && !isMenuVisible) {
+      setHoveredNode(null);
+      setMenuPosition(null);
+    }
+  }, [isMenuHovered, isMenuVisible]);
+
+  const handleNodeClick = useCallback((vertex: TVertex, event: React.MouseEvent) => {
+    setHoveredNode(vertex);
+    setMenuPosition({ x: event.clientX, y: event.clientY });
+    setIsMenuVisible(true);
+  }, []);
+
+  const handleMenuMouseEnter = useCallback(() => {
+    setIsMenuHovered(true);
+  }, []);
+
+  const handleMenuMouseLeave = useCallback(() => {
+    setIsMenuHovered(false);
+    if (!isMenuVisible) {
+      setHoveredNode(null);
+      setMenuPosition(null);
+    }
+  }, [isMenuVisible]);
+
+  const handleViewTraces = () => {
+    window.open(getSearchUrl({ service: hoveredNode?.key }), '_blank');
+  };
+
+  const handleCanvasClick = useCallback(() => {
+    setIsMenuVisible(false);
+    setHoveredNode(null);
+    setMenuPosition(null);
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      if (showMenuTimeout.current) {
+        clearTimeout(showMenuTimeout.current);
+      }
+    };
+  }, []);
+
+  const menuItems: IActionMenuItem[] = React.useMemo(() => {
+    if (!hoveredNode) return [];
+
+    return [
+      {
+        id: 'set-focus',
+        label: 'Set focus',
+        icon: <IoLocate />,
+        onClick: () => {
+          onServiceSelect?.(hoveredNode.key);
+        },
+      },
+      {
+        id: 'view-traces',
+        label: 'View traces',
+        icon: <NewWindowIcon />,
+        onClick: handleViewTraces,
+      },
+    ];
+  }, [hoveredNode]);
+
   const data = React.useMemo(
     () => formatServiceCalls(serviceCalls, selectedService, selectedDepth),
     [serviceCalls, selectedService, selectedDepth]
@@ -203,7 +309,7 @@ export default function DAG({
   }
 
   return (
-    <div className="DAG">
+    <div className="DAG" onClick={handleCanvasClick} role="button">
       <Digraph<TVertex>
         key={`${selectedLayout}-${selectedService}-${selectedDepth}-${uiFind}`}
         zoom
@@ -225,12 +331,37 @@ export default function DAG({
             key: 'nodes',
             layerType: 'html',
             measurable: true,
-            renderNode: (vertex: TVertex) => renderNode(vertex, selectedService, uiFind),
+            renderNode: (vertex: TVertex) =>
+              renderNode(
+                vertex,
+                selectedService,
+                uiFind,
+                handleNodeMouseEnter,
+                handleNodeMouseLeave,
+                handleNodeClick
+              ),
           },
         ]}
         edges={data.edges}
         vertices={data.nodes}
       />
+      {menuPosition && hoveredNode && (isMenuVisible || isMenuHovered) && (
+        <div
+          onMouseEnter={handleMenuMouseEnter}
+          onMouseLeave={handleMenuMouseLeave}
+          onClick={e => e.stopPropagation()}
+          role="menu"
+          style={{
+            position: 'fixed',
+            left: menuPosition.x,
+            top: menuPosition.y - 10,
+            zIndex: 1000,
+            pointerEvents: 'auto',
+          }}
+        >
+          <ActionsMenu items={menuItems} />
+        </div>
+      )}
     </div>
   );
 }

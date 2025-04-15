@@ -219,6 +219,7 @@ export class DependencyGraphPageImpl extends Component {
             selectedDepth={debouncedDepth}
             selectedService={selectedService}
             uiFind={uiFind}
+            onServiceSelect={this.handleServiceSelect}
             onMatchCountChange={this.handleMatchCountChange}
           />
         </div>
