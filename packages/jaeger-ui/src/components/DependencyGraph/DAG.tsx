@@ -60,7 +60,6 @@ export const renderNode = (
       onMouseEnter={e => onMouseEnter?.(vertex, e)}
       onMouseLeave={onMouseLeave}
       onClick={e => {
-        e.stopPropagation();
         onClick?.(vertex, e);
       }}
       style={{ cursor: 'pointer' }}
@@ -105,6 +104,62 @@ const findConnectedServices = (
 
 export const handleViewTraces = (hoveredNode: TVertex | null) => {
   window.open(getSearchUrl({ service: hoveredNode?.key }), '_blank');
+};
+
+export const createHandleNodeClick =
+  (
+    hoveredNode: TVertex | null,
+    setHoveredNode: (node: TVertex | null) => void,
+    setMenuPosition: (position: { x: number; y: number } | null) => void,
+    setIsMenuVisible: (visible: boolean) => void
+  ) =>
+  (vertex: TVertex, event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (hoveredNode?.key === vertex.key) {
+      setHoveredNode(null);
+      setMenuPosition(null);
+      setIsMenuVisible(false);
+    } else {
+      setHoveredNode(vertex);
+      setMenuPosition({ x: event.clientX, y: event.clientY });
+      setIsMenuVisible(true);
+    }
+  };
+
+export const createHandleCanvasClick =
+  (
+    setHoveredNode: (node: TVertex | null) => void,
+    setMenuPosition: (position: { x: number; y: number } | null) => void,
+    setIsMenuVisible: (visible: boolean) => void
+  ) =>
+  () => {
+    setIsMenuVisible(false);
+    setHoveredNode(null);
+    setMenuPosition(null);
+  };
+
+export const createMenuItems = (
+  hoveredNode: TVertex | null,
+  onServiceSelect?: (service: string) => void
+): IActionMenuItem[] => {
+  if (!hoveredNode) return [];
+
+  return [
+    {
+      id: 'set-focus',
+      label: 'Set focus',
+      icon: <IoLocate />,
+      onClick: () => {
+        onServiceSelect?.(hoveredNode.key);
+      },
+    },
+    {
+      id: 'view-traces',
+      label: 'View traces',
+      icon: <NewWindowIcon />,
+      onClick: () => handleViewTraces(hoveredNode),
+    },
+  ];
 };
 
 const formatServiceCalls = (
@@ -161,6 +216,37 @@ const formatServiceCalls = (
 
 const { classNameIsSmall } = Digraph.propsFactories;
 
+const DAGMenu = ({
+  menuPosition,
+  hoveredNode,
+  isMenuVisible,
+  menuItems,
+}: {
+  menuPosition: { x: number; y: number } | null;
+  hoveredNode: TVertex | null;
+  isMenuVisible: boolean;
+  menuItems: IActionMenuItem[];
+}) => {
+  if (!menuPosition || !hoveredNode || !isMenuVisible) {
+    return null;
+  }
+
+  return (
+    <div
+      role="menu"
+      style={{
+        position: 'fixed',
+        left: menuPosition.x,
+        top: menuPosition.y - 10,
+        zIndex: 1000,
+        pointerEvents: 'auto',
+      }}
+    >
+      <ActionsMenu items={menuItems} />
+    </div>
+  );
+};
+
 export default function DAG({
   serviceCalls = [],
   selectedLayout,
@@ -174,45 +260,18 @@ export default function DAG({
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
 
-  const handleNodeClick = (vertex: TVertex, event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (hoveredNode?.key === vertex.key) {
-      setHoveredNode(null);
-      setMenuPosition(null);
-      setIsMenuVisible(false);
-    } else {
-      setHoveredNode(vertex);
-      setMenuPosition({ x: event.clientX, y: event.clientY });
-      setIsMenuVisible(true);
-    }
-  };
+  const handleNodeClick = createHandleNodeClick(
+    hoveredNode,
+    setHoveredNode,
+    setMenuPosition,
+    setIsMenuVisible
+  );
+  const handleCanvasClick = createHandleCanvasClick(setHoveredNode, setMenuPosition, setIsMenuVisible);
 
-  const handleCanvasClick = () => {
-    setIsMenuVisible(false);
-    setHoveredNode(null);
-    setMenuPosition(null);
-  };
-
-  const menuItems: IActionMenuItem[] = React.useMemo(() => {
-    if (!hoveredNode) return [];
-
-    return [
-      {
-        id: 'set-focus',
-        label: 'Set focus',
-        icon: <IoLocate />,
-        onClick: () => {
-          onServiceSelect?.(hoveredNode.key);
-        },
-      },
-      {
-        id: 'view-traces',
-        label: 'View traces',
-        icon: <NewWindowIcon />,
-        onClick: () => handleViewTraces(hoveredNode),
-      },
-    ];
-  }, [hoveredNode]);
+  const menuItems: IActionMenuItem[] = React.useMemo(
+    () => createMenuItems(hoveredNode, onServiceSelect),
+    [hoveredNode, onServiceSelect]
+  );
 
   const data = React.useMemo(
     () => formatServiceCalls(serviceCalls, selectedService, selectedDepth),
@@ -302,21 +361,12 @@ export default function DAG({
         edges={data.edges}
         vertices={data.nodes}
       />
-      {menuPosition && hoveredNode && isMenuVisible && (
-        <div
-          onClick={e => e.stopPropagation()}
-          role="menu"
-          style={{
-            position: 'fixed',
-            left: menuPosition.x,
-            top: menuPosition.y - 10,
-            zIndex: 1000,
-            pointerEvents: 'auto',
-          }}
-        >
-          <ActionsMenu items={menuItems} />
-        </div>
-      )}
+      <DAGMenu
+        menuPosition={menuPosition}
+        hoveredNode={hoveredNode}
+        isMenuVisible={isMenuVisible}
+        menuItems={menuItems}
+      />
     </div>
   );
 }
