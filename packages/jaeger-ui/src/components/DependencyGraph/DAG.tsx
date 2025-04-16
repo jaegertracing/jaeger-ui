@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { ReactNode, useState, useRef } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
 import { TLayoutOptions } from '@jaegertracing/plexus/lib/LayoutManager/types';
@@ -103,6 +103,10 @@ const findConnectedServices = (
   return { nodes, edges };
 };
 
+export const handleViewTraces = (hoveredNode: TVertex | null) => {
+  window.open(getSearchUrl({ service: hoveredNode?.key }), '_blank');
+};
+
 const formatServiceCalls = (
   serviceCalls: TServiceCall[],
   selectedService: string | null,
@@ -168,51 +172,19 @@ export default function DAG({
 }: TProps) {
   const [hoveredNode, setHoveredNode] = useState<TVertex | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
-  const [isMenuHovered, setIsMenuHovered] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
-  const showMenuTimeout = useRef<NodeJS.Timeout>();
-
-  const handleNodeMouseEnter = (vertex: TVertex, event: React.MouseEvent) => {
-    setHoveredNode(vertex);
-    if (showMenuTimeout.current) {
-      clearTimeout(showMenuTimeout.current);
-    }
-    showMenuTimeout.current = setTimeout(() => {
-      setMenuPosition({ x: event.clientX, y: event.clientY });
-      setIsMenuVisible(true);
-    }, 1000);
-  };
-
-  const handleNodeMouseLeave = () => {
-    if (showMenuTimeout.current) {
-      clearTimeout(showMenuTimeout.current);
-    }
-    if (!isMenuHovered && !isMenuVisible) {
-      setHoveredNode(null);
-      setMenuPosition(null);
-    }
-  };
 
   const handleNodeClick = (vertex: TVertex, event: React.MouseEvent) => {
-    setHoveredNode(vertex);
-    setMenuPosition({ x: event.clientX, y: event.clientY });
-    setIsMenuVisible(true);
-  };
-
-  const handleMenuMouseEnter = () => {
-    setIsMenuHovered(true);
-  };
-
-  const handleMenuMouseLeave = () => {
-    setIsMenuHovered(false);
-    if (!isMenuVisible) {
+    event.stopPropagation();
+    if (hoveredNode?.key === vertex.key) {
       setHoveredNode(null);
       setMenuPosition(null);
+      setIsMenuVisible(false);
+    } else {
+      setHoveredNode(vertex);
+      setMenuPosition({ x: event.clientX, y: event.clientY });
+      setIsMenuVisible(true);
     }
-  };
-
-  const handleViewTraces = () => {
-    window.open(getSearchUrl({ service: hoveredNode?.key }), '_blank');
   };
 
   const handleCanvasClick = () => {
@@ -220,14 +192,6 @@ export default function DAG({
     setHoveredNode(null);
     setMenuPosition(null);
   };
-
-  React.useEffect(() => {
-    return () => {
-      if (showMenuTimeout.current) {
-        clearTimeout(showMenuTimeout.current);
-      }
-    };
-  }, []);
 
   const menuItems: IActionMenuItem[] = React.useMemo(() => {
     if (!hoveredNode) return [];
@@ -245,7 +209,7 @@ export default function DAG({
         id: 'view-traces',
         label: 'View traces',
         icon: <NewWindowIcon />,
-        onClick: handleViewTraces,
+        onClick: () => handleViewTraces(hoveredNode),
       },
     ];
   }, [hoveredNode]);
@@ -332,23 +296,14 @@ export default function DAG({
             layerType: 'html',
             measurable: true,
             renderNode: (vertex: TVertex) =>
-              renderNode(
-                vertex,
-                selectedService,
-                uiFind,
-                handleNodeMouseEnter,
-                handleNodeMouseLeave,
-                handleNodeClick
-              ),
+              renderNode(vertex, selectedService, uiFind, undefined, undefined, handleNodeClick),
           },
         ]}
         edges={data.edges}
         vertices={data.nodes}
       />
-      {menuPosition && hoveredNode && (isMenuVisible || isMenuHovered) && (
+      {menuPosition && hoveredNode && isMenuVisible && (
         <div
-          onMouseEnter={handleMenuMouseEnter}
-          onMouseLeave={handleMenuMouseLeave}
           onClick={e => e.stopPropagation()}
           role="menu"
           style={{
