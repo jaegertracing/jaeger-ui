@@ -77,3 +77,14 @@
 .DAG--error {
   margin: 10px;
 }
+
+.DAG .NodeContent--actionsItemIconWrapper > * {
+  position: static;
+}
+
+.DAG > div:last-child {
+  position: fixed;
+  z-index: 1000;
+  background: #fafafa;
+  border: 1px solid #d0d0d0;
+}
