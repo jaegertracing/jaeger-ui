@@ -54,6 +54,55 @@ function toPercentInDecimal(value: number) {
   return `${value * 100}%`;
 }
 
+function SpanBarCriticalPath(props: { criticalPathViewStart: number; criticalPathViewEnd: number }) {
+  const [shouldLoadTooltip, setShouldLoadTooltip] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Load tooltip only when hovering over critical path segment to reduce time (~300ms for 500 spans)
+  // of initial load of trace page
+  if (shouldLoadTooltip) {
+    return (
+      <Tooltip
+        placement="top"
+        // Need to set this manually to show the tooltip when shouldLoadTooltip changes to true
+        defaultOpen={isHovered}
+        title={
+          <div>
+            A segment on the <em>critical path</em> of the overall trace/request/workflow.
+          </div>
+        }
+      >
+        <div
+          data-testid="SpanBar--criticalPath"
+          className="SpanBar--criticalPath"
+          style={{
+            background: 'black',
+            left: toPercentInDecimal(props.criticalPathViewStart),
+            width: toPercentInDecimal(props.criticalPathViewEnd - props.criticalPathViewStart),
+          }}
+        />
+      </Tooltip>
+    );
+  }
+
+  return (
+    <div
+      data-testid="SpanBar--criticalPath"
+      className="SpanBar--criticalPath"
+      onMouseEnter={() => {
+        setShouldLoadTooltip(true);
+        setIsHovered(true);
+      }}
+      onMouseLeave={() => setIsHovered(true)}
+      style={{
+        background: 'black',
+        left: toPercentInDecimal(props.criticalPathViewStart),
+        width: toPercentInDecimal(props.criticalPathViewEnd - props.criticalPathViewStart),
+      }}
+    />
+  );
+}
+
 function SpanBar(props: TCommonProps) {
   const {
     criticalPath,
@@ -145,26 +194,13 @@ function SpanBar(props: TCommonProps) {
           const criticalPathViewStart = critcalPathViewBounds.start;
           const criticalPathViewEnd = critcalPathViewBounds.end;
           const key = `${each.spanId}-${index}`;
+
           return (
-            <Tooltip
-              placement="top"
-              title={
-                <div>
-                  A segment on the <em>critical path</em> of the overall trace/request/workflow.
-                </div>
-              }
-            >
-              <div
-                key={key}
-                data-testid="SpanBar--criticalPath"
-                className="SpanBar--criticalPath"
-                style={{
-                  background: 'black',
-                  left: toPercentInDecimal(criticalPathViewStart),
-                  width: toPercentInDecimal(criticalPathViewEnd - criticalPathViewStart),
-                }}
-              />
-            </Tooltip>
+            <SpanBarCriticalPath
+              criticalPathViewStart={criticalPathViewStart}
+              criticalPathViewEnd={criticalPathViewEnd}
+              key={key}
+            />
           );
         })}
     </div>

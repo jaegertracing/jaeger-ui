@@ -415,6 +415,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
     const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
     const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
+
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
