@@ -14,7 +14,6 @@
 
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
 import transformTraceData from '../../../model/transform-trace-data';
-import { getColumnValues } from './tableValues';
 
 import testTrace from './tableValuesTestTrace/testTrace.json';
 
@@ -29,16 +28,14 @@ describe(' generateDropdownValue', () => {
 
   it('check generateSecondDropdownValue no Tag is selected', () => {
     const expectValues = ['Operation Name', 'span.kind', 'error', 'db.type'];
-    const tableValue = getColumnValues('Service Name', transformedTrace);
-    const values = generateSecondDropdownValue(tableValue, transformedTrace, 'Service Name');
+    const values = generateSecondDropdownValue(transformedTrace, 'Service Name');
 
     expect(values).toEqual(expectValues);
   });
 
   it('check generateSecondDrop Tag is selected', () => {
     const expectValues = ['Service Name', 'Operation Name', 'error'];
-    const tableValue = getColumnValues('span.kind', transformedTrace);
-    const values = generateSecondDropdownValue(tableValue, transformedTrace, 'span.kind');
+    const values = generateSecondDropdownValue(transformedTrace, 'span.kind');
     expect(values).toEqual(expectValues);
   });
 });
