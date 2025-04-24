@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Select, InputNumber, Popover } from 'antd';
-import { IoHelp, IoRefresh } from 'react-icons/io5';
+import { Select, InputNumber, Popover, Button } from 'antd';
+import { IoHelp } from 'react-icons/io5';
 import SearchableSelect from '../common/SearchableSelect';
 import UiFindInput from '../common/UiFindInput';
 import './DAGOptions.css';
@@ -179,12 +179,15 @@ const DAGOptions: React.FC<IDAGOptionsProps> = ({
             disabled={!selectedService}
             data-testid="depth-input"
           />
-          <IoRefresh
-            className="reset-icon"
+          <Button
             onClick={onReset}
-            style={{ marginLeft: '8px', cursor: 'pointer' }}
             data-testid="reset-button"
-          />
+            type="default"
+            className="reset-button"
+            size="small"
+          >
+            Reset
+          </Button>
         </div>
       </div>
       <div className="selector-container">

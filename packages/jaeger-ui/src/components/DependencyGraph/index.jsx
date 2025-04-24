@@ -128,12 +128,15 @@ export class DependencyGraphPageImpl extends Component {
 
   handleDepthChange = value => {
     if (value === null || value === undefined) {
-      return;
-    }
-    const numValue = Number(value);
-    if (Number.isInteger(numValue) && numValue >= 0) {
-      this.setState({ selectedDepth: numValue });
-      this.debouncedDepthChange(numValue);
+      this.setState({ selectedDepth: value, debouncedDepth: value });
+    } else {
+      const numValue = Number(value);
+      if (Number.isInteger(numValue) && numValue >= 0) {
+        this.setState({ selectedDepth: numValue });
+        this.debouncedDepthChange(numValue);
+      } else {
+        this.setState({ selectedDepth: 0, debouncedDepth: 0 });
+      }
     }
   };
 

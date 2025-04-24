@@ -165,18 +165,36 @@ describe('<DependencyGraph>', () => {
       });
     });
 
-    it('handles depth change', () => {
+    it('handles depth change with numeric value', () => {
       const depth = 3;
       wrapper.instance().handleDepthChange(depth);
       expect(wrapper.state('selectedDepth')).toBe(depth);
     });
 
-    it('ignores invalid depth values', () => {
-      const initialDepth = wrapper.state('selectedDepth');
-      wrapper.instance().handleDepthChange('invalid');
-      expect(wrapper.state('selectedDepth')).toBe(initialDepth);
-      wrapper.instance().handleDepthChange(-1);
-      expect(wrapper.state('selectedDepth')).toBe(initialDepth);
+    it('handles depth change with negative value', () => {
+      const depth = -1;
+      wrapper.instance().handleDepthChange(depth);
+      expect(wrapper.state('selectedDepth')).toBe(0);
+    });
+
+    it('handles depth change with null value', () => {
+      const instance = wrapper.instance();
+      jest.spyOn(instance, 'setState');
+
+      instance.handleDepthChange(null);
+      expect(instance.setState).toHaveBeenCalledWith({ selectedDepth: null, debouncedDepth: null });
+      expect(wrapper.state('selectedDepth')).toBe(null);
+      expect(wrapper.state('debouncedDepth')).toBe(null);
+    });
+
+    it('handles depth change with undefined value', () => {
+      const instance = wrapper.instance();
+      jest.spyOn(instance, 'setState');
+
+      instance.handleDepthChange(undefined);
+      expect(instance.setState).toHaveBeenCalledWith({ selectedDepth: undefined, debouncedDepth: undefined });
+      expect(wrapper.state('selectedDepth')).toBe(undefined);
+      expect(wrapper.state('debouncedDepth')).toBe(undefined);
     });
 
     it('handles reset', () => {
@@ -203,14 +221,6 @@ describe('<DependencyGraph>', () => {
         <DependencyGraph {...props} dependencies={manyDependencies} fetchDependencies={() => {}} />
       );
       expect(newWrapper.state('selectedLayout')).toBe('sfdp');
-    });
-
-    it('ignores undefined or null depth values', () => {
-      const initialDepth = wrapper.state('selectedDepth');
-      wrapper.instance().handleDepthChange(undefined);
-      expect(wrapper.state('selectedDepth')).toBe(initialDepth);
-      wrapper.instance().handleDepthChange(null);
-      expect(wrapper.state('selectedDepth')).toBe(initialDepth);
     });
 
     it('debounces depth changes', done => {

@@ -139,6 +139,24 @@ describe('DAGOptions', () => {
     expect(defaultProps.onDepthChange).toHaveBeenCalledWith(10);
   });
 
+  it('handles empty depth value', () => {
+    render(<DAGOptions {...defaultProps} selectedService="service-1" />);
+
+    const depthInput = screen.getByTestId('depth-input');
+    fireEvent.change(depthInput, { target: { value: '' } });
+
+    expect(defaultProps.onDepthChange).toHaveBeenCalledWith(null);
+  });
+
+  it('handles undefined depth value', () => {
+    render(<DAGOptions {...defaultProps} selectedService="service-1" />);
+
+    const depthInput = screen.getByTestId('depth-input');
+    fireEvent.change(depthInput, { target: { value: '' } });
+
+    expect(defaultProps.onDepthChange).toHaveBeenCalledWith(null);
+  });
+
   it('handles reset button click', () => {
     render(<DAGOptions {...defaultProps} />);
 

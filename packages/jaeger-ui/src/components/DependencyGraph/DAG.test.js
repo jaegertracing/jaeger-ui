@@ -213,6 +213,26 @@ describe('<DAG>', () => {
     expect(digraph.props.edges).toHaveLength(0);
   });
 
+  it('handles null or undefined maxDepth values', () => {
+    const serviceCalls = [
+      { parent: 'service-a', child: 'service-b', callCount: 1 },
+      { parent: 'service-b', child: 'service-c', callCount: 2 },
+    ];
+
+    renderer.render(
+      <DAG
+        serviceCalls={serviceCalls}
+        selectedService="service-a"
+        selectedDepth={null}
+        selectedLayout="dot"
+      />
+    );
+    const element = renderer.getRenderOutput();
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(3);
+    expect(digraph.props.edges).toHaveLength(2);
+  });
+
   it('shows error message when too many services to render', () => {
     const serviceCalls = Array.from({ length: DAG_MAX_NUM_SERVICES + 1 }, (_, i) => ({
       parent: `service-${i}`,
