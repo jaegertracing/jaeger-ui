@@ -115,7 +115,11 @@ export default class KeyboardShortcutsHelp extends React.PureComponent<Props, St
           onOk={this.onCloserClicked}
           onCancel={this.onCloserClicked}
           cancelButtonProps={{ style: { display: 'none' } }}
-          bodyStyle={{ padding: 0 }}
+          styles={{
+            body: {
+              padding: 0,
+            },
+          }}
         >
           {getHelpModal()}
         </Modal>
