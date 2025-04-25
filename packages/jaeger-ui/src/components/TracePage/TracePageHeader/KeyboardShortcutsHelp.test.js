@@ -13,15 +13,14 @@
 // limitations under the License.
 
 import React from 'react';
-import { Button, Modal } from 'antd';
-import { shallow } from 'enzyme';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import * as track from './KeyboardShortcutsHelp.track';
 
 describe('KeyboardShortcutsHelp', () => {
   const testClassName = 'test--ClassName';
-  const wrapper = shallow(<KeyboardShortcutsHelp className={testClassName} />);
   let trackSpy;
 
   beforeAll(() => {
@@ -30,28 +29,41 @@ describe('KeyboardShortcutsHelp', () => {
 
   beforeEach(() => {
     trackSpy.mockReset();
+    render(<KeyboardShortcutsHelp className={testClassName} />);
   });
 
   it('renders as expected', () => {
-    expect(wrapper.find(Button).hasClass(testClassName)).toBe(true);
-    expect(wrapper).toMatchSnapshot();
+    const buttonElement = screen.getByRole('button');
+    expect(buttonElement.className).toContain(testClassName);
   });
 
   it('opens modal and tracks its opening', () => {
-    expect(wrapper.setState({ visible: false }));
+    const buttonElement = screen.getByRole('button');
+    let modalElement = screen.queryByText('Keyboard Shortcuts');
+    expect(modalElement).not.toBeInTheDocument();
 
-    wrapper.find(Button).simulate('click', {});
-    expect(wrapper.state('visible')).toBe(true);
+    fireEvent.click(buttonElement);
+    modalElement = screen.getByText('Keyboard Shortcuts');
+    expect(modalElement).toBeInTheDocument();
+
     expect(trackSpy).toHaveBeenCalled();
   });
 
-  it('closes modal', () => {
-    wrapper.setState({ visible: true });
-    wrapper.find(Modal).prop('onOk')();
-    expect(wrapper.state('visible')).toBe(false);
+  it('closes modal on cancel', async () => {
+    const buttonElement = screen.getByRole('button');
+    fireEvent.click(buttonElement);
+    const closeButton = screen.getByLabelText('Close');
+    fireEvent.click(closeButton);
+    const modalElement = screen.getByText('Keyboard Shortcuts');
+    expect(modalElement).not.toBeVisible();
+  });
 
-    wrapper.setState({ visible: true });
-    wrapper.find(Modal).prop('onCancel')();
-    expect(wrapper.state('visible')).toBe(false);
+  it('closes modal on ok', async () => {
+    const buttonElement = screen.getByRole('button');
+    fireEvent.click(buttonElement);
+    const okButton = screen.getByText('OK');
+    fireEvent.click(okButton);
+    const modalElement = screen.getByText('Keyboard Shortcuts');
+    expect(modalElement).not.toBeVisible();
   });
 });
