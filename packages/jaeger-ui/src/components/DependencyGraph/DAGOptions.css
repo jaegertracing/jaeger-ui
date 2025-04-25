@@ -93,9 +93,17 @@
   border-color: #000;
 }
 
+.reset-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 200px;
+}
+
 .reset-icon {
   color: #999;
   cursor: pointer;
+  font-size: 20px;
   transition: color 0.3s ease;
 }
 
@@ -130,4 +138,22 @@
   margin-left: auto;
   align-self: flex-end;
   min-width: 200px;
+}
+
+.reset-button {
+  margin-left: 8px;
+  margin-right: 30px;
+  height: 32px;
+  background-color: #f5f5f5;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.reset-button:hover {
+  background-color: #e6e6e6;
+  border-color: #d9d9d9;
+  color: rgba(0, 0, 0, 0.85);
 }

@@ -75,15 +75,17 @@ export const renderNode = (
 const findConnectedServices = (
   serviceCalls: TServiceCall[],
   startService: string,
-  maxDepth: number
+  maxDepth: number | null | undefined
 ): { nodes: Set<string>; edges: TServiceCall[] } => {
   const nodes = new Set<string>([startService]);
   const edges: TServiceCall[] = [];
   const queue: { service: string; depth: number }[] = [{ service: startService, depth: 0 }];
 
+  const maxDepthValue = maxDepth ?? Number.MAX_SAFE_INTEGER;
+
   while (queue.length > 0) {
     const { service, depth } = queue.shift()!;
-    if (depth >= maxDepth) continue;
+    if (depth >= maxDepthValue) continue;
 
     serviceCalls.forEach(call => {
       if (call.parent === service && !nodes.has(call.child)) {
@@ -165,7 +167,7 @@ export const createMenuItems = (
 const formatServiceCalls = (
   serviceCalls: TServiceCall[],
   selectedService: string | null,
-  selectedDepth: number
+  selectedDepth: number | null | undefined
 ): {
   nodes: TVertex[];
   edges: TEdge[];
