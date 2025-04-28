@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react';
 
 import GraphTicks from './GraphTicks';
 
@@ -27,18 +27,20 @@ describe('<GraphTicks>', () => {
     numTicks: 4,
   };
 
-  let ticksG;
+  let container;
 
-  beforeEach(() => {
-    const wrapper = shallow(<GraphTicks {...defaultProps} />);
-    ticksG = wrapper.find('[data-test="ticks"]');
+  beforeEach(async () => {
+    const { container: c } = render(<GraphTicks {...defaultProps} />);
+    container = c;
   });
 
-  it('creates a <g> for ticks', () => {
+  it('creates a <g> for ticks', async () => {
+    const ticksG = await container.querySelectorAll('[data-test="ticks"]');
     expect(ticksG.length).toBe(1);
   });
 
-  it('creates a line for each ticks excluding the first and last', () => {
-    expect(ticksG.find('line').length).toBe(defaultProps.numTicks - 1);
+  it('creates a line for each ticks excluding the first and last', async () => {
+    const lines = await container.querySelectorAll('[data-test="ticks"]:nth-child(1) line');
+    expect(lines.length).toBe(defaultProps.numTicks - 1);
   });
 });
