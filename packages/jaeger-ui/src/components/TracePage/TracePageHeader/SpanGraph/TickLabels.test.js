@@ -77,5 +77,4 @@ describe('<TickLabels>', () => {
     });
   });
 
-  // Removed the "doesn't explode if no trace is present" test as 'trace' is not a prop
 });
