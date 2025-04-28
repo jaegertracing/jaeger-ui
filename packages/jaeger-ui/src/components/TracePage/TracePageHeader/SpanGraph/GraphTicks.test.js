@@ -29,18 +29,18 @@ describe('<GraphTicks>', () => {
 
   let container;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     const { container: c } = render(<GraphTicks {...defaultProps} />);
     container = c;
   });
 
-  it('creates a <g> for ticks', async () => {
-    const ticksG = await container.querySelectorAll('[data-test="ticks"]');
+  it('creates a <g> for ticks', () => {
+    const ticksG = container.querySelectorAll('[data-test="ticks"]');
     expect(ticksG.length).toBe(1);
   });
 
-  it('creates a line for each ticks excluding the first and last', async () => {
-    const lines = await container.querySelectorAll('[data-test="ticks"]:nth-child(1) line');
+  it('creates a line for each ticks excluding the first and last', () => {
+    const lines = container.querySelectorAll('[data-test="ticks"]:nth-child(1) line');
     expect(lines.length).toBe(defaultProps.numTicks - 1);
   });
 });
