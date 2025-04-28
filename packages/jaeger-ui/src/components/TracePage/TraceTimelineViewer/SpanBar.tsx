@@ -57,6 +57,19 @@ function toPercentInDecimal(value: number) {
 function SpanBarCriticalPath(props: { criticalPathViewStart: number; criticalPathViewEnd: number }) {
   const [shouldLoadTooltip, setShouldLoadTooltip] = useState(false);
 
+  const criticalPath = (
+    <div
+      data-testid="SpanBar--criticalPath"
+      className="SpanBar--criticalPath"
+      onMouseEnter={() => setShouldLoadTooltip(true)}
+      style={{
+        background: 'black',
+        left: toPercentInDecimal(props.criticalPathViewStart),
+        width: toPercentInDecimal(props.criticalPathViewEnd - props.criticalPathViewStart),
+      }}
+    />
+  );
+
   // Load tooltip only when hovering over critical path segment
   // to reduce initial load time of trace page by ~300ms for 500 spans
   if (shouldLoadTooltip) {
@@ -71,33 +84,12 @@ function SpanBarCriticalPath(props: { criticalPathViewStart: number; criticalPat
           </div>
         }
       >
-        <div
-          data-testid="SpanBar--criticalPath"
-          className="SpanBar--criticalPath"
-          style={{
-            background: 'black',
-            left: toPercentInDecimal(props.criticalPathViewStart),
-            width: toPercentInDecimal(props.criticalPathViewEnd - props.criticalPathViewStart),
-          }}
-        />
+        {criticalPath}
       </Tooltip>
     );
   }
 
-  return (
-    <div
-      data-testid="SpanBar--criticalPath"
-      className="SpanBar--criticalPath"
-      onMouseEnter={() => {
-        setShouldLoadTooltip(true);
-      }}
-      style={{
-        background: 'black',
-        left: toPercentInDecimal(props.criticalPathViewStart),
-        width: toPercentInDecimal(props.criticalPathViewEnd - props.criticalPathViewStart),
-      }}
-    />
-  );
+  return criticalPath;
 }
 
 function SpanBar(props: TCommonProps) {
