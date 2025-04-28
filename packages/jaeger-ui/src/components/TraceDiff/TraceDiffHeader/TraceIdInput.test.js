@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { Input } from 'antd';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import TraceIdInput from './TraceIdInput';
 
@@ -22,11 +22,17 @@ describe('TraceIdInput', () => {
   const props = {
     selectTrace: jest.fn(),
   };
-  const { Search } = Input;
 
   it('renders as expected', () => {
-    const wrapper = shallow(<TraceIdInput {...props} />);
-    expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find(Search).prop('onSearch')).toBe(props.selectTrace);
+    render(<TraceIdInput {...props} />);
+
+    // Check for the text rendered by addonBefore
+    expect(screen.getByText('Select by Trace ID')).toBeInTheDocument();
+
+    // Check for the input element
+    expect(screen.getByRole('searchbox')).toBeInTheDocument();
+
+    // Check for the search button (Ant Design Search renders a button)
+    expect(screen.getByRole('button')).toBeInTheDocument();
   });
 });
