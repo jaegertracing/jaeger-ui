@@ -17,6 +17,7 @@
     "@babel/preset-typescript": "^7.24.6",
     "@testing-library/jest-dom": "^6.4.5",
     "@testing-library/react": "^15.0.7",
+    "@testing-library/user-event": "^14.6.1",
     "@types/deep-freeze": "^0.1.1",
     "@types/lodash": "^4.17.0",
     "@types/object-hash": "^3.0.2",

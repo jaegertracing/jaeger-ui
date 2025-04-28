@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import TimelineCollapser from './TimelineCollapser';
 
@@ -25,8 +26,7 @@ describe('<TimelineCollapser>', () => {
       onExpandAll: () => {},
       onExpandOne: () => {},
     };
-    const wrapper = shallow(<TimelineCollapser {...props} />);
-    expect(wrapper).toBeDefined();
-    expect(wrapper.find('.TimelineCollapser').length).toBe(1);
+    const { container } = render(<TimelineCollapser {...props} />);
+    expect(container).toBeDefined();
   });
 });

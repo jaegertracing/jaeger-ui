@@ -38,6 +38,7 @@ export default function Scrubber({
     <g className={className}>
       <g
         className="Scrubber--handles"
+        data-testid="scrubber-handles"
         onMouseDown={onMouseDown}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}

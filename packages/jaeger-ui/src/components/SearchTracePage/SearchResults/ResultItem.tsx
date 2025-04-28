@@ -101,7 +101,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
         <Link to={linkTo}>
           <Row>
             <Col span={4} className="ub-p2">
-              <Tag className="ub-m1" data-test={markers.NUM_SPANS}>
+              <Tag className="ub-m1" data-testid={markers.NUM_SPANS}>
                 {this.state.numSpans} Span{this.state.numSpans > 1 && 's'}
               </Tag>
               {Boolean(this.state.numErredSpans) && (
@@ -111,7 +111,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
               )}
             </Col>
             <Col span={16} className="ub-p2">
-              <ul className="ub-list-reset" data-test={markers.SERVICE_TAGS}>
+              <ul className="ub-list-reset" data-testid={markers.SERVICE_TAGS}>
                 {_sortBy(services, s => s.name).map(service => {
                   const { name, numberOfSpans: count } = service;
                   return (

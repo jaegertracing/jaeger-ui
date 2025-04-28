@@ -13,31 +13,33 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button } from 'antd';
-import { shallow } from 'enzyme';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+
 import DownloadResults from './DownloadResults';
 
 describe('DownloadResults button', () => {
-  let wrapper;
-  const getBtn = (btnIndex = 0) => wrapper.find(Button).at(btnIndex);
-  const getLabel = (btnIndex = 0) => getBtn(btnIndex).prop('children');
   const props = {
     onDownloadResultsClicked: jest.fn(),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    wrapper = shallow(<DownloadResults {...props} />);
+    render(<DownloadResults {...props} />);
   });
 
   it('when renders then correct label is showing', () => {
-    expect(getLabel()).toBe('Download Results');
+    // Find the button by its text content
+    expect(screen.getByRole('button', { name: /Download Results/i })).toBeInTheDocument();
   });
 
   it('when click then call download results function', () => {
     expect(props.onDownloadResultsClicked).toHaveBeenCalledTimes(0);
 
-    getBtn(0).simulate('click', {});
+    // Find the button and simulate a click
+    const button = screen.getByRole('button', { name: /Download Results/i });
+    fireEvent.click(button);
+
     expect(props.onDownloadResultsClicked).toHaveBeenCalledTimes(1);
   });
 });

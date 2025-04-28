@@ -131,7 +131,13 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
           {useLabel && <span className="NameSelector--label">{label}:</span>}
           <BreakableText className="NameSelector--value" text={text} />
           <IoChevronDown className="NameSelector--chevron" />
-          {!required && value && <IoClose className="NameSelector--clearIcon" onClick={this.clearValue} />}
+          {!required && value && (
+            <IoClose
+              className="NameSelector--clearIcon"
+              onClick={this.clearValue}
+              data-testid="name-selector-clear"
+            />
+          )}
         </h2>
       </Popover>
     );

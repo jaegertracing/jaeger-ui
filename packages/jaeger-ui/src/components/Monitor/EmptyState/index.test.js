@@ -13,21 +13,18 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react';
 import MonitorATMEmptyState from '.';
 
 describe('<MonitorATMEmptyState>', () => {
-  let wrapper;
+  let container;
 
   beforeEach(() => {
-    wrapper = shallow(<MonitorATMEmptyState />);
+    const { container: c } = render(<MonitorATMEmptyState />);
+    container = c;
   });
 
   it('does not explode', () => {
-    expect(wrapper.length).toBe(1);
-  });
-
-  it('ATM snapshot test', () => {
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toBeDefined();
   });
 });

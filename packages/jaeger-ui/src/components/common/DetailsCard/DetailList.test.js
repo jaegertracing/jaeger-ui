@@ -13,22 +13,27 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { List } from 'antd';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import DetailList from './DetailList';
 
 describe('DetailList', () => {
   const details = ['foo', 'bar', 'baz'];
 
-  it('renders list as expected', () => {
-    expect(shallow(<DetailList details={details} />)).toMatchSnapshot();
-  });
+  it('renders list items with the provided details', () => {
+    render(<DetailList details={details} />);
 
-  it('renders item as expected', () => {
-    const renderItem = shallow(<DetailList details={details} />)
-      .find(List)
-      .prop('renderItem');
-    expect(shallow(<div>{renderItem(details[0])}</div>)).toMatchSnapshot();
+    // Check if each detail string is rendered within a list item
+    details.forEach(detail => {
+      // Antd List renders items with role='listitem' implicitly
+      // We find the list item and check if it contains the expected text
+      const listItem = screen.getByText(detail).closest('li');
+      expect(listItem).toBeInTheDocument();
+      expect(listItem).toHaveTextContent(detail);
+    });
+
+    // Optionally, check the total number of list items
+    expect(screen.getAllByRole('listitem')).toHaveLength(details.length);
   });
 });
