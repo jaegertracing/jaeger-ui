@@ -106,4 +106,27 @@ describe('<SpanBar>', () => {
     const wrapper = render(<SpanBar {...newProps} />);
     expect(wrapper.getAllByTestId('SpanBar--criticalPath').length).toEqual(1);
   });
+
+  it('Critical Path tooltip is visible on hover', () => {
+    const newProps = {
+      ...props,
+      criticalPath: [
+        {
+          spanId: 'Test-SpanId',
+          section_start: 10,
+          section_end: 20,
+        },
+      ],
+      getViewedBounds: () => ({ start: 0.1, end: 0.5 }),
+    };
+    render(<SpanBar {...newProps} />);
+
+    const criticalPathEl = screen.getByTestId('SpanBar--criticalPath');
+    fireEvent.mouseEnter(criticalPathEl);
+
+    const criticalPathTooltip = screen.getByRole('tooltip');
+    expect(criticalPathTooltip.textContent).toMatch(
+      'A segment on the critical path of the overall trace/request/workflow.'
+    );
+  });
 });
