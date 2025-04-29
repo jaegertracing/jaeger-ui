@@ -23,7 +23,7 @@ import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 
 // Helper function to wrap component with Router
-const renderWithRouter = (ui, { route = '/' } = {}) => {
+const renderWithRouter = ui => {
   return render(ui, { wrapper: MemoryRouter });
 };
 
@@ -69,28 +69,22 @@ it('<ResultItem /> should not render any ServiceTags when there are no services'
 });
 
 it('<ResultItem /> should render error icon on ServiceTags that have an error tag', () => {
-  // Ensure spans exist and have tags arrays before pushing
-  if (trace.spans && trace.spans.length > 0) {
-    if (!trace.spans[0].tags) {
-      trace.spans[0].tags = [];
-    }
-    // Find the first span belonging to the first service
-    const firstService = trace.services[0];
-    const spanWithError = trace.spans.find(span => span.process.serviceName === firstService.name);
-    if (spanWithError) {
-      if (!spanWithError.tags) {
-        spanWithError.tags = [];
-      }
-      spanWithError.tags.push({ key: 'error', value: true });
-    } else {
-      console.warn('Could not find a span for the first service to add error tag.');
-      // Modify the first span as a fallback if no specific service span found
-      if (!trace.spans[0].tags) trace.spans[0].tags = [];
-      trace.spans[0].tags.push({ key: 'error', value: true });
-    }
-  } else {
-    console.warn('Trace has no spans to add an error tag to.');
-  }
+  // Assume trace has services and spans from the generator. Assert this assumption.
+  expect(trace.services).toBeDefined();
+  expect(trace.services.length).toBeGreaterThan(0);
+  expect(trace.spans).toBeDefined();
+  expect(trace.spans.length).toBeGreaterThan(0);
+
+  // Find the first span belonging to the first service.
+  const firstService = trace.services[0];
+  const spanWithError = trace.spans.find(span => span.process.serviceName === firstService.name);
+
+  // Assert that a span for the first service was found. If not, the fixture is wrong.
+  expect(spanWithError).toBeDefined();
+
+  // Add the error tag directly, initializing tags array if necessary.
+  spanWithError.tags = spanWithError.tags || [];
+  spanWithError.tags.push({ key: 'error', value: true });
 
   renderWithRouter(
     <ResultItem
@@ -106,14 +100,10 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error ta
   const serviceTagsContainer = screen.getByTestId(markers.SERVICE_TAGS);
   // Find the tag associated with the service that should have the error
   const errorTag = Array.from(serviceTagsContainer.querySelectorAll('li > .ResultItem--serviceTag')).find(
-    tag => tag.textContent.includes(trace.services[0].name)
+    tag => tag.textContent.includes(firstService.name)
   );
 
-  if (errorTag) {
-    expect(errorTag.querySelector('.ResultItem--errorIcon')).toBeInTheDocument();
-  } else {
-    // If the specific tag wasn't found (e.g., due to service name mismatch or rendering issue),
-    // fall back to checking if *any* error icon exists, which was the original test's broader check.
-    expect(screen.queryAllByRole('img', { hidden: true })[0]).toHaveClass('ResultItem--errorIcon');
-  }
+  // Assert that the specific service tag is found and has the error icon
+  expect(errorTag).toBeDefined();
+  expect(errorTag.querySelector('.ResultItem--errorIcon')).toBeInTheDocument();
 });
