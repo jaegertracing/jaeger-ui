@@ -61,8 +61,6 @@ const initialState = {
 const mockStore = createStore(rootReducer, initialState);
 
 describe('<MonitorATMPage>', () => {
-  let container;
-
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -85,24 +83,24 @@ describe('<MonitorATMPage>', () => {
       return null;
     });
     mockedStorage.set.mockImplementation(() => {});
+  });
 
-    // --- Render Component ---
-    const { container: c } = render(
+  it('does not explode and renders initial elements', () => {
+    const { container } = render(
       <Provider store={mockStore}>
         <MemoryRouter>
           <MonitorATMPage />
         </MemoryRouter>
       </Provider>
     );
-    container = c;
-  });
 
-  it('does not explode and renders initial elements', () => {
     expect(container).toBeDefined();
 
     // Check calls on the mocked *actions*
     expect(mockedJaegerApiActions.fetchServices).toHaveBeenCalledTimes(1);
-    // Note: fetchMetrics calls might not happen if initialState.services.services is empty.
+    // Metrics fetches should NOT happen on initial mount because initialState.services is empty.
+    expect(mockedJaegerApiActions.fetchAllServiceMetrics).not.toHaveBeenCalled();
+    expect(mockedJaegerApiActions.fetchAggregatedServiceMetrics).not.toHaveBeenCalled();
 
     // Check main headings and selectors
     expect(screen.getByRole('heading', { name: /Service/i })).toBeInTheDocument();
@@ -117,5 +115,42 @@ describe('<MonitorATMPage>', () => {
     // Check table section
     expect(screen.getByRole('heading', { name: /Operations metrics/i })).toBeInTheDocument();
     expect(screen.getByRole('table')).toBeInTheDocument();
+  });
+
+  it('renders EmptyState when isATMActivated is false', () => {
+    // Create a specific state for this test where ATM is not activated
+    const emptyStateInitialState = {
+      ...initialState, // Spread the common initial state
+      metrics: {
+        ...initialState.metrics, // Spread the common metrics state
+        isATMActivated: false, // Override to false
+      },
+    };
+    const emptyStateStore = createStore(rootReducer, emptyStateInitialState);
+
+    // Render with the modified store
+    render(
+      <Provider store={emptyStateStore}>
+        <MemoryRouter>
+          <MonitorATMPage />
+        </MemoryRouter>
+      </Provider>
+    );
+
+    // Assert EmptyState component is rendered (e.g., by checking for its unique elements)
+    // Using the image alt text as a likely unique identifier
+    expect(screen.getByAltText('jaeger-monitor-tab-preview')).toBeInTheDocument();
+
+    // Assert main UI elements are NOT rendered
+    // Use exact match for 'Service' heading to avoid matching EmptyState content
+    expect(screen.queryByRole('heading', { name: /^Service$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Latency/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+
+    // fetchServices is called unconditionally in componentDidMount
+    expect(mockedJaegerApiActions.fetchServices).toHaveBeenCalledTimes(1);
+    // Metrics fetches should NOT happen if services array is initially empty
+    expect(mockedJaegerApiActions.fetchAllServiceMetrics).not.toHaveBeenCalled();
+    expect(mockedJaegerApiActions.fetchAggregatedServiceMetrics).not.toHaveBeenCalled();
   });
 });
