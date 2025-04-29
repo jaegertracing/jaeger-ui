@@ -13,18 +13,16 @@
 // limitations under the License.
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import MonitorATMEmptyState from '.';
 
 describe('<MonitorATMEmptyState>', () => {
-  let container;
-
   beforeEach(() => {
-    const { container: c } = render(<MonitorATMEmptyState />);
-    container = c;
+    render(<MonitorATMEmptyState />);
   });
 
-  it('does not explode', () => {
-    expect(container).toBeDefined();
+  it('renders the title', () => {
+    expect(screen.getByText('Get started with Service Performance Monitoring')).toBeInTheDocument();
   });
 });
