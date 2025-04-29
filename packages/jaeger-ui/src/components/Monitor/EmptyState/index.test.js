@@ -13,21 +13,16 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import MonitorATMEmptyState from '.';
 
 describe('<MonitorATMEmptyState>', () => {
-  let wrapper;
-
   beforeEach(() => {
-    wrapper = shallow(<MonitorATMEmptyState />);
+    render(<MonitorATMEmptyState />);
   });
 
-  it('does not explode', () => {
-    expect(wrapper.length).toBe(1);
-  });
-
-  it('ATM snapshot test', () => {
-    expect(wrapper).toMatchSnapshot();
+  it('renders the title', () => {
+    expect(screen.getByText('Get started with Service Performance Monitoring')).toBeInTheDocument();
   });
 });
