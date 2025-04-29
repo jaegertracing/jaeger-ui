@@ -76,5 +76,4 @@ describe('<TickLabels>', () => {
       expect(ticks[i + 1]).toHaveStyle(`left: ${pos}`);
     });
   });
-
 });
