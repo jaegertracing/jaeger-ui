@@ -30,7 +30,10 @@ const renderWithRouter = ui => {
 let trace; // Use let to allow modification in tests
 
 beforeEach(() => {
-  // Reset trace data before each test
+  // Reset trace data before each test.
+  // Some tests modify the trace object (e.g., adding tags).
+  // Resetting ensures that each test starts with a clean, unmodified trace,
+  // preventing side effects between tests and maintaining test isolation.
   trace = transformTraceData(traceGenerator.trace({}));
 });
 
