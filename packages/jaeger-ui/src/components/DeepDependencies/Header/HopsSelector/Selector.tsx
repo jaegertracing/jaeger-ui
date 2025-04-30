@@ -53,6 +53,7 @@ export default class Selector extends PureComponent<TProps> {
           className={`${CLASSNAME}--btn is-${fullness} ${CLASSNAME}--${suffix}`}
           type="button"
           onClick={() => this.handleClick(distance)}
+          data-testid={`hop-${direction === EDirection.Downstream ? 'down' : 'up'}-${Math.abs(distance)}`}
         >
           {Math.abs(distance)}
         </button>
@@ -76,6 +77,7 @@ export default class Selector extends PureComponent<TProps> {
         className={`${CLASSNAME}--decrement`}
         type="button"
         onClick={() => handleClick(furthestDistance - direction, direction)}
+        data-testid={`decrement-${direction === EDirection.Downstream ? 'down' : 'up'}`}
       >
         -
       </button>
@@ -87,6 +89,7 @@ export default class Selector extends PureComponent<TProps> {
         className={`${CLASSNAME}--increment`}
         type="button"
         onClick={() => handleClick(furthestDistance + direction, direction)}
+        data-testid={`increment-${direction === EDirection.Downstream ? 'down' : 'up'}`}
       >
         +
       </button>
@@ -103,7 +106,7 @@ export default class Selector extends PureComponent<TProps> {
 
     return (
       <Popover
-        arrowPointAtCenter
+        arrow={{ pointAtCenter: true }}
         content={[decrementBtn, ...hops.map(this.makeBtn), incrementBtn]}
         placement="bottom"
         title={`Visible ${lowercaseLabel}`}
