@@ -24,7 +24,7 @@ const TraceFlamegraph = ({ trace }: any) => {
   const convertedProfile = trace && trace.data ? convertJaegerTraceToProfile(_cloneDeep(trace.data)) : null;
 
   return (
-    <div className="Flamegraph-wrapper">
+    <div className="Flamegraph-wrapper" data-testid="flamegraph-wrapper">
       <FlamegraphRenderer colorMode="light" profile={convertedProfile} />
     </div>
   );
