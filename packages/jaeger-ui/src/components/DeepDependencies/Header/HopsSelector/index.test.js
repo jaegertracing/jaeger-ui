@@ -62,18 +62,18 @@ describe('HopsSelector', () => {
       await user.click(upstreamTrigger);
       const upstreamPopover = await screen.findByRole('tooltip');
 
-      // Check buttons appear inside upstream popover
-      expect(within(upstreamPopover).getByTestId('hop-up-0')).toBeInTheDocument();
-      expect(within(upstreamPopover).getByTestId('hop-up-1')).toBeInTheDocument();
-      const hopUp2InPopover = within(upstreamPopover).getByTestId('hop-up-2');
+      // Check buttons appear inside upstream popover (using -popover suffix)
+      expect(within(upstreamPopover).getByTestId('hop-up-0-popover')).toBeInTheDocument();
+      expect(within(upstreamPopover).getByTestId('hop-up-1-popover')).toBeInTheDocument();
+      const hopUp2InPopover = within(upstreamPopover).getByTestId('hop-up-2-popover');
       expect(hopUp2InPopover).toBeInTheDocument();
-      expect(within(upstreamPopover).getByTestId('hop-up-6')).toBeInTheDocument(); // Last hop
+      expect(within(upstreamPopover).getByTestId('hop-up-6-popover')).toBeInTheDocument(); // Last hop
 
       // Check default fullness (<= 2 is full)
-      expect(within(upstreamPopover).getByTestId('hop-up-0')).toHaveClass('is-Full');
-      expect(within(upstreamPopover).getByTestId('hop-up-1')).toHaveClass('is-Full');
+      expect(within(upstreamPopover).getByTestId('hop-up-0-popover')).toHaveClass('is-Full');
+      expect(within(upstreamPopover).getByTestId('hop-up-1-popover')).toHaveClass('is-Full');
       expect(hopUp2InPopover).toHaveClass('is-Full');
-      expect(within(upstreamPopover).getByTestId('hop-up-6')).toHaveClass('is-Empty'); // Last hop button
+      expect(within(upstreamPopover).getByTestId('hop-up-6-popover')).toHaveClass('is-Empty'); // Last hop button
 
       // Click a hop inside popover
       await user.click(hopUp2InPopover);
@@ -90,23 +90,23 @@ describe('HopsSelector', () => {
       const downstreamPopover = downstreamTitle.closest('.ant-popover-inner');
       expect(downstreamPopover).toBeInTheDocument();
 
-      // Check buttons appear inside downstream popover
-      expect(within(downstreamPopover).getByTestId('hop-down-0')).toBeInTheDocument();
-      expect(within(downstreamPopover).getByTestId('hop-down-1')).toBeInTheDocument();
-      const hopDown2InPopover = within(downstreamPopover).getByTestId('hop-down-2');
+      // Check buttons appear inside downstream popover (using -popover suffix)
+      expect(within(downstreamPopover).getByTestId('hop-down-0-popover')).toBeInTheDocument();
+      expect(within(downstreamPopover).getByTestId('hop-down-1-popover')).toBeInTheDocument();
+      const hopDown2InPopover = within(downstreamPopover).getByTestId('hop-down-2-popover');
       expect(hopDown2InPopover).toBeInTheDocument();
-      expect(within(downstreamPopover).getByTestId('hop-down-3')).toBeInTheDocument();
-      expect(within(downstreamPopover).getByTestId('hop-down-6')).toBeInTheDocument(); // Last hop
+      expect(within(downstreamPopover).getByTestId('hop-down-3-popover')).toBeInTheDocument();
+      expect(within(downstreamPopover).getByTestId('hop-down-6-popover')).toBeInTheDocument(); // Last hop
 
       // Check default fullness (<= 2 is full)
-      expect(within(downstreamPopover).getByTestId('hop-down-0')).toHaveClass('is-Full');
-      expect(within(downstreamPopover).getByTestId('hop-down-1')).toHaveClass('is-Full');
+      expect(within(downstreamPopover).getByTestId('hop-down-0-popover')).toHaveClass('is-Full');
+      expect(within(downstreamPopover).getByTestId('hop-down-1-popover')).toHaveClass('is-Full');
       expect(hopDown2InPopover).toHaveClass('is-Full');
-      expect(within(downstreamPopover).getByTestId('hop-down-3')).toHaveClass('is-Empty');
-      expect(within(downstreamPopover).getByTestId('hop-down-6')).toHaveClass('is-Empty'); // Last hop button
+      expect(within(downstreamPopover).getByTestId('hop-down-3-popover')).toHaveClass('is-Empty');
+      expect(within(downstreamPopover).getByTestId('hop-down-6-popover')).toHaveClass('is-Empty'); // Last hop button
 
       // Click a hop inside popover
-      await user.click(within(downstreamPopover).getByTestId('hop-down-3'));
+      await user.click(within(downstreamPopover).getByTestId('hop-down-3-popover'));
       expect(mockHandleClick).toHaveBeenCalledTimes(2);
       expect(mockHandleClick).toHaveBeenCalledWith(3, EDirection.Downstream);
     });
@@ -120,11 +120,11 @@ describe('HopsSelector', () => {
       expect(within(upstreamTrigger).getAllByTestId('hop-up-1')[0]).toHaveTextContent('1');
       expect(within(upstreamTrigger).getAllByTestId('hop-up-1')[1]).toHaveTextContent('1');
 
-      // Open upstream popover and check fullness
+      // Open upstream popover and check fullness (using -popover suffix)
       await user.click(upstreamTrigger);
       const upstreamPopover = await screen.findByRole('tooltip');
-      expect(within(upstreamPopover).getByTestId('hop-up-0')).toHaveClass('is-Full');
-      expect(within(upstreamPopover).getByTestId('hop-up-1')).toHaveClass('is-Full');
+      expect(within(upstreamPopover).getByTestId('hop-up-0-popover')).toHaveClass('is-Full');
+      expect(within(upstreamPopover).getByTestId('hop-up-1-popover')).toHaveClass('is-Full');
 
       // Check Downstream renders "No downstream hops"
       expect(screen.getByText(/No downstream hops/i)).toBeInTheDocument();
@@ -161,26 +161,26 @@ describe('HopsSelector', () => {
 
       // Test clicking specific hops after reopening popovers
 
-      // Click hop -3 (upstream)
+      // Click hop -3 (upstream) (using -popover suffix)
       await user.click(upstreamTrigger);
       const reopenedUpstreamTitle = await screen.findByText('Visible upstream hops');
       const reopenedUpstreamPopover = reopenedUpstreamTitle.closest('.ant-popover-inner');
       expect(reopenedUpstreamPopover).toBeInTheDocument();
       const outerUpstreamPopover = reopenedUpstreamPopover.closest('.ant-popover');
       await waitFor(() => expect(outerUpstreamPopover).not.toHaveStyle('pointer-events: none'));
-      const hopUp3Button = within(reopenedUpstreamPopover).getByTestId('hop-up-3');
+      const hopUp3Button = within(reopenedUpstreamPopover).getByTestId('hop-up-3-popover');
       await user.click(hopUp3Button);
       expect(mockHandleClick).toHaveBeenCalledTimes(1);
       expect(mockHandleClick).toHaveBeenCalledWith(-3, EDirection.Upstream);
 
-      // Click hop +4 (downstream)
+      // Click hop +4 (downstream) (using -popover suffix)
       await user.click(downstreamTrigger);
       const reopenedDownstreamTitle = await screen.findByText('Visible downstream hops');
       const reopenedDownstreamPopover = reopenedDownstreamTitle.closest('.ant-popover-inner');
       expect(reopenedDownstreamPopover).toBeInTheDocument();
       const outerDownstreamPopover = reopenedDownstreamPopover.closest('.ant-popover');
       await waitFor(() => expect(outerDownstreamPopover).not.toHaveStyle('pointer-events: none'));
-      const hopDown4Button = within(reopenedDownstreamPopover).getByTestId('hop-down-4');
+      const hopDown4Button = within(reopenedDownstreamPopover).getByTestId('hop-down-4-popover');
       await user.click(hopDown4Button);
       expect(mockHandleClick).toHaveBeenCalledTimes(2);
       expect(mockHandleClick).toHaveBeenCalledWith(4, EDirection.Downstream);
