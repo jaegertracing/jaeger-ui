@@ -35,9 +35,9 @@ describe('<PopupSQL />', () => {
     expect(screen.getByRole('heading', { name: /Tag: "SQL"/i })).toBeInTheDocument();
   });
 
-  it('renders the SQL content in the textarea', () => {
-    // RTL textarea role implicitly looks for `value` attribute, we need getByDisplayValue
-    // Also checking the value is wrapped in quotes as per the component logic
+  it('renders the SQL content wrapped in quotes inside the textarea', () => {
+    // The component implementation currently wraps the content in double quotes.
+    // This test verifies that specific behavior.
     expect(screen.getByDisplayValue(`"${popupContent}"`)).toBeInTheDocument();
   });
 
