@@ -59,6 +59,79 @@ const createSampleDataManager = () => {
   };
 };
 
+const findConnectedServices = (serviceCalls, startService, maxDepth) => {
+  const nodes = new Set([startService]);
+  const edges = [];
+  const queue = [{ service: startService, depth: 0 }];
+
+  const maxDepthValue = maxDepth ?? Number.MAX_SAFE_INTEGER;
+
+  while (queue.length > 0) {
+    const { service, depth } = queue.shift();
+    if (depth >= maxDepthValue) continue;
+
+    serviceCalls.forEach(call => {
+      if (call.parent === service && !nodes.has(call.child)) {
+        nodes.add(call.child);
+        edges.push(call);
+        queue.push({ service: call.child, depth: depth + 1 });
+      }
+      if (call.child === service && !nodes.has(call.parent)) {
+        nodes.add(call.parent);
+        edges.push(call);
+        queue.push({ service: call.parent, depth: depth + 1 });
+      }
+    });
+  }
+
+  return { nodes, edges };
+};
+
+const formatServiceCalls = (serviceCalls, selectedService, selectedDepth) => {
+  if (!selectedService) {
+    const nodeMap = {};
+    const nodes = [];
+    const edges = [];
+
+    serviceCalls.forEach(d => {
+      if (d.parent.trim().length !== 0 && d.child.trim().length !== 0) {
+        if (!nodeMap[d.parent]) {
+          nodes.push({ key: d.parent });
+          nodeMap[d.parent] = true;
+        }
+
+        if (!nodeMap[d.child]) {
+          nodes.push({ key: d.child });
+          nodeMap[d.child] = true;
+        }
+
+        edges.push({
+          from: d.parent,
+          to: d.child,
+          label: `${d.callCount}`,
+        });
+      }
+    });
+
+    return { nodes, edges };
+  }
+
+  const { nodes: connectedNodes, edges: connectedEdges } = findConnectedServices(
+    serviceCalls,
+    selectedService,
+    selectedDepth
+  );
+
+  return {
+    nodes: Array.from(connectedNodes).map(key => ({ key })),
+    edges: connectedEdges.map(edge => ({
+      from: edge.parent,
+      to: edge.child,
+      label: `${edge.callCount}`,
+    })),
+  };
+};
+
 const { getSampleData, loadSampleData } = createSampleDataManager();
 
 // export for tests
@@ -86,6 +159,15 @@ export class DependencyGraphPageImpl extends Component {
     this.setState({ debouncedDepth: value });
   }, 1000);
 
+  getMemoizedGraphData = memoizeOne((dependencies, selectedService, selectedDepth) => {
+    return formatServiceCalls(dependencies ?? [], selectedService, selectedDepth);
+  });
+
+  getMemoizedMatchCount = memoizeOne((graphDataNodes, uiFind) => {
+    if (!uiFind) return 0;
+    return graphDataNodes.filter(node => node.key.toLowerCase().includes(uiFind.toLowerCase())).length;
+  });
+
   constructor(props) {
     super(props);
     this.state = {
@@ -94,7 +176,6 @@ export class DependencyGraphPageImpl extends Component {
       selectedDepth: 5,
       debouncedDepth: 5,
       selectedSampleDatasetType: 'Backend',
-      matchCount: 0,
     };
   }
 
@@ -155,20 +236,10 @@ export class DependencyGraphPageImpl extends Component {
     });
   };
 
-  handleMatchCountChange = count => {
-    this.setState({ matchCount: count });
-  };
-
   render() {
     const { nodes, links, error, loading, dependencies, uiFind } = this.props;
-    const {
-      selectedService,
-      selectedLayout,
-      selectedDepth,
-      debouncedDepth,
-      selectedSampleDatasetType,
-      matchCount,
-    } = this.state;
+    const { selectedService, selectedLayout, selectedDepth, debouncedDepth, selectedSampleDatasetType } =
+      this.state;
 
     if (loading) {
       return <LoadingIndicator className="u-mt-vast" centered />;
@@ -195,6 +266,10 @@ export class DependencyGraphPageImpl extends Component {
 
     const isHierarchicalDisabled = dependencies.length > dagMaxNumServices;
 
+    const graphData = this.getMemoizedGraphData(dependencies, selectedService, debouncedDepth);
+
+    const matchCount = this.getMemoizedMatchCount(graphData.nodes, uiFind);
+
     return (
       <div>
         <div className="ub-m3">
@@ -217,13 +292,12 @@ export class DependencyGraphPageImpl extends Component {
         </div>
         <div className="DependencyGraph--graphWrapper">
           <DAG
-            serviceCalls={dependencies}
+            data={graphData}
             selectedLayout={selectedLayout}
             selectedDepth={debouncedDepth}
             selectedService={selectedService}
             uiFind={uiFind}
             onServiceSelect={this.handleServiceSelect}
-            onMatchCountChange={this.handleMatchCountChange}
           />
         </div>
       </div>

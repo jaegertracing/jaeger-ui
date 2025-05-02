@@ -89,15 +89,12 @@ describe('<DAG>', () => {
   });
 
   it('shows correct number of nodes and vertices', () => {
-    const serviceCalls = [
-      {
-        callCount: 1,
-        child: 'child-id',
-        parent: 'parent-id',
-      },
-    ];
+    const data = {
+      nodes: [{ key: 'parent-id' }, { key: 'child-id' }],
+      edges: [{ from: 'parent-id', to: 'child-id', label: '1' }],
+    };
 
-    renderer.render(<DAG serviceCalls={serviceCalls} />);
+    renderer.render(<DAG data={data} />);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.vertices).toHaveLength(2);
@@ -105,15 +102,9 @@ describe('<DAG>', () => {
   });
 
   it('does not show nodes with empty strings or string with only spaces', () => {
-    const serviceCalls = [
-      {
-        callCount: 1,
-        child: '',
-        parent: ' ',
-      },
-    ];
+    const data = { nodes: [], edges: [] };
 
-    renderer.render(<DAG serviceCalls={serviceCalls} />);
+    renderer.render(<DAG data={data} />);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
 
@@ -124,16 +115,15 @@ describe('<DAG>', () => {
   });
 
   it('shows filtered graph when selectedService and selectedDepth are provided', () => {
-    const serviceCalls = [
-      { parent: 'service-a', child: 'service-b', callCount: 1 },
-      { parent: 'service-b', child: 'service-c', callCount: 2 },
-      { parent: 'service-c', child: 'service-d', callCount: 3 },
-      { parent: 'service-x', child: 'service-y', callCount: 4 },
-    ];
+    const data = {
+      nodes: [{ key: 'service-a' }, { key: 'service-b' }, { key: 'service-c' }],
+      edges: [
+        { from: 'service-a', to: 'service-b', label: '1' },
+        { from: 'service-b', to: 'service-c', label: '2' },
+      ],
+    };
 
-    renderer.render(
-      <DAG serviceCalls={serviceCalls} selectedService="service-a" selectedDepth={2} selectedLayout="dot" />
-    );
+    renderer.render(<DAG data={data} selectedService="service-a" selectedDepth={2} selectedLayout="dot" />);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.vertices).toHaveLength(3);
@@ -141,14 +131,15 @@ describe('<DAG>', () => {
   });
 
   it('handles bidirectional connections in depth filtering', () => {
-    const serviceCalls = [
-      { parent: 'service-a', child: 'service-b', callCount: 1 },
-      { parent: 'service-c', child: 'service-b', callCount: 2 },
-    ];
+    const data = {
+      nodes: [{ key: 'service-a' }, { key: 'service-b' }, { key: 'service-c' }],
+      edges: [
+        { from: 'service-a', to: 'service-b', label: '1' },
+        { from: 'service-c', to: 'service-b', label: '2' },
+      ],
+    };
 
-    renderer.render(
-      <DAG serviceCalls={serviceCalls} selectedService="service-b" selectedDepth={1} selectedLayout="dot" />
-    );
+    renderer.render(<DAG data={data} selectedService="service-b" selectedDepth={1} selectedLayout="dot" />);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.vertices).toHaveLength(3);
@@ -156,15 +147,12 @@ describe('<DAG>', () => {
   });
 
   it('respects depth limit', () => {
-    const serviceCalls = [
-      { parent: 'service-a', child: 'service-b', callCount: 1 },
-      { parent: 'service-b', child: 'service-c', callCount: 2 },
-      { parent: 'service-c', child: 'service-d', callCount: 3 },
-    ];
+    const data = {
+      nodes: [{ key: 'service-a' }, { key: 'service-b' }],
+      edges: [{ from: 'service-a', to: 'service-b', label: '1' }],
+    };
 
-    renderer.render(
-      <DAG serviceCalls={serviceCalls} selectedService="service-a" selectedDepth={1} selectedLayout="dot" />
-    );
+    renderer.render(<DAG data={data} selectedService="service-a" selectedDepth={1} selectedLayout="dot" />);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.vertices).toHaveLength(2);
@@ -177,8 +165,18 @@ describe('<DAG>', () => {
       child: `service-${i + 1}`,
       callCount: 1,
     }));
+    const nodes = new Set();
+    const edges = serviceCalls.map(call => {
+      nodes.add(call.parent);
+      nodes.add(call.child);
+      return { from: call.parent, to: call.child, label: `${call.callCount}` };
+    });
+    const data = {
+      nodes: Array.from(nodes).map(key => ({ key })),
+      edges: edges,
+    };
 
-    renderer.render(<DAG serviceCalls={serviceCalls} selectedLayout="sfdp" />);
+    renderer.render(<DAG data={data} selectedLayout="sfdp" />);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.layoutManager.options).toMatchObject({
@@ -188,12 +186,15 @@ describe('<DAG>', () => {
   });
 
   it('uses dot layout for small graphs', () => {
-    const serviceCalls = [
-      { parent: 'service-a', child: 'service-b', callCount: 1 },
-      { parent: 'service-b', child: 'service-c', callCount: 2 },
-    ];
+    const data = {
+      nodes: [{ key: 'service-a' }, { key: 'service-b' }, { key: 'service-c' }],
+      edges: [
+        { from: 'service-a', to: 'service-b', label: '1' },
+        { from: 'service-b', to: 'service-c', label: '2' },
+      ],
+    };
 
-    renderer.render(<DAG serviceCalls={serviceCalls} selectedLayout="dot" />);
+    renderer.render(<DAG data={data} selectedLayout="dot" />);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.layoutManager.options).toMatchObject({
@@ -206,7 +207,7 @@ describe('<DAG>', () => {
   });
 
   it('handles empty serviceCalls array', () => {
-    renderer.render(<DAG serviceCalls={[]} selectedLayout="dot" />);
+    renderer.render(<DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" />);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.vertices).toHaveLength(0);
@@ -214,18 +215,16 @@ describe('<DAG>', () => {
   });
 
   it('handles null or undefined maxDepth values', () => {
-    const serviceCalls = [
-      { parent: 'service-a', child: 'service-b', callCount: 1 },
-      { parent: 'service-b', child: 'service-c', callCount: 2 },
-    ];
+    const data = {
+      nodes: [{ key: 'service-a' }, { key: 'service-b' }, { key: 'service-c' }],
+      edges: [
+        { from: 'service-a', to: 'service-b', label: '1' },
+        { from: 'service-b', to: 'service-c', label: '2' },
+      ],
+    };
 
     renderer.render(
-      <DAG
-        serviceCalls={serviceCalls}
-        selectedService="service-a"
-        selectedDepth={null}
-        selectedLayout="dot"
-      />
+      <DAG data={data} selectedService="service-a" selectedDepth={null} selectedLayout="dot" />
     );
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
@@ -240,7 +239,19 @@ describe('<DAG>', () => {
       callCount: 1,
     }));
 
-    renderer.render(<DAG serviceCalls={serviceCalls} selectedLayout="dot" />);
+    const nodes = new Set();
+    const edges = serviceCalls.map(call => {
+      nodes.add(call.parent);
+      nodes.add(call.child);
+      return { from: call.parent, to: call.child, label: `${call.callCount}` };
+    });
+    const data = {
+      nodes: Array.from(nodes).map(key => ({ key })),
+      edges: edges,
+    };
+    expect(data.nodes.length).toBeGreaterThan(DAG_MAX_NUM_SERVICES);
+
+    renderer.render(<DAG data={data} selectedLayout="dot" selectedDepth={1} selectedService="" />);
     const element = renderer.getRenderOutput();
 
     expect(element.type).toBe('div');
@@ -249,53 +260,16 @@ describe('<DAG>', () => {
     expect(element.props.children.props.className).toBe('DAG--error');
   });
 
-  it('calls onMatchCountChange with correct count when uiFind is provided', () => {
-    const onMatchCountChange = jest.fn();
-    const serviceCalls = [
-      { parent: 'test-service', child: 'other-service', callCount: 1 },
-      { parent: 'test-service-2', child: 'other-service-2', callCount: 1 },
-    ];
-
-    renderer.render(
-      <DAG
-        serviceCalls={serviceCalls}
-        uiFind="test"
-        onMatchCountChange={onMatchCountChange}
-        selectedLayout="dot"
-        selectedDepth={1}
-        selectedService=""
-      />
-    );
-    expect(onMatchCountChange).toHaveBeenCalledWith(2);
-  });
-
-  it('calls onMatchCountChange with 0 when uiFind is not provided', () => {
-    const onMatchCountChange = jest.fn();
-    const serviceCalls = [
-      { parent: 'test-service', child: 'other-service', callCount: 1 },
-      { parent: 'test-service-2', child: 'other-service-2', callCount: 1 },
-    ];
-
-    renderer.render(
-      <DAG
-        serviceCalls={serviceCalls}
-        onMatchCountChange={onMatchCountChange}
-        selectedLayout="dot"
-        selectedDepth={1}
-        selectedService=""
-      />
-    );
-    expect(onMatchCountChange).toHaveBeenCalledWith(0);
-  });
-
   it('correctly passes selectedService and uiFind to renderNode in Digraph layers', () => {
-    const serviceCalls = [{ parent: 'test-service', child: 'other-service', callCount: 1 }];
     const selectedService = 'test-service';
     const uiFind = 'test';
 
     renderer.render(
       <DAG
-        serviceCalls={serviceCalls}
+        data={{
+          nodes: [{ key: 'test-service' }, { key: 'other-service' }],
+          edges: [{ from: 'test-service', to: 'other-service', label: '1' }],
+        }}
         selectedService={selectedService}
         selectedLayout="dot"
         selectedDepth={1}
@@ -313,7 +287,9 @@ describe('<DAG>', () => {
   });
 
   it('defaults serviceCalls to empty array when not provided', () => {
-    renderer.render(<DAG selectedLayout="dot" selectedDepth={1} selectedService="" />);
+    renderer.render(
+      <DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" selectedDepth={1} selectedService="" />
+    );
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.vertices).toHaveLength(0);
@@ -415,7 +391,7 @@ describe('clean up', () => {
 
   it('stops LayoutManager before unmounting', () => {
     const stopAndReleaseSpy = jest.spyOn(LayoutManager.prototype, 'stopAndRelease');
-    renderer.render(<DAG serviceCalls={[]} />);
+    renderer.render(<DAG data={{ nodes: [], edges: [] }} />);
     const cleanupFunctions = React.useEffect.mock.results
       .map(result => result.value)
       .filter(fn => typeof fn === 'function');
@@ -567,7 +543,7 @@ describe('DAGMenu', () => {
     ];
 
     const DAGComponent = renderer.render(
-      <DAG serviceCalls={[]} selectedLayout="dot" selectedDepth={1} selectedService="" />
+      <DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" selectedDepth={1} selectedService="" />
     );
 
     const DAGMenuComponent = DAGComponent.props.children[1];
@@ -595,7 +571,7 @@ describe('DAGMenu', () => {
 
   it('should not render menu when any condition is not met', () => {
     const DAGComponent = renderer.render(
-      <DAG serviceCalls={[]} selectedLayout="dot" selectedDepth={1} selectedService="" />
+      <DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" selectedDepth={1} selectedService="" />
     );
 
     const DAGMenuComponent = DAGComponent.props.children[1];

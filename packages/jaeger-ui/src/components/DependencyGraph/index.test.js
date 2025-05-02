@@ -87,7 +87,6 @@ describe('<DependencyGraph>', () => {
       expect(wrapper.state('selectedLayout')).toBe('dot');
       expect(wrapper.state('selectedDepth')).toBe(5);
       expect(wrapper.state('debouncedDepth')).toBe(5);
-      expect(wrapper.state('matchCount')).toBe(0);
     });
 
     it('handles service selection', () => {
@@ -248,21 +247,35 @@ describe('<DependencyGraph>', () => {
       await wrapper.instance().handleSampleDatasetTypeChange(null);
     });
 
-    it('handles match count change', () => {
-      const matchCount = 3;
-      wrapper.instance().handleMatchCountChange(matchCount);
-      expect(wrapper.state('matchCount')).toBe(matchCount);
-    });
+    it('passes computed match count to DAGOptions based on uiFind and dependencies', () => {
+      const sampleDependencies = [
+        { parent: 'serviceA', child: 'serviceB', callCount: 10 },
+        { parent: 'serviceB', child: 'anotherService', callCount: 5 },
+        { parent: 'serviceA', child: 'anotherService', callCount: 2 },
+      ];
 
-    it('passes match count to DAGOptions', () => {
-      wrapper.setState({ matchCount: 5 });
+      const uiFindTerm = 'service';
+      const expectedMatchCount = 3;
+
+      wrapper.setProps({ dependencies: sampleDependencies, uiFind: uiFindTerm });
+      wrapper.setState({ selectedService: null });
+
+      wrapper.update();
+
       const dagOptions = wrapper.find(DAGOptions);
-      expect(dagOptions.prop('matchCount')).toBe(5);
-    });
+      expect(dagOptions.prop('matchCount')).toBe(expectedMatchCount);
 
-    it('passes onMatchCountChange to DAG', () => {
-      const dag = wrapper.find(DAG);
-      expect(dag.prop('onMatchCountChange')).toBeDefined();
+      const uiFindTerm2 = 'another';
+      const expectedMatchCount2 = 1;
+      wrapper.setProps({ uiFind: uiFindTerm2 });
+      wrapper.update();
+      const dagOptions2 = wrapper.find(DAGOptions);
+      expect(dagOptions2.prop('matchCount')).toBe(expectedMatchCount2);
+
+      wrapper.setProps({ uiFind: undefined });
+      wrapper.update();
+      const dagOptions3 = wrapper.find(DAGOptions);
+      expect(dagOptions3.prop('matchCount')).toBe(0);
     });
   });
 });
