@@ -13,12 +13,29 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { convertJaegerTraceToProfile } from '@pyroscope/flamegraph';
-
 import TraceFlamegraph from './index';
-
 import testTrace from './testTrace.json';
+
+// Mock the FlamegraphRenderer component
+jest.mock('@pyroscope/flamegraph', () => {
+  const originalModule = jest.requireActual('@pyroscope/flamegraph');
+  return {
+    ...originalModule, // Keep original convertJaegerTraceToProfile
+    // eslint-disable-next-line react/prop-types
+    FlamegraphRenderer: jest.fn(({ profile }) => (
+      <div data-testid="flamegraph-renderer">
+        {profile ? `Profile Loaded - Units: ${profile.metadata?.units}` : 'No Profile Data'}
+      </div>
+    )),
+  };
+});
+
+// Re-import FlamegraphRenderer after mocking
+// eslint-disable-next-line import/order
+const { FlamegraphRenderer } = require('@pyroscope/flamegraph');
 
 const profile = convertJaegerTraceToProfile(testTrace.data);
 
@@ -40,32 +57,61 @@ describe('convertJaegerTraceToProfile', () => {
 });
 
 describe('<TraceFlamegraph />', () => {
-  let wrapper;
-
   beforeEach(() => {
-    const props = { trace: testTrace };
-    wrapper = shallow(<TraceFlamegraph {...props} />);
+    FlamegraphRenderer.mockClear();
   });
 
-  it('renders as expected', () => {
-    expect(wrapper).toMatchSnapshot();
+  it('renders the flamegraph wrapper', () => {
+    render(<TraceFlamegraph trace={testTrace} />);
+    expect(screen.getByTestId('flamegraph-wrapper')).toBeInTheDocument();
   });
 
-  it('does not explode', () => {
-    expect(wrapper).toBeDefined();
-    expect(wrapper.find('.Flamegraph-wrapper').length).toBe(1);
+  it('renders the FlamegraphRenderer with converted profile when trace is provided', () => {
+    render(<TraceFlamegraph trace={testTrace} />);
+
+    // Check if the mocked renderer is in the document
+    const renderer = screen.getByTestId('flamegraph-renderer');
+    expect(renderer).toBeInTheDocument();
+
+    // Check if the mocked renderer received the profile
+    expect(FlamegraphRenderer).toHaveBeenCalledTimes(1);
+    const receivedProps = FlamegraphRenderer.mock.calls[0][0];
+    expect(receivedProps.profile).toBeDefined();
+    expect(receivedProps.profile.metadata.units).toEqual(profile.metadata.units); // Check if correct profile was passed
+
+    // Check the content rendered by the mock based on the profile
+    expect(renderer).toHaveTextContent(`Profile Loaded - Units: ${profile.metadata.units}`);
   });
 
-  it('renders profile table and flamegraph', () => {
-    expect(wrapper).toBeDefined();
-    expect(wrapper.html().includes('flamegraph-table')).toBe(true);
-    expect(wrapper.html().includes('flamegraph-view')).toBe(true);
+  it('renders the FlamegraphRenderer with null profile when trace is not provided', () => {
+    render(<TraceFlamegraph trace={null} />);
+
+    // Check if the mocked renderer is in the document
+    const renderer = screen.getByTestId('flamegraph-renderer');
+    expect(renderer).toBeInTheDocument();
+
+    // Check if the mocked renderer received null profile
+    expect(FlamegraphRenderer).toHaveBeenCalledTimes(1);
+    const receivedProps = FlamegraphRenderer.mock.calls[0][0];
+    expect(receivedProps.profile).toBeNull();
+
+    // Check the content rendered by the mock for no profile
+    expect(renderer).toHaveTextContent('No Profile Data');
   });
 
-  it('may show no profile', () => {
-    const props = {};
-    wrapper = shallow(<TraceFlamegraph {...props} />);
-    expect(wrapper).toBeDefined();
-    expect(wrapper.html().includes('no-profiling-data')).toBe(true);
+  it('renders the FlamegraphRenderer with null profile when trace data is missing', () => {
+    render(<TraceFlamegraph trace={{}} />); // trace without 'data' property
+
+    // Check if the mocked renderer is in the document
+    const renderer = screen.getByTestId('flamegraph-renderer');
+    expect(renderer).toBeInTheDocument();
+
+    // Check if the mocked renderer received null profile
+    expect(FlamegraphRenderer).toHaveBeenCalledTimes(1);
+    const receivedProps = FlamegraphRenderer.mock.calls[0][0];
+    expect(receivedProps.profile).toBeNull();
+
+    // Check the content rendered by the mock for no profile
+    expect(renderer).toHaveTextContent('No Profile Data');
   });
 });
