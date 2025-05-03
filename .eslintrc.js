@@ -91,7 +91,10 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'warn',
     '@typescript-eslint/no-var-requires': 'warn',
     '@typescript-eslint/no-empty-function': 0,
-    '@typescript-eslint/ban-types': 'warn',
+    // '@typescript-eslint/ban-types': 'warn',
+    '@typescript-eslint/no-empty-object-type': 'warn',
+    '@typescript-eslint/no-unsafe-function-type': 'warn',
+    '@typescript-eslint/no-wrapper-object-types': 'warn',
     '@typescript-eslint/ban-ts-comment': 'warn',
 
     /* jsx */
