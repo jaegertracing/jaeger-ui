@@ -13,11 +13,11 @@
 // limitations under the License.
 
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import memoizeOne from 'memoize-one';
 import debounce from 'lodash/debounce';
+import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
 
 import DAG from './DAG';
 import DAGOptions from './DAGOptions';
@@ -25,13 +25,14 @@ import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from '../../constants';
-import { nodesPropTypes, linksPropTypes } from '../../propTypes/dependencies';
 import { getConfigValue } from '../../utils/config/get-config';
 import { extractUiFindFromState } from '../common/UiFindInput';
 
 import './index.css';
 import withRouteProps from '../../utils/withRouteProps';
 import { getAppEnvironment } from '../../utils/constants';
+import { ApiError } from '../../types/api-error';
+import { ReduxState } from '../../types';
 
 // export for tests
 export const GRAPH_TYPES = {
@@ -41,11 +42,35 @@ export const sampleDatasetTypes = ['Backend', 'Small Graph', 'Large Graph'];
 
 const dagMaxNumServices = getConfigValue('dependencies.dagMaxNumServices') || FALLBACK_DAG_MAX_NUM_SERVICES;
 
+type TServiceCall = {
+  parent: string;
+  child: string;
+  callCount: number;
+};
+
+type TProps = {
+  dependencies: TServiceCall[];
+  fetchDependencies: () => void;
+  nodes: TVertex[] | null;
+  links: TEdge[] | null;
+  loading: boolean;
+  error: ApiError | null | undefined;
+  uiFind?: string;
+};
+
+type TState = {
+  selectedService: string | null;
+  selectedLayout: string | null;
+  selectedDepth: number | null;
+  debouncedDepth: number | null;
+  selectedSampleDatasetType: string;
+};
+
 const createSampleDataManager = () => {
-  let sampleDAGDataset = [];
+  let sampleDAGDataset: TServiceCall[] = [];
   return {
     getSampleData: () => sampleDAGDataset,
-    loadSampleData: async type => {
+    loadSampleData: async (type: string) => {
       let module = {};
       const isDev = getAppEnvironment() === 'development';
       if (isDev && type === 'Small Graph') {
@@ -53,21 +78,25 @@ const createSampleDataManager = () => {
       } else if (isDev && type === 'Large Graph') {
         module = await import('./sample_data/large.json');
       }
-      sampleDAGDataset = module?.default ?? [];
+      sampleDAGDataset = (module as { default: TServiceCall[] }).default ?? [];
       return sampleDAGDataset;
     },
   };
 };
 
-const findConnectedServices = (serviceCalls, startService, maxDepth) => {
+const findConnectedServices = (
+  serviceCalls: TServiceCall[],
+  startService: string,
+  maxDepth: number | null | undefined
+) => {
   const nodes = new Set([startService]);
-  const edges = [];
+  const edges: TServiceCall[] = [];
   const queue = [{ service: startService, depth: 0 }];
 
   const maxDepthValue = maxDepth ?? Number.MAX_SAFE_INTEGER;
 
   while (queue.length > 0) {
-    const { service, depth } = queue.shift();
+    const { service, depth } = queue.shift()!;
     if (depth >= maxDepthValue) continue;
 
     serviceCalls.forEach(call => {
@@ -87,11 +116,15 @@ const findConnectedServices = (serviceCalls, startService, maxDepth) => {
   return { nodes, edges };
 };
 
-const formatServiceCalls = (serviceCalls, selectedService, selectedDepth) => {
+const formatServiceCalls = (
+  serviceCalls: TServiceCall[],
+  selectedService: string | null,
+  selectedDepth: number | null | undefined
+): { nodes: TVertex[]; edges: TEdge[] } => {
   if (!selectedService) {
-    const nodeMap = {};
-    const nodes = [];
-    const edges = [];
+    const nodeMap: Record<string, boolean> = {};
+    const nodes: TVertex[] = [];
+    const edges: TEdge[] = [];
 
     serviceCalls.forEach(d => {
       if (d.parent.trim().length !== 0 && d.child.trim().length !== 0) {
@@ -135,40 +168,24 @@ const formatServiceCalls = (serviceCalls, selectedService, selectedDepth) => {
 const { getSampleData, loadSampleData } = createSampleDataManager();
 
 // export for tests
-export class DependencyGraphPageImpl extends Component {
-  static propTypes = {
-    // eslint-disable-next-line react/forbid-prop-types
-    dependencies: PropTypes.any.isRequired,
-    fetchDependencies: PropTypes.func.isRequired,
-    nodes: nodesPropTypes,
-    links: linksPropTypes,
-    loading: PropTypes.bool.isRequired,
-    // eslint-disable-next-line react/forbid-prop-types
-    error: PropTypes.object,
-    uiFind: PropTypes.string,
-  };
-
-  static defaultProps = {
-    nodes: null,
-    links: null,
-    error: null,
-    uiFind: undefined,
-  };
-
-  debouncedDepthChange = debounce(value => {
+export class DependencyGraphPageImpl extends Component<TProps, TState> {
+  debouncedDepthChange = debounce((value: number | null) => {
     this.setState({ debouncedDepth: value });
   }, 1000);
 
-  getMemoizedGraphData = memoizeOne((dependencies, selectedService, selectedDepth) => {
-    return formatServiceCalls(dependencies ?? [], selectedService, selectedDepth);
-  });
+  getMemoizedGraphData = memoizeOne(
+    (dependencies: TServiceCall[], selectedService: string | null, selectedDepth: number | null) => {
+      return formatServiceCalls(dependencies ?? [], selectedService, selectedDepth);
+    }
+  );
 
-  getMemoizedMatchCount = memoizeOne((graphDataNodes, uiFind) => {
+  getMemoizedMatchCount = memoizeOne((graphDataNodes: TVertex[], uiFind: string | undefined) => {
     if (!uiFind) return 0;
-    return graphDataNodes.filter(node => node.key.toLowerCase().includes(uiFind.toLowerCase())).length;
+    return graphDataNodes.filter((node: TVertex) => node.key.toLowerCase().includes(uiFind.toLowerCase()))
+      .length;
   });
 
-  constructor(props) {
+  constructor(props: TProps) {
     super(props);
     this.state = {
       selectedService: null,
@@ -184,7 +201,7 @@ export class DependencyGraphPageImpl extends Component {
     this.updateLayout();
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: Readonly<TProps>) {
     if (prevProps.dependencies !== this.props.dependencies) {
       this.updateLayout();
     }
@@ -192,36 +209,33 @@ export class DependencyGraphPageImpl extends Component {
 
   updateLayout = () => {
     const { dependencies } = this.props;
-    const dataset = getSampleData().length > 0 ? getSampleData() : dependencies;
-    const selectedLayout = dataset.length > dagMaxNumServices ? 'sfdp' : 'dot';
+    const dataset: TServiceCall[] = getSampleData().length > 0 ? getSampleData() : dependencies;
+    const selectedLayout: 'dot' | 'sfdp' = dataset.length > dagMaxNumServices ? 'sfdp' : 'dot';
     if (selectedLayout !== this.state.selectedLayout) {
       this.setState({ selectedLayout, selectedService: null, selectedDepth: 5, debouncedDepth: 5 });
     }
   };
 
-  handleServiceSelect = service => {
+  handleServiceSelect = (service: string | null) => {
     this.setState({ selectedService: service });
   };
 
-  handleLayoutSelect = layout => {
+  handleLayoutSelect = (layout: string) => {
     this.setState({ selectedLayout: layout });
   };
 
-  handleDepthChange = value => {
+  handleDepthChange = (value: number | null) => {
     if (value === null || value === undefined) {
       this.setState({ selectedDepth: value, debouncedDepth: value });
+    } else if (Number.isInteger(value) && value >= 0) {
+      this.setState({ selectedDepth: value });
+      this.debouncedDepthChange(value);
     } else {
-      const numValue = Number(value);
-      if (Number.isInteger(numValue) && numValue >= 0) {
-        this.setState({ selectedDepth: numValue });
-        this.debouncedDepthChange(numValue);
-      } else {
-        this.setState({ selectedDepth: 0, debouncedDepth: 0 });
-      }
+      this.setState({ selectedDepth: 0, debouncedDepth: 0 });
     }
   };
 
-  handleSampleDatasetTypeChange = selectedSampleDatasetType => {
+  handleSampleDatasetTypeChange = (selectedSampleDatasetType: string) => {
     this.setState({ selectedSampleDatasetType });
     loadSampleData(selectedSampleDatasetType).then(() => {
       this.props.fetchDependencies();
@@ -278,9 +292,9 @@ export class DependencyGraphPageImpl extends Component {
             onServiceSelect={this.handleServiceSelect}
             onLayoutSelect={this.handleLayoutSelect}
             onDepthChange={this.handleDepthChange}
-            selectedService={selectedService}
-            selectedLayout={selectedLayout}
-            selectedDepth={selectedDepth}
+            selectedService={selectedService ?? undefined}
+            selectedLayout={selectedLayout ?? undefined}
+            selectedDepth={selectedDepth ?? undefined}
             onReset={this.handleReset}
             isHierarchicalDisabled={isHierarchicalDisabled}
             selectedSampleDatasetType={selectedSampleDatasetType}
@@ -293,9 +307,9 @@ export class DependencyGraphPageImpl extends Component {
         <div className="DependencyGraph--graphWrapper">
           <DAG
             data={graphData}
-            selectedLayout={selectedLayout}
-            selectedDepth={debouncedDepth}
-            selectedService={selectedService}
+            selectedLayout={selectedLayout ?? 'dot'}
+            selectedDepth={debouncedDepth ?? 0}
+            selectedService={selectedService ?? ''}
             uiFind={uiFind}
             onServiceSelect={this.handleServiceSelect}
           />
@@ -305,9 +319,17 @@ export class DependencyGraphPageImpl extends Component {
   }
 }
 
+type TFormattedLink = {
+  source: string;
+  target: string;
+  callCount: number;
+  value: number;
+  target_node_size: number;
+};
+
 const formatDependenciesAsNodesAndLinks = memoizeOne(dependencies => {
   const data = dependencies.reduce(
-    (response, link) => {
+    (response: { nodeMap: Record<string, number>; links: TFormattedLink[] }, link: TServiceCall) => {
       const { nodeMap } = response;
       let { links } = response;
 
@@ -333,13 +355,13 @@ const formatDependenciesAsNodesAndLinks = memoizeOne(dependencies => {
 
       return { nodeMap, links };
     },
-    { nodeMap: {}, links: [] }
+    { nodeMap: {}, links: [] as TFormattedLink[] }
   );
 
   data.nodes = Object.keys(data.nodeMap).map(id => ({
     callCount: data.nodeMap[id],
     radius: Math.max(Math.log(data.nodeMap[id] / 1000), 3),
-    orphan: data.links.findIndex(link => id === link.source || id === link.target) === -1,
+    orphan: data.links.findIndex((link: TFormattedLink) => id === link.source || id === link.target) === -1,
     id,
   }));
 
@@ -349,16 +371,16 @@ const formatDependenciesAsNodesAndLinks = memoizeOne(dependencies => {
 });
 
 // export for tests
-export function mapStateToProps(state) {
+export function mapStateToProps(state: ReduxState): Omit<TProps, 'fetchDependencies'> {
   const { dependencies, error, loading } = state.dependencies;
-  let links;
-  let nodes;
+  let links: TEdge[] | null = null;
+  let nodes: TVertex[] | null = null;
   if (dependencies && dependencies.length > 0) {
     const formatted = formatDependenciesAsNodesAndLinks(dependencies);
     links = formatted.links;
     nodes = formatted.nodes;
   }
-  const dataset = getSampleData().length > 0 ? getSampleData() : dependencies;
+  const dataset: TServiceCall[] = getSampleData().length > 0 ? getSampleData() : dependencies;
   return {
     loading,
     error,
@@ -370,7 +392,7 @@ export function mapStateToProps(state) {
 }
 
 // export for tests
-export function mapDispatchToProps(dispatch) {
+export function mapDispatchToProps(dispatch: any): Pick<TProps, 'fetchDependencies'> {
   const { fetchDependencies } = bindActionCreators(jaegerApiActions, dispatch);
   return { fetchDependencies };
 }

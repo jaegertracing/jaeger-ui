@@ -173,7 +173,7 @@ describe('<DAG>', () => {
     });
     const data = {
       nodes: Array.from(nodes).map(key => ({ key })),
-      edges: edges,
+      edges,
     };
 
     renderer.render(<DAG data={data} selectedLayout="sfdp" />);
@@ -247,7 +247,7 @@ describe('<DAG>', () => {
     });
     const data = {
       nodes: Array.from(nodes).map(key => ({ key })),
-      edges: edges,
+      edges,
     };
     expect(data.nodes.length).toBeGreaterThan(DAG_MAX_NUM_SERVICES);
 
