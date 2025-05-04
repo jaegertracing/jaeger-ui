@@ -218,7 +218,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
             <li>
               <Tooltip placement="left" title="Service">
                 <Button
-                  className="TraceGraph--btn-service"
+                  className={`TraceGraph--btn-service ${mode === MODE_SERVICE ? 'active' : ''}`}
                   htmlType="button"
                   shape="circle"
                   size="small"
@@ -231,7 +231,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
             <li>
               <Tooltip placement="left" title="Time">
                 <Button
-                  className="TraceGraph--btn-time"
+                  className={`TraceGraph--btn-time ${mode === MODE_TIME ? 'active' : ''}`}
                   htmlType="button"
                   shape="circle"
                   size="small"
@@ -244,7 +244,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
             <li>
               <Tooltip placement="left" title="Selftime">
                 <Button
-                  className="TraceGraph--btn-selftime"
+                  className={`TraceGraph--btn-time ${mode === MODE_TIME ? 'active' : ''}`}
                   htmlType="button"
                   shape="circle"
                   size="small"
