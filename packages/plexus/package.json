@@ -33,7 +33,7 @@
     "eslint-config-prettier": "^10.0.0",
     "html-loader": "5.1.0",
     "html-webpack-plugin": "5.6.0",
-    "npm-run-all2": "7.0.1",
+    "npm-run-all2": "8.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "rimraf": "6.0.1",
