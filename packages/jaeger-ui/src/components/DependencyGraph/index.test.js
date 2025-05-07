@@ -278,6 +278,97 @@ describe('<DependencyGraph>', () => {
       expect(dagOptions3.prop('matchCount')).toBe(0);
     });
   });
+
+  describe('<DependencyGraph> filtering logic (findConnectedServices)', () => {
+    let wrapper;
+    const baseProps = {
+      fetchDependencies: jest.fn(),
+      nodes: [{ key: 'dummyNode' }],
+      links: [{ from: 'dummyNode', to: 'dummyNode', label: '1' }],
+      loading: false,
+      error: null,
+      uiFind: undefined,
+      dependencies: [],
+    };
+
+    const getGraphDataFromDAG = currentWrapper => {
+      currentWrapper.update();
+      const dagComponent = currentWrapper.find(DAG);
+      if (dagComponent.exists()) {
+        return dagComponent.prop('data');
+      }
+      return { nodes: [], edges: [] };
+    };
+
+    it('should include direct children when parent is selected', () => {
+      const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
+
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper.setState({ selectedService: 'A', selectedDepth: 1, debouncedDepth: 1 });
+
+      const graphData = getGraphDataFromDAG(wrapper);
+      expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
+      expect(graphData.edges).toEqual(expect.arrayContaining([{ from: 'A', to: 'B', label: '1' }]));
+    });
+
+    it('should include direct parents when child is selected', () => {
+      const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
+
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper.setState({ selectedService: 'B', selectedDepth: 1, debouncedDepth: 1 });
+
+      const graphData = getGraphDataFromDAG(wrapper);
+      expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
+      expect(graphData.edges).toEqual(expect.arrayContaining([{ from: 'A', to: 'B', label: '1' }]));
+    });
+
+    it('should not re-add already visited nodes (outgoing)', () => {
+      const testDependencies = [
+        { parent: 'A', child: 'B', callCount: 1 },
+        { parent: 'B', child: 'A', callCount: 1 },
+      ];
+
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper.setState({ selectedService: 'A', selectedDepth: 2, debouncedDepth: 2 });
+
+      const graphData = getGraphDataFromDAG(wrapper);
+      expect(graphData.nodes).toHaveLength(2);
+      expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
+      expect(graphData.edges).toHaveLength(1);
+      expect(graphData.edges).toEqual(expect.arrayContaining([{ from: 'A', to: 'B', label: '1' }]));
+    });
+
+    it('should not re-add already visited nodes (incoming)', () => {
+      const testDependencies = [
+        { parent: 'A', child: 'B', callCount: 1 },
+        { parent: 'B', child: 'A', callCount: 1 },
+      ];
+
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper.setState({ selectedService: 'B', selectedDepth: 2, debouncedDepth: 2 });
+
+      const graphData = getGraphDataFromDAG(wrapper);
+      expect(graphData.nodes).toHaveLength(2);
+      expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
+      expect(graphData.edges).toHaveLength(1);
+      expect(graphData.edges).toEqual(expect.arrayContaining([{ from: 'A', to: 'B', label: '1' }]));
+    });
+
+    it('should ignore calls not connected to the selected service', () => {
+      const testDependencies = [
+        { parent: 'A', child: 'B', callCount: 1 },
+        { parent: 'C', child: 'D', callCount: 1 },
+      ];
+
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper.setState({ selectedService: 'A', selectedDepth: 1, debouncedDepth: 1 });
+
+      const graphData = getGraphDataFromDAG(wrapper);
+      expect(graphData.nodes).toHaveLength(2);
+      expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
+      expect(graphData.edges).toHaveLength(1);
+    });
+  });
 });
 
 describe('mapStateToProps()', () => {
