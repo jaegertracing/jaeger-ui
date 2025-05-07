@@ -280,7 +280,6 @@ describe('<DependencyGraph>', () => {
   });
 
   describe('<DependencyGraph> filtering logic (findConnectedServices)', () => {
-    let wrapper;
     const baseProps = {
       fetchDependencies: jest.fn(),
       nodes: [{ key: 'dummyNode' }],
