@@ -52,7 +52,7 @@ describe('KeyboardShortcutsHelp', () => {
   it('closes modal on cancel', async () => {
     const buttonElement = screen.getByRole('button');
     fireEvent.click(buttonElement);
-    const closeButton = screen.getByRole('button', { 'aria-label': 'Close' });
+    const closeButton = screen.getByLabelText('Close', { selector: 'button' });
     fireEvent.click(closeButton);
     const modalElement = screen.getByText('Keyboard Shortcuts');
     expect(modalElement).not.toBeVisible();
