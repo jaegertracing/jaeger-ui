@@ -89,9 +89,12 @@ module.exports = {
     /* tsx */
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/no-unused-vars': 'warn',
-    '@typescript-eslint/no-var-requires': 'warn',
+    '@typescript-eslint/no-require-imports': 'warn',
     '@typescript-eslint/no-empty-function': 0,
-    '@typescript-eslint/ban-types': 'warn',
+    '@typescript-eslint/no-restricted-types': 'warn',
+    '@typescript-eslint/no-empty-object-type': ['error', { allowObjectTypes: 'always' }],
+    '@typescript-eslint/no-unsafe-function-type': 'warn',
+    '@typescript-eslint/no-wrapper-object-types': 'warn',
     '@typescript-eslint/ban-ts-comment': 'warn',
 
     /* jsx */
