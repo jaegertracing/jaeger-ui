@@ -9,6 +9,29 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.69.0 (2025-05-08)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Reduce load time of trace page by deferring critical path tooltip ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2718](https://github.com/jaegertracing/jaeger-ui/pull/2718))
+* Migrate copyicon tests ([@nojaf](https://github.com/nojaf) in [#2727](https://github.com/jaegertracing/jaeger-ui/pull/2727))
+* [fix]: make reset icon in sdg more intuitive ([@hari45678](https://github.com/hari45678) in [#2723](https://github.com/jaegertracing/jaeger-ui/pull/2723))
+* Migrate from enzyme to @testing-library/react in keyboardshortshelp ([@nojaf](https://github.com/nojaf) in [#2725](https://github.com/jaegertracing/jaeger-ui/pull/2725))
+* Improve performance of trace statistics page when grouping by tag ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2724](https://github.com/jaegertracing/jaeger-ui/pull/2724))
+* Improve performance of expanding and collapsing spans ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2722](https://github.com/jaegertracing/jaeger-ui/pull/2722))
+* Improve performance of trace statistics ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2721](https://github.com/jaegertracing/jaeger-ui/pull/2721))
+* [feat]: add context menu on node to dag ([@hari45678](https://github.com/hari45678) in [#2719](https://github.com/jaegertracing/jaeger-ui/pull/2719))
+* Fix grouping on trace statistics page for tags ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2717](https://github.com/jaegertracing/jaeger-ui/pull/2717))
+* Improve performance when expanding/collapsing span details ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2716](https://github.com/jaegertracing/jaeger-ui/pull/2716))
+
+#### 👷 CI Improvements
+
+* Add ability to use typescript in tests ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2731](https://github.com/jaegertracing/jaeger-ui/pull/2731))
+
+#### ⚙️ Refactoring
+
+* Migrate traceidinput test ([@nojaf](https://github.com/nojaf) in [#2735](https://github.com/jaegertracing/jaeger-ui/pull/2735))
+
 ## v1.68.0 (2025-04-05)
 
 #### ✨ New Features
