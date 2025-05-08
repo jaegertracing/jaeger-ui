@@ -87,7 +87,6 @@ describe('<DependencyGraph>', () => {
       expect(wrapper.state('selectedLayout')).toBe('dot');
       expect(wrapper.state('selectedDepth')).toBe(5);
       expect(wrapper.state('debouncedDepth')).toBe(5);
-      expect(wrapper.state('matchCount')).toBe(0);
     });
 
     it('handles service selection', () => {
@@ -248,21 +247,125 @@ describe('<DependencyGraph>', () => {
       await wrapper.instance().handleSampleDatasetTypeChange(null);
     });
 
-    it('handles match count change', () => {
-      const matchCount = 3;
-      wrapper.instance().handleMatchCountChange(matchCount);
-      expect(wrapper.state('matchCount')).toBe(matchCount);
-    });
+    it('passes computed match count to DAGOptions based on uiFind and dependencies', () => {
+      const sampleDependencies = [
+        { parent: 'serviceA', child: 'serviceB', callCount: 10 },
+        { parent: 'serviceB', child: 'anotherService', callCount: 5 },
+        { parent: 'serviceA', child: 'anotherService', callCount: 2 },
+      ];
 
-    it('passes match count to DAGOptions', () => {
-      wrapper.setState({ matchCount: 5 });
+      const uiFindTerm = 'service';
+      const expectedMatchCount = 3;
+
+      wrapper.setProps({ dependencies: sampleDependencies, uiFind: uiFindTerm });
+      wrapper.setState({ selectedService: null });
+
+      wrapper.update();
+
       const dagOptions = wrapper.find(DAGOptions);
-      expect(dagOptions.prop('matchCount')).toBe(5);
+      expect(dagOptions.prop('matchCount')).toBe(expectedMatchCount);
+
+      const uiFindTerm2 = 'another';
+      const expectedMatchCount2 = 1;
+      wrapper.setProps({ uiFind: uiFindTerm2 });
+      wrapper.update();
+      const dagOptions2 = wrapper.find(DAGOptions);
+      expect(dagOptions2.prop('matchCount')).toBe(expectedMatchCount2);
+
+      wrapper.setProps({ uiFind: undefined });
+      wrapper.update();
+      const dagOptions3 = wrapper.find(DAGOptions);
+      expect(dagOptions3.prop('matchCount')).toBe(0);
+    });
+  });
+
+  describe('<DependencyGraph> filtering logic (findConnectedServices)', () => {
+    const baseProps = {
+      fetchDependencies: jest.fn(),
+      nodes: [{ key: 'dummyNode' }],
+      links: [{ from: 'dummyNode', to: 'dummyNode', label: '1' }],
+      loading: false,
+      error: null,
+      uiFind: undefined,
+      dependencies: [],
+    };
+
+    const getGraphDataFromDAG = currentWrapper => {
+      currentWrapper.update();
+      const dagComponent = currentWrapper.find(DAG);
+      if (dagComponent.exists()) {
+        return dagComponent.prop('data');
+      }
+      return { nodes: [], edges: [] };
+    };
+
+    it('should include direct children when parent is selected', () => {
+      const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
+
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper.setState({ selectedService: 'A', selectedDepth: 1, debouncedDepth: 1 });
+
+      const graphData = getGraphDataFromDAG(wrapper);
+      expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
+      expect(graphData.edges).toEqual(expect.arrayContaining([{ from: 'A', to: 'B', label: '1' }]));
     });
 
-    it('passes onMatchCountChange to DAG', () => {
-      const dag = wrapper.find(DAG);
-      expect(dag.prop('onMatchCountChange')).toBeDefined();
+    it('should include direct parents when child is selected', () => {
+      const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
+
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper.setState({ selectedService: 'B', selectedDepth: 1, debouncedDepth: 1 });
+
+      const graphData = getGraphDataFromDAG(wrapper);
+      expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
+      expect(graphData.edges).toEqual(expect.arrayContaining([{ from: 'A', to: 'B', label: '1' }]));
+    });
+
+    it('should not re-add already visited nodes (outgoing)', () => {
+      const testDependencies = [
+        { parent: 'A', child: 'B', callCount: 1 },
+        { parent: 'B', child: 'A', callCount: 1 },
+      ];
+
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper.setState({ selectedService: 'A', selectedDepth: 2, debouncedDepth: 2 });
+
+      const graphData = getGraphDataFromDAG(wrapper);
+      expect(graphData.nodes).toHaveLength(2);
+      expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
+      expect(graphData.edges).toHaveLength(1);
+      expect(graphData.edges).toEqual(expect.arrayContaining([{ from: 'A', to: 'B', label: '1' }]));
+    });
+
+    it('should not re-add already visited nodes (incoming)', () => {
+      const testDependencies = [
+        { parent: 'A', child: 'B', callCount: 1 },
+        { parent: 'B', child: 'A', callCount: 1 },
+      ];
+
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper.setState({ selectedService: 'B', selectedDepth: 2, debouncedDepth: 2 });
+
+      const graphData = getGraphDataFromDAG(wrapper);
+      expect(graphData.nodes).toHaveLength(2);
+      expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
+      expect(graphData.edges).toHaveLength(1);
+      expect(graphData.edges).toEqual(expect.arrayContaining([{ from: 'A', to: 'B', label: '1' }]));
+    });
+
+    it('should ignore calls not connected to the selected service', () => {
+      const testDependencies = [
+        { parent: 'A', child: 'B', callCount: 1 },
+        { parent: 'C', child: 'D', callCount: 1 },
+      ];
+
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper.setState({ selectedService: 'A', selectedDepth: 1, debouncedDepth: 1 });
+
+      const graphData = getGraphDataFromDAG(wrapper);
+      expect(graphData.nodes).toHaveLength(2);
+      expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
+      expect(graphData.edges).toHaveLength(1);
     });
   });
 });
