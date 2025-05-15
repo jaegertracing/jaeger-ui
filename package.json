@@ -29,13 +29,15 @@
     "typescript": "5.8.2"
   },
   "overrides": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
+    "react": "^19.1.0",
+     "react-dom": "19.1.0",
     "cheerio": "1.0.0-rc.12"
   },
   "workspaces": [
     "packages/plexus",
-    "packages/jaeger-ui"
+    "packages/jaeger-ui",
+    "packages/*"
+
   ],
   "scripts": {
     "build": "npm run --workspaces build",

@@ -18,7 +18,7 @@ import _debounce from 'lodash/debounce';
 import { matchSorter } from 'match-sorter';
 import { IoSearch } from 'react-icons/io5';
 import { FixedSizeList as VList, ListOnItemsRenderedProps, ListOnScrollProps } from 'react-window';
-import { Key as EKey } from 'ts-key-enum';
+import { Key as EKey } from "../../../../src/utils/keyEnum";
 
 import ListItem from './ListItem';
 
