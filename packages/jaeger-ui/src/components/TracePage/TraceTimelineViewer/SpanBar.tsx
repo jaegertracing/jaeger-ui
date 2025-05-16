@@ -148,7 +148,7 @@ function SpanBar(props: TCommonProps) {
           <Popover
             key={positionKey}
             arrowPointAtCenter
-            overlayClassName="SpanBar--logHint"
+            classNames={{ root:"SpanBar--logHint"}}
             placement="topLeft"
             content={
               <AccordianLogs

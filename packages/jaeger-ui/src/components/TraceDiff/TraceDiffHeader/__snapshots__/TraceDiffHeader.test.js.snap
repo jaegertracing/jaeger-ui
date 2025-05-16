@@ -90,7 +90,7 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
+    classNames={{ root:"TraceDiffHeader--popover"}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -200,7 +200,7 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
+    classNames={{ root:"TraceDiffHeader--popover"}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -314,7 +314,7 @@ exports[`TraceDiffHeader handles absent a 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
+    classNames={{ root:"TraceDiffHeader--popover"}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -431,7 +431,7 @@ exports[`TraceDiffHeader handles absent a 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
+    classNames={{ root:"TraceDiffHeader--popover"}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -554,7 +554,7 @@ exports[`TraceDiffHeader handles absent b 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
+    classNames={{ root:"TraceDiffHeader--popover"}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -678,7 +678,7 @@ exports[`TraceDiffHeader handles absent b 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
+    classNames={{ root:"TraceDiffHeader--popover"}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -796,7 +796,7 @@ exports[`TraceDiffHeader renders as expected 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
+    classNames={{ root:"TraceDiffHeader--popover"}}
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -924,7 +924,7 @@ exports[`TraceDiffHeader renders as expected 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
+    classNames={{ root:"TraceDiffHeader--popover"}}
     placement="bottomLeft"
     title={
       <TraceIdInput

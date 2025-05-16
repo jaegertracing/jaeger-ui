@@ -21,7 +21,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
 
 const proxyConfig = {
-  target: 'http://localhost:16686',
+  target: 'http://localhost:16686/jaeger',
   secure: false,
   changeOrigin: true,
   ws: true,
@@ -76,6 +76,9 @@ export default defineConfig({
       '/serviceedges': proxyConfig,
       '/qualitymetrics-v2': proxyConfig,
     },
+     watch: {
+    usePolling: true  // Required for WSL 2
+  }
   },
   base: './',
   build: {

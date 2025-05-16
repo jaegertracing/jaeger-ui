@@ -25,7 +25,7 @@ exports[`DetailTable render renders as expected 1`] = `
     className="DetailTableDropdown--Footer"
   >
     <Tooltip
-      overlayClassName="DetailTableDropdown--Tooltip"
+      classNames={{ root:"DetailTableDropdown--Tooltip"}}
       title="Remove filter from this column"
     >
       <Button
@@ -42,7 +42,7 @@ exports[`DetailTable render renders as expected 1`] = `
       className="DetailTableDropdown--Footer--CancelConfirm"
     >
       <Tooltip
-        overlayClassName="DetailTableDropdown--Tooltip"
+        classNames={{ root:"DetailTableDropdown--Tooltip"}}
         title="Cancel changes to this column's filter"
       >
         <Button
@@ -56,7 +56,7 @@ exports[`DetailTable render renders as expected 1`] = `
         </Button>
       </Tooltip>
       <Tooltip
-        overlayClassName="DetailTableDropdown--Tooltip"
+        classNames={{ root:"DetailTableDropdown--Tooltip"}}
         title={
           <div
             className="DetailTableDropdown--Tooltip--Body"

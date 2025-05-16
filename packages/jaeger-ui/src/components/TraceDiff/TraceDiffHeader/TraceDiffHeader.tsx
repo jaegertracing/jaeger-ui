@@ -97,7 +97,7 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
           <h1 className="ub-m0">A</h1>
         </div>
         <Popover
-          overlayClassName="TraceDiffHeader--popover"
+          classNames={{ root:"TraceDiffHeader--popover"}}
           trigger="click"
           placement="bottomLeft"
           title={<TraceIdInput selectTrace={this._diffSetA} />}
@@ -124,7 +124,7 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
           <h1 className="ub-m0">B</h1>
         </div>
         <Popover
-          overlayClassName="TraceDiffHeader--popover"
+          classNames={{ root:"TraceDiffHeader--popover"}}
           trigger="click"
           placement="bottomLeft"
           title={<TraceIdInput selectTrace={this._diffSetB} />}

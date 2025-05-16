@@ -53,7 +53,7 @@ if (getConfigValue('dependencies.menuEnabled')) {
   NAV_LINKS.push({
     to: dependencyGraph.getUrl(),
     matches: dependencyGraph.matches,
-    text: 'System Architecture',
+    text: 'System ',
   });
 }
 
