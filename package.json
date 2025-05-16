@@ -11,22 +11,22 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.24.6",
-    "@typescript-eslint/eslint-plugin": "^8.32.0",
-    "@typescript-eslint/parser": "^8.32.0",
+    "@babel/eslint-parser": "^7.27.1",
+    "@typescript-eslint/eslint-plugin": "^8.32.1",
+    "@typescript-eslint/parser": "^8.32.1",
     "depcheck": "1.4.7",
-    "eslint": "8.57.0",
+    "eslint": "^8.57.1",
     "eslint-config-airbnb": "19.0.4",
-    "eslint-config-prettier": "10.1.1",
+    "eslint-config-prettier": "10.1.5",
     "eslint-plugin-import": "2.31.0",
-    "eslint-plugin-jsx-a11y": "^6.8.0",
-    "eslint-plugin-react": "7.37.1",
-    "husky": "9.1.0",
-    "jsdom": "^26.0.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "7.37.5",
+    "husky": "9.1.7",
+    "jsdom": "^26.1.0",
     "npm-run-all2": "8.0.1",
-    "prettier": "3.5.0",
+    "prettier": "3.5.3",
     "rxjs-compat": "6.6.7",
-    "typescript": "5.8.2"
+    "typescript": "5.8.3"
   },
   "overrides": {
     "react": "18.3.1",
