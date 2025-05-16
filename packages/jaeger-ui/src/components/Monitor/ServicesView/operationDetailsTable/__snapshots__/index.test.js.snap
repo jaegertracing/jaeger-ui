@@ -77,7 +77,11 @@ exports[`<OperationTableDetails> Table rendered successfully 1`] = `
               Impact
                 
               <Tooltip
-                overlayClassName="impact-tooltip"
+                classNames={
+                  Object {
+                    "root": "\\"impact-tooltip\\"",
+                  }
+                }
                 placement="top"
                 title="The result of multiplying avg. duration and requests per minute, showing the most used and slowest endpoints"
               >
