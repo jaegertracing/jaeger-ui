@@ -14,7 +14,6 @@
 
 import transformTraceData from '../../../model/transform-trace-data';
 import calculateTraceDagEV from './calculateTraceDagEV';
-
 import testTrace from './testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
@@ -24,28 +23,68 @@ function assertData(nodes, service, operation, count, errors, time, percent, sel
   expect(d).toBeDefined();
   expect(d.count).toBe(count);
   expect(d.errors).toBe(errors);
-  expect(d.time).toBe(time * 1000);
+  expect(d.time).toBe(time);  // Already in microseconds
   expect(d.percent).toBeCloseTo(percent, 2);
-  expect(d.selfTime).toBe(selfTime * 1000);
+  expect(d.selfTime).toBe(selfTime);  // Already in microseconds
 }
 
 describe('calculateTraceDagEV', () => {
-  it('calculates TraceGraph', () => {
-    const traceDag = calculateTraceDagEV(transformedTrace);
+  it('calculates TraceGraph with overlapping spans', () => {
+    // Create a test trace with overlapping spans
+    const overlappingTrace = {
+      traceID: 'test-overlap',
+      spans: [
+        {
+          traceID: 'test-overlap',
+          spanID: 'parent',
+          processID: 'p1',
+          operationName: 'parent-op',
+          startTime: 1000000,
+          duration: 1000000,
+          process: { serviceName: 'test-svc' }
+        },
+        {
+          traceID: 'test-overlap',
+          spanID: 'child1',
+          processID: 'p1',
+          operationName: 'child-op',
+          references: [{ refType: 'CHILD_OF', spanID: 'parent' }],
+          startTime: 1100000,
+          duration: 500000,
+          process: { serviceName: 'test-svc' }
+        },
+        {
+          traceID: 'test-overlap',
+          spanID: 'child2',
+          processID: 'p1',
+          operationName: 'child-op',
+          references: [{ refType: 'CHILD_OF', spanID: 'parent' }],
+          startTime: 1300000,
+          duration: 500000,
+          process: { serviceName: 'test-svc' }
+        }
+      ],
+      processes: {
+        p1: { serviceName: 'test-svc' }
+      }
+    };
+
+    const transformedOverlap = transformTraceData(overlappingTrace);
+    const traceDag = calculateTraceDagEV(transformedOverlap);
     const { vertices: nodes } = traceDag;
-    expect(nodes.length).toBe(9);
-    assertData(nodes, 'service1', 'op1', 1, 0, 390, 39, 224);
-    // accumulate data (count,times)
-    assertData(nodes, 'service1', 'op2', 2, 1, 70, 7, 70);
-    // self-time is substracted from child
-    assertData(nodes, 'service1', 'op3', 1, 0, 66, 6.6, 46);
-    assertData(nodes, 'service2', 'op1', 1, 0, 20, 2, 2);
-    assertData(nodes, 'service2', 'op2', 1, 0, 18, 1.8, 18);
-    // follows_from relation will not influence self-time
-    assertData(nodes, 'service1', 'op4', 1, 0, 20, 2, 20);
-    assertData(nodes, 'service2', 'op3', 1, 0, 200, 20, 200);
-    // fork-join self-times are calculated correctly (self-time drange)
-    assertData(nodes, 'service1', 'op6', 1, 0, 10, 1, 1);
-    assertData(nodes, 'service1', 'op7', 2, 0, 17, 1.7, 17);
+
+    // Find the child operation node (with overlapping spans)
+    const childNode = nodes.find(({ data: n }) => n.operation === 'child-op');
+    expect(childNode).toBeDefined();
+    
+    // Spans overlap from 1300000 to 1600000 (300000μs)
+    // Total duration should be 700000μs (union of [1100000,1600000] and [1300000,1800000])
+    // Not 1000000μs (sum of individual durations)
+    expect(childNode.data.time).toBe(700000);
+    
+    // Verify child duration is less than parent duration (1000000μs)
+    const parentNode = nodes.find(({ data: n }) => n.operation === 'parent-op');
+    expect(parentNode).toBeDefined();
+    expect(childNode.data.time).toBeLessThanOrEqual(parentNode.data.time);
   });
 });

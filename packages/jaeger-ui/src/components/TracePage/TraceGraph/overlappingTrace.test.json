@@ -1,0 +1,65 @@
+{
+  "traceID": "test-trace-overlapping",
+  "spans": [
+    {
+      "traceID": "test-trace-overlapping",
+      "spanID": "span-1",
+      "operationName": "parent-op",
+      "startTime": 1000000,
+      "duration": 1000000,
+      "process": {
+        "serviceName": "test-service",
+        "tags": []
+      },
+      "logs": [],
+      "tags": []
+    },
+    {
+      "traceID": "test-trace-overlapping",
+      "spanID": "span-2",
+      "operationName": "overlapping-op",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "test-trace-overlapping",
+          "spanID": "span-1"
+        }
+      ],
+      "startTime": 1100000,
+      "duration": 500000,
+      "process": {
+        "serviceName": "test-service",
+        "tags": []
+      },
+      "logs": [],
+      "tags": []
+    },
+    {
+      "traceID": "test-trace-overlapping",
+      "spanID": "span-3", 
+      "operationName": "overlapping-op",
+      "references": [
+        {
+          "refType": "CHILD_OF",
+          "traceID": "test-trace-overlapping",
+          "spanID": "span-1"
+        }
+      ],
+      "startTime": 1300000,
+      "duration": 500000,
+      "process": {
+        "serviceName": "test-service",
+        "tags": []
+      },
+      "logs": [],
+      "tags": []
+    }
+  ],
+  "processes": {
+    "p1": {
+      "serviceName": "test-service",
+      "tags": []
+    }
+  },
+  "warnings": null
+}
