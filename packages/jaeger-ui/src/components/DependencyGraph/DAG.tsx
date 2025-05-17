@@ -24,19 +24,15 @@ import { getUrl as getSearchUrl } from '../SearchTracePage/url';
 import './dag.css';
 import { DAG_MAX_NUM_SERVICES } from '../../constants';
 
-type TServiceCall = {
-  parent: string;
-  child: string;
-  callCount: number;
-};
-
 type TProps = {
-  serviceCalls: TServiceCall[];
+  data: {
+    nodes: TVertex[];
+    edges: TEdge[];
+  };
   selectedLayout: string;
   selectedDepth: number;
   selectedService: string;
   uiFind?: string;
-  onMatchCountChange?: (count: number) => void;
   onServiceSelect?: (service: string) => void;
 };
 
@@ -70,38 +66,6 @@ export const renderNode = (
       </div>
     </div>
   ) as ReactNode;
-};
-
-const findConnectedServices = (
-  serviceCalls: TServiceCall[],
-  startService: string,
-  maxDepth: number | null | undefined
-): { nodes: Set<string>; edges: TServiceCall[] } => {
-  const nodes = new Set<string>([startService]);
-  const edges: TServiceCall[] = [];
-  const queue: { service: string; depth: number }[] = [{ service: startService, depth: 0 }];
-
-  const maxDepthValue = maxDepth ?? Number.MAX_SAFE_INTEGER;
-
-  while (queue.length > 0) {
-    const { service, depth } = queue.shift()!;
-    if (depth >= maxDepthValue) continue;
-
-    serviceCalls.forEach(call => {
-      if (call.parent === service && !nodes.has(call.child)) {
-        nodes.add(call.child);
-        edges.push(call);
-        queue.push({ service: call.child, depth: depth + 1 });
-      }
-      if (call.child === service && !nodes.has(call.parent)) {
-        nodes.add(call.parent);
-        edges.push(call);
-        queue.push({ service: call.parent, depth: depth + 1 });
-      }
-    });
-  }
-
-  return { nodes, edges };
 };
 
 export const handleViewTraces = (hoveredNode: TVertex | null) => {
@@ -164,58 +128,6 @@ export const createMenuItems = (
   ];
 };
 
-const formatServiceCalls = (
-  serviceCalls: TServiceCall[],
-  selectedService: string | null,
-  selectedDepth: number | null | undefined
-): {
-  nodes: TVertex[];
-  edges: TEdge[];
-} => {
-  if (!selectedService) {
-    const nodeMap: Record<string, boolean> = {};
-    const nodes: TVertex[] = [];
-    const edges: TEdge[] = [];
-
-    serviceCalls.forEach(d => {
-      if (d.parent.trim().length !== 0 && d.child.trim().length !== 0) {
-        if (!nodeMap[d.parent]) {
-          nodes.push({ key: d.parent });
-          nodeMap[d.parent] = true;
-        }
-
-        if (!nodeMap[d.child]) {
-          nodes.push({ key: d.child });
-          nodeMap[d.child] = true;
-        }
-
-        edges.push({
-          from: d.parent,
-          to: d.child,
-          label: `${d.callCount}`,
-        });
-      }
-    });
-
-    return { nodes, edges };
-  }
-
-  const { nodes: connectedNodes, edges: connectedEdges } = findConnectedServices(
-    serviceCalls,
-    selectedService,
-    selectedDepth
-  );
-
-  return {
-    nodes: Array.from(connectedNodes).map(key => ({ key })),
-    edges: connectedEdges.map(edge => ({
-      from: edge.parent,
-      to: edge.child,
-      label: `${edge.callCount}`,
-    })),
-  };
-};
-
 const { classNameIsSmall } = Digraph.propsFactories;
 
 const DAGMenu = ({
@@ -250,13 +162,12 @@ const DAGMenu = ({
 };
 
 export default function DAG({
-  serviceCalls = [],
+  data,
   selectedLayout,
   selectedDepth,
   selectedService,
   uiFind,
   onServiceSelect,
-  onMatchCountChange,
 }: TProps) {
   const [hoveredNode, setHoveredNode] = useState<TVertex | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
@@ -273,11 +184,6 @@ export default function DAG({
   const menuItems: IActionMenuItem[] = React.useMemo(
     () => createMenuItems(hoveredNode, onServiceSelect),
     [hoveredNode, onServiceSelect]
-  );
-
-  const data = React.useMemo(
-    () => formatServiceCalls(serviceCalls, selectedService, selectedDepth),
-    [serviceCalls, selectedService, selectedDepth]
   );
 
   const forceFocalServiceSelection = data.nodes.length > DAG_MAX_NUM_SERVICES;
@@ -311,17 +217,6 @@ export default function DAG({
       layoutManager.stopAndRelease();
     };
   }, [layoutManager]);
-
-  React.useEffect(() => {
-    if (uiFind && onMatchCountChange) {
-      const matchCount = data.nodes.filter(node =>
-        node.key.toLowerCase().includes(uiFind.toLowerCase())
-      ).length;
-      onMatchCountChange(matchCount);
-    } else {
-      onMatchCountChange?.(0);
-    }
-  }, [data.nodes, uiFind, onMatchCountChange]);
 
   if (forceFocalServiceSelection) {
     return (
