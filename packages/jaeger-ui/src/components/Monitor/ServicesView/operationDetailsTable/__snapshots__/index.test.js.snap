@@ -79,7 +79,7 @@ exports[`<OperationTableDetails> Table rendered successfully 1`] = `
               <Tooltip
                 classNames={
                   Object {
-                    "root": "\\"impact-tooltip\\"",
+                    "root": "impact-tooltip",
                   }
                 }
                 placement="top"
