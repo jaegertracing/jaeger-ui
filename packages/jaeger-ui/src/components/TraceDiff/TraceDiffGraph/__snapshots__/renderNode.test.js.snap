@@ -2,6 +2,11 @@
 
 exports[`drawNode diffNode renders as expected when props.a and props.b are the same 1`] = `
 <Popover
+  classNames={
+    Object {
+      "root": "DiffNode--popover is-same",
+    }
+  }
   content={
     <table
       className="DiffNode is-same"
@@ -42,7 +47,6 @@ exports[`drawNode diffNode renders as expected when props.a and props.b are the 
     </table>
   }
   mouseEnterDelay={0.25}
-  overlayClassName="DiffNode--popover is-same"
 >
   <table
     className="DiffNode is-same"
@@ -86,6 +90,11 @@ exports[`drawNode diffNode renders as expected when props.a and props.b are the 
 
 exports[`drawNode diffNode renders as expected when props.a is 0 1`] = `
 <Popover
+  classNames={
+    Object {
+      "root": "DiffNode--popover is-changed is-added",
+    }
+  }
   content={
     <table
       className="DiffNode is-changed is-added"
@@ -146,7 +155,6 @@ exports[`drawNode diffNode renders as expected when props.a is 0 1`] = `
     </table>
   }
   mouseEnterDelay={0.25}
-  overlayClassName="DiffNode--popover is-changed is-added"
 >
   <table
     className="DiffNode is-changed is-added"
@@ -210,6 +218,11 @@ exports[`drawNode diffNode renders as expected when props.a is 0 1`] = `
 
 exports[`drawNode diffNode renders as expected when props.a is less than props.b 1`] = `
 <Popover
+  classNames={
+    Object {
+      "root": "DiffNode--popover is-changed is-more",
+    }
+  }
   content={
     <table
       className="DiffNode is-changed is-more"
@@ -270,7 +283,6 @@ exports[`drawNode diffNode renders as expected when props.a is less than props.b
     </table>
   }
   mouseEnterDelay={0.25}
-  overlayClassName="DiffNode--popover is-changed is-more"
 >
   <table
     className="DiffNode is-changed is-more"
@@ -334,6 +346,11 @@ exports[`drawNode diffNode renders as expected when props.a is less than props.b
 
 exports[`drawNode diffNode renders as expected when props.a is more than props.b 1`] = `
 <Popover
+  classNames={
+    Object {
+      "root": "DiffNode--popover is-changed is-less",
+    }
+  }
   content={
     <table
       className="DiffNode is-changed is-less"
@@ -394,7 +411,6 @@ exports[`drawNode diffNode renders as expected when props.a is more than props.b
     </table>
   }
   mouseEnterDelay={0.25}
-  overlayClassName="DiffNode--popover is-changed is-less"
 >
   <table
     className="DiffNode is-changed is-less"
@@ -458,6 +474,11 @@ exports[`drawNode diffNode renders as expected when props.a is more than props.b
 
 exports[`drawNode diffNode renders as expected when props.b is 0 1`] = `
 <Popover
+  classNames={
+    Object {
+      "root": "DiffNode--popover is-changed is-removed",
+    }
+  }
   content={
     <table
       className="DiffNode is-changed is-removed"
@@ -518,7 +539,6 @@ exports[`drawNode diffNode renders as expected when props.b is 0 1`] = `
     </table>
   }
   mouseEnterDelay={0.25}
-  overlayClassName="DiffNode--popover is-changed is-removed"
 >
   <table
     className="DiffNode is-changed is-removed"
@@ -582,6 +602,11 @@ exports[`drawNode diffNode renders as expected when props.b is 0 1`] = `
 
 exports[`drawNode diffNode renders as expected when props.isUiFindMatch is true 1`] = `
 <Popover
+  classNames={
+    Object {
+      "root": "DiffNode--popover is-same",
+    }
+  }
   content={
     <table
       className="DiffNode is-same"
@@ -622,7 +647,6 @@ exports[`drawNode diffNode renders as expected when props.isUiFindMatch is true 
     </table>
   }
   mouseEnterDelay={0.25}
-  overlayClassName="DiffNode--popover is-same"
 >
   <table
     className="DiffNode is-same"

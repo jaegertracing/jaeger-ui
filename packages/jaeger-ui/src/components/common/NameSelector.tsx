@@ -112,7 +112,7 @@ export default class NameSelector extends React.PureComponent<TProps, TState> {
     }
     return (
       <Popover
-        overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
+        classNames={{ root: 'NameSelector--overlay u-rm-popover-content-padding' }}
         onOpenChange={this.onPopoverVisibleChanged}
         placement="bottomLeft"
         content={

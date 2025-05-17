@@ -79,7 +79,7 @@ export class DiffNode extends React.PureComponent<Props> {
     );
 
     return (
-      <Popover overlayClassName={`DiffNode--popover ${className}`} mouseEnterDelay={0.25} content={table}>
+      <Popover classNames={{ root: `DiffNode--popover ${className}` }} mouseEnterDelay={0.25} content={table}>
         {table}
       </Popover>
     );
