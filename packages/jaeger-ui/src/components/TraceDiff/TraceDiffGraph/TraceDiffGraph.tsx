@@ -50,24 +50,45 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
         <div className="TraceDiffGraph--emptyState">
           <div className="TraceDiffGraph--emptyStateContent">
             <div className="TraceDiffGraph--emptyStateIcon">
-              <svg width="120" height="60" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <text x="40" y="35" textAnchor="middle" fill="#333" fontWeight="bold" fontSize="32">A</text>
-                <line x1="60" y1="0" x2="60" y2="50" stroke="#199" strokeWidth="3"/>
-                <text x="80" y="35" textAnchor="middle" fill="#333" fontWeight="bold" fontSize="32">B</text>
+              <svg
+                width="120"
+                height="60"
+                viewBox="0 0 120 60"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <text x="40" y="35" textAnchor="middle" fill="#333" fontWeight="bold" fontSize="32">
+                  A
+                </text>
+                <line x1="60" y1="0" x2="60" y2="50" stroke="#199" strokeWidth="3" />
+                <text x="80" y="35" textAnchor="middle" fill="#333" fontWeight="bold" fontSize="32">
+                  B
+                </text>
               </svg>
             </div>
             <h1 className="TraceDiffGraph--emptyStateTitle">At least two Traces are needed</h1>
-            <p className="ub-tx-center">Select traces using the dropdowns above or from the search results page</p>
+            <p className="ub-tx-center">
+              Select traces using the dropdowns above or from the search results page
+            </p>
             <div className="TraceDiffGraph--emptyStateActions">
-              <button 
-                className="TraceDiffGraph--emptyStateButton" 
-                onClick={() => window.location.href = '/search'}
+              <button
+                type="button"
+                className="TraceDiffGraph--emptyStateButton"
+                onClick={() => {
+                  window.location.href = '/search';
+                }}
               >
                 Go to Search
               </button>
-              <button 
+              <button
+                type="button"
                 className="TraceDiffGraph--helpButton"
-                onClick={() => window.open('https://medium.com/jaegertracing/trace-comparisons-arrive-in-jaeger-1-7-a97ad5e2d05d', '_blank')}
+                onClick={() =>
+                  window.open(
+                    'https://medium.com/jaegertracing/trace-comparisons-arrive-in-jaeger-1-7-a97ad5e2d05d',
+                    '_blank'
+                  )
+                }
               >
                 Learn how to compare traces
               </button>

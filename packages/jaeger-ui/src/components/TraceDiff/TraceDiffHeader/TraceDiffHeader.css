@@ -72,7 +72,9 @@ limitations under the License.
   border-radius: 50%;
   background: #199;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .TraceDiffHeader--vsContainer:hover {
@@ -99,6 +101,8 @@ limitations under the License.
 
 .TraceDiffHeader--popover .ant-popover-inner {
   border-radius: 4px;
-  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08),
+  box-shadow:
+    0 3px 6px -4px rgba(0, 0, 0, 0.12),
+    0 6px 16px 0 rgba(0, 0, 0, 0.08),
     0 9px 28px 8px rgba(0, 0, 0, 0.05);
 }
