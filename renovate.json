@@ -17,7 +17,7 @@
     {
       "groupName": "do not apply patch upgrades to GH workflows",
       "matchFileNames": [
-        ".github/workflows/Dockerfil**"
+        ".github/workflows/**"
       ],
       "matchUpdateTypes": ["patch", "digest"],
       "enabled": false
