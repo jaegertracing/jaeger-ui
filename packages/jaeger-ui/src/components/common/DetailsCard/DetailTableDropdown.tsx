@@ -81,7 +81,10 @@ export default class DetailTableDropdown extends React.PureComponent<TProps> {
           value={value}
         />
         <div className="DetailTableDropdown--Footer">
-          <Tooltip classNames={{ root: 'DetailTableDropdown--Tooltip' }} title="Remove filter from this column">
+          <Tooltip
+            classNames={{ root: 'DetailTableDropdown--Tooltip' }}
+            title="Remove filter from this column"
+          >
             <Button className="DetailTableDropdown--Btn Clear" onClick={clearFilters}>
               <IoTrash size={18} />
               Clear Filter

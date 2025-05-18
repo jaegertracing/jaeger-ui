@@ -116,7 +116,7 @@ export default class OpNode extends React.PureComponent<Props> {
     const popoverContent = <div className="OpNode--popoverContent">{table}</div>;
 
     return (
-      <Popover classNames={{ root: "OpNode--popover" }} mouseEnterDelay={0.25} content={popoverContent}>
+      <Popover classNames={{ root: 'OpNode--popover' }} mouseEnterDelay={0.25} content={popoverContent}>
         {table}
       </Popover>
     );

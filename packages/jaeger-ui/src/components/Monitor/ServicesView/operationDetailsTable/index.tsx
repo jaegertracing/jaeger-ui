@@ -162,7 +162,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             <span style={{ float: 'left', color: '#459798' }}>
               {tableTitles.get('impact')} &nbsp;
               <Tooltip
-                classNames={{ root: "impact-tooltip" }}
+                classNames={{ root: 'impact-tooltip' }}
                 placement="top"
                 title="The result of multiplying avg. duration and requests per minute, showing the most used and slowest endpoints"
               >
