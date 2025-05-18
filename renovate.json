@@ -5,6 +5,7 @@
   "suppressNotifications": ["prEditedNotification"],
   "packageRules": [
     {
+      "groupName": "do not apply patch upgrades to dependencies",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["patch", "digest"],
       "enabled": false
@@ -14,7 +15,10 @@
       "groupName": "github-actions deps"
     },
     {
-      "matchManagers": ["github-actions"],
+      "groupName": "do not apply patch upgrades to GH workflows",
+      "matchFileNames": [
+        ".github/workflows/Dockerfil**"
+      ],
       "matchUpdateTypes": ["patch", "digest"],
       "enabled": false
     }
