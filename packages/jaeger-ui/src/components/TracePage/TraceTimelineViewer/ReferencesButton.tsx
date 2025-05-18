@@ -61,7 +61,7 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
       mouseLeaveDelay: 0.5,
       placement: 'bottom' as TooltipPlacement,
       title: tooltipText,
-      overlayClassName: 'ReferencesButton--tooltip',
+      classNames: { root: 'ReferencesButton--tooltip' },
     };
 
     if (references.length > 1) {
