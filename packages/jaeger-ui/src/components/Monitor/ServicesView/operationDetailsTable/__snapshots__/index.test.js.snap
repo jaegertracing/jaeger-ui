@@ -108,22 +108,22 @@ exports[`<OperationTableDetails> Table rendered successfully 1`] = `
 
 exports[`<OperationTableDetails> render No data table 1`] = `
 <div
-  className="ant-col ant-col-24 css-dev-only-do-not-override-18afz5u"
+  className="ant-col ant-col-24 css-dev-only-do-not-override-1m2bkf9"
   style={Object {}}
 >
   <div
-    className="ant-table-wrapper css-dev-only-do-not-override-18afz5u"
+    className="ant-table-wrapper css-dev-only-do-not-override-1m2bkf9"
     style={Object {}}
   >
     <div
-      className="ant-spin-nested-loading css-dev-only-do-not-override-18afz5u"
+      className="ant-spin-nested-loading css-dev-only-do-not-override-1m2bkf9"
     >
       <div
         className="ant-spin-container"
         key="container"
       >
         <div
-          className="ant-table ant-table-empty css-dev-only-do-not-override-18afz5u"
+          className="ant-table ant-table-empty css-dev-only-do-not-override-1m2bkf9"
         >
           <div
             className="ant-table-container"
@@ -646,7 +646,7 @@ exports[`<OperationTableDetails> render No data table 1`] = `
                       style={Object {}}
                     >
                       <div
-                        className="css-dev-only-do-not-override-18afz5u ant-empty ant-empty-normal"
+                        className="css-dev-only-do-not-override-1m2bkf9 ant-empty ant-empty-normal"
                         style={Object {}}
                       >
                         <div
@@ -711,22 +711,22 @@ exports[`<OperationTableDetails> render No data table 1`] = `
 
 exports[`<OperationTableDetails> render P95 latency with more than 2 decimal places value 1`] = `
 <div
-  className="ant-col ant-col-24 css-dev-only-do-not-override-18afz5u"
+  className="ant-col ant-col-24 css-dev-only-do-not-override-1m2bkf9"
   style={Object {}}
 >
   <div
-    className="ant-table-wrapper css-dev-only-do-not-override-18afz5u"
+    className="ant-table-wrapper css-dev-only-do-not-override-1m2bkf9"
     style={Object {}}
   >
     <div
-      className="ant-spin-nested-loading css-dev-only-do-not-override-18afz5u"
+      className="ant-spin-nested-loading css-dev-only-do-not-override-1m2bkf9"
     >
       <div
         className="ant-spin-container"
         key="container"
       >
         <div
-          className="ant-table css-dev-only-do-not-override-18afz5u"
+          className="ant-table css-dev-only-do-not-override-1m2bkf9"
         >
           <div
             className="ant-table-container"
@@ -1535,7 +1535,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
                           aria-valuemax={100}
                           aria-valuemin={0}
                           aria-valuenow={100}
-                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-18afz5u"
+                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-1m2bkf9"
                           role="progressbar"
                           style={Object {}}
                         >
@@ -1584,7 +1584,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
           </div>
         </div>
         <ul
-          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-18afz5u"
+          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-1m2bkf9"
           style={Object {}}
         >
           <li
@@ -1679,7 +1679,7 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
           >
             <div
               aria-label="Page Size"
-              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-18afz5u ant-select-single ant-select-show-arrow ant-select-show-search"
+              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-1m2bkf9 ant-select-single ant-select-show-arrow ant-select-show-search"
               onBlur={[Function]}
               onFocus={[Function]}
               onKeyDown={[Function]}
@@ -1783,22 +1783,22 @@ exports[`<OperationTableDetails> render P95 latency with more than 2 decimal pla
 
 exports[`<OperationTableDetails> render error rate with more than 2 decimal places value 1`] = `
 <div
-  className="ant-col ant-col-24 css-dev-only-do-not-override-18afz5u"
+  className="ant-col ant-col-24 css-dev-only-do-not-override-1m2bkf9"
   style={Object {}}
 >
   <div
-    className="ant-table-wrapper css-dev-only-do-not-override-18afz5u"
+    className="ant-table-wrapper css-dev-only-do-not-override-1m2bkf9"
     style={Object {}}
   >
     <div
-      className="ant-spin-nested-loading css-dev-only-do-not-override-18afz5u"
+      className="ant-spin-nested-loading css-dev-only-do-not-override-1m2bkf9"
     >
       <div
         className="ant-spin-container"
         key="container"
       >
         <div
-          className="ant-table css-dev-only-do-not-override-18afz5u"
+          className="ant-table css-dev-only-do-not-override-1m2bkf9"
         >
           <div
             className="ant-table-container"
@@ -2607,7 +2607,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
                           aria-valuemax={100}
                           aria-valuemin={0}
                           aria-valuenow={100}
-                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-18afz5u"
+                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-1m2bkf9"
                           role="progressbar"
                           style={Object {}}
                         >
@@ -2656,7 +2656,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
           </div>
         </div>
         <ul
-          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-18afz5u"
+          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-1m2bkf9"
           style={Object {}}
         >
           <li
@@ -2751,7 +2751,7 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
           >
             <div
               aria-label="Page Size"
-              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-18afz5u ant-select-single ant-select-show-arrow ant-select-show-search"
+              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-1m2bkf9 ant-select-single ant-select-show-arrow ant-select-show-search"
               onBlur={[Function]}
               onFocus={[Function]}
               onKeyDown={[Function]}
@@ -2855,22 +2855,22 @@ exports[`<OperationTableDetails> render error rate with more than 2 decimal plac
 
 exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
 <div
-  className="ant-col ant-col-24 css-dev-only-do-not-override-18afz5u"
+  className="ant-col ant-col-24 css-dev-only-do-not-override-1m2bkf9"
   style={Object {}}
 >
   <div
-    className="ant-table-wrapper css-dev-only-do-not-override-18afz5u"
+    className="ant-table-wrapper css-dev-only-do-not-override-1m2bkf9"
     style={Object {}}
   >
     <div
-      className="ant-spin-nested-loading css-dev-only-do-not-override-18afz5u"
+      className="ant-spin-nested-loading css-dev-only-do-not-override-1m2bkf9"
     >
       <div
         className="ant-spin-container"
         key="container"
       >
         <div
-          className="ant-table css-dev-only-do-not-override-18afz5u"
+          className="ant-table css-dev-only-do-not-override-1m2bkf9"
         >
           <div
             className="ant-table-container"
@@ -3679,7 +3679,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
                           aria-valuemax={100}
                           aria-valuemin={0}
                           aria-valuenow={100}
-                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-18afz5u"
+                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-1m2bkf9"
                           role="progressbar"
                           style={Object {}}
                         >
@@ -3728,7 +3728,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
           </div>
         </div>
         <ul
-          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-18afz5u"
+          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-1m2bkf9"
           style={Object {}}
         >
           <li
@@ -3823,7 +3823,7 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
           >
             <div
               aria-label="Page Size"
-              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-18afz5u ant-select-single ant-select-show-arrow ant-select-show-search"
+              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-1m2bkf9 ant-select-single ant-select-show-arrow ant-select-show-search"
               onBlur={[Function]}
               onFocus={[Function]}
               onKeyDown={[Function]}
@@ -3927,22 +3927,22 @@ exports[`<OperationTableDetails> render lower than 0.1 P95 latency 1`] = `
 
 exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
 <div
-  className="ant-col ant-col-24 css-dev-only-do-not-override-18afz5u"
+  className="ant-col ant-col-24 css-dev-only-do-not-override-1m2bkf9"
   style={Object {}}
 >
   <div
-    className="ant-table-wrapper css-dev-only-do-not-override-18afz5u"
+    className="ant-table-wrapper css-dev-only-do-not-override-1m2bkf9"
     style={Object {}}
   >
     <div
-      className="ant-spin-nested-loading css-dev-only-do-not-override-18afz5u"
+      className="ant-spin-nested-loading css-dev-only-do-not-override-1m2bkf9"
     >
       <div
         className="ant-spin-container"
         key="container"
       >
         <div
-          className="ant-table css-dev-only-do-not-override-18afz5u"
+          className="ant-table css-dev-only-do-not-override-1m2bkf9"
         >
           <div
             className="ant-table-container"
@@ -4751,7 +4751,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
                           aria-valuemax={100}
                           aria-valuemin={0}
                           aria-valuenow={100}
-                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-18afz5u"
+                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-1m2bkf9"
                           role="progressbar"
                           style={Object {}}
                         >
@@ -4800,7 +4800,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
           </div>
         </div>
         <ul
-          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-18afz5u"
+          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-1m2bkf9"
           style={Object {}}
         >
           <li
@@ -4895,7 +4895,7 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
           >
             <div
               aria-label="Page Size"
-              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-18afz5u ant-select-single ant-select-show-arrow ant-select-show-search"
+              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-1m2bkf9 ant-select-single ant-select-show-arrow ant-select-show-search"
               onBlur={[Function]}
               onFocus={[Function]}
               onKeyDown={[Function]}
@@ -4999,22 +4999,22 @@ exports[`<OperationTableDetails> render lower than 0.1 error rate 1`] = `
 
 exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = `
 <div
-  className="ant-col ant-col-24 css-dev-only-do-not-override-18afz5u"
+  className="ant-col ant-col-24 css-dev-only-do-not-override-1m2bkf9"
   style={Object {}}
 >
   <div
-    className="ant-table-wrapper css-dev-only-do-not-override-18afz5u"
+    className="ant-table-wrapper css-dev-only-do-not-override-1m2bkf9"
     style={Object {}}
   >
     <div
-      className="ant-spin-nested-loading css-dev-only-do-not-override-18afz5u"
+      className="ant-spin-nested-loading css-dev-only-do-not-override-1m2bkf9"
     >
       <div
         className="ant-spin-container"
         key="container"
       >
         <div
-          className="ant-table css-dev-only-do-not-override-18afz5u"
+          className="ant-table css-dev-only-do-not-override-1m2bkf9"
         >
           <div
             className="ant-table-container"
@@ -5823,7 +5823,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
                           aria-valuemax={100}
                           aria-valuemin={0}
                           aria-valuenow={100}
-                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-18afz5u"
+                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-1m2bkf9"
                           role="progressbar"
                           style={Object {}}
                         >
@@ -5872,7 +5872,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
           </div>
         </div>
         <ul
-          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-18afz5u"
+          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-1m2bkf9"
           style={Object {}}
         >
           <li
@@ -5967,7 +5967,7 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
           >
             <div
               aria-label="Page Size"
-              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-18afz5u ant-select-single ant-select-show-arrow ant-select-show-search"
+              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-1m2bkf9 ant-select-single ant-select-show-arrow ant-select-show-search"
               onBlur={[Function]}
               onFocus={[Function]}
               onKeyDown={[Function]}
@@ -6071,22 +6071,22 @@ exports[`<OperationTableDetails> render lower than 0.1 request rate value 1`] = 
 
 exports[`<OperationTableDetails> render request rate number with more than 2 decimal places value 1`] = `
 <div
-  className="ant-col ant-col-24 css-dev-only-do-not-override-18afz5u"
+  className="ant-col ant-col-24 css-dev-only-do-not-override-1m2bkf9"
   style={Object {}}
 >
   <div
-    className="ant-table-wrapper css-dev-only-do-not-override-18afz5u"
+    className="ant-table-wrapper css-dev-only-do-not-override-1m2bkf9"
     style={Object {}}
   >
     <div
-      className="ant-spin-nested-loading css-dev-only-do-not-override-18afz5u"
+      className="ant-spin-nested-loading css-dev-only-do-not-override-1m2bkf9"
     >
       <div
         className="ant-spin-container"
         key="container"
       >
         <div
-          className="ant-table css-dev-only-do-not-override-18afz5u"
+          className="ant-table css-dev-only-do-not-override-1m2bkf9"
         >
           <div
             className="ant-table-container"
@@ -6895,7 +6895,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
                           aria-valuemax={100}
                           aria-valuemin={0}
                           aria-valuenow={100}
-                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-18afz5u"
+                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-1m2bkf9"
                           role="progressbar"
                           style={Object {}}
                         >
@@ -6944,7 +6944,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
           </div>
         </div>
         <ul
-          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-18afz5u"
+          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-1m2bkf9"
           style={Object {}}
         >
           <li
@@ -7039,7 +7039,7 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
           >
             <div
               aria-label="Page Size"
-              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-18afz5u ant-select-single ant-select-show-arrow ant-select-show-search"
+              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-1m2bkf9 ant-select-single ant-select-show-arrow ant-select-show-search"
               onBlur={[Function]}
               onFocus={[Function]}
               onKeyDown={[Function]}
@@ -7143,22 +7143,22 @@ exports[`<OperationTableDetails> render request rate number with more than 2 dec
 
 exports[`<OperationTableDetails> render some values in the table 1`] = `
 <div
-  className="ant-col ant-col-24 css-dev-only-do-not-override-18afz5u"
+  className="ant-col ant-col-24 css-dev-only-do-not-override-1m2bkf9"
   style={Object {}}
 >
   <div
-    className="ant-table-wrapper css-dev-only-do-not-override-18afz5u"
+    className="ant-table-wrapper css-dev-only-do-not-override-1m2bkf9"
     style={Object {}}
   >
     <div
-      className="ant-spin-nested-loading css-dev-only-do-not-override-18afz5u"
+      className="ant-spin-nested-loading css-dev-only-do-not-override-1m2bkf9"
     >
       <div
         className="ant-spin-container"
         key="container"
       >
         <div
-          className="ant-table css-dev-only-do-not-override-18afz5u"
+          className="ant-table css-dev-only-do-not-override-1m2bkf9"
         >
           <div
             className="ant-table-container"
@@ -7967,7 +7967,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
                           aria-valuemax={100}
                           aria-valuemin={0}
                           aria-valuenow={100}
-                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-18afz5u"
+                          className="ant-progress ant-progress-status-success ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-1m2bkf9"
                           role="progressbar"
                           style={Object {}}
                         >
@@ -8016,7 +8016,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
           </div>
         </div>
         <ul
-          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-18afz5u"
+          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-1m2bkf9"
           style={Object {}}
         >
           <li
@@ -8111,7 +8111,7 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
           >
             <div
               aria-label="Page Size"
-              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-18afz5u ant-select-single ant-select-show-arrow ant-select-show-search"
+              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-1m2bkf9 ant-select-single ant-select-show-arrow ant-select-show-search"
               onBlur={[Function]}
               onFocus={[Function]}
               onKeyDown={[Function]}
@@ -8215,22 +8215,22 @@ exports[`<OperationTableDetails> render some values in the table 1`] = `
 
 exports[`<OperationTableDetails> test column render function 1`] = `
 <div
-  className="ant-col ant-col-24 css-dev-only-do-not-override-18afz5u"
+  className="ant-col ant-col-24 css-dev-only-do-not-override-1m2bkf9"
   style={Object {}}
 >
   <div
-    className="ant-table-wrapper css-dev-only-do-not-override-18afz5u"
+    className="ant-table-wrapper css-dev-only-do-not-override-1m2bkf9"
     style={Object {}}
   >
     <div
-      className="ant-spin-nested-loading css-dev-only-do-not-override-18afz5u"
+      className="ant-spin-nested-loading css-dev-only-do-not-override-1m2bkf9"
     >
       <div
         className="ant-spin-container"
         key="container"
       >
         <div
-          className="ant-table css-dev-only-do-not-override-18afz5u"
+          className="ant-table css-dev-only-do-not-override-1m2bkf9"
         >
           <div
             className="ant-table-container"
@@ -8829,7 +8829,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
                           aria-valuemax={100}
                           aria-valuemin={0}
                           aria-valuenow={NaN}
-                          className="ant-progress ant-progress-status-normal ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-18afz5u"
+                          className="ant-progress ant-progress-status-normal ant-progress-line ant-progress-line-align-end ant-progress-line-position-outer ant-progress-default impact css-dev-only-do-not-override-1m2bkf9"
                           role="progressbar"
                           style={Object {}}
                         >
@@ -8878,7 +8878,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
           </div>
         </div>
         <ul
-          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-18afz5u"
+          className="ant-pagination ant-table-pagination ant-table-pagination-right css-dev-only-do-not-override-1m2bkf9"
           style={Object {}}
         >
           <li
@@ -8973,7 +8973,7 @@ exports[`<OperationTableDetails> test column render function 1`] = `
           >
             <div
               aria-label="Page Size"
-              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-18afz5u ant-select-single ant-select-show-arrow ant-select-show-search"
+              className="ant-select ant-select-outlined ant-pagination-options-size-changer css-dev-only-do-not-override-1m2bkf9 ant-select-single ant-select-show-arrow ant-select-show-search"
               onBlur={[Function]}
               onFocus={[Function]}
               onKeyDown={[Function]}
