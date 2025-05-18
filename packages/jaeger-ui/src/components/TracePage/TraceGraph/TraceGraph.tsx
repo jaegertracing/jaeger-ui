@@ -17,6 +17,7 @@ import { Card, Button, Tooltip } from 'antd';
 import { IoClose, IoHelpCircleOutline } from 'react-icons/io5';
 import cx from 'classnames';
 import { Digraph, LayoutManager, cacheAs } from '@jaegertracing/plexus';
+import getConfig from '../../../utils/config/get-config';
 
 import {
   getNodeRenderer,
@@ -205,7 +206,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
         <a
           className="TraceGraph--experimental"
           href="https://github.com/jaegertracing/jaeger-ui/issues/293"
-          target="_blank"
+          target={getConfig().forbidNewPage ? undefined : "_blank"}
           rel="noopener noreferrer"
         >
           Experimental

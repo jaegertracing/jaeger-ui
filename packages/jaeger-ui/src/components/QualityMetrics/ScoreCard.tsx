@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { getConfigValue } from '../../utils/config/get-config';
 
 import CircularProgressbar from '../common/CircularProgressbar';
 import NewWindowIcon from '../common/NewWindowIcon';
@@ -45,7 +46,7 @@ export default class ScoreCard extends React.PureComponent<TProps> {
             value={value}
           />
         </div>
-        <a href={link} target="_blank" rel="noreferrer noopener">
+        <a href={link} target={getConfigValue('forbidNewPage') ? undefined : "_blank"} rel="noreferrer noopener">
           {linkText}
           <NewWindowIcon />
         </a>

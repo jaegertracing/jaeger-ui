@@ -25,6 +25,7 @@ import VerticalResizer from '../../common/VerticalResizer';
 import JaegerAPI from '../../../api/jaeger';
 import extractDecorationFromState, { TDecorationFromState } from '../../../model/path-agnostic-decorations';
 import stringSupplant from '../../../utils/stringSupplant';
+import getConfig from '../../../utils/config/get-config';
 
 import { TPathAgnosticDecorationSchema } from '../../../model/path-agnostic-decorations/types';
 import { TColumnDefs, TDetails } from '../../common/DetailsCard/types';
@@ -144,7 +145,7 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
               <a
                 className="Ddg--DetailsPanel--DetailLink"
                 href={stringSupplant(detailLink, { service, operation })}
-                target="_blank"
+                target={getConfig().forbidNewPage ? undefined : "_blank"}
                 rel="noreferrer noopener"
               >
                 <NewWindowIcon />

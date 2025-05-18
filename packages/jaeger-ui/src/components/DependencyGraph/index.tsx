@@ -269,7 +269,7 @@ export class DependencyGraphPageImpl extends Component<TProps, TState> {
           <a
             href="https://www.jaegertracing.io/docs/latest/faq/#why-is-the-dependencies-page-empty"
             rel="noopener noreferrer"
-            target="_blank"
+            target={getConfigValue('forbidNewPage') ? undefined : "_blank"}
           >
             See FAQ
           </a>
@@ -398,3 +398,16 @@ export function mapDispatchToProps(dispatch: any): Pick<TProps, 'fetchDependenci
 }
 
 export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(DependencyGraphPageImpl));
+
+export default function DependencyGraph(props: TProps) {
+  const { data, ...rest } = props;
+  return (
+    <DirectedGraph
+      {...rest}
+      arrowScaleDampener={ARROW_SCALE_DAMPENER}
+      className={`DependencyGraph ${rest.className || ''}`}
+      target={getConfigValue('forbidNewPage') ? undefined : "_blank"}
+      data={data}
+    />
+  );
+}

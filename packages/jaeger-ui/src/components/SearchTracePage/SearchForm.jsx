@@ -26,6 +26,7 @@ import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import store from 'store';
+import getConfig from '../../utils/config/get-config';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
@@ -367,7 +368,7 @@ export class SearchFormImpl extends React.PureComponent {
                 title={
                   <h3 key="title" className="SearchForm--tagsHintTitle">
                     Values should be in the{' '}
-                    <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
+                    <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target={getConfig().forbidNewPage ? undefined : "_blank"}>
                       logfmt
                     </a>{' '}
                     format.
@@ -385,7 +386,7 @@ export class SearchFormImpl extends React.PureComponent {
                         <a
                           href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
                           rel="noopener noreferrer"
-                          target="_blank"
+                          target={getConfig().forbidNewPage ? undefined : "_blank"}
                         >
                           reserved characters
                         </a>{' '}
@@ -411,10 +412,11 @@ export class SearchFormImpl extends React.PureComponent {
                           <a
                             href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
                             rel="noopener noreferrer"
-                            target="_blank"
+                            target={getConfig().forbidNewPage ? undefined : "_blank"}
                           >
                             regex-reserved
                           </a>{' '}
+
                           character <code className="SearchForm--tagsHintEg">&quot;?&quot;</code> must be
                           escaped with <code className="SearchForm--tagsHintEg">&quot;\\&quot;</code>.
                         </div>
