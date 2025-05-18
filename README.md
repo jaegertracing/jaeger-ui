@@ -131,8 +131,6 @@ See the [configuration guide](https://www.jaegertracing.io/docs/latest/frontend-
 
 ```
 
-See the [configuration guide](https://www.jaegertracing.io/docs/latest/frontend-ui/) for details on configuring Google Analytics tracking, menu customizations, and other aspects of UI behavior.
-
 ## License
 
 [Apache 2.0 License](./LICENSE).
