@@ -19,54 +19,54 @@ import { MonitorEmptyStateConfig } from '../../../types/config';
 import { getConfigValue } from '../../../utils/config/get-config';
 import monitorImg from './media/monitor.png';
 
-export default class MonitorATMEmptyState extends React.PureComponent {
-  config: MonitorEmptyStateConfig;
+const MonitorATMEmptyState: React.FC = () => {
+  const config: MonitorEmptyStateConfig = getConfigValue('monitor.emptyState');
 
-  constructor(props: object) {
-    super(props);
+  return (
+    <Col>
+      <Row justify="center">
+        <Col span={8}>
+          <img
+            className="monitor-preview-image-empty-state"
+            alt="jaeger-monitor-tab-preview"
+            src={monitorImg}
+          />
+        </Col>
+      </Row>
+      <Row justify="center">
+        <Col span={6} className="center-empty-state">
+          {config.mainTitle && (
+            <h2 className="main-title-empty-state">{config.mainTitle}</h2>
+          )}
+          {config.subTitle && (
+            <h3 className="sub-title-empty-state">{config.subTitle}</h3>
+          )}
+          {config.description && (
+            <h4 className="description-empty-state">{config.description}</h4>
+          )}
+          {config.button?.text && (
+            <Button
+              className="button-empty-state"
+              onClick={() => config.button?.onClick?.()}
+            >
+              {config.button.text}
+            </Button>
+          )}
+          {config.alert && (
+            <Row justify="center">
+              <Col span={20}>
+                <Alert
+                  message={config.alert.message}
+                  type={config.alert.type}
+                  showIcon
+                />
+              </Col>
+            </Row>
+          )}
+        </Col>
+      </Row>
+    </Col>
+  );
+};
 
-    this.config = getConfigValue('monitor.emptyState');
-  }
-
-  render() {
-    return (
-      <Col>
-        <Row justify="center">
-          <Col span={8}>
-            <img
-              className="monitor-preview-image-empty-state"
-              alt="jaeger-monitor-tab-preview"
-              src={monitorImg}
-            />
-          </Col>
-        </Row>
-        <Row justify="center">
-          <Col span={6} className="center-empty-state">
-            {this.config.mainTitle && <h2 className="main-title-empty-state">{this.config.mainTitle}</h2>}
-            {this.config.subTitle && <h3 className="sub-title-empty-state">{this.config.subTitle}</h3>}
-            {this.config.description && (
-              <h4 className="description-empty-state">{this.config.description}</h4>
-            )}
-            {this.config.button && this.config.button.text && (
-              <Button
-                className="button-empty-state"
-                onClick={() =>
-                  this.config.button && this.config.button.onClick && this.config.button.onClick()
-                }
-              >
-                {this.config.button.text}
-              </Button>
-            )}
-            {this.config.alert && (
-              <Row justify="center">
-                <Col span={20}>
-                  <Alert message={this.config.alert.message} type={this.config.alert.type} showIcon />
-                </Col>
-              </Row>
-            )}
-          </Col>
-        </Row>
-      </Col>
-    );
-  }
-}
+export default MonitorATMEmptyState;
