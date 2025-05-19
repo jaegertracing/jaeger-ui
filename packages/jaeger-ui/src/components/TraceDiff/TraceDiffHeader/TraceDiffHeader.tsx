@@ -118,7 +118,7 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
           </div>
         </Popover>
         <div className="TraceDiffHeader--divider">
-          <div className="TraceDiffHeader--vsContainer">
+          <div className="TraceDiffHeader--vsContainer" data-testid="vs-separator">
             <span className="TraceDiffHeader--vsLabel">VS</span>
           </div>
         </div>

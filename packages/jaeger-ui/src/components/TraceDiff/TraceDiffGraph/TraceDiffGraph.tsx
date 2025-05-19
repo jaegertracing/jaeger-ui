@@ -47,7 +47,7 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
     const { a, b, uiFind = '' } = this.props;
     if (!a || !b) {
       return (
-        <div className="TraceDiffGraph--emptyState">
+        <div className="TraceDiffGraph--emptyState" data-testid="trace-diff-empty-state">
           <div className="TraceDiffGraph--emptyStateContent">
             <div className="TraceDiffGraph--emptyStateIcon">
               <svg
@@ -74,6 +74,7 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
               <button
                 type="button"
                 className="TraceDiffGraph--emptyStateButton"
+                data-testid="go-to-search-button"
                 onClick={() => {
                   window.location.href = '/search';
                 }}
@@ -83,6 +84,7 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
               <button
                 type="button"
                 className="TraceDiffGraph--helpButton"
+                data-testid="learn-how-button"
                 onClick={() =>
                   window.open(
                     'https://medium.com/jaegertracing/trace-comparisons-arrive-in-jaeger-1-7-a97ad5e2d05d',
