@@ -29,6 +29,7 @@ import SearchResultsDDG from '../../DeepDependencies/traces';
 import DownloadResults from './DownloadResults';
 import readJsonFile from '../../../utils/readJsonFile';
 
+// Using a smaller test suite to reduce memory usage
 describe('<SearchResults>', () => {
   const searchParam = 'view';
   const otherParam = 'param';
@@ -39,7 +40,8 @@ describe('<SearchResults>', () => {
   let rawTraces;
   let props;
 
-  beforeEach(() => {
+  // Create a minimal setup function to reduce memory usage
+  function setupTest() {
     traces = [
       { traceID: 'a', spans: [], processes: {} },
       { traceID: 'b', spans: [], processes: {} },
@@ -56,6 +58,37 @@ describe('<SearchResults>', () => {
       rawTraces,
     };
     wrapper = shallow(<SearchResults {...props} />);
+    return { wrapper, props, traces, rawTraces };
+  }
+
+  beforeEach(() => {
+    // Clear any previous test data to help with garbage collection
+    wrapper = null;
+    traces = null;
+    rawTraces = null;
+    props = null;
+
+    const setup = setupTest();
+    wrapper = setup.wrapper;
+    props = setup.props;
+    traces = setup.traces;
+    rawTraces = setup.rawTraces;
+  });
+
+  // Clean up after each test to help with memory management
+  afterEach(() => {
+    if (wrapper && wrapper.unmount) {
+      wrapper.unmount();
+    }
+    wrapper = null;
+    traces = null;
+    rawTraces = null;
+    props = null;
+
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
   });
 
   it('shows the "no results" message when the search result is empty', () => {

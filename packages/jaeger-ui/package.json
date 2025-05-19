@@ -95,8 +95,8 @@
     "coverage": "npm run test-ci -- --coverage",
     "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite",
     "start": "vite",
-    "test": "jest --maxWorkers=30%",
-    "test-ci": "CI=1 jest --silent --color --maxWorkers=4"
+    "test": "NODE_OPTIONS='--max-old-space-size=4096 --expose-gc' jest --runInBand",
+    "test-ci": "CI=1 NODE_OPTIONS='--max-old-space-size=4096 --expose-gc' jest --silent --color --maxWorkers=4"
   },
   "jest": {
     "globalSetup": "./test/jest.global-setup.js",

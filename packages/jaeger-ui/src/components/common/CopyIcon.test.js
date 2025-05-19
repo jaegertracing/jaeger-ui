@@ -66,18 +66,24 @@ describe('<CopyIcon />', () => {
     fireEvent.click(copyButton);
 
     // 3. Wait for "Copied" text with longer timeout
-    await waitFor(() => {
-      tooltip = screen.getByRole('tooltip'); // Re-find
-      expect(tooltip).toHaveTextContent('Copied');
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        tooltip = screen.getByRole('tooltip'); // Re-find
+        expect(tooltip).toHaveTextContent('Copied');
+      },
+      { timeout: 3000 }
+    );
 
     // 4. Move the mouse away to hide the tooltip
     fireEvent.mouseLeave(copyButton);
 
     // 5. Wait for the tooltip to disappear with longer timeout
-    await waitFor(() => {
-      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
 
     // 6. Hover again
     fireEvent.mouseEnter(copyButton);
@@ -100,18 +106,24 @@ describe('<CopyIcon />', () => {
     fireEvent.click(copyButton);
 
     // 3. Assert the tooltip content changes to "Copied" with longer timeout
-    await waitFor(() => {
-      // Re-find the tooltip in case it re-rendered and check content
-      tooltip = screen.getByRole('tooltip');
-      expect(tooltip).toHaveTextContent('Copied');
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        // Re-find the tooltip in case it re-rendered and check content
+        tooltip = screen.getByRole('tooltip');
+        expect(tooltip).toHaveTextContent('Copied');
+      },
+      { timeout: 3000 }
+    );
 
     // 4. Move the mouse away
     fireEvent.mouseLeave(copyButton);
 
     // 5. Assert the tooltip disappears with longer timeout
-    await waitFor(() => {
-      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
   });
 });
