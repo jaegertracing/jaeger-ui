@@ -58,20 +58,32 @@ function computeSelfTime(span: Span, allSpans: Span[]): number {
     const spanEndTime = child.startTime + child.duration;
     const spanStartsAfterParentEnded = child.startTime > parentSpanEndTime;
     const spanEndsBeforePreviousSpan = spanEndTime < previousSpanEndTime;
+
+    // parent |..................|
+    // child    |.......|
+    // child     |.....|                      - spanEndsBeforePreviousSpan is true, skipped
+    // child                         |......| - spanStartsAfterParentEnded is true, skipped
     if (spanStartsAfterParentEnded || spanEndsBeforePreviousSpan) {
       continue;
     }
 
     let nonOverlappingStartTime = child.startTime;
     let nonOverlappingDuration = child.duration;
-
     const spanStartsBeforePreviousSpanEnds = child.startTime < previousSpanEndTime;
+
+    // parent |.....................|
+    // child    |.......|
+    // child        |.....|                  - spanStartsBeforePreviousSpanEnds is true
+    // child                |.....|          - spanStartsBeforePreviousSpanEnds is false
     if (spanStartsBeforePreviousSpanEnds) {
       const diff = previousSpanEndTime - child.startTime;
       nonOverlappingDuration = child.duration - diff;
       nonOverlappingStartTime = previousSpanEndTime;
     }
     // last span which can be included in self time calculation, because it ends after parent span ends
+    // parent |......................|
+    // child                      |.....|        - last span included in self time calculation
+    // child                       |.........|   - skipped
     else if (spanEndTime > parentSpanEndTime) {
       const diff = spanEndTime - parentSpanEndTime;
 
