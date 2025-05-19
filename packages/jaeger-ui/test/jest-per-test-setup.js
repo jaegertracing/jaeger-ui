@@ -26,7 +26,25 @@ const Enzyme = require('enzyme');
 const EnzymeAdapter = require('@wojtekmaj/enzyme-adapter-react-17');
 const createSerializer = require('enzyme-to-json').createSerializer;
 
-Enzyme.configure({ adapter: new EnzymeAdapter() });
+// Suppress React 18 warnings about ReactDOM.render in tests
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  if (
+    args[0] &&
+    typeof args[0] === 'string' &&
+    (args[0].includes('ReactDOM.render is no longer supported') ||
+     args[0].includes('findDOMNode is deprecated'))
+  ) {
+    return;
+  }
+  originalConsoleError(...args);
+};
+
+Enzyme.configure({
+  adapter: new EnzymeAdapter(),
+  // Add React 18 specific configuration
+  disableLifecycleMethods: false,
+});
 expect.addSnapshotSerializer(createSerializer({ mode: 'deep' }));
 
 // Calls to get-config.tsx and get-version.tsx warn if these globals are not functions.

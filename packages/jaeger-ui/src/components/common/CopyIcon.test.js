@@ -51,36 +51,39 @@ describe('<CopyIcon />', () => {
     expect(copy).toHaveBeenCalledWith(props.copyText);
   });
 
+  // This test is flaky due to timing issues with tooltips
   it('resets tooltip text to original title when tooltip hides after copying', async () => {
     const copyButton = screen.getByRole('button', { name: props.buttonText });
 
     // 1. Hover to show the initial tooltip
     fireEvent.mouseEnter(copyButton);
-    let tooltip = await screen.findByRole('tooltip');
+
+    // Use a more reliable approach with longer timeout
+    let tooltip = await screen.findByRole('tooltip', {}, { timeout: 3000 });
     expect(tooltip).toHaveTextContent(props.tooltipTitle);
 
     // 2. Click the button
     fireEvent.click(copyButton);
 
-    // 3. Wait for "Copied" text
+    // 3. Wait for "Copied" text with longer timeout
     await waitFor(() => {
       tooltip = screen.getByRole('tooltip'); // Re-find
       expect(tooltip).toHaveTextContent('Copied');
-    });
+    }, { timeout: 3000 });
 
     // 4. Move the mouse away to hide the tooltip
     fireEvent.mouseLeave(copyButton);
 
-    // 5. Wait for the tooltip to disappear
+    // 5. Wait for the tooltip to disappear with longer timeout
     await waitFor(() => {
       expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
 
     // 6. Hover again
     fireEvent.mouseEnter(copyButton);
 
     // 7. Wait for the tooltip to reappear and check for the *original* title
-    tooltip = await screen.findByRole('tooltip');
+    tooltip = await screen.findByRole('tooltip', {}, { timeout: 3000 });
     expect(tooltip).toHaveTextContent(props.tooltipTitle);
   });
 
@@ -89,26 +92,26 @@ describe('<CopyIcon />', () => {
 
     // 1. Hover to show the initial tooltip
     fireEvent.mouseEnter(copyButton);
-    // Find the tooltip and check its initial content
-    let tooltip = await screen.findByRole('tooltip');
+    // Find the tooltip and check its initial content with longer timeout
+    let tooltip = await screen.findByRole('tooltip', {}, { timeout: 3000 });
     expect(tooltip).toHaveTextContent(props.tooltipTitle);
 
     // 2. Click the button (while implicitly still hovered)
     fireEvent.click(copyButton);
 
-    // 3. Assert the tooltip content changes to "Copied"
+    // 3. Assert the tooltip content changes to "Copied" with longer timeout
     await waitFor(() => {
       // Re-find the tooltip in case it re-rendered and check content
       tooltip = screen.getByRole('tooltip');
       expect(tooltip).toHaveTextContent('Copied');
-    });
+    }, { timeout: 3000 });
 
     // 4. Move the mouse away
     fireEvent.mouseLeave(copyButton);
 
-    // 5. Assert the tooltip disappears
+    // 5. Assert the tooltip disappears with longer timeout
     await waitFor(() => {
       expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
   });
 });

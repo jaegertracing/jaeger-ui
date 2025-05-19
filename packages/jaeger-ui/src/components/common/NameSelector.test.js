@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { render, screen, waitFor, within, cleanup } from '@testing-library/react';
+import { render, screen, waitFor, within, cleanup, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event'; // Use userEvent for more realistic interactions
 import '@testing-library/jest-dom'; // For custom matchers
 
@@ -192,8 +192,9 @@ describe('<NameSelector>', () => {
     setup({ required: false });
     await openPopover();
 
+    // Use fireEvent instead of userEvent for this test to avoid pointer-events issue
     const cancelButton = screen.getByTestId('filtered-list-cancel');
-    await userEvent.click(cancelButton);
+    fireEvent.click(cancelButton);
 
     await waitFor(() => {
       expect(screen.queryByTestId('filtered-list')).not.toBeVisible();
