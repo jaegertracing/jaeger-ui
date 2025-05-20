@@ -21,6 +21,7 @@ import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
+import { message } from 'antd';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
@@ -285,7 +286,10 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   archiveTrace = () => {
-    const { id, archiveTrace } = this.props;
+    const { id, archiveTrace, storageCapabilities } = this.props;
+    if (storageCapabilities?.storageType === 'memory') {
+      message.warning('Warning: Archiving with in-memory storage is not persistent. Traces will be lost on restart.');
+    }
     archiveTrace(id);
   };
 
@@ -362,6 +366,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
     const isEmbedded = Boolean(embedded);
     const hasArchiveStorage = Boolean(storageCapabilities?.archiveStorage);
+    const isMemoryStorage = storageCapabilities?.storageType === 'memory';
+    const showArchiveButton = !isEmbedded && archiveEnabled && hasArchiveStorage && !isMemoryStorage;
     const headerProps = {
       focusUiFindMatches: this.focusUiFindMatches,
       slimView,
@@ -383,7 +389,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       ref: this._searchBar,
       resultCount: findCount,
       disableJsonView,
-      showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
+      showArchiveButton,
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
