@@ -16,9 +16,7 @@
     },
     {
       "groupName": "do not apply patch upgrades to GH workflows",
-      "matchFileNames": [
-        ".github/workflows/**"
-      ],
+      "matchFileNames": [".github/workflows/**"],
       "matchUpdateTypes": ["patch", "digest"],
       "enabled": false
     }
