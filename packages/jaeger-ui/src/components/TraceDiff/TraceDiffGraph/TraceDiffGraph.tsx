@@ -16,6 +16,7 @@ import * as React from 'react';
 import { cacheAs, Digraph, LayoutManager } from '@jaegertracing/plexus';
 import cx from 'classnames';
 import { connect } from 'react-redux';
+import { getConfigValue } from '../../../utils/config/get-config';
 
 import renderNode, { getNodeEmphasisRenderer } from './renderNode';
 import { getUiFindVertexKeys, getEdgesAndVertices } from './traceDiffGraphUtils';
@@ -87,7 +88,7 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
                 data-testid="learn-how-button"
                 onClick={() =>
                   window.open(
-                    'https://medium.com/jaegertracing/trace-comparisons-arrive-in-jaeger-1-7-a97ad5e2d05d',
+                    getConfigValue('traceDiff.helpLink'),
                     '_blank'
                   )
                 }
