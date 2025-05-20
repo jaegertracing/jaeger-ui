@@ -35,31 +35,18 @@ const MonitorATMEmptyState: React.FC = () => {
       </Row>
       <Row justify="center">
         <Col span={6} className="center-empty-state">
-          {config.mainTitle && (
-            <h2 className="main-title-empty-state">{config.mainTitle}</h2>
-          )}
-          {config.subTitle && (
-            <h3 className="sub-title-empty-state">{config.subTitle}</h3>
-          )}
-          {config.description && (
-            <h4 className="description-empty-state">{config.description}</h4>
-          )}
+          {config.mainTitle && <h2 className="main-title-empty-state">{config.mainTitle}</h2>}
+          {config.subTitle && <h3 className="sub-title-empty-state">{config.subTitle}</h3>}
+          {config.description && <h4 className="description-empty-state">{config.description}</h4>}
           {config.button?.text && (
-            <Button
-              className="button-empty-state"
-              onClick={() => config.button?.onClick?.()}
-            >
+            <Button className="button-empty-state" onClick={() => config.button?.onClick?.()}>
               {config.button.text}
             </Button>
           )}
           {config.alert && (
             <Row justify="center">
               <Col span={20}>
-                <Alert
-                  message={config.alert.message}
-                  type={config.alert.type}
-                  showIcon
-                />
+                <Alert message={config.alert.message} type={config.alert.type} showIcon />
               </Col>
             </Row>
           )}
