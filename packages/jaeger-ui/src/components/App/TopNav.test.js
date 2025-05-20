@@ -21,7 +21,7 @@ import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
 
 jest.mock('../../utils/config/get-config', () => {
   return {
-    getConfigValue: jest.fn((key) => {
+    getConfigValue: jest.fn(key => {
       switch (key) {
         case 'dependencies.menuEnabled':
         case 'deepDependencies.menuEnabled':
@@ -125,7 +125,6 @@ describe('<TopNav>', () => {
       const item = screen.getByRole('link', { name: 'Quality' });
       expect(item).toBeInTheDocument();
     });
-
   });
 
   describe('renders the custom menu', () => {
