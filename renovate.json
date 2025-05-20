@@ -3,7 +3,7 @@
   "extends": ["config:recommended", ":gitSignOff"],
   "labels": ["changelog:dependencies"],
   "suppressNotifications": ["prEditedNotification"],
-  "schedule": ["every sunday"]
+  "schedule": ["every sunday"],
   "packageRules": [
     {
       "matchManagers": ["npm"],
