@@ -21,7 +21,6 @@ import Header from './Header';
 
 jest.mock('lodash/debounce');
 
-// Using a more memory-efficient approach
 describe('Header', () => {
   const lookback = 4;
   const minProps = {
@@ -39,7 +38,6 @@ describe('Header', () => {
   let callDebouncedFn;
   let setLookbackSpy;
 
-  // Setup debounce mock only once
   beforeAll(() => {
     debounceMock.mockImplementation(fn => {
       setLookbackSpy = jest.fn((...args) => {
@@ -49,30 +47,24 @@ describe('Header', () => {
     });
   });
 
-  // Clean up between tests to help with memory
   beforeEach(() => {
-    // Reset mocks
     props.setLookback.mockReset();
     setLookbackSpy = undefined;
 
-    // Clean up previous wrapper
     if (wrapper) {
       wrapper.unmount();
       wrapper = null;
     }
 
-    // Create new wrapper
     wrapper = shallow(<Header {...props} />);
   });
 
-  // Clean up after each test
   afterEach(() => {
     if (wrapper) {
       wrapper.unmount();
       wrapper = null;
     }
 
-    // Force garbage collection if available
     if (global.gc) {
       global.gc();
     }
