@@ -185,7 +185,7 @@ describe('TraceDiffGraph', () => {
       state: fetchedState.DONE,
     };
 
-    const wrapper = shallow(<TraceDiffGraph a={baseTrace} b={baseTrace} uiFind="GET" />);
+    wrapper = shallow(<TraceDiffGraph a={baseTrace} b={baseTrace} uiFind="GET" />);
 
     expect(wrapper.find(UiFindInput).prop('inputProps')).toMatchObject({
       suffix: '1',
