@@ -22,13 +22,7 @@ export const filterOptionsByLabel = (input: string, option?: DefaultOptionType) 
 };
 
 const SearchableSelect: FunctionComponent<SelectProps> = props => {
-  return (
-    <Select
-      showSearch
-      filterOption={filterOptionsByLabel}
-      {...props}
-    />
-  );
+  return <Select showSearch filterOption={filterOptionsByLabel} {...props} />;
 };
 
 export default SearchableSelect;
