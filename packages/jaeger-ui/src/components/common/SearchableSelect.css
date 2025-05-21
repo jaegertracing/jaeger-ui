@@ -1,0 +1,5 @@
+.ant-select-dropdown {
+    max-width: 300px;
+    overflow-x: auto;
+    white-space: nowrap;
+}
