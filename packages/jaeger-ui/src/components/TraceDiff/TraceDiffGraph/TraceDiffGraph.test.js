@@ -168,4 +168,29 @@ describe('TraceDiffGraph', () => {
     wrapper.unmount();
     expect(layoutManager).toHaveBeenCalledTimes(1);
   });
+
+  it('displays match count when uiFind matches span data', () => {
+    const span = {
+      spanID: 'abc123',
+      operationName: 'GET /api',
+      process: { serviceName: 'svc' },
+      tags: [],
+      logs: [],
+    };
+
+    const baseTrace = {
+      data: { spans: [span], traceID: 't-id' },
+      error: null,
+      id: 't-id',
+      state: fetchedState.DONE,
+    };
+
+    const wrapper = shallow(
+      <TraceDiffGraph a={baseTrace} b={baseTrace} uiFind="GET" />
+    );
+
+    expect(wrapper.find(UiFindInput).prop('inputProps')).toMatchObject({
+      suffix: '1',
+    });
+  });
 });
