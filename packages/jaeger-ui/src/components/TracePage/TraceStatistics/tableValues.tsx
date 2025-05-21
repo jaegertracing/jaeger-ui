@@ -42,61 +42,61 @@ function getChildOfSpans(parentID: string, allSpans: Span[]): Span[] {
   return memoizedParentChildOfMap(allSpans)[parentID] || [];
 }
 
-function computeSelfTime(span: Span, allSpans: Span[]): number {
-  if (!span.hasChildren) return span.duration;
+function computeSelfTime(parentSpan: Span, allSpans: Span[]): number {
+  if (!parentSpan.hasChildren) return parentSpan.duration;
 
-  let spanSelfTime = span.duration;
-  let previousSpanEndTime = span.startTime;
+  let parentSpanSelfTime = parentSpan.duration;
+  let previousChildEndTime = parentSpan.startTime;
 
-  const children = getChildOfSpans(span.spanID, allSpans).sort((a, b) => a.startTime - b.startTime);
+  const children = getChildOfSpans(parentSpan.spanID, allSpans).sort((a, b) => a.startTime - b.startTime);
 
-  const parentSpanEndTime = span.startTime + span.duration;
+  const parentSpanEndTime = parentSpan.startTime + parentSpan.duration;
 
   for (let index = 0; index < children.length; index++) {
     const child = children[index];
 
-    const spanEndTime = child.startTime + child.duration;
-    const spanStartsAfterParentEnded = child.startTime > parentSpanEndTime;
-    const spanEndsBeforePreviousSpan = spanEndTime < previousSpanEndTime;
+    const childEndTime = child.startTime + child.duration;
+    const childStartsAfterParentEnded = child.startTime > parentSpanEndTime;
+    const childEndsBeforePreviousChild = childEndTime < previousChildEndTime;
 
     // parent |..................|
     // child    |.......|
-    // child     |.....|                      - spanEndsBeforePreviousSpan is true, skipped
-    // child                         |......| - spanStartsAfterParentEnded is true, skipped
-    if (spanStartsAfterParentEnded || spanEndsBeforePreviousSpan) {
+    // child     |.....|                      - childEndsBeforePreviousChild is true, skipped
+    // child                         |......| - childStartsAfterParentEnded is true, skipped
+    if (childStartsAfterParentEnded || childEndsBeforePreviousChild) {
       continue;
     }
 
     let nonOverlappingStartTime = child.startTime;
     let nonOverlappingDuration = child.duration;
-    const spanStartsBeforePreviousSpanEnds = child.startTime < previousSpanEndTime;
+    const childStartsBeforePreviousChildEnds = child.startTime < previousChildEndTime;
 
     // parent |.....................|
     // child    |.......|
-    // child        |.....|                  - spanStartsBeforePreviousSpanEnds is true
-    // child                |.....|          - spanStartsBeforePreviousSpanEnds is false
-    if (spanStartsBeforePreviousSpanEnds) {
-      const diff = previousSpanEndTime - child.startTime;
+    // child        |.....|                  - childStartsBeforePreviousChildEnds is true
+    // child                |.....|          - childStartsBeforePreviousChildEnds is false
+    if (childStartsBeforePreviousChildEnds) {
+      const diff = previousChildEndTime - child.startTime;
       nonOverlappingDuration = child.duration - diff;
-      nonOverlappingStartTime = previousSpanEndTime;
+      nonOverlappingStartTime = previousChildEndTime;
     }
     // last span which can be included in self time calculation, because it ends after parent span ends
     // parent |......................|
     // child                      |.....|        - last span included in self time calculation
     // child                       |.........|   - skipped
-    else if (spanEndTime > parentSpanEndTime) {
-      const diff = spanEndTime - parentSpanEndTime;
+    else if (childEndTime > parentSpanEndTime) {
+      const diff = childEndTime - parentSpanEndTime;
 
       nonOverlappingDuration = child.duration - diff;
-      spanSelfTime -= nonOverlappingDuration;
+      parentSpanSelfTime -= nonOverlappingDuration;
       break;
     }
 
-    spanSelfTime -= nonOverlappingDuration;
-    previousSpanEndTime = nonOverlappingStartTime + nonOverlappingDuration;
+    parentSpanSelfTime -= nonOverlappingDuration;
+    previousChildEndTime = nonOverlappingStartTime + nonOverlappingDuration;
   }
 
-  return spanSelfTime;
+  return parentSpanSelfTime;
 }
 
 function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultValue: StatsPerTag) {
