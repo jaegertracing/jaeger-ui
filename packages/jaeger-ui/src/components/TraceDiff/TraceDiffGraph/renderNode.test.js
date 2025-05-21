@@ -15,7 +15,8 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import renderNode, { DiffNode } from './renderNode';
+import renderNode, { DiffNode, getNodeEmphasisRenderer } from './renderNode';
+import EmphasizedNode from '../../common/EmphasizedNode';
 
 describe('drawNode', () => {
   const operation = 'operationName';
@@ -86,6 +87,25 @@ describe('drawNode', () => {
       expect(node.props.b).toBe(lenB);
       expect(node.props.operation).toBe(operation);
       expect(node.props.service).toBe(service);
+    });
+  });
+
+  describe('getNodeEmphasisRenderer', () => {
+    const key = 'match-key';
+    const renderer = getNodeEmphasisRenderer(new Set([key]));
+
+    it('returns EmphasizedNode when key matches', () => {
+      const lv = { height: 100, width: 200, vertex: { key } };
+      const result = renderer(lv);
+      expect(result.type).toBe(EmphasizedNode);
+      expect(result.props.height).toBe(100);
+      expect(result.props.width).toBe(200);
+    });
+
+    it('returns null when key does not match', () => {
+      const lv = { height: 100, width: 200, vertex: { key: 'no-match' } };
+      const result = renderer(lv);
+      expect(result).toBeNull();
     });
   });
 });
