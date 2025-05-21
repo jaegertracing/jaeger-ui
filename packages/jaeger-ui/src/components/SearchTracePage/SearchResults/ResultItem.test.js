@@ -44,7 +44,7 @@ it('<ResultItem /> should render base case correctly', () => {
       trace={trace}
       durationPercent={50}
       linkTo=""
-      toggleComparison={() => { }}
+      toggleComparison={() => {}}
       isInDiffCohort={false}
       disableComparision={false}
     />
@@ -62,7 +62,7 @@ it('<ResultItem /> should not render any ServiceTags when there are no services'
       trace={traceWithoutServices}
       durationPercent={50}
       linkTo=""
-      toggleComparison={() => { }}
+      toggleComparison={() => {}}
       isInDiffCohort={false}
       disableComparision={false}
     />
@@ -95,7 +95,7 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error ta
       trace={trace}
       durationPercent={50}
       linkTo=""
-      toggleComparison={() => { }}
+      toggleComparison={() => {}}
       isInDiffCohort={false}
       disableComparision={false}
     />
@@ -119,7 +119,7 @@ it('calls trackConversions on click', () => {
       trace={trace}
       durationPercent={50}
       linkTo=""
-      toggleComparison={() => { }}
+      toggleComparison={() => {}}
       isInDiffCohort={false}
       disableComparision={false}
     />

@@ -47,7 +47,7 @@ describe('<SearchResults>', () => {
     rawTraces = traces;
     props = {
       diffCohort: [],
-      goToTrace: () => { },
+      goToTrace: () => {},
       location: {},
       loading: false,
       maxTraceDuration: 1,
@@ -93,14 +93,16 @@ describe('<SearchResults>', () => {
 
   it('sets trace color to red if error tag is present', () => {
     wrapper.setProps({
-      traces: [{
-        traceID: 'err',
-        traceName: 'T',
-        startTime: 0,
-        duration: 1,
-        processes: {},
-        spans: [{ tags: [{ key: 'error', value: true }] }],
-      }],
+      traces: [
+        {
+          traceID: 'err',
+          traceName: 'T',
+          startTime: 0,
+          duration: 1,
+          processes: {},
+          spans: [{ tags: [{ key: 'error', value: true }] }],
+        },
+      ],
     });
     const data = wrapper.find(ScatterPlot).prop('data');
     expect(data[0].color).toBe('red');
