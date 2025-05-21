@@ -21,6 +21,7 @@ import AccordianLogs from './SpanDetail/AccordianLogs';
 import { ViewedBoundsFunctionType } from './utils';
 import { TNil } from '../../../types';
 import { Span, criticalPathSection } from '../../../types/trace';
+import { ColorGenerator, ColorGeneratorView, Rgb } from '../../../utils/color-generator';
 
 import './SpanBar.css';
 
@@ -44,6 +45,8 @@ type TCommonProps = {
   span: Span;
   longLabel: string;
   shortLabel: string;
+  colorGenerator: ColorGenerator;
+  markerColorKey: string[];
 };
 
 function toPercent(value: number) {
@@ -106,6 +109,8 @@ function SpanBar(props: TCommonProps) {
     span,
     shortLabel,
     longLabel,
+    colorGenerator,
+    markerColorKey,
   } = props;
   // group logs based on timestamps
   const logGroups = _groupBy(span.logs, log => {
@@ -162,7 +167,15 @@ function SpanBar(props: TCommonProps) {
             <div
               data-testid="SpanBar--logMarker"
               className="SpanBar--logMarker"
-              style={{ left: positionKey, zIndex: 3 }}
+              style={{
+                left: positionKey,
+                zIndex: 3,
+                background: logMarkerImage(
+                  new ColorGeneratorView(colorGenerator, darkenRgb),
+                  markerColorKey,
+                  logGroups[positionKey]
+                ),
+              }}
             />
           </Popover>
         ))}
@@ -194,6 +207,35 @@ function SpanBar(props: TCommonProps) {
         })}
     </div>
   );
+}
+
+function darkenRgb(rgb: Rgb): Rgb {
+  return rgb.map(comp => Math.floor((comp * 2) / 3));
+}
+
+function logMarkerImage(colorView: ColorGeneratorView, tags: string[], logs: Log[]): string {
+  if (tags.length === 0) {
+    return '#000000';
+  }
+
+  const tagSet = {};
+  for (const tag of tags) {
+    tagSet[tag] = true;
+  }
+
+  const sections = [];
+
+  for (const log of logs) {
+    const values = log.fields.filter(({ key }) => tagSet.hasOwnProperty(key)).map(({ value }) => value);
+    const color = values.length === 0 ? '#000000' : colorView.getColorByKey(JSON.stringify(values));
+
+    const start = Math.floor((sections.length * 100) / logs.length);
+    const end = Math.floor(((sections.length + 1) * 100) / logs.length);
+
+    sections.push(`${color} ${start}%`, `${color} ${end}%`);
+  }
+
+  return `linear-gradient(${sections.join(', ')})`;
 }
 
 export default SpanBar;
