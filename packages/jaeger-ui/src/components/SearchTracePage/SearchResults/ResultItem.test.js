@@ -21,6 +21,7 @@ import ResultItem from './ResultItem';
 import * as markers from './ResultItem.markers';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
+import * as tracking from './index.track';
 
 // Helper function to wrap component with Router
 const renderWithRouter = ui => {
@@ -43,7 +44,7 @@ it('<ResultItem /> should render base case correctly', () => {
       trace={trace}
       durationPercent={50}
       linkTo=""
-      toggleComparison={() => {}}
+      toggleComparison={() => { }}
       isInDiffCohort={false}
       disableComparision={false}
     />
@@ -61,7 +62,7 @@ it('<ResultItem /> should not render any ServiceTags when there are no services'
       trace={traceWithoutServices}
       durationPercent={50}
       linkTo=""
-      toggleComparison={() => {}}
+      toggleComparison={() => { }}
       isInDiffCohort={false}
       disableComparision={false}
     />
@@ -94,7 +95,7 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error ta
       trace={trace}
       durationPercent={50}
       linkTo=""
-      toggleComparison={() => {}}
+      toggleComparison={() => { }}
       isInDiffCohort={false}
       disableComparision={false}
     />
@@ -109,4 +110,21 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error ta
   // Assert that the specific service tag is found and has the error icon
   expect(errorTag).toBeDefined();
   expect(errorTag.querySelector('.ResultItem--errorIcon')).toBeInTheDocument();
+});
+
+it('calls trackConversions on click', () => {
+  const spy = jest.spyOn(tracking, 'trackConversions');
+  renderWithRouter(
+    <ResultItem
+      trace={trace}
+      durationPercent={50}
+      linkTo=""
+      toggleComparison={() => { }}
+      isInDiffCohort={false}
+      disableComparision={false}
+    />
+  );
+  const resultItem = screen.getByRole('button');
+  resultItem.click();
+  expect(spy).toHaveBeenCalledWith(tracking.EAltViewActions.Traces);
 });
