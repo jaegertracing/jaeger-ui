@@ -197,7 +197,22 @@ export function computeLinks(
   linkPatterns.forEach(pattern => {
     if (pattern.type(type) && pattern.key(item.key) && pattern.value(item.value)) {
       const parameterValues: Record<string, any> = {};
+      
+      // Add traceID and spanID to all link pattern types
+      parameterValues.traceID = span.traceID;
+      parameterValues.spanID = span.spanID;
+      
+      // Add span timing information
+      parameterValues.startTime = span.startTime;
+      parameterValues.duration = span.duration;
+      parameterValues.endTime = span.startTime + span.duration;
+      
       const allParameters = pattern.parameters.every(parameter => {
+        // Skip parameters that are already set
+        if (parameterValues[parameter] !== undefined) {
+          return true;
+        }
+        
         let entry;
 
         if (parameter.startsWith('trace.')) {
