@@ -77,6 +77,15 @@ describe('ResultItemTitle', () => {
         !defaultProps.isInDiffCohort
       );
     });
+
+    it('calls stopPropagation on checkbox click', () => {
+      const stopPropagation = jest.fn();
+      const fakeEvent = { stopPropagation };
+
+      const checkbox = wrapper.find(Checkbox);
+      checkbox.prop('onClick')(fakeEvent);
+      expect(stopPropagation).toHaveBeenCalled();
+    });
   });
 
   describe('WrapperComponent', () => {
