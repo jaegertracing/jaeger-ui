@@ -14,13 +14,20 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
-import { MemoryRouter, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import withRouteProps from './withRouteProps';
 import { useHistory, HistoryProvider } from './useHistory';
 
 jest.mock('./useHistory', () => ({
   useHistory: jest.fn(),
   HistoryProvider: ({ children }) => <div>{children}</div>,
+}));
+
+// Mock react-router-dom hooks
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useLocation: () => ({ pathname: '/test', search: '?param=value' }),
+  useParams: () => ({}),
 }));
 
 describe('withRouteProps', () => {
@@ -38,9 +45,7 @@ describe('withRouteProps', () => {
     render(
       <HistoryProvider history={mockHistory}>
         <MemoryRouter initialEntries={['/test?param=value']}>
-          <Route path="/test">
-            <ComponentWithRouteProps />
-          </Route>
+          <ComponentWithRouteProps />
         </MemoryRouter>
       </HistoryProvider>
     );

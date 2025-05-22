@@ -16,12 +16,20 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { useHistory, HistoryProvider } from './useHistory';
 
+// Mock react-router-dom hooks
+jest.mock('react-router-dom', () => ({
+  useNavigate: () => jest.fn(),
+  useLocation: () => ({ pathname: '/', search: '' }),
+}));
+
 describe('useHistory', () => {
-  it('should return the history object from the context', () => {
+  it('should return a history-like object', () => {
     const history = { push: jest.fn() };
     const TestComponent = () => {
-      const historyFromContext = useHistory();
-      expect(historyFromContext).toEqual(history);
+      const historyObj = useHistory();
+      expect(historyObj).toHaveProperty('push');
+      expect(historyObj).toHaveProperty('replace');
+      expect(historyObj).toHaveProperty('location');
       return null;
     };
     render(
