@@ -19,6 +19,24 @@ import '@testing-library/jest-dom';
 
 import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
 
+jest.mock('../../utils/config/get-config', () => {
+  return {
+    getConfigValue: jest.fn(key => {
+      switch (key) {
+        case 'dependencies.menuEnabled':
+        case 'deepDependencies.menuEnabled':
+        case 'qualityMetrics.menuEnabled':
+        case 'monitor.menuEnabled':
+          return true;
+        case 'qualityMetrics.menuLabel':
+          return 'Quality';
+        default:
+          return false;
+      }
+    }),
+  };
+});
+
 describe('<TopNav>', () => {
   const labelGitHub = 'GitHub';
   const githubUrl = 'https://github.com/uber/jaeger';
@@ -96,6 +114,16 @@ describe('<TopNav>', () => {
     it('renders the "System Architecture" button', () => {
       const items = screen.getByRole('link', { name: 'System Architecture' });
       expect(items).toBeInTheDocument();
+    });
+
+    it('renders the "Service Dependencies" button', () => {
+      const item = screen.getByRole('link', { name: 'Service Dependencies' });
+      expect(item).toBeInTheDocument();
+    });
+
+    it('renders the "Quality" button', () => {
+      const item = screen.getByRole('link', { name: 'Quality' });
+      expect(item).toBeInTheDocument();
     });
   });
 

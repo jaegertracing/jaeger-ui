@@ -63,6 +63,14 @@ describe('<Page>', () => {
     expect(trackPageView).toHaveBeenCalledWith(newProps.pathname, newProps.search);
   });
 
+  it('tracks a pageView when the search changes but pathname is same', () => {
+    trackPageView.mockReset();
+    const staticPathname = '/same-path';
+    const { rerender } = render(<Page pathname={staticPathname} search="?a=1" />);
+    rerender(<Page pathname={staticPathname} search="?a=2" />);
+    expect(trackPageView).toHaveBeenCalledWith(staticPathname, '?a=2');
+  });
+
   describe('Page embedded', () => {
     beforeEach(() => {
       trackPageView.mockReset();
