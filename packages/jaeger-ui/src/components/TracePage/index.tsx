@@ -49,7 +49,7 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { fetchedState } from '../../constants';
 import { FetchedTrace, LocationState, ReduxState, TNil } from '../../types';
-import { Trace } from '../../types/trace';
+import { Trace, Span } from '../../types/trace';
 import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
@@ -73,7 +73,7 @@ type TDispatchProps = {
 type TOwnProps = {
   history: RouterHistory;
   location: Location<LocationState>;
-  params: { id: string };
+  params: { id: string; spanId?: string };
 };
 
 type TReduxProps = {
@@ -83,6 +83,7 @@ type TReduxProps = {
   criticalPathEnabled: boolean;
   embedded: null | EmbeddedState;
   id: string;
+  spanId?: string;
   searchUrl: null | string;
   disableJsonView: boolean;
   trace: FetchedTrace | TNil;
@@ -97,6 +98,7 @@ type TState = {
   slimView: boolean;
   viewType: ETraceViewType;
   viewRange: IViewRange;
+  rerootedSpanID: string | null;
 };
 
 // export for tests
@@ -139,7 +141,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
   constructor(props: TProps) {
     super(props);
-    const { embedded, trace } = props;
+    const { embedded, trace, params } = props;
     this.state = {
       headerHeight: null,
       slimView: Boolean(embedded && embedded.timeline.collapseTitle),
@@ -149,6 +151,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           current: [0, 1],
         },
       },
+      rerootedSpanID: params.spanId || null,
     };
     this._headerElm = null;
     this._filterSpans = _memoize(
@@ -186,8 +189,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     mergeShortcuts(shortcutCallbacks);
   }
 
-  componentDidUpdate({ id: prevID }: TProps) {
-    const { id, trace } = this.props;
+  componentDidUpdate({ id: prevID, params: prevParams }: TProps) {
+    const { id, trace, params } = this.props;
 
     this._scrollManager.setTrace(trace && trace.data);
 
@@ -199,6 +202,11 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     if (prevID !== id) {
       this.updateViewRangeTime(0, 1);
       this.clearSearch();
+    }
+
+    // Handle re-rooting when spanId changes in URL
+    if (params.spanId !== prevParams.spanId) {
+      this.setState({ rerootedSpanID: params.spanId || null });
     }
   }
 
@@ -324,6 +332,44 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     this._scrollManager.scrollToPrevVisibleSpan();
   };
 
+  clearReroot = () => {
+    const { history, location, id } = this.props;
+    this.setState({ rerootedSpanID: null });
+    history.replace(getLocation(id, location.state));
+  };
+
+  // Filter spans to only show the re-rooted subtree
+  filterSpansForReroot = (spans: Span[], rerootedSpanID: string): Span[] => {
+    if (!rerootedSpanID) return spans;
+
+    // Find the re-rooted span
+    const rerootedSpan = spans.find(span => span.spanID === rerootedSpanID);
+    if (!rerootedSpan) return spans;
+
+    // Create a set of all descendant span IDs
+    const descendants = new Set<string>();
+    
+    // Helper function to recursively find all descendants
+    const findDescendants = (spanID: string) => {
+      const children = spans.filter(span => 
+        span.references && 
+        span.references.some(ref => ref.spanID === spanID)
+      );
+      
+      children.forEach(child => {
+        descendants.add(child.spanID);
+        findDescendants(child.spanID);
+      });
+    };
+
+    // Start finding descendants from the re-rooted span
+    descendants.add(rerootedSpanID);
+    findDescendants(rerootedSpanID);
+
+    // Filter spans to only include the re-rooted span and its descendants
+    return spans.filter(span => descendants.has(span.spanID));
+  };
+
   render() {
     const {
       archiveEnabled,
@@ -338,7 +384,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       traceGraphConfig,
       location: { state: locationState },
     } = this.props;
-    const { slimView, viewType, headerHeight, viewRange } = this.state;
+    const { slimView, viewType, headerHeight, viewRange, rerootedSpanID } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
@@ -346,6 +392,12 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     if (trace.state === fetchedState.ERROR || !data) {
       return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
     }
+
+    // Filter spans if we're re-rooted
+    const filteredData = rerootedSpanID ? {
+      ...data,
+      spans: this.filterSpansForReroot(data.spans, rerootedSpanID)
+    } : data;
 
     let findCount = 0;
     let graphFindMatches: Set<string> | null | undefined;
@@ -388,20 +440,22 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
       toSearch: (locationState && locationState.fromSearch) || null,
-      trace: data,
+      trace: filteredData,
       updateNextViewRangeTime: this.updateNextViewRangeTime,
       updateViewRangeTime: this.updateViewRangeTime,
+      rerootedSpanID: rerootedSpanID,
+      clearReroot: this.clearReroot,
     };
 
     let view;
-    const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data) : [];
+    const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(filteredData) : [];
     if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
       view = (
         <TraceTimelineViewer
           registerAccessors={this._scrollManager.setAccessors}
           scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
           findMatchesIDs={spanFindMatches}
-          trace={data}
+          trace={filteredData}
           criticalPath={criticalPath}
           updateNextViewRangeTime={this.updateNextViewRangeTime}
           updateViewRangeTime={this.updateViewRangeTime}
@@ -419,11 +473,11 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
         />
       );
     } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
-      view = <TraceStatistics trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
+      view = <TraceStatistics trace={filteredData} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
     } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
-      view = <TraceSpanView trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
+      view = <TraceSpanView trace={filteredData} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
     } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
-      view = <TraceFlamegraph trace={trace} />;
+      view = <TraceFlamegraph trace={{ ...trace, data: filteredData }} />;
     }
 
     return (
@@ -442,7 +496,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { id } = ownProps.params;
+  const { id, spanId } = ownProps.params;
   const { archive, config, embedded, router } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
@@ -462,6 +516,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     criticalPathEnabled,
     embedded,
     id,
+    spanId,
     searchUrl,
     disableJsonView,
     trace,

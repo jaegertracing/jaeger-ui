@@ -20,6 +20,7 @@ import { formatDuration, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
+import ReRootButton from './ReRootButton';
 
 import { TNil } from '../../../types';
 import { criticalPathSection, Span } from '../../../types/trace';
@@ -57,6 +58,7 @@ type SpanBarRowProps = {
   traceStartTime: number;
   span: Span;
   focusSpan: (spanID: string) => void;
+  traceID: string;
 };
 
 /**
@@ -98,6 +100,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       traceStartTime,
       span,
       focusSpan,
+      traceID,
     } = this.props;
     const {
       duration,
@@ -120,6 +123,9 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       longLabel = `${label} | ${labelDetail}`;
       hintSide = 'right';
     }
+
+    // Check if this is the root span (no parent references)
+    const isRootSpan = !span.references || span.references.length === 0;
 
     return (
       <TimelineRow
@@ -190,6 +196,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                 <IoCloudUploadOutline />
               </ReferencesButton>
             )}
+            <ReRootButton span={span} traceId={traceID} isRootSpan={isRootSpan} />
           </div>
         </TimelineRow.Cell>
         <TimelineRow.Cell
