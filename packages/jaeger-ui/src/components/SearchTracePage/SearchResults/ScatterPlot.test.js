@@ -249,6 +249,11 @@ describe('ScatterPlot', () => {
     expect(container.querySelector('.TraceResultsScatterPlot')).toBeTruthy();
     expect(container.querySelector('.recharts-responsive-container')).toBeFalsy();
   });
+
+  it('uses default calculateContainerWidth when prop is not provided', () => {
+    render(<ScatterPlot data={sampleData} onValueClick={jest.fn()} />);
+    expect(document.querySelector('.TraceResultsScatterPlot')).toBeInTheDocument();
+  });
 });
 
 describe('CustomTooltip', () => {

@@ -78,6 +78,56 @@ describe('<SearchResults>', () => {
     expect(wrapper.find(DiffSelection).length).toBe(0);
   });
 
+  it('adds or removes trace from cohort based on flag', () => {
+    const cohortAddTrace = jest.fn();
+    const cohortRemoveTrace = jest.fn();
+    wrapper.setProps({ cohortAddTrace, cohortRemoveTrace });
+
+    const instance = wrapper.instance();
+    instance.toggleComparison('id-1');
+    instance.toggleComparison('id-2', true);
+
+    expect(cohortAddTrace).toHaveBeenCalledWith('id-1');
+    expect(cohortRemoveTrace).toHaveBeenCalledWith('id-2');
+  });
+
+  it('sets trace color to red if error tag is present', () => {
+    wrapper.setProps({
+      traces: [
+        {
+          traceID: 'err',
+          traceName: 'T',
+          startTime: 0,
+          duration: 1,
+          processes: {},
+          spans: [{ tags: [{ key: 'error', value: true }] }],
+        },
+      ],
+    });
+    const data = wrapper.find(ScatterPlot).prop('data');
+    expect(data[0].color).toBe('red');
+  });
+
+  it('renders DiffSelection when diffCohort is provided', () => {
+    wrapper.setProps({ diffCohort: [{ id: 'id-1' }] });
+    expect(wrapper.find(DiffSelection)).toHaveLength(1);
+  });
+
+  it('calls goToTrace when a ScatterPlot point is clicked', () => {
+    const goToTrace = jest.fn();
+    const trace = {
+      traceID: 'id-1',
+      spans: [],
+      startTime: 0,
+      duration: 1,
+      traceName: 'TraceThis',
+      processes: {},
+    };
+    wrapper.setProps({ traces: [trace], goToTrace });
+    wrapper.find(ScatterPlot).prop('onValueClick')(trace);
+    expect(goToTrace).toHaveBeenCalledWith('id-1');
+  });
+
   describe('search finished with results', () => {
     it('shows a scatter plot', () => {
       expect(wrapper.find(ScatterPlot).length).toBe(1);
