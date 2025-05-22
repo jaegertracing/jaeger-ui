@@ -463,6 +463,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           traceStartTime={trace.startTime}
           span={span}
           focusSpan={this.focusSpan}
+          traceID={trace.traceID}
         />
       </div>
     );

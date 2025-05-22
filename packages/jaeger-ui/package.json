@@ -24,11 +24,11 @@
     "@types/object-hash": "^3.0.2",
     "@types/react": "^18.3.11",
     "@types/react-helmet": "^6.1.5",
-    "@types/react-router-dom": "^7.0.0",
+    "@types/react-router-dom": "^5.3.3",
     "@types/react-window": "^1.8.0",
     "@types/redux-actions": "2.2.1",
     "@vitejs/plugin-legacy": "^6.0.0",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^4.4.1",
     "@wojtekmaj/enzyme-adapter-react-17": "^0.8.0",
     "babel-jest": "^29.5.0",
     "babel-plugin-inline-react-svg": "^2.0.2",
@@ -77,8 +77,7 @@
     "react-is": "^18.2.0",
     "react-json-view-lite": "2.4.1",
     "react-redux": "^9.2.0",
-    "react-router-dom": "^7.2.0",
-
+    "react-router-dom": "^6.22.0",
     "react-window": "^1.8.10",
     "recharts": "^2.15.1",
     "redux": "^5.0.1",
@@ -91,12 +90,12 @@
     "u-basscss": "2.0.1"
   },
   "scripts": {
-    "build": "NODE_ENV=production REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite build",
+    "build": "set NODE_ENV=production && set REACT_APP_VSN_STATE=dev && vite build",
     "coverage": "npm run test-ci -- --coverage",
-    "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite",
+    "start:ga-debug": "set REACT_APP_GA_DEBUG=1 && set REACT_APP_VSN_STATE=dev && vite",
     "start": "vite",
     "test": "jest --maxWorkers=50%",
-    "test-ci": "CI=1 jest --silent --color --maxWorkers=4"
+    "test-ci": "set CI=1 && jest --silent --color --maxWorkers=4"
   },
   "jest": {
     "globalSetup": "./test/jest.global-setup.js",

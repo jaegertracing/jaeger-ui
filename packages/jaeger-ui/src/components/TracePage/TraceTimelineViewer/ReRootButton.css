@@ -1,0 +1,28 @@
+.ReRootButton {
+  background: none;
+  border: none;
+  color: #3f51b5;
+  cursor: pointer;
+  font-size: 1em;
+  margin-left: 0.5em;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ReRootButton:hover {
+  color: #1a237e;
+}
+
+.ReRootButton--disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.ReRootButton--disabled:hover {
+  color: #aaa;
+}
+
+.ReRootButton--icon {
+  margin-right: 0.25em;
+}
