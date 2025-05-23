@@ -60,7 +60,7 @@ describe('drawNode', () => {
     });
 
     it('renders correctly when isUiFindMatch is true (ignored prop)', () => {
-      const { container } = render(<DiffNode {...baseProps} isUiFindMatch={true} />);
+      const { container } = render(<DiffNode {...baseProps} isUiFindMatch />);
       expect(container).toMatchSnapshot();
     });
   });

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TraceDiffGraph renders graph when data is present (snapshot) 1`] = `
+exports[`TraceDiffGraph renders graph when data is present 1`] = `
 <div>
   <div
     class="TraceDiffGraph--graphWrapper"
