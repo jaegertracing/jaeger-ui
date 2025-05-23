@@ -39,7 +39,7 @@ describe('<SearchResults>', () => {
   let rawTraces;
   let props;
 
-  beforeEach(() => {
+  function setupTest() {
     traces = [
       { traceID: 'a', spans: [], processes: {} },
       { traceID: 'b', spans: [], processes: {} },
@@ -56,6 +56,17 @@ describe('<SearchResults>', () => {
       rawTraces,
     };
     wrapper = shallow(<SearchResults {...props} />);
+    return { wrapper, props, traces, rawTraces };
+  }
+
+  beforeEach(() => {
+    ({ wrapper, props, traces, rawTraces } = setupTest());
+  });
+
+  afterEach(() => {
+    if (wrapper && wrapper.unmount) {
+      wrapper.unmount();
+    }
   });
 
   it('shows the "no results" message when the search result is empty', () => {

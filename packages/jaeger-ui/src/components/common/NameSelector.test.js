@@ -14,22 +14,18 @@
 
 import React from 'react';
 import { render, screen, waitFor, within, cleanup } from '@testing-library/react';
-import userEvent from '@testing-library/user-event'; // Use userEvent for more realistic interactions
-import '@testing-library/jest-dom'; // For custom matchers
+import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 
 import NameSelector, { DEFAULT_PLACEHOLDER } from './NameSelector';
 
-// Mock FilteredList as its internal behavior is tested separately
-// We just need to test the interaction between NameSelector and FilteredList
 jest.mock('./FilteredList', () => {
-  // Import React inside the factory function
-  // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires, no-shadow
-  const React = require('react');
-  // eslint-disable-next-line react/display-name
-  return React.forwardRef(({ cancel, options, value, setValue }, ref) => {
-    React.useImperativeHandle(ref, () => ({
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
+  const MockReact = require('react');
+  return MockReact.forwardRef(({ cancel, options, value, setValue }, ref) => {
+    MockReact.useImperativeHandle(ref, () => ({
       focusInput: jest.fn(),
-      isMouseWithin: jest.fn(() => false), // Default to false for outside click tests
+      isMouseWithin: jest.fn(() => false),
     }));
     return (
       <div data-testid="filtered-list">
@@ -60,7 +56,6 @@ describe('<NameSelector>', () => {
   let setValueMock;
   let clearValueMock;
 
-  // Explicitly call cleanup after each test
   afterEach(cleanup);
 
   const setup = (overrideProps = {}) => {
@@ -74,37 +69,25 @@ describe('<NameSelector>', () => {
       required: true,
       setValue: setValueMock,
       ...overrideProps,
-      // Conditionally add clearValue only if not required
       ...(overrideProps.required === false && !overrideProps.clearValue
         ? { clearValue: clearValueMock }
         : {}),
       ...(overrideProps.required !== false && overrideProps.clearValue
-        ? { clearValue: overrideProps.clearValue } // Allow explicit clearValue when required for testing errors
+        ? { clearValue: overrideProps.clearValue }
         : {}),
     };
-    // Antd Popover renders content into a portal by default.
-    // Attach container to document.body to make portal content accessible.
-    // Pass getPopupContainer to render Popover inline for easier testing
-    return render(
-      <NameSelector
-        {...props}
-        // @ts-ignore // Ignore TS error for adding Popover prop not defined in NameSelector props
-        getPopupContainer={triggerNode => triggerNode.parentElement}
-      />
-    );
+
+    return render(<NameSelector {...props} getPopupContainer={triggerNode => triggerNode.parentElement} />);
   };
 
   const openPopover = async () => {
-    // The clickable element is the h2 containing the label and value
     const trigger = screen.getByRole('heading', { level: 2 });
     await userEvent.click(trigger);
-    // Wait for the popover content to appear
     await screen.findByTestId('filtered-list');
   };
 
   it('renders without exploding', () => {
     setup();
-    // Check for heading containing the placeholder initially (value=null)
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(placeholder);
   });
 
@@ -126,9 +109,7 @@ describe('<NameSelector>', () => {
   describe('placeholder prop', () => {
     it('renders the custom placeholder when provided as a string and value is null', () => {
       setup({ placeholder, value: null, required: false });
-      // Label is hidden when placeholder is shown
       expect(screen.queryByText(`${label}:`)).not.toBeInTheDocument();
-      // Check text content of the heading due to BreakableText
       expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(placeholder);
     });
 
@@ -142,13 +123,11 @@ describe('<NameSelector>', () => {
       const value = options[1];
       setup({ placeholder, value, required: false });
       expect(screen.getByText(`${label}:`)).toBeInTheDocument();
-      // Check that the heading contains the label AND the value
       expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(`${label}:${value}`);
       expect(screen.queryByText(placeholder)).not.toBeInTheDocument();
       expect(screen.queryByText(DEFAULT_PLACEHOLDER)).not.toBeInTheDocument();
 
-      // Rerender with placeholder=true to double-check
-      cleanup(); // Clean up previous render first
+      cleanup();
       setup({ placeholder: true, value, required: false });
       expect(screen.getByText(`${label}:`)).toBeInTheDocument();
       expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(`${label}:${value}`);
@@ -157,12 +136,11 @@ describe('<NameSelector>', () => {
 
     it('does not render any placeholder if placeholder prop is omitted or false', () => {
       setup({ placeholder: undefined, value: null, required: false });
-      // Label should still be rendered even if value is empty
       expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(`${label}:`);
       expect(screen.queryByText(placeholder)).not.toBeInTheDocument();
       expect(screen.queryByText(DEFAULT_PLACEHOLDER)).not.toBeInTheDocument();
 
-      cleanup(); // Clean up previous render
+      cleanup();
       setup({ placeholder: false, value: null, required: false });
       expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(`${label}:`);
       expect(screen.queryByText(placeholder)).not.toBeInTheDocument();
@@ -182,7 +160,6 @@ describe('<NameSelector>', () => {
     expect(setValueMock).toHaveBeenCalledWith(options[1]);
     expect(setValueMock).toHaveBeenCalledTimes(1);
 
-    // Popover should close after selection
     await waitFor(() => {
       expect(screen.queryByTestId('filtered-list')).not.toBeVisible();
     });
@@ -200,14 +177,10 @@ describe('<NameSelector>', () => {
     });
   });
 
-  // Note: Testing clicking outside is tricky with portals.
-  // We rely on the mocked isMouseWithin returning false.
-  // We also ensure the Popover's onOpenChange works as expected.
   it('hides the popover when clicking outside', async () => {
     setup({ required: false });
-    await openPopover(); // Popover is open
+    await openPopover();
 
-    // Simulate click outside the popover
     await userEvent.click(document.body);
 
     await waitFor(() => {
@@ -219,29 +192,21 @@ describe('<NameSelector>', () => {
     setup({ required: false });
     const trigger = screen.getByRole('heading', { level: 2 });
 
-    // Initially closed
     expect(screen.queryByTestId('filtered-list')).not.toBeInTheDocument();
 
-    // Click to open
     await userEvent.click(trigger);
-    await screen.findByTestId('filtered-list'); // Wait for open
+    await screen.findByTestId('filtered-list');
 
-    // Click again to close
     await userEvent.click(trigger);
     await waitFor(() => {
       expect(screen.queryByTestId('filtered-list')).not.toBeVisible();
     });
   });
 
-  // Focusing is hard to test accurately without a real browser env,
-  // but we can check if the mock function was called.
   it('attempts to focus the filter input when the popover opens', async () => {
     setup({ required: false });
-    // The mock's focusInput is called within componentDidUpdate/useEffect in the actual component
-    // We check if the input exists after opening.
     await openPopover();
     expect(screen.getByTestId('filtered-list-input')).toBeInTheDocument();
-    // We can't easily assert focus in jsdom, but the mock confirms the intent.
   });
 
   describe('clear button', () => {
@@ -267,25 +232,21 @@ describe('<NameSelector>', () => {
       await userEvent.click(clearButton);
 
       expect(clearValueMock).toHaveBeenCalledTimes(1);
-      // Popover should not have opened
       expect(screen.queryByTestId('filtered-list')).toBeNull();
     });
 
     it('throws Error when attempting to clear when required (simulated)', () => {
-      // Render the component internally to access instance method for testing the throw
       const instanceProps = {
         label,
         options,
         value: options[0],
         required: true,
         setValue: jest.fn(),
-        // No clearValue needed here as it's required
       };
       const instance = new NameSelector(instanceProps);
-      // Mock event object
+
       const mockEvent = { stopPropagation: jest.fn() };
 
-      // Use try-catch or expect().toThrow on the instance method call
       expect(() => instance.clearValue(mockEvent)).toThrow('Cannot clear value of required NameSelector');
     });
   });
