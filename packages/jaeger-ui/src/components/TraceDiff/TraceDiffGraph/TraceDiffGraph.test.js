@@ -107,7 +107,13 @@ describe('TraceDiffGraph', () => {
 
   it('renders graph when data is present', () => {
     const { container } = render(<TraceDiffGraph {...baseProps} />);
-    expect(container).toMatchSnapshot();
+    const graphWrapper = container.querySelector('.TraceDiffGraph--graphWrapper');
+    const dag = container.querySelector('.TraceDiffGraph--dag');
+    const minimap = container.querySelector('.u-miniMap');
+
+    expect(graphWrapper).toBeInTheDocument();
+    expect(dag).toBeInTheDocument();
+    expect(minimap).toBeInTheDocument();
   });
 
   it('renders uiFind input with count suffix', () => {

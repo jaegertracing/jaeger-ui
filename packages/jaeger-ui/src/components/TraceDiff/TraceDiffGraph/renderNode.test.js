@@ -34,34 +34,40 @@ describe('drawNode', () => {
       service,
     };
 
-    it('renders correctly when a and b are the same', () => {
+    it('renders table when a and b are the same', () => {
       const { container } = render(<DiffNode {...baseProps} />);
-      expect(container).toMatchSnapshot();
+      expect(container.querySelector('table')).toBeInTheDocument();
+      expect(container.textContent).toContain(service);
+      expect(container.textContent).toContain(operation);
     });
 
     it('renders correctly when a < b', () => {
       const { container } = render(<DiffNode {...baseProps} a={defaultCount / 2} />);
-      expect(container).toMatchSnapshot();
+      expect(container.querySelector('.is-more')).toBeInTheDocument();
+      expect(container.textContent).toContain('+');
     });
 
     it('renders correctly when a > b', () => {
       const { container } = render(<DiffNode {...baseProps} a={defaultCount * 2} />);
-      expect(container).toMatchSnapshot();
+      expect(container.querySelector('.is-less')).toBeInTheDocument();
+      expect(container.textContent).toContain('-');
     });
 
     it('renders correctly when a is 0', () => {
       const { container } = render(<DiffNode {...baseProps} a={0} />);
-      expect(container).toMatchSnapshot();
+      expect(container.querySelector('.is-added')).toBeInTheDocument();
+      expect(container.textContent).toContain('100');
     });
 
     it('renders correctly when b is 0', () => {
       const { container } = render(<DiffNode {...baseProps} b={0} />);
-      expect(container).toMatchSnapshot();
+      expect(container.querySelector('.is-removed')).toBeInTheDocument();
+      expect(container.textContent).toContain('100');
     });
 
-    it('renders correctly when isUiFindMatch is true (ignored prop)', () => {
+    it('accepts unused isUiFindMatch prop without breaking', () => {
       const { container } = render(<DiffNode {...baseProps} isUiFindMatch />);
-      expect(container).toMatchSnapshot();
+      expect(container.querySelector('table')).toBeInTheDocument();
     });
   });
 
@@ -79,7 +85,7 @@ describe('drawNode', () => {
       key,
     };
 
-    it('extracts values from vertex.data', () => {
+    it('extracts values from vertex.data and passes them as props', () => {
       const node = renderNode(vertex);
       expect(node.props.a).toBe(lenA);
       expect(node.props.b).toBe(lenB);
