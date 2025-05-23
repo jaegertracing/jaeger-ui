@@ -14,7 +14,7 @@
 
 import transformTraceData from '../../../model/transform-trace-data';
 import calculateTraceDagEV from './calculateTraceDagEV';
-
+import { mapFollowsFrom } from './calculateTraceDagEV';
 import testTrace from './testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
@@ -47,5 +47,43 @@ describe('calculateTraceDagEV', () => {
     // fork-join self-times are calculated correctly (self-time drange)
     assertData(nodes, 'service1', 'op6', 1, 0, 10, 1, 1);
     assertData(nodes, 'service1', 'op7', 2, 0, 17, 1.7, 17);
+  });
+});
+
+describe('mapFollowsFrom', () => {
+  it('sets followsFrom false if node has CHILD_OF reference and e.to is number', () => {
+    const mockEdges = [{ from: 0, to: 0 }];
+    const mockNodes = [
+      {
+        members: [
+          {
+            span: {
+              references: [{ refType: 'CHILD_OF' }],
+            },
+          },
+        ],
+      },
+    ];
+
+    const result = mapFollowsFrom(mockEdges, mockNodes);
+    expect(result[0].followsFrom).toBe(false);
+  });
+
+  it('sets followsFrom true if node does NOT have CHILD_OF reference and e.to is number', () => {
+    const mockEdges = [{ from: 0, to: 0 }];
+    const mockNodes = [
+      {
+        members: [
+          {
+            span: {
+              references: [{ refType: 'FOLLOWS_FROM' }],
+            },
+          },
+        ],
+      },
+    ];
+
+    const result = mapFollowsFrom(mockEdges, mockNodes);
+    expect(result[0].followsFrom).toBe(true);
   });
 });

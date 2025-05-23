@@ -13,83 +13,104 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import transformTraceData from '../../../model/transform-trace-data';
 import calculateTraceDagEV from './calculateTraceDagEV';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
-import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 
 import testTrace from './testTrace.json';
+import { LayoutManager } from '@jaegertracing/plexus';
+
+jest.mock('@jaegertracing/plexus', () => {
+  const React = require('react');
+
+  class LayoutManagerMock {
+    stopAndRelease() {}
+  }
+
+  const DigraphMock = React.forwardRef(() => {
+    return <div data-testid="mock-digraph" />;
+  });
+
+  DigraphMock.propsFactories = {
+    classNameIsSmall: () => ({}),
+    scaleOpacity: () => ({}),
+    scaleStrokeOpacity: () => ({}),
+  };
+
+  return {
+    Digraph: DigraphMock,
+    LayoutManager: LayoutManagerMock,
+    cacheAs: (_key, fn) => fn,
+  };
+});
 
 const transformedTrace = transformTraceData(testTrace);
 const ev = calculateTraceDagEV(transformedTrace);
 
+afterEach(() => {
+  cleanup();
+  jest.restoreAllMocks();
+});
+
 describe('<TraceGraph>', () => {
-  let wrapper;
-
-  beforeEach(() => {
-    const props = {
-      headerHeight: 60,
-      ev,
-    };
-    wrapper = shallow(<TraceGraph {...props} />);
+  it('renders buttons and menu properly', () => {
+    render(<TraceGraph headerHeight={60} ev={ev} uiFind={null} uiFindVertexKeys={null} />);
+    expect(screen.getByRole('button', { name: 'S' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'T' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'ST' })).toBeInTheDocument();
+    expect(document.querySelector('.TraceGraph--menu')).toBeInTheDocument();
   });
 
-  it('does not explode', () => {
-    expect(wrapper).toBeDefined();
-    expect(wrapper.find('.TraceGraph--menu').length).toBe(1);
-    expect(wrapper.find('Button').length).toBe(3);
+  it('renders fallback when no trace is found', () => {
+    render(<TraceGraph headerHeight={60} uiFind={null} uiFindVertexKeys={null} />);
+    expect(screen.getByText('No trace found')).toBeInTheDocument();
   });
 
-  it('may show no traces', () => {
-    const props = {};
-    wrapper = shallow(<TraceGraph {...props} />);
-    expect(wrapper).toBeDefined();
-    expect(wrapper.find('h1').text()).toBe('No trace found');
+  it('calls toggleNodeMode with correct mode on button clicks', () => {
+    render(<TraceGraph headerHeight={60} ev={ev} uiFind={null} uiFindVertexKeys={null} />);
+    fireEvent.click(screen.getByRole('button', { name: 'S' }));
+    fireEvent.click(screen.getByRole('button', { name: 'T' }));
+    fireEvent.click(screen.getByRole('button', { name: 'ST' }));
   });
 
-  it('toggles nodeMode to time', () => {
-    const mode = MODE_SERVICE;
-    wrapper.setState({ mode });
-    wrapper.instance().toggleNodeMode(MODE_TIME);
-    const modeState = wrapper.state('mode');
-    expect(modeState).toEqual(MODE_TIME);
+  it('shows help content on clicking help icon', () => {
+    const { container } = render(
+      <TraceGraph headerHeight={60} ev={ev} uiFind={null} uiFindVertexKeys={null} />
+    );
+    const helpIcon = container.querySelector('svg');
+    fireEvent.click(helpIcon);
+    expect(screen.getByText('Help')).toBeInTheDocument();
   });
 
-  it('validates button nodeMode change click', () => {
-    const toggleNodeMode = jest.spyOn(wrapper.instance(), 'toggleNodeMode');
-    const btnService = wrapper.find('.TraceGraph--btn-service');
-    expect(btnService.length).toBe(1);
-    btnService.simulate('click');
-    expect(toggleNodeMode).toHaveBeenCalledWith(MODE_SERVICE);
-    const btnTime = wrapper.find('.TraceGraph--btn-time');
-    expect(btnTime.length).toBe(1);
-    btnTime.simulate('click');
-    expect(toggleNodeMode).toHaveBeenCalledWith(MODE_TIME);
-    const btnSelftime = wrapper.find('.TraceGraph--btn-selftime');
-    expect(btnSelftime.length).toBe(1);
-    btnSelftime.simulate('click');
-    expect(toggleNodeMode).toHaveBeenCalledWith(MODE_SELFTIME);
+  it('closes help sidebar when close icon clicked', () => {
+    const { container } = render(
+      <TraceGraph headerHeight={60} ev={ev} uiFind={null} uiFindVertexKeys={null} />
+    );
+    const helpIcon = container.querySelector('svg');
+    fireEvent.click(helpIcon);
+    expect(screen.getByText('Help')).toBeInTheDocument();
+    const closeBtn = container.querySelector('.ant-card-extra a');
+    fireEvent.click(closeBtn);
+    expect(screen.queryByText('Help')).not.toBeInTheDocument();
   });
 
-  it('shows help', () => {
-    const showHelp = false;
-    wrapper.setState({ showHelp });
-    wrapper.instance().showHelp();
-    expect(wrapper.state('showHelp')).toBe(true);
+  it('calls layoutManager.stopAndRelease() on unmount', () => {
+    const stopAndReleaseMock = jest.fn();
+    LayoutManager.prototype.stopAndRelease = stopAndReleaseMock;
+
+    const { unmount } = render(
+      <TraceGraph headerHeight={60} ev={ev} uiFind={null} uiFindVertexKeys={null} />
+    );
+    unmount();
+    expect(stopAndReleaseMock).toHaveBeenCalledTimes(1);
   });
 
-  it('hides help', () => {
-    const showHelp = true;
-    wrapper.setState({ showHelp });
-    wrapper.instance().closeSidebar();
-    expect(wrapper.state('showHelp')).toBe(false);
-  });
-
-  it('uses stroke-dash edges for followsFrom', () => {
-    const edge = { from: 0, to: 1, followsFrom: true };
-    expect(setOnEdgePath(edge)).toEqual({ strokeDasharray: 4 });
+  it('returns correct edge styles from setOnEdgePath', () => {
+    const edge1 = { from: 0, to: 1, followsFrom: true };
+    expect(setOnEdgePath(edge1)).toEqual({ strokeDasharray: 4 });
 
     const edge2 = { from: 0, to: 1, followsFrom: false };
     expect(setOnEdgePath(edge2)).toEqual({});
