@@ -105,7 +105,7 @@ describe('TraceDiffGraph', () => {
     expect(container.querySelector('.TraceDiffGraph--graphWrapper').innerHTML).toBe('');
   });
 
-  it('renders graph when data is present (snapshot)', () => {
+  it('renders graph when data is present', () => {
     const { container } = render(<TraceDiffGraph {...baseProps} />);
     expect(container).toMatchSnapshot();
   });
