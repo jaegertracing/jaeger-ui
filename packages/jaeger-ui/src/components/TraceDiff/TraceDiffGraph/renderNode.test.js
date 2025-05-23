@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, cleanup } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import renderNode, { DiffNode, getNodeEmphasisRenderer } from './renderNode';
 import EmphasizedNode from '../../common/EmphasizedNode';
@@ -21,56 +22,53 @@ import EmphasizedNode from '../../common/EmphasizedNode';
 describe('drawNode', () => {
   const operation = 'operationName';
   const service = 'serviceName';
+  const defaultCount = 100;
+
+  afterEach(cleanup);
 
   describe('diffNode', () => {
-    const defaultCount = 100;
-    const props = {
+    const baseProps = {
       a: defaultCount,
       b: defaultCount,
       operation,
       service,
     };
 
-    let wrapper;
-
-    beforeEach(() => {
-      wrapper = shallow(<DiffNode {...props} />);
+    it('renders correctly when a and b are the same', () => {
+      const { container } = render(<DiffNode {...baseProps} />);
+      expect(container).toMatchSnapshot();
     });
 
-    it('renders as expected when props.a and props.b are the same', () => {
-      expect(wrapper).toMatchSnapshot();
+    it('renders correctly when a < b', () => {
+      const { container } = render(<DiffNode {...baseProps} a={defaultCount / 2} />);
+      expect(container).toMatchSnapshot();
     });
 
-    it('renders as expected when props.a is less than props.b', () => {
-      wrapper.setProps({ a: defaultCount / 2 });
-      expect(wrapper).toMatchSnapshot();
+    it('renders correctly when a > b', () => {
+      const { container } = render(<DiffNode {...baseProps} a={defaultCount * 2} />);
+      expect(container).toMatchSnapshot();
     });
 
-    it('renders as expected when props.a is more than props.b', () => {
-      wrapper.setProps({ a: defaultCount * 2 });
-      expect(wrapper).toMatchSnapshot();
+    it('renders correctly when a is 0', () => {
+      const { container } = render(<DiffNode {...baseProps} a={0} />);
+      expect(container).toMatchSnapshot();
     });
 
-    it('renders as expected when props.a is 0', () => {
-      wrapper.setProps({ a: 0 });
-      expect(wrapper).toMatchSnapshot();
+    it('renders correctly when b is 0', () => {
+      const { container } = render(<DiffNode {...baseProps} b={0} />);
+      expect(container).toMatchSnapshot();
     });
 
-    it('renders as expected when props.b is 0', () => {
-      wrapper.setProps({ b: 0 });
-      expect(wrapper).toMatchSnapshot();
-    });
-
-    it('renders as expected when props.isUiFindMatch is true', () => {
-      wrapper.setProps({ isUiFindMatch: true });
-      expect(wrapper).toMatchSnapshot();
+    it('renders correctly when isUiFindMatch is true (ignored prop)', () => {
+      const { container } = render(<DiffNode {...baseProps} isUiFindMatch={true} />);
+      expect(container).toMatchSnapshot();
     });
   });
 
   describe('renderNode()', () => {
     const lenA = 3;
     const lenB = 7;
-    const key = 'vertex key';
+    const key = 'vertex-key';
     const vertex = {
       data: {
         a: new Array(lenA),
@@ -91,11 +89,12 @@ describe('drawNode', () => {
   });
 
   describe('getNodeEmphasisRenderer', () => {
-    const key = 'match-key';
-    const renderer = getNodeEmphasisRenderer(new Set([key]));
+    const matchKey = 'match-key';
+    const nonMatchKey = 'no-match';
+    const renderer = getNodeEmphasisRenderer(new Set([matchKey]));
 
     it('returns EmphasizedNode when key matches', () => {
-      const lv = { height: 100, width: 200, vertex: { key } };
+      const lv = { height: 100, width: 200, vertex: { key: matchKey } };
       const result = renderer(lv);
       expect(result.type).toBe(EmphasizedNode);
       expect(result.props.height).toBe(100);
@@ -103,7 +102,7 @@ describe('drawNode', () => {
     });
 
     it('returns null when key does not match', () => {
-      const lv = { height: 100, width: 200, vertex: { key: 'no-match' } };
+      const lv = { height: 100, width: 200, vertex: { key: nonMatchKey } };
       const result = renderer(lv);
       expect(result).toBeNull();
     });

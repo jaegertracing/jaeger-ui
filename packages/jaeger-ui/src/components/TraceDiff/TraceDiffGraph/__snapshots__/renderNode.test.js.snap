@@ -1,689 +1,525 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`drawNode diffNode renders as expected when props.a and props.b are the same 1`] = `
-<Popover
-  classNames={
-    Object {
-      "root": "DiffNode--popover is-same",
-    }
-  }
-  content={
-    <table
-      className="DiffNode is-same"
-    >
-      <tbody
-        className="DiffNode--body"
-      >
-        <tr>
-          <td
-            className="DiffNode--metricCell is-same"
-            rowSpan={2}
-          >
-            100
-          </td>
-          <td
-            className="DiffNode--labelCell is-same"
-          >
-            <strong>
-              serviceName
-            </strong>
-            <CopyIcon
-              className="DiffNode--copyIcon"
-              copyText="serviceName operationName"
-              icon={<IoCopyOutline />}
-              placement="top"
-              tooltipTitle="Copy label"
-            />
-          </td>
-        </tr>
-        <tr>
-          <td
-            className="DiffNode--labelCell is-same"
-          >
-            operationName
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  }
-  mouseEnterDelay={0.25}
->
+exports[`drawNode diffNode renders correctly when a < b 1`] = `
+<div>
   <table
-    className="DiffNode is-same"
+    aria-describedby="test-id"
+    class="DiffNode is-changed is-more"
   >
     <tbody
-      className="DiffNode--body"
+      class="DiffNode--body"
     >
       <tr>
         <td
-          className="DiffNode--metricCell is-same"
-          rowSpan={2}
-        >
-          100
-        </td>
-        <td
-          className="DiffNode--labelCell is-same"
-        >
-          <strong>
-            serviceName
-          </strong>
-          <CopyIcon
-            className="DiffNode--copyIcon"
-            copyText="serviceName operationName"
-            icon={<IoCopyOutline />}
-            placement="top"
-            tooltipTitle="Copy label"
-          />
-        </td>
-      </tr>
-      <tr>
-        <td
-          className="DiffNode--labelCell is-same"
-        >
-          operationName
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</Popover>
-`;
-
-exports[`drawNode diffNode renders as expected when props.a is 0 1`] = `
-<Popover
-  classNames={
-    Object {
-      "root": "DiffNode--popover is-changed is-added",
-    }
-  }
-  content={
-    <table
-      className="DiffNode is-changed is-added"
-    >
-      <tbody
-        className="DiffNode--body"
-      >
-        <tr>
-          <td
-            className="DiffNode--metricCell is-changed is-added"
-            rowSpan={1}
-          >
-            <span
-              className="DiffNode--metricSymbol"
-            >
-              +
-            </span>
-            100
-          </td>
-          <td
-            className="DiffNode--labelCell is-changed is-added"
-          >
-            <strong>
-              serviceName
-            </strong>
-            <CopyIcon
-              className="DiffNode--copyIcon"
-              copyText="serviceName operationName"
-              icon={<IoCopyOutline />}
-              placement="top"
-              tooltipTitle="Copy label"
-            />
-          </td>
-        </tr>
-        <tr>
-          <td
-            className="DiffNode--metricCell is-changed is-added"
-          >
-            <span
-              className="DiffNode--metricSymbol"
-            >
-              +
-            </span>
-            100
-            <span
-              className="DiffNode--metricSymbol"
-            >
-              %
-            </span>
-          </td>
-          <td
-            className="DiffNode--labelCell is-changed is-added"
-          >
-            operationName
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  }
-  mouseEnterDelay={0.25}
->
-  <table
-    className="DiffNode is-changed is-added"
-  >
-    <tbody
-      className="DiffNode--body"
-    >
-      <tr>
-        <td
-          className="DiffNode--metricCell is-changed is-added"
-          rowSpan={1}
+          class="DiffNode--metricCell is-changed is-more"
+          rowspan="1"
         >
           <span
-            className="DiffNode--metricSymbol"
-          >
-            +
-          </span>
-          100
-        </td>
-        <td
-          className="DiffNode--labelCell is-changed is-added"
-        >
-          <strong>
-            serviceName
-          </strong>
-          <CopyIcon
-            className="DiffNode--copyIcon"
-            copyText="serviceName operationName"
-            icon={<IoCopyOutline />}
-            placement="top"
-            tooltipTitle="Copy label"
-          />
-        </td>
-      </tr>
-      <tr>
-        <td
-          className="DiffNode--metricCell is-changed is-added"
-        >
-          <span
-            className="DiffNode--metricSymbol"
-          >
-            +
-          </span>
-          100
-          <span
-            className="DiffNode--metricSymbol"
-          >
-            %
-          </span>
-        </td>
-        <td
-          className="DiffNode--labelCell is-changed is-added"
-        >
-          operationName
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</Popover>
-`;
-
-exports[`drawNode diffNode renders as expected when props.a is less than props.b 1`] = `
-<Popover
-  classNames={
-    Object {
-      "root": "DiffNode--popover is-changed is-more",
-    }
-  }
-  content={
-    <table
-      className="DiffNode is-changed is-more"
-    >
-      <tbody
-        className="DiffNode--body"
-      >
-        <tr>
-          <td
-            className="DiffNode--metricCell is-changed is-more"
-            rowSpan={1}
-          >
-            <span
-              className="DiffNode--metricSymbol"
-            >
-              +
-            </span>
-            50
-          </td>
-          <td
-            className="DiffNode--labelCell is-changed is-more"
-          >
-            <strong>
-              serviceName
-            </strong>
-            <CopyIcon
-              className="DiffNode--copyIcon"
-              copyText="serviceName operationName"
-              icon={<IoCopyOutline />}
-              placement="top"
-              tooltipTitle="Copy label"
-            />
-          </td>
-        </tr>
-        <tr>
-          <td
-            className="DiffNode--metricCell is-changed is-more"
-          >
-            <span
-              className="DiffNode--metricSymbol"
-            >
-              +
-            </span>
-            50
-            <span
-              className="DiffNode--metricSymbol"
-            >
-              %
-            </span>
-          </td>
-          <td
-            className="DiffNode--labelCell is-changed is-more"
-          >
-            operationName
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  }
-  mouseEnterDelay={0.25}
->
-  <table
-    className="DiffNode is-changed is-more"
-  >
-    <tbody
-      className="DiffNode--body"
-    >
-      <tr>
-        <td
-          className="DiffNode--metricCell is-changed is-more"
-          rowSpan={1}
-        >
-          <span
-            className="DiffNode--metricSymbol"
+            class="DiffNode--metricSymbol"
           >
             +
           </span>
           50
         </td>
         <td
-          className="DiffNode--labelCell is-changed is-more"
+          class="DiffNode--labelCell is-changed is-more"
         >
           <strong>
             serviceName
           </strong>
-          <CopyIcon
-            className="DiffNode--copyIcon"
-            copyText="serviceName operationName"
-            icon={<IoCopyOutline />}
-            placement="top"
-            tooltipTitle="Copy label"
-          />
+          <button
+            aria-describedby="test-id"
+            class="ant-btn css-dev-only-do-not-override-18afz5u ant-btn-default ant-btn-color-default ant-btn-variant-outlined ant-btn-icon-only DiffNode--copyIcon CopyIcon"
+            type="button"
+          >
+            <span
+              class="ant-btn-icon"
+            >
+              <svg
+                fill="currentColor"
+                height="1em"
+                stroke="currentColor"
+                stroke-width="0"
+                viewBox="0 0 512 512"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  fill="none"
+                  height="336"
+                  rx="57"
+                  ry="57"
+                  stroke-linejoin="round"
+                  stroke-width="32"
+                  width="336"
+                  x="128"
+                  y="128"
+                />
+                <path
+                  d="m383.5 128 .5-24a56.16 56.16 0 0 0-56-56H112a64.19 64.19 0 0 0-64 64v216a56.16 56.16 0 0 0 56 56h24"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="32"
+                />
+              </svg>
+            </span>
+          </button>
         </td>
       </tr>
       <tr>
         <td
-          className="DiffNode--metricCell is-changed is-more"
+          class="DiffNode--metricCell is-changed is-more"
         >
           <span
-            className="DiffNode--metricSymbol"
+            class="DiffNode--metricSymbol"
           >
             +
           </span>
           50
           <span
-            className="DiffNode--metricSymbol"
+            class="DiffNode--metricSymbol"
           >
             %
           </span>
         </td>
         <td
-          className="DiffNode--labelCell is-changed is-more"
+          class="DiffNode--labelCell is-changed is-more"
         >
           operationName
         </td>
       </tr>
     </tbody>
   </table>
-</Popover>
+</div>
 `;
 
-exports[`drawNode diffNode renders as expected when props.a is more than props.b 1`] = `
-<Popover
-  classNames={
-    Object {
-      "root": "DiffNode--popover is-changed is-less",
-    }
-  }
-  content={
-    <table
-      className="DiffNode is-changed is-less"
-    >
-      <tbody
-        className="DiffNode--body"
-      >
-        <tr>
-          <td
-            className="DiffNode--metricCell is-changed is-less"
-            rowSpan={1}
-          >
-            <span
-              className="DiffNode--metricSymbol"
-            >
-              -
-            </span>
-            100
-          </td>
-          <td
-            className="DiffNode--labelCell is-changed is-less"
-          >
-            <strong>
-              serviceName
-            </strong>
-            <CopyIcon
-              className="DiffNode--copyIcon"
-              copyText="serviceName operationName"
-              icon={<IoCopyOutline />}
-              placement="top"
-              tooltipTitle="Copy label"
-            />
-          </td>
-        </tr>
-        <tr>
-          <td
-            className="DiffNode--metricCell is-changed is-less"
-          >
-            <span
-              className="DiffNode--metricSymbol"
-            >
-              -
-            </span>
-            50
-            <span
-              className="DiffNode--metricSymbol"
-            >
-              %
-            </span>
-          </td>
-          <td
-            className="DiffNode--labelCell is-changed is-less"
-          >
-            operationName
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  }
-  mouseEnterDelay={0.25}
->
+exports[`drawNode diffNode renders correctly when a > b 1`] = `
+<div>
   <table
-    className="DiffNode is-changed is-less"
+    aria-describedby="test-id"
+    class="DiffNode is-changed is-less"
   >
     <tbody
-      className="DiffNode--body"
+      class="DiffNode--body"
     >
       <tr>
         <td
-          className="DiffNode--metricCell is-changed is-less"
-          rowSpan={1}
+          class="DiffNode--metricCell is-changed is-less"
+          rowspan="1"
         >
           <span
-            className="DiffNode--metricSymbol"
+            class="DiffNode--metricSymbol"
           >
             -
           </span>
           100
         </td>
         <td
-          className="DiffNode--labelCell is-changed is-less"
+          class="DiffNode--labelCell is-changed is-less"
         >
           <strong>
             serviceName
           </strong>
-          <CopyIcon
-            className="DiffNode--copyIcon"
-            copyText="serviceName operationName"
-            icon={<IoCopyOutline />}
-            placement="top"
-            tooltipTitle="Copy label"
-          />
+          <button
+            aria-describedby="test-id"
+            class="ant-btn css-dev-only-do-not-override-18afz5u ant-btn-default ant-btn-color-default ant-btn-variant-outlined ant-btn-icon-only DiffNode--copyIcon CopyIcon"
+            type="button"
+          >
+            <span
+              class="ant-btn-icon"
+            >
+              <svg
+                fill="currentColor"
+                height="1em"
+                stroke="currentColor"
+                stroke-width="0"
+                viewBox="0 0 512 512"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  fill="none"
+                  height="336"
+                  rx="57"
+                  ry="57"
+                  stroke-linejoin="round"
+                  stroke-width="32"
+                  width="336"
+                  x="128"
+                  y="128"
+                />
+                <path
+                  d="m383.5 128 .5-24a56.16 56.16 0 0 0-56-56H112a64.19 64.19 0 0 0-64 64v216a56.16 56.16 0 0 0 56 56h24"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="32"
+                />
+              </svg>
+            </span>
+          </button>
         </td>
       </tr>
       <tr>
         <td
-          className="DiffNode--metricCell is-changed is-less"
+          class="DiffNode--metricCell is-changed is-less"
         >
           <span
-            className="DiffNode--metricSymbol"
+            class="DiffNode--metricSymbol"
           >
             -
           </span>
           50
           <span
-            className="DiffNode--metricSymbol"
+            class="DiffNode--metricSymbol"
           >
             %
           </span>
         </td>
         <td
-          className="DiffNode--labelCell is-changed is-less"
+          class="DiffNode--labelCell is-changed is-less"
         >
           operationName
         </td>
       </tr>
     </tbody>
   </table>
-</Popover>
+</div>
 `;
 
-exports[`drawNode diffNode renders as expected when props.b is 0 1`] = `
-<Popover
-  classNames={
-    Object {
-      "root": "DiffNode--popover is-changed is-removed",
-    }
-  }
-  content={
-    <table
-      className="DiffNode is-changed is-removed"
-    >
-      <tbody
-        className="DiffNode--body"
-      >
-        <tr>
-          <td
-            className="DiffNode--metricCell is-changed is-removed"
-            rowSpan={1}
-          >
-            <span
-              className="DiffNode--metricSymbol"
-            >
-              -
-            </span>
-            100
-          </td>
-          <td
-            className="DiffNode--labelCell is-changed is-removed"
-          >
-            <strong>
-              serviceName
-            </strong>
-            <CopyIcon
-              className="DiffNode--copyIcon"
-              copyText="serviceName operationName"
-              icon={<IoCopyOutline />}
-              placement="top"
-              tooltipTitle="Copy label"
-            />
-          </td>
-        </tr>
-        <tr>
-          <td
-            className="DiffNode--metricCell is-changed is-removed"
-          >
-            <span
-              className="DiffNode--metricSymbol"
-            >
-              -
-            </span>
-            100
-            <span
-              className="DiffNode--metricSymbol"
-            >
-              %
-            </span>
-          </td>
-          <td
-            className="DiffNode--labelCell is-changed is-removed"
-          >
-            operationName
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  }
-  mouseEnterDelay={0.25}
->
+exports[`drawNode diffNode renders correctly when a and b are the same 1`] = `
+<div>
   <table
-    className="DiffNode is-changed is-removed"
+    aria-describedby="test-id"
+    class="DiffNode is-same"
   >
     <tbody
-      className="DiffNode--body"
+      class="DiffNode--body"
     >
       <tr>
         <td
-          className="DiffNode--metricCell is-changed is-removed"
-          rowSpan={1}
+          class="DiffNode--metricCell is-same"
+          rowspan="2"
+        >
+          100
+        </td>
+        <td
+          class="DiffNode--labelCell is-same"
+        >
+          <strong>
+            serviceName
+          </strong>
+          <button
+            aria-describedby="test-id"
+            class="ant-btn css-dev-only-do-not-override-18afz5u ant-btn-default ant-btn-color-default ant-btn-variant-outlined ant-btn-icon-only DiffNode--copyIcon CopyIcon"
+            type="button"
+          >
+            <span
+              class="ant-btn-icon"
+            >
+              <svg
+                fill="currentColor"
+                height="1em"
+                stroke="currentColor"
+                stroke-width="0"
+                viewBox="0 0 512 512"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  fill="none"
+                  height="336"
+                  rx="57"
+                  ry="57"
+                  stroke-linejoin="round"
+                  stroke-width="32"
+                  width="336"
+                  x="128"
+                  y="128"
+                />
+                <path
+                  d="m383.5 128 .5-24a56.16 56.16 0 0 0-56-56H112a64.19 64.19 0 0 0-64 64v216a56.16 56.16 0 0 0 56 56h24"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="32"
+                />
+              </svg>
+            </span>
+          </button>
+        </td>
+      </tr>
+      <tr>
+        <td
+          class="DiffNode--labelCell is-same"
+        >
+          operationName
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;
+
+exports[`drawNode diffNode renders correctly when a is 0 1`] = `
+<div>
+  <table
+    aria-describedby="test-id"
+    class="DiffNode is-changed is-added"
+  >
+    <tbody
+      class="DiffNode--body"
+    >
+      <tr>
+        <td
+          class="DiffNode--metricCell is-changed is-added"
+          rowspan="1"
         >
           <span
-            className="DiffNode--metricSymbol"
+            class="DiffNode--metricSymbol"
+          >
+            +
+          </span>
+          100
+        </td>
+        <td
+          class="DiffNode--labelCell is-changed is-added"
+        >
+          <strong>
+            serviceName
+          </strong>
+          <button
+            aria-describedby="test-id"
+            class="ant-btn css-dev-only-do-not-override-18afz5u ant-btn-default ant-btn-color-default ant-btn-variant-outlined ant-btn-icon-only DiffNode--copyIcon CopyIcon"
+            type="button"
+          >
+            <span
+              class="ant-btn-icon"
+            >
+              <svg
+                fill="currentColor"
+                height="1em"
+                stroke="currentColor"
+                stroke-width="0"
+                viewBox="0 0 512 512"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  fill="none"
+                  height="336"
+                  rx="57"
+                  ry="57"
+                  stroke-linejoin="round"
+                  stroke-width="32"
+                  width="336"
+                  x="128"
+                  y="128"
+                />
+                <path
+                  d="m383.5 128 .5-24a56.16 56.16 0 0 0-56-56H112a64.19 64.19 0 0 0-64 64v216a56.16 56.16 0 0 0 56 56h24"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="32"
+                />
+              </svg>
+            </span>
+          </button>
+        </td>
+      </tr>
+      <tr>
+        <td
+          class="DiffNode--metricCell is-changed is-added"
+        >
+          <span
+            class="DiffNode--metricSymbol"
+          >
+            +
+          </span>
+          100
+          <span
+            class="DiffNode--metricSymbol"
+          >
+            %
+          </span>
+        </td>
+        <td
+          class="DiffNode--labelCell is-changed is-added"
+        >
+          operationName
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;
+
+exports[`drawNode diffNode renders correctly when b is 0 1`] = `
+<div>
+  <table
+    aria-describedby="test-id"
+    class="DiffNode is-changed is-removed"
+  >
+    <tbody
+      class="DiffNode--body"
+    >
+      <tr>
+        <td
+          class="DiffNode--metricCell is-changed is-removed"
+          rowspan="1"
+        >
+          <span
+            class="DiffNode--metricSymbol"
           >
             -
           </span>
           100
         </td>
         <td
-          className="DiffNode--labelCell is-changed is-removed"
+          class="DiffNode--labelCell is-changed is-removed"
         >
           <strong>
             serviceName
           </strong>
-          <CopyIcon
-            className="DiffNode--copyIcon"
-            copyText="serviceName operationName"
-            icon={<IoCopyOutline />}
-            placement="top"
-            tooltipTitle="Copy label"
-          />
+          <button
+            aria-describedby="test-id"
+            class="ant-btn css-dev-only-do-not-override-18afz5u ant-btn-default ant-btn-color-default ant-btn-variant-outlined ant-btn-icon-only DiffNode--copyIcon CopyIcon"
+            type="button"
+          >
+            <span
+              class="ant-btn-icon"
+            >
+              <svg
+                fill="currentColor"
+                height="1em"
+                stroke="currentColor"
+                stroke-width="0"
+                viewBox="0 0 512 512"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  fill="none"
+                  height="336"
+                  rx="57"
+                  ry="57"
+                  stroke-linejoin="round"
+                  stroke-width="32"
+                  width="336"
+                  x="128"
+                  y="128"
+                />
+                <path
+                  d="m383.5 128 .5-24a56.16 56.16 0 0 0-56-56H112a64.19 64.19 0 0 0-64 64v216a56.16 56.16 0 0 0 56 56h24"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="32"
+                />
+              </svg>
+            </span>
+          </button>
         </td>
       </tr>
       <tr>
         <td
-          className="DiffNode--metricCell is-changed is-removed"
+          class="DiffNode--metricCell is-changed is-removed"
         >
           <span
-            className="DiffNode--metricSymbol"
+            class="DiffNode--metricSymbol"
           >
             -
           </span>
           100
           <span
-            className="DiffNode--metricSymbol"
+            class="DiffNode--metricSymbol"
           >
             %
           </span>
         </td>
         <td
-          className="DiffNode--labelCell is-changed is-removed"
+          class="DiffNode--labelCell is-changed is-removed"
         >
           operationName
         </td>
       </tr>
     </tbody>
   </table>
-</Popover>
+</div>
 `;
 
-exports[`drawNode diffNode renders as expected when props.isUiFindMatch is true 1`] = `
-<Popover
-  classNames={
-    Object {
-      "root": "DiffNode--popover is-same",
-    }
-  }
-  content={
-    <table
-      className="DiffNode is-same"
-    >
-      <tbody
-        className="DiffNode--body"
-      >
-        <tr>
-          <td
-            className="DiffNode--metricCell is-same"
-            rowSpan={2}
-          >
-            100
-          </td>
-          <td
-            className="DiffNode--labelCell is-same"
-          >
-            <strong>
-              serviceName
-            </strong>
-            <CopyIcon
-              className="DiffNode--copyIcon"
-              copyText="serviceName operationName"
-              icon={<IoCopyOutline />}
-              placement="top"
-              tooltipTitle="Copy label"
-            />
-          </td>
-        </tr>
-        <tr>
-          <td
-            className="DiffNode--labelCell is-same"
-          >
-            operationName
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  }
-  mouseEnterDelay={0.25}
->
+exports[`drawNode diffNode renders correctly when isUiFindMatch is true (ignored prop) 1`] = `
+<div>
   <table
-    className="DiffNode is-same"
+    aria-describedby="test-id"
+    class="DiffNode is-same"
   >
     <tbody
-      className="DiffNode--body"
+      class="DiffNode--body"
     >
       <tr>
         <td
-          className="DiffNode--metricCell is-same"
-          rowSpan={2}
+          class="DiffNode--metricCell is-same"
+          rowspan="2"
         >
           100
         </td>
         <td
-          className="DiffNode--labelCell is-same"
+          class="DiffNode--labelCell is-same"
         >
           <strong>
             serviceName
           </strong>
-          <CopyIcon
-            className="DiffNode--copyIcon"
-            copyText="serviceName operationName"
-            icon={<IoCopyOutline />}
-            placement="top"
-            tooltipTitle="Copy label"
-          />
+          <button
+            aria-describedby="test-id"
+            class="ant-btn css-dev-only-do-not-override-18afz5u ant-btn-default ant-btn-color-default ant-btn-variant-outlined ant-btn-icon-only DiffNode--copyIcon CopyIcon"
+            type="button"
+          >
+            <span
+              class="ant-btn-icon"
+            >
+              <svg
+                fill="currentColor"
+                height="1em"
+                stroke="currentColor"
+                stroke-width="0"
+                viewBox="0 0 512 512"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  fill="none"
+                  height="336"
+                  rx="57"
+                  ry="57"
+                  stroke-linejoin="round"
+                  stroke-width="32"
+                  width="336"
+                  x="128"
+                  y="128"
+                />
+                <path
+                  d="m383.5 128 .5-24a56.16 56.16 0 0 0-56-56H112a64.19 64.19 0 0 0-64 64v216a56.16 56.16 0 0 0 56 56h24"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="32"
+                />
+              </svg>
+            </span>
+          </button>
         </td>
       </tr>
       <tr>
         <td
-          className="DiffNode--labelCell is-same"
+          class="DiffNode--labelCell is-same"
         >
           operationName
         </td>
       </tr>
     </tbody>
   </table>
-</Popover>
+</div>
 `;
