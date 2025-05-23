@@ -15,6 +15,7 @@
 import React from 'react';
 import { SpanReference } from '../../../types/trace';
 import { getUrl } from '.';
+import getConfig from '../../../utils/config/get-config';
 
 type ReferenceLinkProps = {
   reference: SpanReference;
@@ -37,7 +38,7 @@ export default function ReferenceLink(props: ReferenceLinkProps) {
   return (
     <a
       href={getUrl(reference.traceID, reference.spanID)}
-      target="_blank"
+      target={getConfig().forbidNewPage ? undefined : "_blank"}
       rel="noopener noreferrer"
       className={className}
       {...otherProps}

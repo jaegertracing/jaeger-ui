@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,32 +13,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createStore, applyMiddleware, compose } from 'redux';
-import { createBrowserHistory } from 'history';
+import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
 import { createReduxHistoryContext } from 'redux-first-history';
-import promiseMiddleware from 'redux-promise-middleware';
+import { createHistoryWithPolyfill } from './history-polyfill';
 
-import rootReducer from '../reducers';
-import traceDiffReducer from '../reducers/trace-diff';
-import middlewareCrtDependencies from '../middlewares';
-
-export const history = createBrowserHistory();
+import traceDiff from '../components/TraceDiff/duck';
+import archive from '../components/TracePage/ArchiveNotifier/duck';
+import traceTimeline from '../components/TracePage/TraceTimelineViewer/duck';
+import jaegerReducers from '../reducers';
+import * as jaegerMiddlewares from '../middlewares';
+import { getAppEnvironment } from './constants';
 
 const { createReduxHistory, routerMiddleware, routerReducer } = createReduxHistoryContext({
-  history,
+  history: createHistoryWithPolyfill(),
+  reduxTravelling: process.env.NODE_ENV === 'development',
+  savePreviousLocations: 1,
 });
 
-const middlewares = applyMiddleware(
-  routerMiddleware,
-  promiseMiddleware,
-  ...middlewareCrtDependencies()
-);
+export default function configureStore() {
+  return createStore(
+    combineReducers({
+      ...jaegerReducers,
+      archive,
+      traceDiff,
+      traceTimeline,
+      router: routerReducer,
+    }),
+    compose(
+      applyMiddleware(
+        ...Object.keys(jaegerMiddlewares)
+          .map(key => jaegerMiddlewares[key])
+          .filter(Boolean),
+        routerMiddleware
+      ),
+      getAppEnvironment() !== 'production' && window && window.__REDUX_DEVTOOLS_EXTENSION__
+        ? window.__REDUX_DEVTOOLS_EXTENSION__()
+        : noop => noop
+    )
+  );
+}
 
-const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-
-export const store = createStore(
-  rootReducer(routerReducer, traceDiffReducer),
-  composeEnhancers(middlewares)
-);
-
-export const reduxHistory = createReduxHistory(store);
+export const store = configureStore();
+export const history = createReduxHistory(store);

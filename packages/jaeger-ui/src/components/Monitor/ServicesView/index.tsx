@@ -41,7 +41,7 @@ import prefixUrl from '../../../utils/prefix-url';
 import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 
 import './index.css';
-import { getConfigValue } from '../../../utils/config/get-config';
+import getConfig, { getConfigValue } from '../../../utils/config/get-config';
 import {
   trackSearchOperation,
   trackSelectService,
@@ -279,7 +279,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
             message={
               <>
                 No data yet! Please see these
-                <Link to={{ pathname: this.docsLink }} target="_blank">
+                <Link to={{ pathname: this.docsLink }} target={getConfig().forbidNewPage ? undefined : "_blank"}>
                   &nbsp;instructions&nbsp;
                 </Link>
                 on how to set up your span metrics.

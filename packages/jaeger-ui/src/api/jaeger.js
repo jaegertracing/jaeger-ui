@@ -17,7 +17,7 @@ import dayjs from 'dayjs';
 import _duration from 'dayjs/plugin/duration';
 import queryString from 'query-string';
 
-import getConfig from '../utils/config/get-config';
+import getConfig, { getConfigValue } from '../utils/config/get-config';
 import prefixUrl from '../utils/prefix-url';
 
 dayjs.extend(_duration);
@@ -82,7 +82,7 @@ function getJSON(url, options = {}) {
 
 export const DEFAULT_API_ROOT = prefixUrl('/api/');
 export const ANALYTICS_ROOT = prefixUrl('/analytics/');
-export const QUALITY_METRICS_ROOT = prefixUrl(getConfig().qualityMetrics.apiEndpoint);
+export const QUALITY_METRICS_ROOT = prefixUrl(getConfigValue('qualityMetrics.apiEndpoint'));
 export const DEFAULT_DEPENDENCY_LOOKBACK = dayjs.duration(1, 'weeks').asMilliseconds();
 
 const JaegerAPI = {
