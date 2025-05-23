@@ -112,4 +112,3 @@ export default function calculateTraceDagEV(trace: Trace): TEv {
   const edges = mapFollowsFrom(ev.edges, nodes);
   return { ...ev, edges };
 }
-

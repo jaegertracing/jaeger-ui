@@ -52,27 +52,27 @@ describe('<OpNode>', () => {
     expect(container).toHaveTextContent('service1');
   });
 
-it('renders correctly in MODE_TIME', () => {
-  const { container } = render(<OpNode {...baseProps} mode={MODE_TIME} />);
-  expect(container.querySelector('.OpNode--mode-time')).toBeInTheDocument();
-  expect(container).toHaveTextContent('5 / 0');
-  expect(container).toHaveTextContent('200 ms (7.89 %)');
-  expect(container).toHaveTextContent('40 ms');
-  expect(container).toHaveTextContent('180 ms (90 %)');
-  expect(container).toHaveTextContent('op1');
-  expect(container).toHaveTextContent('service1');
-});
+  it('renders correctly in MODE_TIME', () => {
+    const { container } = render(<OpNode {...baseProps} mode={MODE_TIME} />);
+    expect(container.querySelector('.OpNode--mode-time')).toBeInTheDocument();
+    expect(container).toHaveTextContent('5 / 0');
+    expect(container).toHaveTextContent('200 ms (7.89 %)');
+    expect(container).toHaveTextContent('40 ms');
+    expect(container).toHaveTextContent('180 ms (90 %)');
+    expect(container).toHaveTextContent('op1');
+    expect(container).toHaveTextContent('service1');
+  });
 
-it('renders correctly in MODE_SELFTIME', () => {
-  const { container } = render(<OpNode {...baseProps} mode={MODE_SELFTIME} />);
-  expect(container.querySelector('.OpNode--mode-selftime')).toBeInTheDocument();
-  expect(container).toHaveTextContent('5 / 0');
-  expect(container).toHaveTextContent('200 ms (7.89 %)');
-  expect(container).toHaveTextContent('40 ms');
-  expect(container).toHaveTextContent('180 ms (90 %)');
-  expect(container).toHaveTextContent('op1');
-  expect(container).toHaveTextContent('service1');
-});
+  it('renders correctly in MODE_SELFTIME', () => {
+    const { container } = render(<OpNode {...baseProps} mode={MODE_SELFTIME} />);
+    expect(container.querySelector('.OpNode--mode-selftime')).toBeInTheDocument();
+    expect(container).toHaveTextContent('5 / 0');
+    expect(container).toHaveTextContent('200 ms (7.89 %)');
+    expect(container).toHaveTextContent('40 ms');
+    expect(container).toHaveTextContent('180 ms (90 %)');
+    expect(container).toHaveTextContent('op1');
+    expect(container).toHaveTextContent('service1');
+  });
 
   it('renders a copy icon with correct props', () => {
     const { container } = render(<OpNode {...baseProps} mode={MODE_SERVICE} />);
