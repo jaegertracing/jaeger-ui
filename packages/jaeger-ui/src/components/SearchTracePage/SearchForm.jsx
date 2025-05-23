@@ -260,7 +260,7 @@ export function submitForm(fields, searchTraces) {
 }
 
 export class SearchFormImpl extends React.PureComponent {
-  constructor(props) {
+  constructor(props = { invalid: false, services: [], submitting: false }) {
     super(props);
     this.state = {
       formData: {
@@ -607,12 +607,6 @@ SearchFormImpl.propTypes = {
       operations: PropTypes.arrayOf(PropTypes.string),
     })
   ),
-};
-
-SearchFormImpl.defaultProps = {
-  invalid: false,
-  services: [],
-  submitting: false,
 };
 
 export function mapStateToProps(state) {
