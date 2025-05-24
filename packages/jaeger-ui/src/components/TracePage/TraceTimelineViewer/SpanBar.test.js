@@ -73,7 +73,7 @@ describe('<SpanBar>', () => {
   };
 
   it('renders without exploding', () => {
-    render(<SpanBar {...props} />);
+    render(<SpanBar {...props} / data-testid="spanbar">);
     const labelElm = screen.getByText(shortLabel);
     expect(labelElm).toBeInTheDocument();
     expect(screen.queryByText(longLabel)).toBeNull();
@@ -87,7 +87,7 @@ describe('<SpanBar>', () => {
 
   it('log markers count', () => {
     // 3 log entries, two grouped together with the same timestamp
-    render(<SpanBar {...props} />);
+    render(<SpanBar {...props} / data-testid="spanbar">);
     expect(screen.getAllByTestId('SpanBar--logMarker').length).toEqual(2);
   });
 
@@ -103,7 +103,7 @@ describe('<SpanBar>', () => {
       ],
       getViewedBounds: () => ({ start: 0.1, end: 0.5 }),
     };
-    const wrapper = render(<SpanBar {...newProps} />);
+    const wrapper = render(<SpanBar {...newProps} / data-testid="spanbar">);
     expect(wrapper.getAllByTestId('SpanBar--criticalPath').length).toEqual(1);
   });
 
@@ -119,7 +119,7 @@ describe('<SpanBar>', () => {
       ],
       getViewedBounds: () => ({ start: 0.1, end: 0.5 }),
     };
-    render(<SpanBar {...newProps} />);
+    render(<SpanBar {...newProps} / data-testid="spanbar">);
 
     const criticalPathEl = screen.getByTestId('SpanBar--criticalPath');
     fireEvent.mouseEnter(criticalPathEl);

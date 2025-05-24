@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import transformTraceData from '../../../model/transform-trace-data';
 import calculateTraceDagEV from './calculateTraceDagEV';
@@ -26,25 +27,20 @@ const transformedTrace = transformTraceData(testTrace);
 const ev = calculateTraceDagEV(transformedTrace);
 
 describe('<TraceGraph>', () => {
-  let wrapper;
-
+  let rendered;
   beforeEach(() => {
-    const props = {
-      headerHeight: 60,
-      ev,
-    };
-    wrapper = shallow(<TraceGraph {...props} />);
+    rendered = render(<TraceGraph {...props} / data-testid="tracegraph">));
   });
 
   it('does not explode', () => {
     expect(wrapper).toBeDefined();
-    expect(wrapper.find('.TraceGraph--menu').length).toBe(1);
-    expect(wrapper.find('Button').length).toBe(3);
+    expect(screen.getAllByTestId('.TraceGraph--menu')).toHaveLength(1);
+    expect(screen.getAllByTestId('Button')).toHaveLength(3);
   });
 
   it('may show no traces', () => {
     const props = {};
-    wrapper = shallow(<TraceGraph {...props} />);
+    wrapper = shallow(<TraceGraph {...props} / data-testid="tracegraph">);
     expect(wrapper).toBeDefined();
     expect(wrapper.find('h1').text()).toBe('No trace found');
   });
@@ -52,13 +48,13 @@ describe('<TraceGraph>', () => {
   it('toggles nodeMode to time', () => {
     const mode = MODE_SERVICE;
     wrapper.setState({ mode });
-    wrapper.instance().toggleNodeMode(MODE_TIME);
+    // RTL doesn't access component instances - use assertions on rendered output instead.toggleNodeMode(MODE_TIME);
     const modeState = wrapper.state('mode');
     expect(modeState).toEqual(MODE_TIME);
   });
 
   it('validates button nodeMode change click', () => {
-    const toggleNodeMode = jest.spyOn(wrapper.instance(), 'toggleNodeMode');
+    const toggleNodeMode = jest.spyOn(// RTL doesn't access component instances - use assertions on rendered output instead, 'toggleNodeMode');
     const btnService = wrapper.find('.TraceGraph--btn-service');
     expect(btnService.length).toBe(1);
     btnService.simulate('click');
@@ -76,14 +72,14 @@ describe('<TraceGraph>', () => {
   it('shows help', () => {
     const showHelp = false;
     wrapper.setState({ showHelp });
-    wrapper.instance().showHelp();
+    // RTL doesn't access component instances - use assertions on rendered output instead.showHelp();
     expect(wrapper.state('showHelp')).toBe(true);
   });
 
   it('hides help', () => {
     const showHelp = true;
     wrapper.setState({ showHelp });
-    wrapper.instance().closeSidebar();
+    // RTL doesn't access component instances - use assertions on rendered output instead.closeSidebar();
     expect(wrapper.state('showHelp')).toBe(false);
   });
 

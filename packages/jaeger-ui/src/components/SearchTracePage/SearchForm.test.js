@@ -16,7 +16,8 @@
 jest.mock('store');
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import dayjs from 'dayjs';
 import queryString from 'query-string';
 import store from 'store';
@@ -387,15 +388,15 @@ describe('submitForm()', () => {
 });
 
 describe('<SearchForm>', () => {
-  let wrapper;
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<SearchForm {...defaultProps} />);
+    rendered = render(<SearchForm {...defaultProps} / data-testid="searchform">));
   });
 
   it('enables operations only when a service is selected', () => {
     let ops = wrapper.find('[placeholder="Select An Operation"]');
     expect(ops.prop('disabled')).toBe(true);
-    wrapper.instance().handleChange({ service: 'svcA' });
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleChange({ service: 'svcA' });
     ops = wrapper.find('[placeholder="Select An Operation"]');
     expect(ops.prop('disabled')).toBe(false);
   });
@@ -403,7 +404,7 @@ describe('<SearchForm>', () => {
   it('keeps operation disabled when no service selected', () => {
     let ops = wrapper.find('[placeholder="Select An Operation"]');
     expect(ops.prop('disabled')).toBe(true);
-    wrapper.instance().handleChange({ service: '' });
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleChange({ service: '' });
     ops = wrapper.find('[placeholder="Select An Operation"]');
     expect(ops.prop('disabled')).toBe(true);
   });
@@ -411,7 +412,7 @@ describe('<SearchForm>', () => {
   it('enables operation when unknown service selected', () => {
     let ops = wrapper.find('[placeholder="Select An Operation"]');
     expect(ops.prop('disabled')).toBe(true);
-    wrapper.instance().handleChange({ service: 'svcC' });
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleChange({ service: 'svcC' });
     ops = wrapper.find('[placeholder="Select An Operation"]');
     expect(ops.prop('disabled')).toBe(false);
   });
@@ -424,48 +425,48 @@ describe('<SearchForm>', () => {
       ];
     }
     expect(getDateFieldLengths(wrapper)).toEqual([0, 0]);
-    wrapper = shallow(<SearchForm {...defaultProps} />);
-    wrapper.instance().handleChange({ lookback: 'custom' });
+    wrapper = shallow(<SearchForm {...defaultProps} / data-testid="searchform">);
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleChange({ lookback: 'custom' });
     expect(getDateFieldLengths(wrapper)).toEqual([1, 1]);
   });
 
   it('disables the submit button when a service is not selected', () => {
     let btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeTruthy();
-    wrapper = shallow(<SearchForm {...defaultProps} />);
-    wrapper.instance().handleChange({ service: 'svcA' });
+    wrapper = shallow(<SearchForm {...defaultProps} / data-testid="searchform">);
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleChange({ service: 'svcA' });
     btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeFalsy();
   });
 
   it('disables the submit button when the form has invalid data', () => {
-    wrapper = shallow(<SearchForm {...defaultProps} />);
-    wrapper.instance().handleChange({ service: 'svcA' });
+    wrapper = shallow(<SearchForm {...defaultProps} / data-testid="searchform">);
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleChange({ service: 'svcA' });
     let btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     // If this test fails on the following expect statement, this may be a false negative caused by a separate
     // regression.
     expect(btn.prop('disabled')).toBeFalsy();
-    wrapper.setProps({ invalid: true });
+    rendered = render({ invalid: true });
     btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(btn.prop('disabled')).toBeTruthy();
   });
 
   it('disables the submit button when duration is invalid', () => {
-    wrapper = shallow(<SearchForm {...defaultProps} />);
-    wrapper.instance().handleChange({ service: 'svcA' });
-    wrapper.instance().handleChange({ minDuration: '1ms' });
+    wrapper = shallow(<SearchForm {...defaultProps} / data-testid="searchform">);
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleChange({ service: 'svcA' });
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleChange({ minDuration: '1ms' });
     let btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     let invalidDuration =
-      validateDurationFields(wrapper.state().formData.minDuration) ||
-      validateDurationFields(wrapper.state().formData.maxDuration);
+      validateDurationFields(// RTL doesn't access component state directly - use assertions on rendered output instead.formData.minDuration) ||
+      validateDurationFields(// RTL doesn't access component state directly - use assertions on rendered output instead.formData.maxDuration);
     expect(invalidDuration).not.toBeDefined();
     expect(btn.prop('disabled')).toBeFalsy();
 
-    wrapper.instance().handleChange({ minDuration: '1kg' });
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleChange({ minDuration: '1kg' });
     btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
     invalidDuration =
-      validateDurationFields(wrapper.state().formData.minDuration) ||
-      validateDurationFields(wrapper.state().formData.maxDuration);
+      validateDurationFields(// RTL doesn't access component state directly - use assertions on rendered output instead.formData.minDuration) ||
+      validateDurationFields(// RTL doesn't access component state directly - use assertions on rendered output instead.formData.maxDuration);
     expect(invalidDuration).toBeDefined();
     expect(btn.prop('disabled')).toBeTruthy();
   });
@@ -479,8 +480,8 @@ describe('<SearchForm>', () => {
       },
     };
     window.getJaegerUiConfig = jest.fn(() => config);
-    wrapper = shallow(<SearchForm {...defaultProps} />);
-    wrapper.instance().handleChange({ service: 'svcA' });
+    wrapper = shallow(<SearchForm {...defaultProps} / data-testid="searchform">);
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleChange({ service: 'svcA' });
     const field = wrapper.find(`Input[name="resultsLimit"]`);
     expect(field.prop('max')).toEqual(maxLimit);
   });
@@ -551,31 +552,26 @@ describe('<SearchForm>', () => {
 });
 
 describe('submitFormHandler', () => {
-  let wrapper;
-  let submitFormHandler;
-  let preventDefault;
-
+  let rendered;
   beforeEach(() => {
-    submitFormHandler = sinon.spy();
-    preventDefault = sinon.spy();
-    wrapper = shallow(
+    rendered = render(
       <SearchForm
         {...defaultProps}
         submitFormHandler={submitFormHandler}
         initialValues={{ service: 'svcA' }}
-      />
-    );
+      / data-testid="searchform">
+    ));
   });
 
   it('calls submitFormHandler with formData on form submit', () => {
     const formData = wrapper.state('formData');
-    wrapper.instance().handleSubmit({ preventDefault });
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleSubmit({ preventDefault });
     expect(preventDefault.calledOnce).toBe(true);
     expect(submitFormHandler.calledOnceWith(formData)).toBe(true);
   });
 
   it('prevents default form submission behavior', () => {
-    wrapper.instance().handleSubmit({ preventDefault });
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleSubmit({ preventDefault });
     expect(preventDefault.calledOnce).toBe(true);
   });
 });

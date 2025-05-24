@@ -26,7 +26,7 @@ describe('<TimelineCollapser>', () => {
       onExpandAll: () => {},
       onExpandOne: () => {},
     };
-    const { container } = render(<TimelineCollapser {...props} />);
+    const { container } = render(<TimelineCollapser {...props} / data-testid="timelinecollapser">);
     expect(container).toBeDefined();
   });
 });

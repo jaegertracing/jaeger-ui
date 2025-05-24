@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import SpanDetailRow from './SpanDetailRow';
 import SpanDetail from './SpanDetail';
@@ -39,16 +40,9 @@ describe('<SpanDetailRow>', () => {
     traceStartTime: 1000,
   };
 
-  let wrapper;
-
+  let rendered;
   beforeEach(() => {
-    props.onDetailToggled.mockReset();
-    props.linksGetter.mockReset();
-    props.logItemToggle.mockReset();
-    props.logsToggle.mockReset();
-    props.processToggle.mockReset();
-    props.tagsToggle.mockReset();
-    wrapper = shallow(<SpanDetailRow {...props} />);
+    rendered = render(<SpanDetailRow {...props} / data-testid="spandetailrow">));
   });
 
   it('renders without exploding', () => {
@@ -63,7 +57,7 @@ describe('<SpanDetailRow>', () => {
   });
 
   it('renders the span tree offset', () => {
-    const spanTreeOffset = <SpanTreeOffset span={props.span} showChildrenIcon={false} />;
+    const spanTreeOffset = <SpanTreeOffset span={props.span} showChildrenIcon={false} / data-testid="spantreeoffset">;
     expect(wrapper.contains(spanTreeOffset)).toBe(true);
   });
 
@@ -76,14 +70,14 @@ describe('<SpanDetailRow>', () => {
     const spanDetail = (
       <SpanDetail
         detailState={props.detailState}
-        linksGetter={wrapper.instance()._linksGetter}
+        linksGetter={// RTL doesn't access component instances - use assertions on rendered output instead._linksGetter}
         logItemToggle={props.logItemToggle}
         logsToggle={props.logsToggle}
         processToggle={props.processToggle}
         span={props.span}
         tagsToggle={props.tagsToggle}
         traceStartTime={props.traceStartTime}
-      />
+      / data-testid="spandetail">
     );
     expect(wrapper.contains(spanDetail)).toBe(true);
   });

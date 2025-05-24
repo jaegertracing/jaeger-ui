@@ -13,14 +13,15 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 
 import Graph, { setOnEdgesContainer, setOnVectorBorderContainerWithViewModifiers } from './index';
 
 import { EViewModifier } from '../../../model/ddg/types';
 
-describe('<Graph />', () => {
+describe('<Graph / data-testid="graph">', () => {
   const vertices = [...new Array(10)].map((_, i) => ({ key: `key${i}` }));
   const edges = [
     {
@@ -48,24 +49,22 @@ describe('<Graph />', () => {
   });
 
   describe('render', () => {
-    let wrapper;
-    let plexusGraph;
-
-    beforeEach(() => {
-      wrapper = shallow(<Graph {...props} />);
+    let rendered;
+  beforeEach(() => {
+    rendered = render(<Graph {...props} / data-testid="graph">);
       plexusGraph = wrapper.find(Digraph);
     });
 
     it('renders provided edges and vertices', () => {
       expect(plexusGraph.prop('edges')).toEqual(edges);
       expect(plexusGraph.prop('vertices')).toEqual(vertices);
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('de-emphasizes non-matching edges iff edgeVMs are present', () => {
       expect(plexusGraph.prop('layers')[3].setOnContainer).toBe(setOnEdgesContainer.withoutViewModifiers);
 
-      wrapper.setProps({ edgesViewModifiers: new Map([[0, EViewModifier.Emphasized]]) });
+      rendered = render({ edgesViewModifiers: new Map([[0, EViewModifier.Emphasized]]) });
       plexusGraph = wrapper.find(Digraph);
       expect(plexusGraph.prop('layers')[3].setOnContainer).toBe(setOnEdgesContainer.withViewModifiers);
     });
@@ -75,7 +74,7 @@ describe('<Graph />', () => {
         Digraph.propsFactories.scaleStrokeOpacityStrongest
       );
 
-      wrapper.setProps({ verticesViewModifiers: new Map([[0, EViewModifier.Emphasized]]) });
+      rendered = render({ verticesViewModifiers: new Map([[0, EViewModifier.Emphasized]]) });
       plexusGraph = wrapper.find(Digraph);
       expect(plexusGraph.prop('layers')[2].setOnContainer).toBe(setOnVectorBorderContainerWithViewModifiers);
     });
@@ -83,8 +82,8 @@ describe('<Graph />', () => {
 
   describe('clean up', () => {
     it('stops LayoutManager before unmounting', () => {
-      const wrapper = shallow(<Graph {...props} />);
-      const stopAndReleaseSpy = jest.spyOn(wrapper.instance().layoutManager, 'stopAndRelease');
+      const { container } = render(<Graph {...props} / data-testid="graph">);
+      const stopAndReleaseSpy = jest.spyOn(// RTL doesn't access component instances - use assertions on rendered output instead.layoutManager, 'stopAndRelease');
       wrapper.unmount();
       expect(stopAndReleaseSpy).toHaveBeenCalledTimes(1);
     });

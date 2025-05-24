@@ -36,7 +36,7 @@ describe('<MonitorATMEmptyState>', () => {
       },
     });
 
-    render(<MonitorATMEmptyState />);
+    render(<MonitorATMEmptyState / data-testid="monitoratmemptystate">);
   });
 
   it('renders the title', () => {

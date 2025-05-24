@@ -21,7 +21,8 @@ jest.mock('./calc-positioning', () => () => ({
 
 /* eslint-disable import/first */
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import {
   getNodeRenderer,
@@ -63,16 +64,9 @@ describe('<DdgNodeContent>', () => {
     vertexKey,
   };
 
-  let wrapper;
-
+  let rendered;
   beforeEach(() => {
-    props.getDecoration.mockClear();
-    props.getGenerationVisibility.mockReturnValue(null).mockClear();
-    props.getVisiblePathElems.mockReset();
-    props.selectVertex.mockReset();
-    props.setViewModifier.mockReset();
-    props.updateGenerationVisibility.mockReset();
-    wrapper = shallow(<DdgNodeContent {...props} />);
+    rendered = render(<DdgNodeContent {...props} / data-testid="ddgnodecontent">));
   });
 
   it('does not explode', () => {
@@ -80,59 +74,59 @@ describe('<DdgNodeContent>', () => {
   });
 
   it('omits the operation if it is null', () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper.setProps({ operation: null });
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
+    rendered = render({ operation: null });
+    expect(container).toMatchSnapshot();
   });
 
   it('renders the number of operations if there are multiple', () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper.setProps({ operation: operationArray });
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
+    rendered = render({ operation: operationArray });
+    expect(container).toMatchSnapshot();
   });
 
   it('renders correctly when isFocalNode = true and focalNodeUrl = null', () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper.setProps({ focalNodeUrl: null, isFocalNode: true });
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
+    rendered = render({ focalNodeUrl: null, isFocalNode: true });
+    expect(container).toMatchSnapshot();
   });
 
   it('renders correctly when given decorationProgressbar', () => {
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
 
     const decorationProgressbar = <span>Test progressbar</span>;
-    wrapper.setProps({ decorationProgressbar, decorationValue });
-    expect(wrapper).toMatchSnapshot();
+    rendered = render({ decorationProgressbar, decorationValue });
+    expect(container).toMatchSnapshot();
   });
 
   it('renders correctly when decorationValue is a string', () => {
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
 
-    wrapper.setProps({ decorationValue: 'Error: Status Code 418' });
-    expect(wrapper).toMatchSnapshot();
+    rendered = render({ decorationValue: 'Error: Status Code 418' });
+    expect(container).toMatchSnapshot();
   });
 
   describe('getDecoration', () => {
     it('gets decoration on mount or change of props.decorationID iff props.decorationID is truthy', () => {
       expect(props.getDecoration).not.toHaveBeenCalled();
 
-      wrapper.setProps({ decorationID });
+      rendered = render({ decorationID });
       expect(props.getDecoration).toHaveBeenCalledTimes(1);
       expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, operation);
 
-      wrapper.setProps({ decorationID });
+      rendered = render({ decorationID });
       expect(props.getDecoration).toHaveBeenCalledTimes(1);
 
       const newDecorationID = `new ${decorationID}`;
-      wrapper.setProps({ decorationID: newDecorationID });
+      rendered = render({ decorationID: newDecorationID });
       expect(props.getDecoration).toHaveBeenCalledTimes(2);
       expect(props.getDecoration).toHaveBeenLastCalledWith(newDecorationID, service, operation);
 
-      wrapper.setProps({ decorationID, operation: operationArray });
+      rendered = render({ decorationID, operation: operationArray });
       expect(props.getDecoration).toHaveBeenCalledTimes(3);
       expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, undefined);
 
-      shallow(<DdgNodeContent {...props} decorationID={decorationID} />);
+      shallow(<DdgNodeContent {...props} decorationID={decorationID} / data-testid="ddgnodecontent">);
       expect(props.getDecoration).toHaveBeenCalledTimes(4);
       expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, operation);
     });
@@ -142,11 +136,11 @@ describe('<DdgNodeContent>', () => {
     it('calls props.selectVertex iff props.decorationValue is truthy', () => {
       expect(props.selectVertex).not.toHaveBeenCalled();
 
-      wrapper.find('.DdgNodeContent--core').simulate('click');
+      userEvent.click(screen.getByTestId('.DdgNodeContent--core'));
       expect(props.selectVertex).not.toHaveBeenCalled();
 
-      wrapper.setProps({ decorationValue });
-      wrapper.find('.DdgNodeContent--core').simulate('click');
+      rendered = render({ decorationValue });
+      userEvent.click(screen.getByTestId('.DdgNodeContent--core'));
       expect(props.selectVertex).toHaveBeenCalledTimes(1);
       expect(props.selectVertex).toHaveBeenLastCalledWith(props.vertex);
     });
@@ -203,14 +197,14 @@ describe('<DdgNodeContent>', () => {
       wrapper.unmount();
       expect(props.setViewModifier).toHaveBeenCalledTimes(0);
 
-      wrapper = shallow(<DdgNodeContent {...props} />);
+      wrapper = shallow(<DdgNodeContent {...props} / data-testid="ddgnodecontent">);
       wrapper.simulate('mouseover', { type: 'mouseover' });
       wrapper.simulate('mouseout', { type: 'mouseout' });
       expect(props.setViewModifier).toHaveBeenCalledTimes(2);
       wrapper.unmount();
       expect(props.setViewModifier).toHaveBeenCalledTimes(2);
 
-      wrapper = shallow(<DdgNodeContent {...props} />);
+      wrapper = shallow(<DdgNodeContent {...props} / data-testid="ddgnodecontent">);
       wrapper.simulate('mouseover', { type: 'mouseover' });
       expect(props.setViewModifier).toHaveBeenCalledTimes(3);
       wrapper.unmount();
@@ -226,7 +220,7 @@ describe('<DdgNodeContent>', () => {
       );
       wrapper.simulate('mouseover', { type: 'mouseover' });
 
-      expect(wrapper.state()).toEqual({
+      expect(// RTL doesn't access component state directly - use assertions on rendered output instead).toEqual({
         childrenVisibility,
         parentVisibility,
       });
@@ -236,7 +230,7 @@ describe('<DdgNodeContent>', () => {
       props.getVisiblePathElems.mockReturnValue(undefined);
       wrapper.simulate('mouseover', { type: 'mouseover' });
 
-      expect(wrapper.state()).toEqual({
+      expect(// RTL doesn't access component state directly - use assertions on rendered output instead).toEqual({
         childrenVisibility: null,
         parentVisibility: null,
       });
@@ -245,9 +239,9 @@ describe('<DdgNodeContent>', () => {
 
     it('clears hoveredIndices on mouse out', () => {
       wrapper.simulate('mouseover', { type: 'mouseover' });
-      expect(wrapper.instance().hoveredIndices).not.toEqual(new Set());
+      expect(// RTL doesn't access component instances - use assertions on rendered output instead.hoveredIndices).not.toEqual(new Set());
       wrapper.simulate('mouseout', { type: 'mouseout' });
-      expect(wrapper.instance().hoveredIndices).toEqual(new Set());
+      expect(// RTL doesn't access component instances - use assertions on rendered output instead.hoveredIndices).toEqual(new Set());
     });
   });
 
@@ -260,7 +254,7 @@ describe('<DdgNodeContent>', () => {
     };
     const noOp = () => {};
 
-    it('returns a <DdgNodeContent />', () => {
+    it('returns a <DdgNodeContent / data-testid="ddgnodecontent">', () => {
       const ddgNode = getNodeRenderer(noOp, noOp, EDdgDensity.PreventPathEntanglement, true, 'testBaseUrl', {
         maxDuration: '100ms',
       })(ddgVertex);
@@ -268,7 +262,7 @@ describe('<DdgNodeContent>', () => {
       expect(ddgNode.props).toMatchSnapshot();
     });
 
-    it('returns a focal <DdgNodeContent />', () => {
+    it('returns a focal <DdgNodeContent / data-testid="ddgnodecontent">', () => {
       const focalNode = getNodeRenderer(
         noOp,
         noOp
@@ -303,14 +297,14 @@ describe('<DdgNodeContent>', () => {
 
     describe('focusPaths', () => {
       it('calls focusPathsThroughVertex with vertexKey', () => {
-        wrapper.instance().focusPaths();
+        // RTL doesn't access component instances - use assertions on rendered output instead.focusPaths();
         expect(props.focusPathsThroughVertex).toHaveBeenCalledWith(vertexKey);
       });
     });
 
     describe('hideVertex', () => {
       it('calls hideVertex with vertexKey', () => {
-        wrapper.instance().hideVertex();
+        // RTL doesn't access component instances - use assertions on rendered output instead.hideVertex();
         expect(props.hideVertex).toHaveBeenCalledWith(vertexKey);
       });
     });
@@ -318,7 +312,7 @@ describe('<DdgNodeContent>', () => {
     describe('setOperation', () => {
       it('calls setOperation with the provided operation and tracks the event', () => {
         const newOperation = 'new-operation';
-        wrapper.instance().setOperation(newOperation);
+        // RTL doesn't access component instances - use assertions on rendered output instead.setOperation(newOperation);
         expect(props.setOperation).toHaveBeenCalledWith(newOperation);
         expect(track.trackVertexSetOperation).toHaveBeenCalled();
       });
@@ -326,14 +320,14 @@ describe('<DdgNodeContent>', () => {
 
     describe('updateChildren', () => {
       it('calls updateGenerationVisibility with vertexKey and Downstream direction', () => {
-        wrapper.instance().updateChildren();
+        // RTL doesn't access component instances - use assertions on rendered output instead.updateChildren();
         expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Downstream);
       });
     });
 
     describe('updateParents', () => {
       it('calls updateGenerationVisibility with vertexKey and Upstream direction', () => {
-        wrapper.instance().updateParents();
+        // RTL doesn't access component instances - use assertions on rendered output instead.updateParents();
         expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Upstream);
       });
     });
@@ -353,7 +347,7 @@ describe('<DdgNodeContent>', () => {
 
       it('opens search URL with trace IDs and tracks the event', () => {
         const windowSpy = jest.spyOn(window, 'open').mockImplementation();
-        wrapper.instance().viewTraces();
+        // RTL doesn't access component instances - use assertions on rendered output instead.viewTraces();
 
         expect(track.trackViewTraces).toHaveBeenCalled();
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({ traceID: mockTraceIds });
@@ -364,7 +358,7 @@ describe('<DdgNodeContent>', () => {
       it('handles case when getVisiblePathElems returns undefined', () => {
         props.getVisiblePathElems.mockReturnValue(undefined);
         const windowSpy = jest.spyOn(window, 'open').mockImplementation();
-        wrapper.instance().viewTraces();
+        // RTL doesn't access component instances - use assertions on rendered output instead.viewTraces();
 
         expect(track.trackViewTraces).toHaveBeenCalled();
         expect(getSearchUrl.getUrl).not.toHaveBeenCalled();
@@ -384,7 +378,7 @@ describe('<DdgNodeContent>', () => {
         props.getVisiblePathElems.mockReturnValue(mockElems);
 
         const windowSpy = jest.spyOn(window, 'open').mockImplementation();
-        wrapper.instance().viewTraces();
+        // RTL doesn't access component instances - use assertions on rendered output instead.viewTraces();
 
         const expectedTraceIds = mockElems.slice(0, MAX_LINKED_TRACES).map(elem => elem.memberOf.traceIDs[0]);
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
@@ -405,7 +399,7 @@ describe('<DdgNodeContent>', () => {
         props.getVisiblePathElems.mockReturnValue(mockElems);
 
         const windowSpy = jest.spyOn(window, 'open').mockImplementation();
-        wrapper.instance().viewTraces();
+        // RTL doesn't access component instances - use assertions on rendered output instead.viewTraces();
 
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
           traceID: [longTraceId],
@@ -424,7 +418,7 @@ describe('<DdgNodeContent>', () => {
         props.getVisiblePathElems.mockReturnValue(mockElems);
 
         const windowSpy = jest.spyOn(window, 'open').mockImplementation();
-        wrapper.instance().viewTraces();
+        // RTL doesn't access component instances - use assertions on rendered output instead.viewTraces();
 
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
           traceID: [traceId],

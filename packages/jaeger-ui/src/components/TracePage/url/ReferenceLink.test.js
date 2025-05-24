@@ -38,12 +38,12 @@ describe(ReferenceLink, () => {
 
   describe('rendering', () => {
     it('render for this trace', () => {
-      render(<ReferenceLink reference={sameTraceRef} focusSpan={focusMock} />);
+      render(<ReferenceLink reference={sameTraceRef} focusSpan={focusMock} / data-testid="referencelink">);
       expect(screen.getAllByRole('button').length).toBe(1);
     });
 
     it('render for external trace', () => {
-      render(<ReferenceLink reference={externalRef} focusSpan={focusMock} />);
+      render(<ReferenceLink reference={externalRef} focusSpan={focusMock} / data-testid="referencelink">);
       expect(screen.getByRole('link')).toHaveAttribute('href', '/trace/trace2?uiFind=span2');
     });
   });
@@ -51,7 +51,7 @@ describe(ReferenceLink, () => {
   describe('focus span', () => {
     it('call focusSpan', () => {
       focusMock.mockReset();
-      render(<ReferenceLink reference={sameTraceRef} focusSpan={focusMock} />);
+      render(<ReferenceLink reference={sameTraceRef} focusSpan={focusMock} / data-testid="referencelink">);
 
       fireEvent.click(screen.getByRole('button'));
       expect(focusMock).toHaveBeenLastCalledWith('span1');

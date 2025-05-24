@@ -65,7 +65,7 @@ describe('<ServiceGraph>', () => {
   afterEach(cleanup);
 
   it('renders loading indicator when loading', () => {
-    const { container } = render(<ServiceGraph {...defaultProps} />);
+    const { container } = render(<ServiceGraph {...defaultProps} / data-testid="servicegraph">);
     const loadingIndicator = container.querySelector('svg.LoadingIndicator');
     expect(loadingIndicator).toBeInTheDocument();
     expect(loadingIndicator).toHaveClass('is-centered');
@@ -74,19 +74,19 @@ describe('<ServiceGraph>', () => {
 
   it('renders loading indicator when xDomain is empty or undefined', () => {
     cleanup();
-    const { container: container1 } = render(<ServiceGraph {...defaultProps} xDomain={[]} loading={false} />);
+    const { container: container1 } = render(<ServiceGraph {...defaultProps} xDomain={[]} loading={false} / data-testid="servicegraph">);
     expect(container1.querySelector('svg.LoadingIndicator')).toBeInTheDocument();
 
     cleanup();
     const { container: container2 } = render(
-      <ServiceGraph {...defaultProps} xDomain={[undefined, undefined]} loading={false} />
+      <ServiceGraph {...defaultProps} xDomain={[undefined, undefined]} loading={false} / data-testid="servicegraph">
     );
     expect(container2.querySelector('svg.LoadingIndicator')).toBeInTheDocument();
   });
 
   it('renders "No Data" when no metrics data is available', () => {
     cleanup();
-    const { container } = render(<ServiceGraph {...defaultProps} loading={false} />);
+    const { container } = render(<ServiceGraph {...defaultProps} loading={false} / data-testid="servicegraph">);
     const placeholder = container.querySelector('.center-placeholder');
     expect(placeholder).toHaveTextContent('No Data');
   });
@@ -94,7 +94,7 @@ describe('<ServiceGraph>', () => {
   it('renders error message when there is an error', () => {
     cleanup();
     const { container } = render(
-      <ServiceGraph {...defaultProps} loading={false} error={new Error('API Error')} />
+      <ServiceGraph {...defaultProps} loading={false} error={new Error('API Error')} / data-testid="servicegraph">
     );
     const placeholder = container.querySelector('.center-placeholder');
     expect(placeholder).toHaveTextContent('Could not fetch data');
@@ -103,7 +103,7 @@ describe('<ServiceGraph>', () => {
   it('renders base graph with data', () => {
     cleanup();
     const { container } = render(
-      <ServiceGraph {...defaultProps} loading={false} metricsData={serviceMetrics.service_call_rate} />
+      <ServiceGraph {...defaultProps} loading={false} metricsData={serviceMetrics.service_call_rate} / data-testid="servicegraph">
     );
     expect(container.querySelector('[data-testid="service-graph"]')).toHaveClass('graph-container');
   });
@@ -115,7 +115,7 @@ describe('<ServiceGraph>', () => {
       { ...serviceMetrics.service_call_rate, quantile: 0.95 },
     ];
     const { container } = render(
-      <ServiceGraph {...defaultProps} loading={false} metricsData={metricsData} showLegend />
+      <ServiceGraph {...defaultProps} loading={false} metricsData={metricsData} showLegend / data-testid="servicegraph">
     );
     expect(container.querySelector('[data-testid="service-graph"]')).toHaveClass('graph-container');
   });
@@ -128,7 +128,7 @@ describe('<ServiceGraph>', () => {
         loading={false}
         metricsData={serviceMetrics.service_call_rate}
         showHorizontalLines
-      />
+      / data-testid="servicegraph">
     );
     expect(container.querySelector('[data-testid="service-graph"]')).toHaveClass('graph-container');
   });
@@ -141,7 +141,7 @@ describe('<ServiceGraph>', () => {
         loading={false}
         metricsData={serviceMetrics.service_call_rate}
         color="AAAAAA"
-      />
+      / data-testid="servicegraph">
     );
     expect(container.querySelector('[data-testid="service-graph"]')).toHaveClass('graph-container');
   });
@@ -154,13 +154,13 @@ describe('<ServiceGraph>', () => {
     ];
 
     const { container } = render(
-      <ServiceGraph {...defaultProps} loading={false} metricsData={metricsData} />
+      <ServiceGraph {...defaultProps} loading={false} metricsData={metricsData} / data-testid="servicegraph">
     );
     expect(container.querySelector('[data-testid="service-graph"]')).toHaveClass('graph-container');
   });
 
   it('handles edge cases in data rendering', () => {
-    const { container } = render(<ServiceGraph {...defaultProps} loading={false} metricsData={null} />);
+    const { container } = render(<ServiceGraph {...defaultProps} loading={false} metricsData={null} / data-testid="servicegraph">);
     const placeholder = container.querySelector('.center-placeholder');
     expect(placeholder).toHaveTextContent('No Data');
 
@@ -173,7 +173,7 @@ describe('<ServiceGraph>', () => {
       ],
     };
     const { container: container2 } = render(
-      <ServiceGraph {...defaultProps} loading={false} metricsData={metricsWithNull} />
+      <ServiceGraph {...defaultProps} loading={false} metricsData={metricsWithNull} / data-testid="servicegraph">
     );
     expect(container2.querySelector('[data-testid="service-graph"]')).toHaveClass('graph-container');
 
@@ -186,7 +186,7 @@ describe('<ServiceGraph>', () => {
       ],
     };
     const { container: container3 } = render(
-      <ServiceGraph {...defaultProps} loading={false} metricsData={metricsWithExtremes} />
+      <ServiceGraph {...defaultProps} loading={false} metricsData={metricsWithExtremes} / data-testid="servicegraph">
     );
     expect(container3.querySelector('[data-testid="service-graph"]')).toHaveClass('graph-container');
   });
@@ -200,7 +200,7 @@ describe('<ServiceGraph>', () => {
         loading={false}
         metricsData={serviceMetrics.service_call_rate}
         name="Error rate"
-      />
+      / data-testid="servicegraph">
     );
     expect(container1.querySelector('h3')).toHaveTextContent('Error rate');
 
@@ -210,7 +210,7 @@ describe('<ServiceGraph>', () => {
         {...defaultProps}
         loading={false}
         metricsData={serviceMetrics.service_call_rate}
-        yAxisTickFormat={v => Math.round(v)}
+        yAxisTickFormat={v = data-testid="servicegraph"> Math.round(v)}
       />
     );
     expect(container2.querySelector('[data-testid="service-graph"]')).toHaveClass('graph-container');
@@ -241,7 +241,7 @@ describe('<ServiceGraph>', () => {
   it('handles undefined xDomain values', () => {
     cleanup();
     const { container } = render(
-      <ServiceGraph {...defaultProps} loading={false} xDomain={[undefined, undefined]} />
+      <ServiceGraph {...defaultProps} loading={false} xDomain={[undefined, undefined]} / data-testid="servicegraph">
     );
     const loadingIndicator = container.querySelector('svg.LoadingIndicator');
     expect(loadingIndicator).toBeInTheDocument();
@@ -254,7 +254,7 @@ describe('<ServiceGraph>', () => {
       metricPoints: [],
     };
     const { container } = render(
-      <ServiceGraph {...defaultProps} loading={false} metricsData={emptyMetrics} />
+      <ServiceGraph {...defaultProps} loading={false} metricsData={emptyMetrics} / data-testid="servicegraph">
     );
     expect(container.querySelector('[data-testid="service-graph"]')).toHaveClass('graph-container');
   });
@@ -266,7 +266,7 @@ describe('<ServiceGraph>', () => {
       metricPoints: undefined,
     };
     const { container } = render(
-      <ServiceGraph {...defaultProps} loading={false} metricsData={metricsWithoutPoints} />
+      <ServiceGraph {...defaultProps} loading={false} metricsData={metricsWithoutPoints} / data-testid="servicegraph">
     );
     expect(container.querySelector('[data-testid="service-graph"]')).toHaveClass('graph-container');
   });
@@ -279,7 +279,7 @@ describe('<ServiceGraph>', () => {
         loading={false}
         metricsData={serviceMetrics.service_call_rate}
         showLegend
-      />
+      / data-testid="servicegraph">
     );
     const graph = container.querySelector('[data-testid="service-graph"]');
     expect(graph).toBeInTheDocument();
@@ -324,7 +324,7 @@ describe('<ServiceGraph>', () => {
         loading={false}
         metricsData={serviceMetrics.service_call_rate}
         showLegend
-      />
+      / data-testid="servicegraph">
     );
     const graph = container.querySelector('[data-testid="service-graph"]');
     expect(graph).toBeInTheDocument();
@@ -457,7 +457,7 @@ describe('Placeholder component', () => {
   it('renders with all props', () => {
     cleanup();
     const { container } = render(
-      <Placeholder name="Test" width={300} height={200} marginClassName="test-margin">
+      <Placeholder name="Test" width={300} height={200} marginClassName="test-margin" data-testid="placeholder">
         <div>Test content</div>
       </Placeholder>
     );
@@ -469,7 +469,7 @@ describe('Placeholder component', () => {
   it('renders without optional marginClassName', () => {
     cleanup();
     const { container } = render(
-      <Placeholder name="Test" width={300} height={200}>
+      <Placeholder name="Test" width={300} height={200} data-testid="placeholder">
         <div>Test content</div>
       </Placeholder>
     );

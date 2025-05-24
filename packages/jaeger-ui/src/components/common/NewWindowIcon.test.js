@@ -22,18 +22,18 @@ describe('NewWindowIcon', () => {
     notIsLarge: 'not is large',
   };
   it('renders without is-large className when props.isLarge is false', () => {
-    const { container } = render(<NewWindowIcon {...props} />);
+    const { container } = render(<NewWindowIcon {...props} / data-testid="newwindowicon">);
     expect(container.querySelector('.is-large')).toBeNull();
   });
 
   it('adds is-large className when props.isLarge is true', () => {
-    const { rerender, container } = render(<NewWindowIcon {...props} />);
+    const { rerender, container } = render(<NewWindowIcon {...props} / data-testid="newwindowicon">);
 
     // Initial render, is-large should be false
     expect(container.querySelector('.is-large')).toBeNull();
 
     // Re-render with isLarge prop set to true
-    rerender(<NewWindowIcon {...props} isLarge />);
+    rerender(<NewWindowIcon {...props} isLarge / data-testid="newwindowicon">);
 
     // After re-render, is-large should be true
     expect(container.querySelector('.is-large')).toBeInTheDocument();

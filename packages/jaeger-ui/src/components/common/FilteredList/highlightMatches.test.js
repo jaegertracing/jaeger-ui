@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import highlightMatches from './highlightMatches';
 
@@ -59,8 +60,8 @@ describe('highlightMatches(query, text)', () => {
   tests.forEach(info => {
     const { message, query, text } = info;
     it(message, () => {
-      const wrapper = shallow(<span>{highlightMatches(query, text)}</span>);
-      expect(wrapper).toMatchSnapshot();
+      const { container } = render(<span>{highlightMatches(query, text)}</span>);
+      expect(container).toMatchSnapshot();
     });
   });
 

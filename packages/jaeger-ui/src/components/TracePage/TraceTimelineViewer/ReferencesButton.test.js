@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Dropdown, Tooltip } from 'antd';
 
 import ReferencesButton from './ReferencesButton';
@@ -48,7 +49,7 @@ describe(ReferencesButton, () => {
 
   it('renders single reference', () => {
     const props = { ...baseProps, references: oneReference };
-    const wrapper = shallow(<ReferencesButton {...props} />);
+    const { container } = render(<ReferencesButton {...props} / data-testid="referencesbutton">);
     const dropdown = wrapper.find(Dropdown);
     const refLink = wrapper.find(ReferenceLink);
     const tooltip = wrapper.find(Tooltip);
@@ -63,7 +64,7 @@ describe(ReferencesButton, () => {
 
   it('renders multiple references', () => {
     const props = { ...baseProps, references: moreReferences };
-    const wrapper = shallow(<ReferencesButton {...props} />);
+    const { container } = render(<ReferencesButton {...props} / data-testid="referencesbutton">);
     const dropdown = wrapper.find(Dropdown);
     expect(dropdown.length).toBe(1);
     const submenuItems = dropdown.prop('menu').items;

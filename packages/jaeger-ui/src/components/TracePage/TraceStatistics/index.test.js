@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import TraceStatistics from './index';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
 import PopupSql from './PopupSql';
@@ -25,17 +26,9 @@ import testTrace from './tableValuesTestTrace/testTrace.json';
 const transformedTrace = transformTraceData(testTrace);
 
 describe('<TraceTagOverview>', () => {
-  let wrapper;
-  let defaultProps;
-
+  let rendered;
   beforeEach(() => {
-    defaultProps = {
-      trace: transformedTrace,
-      uiFind: undefined,
-      uiFindVertexKeys: undefined,
-    };
-
-    wrapper = mount(<TraceStatistics {...defaultProps} />);
+    rendered = render(<TraceStatistics {...defaultProps} / data-testid="tracestatistics">));
   });
 
   it('does not explode', () => {
@@ -43,20 +36,20 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('renders Trace Tag Overview', () => {
-    expect(wrapper.find(TraceStatisticsHeader).length).toBe(1);
+    expect(screen.getAllByTestId(TraceStatisticsHeader)).toHaveLength(1);
     expect(wrapper.state('valueNameSelector1')).toBe('Service Name');
     expect(wrapper.state('valueNameSelector2')).toBe(null);
-    expect(wrapper.find(PopupSql).length).toBe(0);
+    expect(screen.getAllByTestId(PopupSql)).toHaveLength(0);
   });
 
   it('check search', () => {
     const searchSet = new Set();
     searchSet.add('service1	op1	__LEAF__');
 
-    wrapper.setProps({ uiFind: 'service1', uiFindVertexKeys: searchSet });
+    rendered = render({ uiFind: 'service1', uiFindVertexKeys: searchSet });
     expect(wrapper.state('tableValue')[0].searchColor).toBe('rgb(255,243,215)');
 
-    wrapper.setProps({ uiFind: undefined, uiFindVertexKeys: undefined });
+    rendered = render({ uiFind: undefined, uiFindVertexKeys: undefined });
     expect(wrapper.state('tableValue')[0].searchColor).toBe('transparent');
   });
 
@@ -68,7 +61,7 @@ describe('<TraceTagOverview>', () => {
       'Operation Name',
       transformedTrace
     );
-    const instance = wrapper.instance();
+    const instance = // RTL doesn't access component instances - use assertions on rendered output instead;
     instance.handler(tableValue, tableValue, 'Service Name', 'Operation Name');
 
     // table is sorted only after calling handler
@@ -79,7 +72,7 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('check togglePopup', () => {
-    const instance = wrapper.instance();
+    const instance = // RTL doesn't access component instances - use assertions on rendered output instead;
     instance.togglePopup('select *');
 
     expect(instance.state.popupContent).toBe('select *');

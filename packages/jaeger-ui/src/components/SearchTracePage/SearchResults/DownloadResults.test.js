@@ -25,7 +25,7 @@ describe('DownloadResults button', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    render(<DownloadResults {...props} />);
+    render(<DownloadResults {...props} / data-testid="downloadresults">);
   });
 
   it('when renders then correct label is showing', () => {

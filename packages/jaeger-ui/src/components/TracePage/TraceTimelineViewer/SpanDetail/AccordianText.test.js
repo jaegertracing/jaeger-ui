@@ -13,24 +13,17 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import AccordianText from './AccordianText';
 import TextList from './TextList';
 
 const warnings = ['Duplicated tag', 'Duplicated spanId'];
 
 describe('<AccordianText>', () => {
-  let wrapper;
-
-  const props = {
-    compact: false,
-    data: warnings,
-    isOpen: false,
-    label: 'le-label',
-  };
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<AccordianText {...props} />);
+    rendered = render(<AccordianText {...props} / data-testid="accordiantext">));
   });
 
   it('renders without exploding', () => {
@@ -45,36 +38,36 @@ describe('<AccordianText>', () => {
   });
 
   it('renders the content when it is expanded', () => {
-    wrapper.setProps({ isOpen: true });
+    rendered = render({ isOpen: true });
     const content = wrapper.find(TextList);
     expect(content.length).toBe(1);
     expect(content.prop('data')).toBe(warnings);
   });
 
   it('disables onClick if data is empty', () => {
-    wrapper = shallow(<AccordianText {...props} data={[]} />);
-    const headerProps = wrapper.find('.AccordianText--header').props();
+    wrapper = shallow(<AccordianText {...props} data={[]} / data-testid="accordiantext">);
+    const headerProps = screen.getByTestId('.AccordianText--header');
     expect(headerProps.onClick).toBeNull();
   });
 
   it('has role="switch" when interactive = true', () => {
-    wrapper = shallow(<AccordianText {...props} isOpen />);
-    const headerProps = wrapper.find('.AccordianText--header').props();
+    wrapper = shallow(<AccordianText {...props} isOpen / data-testid="accordiantext">);
+    const headerProps = screen.getByTestId('.AccordianText--header');
     expect(headerProps.role).toBe('switch');
   });
 
   it('has class "is-empty" class if data is empty', () => {
-    wrapper = shallow(<AccordianText {...props} data={[]} />);
+    wrapper = shallow(<AccordianText {...props} data={[]} / data-testid="accordiantext">);
     expect(wrapper.find('.AccordianText--header').hasClass('is-empty')).toBe(true);
   });
 
   it('has class "is-high-contrast" class if highContrast=true', () => {
-    wrapper = shallow(<AccordianText {...props} highContrast />);
+    wrapper = shallow(<AccordianText {...props} highContrast / data-testid="accordiantext">);
     expect(wrapper.find('.AccordianText--header').hasClass('is-high-contrast')).toBe(true);
   });
 
   it('does not render arrow or clickable header if interactive = false', () => {
-    wrapper = shallow(<AccordianText {...props} interactive={false} />);
+    wrapper = shallow(<AccordianText {...props} interactive={false} / data-testid="accordiantext">);
     const header = wrapper.find('.AccordianText--header');
     expect(header.prop('role')).toBeUndefined();
     expect(header.find('.u-align-icon').exists()).toBe(false);

@@ -22,22 +22,22 @@ describe('<ErrorMessage>', () => {
   const errorMessage = 'some error message';
 
   it('renders empty when not passed an error', () => {
-    render(<ErrorMessage />);
+    render(<ErrorMessage / data-testid="errormessage">);
     expect(screen.queryByTestId('ErrorMessage')).toBeNull();
   });
 
   it('renders a message when passed a string', () => {
-    render(<ErrorMessage error={errorMessage} />);
+    render(<ErrorMessage error={errorMessage} / data-testid="errormessage">);
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
   });
 
-  it('<Details /> renders empty on string error', () => {
-    render(<Details error={errorMessage} />);
+  it('<Details / data-testid="details"> renders empty on string error', () => {
+    render(<Details error={errorMessage} / data-testid="details">);
     expect(screen.queryByTestId('ErrorMessage--details')).toBeNull();
     expect(screen.queryByTestId('ErrorMessage--details--wrapper')).toBeNull();
   });
 
-  it('<Details /> renders wrapper on wrap', () => {
+  it('<Details / data-testid="details"> renders wrapper on wrap', () => {
     const error = {
       httpStatus: 'value-httpStatus',
       httpStatusText: 'value-httpStatusText',
@@ -45,7 +45,7 @@ describe('<ErrorMessage>', () => {
       httpQuery: 'value-httpQuery',
       httpBody: 'value-httpBody',
     };
-    render(<Details error={error} wrap />);
+    render(<Details error={error} wrap / data-testid="details">);
 
     // The wrapper element should be present
     expect(screen.getByTestId('ErrorMessage--details--wrapper')).toBeInTheDocument();
@@ -56,7 +56,7 @@ describe('<ErrorMessage>', () => {
     });
   });
 
-  it('<Details /> renders custom wrapper class', () => {
+  it('<Details / data-testid="details"> renders custom wrapper class', () => {
     const error = {
       httpStatus: 'value-httpStatus',
       httpStatusText: 'value-httpStatusText',
@@ -64,7 +64,7 @@ describe('<ErrorMessage>', () => {
       httpQuery: 'value-httpQuery',
       httpBody: 'value-httpBody',
     };
-    render(<Details error={error} wrap wrapperClassName="TEST-WRAPPER-CLASS" />);
+    render(<Details error={error} wrap wrapperClassName="TEST-WRAPPER-CLASS" / data-testid="details">);
 
     // The wrapper element should be present
     expect(screen.getByTestId('ErrorMessage--details--wrapper')).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe('<ErrorMessage>', () => {
 
   it('renders the error message', () => {
     const error = new Error('another-error');
-    render(<ErrorMessage error={error} />);
+    render(<ErrorMessage error={error} / data-testid="errormessage">);
 
     expect(screen.getByText(error.message)).toBeInTheDocument();
   });
@@ -93,7 +93,7 @@ describe('<ErrorMessage>', () => {
       httpBody: 'value-httpBody',
     };
 
-    render(<ErrorMessage error={error} />);
+    render(<ErrorMessage error={error} / data-testid="errormessage">);
     Object.keys(error).forEach(key => {
       expect(screen.getByText(error[key])).toBeInTheDocument();
     });
@@ -109,7 +109,7 @@ describe('<ErrorMessage>', () => {
       httpBody: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac maximus elit. Curabitur non urna in odio dictum porttitor. Fusce sed mi mauris. Sed vehicula mi nec nulla ultricies, a faucibus nisi feugiat. Aliquam varius diam in porttitor maximus. Quisque in varius neque, vel consequat enim. Donec faucibus lorem tortor, a aliquam augue vulputate eu. Pellentesque tincidunt, nisl vitae tristique fringilla, elit augue eleifend leo, eget laoreet turpis justo et dui. Suspendisse nec lacinia tortor, non fermentum arcu. Morbi at nunc nisi. Vestibulum condimentum sollicitudin nibh ut cursus. Nullam neque erat, eleifend eget libero eget, porta maximus diam. Integer ut est congue, placerat ipsum nec, varius ligula. Integer maximus gravida velit quis commodo. Phasellus posuere a nulla id sodales. Aliquam ultrices purus et iaculis imperdiet. Morbi in felis maximus, dictum sapien in, malesuada augue. Duis sit amet tortor ac ante pellentesque iaculis eget vestibulum ex. Nunc malesuada egestas mauris, ut tempus eros hendrerit dui.`,
     };
 
-    render(<ErrorMessage error={error} />);
+    render(<ErrorMessage error={error} / data-testid="errormessage">);
 
     // All the keys expect httpBody should be present as is
     Object.keys(error).forEach(key => {
@@ -131,7 +131,7 @@ describe('<ErrorMessage>', () => {
       httpBody: 'value-httpBody',
     };
 
-    render(<ErrorMessage error={error} />);
+    render(<ErrorMessage error={error} / data-testid="errormessage">);
     Object.keys(error).forEach(key => {
       expect(screen.getByText(error[key])).toBeInTheDocument();
     });

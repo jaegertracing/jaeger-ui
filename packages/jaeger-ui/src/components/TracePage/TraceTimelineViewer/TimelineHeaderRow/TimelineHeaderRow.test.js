@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import VerticalResizer from '../../../common/VerticalResizer';
 import TimelineHeaderRow from './TimelineHeaderRow';
@@ -22,32 +23,14 @@ import Ticks from '../Ticks';
 import TimelineCollapser from './TimelineCollapser';
 
 describe('<TimelineHeaderRow>', () => {
-  let wrapper;
-
-  const nameColumnWidth = 0.25;
-  const props = {
-    nameColumnWidth,
-    duration: 1234,
-    numTicks: 5,
-    onCollapseAll: () => {},
-    onCollapseOne: () => {},
-    onColummWidthChange: () => {},
-    onExpandAll: () => {},
-    onExpandOne: () => {},
-    updateNextViewRangeTime: () => {},
-    updateViewRangeTime: () => {},
-    viewRangeTime: {
-      current: [0.1, 0.9],
-    },
-  };
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<TimelineHeaderRow {...props} />);
+    rendered = render(<TimelineHeaderRow {...props} / data-testid="timelineheaderrow">));
   });
 
   it('renders without exploding', () => {
     expect(wrapper).toBeDefined();
-    expect(wrapper.find('.TimelineHeaderRow').length).toBe(1);
+    expect(screen.getAllByTestId('.TimelineHeaderRow')).toHaveLength(1);
   });
 
   it('propagates the name column width', () => {
@@ -68,7 +51,7 @@ describe('<TimelineHeaderRow>', () => {
         updateNextViewRangeTime={props.updateNextViewRangeTime}
         updateViewRangeTime={props.updateViewRangeTime}
         viewRangeTime={props.viewRangeTime}
-      />
+      / data-testid="timelineviewinglayer">
     );
     expect(wrapper.containsMatchingElement(elm)).toBe(true);
   });
@@ -81,7 +64,7 @@ describe('<TimelineHeaderRow>', () => {
         startTime={viewStart * props.duration}
         endTime={viewEnd * props.duration}
         showLabels
-      />
+      / data-testid="ticks">
     );
     expect(wrapper.containsMatchingElement(elm)).toBe(true);
   });
@@ -93,7 +76,7 @@ describe('<TimelineHeaderRow>', () => {
         onChange={props.onColummWidthChange}
         min={0.15}
         max={0.85}
-      />
+      / data-testid="verticalresizer">
     );
     expect(wrapper.containsMatchingElement(elm)).toBe(true);
   });
@@ -105,7 +88,7 @@ describe('<TimelineHeaderRow>', () => {
         onExpandAll={props.onExpandAll}
         onCollapseOne={props.onCollapseOne}
         onExpandOne={props.onExpandOne}
-      />
+      / data-testid="timelinecollapser">
     );
     expect(wrapper.containsMatchingElement(elm)).toBe(true);
   });

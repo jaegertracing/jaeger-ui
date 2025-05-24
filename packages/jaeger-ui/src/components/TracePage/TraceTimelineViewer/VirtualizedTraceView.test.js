@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import React from 'react';
-import { shallow, mount } from 'enzyme';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
@@ -32,81 +34,10 @@ jest.mock('./SpanTreeOffset');
 jest.mock('../../../utils/update-ui-find');
 
 describe('<VirtualizedTraceViewImpl>', () => {
-  let wrapper;
-  let instance;
-  const focusUiFindMatchesMock = jest.fn();
-
-  const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
-  const criticalPath = memoizedTraceCriticalPath(trace);
-
-  const props = {
-    childrenHiddenIDs: new Set(),
-    childrenToggle: jest.fn(),
-    clearShouldScrollToFirstUiFindMatch: jest.fn(),
-    currentViewRangeTime: [0.25, 0.75],
-    detailLogItemToggle: jest.fn(),
-    detailLogsToggle: jest.fn(),
-    detailProcessToggle: jest.fn(),
-    detailStates: new Map(),
-    detailTagsToggle: jest.fn(),
-    detailToggle: jest.fn(),
-    findMatchesIDs: null,
-    registerAccessors: jest.fn(),
-    scrollToFirstVisibleSpan: jest.fn(),
-    setSpanNameColumnWidth: jest.fn(),
-    focusUiFindMatches: focusUiFindMatchesMock,
-    setTrace: jest.fn(),
-    shouldScrollToFirstUiFindMatch: false,
-    spanNameColumnWidth: 0.5,
-    trace,
-    criticalPath,
-    uiFind: 'uiFind',
-    history: {
-      replace: () => {},
-    },
-    location: {
-      search: null,
-    },
-  };
-
-  function expandRow(rowIndex) {
-    const detailStates = new Map();
-    const detailState = new DetailState();
-    detailStates.set(trace.spans[rowIndex].spanID, detailState);
-    wrapper.setProps({ detailStates });
-    return detailState;
-  }
-
-  function addSpansAndCollapseTheirParent(newSpanID = 'some-id') {
-    const childrenHiddenIDs = new Set([newSpanID]);
-    const spans = [
-      trace.spans[0],
-      // this span is condidered to have collapsed children
-      { spanID: newSpanID, depth: 1 },
-      // these two "spans" are children and should be hidden
-      { depth: 2 },
-      { depth: 3 },
-      ...trace.spans.slice(1),
-    ];
-    const _trace = { ...trace, spans };
-    wrapper.setProps({ childrenHiddenIDs, trace: _trace });
-    return spans;
-  }
-
-  function updateSpan(srcTrace, spanIndex, update) {
-    const span = { ...srcTrace.spans[spanIndex], ...update };
-    const spans = [...srcTrace.spans.slice(0, spanIndex), span, ...srcTrace.spans.slice(spanIndex + 1)];
-    return { ...srcTrace, spans };
-  }
-
+  let rendered;
   beforeEach(() => {
-    Object.keys(props).forEach(key => {
-      if (typeof props[key] === 'function') {
-        props[key].mockReset();
-      }
-    });
-    wrapper = shallow(<VirtualizedTraceViewImpl {...props} />);
-    instance = wrapper.instance();
+    rendered = render(<VirtualizedTraceViewImpl {...props} / data-testid="virtualizedtraceviewimpl">);
+    instance = // RTL doesn't access component instances - use assertions on rendered output instead;
   });
 
   it('renders without exploding', () => {
@@ -114,7 +45,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 
   it('renders when a trace is not set', () => {
-    wrapper.setProps({ trace: [] });
+    rendered = render({ trace: [] });
     expect(wrapper).toBeDefined();
   });
 
@@ -127,7 +58,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     props.setTrace.mockReset();
     const traceID = 'some-other-id';
     const _trace = { ...trace, traceID };
-    wrapper.setProps({ trace: _trace });
+    rendered = render({ trace: _trace });
     expect(props.setTrace.mock.calls).toEqual([[_trace, props.uiFind]]);
   });
 
@@ -166,7 +97,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     it('invokes when registerAccessors changes', () => {
       const registerAccessors = jest.fn();
       instance.setListView(lv);
-      wrapper.setProps({ registerAccessors });
+      rendered = render({ registerAccessors });
       expect(registerAccessors.mock.calls).toEqual([[expectedArg]]);
     });
   });
@@ -177,13 +108,13 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   it('returns findMatchesIDs via getSearchedSpanIDs()', () => {
     const findMatchesIDs = new Set();
-    wrapper.setProps({ findMatchesIDs });
+    rendered = render({ findMatchesIDs });
     expect(instance.getSearchedSpanIDs()).toBe(findMatchesIDs);
   });
 
   it('returns childrenHiddenIDs via getCollapsedChildren()', () => {
     const childrenHiddenIDs = new Set();
-    wrapper.setProps({ childrenHiddenIDs });
+    rendered = render({ childrenHiddenIDs });
     expect(instance.getCollapsedChildren()).toBe(childrenHiddenIDs);
   });
 
@@ -299,7 +230,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       ];
       const altTrace = updateSpan(trace, 0, { logs });
       expandRow(0);
-      wrapper.setProps({ trace: altTrace });
+      rendered = render({ trace: altTrace });
       expect(instance.getRowHeight(1)).toBe(DEFAULT_HEIGHTS.detailWithLogs);
     });
   });
@@ -324,13 +255,13 @@ describe('<VirtualizedTraceViewImpl>', () => {
             rpc={undefined}
             showErrorIcon={false}
             span={span}
-          />
+          / data-testid="spanbarrow">
         )
       ).toBe(true);
     });
 
     it('renders Critical Path segments when row is not collapsed', () => {
-      wrapper.setProps({
+      rendered = render({
         trace: criticalPathTest.trace,
         criticalPath: criticalPathTest.criticalPathSections,
       });
@@ -340,7 +271,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
     it('renders Critical Path segments are merged if consecutive when row is collapased', () => {
       const childrenHiddenIDs = new Set([criticalPathTest.trace.spans[0].spanID]);
-      wrapper.setProps({
+      rendered = render({
         childrenHiddenIDs,
         trace: criticalPathTest.trace,
         criticalPath: criticalPathTest.criticalPathSections,
@@ -355,7 +286,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       let altTrace = updateSpan(trace, 0, { tags: clientTags });
       altTrace = updateSpan(altTrace, 1, { tags: serverTags });
       const childrenHiddenIDs = new Set([altTrace.spans[0].spanID]);
-      wrapper.setProps({ childrenHiddenIDs, trace: altTrace });
+      rendered = render({ childrenHiddenIDs, trace: altTrace });
 
       const rowWrapper = mount(instance.renderRow('some-key', {}, 0, {}));
       const spanBarRow = rowWrapper.find(SpanBarRow);
@@ -379,7 +310,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
             processToggle={props.detailProcessToggle}
             span={span}
             tagsToggle={props.detailTagsToggle}
-          />
+          / data-testid="spandetailrow">
         )
       ).toBe(true);
     });
@@ -405,7 +336,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       tags.forEach(tag => {
         const altTrace = updateSpan(trace, leafSpanIndex, { tags: tag });
-        wrapper.setProps({ trace: altTrace });
+        rendered = render({ trace: altTrace });
         const rowWrapper = mount(instance.renderRow('some-key', {}, leafSpanIndex, {}));
         const spanBarRow = rowWrapper.find(SpanBarRow);
         expect(spanBarRow.length).toBe(1);
@@ -433,7 +364,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
     describe('shouldComponentUpdate', () => {
       it('returns true if props.shouldScrollToFirstUiFindMatch changes to true', () => {
-        expect(wrapper.instance().shouldComponentUpdate(propsWithTrueShouldScrollToFirstUiFindMatch)).toBe(
+        expect(// RTL doesn't access component instances - use assertions on rendered output instead.shouldComponentUpdate(propsWithTrueShouldScrollToFirstUiFindMatch)).toBe(
           true
         );
       });
@@ -444,16 +375,16 @@ describe('<VirtualizedTraceViewImpl>', () => {
           clearShouldScrollToFirstUiFindMatch: () => {},
         };
         wrapper.setProps(propsWithOtherDifferenceAndTrueshouldScrollToFirstUiFindMatch);
-        expect(wrapper.instance().shouldComponentUpdate(props)).toBe(true);
+        expect(// RTL doesn't access component instances - use assertions on rendered output instead.shouldComponentUpdate(props)).toBe(true);
       });
 
       it('returns false if props.shouldScrollToFirstUiFindMatch changes to false and no other props change', () => {
         wrapper.setProps(propsWithTrueShouldScrollToFirstUiFindMatch);
-        expect(wrapper.instance().shouldComponentUpdate(props)).toBe(false);
+        expect(// RTL doesn't access component instances - use assertions on rendered output instead.shouldComponentUpdate(props)).toBe(false);
       });
 
       it('returns false if all props are unchanged', () => {
-        expect(wrapper.instance().shouldComponentUpdate(props)).toBe(false);
+        expect(// RTL doesn't access component instances - use assertions on rendered output instead.shouldComponentUpdate(props)).toBe(false);
       });
     });
   });

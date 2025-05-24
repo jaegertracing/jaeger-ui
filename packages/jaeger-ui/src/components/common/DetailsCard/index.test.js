@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import DetailsCard from '.';
 
@@ -22,57 +23,57 @@ describe('DetailsCard', () => {
 
   it('renders string details', () => {
     const details = 'test details';
-    expect(shallow(<DetailsCard details={details} header={header} />)).toMatchSnapshot();
+    expect(shallow(<DetailsCard details={details} header={header} / data-testid="detailscard">)).toMatchSnapshot();
   });
 
   it('handles empty details array', () => {
     const details = [];
-    expect(shallow(<DetailsCard details={details} header={header} />)).toMatchSnapshot();
+    expect(shallow(<DetailsCard details={details} header={header} / data-testid="detailscard">)).toMatchSnapshot();
   });
 
   it('renders list details', () => {
     const details = ['foo', 'bar', 'baz'];
-    expect(shallow(<DetailsCard details={details} header={header} />)).toMatchSnapshot();
+    expect(shallow(<DetailsCard details={details} header={header} / data-testid="detailscard">)).toMatchSnapshot();
   });
 
   it('renders table details', () => {
     const details = [{ value: 'foo' }];
-    expect(shallow(<DetailsCard details={details} header={header} />)).toMatchSnapshot();
+    expect(shallow(<DetailsCard details={details} header={header} / data-testid="detailscard">)).toMatchSnapshot();
   });
 
   it('renders table details with column defs', () => {
     const columnDefs = ['col'];
     const details = [{ [columnDefs[0]]: 'foo' }];
     expect(
-      shallow(<DetailsCard columnDefs={columnDefs} details={details} header={header} />)
+      shallow(<DetailsCard columnDefs={columnDefs} details={details} header={header} / data-testid="detailscard">)
     ).toMatchSnapshot();
   });
 
   it('renders with description', () => {
     const description = 'test description';
-    expect(shallow(<DetailsCard description={description} header={header} />)).toMatchSnapshot();
+    expect(shallow(<DetailsCard description={description} header={header} / data-testid="detailscard">)).toMatchSnapshot();
   });
 
   it('renders with className', () => {
     const className = 'test className';
-    expect(shallow(<DetailsCard className={className} header={header} />)).toMatchSnapshot();
+    expect(shallow(<DetailsCard className={className} header={header} / data-testid="detailscard">)).toMatchSnapshot();
   });
 
   it('renders as collapsible', () => {
     expect(
-      shallow(<DetailsCard header={header} />)
+      shallow(<DetailsCard header={header} / data-testid="detailscard">)
         .find('.DetailsCard--DetailsWrapper')
         .hasClass('is-collapsed')
     ).toBe(false);
 
-    const wrapper = shallow(<DetailsCard collapsible header={header} />);
+    const { container } = render(<DetailsCard collapsible header={header} / data-testid="detailscard">);
     expect(wrapper.find('.DetailsCard--DetailsWrapper').hasClass('is-collapsed')).toBe(true);
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
 
-    wrapper.find('button').simulate('click');
+    userEvent.click(screen.getByTestId('button'));
     expect(wrapper.find('.DetailsCard--DetailsWrapper').hasClass('is-collapsed')).toBe(false);
 
-    wrapper.find('button').simulate('click');
+    userEvent.click(screen.getByTestId('button'));
     expect(wrapper.find('.DetailsCard--DetailsWrapper').hasClass('is-collapsed')).toBe(true);
   });
 });

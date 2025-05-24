@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount, shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import SpanBarRow from './SpanBarRow';
 import SpanTreeOffset from './SpanTreeOffset';
@@ -57,12 +58,9 @@ describe('<SpanBarRow>', () => {
     },
   };
 
-  let wrapper;
-
+  let rendered;
   beforeEach(() => {
-    props.onDetailToggled.mockReset();
-    props.onChildrenToggled.mockReset();
-    wrapper = mount(<SpanBarRow {...props} />);
+    rendered = render(<SpanBarRow {...props} / data-testid="spanbarrow">));
   });
 
   it('renders without exploding', () => {
@@ -108,7 +106,7 @@ describe('<SpanBarRow>', () => {
       props.span
     );
 
-    const spanRow = shallow(<SpanBarRow {...props} span={span} />);
+    const spanRow = shallow(<SpanBarRow {...props} span={span} / data-testid="spanbarrow">);
     const refButton = spanRow.find(ReferencesButton);
     expect(refButton.length).toEqual(1);
     expect(refButton.at(0).props().tooltipText).toEqual('Contains multiple references');
@@ -130,7 +128,7 @@ describe('<SpanBarRow>', () => {
       },
       props.span
     );
-    const spanRow = shallow(<SpanBarRow {...props} span={span} />);
+    const spanRow = shallow(<SpanBarRow {...props} span={span} / data-testid="spanbarrow">);
     const refButton = spanRow.find(ReferencesButton);
     expect(refButton.length).toEqual(1);
     expect(refButton.at(0).props().tooltipText).toEqual('This span is referenced by another span');
@@ -160,7 +158,7 @@ describe('<SpanBarRow>', () => {
       },
       props.span
     );
-    const spanRow = shallow(<SpanBarRow {...props} span={span} />);
+    const spanRow = shallow(<SpanBarRow {...props} span={span} / data-testid="spanbarrow">);
     const refButton = spanRow.find(ReferencesButton);
     expect(refButton.length).toEqual(1);
     expect(refButton.at(0).props().tooltipText).toEqual('This span is referenced by multiple other spans');

@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { convertJaegerTraceToProfile } from '@pyroscope/flamegraph';
 import TraceFlamegraph from './index';
@@ -56,18 +57,18 @@ describe('convertJaegerTraceToProfile', () => {
   });
 });
 
-describe('<TraceFlamegraph />', () => {
+describe('<TraceFlamegraph / data-testid="traceflamegraph">', () => {
   beforeEach(() => {
     FlamegraphRenderer.mockClear();
   });
 
   it('renders the flamegraph wrapper', () => {
-    render(<TraceFlamegraph trace={testTrace} />);
+    render(<TraceFlamegraph trace={testTrace} / data-testid="traceflamegraph">);
     expect(screen.getByTestId('flamegraph-wrapper')).toBeInTheDocument();
   });
 
   it('renders the FlamegraphRenderer with converted profile when trace is provided', () => {
-    render(<TraceFlamegraph trace={testTrace} />);
+    render(<TraceFlamegraph trace={testTrace} / data-testid="traceflamegraph">);
 
     // Check if the mocked renderer is in the document
     const renderer = screen.getByTestId('flamegraph-renderer');
@@ -84,7 +85,7 @@ describe('<TraceFlamegraph />', () => {
   });
 
   it('renders the FlamegraphRenderer with null profile when trace is not provided', () => {
-    render(<TraceFlamegraph trace={null} />);
+    render(<TraceFlamegraph trace={null} / data-testid="traceflamegraph">);
 
     // Check if the mocked renderer is in the document
     const renderer = screen.getByTestId('flamegraph-renderer');
@@ -100,7 +101,7 @@ describe('<TraceFlamegraph />', () => {
   });
 
   it('renders the FlamegraphRenderer with null profile when trace data is missing', () => {
-    render(<TraceFlamegraph trace={{}} />); // trace without 'data' property
+    render(<TraceFlamegraph trace={{}} / data-testid="traceflamegraph">); // trace without 'data' property
 
     // Check if the mocked renderer is in the document
     const renderer = screen.getByTestId('flamegraph-renderer');

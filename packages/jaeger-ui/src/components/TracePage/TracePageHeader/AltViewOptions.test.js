@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Dropdown } from 'antd';
 import AltViewOptions from './AltViewOptions';
 import * as track from './TracePageHeader.track';
@@ -27,42 +28,17 @@ describe('AltViewOptions', () => {
   let trackStatisticsView;
   let trackTraceSpansView;
 
-  let wrapper;
-  const getLink = text => {
-    const links = wrapper.find(Dropdown).prop('menu').items;
-    for (let i = 0; i < links.length; i++) {
-      const link = links[i];
-      if (link.label.props.children === text) return link.label.props;
-    }
-    throw new Error(`Could not find "${text}"`);
-  };
-
-  const props = {
-    viewType: ETraceViewType.TraceTimelineViewer,
-    traceID: 'test trace ID',
-    onTraceViewChange: jest.fn(),
-  };
-
-  beforeAll(() => {
-    trackGanttView = jest.spyOn(track, 'trackGanttView');
-    trackGraphView = jest.spyOn(track, 'trackGraphView');
-    trackJsonView = jest.spyOn(track, 'trackJsonView');
-    trackRawJsonView = jest.spyOn(track, 'trackRawJsonView');
-    trackStatisticsView = jest.spyOn(track, 'trackStatisticsView');
-    trackTraceSpansView = jest.spyOn(track, 'trackTraceSpansView');
-  });
-
+  let rendered;
   beforeEach(() => {
-    jest.clearAllMocks();
-    wrapper = shallow(<AltViewOptions {...props} />);
+    rendered = render(<AltViewOptions {...props} / data-testid="altviewoptions">));
   });
 
   it('renders correctly', () => {
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it('disables json links because disableJsonView is true', () => {
-    wrapper.setProps({ disableJsonView: true });
+    rendered = render({ disableJsonView: true });
 
     expect(() => getLink('Trace JSON')).toThrow('Could not find "Trace JSON"');
     expect(() => getLink('Trace JSON (unadjusted)')).toThrow('Could not find "Trace JSON (unadjusted)"');
@@ -112,7 +88,7 @@ describe('AltViewOptions', () => {
 
     viewInteractions.forEach(({ link, trackFn, propViewType }, i) => {
       if (propViewType) {
-        wrapper.setProps({
+        rendered = render({
           viewType: propViewType,
         });
       }

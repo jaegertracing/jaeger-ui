@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import AccordianReferences, { References } from './AccordianReferences';
 import ReferenceLink from '../../url/ReferenceLink';
 
@@ -53,19 +54,9 @@ const references = [
 ];
 
 describe('<AccordianReferences>', () => {
-  let wrapper;
-
-  const props = {
-    compact: false,
-    data: references,
-    highContrast: false,
-    isOpen: false,
-    onToggle: jest.fn(),
-    focusSpan: jest.fn(),
-  };
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<AccordianReferences {...props} />);
+    rendered = render(<AccordianReferences {...props} / data-testid="accordianreferences">));
   });
 
   it('renders without exploding', () => {
@@ -74,7 +65,7 @@ describe('<AccordianReferences>', () => {
   });
 
   it('renders the content when it is expanded', () => {
-    wrapper.setProps({ isOpen: true });
+    rendered = render({ isOpen: true });
     const content = wrapper.find(References);
     expect(content.length).toBe(1);
     expect(content.prop('data')).toBe(references);
@@ -82,15 +73,9 @@ describe('<AccordianReferences>', () => {
 });
 
 describe('<References>', () => {
-  let wrapper;
-
-  const props = {
-    data: references,
-    focusSpan: jest.fn(),
-  };
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<References {...props} />);
+    rendered = render(<References {...props} / data-testid="references">));
   });
 
   it('render references list', () => {

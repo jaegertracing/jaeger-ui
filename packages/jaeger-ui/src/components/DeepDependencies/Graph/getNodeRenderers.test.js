@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import getNodeRenderers from './getNodeRenderers';
 
@@ -60,19 +61,19 @@ describe('getNodeRenderers', () => {
     });
 
     it('returns div with .is-findMatch if vertex is a findMatch', () => {
-      const wrapper = shallow(getNodeRenderers(new Set([lv.vertex.key]), new Map()).htmlEmphasis(lv));
+      const { container } = render(getNodeRenderers(new Set([lv.vertex.key]), new Map()).htmlEmphasis(lv));
       expect(wrapper.hasClass('is-findMatch')).toBe(true);
       expect(wrapper.type()).toBe('div');
     });
 
     it('returns div with .is-focalNode if vertex is a focalNode', () => {
-      const wrapper = shallow(getNodeRenderers(new Set(), new Map()).htmlEmphasis(focalLv));
+      const { container } = render(getNodeRenderers(new Set(), new Map()).htmlEmphasis(focalLv));
       expect(wrapper.hasClass('is-focalNode')).toBe(true);
       expect(wrapper.type()).toBe('div');
     });
 
     it('returns div with .is-findMatch and .is-focalNode if vertex is a focalNode and a findMatch', () => {
-      const wrapper = shallow(
+      const { container } = render(
         getNodeRenderers(new Set([focalLv.vertex.key]), new Map()).htmlEmphasis(focalLv)
       );
       expect(wrapper.hasClass('is-findMatch')).toBe(true);

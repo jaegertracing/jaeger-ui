@@ -29,7 +29,7 @@ describe('KeyboardShortcutsHelp', () => {
 
   beforeEach(() => {
     trackSpy.mockReset();
-    render(<KeyboardShortcutsHelp className={testClassName} />);
+    render(<KeyboardShortcutsHelp className={testClassName} / data-testid="keyboardshortcutshelp">);
   });
 
   it('renders as expected', () => {

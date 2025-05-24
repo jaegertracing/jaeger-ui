@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import NotFound from './NotFound';
@@ -16,7 +17,7 @@ describe('NotFound tests', () => {
   it('renders error title and home link without error', () => {
     render(
       <MemoryRouter>
-        <NotFound error={null} />
+        <NotFound error={null} / data-testid="notfound">
       </MemoryRouter>
     );
 
@@ -29,7 +30,7 @@ describe('NotFound tests', () => {
     const testError = new Error('Page not found');
     render(
       <MemoryRouter>
-        <NotFound error={testError} />
+        <NotFound error={testError} / data-testid="notfound">
       </MemoryRouter>
     );
 

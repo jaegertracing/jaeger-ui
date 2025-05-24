@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Button } from 'antd';
 
 import AltViewOptions from './AltViewOptions';
@@ -26,24 +27,9 @@ describe('AltViewOptions', () => {
   let getUrlStateSpy;
   let openSpy;
 
-  let wrapper;
-  const getBtn = (btnIndex = 0) => wrapper.find(Button).at(btnIndex);
-  const getLabel = (btnIndex = 0) => getBtn(btnIndex).prop('children');
-  const props = {
-    traceResultsView: true,
-    onDdgViewClicked: jest.fn(),
-  };
-
-  beforeAll(() => {
-    getUrlSpy = jest.spyOn(url, 'getUrl');
-    getUrlStateSpy = jest.spyOn(url, 'getUrlState');
-    getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue');
-    openSpy = jest.spyOn(window, 'open').mockImplementation();
-  });
-
+  let rendered;
   beforeEach(() => {
-    jest.clearAllMocks();
-    wrapper = shallow(<AltViewOptions {...props} />);
+    rendered = render(<AltViewOptions {...props} / data-testid="altviewoptions">));
   });
 
   afterAll(() => {
@@ -53,23 +39,23 @@ describe('AltViewOptions', () => {
   it('renders correct label', () => {
     expect(getLabel()).toBe('Deep Dependency Graph');
 
-    wrapper.setProps({ traceResultsView: false });
+    rendered = render({ traceResultsView: false });
     expect(getLabel()).toBe('Trace Results');
   });
 
   it('renders button to view full ddg iff ddg is enabled and search results are viewed as ddg', () => {
     expect(getLabel()).toBe('Deep Dependency Graph');
-    expect(wrapper.find(Button).length).toBe(1);
+    expect(screen.getAllByTestId(Button)).toHaveLength(1);
 
     getConfigValueSpy.mockReturnValue(true);
-    wrapper.setProps({ traceResultsView: false });
-    expect(wrapper.find(Button).length).toBe(2);
+    rendered = render({ traceResultsView: false });
+    expect(screen.getAllByTestId(Button)).toHaveLength(2);
     expect(getLabel()).toBe('Trace Results');
     expect(getLabel(1)).toBe('View All Dependencies');
 
-    wrapper.setProps({ traceResultsView: true });
+    rendered = render({ traceResultsView: true });
     expect(getLabel()).toBe('Deep Dependency Graph');
-    expect(wrapper.find(Button).length).toBe(1);
+    expect(screen.getAllByTestId(Button)).toHaveLength(1);
   });
 
   it('opens correct ddg url with correct target when view full ddg button is clicked', () => {
@@ -79,7 +65,7 @@ describe('AltViewOptions', () => {
     getUrlSpy.mockReturnValue(mockUrl);
     getUrlStateSpy.mockReturnValue(mockUrlState);
 
-    wrapper.setProps({ traceResultsView: false });
+    rendered = render({ traceResultsView: false });
     const viewDdgBtn = getBtn(1);
     viewDdgBtn.simulate('click', {});
     expect(getUrlSpy).toHaveBeenLastCalledWith(mockUrlState);

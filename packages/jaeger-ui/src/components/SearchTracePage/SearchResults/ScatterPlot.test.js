@@ -121,7 +121,7 @@ describe('ScatterPlot', () => {
     let container;
     act(() => {
       const result = render(
-        <ScatterPlot data={data} onValueClick={mockOnValueClick} calculateContainerWidth={() => 1200} />
+        <ScatterPlot data={data} onValueClick={mockOnValueClick} calculateContainerWidth={() = data-testid="scatterplot"> 1200} />
       );
       container = result.container;
     });
@@ -133,7 +133,7 @@ describe('ScatterPlot', () => {
     let container;
     act(() => {
       const result = render(
-        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() => 1200} />
+        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() = data-testid="scatterplot"> 1200} />
       );
       container = result.container;
     });
@@ -149,7 +149,7 @@ describe('ScatterPlot', () => {
     let container;
     act(() => {
       const result = render(
-        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() => 1200} />
+        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() = data-testid="scatterplot"> 1200} />
       );
       container = result.container;
     });
@@ -164,7 +164,7 @@ describe('ScatterPlot', () => {
     let container;
     act(() => {
       const result = render(
-        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() => 1200} />
+        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() = data-testid="scatterplot"> 1200} />
       );
       container = result.container;
     });
@@ -184,7 +184,7 @@ describe('ScatterPlot', () => {
           data={sampleData}
           onValueClick={mockOnValueClick}
           calculateContainerWidth={calculateContainerWidth}
-        />
+        / data-testid="scatterplot">
       );
       unmount = result.unmount;
     });
@@ -206,7 +206,7 @@ describe('ScatterPlot', () => {
     let container;
     act(() => {
       const result = render(
-        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() => 1200} />
+        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() = data-testid="scatterplot"> 1200} />
       );
       container = result.container;
     });
@@ -227,7 +227,7 @@ describe('ScatterPlot', () => {
     let container;
     act(() => {
       const result = render(
-        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() => 1200} />
+        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() = data-testid="scatterplot"> 1200} />
       );
       container = result.container;
     });
@@ -241,7 +241,7 @@ describe('ScatterPlot', () => {
     let container;
     act(() => {
       const result = render(
-        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() => 0} />
+        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() = data-testid="scatterplot"> 0} />
       );
       container = result.container;
     });
@@ -251,7 +251,7 @@ describe('ScatterPlot', () => {
   });
 
   it('uses default calculateContainerWidth when prop is not provided', () => {
-    render(<ScatterPlot data={sampleData} onValueClick={jest.fn()} />);
+    render(<ScatterPlot data={sampleData} onValueClick={jest.fn()} / data-testid="scatterplot">);
     expect(document.querySelector('.TraceResultsScatterPlot')).toBeInTheDocument();
   });
 });
@@ -259,7 +259,7 @@ describe('ScatterPlot', () => {
 describe('CustomTooltip', () => {
   it('renders with trace name when active and payload is provided', () => {
     const traceName = 'Test Trace Name';
-    const { container } = render(<CustomTooltip active payload={[{ payload: { name: traceName } }]} />);
+    const { container } = render(<CustomTooltip active payload={[{ payload: { name: traceName } }]} / data-testid="customtooltip">);
 
     const tooltipElement = container.querySelector('.scatter-plot-hint');
     expect(tooltipElement).toBeTruthy();
@@ -267,7 +267,7 @@ describe('CustomTooltip', () => {
   });
 
   it('renders with fallback name when trace has no name', () => {
-    const { container } = render(<CustomTooltip active payload={[{ payload: {} }]} />);
+    const { container } = render(<CustomTooltip active payload={[{ payload: {} }]} / data-testid="customtooltip">);
 
     const tooltipElement = container.querySelector('.scatter-plot-hint');
     expect(tooltipElement).toBeTruthy();
@@ -275,17 +275,17 @@ describe('CustomTooltip', () => {
   });
 
   it('returns null when not active', () => {
-    const { container } = render(<CustomTooltip payload={[{ payload: { name: 'Test' } }]} />);
+    const { container } = render(<CustomTooltip payload={[{ payload: { name: 'Test' } }]} / data-testid="customtooltip">);
     expect(container.firstChild).toBeNull();
   });
 
   it('returns null when payload is empty', () => {
-    const { container } = render(<CustomTooltip active payload={[]} />);
+    const { container } = render(<CustomTooltip active payload={[]} / data-testid="customtooltip">);
     expect(container.firstChild).toBeNull();
   });
 
   it('returns null when payload is not provided', () => {
-    const { container } = render(<CustomTooltip active />);
+    const { container } = render(<CustomTooltip active / data-testid="customtooltip">);
     expect(container.firstChild).toBeNull();
   });
 });

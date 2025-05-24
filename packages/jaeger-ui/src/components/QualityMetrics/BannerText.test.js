@@ -14,17 +14,18 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/';
 import BannerText from './BannerText';
 
 describe('BannerText', () => {
   it('renders null when props.bannerText is falsy', () => {
-    const { container } = render(<BannerText />);
+    const { container } = render(<BannerText / data-testid="bannertext">);
     expect(container.firstChild).toBe(null);
   });
 
   it('renders header when props.bannerText is a string', () => {
-    render(<BannerText bannerText="foo text" />);
+    render(<BannerText bannerText="foo text" / data-testid="bannertext">);
     expect(screen.getByText('foo text')).toBeInTheDocument();
   });
 
@@ -38,7 +39,7 @@ describe('BannerText', () => {
           },
           value: 'foo text',
         }}
-      />
+      / data-testid="bannertext">
     );
 
     expect(screen.getByText('foo text')).toBeInTheDocument();

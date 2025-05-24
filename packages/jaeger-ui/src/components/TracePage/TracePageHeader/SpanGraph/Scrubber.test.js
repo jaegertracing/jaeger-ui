@@ -27,7 +27,7 @@ const renderInSvg = ui => {
   return { container: container.firstChild.firstChild, ...rest };
 };
 
-describe('<Scrubber />', () => {
+describe('<Scrubber / data-testid="scrubber">', () => {
   const defaultProps = {
     isDragging: false,
     position: 0,
@@ -37,7 +37,7 @@ describe('<Scrubber />', () => {
   };
 
   it('renders correctly', () => {
-    const { container } = renderInSvg(<Scrubber {...defaultProps} />);
+    const { container } = renderInSvg(<Scrubber {...defaultProps} / data-testid="scrubber">);
 
     // Check for the presence of the main line
     expect(container.querySelector('.Scrubber--line')).toBeInTheDocument();
@@ -53,7 +53,7 @@ describe('<Scrubber />', () => {
   it('positions elements based on the position prop', () => {
     const position = 0.5; // 50%
     const xPercent = `${position * 100}%`; // '50%'
-    const { container } = renderInSvg(<Scrubber {...defaultProps} position={position} />);
+    const { container } = renderInSvg(<Scrubber {...defaultProps} position={position} / data-testid="scrubber">);
 
     const line = container.querySelector('.Scrubber--line');
     const handle = container.querySelector('.Scrubber--handle');
@@ -67,7 +67,7 @@ describe('<Scrubber />', () => {
 
   it('calls onMouseDown when handles are clicked', () => {
     const onMouseDownMock = jest.fn();
-    renderInSvg(<Scrubber {...defaultProps} onMouseDown={onMouseDownMock} />);
+    renderInSvg(<Scrubber {...defaultProps} onMouseDown={onMouseDownMock} / data-testid="scrubber">);
 
     const handles = screen.getByTestId('scrubber-handles');
     fireEvent.mouseDown(handles);
@@ -76,13 +76,13 @@ describe('<Scrubber />', () => {
   });
 
   it('applies isDragging class when isDragging is true', () => {
-    const { container } = renderInSvg(<Scrubber {...defaultProps} isDragging />);
+    const { container } = renderInSvg(<Scrubber {...defaultProps} isDragging / data-testid="scrubber">);
     // The top-level <g> element should have the isDragging class
     expect(container).toHaveClass('Scrubber isDragging');
   });
 
   it('does not apply isDragging class when isDragging is false', () => {
-    const { container } = renderInSvg(<Scrubber {...defaultProps} isDragging={false} />);
+    const { container } = renderInSvg(<Scrubber {...defaultProps} isDragging={false} / data-testid="scrubber">);
     expect(container).toHaveClass('Scrubber');
     expect(container).not.toHaveClass('isDragging');
   });

@@ -14,6 +14,7 @@
 
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 import TraceHeader, { Attrs, EmptyAttrs } from './TraceHeader';
@@ -33,7 +34,7 @@ describe('TraceHeader', () => {
       ...passedProps,
     };
 
-    render(<TraceHeader {...props} />);
+    render(<TraceHeader {...props} / data-testid="traceheader">);
   };
 
   it('renders as expected', () => {
@@ -78,7 +79,7 @@ describe('TraceHeader', () => {
 
   describe('EmptyAttrs', () => {
     it('renders as expected', () => {
-      render(<EmptyAttrs />);
+      render(<EmptyAttrs / data-testid="emptyattrs">);
 
       expect(screen.getByTestId('TraceDiffHeader--traceAttr--empty'));
     });
@@ -89,7 +90,7 @@ describe('TraceHeader', () => {
       // Represents a minute in microseconds
       const ONE_MINUTE = 60 * 10 ** 6;
 
-      render(<Attrs duration={700} startTime={ONE_MINUTE} totalSpans={50} />);
+      render(<Attrs duration={700} startTime={ONE_MINUTE} totalSpans={50} / data-testid="attrs">);
 
       // Test that the shown values are correctly formatted
       expect(screen.getByText('January 1, 1970, 12:01:00 am'));
@@ -98,7 +99,7 @@ describe('TraceHeader', () => {
     });
 
     it('Attrs renders as expected when missing props', () => {
-      render(<Attrs />);
+      render(<Attrs / data-testid="attrs">);
 
       // Test that the default values are correctly
       expect(screen.getByText('January 1, 1970, 12:00:00 am'));

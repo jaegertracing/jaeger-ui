@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount, shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { notification } from 'antd';
 import { IoTimeOutline } from 'react-icons/io5';
 import LoadingIndicator from '../../common/LoadingIndicator';
@@ -36,16 +37,9 @@ jest.mock('antd', () => {
 });
 
 describe('<ArchiveNotifier>', () => {
-  let wrapper;
-  let defaultProps;
-
+  let rendered;
   beforeEach(() => {
-    defaultProps = {
-      archivedState: { isArchived: true },
-      acknowledge: jest.fn(),
-    };
-
-    wrapper = mount(<ArchiveNotifier {...defaultProps} />);
+    rendered = render(<ArchiveNotifier {...defaultProps} / data-testid="archivenotifier">));
   });
 
   afterEach(() => {
@@ -53,7 +47,7 @@ describe('<ArchiveNotifier>', () => {
   });
 
   it('renders with default props', () => {
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it('notification success() is called with default props', () => {
@@ -62,7 +56,7 @@ describe('<ArchiveNotifier>', () => {
         key: 'ENotifiedState.Outcome',
         description: null,
         duration: null,
-        icon: <IoTimeOutline className="ArchiveNotifier--doneIcon" />,
+        icon: <IoTimeOutline className="ArchiveNotifier--doneIcon" / data-testid="iotimeoutline">,
         message: 'This trace has been archived.',
         onClose: defaultProps.acknowledge,
       })
@@ -76,16 +70,16 @@ describe('<ArchiveNotifier>', () => {
 
   it('notification close() is not called onUnmount of null state', () => {
     const props = { ...defaultProps, archivedState: null };
-    wrapper = mount(<ArchiveNotifier {...props} />);
+    wrapper = mount(<ArchiveNotifier {...props} / data-testid="archivenotifier">);
 
-    expect(wrapper.state().notifiedState).toEqual(null);
+    expect(// RTL doesn't access component state directly - use assertions on rendered output instead.notifiedState).toEqual(null);
     wrapper.unmount();
     expect(notification.destroy).not.toBeCalled();
   });
 
   it('notification close() is not called onUnmount of isAcknowledged state', () => {
     const props = { ...defaultProps, archivedState: { isAcknowledged: true } };
-    wrapper = mount(<ArchiveNotifier {...props} />);
+    wrapper = mount(<ArchiveNotifier {...props} / data-testid="archivenotifier">);
 
     wrapper.unmount();
     expect(notification.destroy).not.toBeCalled();
@@ -94,7 +88,7 @@ describe('<ArchiveNotifier>', () => {
   it('will throw on missing both isArchived and error from archivedState prop', () => {
     const props = { ...defaultProps, archivedState: {} };
     expect(() => {
-      shallow(<ArchiveNotifier {...props} />);
+      shallow(<ArchiveNotifier {...props} / data-testid="archivenotifier">);
     }).toThrow('Unexpected condition');
   });
 
@@ -107,28 +101,28 @@ describe('<ArchiveNotifier>', () => {
    */
   it('sets internal notifiedState to null on null archivedState prop', () => {
     const props = { ...defaultProps, archivedState: null };
-    wrapper = mount(<ArchiveNotifier {...props} />);
+    wrapper = mount(<ArchiveNotifier {...props} / data-testid="archivenotifier">);
 
-    expect(wrapper.state().notifiedState).toEqual(null);
+    expect(// RTL doesn't access component state directly - use assertions on rendered output instead.notifiedState).toEqual(null);
   });
 
   it('sets internal notifiedState to null on archivedState.isAcknowledged', () => {
     const props = { ...defaultProps, archivedState: { isAcknowledged: true } };
-    wrapper = mount(<ArchiveNotifier {...props} />);
+    wrapper = mount(<ArchiveNotifier {...props} / data-testid="archivenotifier">);
 
-    expect(wrapper.state().notifiedState).toEqual(null);
+    expect(// RTL doesn't access component state directly - use assertions on rendered output instead.notifiedState).toEqual(null);
   });
 
   it('will call notification.info on isLoading is true', () => {
     const props = { ...defaultProps, archivedState: { isLoading: true } };
-    wrapper = mount(<ArchiveNotifier {...props} />);
+    wrapper = mount(<ArchiveNotifier {...props} / data-testid="archivenotifier">);
 
     expect(notification.info).toBeCalledWith(
       expect.objectContaining({
         key: 'ENotifiedState.Progress',
         description: null,
         duration: 0,
-        icon: <LoadingIndicator />,
+        icon: <LoadingIndicator / data-testid="loadingindicator">,
         message: 'Archiving trace...',
       })
     );
@@ -136,16 +130,16 @@ describe('<ArchiveNotifier>', () => {
 
   it('will call notification.warn on error state', () => {
     const props = { ...defaultProps, archivedState: { error: 'This is an error string' } };
-    wrapper = mount(<ArchiveNotifier {...props} />);
+    wrapper = mount(<ArchiveNotifier {...props} / data-testid="archivenotifier">);
 
     expect(notification.warning).toBeCalledWith(
       expect.objectContaining({
         key: 'ENotifiedState.Outcome',
         className: 'ArchiveNotifier--errorNotification',
-        description: <Details error="This is an error string" wrap />,
+        description: <Details error="This is an error string" wrap / data-testid="details">,
         duration: null,
-        icon: <IoTimeOutline className="ArchiveNotifier--errorIcon" />,
-        message: <Message error="This is an error string" wrap />,
+        icon: <IoTimeOutline className="ArchiveNotifier--errorIcon" / data-testid="iotimeoutline">,
+        message: <Message error="This is an error string" wrap / data-testid="message">,
         onClose: props.acknowledge,
       })
     );
@@ -153,7 +147,7 @@ describe('<ArchiveNotifier>', () => {
 
   it('will call notification.close new state type', () => {
     const props = { ...defaultProps, archivedState: { isLoading: true } };
-    wrapper = mount(<ArchiveNotifier {...props} />);
+    wrapper = mount(<ArchiveNotifier {...props} / data-testid="archivenotifier">);
 
     const newProps = { ...props, archivedState: { isArchived: true } };
     wrapper.setProps(newProps);

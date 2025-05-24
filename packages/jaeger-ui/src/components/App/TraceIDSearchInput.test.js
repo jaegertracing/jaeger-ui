@@ -22,15 +22,15 @@ import { Router } from 'react-router-dom';
 import TraceIDSearchInput from './TraceIDSearchInput';
 import { HistoryProvider } from '../../utils/useHistory';
 
-describe('<TraceIDSearchInput />', () => {
+describe('<TraceIDSearchInput / data-testid="traceidsearchinput">', () => {
   let history;
 
   beforeEach(() => {
     history = createMemoryHistory();
     render(
-      <HistoryProvider history={history}>
-        <Router history={history}>
-          <TraceIDSearchInput />
+      <HistoryProvider history={history} data-testid="historyprovider">
+        <Router history={history} data-testid="router">
+          <TraceIDSearchInput / data-testid="traceidsearchinput">
         </Router>
       </HistoryProvider>
     );

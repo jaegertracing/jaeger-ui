@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Checkbox } from 'antd';
 import { IoLocate } from 'react-icons/io5';
 import NewWindowIcon from '../NewWindowIcon';
@@ -11,8 +12,8 @@ import ActionsMenu from './ActionsMenu';
 describe('<ActionsMenu>', () => {
   const mockOnClick = jest.fn();
   const mockHref = 'http://example.com';
-  const mockIcon = <IoLocate />;
-  const mockNewWindowIcon = <NewWindowIcon />;
+  const mockIcon = <IoLocate / data-testid="iolocate">;
+  const mockNewWindowIcon = <NewWindowIcon / data-testid="newwindowicon">;
 
   const defaultProps = {
     items: [
@@ -44,10 +45,9 @@ describe('<ActionsMenu>', () => {
     ],
   };
 
-  let wrapper;
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<ActionsMenu {...defaultProps} />);
+    rendered = render(<ActionsMenu {...defaultProps} / data-testid="actionsmenu">);
     jest.clearAllMocks();
   });
 
@@ -71,7 +71,7 @@ describe('<ActionsMenu>', () => {
         isVisible: false,
       },
     ];
-    wrapper.setProps({ items: itemsWithHidden });
+    rendered = render({ items: itemsWithHidden });
     const menuItems = wrapper.find('.NodeContent--actionsItem');
     expect(menuItems).toHaveLength(3);
   });
@@ -109,7 +109,7 @@ describe('<ActionsMenu>', () => {
 
   it('applies custom className when provided', () => {
     const customClass = 'custom-class';
-    wrapper.setProps({ className: customClass });
+    rendered = render({ className: customClass });
     expect(wrapper.find(`.${customClass}`)).toHaveLength(1);
   });
 
@@ -144,13 +144,13 @@ describe('<ActionsMenu>', () => {
   });
 
   it('handles empty items array', () => {
-    wrapper.setProps({ items: [] });
+    rendered = render({ items: [] });
     const menuItems = wrapper.find('.NodeContent--actionsItem');
     expect(menuItems).toHaveLength(0);
   });
 
   it('handles undefined items prop', () => {
-    wrapper.setProps({ items: undefined });
+    rendered = render({ items: undefined });
     const menuItems = wrapper.find('.NodeContent--actionsItem');
     expect(menuItems).toHaveLength(0);
   });

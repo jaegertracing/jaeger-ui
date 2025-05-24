@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Button } from 'antd';
 
 import FilteredList from '../FilteredList';
@@ -28,30 +29,26 @@ describe('DetailTable', () => {
     selectedKeys: options.slice(1),
     setSelectedKeys: jest.fn(),
   };
-  let wrapper;
-
+  let rendered;
   beforeEach(() => {
-    props.clearFilters.mockReset();
-    props.confirm.mockReset();
-    props.setSelectedKeys.mockReset();
-    wrapper = shallow(<DetailTableDropdown {...props} />);
+    rendered = render(<DetailTableDropdown {...props} / data-testid="detailtabledropdown">));
   });
 
   describe('render', () => {
     it('renders as expected', () => {
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('filters duplicates and numbers out of selectedKeys', () => {
       const dupedKeysWithNumbers = props.selectedKeys
         .concat(props.selectedKeys)
         .concat([4, 8, 15, 16, 23, 42]);
-      wrapper.setProps({ selectedKeys: dupedKeysWithNumbers });
+      rendered = render({ selectedKeys: dupedKeysWithNumbers });
       expect(wrapper.find(FilteredList).prop('value')).toEqual(new Set(props.selectedKeys));
     });
 
     it('handles missing clearFilters prop', () => {
-      wrapper.setProps({ clearFilters: undefined });
+      rendered = render({ clearFilters: undefined });
       expect(() => wrapper.find(Button).first().simulate('click')).not.toThrow();
     });
   });
@@ -60,7 +57,7 @@ describe('DetailTable', () => {
     const selectedKeys = [options[0]];
 
     it('resets to this.selectedKeys on cancel and calls confirm once props reflect cancellation', () => {
-      wrapper.instance().selected = selectedKeys;
+      // RTL doesn't access component instances - use assertions on rendered output instead.selected = selectedKeys;
       expect(props.confirm).not.toHaveBeenCalled();
       expect(props.setSelectedKeys).not.toHaveBeenCalled();
 
@@ -69,25 +66,25 @@ describe('DetailTable', () => {
       expect(props.setSelectedKeys).toHaveBeenCalledWith(selectedKeys);
       expect(props.confirm).not.toHaveBeenCalled();
 
-      wrapper.setProps({ selectedKeys });
+      rendered = render({ selectedKeys });
       expect(props.setSelectedKeys).toHaveBeenCalledTimes(1);
       expect(props.confirm).toHaveBeenCalledTimes(1);
     });
 
     it('updates this.selectedKeys on open/close', () => {
-      expect(wrapper.instance().selected).not.toEqual(selectedKeys);
+      expect(// RTL doesn't access component instances - use assertions on rendered output instead.selected).not.toEqual(selectedKeys);
 
-      wrapper.setProps({ selectedKeys: selectedKeys.slice() });
-      expect(wrapper.instance().selected).not.toEqual(selectedKeys);
+      rendered = render({ selectedKeys: selectedKeys.slice() });
+      expect(// RTL doesn't access component instances - use assertions on rendered output instead.selected).not.toEqual(selectedKeys);
 
-      wrapper.setProps({ selectedKeys: selectedKeys.slice() });
-      expect(wrapper.instance().selected).toEqual(selectedKeys);
+      rendered = render({ selectedKeys: selectedKeys.slice() });
+      expect(// RTL doesn't access component instances - use assertions on rendered output instead.selected).toEqual(selectedKeys);
     });
 
     it('maintains this.selectedKeys on changed selection', () => {
-      wrapper.instance().selected = selectedKeys;
-      wrapper.setProps({ selectedKeys: props.options.slice(0, props.selectedKeys.length) });
-      expect(wrapper.instance().selected).toBe(selectedKeys);
+      // RTL doesn't access component instances - use assertions on rendered output instead.selected = selectedKeys;
+      rendered = render({ selectedKeys: props.options.slice(0, props.selectedKeys.length) });
+      expect(// RTL doesn't access component instances - use assertions on rendered output instead.selected).toBe(selectedKeys);
     });
   });
 

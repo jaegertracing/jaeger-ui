@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import CountCard from './CountCard';
 
@@ -23,21 +24,21 @@ describe('CountCard', () => {
   const examples = ['Examples'];
 
   it('renders null when props.count or props.title is absent', () => {
-    const { container: containerWithoutTitle } = render(<CountCard count={count} />);
+    const { container: containerWithoutTitle } = render(<CountCard count={count} / data-testid="countcard">);
     expect(containerWithoutTitle.firstChild).toBe(null);
-    const { container: containerWithoutCount } = render(<CountCard title={title} />);
+    const { container: containerWithoutCount } = render(<CountCard title={title} / data-testid="countcard">);
     expect(containerWithoutCount.firstChild).toBe(null);
   });
 
   it('renders as expected when given count and title', () => {
-    render(<CountCard count={count} title={title} />);
+    render(<CountCard count={count} title={title} / data-testid="countcard">);
 
     expect(screen.getByText(count)).toBeInTheDocument();
     expect(screen.getByText(title)).toBeInTheDocument();
   });
 
   it('renders as expected when given count, title, and examples', () => {
-    render(<CountCard count={count} title={title} examples={examples} />);
+    render(<CountCard count={count} title={title} examples={examples} / data-testid="countcard">);
 
     expect(screen.getByText(count)).toBeInTheDocument();
     expect(screen.getByText(title)).toBeInTheDocument();

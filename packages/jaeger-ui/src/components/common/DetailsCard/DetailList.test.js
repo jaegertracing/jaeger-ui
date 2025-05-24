@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 import DetailList from './DetailList';
@@ -22,7 +23,7 @@ describe('DetailList', () => {
   const details = ['foo', 'bar', 'baz'];
 
   it('renders list items with the provided details', () => {
-    render(<DetailList details={details} />);
+    render(<DetailList details={details} / data-testid="detaillist">);
 
     // Check if each detail string is rendered within a list item
     details.forEach(detail => {

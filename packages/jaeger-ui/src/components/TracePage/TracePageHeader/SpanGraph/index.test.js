@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import CanvasSpanGraph from './CanvasSpanGraph';
 import SpanGraph from './index';
@@ -37,22 +38,21 @@ describe('<SpanGraph>', () => {
     },
   };
 
-  let wrapper;
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<SpanGraph {...props} />);
+    rendered = render(<SpanGraph {...props} / data-testid="spangraph">));
   });
 
-  it('renders a <CanvasSpanGraph />', () => {
-    expect(wrapper.find(CanvasSpanGraph).length).toBe(1);
+  it('renders a <CanvasSpanGraph / data-testid="canvasspangraph">', () => {
+    expect(screen.getAllByTestId(CanvasSpanGraph)).toHaveLength(1);
   });
 
-  it('renders a <TickLabels />', () => {
-    expect(wrapper.find(TickLabels).length).toBe(1);
+  it('renders a <TickLabels / data-testid="ticklabels">', () => {
+    expect(screen.getAllByTestId(TickLabels)).toHaveLength(1);
   });
 
   it('returns a <div> if a trace is not provided', () => {
-    wrapper = shallow(<SpanGraph {...props} trace={null} />);
+    wrapper = shallow(<SpanGraph {...props} trace={null} / data-testid="spangraph">);
     expect(wrapper.matchesElement(<div />)).toBeTruthy();
   });
 
@@ -78,7 +78,7 @@ describe('<SpanGraph>', () => {
     const canvasGraph = wrapper.find(CanvasSpanGraph).first();
     const items = canvasGraph.prop('items');
 
-    wrapper.instance().forceUpdate();
+    // RTL doesn't access component instances - use assertions on rendered output instead.forceUpdate();
 
     const newCanvasGraph = wrapper.find(CanvasSpanGraph).first();
     const newItems = newCanvasGraph.prop('items');

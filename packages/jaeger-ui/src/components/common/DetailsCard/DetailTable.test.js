@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { IoFunnel, IoFunnelOutline } from 'react-icons/io5';
 
 import ExamplesLink from '../ExamplesLink';
@@ -48,19 +49,19 @@ describe('DetailTable', () => {
     };
 
     it('renders given rows and columns', () => {
-      expect(shallow(<DetailTable columnDefs={[col1, col0]} details={[row0, row1]} />)).toMatchSnapshot();
+      expect(shallow(<DetailTable columnDefs={[col1, col0]} details={[row0, row1]} / data-testid="detailtable">)).toMatchSnapshot();
     });
 
     it('infers all columns', () => {
-      expect(shallow(<DetailTable details={[row0]} />)).toMatchSnapshot();
+      expect(shallow(<DetailTable details={[row0]} / data-testid="detailtable">)).toMatchSnapshot();
     });
 
     it('infers missing columns', () => {
-      expect(shallow(<DetailTable columnDefs={[col0]} details={[row0]} />)).toMatchSnapshot();
+      expect(shallow(<DetailTable columnDefs={[col0]} details={[row0]} / data-testid="detailtable">)).toMatchSnapshot();
     });
 
     it('does not duplicate columns', () => {
-      expect(shallow(<DetailTable columnDefs={[col1]} details={[row0, row1]} />)).toMatchSnapshot();
+      expect(shallow(<DetailTable columnDefs={[col1]} details={[row0, row1]} / data-testid="detailtable">)).toMatchSnapshot();
     });
   });
 
@@ -86,13 +87,13 @@ describe('DetailTable', () => {
 
     it('handles object with React.Element value with key', () => {
       const key = 'test-key';
-      const elem = <ExamplesLink key={key} examples={examples} />;
+      const elem = <ExamplesLink key={key} examples={examples} / data-testid="exampleslink">;
       const row = { [column]: { value: elem } };
       expect(_rowKey(row)).toBe(JSON.stringify({ [column]: key }));
     });
 
     it('handles object with React.Element value without key', () => {
-      const elem = <ExamplesLink examples={examples} />;
+      const elem = <ExamplesLink examples={examples} / data-testid="exampleslink">;
       const row = { [column]: { value: elem } };
       expect(_rowKey(row)).toBe(JSON.stringify({ [column]: 'Unknown' }));
     });
@@ -183,8 +184,8 @@ describe('DetailTable', () => {
         const expected = new Set(filterableValues.map(v => v.value || v));
         const values = [
           ...filterableValues,
-          <ExamplesLink examples={[]} />,
-          <ExamplesLink key="fookey" examples={[]} />,
+          <ExamplesLink examples={[]} / data-testid="exampleslink">,
+          <ExamplesLink key="fookey" examples={[]} / data-testid="exampleslink">,
           undefined,
         ];
         const rows = values.map(value => ({
@@ -320,7 +321,7 @@ describe('DetailTable', () => {
           expect(_renderCell({ value })).toBe(value);
         });
 
-        it('renders <ExamplesLink />', () => {
+        it('renders <ExamplesLink / data-testid="exampleslink">', () => {
           const examples = [];
           const exampleLink = _renderCell(examples);
           expect(exampleLink.type).toBe(ExamplesLink);

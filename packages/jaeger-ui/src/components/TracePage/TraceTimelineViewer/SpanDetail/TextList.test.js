@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 import TextList from './TextList';
@@ -22,13 +23,13 @@ describe('<TextList>', () => {
   const data = ['string 1', 'string 2', 'another string'];
 
   it('renders without exploding', () => {
-    render(<TextList data={data} />);
+    render(<TextList data={data} / data-testid="textlist">);
     // Check if the list container is rendered (optional, but confirms basic rendering)
     expect(screen.getByRole('list')).toBeInTheDocument();
   });
 
   it('renders a list item for each data element', () => {
-    render(<TextList data={data} />);
+    render(<TextList data={data} / data-testid="textlist">);
     const listItems = screen.getAllByRole('listitem');
     expect(listItems).toHaveLength(data.length);
 
@@ -39,7 +40,7 @@ describe('<TextList>', () => {
   });
 
   it('renders nothing if data is empty', () => {
-    render(<TextList data={[]} />);
+    render(<TextList data={[]} / data-testid="textlist">);
     const listItems = screen.queryAllByRole('listitem');
     expect(listItems).toHaveLength(0);
   });

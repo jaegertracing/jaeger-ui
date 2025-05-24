@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Table, Tag } from 'antd';
 
 import CohortTable, { NEED_MORE_TRACES_MESSAGE } from './CohortTable';
@@ -55,18 +56,9 @@ describe('CohortTable', () => {
   };
 
   let formatDurationSpy;
-  let wrapper;
-
-  /**
-   * Creates a new wrapper with default props and specified props. It is necessary to create a new wrapper
-   * when props change because enzyme does not support wrapper.setProps for classes that render an array of
-   * elements.
-   *
-   * @param {Object} [specifiedProps={}] - Props to set that are different from props defined above.
-   * @returns {Object} - New wrapper.
-   */
-  function updateWrapper(specifiedProps = {}) {
-    wrapper = shallow(<CohortTable {...props} {...specifiedProps} />);
+  let rendered;
+  beforeEach(() => {
+    rendered = render(<CohortTable {...props} {...specifiedProps} / data-testid="cohorttable">);
   }
 
   function getRowRenderer(dataIndex) {
@@ -84,7 +76,7 @@ describe('CohortTable', () => {
   });
 
   it('renders as expected', () => {
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   describe('row selection', () => {

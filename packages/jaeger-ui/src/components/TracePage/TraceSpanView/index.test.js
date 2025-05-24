@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount, shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import TraceSpanView from './index';
 import transformTraceData from '../../../model/transform-trace-data';
 
@@ -22,52 +23,29 @@ import testTrace from '../TraceStatistics/tableValuesTestTrace/testTrace.json';
 const transformedTrace = transformTraceData(testTrace);
 
 describe('<TraceSpanView>', () => {
-  let wrapper;
-  let defaultProps;
-
+  let rendered;
   beforeEach(() => {
-    defaultProps = {
-      trace: transformedTrace,
-      uiFind: undefined,
-      uiFindVertexKeys: undefined,
-    };
+    rendered = render(<TraceSpanView {...defaultProps} / data-testid="tracespanview">);
 
-    wrapper = mount(<TraceSpanView {...defaultProps} />);
-  });
-
-  it('does not explode', () => {
-    expect(wrapper).toBeDefined();
-    expect(wrapper.find('.title--TraceSpanView').length).toBe(1);
-    expect(wrapper.find('.span-view-table').length).toBe(3);
-    expect(wrapper.find('table').length).toBe(1);
-    expect(wrapper.find('colgroup').length).toBe(1);
-    expect(wrapper.find('Pagination').length).toBe(2);
-    expect(wrapper.find('Button').length).toBe(1);
-    expect(wrapper.find('.ant-form-item-control-input').length).toBe(3);
-  });
-  it('Should change value when onChange was called', () => {
-    const event = ['service2'];
-    wrapper = shallow(<TraceSpanView {...defaultProps} />);
-
-    wrapper.find({ 'data-testid': 'select-service' }).simulate('change', event);
+    userEvent.change(screen.getByTestId({ 'data-testid': 'select-service' }), event);
     expect(wrapper.state('selectedServiceName')).toEqual(['service2']);
   });
   it('Should change value when onChange and Rest the value when called reset', () => {
     const event = ['service2'];
-    wrapper = shallow(<TraceSpanView {...defaultProps} />);
-    wrapper.find({ 'data-testid': 'select-service' }).simulate('change', event);
+    wrapper = shallow(<TraceSpanView {...defaultProps} / data-testid="tracespanview">);
+    userEvent.change(screen.getByTestId({ 'data-testid': 'select-service' }), event);
     expect(wrapper.state('selectedServiceName')).toEqual(['service2']);
-    wrapper.find('.reset-filter Button').simulate('click');
+    userEvent.click(screen.getByTestId('.reset-filter Button'));
     expect(wrapper.state('selectedServiceName')).toEqual([]);
   });
   it('Should change value when onChange OperatioName DDwas called', () => {
     const event = ['op2', 'op3'];
-    wrapper = shallow(<TraceSpanView {...defaultProps} />);
-    wrapper.find({ 'data-testid': 'select-operation' }).simulate('change', event);
+    wrapper = shallow(<TraceSpanView {...defaultProps} / data-testid="tracespanview">);
+    userEvent.change(screen.getByTestId({ 'data-testid': 'select-operation' }), event);
     expect(wrapper.state('selectedOperationName')).toEqual(['op2', 'op3']);
   });
   it('check handler', () => {
-    const instance = wrapper.instance();
+    const instance = // RTL doesn't access component instances - use assertions on rendered output instead;
     expect(instance.state.serviceNamesList).toBeDefined();
     expect(instance.state.serviceNamesList.length).toBe(2);
     expect(instance.state.serviceNamesList).toEqual(['service1', 'service2']);

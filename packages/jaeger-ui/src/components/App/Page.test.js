@@ -18,6 +18,7 @@ jest.mock('../../utils/tracking');
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 import { mapStateToProps, PageImpl as Page } from './Page';
@@ -43,7 +44,7 @@ describe('<Page>', () => {
       pathname: String(Math.random()),
       search: String(Math.random()),
     };
-    render(<Page {...props} />);
+    render(<Page {...props} / data-testid="page">);
   });
 
   it('renders without exploding', () => {
@@ -58,16 +59,16 @@ describe('<Page>', () => {
   it('tracks a pageView when the location changes', () => {
     trackPageView.mockReset();
     const newProps = { pathname: 'le-path', search: 'searching' };
-    const { rerender } = render(<Page {...props} />);
-    rerender(<Page {...newProps} />);
+    const { rerender } = render(<Page {...props} / data-testid="page">);
+    rerender(<Page {...newProps} / data-testid="page">);
     expect(trackPageView).toHaveBeenCalledWith(newProps.pathname, newProps.search);
   });
 
   it('tracks a pageView when the search changes but pathname is same', () => {
     trackPageView.mockReset();
     const staticPathname = '/same-path';
-    const { rerender } = render(<Page pathname={staticPathname} search="?a=1" />);
-    rerender(<Page pathname={staticPathname} search="?a=2" />);
+    const { rerender } = render(<Page pathname={staticPathname} search="?a=1" / data-testid="page">);
+    rerender(<Page pathname={staticPathname} search="?a=2" / data-testid="page">);
     expect(trackPageView).toHaveBeenCalledWith(staticPathname, '?a=2');
   });
 
@@ -78,7 +79,7 @@ describe('<Page>', () => {
         pathname: String(Math.random()),
         search: 'hideGraph',
       };
-      render(<Page embedded {...props} />);
+      render(<Page embedded {...props} / data-testid="page">);
     });
 
     it('renders without exploding', () => {

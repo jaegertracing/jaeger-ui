@@ -17,6 +17,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers } from 'redux';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import store from 'store';
 import MonitorATMPage from '.';
@@ -87,9 +88,9 @@ describe('<MonitorATMPage>', () => {
 
   it('does not explode and renders initial elements', () => {
     const { container } = render(
-      <Provider store={mockStore}>
+      <Provider store={mockStore} data-testid="provider">
         <MemoryRouter>
-          <MonitorATMPage />
+          <MonitorATMPage / data-testid="monitoratmpage">
         </MemoryRouter>
       </Provider>
     );
@@ -130,9 +131,9 @@ describe('<MonitorATMPage>', () => {
 
     // Render with the modified store
     render(
-      <Provider store={emptyStateStore}>
+      <Provider store={emptyStateStore} data-testid="provider">
         <MemoryRouter>
-          <MonitorATMPage />
+          <MonitorATMPage / data-testid="monitoratmpage">
         </MemoryRouter>
       </Provider>
     );

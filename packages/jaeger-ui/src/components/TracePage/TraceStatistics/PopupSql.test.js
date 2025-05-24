@@ -17,7 +17,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import PopupSql from './PopupSql';
 
-describe('<PopupSQL />', () => {
+describe('<PopupSQL / data-testid="popupsql">', () => {
   const popupContent = 'SELECT * FROM users WHERE id = ?';
   const closePopupMock = jest.fn();
 
@@ -28,7 +28,7 @@ describe('<PopupSQL />', () => {
 
   beforeEach(() => {
     closePopupMock.mockClear();
-    render(<PopupSql {...defaultProps} />);
+    render(<PopupSql {...defaultProps} / data-testid="popupsql">);
   });
 
   it('renders the header', () => {

@@ -29,7 +29,8 @@ jest.mock('./CriticalPath/index');
 
 import React from 'react';
 import sinon from 'sinon';
-import { shallow, mount } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import {
   makeShortcutCallbacks,
@@ -98,14 +99,9 @@ describe('<TracePage>', () => {
   };
   const notDefaultPropsId = `not ${defaultProps.id}`;
 
-  let wrapper;
-
-  beforeAll(() => {
-    filterSpansSpy.mockReturnValue(new Set());
-  });
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<TracePage {...defaultProps} />);
+    rendered = render(<TracePage {...defaultProps} / data-testid="tracepage">);
     filterSpansSpy.mockClear();
     updateUiFindSpy.mockClear();
   });
@@ -113,7 +109,7 @@ describe('<TracePage>', () => {
   describe('clearSearch', () => {
     it('calls updateUiFind with expected kwargs when clearing search', () => {
       expect(updateUiFindSpy).not.toHaveBeenCalled();
-      wrapper.setProps({ id: notDefaultPropsId });
+      rendered = render({ id: notDefaultPropsId });
       expect(updateUiFindSpy).toHaveBeenCalledWith({
         history: defaultProps.history,
         location: defaultProps.location,
@@ -123,16 +119,16 @@ describe('<TracePage>', () => {
 
     it('blurs _searchBar.current when _searchBar.current exists', () => {
       const blur = jest.fn();
-      wrapper.instance()._searchBar.current = {
+      // RTL doesn't access component instances - use assertions on rendered output instead._searchBar.current = {
         blur,
       };
-      wrapper.setProps({ id: notDefaultPropsId });
+      rendered = render({ id: notDefaultPropsId });
       expect(blur).toHaveBeenCalledTimes(1);
     });
 
     it('handles null _searchBar.current', () => {
-      expect(wrapper.instance()._searchBar.current).toBe(null);
-      wrapper.setProps({ id: notDefaultPropsId });
+      expect(// RTL doesn't access component instances - use assertions on rendered output instead._searchBar.current).toBe(null);
+      rendered = render({ id: notDefaultPropsId });
     });
   });
 
@@ -151,7 +147,7 @@ describe('<TracePage>', () => {
 
       it('calls props.focusUiFindMatches with props.trace.data and uiFind when props.trace.data is present', () => {
         const uiFind = 'test ui find';
-        wrapper.setProps({ uiFind });
+        rendered = render({ uiFind });
         wrapper.find(TracePageHeader).prop('focusUiFindMatches')();
         expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(defaultProps.trace.data, uiFind);
         expect(trackFocusSpy).toHaveBeenCalledTimes(1);
@@ -179,7 +175,7 @@ describe('<TracePage>', () => {
 
       it('calls scrollToNextVisibleSpan and tracks it', () => {
         const scrollNextSpy = jest
-          .spyOn(wrapper.instance()._scrollManager, 'scrollToNextVisibleSpan')
+          .spyOn(// RTL doesn't access component instances - use assertions on rendered output instead._scrollManager, 'scrollToNextVisibleSpan')
           .mockImplementation();
         wrapper.find(TracePageHeader).prop('nextResult')();
         expect(trackNextSpy).toHaveBeenCalledTimes(1);
@@ -200,7 +196,7 @@ describe('<TracePage>', () => {
 
       it('calls scrollToPrevVisibleSpan and tracks it', () => {
         const scrollPrevSpy = jest
-          .spyOn(wrapper.instance()._scrollManager, 'scrollToPrevVisibleSpan')
+          .spyOn(// RTL doesn't access component instances - use assertions on rendered output instead._scrollManager, 'scrollToPrevVisibleSpan')
           .mockImplementation();
         wrapper.find(TracePageHeader).prop('prevResult')();
         expect(trackPrevSpy).toHaveBeenCalledTimes(1);
@@ -213,39 +209,39 @@ describe('<TracePage>', () => {
     expect(filterSpansSpy).toHaveBeenCalledTimes(0);
 
     const uiFind = 'uiFind';
-    wrapper.setProps({ uiFind });
+    rendered = render({ uiFind });
     // changing props.id is used to trigger renders without invalidating memo cache key
-    wrapper.setProps({ id: notDefaultPropsId });
+    rendered = render({ id: notDefaultPropsId });
     expect(filterSpansSpy).toHaveBeenCalledTimes(1);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, defaultProps.trace.data.spans);
 
     const newTrace = { ...defaultProps.trace, traceID: `not-${defaultProps.trace.traceID}` };
-    wrapper.setProps({ trace: newTrace });
-    wrapper.setProps({ id: defaultProps.id });
+    rendered = render({ trace: newTrace });
+    rendered = render({ id: defaultProps.id });
     expect(filterSpansSpy).toHaveBeenCalledTimes(2);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, newTrace.data.spans);
 
     // Mutating props is not advised, but emulates behavior done somewhere else
     newTrace.data.spans.splice(0, newTrace.data.spans.length / 2);
-    wrapper.setProps({ id: notDefaultPropsId });
-    wrapper.setProps({ id: defaultProps.id });
+    rendered = render({ id: notDefaultPropsId });
+    rendered = render({ id: defaultProps.id });
     expect(filterSpansSpy).toHaveBeenCalledTimes(3);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, newTrace.data.spans);
   });
 
   it('renders a a loading indicator when not provided a fetched trace', () => {
-    wrapper.setProps({ trace: null });
+    rendered = render({ trace: null });
     const loading = wrapper.find(LoadingIndicator);
     expect(loading.length).toBe(1);
   });
 
   it('renders an error message when given an error', () => {
-    wrapper.setProps({ trace: new Error('some-error') });
-    expect(wrapper.find(ErrorMessage).length).toBe(1);
+    rendered = render({ trace: new Error('some-error') });
+    expect(screen.getAllByTestId(ErrorMessage)).toHaveLength(1);
   });
 
   it('renders a loading indicator when loading', () => {
-    wrapper.setProps({ trace: null, loading: true });
+    rendered = render({ trace: null, loading: true });
     const loading = wrapper.find(LoadingIndicator);
     expect(loading.length).toBe(1);
   });
@@ -259,7 +255,7 @@ describe('<TracePage>', () => {
         replace: replaceMock,
       },
     };
-    shallow(<TracePage {...props} />);
+    shallow(<TracePage {...props} / data-testid="tracepage">);
     expect(replaceMock).toHaveBeenCalledWith(
       expect.objectContaining({
         pathname: expect.stringContaining(trace.traceID),
@@ -269,43 +265,43 @@ describe('<TracePage>', () => {
 
   it('focuses on search bar when there is a search bar and focusOnSearchBar is called', () => {
     const focus = jest.fn();
-    wrapper.instance()._searchBar.current = {
+    // RTL doesn't access component instances - use assertions on rendered output instead._searchBar.current = {
       focus,
     };
-    wrapper.instance().focusOnSearchBar();
+    // RTL doesn't access component instances - use assertions on rendered output instead.focusOnSearchBar();
     expect(focus).toHaveBeenCalledTimes(1);
   });
 
   it('handles absent search bar when there is not a search bar and focusOnSearchBar is called', () => {
-    expect(wrapper.instance()._searchBar.current).toBe(null);
-    wrapper.instance().focusOnSearchBar();
+    expect(// RTL doesn't access component instances - use assertions on rendered output instead._searchBar.current).toBe(null);
+    // RTL doesn't access component instances - use assertions on rendered output instead.focusOnSearchBar();
   });
 
   it('fetches the trace if necessary', () => {
     const fetchTrace = sinon.spy();
-    wrapper = mount(<TracePage {...defaultProps} trace={null} fetchTrace={fetchTrace} />);
+    wrapper = mount(<TracePage {...defaultProps} trace={null} fetchTrace={fetchTrace} / data-testid="tracepage">);
     expect(fetchTrace.called).toBeTruthy();
     expect(fetchTrace.calledWith(trace.traceID)).toBe(true);
   });
 
   it("doesn't fetch the trace if already present", () => {
     const fetchTrace = sinon.spy();
-    wrapper = mount(<TracePage {...defaultProps} fetchTrace={fetchTrace} />);
+    wrapper = mount(<TracePage {...defaultProps} fetchTrace={fetchTrace} / data-testid="tracepage">);
     expect(fetchTrace.called).toBeFalsy();
   });
 
   it('resets the view range when the trace changes', () => {
     const altTrace = { ...trace, traceID: 'some-other-id' };
     // mount because `.componentDidUpdate()`
-    wrapper = mount(<TracePage {...defaultProps} />);
+    wrapper = mount(<TracePage {...defaultProps} / data-testid="tracepage">);
     wrapper.setState({ viewRange: { time: [0.2, 0.8] } });
     wrapper.setProps({ id: altTrace.traceID, trace: { data: altTrace, state: fetchedState.DONE } });
     expect(wrapper.state('viewRange')).toEqual({ time: { current: [0, 1] } });
   });
 
   it('updates _scrollManager when recieving props', () => {
-    wrapper = shallow(<TracePage {...defaultProps} trace={null} />);
-    const scrollManager = wrapper.instance()._scrollManager;
+    wrapper = shallow(<TracePage {...defaultProps} trace={null} / data-testid="tracepage">);
+    const scrollManager = // RTL doesn't access component instances - use assertions on rendered output instead._scrollManager;
     scrollManager.setTrace = jest.fn();
     wrapper.setProps({ trace: { data: trace } });
     expect(scrollManager.setTrace.mock.calls).toEqual([[trace]]);
@@ -313,8 +309,8 @@ describe('<TracePage>', () => {
 
   it('performs misc cleanup when unmounting', () => {
     resetShortcuts.mockReset();
-    wrapper = shallow(<TracePage {...defaultProps} trace={null} />);
-    const scrollManager = wrapper.instance()._scrollManager;
+    wrapper = shallow(<TracePage {...defaultProps} trace={null} / data-testid="tracepage">);
+    const scrollManager = // RTL doesn't access component instances - use assertions on rendered output instead._scrollManager;
     scrollManager.destroy = jest.fn();
     wrapper.unmount();
     expect(scrollManager.destroy.mock.calls).toEqual([[]]);
@@ -337,7 +333,7 @@ describe('<TracePage>', () => {
                 hideMinimap,
               },
             };
-            wrapper.setProps({ embedded });
+            rendered = render({ embedded });
             expect(wrapper.find(TracePageHeader).prop('canCollapse')).toBe(!hideSummary || !hideMinimap);
           });
         });
@@ -346,7 +342,7 @@ describe('<TracePage>', () => {
 
     describe('calculates hideMap correctly', () => {
       it('is true if on traceGraphView', () => {
-        wrapper.instance().traceDagEV = { vertices: [], nodes: [] };
+        // RTL doesn't access component instances - use assertions on rendered output instead.traceDagEV = { vertices: [], nodes: [] };
         wrapper.setState({ viewType: ETraceViewType.TraceGraph });
         expect(wrapper.find(TracePageHeader).prop('hideMap')).toBe(true);
       });
@@ -401,7 +397,7 @@ describe('<TracePage>', () => {
         [{ timeline: {} }, undefined].forEach(embedded => {
           [true, false].forEach(archiveEnabled => {
             [{ archiveStorage: false }, { archiveStorage: true }].forEach(storageCapabilities => {
-              wrapper.setProps({ embedded, archiveEnabled, storageCapabilities });
+              rendered = render({ embedded, archiveEnabled, storageCapabilities });
               expect(wrapper.find(TracePageHeader).prop('showArchiveButton')).toBe(
                 !embedded && archiveEnabled && storageCapabilities.archiveStorage
               );
@@ -427,7 +423,7 @@ describe('<TracePage>', () => {
 
         const size = 20;
         filterSpansSpy.mockReturnValueOnce({ size });
-        wrapper.setProps({ uiFind: 'new ui find to bust memo' });
+        rendered = render({ uiFind: 'new ui find to bust memo' });
         expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(size);
       });
 
@@ -437,17 +433,17 @@ describe('<TracePage>', () => {
         const size = 30;
         getUiFindVertexKeysSpy.mockReturnValueOnce({ size });
         wrapper.setState({ viewType: ETraceViewType.TraceGraph });
-        wrapper.setProps({ uiFind: 'new ui find to bust memo' });
+        rendered = render({ uiFind: 'new ui find to bust memo' });
         expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(size);
       });
 
       it('defaults to 0', () => {
         // falsy uiFind for base case
-        wrapper.setProps({ uiFind: '' });
+        rendered = render({ uiFind: '' });
         expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(0);
 
         filterSpansSpy.mockReturnValueOnce(null);
-        wrapper.setProps({ uiFind: 'truthy uiFind' });
+        rendered = render({ uiFind: 'truthy uiFind' });
         expect(wrapper.find(TracePageHeader).prop('resultCount')).toBe(0);
 
         wrapper.setState({ traceGraphView: true });
@@ -457,7 +453,7 @@ describe('<TracePage>', () => {
 
     describe('isEmbedded derived props', () => {
       it('toggles derived props when embedded is provided', () => {
-        expect(wrapper.find(TracePageHeader).props()).toEqual(
+        expect(screen.getByTestId(TracePageHeader)).toEqual(
           expect.objectContaining({
             showShortcutsHelp: true,
             showStandaloneLink: false,
@@ -466,7 +462,7 @@ describe('<TracePage>', () => {
         );
 
         wrapper.setProps({ embedded: { timeline: {} } });
-        expect(wrapper.find(TracePageHeader).props()).toEqual(
+        expect(screen.getByTestId(TracePageHeader)).toEqual(
           expect.objectContaining({
             showShortcutsHelp: false,
             showStandaloneLink: true,
@@ -522,8 +518,8 @@ describe('<TracePage>', () => {
     ];
 
     beforeEach(() => {
-      wrapper = shallow(<TracePage {...defaultProps} />);
-      instance = wrapper.instance();
+      wrapper = shallow(<TracePage {...defaultProps} / data-testid="tracepage">);
+      instance = // RTL doesn't access component instances - use assertions on rendered output instead;
       time = { current: null };
       state = { viewRange: { time } };
     });
@@ -542,21 +538,21 @@ describe('<TracePage>', () => {
 
   describe('Archive', () => {
     it('renders ArchiveNotifier if props.archiveEnabled is true', () => {
-      expect(wrapper.find(ArchiveNotifier).length).toBe(0);
-      wrapper.setProps({ archiveEnabled: true });
-      expect(wrapper.find(ArchiveNotifier).length).toBe(1);
+      expect(screen.getAllByTestId(ArchiveNotifier)).toHaveLength(0);
+      rendered = render({ archiveEnabled: true });
+      expect(screen.getAllByTestId(ArchiveNotifier)).toHaveLength(1);
     });
 
     it('calls props.acknowledgeArchive when ArchiveNotifier acknowledges', () => {
       const acknowledgeArchive = jest.fn();
-      wrapper.setProps({ acknowledgeArchive, archiveEnabled: true });
+      rendered = render({ acknowledgeArchive, archiveEnabled: true });
       wrapper.find(ArchiveNotifier).prop('acknowledge')();
       expect(acknowledgeArchive).toHaveBeenCalledWith(defaultProps.id);
     });
 
     it("calls props.archiveTrace when TracePageHeader's archive button is clicked", () => {
       const archiveTrace = jest.fn();
-      wrapper.setProps({ archiveTrace });
+      rendered = render({ archiveTrace });
       wrapper.find(TracePageHeader).prop('onArchiveClicked')();
       expect(archiveTrace).toHaveBeenCalledWith(defaultProps.id);
     });
@@ -579,16 +575,16 @@ describe('<TracePage>', () => {
     });
 
     beforeEach(() => {
-      wrapper = mount(<TracePage {...defaultProps} />);
+      wrapper = mount(<TracePage {...defaultProps} / data-testid="tracepage">);
       // use the method directly because it is a `ref` prop
-      wrapper.instance().setHeaderHeight({ clientHeight: 1 });
+      // RTL doesn't access component instances - use assertions on rendered output instead.setHeaderHeight({ clientHeight: 1 });
       wrapper.update();
       refreshWrappers();
     });
 
     it('propagates headerHeight changes', () => {
       const h = 100;
-      const { setHeaderHeight } = wrapper.instance();
+      const { setHeaderHeight } = // RTL doesn't access component instances - use assertions on rendered output instead;
       // use the method directly because it is a `ref` prop
       setHeaderHeight({ clientHeight: h });
       wrapper.update();
@@ -596,7 +592,7 @@ describe('<TracePage>', () => {
       expect(sections.length).toBe(1);
       const section = sections.first();
       expect(section.prop('style')).toEqual({ paddingTop: h });
-      expect(section.containsMatchingElement(<TraceTimelineViewer />)).toBe(true);
+      expect(section.containsMatchingElement(<TraceTimelineViewer / data-testid="tracetimelineviewer">)).toBe(true);
       setHeaderHeight(null);
       wrapper.update();
       sections = wrapper.find('section');
@@ -607,7 +603,7 @@ describe('<TracePage>', () => {
       expect(wrapper.state('slimView')).toBe(false);
       // Empty trace avoids this spec from evaluating TracePageHeader's consumption of slimView
       wrapper = mount(
-        <TracePage {...defaultProps} trace={{}} embedded={{ timeline: { collapseTitle: true } }} />
+        <TracePage {...defaultProps} trace={{}} embedded={{ timeline: { collapseTitle: true } }} / data-testid="tracepage">
       );
       expect(wrapper.state('slimView')).toBe(true);
     });
@@ -626,7 +622,7 @@ describe('<TracePage>', () => {
     it('propagates textFilter changes', () => {
       const s = 'abc';
       expect(header.prop('textFilter')).toBeUndefined();
-      wrapper.setProps({ uiFind: s });
+      rendered = render({ uiFind: s });
       refreshWrappers();
       expect(header.prop('textFilter')).toBe(s);
     });
@@ -688,9 +684,9 @@ describe('<TracePage>', () => {
     }
 
     beforeEach(() => {
-      wrapper = mount(<TracePage {...defaultProps} />);
+      wrapper = mount(<TracePage {...defaultProps} / data-testid="tracepage">);
       // use the method directly because it is a `ref` prop
-      wrapper.instance().setHeaderHeight({ clientHeight: 1 });
+      // RTL doesn't access component instances - use assertions on rendered output instead.setHeaderHeight({ clientHeight: 1 });
       wrapper.update();
       refreshWrappers();
     });

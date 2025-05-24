@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import {
   MonitorATMServicesViewImpl as MonitorATMServicesView,
   mapStateToProps,
@@ -46,24 +47,16 @@ Date.now = jest.fn(() => 1487076708000); // Tue, 14 Feb 2017 12:51:48 GMT'
 jest.mock('lodash/debounce', () => fn => fn);
 
 describe('<MonitorATMServicesView>', () => {
-  let wrapper;
-  const mockFetchServices = jest.fn();
-  const mockFetchAllServiceMetrics = jest.fn();
-  const mockFetchAggregatedServiceMetrics = jest.fn();
-
-  beforeAll(() => {
-    Date.now = jest.fn(() => 1466424490000);
-  });
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(
+    rendered = render(
       <MonitorATMServicesView
         {...props}
         fetchServices={mockFetchServices}
         fetchAllServiceMetrics={mockFetchAllServiceMetrics}
         fetchAggregatedServiceMetrics={mockFetchAggregatedServiceMetrics}
-      />
-    );
+      / data-testid="monitoratmservicesview">
+    ));
   });
 
   afterEach(() => {
@@ -77,8 +70,8 @@ describe('<MonitorATMServicesView>', () => {
   });
 
   it('shows a loading indicator when loading services list', () => {
-    wrapper.setProps({ servicesLoading: true });
-    expect(wrapper.find(LoadingIndicator).length).toBe(1);
+    rendered = render({ servicesLoading: true });
+    expect(screen.getAllByTestId(LoadingIndicator)).toHaveLength(1);
   });
 
   it('do not show a loading indicator once data loaded', () => {
@@ -93,7 +86,7 @@ describe('<MonitorATMServicesView>', () => {
         isATMActivated: true,
       },
     });
-    expect(wrapper.find(LoadingIndicator).length).toBe(0);
+    expect(screen.getAllByTestId(LoadingIndicator)).toHaveLength(0);
   });
 
   it('render one service latency', () => {
@@ -123,7 +116,7 @@ describe('<MonitorATMServicesView>', () => {
         isATMActivated: false,
       },
     });
-    expect(wrapper.find(MonitorATMEmptyState).length).toBe(1);
+    expect(screen.getAllByTestId(MonitorATMEmptyState)).toHaveLength(1);
   });
 
   it('function invocation check on page load', () => {
@@ -156,7 +149,7 @@ describe('<MonitorATMServicesView>', () => {
         isATMActivated: true,
       },
     });
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it('ATM snapshot test with no metrics', () => {
@@ -172,7 +165,7 @@ describe('<MonitorATMServicesView>', () => {
         isATMActivated: true,
       },
     });
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it('render one service latency', () => {
@@ -185,7 +178,7 @@ describe('<MonitorATMServicesView>', () => {
         isATMActivated: true,
       },
     });
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it('ComponentWillUnmount remove listener', () => {
@@ -196,20 +189,20 @@ describe('<MonitorATMServicesView>', () => {
 
   it('resize window test', () => {
     const selectedInput = 'graphDivWrapper';
-    wrapper.instance()[selectedInput] = {
+    // RTL doesn't access component instances - use assertions on rendered output instead[selectedInput] = {
       current: {
         offsetWidth: 100,
       },
     };
     global.dispatchEvent(new Event('resize'));
-    expect(wrapper.state().graphWidth).toBe(76);
+    expect(// RTL doesn't access component state directly - use assertions on rendered output instead.graphWidth).toBe(76);
   });
 
   it('should update state after choosing a new timeframe', () => {
-    const firstGraphXDomain = wrapper.state().graphXDomain;
-    wrapper.instance().handleTimeFrameChange(3600000 * 2);
+    const firstGraphXDomain = // RTL doesn't access component state directly - use assertions on rendered output instead.graphXDomain;
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleTimeFrameChange(3600000 * 2);
 
-    expect(wrapper.state().graphXDomain).not.toBe(firstGraphXDomain);
+    expect(// RTL doesn't access component state directly - use assertions on rendered output instead.graphXDomain).not.toBe(firstGraphXDomain);
   });
 
   it('search test', () => {
@@ -225,12 +218,12 @@ describe('<MonitorATMServicesView>', () => {
       },
     });
 
-    wrapper.find('Search').simulate('change', { target: { value: 'place' } });
-    expect(wrapper.state().serviceOpsMetrics.length).toBe(1);
-    wrapper.find('Search').simulate('change', { target: { value: 'qqq' } });
-    expect(wrapper.state().serviceOpsMetrics.length).toBe(0);
-    wrapper.find('Search').simulate('change', { target: { value: '' } });
-    expect(wrapper.state().serviceOpsMetrics.length).toBe(1);
+    userEvent.change(screen.getByTestId('Search'), { target: { value: 'place' } });
+    expect(// RTL doesn't access component state directly - use assertions on rendered output instead.serviceOpsMetrics.length).toBe(1);
+    userEvent.change(screen.getByTestId('Search'), { target: { value: 'qqq' } });
+    expect(// RTL doesn't access component state directly - use assertions on rendered output instead.serviceOpsMetrics.length).toBe(0);
+    userEvent.change(screen.getByTestId('Search'), { target: { value: '' } });
+    expect(// RTL doesn't access component state directly - use assertions on rendered output instead.serviceOpsMetrics.length).toBe(1);
   });
 
   it('Error in serviceLatencies ', () => {
@@ -303,7 +296,7 @@ describe('<MonitorATMServicesView>', () => {
       metrics: { ...originInitialState, serviceOpsMetrics },
     });
 
-    wrapper.find('Search').simulate('change', { target: { value: newValue } });
+    userEvent.change(screen.getByTestId('Search'), { target: { value: newValue } });
     expect(trackSearchOperationSpy).toHaveBeenCalledWith(newValue);
 
     wrapper.find('SearchableSelect').first().prop('onChange')(newValue);
@@ -315,7 +308,7 @@ describe('<MonitorATMServicesView>', () => {
     wrapper.find('SearchableSelect').last().prop('onChange')(timeFrameOption.value);
     expect(trackSelectTimeframeSpy).toHaveBeenCalledWith(timeFrameOption.label);
 
-    wrapper.find({ children: 'View all traces' }).simulate('click');
+    userEvent.click(screen.getByTestId({ children: 'View all traces' }));
     expect(trackViewAllTracesSpy).toHaveBeenCalled();
 
     trackSelectServiceSpy.mockReset();
@@ -328,29 +321,16 @@ describe('<MonitorATMServicesView>', () => {
 
 describe('<MonitorATMServicesView> on page switch', () => {
   /* eslint-disable @typescript-eslint/no-unused-vars */
-  let wrapper;
-  const stateOnPageSwitch = {
-    services: {
-      services: ['s1'],
-    },
-    metrics: originInitialState,
-    selectedService: undefined,
-  };
-
-  const propsOnPageSwitch = mapStateToProps(stateOnPageSwitch);
-  const mockFetchServices = jest.fn();
-  const mockFetchAllServiceMetrics = jest.fn();
-  const mockFetchAggregatedServiceMetrics = jest.fn();
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(
+    rendered = render(
       <MonitorATMServicesView
         {...propsOnPageSwitch}
         fetchServices={mockFetchServices}
         fetchAllServiceMetrics={mockFetchAllServiceMetrics}
         fetchAggregatedServiceMetrics={mockFetchAggregatedServiceMetrics}
-      />
-    );
+      / data-testid="monitoratmservicesview">
+    ));
   });
 
   it('function invocation check on page load', () => {

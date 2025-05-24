@@ -39,14 +39,14 @@ describe('HopsSelector', () => {
   });
 
   it('renders nothing when distanceToPathElems is not provided', () => {
-    const { container } = render(<HopsSelector handleClick={mockHandleClick} />);
+    const { container } = render(<HopsSelector handleClick={mockHandleClick} / data-testid="hopsselector">);
     expect(container.firstChild).toBeEmptyDOMElement();
   });
 
   describe('with distanceToPathElems', () => {
     it('renders selectors with default visibility (<= 2 hops)', async () => {
       const user = userEvent.setup();
-      render(<HopsSelector distanceToPathElems={distanceToPathElems} handleClick={mockHandleClick} />);
+      render(<HopsSelector distanceToPathElems={distanceToPathElems} handleClick={mockHandleClick} / data-testid="hopsselector">);
 
       // Check Upstream Trigger Button Display (Furthest Visible / Total)
       const upstreamTrigger = screen.getByText('Upstream hops').closest('span');
@@ -113,7 +113,7 @@ describe('HopsSelector', () => {
 
     it('handles DDGs smaller than two hops', async () => {
       const user = userEvent.setup();
-      render(<HopsSelector distanceToPathElems={shortPathElems} handleClick={mockHandleClick} />);
+      render(<HopsSelector distanceToPathElems={shortPathElems} handleClick={mockHandleClick} / data-testid="hopsselector">);
 
       // Check Upstream Trigger (Furthest/Total = 1/1)
       const upstreamTrigger = screen.getByText('Upstream hops').closest('span');
@@ -138,7 +138,7 @@ describe('HopsSelector', () => {
           distanceToPathElems={distanceToPathElems}
           visEncoding={visEncoding}
           handleClick={mockHandleClick}
-        />
+        / data-testid="hopsselector">
       );
 
       // Check Upstream Trigger Display (tests use observed values for this encoding)
@@ -188,7 +188,7 @@ describe('HopsSelector', () => {
 
     it('handles clicks on increment/decrement buttons', async () => {
       const user = userEvent.setup();
-      render(<HopsSelector distanceToPathElems={distanceToPathElems} handleClick={mockHandleClick} />);
+      render(<HopsSelector distanceToPathElems={distanceToPathElems} handleClick={mockHandleClick} / data-testid="hopsselector">);
 
       // Open upstream popover
       const upstreamTrigger = screen.getByText('Upstream hops').closest('span');

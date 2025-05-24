@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import OperationsGraph from './opsGraph';
 import { serviceOpsMetrics } from '../../../../reducers/metrics.mock';
@@ -33,18 +34,18 @@ describe('<OperationsGraph>', () => {
   };
 
   it('does not explode', () => {
-    const { container } = render(<OperationsGraph {...defaultProps} />);
+    const { container } = render(<OperationsGraph {...defaultProps} / data-testid="operationsgraph">);
     expect(container).toBeInTheDocument();
   });
 
   it('"No Data" is displayed', () => {
-    render(<OperationsGraph {...defaultProps} />);
+    render(<OperationsGraph {...defaultProps} / data-testid="operationsgraph">);
     expect(screen.getByText('No Data')).toBeInTheDocument();
     expect(screen.queryByTestId('.ops-container')).not.toBeInTheDocument();
   });
 
   it('"Couldn\'t fetch data" displayed', () => {
-    render(<OperationsGraph {...defaultProps} error={new Error('API Error')} />);
+    render(<OperationsGraph {...defaultProps} error={new Error('API Error')} / data-testid="operationsgraph">);
     expect(screen.getByText("Couldn't fetch data")).toBeInTheDocument();
     expect(screen.queryByTestId('.ops-container')).not.toBeInTheDocument();
   });
@@ -54,7 +55,7 @@ describe('<OperationsGraph>', () => {
       ...defaultProps,
       dataPoints: serviceOpsMetrics[0].dataPoints.service_operation_call_rate,
     };
-    const { container } = render(<OperationsGraph {...props} />);
+    const { container } = render(<OperationsGraph {...props} / data-testid="operationsgraph">);
     expect(container.querySelector('.ops-container')).toBeInTheDocument();
     expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
     expect(container.querySelector('.recharts-area')).toBeInTheDocument();
@@ -66,7 +67,7 @@ describe('<OperationsGraph>', () => {
       dataPoints: [{ x: 1, y: 50 }],
       yDomain: [0, 100],
     };
-    const { container } = render(<OperationsGraph {...props} />);
+    const { container } = render(<OperationsGraph {...props} / data-testid="operationsgraph">);
     expect(container.querySelector('.ops-container')).toBeInTheDocument();
     expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
   });
@@ -81,7 +82,7 @@ describe('<OperationsGraph>', () => {
         { x: 4, y: 30 },
       ],
     };
-    const { container } = render(<OperationsGraph {...props} />);
+    const { container } = render(<OperationsGraph {...props} / data-testid="operationsgraph">);
     expect(container.querySelector('.ops-container')).toBeInTheDocument();
     expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
   });
@@ -94,7 +95,7 @@ describe('<OperationsGraph>', () => {
         { x: 2, y: null },
       ],
     };
-    const { container } = render(<OperationsGraph {...props} />);
+    const { container } = render(<OperationsGraph {...props} / data-testid="operationsgraph">);
     expect(container.querySelector('.ops-container')).toBeInTheDocument();
     expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
   });
@@ -106,7 +107,7 @@ describe('<OperationsGraph>', () => {
       { x: 3, y: undefined },
       { x: 4, y: 30 },
     ];
-    const { container } = render(<OperationsGraph dataPoints={dataPoints} />);
+    const { container } = render(<OperationsGraph dataPoints={dataPoints} / data-testid="operationsgraph">);
     expect(container.querySelector('.recharts-wrapper')).toBeInTheDocument();
   });
 

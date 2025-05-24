@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
@@ -92,7 +93,7 @@ describe('<TopNav>', () => {
     beforeEach(() => {
       component = render(
         <BrowserRouter>
-          <TopNav {...defaultProps} />
+          <TopNav {...defaultProps} / data-testid="topnav">
         </BrowserRouter>
       );
     });
@@ -132,7 +133,7 @@ describe('<TopNav>', () => {
     beforeEach(() => {
       component = render(
         <BrowserRouter>
-          <TopNav {...defaultProps} />
+          <TopNav {...defaultProps} / data-testid="topnav">
         </BrowserRouter>
       );
     });

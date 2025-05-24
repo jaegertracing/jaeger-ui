@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { InputNumber } from 'antd';
 import debounceMock from 'lodash/debounce';
 
@@ -34,33 +35,19 @@ describe('Header', () => {
     service,
     services: ['foo', 'bar', 'baz'],
   };
-  let wrapper;
-  let callDebouncedFn;
-  let setLookbackSpy;
-
-  beforeAll(() => {
-    debounceMock.mockImplementation(fn => {
-      setLookbackSpy = jest.fn((...args) => {
-        callDebouncedFn = () => fn(...args);
-      });
-      return setLookbackSpy;
-    });
-  });
-
+  let rendered;
   beforeEach(() => {
-    props.setLookback.mockReset();
-    setLookbackSpy = undefined;
-    wrapper = shallow(<Header {...props} />);
+    rendered = render(<Header {...props} / data-testid="header">));
   });
 
   describe('rendering', () => {
     it('renders as expected with minimum props', () => {
-      wrapper = shallow(<Header {...minProps} />);
-      expect(wrapper).toMatchSnapshot();
+      wrapper = shallow(<Header {...minProps} / data-testid="header">);
+      expect(container).toMatchSnapshot();
     });
 
     it('renders as expected with full props', () => {
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('renders props.lookback when state.ownInputValue is `undefined`', () => {

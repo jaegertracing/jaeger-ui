@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import DiffSelection, { CTA_MESSAGE } from './DiffSelection';
 import ResultItemTitle from './ResultItemTitle';
@@ -46,23 +47,23 @@ describe('DiffSelection', () => {
   ];
 
   it('renders a trace as expected', () => {
-    const wrapper = shallow(
-      <DiffSelection traces={traces.slice(0, 1)} toggleComparison={toggleComparison} />
+    const { container } = render(
+      <DiffSelection traces={traces.slice(0, 1)} toggleComparison={toggleComparison} / data-testid="diffselection">
     );
 
-    expect(wrapper.find(ResultItemTitle).length).toBe(1);
-    expect(wrapper).toMatchSnapshot();
+    expect(screen.getAllByTestId(ResultItemTitle)).toHaveLength(1);
+    expect(container).toMatchSnapshot();
   });
 
   it('renders multiple traces as expected', () => {
-    const wrapper = shallow(<DiffSelection traces={traces} toggleComparison={toggleComparison} />);
+    const { container } = render(<DiffSelection traces={traces} toggleComparison={toggleComparison} / data-testid="diffselection">);
 
     expect(wrapper.find(ResultItemTitle).length).toBe(traces.length);
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it('renders CTA_MESSAGE when given empty traces array', () => {
-    const wrapper = shallow(<DiffSelection traces={[]} toggleComparison={toggleComparison} />);
+    const { container } = render(<DiffSelection traces={[]} toggleComparison={toggleComparison} / data-testid="diffselection">);
     expect(wrapper.contains(CTA_MESSAGE)).toBe(true);
   });
 });

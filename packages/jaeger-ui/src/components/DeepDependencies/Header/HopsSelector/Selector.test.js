@@ -51,12 +51,12 @@ describe('Selector', () => {
 
   it('renders message when there are not enough hops', () => {
     // Render with only one hop
-    render(<Selector {...defaultProps} hops={[{ distance: 0, fullness: ECheckedStatus.Full }]} />);
+    render(<Selector {...defaultProps} hops={[{ distance: 0, fullness: ECheckedStatus.Full }]} / data-testid="selector">);
     expect(screen.getByText('No downstream hops')).toBeInTheDocument();
   });
 
   it('renders buttons with expected text and classes for Downstream', () => {
-    render(<Selector {...defaultProps} />);
+    render(<Selector {...defaultProps} / data-testid="selector">);
 
     // Check main display buttons (furthest visible and max hops)
     expect(screen.getByTestId('hop-down-2')).toHaveTextContent('2');
@@ -77,7 +77,7 @@ describe('Selector', () => {
         furthestDistance={-2}
         furthestFullDistance={-2}
         hops={upstreamHops}
-      />
+      / data-testid="selector">
     );
 
     // Check main display buttons (abs value is used for display)
@@ -91,7 +91,7 @@ describe('Selector', () => {
   });
 
   it('calls handleClick with correct arguments from label buttons', () => {
-    render(<Selector {...defaultProps} />);
+    render(<Selector {...defaultProps} / data-testid="selector">);
 
     // Furthest visible hop button
     fireEvent.click(screen.getByTestId('hop-down-2'));

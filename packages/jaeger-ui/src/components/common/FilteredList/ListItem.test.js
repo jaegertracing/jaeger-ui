@@ -13,44 +13,31 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import ListItem from './ListItem';
 
 describe('<ListItem>', () => {
-  let wrapper;
-  const props = {
-    style: {},
-    index: 0,
-    data: {
-      setValue: jest.fn(),
-      focusedIndex: null,
-      highlightQuery: '',
-      options: ['a', 'b'],
-      selectedValue: null,
-    },
-  };
-  const selectedValue = props.data.options[props.index];
-
+  let rendered;
   beforeEach(() => {
-    props.data.setValue.mockReset();
-    wrapper = shallow(<ListItem {...props} />);
+    rendered = render(<ListItem {...props} / data-testid="listitem">));
   });
 
   it('renders without exploding', () => {
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it('is focused when the index is the focusIndex', () => {
     const data = { ...props.data, focusedIndex: props.index };
-    wrapper.setProps({ data });
-    expect(wrapper).toMatchSnapshot();
+    rendered = render({ data });
+    expect(container).toMatchSnapshot();
   });
 
   it('is selected when options[index] == selectedValue', () => {
     const data = { ...props.data, selectedValue };
-    wrapper.setProps({ data });
-    expect(wrapper).toMatchSnapshot();
+    rendered = render({ data });
+    expect(container).toMatchSnapshot();
   });
 
   it('sets the value when clicked', () => {
@@ -65,23 +52,23 @@ describe('<ListItem>', () => {
     const data = { ...props.data, multi: true };
 
     beforeEach(() => {
-      wrapper.setProps({ data });
+      rendered = render({ data });
       addValues.mockReset();
       removeValues.mockReset();
     });
 
     it('renders without exploding', () => {
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('renders as selected when selected', () => {
       wrapper.setProps({ data: { ...data, selectedValue } });
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('renders as selected when selected with others', () => {
       wrapper.setProps({ data: { ...data, selectedValue: new Set(props.data.options) } });
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('no-ops on click when multi add/remove functions are not both available', () => {

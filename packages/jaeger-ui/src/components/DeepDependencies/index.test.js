@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import _set from 'lodash/set';
 
 import { DeepDependencyGraphPageImpl, mapDispatchToProps, mapStateToProps } from '.';
@@ -518,23 +519,21 @@ describe('DeepDependencyGraphPage', () => {
     });
 
     describe('select vertex', () => {
-      let wrapper;
-      const selectedVertex = { key: 'test vertex' };
-
-      beforeEach(() => {
-        wrapper = shallow(<DeepDependencyGraphPageImpl {...props} graphState={undefined} />);
-      });
+      let rendered;
+  beforeEach(() => {
+    rendered = render(<DeepDependencyGraphPageImpl {...props} graphState={undefined} / data-testid="deepdependencygraphpageimpl">));
+  });
 
       it('selects a vertex', () => {
         expect(wrapper.state('selectedVertex')).toBeUndefined();
-        wrapper.instance().selectVertex(selectedVertex);
+        // RTL doesn't access component instances - use assertions on rendered output instead.selectVertex(selectedVertex);
         expect(wrapper.state('selectedVertex')).toEqual(selectedVertex);
       });
 
       it('clears a vertex', () => {
         wrapper.setState({ selectedVertex });
         expect(wrapper.state('selectedVertex')).toEqual(selectedVertex);
-        wrapper.instance().selectVertex();
+        // RTL doesn't access component instances - use assertions on rendered output instead.selectVertex();
         expect(wrapper.state('selectedVertex')).toBeUndefined();
       });
     });
@@ -671,15 +670,15 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('renders message to query a ddg when no graphState is provided', () => {
-        const message = shallow(<DeepDependencyGraphPageImpl {...props} graphState={undefined} />)
+        const message = shallow(<DeepDependencyGraphPageImpl {...props} graphState={undefined} / data-testid="deepdependencygraphpageimpl">)
           .find('h1')
           .last();
         expect(message.text()).toBe('Enter query above');
       });
 
       it('renders LoadingIndicator when loading', () => {
-        const wrapper = shallow(
-          <DeepDependencyGraphPageImpl {...props} graphState={{ state: fetchedState.LOADING }} />
+        const { container } = render(
+          <DeepDependencyGraphPageImpl {...props} graphState={{ state: fetchedState.LOADING }} / data-testid="deepdependencygraphpageimpl">
         );
         expect(wrapper.find(LoadingIndicator)).toHaveLength(1);
       });
@@ -687,7 +686,7 @@ describe('DeepDependencyGraphPage', () => {
       it('renders ErrorMessage when erred', () => {
         const error = 'Some API error';
         const errorComponent = shallow(
-          <DeepDependencyGraphPageImpl {...props} graphState={{ error, state: fetchedState.ERROR }} />
+          <DeepDependencyGraphPageImpl {...props} graphState={{ error, state: fetchedState.ERROR }} / data-testid="deepdependencygraphpageimpl">
         ).find(ErrorMessage);
         expect(errorComponent).toHaveLength(1);
         expect(errorComponent.prop('error')).toBe(error);
@@ -713,18 +712,10 @@ describe('DeepDependencyGraphPage', () => {
         }
         let getConfigValueSpy;
         let getSearchUrlSpy;
-        let wrapper;
-
-        beforeAll(() => {
-          getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue');
-          getSearchUrlSpy = jest.spyOn(getSearchUrl, 'getUrl');
-        });
-
-        beforeEach(() => {
-          getConfigValueSpy.mockClear();
-          getSearchUrlSpy.mockClear();
-          wrapper = shallow(<DeepDependencyGraphPageImpl {...props} graph={graph} />);
-        });
+        let rendered;
+  beforeEach(() => {
+    rendered = render(<DeepDependencyGraphPageImpl {...props} graph={graph} / data-testid="deepdependencygraphpageimpl">));
+  });
 
         it('renders graph if there are multiple vertices visible', () => {
           const graphComponent = wrapper.find(Graph);
@@ -776,7 +767,7 @@ describe('DeepDependencyGraphPage', () => {
             tags: '{"span.kind":"server"}',
           });
 
-          wrapper.setProps({ urlState: urlStateWithoutOp, ...makeGraphState() });
+          rendered = render({ urlState: urlStateWithoutOp, ...makeGraphState() });
           expect(wrapper.find(Graph)).toHaveLength(0);
           expect(wrapper.find('h1.Ddg--center').text()).toBe(expectedHeader);
           expect(wrapper.find('p.Ddg--center').first().text()).toBe(expectedInstruction(false));
@@ -792,7 +783,7 @@ describe('DeepDependencyGraphPage', () => {
 
       it('renders indication of unknown graphState', () => {
         const state = 'invalid state';
-        const unknownIndication = shallow(<DeepDependencyGraphPageImpl {...props} graphState={{ state }} />)
+        const unknownIndication = shallow(<DeepDependencyGraphPageImpl {...props} graphState={{ state }} / data-testid="deepdependencygraphpageimpl">)
           .find('div')
           .find('div')
           .last()
@@ -802,20 +793,20 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('renders indication of unknown state when done but no graph is provided', () => {
-        const wrapper = shallow(<DeepDependencyGraphPageImpl {...propsWithoutGraph} />);
+        const { container } = render(<DeepDependencyGraphPageImpl {...propsWithoutGraph} / data-testid="deepdependencygraphpageimpl">);
         const unknownIndication = wrapper.find('div').find('div').last().text();
         expect(wrapper.find(Graph)).toHaveLength(0);
         expect(unknownIndication).toMatch(/Unknown graphState/);
       });
 
       it('calculates uiFindCount and hiddenUiFindMatches', () => {
-        const wrapper = shallow(
-          <DeepDependencyGraphPageImpl {...propsWithoutGraph} uiFind="truthy uiFind" />
+        const { container } = render(
+          <DeepDependencyGraphPageImpl {...propsWithoutGraph} uiFind="truthy uiFind" / data-testid="deepdependencygraphpageimpl">
         );
         expect(wrapper.find(Header).prop('uiFindCount')).toBe(undefined);
         expect(wrapper.find(Header).prop('hiddenUiFindMatches')).toBe(undefined);
 
-        wrapper.setProps({ graph });
+        rendered = render({ graph });
         expect(wrapper.find(Header).prop('uiFindCount')).toBe(visibleFindCount);
         expect(wrapper.find(Header).prop('hiddenUiFindMatches').size).toBe(
           vertices.length - visibleFindCount
@@ -823,20 +814,20 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('passes correct operations to Header', () => {
-        const wrapper = shallow(
-          <DeepDependencyGraphPageImpl {...props} graph={graph} serverOpsForService={undefined} />
+        const { container } = render(
+          <DeepDependencyGraphPageImpl {...props} graph={graph} serverOpsForService={undefined} / data-testid="deepdependencygraphpageimpl">
         );
         expect(wrapper.find(Header).prop('operations')).toBe(undefined);
 
         const serverOpsForService = {
           [props.urlState.service]: ['testOperation0', 'testOperation1'],
         };
-        wrapper.setProps({ serverOpsForService });
+        rendered = render({ serverOpsForService });
         expect(wrapper.find(Header).prop('operations')).toBe(serverOpsForService[props.urlState.service]);
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { service: _, ...urlStateWithoutService } = props.urlState;
-        wrapper.setProps({ urlState: urlStateWithoutService });
+        rendered = render({ urlState: urlStateWithoutService });
         expect(wrapper.find(Header).prop('operations')).toBe(undefined);
       });
     });

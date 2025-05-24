@@ -15,6 +15,7 @@
 import React from 'react';
 import ShallowRenderer from 'react-test-renderer/shallow';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { LayoutManager } from '@jaegertracing/plexus';
 import DAG, {
@@ -94,7 +95,7 @@ describe('<DAG>', () => {
       edges: [{ from: 'parent-id', to: 'child-id', label: '1' }],
     };
 
-    renderer.render(<DAG data={data} />);
+    renderer.render(<DAG data={data} / data-testid="dag">);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.vertices).toHaveLength(2);
@@ -104,7 +105,7 @@ describe('<DAG>', () => {
   it('does not show nodes with empty strings or string with only spaces', () => {
     const data = { nodes: [], edges: [] };
 
-    renderer.render(<DAG data={data} />);
+    renderer.render(<DAG data={data} / data-testid="dag">);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
 
@@ -123,7 +124,7 @@ describe('<DAG>', () => {
       ],
     };
 
-    renderer.render(<DAG data={data} selectedService="service-a" selectedDepth={2} selectedLayout="dot" />);
+    renderer.render(<DAG data={data} selectedService="service-a" selectedDepth={2} selectedLayout="dot" / data-testid="dag">);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.vertices).toHaveLength(3);
@@ -139,7 +140,7 @@ describe('<DAG>', () => {
       ],
     };
 
-    renderer.render(<DAG data={data} selectedService="service-b" selectedDepth={1} selectedLayout="dot" />);
+    renderer.render(<DAG data={data} selectedService="service-b" selectedDepth={1} selectedLayout="dot" / data-testid="dag">);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.vertices).toHaveLength(3);
@@ -152,7 +153,7 @@ describe('<DAG>', () => {
       edges: [{ from: 'service-a', to: 'service-b', label: '1' }],
     };
 
-    renderer.render(<DAG data={data} selectedService="service-a" selectedDepth={1} selectedLayout="dot" />);
+    renderer.render(<DAG data={data} selectedService="service-a" selectedDepth={1} selectedLayout="dot" / data-testid="dag">);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.vertices).toHaveLength(2);
@@ -176,7 +177,7 @@ describe('<DAG>', () => {
       edges,
     };
 
-    renderer.render(<DAG data={data} selectedLayout="sfdp" />);
+    renderer.render(<DAG data={data} selectedLayout="sfdp" / data-testid="dag">);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.layoutManager.options).toMatchObject({
@@ -194,7 +195,7 @@ describe('<DAG>', () => {
       ],
     };
 
-    renderer.render(<DAG data={data} selectedLayout="dot" />);
+    renderer.render(<DAG data={data} selectedLayout="dot" / data-testid="dag">);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.layoutManager.options).toMatchObject({
@@ -207,7 +208,7 @@ describe('<DAG>', () => {
   });
 
   it('handles empty serviceCalls array', () => {
-    renderer.render(<DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" />);
+    renderer.render(<DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" / data-testid="dag">);
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
     expect(digraph.props.vertices).toHaveLength(0);
@@ -224,7 +225,7 @@ describe('<DAG>', () => {
     };
 
     renderer.render(
-      <DAG data={data} selectedService="service-a" selectedDepth={null} selectedLayout="dot" />
+      <DAG data={data} selectedService="service-a" selectedDepth={null} selectedLayout="dot" / data-testid="dag">
     );
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
@@ -251,7 +252,7 @@ describe('<DAG>', () => {
     };
     expect(data.nodes.length).toBeGreaterThan(DAG_MAX_NUM_SERVICES);
 
-    renderer.render(<DAG data={data} selectedLayout="dot" selectedDepth={1} selectedService="" />);
+    renderer.render(<DAG data={data} selectedLayout="dot" selectedDepth={1} selectedService="" / data-testid="dag">);
     const element = renderer.getRenderOutput();
 
     expect(element.type).toBe('div');
@@ -274,7 +275,7 @@ describe('<DAG>', () => {
         selectedLayout="dot"
         selectedDepth={1}
         uiFind={uiFind}
-      />
+      / data-testid="dag">
     );
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
@@ -288,7 +289,7 @@ describe('<DAG>', () => {
 
   it('defaults serviceCalls to empty array when not provided', () => {
     renderer.render(
-      <DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" selectedDepth={1} selectedService="" />
+      <DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" selectedDepth={1} selectedService="" / data-testid="dag">
     );
     const element = renderer.getRenderOutput();
     const digraph = element.props.children[0];
@@ -391,7 +392,7 @@ describe('clean up', () => {
 
   it('stops LayoutManager before unmounting', () => {
     const stopAndReleaseSpy = jest.spyOn(LayoutManager.prototype, 'stopAndRelease');
-    renderer.render(<DAG data={{ nodes: [], edges: [] }} />);
+    renderer.render(<DAG data={{ nodes: [], edges: [] }} / data-testid="dag">);
     const cleanupFunctions = React.useEffect.mock.results
       .map(result => result.value)
       .filter(fn => typeof fn === 'function');
@@ -543,7 +544,7 @@ describe('DAGMenu', () => {
     ];
 
     const DAGComponent = renderer.render(
-      <DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" selectedDepth={1} selectedService="" />
+      <DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" selectedDepth={1} selectedService="" / data-testid="dag">
     );
 
     const DAGMenuComponent = DAGComponent.props.children[1];
@@ -571,7 +572,7 @@ describe('DAGMenu', () => {
 
   it('should not render menu when any condition is not met', () => {
     const DAGComponent = renderer.render(
-      <DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" selectedDepth={1} selectedService="" />
+      <DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" selectedDepth={1} selectedService="" / data-testid="dag">
     );
 
     const DAGMenuComponent = DAGComponent.props.children[1];

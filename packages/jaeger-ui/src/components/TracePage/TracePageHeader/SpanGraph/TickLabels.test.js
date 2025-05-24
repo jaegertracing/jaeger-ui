@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 import TickLabels from './TickLabels';
@@ -33,7 +34,7 @@ describe('<TickLabels>', () => {
   beforeEach(() => {
     // Reset the mock before each test if needed, though it might not be strictly necessary here
     formatDuration.mockClear();
-    render(<TickLabels {...defaultProps} />);
+    render(<TickLabels {...defaultProps} / data-testid="ticklabels">);
   });
 
   it('renders the right number of ticks', () => {

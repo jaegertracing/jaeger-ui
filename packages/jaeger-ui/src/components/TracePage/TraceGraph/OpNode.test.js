@@ -13,36 +13,22 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import OpNode, { getNodeRenderer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 import CopyIcon from '../../common/CopyIcon';
 
 describe('<OpNode>', () => {
-  let wrapper;
-  let mode;
-  let props;
-
+  let rendered;
   beforeEach(() => {
-    mode = MODE_SERVICE;
-    props = {
-      count: 5,
-      errors: 0,
-      isUiFindMatch: false,
-      operation: 'op1',
-      percent: 7.89,
-      percentSelfTime: 90,
-      selfTime: 180000,
-      service: 'service1',
-      time: 200000,
-    };
-    wrapper = shallow(<OpNode {...props} mode={mode} />);
+    rendered = render(<OpNode {...props} mode={mode} / data-testid="opnode">));
   });
 
   it('does not explode', () => {
     expect(wrapper).toBeDefined();
-    expect(wrapper.find('.OpNode').length).toBe(1);
-    expect(wrapper.find('.OpNode--mode-service').length).toBe(1);
+    expect(screen.getAllByTestId('.OpNode')).toHaveLength(1);
+    expect(screen.getAllByTestId('.OpNode--mode-service')).toHaveLength(1);
   });
 
   it('renders OpNode', () => {
@@ -56,22 +42,22 @@ describe('<OpNode>', () => {
 
   it('switches mode', () => {
     mode = MODE_SERVICE;
-    wrapper = shallow(<OpNode {...props} mode={mode} />);
-    expect(wrapper.find('.OpNode--mode-service').length).toBe(1);
-    expect(wrapper.find('.OpNode--mode-time').length).toBe(0);
-    expect(wrapper.find('.OpNode--mode-selftime').length).toBe(0);
+    wrapper = shallow(<OpNode {...props} mode={mode} / data-testid="opnode">);
+    expect(screen.getAllByTestId('.OpNode--mode-service')).toHaveLength(1);
+    expect(screen.getAllByTestId('.OpNode--mode-time')).toHaveLength(0);
+    expect(screen.getAllByTestId('.OpNode--mode-selftime')).toHaveLength(0);
 
     mode = MODE_TIME;
-    wrapper = shallow(<OpNode {...props} mode={mode} />);
-    expect(wrapper.find('.OpNode--mode-service').length).toBe(0);
-    expect(wrapper.find('.OpNode--mode-time').length).toBe(1);
-    expect(wrapper.find('.OpNode--mode-selftime').length).toBe(0);
+    wrapper = shallow(<OpNode {...props} mode={mode} / data-testid="opnode">);
+    expect(screen.getAllByTestId('.OpNode--mode-service')).toHaveLength(0);
+    expect(screen.getAllByTestId('.OpNode--mode-time')).toHaveLength(1);
+    expect(screen.getAllByTestId('.OpNode--mode-selftime')).toHaveLength(0);
 
     mode = MODE_SELFTIME;
-    wrapper = shallow(<OpNode {...props} mode={mode} />);
-    expect(wrapper.find('.OpNode--mode-service').length).toBe(0);
-    expect(wrapper.find('.OpNode--mode-time').length).toBe(0);
-    expect(wrapper.find('.OpNode--mode-selftime').length).toBe(1);
+    wrapper = shallow(<OpNode {...props} mode={mode} / data-testid="opnode">);
+    expect(screen.getAllByTestId('.OpNode--mode-service')).toHaveLength(0);
+    expect(screen.getAllByTestId('.OpNode--mode-time')).toHaveLength(0);
+    expect(screen.getAllByTestId('.OpNode--mode-selftime')).toHaveLength(1);
   });
 
   it('renders a copy icon', () => {

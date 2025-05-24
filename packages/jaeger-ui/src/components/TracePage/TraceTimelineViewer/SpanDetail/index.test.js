@@ -16,7 +16,8 @@
 jest.mock('../utils');
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
@@ -29,91 +30,9 @@ import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 
 describe('<SpanDetail>', () => {
-  let wrapper;
-
-  // use `transformTraceData` on a fake trace to get a fully processed span
-  const span = transformTraceData(traceGenerator.trace({ numberOfSpans: 1 })).spans[0];
-  const detailState = new DetailState().toggleLogs().toggleProcess().toggleReferences().toggleTags();
-  const traceStartTime = 5;
-  const props = {
-    detailState,
-    span,
-    traceStartTime,
-    logItemToggle: jest.fn(),
-    logsToggle: jest.fn(),
-    processToggle: jest.fn(),
-    tagsToggle: jest.fn(),
-    warningsToggle: jest.fn(),
-    referencesToggle: jest.fn(),
-  };
-  span.logs = [
-    {
-      timestamp: 10,
-      fields: [
-        { key: 'message', value: 'oh the log message' },
-        { key: 'something', value: 'else' },
-      ],
-    },
-    {
-      timestamp: 20,
-      fields: [
-        { key: 'message', value: 'oh the next log message' },
-        { key: 'more', value: 'stuff' },
-      ],
-    },
-  ];
-
-  span.warnings = ['Warning 1', 'Warning 2'];
-
-  span.references = [
-    {
-      refType: 'CHILD_OF',
-      span: {
-        spanID: 'span2',
-        traceID: 'trace1',
-        operationName: 'op1',
-        process: {
-          serviceName: 'service1',
-        },
-      },
-      spanID: 'span1',
-      traceID: 'trace1',
-    },
-    {
-      refType: 'CHILD_OF',
-      span: {
-        spanID: 'span3',
-        traceID: 'trace1',
-        operationName: 'op2',
-        process: {
-          serviceName: 'service2',
-        },
-      },
-      spanID: 'span4',
-      traceID: 'trace1',
-    },
-    {
-      refType: 'CHILD_OF',
-      span: {
-        spanID: 'span6',
-        traceID: 'trace2',
-        operationName: 'op2',
-        process: {
-          serviceName: 'service2',
-        },
-      },
-      spanID: 'span5',
-      traceID: 'trace2',
-    },
-  ];
-
+  let rendered;
   beforeEach(() => {
-    formatDuration.mockReset();
-    props.tagsToggle.mockReset();
-    props.processToggle.mockReset();
-    props.logsToggle.mockReset();
-    props.logItemToggle.mockReset();
-    wrapper = shallow(<SpanDetail {...props} />);
+    rendered = render(<SpanDetail {...props} / data-testid="spandetail">));
   });
 
   it('renders without exploding', () => {
@@ -136,18 +55,18 @@ describe('<SpanDetail>', () => {
   });
 
   it('renders the span tags', () => {
-    const target = <AccordianKeyValues data={span.tags} label="Tags" isOpen={detailState.isTagsOpen} />;
+    const target = <AccordianKeyValues data={span.tags} label="Tags" isOpen={detailState.isTagsOpen} / data-testid="accordiankeyvalues">;
     expect(wrapper.containsMatchingElement(target)).toBe(true);
-    wrapper.find({ data: span.tags }).simulate('toggle');
+    userEvent.toggle(screen.getByTestId({ data: span.tags }));
     expect(props.tagsToggle).toHaveBeenLastCalledWith(span.spanID);
   });
 
   it('renders the process tags', () => {
     const target = (
-      <AccordianKeyValues data={span.process.tags} label="Process" isOpen={detailState.isProcessOpen} />
+      <AccordianKeyValues data={span.process.tags} label="Process" isOpen={detailState.isProcessOpen} / data-testid="accordiankeyvalues">
     );
     expect(wrapper.containsMatchingElement(target)).toBe(true);
-    wrapper.find({ data: span.process.tags }).simulate('toggle');
+    userEvent.toggle(screen.getByTestId({ data: span.process.tags }));
     expect(props.processToggle).toHaveBeenLastCalledWith(span.spanID);
   });
 
@@ -159,7 +78,7 @@ describe('<SpanDetail>', () => {
         isOpen={detailState.logs.isOpen}
         openedItems={detailState.logs.openedItems}
         timestamp={traceStartTime}
-      />
+      / data-testid="accordianlogs">
     );
     expect(wrapper.containsMatchingElement(target)).toBe(true);
     const accordianLogs = wrapper.find(AccordianLogs);

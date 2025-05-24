@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 import ExamplesLink from './ExamplesLink';
@@ -37,27 +38,27 @@ describe('ExamplesLink', () => {
   const expectedSpanParams = 'span=spanID00%40foo0&span=spanID10%20spanID11%40bar1';
 
   it('renders null when props.examples is absent', () => {
-    render(<ExamplesLink />);
+    render(<ExamplesLink / data-testid="exampleslink">);
     expect(screen.queryByRole('link')).toBeNull();
   });
 
   it('renders null when props.examples is empty', () => {
-    render(<ExamplesLink examples={[]} />);
+    render(<ExamplesLink examples={[]} / data-testid="exampleslink">);
     expect(screen.queryByRole('link')).toBeNull();
   });
 
   it('renders correctly when given trace links', () => {
-    render(<ExamplesLink examples={traceLinks} />);
+    render(<ExamplesLink examples={traceLinks} / data-testid="exampleslink">);
     expect(screen.getByRole('link')).toHaveAttribute('href', `/search?${expectedTraceParams}`);
   });
 
   it('renders as expected when given span links', () => {
-    render(<ExamplesLink examples={spanLinks} />);
+    render(<ExamplesLink examples={spanLinks} / data-testid="exampleslink">);
     expect(screen.getByRole('link')).toHaveAttribute('href', `/search?${expectedSpanParams}`);
   });
 
   it('renders as expected when given both span and trace links', () => {
-    render(<ExamplesLink examples={spanLinks.concat(traceLinks)} />);
+    render(<ExamplesLink examples={spanLinks.concat(traceLinks)} / data-testid="exampleslink">);
     expect(screen.getByRole('link')).toHaveAttribute(
       'href',
       `/search?${expectedSpanParams}&${expectedTraceParams}`
@@ -65,10 +66,10 @@ describe('ExamplesLink', () => {
   });
 
   it('renders label text iff props.includeText is true', () => {
-    render(<ExamplesLink examples={traceLinks} />);
+    render(<ExamplesLink examples={traceLinks} / data-testid="exampleslink">);
     expect(screen.queryByText('Examples')).toBeNull();
 
-    render(<ExamplesLink examples={traceLinks} includeText />);
+    render(<ExamplesLink examples={traceLinks} includeText / data-testid="exampleslink">);
     expect(screen.getByText('Examples')).toBeInTheDocument();
   });
 });

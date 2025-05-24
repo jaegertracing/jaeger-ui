@@ -30,7 +30,7 @@ describe('<GraphTicks>', () => {
   let container;
 
   beforeEach(() => {
-    const { container: c } = render(<GraphTicks {...defaultProps} />);
+    const { container: c } = render(<GraphTicks {...defaultProps} / data-testid="graphticks">);
     container = c;
   });
 

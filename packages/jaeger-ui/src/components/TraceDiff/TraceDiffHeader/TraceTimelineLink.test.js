@@ -21,7 +21,7 @@ describe('TraceTimelineLink', () => {
   const traceID = 'test-trace-id';
 
   beforeEach(() => {
-    render(<TraceTimelineLink traceID={traceID} />);
+    render(<TraceTimelineLink traceID={traceID} / data-testid="tracetimelinelink">);
   });
 
   it('renders the NewWindowIcon', () => {

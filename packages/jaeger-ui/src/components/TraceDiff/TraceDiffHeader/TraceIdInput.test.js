@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 import TraceIdInput from './TraceIdInput';
@@ -24,7 +25,7 @@ describe('TraceIdInput', () => {
   };
 
   it('renders as expected', () => {
-    render(<TraceIdInput {...props} />);
+    render(<TraceIdInput {...props} / data-testid="traceidinput">);
 
     // Check for the text rendered by addonBefore
     expect(screen.getByText('Select by Trace ID')).toBeInTheDocument();

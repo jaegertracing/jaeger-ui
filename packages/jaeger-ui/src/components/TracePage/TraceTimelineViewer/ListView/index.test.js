@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount, shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import ListView from './index';
 import { polyfill as polyfillAnimationFrame } from '../../../../utils/test/requestAnimationFrame';
@@ -51,39 +52,23 @@ describe('<ListView>', () => {
 
   function renderItem(itemKey, styles, itemIndex, attrs) {
     return (
-      <Item key={itemKey} style={styles} {...attrs}>
+      <Item key={itemKey} style={styles} {...attrs} data-testid="item">
         {itemIndex}
       </Item>
     );
   }
 
-  let wrapper;
-  let instance;
-
-  const props = {
-    dataLength: DATA_LENGTH,
-    getIndexFromKey: Number,
-    getKeyFromIndex: String,
-    initialDraw: 5,
-    itemHeightGetter: getHeight,
-    itemRenderer: renderItem,
-    itemsWrapperClassName: 'SomeClassName',
-    viewBuffer: 10,
-    viewBufferMin: 5,
-    windowScroller: false,
-  };
-
-  describe('shallow tests', () => {
-    beforeEach(() => {
-      wrapper = shallow(<ListView {...props} />);
-    });
+  let rendered;
+  beforeEach(() => {
+    rendered = render(<ListView {...props} / data-testid="listview">));
+  });
 
     it('renders without exploding', () => {
       expect(wrapper).toBeDefined();
     });
 
     it('matches a snapshot', () => {
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('initialDraw sets the number of items initially drawn', () => {
@@ -102,7 +87,7 @@ describe('<ListView>', () => {
     });
 
     it('saves the currently drawn indexes to _startIndexDrawn and _endIndexDrawn', () => {
-      const inst = wrapper.instance();
+      const inst = // RTL doesn't access component instances - use assertions on rendered output instead;
       expect(inst._startIndexDrawn).toBe(0);
       expect(inst._endIndexDrawn).toBe(props.initialDraw - 1);
     });
@@ -149,8 +134,8 @@ describe('<ListView>', () => {
 
       beforeEach(() => {
         initWrapperMock.mockClear();
-        wrapper = mount(<ListView {...props} />);
-        instance = wrapper.instance();
+        wrapper = mount(<ListView {...props} / data-testid="listview">);
+        instance = // RTL doesn't access component instances - use assertions on rendered output instead;
       });
 
       it('getViewHeight() returns the viewHeight', () => {
@@ -184,8 +169,8 @@ describe('<ListView>', () => {
         windowAddListenerSpy = jest.spyOn(window, 'addEventListener');
         windowRmListenerSpy = jest.spyOn(window, 'removeEventListener');
         const wsProps = { ...props, windowScroller: true };
-        wrapper = mount(<ListView {...wsProps} />);
-        instance = wrapper.instance();
+        wrapper = mount(<ListView {...wsProps} / data-testid="listview">);
+        instance = // RTL doesn't access component instances - use assertions on rendered output instead;
       });
 
       afterEach(() => {

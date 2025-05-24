@@ -13,42 +13,16 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
 
 describe('<AccordianLogs>', () => {
-  let wrapper;
-
-  const logs = [
-    {
-      timestamp: 10,
-      fields: [
-        { key: 'message', value: 'oh the log message' },
-        { key: 'something', value: 'else' },
-      ],
-    },
-    {
-      timestamp: 20,
-      fields: [
-        { key: 'message', value: 'oh the next log message' },
-        { key: 'more', value: 'stuff' },
-      ],
-    },
-  ];
-  const props = {
-    logs,
-    isOpen: false,
-    onItemToggle: jest.fn(),
-    onToggle: () => {},
-    openedItems: new Set([logs[1]]),
-    timestamp: 5,
-  };
-
+  let rendered;
   beforeEach(() => {
-    props.onItemToggle.mockReset();
-    wrapper = shallow(<AccordianLogs {...props} />);
+    rendered = render(<AccordianLogs {...props} / data-testid="accordianlogs">));
   });
 
   it('renders without exploding', () => {
@@ -66,7 +40,7 @@ describe('<AccordianLogs>', () => {
 
   it('shows log entries when expanded', () => {
     expect(wrapper.find(AccordianKeyValues).exists()).toBe(false);
-    wrapper.setProps({ isOpen: true });
+    rendered = render({ isOpen: true });
     const logViews = wrapper.find(AccordianKeyValues);
     expect(logViews.length).toBe(logs.length);
 
@@ -79,7 +53,7 @@ describe('<AccordianLogs>', () => {
   });
 
   it('propagates isOpen to log items correctly', () => {
-    wrapper.setProps({ isOpen: true });
+    rendered = render({ isOpen: true });
     const logViews = wrapper.find(AccordianKeyValues);
     logViews.forEach((node, i) => {
       expect(node.prop('isOpen')).toBe(props.openedItems.has(logs[i]));

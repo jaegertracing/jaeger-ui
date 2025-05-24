@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { TraceId } from './TraceId';
 import { getConfigValue } from '../../utils/config/get-config';
 
@@ -26,8 +27,6 @@ describe('TraceIdDisplayLength', () => {
   const MOCK_TRACE_ID = '12345678901234567890';
   const CUSTOM_CLASS = 'custom-class';
 
-  let wrapper;
-
   const defaultProps = {
     traceId: MOCK_TRACE_ID,
   };
@@ -36,26 +35,20 @@ describe('TraceIdDisplayLength', () => {
     jest.clearAllMocks();
   });
 
-  const createWrapper = (props = {}) => {
-    return shallow(<TraceId {...defaultProps} {...props} />);
-  };
-
   describe('TraceIdDisplayLength Component', () => {
     it('renders the default traceIdLength 7', () => {
       getConfigValue.mockReturnValue(undefined);
-      wrapper = createWrapper();
+      const { container } = render(<TraceId {...defaultProps} data-testid="traceid" />);
 
-      const displayedText = wrapper.text();
-      expect(displayedText).toEqual(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
+      expect(container.textContent).toEqual(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
     });
 
     it('renders the config length when provided', () => {
       const configuredLength = 5;
       getConfigValue.mockReturnValue(configuredLength);
-      wrapper = createWrapper();
+      const { container } = render(<TraceId {...defaultProps} data-testid="traceid" />);
 
-      const displayedText = wrapper.text();
-      expect(displayedText).toEqual(MOCK_TRACE_ID.slice(0, configuredLength));
+      expect(container.textContent).toEqual(MOCK_TRACE_ID.slice(0, configuredLength));
     });
   });
 
@@ -65,36 +58,40 @@ describe('TraceIdDisplayLength', () => {
       const configuredLength = 10;
       getConfigValue.mockReturnValue(configuredLength);
 
-      wrapper = createWrapper({ traceId: shortTraceId });
-      expect(wrapper.text()).toEqual(shortTraceId);
+      const { container } = render(<TraceId {...defaultProps} traceId={shortTraceId} data-testid="traceid" />);
+      expect(container.textContent).toEqual(shortTraceId);
     });
 
     it('renders when traceId is undefiend', () => {
-      wrapper = createWrapper({ traceId: '' });
-      expect(wrapper.text()).toEqual('');
+      const { container } = render(<TraceId {...defaultProps} traceId="" data-testid="traceid" />);
+      expect(container.textContent).toEqual('');
     });
   });
 
   describe('Style handling', () => {
     it('applies custom className when provided', () => {
-      wrapper = createWrapper({ className: CUSTOM_CLASS });
-      expect(wrapper.hasClass(CUSTOM_CLASS)).toBe(true);
+      const { container } = render(<TraceId {...defaultProps} className={CUSTOM_CLASS} data-testid="traceid" />);
+      const element = container.firstChild;
+      expect(element.classList.contains(CUSTOM_CLASS)).toBe(true);
     });
 
     it('default classes for styling', () => {
-      wrapper = createWrapper();
-      expect(wrapper.hasClass('TraceIDLength')).toBe(true);
-      expect(wrapper.hasClass('u-tx-muted')).toBe(true);
+      const { container } = render(<TraceId {...defaultProps} data-testid="traceid" />);
+      const element = container.firstChild;
+      expect(element.classList.contains('TraceIDLength')).toBe(true);
+      expect(element.classList.contains('u-tx-muted')).toBe(true);
     });
 
     it('adds a length-based class depending on the configuration', () => {
       getConfigValue.mockReturnValue(DEFAULT_LENGTH);
-      wrapper = createWrapper();
-      expect(wrapper.hasClass('TraceIDLength--short')).toBe(true);
+      const { container } = render(<TraceId {...defaultProps} data-testid="traceid" />);
+      const element = container.firstChild;
+      expect(element.classList.contains('TraceIDLength--short')).toBe(true);
 
       getConfigValue.mockReturnValue(32);
-      wrapper = createWrapper();
-      expect(wrapper.hasClass('TraceIDLength--full')).toBe(true);
+      const { container: container2 } = render(<TraceId {...defaultProps} data-testid="traceid" />);
+      const element2 = container2.firstChild;
+      expect(element2.classList.contains('TraceIDLength--full')).toBe(true);
     });
   });
 });

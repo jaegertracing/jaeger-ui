@@ -36,10 +36,10 @@ describe('withRouteProps', () => {
     const WrappedComponent = jest.fn(() => null);
     const ComponentWithRouteProps = withRouteProps(WrappedComponent);
     render(
-      <HistoryProvider history={mockHistory}>
-        <MemoryRouter initialEntries={['/test?param=value']}>
-          <Route path="/test">
-            <ComponentWithRouteProps />
+      <HistoryProvider history={mockHistory} data-testid="historyprovider">
+        <MemoryRouter initialEntries={['/test?param=value']} data-testid="memoryrouter">
+          <Route path="/test" data-testid="route">
+            <ComponentWithRouteProps / data-testid="componentwithrouteprops">
           </Route>
         </MemoryRouter>
       </HistoryProvider>

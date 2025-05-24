@@ -33,13 +33,13 @@ describe('CircularProgressbar', () => {
   };
 
   it('handles minimal props', () => {
-    render(<CircularProgressbar {...minProps} />);
+    render(<CircularProgressbar {...minProps} / data-testid="circularprogressbar">);
 
     expect(screen.getByTestId('circular-progress-bar')).toBeInTheDocument();
   });
 
   it('renders as expected with all props', () => {
-    render(<CircularProgressbar {...fullProps} />);
+    render(<CircularProgressbar {...fullProps} / data-testid="circularprogressbar">);
 
     expect(screen.getByTestId('circular-progress-bar')).toBeInTheDocument();
     expect(screen.getByText(fullProps.text)).toBeInTheDocument();

@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import { UnconnectedTraceDiffGraph as TraceDiffGraph } from './TraceDiffGraph';
 import ErrorMessage from '../../common/ErrorMessage';
@@ -42,30 +43,29 @@ describe('TraceDiffGraph', () => {
       state: fetchedState.DONE,
     },
   };
-  let wrapper;
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<TraceDiffGraph {...props} />);
+    rendered = render(<TraceDiffGraph {...props} / data-testid="tracediffgraph">));
   });
 
   it('renders warning when a or b are not provided', () => {
-    expect(wrapper.find('h1').length).toBe(0);
+    expect(screen.getAllByTestId('h1')).toHaveLength(0);
 
-    wrapper.setProps({ a: undefined });
-    expect(wrapper.find('h1').length).toBe(1);
+    rendered = render({ a: undefined });
+    expect(screen.getAllByTestId('h1')).toHaveLength(1);
     expect(wrapper.find('h1').text()).toBe('At least two Traces are needed');
 
-    wrapper.setProps({ b: undefined });
-    expect(wrapper.find('h1').length).toBe(1);
+    rendered = render({ b: undefined });
+    expect(screen.getAllByTestId('h1')).toHaveLength(1);
     expect(wrapper.find('h1').text()).toBe('At least two Traces are needed');
 
-    wrapper.setProps({ a: props.a });
-    expect(wrapper.find('h1').length).toBe(1);
+    rendered = render({ a: props.a });
+    expect(screen.getAllByTestId('h1')).toHaveLength(1);
     expect(wrapper.find('h1').text()).toBe('At least two Traces are needed');
   });
 
   it('renders warning when a or b have errored', () => {
-    expect(wrapper.find(ErrorMessage).length).toBe(0);
+    expect(screen.getAllByTestId(ErrorMessage)).toHaveLength(0);
 
     const errorA = 'some error text for trace a';
     wrapper.setProps({
@@ -75,8 +75,8 @@ describe('TraceDiffGraph', () => {
       },
     });
 
-    expect(wrapper.find(ErrorMessage).length).toBe(1);
-    expect(wrapper.find(ErrorMessage).props()).toEqual(
+    expect(screen.getAllByTestId(ErrorMessage)).toHaveLength(1);
+    expect(screen.getByTestId(ErrorMessage)).toEqual(
       expect.objectContaining({
         error: errorA,
       })
@@ -89,17 +89,17 @@ describe('TraceDiffGraph', () => {
       },
     });
 
-    expect(wrapper.find(ErrorMessage).length).toBe(2);
+    expect(screen.getAllByTestId(ErrorMessage)).toHaveLength(2);
     expect(wrapper.find(ErrorMessage).at(1).props()).toEqual(
       expect.objectContaining({
         error: errorB,
       })
     );
-    wrapper.setProps({
+    rendered = render({
       a: props.a,
     });
-    expect(wrapper.find(ErrorMessage).length).toBe(1);
-    expect(wrapper.find(ErrorMessage).props()).toEqual(
+    expect(screen.getAllByTestId(ErrorMessage)).toHaveLength(1);
+    expect(screen.getByTestId(ErrorMessage)).toEqual(
       expect.objectContaining({
         error: errorB,
       })
@@ -107,24 +107,24 @@ describe('TraceDiffGraph', () => {
   });
 
   it('renders a loading indicator when a or b are loading', () => {
-    expect(wrapper.find(LoadingIndicator).length).toBe(0);
+    expect(screen.getAllByTestId(LoadingIndicator)).toHaveLength(0);
 
     wrapper.setProps({
       a: {
         state: fetchedState.LOADING,
       },
     });
-    expect(wrapper.find(LoadingIndicator).length).toBe(1);
+    expect(screen.getAllByTestId(LoadingIndicator)).toHaveLength(1);
 
     wrapper.setProps({
       b: {
         state: fetchedState.LOADING,
       },
     });
-    expect(wrapper.find(LoadingIndicator).length).toBe(1);
+    expect(screen.getAllByTestId(LoadingIndicator)).toHaveLength(1);
 
-    wrapper.setProps({ a: props.a });
-    expect(wrapper.find(LoadingIndicator).length).toBe(1);
+    rendered = render({ a: props.a });
+    expect(screen.getAllByTestId(LoadingIndicator)).toHaveLength(1);
   });
 
   it('renders an empty div when a or b lack data', () => {
@@ -132,19 +132,19 @@ describe('TraceDiffGraph', () => {
 
     /* eslint-disable @typescript-eslint/no-unused-vars */
     const { data: unusedAData, ...aWithoutData } = props.a;
-    wrapper.setProps({ a: aWithoutData });
+    rendered = render({ a: aWithoutData });
     expect(wrapper.children().length).toBe(0);
 
     const { data: unusedBData, ...bWithoutData } = props.b;
-    wrapper.setProps({ b: bWithoutData });
+    rendered = render({ b: bWithoutData });
     expect(wrapper.children().length).toBe(0);
 
-    wrapper.setProps({ a: props.a });
+    rendered = render({ a: props.a });
     expect(wrapper.children().length).toBe(0);
   });
 
   it('renders a DiGraph when it has data', () => {
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it('renders current uiFind count when given uiFind', () => {
@@ -154,7 +154,7 @@ describe('TraceDiffGraph', () => {
       })
     );
 
-    wrapper.setProps({ uiFind: 'test uiFind' });
+    rendered = render({ uiFind: 'test uiFind' });
 
     expect(wrapper.find(UiFindInput).prop('inputProps')).toEqual(
       expect.objectContaining({
@@ -164,7 +164,7 @@ describe('TraceDiffGraph', () => {
   });
 
   it('cleans up layoutManager before unmounting', () => {
-    const layoutManager = jest.spyOn(wrapper.instance().layoutManager, 'stopAndRelease');
+    const layoutManager = jest.spyOn(// RTL doesn't access component instances - use assertions on rendered output instead.layoutManager, 'stopAndRelease');
     wrapper.unmount();
     expect(layoutManager).toHaveBeenCalledTimes(1);
   });

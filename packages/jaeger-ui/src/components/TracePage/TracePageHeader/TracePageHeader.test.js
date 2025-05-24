@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow, mount } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Link } from 'react-router-dom';
 
 import AltViewOptions from './AltViewOptions';
@@ -37,18 +38,17 @@ describe('<TracePageHeader>', () => {
     updateTextFilter: () => {},
   };
 
-  let wrapper;
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<TracePageHeader {...defaultProps} />);
+    rendered = render(<TracePageHeader {...defaultProps} / data-testid="tracepageheader">));
   });
 
   it('renders a <header />', () => {
-    expect(wrapper.find('header').length).toBe(1);
+    expect(screen.getAllByTestId('header')).toHaveLength(1);
   });
 
   it('renders an empty <div> if a trace is not present', () => {
-    wrapper = mount(<TracePageHeader {...defaultProps} trace={null} />);
+    wrapper = mount(<TracePageHeader {...defaultProps} trace={null} / data-testid="tracepageheader">);
     expect(wrapper.children().length).toBe(0);
   });
 
@@ -64,20 +64,20 @@ describe('<TracePageHeader>', () => {
   });
 
   it('renders a <SpanGraph>', () => {
-    expect(wrapper.find(SpanGraph).length).toBe(1);
+    expect(screen.getAllByTestId(SpanGraph)).toHaveLength(1);
   });
 
   describe('observes the visibility toggles for various UX elements', () => {
     it('hides the minimap when hideMap === true', () => {
-      expect(wrapper.find(SpanGraph).length).toBe(1);
-      wrapper.setProps({ hideMap: true });
-      expect(wrapper.find(SpanGraph).length).toBe(0);
+      expect(screen.getAllByTestId(SpanGraph)).toHaveLength(1);
+      rendered = render({ hideMap: true });
+      expect(screen.getAllByTestId(SpanGraph)).toHaveLength(0);
     });
 
     it('hides the summary when hideSummary === true', () => {
-      expect(wrapper.find(LabeledList).length).toBe(1);
-      wrapper.setProps({ hideSummary: true });
-      expect(wrapper.find(LabeledList).length).toBe(0);
+      expect(screen.getAllByTestId(LabeledList)).toHaveLength(1);
+      rendered = render({ hideSummary: true });
+      expect(screen.getAllByTestId(LabeledList)).toHaveLength(0);
     });
 
     it('toggles the archive button', () => {
@@ -87,36 +87,36 @@ describe('<TracePageHeader>', () => {
         showArchiveButton: true,
       };
       wrapper.setProps(props);
-      expect(wrapper.find({ onClick: onArchiveClicked }).length).toBe(1);
+      expect(screen.getAllByTestId({ onClick: onArchiveClicked })).toHaveLength(1);
       props.showArchiveButton = false;
       wrapper.setProps(props);
-      expect(wrapper.find({ onClick: onArchiveClicked }).length).toBe(0);
+      expect(screen.getAllByTestId({ onClick: onArchiveClicked })).toHaveLength(0);
     });
 
-    it('toggles <KeyboardShortcutsHelp />', () => {
+    it('toggles <KeyboardShortcutsHelp / data-testid="keyboardshortcutshelp">', () => {
       const props = { showShortcutsHelp: true };
       wrapper.setProps(props);
-      expect(wrapper.find(KeyboardShortcutsHelp).length).toBe(1);
+      expect(screen.getAllByTestId(KeyboardShortcutsHelp)).toHaveLength(1);
       props.showShortcutsHelp = false;
       wrapper.setProps(props);
-      expect(wrapper.find(KeyboardShortcutsHelp).length).toBe(0);
+      expect(screen.getAllByTestId(KeyboardShortcutsHelp)).toHaveLength(0);
     });
 
-    it('toggles <AltViewOptions />', () => {
+    it('toggles <AltViewOptions / data-testid="altviewoptions">', () => {
       const props = { showViewOptions: true };
       wrapper.setProps(props);
-      expect(wrapper.find(AltViewOptions).length).toBe(1);
+      expect(screen.getAllByTestId(AltViewOptions)).toHaveLength(1);
       props.showViewOptions = false;
       wrapper.setProps(props);
-      expect(wrapper.find(AltViewOptions).length).toBe(0);
+      expect(screen.getAllByTestId(AltViewOptions)).toHaveLength(0);
     });
 
     it('renders the link to search', () => {
-      expect(wrapper.find(Link).length).toBe(0);
+      expect(screen.getAllByTestId(Link)).toHaveLength(0);
 
       const toSearch = 'some-link';
-      wrapper.setProps({ toSearch });
-      expect(wrapper.find({ to: toSearch }).length).toBe(1);
+      rendered = render({ toSearch });
+      expect(screen.getAllByTestId({ to: toSearch })).toHaveLength(1);
     });
 
     it('toggles the standalone link', () => {
@@ -126,10 +126,10 @@ describe('<TracePageHeader>', () => {
         showStandaloneLink: true,
       };
       wrapper.setProps(props);
-      expect(wrapper.find({ to: linkToStandalone }).length).toBe(1);
+      expect(screen.getAllByTestId({ to: linkToStandalone })).toHaveLength(1);
       props.showStandaloneLink = false;
       wrapper.setProps(props);
-      expect(wrapper.find({ to: linkToStandalone }).length).toBe(0);
+      expect(screen.getAllByTestId({ to: linkToStandalone })).toHaveLength(0);
     });
   });
 });

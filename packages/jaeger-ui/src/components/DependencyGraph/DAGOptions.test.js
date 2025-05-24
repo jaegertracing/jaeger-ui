@@ -53,7 +53,7 @@ describe('DAGOptions', () => {
   });
 
   it('renders all selectors and inputs', () => {
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} / data-testid="dagoptions">);
 
     expect(screen.getByTestId('dag-options')).toBeInTheDocument();
     expect(screen.getByTestId('layout-select')).toBeInTheDocument();
@@ -63,7 +63,7 @@ describe('DAGOptions', () => {
   });
 
   it('displays all help icons', () => {
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} / data-testid="dagoptions">);
 
     expect(screen.getByTestId('layout-help-icon')).toBeInTheDocument();
     expect(screen.getByTestId('service-help-icon')).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe('DAGOptions', () => {
   });
 
   it('shows popover content when clicking help icon', () => {
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} / data-testid="dagoptions">);
 
     fireEvent.click(screen.getByTestId('layout-help-icon'));
 
@@ -85,7 +85,7 @@ describe('DAGOptions', () => {
   });
 
   it('handles layout selection', () => {
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} / data-testid="dagoptions">);
     const layoutSelect = screen.getByTestId('layout-select');
 
     const selectElement = within(layoutSelect).getByRole('combobox');
@@ -108,7 +108,7 @@ describe('DAGOptions', () => {
   });
 
   it('handles service selection', () => {
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} / data-testid="dagoptions">);
     const serviceSelect = screen.getByTestId('service-select');
 
     const selectElement = within(serviceSelect).getByRole('combobox');
@@ -131,7 +131,7 @@ describe('DAGOptions', () => {
   });
 
   it('handles depth change', () => {
-    render(<DAGOptions {...defaultProps} selectedService="service-1" />);
+    render(<DAGOptions {...defaultProps} selectedService="service-1" / data-testid="dagoptions">);
 
     const depthInput = screen.getByTestId('depth-input');
     fireEvent.change(depthInput, { target: { value: '10' } });
@@ -140,7 +140,7 @@ describe('DAGOptions', () => {
   });
 
   it('handles empty depth value', () => {
-    render(<DAGOptions {...defaultProps} selectedService="service-1" />);
+    render(<DAGOptions {...defaultProps} selectedService="service-1" / data-testid="dagoptions">);
 
     const depthInput = screen.getByTestId('depth-input');
     fireEvent.change(depthInput, { target: { value: '' } });
@@ -149,7 +149,7 @@ describe('DAGOptions', () => {
   });
 
   it('handles undefined depth value', () => {
-    render(<DAGOptions {...defaultProps} selectedService="service-1" />);
+    render(<DAGOptions {...defaultProps} selectedService="service-1" / data-testid="dagoptions">);
 
     const depthInput = screen.getByTestId('depth-input');
     fireEvent.change(depthInput, { target: { value: '' } });
@@ -158,7 +158,7 @@ describe('DAGOptions', () => {
   });
 
   it('handles reset button click', () => {
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} / data-testid="dagoptions">);
 
     const resetButton = screen.getByTestId('reset-button');
     fireEvent.click(resetButton);
@@ -167,21 +167,21 @@ describe('DAGOptions', () => {
   });
 
   it('disables depth input when no service is selected', () => {
-    render(<DAGOptions {...defaultProps} selectedService={null} />);
+    render(<DAGOptions {...defaultProps} selectedService={null} / data-testid="dagoptions">);
 
     const depthInput = screen.getByTestId('depth-input');
     expect(depthInput).toBeDisabled();
   });
 
   it('enables depth input when a service is selected', () => {
-    render(<DAGOptions {...defaultProps} selectedService="service-1" />);
+    render(<DAGOptions {...defaultProps} selectedService="service-1" / data-testid="dagoptions">);
 
     const depthInput = screen.getByTestId('depth-input');
     expect(depthInput).not.toBeDisabled();
   });
 
   it('disables hierarchical layout option when isHierarchicalDisabled is true', () => {
-    render(<DAGOptions {...defaultProps} isHierarchicalDisabled />);
+    render(<DAGOptions {...defaultProps} isHierarchicalDisabled / data-testid="dagoptions">);
     const layoutSelect = screen.getByTestId('layout-select');
 
     const selectElement = within(layoutSelect).getByRole('combobox');
@@ -194,7 +194,7 @@ describe('DAGOptions', () => {
   });
 
   it('displays all unique services in the service selector', () => {
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} / data-testid="dagoptions">);
     const serviceSelect = screen.getByTestId('service-select');
 
     const selectElement = within(serviceSelect).getByRole('combobox');
@@ -212,7 +212,7 @@ describe('DAGOptions', () => {
 
   it('maintains selected values correctly', () => {
     render(
-      <DAGOptions {...defaultProps} selectedService="service-1" selectedLayout="sfdp" selectedDepth={10} />
+      <DAGOptions {...defaultProps} selectedService="service-1" selectedLayout="sfdp" selectedDepth={10} / data-testid="dagoptions">
     );
 
     const layoutSelect = screen.getByTestId('layout-select');
@@ -229,7 +229,7 @@ describe('DAGOptions', () => {
   });
 
   it('handles empty dependencies array', () => {
-    render(<DAGOptions {...defaultProps} dependencies={[]} />);
+    render(<DAGOptions {...defaultProps} dependencies={[]} / data-testid="dagoptions">);
     const serviceSelect = screen.getByTestId('service-select');
 
     const selectElement = within(serviceSelect).getByRole('combobox');
@@ -241,7 +241,7 @@ describe('DAGOptions', () => {
   });
 
   it('handles service popover content', () => {
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} / data-testid="dagoptions">);
 
     fireEvent.click(screen.getByTestId('service-help-icon'));
 
@@ -252,7 +252,7 @@ describe('DAGOptions', () => {
   });
 
   it('handles depth popover content', () => {
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} / data-testid="dagoptions">);
 
     fireEvent.click(screen.getByTestId('depth-help-icon'));
 
@@ -265,7 +265,7 @@ describe('DAGOptions', () => {
   });
 
   it('handles undefined dependencies', () => {
-    render(<DAGOptions {...defaultProps} dependencies={undefined} />);
+    render(<DAGOptions {...defaultProps} dependencies={undefined} / data-testid="dagoptions">);
 
     const serviceSelect = screen.getByTestId('service-select');
     fireEvent.mouseDown(serviceSelect);
@@ -276,55 +276,55 @@ describe('DAGOptions', () => {
   });
 
   it('handles default props correctly', () => {
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} / data-testid="dagoptions">);
 
     expect(screen.getByText('Hierarchical Layout')).toBeInTheDocument();
     expect(screen.getByDisplayValue('5')).toBeInTheDocument();
   });
 
   it('handles null service selection', () => {
-    render(<DAGOptions {...defaultProps} selectedService={null} />);
+    render(<DAGOptions {...defaultProps} selectedService={null} / data-testid="dagoptions">);
 
     const depthInput = screen.getByTestId('depth-input');
     expect(depthInput).toBeDisabled();
   });
 
   it('handles undefined service selection', () => {
-    render(<DAGOptions {...defaultProps} selectedService={undefined} />);
+    render(<DAGOptions {...defaultProps} selectedService={undefined} / data-testid="dagoptions">);
 
     const depthInput = screen.getByTestId('depth-input');
     expect(depthInput).toBeDisabled();
   });
 
   it('handles undefined layout selection', () => {
-    render(<DAGOptions {...defaultProps} selectedLayout={undefined} />);
+    render(<DAGOptions {...defaultProps} selectedLayout={undefined} / data-testid="dagoptions">);
 
     expect(screen.getByText('Hierarchical Layout')).toBeInTheDocument();
   });
 
   it('handles undefined depth selection', () => {
-    render(<DAGOptions {...defaultProps} selectedDepth={undefined} />);
+    render(<DAGOptions {...defaultProps} selectedDepth={undefined} / data-testid="dagoptions">);
 
     expect(screen.getByDisplayValue('0')).toBeInTheDocument();
   });
 
   it('renders sample dataset type selector in development mode', () => {
     jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} / data-testid="dagoptions">);
 
     expect(screen.getByTestId('sample-dataset-type-select')).toBeInTheDocument();
   });
 
   it('does not render sample dataset type selector in production mode', () => {
     jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('production');
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} / data-testid="dagoptions">);
 
     expect(screen.queryByTestId('sample-dataset-type-select')).not.toBeInTheDocument();
   });
 
   it('handles sample dataset type selection', () => {
     jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
-    render(<DAGOptions {...defaultProps} />);
+    render(<DAGOptions {...defaultProps} / data-testid="dagoptions">);
     const sampleDatasetTypeSelect = screen.getByTestId('sample-dataset-type-select');
 
     const selectElement = within(sampleDatasetTypeSelect).getByRole('combobox');
@@ -348,7 +348,7 @@ describe('DAGOptions', () => {
 
   it('maintains selected sample dataset type value correctly', () => {
     jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
-    render(<DAGOptions {...defaultProps} selectedSampleDatasetType="Small Graph" />);
+    render(<DAGOptions {...defaultProps} selectedSampleDatasetType="Small Graph" / data-testid="dagoptions">);
 
     const sampleDatasetTypeSelect = screen.getByTestId('sample-dataset-type-select');
     const sampleDatasetTypeValue = within(sampleDatasetTypeSelect).getByRole('combobox');
@@ -357,7 +357,7 @@ describe('DAGOptions', () => {
   });
 
   it('renders search input with match count when uiFind is provided', () => {
-    render(<DAGOptions {...defaultProps} uiFind="test" matchCount={3} />);
+    render(<DAGOptions {...defaultProps} uiFind="test" matchCount={3} / data-testid="dagoptions">);
 
     const searchInput = screen.getByTestId('search-input');
     expect(searchInput).toBeInTheDocument();
@@ -366,7 +366,7 @@ describe('DAGOptions', () => {
   });
 
   it('renders search input without match count when uiFind is not provided', () => {
-    render(<DAGOptions {...defaultProps} uiFind={undefined} matchCount={undefined} />);
+    render(<DAGOptions {...defaultProps} uiFind={undefined} matchCount={undefined} / data-testid="dagoptions">);
 
     const searchInput = screen.getByTestId('search-input');
     expect(searchInput).toBeInTheDocument();
@@ -375,7 +375,7 @@ describe('DAGOptions', () => {
   });
 
   it('renders search input with single match count', () => {
-    render(<DAGOptions {...defaultProps} uiFind="test" matchCount={1} />);
+    render(<DAGOptions {...defaultProps} uiFind="test" matchCount={1} / data-testid="dagoptions">);
 
     const searchInput = screen.getByTestId('search-input');
     expect(searchInput).toBeInTheDocument();

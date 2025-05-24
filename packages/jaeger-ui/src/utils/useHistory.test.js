@@ -25,8 +25,8 @@ describe('useHistory', () => {
       return null;
     };
     render(
-      <HistoryProvider history={history}>
-        <TestComponent />
+      <HistoryProvider history={history} data-testid="historyprovider">
+        <TestComponent / data-testid="testcomponent">
       </HistoryProvider>
     );
   });

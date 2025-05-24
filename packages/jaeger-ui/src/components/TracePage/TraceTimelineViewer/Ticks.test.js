@@ -19,7 +19,7 @@ import Ticks from './Ticks';
 
 describe('<Ticks>', () => {
   it('renders without exploding', () => {
-    const { container } = render(<Ticks endTime={200} numTicks={5} showLabels startTime={100} />);
+    const { container } = render(<Ticks endTime={200} numTicks={5} showLabels startTime={100} / data-testid="ticks">);
     expect(container).toBeDefined();
   });
 });

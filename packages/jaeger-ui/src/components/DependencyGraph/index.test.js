@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as constants from '../../utils/constants';
 
 import { DependencyGraphPageImpl as DependencyGraph, mapDispatchToProps, mapStateToProps } from './index';
@@ -47,10 +48,9 @@ const state = {
 const props = mapStateToProps(state);
 
 describe('<DependencyGraph>', () => {
-  let wrapper;
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<DependencyGraph {...props} fetchDependencies={() => {}} />);
+    rendered = render(<DependencyGraph {...props} fetchDependencies={() = data-testid="dependencygraph"> {}} />));
   });
 
   it('does not explode', () => {
@@ -58,20 +58,20 @@ describe('<DependencyGraph>', () => {
   });
 
   it('shows a loading indicator when loading data', () => {
-    expect(wrapper.find(LoadingIndicator).length).toBe(0);
-    wrapper.setProps({ loading: true });
-    expect(wrapper.find(LoadingIndicator).length).toBe(1);
+    expect(screen.getAllByTestId(LoadingIndicator)).toHaveLength(0);
+    rendered = render({ loading: true });
+    expect(screen.getAllByTestId(LoadingIndicator)).toHaveLength(1);
   });
 
   it('shows an error message when passed error information', () => {
     const error = {};
     expect(wrapper.find({ error: expect.anything() }).length).toBe(0);
-    wrapper.setProps({ error });
-    expect(wrapper.find({ error }).length).toBe(1);
+    rendered = render({ error });
+    expect(screen.getAllByTestId({ error })).toHaveLength(1);
   });
 
   it('shows a message where there is nothing to visualize', () => {
-    wrapper.setProps({ links: null, nodes: null });
+    rendered = render({ links: null, nodes: null });
     const matchTest = expect.stringMatching(/no.*?found/i);
     expect(wrapper.text()).toEqual(matchTest);
   });
@@ -91,13 +91,13 @@ describe('<DependencyGraph>', () => {
 
     it('handles service selection', () => {
       const service = 'test-service';
-      wrapper.instance().handleServiceSelect(service);
+      // RTL doesn't access component instances - use assertions on rendered output instead.handleServiceSelect(service);
       expect(wrapper.state('selectedService')).toBe(service);
     });
 
     it('handles layout selection', () => {
       const layout = 'sfdp';
-      const instance = wrapper.instance();
+      const instance = // RTL doesn't access component instances - use assertions on rendered output instead;
       jest.spyOn(instance, 'setState');
 
       instance.handleLayoutSelect(layout);
@@ -106,7 +106,7 @@ describe('<DependencyGraph>', () => {
     });
 
     it('calls updateLayout when dependencies prop changes', () => {
-      const instance = wrapper.instance();
+      const instance = // RTL doesn't access component instances - use assertions on rendered output instead;
       jest.spyOn(instance, 'updateLayout');
 
       const newDependencies = [
@@ -118,13 +118,13 @@ describe('<DependencyGraph>', () => {
         },
       ];
 
-      wrapper.setProps({ dependencies: newDependencies });
+      rendered = render({ dependencies: newDependencies });
       expect(instance.updateLayout).toHaveBeenCalledTimes(1);
     });
 
     it('updates layout based on dependencies size', () => {
       const smallWrapper = shallow(
-        <DependencyGraph {...props} dependencies={dependencies} fetchDependencies={() => {}} />
+        <DependencyGraph {...props} dependencies={dependencies} fetchDependencies={() = data-testid="dependencygraph"> {}} />
       );
       smallWrapper.instance().updateLayout();
       expect(smallWrapper.state('selectedLayout')).toBe('dot');
@@ -137,7 +137,7 @@ describe('<DependencyGraph>', () => {
           parent: 'parent',
         }));
       const largeWrapper = shallow(
-        <DependencyGraph {...props} dependencies={manyDependencies} fetchDependencies={() => {}} />
+        <DependencyGraph {...props} dependencies={manyDependencies} fetchDependencies={() = data-testid="dependencygraph"> {}} />
       );
       largeWrapper.instance().updateLayout();
       expect(largeWrapper.state('selectedLayout')).toBe('sfdp');
@@ -145,7 +145,7 @@ describe('<DependencyGraph>', () => {
 
     it('updates layout based on dependencies size', () => {
       const smallWrapper = shallow(
-        <DependencyGraph {...props} dependencies={dependencies} fetchDependencies={() => {}} />
+        <DependencyGraph {...props} dependencies={dependencies} fetchDependencies={() = data-testid="dependencygraph"> {}} />
       );
       const instance = smallWrapper.instance();
       jest.spyOn(instance, 'setState');
@@ -166,18 +166,18 @@ describe('<DependencyGraph>', () => {
 
     it('handles depth change with numeric value', () => {
       const depth = 3;
-      wrapper.instance().handleDepthChange(depth);
+      // RTL doesn't access component instances - use assertions on rendered output instead.handleDepthChange(depth);
       expect(wrapper.state('selectedDepth')).toBe(depth);
     });
 
     it('handles depth change with negative value', () => {
       const depth = -1;
-      wrapper.instance().handleDepthChange(depth);
+      // RTL doesn't access component instances - use assertions on rendered output instead.handleDepthChange(depth);
       expect(wrapper.state('selectedDepth')).toBe(0);
     });
 
     it('handles depth change with null value', () => {
-      const instance = wrapper.instance();
+      const instance = // RTL doesn't access component instances - use assertions on rendered output instead;
       jest.spyOn(instance, 'setState');
 
       instance.handleDepthChange(null);
@@ -187,7 +187,7 @@ describe('<DependencyGraph>', () => {
     });
 
     it('handles depth change with undefined value', () => {
-      const instance = wrapper.instance();
+      const instance = // RTL doesn't access component instances - use assertions on rendered output instead;
       jest.spyOn(instance, 'setState');
 
       instance.handleDepthChange(undefined);
@@ -202,7 +202,7 @@ describe('<DependencyGraph>', () => {
         selectedDepth: 3,
         debouncedDepth: 3,
       });
-      wrapper.instance().handleReset();
+      // RTL doesn't access component instances - use assertions on rendered output instead.handleReset();
       expect(wrapper.state('selectedService')).toBe(null);
       expect(wrapper.state('selectedDepth')).toBe(5);
       expect(wrapper.state('debouncedDepth')).toBe(5);
@@ -217,14 +217,14 @@ describe('<DependencyGraph>', () => {
           parent: 'parent',
         }));
       const newWrapper = shallow(
-        <DependencyGraph {...props} dependencies={manyDependencies} fetchDependencies={() => {}} />
+        <DependencyGraph {...props} dependencies={manyDependencies} fetchDependencies={() = data-testid="dependencygraph"> {}} />
       );
       expect(newWrapper.state('selectedLayout')).toBe('sfdp');
     });
 
     it('debounces depth changes', done => {
       const depth = 3;
-      wrapper.instance().handleDepthChange(depth);
+      // RTL doesn't access component instances - use assertions on rendered output instead.handleDepthChange(depth);
       expect(wrapper.state('selectedDepth')).toBe(depth);
       expect(wrapper.state('debouncedDepth')).toBe(5);
 
@@ -236,15 +236,15 @@ describe('<DependencyGraph>', () => {
 
     it('handles sample dataset type change', async () => {
       const selectedSampleDatasetType = 'Small Graph';
-      await wrapper.instance().handleSampleDatasetTypeChange(selectedSampleDatasetType);
+      await // RTL doesn't access component instances - use assertions on rendered output instead.handleSampleDatasetTypeChange(selectedSampleDatasetType);
 
       expect(wrapper.state('selectedSampleDatasetType')).toBe(selectedSampleDatasetType);
       expect(wrapper.state('selectedLayout')).toBe('dot');
 
-      await wrapper.instance().handleSampleDatasetTypeChange(null);
+      await // RTL doesn't access component instances - use assertions on rendered output instead.handleSampleDatasetTypeChange(null);
       expect(wrapper.state('selectedSampleDatasetType')).toBe(null);
 
-      await wrapper.instance().handleSampleDatasetTypeChange(null);
+      await // RTL doesn't access component instances - use assertions on rendered output instead.handleSampleDatasetTypeChange(null);
     });
 
     it('passes computed match count to DAGOptions based on uiFind and dependencies', () => {
@@ -257,7 +257,7 @@ describe('<DependencyGraph>', () => {
       const uiFindTerm = 'service';
       const expectedMatchCount = 3;
 
-      wrapper.setProps({ dependencies: sampleDependencies, uiFind: uiFindTerm });
+      rendered = render({ dependencies: sampleDependencies, uiFind: uiFindTerm });
       wrapper.setState({ selectedService: null });
 
       wrapper.update();
@@ -267,12 +267,12 @@ describe('<DependencyGraph>', () => {
 
       const uiFindTerm2 = 'another';
       const expectedMatchCount2 = 1;
-      wrapper.setProps({ uiFind: uiFindTerm2 });
+      rendered = render({ uiFind: uiFindTerm2 });
       wrapper.update();
       const dagOptions2 = wrapper.find(DAGOptions);
       expect(dagOptions2.prop('matchCount')).toBe(expectedMatchCount2);
 
-      wrapper.setProps({ uiFind: undefined });
+      rendered = render({ uiFind: undefined });
       wrapper.update();
       const dagOptions3 = wrapper.find(DAGOptions);
       expect(dagOptions3.prop('matchCount')).toBe(0);
@@ -302,7 +302,7 @@ describe('<DependencyGraph>', () => {
     it('should include direct children when parent is selected', () => {
       const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
 
-      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} / data-testid="dependencygraph">);
       wrapper.setState({ selectedService: 'A', selectedDepth: 1, debouncedDepth: 1 });
 
       const graphData = getGraphDataFromDAG(wrapper);
@@ -313,7 +313,7 @@ describe('<DependencyGraph>', () => {
     it('should include direct parents when child is selected', () => {
       const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
 
-      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} / data-testid="dependencygraph">);
       wrapper.setState({ selectedService: 'B', selectedDepth: 1, debouncedDepth: 1 });
 
       const graphData = getGraphDataFromDAG(wrapper);
@@ -327,7 +327,7 @@ describe('<DependencyGraph>', () => {
         { parent: 'B', child: 'A', callCount: 1 },
       ];
 
-      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} / data-testid="dependencygraph">);
       wrapper.setState({ selectedService: 'A', selectedDepth: 2, debouncedDepth: 2 });
 
       const graphData = getGraphDataFromDAG(wrapper);
@@ -343,7 +343,7 @@ describe('<DependencyGraph>', () => {
         { parent: 'B', child: 'A', callCount: 1 },
       ];
 
-      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} / data-testid="dependencygraph">);
       wrapper.setState({ selectedService: 'B', selectedDepth: 2, debouncedDepth: 2 });
 
       const graphData = getGraphDataFromDAG(wrapper);
@@ -359,7 +359,7 @@ describe('<DependencyGraph>', () => {
         { parent: 'C', child: 'D', callCount: 1 },
       ];
 
-      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} / data-testid="dependencygraph">);
       wrapper.setState({ selectedService: 'A', selectedDepth: 1, debouncedDepth: 1 });
 
       const graphData = getGraphDataFromDAG(wrapper);

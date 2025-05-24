@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import { createBlob, UnconnectedSearchResults as SearchResults, SelectSort } from '.';
 import * as markers from './index.markers';
@@ -34,56 +35,37 @@ describe('<SearchResults>', () => {
   const otherParam = 'param';
   const otherValue = 'value';
   const otherSearch = `?${otherParam}=${otherValue}`;
-  let wrapper;
-  let traces;
-  let rawTraces;
-  let props;
-
+  let rendered;
   beforeEach(() => {
-    traces = [
-      { traceID: 'a', spans: [], processes: {} },
-      { traceID: 'b', spans: [], processes: {} },
-    ];
-    rawTraces = traces;
-    props = {
-      diffCohort: [],
-      goToTrace: () => {},
-      location: {},
-      loading: false,
-      maxTraceDuration: 1,
-      queryOfResults: {},
-      traces,
-      rawTraces,
-    };
-    wrapper = shallow(<SearchResults {...props} />);
+    rendered = render(<SearchResults {...props} / data-testid="searchresults">));
   });
 
   it('shows the "no results" message when the search result is empty', () => {
-    wrapper.setProps({ traces: [] });
-    expect(wrapper.find(`[data-test="${markers.NO_RESULTS}"]`).length).toBe(1);
+    rendered = render({ traces: [] });
+    expect(screen.getAllByTestId(`[data-test="${markers.NO_RESULTS}"]`)).toHaveLength(1);
   });
 
   it('shows a loading indicator if loading traces', () => {
-    wrapper.setProps({ loading: true });
-    expect(wrapper.find(LoadingIndicator).length).toBe(1);
+    rendered = render({ loading: true });
+    expect(screen.getAllByTestId(LoadingIndicator)).toHaveLength(1);
   });
 
   it('hide scatter plot if queryparam hideGraph', () => {
-    wrapper.setProps({ hideGraph: true, embed: true, getSearchURL: () => 'SEARCH_URL' });
-    expect(wrapper.find(ScatterPlot).length).toBe(0);
+    rendered = render({ hideGraph: true, embed: true, getSearchURL: () => 'SEARCH_URL' });
+    expect(screen.getAllByTestId(ScatterPlot)).toHaveLength(0);
   });
 
   it('hide DiffSelection when disableComparisons = true', () => {
-    wrapper.setProps({ disableComparisons: true });
-    expect(wrapper.find(DiffSelection).length).toBe(0);
+    rendered = render({ disableComparisons: true });
+    expect(screen.getAllByTestId(DiffSelection)).toHaveLength(0);
   });
 
   it('adds or removes trace from cohort based on flag', () => {
     const cohortAddTrace = jest.fn();
     const cohortRemoveTrace = jest.fn();
-    wrapper.setProps({ cohortAddTrace, cohortRemoveTrace });
+    rendered = render({ cohortAddTrace, cohortRemoveTrace });
 
-    const instance = wrapper.instance();
+    const instance = // RTL doesn't access component instances - use assertions on rendered output instead;
     instance.toggleComparison('id-1');
     instance.toggleComparison('id-2', true);
 
@@ -123,14 +105,14 @@ describe('<SearchResults>', () => {
       traceName: 'TraceThis',
       processes: {},
     };
-    wrapper.setProps({ traces: [trace], goToTrace });
+    rendered = render({ traces: [trace], goToTrace });
     wrapper.find(ScatterPlot).prop('onValueClick')(trace);
     expect(goToTrace).toHaveBeenCalledWith('id-1');
   });
 
   describe('search finished with results', () => {
     it('shows a scatter plot', () => {
-      expect(wrapper.find(ScatterPlot).length).toBe(1);
+      expect(screen.getAllByTestId(ScatterPlot)).toHaveLength(1);
     });
 
     it('shows a result entry for each trace', () => {
@@ -142,7 +124,7 @@ describe('<SearchResults>', () => {
       const spanLinks = {
         [traces[0].traceID]: uiFind,
       };
-      wrapper.setProps({ spanLinks });
+      rendered = render({ spanLinks });
       const results = wrapper.find(ResultItem);
       expect(results.at(0).prop('linkTo').search).toBe(`uiFind=${uiFind}`);
       expect(results.at(1).prop('linkTo').search).toBeUndefined();
@@ -161,7 +143,7 @@ describe('<SearchResults>', () => {
         { traceID: traceID0, spans: [], processes: {} },
         { traceID: `000${traceID1}`, spans: [], processes: {} },
       ];
-      wrapper.setProps({ spanLinks, traces: zeroIDTraces });
+      rendered = render({ spanLinks, traces: zeroIDTraces });
       const results = wrapper.find(ResultItem);
       expect(results.at(0).prop('linkTo').search).toBe(`uiFind=${uiFind0}`);
       expect(results.at(1).prop('linkTo').search).toBe(`uiFind=${uiFind1}`);
@@ -200,14 +182,14 @@ describe('<SearchResults>', () => {
       });
 
       it('shows ddg instead of scatterplot and results', () => {
-        expect(wrapper.find(SearchResultsDDG).length).toBe(0);
+        expect(screen.getAllByTestId(SearchResultsDDG)).toHaveLength(0);
         expect(wrapper.find(ResultItem).length).not.toBe(0);
         expect(wrapper.find(ScatterPlot).length).not.toBe(0);
 
         wrapper.setProps({ location: { search: `?${search}` } });
-        expect(wrapper.find(SearchResultsDDG).length).toBe(1);
-        expect(wrapper.find(ResultItem).length).toBe(0);
-        expect(wrapper.find(ScatterPlot).length).toBe(0);
+        expect(screen.getAllByTestId(SearchResultsDDG)).toHaveLength(1);
+        expect(screen.getAllByTestId(ResultItem)).toHaveLength(0);
+        expect(screen.getAllByTestId(ScatterPlot)).toHaveLength(0);
       });
     });
 
@@ -215,13 +197,13 @@ describe('<SearchResults>', () => {
       it('shows DownloadResults when view is not ddg', () => {
         const view = 'traces';
         wrapper.setProps({ location: { search: `${otherSearch}&${searchParam}=${view}` } });
-        expect(wrapper.find(DownloadResults).length).toBe(1);
+        expect(screen.getAllByTestId(DownloadResults)).toHaveLength(1);
       });
 
       it('does not show DownloadResults when view is ddg', () => {
         const view = 'ddg';
         wrapper.setProps({ location: { search: `${otherSearch}&${searchParam}=${view}` } });
-        expect(wrapper.find(DownloadResults).length).toBe(0);
+        expect(screen.getAllByTestId(DownloadResults)).toHaveLength(0);
       });
 
       it('when click on DownloadResults then call download function', () => {
@@ -264,7 +246,7 @@ describe('<SearchResults>', () => {
       beforeEach(() => {
         handleSortChange = jest.fn();
         selectSortWrapper = shallow(
-          <SelectSort sortBy={orderBy.MOST_RECENT} handleSortChange={handleSortChange} />
+          <SelectSort sortBy={orderBy.MOST_RECENT} handleSortChange={handleSortChange} / data-testid="selectsort">
         );
       });
 

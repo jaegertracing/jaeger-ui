@@ -21,7 +21,7 @@ import CopyIcon from './CopyIcon';
 // Mock the copy-to-clipboard module
 jest.mock('copy-to-clipboard');
 
-describe('<CopyIcon />', () => {
+describe('<CopyIcon / data-testid="copyicon">', () => {
   const props = {
     className: 'classNameValue',
     copyText: 'copyTextValue',
@@ -31,7 +31,7 @@ describe('<CopyIcon />', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    render(<CopyIcon {...props} />);
+    render(<CopyIcon {...props} / data-testid="copyicon">);
   });
 
   it('renders the button with correct text and initial tooltip title', async () => {

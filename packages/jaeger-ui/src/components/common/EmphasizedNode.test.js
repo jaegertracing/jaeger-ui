@@ -24,7 +24,7 @@ describe('<EmphasizedNode>', () => {
   };
 
   it('renders with default props', () => {
-    const { container } = render(<EmphasizedNode {...defaultProps} />);
+    const { container } = render(<EmphasizedNode {...defaultProps} / data-testid="emphasizednode">);
 
     const recElements = container.querySelectorAll('rect');
 

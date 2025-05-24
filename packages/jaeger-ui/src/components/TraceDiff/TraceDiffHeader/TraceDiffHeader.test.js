@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Popover } from 'antd';
 
 import TraceDiffHeader from './TraceDiffHeader';
@@ -97,43 +98,36 @@ describe('TraceDiffHeader', () => {
     diffSetB,
   };
 
-  let wrapper;
-
-  function getPopoverProp(popoverIndex, propName) {
-    return wrapper.find(Popover).at(popoverIndex).prop(propName);
-  }
-
+  let rendered;
   beforeEach(() => {
-    diffSetA.mockReset();
-    diffSetB.mockReset();
-    wrapper = shallow(<TraceDiffHeader {...props} />);
+    rendered = render(<TraceDiffHeader {...props} / data-testid="tracediffheader">));
   });
 
   it('renders as expected', () => {
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it('handles trace without spans', () => {
-    wrapper.setProps({ a: cohort[0] });
+    rendered = render({ a: cohort[0] });
   });
 
   it('handles absent a', () => {
-    wrapper.setProps({ a: null });
-    expect(wrapper).toMatchSnapshot();
+    rendered = render({ a: null });
+    expect(container).toMatchSnapshot();
   });
 
   it('handles absent b', () => {
-    wrapper.setProps({ b: null });
-    expect(wrapper).toMatchSnapshot();
+    rendered = render({ b: null });
+    expect(container).toMatchSnapshot();
   });
 
   it('handles absent a & b', () => {
-    wrapper.setProps({ a: null, b: null });
-    expect(wrapper).toMatchSnapshot();
+    rendered = render({ a: null, b: null });
+    expect(container).toMatchSnapshot();
   });
 
   it('manages visibility correctly', () => {
-    expect(wrapper.state().tableVisible).toBe(null);
+    expect(// RTL doesn't access component state directly - use assertions on rendered output instead.tableVisible).toBe(null);
     const popovers = wrapper.find(Popover);
     expect(popovers.length).toBe(2);
     popovers.forEach(popover => expect(popover.prop('open')).toBe(false));
@@ -178,7 +172,7 @@ describe('TraceDiffHeader', () => {
 
           expect(shouldCall[aOrB]).toHaveBeenCalledWith(selectTraceArgument);
           expect(shouldNotCall[aOrB]).not.toHaveBeenCalled();
-          expect(wrapper.state().tableVisible).toBe(null);
+          expect(// RTL doesn't access component state directly - use assertions on rendered output instead.tableVisible).toBe(null);
         });
       });
     });

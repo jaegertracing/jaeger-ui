@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import AccordianKeyValues, { KeyValuesSummary } from './AccordianKeyValues';
 import * as markers from './AccordianKeyValues.markers';
@@ -25,12 +26,9 @@ const tags = [
 ];
 
 describe('<KeyValuesSummary>', () => {
-  let wrapper;
-
-  const props = { data: tags };
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<KeyValuesSummary {...props} />);
+    rendered = render(<KeyValuesSummary {...props} / data-testid="keyvaluessummary">));
   });
 
   it('renders without exploding', () => {
@@ -38,7 +36,7 @@ describe('<KeyValuesSummary>', () => {
   });
 
   it('returns `null` when props.data is empty', () => {
-    wrapper.setProps({ data: null });
+    rendered = render({ data: null });
     expect(wrapper.isEmptyRender()).toBe(true);
   });
 
@@ -54,20 +52,9 @@ describe('<KeyValuesSummary>', () => {
 });
 
 describe('<AccordianKeyValues>', () => {
-  let wrapper;
-  const mockToggle = jest.fn();
-
-  const props = {
-    compact: false,
-    data: tags,
-    highContrast: false,
-    isOpen: false,
-    label: 'le-label',
-    onToggle: mockToggle,
-  };
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<AccordianKeyValues {...props} />);
+    rendered = render(<AccordianKeyValues {...props} / data-testid="accordiankeyvalues">));
   });
 
   it('renders without exploding', () => {
@@ -76,15 +63,15 @@ describe('<AccordianKeyValues>', () => {
   });
 
   it('calls onToggle when clicked', () => {
-    wrapper.find('.AccordianKeyValues--header').simulate('click');
+    userEvent.click(screen.getByTestId('.AccordianKeyValues--header'));
     expect(mockToggle).toHaveBeenCalled();
   });
 
   it('does not call onToggle if interactive is false', () => {
     mockToggle.mockClear();
-    wrapper.setProps({ interactive: false });
+    rendered = render({ interactive: false });
     wrapper.update();
-    wrapper.find('.AccordianKeyValues--header').simulate('click');
+    userEvent.click(screen.getByTestId('.AccordianKeyValues--header'));
     expect(mockToggle).not.toHaveBeenCalled();
   });
 
@@ -93,7 +80,7 @@ describe('<AccordianKeyValues>', () => {
   });
 
   it('applies high contrast styles when highContrast is true', () => {
-    wrapper.setProps({ highContrast: true });
+    rendered = render({ highContrast: true });
     expect(wrapper.find('.AccordianKeyValues--header').hasClass('is-high-contrast')).toBe(true);
   });
 
@@ -107,12 +94,12 @@ describe('<AccordianKeyValues>', () => {
     const summary = wrapper.find('.AccordianKeyValues--header').find(KeyValuesSummary);
     expect(summary.length).toBe(1);
     expect(summary.prop('data')).toBe(tags);
-    expect(wrapper.find(KeyValuesTable).length).toBe(0);
+    expect(screen.getAllByTestId(KeyValuesTable)).toHaveLength(0);
   });
 
   it('renders the table instead of the summarywhen it is expanded', () => {
-    wrapper.setProps({ isOpen: true });
-    expect(wrapper.find(KeyValuesSummary).length).toBe(0);
+    rendered = render({ isOpen: true });
+    expect(screen.getAllByTestId(KeyValuesSummary)).toHaveLength(0);
     const table = wrapper.find(KeyValuesTable);
     expect(table.length).toBe(1);
     expect(table.prop('data')).toBe(tags);

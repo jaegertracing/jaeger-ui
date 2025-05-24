@@ -22,18 +22,18 @@ describe('ValidatedFormField', () => {
   });
 
   it('renders without crashing', () => {
-    const { getByPlaceholderText } = render(<ValidatedFormField {...defaultProps} />);
+    const { getByPlaceholderText } = render(<ValidatedFormField {...defaultProps} / data-testid="validatedformfield">);
     expect(getByPlaceholderText('formFieldPlaceholder')).not.toBeNull();
   });
 
   it('calls validate function with the correct value', () => {
-    render(<ValidatedFormField {...defaultProps} />);
+    render(<ValidatedFormField {...defaultProps} / data-testid="validatedformfield">);
     expect(mockValidate).toHaveBeenCalledWith('initial value');
   });
 
   it('displays Popover when validation fails and blur is true', () => {
     mockValidate.mockReturnValue({ content: 'error content', title: 'error title' });
-    const { getByPlaceholderText, getByText } = render(<ValidatedFormField {...defaultProps} />);
+    const { getByPlaceholderText, getByText } = render(<ValidatedFormField {...defaultProps} / data-testid="validatedformfield">);
     const input = getByPlaceholderText('formFieldPlaceholder');
     fireEvent.blur(input);
     expect(getByText('error content')).not.toBeNull();
@@ -41,7 +41,7 @@ describe('ValidatedFormField', () => {
 
   it('hides Popover when validation passes or blur is false', () => {
     mockValidate.mockReturnValue(null);
-    const { getByPlaceholderText, queryByText } = render(<ValidatedFormField {...defaultProps} />);
+    const { getByPlaceholderText, queryByText } = render(<ValidatedFormField {...defaultProps} / data-testid="validatedformfield">);
     const input = getByPlaceholderText('formFieldPlaceholder');
     fireEvent.focus(input);
     expect(queryByText('error content')).toBeNull();

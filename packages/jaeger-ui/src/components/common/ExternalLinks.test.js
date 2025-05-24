@@ -27,7 +27,7 @@ describe('<ExternalLinks>', () => {
         { url: 'http://link/', text: 'link text' },
       ];
 
-      render(<ExternalLinks links={links} />);
+      render(<ExternalLinks links={links} / data-testid="externallinks">);
 
       // The dropdown should be rendered
       const dropdown = screen.getByTestId('dropdown');
@@ -46,7 +46,7 @@ describe('<ExternalLinks>', () => {
 
     it('renders one link correctly', () => {
       const links = [{ url: 'http://nowhere/', text: 'some text' }];
-      render(<ExternalLinks links={links} />);
+      render(<ExternalLinks links={links} / data-testid="externallinks">);
 
       // There should be no dropdown rendered
       expect(screen.queryByTestId('dropdown')).toBeNull();

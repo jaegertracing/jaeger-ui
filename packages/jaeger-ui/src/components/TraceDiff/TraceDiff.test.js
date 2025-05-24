@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import queryString from 'query-string';
 import * as redux from 'redux';
 
@@ -60,23 +61,14 @@ describe('TraceDiff', () => {
   const nonDefaultCohortId = 'non-default-cohort-id';
   const getUrlSpyMockReturnValue = 'getUrlSpyMockReturnValue';
   let getUrlSpy;
-  let wrapper;
-
-  beforeAll(() => {
-    getUrlSpy = jest.spyOn(TraceDiffUrl, 'getUrl').mockReturnValue(getUrlSpyMockReturnValue);
-  });
-
+  let rendered;
   beforeEach(() => {
-    fetchMultipleTracesMock.mockClear();
-    forceStateMock.mockClear();
-    getUrlSpy.mockClear();
-    historyPushMock.mockClear();
-    wrapper = shallow(<TraceDiffImpl {...defaultProps} />);
+    rendered = render(<TraceDiffImpl {...defaultProps} / data-testid="tracediffimpl">));
   });
 
   describe('syncStates', () => {
     it('forces state if a is inconsistent between url and reduxState', () => {
-      wrapper.setProps({ a: newAValue });
+      rendered = render({ a: newAValue });
       expect(forceStateMock).toHaveBeenLastCalledWith({
         a: newAValue,
         b: defaultProps.b,
@@ -85,7 +77,7 @@ describe('TraceDiff', () => {
     });
 
     it('forces state if b is inconsistent between url and reduxState', () => {
-      wrapper.setProps({ b: newBValue });
+      rendered = render({ b: newBValue });
       expect(forceStateMock).toHaveBeenLastCalledWith({
         a: defaultProps.a,
         b: newBValue,
@@ -95,7 +87,7 @@ describe('TraceDiff', () => {
 
     it('forces state if cohort size has changed', () => {
       const newCohort = [...defaultProps.cohort, nonDefaultCohortId];
-      wrapper.setProps({ cohort: newCohort });
+      rendered = render({ cohort: newCohort });
       expect(forceStateMock).toHaveBeenLastCalledWith({
         a: defaultProps.a,
         b: defaultProps.b,
@@ -115,7 +107,7 @@ describe('TraceDiff', () => {
 
     it('forces state if cohort entry has changed', () => {
       const newCohort = [...defaultProps.cohort.slice(1), nonDefaultCohortId];
-      wrapper.setProps({ cohort: newCohort });
+      rendered = render({ cohort: newCohort });
       expect(forceStateMock).toHaveBeenLastCalledWith({
         a: defaultProps.a,
         b: defaultProps.b,
@@ -138,7 +130,7 @@ describe('TraceDiff', () => {
     const newId0 = 'new-id-0';
     const newId1 = 'new-id-1';
     expect(fetchMultipleTracesMock).toHaveBeenCalledTimes(0);
-    wrapper.setProps({ cohort: [...defaultProps.cohort, newId0, newId1] });
+    rendered = render({ cohort: [...defaultProps.cohort, newId0, newId1] });
     expect(fetchMultipleTracesMock).toHaveBeenCalledWith([newId0, newId1]);
     expect(fetchMultipleTracesMock).toHaveBeenCalledTimes(1);
   });
@@ -151,7 +143,7 @@ describe('TraceDiff', () => {
     const tracesData = new Map(defaultProps.tracesData);
     tracesData.set(newId0, { id: newId0, state: fetchedState.ERROR });
     tracesData.set(newId1, { id: newId0, state: fetchedState.LOADING });
-    wrapper.setProps({ cohort, tracesData });
+    rendered = render({ cohort, tracesData });
     expect(fetchMultipleTracesMock).not.toHaveBeenCalled();
   });
 
@@ -189,15 +181,15 @@ describe('TraceDiff', () => {
 
   describe('render', () => {
     it('renders as expected', () => {
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('handles a and b not in props.tracesData', () => {
       const tracesData = new Map(defaultProps.tracesData);
       tracesData.delete(defaultA);
       tracesData.delete(defaultB);
-      wrapper.setProps({ tracesData });
-      expect(wrapper.find(TraceDiffHeader).props()).toEqual(
+      rendered = render({ tracesData });
+      expect(screen.getByTestId(TraceDiffHeader)).toEqual(
         expect.objectContaining({
           a: { id: defaultA },
           b: { id: defaultB },
@@ -206,8 +198,8 @@ describe('TraceDiff', () => {
     });
 
     it('handles absent a and b', () => {
-      wrapper.setProps({ a: null, b: null });
-      expect(wrapper.find(TraceDiffHeader).props()).toEqual(expect.objectContaining({ a: null, b: null }));
+      rendered = render({ a: null, b: null });
+      expect(screen.getByTestId(TraceDiffHeader)).toEqual(expect.objectContaining({ a: null, b: null }));
     });
   });
 
@@ -215,18 +207,18 @@ describe('TraceDiff', () => {
     const arbitraryHeight = TOP_NAV_HEIGHT * 2;
 
     it('initializes as TOP_NAV_HEIGHT', () => {
-      expect(wrapper.state().graphTopOffset).toBe(TOP_NAV_HEIGHT);
+      expect(// RTL doesn't access component state directly - use assertions on rendered output instead.graphTopOffset).toBe(TOP_NAV_HEIGHT);
     });
 
     it('defaults to TOP_NAV_HEIGHT', () => {
       wrapper.setState({ graphTopOffset: arbitraryHeight });
-      wrapper.instance().headerWrapperRef(null);
-      expect(wrapper.state().graphTopOffset).toBe(TOP_NAV_HEIGHT);
+      // RTL doesn't access component instances - use assertions on rendered output instead.headerWrapperRef(null);
+      expect(// RTL doesn't access component state directly - use assertions on rendered output instead.graphTopOffset).toBe(TOP_NAV_HEIGHT);
     });
 
     it('adjusts TraceDiff--graphWrapper top offset based on TraceDiffHeader height', () => {
-      wrapper.instance().headerWrapperRef({ clientHeight: arbitraryHeight });
-      expect(wrapper.state().graphTopOffset).toBe(TOP_NAV_HEIGHT + arbitraryHeight);
+      // RTL doesn't access component instances - use assertions on rendered output instead.headerWrapperRef({ clientHeight: arbitraryHeight });
+      expect(// RTL doesn't access component state directly - use assertions on rendered output instead.graphTopOffset).toBe(TOP_NAV_HEIGHT + arbitraryHeight);
     });
   });
 

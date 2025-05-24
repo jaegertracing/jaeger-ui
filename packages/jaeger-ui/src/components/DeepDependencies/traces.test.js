@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import queryString from 'query-string';
 
 import { DeepDependencyGraphPageImpl } from '.';
@@ -39,7 +40,7 @@ describe('TracesDdg', () => {
     );
     const search = queryString.stringify({ ...extraUrlArgs, extraParam: 'extraParam' });
 
-    const wrapper = shallow(<TracesDdgImpl location={{ search }} {...passProps} />);
+    const { container } = render(<TracesDdgImpl location={{ search }} {...passProps} / data-testid="tracesddgimpl">);
     const ddgPage = wrapper.find(DeepDependencyGraphPageImpl);
     expect(ddgPage.props()).toEqual(
       expect.objectContaining({

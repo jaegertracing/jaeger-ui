@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import _set from 'lodash/set';
 
 import stringSupplant from '../../../utils/stringSupplant';
@@ -175,45 +176,45 @@ describe('<SidePanel>', () => {
 
   describe('render', () => {
     it('renders', () => {
-      const wrapper = shallow(<DetailsPanel {...props} />);
+      const { container } = render(<DetailsPanel {...props} / data-testid="detailspanel">);
       wrapper.setState({ detailsLoading: false });
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('renders with operation', () => {
-      const wrapper = shallow(<DetailsPanel {...props} operation={opString} />);
+      const { container } = render(<DetailsPanel {...props} operation={opString} / data-testid="detailspanel">);
       wrapper.setState({ detailsLoading: false });
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('renders omitted array of operations', () => {
-      const wrapper = shallow(<DetailsPanel {...props} operation={['op0', 'op1']} />);
+      const { container } = render(<DetailsPanel {...props} operation={['op0', 'op1']} / data-testid="detailspanel">);
       wrapper.setState({ detailsLoading: false });
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('renders with progressbar', () => {
       const progressbar = <div>stand-in progressbar</div>;
-      const wrapper = shallow(<DetailsPanel {...props} decorationProgressbar={progressbar} />);
+      const { container } = render(<DetailsPanel {...props} decorationProgressbar={progressbar} / data-testid="detailspanel">);
       wrapper.setState({ detailsLoading: false });
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('renders while loading', () => {
-      const wrapper = shallow(<DetailsPanel {...props} />);
-      expect(wrapper).toMatchSnapshot();
+      const { container } = render(<DetailsPanel {...props} / data-testid="detailspanel">);
+      expect(container).toMatchSnapshot();
     });
 
     it('renders details', () => {
-      const wrapper = shallow(<DetailsPanel {...props} />);
+      const { container } = render(<DetailsPanel {...props} / data-testid="detailspanel">);
       wrapper.setState({ detailsLoading: false, details: 'details string' });
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('renders details error', () => {
-      const wrapper = shallow(<DetailsPanel {...props} />);
+      const { container } = render(<DetailsPanel {...props} / data-testid="detailspanel">);
       wrapper.setState({ detailsLoading: false, details: 'details error', detailsErred: true });
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('renders detailLink', () => {
@@ -221,8 +222,8 @@ describe('<SidePanel>', () => {
         ...props.decorationSchema,
         detailLink: 'test details link',
       };
-      const wrapper = shallow(<DetailsPanel {...props} decorationSchema={schemaWithLink} />);
-      expect(wrapper).toMatchSnapshot();
+      const { container } = render(<DetailsPanel {...props} decorationSchema={schemaWithLink} / data-testid="detailspanel">);
+      expect(container).toMatchSnapshot();
     });
   });
 
@@ -230,7 +231,7 @@ describe('<SidePanel>', () => {
     it('fetches details', () => {
       expect(fetchDecorationSpy).not.toHaveBeenCalled();
 
-      shallow(<DetailsPanel {...props} />);
+      shallow(<DetailsPanel {...props} / data-testid="detailspanel">);
       expect(fetchDecorationSpy).toHaveBeenCalled();
       expect(fetchDecorationSpy).toHaveBeenLastCalledWith(supplantedUrl);
     });
@@ -242,10 +243,9 @@ describe('<SidePanel>', () => {
       detailsErred: false,
       detailsLoading: true,
     });
-    let wrapper;
-
-    beforeEach(() => {
-      wrapper = shallow(<DetailsPanel {...props} />);
+    let rendered;
+  beforeEach(() => {
+    rendered = render(<DetailsPanel {...props} / data-testid="detailspanel">);
       wrapper.setState({
         details: 'test details',
         detailsErred: false,
@@ -261,27 +261,27 @@ describe('<SidePanel>', () => {
         ...props.decorationSchema,
         detailUrl,
       };
-      wrapper.setProps({ decorationSchema: newSchema });
+      rendered = render({ decorationSchema: newSchema });
       expect(fetchDecorationSpy).toHaveBeenCalledTimes(2);
       expect(fetchDecorationSpy).toHaveBeenLastCalledWith(stringSupplant(detailUrl, { service }));
-      expect(wrapper.state()).toEqual(expectedState);
+      expect(// RTL doesn't access component state directly - use assertions on rendered output instead).toEqual(expectedState);
     });
 
     it('fetches details and clears relevant state if operation changes', () => {
-      wrapper.setProps({ operation: opString });
+      rendered = render({ operation: opString });
       expect(fetchDecorationSpy).toHaveBeenCalledTimes(2);
       expect(fetchDecorationSpy).toHaveBeenLastCalledWith(supplantedOpUrl);
-      expect(wrapper.state()).toEqual(expectedState);
+      expect(// RTL doesn't access component state directly - use assertions on rendered output instead).toEqual(expectedState);
     });
 
     it('fetches details and clears relevant state if service changes', () => {
       const newService = 'different test service';
-      wrapper.setProps({ service: newService });
+      rendered = render({ service: newService });
       expect(fetchDecorationSpy).toHaveBeenCalledTimes(2);
       expect(fetchDecorationSpy).toHaveBeenLastCalledWith(
         stringSupplant(props.decorationSchema.detailUrl, { service: newService })
       );
-      expect(wrapper.state()).toEqual(expectedState);
+      expect(// RTL doesn't access component state directly - use assertions on rendered output instead).toEqual(expectedState);
     });
 
     it('does nothing if decorationSchema, operation, and service are unchanged', () => {
@@ -293,7 +293,7 @@ describe('<SidePanel>', () => {
   describe('onResize', () => {
     it('updates state', () => {
       const width = 60;
-      const wrapper = shallow(<DetailsPanel {...props} />);
+      const { container } = render(<DetailsPanel {...props} / data-testid="detailspanel">);
       expect(wrapper.state('width')).not.toBe(width);
 
       wrapper.find(VerticalResizer).prop('onChange')(width);

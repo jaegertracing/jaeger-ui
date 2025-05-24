@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import TraceTimelineViewer, { TraceTimelineViewerImpl } from './index';
 import traceGenerator from '../../../demo/trace-generators';
@@ -48,12 +49,10 @@ describe('<TraceTimelineViewer>', () => {
     },
   };
 
-  let wrapper;
-  let connectedWrapper;
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<TraceTimelineViewerImpl {...props} />, options);
-    connectedWrapper = shallow(<TraceTimelineViewer store={options.context.store} {...props} />, options);
+    rendered = render(<TraceTimelineViewerImpl {...props} / data-testid="tracetimelineviewerimpl">, options);
+    connectedWrapper = shallow(<TraceTimelineViewer store={options.context.store} {...props} / data-testid="tracetimelineviewer">, options);
   });
 
   it('it does not explode', () => {

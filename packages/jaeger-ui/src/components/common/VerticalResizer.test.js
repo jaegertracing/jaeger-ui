@@ -13,32 +13,23 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import VerticalResizer from './VerticalResizer';
 
 describe('<VerticalResizer>', () => {
-  let wrapper;
-  let instance;
-
-  const props = {
-    min: 0.1,
-    max: 0.9,
-    onChange: jest.fn(),
-    position: 0.5,
-  };
-
+  let rendered;
   beforeEach(() => {
-    props.onChange.mockReset();
-    wrapper = mount(<VerticalResizer {...props} />);
-    instance = wrapper.instance();
+    rendered = render(<VerticalResizer {...props} / data-testid="verticalresizer">);
+    instance = // RTL doesn't access component instances - use assertions on rendered output instead;
   });
 
   it('renders without exploding', () => {
     expect(wrapper).toBeDefined();
-    expect(wrapper.find('.VerticalResizer').length).toBe(1);
-    expect(wrapper.find('.VerticalResizer--gripIcon').length).toBe(1);
-    expect(wrapper.find('.VerticalResizer--dragger').length).toBe(1);
+    expect(screen.getAllByTestId('.VerticalResizer')).toHaveLength(1);
+    expect(screen.getAllByTestId('.VerticalResizer--gripIcon')).toHaveLength(1);
+    expect(screen.getAllByTestId('.VerticalResizer--dragger')).toHaveLength(1);
   });
 
   it('sets the root elm', () => {
@@ -68,7 +59,7 @@ describe('<VerticalResizer>', () => {
     it('returns the flipped draggable bounds via _getDraggingBounds()', () => {
       const left = 10;
       const width = 100;
-      wrapper.setProps({ rightSide: true });
+      rendered = render({ rightSide: true });
       instance._rootElm.getBoundingClientRect = () => ({ left, width });
       expect(instance._getDraggingBounds()).toEqual({
         width,
@@ -79,7 +70,7 @@ describe('<VerticalResizer>', () => {
     });
 
     it('throws if dragged before rendered', () => {
-      wrapper.instance()._rootElm = null;
+      // RTL doesn't access component instances - use assertions on rendered output instead._rootElm = null;
       expect(instance._getDraggingBounds).toThrow('invalid state');
     });
 
@@ -93,15 +84,15 @@ describe('<VerticalResizer>', () => {
     it('handles drag update', () => {
       const value = props.position * 1.1;
       expect(wrapper.state('dragPosition')).toBe(null);
-      wrapper.instance()._handleDragUpdate({ value });
+      // RTL doesn't access component instances - use assertions on rendered output instead._handleDragUpdate({ value });
       expect(wrapper.state('dragPosition')).toBe(value);
     });
 
     it('handles flipped drag update', () => {
       const value = props.position * 1.1;
-      wrapper.setProps({ rightSide: true });
+      rendered = render({ rightSide: true });
       expect(wrapper.state('dragPosition')).toBe(null);
-      wrapper.instance()._handleDragUpdate({ value });
+      // RTL doesn't access component instances - use assertions on rendered output instead._handleDragUpdate({ value });
       expect(wrapper.state('dragPosition')).toBe(1 - value);
     });
 
@@ -118,7 +109,7 @@ describe('<VerticalResizer>', () => {
     it('handles flipped drag end', () => {
       const manager = { resetBounds: jest.fn() };
       const value = Math.random();
-      wrapper.setProps({ rightSide: true });
+      rendered = render({ rightSide: true });
       wrapper.setState({ dragPosition: 2 * value });
       instance._handleDragEnd({ manager, value });
       expect(manager.resetBounds.mock.calls).toEqual([[]]);
@@ -127,7 +118,7 @@ describe('<VerticalResizer>', () => {
     });
 
     it('cleans up DraggableManager on unmount', () => {
-      const disposeSpy = jest.spyOn(wrapper.instance()._dragManager, 'dispose');
+      const disposeSpy = jest.spyOn(// RTL doesn't access component instances - use assertions on rendered output instead._dragManager, 'dispose');
       wrapper.unmount();
       expect(disposeSpy).toHaveBeenCalledTimes(1);
     });
@@ -148,8 +139,8 @@ describe('<VerticalResizer>', () => {
   });
 
   it('renders is-flipped classname when positioned on rightSide', () => {
-    expect(wrapper.find('.is-flipped').length).toBe(0);
-    wrapper.setProps({ rightSide: true });
-    expect(wrapper.find('.is-flipped').length).toBe(1);
+    expect(screen.getAllByTestId('.is-flipped')).toHaveLength(0);
+    rendered = render({ rightSide: true });
+    expect(screen.getAllByTestId('.is-flipped')).toHaveLength(1);
   });
 });

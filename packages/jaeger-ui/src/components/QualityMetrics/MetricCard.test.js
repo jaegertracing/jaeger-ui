@@ -63,14 +63,14 @@ describe('MetricCard', () => {
   ];
 
   it('renders as expected without details', () => {
-    const { container } = render(<MetricCard metric={metric} />);
+    const { container } = render(<MetricCard metric={metric} / data-testid="metriccard">);
     expect(screen.getByText('Metric Name')).toBeInTheDocument();
     expect(screen.getByText('Metric Description')).toBeInTheDocument();
     expect(container.querySelector('.MetricCard--Details')).not.toBeInTheDocument();
   });
 
   it('renders as expected with details', () => {
-    render(<MetricCard metric={{ ...metric, details }} />);
+    render(<MetricCard metric={{ ...metric, details }} / data-testid="metriccard">);
     expect(screen.getByText(metric.name)).toBeInTheDocument();
     expect(screen.getByText(metric.description)).toBeInTheDocument();
     details.forEach(detail => {
@@ -81,7 +81,7 @@ describe('MetricCard', () => {
   });
 
   it('renders as expected when passCount is zero', () => {
-    render(<MetricCard metric={{ ...metric, passCount: 0 }} />);
+    render(<MetricCard metric={{ ...metric, passCount: 0 }} / data-testid="metriccard">);
     expect(screen.getByText('Metric Name')).toBeInTheDocument();
     expect(screen.getByText('0.0%')).toBeInTheDocument();
     expect(screen.getByText('Passing')).toBeInTheDocument();

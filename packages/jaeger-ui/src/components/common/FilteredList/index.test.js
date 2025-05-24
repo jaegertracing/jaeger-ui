@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Checkbox } from 'antd';
 import { FixedSizeList as VList } from 'react-window';
 import { Key as EKey } from 'ts-key-enum';
@@ -25,41 +26,30 @@ describe('<FilteredList>', () => {
   const numbers = ['0', '1', '2'];
 
   let props;
-  let wrapper;
-
-  const getData = () => wrapper.find(VList).prop('itemData');
-
-  const keyDown = key => wrapper.find('input').simulate('keydown', { key });
-
+  let rendered;
   beforeEach(() => {
-    props = {
-      cancel: jest.fn(),
-      options: words.concat(numbers),
-      value: null,
-      setValue: jest.fn(),
-    };
-    wrapper = shallow(<FilteredList {...props} />);
+    rendered = render(<FilteredList {...props} / data-testid="filteredlist">));
   });
 
   it('renders without exploding', () => {
     expect(wrapper.exists()).toBe(true);
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it('puts the focus on the input on update', () => {
     const fn = jest.fn();
-    wrapper.instance().inputRef = {
+    // RTL doesn't access component instances - use assertions on rendered output instead.inputRef = {
       current: {
         focus: fn,
       },
     };
-    wrapper.setProps({ value: 'anything' });
+    rendered = render({ value: 'anything' });
     expect(fn.mock.calls.length).toBe(1);
   });
 
   it('filters options based on the current input text', () => {
     expect(getData().options).toEqual(props.options);
-    wrapper.find('input').simulate('change', { target: { value: 'a' } });
+    userEvent.change(screen.getByTestId('input'), { target: { value: 'a' } });
     expect(getData().options).toEqual(words);
   });
 
@@ -87,7 +77,7 @@ describe('<FilteredList>', () => {
         visibleStartIndex: 1,
         visibleStopIndex: props.options.length - 1,
       };
-      wrapper.instance().onListItemsRendered(indices);
+      // RTL doesn't access component instances - use assertions on rendered output instead.onListItemsRendered(indices);
       jest.runAllTimers();
     });
 
@@ -114,7 +104,7 @@ describe('<FilteredList>', () => {
       const fn = jest.fn();
       keyDown(EKey.ArrowDown);
       expect(wrapper.state('focusedIndex')).toBe(indices.visibleStartIndex);
-      wrapper.instance().vlistRef = {
+      // RTL doesn't access component instances - use assertions on rendered output instead.vlistRef = {
         current: {
           scrollToItem: fn,
         },
@@ -128,29 +118,29 @@ describe('<FilteredList>', () => {
   describe('multi mode checkbox', () => {
     const addValues = jest.fn();
     const removeValues = jest.fn();
-    const click = checked => wrapper.find(Checkbox).simulate('change', { target: { checked } });
+    const click = checked => userEvent.change(screen.getByTestId(Checkbox), { target: { checked } });
     const isChecked = () => wrapper.find(Checkbox).prop('checked');
     const isIndeterminate = () => wrapper.find(Checkbox).prop('indeterminate');
 
     beforeEach(() => {
-      wrapper.setProps({ multi: true, addValues, removeValues });
+      rendered = render({ multi: true, addValues, removeValues });
       addValues.mockReset();
       removeValues.mockReset();
     });
 
     it('is omitted if multi is false or addValues or removeValues is not provided', () => {
-      wrapper.setProps({ multi: false });
-      expect(wrapper.find(Checkbox).length).toBe(0);
+      rendered = render({ multi: false });
+      expect(screen.getAllByTestId(Checkbox)).toHaveLength(0);
 
-      wrapper.setProps({ multi: true, addValues: undefined });
-      expect(wrapper.find(Checkbox).length).toBe(0);
+      rendered = render({ multi: true, addValues: undefined });
+      expect(screen.getAllByTestId(Checkbox)).toHaveLength(0);
 
-      wrapper.setProps({ addValues, removeValues: undefined });
-      expect(wrapper.find(Checkbox).length).toBe(0);
+      rendered = render({ addValues, removeValues: undefined });
+      expect(screen.getAllByTestId(Checkbox)).toHaveLength(0);
     });
 
     it('is present in multi mode', () => {
-      expect(wrapper.find(Checkbox).length).toBe(1);
+      expect(screen.getAllByTestId(Checkbox)).toHaveLength(1);
     });
 
     it('is unchecked if nothing is selected', () => {
@@ -159,54 +149,54 @@ describe('<FilteredList>', () => {
     });
 
     it('is indeterminate if one is selected', () => {
-      wrapper.setProps({ value: words[0] });
+      rendered = render({ value: words[0] });
       expect(isChecked()).toBe(false);
       expect(isIndeterminate()).toBe(true);
     });
 
     it('is indeterminate if some are selected', () => {
-      wrapper.setProps({ value: new Set(words) });
+      rendered = render({ value: new Set(words) });
       expect(isChecked()).toBe(false);
       expect(isIndeterminate()).toBe(true);
     });
 
     it('is checked if all are selected', () => {
-      wrapper.setProps({ value: new Set([...words, ...numbers]) });
+      rendered = render({ value: new Set([...words, ...numbers]) });
       expect(isChecked()).toBe(true);
       expect(isIndeterminate()).toBe(false);
     });
 
     it('is unchecked if nothing filtered is selected', () => {
       wrapper.setState({ filterText: numbers[0] });
-      wrapper.setProps({ value: new Set(words) });
+      rendered = render({ value: new Set(words) });
       expect(isChecked()).toBe(false);
       expect(isIndeterminate()).toBe(false);
     });
 
     it('is unchecked if one filtered value is selected', () => {
       wrapper.setState({ filterText: numbers[0] });
-      wrapper.setProps({ value: new Set(words) });
+      rendered = render({ value: new Set(words) });
       expect(isChecked()).toBe(false);
       expect(isIndeterminate()).toBe(false);
     });
 
     it('is indeterminate if one filtered value is selected', () => {
       wrapper.setState({ filterText: words[0][0] });
-      wrapper.setProps({ value: words[0] });
+      rendered = render({ value: words[0] });
       expect(isChecked()).toBe(false);
       expect(isIndeterminate()).toBe(true);
     });
 
     it('is indeterminate if some filtered values are selected', () => {
       wrapper.setState({ filterText: words[0][0] });
-      wrapper.setProps({ value: new Set(words.slice(1)) });
+      rendered = render({ value: new Set(words.slice(1)) });
       expect(isChecked()).toBe(false);
       expect(isIndeterminate()).toBe(true);
     });
 
     it('is checked if all filtered values are selected', () => {
       wrapper.setState({ filterText: words[0][0] });
-      wrapper.setProps({ value: new Set(words) });
+      rendered = render({ value: new Set(words) });
       expect(isChecked()).toBe(true);
       expect(isIndeterminate()).toBe(false);
     });
@@ -229,7 +219,7 @@ describe('<FilteredList>', () => {
 
     it('selects all unselected filtered values when clicked and unchecked', () => {
       wrapper.setState({ filterText: words[0][0] });
-      wrapper.setProps({ value: words[0] });
+      rendered = render({ value: words[0] });
       click(true);
       expect(addValues).toHaveBeenCalledTimes(1);
       expect(addValues).toHaveBeenCalledWith(words.slice(1));
@@ -253,7 +243,7 @@ describe('<FilteredList>', () => {
 
   it('enter selects the filteredOption if there is only one option', () => {
     const value = words[1];
-    wrapper.find('input').simulate('change', { target: { value } });
+    userEvent.change(screen.getByTestId('input'), { target: { value } });
     expect(props.setValue.mock.calls.length).toBe(0);
     keyDown(EKey.Enter);
     expect(props.setValue.mock.calls).toEqual([[value]]);
@@ -268,7 +258,7 @@ describe('<FilteredList>', () => {
   it('scrolling unsets the focus index', () => {
     jest.useFakeTimers('modern');
     wrapper.setState({ focusedIndex: 0 });
-    wrapper.instance().onListScrolled({ scrollUpdateWasRequested: false });
+    // RTL doesn't access component instances - use assertions on rendered output instead.onListScrolled({ scrollUpdateWasRequested: false });
     jest.runAllTimers();
     expect(wrapper.state('focusedIndex')).toBe(null);
   });

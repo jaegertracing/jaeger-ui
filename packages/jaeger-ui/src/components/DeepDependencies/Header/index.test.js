@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Tooltip } from 'antd';
 import { IoEye, IoEyeOff } from 'react-icons/io5';
 
@@ -34,18 +35,13 @@ describe('<Header>', () => {
   const operation = 'testOperation';
   const operations = [operation];
   let trackSetOpSpy;
-  let wrapper;
-
-  beforeAll(() => {
-    trackSetOpSpy = jest.spyOn(track, 'trackHeaderSetOperation');
-  });
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<Header {...minProps} />);
+    rendered = render(<Header {...minProps} / data-testid="header">));
   });
 
   it('renders with minimal props', () => {
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it('omits the operation selector if a service is not selected', () => {
@@ -57,18 +53,18 @@ describe('<Header>', () => {
   it('renders the operation selector iff a service is selected', () => {
     let nameSelector = wrapper.find(NameSelector);
     expect(nameSelector.length).toBe(1);
-    wrapper.setProps({ service, services });
+    rendered = render({ service, services });
     nameSelector = wrapper.find(NameSelector);
     expect(nameSelector.length).toBe(2);
     expect(nameSelector.at(1).prop('label')).toMatch(/operation/i);
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
 
-    wrapper.setProps({ operation, operations });
-    expect(wrapper).toMatchSnapshot();
+    rendered = render({ operation, operations });
+    expect(container).toMatchSnapshot();
   });
 
   it('tracks when operation selector sets a value', () => {
-    wrapper.setProps({ service, services });
+    rendered = render({ service, services });
     const testOp = 'test operation';
     expect(trackSetOpSpy).not.toHaveBeenCalled();
 
@@ -78,20 +74,20 @@ describe('<Header>', () => {
   });
 
   it('renders the hops selector if distanceToPathElems is provided', () => {
-    wrapper.setProps({
+    rendered = render({
       distanceToPathElems: new Map(),
       visEncoding: '3',
     });
-    expect(wrapper.find(HopsSelector).length).toBe(1);
-    expect(wrapper).toMatchSnapshot();
+    expect(screen.getAllByTestId(HopsSelector)).toHaveLength(1);
+    expect(container).toMatchSnapshot();
   });
 
   it('focuses uiFindInput IFF rendered when clicking on wrapping div', () => {
-    const click = () => wrapper.find('.DdgHeader--uiFind').simulate('click');
+    const click = () => userEvent.click(screen.getByTestId('.DdgHeader--uiFind'));
     const focus = jest.fn();
     click();
 
-    wrapper.instance()._uiFindInput = { current: { focus } };
+    // RTL doesn't access component instances - use assertions on rendered output instead._uiFindInput = { current: { focus } };
     click();
     expect(focus).toHaveBeenCalledTimes(1);
   });
@@ -114,7 +110,7 @@ describe('<Header>', () => {
     it('renders count if `hiddenUiFindMatches` is `undefined` or empty', () => {
       const expectedTitle = 'All matches are visible';
 
-      wrapper.setProps({ uiFindCount });
+      rendered = render({ uiFindCount });
       expect(getMatchesInfo().text()).toEqual(expectedFindCount);
       expect(getMatchesInfo().text()).not.toEqual(expectedHiddenCount);
       expect(getTooltip().prop('title')).toBe(expectedTitle);
@@ -122,7 +118,7 @@ describe('<Header>', () => {
       expect(wrapper.find(IoEye)).toHaveLength(1);
       expect(wrapper.find(IoEyeOff)).toHaveLength(0);
 
-      wrapper.setProps({ hiddenUiFindMatches: new Set() });
+      rendered = render({ hiddenUiFindMatches: new Set() });
       expect(getMatchesInfo().text()).toEqual(expectedFindCount);
       expect(getMatchesInfo().text()).not.toEqual(expectedHiddenCount);
       expect(getTooltip().prop('title')).toBe(expectedTitle);
@@ -132,7 +128,7 @@ describe('<Header>', () => {
     });
 
     it('renders both visible and hidden counts if both are provided', () => {
-      wrapper.setProps({ hiddenUiFindMatches, uiFindCount });
+      rendered = render({ hiddenUiFindMatches, uiFindCount });
 
       expect(getMatchesInfo().text()).toEqual(expectedFindCount);
       expect(getMatchesInfo().text()).toEqual(expectedHiddenCount);
@@ -144,7 +140,7 @@ describe('<Header>', () => {
 
     it('renders 0 with correct tooltip if there are no visible nor hidden matches', () => {
       const expectedTitle = 'No matches';
-      wrapper.setProps({ uiFindCount: 0 });
+      rendered = render({ uiFindCount: 0 });
 
       expect(getMatchesInfo().text()).toBe('0');
       expect(getTooltip().prop('title')).toBe(expectedTitle);
@@ -154,8 +150,8 @@ describe('<Header>', () => {
     });
 
     it('renders 0 with correct tooltip if there are no matches but there are hidden matches', () => {
-      wrapper.setProps({ uiFindCount: 0 });
-      wrapper.setProps({ hiddenUiFindMatches });
+      rendered = render({ uiFindCount: 0 });
+      rendered = render({ hiddenUiFindMatches });
 
       expect(getMatchesInfo().text()).toEqual(expect.stringContaining('0'));
       expect(getMatchesInfo().text()).toEqual(expectedHiddenCount);
@@ -167,18 +163,18 @@ describe('<Header>', () => {
 
     it('renders correct plurality in tooltip', () => {
       const expectedTitle = 'Click to view 1 hidden match';
-      wrapper.setProps({ hiddenUiFindMatches: new Set([Array.from(hiddenUiFindMatches)[0]]), uiFindCount });
+      rendered = render({ hiddenUiFindMatches: new Set([Array.from(hiddenUiFindMatches)[0]]), uiFindCount });
 
       expect(getTooltip().prop('title')).toBe(expectedTitle);
     });
 
     it('calls props.showVertices with vertices in props.hiddenUiFindMatches when clicked with hiddenUiFindMatches', () => {
       const showVertices = jest.fn();
-      wrapper.setProps({ showVertices, uiFindCount });
+      rendered = render({ showVertices, uiFindCount });
       getBtn().simulate('click');
       expect(showVertices).toHaveBeenCalledTimes(0);
 
-      wrapper.setProps({ hiddenUiFindMatches });
+      rendered = render({ hiddenUiFindMatches });
       getBtn().simulate('click');
       expect(showVertices).toHaveBeenCalledTimes(1);
       expect(showVertices).toHaveBeenCalledWith(Array.from(hiddenUiFindMatches));

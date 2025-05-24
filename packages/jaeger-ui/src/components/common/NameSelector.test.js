@@ -89,7 +89,7 @@ describe('<NameSelector>', () => {
       <NameSelector
         {...props}
         // @ts-ignore // Ignore TS error for adding Popover prop not defined in NameSelector props
-        getPopupContainer={triggerNode => triggerNode.parentElement}
+        getPopupContainer={triggerNode = data-testid="nameselector"> triggerNode.parentElement}
       />
     );
   };

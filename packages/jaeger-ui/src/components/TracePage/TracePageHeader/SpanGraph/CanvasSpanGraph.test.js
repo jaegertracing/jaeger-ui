@@ -22,7 +22,7 @@ import * as renderUtils from './render-into-canvas'; // Import the module to moc
 // Mock the renderIntoCanvas function
 jest.mock('./render-into-canvas');
 
-describe('<CanvasSpanGraph />', () => {
+describe('<CanvasSpanGraph / data-testid="canvasspangraph">', () => {
   const items = [{ valueWidth: 1, valueOffset: 1, serviceName: 'service-name-0' }];
   const props = {
     items: [],
@@ -49,7 +49,7 @@ describe('<CanvasSpanGraph />', () => {
   });
 
   it('renders without exploding', () => {
-    const { container, rerender } = render(<CanvasSpanGraph {...props} />);
+    const { container, rerender } = render(<CanvasSpanGraph {...props} / data-testid="canvasspangraph">);
     const canvas = container.querySelector('.CanvasSpanGraph');
 
     expect(canvas).toBeInTheDocument();
@@ -57,7 +57,7 @@ describe('<CanvasSpanGraph />', () => {
     expect(renderUtils.default).toHaveBeenCalledTimes(1);
 
     // Update props and rerender
-    rerender(<CanvasSpanGraph {...props} items={items} />);
+    rerender(<CanvasSpanGraph {...props} items={items} / data-testid="canvasspangraph">);
 
     // Check if renderIntoCanvas was called again on update
     expect(renderUtils.default).toHaveBeenCalledTimes(2);

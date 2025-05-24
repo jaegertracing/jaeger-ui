@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as markers from './TracePageSearchBar.markers';
 import DefaultTracePageSearchBar, { TracePageSearchBarFn as TracePageSearchBar } from './TracePageSearchBar';
 import { trackFilter } from '../index.track';
@@ -29,10 +30,9 @@ const defaultProps = {
 };
 
 describe('<TracePageSearchBar>', () => {
-  let wrapper;
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<TracePageSearchBar {...defaultProps} />);
+    rendered = render(<TracePageSearchBar {...defaultProps} / data-testid="tracepagesearchbar">));
   });
 
   describe('truthy textFilter', () => {
@@ -66,7 +66,7 @@ describe('<TracePageSearchBar>', () => {
     });
 
     it('hides navigation buttons when not navigable', () => {
-      wrapper.setProps({ navigable: false });
+      rendered = render({ navigable: false });
       const button = wrapper.find('Button');
       expect(button.length).toBe(1);
       expect(button.find('[data-testid="CloseOutlined"]').exists()).toBe(true);
@@ -75,8 +75,8 @@ describe('<TracePageSearchBar>', () => {
 
   describe('falsy textFilter', () => {
     beforeEach(() => {
-      wrapper.setProps({ textFilter: '' });
-    });
+    rendered = render({ textFilter: '' }));
+  });
 
     it('renders UiFindInput with correct props', () => {
       expect(wrapper.find(UiFindInput).prop('inputProps').suffix).toBe(null);
@@ -98,7 +98,7 @@ describe('<DefaultTracePageSearchBar>', () => {
   const { forwardedRef: ref, ...propsWithoutRef } = defaultProps;
 
   it('forwardsRef correctly', () => {
-    const wrapper = shallow(<DefaultTracePageSearchBar {...propsWithoutRef} ref={ref} />);
-    expect(wrapper.find(TracePageSearchBar).props()).toEqual(defaultProps);
+    const { container } = render(<DefaultTracePageSearchBar {...propsWithoutRef} ref={ref} / data-testid="defaulttracepagesearchbar">);
+    expect(screen.getByTestId(TracePageSearchBar)).toEqual(defaultProps);
   });
 });

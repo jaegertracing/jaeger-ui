@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -38,13 +39,13 @@ beforeEach(() => {
   trace = transformTraceData(traceGenerator.trace({}));
 });
 
-it('<ResultItem /> should render base case correctly', () => {
+it('<ResultItem / data-testid="resultitem"> should render base case correctly', () => {
   renderWithRouter(
     <ResultItem
       trace={trace}
       durationPercent={50}
       linkTo=""
-      toggleComparison={() => {}}
+      toggleComparison={() = data-testid="resultitem"> {}}
       isInDiffCohort={false}
       disableComparision={false}
     />
@@ -55,14 +56,14 @@ it('<ResultItem /> should render base case correctly', () => {
   expect(serviceTags).toHaveLength(trace.services.length);
 });
 
-it('<ResultItem /> should not render any ServiceTags when there are no services', () => {
+it('<ResultItem / data-testid="resultitem"> should not render any ServiceTags when there are no services', () => {
   const traceWithoutServices = { ...trace, services: [] };
   renderWithRouter(
     <ResultItem
       trace={traceWithoutServices}
       durationPercent={50}
       linkTo=""
-      toggleComparison={() => {}}
+      toggleComparison={() = data-testid="resultitem"> {}}
       isInDiffCohort={false}
       disableComparision={false}
     />
@@ -72,7 +73,7 @@ it('<ResultItem /> should not render any ServiceTags when there are no services'
   expect(serviceTags).toHaveLength(0);
 });
 
-it('<ResultItem /> should render error icon on ServiceTags that have an error tag', () => {
+it('<ResultItem / data-testid="resultitem"> should render error icon on ServiceTags that have an error tag', () => {
   // Assume trace has services and spans from the generator. Assert this assumption.
   expect(trace.services).toBeDefined();
   expect(trace.services.length).toBeGreaterThan(0);
@@ -95,7 +96,7 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error ta
       trace={trace}
       durationPercent={50}
       linkTo=""
-      toggleComparison={() => {}}
+      toggleComparison={() = data-testid="resultitem"> {}}
       isInDiffCohort={false}
       disableComparision={false}
     />
@@ -119,7 +120,7 @@ it('calls trackConversions on click', () => {
       trace={trace}
       durationPercent={50}
       linkTo=""
-      toggleComparison={() => {}}
+      toggleComparison={() = data-testid="resultitem"> {}}
       isInDiffCohort={false}
       disableComparision={false}
     />

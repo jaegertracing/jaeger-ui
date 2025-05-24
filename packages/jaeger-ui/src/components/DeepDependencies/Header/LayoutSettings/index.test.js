@@ -14,7 +14,8 @@
 
 import React from 'react';
 import { Checkbox, Radio, Popover } from 'antd';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import LayoutSettings, { densityOptions } from '.';
 import * as track from '../../index.track';
@@ -31,7 +32,7 @@ describe('LayoutSettings', () => {
   const densityIdx = densityOptions.findIndex(({ option }) => option === props.density);
 
   const getWrapper = overrideProps => {
-    const content = shallow(<LayoutSettings {...props} {...overrideProps} />)
+    const content = shallow(<LayoutSettings {...props} {...overrideProps} / data-testid="layoutsettings">)
       .find(Popover)
       .prop('content');
     return shallow(content);

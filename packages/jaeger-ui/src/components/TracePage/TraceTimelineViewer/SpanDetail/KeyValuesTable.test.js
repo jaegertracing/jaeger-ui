@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Dropdown } from 'antd';
 import { IoOpenOutline } from 'react-icons/io5';
 
@@ -25,8 +26,8 @@ describe('LinkValue', () => {
   const title = 'titleValue';
   const href = 'hrefValue';
   const childrenText = 'childrenTextValue';
-  const wrapper = shallow(
-    <LinkValue href={href} title={title}>
+  const { container } = render(
+    <LinkValue href={href} title={title} data-testid="linkvalue">
       {childrenText}
     </LinkValue>
   );
@@ -43,47 +44,14 @@ describe('LinkValue', () => {
 });
 
 describe('<KeyValuesTable>', () => {
-  let wrapper;
-
-  const jsonValue = {
-    hello: 'world',
-    '<xss>': 'safe',
-    link: 'https://example.com',
-    xss_link: 'https://example.com with "quotes"',
-    boolean: true,
-    number: 42,
-    null: null,
-    array: ['x', 'y', 'z'],
-    object: { a: 'b', x: 'y' },
-  };
-  const data = [
-    { key: 'span.kind', value: 'client', expected: 'client' },
-    { key: 'omg', value: 'mos-def', expected: 'mos-def' },
-    { key: 'numericString', value: '12345678901234567890', expected: '12345678901234567890' },
-    { key: 'numeric', value: 123456789, expected: '123456789' },
-    { key: 'boolean', value: true, expected: 'true' },
-    { key: 'http.request.header.accept', value: ['application/json'], expected: 'application/json' },
-    {
-      key: 'http.response.header.set_cookie',
-      value: JSON.stringify(['name=mos-def', 'code=12345']),
-      expected: 'name=mos-def, code=12345',
-    },
-    // render().text() does not preserve full escaping of rendered JSON,
-    // so instead rely on jest snapshot comparison.
-    // Key observations:
-    // - "<xss>" key is encoded as &lt;xss&gt;
-    // - link value is rendered as <a>
-    // - xss_link value is rendered as plain string
-    { key: 'jsonkey', value: JSON.stringify(jsonValue), snapshot: true },
-  ];
-
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<KeyValuesTable data={data} />);
+    rendered = render(<KeyValuesTable data={data} / data-testid="keyvaluestable">));
   });
 
   it('renders without exploding', () => {
     expect(wrapper).toBeDefined();
-    expect(wrapper.find('.KeyValueTable').length).toBe(1);
+    expect(screen.getAllByTestId('.KeyValueTable')).toHaveLength(1);
   });
 
   it('renders a table row for each data element', () => {
@@ -147,7 +115,7 @@ describe('<KeyValuesTable>', () => {
     expect(dropdown.closest('tr').find('td').first().text()).toBe('span.kind');
   });
 
-  it('renders a <CopyIcon /> with correct copyText for each data element', () => {
+  it('renders a <CopyIcon / data-testid="copyicon"> with correct copyText for each data element', () => {
     const copyIcons = wrapper.find(CopyIcon);
     expect(copyIcons.length).toBe(2 * data.length); // Copy and Copy JSON buttons
     copyIcons.forEach((copyIcon, i) => {

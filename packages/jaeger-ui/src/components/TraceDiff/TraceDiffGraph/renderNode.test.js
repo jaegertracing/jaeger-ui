@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import renderNode, { DiffNode } from './renderNode';
 
@@ -30,39 +31,38 @@ describe('drawNode', () => {
       service,
     };
 
-    let wrapper;
-
-    beforeEach(() => {
-      wrapper = shallow(<DiffNode {...props} />);
-    });
+    let rendered;
+  beforeEach(() => {
+    rendered = render(<DiffNode {...props} / data-testid="diffnode">));
+  });
 
     it('renders as expected when props.a and props.b are the same', () => {
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it('renders as expected when props.a is less than props.b', () => {
-      wrapper.setProps({ a: defaultCount / 2 });
-      expect(wrapper).toMatchSnapshot();
+      rendered = render({ a: defaultCount / 2 });
+      expect(container).toMatchSnapshot();
     });
 
     it('renders as expected when props.a is more than props.b', () => {
-      wrapper.setProps({ a: defaultCount * 2 });
-      expect(wrapper).toMatchSnapshot();
+      rendered = render({ a: defaultCount * 2 });
+      expect(container).toMatchSnapshot();
     });
 
     it('renders as expected when props.a is 0', () => {
-      wrapper.setProps({ a: 0 });
-      expect(wrapper).toMatchSnapshot();
+      rendered = render({ a: 0 });
+      expect(container).toMatchSnapshot();
     });
 
     it('renders as expected when props.b is 0', () => {
-      wrapper.setProps({ b: 0 });
-      expect(wrapper).toMatchSnapshot();
+      rendered = render({ b: 0 });
+      expect(container).toMatchSnapshot();
     });
 
     it('renders as expected when props.isUiFindMatch is true', () => {
-      wrapper.setProps({ isUiFindMatch: true });
-      expect(wrapper).toMatchSnapshot();
+      rendered = render({ isUiFindMatch: true });
+      expect(container).toMatchSnapshot();
     });
   });
 

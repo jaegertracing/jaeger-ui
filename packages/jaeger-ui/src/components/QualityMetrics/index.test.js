@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import JaegerAPI from '../../api/jaeger';
 import Header from './Header';
@@ -72,7 +73,7 @@ describe('QualityMetrics', () => {
 
     describe('componentDidMount', () => {
       it('fetches quality metrics', () => {
-        shallow(<UnconnectedQualityMetrics {...props} />);
+        shallow(<UnconnectedQualityMetrics {...props} / data-testid="unconnectedqualitymetrics">);
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
         expect(fetchQualityMetricsSpy).toHaveBeenCalledWith(props.service, props.lookback);
       });
@@ -92,10 +93,9 @@ describe('QualityMetrics', () => {
         error: {},
         loading: false,
       };
-      let wrapper;
-
-      beforeEach(() => {
-        wrapper = shallow(<UnconnectedQualityMetrics {...props} />);
+      let rendered;
+  beforeEach(() => {
+    rendered = render(<UnconnectedQualityMetrics {...props} / data-testid="unconnectedqualitymetrics">);
         wrapper.setState(initialState);
       });
 
@@ -103,43 +103,42 @@ describe('QualityMetrics', () => {
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
 
         const service = `not-${props.service}`;
-        wrapper.setProps({ service });
+        rendered = render({ service });
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(2);
         expect(fetchQualityMetricsSpy).toHaveBeenLastCalledWith(service, props.lookback);
-        expect(wrapper.state()).toEqual(expectedState);
+        expect(// RTL doesn't access component state directly - use assertions on rendered output instead).toEqual(expectedState);
       });
 
       it('clears state and fetches quality metrics if lookback changed', () => {
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
 
         const lookback = `not-${props.lookback}`;
-        wrapper.setProps({ lookback });
+        rendered = render({ lookback });
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(2);
         expect(fetchQualityMetricsSpy).toHaveBeenLastCalledWith(props.service, lookback);
-        expect(wrapper.state()).toEqual(expectedState);
+        expect(// RTL doesn't access component state directly - use assertions on rendered output instead).toEqual(expectedState);
       });
 
       it('no-ops if neither service or lookback changed', () => {
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
 
-        wrapper.setProps({ services: [] });
+        rendered = render({ services: [] });
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
       });
     });
 
     describe('fetches quality metrics', () => {
-      let wrapper;
-
-      beforeEach(() => {
-        wrapper = shallow(<UnconnectedQualityMetrics {...propsWithoutService} />);
-      });
+      let rendered;
+  beforeEach(() => {
+    rendered = render(<UnconnectedQualityMetrics {...propsWithoutService} / data-testid="unconnectedqualitymetrics">));
+  });
 
       it('no-ops on falsy service', () => {
         expect(wrapper.state('loading')).toBe(undefined);
       });
 
       it('fetches quality metrics and updates state on success', async () => {
-        wrapper.setProps({ service: props.service });
+        rendered = render({ service: props.service });
         expect(wrapper.state('loading')).toBe(true);
 
         const qualityMetrics = {};
@@ -151,7 +150,7 @@ describe('QualityMetrics', () => {
       });
 
       it('fetches quality metrics and updates state on error', async () => {
-        wrapper.setProps({ service: props.service });
+        rendered = render({ service: props.service });
         expect(wrapper.state('loading')).toBe(true);
 
         const error = {};
@@ -169,14 +168,9 @@ describe('QualityMetrics', () => {
       let getUrlSpy;
       let latestUrl;
       let setLookback;
-      let wrapper;
-
-      beforeAll(() => {
-        getUrlSpy = jest.spyOn(getUrl, 'getUrl').mockImplementation(() => {
-          latestUrl = `${testUrl}.${getUrlSpy.mock.calls.length}`;
-          return latestUrl;
-        });
-        wrapper = shallow(<UnconnectedQualityMetrics {...props} />);
+      let rendered;
+  beforeEach(() => {
+    rendered = render(<UnconnectedQualityMetrics {...props} / data-testid="unconnectedqualitymetrics">);
         setLookback = wrapper.find(Header).prop('setLookback');
       });
 
@@ -200,7 +194,7 @@ describe('QualityMetrics', () => {
       });
 
       it('sets lookback without service', () => {
-        wrapper.setProps({ service: undefined });
+        rendered = render({ service: undefined });
         setLookback(testLookback);
         expect(getUrlSpy).toHaveBeenLastCalledWith({
           lookback: testLookback,
@@ -232,23 +226,23 @@ describe('QualityMetrics', () => {
 
     describe('render', () => {
       it('renders without loading, error, or metrics', () => {
-        expect(shallow(<UnconnectedQualityMetrics {...propsWithoutService} />)).toMatchSnapshot();
+        expect(shallow(<UnconnectedQualityMetrics {...propsWithoutService} / data-testid="unconnectedqualitymetrics">)).toMatchSnapshot();
       });
 
       it('renders when loading', () => {
-        expect(shallow(<UnconnectedQualityMetrics {...props} />)).toMatchSnapshot();
+        expect(shallow(<UnconnectedQualityMetrics {...props} / data-testid="unconnectedqualitymetrics">)).toMatchSnapshot();
       });
 
       it('renders when errored', async () => {
-        const wrapper = shallow(<UnconnectedQualityMetrics {...props} />);
+        const { container } = render(<UnconnectedQualityMetrics {...props} / data-testid="unconnectedqualitymetrics">);
         const message = 'Error message';
         rej({ message });
         await promise.catch(() => {});
-        expect(wrapper).toMatchSnapshot();
+        expect(container).toMatchSnapshot();
       });
 
       it('renders with metrics', async () => {
-        const wrapper = shallow(<UnconnectedQualityMetrics {...props} />);
+        const { container } = render(<UnconnectedQualityMetrics {...props} / data-testid="unconnectedqualitymetrics">);
         const metrics = {
           bannerText: 'test banner text',
           traceQualityDocumentationLink: 'trace.quality.documentation/link',
@@ -271,7 +265,7 @@ describe('QualityMetrics', () => {
         };
         res(metrics);
         await promise;
-        expect(wrapper).toMatchSnapshot();
+        expect(container).toMatchSnapshot();
       });
     });
   });

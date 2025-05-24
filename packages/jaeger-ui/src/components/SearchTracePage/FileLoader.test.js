@@ -13,20 +13,19 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import FileLoader from './FileLoader';
 
-describe('<FileLoader />', () => {
-  let wrapper;
-  const mockLoadJsonTraces = jest.fn();
-
+describe('<FileLoader / data-testid="fileloader">', () => {
+  let rendered;
   beforeEach(() => {
-    wrapper = shallow(<FileLoader loadJsonTraces={mockLoadJsonTraces} />);
+    rendered = render(<FileLoader loadJsonTraces={mockLoadJsonTraces} / data-testid="fileloader">));
   });
 
   it('matches the snapshot', () => {
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it('calls loadJsonTraces with the uploaded file', () => {

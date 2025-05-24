@@ -18,7 +18,8 @@ jest.mock('store');
 
 /* eslint-disable import/first */
 import React from 'react';
-import { mount } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import store from 'store';
 
 import { Provider } from 'react-redux';
@@ -33,7 +34,7 @@ import { store as globalStore } from '../../utils/configure-store';
 
 const AllProvider = ({ children }) => (
   <BrowserRouter>
-    <Provider store={globalStore}>
+    <Provider store={globalStore} data-testid="provider">
       <MemoryRouter>{children}</MemoryRouter>
     </Provider>
   </BrowserRouter>
@@ -41,40 +42,9 @@ const AllProvider = ({ children }) => (
 
 describe('<SearchTracePage>', () => {
   const queryOfResults = {};
-  let wrapper;
-  let traces;
-  let traceResultsToDownload;
-  let props;
-
+  let rendered;
   beforeEach(() => {
-    traces = [
-      { traceID: 'a', spans: [], processes: {} },
-      { traceID: 'b', spans: [], processes: {} },
-    ];
-    traceResultsToDownload = [
-      { traceID: 'a', spans: [], processes: {} },
-      { traceID: 'b', spans: [], processes: {} },
-    ];
-    props = {
-      queryOfResults,
-      traces,
-      traceResultsToDownload,
-      diffCohort: [],
-      isHomepage: false,
-      loadingServices: false,
-      loadingTraces: false,
-      disableFileUploadControl: false,
-      maxTraceDuration: 100,
-      numberOfTraceResults: traces.length,
-      services: null,
-      sortedTracesXformer: jest.fn(),
-      urlQueryParams: { service: 'svc-a' },
-      // actions
-      fetchServiceOperations: jest.fn(),
-      fetchServices: jest.fn(),
-      searchTraces: jest.fn(),
-    };
-    wrapper = mount(<SearchTracePage {...props} />, { wrappingComponent: AllProvider });
+    rendered = render(<SearchTracePage {...props} / data-testid="searchtracepage">, { wrappingComponent: AllProvider }));
   });
 
   it('searches for traces if `service` or `traceID` are in the query string', () => {
@@ -88,7 +58,7 @@ describe('<SearchTracePage>', () => {
     store.get = jest.fn(() => ({ service: 'svc-b' }));
     wrapper = mount(
       <MemoryRouter>
-        <SearchTracePage {...{ ...props, urlQueryParams: {} }} />
+        <SearchTracePage {...{ ...props, urlQueryParams: {} }} / data-testid="searchtracepage">
       </MemoryRouter>
     );
     expect(props.fetchServices.mock.calls.length).toBe(1);
@@ -104,7 +74,7 @@ describe('<SearchTracePage>', () => {
     store.get = jest.fn(() => ({ service: 'svc-b' }));
     wrapper = mount(
       <MemoryRouter>
-        <SearchTracePage {...props} />
+        <SearchTracePage {...props} / data-testid="searchtracepage">
       </MemoryRouter>
     );
     expect(props.fetchServices.mock.calls.length).toBe(1);
@@ -121,7 +91,7 @@ describe('<SearchTracePage>', () => {
 
   it('handles sort change correctly', () => {
     const sortBy = MOST_SPANS;
-    wrapper.instance().handleSortChange(sortBy);
+    // RTL doesn't access component instances - use assertions on rendered output instead.handleSortChange(sortBy);
     expect(wrapper.state('sortBy')).toBe(sortBy);
   });
 
@@ -132,7 +102,7 @@ describe('<SearchTracePage>', () => {
     const historyMock = { push: historyPush };
     wrapper = mount(
       <MemoryRouter>
-        <SearchTracePage {...props} history={historyMock} query={query} />
+        <SearchTracePage {...props} history={historyMock} query={query} / data-testid="searchtracepage">
       </MemoryRouter>
     );
     wrapper.find(SearchTracePage).first().instance().goToTrace(traceID);
@@ -145,43 +115,43 @@ describe('<SearchTracePage>', () => {
   });
 
   it('shows a loading indicator if loading services', () => {
-    wrapper.setProps({ loadingServices: true });
-    expect(wrapper.find(LoadingIndicator).length).toBe(1);
+    rendered = render({ loadingServices: true });
+    expect(screen.getAllByTestId(LoadingIndicator)).toHaveLength(1);
   });
 
   it('shows a search form when services are loaded', () => {
     const services = [{ name: 'svc-a', operations: ['op-a'] }];
-    wrapper.setProps({ services });
-    expect(wrapper.find(SearchForm).length).toBe(1);
+    rendered = render({ services });
+    expect(screen.getAllByTestId(SearchForm)).toHaveLength(1);
   });
 
   it('shows an error message if there is an error message', () => {
     wrapper.setProps({ errors: [{ message: 'big-error' }] });
-    expect(wrapper.find('.js-test-error-message').length).toBe(1);
+    expect(screen.getAllByTestId('.js-test-error-message')).toHaveLength(1);
   });
 
   it('shows the logo prior to searching', () => {
-    wrapper.setProps({ isHomepage: true, traceResults: [] });
-    expect(wrapper.find('.js-test-logo').length).toBe(1);
+    rendered = render({ isHomepage: true, traceResults: [] });
+    expect(screen.getAllByTestId('.js-test-logo')).toHaveLength(1);
   });
 
   it('hides SearchForm if is embed', () => {
-    wrapper.setProps({ embed: true });
-    expect(wrapper.find(SearchForm).length).toBe(0);
+    rendered = render({ embed: true });
+    expect(screen.getAllByTestId(SearchForm)).toHaveLength(0);
   });
 
   it('hides logo if is embed', () => {
-    wrapper.setProps({ embed: true });
-    expect(wrapper.find('.js-test-logo').length).toBe(0);
+    rendered = render({ embed: true });
+    expect(screen.getAllByTestId('.js-test-logo')).toHaveLength(0);
   });
 
   it('shows Upload tab by default', () => {
-    expect(wrapper.find({ 'data-node-key': 'fileLoader' }).length).toBe(1);
+    expect(screen.getAllByTestId({ 'data-node-key': 'fileLoader' })).toHaveLength(1);
   });
 
   it('hides Upload tab if it is disabled via config', () => {
-    wrapper.setProps({ disableFileUploadControl: true });
-    expect(wrapper.find({ 'data-node-key': 'fileLoader' }).length).toBe(0);
+    rendered = render({ disableFileUploadControl: true });
+    expect(screen.getAllByTestId({ 'data-node-key': 'fileLoader' })).toHaveLength(0);
   });
 });
 
