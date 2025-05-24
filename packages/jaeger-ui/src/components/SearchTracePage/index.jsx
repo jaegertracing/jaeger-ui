@@ -36,6 +36,7 @@ import { fetchedState } from '../../constants';
 import { sortTraces } from '../../model/search';
 import { stripEmbeddedState } from '../../utils/embedded-url';
 import FileLoader from './FileLoader';
+import getConfig, { getConfigValue } from '../../utils/config/get-config';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
@@ -263,10 +264,10 @@ const stateServicesXformer = memoizeOne(stateServices => {
 
 // export to test
 export function mapStateToProps(state) {
-  const { embedded, router, services: stServices, traceDiff, config } = state;
+  const { embedded, router, services: stServices, traceDiff } = state;
   const query = getUrlState(router.location.search);
   const isHomepage = !Object.keys(query).length;
-  const { disableFileUploadControl } = config;
+  const disableFileUploadControl = getConfigValue('disableFileUploadControl');
   const {
     query: queryOfResults,
     traces,

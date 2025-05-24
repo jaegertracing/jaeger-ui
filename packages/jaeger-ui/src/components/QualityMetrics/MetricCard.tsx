@@ -14,6 +14,7 @@
 
 import * as React from 'react';
 import { Tooltip } from 'antd';
+import { getConfigValue } from '../../utils/config/get-config';
 
 import CircularProgressbar from '../common/CircularProgressbar';
 import NewWindowIcon from '../common/NewWindowIcon';
@@ -64,7 +65,7 @@ export default class MetricCard extends React.PureComponent<TProps> {
           <span className="MetricCard--TitleHeader">
             {name}{' '}
             <Tooltip arrow={{ pointAtCenter: true }} title="Metric Documentation">
-              <a href={metricDocumentationLink} target="_blank" rel="noreferrer noopener">
+              <a href={metricDocumentationLink} target={getConfigValue('forbidNewPage') ? undefined : "_blank"} rel="noreferrer noopener">
                 <NewWindowIcon />
               </a>
             </Tooltip>

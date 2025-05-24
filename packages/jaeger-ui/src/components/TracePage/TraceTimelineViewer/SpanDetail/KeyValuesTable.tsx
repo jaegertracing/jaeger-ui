@@ -19,6 +19,7 @@ import { IoOpenOutline, IoList, IoCopyOutline } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
 
 import CopyIcon from '../../../common/CopyIcon';
+import getConfig from '../../../../utils/config/get-config';
 
 import { TNil } from '../../../../types';
 import { KeyValuePair, Link } from '../../../../types/trace';
@@ -117,7 +118,7 @@ function formatValue(key: string, value: any) {
 }
 
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
-  <a href={props.href} title={props.title || ''} target="_blank" rel="noopener noreferrer">
+  <a href={props.href} title={props.title || ''} target={getConfig().forbidNewPage ? undefined : "_blank"} rel="noopener noreferrer">
     {props.children} <IoOpenOutline className="KeyValueTable--linkIcon" />
   </a>
 );

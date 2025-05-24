@@ -13,9 +13,18 @@
 // limitations under the License.
 
 import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import shallow from '../../utils/ReactShallowRenderer.test';
 
 import JaegerUIApp from './index';
+
+// Mock the react-router-dom hooks
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => jest.fn(),
+  useLocation: () => ({ pathname: '/', search: '' }),
+  useParams: () => ({}),
+}));
 
 describe('JaegerUIApp', () => {
   it('does not explode', () => {

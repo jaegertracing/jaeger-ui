@@ -16,6 +16,7 @@ import { Dropdown } from 'antd';
 import * as React from 'react';
 import { Link } from '../../types/trace';
 import NewWindowIcon from './NewWindowIcon';
+import { getConfigValue } from '../../utils/config/get-config';
 
 type ExternalLinksProps = {
   links: Link[];
@@ -26,17 +27,21 @@ const LinkValue = (props: {
   title: string;
   children?: React.ReactNode;
   className?: string;
-}) => (
-  <a
-    href={props.href}
-    title={props.title}
-    target="_blank"
-    rel="noopener noreferrer"
-    className={props.className}
-  >
-    {props.children} <NewWindowIcon />
-  </a>
-);
+}) => {
+  const forbidNewPage = getConfigValue('forbidNewPage');
+  return (
+    <a
+      href={props.href}
+      title={props.title}
+      target={forbidNewPage ? undefined : "_blank"}
+      rel={forbidNewPage ? undefined : "noopener noreferrer"}
+      className={props.className}
+    >
+      {props.children}
+      {!forbidNewPage && <NewWindowIcon />}
+    </a>
+  );
+};
 
 // export for testing
 export const linkValueList = (links: Link[]) => {
@@ -59,7 +64,7 @@ export default function ExternalLinks(props: ExternalLinksProps) {
 
   if (links.length === 1) {
     return <LinkValue href={links[0].url} title={links[0].text} className="TracePageHeader--back" />;
-  }
+  } 
 
   return (
     <Dropdown menu={{ items: linkValueList(links) }} placement="bottomRight" trigger={['click']}>

@@ -21,6 +21,8 @@ let OTLPTrace;
 let jaegerTrace;
 let OTLPTraceMulti;
 let jaegerTraceMulti;
+let OTLPTraceNegativeCounts;
+let OTLPTraceNegativeCountsFixed;
 
 beforeAll(() => {
   OTLPTrace = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-in.json', 'utf-8'));
@@ -29,6 +31,8 @@ beforeAll(() => {
     fs.readFileSync('src/utils/fixtures/otlp2jaeger-multi-in-combined.json', 'utf-8')
   );
   jaegerTraceMulti = JSON.parse(fs.readFileSync('src/utils/fixtures/oltp2jaeger-multi-out.json', 'utf-8'));
+  OTLPTraceNegativeCounts = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-negative-counts.json', 'utf-8'));
+  OTLPTraceNegativeCountsFixed = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-negative-counts-fixed.json', 'utf-8'));
 });
 
 jest.spyOn(JaegerAPI, 'transformOTLP').mockImplementation(APICallRequest => {
@@ -40,8 +44,18 @@ jest.spyOn(JaegerAPI, 'transformOTLP').mockImplementation(APICallRequest => {
     return Promise.resolve(jaegerTraceMulti);
   }
 
+  // Handle the case with negative droppedAttributesCount values
+  if (lodash.isEqual(APICallRequest, OTLPTraceNegativeCounts)) {
+    return Promise.reject(new Error('HTTP Error: cannot unmarshal OTLP : readUint32: unexpected character: \ufffd, error found in #10 byte of ...|esCount":-1}],"links|..., bigger context ...|AR to the classpath"}}],"droppedAttributesCount":-1}],"links":[],"status":{"code":2},"flags":257},{"|...'));
+  }
+
+  // Handle the case with fixed negative droppedAttributesCount values
+  if (lodash.isEqual(APICallRequest, OTLPTraceNegativeCountsFixed)) {
+    return Promise.resolve(jaegerTrace); // Use the same output for simplicity
+  }
+
   // This defines case where API call errors out even after detecting a `resourceSpan` in the request
-  return Promise.reject();
+  return Promise.reject(new Error('Error converting traces to OTLP'));
 });
 
 describe('fileReader.readJsonFile', () => {
@@ -96,5 +110,30 @@ describe('fileReader.readJsonFile', () => {
     const file = new File([fileContent], 'multi.json', { type: 'application/json' });
     const p = readJsonFile({ file });
     return expect(p).resolves.toMatchObject(expectedOutput);
+  });
+
+  it('automatically fixes negative droppedAttributesCount values', () => {
+    const file = new File([JSON.stringify(OTLPTraceNegativeCounts)], 'negative-counts.json');
+    const p = readJsonFile({ file });
+    return expect(p).resolves.toMatchObject(jaegerTrace);
+  });
+
+  it('provides a helpful error message when auto-fixing fails', async () => {
+    // Mock the fixOtlpTraceIssues function to return the original object (not fixing it)
+    const originalFixFunction = require('./readJsonFile').fixOtlpTraceIssues;
+    require('./readJsonFile').fixOtlpTraceIssues = jest.fn().mockImplementation(obj => obj);
+
+    try {
+      const file = new File([JSON.stringify(OTLPTraceNegativeCounts)], 'negative-counts.json');
+      await readJsonFile({ file });
+      // If we get here, the test should fail
+      expect(true).toBe(false);
+    } catch (error) {
+      expect(error.message).toContain('droppedAttributesCount');
+      expect(error.message).toContain('readUint32');
+    } finally {
+      // Restore the original function
+      require('./readJsonFile').fixOtlpTraceIssues = originalFixFunction;
+    }
   });
 });

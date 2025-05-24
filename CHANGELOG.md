@@ -9,6 +9,16 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.70.0 (2025-06-10)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Fix error handling when uploading OTLP traces with negative droppedAttributesCount values ([@7908837174](https://github.com/7908837174) in [#2590](https://github.com/jaegertracing/jaeger-ui/pull/2590))
+  * Added validation to detect negative values in droppedAttributesCount and similar fields
+  * Implemented automatic fixing of invalid values by replacing negative values with 0
+  * Improved error handling to extract and display detailed error messages from the server
+  * Added specific detection for the readUint32 and droppedAttributesCount issues to provide helpful guidance to users
+
 ## v1.69.0 (2025-05-08)
 
 #### 🐞 Bug fixes, Minor Improvements

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import React, { ReactNode, createContext, useContext, FC } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { History } from 'history';
 
 const HistoryContext = createContext<History | undefined>(undefined);
@@ -21,8 +22,18 @@ interface IHistoryProviderProps {
   history: History;
 }
 
-export const useHistory = (): History | undefined => {
-  return useContext(HistoryContext);
+export const useHistory = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Create a history-like object using react-router-dom v7 hooks
+  return {
+    push: (path: string) => navigate(path),
+    replace: (path: string) => navigate(path, { replace: true }),
+    location,
+    listen: () => () => {},
+    createHref: (location: any) => location.pathname,
+  };
 };
 
 export const HistoryProvider: FC<IHistoryProviderProps> = ({ children, history }) => {

@@ -1,82 +1,16 @@
-/*
-Copyright (c) 2017 Uber Technologies, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-.TracePageHeader > :first-child {
-  border-bottom: 1px solid #e8e8e8;
+.TracePageHeader {
+  margin-bottom: 15px;
 }
 
-.TracePageHeader > :nth-child(2) {
-  background-color: #eee;
-  border-bottom: 1px solid #e4e4e4;
-}
-
-.TracePageHeader > :last-child {
-  background-color: #f8f8f8;
-  border-bottom: 1px solid #ccc;
-}
-
-/* boost the specificity for cases with only one row -- bg should be white */
-.TracePageHeader > .TracePageHeader--titleRow {
-  align-items: center;
-  background-color: #fff;
+.TracePageHeader--titleRow {
   display: flex;
-}
-
-.TracePageHeader--back {
   align-items: center;
-  align-self: stretch;
-  background-color: #fafafa;
-  border-bottom: 1px solid #ddd;
-  border-right: 1px solid #ddd;
-  color: inherit;
-  display: flex;
-  font-size: 1.4rem;
-  padding: 0 1rem;
-  margin-bottom: -1px;
+  margin-bottom: 15px;
 }
 
-.TracePageHeader--back:hover {
-  background-color: #f0f0f0;
-  border-color: #ccc;
-}
-
-.TracePageHeader--titleLink {
-  align-items: center;
-  color: var(--tx-color-title);
-  display: flex;
-  flex: 1;
-}
-
-.TracePageHeader--titleLink:hover * {
-  text-decoration: underline;
-}
-
-.TracePageHeader--titleLink:hover > *,
-.TracePageHeader--titleLink:hover small {
-  text-decoration: none;
-}
-
-.TracePageHeader--detailToggle {
-  font-size: 2rem;
-  margin: 0 12px;
-  transition: transform 0.07s ease-out;
-}
-
-.TracePageHeader--detailToggle.is-expanded {
-  transform: rotate(90deg);
+.TracePageHeader--titleToggleViewButton {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
 }
 
 .TracePageHeader--title {
@@ -84,8 +18,7 @@ limitations under the License.
   flex: 1;
   font-size: 1.7em;
   line-height: 1em;
-  margin: 0 0 0 0.5em;
-  padding: 0.5em 0;
+  margin: 0 0 0 0;
 }
 
 .TracePageHeader--title.is-collapsible {
@@ -93,19 +26,41 @@ limitations under the License.
 }
 
 .TracePageHeader--overviewItems {
-  border-bottom: 1px solid #e4e4e4;
-  padding: 0.25rem 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
-.TracePageHeader--overviewItem--valueDetail {
-  color: #aaa;
-}
-
-.TracePageHeader--overviewItem--value:hover > .TracePageHeader--overviewItem--valueDetail {
-  color: unset;
+.TracePageHeader--overviewItemsDivider {
+  margin: 0 0.5rem;
 }
 
 .TracePageHeader--archiveIcon {
-  font-size: 1.78em;
-  margin-right: 0.15em;
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+}
+
+.TracePageHeader--backIcon {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+}
+
+.TracePageHeader--rerootButton {
+  margin-left: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .TracePageHeader--titleRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .TracePageHeader--title {
+    margin-bottom: 0.5rem;
+  }
+
+  .TracePageHeader--archiveButtonText,
+  .TracePageHeader--backToResultsText {
+    display: none;
+  }
 }

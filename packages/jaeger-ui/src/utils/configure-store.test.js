@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,18 +13,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import createMemoryHistory from 'history/createMemoryHistory';
-
+import { createMemoryHistory } from 'history';
 import configureStore from './configure-store';
 
-it('configureStore() should return the redux store', () => {
-  const store = configureStore(createMemoryHistory());
+describe('configureStore()', () => {
+  let store;
+  let history;
 
-  expect(typeof store.dispatch === 'function').toBeTruthy();
-  expect(typeof store.getState === 'function').toBeTruthy();
-  expect(typeof store.subscribe === 'function').toBeTruthy();
-  expect(typeof store.replaceReducer === 'function').toBeTruthy();
+  beforeEach(() => {
+    history = createMemoryHistory();
+    store = configureStore();
+  });
 
-  expect({}.hasOwnProperty.call(store.getState(), 'router')).toBeTruthy();
-  expect({}.hasOwnProperty.call(store.getState(), 'trace')).toBeTruthy();
+  it('creates a store with the expected shape', () => {
+    expect(typeof store.dispatch).toBe('function');
+    expect(typeof store.getState).toBe('function');
+    expect(typeof store.subscribe).toBe('function');
+  });
+
+  it('creates a store with the expected reducers', () => {
+    const state = store.getState();
+    expect(state).toEqual(expect.objectContaining({
+      router: expect.any(Object),
+      archive: expect.any(Object),
+      traceDiff: expect.any(Object),
+      traceTimeline: expect.any(Object),
+    }));
+  });
+
+  it('history provides expected API', () => {
+    expect(history.length).toBeDefined();
+    expect(typeof history.push).toBe('function');
+    expect(typeof history.replace).toBe('function');
+    expect(typeof history.go).toBe('function');
+    expect(typeof history.goBack).toBe('function');
+    expect(typeof history.goForward).toBe('function');
+    expect(typeof history.block).toBe('function');
+    expect(typeof history.listen).toBe('function');
+  });
 });
