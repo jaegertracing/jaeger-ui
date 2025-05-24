@@ -404,10 +404,23 @@ describe('computeLinks()', () => {
       url: 'http://example.com/?myKey1=#{myKey}&myKey=#{myThirdKey}&traceID=#{trace.traceID}&startTime=#{trace.startTime}',
       text: 'third link (#{myThirdKey}) for traceID - #{trace.traceID}',
     },
+    {
+      type: 'spans',
+      url: 'http://example.com/?traceID=#{traceID}&spanID=#{spanID}',
+      text: 'span link (#{traceID}, #{spanID})',
+    },
   ].map(processLinkPattern);
 
   const spans = [
-    { depth: 0, process: {}, tags: [{ key: 'myKey', value: 'valueOfMyKey' }] },
+    { 
+      depth: 0, 
+      process: {}, 
+      tags: [{ key: 'myKey', value: 'valueOfMyKey' }],
+      traceID: 'trace123',
+      spanID: 'span456',
+      startTime: 1500,
+      duration: 3000
+    },
     {
       depth: 1,
       process: {},
@@ -419,6 +432,10 @@ describe('computeLinks()', () => {
           ],
         },
       ],
+      traceID: 'trace123',
+      spanID: 'span789',
+      startTime: 2000,
+      duration: 1000
     },
   ];
   spans[1].references = [
@@ -458,6 +475,20 @@ describe('computeLinks()', () => {
         text: 'third link (valueOfThirdMyKey) for traceID - trc1',
       },
     ]);
+  });
+
+  it('correctly adds span-specific links', () => {
+    expect(computeLinks(linkPatterns, spans[0], [{ key: 'spanID', value: spans[0].spanID }], 0)).toEqual([
+      {
+        url: 'http://example.com/?traceID=trace123&spanID=span456',
+        text: 'span link (trace123, span456)',
+      },
+    ]);
+  });
+
+  it('correctly adds traceID and spanID to all link types', () => {
+    const result = computeLinks(linkPatterns, spans[0], spans[0].tags, 0);
+    expect(result[0].url).toContain('myKey=valueOfMyKey');
   });
 });
 
