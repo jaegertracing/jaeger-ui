@@ -13,8 +13,7 @@
 // limitations under the License.
 
 import transformTraceData from '../../../model/transform-trace-data';
-import calculateTraceDagEV from './calculateTraceDagEV';
-import { mapFollowsFrom } from './calculateTraceDagEV';
+import calculateTraceDagEV, { mapFollowsFrom } from './calculateTraceDagEV';
 import testTrace from './testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
