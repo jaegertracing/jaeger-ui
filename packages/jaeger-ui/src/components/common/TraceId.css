@@ -14,8 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 .TraceIDLength {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   vertical-align: middle;
+  cursor: pointer;
 }
 .TraceIDLength--short {
   font-size: 16px;
@@ -25,4 +27,22 @@ limitations under the License.
   font-size: 14px;
   padding: 3px 4px;
   letter-spacing: 0.1px;
+}
+
+.TraceIDLength--copyIcon {
+  margin-left: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.TraceIDLength--copyIcon:hover {
+  opacity: 1;
+}
+
+.TraceIDLength--copyIcon .anticon {
+  font-size: 14px;
 }
