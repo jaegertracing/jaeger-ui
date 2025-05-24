@@ -105,58 +105,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   );
 };
 
-// export class TraceTimelineViewerImpl1 extends React.PureComponent<TProps> {
-//   componentDidMount() {
-//     mergeShortcuts({
-//       collapseAll: this.collapseAll,
-//       expandAll: this.expandAll,
-//       collapseOne: this.collapseOne,
-//       expandOne: this.expandOne,
-//     });
-//   }
-
-//   collapseAll = () => {
-//     this.props.collapseAll(this.props.trace.spans);
-//   };
-
-//   collapseOne = () => {
-//     this.props.collapseOne(this.props.trace.spans);
-//   };
-
-//   expandAll = () => {
-//     this.props.expandAll();
-//   };
-
-//   expandOne = () => {
-//     this.props.expandOne(this.props.trace.spans);
-//   };
-
-//   render() {
-//     const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRangeTime, viewRange, ...rest } =
-//       this.props;
-//     const { spanNameColumnWidth, trace } = rest;
-
-//     return (
-//       <div className="TraceTimelineViewer">
-//         <TimelineHeaderRow
-//           duration={trace.duration}
-//           nameColumnWidth={spanNameColumnWidth}
-//           numTicks={NUM_TICKS}
-//           onCollapseAll={this.collapseAll}
-//           onCollapseOne={this.collapseOne}
-//           onColummWidthChange={setSpanNameColumnWidth}
-//           onExpandAll={this.expandAll}
-//           onExpandOne={this.expandOne}
-//           viewRangeTime={viewRange.time}
-//           updateNextViewRangeTime={updateNextViewRangeTime}
-//           updateViewRangeTime={updateViewRangeTime}
-//         />
-//         <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
-//       </div>
-//     );
-//   }
-// }
-
 function mapStateToProps(state: ReduxState) {
   const spanNameColumnWidth = state.traceTimeline.spanNameColumnWidth;
   return { spanNameColumnWidth };
