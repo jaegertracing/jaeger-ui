@@ -50,20 +50,7 @@ describe('Header', () => {
   beforeEach(() => {
     props.setLookback.mockReset();
     setLookbackSpy = undefined;
-
-    if (wrapper) {
-      wrapper.unmount();
-      wrapper = null;
-    }
-
     wrapper = shallow(<Header {...props} />);
-  });
-
-  afterEach(() => {
-    if (wrapper) {
-      wrapper.unmount();
-      wrapper = null;
-    }
   });
 
   describe('rendering', () => {

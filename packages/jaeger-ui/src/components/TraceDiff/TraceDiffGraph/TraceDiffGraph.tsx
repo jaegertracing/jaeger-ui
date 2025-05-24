@@ -53,7 +53,7 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
       return (
         <div className="TraceDiffGraph--emptyState" data-testid="trace-diff-empty-state">
           <div className="TraceDiffGraph--emptyStateContent">
-            <div className="TraceDiffGraph--emptyStateIcon">
+            <div className="TraceDiffGraph--emptyStateHeader">
               <div className="TraceDiffGraph--traceA">A</div>
               <div className="TraceDiffGraph--separator" />
               <div className="TraceDiffGraph--traceB">B</div>

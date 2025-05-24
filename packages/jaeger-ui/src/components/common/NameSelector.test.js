@@ -24,10 +24,10 @@ import NameSelector, { DEFAULT_PLACEHOLDER } from './NameSelector';
 jest.mock('./FilteredList', () => {
   // Import React inside the factory function
   // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires, no-shadow
-  const MockReact = require('react');
+  const React = require('react');
   // eslint-disable-next-line react/display-name
-  return MockReact.forwardRef(({ cancel, options, value, setValue }, ref) => {
-    MockReact.useImperativeHandle(ref, () => ({
+  return React.forwardRef(({ cancel, options, value, setValue }, ref) => {
+    React.useImperativeHandle(ref, () => ({
       focusInput: jest.fn(),
       isMouseWithin: jest.fn(() => false), // Default to false for outside click tests
     }));

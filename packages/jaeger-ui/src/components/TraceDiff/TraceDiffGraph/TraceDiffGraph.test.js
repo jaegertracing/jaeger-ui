@@ -20,6 +20,7 @@ import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import UiFindInput from '../../common/UiFindInput';
 import { fetchedState } from '../../../constants';
+import * as getConfig from '../../../utils/config/get-config';
 
 describe('TraceDiffGraph', () => {
   const props = {
@@ -43,25 +44,33 @@ describe('TraceDiffGraph', () => {
     },
   };
   let wrapper;
+  let getConfigValueSpy;
+  let windowOpenSpy;
 
   beforeEach(() => {
+    getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue');
+    windowOpenSpy = jest.spyOn(window, 'open').mockImplementation(() => {});
     wrapper = shallow(<TraceDiffGraph {...props} />);
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('renders warning when a or b are not provided', () => {
-    expect(wrapper.find('h1').length).toBe(0);
+    expect(wrapper.find('.TraceDiffGraph--emptyStateTitle').length).toBe(0);
 
     wrapper.setProps({ a: undefined });
-    expect(wrapper.find('h1').length).toBe(1);
-    expect(wrapper.find('h1').text()).toBe('At least two Traces are needed');
+    expect(wrapper.find('.TraceDiffGraph--emptyStateTitle').length).toBe(1);
+    expect(wrapper.find('.TraceDiffGraph--emptyStateTitle').text()).toBe('At least two Traces are needed');
 
     wrapper.setProps({ b: undefined });
-    expect(wrapper.find('h1').length).toBe(1);
-    expect(wrapper.find('h1').text()).toBe('At least two Traces are needed');
+    expect(wrapper.find('.TraceDiffGraph--emptyStateTitle').length).toBe(1);
+    expect(wrapper.find('.TraceDiffGraph--emptyStateTitle').text()).toBe('At least two Traces are needed');
 
     wrapper.setProps({ a: props.a });
-    expect(wrapper.find('h1').length).toBe(1);
-    expect(wrapper.find('h1').text()).toBe('At least two Traces are needed');
+    expect(wrapper.find('.TraceDiffGraph--emptyStateTitle').length).toBe(1);
+    expect(wrapper.find('.TraceDiffGraph--emptyStateTitle').text()).toBe('At least two Traces are needed');
   });
 
   it('renders warning when a or b have errored', () => {
@@ -167,5 +176,32 @@ describe('TraceDiffGraph', () => {
     const layoutManager = jest.spyOn(wrapper.instance().layoutManager, 'stopAndRelease');
     wrapper.unmount();
     expect(layoutManager).toHaveBeenCalledTimes(1);
+  });
+
+  describe('empty state help button', () => {
+    beforeEach(() => {
+      wrapper.setProps({ a: undefined, b: undefined });
+    });
+
+    it('opens help link when config value exists', () => {
+      const helpLink = 'https://example.com/help';
+
+      getConfigValueSpy.mockReturnValue(helpLink);
+
+      const helpButton = wrapper.find('[data-testid="learn-how-button"]');
+      helpButton.simulate('click');
+
+      expect(getConfigValueSpy).toHaveBeenCalledWith('traceDiff.helpLink');
+      expect(windowOpenSpy).toHaveBeenCalledWith(helpLink, expect.any(String));
+    });
+
+    it('does not open window when help link config is not set', () => {
+      getConfigValueSpy.mockReturnValue(null);
+
+      const helpButton = wrapper.find('[data-testid="learn-how-button"]');
+      helpButton.simulate('click');
+
+      expect(windowOpenSpy).not.toHaveBeenCalled();
+    });
   });
 });
