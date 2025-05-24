@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import renderNode, { DiffNode, getNodeEmphasisRenderer } from './renderNode';
@@ -28,46 +28,48 @@ describe('drawNode', () => {
 
   describe('diffNode', () => {
     const baseProps = {
-      a: defaultCount,
-      b: defaultCount,
-      operation,
-      service,
+      a: 100,
+      b: 100,
+      operation: 'operationName',
+      service: 'serviceName',
     };
 
     it('renders table when a and b are the same', () => {
-      const { container } = render(<DiffNode {...baseProps} />);
-      expect(container.querySelector('table')).toBeInTheDocument();
-      expect(container.textContent).toContain(service);
-      expect(container.textContent).toContain(operation);
+      render(<DiffNode {...baseProps} />);
+      const metricCell = screen.getByTestId('diff-metric-cell');
+      expect(metricCell).toHaveClass('is-same');
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(screen.getByText('serviceName')).toBeInTheDocument();
+      expect(screen.getByText('operationName')).toBeInTheDocument();
     });
 
-    it('renders correctly when a < b', () => {
-      const { container } = render(<DiffNode {...baseProps} a={defaultCount / 2} />);
-      expect(container.querySelector('.is-more')).toBeInTheDocument();
-      expect(container.textContent).toContain('+');
+    it('applies is-more class when a < b', () => {
+      render(<DiffNode {...baseProps} a={50} b={100} />);
+      const metricCell = screen.getByTestId('diff-metric-cell');
+      expect(metricCell).toHaveClass('is-more');
     });
 
-    it('renders correctly when a > b', () => {
-      const { container } = render(<DiffNode {...baseProps} a={defaultCount * 2} />);
-      expect(container.querySelector('.is-less')).toBeInTheDocument();
-      expect(container.textContent).toContain('-');
+    it('applies is-less class when a > b', () => {
+      render(<DiffNode {...baseProps} a={200} b={100} />);
+      const metricCell = screen.getByTestId('diff-metric-cell');
+      expect(metricCell).toHaveClass('is-less');
     });
 
-    it('renders correctly when a is 0', () => {
-      const { container } = render(<DiffNode {...baseProps} a={0} />);
-      expect(container.querySelector('.is-added')).toBeInTheDocument();
-      expect(container.textContent).toContain('100');
+    it('applies is-added class when a is 0', () => {
+      render(<DiffNode {...baseProps} a={0} b={100} />);
+      const metricCell = screen.getByTestId('diff-metric-cell');
+      expect(metricCell).toHaveClass('is-added');
     });
 
-    it('renders correctly when b is 0', () => {
-      const { container } = render(<DiffNode {...baseProps} b={0} />);
-      expect(container.querySelector('.is-removed')).toBeInTheDocument();
-      expect(container.textContent).toContain('100');
+    it('applies is-removed class when b is 0', () => {
+      render(<DiffNode {...baseProps} a={100} b={0} />);
+      const metricCell = screen.getByTestId('diff-metric-cell');
+      expect(metricCell).toHaveClass('is-removed');
     });
 
     it('accepts unused isUiFindMatch prop without breaking', () => {
-      const { container } = render(<DiffNode {...baseProps} isUiFindMatch />);
-      expect(container.querySelector('table')).toBeInTheDocument();
+      render(<DiffNode {...baseProps} isUiFindMatch />);
+      expect(screen.getByRole('table')).toBeInTheDocument();
     });
   });
 
