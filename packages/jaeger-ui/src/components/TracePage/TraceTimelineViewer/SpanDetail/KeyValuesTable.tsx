@@ -24,7 +24,6 @@ import { TNil } from '../../../../types';
 import { KeyValuePair, Link } from '../../../../types/trace';
 
 import './KeyValuesTable.css';
-import { consoleIntegration } from '@sentry/core';
 
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
