@@ -202,4 +202,7 @@ export type Config = {
     menuLabel?: string;
     apiEndpoint?: string;
   };
+  traceDiff?: {
+    helpLink: string;
+  };
 };
