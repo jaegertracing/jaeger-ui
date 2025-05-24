@@ -24,6 +24,7 @@ import { TNil } from '../../../../types';
 import { KeyValuePair, Link } from '../../../../types/trace';
 
 import './KeyValuesTable.css';
+import { consoleIntegration } from '@sentry/core';
 
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
@@ -178,21 +179,23 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
               // eslint-disable-next-line react/no-array-index-key
               <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
                 <td className="KeyValueTable--keyColumn">{row.key}</td>
-                <td>{valueMarkup}</td>
-                <td className="KeyValueTable--copyColumn">
-                  <CopyIcon
-                    className="KeyValueTable--copyIcon"
-                    copyText={row.value}
-                    tooltipTitle="Copy value"
-                    buttonText="Copy"
-                  />
-                  <CopyIcon
-                    className="KeyValueTable--copyIcon"
-                    icon={<IoCopyOutline />}
-                    copyText={JSON.stringify(row, null, 2)}
-                    tooltipTitle="Copy JSON"
-                    buttonText="JSON"
-                  />
+                <td className="KeyValueTable--valueColumn">
+                  <div className="KeyValueTable--copyContainer">
+                    <CopyIcon
+                      className="KeyValueTable--copyIcon"
+                      copyText={row.value}
+                      tooltipTitle="Copy value"
+                      buttonText="Copy"
+                    />
+                    <CopyIcon
+                      className="KeyValueTable--copyIcon"
+                      icon={<IoCopyOutline />}
+                      copyText={JSON.stringify(row, null, 2)}
+                      tooltipTitle="Copy JSON"
+                      buttonText="JSON"
+                    />
+                  </div>
+                  {valueMarkup}
                 </td>
               </tr>
             );
