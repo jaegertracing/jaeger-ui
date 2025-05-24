@@ -33,13 +33,15 @@ export default function LabeledList(props: LabeledListProps) {
             <Divider className={dividerClassName} type="vertical" />
           </li>
         );
-        return [
-          <li className="LabeledList--item" key={key}>
-            <span className="LabeledList--label">{label}</span>
-            <strong>{value}</strong>
-          </li>,
-          divider,
-        ];
+        return (
+          <React.Fragment key={key}>
+            <li className="LabeledList--item">
+              <span className="LabeledList--label">{label}</span>
+              <strong>{value}</strong>
+            </li>
+            {divider}
+          </React.Fragment>
+        );
       })}
     </ul>
   );
