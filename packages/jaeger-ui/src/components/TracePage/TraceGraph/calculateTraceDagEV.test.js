@@ -86,3 +86,58 @@ describe('mapFollowsFrom', () => {
     expect(result[0].followsFrom).toBe(true);
   });
 });
+
+describe('mapFollowsFrom - reference combinations', () => {
+  const testCases = [
+    {
+      name: 'only CHILD_OF',
+      references: [{ refType: 'CHILD_OF' }],
+      expected: false,
+    },
+    {
+      name: 'multiple CHILD_OF',
+      references: [{ refType: 'CHILD_OF' }, { refType: 'CHILD_OF' }],
+      expected: false,
+    },
+    {
+      name: 'only FOLLOWS_FROM',
+      references: [{ refType: 'FOLLOWS_FROM' }],
+      expected: true,
+    },
+    {
+      name: 'CHILD_OF followed by FOLLOWS_FROM',
+      references: [{ refType: 'CHILD_OF' }, { refType: 'FOLLOWS_FROM' }],
+      expected: false,
+    },
+    {
+      name: 'FOLLOWS_FROM followed by CHILD_OF',
+      references: [{ refType: 'FOLLOWS_FROM' }, { refType: 'CHILD_OF' }],
+      expected: false,
+    },
+    {
+      name: 'no references at all',
+      references: [],
+      expected: true,
+    },
+  ];
+
+  testCases.forEach(({ name, references, expected }) => {
+    it(`sets followsFrom correctly when ${name}`, () => {
+      const mockEdges = [{ from: 0, to: 0 }];
+      const mockNodes = [
+        {
+          members: [
+            {
+              span: {
+                references,
+              },
+            },
+          ],
+        },
+      ];
+
+      const result = mapFollowsFrom(mockEdges, mockNodes);
+      expect(result[0].followsFrom).toBe(expected);
+    });
+  });
+});
