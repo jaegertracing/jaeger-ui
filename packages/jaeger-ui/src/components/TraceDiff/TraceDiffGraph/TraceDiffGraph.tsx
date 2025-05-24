@@ -19,6 +19,7 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { getConfigValue } from '../../../utils/config/get-config';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import prefixUrl from '../../../utils/prefix-url';
 
 import renderNode, { getNodeEmphasisRenderer } from './renderNode';
 import { getUiFindVertexKeys, getEdgesAndVertices } from './traceDiffGraphUtils';
@@ -53,21 +54,9 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
         <div className="TraceDiffGraph--emptyState" data-testid="trace-diff-empty-state">
           <div className="TraceDiffGraph--emptyStateContent">
             <div className="TraceDiffGraph--emptyStateIcon">
-              <svg
-                width="120"
-                height="60"
-                viewBox="0 0 120 60"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <text x="40" y="35" textAnchor="middle" fill="#333" fontWeight="bold" fontSize="32">
-                  A
-                </text>
-                <line x1="60" y1="0" x2="60" y2="50" stroke="#199" strokeWidth="3" />
-                <text x="80" y="35" textAnchor="middle" fill="#333" fontWeight="bold" fontSize="32">
-                  B
-                </text>
-              </svg>
+              <div className="TraceDiffGraph--traceA">A</div>
+              <div className="TraceDiffGraph--separator" />
+              <div className="TraceDiffGraph--traceB">B</div>
             </div>
             <h1 className="TraceDiffGraph--emptyStateTitle">At least two Traces are needed</h1>
             <p className="ub-tx-center">
@@ -75,7 +64,7 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
             </p>
             <div className="TraceDiffGraph--emptyStateActions">
               <Link
-                to="/search"
+                to={prefixUrl('/search')}
                 className="TraceDiffGraph--emptyStateButton"
                 data-testid="go-to-search-button"
               >
