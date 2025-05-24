@@ -15,7 +15,7 @@
 
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
 import { createReduxHistoryContext } from 'redux-first-history';
-import { createBrowserHistory } from 'history';
+import { createHistoryWithPolyfill } from './history-polyfill';
 
 import traceDiff from '../components/TraceDiff/duck';
 import archive from '../components/TracePage/ArchiveNotifier/duck';
@@ -25,7 +25,9 @@ import * as jaegerMiddlewares from '../middlewares';
 import { getAppEnvironment } from './constants';
 
 const { createReduxHistory, routerMiddleware, routerReducer } = createReduxHistoryContext({
-  history: createBrowserHistory(),
+  history: createHistoryWithPolyfill(),
+  reduxTravelling: process.env.NODE_ENV === 'development',
+  savePreviousLocations: 1,
 });
 
 export default function configureStore() {
