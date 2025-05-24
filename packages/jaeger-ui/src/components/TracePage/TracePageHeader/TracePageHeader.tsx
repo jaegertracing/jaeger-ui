@@ -13,31 +13,28 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, InputRef } from 'antd';
-import _get from 'lodash/get';
-import _maxBy from 'lodash/maxBy';
-import _values from 'lodash/values';
-import { IoArrowBack, IoFileTrayFull, IoChevronForward } from 'react-icons/io5';
+import { Button, Input, InputRef, Tooltip } from 'antd';
+import { IoChevronDown, IoChevronUp, IoSearch, IoArrowBack } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
+import { Divider } from 'antd';
 
-import { Helmet } from 'react-helmet';
-import AltViewOptions from './AltViewOptions';
-import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
-import SpanGraph from './SpanGraph';
+import * as markers from './TracePageSearchBar.markers';
+import { trackSlimHeaderToggle } from './TracePageHeader.track';
 import TracePageSearchBar from './TracePageSearchBar';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from '../types';
 import LabeledList from '../../common/LabeledList';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
+import { getTraceName } from '../../../model/trace-viewer';
 import { TNil } from '../../../types';
 import { Trace } from '../../../types/trace';
 import { formatDatetime, formatDuration } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
 
 import './TracePageHeader.css';
-import ExternalLinks from '../../common/ExternalLinks';
-import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
-import TraceId from '../../common/TraceId';
+import AltViewOptions from './AltViewOptions';
+import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
+import SpanGraph from './SpanGraph';
 
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
@@ -47,187 +44,204 @@ type TracePageHeaderEmbedProps = {
   hideSummary: boolean;
   linkToStandalone: string;
   nextResult: () => void;
-  onArchiveClicked: () => void;
   onSlimViewClicked: () => void;
-  onTraceViewChange: (viewType: ETraceViewType) => void;
   prevResult: () => void;
   resultCount: number;
   showArchiveButton: boolean;
   showShortcutsHelp: boolean;
   showStandaloneLink: boolean;
-  disableJsonView: boolean;
   showViewOptions: boolean;
   slimView: boolean;
   textFilter: string | TNil;
-  toSearch: string | null;
   trace: Trace;
-  viewType: ETraceViewType;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: IViewRange;
+  viewType: ETraceViewType;
+  disableJsonView: boolean;
+  onTraceViewChange: (viewType: ETraceViewType) => void;
+  onArchiveClicked: () => void;
+  toSearch: string | null;
+  rerootedSpanID: string | null;
+  clearReroot: () => void;
 };
 
-export const HEADER_ITEMS = [
-  {
-    key: 'timestamp',
-    label: 'Trace Start',
-    renderer: (trace: Trace) => {
-      const dateStr = formatDatetime(trace.startTime);
-      const match = dateStr.match(/^(.+)(\.\d+)$/);
-      return match ? (
-        <span className="TracePageHeader--overviewItem--value">
-          {match[1]}
-          <span className="TracePageHeader--overviewItem--valueDetail">{match[2]}</span>
-        </span>
-      ) : (
-        dateStr
-      );
-    },
-  },
-  {
-    key: 'duration',
-    label: 'Duration',
-    renderer: (trace: Trace) => formatDuration(trace.duration),
-  },
-  {
-    key: 'service-count',
-    label: 'Services',
-    renderer: (trace: Trace) => new Set(_values(trace.processes).map(p => p.serviceName)).size,
-  },
-  {
-    key: 'depth',
-    label: 'Depth',
-    renderer: (trace: Trace) => _get(_maxBy(trace.spans, 'depth'), 'depth', 0) + 1,
-  },
-  {
-    key: 'span-count',
-    label: 'Total Spans',
-    renderer: (trace: Trace) => trace.spans.length,
-  },
-];
+export type TracePageHeaderProps = TracePageHeaderEmbedProps & {
+  forwardedRef: React.Ref<InputRef>;
+};
 
-export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwardedRef: React.Ref<InputRef> }) {
-  const {
-    canCollapse,
-    clearSearch,
-    focusUiFindMatches,
-    forwardedRef,
-    hideMap,
-    hideSummary,
-    linkToStandalone,
-    nextResult,
-    onArchiveClicked,
-    onSlimViewClicked,
-    onTraceViewChange,
-    prevResult,
-    resultCount,
-    showArchiveButton,
-    showShortcutsHelp,
-    showStandaloneLink,
-    showViewOptions,
-    disableJsonView,
-    slimView,
-    textFilter,
-    toSearch,
-    trace,
-    viewType,
-    updateNextViewRangeTime,
-    updateViewRangeTime,
-    viewRange,
-  } = props;
+export class TracePageHeaderFn extends React.PureComponent<TracePageHeaderProps> {
+  render() {
+    const {
+      canCollapse,
+      clearSearch,
+      clearReroot,
+      disableJsonView,
+      focusUiFindMatches,
+      forwardedRef,
+      hideMap,
+      hideSummary,
+      linkToStandalone,
+      nextResult,
+      onArchiveClicked,
+      onSlimViewClicked,
+      onTraceViewChange,
+      prevResult,
+      resultCount,
+      rerootedSpanID,
+      showArchiveButton,
+      showShortcutsHelp,
+      showStandaloneLink,
+      showViewOptions,
+      slimView,
+      textFilter,
+      toSearch,
+      trace,
+      updateNextViewRangeTime,
+      updateViewRangeTime,
+      viewRange,
+      viewType,
+    } = this.props;
 
-  if (!trace) {
-    return null;
-  }
+    if (!trace) {
+      return null;
+    }
 
-  const links = getTraceLinks(trace);
+    const links = getTraceLinks(trace);
+    const summaryItems =
+      !hideSummary &&
+      [
+        {
+          key: 'start',
+          label: 'Trace Start:',
+          value: formatDatetime(trace.startTime),
+        },
+        {
+          key: 'duration',
+          label: 'Duration:',
+          value: formatDuration(trace.duration),
+        },
+        {
+          key: 'svc-count',
+          label: 'Services:',
+          value: new Set(trace.spans.map(span => span.process.serviceName)).size,
+        },
+        {
+          key: 'depth',
+          label: 'Depth:',
+          value: trace.depth,
+        },
+        {
+          key: 'span-count',
+          label: 'Total Spans:',
+          value: trace.spans.length,
+        },
+        ...(links
+          ? links.map((link, i) => ({
+              key: `link-${i}`,
+              label: link.key,
+              value: (
+                <a href={link.url} target="_blank" rel="noopener noreferrer">
+                  {link.text}
+                </a>
+              ),
+            }))
+          : []),
+      ];
 
-  const summaryItems =
-    !hideSummary &&
-    !slimView &&
-    HEADER_ITEMS.map(item => {
-      const { renderer, ...rest } = item;
-      return { ...rest, value: renderer(trace) };
-    });
-
-  const traceShortID = trace.traceID.slice(0, 7);
-
-  const title = (
-    <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>
-      <TraceName traceName={trace.traceName} /> <TraceId traceId={trace.traceID} />
-    </h1>
-  );
-
-  return (
-    <header className="TracePageHeader">
-      <Helmet title={`${trace.traceEmoji} ${traceShortID}: ${trace.tracePageTitle} — Jaeger UI`} />
-      <div className="TracePageHeader--titleRow">
-        {toSearch && (
-          <Link className="TracePageHeader--back" to={toSearch}>
-            <IoArrowBack />
-          </Link>
-        )}
-        {links && links.length > 0 && <ExternalLinks links={links} />}
-        {canCollapse ? (
-          <a
-            className="TracePageHeader--titleLink"
-            onClick={onSlimViewClicked}
-            role="switch"
-            aria-checked={!slimView}
+    const title = (
+      <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>
+        <TraceName traceName={getTraceName(trace.spans)} />{' '}
+        <small className="u-tx-muted">{trace.traceID.slice(0, 7)}</small>
+        {rerootedSpanID && (
+          <Button
+            className="TracePageHeader--rerootButton"
+            onClick={clearReroot}
+            type="primary"
+            size="small"
+            icon={<IoArrowBack />}
           >
-            <IoChevronForward className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`} />
-            {title}
-          </a>
-        ) : (
-          title
-        )}
-        <TracePageSearchBar
-          clearSearch={clearSearch}
-          focusUiFindMatches={focusUiFindMatches}
-          nextResult={nextResult}
-          prevResult={prevResult}
-          ref={forwardedRef}
-          resultCount={resultCount}
-          textFilter={textFilter}
-          navigable={viewType === ETraceViewType.TraceTimelineViewer}
-        />
-        {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
-        {showViewOptions && (
-          <AltViewOptions
-            disableJsonView={disableJsonView}
-            onTraceViewChange={onTraceViewChange}
-            traceID={trace.traceID}
-            viewType={viewType}
-          />
-        )}
-        {showArchiveButton && (
-          <Button className="ub-mr2 ub-flex ub-items-center" htmlType="button" onClick={onArchiveClicked}>
-            <IoFileTrayFull className="TracePageHeader--archiveIcon" />
-            Archive Trace
+            Back to Full Trace
           </Button>
         )}
-        {showStandaloneLink && (
-          <Link
-            className="u-tx-inherit ub-nowrap ub-mx2"
-            to={linkToStandalone}
-            target={getTargetEmptyOrBlank()}
-            rel="noopener noreferrer"
-          >
-            <NewWindowIcon isLarge />
-          </Link>
+      </h1>
+    );
+
+    return (
+      <header className="TracePageHeader">
+        <div className="TracePageHeader--titleRow">
+          {canCollapse && (
+            <Button
+              className="TracePageHeader--titleToggleViewButton"
+              onClick={onSlimViewClicked}
+              type="text"
+              icon={slimView ? <IoChevronDown /> : <IoChevronUp />}
+            />
+          )}
+          {title}
+          <TracePageSearchBar
+            clearSearch={clearSearch}
+            focusUiFindMatches={focusUiFindMatches}
+            nextResult={nextResult}
+            prevResult={prevResult}
+            ref={forwardedRef}
+            resultCount={resultCount}
+            textFilter={textFilter}
+            navigable={viewType === ETraceViewType.TraceTimelineViewer}
+          />
+          {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-mr2" />}
+          {showViewOptions && (
+            <AltViewOptions
+              disableJsonView={disableJsonView}
+              onTraceViewChange={onTraceViewChange}
+              traceID={trace.traceID}
+              viewType={viewType}
+            />
+          )}
+          {showArchiveButton && (
+            <Button className="ub-mr2 ub-flex ub-items-center" onClick={onArchiveClicked}>
+              <IoSearch className="TracePageHeader--archiveIcon" />
+              <span className="TracePageHeader--archiveButtonText">Archive Trace</span>
+            </Button>
+          )}
+          {showStandaloneLink && (
+            <Link
+              className="ub-mr2 ub-flex ub-items-center"
+              to={linkToStandalone}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <NewWindowIcon />
+            </Link>
+          )}
+          {toSearch && (
+            <Link className="u-tx-inherit ub-mx2" to={toSearch}>
+              <Button className="ub-mr2 ub-flex ub-items-center">
+                <IoArrowBack className="TracePageHeader--backIcon" />
+                <span className="TracePageHeader--backToResultsText">Back to Results</span>
+              </Button>
+            </Link>
+          )}
+        </div>
+        {summaryItems && !slimView && (
+          <LabeledList
+            className="TracePageHeader--overviewItems"
+            dividerClassName="TracePageHeader--overviewItemsDivider"
+            items={summaryItems}
+          />
         )}
-      </div>
-      {summaryItems && <LabeledList className="TracePageHeader--overviewItems" items={summaryItems} />}
-      {!hideMap && !slimView && (
-        <SpanGraph
-          trace={trace}
-          viewRange={viewRange}
-          updateNextViewRangeTime={updateNextViewRangeTime}
-          updateViewRangeTime={updateViewRangeTime}
-        />
-      )}
-    </header>
-  );
+        {!hideMap && !slimView && (
+          <SpanGraph
+            trace={trace}
+            viewRange={viewRange}
+            updateNextViewRangeTime={updateNextViewRangeTime}
+            updateViewRangeTime={updateViewRangeTime}
+          />
+        )}
+        {!slimView && <Divider className="ub-my0" />}
+      </header>
+    );
+  }
 }
 
 export default React.forwardRef((props: TracePageHeaderEmbedProps, ref: React.Ref<InputRef>) => (

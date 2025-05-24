@@ -14,9 +14,10 @@
 
 import { TNil } from '../../types';
 import { IWebAnalyticsFunc } from '../../types/tracking';
+import type IWebAnalytics from '../../types/tracking';
 import GA from './ga';
 import NoopWebAnalytics from './noopWebAnalytics';
-import getConfig from '../config/get-config';
+import getConfig, { getConfigValue } from '../config/get-config';
 import { getVersionInfo } from '../constants';
 
 const TrackingImplementation = () => {
@@ -80,3 +81,21 @@ export function trackEvent(
 
 export const context = tracker.context;
 export const isWaEnabled = tracker.isEnabled();
+
+let tracked = false;
+let trackingEnabled = false;
+let trackFn: IWebAnalytics | null = null;
+
+export function init(createTracker: () => IWebAnalytics | undefined) {
+  if (tracked) return;
+  tracked = true;
+
+  const gaID = getConfigValue('tracking.gaID');
+  trackingEnabled = Boolean(gaID);
+  if (!trackingEnabled) return;
+
+  const tracker = createTracker();
+  if (!tracker) return;
+
+  trackFn = tracker;
+}

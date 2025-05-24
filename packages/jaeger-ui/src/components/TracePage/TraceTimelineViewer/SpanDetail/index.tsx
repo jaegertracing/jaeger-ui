@@ -80,6 +80,9 @@ export default function SpanDetail(props: SpanDetailProps) {
   ];
   const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${spanID}`;
 
+  // Get span-specific links if linksGetter is available
+  const spanLinks = linksGetter ? linksGetter([{ key: 'spanID', value: spanID }], 0) : [];
+
   return (
     <div>
       <div className="ub-flex ub-items-center">
@@ -150,6 +153,21 @@ export default function SpanDetail(props: SpanDetailProps) {
             placement="topRight"
             tooltipTitle="Copy deep link to this span"
           />
+          {spanLinks.length > 0 && (
+            <div className="SpanDetail--spanLinks" style={{ marginLeft: '10px', display: 'inline-block' }}>
+              {spanLinks.map((link, i) => (
+                <a
+                  key={i}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ marginRight: '5px' }}
+                >
+                  {link.text}
+                </a>
+              ))}
+            </div>
+          )}
         </small>
       </div>
     </div>
