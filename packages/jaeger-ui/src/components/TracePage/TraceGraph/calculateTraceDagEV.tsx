@@ -35,7 +35,7 @@ export function isError(tags: Array<KeyValuePair>) {
   return false;
 }
 
-function mapFollowsFrom(
+export function mapFollowsFrom(
   edges: TEdge[],
   nodes: TDagNode<TSumSpan & TDenseSpanMembers>[]
 ): TEdge<{ followsFrom: boolean }>[] {
