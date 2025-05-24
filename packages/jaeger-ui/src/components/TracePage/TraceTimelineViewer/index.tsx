@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -55,57 +55,55 @@ const NUM_TICKS = 5;
  * re-render the ListView every time the cursor is moved on the trace minimap
  * or `TimelineHeaderRow`.
  */
-export class TraceTimelineViewerImpl extends React.PureComponent<TProps> {
-  componentDidMount() {
+
+export const TraceTimelineViewerImpl = (props: TProps) => {
+  const collapseAll = useCallback(() => {
+    props.collapseAll(props.trace.spans);
+  }, [props.collapseAll, props.trace.spans]);
+
+  const collapseOne = useCallback(() => {
+    props.collapseOne(props.trace.spans);
+  }, [props.collapseOne, props.trace.spans]);
+
+  const expandAll = useCallback(() => {
+    props.expandAll();
+  }, [props.expandAll]);
+
+  const expandOne = useCallback(() => {
+    props.expandOne(props.trace.spans);
+  }, [props.expandOne, props.trace.spans]);
+
+  useEffect(() => {
     mergeShortcuts({
-      collapseAll: this.collapseAll,
-      expandAll: this.expandAll,
-      collapseOne: this.collapseOne,
-      expandOne: this.expandOne,
+      collapseAll,
+      expandAll,
+      collapseOne,
+      expandOne,
     });
-  }
+  }, [collapseAll, expandAll, collapseOne, expandOne]);
 
-  collapseAll = () => {
-    this.props.collapseAll(this.props.trace.spans);
-  };
+  const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRangeTime, viewRange, ...rest } = props;
+  const { spanNameColumnWidth, trace } = rest;
 
-  collapseOne = () => {
-    this.props.collapseOne(this.props.trace.spans);
-  };
-
-  expandAll = () => {
-    this.props.expandAll();
-  };
-
-  expandOne = () => {
-    this.props.expandOne(this.props.trace.spans);
-  };
-
-  render() {
-    const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRangeTime, viewRange, ...rest } =
-      this.props;
-    const { spanNameColumnWidth, trace } = rest;
-
-    return (
-      <div className="TraceTimelineViewer">
-        <TimelineHeaderRow
-          duration={trace.duration}
-          nameColumnWidth={spanNameColumnWidth}
-          numTicks={NUM_TICKS}
-          onCollapseAll={this.collapseAll}
-          onCollapseOne={this.collapseOne}
-          onColummWidthChange={setSpanNameColumnWidth}
-          onExpandAll={this.expandAll}
-          onExpandOne={this.expandOne}
-          viewRangeTime={viewRange.time}
-          updateNextViewRangeTime={updateNextViewRangeTime}
-          updateViewRangeTime={updateViewRangeTime}
-        />
-        <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
-      </div>
-    );
-  }
-}
+  return (
+    <div className="TraceTimelineViewer">
+      <TimelineHeaderRow
+        duration={trace.duration}
+        nameColumnWidth={spanNameColumnWidth}
+        numTicks={NUM_TICKS}
+        onCollapseAll={collapseAll}
+        onCollapseOne={collapseOne}
+        onColummWidthChange={setSpanNameColumnWidth}
+        onExpandAll={expandAll}
+        onExpandOne={expandOne}
+        viewRangeTime={viewRange.time}
+        updateNextViewRangeTime={updateNextViewRangeTime}
+        updateViewRangeTime={updateViewRangeTime}
+      />
+      <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
+    </div>
+  );
+};
 
 function mapStateToProps(state: ReduxState) {
   const spanNameColumnWidth = state.traceTimeline.spanNameColumnWidth;
