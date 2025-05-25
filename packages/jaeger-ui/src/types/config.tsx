@@ -88,6 +88,16 @@ export type StorageCapabilities = {
 };
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
+export type TraceRepresentation = {
+  // Display name for the representation in the UI
+  name: string;
+  // Description of what this representation does
+  description?: string;
+  // Function that transforms the trace data
+  // This function should take the raw trace as input and return a modified trace
+  transformFunction: string;
+};
+
 export type Config = {
   //
   // archiveEnabled enables the Archive Trace button in the trace view.
@@ -96,6 +106,9 @@ export type Config = {
 
   // criticalPath enables to show the criticalPath of each span in a trace view.
   criticalPathEnabled: boolean;
+
+  // traceRepresentations defines different ways to view a trace by transforming the trace data
+  traceRepresentations?: TraceRepresentation[];
 
   // dependencies controls the behavior of System Architecture tab.
   dependencies?: {
