@@ -62,9 +62,7 @@ export function Attrs({
       <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
         <span className="u-tx-muted">Spans: </span>{' '}
         <strong data-testid="TraceDiffHeader--traceAttr--spans">{totalSpans || 0}</strong>
-        <span style={{ marginLeft: '20px' }}>
-          <IoChevronDown className="TraceDiffHeader--traceTitleChevron" />
-        </span>
+        <IoChevronDown className="TraceDiffHeader--traceTitleChevron" />
       </li>
     </ul>
   );

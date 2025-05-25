@@ -47,6 +47,7 @@ limitations under the License.
   display: inline-block;
   vertical-align: middle;
   transition: transform 0.2s ease;
+  margin-left: 20px;
 }
 
 .TraceDiffHeader--traceSection:hover .TraceDiffHeader--traceTitleChevron {
