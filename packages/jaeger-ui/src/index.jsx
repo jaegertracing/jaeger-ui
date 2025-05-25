@@ -24,6 +24,7 @@ import { createRoot } from 'react-dom/client';
 
 import JaegerUIApp from './components/App';
 import { context as trackingContext } from './utils/tracking';
+import { TimezoneProvider } from './utils/timezone-context';
 
 // these need to go after the App import
 /* eslint-disable import/first */
@@ -43,7 +44,9 @@ if (typeof trackingContext === 'object' && trackingContext !== null) {
     root.render(
       <BrowserRouter>
         <CompatRouter>
-          <JaegerUIApp />
+          <TimezoneProvider>
+            <JaegerUIApp />
+          </TimezoneProvider>
         </CompatRouter>
       </BrowserRouter>
     );
@@ -52,7 +55,9 @@ if (typeof trackingContext === 'object' && trackingContext !== null) {
   root.render(
     <BrowserRouter>
       <CompatRouter>
-        <JaegerUIApp />
+        <TimezoneProvider>
+          <JaegerUIApp />
+        </TimezoneProvider>
       </CompatRouter>
     </BrowserRouter>
   );

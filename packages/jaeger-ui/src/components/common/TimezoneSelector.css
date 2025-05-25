@@ -1,0 +1,14 @@
+.TimezoneSelector {
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+}
+
+.TimezoneSelector--icon {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.TimezoneSelector--select {
+  min-width: 200px;
+}

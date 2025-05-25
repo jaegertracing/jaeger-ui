@@ -16,10 +16,14 @@ import dayjs, { ConfigType } from 'dayjs';
 import _dropWhile from 'lodash/dropWhile';
 import _round from 'lodash/round';
 import _duration, { DurationUnitType } from 'dayjs/plugin/duration';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 import { toFloatPrecision } from './number';
 
 dayjs.extend(_duration);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const TODAY = 'Today';
 const YESTERDAY = 'Yesterday';
@@ -76,6 +80,7 @@ const quantizeDuration = (duration: number, floatPrecision: number, conversionFa
 
 /**
  * @param {number} duration - Unix Time
+ * @param {string} tz - Timezone (optional)
  * @return {string} formatted, unit-labelled string with time in milliseconds
  *
  * @example
@@ -83,12 +88,14 @@ const quantizeDuration = (duration: number, floatPrecision: number, conversionFa
  * formatDate(0) // => 1970-01-01
  * ```
  */
-export function formatDate(duration: number): string {
-  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_DATE_FORMAT);
+export function formatDate(duration: number, tz?: string): string {
+  const dayjsObj = dayjs(duration / ONE_MILLISECOND);
+  return tz ? dayjsObj.tz(tz).format(STANDARD_DATE_FORMAT) : dayjsObj.format(STANDARD_DATE_FORMAT);
 }
 
 /**
  * @param {number} duration - Unix Time
+ * @param {string} tz - Timezone (optional)
  * @return {string} formatted, unit-labelled string with time in milliseconds
  *
  * @example
@@ -96,12 +103,14 @@ export function formatDate(duration: number): string {
  * formatTime(0) // => 00:00
  * ```
  */
-export function formatTime(duration: number): string {
-  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_TIME_FORMAT);
+export function formatTime(duration: number, tz?: string): string {
+  const dayjsObj = dayjs(duration / ONE_MILLISECOND);
+  return tz ? dayjsObj.tz(tz).format(STANDARD_TIME_FORMAT) : dayjsObj.format(STANDARD_TIME_FORMAT);
 }
 
 /**
  * @param {number} duration - Unix Time
+ * @param {string} tz - Timezone (optional)
  * @return {string} formatted, unit-labelled string with time in milliseconds
  *
  * @example
@@ -109,8 +118,9 @@ export function formatTime(duration: number): string {
  * formatDatetime(0) // => January 1 1970, 00:00:00.000
  * ```
  */
-export function formatDatetime(duration: number): string {
-  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_DATETIME_FORMAT);
+export function formatDatetime(duration: number, tz?: string): string {
+  const dayjsObj = dayjs(duration / ONE_MILLISECOND);
+  return tz ? dayjsObj.tz(tz).format(STANDARD_DATETIME_FORMAT) : dayjsObj.format(STANDARD_DATETIME_FORMAT);
 }
 
 /**

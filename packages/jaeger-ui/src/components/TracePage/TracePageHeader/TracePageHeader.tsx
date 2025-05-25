@@ -17,6 +17,8 @@ import { Button, Input, InputRef, Tooltip } from 'antd';
 import { IoChevronDown, IoChevronUp, IoSearch, IoArrowBack } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 import { Divider } from 'antd';
+import TimezoneSelector from '../../common/TimezoneSelector';
+import { useTimezone } from '../../../utils/timezone-context';
 
 import * as markers from './TracePageSearchBar.markers';
 import { trackSlimHeaderToggle } from './TracePageHeader.track';
@@ -70,16 +72,15 @@ export type TracePageHeaderProps = TracePageHeaderEmbedProps & {
   forwardedRef: React.Ref<InputRef>;
 };
 
-export class TracePageHeaderFn extends React.PureComponent<TracePageHeaderProps> {
-  render() {
-    const {
+export const TracePageHeaderFn = React.forwardRef<InputRef, TracePageHeaderEmbedProps>((props, ref) => {
+  const { timezone } = useTimezone();
+  const {
       canCollapse,
       clearSearch,
       clearReroot,
       disableJsonView,
       focusUiFindMatches,
-      forwardedRef,
-      hideMap,
+            hideMap,
       hideSummary,
       linkToStandalone,
       nextResult,
@@ -101,7 +102,7 @@ export class TracePageHeaderFn extends React.PureComponent<TracePageHeaderProps>
       updateViewRangeTime,
       viewRange,
       viewType,
-    } = this.props;
+    } = props;
 
     if (!trace) {
       return null;
@@ -114,7 +115,7 @@ export class TracePageHeaderFn extends React.PureComponent<TracePageHeaderProps>
         {
           key: 'start',
           label: 'Trace Start:',
-          value: formatDatetime(trace.startTime),
+          value: formatDatetime(trace.startTime, timezone),
         },
         {
           key: 'duration',
@@ -184,7 +185,7 @@ export class TracePageHeaderFn extends React.PureComponent<TracePageHeaderProps>
             focusUiFindMatches={focusUiFindMatches}
             nextResult={nextResult}
             prevResult={prevResult}
-            ref={forwardedRef}
+            ref={ref}
             resultCount={resultCount}
             textFilter={textFilter}
             navigable={viewType === ETraceViewType.TraceTimelineViewer}
@@ -224,11 +225,14 @@ export class TracePageHeaderFn extends React.PureComponent<TracePageHeaderProps>
           )}
         </div>
         {summaryItems && !slimView && (
-          <LabeledList
-            className="TracePageHeader--overviewItems"
-            dividerClassName="TracePageHeader--overviewItemsDivider"
-            items={summaryItems}
-          />
+          <div className="TracePageHeader--overviewItemsWrapper">
+            <LabeledList
+              className="TracePageHeader--overviewItems"
+              dividerClassName="TracePageHeader--overviewItemsDivider"
+              items={summaryItems}
+            />
+            <TimezoneSelector />
+          </div>
         )}
         {!hideMap && !slimView && (
           <SpanGraph
@@ -241,9 +245,6 @@ export class TracePageHeaderFn extends React.PureComponent<TracePageHeaderProps>
         {!slimView && <Divider className="ub-my0" />}
       </header>
     );
-  }
-}
+  });
 
-export default React.forwardRef((props: TracePageHeaderEmbedProps, ref: React.Ref<InputRef>) => (
-  <TracePageHeaderFn {...props} forwardedRef={ref} />
-));
+export default TracePageHeaderFn;;

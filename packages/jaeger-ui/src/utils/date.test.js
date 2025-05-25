@@ -237,14 +237,38 @@ describe('format microseconds', () => {
     expect(formatDate(dateInMicroseconds)).toBe('2000-01-01');
   });
 
+  it('formatDate formats microseconds to date with timezone', () => {
+    const dateInMicroseconds = dateInMilliseconds * ONE_MILLISECOND;
+    // New York is UTC-5, so 10:00 UTC would be 05:00 in New York
+    expect(formatDate(dateInMicroseconds, 'America/New_York')).toBe('2000-01-01');
+    // Tokyo is UTC+9, so 10:00 UTC would be 19:00 in Tokyo
+    expect(formatDate(dateInMicroseconds, 'Asia/Tokyo')).toBe('2000-01-01');
+  });
+
   it('formatTime formats microseconds to time', () => {
     const dateInMicroseconds = dateInMilliseconds * ONE_MILLISECOND;
     expect(formatTime(dateInMicroseconds)).toBe('10:00');
   });
 
+  it('formatTime formats microseconds to time with timezone', () => {
+    const dateInMicroseconds = dateInMilliseconds * ONE_MILLISECOND;
+    // New York is UTC-5, so 10:00 UTC would be 05:00 in New York
+    expect(formatTime(dateInMicroseconds, 'America/New_York')).toBe('05:00');
+    // Tokyo is UTC+9, so 10:00 UTC would be 19:00 in Tokyo
+    expect(formatTime(dateInMicroseconds, 'Asia/Tokyo')).toBe('19:00');
+  });
+
   it('formatDateTime formats microseconds to standard date format', () => {
     const dateInMicroseconds = dateInMilliseconds * ONE_MILLISECOND;
     expect(formatDatetime(dateInMicroseconds)).toBe('January 1 2000, 10:00:00.000');
+  });
+
+  it('formatDateTime formats microseconds to standard date format with timezone', () => {
+    const dateInMicroseconds = dateInMilliseconds * ONE_MILLISECOND;
+    // New York is UTC-5, so 10:00 UTC would be 05:00 in New York
+    expect(formatDatetime(dateInMicroseconds, 'America/New_York')).toBe('January 1 2000, 05:00:00.000');
+    // Tokyo is UTC+9, so 10:00 UTC would be 19:00 in Tokyo
+    expect(formatDatetime(dateInMicroseconds, 'Asia/Tokyo')).toBe('January 1 2000, 19:00:00.000');
   });
 
   it('formatMillisecondTime formats microseconds to milliseconds', () => {

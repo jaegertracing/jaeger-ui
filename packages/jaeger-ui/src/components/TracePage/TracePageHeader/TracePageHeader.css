@@ -25,6 +25,13 @@
   margin-left: 0;
 }
 
+.TracePageHeader--overviewItemsWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+}
+
 .TracePageHeader--overviewItems {
   padding-bottom: 0.5rem;
 }
