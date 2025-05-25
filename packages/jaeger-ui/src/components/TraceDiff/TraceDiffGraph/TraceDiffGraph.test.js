@@ -31,7 +31,7 @@ jest.mock('../../common/LoadingIndicator', () => () => <div data-testid="loading
 
 afterEach(cleanup);
 
-const renderWithRouter = (component) => {
+const renderWithRouter = component => {
   return render(<MemoryRouter>{component}</MemoryRouter>);
 };
 
@@ -74,10 +74,18 @@ describe('TraceDiffGraph', () => {
     const { rerender } = renderWithRouter(<TraceDiffGraph {...baseProps} />);
     expect(screen.queryByText('At least two Traces are needed')).not.toBeInTheDocument();
 
-    rerender(<MemoryRouter><TraceDiffGraph {...baseProps} a={undefined} /></MemoryRouter>);
+    rerender(
+      <MemoryRouter>
+        <TraceDiffGraph {...baseProps} a={undefined} />
+      </MemoryRouter>
+    );
     expect(screen.getByText('At least two Traces are needed')).toBeInTheDocument();
 
-    rerender(<MemoryRouter><TraceDiffGraph {...baseProps} b={undefined} /></MemoryRouter>);
+    rerender(
+      <MemoryRouter>
+        <TraceDiffGraph {...baseProps} b={undefined} />
+      </MemoryRouter>
+    );
     expect(screen.getByText('At least two Traces are needed')).toBeInTheDocument();
   });
 
@@ -87,7 +95,11 @@ describe('TraceDiffGraph', () => {
     expect(screen.queryAllByTestId('error-message')).toHaveLength(0);
 
     const errorA = 'trace a error';
-    rerender(<MemoryRouter><TraceDiffGraph {...baseProps} a={{ ...baseProps.a, error: errorA }} /></MemoryRouter>);
+    rerender(
+      <MemoryRouter>
+        <TraceDiffGraph {...baseProps} a={{ ...baseProps.a, error: errorA }} />
+      </MemoryRouter>
+    );
     expect(screen.getAllByTestId('error-message')).toHaveLength(1);
     expect(screen.getByText(errorA)).toBeInTheDocument();
 
@@ -111,7 +123,11 @@ describe('TraceDiffGraph', () => {
     );
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
 
-    rerender(<MemoryRouter><TraceDiffGraph {...baseProps} b={{ ...baseProps.b, state: fetchedState.LOADING }} /></MemoryRouter>);
+    rerender(
+      <MemoryRouter>
+        <TraceDiffGraph {...baseProps} b={{ ...baseProps.b, state: fetchedState.LOADING }} />
+      </MemoryRouter>
+    );
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
@@ -121,7 +137,11 @@ describe('TraceDiffGraph', () => {
     );
     expect(container.querySelector('.TraceDiffGraph--graphWrapper').innerHTML).toBe('');
 
-    rerender(<MemoryRouter><TraceDiffGraph {...baseProps} b={{ ...baseProps.b, data: undefined }} /></MemoryRouter>);
+    rerender(
+      <MemoryRouter>
+        <TraceDiffGraph {...baseProps} b={{ ...baseProps.b, data: undefined }} />
+      </MemoryRouter>
+    );
     expect(container.querySelector('.TraceDiffGraph--graphWrapper').innerHTML).toBe('');
   });
 
@@ -140,7 +160,11 @@ describe('TraceDiffGraph', () => {
     const { getByTestId, rerender } = renderWithRouter(<TraceDiffGraph {...baseProps} />);
     expect(getByTestId('ui-find-input')).not.toHaveAttribute('suffix');
 
-    rerender(<MemoryRouter><TraceDiffGraph {...baseProps} uiFind="test uiFind" /></MemoryRouter>);
+    rerender(
+      <MemoryRouter>
+        <TraceDiffGraph {...baseProps} uiFind="test uiFind" />
+      </MemoryRouter>
+    );
     expect(getByTestId('ui-find-input')).toHaveAttribute('suffix', '0');
   });
 
