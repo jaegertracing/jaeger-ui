@@ -18,13 +18,27 @@ jest.mock('./Tween');
 import { scrollBy, scrollTo, cancel } from './scroll-page';
 import Tween from './Tween';
 
+// Mock CSS scroll-behavior support
+const originalDocumentElementStyle = document.documentElement.style;
+Object.defineProperty(document.documentElement, 'style', {
+  value: {},
+  configurable: true,
+});
+
 // keep track of instances, manually
 // https://github.com/facebook/jest/issues/5019
 const tweenInstances = [];
 
 describe('scroll-by', () => {
   beforeEach(() => {
+    // Mock that CSS scroll-behavior is NOT supported for these tests
+    Object.defineProperty(document.documentElement, 'style', {
+      value: {},
+      configurable: true,
+    });
+    
     window.scrollY = 100;
+    window.scrollTo = jest.fn();
     tweenInstances.length = 0;
     Tween.mockClear();
     Tween.mockImplementation(opts => {
@@ -41,6 +55,11 @@ describe('scroll-by', () => {
 
   afterEach(() => {
     cancel();
+    // Restore original document.documentElement.style
+    Object.defineProperty(document.documentElement, 'style', {
+      value: originalDocumentElementStyle,
+      configurable: true,
+    });
   });
 
   describe('scrollBy()', () => {
@@ -80,6 +99,26 @@ describe('scroll-by', () => {
         expect(Tween.mock.calls[1]).toEqual([spec]);
       });
     });
+
+    describe('when CSS scroll-behavior is supported', () => {
+      beforeEach(() => {
+        // Mock that CSS scroll-behavior IS supported
+        Object.defineProperty(document.documentElement, 'style', {
+          value: { scrollBehavior: '' },
+          configurable: true,
+        });
+      });
+
+      it('uses window.scrollBy with smooth behavior', () => {
+        const yDelta = 10;
+        scrollBy(yDelta);
+        expect(window.scrollTo).not.toHaveBeenCalled();
+        expect(window.scrollBy).toHaveBeenCalledWith({
+          top: yDelta,
+          behavior: 'smooth',
+        });
+      });
+    });
   });
 
   describe('scrollTo', () => {
@@ -97,6 +136,26 @@ describe('scroll-by', () => {
       scrollTo(to);
       expect(Tween.mock.calls.length).toBe(2);
       expect(Tween.mock.calls[1]).toEqual([spec]);
+    });
+
+    describe('when CSS scroll-behavior is supported', () => {
+      beforeEach(() => {
+        // Mock that CSS scroll-behavior IS supported
+        Object.defineProperty(document.documentElement, 'style', {
+          value: { scrollBehavior: '' },
+          configurable: true,
+        });
+      });
+
+      it('uses window.scrollTo with smooth behavior', () => {
+        const to = 10;
+        scrollTo(to);
+        expect(Tween.mock.calls.length).toBe(0);
+        expect(window.scrollTo).toHaveBeenCalledWith({
+          top: to,
+          behavior: 'smooth',
+        });
+      });
     });
   });
 

@@ -18,8 +18,13 @@ const DURATION_MS = 350;
 
 let lastTween: Tween | void;
 
-// TODO(joe): this util can be modified a bit to be generalized (e.g. take in
-// an element as a parameter and use scrollTop instead of window.scrollTo)
+// Check if browser supports CSS scroll-behavior
+const isSmoothScrollSupported = typeof document !== 'undefined' && 'scrollBehavior' in document.documentElement.style;
+
+// Apply smooth scrolling class to html element if supported
+if (isSmoothScrollSupported && document.documentElement) {
+  document.documentElement.classList.add('u-smooth-scroll');
+}
 
 function _onTweenUpdate({ done, value }: { done: boolean; value: number }) {
   window.scrollTo(window.scrollX, value);
@@ -29,6 +34,14 @@ function _onTweenUpdate({ done, value }: { done: boolean; value: number }) {
 }
 
 export function scrollBy(yDelta: number, appendToLast = false) {
+  if (isSmoothScrollSupported) {
+    window.scrollBy({
+      top: yDelta,
+      behavior: 'smooth',
+    });
+    return;
+  }
+
   const { scrollY } = window;
   let targetFrom = scrollY;
   if (appendToLast && lastTween) {
@@ -43,6 +56,14 @@ export function scrollBy(yDelta: number, appendToLast = false) {
 }
 
 export function scrollTo(y: number) {
+  if (isSmoothScrollSupported) {
+    window.scrollTo({
+      top: y,
+      behavior: 'smooth',
+    });
+    return;
+  }
+
   const { scrollY } = window;
   lastTween = new Tween({ duration: DURATION_MS, from: scrollY, to: y, onUpdate: _onTweenUpdate });
 }
