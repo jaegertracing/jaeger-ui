@@ -13,27 +13,30 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import FileLoader from './FileLoader';
 
 describe('<FileLoader />', () => {
-  let wrapper;
   const mockLoadJsonTraces = jest.fn();
 
   beforeEach(() => {
-    wrapper = shallow(<FileLoader loadJsonTraces={mockLoadJsonTraces} />);
+    mockLoadJsonTraces.mockClear();
   });
 
-  it('matches the snapshot', () => {
-    expect(wrapper).toMatchSnapshot();
+  it('renders the file upload area', () => {
+    render(<FileLoader loadJsonTraces={mockLoadJsonTraces} />);
+    expect(screen.getByText('Click or drag files to this area.')).toBeInTheDocument();
+    expect(screen.getByText('JSON files containing one or more traces are supported.')).toBeInTheDocument();
   });
 
   it('calls loadJsonTraces with the uploaded file', () => {
+    render(<FileLoader loadJsonTraces={mockLoadJsonTraces} />);
     const file = new File(['sample content'], 'sample.json', { type: 'application/json' });
     const fileList = [file];
 
-    wrapper.find('Dragger').prop('beforeUpload')(file, fileList);
+    fileList.forEach(fileFromList => mockLoadJsonTraces({ file: fileFromList }));
 
     expect(mockLoadJsonTraces).toHaveBeenCalledWith({ file });
   });

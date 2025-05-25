@@ -13,10 +13,11 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom';
 
-import DiffSelection, { CTA_MESSAGE } from './DiffSelection';
-import ResultItemTitle from './ResultItemTitle';
+import DiffSelection from './DiffSelection';
 import { fetchedState } from '../../../constants';
 
 describe('DiffSelection', () => {
@@ -46,23 +47,31 @@ describe('DiffSelection', () => {
   ];
 
   it('renders a trace as expected', () => {
-    const wrapper = shallow(
-      <DiffSelection traces={traces.slice(0, 1)} toggleComparison={toggleComparison} />
+    const { container } = render(
+      <MemoryRouter>
+        <DiffSelection traces={traces.slice(0, 1)} toggleComparison={toggleComparison} />
+      </MemoryRouter>
     );
 
-    expect(wrapper.find(ResultItemTitle).length).toBe(1);
-    expect(wrapper).toMatchSnapshot();
+    expect(container.querySelectorAll('.ResultItemTitle')).toHaveLength(1);
   });
 
   it('renders multiple traces as expected', () => {
-    const wrapper = shallow(<DiffSelection traces={traces} toggleComparison={toggleComparison} />);
+    const { container } = render(
+      <MemoryRouter>
+        <DiffSelection traces={traces} toggleComparison={toggleComparison} />
+      </MemoryRouter>
+    );
 
-    expect(wrapper.find(ResultItemTitle).length).toBe(traces.length);
-    expect(wrapper).toMatchSnapshot();
+    expect(container.querySelectorAll('.ResultItemTitle')).toHaveLength(traces.length);
   });
 
   it('renders CTA_MESSAGE when given empty traces array', () => {
-    const wrapper = shallow(<DiffSelection traces={[]} toggleComparison={toggleComparison} />);
-    expect(wrapper.contains(CTA_MESSAGE)).toBe(true);
+    render(
+      <MemoryRouter>
+        <DiffSelection traces={[]} toggleComparison={toggleComparison} />
+      </MemoryRouter>
+    );
+    expect(screen.getByText('Compare traces by selecting result items')).toBeInTheDocument();
   });
 });
