@@ -73,19 +73,17 @@ describe('<SpanDetailRow>', () => {
   });
 
   it('renders the SpanDetail', () => {
-    const spanDetail = (
-      <SpanDetail
-        detailState={props.detailState}
-        linksGetter={wrapper.instance()._linksGetter}
-        logItemToggle={props.logItemToggle}
-        logsToggle={props.logsToggle}
-        processToggle={props.processToggle}
-        span={props.span}
-        tagsToggle={props.tagsToggle}
-        traceStartTime={props.traceStartTime}
-      />
-    );
-    expect(wrapper.contains(spanDetail)).toBe(true);
+    const spanDetailNode = wrapper.find(SpanDetail);
+    expect(spanDetailNode.exists()).toBe(true);
+
+    expect(spanDetailNode.prop('detailState')).toBe(props.detailState);
+    expect(spanDetailNode.prop('linksGetter')).toEqual(expect.any(Function));
+    expect(spanDetailNode.prop('logItemToggle')).toBe(props.logItemToggle);
+    expect(spanDetailNode.prop('logsToggle')).toBe(props.logsToggle);
+    expect(spanDetailNode.prop('processToggle')).toBe(props.processToggle);
+    expect(spanDetailNode.prop('span')).toBe(props.span);
+    expect(spanDetailNode.prop('tagsToggle')).toBe(props.tagsToggle);
+    expect(spanDetailNode.prop('traceStartTime')).toBe(props.traceStartTime);
   });
 
   it('adds span when calling linksGetter', () => {
