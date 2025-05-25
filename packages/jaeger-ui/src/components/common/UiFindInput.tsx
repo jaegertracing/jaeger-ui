@@ -89,10 +89,10 @@ export class UnconnectedUiFindInput extends React.PureComponent<TProps, StateTyp
 
     const inputValue = _isString(this.state.ownInputValue) ? this.state.ownInputValue : this.props.uiFind;
     const suffix = (
-      <>
+      <React.Fragment key="suffix">
         {allowClear && inputValue && inputValue.length && <IoClose onClick={this.clearUiFind} />}
         {inputProps.suffix}
-      </>
+      </React.Fragment>
     );
 
     return (
