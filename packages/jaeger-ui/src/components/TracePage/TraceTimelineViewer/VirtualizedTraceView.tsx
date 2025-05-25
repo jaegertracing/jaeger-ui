@@ -63,6 +63,7 @@ type TVirtualizedTraceViewOwnProps = {
   registerAccessors: (accesors: Accessors) => void;
   trace: Trace;
   criticalPath: criticalPathSection[];
+  markerColorKey: string[];
 };
 
 type TDispatchProps = {
@@ -406,6 +407,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       spanNameColumnWidth,
       trace,
       criticalPath,
+      markerColorKey,
     } = this.props;
     // to avert flow error
     if (!trace) {
@@ -463,6 +465,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           traceStartTime={trace.startTime}
           span={span}
           focusSpan={this.focusSpan}
+          colorGenerator={colorGenerator}
+          markerColorKey={markerColorKey}
         />
       </div>
     );
