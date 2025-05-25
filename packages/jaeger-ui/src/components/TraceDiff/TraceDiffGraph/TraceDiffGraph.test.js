@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import { UnconnectedTraceDiffGraph as TraceDiffGraph } from './TraceDiffGraph';
@@ -29,6 +30,10 @@ jest.mock('../../common/ErrorMessage', () => props => <div data-testid="error-me
 jest.mock('../../common/LoadingIndicator', () => () => <div data-testid="loading-indicator">Loading...</div>);
 
 afterEach(cleanup);
+
+const renderWithRouter = (component) => {
+  return render(<MemoryRouter>{component}</MemoryRouter>);
+};
 
 describe('TraceDiffGraph', () => {
   const baseProps = {
@@ -66,60 +71,62 @@ describe('TraceDiffGraph', () => {
   });
 
   it('renders warning when a or b are not provided', () => {
-    const { rerender } = render(<TraceDiffGraph {...baseProps} />);
+    const { rerender } = renderWithRouter(<TraceDiffGraph {...baseProps} />);
     expect(screen.queryByText('At least two Traces are needed')).not.toBeInTheDocument();
 
-    rerender(<TraceDiffGraph {...baseProps} a={undefined} />);
+    rerender(<MemoryRouter><TraceDiffGraph {...baseProps} a={undefined} /></MemoryRouter>);
     expect(screen.getByText('At least two Traces are needed')).toBeInTheDocument();
 
-    rerender(<TraceDiffGraph {...baseProps} b={undefined} />);
+    rerender(<MemoryRouter><TraceDiffGraph {...baseProps} b={undefined} /></MemoryRouter>);
     expect(screen.getByText('At least two Traces are needed')).toBeInTheDocument();
   });
 
   it('renders error message when a or b have errors', () => {
-    const { rerender } = render(<TraceDiffGraph {...baseProps} />);
+    const { rerender } = renderWithRouter(<TraceDiffGraph {...baseProps} />);
 
     expect(screen.queryAllByTestId('error-message')).toHaveLength(0);
 
     const errorA = 'trace a error';
-    rerender(<TraceDiffGraph {...baseProps} a={{ ...baseProps.a, error: errorA }} />);
+    rerender(<MemoryRouter><TraceDiffGraph {...baseProps} a={{ ...baseProps.a, error: errorA }} /></MemoryRouter>);
     expect(screen.getAllByTestId('error-message')).toHaveLength(1);
     expect(screen.getByText(errorA)).toBeInTheDocument();
 
     const errorB = 'trace b error';
     rerender(
-      <TraceDiffGraph
-        {...baseProps}
-        a={{ ...baseProps.a, error: errorA }}
-        b={{ ...baseProps.b, error: errorB }}
-      />
+      <MemoryRouter>
+        <TraceDiffGraph
+          {...baseProps}
+          a={{ ...baseProps.a, error: errorA }}
+          b={{ ...baseProps.b, error: errorB }}
+        />
+      </MemoryRouter>
     );
     expect(screen.getAllByTestId('error-message')).toHaveLength(2);
     expect(screen.getByText(errorB)).toBeInTheDocument();
   });
 
   it('shows loading when a or b are loading', () => {
-    const { rerender } = render(
+    const { rerender } = renderWithRouter(
       <TraceDiffGraph {...baseProps} a={{ ...baseProps.a, state: fetchedState.LOADING }} />
     );
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
 
-    rerender(<TraceDiffGraph {...baseProps} b={{ ...baseProps.b, state: fetchedState.LOADING }} />);
+    rerender(<MemoryRouter><TraceDiffGraph {...baseProps} b={{ ...baseProps.b, state: fetchedState.LOADING }} /></MemoryRouter>);
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
   it('renders an empty graph wrapper when data is missing', () => {
-    const { container, rerender } = render(
+    const { container, rerender } = renderWithRouter(
       <TraceDiffGraph {...baseProps} a={{ ...baseProps.a, data: undefined }} />
     );
     expect(container.querySelector('.TraceDiffGraph--graphWrapper').innerHTML).toBe('');
 
-    rerender(<TraceDiffGraph {...baseProps} b={{ ...baseProps.b, data: undefined }} />);
+    rerender(<MemoryRouter><TraceDiffGraph {...baseProps} b={{ ...baseProps.b, data: undefined }} /></MemoryRouter>);
     expect(container.querySelector('.TraceDiffGraph--graphWrapper').innerHTML).toBe('');
   });
 
   it('renders graph when data is present', () => {
-    const { container } = render(<TraceDiffGraph {...baseProps} />);
+    const { container } = renderWithRouter(<TraceDiffGraph {...baseProps} />);
     const graphWrapper = container.querySelector('.TraceDiffGraph--graphWrapper');
     const dag = container.querySelector('.TraceDiffGraph--dag');
     const minimap = container.querySelector('.u-miniMap');
@@ -130,10 +137,10 @@ describe('TraceDiffGraph', () => {
   });
 
   it('renders uiFind input with count suffix', () => {
-    const { getByTestId, rerender } = render(<TraceDiffGraph {...baseProps} />);
+    const { getByTestId, rerender } = renderWithRouter(<TraceDiffGraph {...baseProps} />);
     expect(getByTestId('ui-find-input')).not.toHaveAttribute('suffix');
 
-    rerender(<TraceDiffGraph {...baseProps} uiFind="test uiFind" />);
+    rerender(<MemoryRouter><TraceDiffGraph {...baseProps} uiFind="test uiFind" /></MemoryRouter>);
     expect(getByTestId('ui-find-input')).toHaveAttribute('suffix', '0');
   });
 
@@ -153,7 +160,7 @@ describe('TraceDiffGraph', () => {
       state: fetchedState.DONE,
     };
 
-    render(<TraceDiffGraph a={matchedTrace} b={matchedTrace} uiFind="GET" />);
+    renderWithRouter(<TraceDiffGraph a={matchedTrace} b={matchedTrace} uiFind="GET" />);
     expect(screen.getByTestId('ui-find-input')).toHaveAttribute('suffix', '1');
   });
 
@@ -163,7 +170,7 @@ describe('TraceDiffGraph', () => {
 
       getConfigValueSpy.mockReturnValue(helpLink);
 
-      const { getByTestId } = render(<TraceDiffGraph {...baseProps} a={undefined} b={undefined} />);
+      const { getByTestId } = renderWithRouter(<TraceDiffGraph {...baseProps} a={undefined} b={undefined} />);
       const helpButton = getByTestId('learn-how-button');
       helpButton.click();
 
@@ -174,7 +181,7 @@ describe('TraceDiffGraph', () => {
     it('does not open window when help link config is not set', () => {
       getConfigValueSpy.mockReturnValue(null);
 
-      const { getByTestId } = render(<TraceDiffGraph {...baseProps} a={undefined} b={undefined} />);
+      const { getByTestId } = renderWithRouter(<TraceDiffGraph {...baseProps} a={undefined} b={undefined} />);
       const helpButton = getByTestId('learn-how-button');
       helpButton.click();
 
