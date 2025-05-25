@@ -43,10 +43,9 @@ limitations under the License.
 
 .TraceDiffHeader--traceTitleChevron {
   color: #199;
-  font-size: 0.75em;
-  position: absolute;
-  right: 15px;
-  top: calc(50% - 0.5em);
+  font-size: 1.5em;
+  display: inline-block;
+  vertical-align: middle;
   transition: transform 0.2s ease;
 }
 
