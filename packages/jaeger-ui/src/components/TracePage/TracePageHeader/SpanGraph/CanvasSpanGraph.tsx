@@ -24,7 +24,7 @@ type CanvasSpanGraphProps = {
   valueWidth: number;
 };
 
-const getColor = (hex: string) => colorGenerator.getRgbColorByKey(hex);
+export const getColor = (hex: string) => colorGenerator.getRgbColorByKey(hex);
 
 const CanvasSpanGraph: React.FC<CanvasSpanGraphProps> = ({ items, valueWidth }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
