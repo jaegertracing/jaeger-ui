@@ -280,14 +280,26 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   }
 
   focusSpan = (uiFind: string) => {
-    const { trace, focusUiFindMatches, location, history } = this.props;
+    const { trace, focusUiFindMatches, location, history, detailStates } = this.props;
     if (trace) {
+      // Create a copy of the current detail states to preserve them
+      const currentDetailStates = new Map(detailStates);
+      
       updateUiFind({
         location,
         history,
         uiFind,
       });
+      
+      // Pass false for allowHide to prevent closing the source span
       focusUiFindMatches(trace, uiFind, false);
+      
+      // Restore the original detail states to keep source spans open
+      this.props.detailStates.forEach((state, spanID) => {
+        if (currentDetailStates.has(spanID)) {
+          this.props.detailStates.set(spanID, currentDetailStates.get(spanID));
+        }
+      });
     }
   };
 
