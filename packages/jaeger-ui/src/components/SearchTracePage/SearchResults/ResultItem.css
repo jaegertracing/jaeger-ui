@@ -14,14 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+
 .ResultItem {
   border: 1px solid #e6e6e6;
   background: #fbfbfb;
+  cursor: pointer; /* Show pointer on hover */
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .ResultItem:hover {
   background: #f5f5f5;
   border-color: #d8d8d8;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* subtle shadow */
+  transform: translateY(-2px); /* slight lift */
 }
 
 .ResultItem--serviceTag {
