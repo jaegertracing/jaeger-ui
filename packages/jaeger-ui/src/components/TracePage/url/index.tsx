@@ -18,19 +18,19 @@ import prefixUrl from '../../../utils/prefix-url';
 
 import { TNil } from '../../../types';
 
-export const ROUTE_PATH = prefixUrl('/trace/:id');
+export const ROUTE_PATH = prefixUrl('/trace/:id/:spanId?');
 
-export function getUrl(id: string, uiFind?: string): string {
-  const traceUrl = prefixUrl(`/trace/${id}`);
+export function getUrl(id: string, uiFind?: string, spanId?: string): string {
+  const traceUrl = prefixUrl(spanId ? `/trace/${id}/${spanId}` : `/trace/${id}`);
   if (!uiFind) return traceUrl;
 
   return `${traceUrl}?${queryString.stringify({ uiFind })}`;
 }
 
-export function getLocation(id: string, state: Record<string, string> | TNil, uiFind?: string) {
+export function getLocation(id: string, state: Record<string, string> | TNil, uiFind?: string, spanId?: string) {
   return {
     state,
-    pathname: getUrl(id),
+    pathname: getUrl(id, uiFind, spanId),
     search: uiFind && queryString.stringify({ uiFind }),
   };
 }

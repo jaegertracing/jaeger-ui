@@ -45,6 +45,7 @@ type TProps = TDispatchProps & {
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: IViewRange;
+  onRerootClicked?: (spanId: string) => void;
 };
 
 const NUM_TICKS = 5;
@@ -82,7 +83,7 @@ export class TraceTimelineViewerImpl extends React.PureComponent<TProps> {
   };
 
   render() {
-    const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRangeTime, viewRange, ...rest } =
+    const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRangeTime, viewRange, onRerootClicked, ...rest } =
       this.props;
     const { spanNameColumnWidth, trace } = rest;
 
@@ -101,7 +102,11 @@ export class TraceTimelineViewerImpl extends React.PureComponent<TProps> {
           updateNextViewRangeTime={updateNextViewRangeTime}
           updateViewRangeTime={updateViewRangeTime}
         />
-        <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
+        <VirtualizedTraceView 
+          {...rest} 
+          currentViewRangeTime={viewRange.time.current} 
+          onRerootClicked={onRerootClicked}
+        />
       </div>
     );
   }

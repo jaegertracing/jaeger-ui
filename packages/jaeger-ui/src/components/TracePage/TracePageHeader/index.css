@@ -1,0 +1,16 @@
+.TracePageHeader--title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.TracePageHeader--titleText {
+  margin-right: 0.5em;
+}
+
+.TracePageHeader--resetRootButton {
+  margin-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
