@@ -53,6 +53,8 @@ describe('<AccordianLogs>', () => {
     onToggle: jest.fn(),
     openedItems: new Set([logs[1]]),
     timestamp: 5,
+    traceDuration: 100,
+    currentViewRangeTime: [0.0, 0.12],
   };
 
   beforeEach(() => {
