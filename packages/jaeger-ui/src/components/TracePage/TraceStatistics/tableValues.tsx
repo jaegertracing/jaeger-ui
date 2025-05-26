@@ -14,7 +14,6 @@
 
 import memoizeOne from 'memoize-one';
 import _uniq from 'lodash/uniq';
-import DRange from 'drange';
 import { Trace, Span } from '../../../types/trace';
 import { ITableSpan } from './types';
 import colorGenerator from '../../../utils/color-generator';
@@ -43,23 +42,53 @@ function getChildOfSpans(parentID: string, allSpans: Span[]): Span[] {
   return memoizedParentChildOfMap(allSpans)[parentID] || [];
 }
 
-function computeSelfTime(span: Span, allSpans: Span[]): number {
-  if (!span.hasChildren) return span.duration;
-  // We want to represent spans as half-open intervals like [startTime, startTime + duration).
-  // This way the subtraction preserves the right boundaries. However, DRange treats all
-  // intervals as inclusive. For example,
-  //       range(1, 10).subtract(4, 8) => range([1, 3], [9-10])
-  //       length=(3-1)+(10-9)=2+1=3
-  // In other words, we took an interval of length=10-1=9 and subtracted length=8-4=4.
-  // We should've ended up with length 9-4=5, but we got 3.
-  // To work around that, we multiply start/end times by 10 and subtract one from the end.
-  // So instead of [1-10] we get [10-99]. This makes the intervals work like half-open.
-  const spanRange = new DRange(10 * span.startTime, 10 * (span.startTime + span.duration) - 1);
-  const children = getChildOfSpans(span.spanID, allSpans);
-  children.forEach(child => {
-    spanRange.subtract(10 * child.startTime, 10 * (child.startTime + child.duration) - 1);
-  });
-  return Math.round(spanRange.length / 10);
+function computeSelfTime(parentSpan: Span, allSpans: Span[]): number {
+  if (!parentSpan.hasChildren) return parentSpan.duration;
+
+  let parentSpanSelfTime = parentSpan.duration;
+  let previousChildEndTime = parentSpan.startTime;
+
+  const children = getChildOfSpans(parentSpan.spanID, allSpans).sort((a, b) => a.startTime - b.startTime);
+
+  const parentSpanEndTime = parentSpan.startTime + parentSpan.duration;
+
+  for (let index = 0; index < children.length; index++) {
+    const child = children[index];
+
+    const childEndTime = child.startTime + child.duration;
+    const childStartsAfterParentEnded = child.startTime > parentSpanEndTime;
+    const childEndsBeforePreviousChild = childEndTime < previousChildEndTime;
+
+    // parent |..................|
+    // child    |.......|                     - previousChild
+    // child     |.....|                      - childEndsBeforePreviousChild is true, skipped
+    // child                         |......| - childStartsAfterParentEnded is true, skipped
+    if (childStartsAfterParentEnded || childEndsBeforePreviousChild) {
+      continue;
+    }
+
+    // parent |.....................|
+    // child    |.......|                    - previousChild
+    // child        |.....|                  - nonOverlappingStartTime is previousChildEndTime
+    // child                |.....|          - nonOverlappingStartTime is child.startTime
+    const nonOverlappingStartTime = Math.max(previousChildEndTime, child.startTime);
+    const childEndTimeOrParentEndTime = Math.min(parentSpanEndTime, childEndTime);
+
+    const nonOverlappingDuration = childEndTimeOrParentEndTime - nonOverlappingStartTime;
+    parentSpanSelfTime -= nonOverlappingDuration;
+
+    // last span which can be included in self time calculation, because it ends after parent span ends
+    // parent |......................|
+    // child                      |.....|        - last span included in self time calculation
+    // child                       |.........|   - skipped
+    if (childEndTimeOrParentEndTime === parentSpanEndTime) {
+      break;
+    }
+
+    previousChildEndTime = childEndTime;
+  }
+
+  return parentSpanSelfTime;
 }
 
 function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultValue: StatsPerTag) {
