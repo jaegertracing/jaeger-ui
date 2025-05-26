@@ -60,40 +60,32 @@ function computeSelfTime(parentSpan: Span, allSpans: Span[]): number {
     const childEndsBeforePreviousChild = childEndTime < previousChildEndTime;
 
     // parent |..................|
-    // child    |.......|
+    // child    |.......|                     - previousChild
     // child     |.....|                      - childEndsBeforePreviousChild is true, skipped
     // child                         |......| - childStartsAfterParentEnded is true, skipped
     if (childStartsAfterParentEnded || childEndsBeforePreviousChild) {
       continue;
     }
 
-    let nonOverlappingStartTime = child.startTime;
-    let nonOverlappingDuration = child.duration;
-    const childStartsBeforePreviousChildEnds = child.startTime < previousChildEndTime;
-
     // parent |.....................|
-    // child    |.......|
-    // child        |.....|                  - childStartsBeforePreviousChildEnds is true
-    // child                |.....|          - childStartsBeforePreviousChildEnds is false
-    if (childStartsBeforePreviousChildEnds) {
-      const diff = previousChildEndTime - child.startTime;
-      nonOverlappingDuration = child.duration - diff;
-      nonOverlappingStartTime = previousChildEndTime;
-    }
+    // child    |.......|                    - previousChild
+    // child        |.....|                  - nonOverlappingStartTime is previousChildEndTime
+    // child                |.....|          - nonOverlappingStartTime is child.startTime
+    const nonOverlappingStartTime = Math.max(previousChildEndTime, child.startTime);
+    const childEndTimeOrParentEndTime = Math.min(parentSpanEndTime, childEndTime);
+
+    const nonOverlappingDuration = childEndTimeOrParentEndTime - nonOverlappingStartTime;
+    parentSpanSelfTime -= nonOverlappingDuration;
+
     // last span which can be included in self time calculation, because it ends after parent span ends
     // parent |......................|
     // child                      |.....|        - last span included in self time calculation
     // child                       |.........|   - skipped
-    else if (childEndTime > parentSpanEndTime) {
-      const diff = childEndTime - parentSpanEndTime;
-
-      nonOverlappingDuration = child.duration - diff;
-      parentSpanSelfTime -= nonOverlappingDuration;
+    if (childEndTimeOrParentEndTime === parentSpanEndTime) {
       break;
     }
 
-    parentSpanSelfTime -= nonOverlappingDuration;
-    previousChildEndTime = nonOverlappingStartTime + nonOverlappingDuration;
+    previousChildEndTime = childEndTime;
   }
 
   return parentSpanSelfTime;
