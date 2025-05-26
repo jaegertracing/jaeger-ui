@@ -31,6 +31,14 @@ limitations under the License.
   background: #dadada;
 }
 
+.AccordianLogs--toggle {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-style: italic;
+  text-decoration: underline;
+}
+
 .AccordianLogs--content {
   background: #f0f0f0;
   border-top: 1px solid #d8d8d8;

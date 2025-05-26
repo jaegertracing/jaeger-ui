@@ -482,6 +482,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailToggle,
       spanNameColumnWidth,
       trace,
+      currentViewRangeTime,
     } = this.props;
     const detailState = detailStates.get(spanID);
     if (!trace || !detailState) {
@@ -505,6 +506,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           tagsToggle={detailTagsToggle}
           traceStartTime={trace.startTime}
           focusSpan={this.focusSpan}
+          currentViewRangeTime={currentViewRangeTime}
+          traceDuration={trace.duration}
         />
       </div>
     );

@@ -33,6 +33,8 @@ type AccordianLogsProps = {
   onToggle?: () => void;
   openedItems?: Set<Log>;
   timestamp: number;
+  currentViewRangeTime: [number, number];
+  traceDuration: number;
 };
 
 export default function AccordianLogs({
@@ -44,10 +46,44 @@ export default function AccordianLogs({
   onItemToggle,
   onToggle,
   timestamp,
+  currentViewRangeTime,
+  traceDuration,
 }: AccordianLogsProps) {
   let arrow: React.ReactNode | null = null;
   let HeaderComponent: 'span' | 'a' = 'span';
   let headerProps: object | null = null;
+  const [showOutOfRangeLogs, setShowOutOfRangeLogs] = React.useState(false);
+
+  const inRangeLogs = React.useMemo(() => {
+    const viewStartAbsolute = timestamp + currentViewRangeTime[0] * traceDuration;
+    const viewEndAbsolute = timestamp + currentViewRangeTime[1] * traceDuration;
+    return logs.filter(log => log.timestamp >= viewStartAbsolute && log.timestamp <= viewEndAbsolute);
+  }, [logs, timestamp, currentViewRangeTime, traceDuration]);
+
+  const logsToDisplay = showOutOfRangeLogs ? logs : inRangeLogs;
+  const displayedCount = logsToDisplay.length;
+  const inRangeCount = inRangeLogs.length;
+  const totalCount = logs.length;
+
+  let title = `Logs (${displayedCount})`;
+  let toggleLink: React.ReactNode = null;
+
+  if (!showOutOfRangeLogs && inRangeCount < totalCount) {
+    title = `Logs (${inRangeCount} of ${totalCount})`;
+    toggleLink = (
+      <button type="button" className="AccordianLogs--toggle" onClick={() => setShowOutOfRangeLogs(true)}>
+        show all
+      </button>
+    );
+  } else if (showOutOfRangeLogs && inRangeCount < totalCount) {
+    title = `Logs (${totalCount})`;
+    toggleLink = (
+      <button type="button" className="AccordianLogs--toggle" onClick={() => setShowOutOfRangeLogs(false)}>
+        show in range
+      </button>
+    );
+  }
+
   if (interactive) {
     arrow = isOpen ? (
       <IoChevronDown className="u-align-icon" />
@@ -65,16 +101,16 @@ export default function AccordianLogs({
   return (
     <div className="AccordianLogs">
       <HeaderComponent className={cx('AccordianLogs--header', { 'is-open': isOpen })} {...headerProps}>
-        {arrow} <strong>Logs</strong> ({logs.length})
+        {arrow} <strong>{title}</strong> {toggleLink}
       </HeaderComponent>
       {isOpen && (
         <div className="AccordianLogs--content">
-          {_sortBy(logs, 'timestamp').map((log, i) => (
+          {_sortBy(logsToDisplay, 'timestamp').map((log, i) => (
             <AccordianKeyValues
               // `i` is necessary in the key because timestamps can repeat
               // eslint-disable-next-line react/no-array-index-key
               key={`${log.timestamp}-${i}`}
-              className={i < logs.length - 1 ? 'ub-mb1' : null}
+              className={i < logsToDisplay.length - 1 ? 'ub-mb1' : null}
               data={log.fields || []}
               highContrast
               interactive={interactive}
