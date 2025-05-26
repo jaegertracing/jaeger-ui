@@ -57,7 +57,8 @@ import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
-import { StorageCapabilities, TraceGraphConfig } from '../../types/config';
+import { StorageCapabilities, TraceGraphConfig, TraceRepresentation } from '../../types/config';
+import getConfig from '../../utils/config/get-config';
 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
@@ -97,6 +98,8 @@ type TState = {
   slimView: boolean;
   viewType: ETraceViewType;
   viewRange: IViewRange;
+  currentRepresentation: string;
+  transformedTrace: Trace | null;
 };
 
 // export for tests
@@ -140,6 +143,11 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   constructor(props: TProps) {
     super(props);
     const { embedded, trace } = props;
+    const config = getConfig();
+    const defaultRepresentation = config.traceRepresentations && config.traceRepresentations.length > 0
+      ? config.traceRepresentations[0].name
+      : 'Original';
+    
     this.state = {
       headerHeight: null,
       slimView: Boolean(embedded && embedded.timeline.collapseTitle),
@@ -149,6 +157,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           current: [0, 1],
         },
       },
+      currentRepresentation: defaultRepresentation,
+      transformedTrace: null,
     };
     this._headerElm = null;
     this._filterSpans = _memoize(
@@ -186,8 +196,9 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     mergeShortcuts(shortcutCallbacks);
   }
 
-  componentDidUpdate({ id: prevID }: TProps) {
+  componentDidUpdate({ id: prevID, trace: prevTrace }: TProps) {
     const { id, trace } = this.props;
+    const { currentRepresentation } = this.state;
 
     this._scrollManager.setTrace(trace && trace.data);
 
@@ -196,6 +207,16 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       this.ensureTraceFetched();
       return;
     }
+    
+    // If the trace has changed, apply the current representation
+    if (trace && (!prevTrace || prevTrace.data !== trace.data)) {
+      const config = getConfig();
+      const representation = config.traceRepresentations?.find(r => r.name === currentRepresentation);
+      if (representation) {
+        this.setTraceRepresentation(representation);
+      }
+    }
+    
     if (prevID !== id) {
       this.updateViewRangeTime(0, 1);
       this.clearSearch();
@@ -284,6 +305,24 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     this.setState({ viewType });
   };
 
+  setTraceRepresentation = (representation: TraceRepresentation) => {
+    const { trace } = this.props;
+    if (!trace || !trace.data) return;
+
+    try {
+      // eslint-disable-next-line no-new-func
+      const transformFunc = new Function('return ' + representation.transformFunction)();
+      const transformedTrace = transformFunc(trace.data);
+      
+      this.setState({
+        currentRepresentation: representation.name,
+        transformedTrace,
+      });
+    } catch (error) {
+      console.error('Error applying trace representation:', error);
+    }
+  };
+
   archiveTrace = () => {
     const { id, archiveTrace } = this.props;
     archiveTrace(id);
@@ -338,11 +377,15 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       traceGraphConfig,
       location: { state: locationState },
     } = this.props;
-    const { slimView, viewType, headerHeight, viewRange } = this.state;
+    const { slimView, viewType, headerHeight, viewRange, currentRepresentation } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
-    const { data } = trace;
+    
+    // Use the transformed trace if available, otherwise use the original trace data
+    const { transformedTrace } = this.state;
+    const data = transformedTrace || trace.data;
+    
     if (trace.state === fetchedState.ERROR || !data) {
       return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
     }
@@ -379,6 +422,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       onArchiveClicked: this.archiveTrace,
       onSlimViewClicked: this.toggleSlimView,
       onTraceViewChange: this.setTraceView,
+      onTraceRepresentationChange: this.setTraceRepresentation,
+      currentRepresentation,
       prevResult: this.prevResult,
       ref: this._searchBar,
       resultCount: findCount,

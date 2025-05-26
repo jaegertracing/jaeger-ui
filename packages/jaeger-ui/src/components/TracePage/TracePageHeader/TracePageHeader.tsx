@@ -23,6 +23,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import AltViewOptions from './AltViewOptions';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
+import TraceRepresentationSelector from './TraceRepresentationSelector';
 import SpanGraph from './SpanGraph';
 import TracePageSearchBar from './TracePageSearchBar';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from '../types';
@@ -33,6 +34,8 @@ import { TNil } from '../../../types';
 import { Trace } from '../../../types/trace';
 import { formatDatetime, formatDuration } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
+import { TraceRepresentation } from '../../../types/config';
+import getConfig from '../../../utils/config/get-config';
 
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
@@ -50,6 +53,8 @@ type TracePageHeaderEmbedProps = {
   onArchiveClicked: () => void;
   onSlimViewClicked: () => void;
   onTraceViewChange: (viewType: ETraceViewType) => void;
+  onTraceRepresentationChange?: (representation: TraceRepresentation) => void;
+  currentRepresentation?: string;
   prevResult: () => void;
   resultCount: number;
   showArchiveButton: boolean;
@@ -119,6 +124,8 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     onArchiveClicked,
     onSlimViewClicked,
     onTraceViewChange,
+    onTraceRepresentationChange,
+    currentRepresentation,
     prevResult,
     resultCount,
     showArchiveButton,
@@ -192,6 +199,13 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           navigable={viewType === ETraceViewType.TraceTimelineViewer}
         />
         {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
+        {showViewOptions && onTraceRepresentationChange && (
+          <TraceRepresentationSelector
+            representations={getConfig().traceRepresentations || []}
+            currentRepresentation={currentRepresentation || 'Original'}
+            onRepresentationChange={onTraceRepresentationChange}
+          />
+        )}
         {showViewOptions && (
           <AltViewOptions
             disableJsonView={disableJsonView}
