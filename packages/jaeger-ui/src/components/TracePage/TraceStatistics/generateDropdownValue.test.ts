@@ -39,4 +39,11 @@ describe(' generateDropdownValue', () => {
     const values = generateSecondDropdownValue(transformedTrace, 'span.kind');
     expect(values).toEqual(expectValues);
   });
+
+  it('check generateSecondDropdownValue when Operation Name is selected', () => {
+    const expectValues = ['Service Name', 'span.kind', 'error', 'db.type'];
+    const values = generateSecondDropdownValue(transformedTrace, 'Operation Name');
+
+    expect(values).toEqual(expectValues);
+  });
 });
