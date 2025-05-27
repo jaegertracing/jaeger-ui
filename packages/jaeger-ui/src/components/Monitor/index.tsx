@@ -13,8 +13,14 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { Provider } from 'react-redux';
+import { store } from '../../utils/configure-store';
 import MonitorATMServicesView from './ServicesView';
 
-const MonitorATMPage = () => <MonitorATMServicesView />;
-
-export default MonitorATMPage;
+export default function MonitorATMPage() {
+  return (
+    <Provider store={store}>
+      <MonitorATMServicesView />
+    </Provider>
+  );
+}

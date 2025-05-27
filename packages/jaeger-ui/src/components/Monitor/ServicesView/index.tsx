@@ -20,8 +20,7 @@ import _isEqual from 'lodash/isEqual';
 import _isEmpty from 'lodash/isEmpty';
 // @ts-ignore
 import store from 'store';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import * as jaegerApiActions from '../../../actions/jaeger-api';
 import ServiceGraph from './serviceGraph';
@@ -49,34 +48,7 @@ import {
   trackSelectTimeframe,
   trackViewAllTraces,
 } from './index.track';
-import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
-
-type StateType = {
-  graphWidth: number;
-  serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
-  searchOps: string;
-  graphXDomain: number[];
-  selectedService: string;
-  selectedSpanKind: spanKinds;
-  selectedTimeFrame: number;
-};
-
-type TReduxProps = {
-  services: string[];
-  servicesLoading: boolean;
-  metrics: MetricsReduxState;
-};
-
-type TProps = TReduxProps & TDispatchProps;
-
-type TDispatchProps = {
-  fetchServices: ActionFunction<Action<Promise<any>>>;
-  fetchAggregatedServiceMetrics: ActionFunction<Action<Promise<any>>, string, MetricsAPIQueryParams>;
-  fetchAllServiceMetrics: (serviceName: string, query: MetricsAPIQueryParams) => void;
-};
-
-const trackSearchOperationDebounced = _debounce(searchQuery => trackSearchOperation(searchQuery), 1000);
 
 const Search = Input.Search;
 const Option = Select.Option;
@@ -140,344 +112,317 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
   return { ...serviceErrorRate, metricPoints: convertedMetricsPoints };
 };
 
-// export for tests
-export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, StateType> {
-  docsLink: string;
-  graphDivWrapper: React.RefObject<HTMLInputElement>;
-  serviceSelectorValue = '';
-  endTime: number = Date.now();
-  state: StateType = {
-    graphWidth: 300,
-    serviceOpsMetrics: undefined,
-    searchOps: '',
-    graphXDomain: [],
-    selectedService: store.get('lastAtmSearchService') || '',
-    selectedSpanKind: store.get('lastAtmSearchSpanKind') || 'server',
-    selectedTimeFrame: store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds,
-  };
+const trackSearchOperationDebounced = _debounce(searchQuery => trackSearchOperation(searchQuery), 1000);
 
-  constructor(props: TProps) {
-    super(props);
-    this.graphDivWrapper = React.createRef();
-    this.docsLink = getConfigValue('monitor.docsLink');
-  }
+export function MonitorATMServicesView() {
+  // Redux state
+  const services = useSelector((state: ReduxState) => state.services.services || []);
+  const servicesLoading = useSelector((state: ReduxState) => state.services.loading);
+  const metrics = useSelector((state: ReduxState) => state.metrics);
+  const dispatch = useDispatch();
 
-  componentDidMount() {
-    const { fetchServices, services } = this.props;
-    fetchServices();
-    if (services.length !== 0) {
-      this.fetchMetrics();
-    }
-    window.addEventListener('resize', this.updateDimensions.bind(this));
-    this.updateDimensions.apply(this);
-    this.calcGraphXDomain();
-  }
+  // Local state
+  const [graphWidth, setGraphWidth] = React.useState(300);
+  const [serviceOpsMetrics, setServiceOpsMetrics] = React.useState<ServiceOpsMetrics[] | undefined>(undefined);
+  const [searchOps, setSearchOps] = React.useState('');
+  const [graphXDomain, setGraphXDomain] = React.useState<number[]>([]);
+  const [selectedService, setSelectedService] = React.useState(store.get('lastAtmSearchService') || '');
+  const [selectedSpanKind, setSelectedSpanKind] = React.useState<spanKinds>(
+    store.get('lastAtmSearchSpanKind') || 'server'
+  );
+  const [selectedTimeFrame, setSelectedTimeFrame] = React.useState(
+    store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds
+  );
+  const [endTime, setEndTime] = React.useState(Date.now());
 
-  componentDidUpdate(prevProps: TProps) {
-    const { services } = this.props;
+  // Refs
+  const graphDivWrapper = React.useRef<HTMLDivElement>(null);
+  const docsLink = getConfigValue('monitor.docsLink');
 
-    if (!_isEqual(prevProps.services, services)) {
-      this.fetchMetrics();
-    }
-  }
+  // Helper functions
+  const getSelectedService = React.useCallback(() => {
+    return selectedService || store.get('lastAtmSearchService') || services[0];
+  }, [selectedService, services]);
 
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.updateDimensions.bind(this));
-  }
-
-  calcGraphXDomain() {
+  const calcGraphXDomain = React.useCallback(() => {
     const currentTime = Date.now();
-    this.setState(prevState => ({
-      graphXDomain: [currentTime - prevState.selectedTimeFrame, currentTime],
-    }));
-  }
+    setGraphXDomain([currentTime - selectedTimeFrame, currentTime]);
+  }, [selectedTimeFrame]);
 
-  updateDimensions() {
-    if (this.graphDivWrapper.current) {
-      this.setState({
-        graphWidth: this.graphDivWrapper.current.offsetWidth - 24,
-      });
+  const updateDimensions = React.useCallback(() => {
+    if (graphDivWrapper.current) {
+      setGraphWidth(graphDivWrapper.current.offsetWidth - 24);
     }
-  }
+  }, []);
 
-  handleServiceChange = (value: string) => {
-    this.setState({ selectedService: value }, () => {
-      trackSelectService(value);
-      this.fetchMetrics();
-    });
-  };
-
-  handleSpanKindChange = (value: string) => {
-    this.setState({ selectedSpanKind: value as spanKinds }, () => {
-      const { label } = spanKindOptions.find(option => option.value === value)!;
-      trackSelectSpanKind(label);
-      this.fetchMetrics();
-    });
-  };
-
-  handleTimeFrameChange = (value: number) => {
-    this.setState({ selectedTimeFrame: value }, () => {
-      const { label } = timeFrameOptions.find(option => option.value === value)!;
-      trackSelectTimeframe(label);
-      this.fetchMetrics();
-      this.calcGraphXDomain();
-    });
-  };
-
-  fetchMetrics() {
-    const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, services } = this.props;
-    const { selectedService, selectedSpanKind, selectedTimeFrame } = this.state;
-    const currentService = selectedService || services[0];
+  const fetchMetrics = React.useCallback(() => {
+    const currentService = getSelectedService();
 
     if (currentService) {
-      this.endTime = Date.now();
+      const newEndTime = Date.now();
+      setEndTime(newEndTime);
+      
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
-      store.set('lastAtmSearchService', this.getSelectedService());
+      store.set('lastAtmSearchService', currentService);
 
       const metricQueryPayload = {
         quantile: 0.95,
-        endTs: this.endTime,
+        endTs: newEndTime,
         lookback: selectedTimeFrame,
         step: 60 * 1000,
         ratePer: 10 * 60 * 1000,
         spanKind: selectedSpanKind,
       };
 
-      fetchAllServiceMetrics(currentService, metricQueryPayload);
-      fetchAggregatedServiceMetrics(currentService, metricQueryPayload);
+      dispatch(jaegerApiActions.fetchAllServiceMetrics(currentService, metricQueryPayload));
+      dispatch(jaegerApiActions.fetchAggregatedServiceMetrics(currentService, metricQueryPayload));
 
-      this.setState({ serviceOpsMetrics: undefined, searchOps: '' });
+      setServiceOpsMetrics(undefined);
+      setSearchOps('');
     }
+  }, [dispatch, getSelectedService, selectedSpanKind, selectedTimeFrame]);
+
+  // Event handlers
+  const handleServiceChange = (value: string) => {
+    setSelectedService(value);
+    trackSelectService(value);
+    setTimeout(() => fetchMetrics(), 0);
+  };
+
+  const handleSpanKindChange = (value: string) => {
+    setSelectedSpanKind(value as spanKinds);
+    const { label } = spanKindOptions.find(option => option.value === value)!;
+    trackSelectSpanKind(label);
+    setTimeout(() => fetchMetrics(), 0);
+  };
+
+  const handleTimeFrameChange = (value: number) => {
+    setSelectedTimeFrame(value);
+    const { label } = timeFrameOptions.find(option => option.value === value)!;
+    trackSelectTimeframe(label);
+    setTimeout(() => {
+      fetchMetrics();
+      calcGraphXDomain();
+    }, 0);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const searchValue = e.target.value;
+    setSearchOps(searchValue);
+    
+    if (metrics.serviceOpsMetrics) {
+      const filteredData = metrics.serviceOpsMetrics.filter(({ name }: { name: string }) => {
+        return name.toLowerCase().includes(searchValue.toLowerCase());
+      });
+      setServiceOpsMetrics(filteredData);
+    }
+    
+    trackSearchOperationDebounced(searchValue);
+  };
+
+  // Effects
+  React.useEffect(() => {
+    dispatch(jaegerApiActions.fetchServices());
+    if (services.length !== 0) {
+      fetchMetrics();
+    }
+    window.addEventListener('resize', updateDimensions);
+    updateDimensions();
+    calcGraphXDomain();
+
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (services.length > 0) {
+      fetchMetrics();
+    }
+  }, [services]);
+
+  // Render
+  const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
+  const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
+  const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
+
+  if (servicesLoading) {
+    return <LoadingIndicator vcentered centered />;
   }
 
-  getSelectedService() {
-    const { services } = this.props;
-    const { selectedService } = this.state;
-    return selectedService || store.get('lastAtmSearchService') || services[0];
+  if (metrics.isATMActivated === false) {
+    return <MonitorATMEmptyState />;
   }
 
-  render() {
-    const { services, metrics, servicesLoading } = this.props;
-    const { selectedSpanKind, selectedTimeFrame, searchOps, graphWidth, graphXDomain } = this.state;
-    const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
-    const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
-    const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
-
-    if (servicesLoading) {
-      return <LoadingIndicator vcentered centered />;
-    }
-
-    if (metrics.isATMActivated === false) {
-      return <MonitorATMEmptyState />;
-    }
-
-    return (
-      <>
-        {_isEmpty(metrics && metrics.serviceMetrics && metrics.serviceMetrics.service_latencies) && (
-          <Alert
-            message={
-              <>
-                No data yet! Please see these
-                <Link to={{ pathname: this.docsLink }} target="_blank">
-                  &nbsp;instructions&nbsp;
-                </Link>
-                on how to set up your span metrics.
-              </>
-            }
-            type="warning"
-            showIcon
-          />
-        )}
-        <div className="service-view-container">
-          <Row>
-            <Col span={6}>
-              <h2 className="service-selector-header">Service</h2>
-              <SearchableSelect
-                value={this.getSelectedService()}
-                onChange={this.handleServiceChange}
-                placeholder="Select A Service"
-                className="select-a-service-input"
-                disabled={metrics.operationMetricsLoading}
-                loading={metrics.operationMetricsLoading}
-              >
-                {services.map((service: string) => (
-                  <Option key={service} value={service}>
-                    {service}
-                  </Option>
-                ))}
-              </SearchableSelect>
-            </Col>
-            <Col span={6}>
-              <h2 className="span-kind-selector-header">Span Kind</h2>
-              <SearchableSelect
-                value={selectedSpanKind}
-                onChange={this.handleSpanKindChange}
-                placeholder="Select A Span Kind"
-                className="span-kind-selector"
-                disabled={metrics.operationMetricsLoading}
-                loading={metrics.operationMetricsLoading}
-              >
-                {spanKindOptions.map(option => (
-                  <Option key={option.value} value={option.value}>
-                    {option.label}
-                  </Option>
-                ))}
-              </SearchableSelect>
-            </Col>
-          </Row>
-          <Row align="middle">
-            <Col span={16}>
-              <p className="operations-metrics-text">
-                Aggregation of all &quot;{this.getSelectedService()}&quot; metrics in selected timeframe.{' '}
-                <a
-                  href={prefixUrl(
-                    `/search?end=${Date.now()}000&limit=20&lookback=${
-                      selectedTimeFrame / (3600 * 1000)
-                    }h&maxDuration&minDuration&service=${this.getSelectedService()}&start=${
-                      Date.now() - selectedTimeFrame
-                    }000`
-                  )}
-                  target="blank"
-                  onClick={trackViewAllTraces}
-                >
-                  View all traces
-                </a>
-              </p>
-            </Col>
-            <Col span={8} className="timeframe-selector">
-              <SearchableSelect
-                value={selectedTimeFrame}
-                onChange={this.handleTimeFrameChange}
-                placeholder="Select A Timeframe"
-                className="select-a-timeframe-input"
-                disabled={metrics.operationMetricsLoading}
-                loading={metrics.operationMetricsLoading}
-              >
-                {timeFrameOptions.map(option => (
-                  <Option key={option.value} value={option.value}>
-                    {option.label}
-                  </Option>
-                ))}
-              </SearchableSelect>
-            </Col>
-          </Row>
-          <Row>
-            <Col span={8}>
-              <div ref={this.graphDivWrapper} />
-              <ServiceGraph
-                key="latency"
-                error={
-                  metrics.serviceError.service_latencies_50 &&
-                  metrics.serviceError.service_latencies_75 &&
-                  metrics.serviceError.service_latencies_95
-                }
-                loading={metrics.loading}
-                name={`Latency (${convertTimeUnitToShortTerm(displayTimeUnit)})`}
-                width={graphWidth}
-                metricsData={serviceLatencies}
-                showLegend
-                marginClassName="latency-margins"
-                showHorizontalLines
-                yAxisTickFormat={timeInMs => yAxisTickFormat(timeInMs, displayTimeUnit)}
-                xDomain={graphXDomain}
-              />
-            </Col>
-            <Col span={8}>
-              <ServiceGraph
-                key="errRate"
-                error={metrics.serviceError.service_error_rate}
-                loading={metrics.loading}
-                name="Error rate (%)"
-                width={graphWidth}
-                metricsData={convertServiceErrorRateToPercentages(serviceErrorRate)}
-                marginClassName="error-rate-margins"
-                color="#CD513A"
-                yDomain={[0, 100]}
-                xDomain={graphXDomain}
-              />
-            </Col>
-            <Col span={8}>
-              <ServiceGraph
-                key="requests"
-                loading={metrics.loading}
-                error={metrics.serviceError.service_call_rate}
-                name="Request rate (req/s)"
-                width={graphWidth}
-                metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_call_rate : null}
-                showHorizontalLines
-                color="#4795BA"
-                marginClassName="request-margins"
-                xDomain={graphXDomain}
-              />
-            </Col>
-          </Row>
-          <Row className="operation-table-block">
-            <Col span={16}>
-              <h2 className="table-header">Operations metrics under {this.getSelectedService()}</h2>{' '}
-              <span className="over-the-last">Over the {getLoopbackInterval(selectedTimeFrame)}</span>
-            </Col>
-            <Col span={8} className="select-operation-column">
-              <Search
-                placeholder="Search operation"
-                className="select-operation-input"
-                value={searchOps}
-                disabled={metrics.operationMetricsLoading === true || metrics.serviceOpsMetrics === undefined}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  const filteredData = metrics.serviceOpsMetrics!.filter(({ name }: { name: string }) => {
-                    return name.toLowerCase().includes(e.target.value.toLowerCase());
-                  });
-
-                  this.setState({
-                    searchOps: e.target.value,
-                    serviceOpsMetrics: filteredData,
-                  });
-
-                  trackSearchOperationDebounced(e.target.value);
-                }}
-              />
-            </Col>
-          </Row>
-          <Row>
-            <OperationTableDetails
+  return (
+    <>
+      {_isEmpty(metrics && metrics.serviceMetrics && metrics.serviceMetrics.service_latencies) && (
+        <Alert
+          message={
+            <>
+              No data yet! Please see these
+              <Link to={{ pathname: docsLink }} target="_blank">
+                &nbsp;instructions&nbsp;
+              </Link>
+              on how to set up your span metrics.
+            </>
+          }
+          type="warning"
+          showIcon
+        />
+      )}
+      <div className="service-view-container">
+        <Row>
+          <Col span={6}>
+            <h2 className="service-selector-header">Service</h2>
+            <SearchableSelect
+              value={getSelectedService()}
+              onChange={handleServiceChange}
+              placeholder="Select A Service"
+              className="select-a-service-input"
+              disabled={metrics.operationMetricsLoading}
               loading={metrics.operationMetricsLoading}
-              error={metrics.opsError}
-              data={
-                this.state.serviceOpsMetrics === undefined
-                  ? metrics.serviceOpsMetrics
-                  : this.state.serviceOpsMetrics
+            >
+              {services.map((service: string) => (
+                <Option key={service} value={service}>
+                  {service}
+                </Option>
+              ))}
+            </SearchableSelect>
+          </Col>
+          <Col span={6}>
+            <h2 className="span-kind-selector-header">Span Kind</h2>
+            <SearchableSelect
+              value={selectedSpanKind}
+              onChange={handleSpanKindChange}
+              placeholder="Select A Span Kind"
+              className="span-kind-selector"
+              disabled={metrics.operationMetricsLoading}
+              loading={metrics.operationMetricsLoading}
+            >
+              {spanKindOptions.map(option => (
+                <Option key={option.value} value={option.value}>
+                  {option.label}
+                </Option>
+              ))}
+            </SearchableSelect>
+          </Col>
+        </Row>
+        <Row align="middle">
+          <Col span={16}>
+            <p className="operations-metrics-text">
+              Aggregation of all &quot;{getSelectedService()}&quot; metrics in selected timeframe.{' '}
+              <a
+                href={prefixUrl(
+                  `/search?end=${Date.now()}000&limit=20&lookback=${
+                    selectedTimeFrame / (3600 * 1000)
+                  }h&maxDuration&minDuration&service=${getSelectedService()}&start=${
+                    Date.now() - selectedTimeFrame
+                  }000`
+                )}
+                target="blank"
+                onClick={trackViewAllTraces}
+              >
+                View all traces
+              </a>
+            </p>
+          </Col>
+          <Col span={8} className="timeframe-selector">
+            <SearchableSelect
+              value={selectedTimeFrame}
+              onChange={handleTimeFrameChange}
+              placeholder="Select A Timeframe"
+              className="select-a-timeframe-input"
+              disabled={metrics.operationMetricsLoading}
+              loading={metrics.operationMetricsLoading}
+            >
+              {timeFrameOptions.map(option => (
+                <Option key={option.value} value={option.value}>
+                  {option.label}
+                </Option>
+              ))}
+            </SearchableSelect>
+          </Col>
+        </Row>
+        <Row>
+          <Col span={8}>
+            <div ref={graphDivWrapper} />
+            <ServiceGraph
+              key="latency"
+              error={
+                metrics.serviceError.service_latencies_50 &&
+                metrics.serviceError.service_latencies_75 &&
+                metrics.serviceError.service_latencies_95
               }
-              endTime={this.endTime}
-              lookback={selectedTimeFrame}
-              serviceName={this.getSelectedService()}
+              loading={metrics.loading}
+              name={`Latency (${convertTimeUnitToShortTerm(displayTimeUnit)})`}
+              width={graphWidth}
+              metricsData={serviceLatencies}
+              showLegend
+              marginClassName="latency-margins"
+              showHorizontalLines
+              yAxisTickFormat={timeInMs => yAxisTickFormat(timeInMs, displayTimeUnit)}
+              xDomain={graphXDomain}
             />
-          </Row>
-        </div>
-      </>
-    );
-  }
+          </Col>
+          <Col span={8}>
+            <ServiceGraph
+              key="errRate"
+              error={metrics.serviceError.service_error_rate}
+              loading={metrics.loading}
+              name="Error rate (%)"
+              width={graphWidth}
+              metricsData={convertServiceErrorRateToPercentages(serviceErrorRate)}
+              marginClassName="error-rate-margins"
+              color="#CD513A"
+              yDomain={[0, 100]}
+              xDomain={graphXDomain}
+            />
+          </Col>
+          <Col span={8}>
+            <ServiceGraph
+              key="requests"
+              loading={metrics.loading}
+              error={metrics.serviceError.service_call_rate}
+              name="Request rate (req/s)"
+              width={graphWidth}
+              metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_call_rate : null}
+              showHorizontalLines
+              color="#4795BA"
+              marginClassName="request-margins"
+              xDomain={graphXDomain}
+            />
+          </Col>
+        </Row>
+        <Row className="operation-table-block">
+          <Col span={16}>
+            <h2 className="table-header">Operations metrics under {getSelectedService()}</h2>{' '}
+            <span className="over-the-last">Over the {getLoopbackInterval(selectedTimeFrame)}</span>
+          </Col>
+          <Col span={8} className="select-operation-column">
+            <Search
+              placeholder="Search operation"
+              className="select-operation-input"
+              value={searchOps}
+              disabled={metrics.operationMetricsLoading === true || metrics.serviceOpsMetrics === undefined}
+              onChange={handleSearchChange}
+            />
+          </Col>
+        </Row>
+        <Row>
+          <OperationTableDetails
+            loading={metrics.operationMetricsLoading}
+            error={metrics.opsError}
+            data={serviceOpsMetrics === undefined ? metrics.serviceOpsMetrics : serviceOpsMetrics}
+            endTime={endTime}
+            lookback={selectedTimeFrame}
+            serviceName={getSelectedService()}
+          />
+        </Row>
+      </div>
+    </>
+  );
 }
 
-export function mapStateToProps(state: ReduxState): TReduxProps {
-  const { services, metrics } = state;
-  return {
-    services: services.services || [],
-    servicesLoading: services.loading,
-    metrics,
-  };
-}
-
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchServices, fetchAllServiceMetrics, fetchAggregatedServiceMetrics } = bindActionCreators<
-    object,
-    any
-  >(jaegerApiActions, dispatch);
-
-  return {
-    fetchServices,
-    fetchAllServiceMetrics,
-    fetchAggregatedServiceMetrics,
-  };
-}
-
-export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(MonitorATMServicesViewImpl));
+export default MonitorATMServicesView;
