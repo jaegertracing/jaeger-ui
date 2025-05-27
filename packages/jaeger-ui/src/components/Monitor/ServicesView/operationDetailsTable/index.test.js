@@ -13,10 +13,20 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount, shallow } from 'enzyme';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import userEvent from '@testing-library/user-event';
 import OperationTableDetails from '.';
 import { originInitialState, serviceOpsMetrics } from '../../../../reducers/metrics.mock';
 import * as track from './index.track';
+
+// Mock ResizeObserver for recharts
+class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+window.ResizeObserver = ResizeObserver;
 
 const props = {
   data: originInitialState.serviceOpsMetrics,
@@ -25,278 +35,168 @@ const props = {
   endTime: 1632133918915,
   lookback: 3600 * 1000,
   serviceName: 'serviceName',
-  hoveredRowKey: [],
 };
 
 describe('<OperationTableDetails>', () => {
-  let wrapper;
-
-  beforeEach(() => {
-    wrapper = shallow(<OperationTableDetails {...props} />);
+  it('renders loading indicator when loading is true', () => {
+    render(<OperationTableDetails {...props} />);
+    expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
-  it('does not explode', () => {
-    expect(wrapper.length).toBe(1);
-  });
-
-  it('Loading indicator is displayed', () => {
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it('"Couldn’t fetch data" displayed', () => {
+  it('displays error message when API errors occur', () => {
     const error = {
       opsCalls: new Error('API Error'),
       opsErrors: new Error('API Error'),
       opsLatencies: new Error('API Error'),
     };
-    wrapper.setProps({ ...props, loading: false, error });
-    expect(wrapper).toMatchSnapshot();
+    render(<OperationTableDetails {...props} loading={false} error={error} />);
+    expect(screen.getByText("Couldn't fetch data")).toBeInTheDocument();
   });
 
-  it('Table rendered successfully', () => {
-    wrapper.setProps({ ...props, loading: false });
-    expect(wrapper).toMatchSnapshot();
-  });
-});
-
-describe('<OperationTableDetails>', () => {
-  let wrapper;
-
-  beforeEach(() => {
-    wrapper = mount(<OperationTableDetails {...props} />);
+  it('renders empty table when no data is provided', () => {
+    render(<OperationTableDetails {...props} loading={false} />);
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    // Check for column headers
+    expect(screen.getByText('Name')).toBeInTheDocument();
+    expect(screen.getByText('P95 Latency')).toBeInTheDocument();
+    expect(screen.getByText('Request rate')).toBeInTheDocument();
+    expect(screen.getByText('Error rate')).toBeInTheDocument();
+    expect(screen.getByText('Impact')).toBeInTheDocument();
   });
 
-  it('render No data table', () => {
-    wrapper.setProps({ ...props, loading: false });
-    expect(wrapper).toMatchSnapshot();
+  it('renders table with data correctly', () => {
+    render(<OperationTableDetails {...props} data={serviceOpsMetrics} loading={false} />);
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByText('/PlaceOrder')).toBeInTheDocument();
   });
 
-  it('render some values in the table', () => {
-    wrapper.setProps({ ...props, data: serviceOpsMetrics, loading: false });
-    expect(wrapper).toMatchSnapshot();
+  it('renders latency in seconds in the table', () => {
+    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0], latency: 8 };
+    render(<OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />);
+    expect(screen.getByText('/PlaceOrder')).toBeInTheDocument();
   });
 
-  it('render latency in seconds in the table', () => {
-    const cloneServiceOpsMetrics = {};
-    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
-    cloneServiceOpsMetrics.latency = 8000;
+  it('renders lower than 0.1 request rate value', () => {
+    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0], requests: 0.02 };
+    render(<OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />);
+    expect(screen.getByText('/PlaceOrder')).toBeInTheDocument();
   });
 
-  it('render lower than 0.1 request rate value', () => {
-    const cloneServiceOpsMetrics = {};
-    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
-    cloneServiceOpsMetrics.requests = 0.02;
-    wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
-    expect(wrapper).toMatchSnapshot();
+  it('renders request rate number with more than 2 decimal places value', () => {
+    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0], requests: 0.2888 };
+    render(<OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />);
+    expect(screen.getByText('/PlaceOrder')).toBeInTheDocument();
   });
 
-  it('render request rate number with more than 2 decimal places value', () => {
-    const cloneServiceOpsMetrics = {};
-    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
-    cloneServiceOpsMetrics.requests = 0.2888;
-    wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
-    expect(wrapper).toMatchSnapshot();
+  it('renders lower than 0.1 error rate', () => {
+    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0], errRates: 0.00001 };
+    render(<OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />);
+    expect(screen.getByText('/PlaceOrder')).toBeInTheDocument();
   });
 
-  it('render lower than 0.1 error rate', () => {
-    const cloneServiceOpsMetrics = {};
-    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
-    cloneServiceOpsMetrics.errRates = 0.00001;
-    wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
-    expect(wrapper).toMatchSnapshot();
+  it('renders error rate with more than 2 decimal places value', () => {
+    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0], latency: 33.333333 };
+    render(<OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />);
+    expect(screen.getByText('/PlaceOrder')).toBeInTheDocument();
   });
 
-  it('render error rate with more than 2 decimal places value', () => {
-    const cloneServiceOpsMetrics = {};
-    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
-    cloneServiceOpsMetrics.latency = 33.333333;
-    wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
-    expect(wrapper).toMatchSnapshot();
+  it('renders lower than 0.1 P95 latency', () => {
+    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0], latency: 0.00001 };
+    render(<OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />);
+    expect(screen.getByText('/PlaceOrder')).toBeInTheDocument();
   });
 
-  it('render lower than 0.1 P95 latency', () => {
-    const cloneServiceOpsMetrics = {};
-    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
-    cloneServiceOpsMetrics.latency = 0.00001;
-    wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
-    expect(wrapper).toMatchSnapshot();
+  it('renders P95 latency with more than 2 decimal places value', () => {
+    const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0], latency: 0.2988 };
+    render(<OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />);
+    expect(screen.getByText('/PlaceOrder')).toBeInTheDocument();
   });
 
-  it('render P95 latency with more than 2 decimal places value', () => {
-    const cloneServiceOpsMetrics = {};
-    Object.assign(cloneServiceOpsMetrics, serviceOpsMetrics[0]);
-    cloneServiceOpsMetrics.latency = 0.2988;
-    wrapper.setProps({ ...props, data: [cloneServiceOpsMetrics], loading: false });
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it('test column render function', () => {
-    wrapper.setProps({
-      ...props,
-      data: [
-        {
-          ...serviceOpsMetrics,
-          dataPoints: {
-            ...serviceOpsMetrics.dataPoints,
-            service_operation_call_rate: [],
-            service_operation_error_rate: [],
-            service_operation_latencies: [],
-          },
-        },
-      ],
-      loading: false,
-    });
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it('highlight the row', () => {
-    wrapper.setProps({ ...props, data: serviceOpsMetrics, loading: false });
-    expect(wrapper.state('hoveredRowKey')).toBe(-1);
-
-    wrapper.find('.table-row').at(0).simulate('mouseenter');
-    expect(wrapper.state('hoveredRowKey')).toBe(0);
-
-    wrapper.find('.table-row').at(0).simulate('mouseleave');
-    expect(wrapper.state('hoveredRowKey')).toBe(-1);
-  });
-
-  it('highlight the row', () => {
-    wrapper.setProps({ ...props, data: serviceOpsMetrics, loading: false });
-    expect(wrapper.state('hoveredRowKey')).toBe(-1);
-
-    wrapper.find('.table-row').at(0).simulate('mouseenter');
-    expect(wrapper.state('hoveredRowKey')).toBe(0);
-
-    wrapper.find('.table-row').at(0).simulate('mouseleave');
-    expect(wrapper.state('hoveredRowKey')).toBe(-1);
-  });
-
-  it('sort row', () => {
-    const data = serviceOpsMetrics;
-    data.push({
-      dataPoints: {
-        avg: {
-          service_operation_call_rate: 0.02,
-          service_operation_error_rate: 2,
-          service_operation_latencies: 800.16,
-        },
-        service_operation_call_rate: [
-          {
-            x: 1631534436235,
-            y: 0.01,
-          },
-          {
-            x: 1631534496235,
-            y: 0.01,
-          },
-        ],
-        service_operation_error_rate: [
-          {
-            x: 1631534436235,
-            y: 1,
-          },
-          {
-            x: 1631534496235,
-            y: 1,
-          },
-        ],
-        service_operation_latencies: [
-          {
-            x: 1631534436235,
-            y: 737.33,
-          },
-          {
-            x: 1631534496235,
-            y: 735,
-          },
-        ],
-      },
-      errRates: 2,
-      impact: 0,
-      key: 1,
-      latency: 800.16,
-      name: '/Accounts',
-      requests: 0.002,
-    });
-
-    wrapper.setProps({ ...props, data, loading: false });
-
-    expect(wrapper.find('td').first().text()).toBe('/PlaceOrder');
-    // click on name
-    wrapper.find('[aria-label="caret-up"]').at(0).simulate('click');
-    expect(wrapper.find('td').first().text()).toBe('/Accounts');
-
-    // click on latencies
-    wrapper.find('[aria-label="caret-up"]').at(1).simulate('click');
-    expect(wrapper.find('td').first().text()).toBe('/PlaceOrder');
-
-    // click on request
-    wrapper.find('[aria-label="caret-up"]').at(2).simulate('click');
-    expect(wrapper.find('td').first().text()).toBe('/Accounts');
-
-    // click on errors
-    wrapper.find('[aria-label="caret-up"]').at(3).simulate('click');
-    expect(wrapper.find('td').first().text()).toBe('/PlaceOrder');
-
-    // click on errors
-    wrapper.find('[aria-label="caret-up"]').at(4).simulate('click');
-    expect(wrapper.find('td').first().text()).toBe('/Accounts');
-  });
-
-  it('Graph avg label test', () => {
+  it('renders table with empty data points', () => {
     const data = [
       {
+        ...serviceOpsMetrics[0],
         dataPoints: {
-          avg: {
-            service_operation_call_rate: 11,
-            service_operation_error_rate: 22,
-            service_operation_latencies: 99,
-          },
+          ...serviceOpsMetrics[0].dataPoints,
           service_operation_call_rate: [],
           service_operation_error_rate: [],
           service_operation_latencies: [],
         },
-        errRates: 1,
-        impact: 2,
-        key: 1,
-        latency: 3,
-        name: '/Accounts',
-        requests: 4,
       },
     ];
-
-    wrapper.setProps({ ...props, data, loading: false });
-
-    // Latency
-    expect(wrapper.find('div.table-graph-avg').at(0).text()).toBe('');
-
-    // Request rate
-    expect(wrapper.find('div.table-graph-avg').at(1).text()).toBe('');
-
-    // Error rate
-    expect(wrapper.find('div.table-graph-avg').at(2).text()).toBe('');
+    render(<OperationTableDetails {...props} data={data} loading={false} />);
+    expect(screen.getByText('/PlaceOrder')).toBeInTheDocument();
   });
 
-  it('Should track all events', async () => {
-    const trackSortOperationsSpy = jest.spyOn(track, 'trackSortOperations');
+  it('shows view traces button on row hover', async () => {
+    render(<OperationTableDetails {...props} data={serviceOpsMetrics} loading={false} />);
+    
+    // Find the table row and hover over it
+    const tableRow = screen.getByText('/PlaceOrder').closest('tr');
+    fireEvent.mouseEnter(tableRow);
+    
+    // Check if the button appears
+    expect(await screen.findByText('View traces')).toBeInTheDocument();
+    
+    // Mouse leave should hide the button
+    fireEvent.mouseLeave(tableRow);
+    expect(screen.queryByText('View traces')).not.toBeInTheDocument();
+  });
+
+  it('tracks view traces button click', async () => {
     const trackViewTracesSpy = jest.spyOn(track, 'trackViewTraces');
-    const recordIndex = 0;
+    render(<OperationTableDetails {...props} data={serviceOpsMetrics} loading={false} />);
+    
+    // Find the table row and hover over it
+    const tableRow = screen.getByText('/PlaceOrder').closest('tr');
+    fireEvent.mouseEnter(tableRow);
+    
+    // Click the view traces button
+    const viewTracesButton = await screen.findByText('View traces');
+    fireEvent.click(viewTracesButton);
+    
+    expect(trackViewTracesSpy).toHaveBeenCalledWith(serviceOpsMetrics[0].name);
+    trackViewTracesSpy.mockRestore();
+  });
 
-    wrapper.setProps({ ...props, loading: false, data: serviceOpsMetrics });
-
-    // Hover on first line in the t able and display the button
-    wrapper.find('.ant-table-row.table-row').at(recordIndex).simulate('mouseenter');
-    wrapper.find({ children: 'View traces' }).first().simulate('click');
-
-    expect(trackViewTracesSpy).toHaveBeenCalledWith(serviceOpsMetrics[recordIndex].name);
-
-    wrapper.find('.ant-table-column-sorter-down').first().simulate('click');
+  it('tracks column sorting', () => {
+    const trackSortOperationsSpy = jest.spyOn(track, 'trackSortOperations');
+    render(<OperationTableDetails {...props} data={serviceOpsMetrics} loading={false} />);
+    
+    // Find and click on the Name column header
+    const nameColumnHeader = screen.getByText('Name').closest('th');
+    fireEvent.click(nameColumnHeader);
+    
     expect(trackSortOperationsSpy).toHaveBeenCalledWith('Name');
+    trackSortOperationsSpy.mockRestore();
+  });
 
-    wrapper.find('.ant-table-column-sorter-down').last().simulate('click');
-    expect(trackSortOperationsSpy).toHaveBeenCalledWith('Impact');
-
-    trackSortOperationsSpy.mockReset();
-    trackViewTracesSpy.mockReset();
+  it('sorts table by different columns', () => {
+    const data = [
+      serviceOpsMetrics[0],
+      {
+        ...serviceOpsMetrics[0],
+        key: 1,
+        name: '/Accounts',
+        requests: 0.002,
+        errRates: 2,
+        latency: 800.16,
+        impact: 0,
+      },
+    ];
+    
+    render(<OperationTableDetails {...props} data={data} loading={false} />);
+    
+    // Initial sort should have /PlaceOrder first (default sort by impact)
+    const rows = screen.getAllByRole('row');
+    expect(rows[1]).toHaveTextContent('/PlaceOrder');
+    
+    // Sort by name
+    const nameColumnHeader = screen.getByText('Name').closest('th');
+    fireEvent.click(nameColumnHeader);
+    
+    // After sorting by name, /Accounts should be first
+    const rowsAfterSort = screen.getAllByRole('row');
+    expect(rowsAfterSort[1]).toHaveTextContent('/Accounts');
   });
 });

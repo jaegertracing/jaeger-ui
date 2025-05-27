@@ -24,21 +24,37 @@ import { KeyValuePair, Link } from '../../../../types/trace';
 import './AccordianKeyValues.css';
 
 // export for tests
-export function KeyValuesSummary({ data }: { data: KeyValuePair[] }) {
+// export for tests
+export function KeyValuesSummary({ data }: { data: (KeyValuePair & { type?: string })[] }) {
   if (!Array.isArray(data) || !data.length) {
     return null;
   }
   return (
     <ul className="AccordianKeyValues--summary">
-      {data.map((item, i) => (
-        // `i` is necessary in the key because item.key can repeat
-        // eslint-disable-next-line react/no-array-index-key
-        <li className="AccordianKeyValues--summaryItem" key={`${item.key}-${i}`}>
-          <span className="AccordianKeyValues--summaryLabel">{item.key}</span>
-          <span className="AccordianKeyValues--summaryDelim">=</span>
-          {String(item.value)}
-        </li>
-      ))}
+      {data.map((item, i) => {
+        let valueDisplay = String(item.value);
+        let warningIndicator = null;
+
+        // Check for potential precision loss with int64 numbers
+        if (item.type === 'int64' && typeof item.value === 'number' && (item.value > Number.MAX_SAFE_INTEGER || item.value < Number.MIN_SAFE_INTEGER)) {
+          warningIndicator = (
+            <span title="Value may have lost precision due to JavaScript number limitations" style={{ color: 'orange', marginLeft: '3px' }}>
+              *
+            </span>
+          );
+        }
+
+        return (
+          // `i` is necessary in the key because item.key can repeat
+          // eslint-disable-next-line react/no-array-index-key
+          <li className="AccordianKeyValues--summaryItem" key={`${item.key}-${i}`}>
+            <span className="AccordianKeyValues--summaryLabel">{item.key}</span>
+            <span className="AccordianKeyValues--summaryDelim">=</span>
+            {valueDisplay}
+            {warningIndicator}
+          </li>
+        );
+      })}
     </ul>
   );
 }

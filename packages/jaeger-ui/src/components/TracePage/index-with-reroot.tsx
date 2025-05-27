@@ -59,6 +59,7 @@ import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
 import { StorageCapabilities, TraceGraphConfig, TraceRepresentation } from '../../types/config';
 import getConfig from '../../utils/config/get-config';
+import { createSubtrace } from '../../model/trace-subtree';
 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
@@ -74,7 +75,7 @@ type TDispatchProps = {
 type TOwnProps = {
   history: RouterHistory;
   location: Location<LocationState>;
-  params: { id: string };
+  params: { id: string; spanId?: string };
 };
 
 type TReduxProps = {
@@ -100,6 +101,7 @@ type TState = {
   viewRange: IViewRange;
   currentRepresentation: string;
   transformedTrace: Trace | null;
+  subtrace: Trace | null;
 };
 
 // export for tests
@@ -159,6 +161,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       },
       currentRepresentation: defaultRepresentation,
       transformedTrace: null,
+      subtrace: null,
     };
     this._headerElm = null;
     this._filterSpans = _memoize(
@@ -194,10 +197,13 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     shortcutCallbacks.clearSearch = this.clearSearch;
     shortcutCallbacks.searchSpans = this.focusOnSearchBar;
     mergeShortcuts(shortcutCallbacks);
+    
+    // Check if we need to create a subtrace based on spanId in URL
+    this.createSubtraceIfNeeded();
   }
 
-  componentDidUpdate({ id: prevID, trace: prevTrace }: TProps) {
-    const { id, trace } = this.props;
+  componentDidUpdate({ id: prevID, trace: prevTrace, params: prevParams }: TProps) {
+    const { id, trace, params } = this.props;
     const { currentRepresentation } = this.state;
 
     this._scrollManager.setTrace(trace && trace.data);
@@ -215,6 +221,14 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       if (representation) {
         this.setTraceRepresentation(representation);
       }
+      
+      // Check if we need to create a subtrace based on spanId in URL
+      this.createSubtraceIfNeeded();
+    }
+    
+    // If the spanId param has changed, update the subtrace
+    if (params.spanId !== prevParams.spanId) {
+      this.createSubtraceIfNeeded();
     }
     
     if (prevID !== id) {
@@ -232,6 +246,34 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       scrollTo,
     });
   }
+
+  createSubtraceIfNeeded() {
+    const { trace, params } = this.props;
+    const { spanId } = params;
+    
+    if (trace && trace.data && spanId) {
+      const subtrace = createSubtrace(trace.data, spanId);
+      this.setState({ subtrace });
+    } else {
+      this.setState({ subtrace: null });
+    }
+  }
+
+  rerootTrace = (spanId: string) => {
+    const { history, location, params } = this.props;
+    const { id } = params;
+    
+    // Navigate to the URL with the spanId
+    history.push(getLocation(id, location.state, undefined, spanId));
+  };
+
+  resetRootTrace = () => {
+    const { history, location, params } = this.props;
+    const { id } = params;
+    
+    // Navigate to the URL without the spanId
+    history.push(getLocation(id, location.state));
+  };
 
   _adjustViewRange(startChange: number, endChange: number, trackSrc: string) {
     const [viewStart, viewEnd] = this.state.viewRange.time.current;
@@ -376,15 +418,16 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       disableJsonView,
       traceGraphConfig,
       location: { state: locationState },
+      params,
     } = this.props;
-    const { slimView, viewType, headerHeight, viewRange, currentRepresentation } = this.state;
+    const { slimView, viewType, headerHeight, viewRange, currentRepresentation, subtrace } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
     }
     
-    // Use the transformed trace if available, otherwise use the original trace data
+    // Use the subtrace if available, otherwise use transformed trace or original trace data
     const { transformedTrace } = this.state;
-    const data = transformedTrace || trace.data;
+    const data = subtrace || transformedTrace || trace.data;
     
     if (trace.state === fetchedState.ERROR || !data) {
       return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
@@ -405,6 +448,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
     const isEmbedded = Boolean(embedded);
     const hasArchiveStorage = Boolean(storageCapabilities?.archiveStorage);
+    const isSubtrace = Boolean(subtrace);
+    
     const headerProps = {
       focusUiFindMatches: this.focusUiFindMatches,
       slimView,
@@ -436,6 +481,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       trace: data,
       updateNextViewRangeTime: this.updateNextViewRangeTime,
       updateViewRangeTime: this.updateViewRangeTime,
+      isSubtrace,
+      onResetRootTrace: isSubtrace ? this.resetRootTrace : undefined,
     };
 
     let view;
@@ -451,6 +498,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           updateNextViewRangeTime={this.updateNextViewRangeTime}
           updateViewRangeTime={this.updateViewRangeTime}
           viewRange={viewRange}
+          onRerootClicked={this.rerootTrace}
         />
       );
     } else if (ETraceViewType.TraceGraph === viewType && headerHeight) {
