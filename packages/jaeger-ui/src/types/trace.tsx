@@ -68,11 +68,13 @@ export type Span = SpanData & {
   warnings: NonNullable<SpanData['warnings']>;
   childSpanIds: NonNullable<SpanData['childSpanIds']>;
   subsidiarilyReferencedBy: Array<SpanReference>;
+  serviceInstanceId?: string; // Added for service instance identification
 };
 
 export type TraceData = {
   processes: Record<string, Process>;
   traceID: string;
+  serviceInstanceCounts?: Record<string, { count: number; hostnames: Map<string, number> }>;
 };
 
 export type Trace = TraceData & {

@@ -92,8 +92,13 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       traceStartTime,
       onRerootClicked,
     } = this.props;
-    const label = span.process.serviceName;
-    const longLabel = `${span.process.serviceName}: ${span.operationName}`;
+    
+    // Get the service name and decorate it with instance ID if available
+    const serviceName = span.process.serviceName;
+    const serviceInstanceId = span.serviceInstanceId;
+    const label = serviceInstanceId ? `${serviceName}[${serviceInstanceId}]` : serviceName;
+    
+    const longLabel = `${label}: ${span.operationName}`;
     const depth = span.depth;
     const hasChildren = span.hasChildren;
     const viewBounds = getViewedBounds(span.startTime, span.startTime + span.duration);
