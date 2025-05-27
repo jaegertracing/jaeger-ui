@@ -85,6 +85,9 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   // eslint-disable-next-line no-param-reassign
   data.spans = data.spans.filter(span => Boolean(span.startTime));
 
+  // Initialize service instance tracking
+  data.serviceInstanceCounts = {};
+
   const numSpans = data.spans.length;
   for (let i = 0; i < numSpans; i++) {
     const span: Span = data.spans[i] as Span;
@@ -130,6 +133,44 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
       return;
     }
     const { serviceName } = span.process;
+    
+    // Track instances of the same service to decorate service names
+    if (!span.process.tags) {
+      span.process.tags = [];
+    }
+    
+    // Find hostname/IP from process tags if available
+    const hostTag = span.process.tags.find(
+      tag => tag.key === 'hostname' || tag.key === 'ip' || tag.key === 'host.name' || tag.key === 'host.ip'
+    );
+    
+    // Initialize service instance tracking for this service if needed
+    if (!data.serviceInstanceCounts[serviceName]) {
+      data.serviceInstanceCounts[serviceName] = {
+        count: 0,
+        hostnames: new Map(),
+      };
+    }
+    
+    // Track hostnames for this service
+    let instanceIdentifier = '';
+    if (hostTag) {
+      // Use hostname/IP if available
+      instanceIdentifier = hostTag.value.toString();
+      if (!data.serviceInstanceCounts[serviceName].hostnames.has(instanceIdentifier)) {
+        data.serviceInstanceCounts[serviceName].hostnames.set(
+          instanceIdentifier, 
+          data.serviceInstanceCounts[serviceName].count++
+        );
+      }
+    } else {
+      // If no hostname/IP, use a counter
+      instanceIdentifier = `instance-${data.serviceInstanceCounts[serviceName].count++}`;
+    }
+    
+    // Store the instance identifier for use in UI
+    span.serviceInstanceId = instanceIdentifier;
+    
     svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
@@ -186,6 +227,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     // repl: https://goo.gl/4Z23MJ
     // issue: https://github.com/facebook/flow/issues/1511
     processes: data.processes,
+    serviceInstanceCounts: data.serviceInstanceCounts,
     duration: traceEndTime - traceStartTime,
     startTime: traceStartTime,
     endTime: traceEndTime,
