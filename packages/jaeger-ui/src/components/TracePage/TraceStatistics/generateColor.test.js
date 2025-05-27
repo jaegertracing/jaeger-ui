@@ -116,4 +116,16 @@ describe('generateColor', () => {
     expect(tableValue2[1].total).toBe(390);
     expect(tableValue2[1].colorToPercent).toBe('rgb(248,248,248)');
   });
+
+  it('covers percent attribute with colorToPercent=true', () => {
+    const input = [
+      { isDetail: false, percent: 75 },
+      { isDetail: false, percent: 25 },
+    ];
+
+    const output = generateColor(input, 'percent', true);
+
+    expect(output[0].colorToPercent).toBe('rgb(248,111.5,111.5)');
+    expect(output[1].colorToPercent).toBe('rgb(248,194.5,194.5)');
+  });
 });

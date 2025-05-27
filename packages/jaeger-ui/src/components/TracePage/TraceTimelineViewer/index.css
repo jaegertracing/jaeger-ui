@@ -83,7 +83,8 @@ limitations under the License.
 }
 
 .json-markup-child {
-  margin: 0.25rem 2.5rem;
+  margin: 0.25rem;
+  width: 100%;
   padding: 0;
 }
 

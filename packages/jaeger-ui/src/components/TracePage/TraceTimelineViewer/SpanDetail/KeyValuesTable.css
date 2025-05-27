@@ -40,12 +40,17 @@ limitations under the License.
   width: 125px;
 }
 
-.KeyValueTable--copyColumn {
-  white-space: nowrap;
-  text-align: right;
+.KeyValueTable--valueColumn {
+  position: relative;
 }
 
-.KeyValueTable--row:not(:hover) > .KeyValueTable--copyColumn > .KeyValueTable--copyIcon {
+.KeyValueTable--copyContainer {
+  float: right;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.KeyValueTable--row:not(:hover) .KeyValueTable--copyContainer .KeyValueTable--copyIcon {
   visibility: hidden;
 }
 

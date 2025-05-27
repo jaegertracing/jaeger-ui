@@ -13,8 +13,7 @@
 // limitations under the License.
 
 import transformTraceData from '../../../model/transform-trace-data';
-import calculateTraceDagEV from './calculateTraceDagEV';
-
+import calculateTraceDagEV, { mapFollowsFrom } from './calculateTraceDagEV';
 import testTrace from './testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
@@ -47,5 +46,98 @@ describe('calculateTraceDagEV', () => {
     // fork-join self-times are calculated correctly (self-time drange)
     assertData(nodes, 'service1', 'op6', 1, 0, 10, 1, 1);
     assertData(nodes, 'service1', 'op7', 2, 0, 17, 1.7, 17);
+  });
+});
+
+describe('mapFollowsFrom', () => {
+  it('sets followsFrom false if node has CHILD_OF reference and e.to is number', () => {
+    const mockEdges = [{ from: 0, to: 0 }];
+    const mockNodes = [
+      {
+        members: [
+          {
+            span: {
+              references: [{ refType: 'CHILD_OF' }],
+            },
+          },
+        ],
+      },
+    ];
+
+    const result = mapFollowsFrom(mockEdges, mockNodes);
+    expect(result[0].followsFrom).toBe(false);
+  });
+
+  it('sets followsFrom true if node does NOT have CHILD_OF reference and e.to is number', () => {
+    const mockEdges = [{ from: 0, to: 0 }];
+    const mockNodes = [
+      {
+        members: [
+          {
+            span: {
+              references: [{ refType: 'FOLLOWS_FROM' }],
+            },
+          },
+        ],
+      },
+    ];
+
+    const result = mapFollowsFrom(mockEdges, mockNodes);
+    expect(result[0].followsFrom).toBe(true);
+  });
+});
+
+describe('mapFollowsFrom - reference combinations', () => {
+  const testCases = [
+    {
+      name: 'only CHILD_OF',
+      references: [{ refType: 'CHILD_OF' }],
+      expected: false,
+    },
+    {
+      name: 'multiple CHILD_OF',
+      references: [{ refType: 'CHILD_OF' }, { refType: 'CHILD_OF' }],
+      expected: false,
+    },
+    {
+      name: 'only FOLLOWS_FROM',
+      references: [{ refType: 'FOLLOWS_FROM' }],
+      expected: true,
+    },
+    {
+      name: 'CHILD_OF followed by FOLLOWS_FROM',
+      references: [{ refType: 'CHILD_OF' }, { refType: 'FOLLOWS_FROM' }],
+      expected: false,
+    },
+    {
+      name: 'FOLLOWS_FROM followed by CHILD_OF',
+      references: [{ refType: 'FOLLOWS_FROM' }, { refType: 'CHILD_OF' }],
+      expected: false,
+    },
+    {
+      name: 'no references at all',
+      references: [],
+      expected: true,
+    },
+  ];
+
+  testCases.forEach(({ name, references, expected }) => {
+    it(`sets followsFrom correctly when ${name}`, () => {
+      const mockEdges = [{ from: 0, to: 0 }];
+      const mockNodes = [
+        {
+          members: [
+            {
+              span: {
+                references,
+              },
+            },
+          ],
+        },
+      ];
+
+      const result = mapFollowsFrom(mockEdges, mockNodes);
+      expect(result[0].followsFrom).toBe(expected);
+    });
   });
 });
