@@ -23,6 +23,7 @@ import traceTimeline from '../components/TracePage/TraceTimelineViewer/duck';
 import jaegerReducers from '../reducers';
 import * as jaegerMiddlewares from '../middlewares';
 import { getAppEnvironment } from './constants';
+import { createHistoryPolyfill } from './history-polyfill';
 
 const { createReduxHistory, routerMiddleware, routerReducer } = createReduxHistoryContext({
   history: createBrowserHistory(),
@@ -52,4 +53,6 @@ export default function configureStore() {
 }
 
 export const store = configureStore();
-export const history = createReduxHistory(store);
+const reduxHistory = createReduxHistory(store);
+// Apply polyfill to add v4 API compatibility to history v5
+export const history = createHistoryPolyfill(reduxHistory);

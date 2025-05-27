@@ -17,6 +17,12 @@ import shallow from '../../utils/ReactShallowRenderer.test';
 
 import JaegerUIApp from './index';
 
+// Mock the history module to avoid snapshot test failures
+jest.mock('../../utils/configure-store', () => ({
+  history: {},
+  store: {},
+}));
+
 describe('JaegerUIApp', () => {
   it('does not explode', () => {
     const wrapper = shallow(<JaegerUIApp />);

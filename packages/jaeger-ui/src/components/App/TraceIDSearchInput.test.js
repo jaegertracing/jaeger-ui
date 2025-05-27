@@ -21,12 +21,16 @@ import '@testing-library/jest-dom';
 import { Router } from 'react-router-dom';
 import TraceIDSearchInput from './TraceIDSearchInput';
 import { HistoryProvider } from '../../utils/useHistory';
+import { createHistoryPolyfill } from '../../utils/history-polyfill';
 
 describe('<TraceIDSearchInput />', () => {
   let history;
 
   beforeEach(() => {
-    history = createMemoryHistory();
+    // Create memory history and apply polyfill for v5 compatibility
+    const memHistory = createMemoryHistory();
+    history = createHistoryPolyfill(memHistory);
+    
     render(
       <HistoryProvider history={history}>
         <Router history={history}>
@@ -53,6 +57,7 @@ describe('<TraceIDSearchInput />', () => {
   it('does not push to history on falsy input value', () => {
     fireEvent.submit(screen.getByTestId('TraceIDSearchInput--form'));
 
+    expect(history.action).toEqual('POP');
     expect(history.length).toEqual(1);
   });
 });
