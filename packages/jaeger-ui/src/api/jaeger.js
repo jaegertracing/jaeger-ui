@@ -43,7 +43,7 @@ function getJSON(url, options = {}) {
   let queryStr = '';
 
   if (query) {
-    queryStr = `?${typeof query === 'string' ? query : queryString.stringify(query)}`;
+    queryStr = `?${typeof query === 'string' ? query : queryString.stringify(query, { encode: true })}`;
   }
 
   return fetch(`${url}${queryStr}`, init).then(response => {
@@ -142,7 +142,7 @@ const JaegerAPI = {
     const servicesName = serviceNameList.map(serviceName => `service=${serviceName}`).join(',');
 
     return getJSON(`${this.apiRoot}metrics/${metricType}`, {
-      query: `${servicesName}&${queryString.stringify(query)}`,
+      query: `${servicesName}&${queryString.stringify(query, { encode: true })}`,
     }).then(d => ({ ...d, quantile: query.quantile }));
   },
 };

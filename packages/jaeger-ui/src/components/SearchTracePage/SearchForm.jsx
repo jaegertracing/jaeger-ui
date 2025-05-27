@@ -209,6 +209,18 @@ export function convertQueryParamsToFormDates({ start, end }) {
   };
 }
 
+// Function to encode special characters in tag values
+export function encodeTagValue(value) {
+  if (!value) return value;
+  
+  // Encode special characters that cause issues in search
+  return value
+    .replace(/#/g, '%23')
+    .replace(/\?/g, '%3F')
+    .replace(/\+/g, '%2B')
+    .replace(/&/g, '%26');
+}
+
 export function submitForm(fields, searchTraces) {
   const {
     resultsLimit,
@@ -245,6 +257,19 @@ export function submitForm(fields, searchTraces) {
 
   trackFormInput(resultsLimit, operation, tags, minDuration, maxDuration, lookback, service);
 
+  // Process tags to encode special characters
+  let processedTags = tags;
+  if (tags) {
+    const data = logfmtParser.parse(tags);
+    Object.keys(data).forEach(key => {
+      const value = data[key];
+      if (typeof value === 'string') {
+        data[key] = encodeTagValue(value);
+      }
+    });
+    processedTags = logfmtStringify(data);
+  }
+
   searchTraces({
     service,
     operation: operation !== DEFAULT_OPERATION ? operation : undefined,
@@ -252,7 +277,7 @@ export function submitForm(fields, searchTraces) {
     lookback,
     start,
     end,
-    tags: convTagsLogfmt(tags) || undefined,
+    tags: convTagsLogfmt(processedTags) || undefined,
     minDuration: minDuration || null,
     maxDuration: maxDuration || null,
   });
@@ -391,6 +416,9 @@ export class SearchFormImpl extends React.PureComponent {
                         </a>{' '}
                         need to be escaped for exact match queries.
                       </li>
+                      <li>
+                        Special characters like #, ?, +, & are automatically encoded when searching.
+                      </li>
                     </ul>
                     <p>Examples:</p>
                     <ul className="SearchForm--tagsHintInfo">
@@ -404,20 +432,13 @@ export class SearchFormImpl extends React.PureComponent {
                       </li>
                       <li>
                         <code className="SearchForm--tagsHintEg">
-                          http.url=&quot;http://0.0.0.0:8081/customer\\?customer=123&quot;
+                          http.url=&quot;http://0.0.0.0:8081/customer?customer=123&quot;
                         </code>
-                        <div>
-                          Note: when using Elasticsearch/OpenSearch the{' '}
-                          <a
-                            href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
-                            rel="noopener noreferrer"
-                            target="_blank"
-                          >
-                            regex-reserved
-                          </a>{' '}
-                          character <code className="SearchForm--tagsHintEg">&quot;?&quot;</code> must be
-                          escaped with <code className="SearchForm--tagsHintEg">&quot;\\&quot;</code>.
-                        </div>
+                      </li>
+                      <li>
+                        <code className="SearchForm--tagsHintEg">
+                          hash=#value#
+                        </code>
                       </li>
                     </ul>
                   </div>
