@@ -48,7 +48,20 @@ function getJSON(url, options = {}) {
 
   return fetch(`${url}${queryStr}`, init).then(response => {
     if (response.status < 400) {
-      return response.json();
+      return response.text().then(text => {
+        if (text === '') {
+          // For /api/traces, the backend should return { data: [], ... }
+          // If it's an empty string, we mimic an empty successful response.
+          // This might need adjustment if other endpoints expect different structures on empty valid response.
+          if (url.includes('/api/traces')) {
+            return { data: [], total: 0, limit: 0, offset: 0 };
+          }
+          // For other endpoints, null might be acceptable, or a specific empty object.
+          // This is a cautious default.
+          return null;
+        }
+        return JSON.parse(text);
+      });
     }
     return response.text().then(bodyText => {
       let data;

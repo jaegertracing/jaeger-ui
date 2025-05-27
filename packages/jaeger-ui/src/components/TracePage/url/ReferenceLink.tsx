@@ -29,7 +29,16 @@ export default function ReferenceLink(props: ReferenceLinkProps) {
   delete otherProps.onClick;
   if (reference.span) {
     return (
-      <a role="button" onClick={() => focusSpan(reference.spanID)} className={className} {...otherProps}>
+      <a 
+        role="button" 
+        onClick={(e) => {
+          e.preventDefault();
+          // Don't close the source span when clicking on a linked span
+          focusSpan(reference.spanID);
+        }} 
+        className={className} 
+        {...otherProps}
+      >
         {children}
       </a>
     );

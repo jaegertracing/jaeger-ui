@@ -1,0 +1,7 @@
+.TraceRepresentationSelector {
+  margin-right: 0.5rem;
+}
+
+.active-representation {
+  font-weight: bold;
+}
