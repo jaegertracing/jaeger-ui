@@ -23,6 +23,13 @@ import { Config } from '../types/config';
 const defaultConfig: Config = {
   archiveEnabled: true,
   criticalPathEnabled: true,
+  traceRepresentations: [
+    {
+      name: 'Original',
+      description: 'Original trace without any modifications',
+      transformFunction: 'function(trace) { return trace; }',
+    },
+  ],
   dependencies: {
     dagMaxNumServices: FALLBACK_DAG_MAX_NUM_SERVICES,
     menuEnabled: true,
@@ -124,8 +131,8 @@ const defaultConfig: Config = {
 };
 
 // Fields that should be merged with user-supplied config values rather than overwritten.
-type TMergeField = 'dependencies' | 'search' | 'tracking';
-export const mergeFields: readonly TMergeField[] = ['dependencies', 'search', 'tracking'];
+type TMergeField = 'dependencies' | 'search' | 'tracking' | 'traceRepresentations';
+export const mergeFields: readonly TMergeField[] = ['dependencies', 'search', 'tracking', 'traceRepresentations'];
 
 export default deepFreeze(defaultConfig);
 

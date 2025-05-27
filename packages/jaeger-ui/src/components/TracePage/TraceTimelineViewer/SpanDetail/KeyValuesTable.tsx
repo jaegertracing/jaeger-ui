@@ -74,17 +74,29 @@ const scalarMarkup = (value: string | Number | Boolean) => {
   );
 };
 
-function formatValue(key: string, value: any) {
+function formatValue(item: KeyValuePair & { type?: string }) {
+  const { key, value } = item;
   let content;
   let parsed = value;
+  let warningMessage = null;
 
   if (typeof value === 'string') {
     parsed = tryParseJson(value);
   }
 
+  // Check for potential precision loss with int64 numbers
+  // This assumes 'type' field is available on the item, even if not in KeyValuePair generic
+  if (item.type === 'int64' && typeof parsed === 'number' && (parsed > Number.MAX_SAFE_INTEGER || parsed < Number.MIN_SAFE_INTEGER)) {
+    warningMessage = (
+      <span style={{ color: 'orange', marginLeft: '5px', fontSize: '0.9em' }}>
+        (Warning: Value may have lost precision. Large integers should be sent as strings from the backend.)
+      </span>
+    );
+  }
+  
   if (Array.isArray(parsed) && shouldDisplayAsStringList(key)) {
     content = stringListMarkup(parsed);
-  } else if (typeof parsed === 'object') {
+  } else if (typeof parsed === 'object' && parsed !== null) { // Ensure parsed is not null before treating as object
     const shouldJsonTreeExpand = Object.keys(parsed).length <= 10;
 
     content = (
@@ -110,10 +122,15 @@ function formatValue(key: string, value: any) {
       />
     );
   } else {
-    content = scalarMarkup(parsed);
+    content = scalarMarkup(parsed as string | number | boolean); // Cast to satisfy scalarMarkup
   }
 
-  return <div className="ub-inline-block">{content}</div>;
+  return (
+    <div className="ub-inline-block">
+      {content}
+      {warningMessage}
+    </div>
+  );
 }
 
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
@@ -145,7 +162,8 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
       <table className="u-width-100">
         <tbody className="KeyValueTable--body">
           {data.map((row, i) => {
-            const jsonTable = formatValue(row.key, row.value);
+            // Pass the whole row (item) to formatValue
+            const jsonTable = formatValue(row as KeyValuePair & { type?: string });
             const links = linksGetter ? linksGetter(data, i) : null;
             let valueMarkup;
             if (links?.length === 1) {
