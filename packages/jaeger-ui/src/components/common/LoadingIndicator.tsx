@@ -39,5 +39,5 @@ export default function LoadingIndicator({
     ${className}
   `;
 
-  return <LuLoaderCircle className={cls} {...rest} style={style} />;
+  return <LuLoaderCircle data-testid="loading-indicator" className={cls} {...rest} style={style} />;
 }
