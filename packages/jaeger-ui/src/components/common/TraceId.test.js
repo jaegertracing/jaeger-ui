@@ -21,6 +21,12 @@ jest.mock('../../utils/config/get-config', () => ({
   getConfigValue: jest.fn(),
 }));
 
+jest.mock('./ClickToCopy', () => {
+  const ClickToCopy = ({ children }) => <span>{children}</span>;
+  ClickToCopy.displayName = 'ClickToCopy';
+  return ClickToCopy;
+});
+
 describe('TraceIdDisplayLength', () => {
   const DEFAULT_LENGTH = 7;
   const MOCK_TRACE_ID = '12345678901234567890';
@@ -45,7 +51,7 @@ describe('TraceIdDisplayLength', () => {
       getConfigValue.mockReturnValue(undefined);
       wrapper = createWrapper();
 
-      const displayedText = wrapper.text();
+      const displayedText = wrapper.find('ClickToCopy').children().text();
       expect(displayedText).toEqual(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
     });
 
@@ -54,7 +60,7 @@ describe('TraceIdDisplayLength', () => {
       getConfigValue.mockReturnValue(configuredLength);
       wrapper = createWrapper();
 
-      const displayedText = wrapper.text();
+      const displayedText = wrapper.find('ClickToCopy').children().text();
       expect(displayedText).toEqual(MOCK_TRACE_ID.slice(0, configuredLength));
     });
   });
@@ -66,12 +72,13 @@ describe('TraceIdDisplayLength', () => {
       getConfigValue.mockReturnValue(configuredLength);
 
       wrapper = createWrapper({ traceId: shortTraceId });
-      expect(wrapper.text()).toEqual(shortTraceId);
+      expect(wrapper.find('ClickToCopy').children().text()).toEqual(shortTraceId);
     });
 
     it('renders when traceId is undefiend', () => {
       wrapper = createWrapper({ traceId: '' });
-      expect(wrapper.text()).toEqual('');
+      expect(wrapper.find('ClickToCopy').exists()).toBe(true);
+      expect(wrapper.find('ClickToCopy').children().exists()).toBe(false);
     });
   });
 

@@ -28,21 +28,3 @@ limitations under the License.
   padding: 3px 4px;
   letter-spacing: 0.1px;
 }
-
-.TraceIDLength--copyIcon {
-  margin-left: 4px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: inherit;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-}
-
-.TraceIDLength--copyIcon:hover {
-  opacity: 1;
-}
-
-.TraceIDLength--copyIcon .anticon {
-  font-size: 14px;
-}

@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { useState } from 'react';
+import React from 'react';
 import { getConfigValue } from '../../utils/config/get-config';
-import { Tooltip } from 'antd';
-import copy from 'copy-to-clipboard';
+import ClickToCopy from './ClickToCopy';
 import './TraceId.css';
 
 type Props = {
@@ -24,31 +23,14 @@ type Props = {
 };
 
 export function TraceId({ traceId, className = '' }: Props) {
-  const [hasCopied, setHasCopied] = useState(false);
-
-  const whenClicked = () => {
-    copy(traceId);
-    setHasCopied(true);
-    setTimeout(() => {
-      setHasCopied(false);
-    }, 2000);
-  };
-
   const traceIdDisplayLength = getConfigValue('traceIdDisplayLength') || 7;
   const traceIdDisplay = traceId ? traceId.slice(0, traceIdDisplayLength) : '';
   const lengthClass = traceIdDisplayLength === 7 ? 'TraceIDLength--short' : 'TraceIDLength--full';
 
   return (
-    <Tooltip title={hasCopied ? 'Copied to clipboard' : 'Copy to clipboard'}>
-      <span
-        className={`TraceIDLength ${lengthClass} u-tx-muted ${className}`}
-        onClick={whenClicked}
-        role="button"
-        tabIndex={0}
-      >
-        {traceIdDisplay}
-      </span>
-    </Tooltip>
+    <ClickToCopy text={traceId} className={`TraceIDLength ${lengthClass} u-tx-muted ${className}`.trim()}>
+      {traceIdDisplay}
+    </ClickToCopy>
   );
 }
 
