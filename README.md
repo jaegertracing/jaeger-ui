@@ -1,24 +1,31 @@
-# History Package Upgrade
+# ESLint 9 Upgrade
 
-This PR upgrades the history package from v4.6.3 to v5.3.0 in the Jaeger UI project.
+This PR upgrades ESLint from v8 to v9, which introduces a new flat config system.
 
 ## Changes Made
 
-1. Updated `history` dependency from v4.6.3 to v5.3.0 in package.json
-2. Created a polyfill (`history-polyfill.ts`) to bridge API differences between history v4 and v5
-3. Updated `configure-store.js` to use the polyfill
-4. Fixed test cases that were failing due to API changes in history v5
+1. Added `@eslint/eslintrc` dependency to provide compatibility with the old config format
+2. Created a new `eslint.config.js` file that uses `FlatCompat` to migrate the existing configuration
+3. Set `"type": "module"` in package.json to support ESM imports in the config file
+4. Moved ignore patterns from `.eslintrc.js` to the `ignores` property in the flat config
 
 ## Implementation Details
 
-The main issue was that history v5 has API changes that are incompatible with react-router-dom v5, which the project currently uses. The key difference is that history v5 doesn't have a `length` property, which was used in tests and possibly in the application code.
+ESLint 9 no longer supports the `.eslintrc.js` format by default and requires a new flat config system. However, some dependencies like `eslint-config-airbnb` don't yet support the new format.
 
-The polyfill adds the missing `length` property to the history object, making it compatible with code that expects the v4 API while using the v5 package.
-
-## Future Considerations
-
-This is a temporary solution until the project can be migrated to use react-router-dom v6+ with functional components and the useNavigate hook. The polyfill should be removed during that migration.
+To solve this, we're using the `@eslint/eslintrc` package's `FlatCompat` utility, which allows us to use the old config format with the new ESLint version. This is a recommended workaround until all dependencies support the flat config system.
 
 ## Testing
 
-All tests are now passing with the history v5 package.
+All linting commands should work as before:
+
+```bash
+npm run lint
+npm run eslint
+```
+
+## References
+
+- [ESLint 9 Migration Guide](https://eslint.org/docs/latest/use/migrate-to-9.0.0)
+- [ESLint Flat Config Migration Guide](https://eslint.org/docs/latest/use/configure/migration-guide)
+- [eslint-config-airbnb issue about flat config support](https://github.com/airbnb/javascript/issues/2804)

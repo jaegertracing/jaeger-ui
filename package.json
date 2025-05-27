@@ -10,12 +10,14 @@
   "engines": {
     "node": ">=20"
   },
+  "type": "module",
   "devDependencies": {
     "@babel/eslint-parser": "^7.24.6",
+    "@eslint/eslintrc": "^3.0.2",
     "@typescript-eslint/eslint-plugin": "^8.32.0",
     "@typescript-eslint/parser": "^8.32.0",
     "depcheck": "1.4.7",
-    "eslint": "8.57.0",
+    "eslint": "^9.0.0",
     "eslint-config-airbnb": "19.0.4",
     "eslint-config-prettier": "10.1.1",
     "eslint-plugin-import": "2.31.0",
