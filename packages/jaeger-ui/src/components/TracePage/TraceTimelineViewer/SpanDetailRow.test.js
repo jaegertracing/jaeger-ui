@@ -13,14 +13,25 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import userEvent from '@testing-library/user-event';
 
 import SpanDetailRow from './SpanDetailRow';
-import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 
-jest.mock('./SpanTreeOffset');
+const MockSpanDetail = jest.fn(() => <div data-testid="mocked-span-detail" />);
+jest.mock('./SpanDetail', () => ({
+  __esModule: true,
+  default: props => MockSpanDetail(props),
+}));
+
+const MockSpanTreeOffset = jest.fn(() => <div data-testid="mocked-span-tree-offset" />);
+jest.mock('./SpanTreeOffset', () => ({
+  __esModule: true,
+  default: props => MockSpanTreeOffset(props),
+}));
 
 describe('<SpanDetailRow>', () => {
   const spanID = 'some-id';
@@ -39,8 +50,6 @@ describe('<SpanDetailRow>', () => {
     traceStartTime: 1000,
   };
 
-  let wrapper;
-
   beforeEach(() => {
     props.onDetailToggled.mockReset();
     props.linksGetter.mockReset();
@@ -48,47 +57,65 @@ describe('<SpanDetailRow>', () => {
     props.logsToggle.mockReset();
     props.processToggle.mockReset();
     props.tagsToggle.mockReset();
-    wrapper = shallow(<SpanDetailRow {...props} />);
+    MockSpanDetail.mockClear();
+    MockSpanTreeOffset.mockClear();
   });
 
   it('renders without exploding', () => {
-    expect(wrapper).toBeDefined();
+    render(<SpanDetailRow {...props} />);
+    expect(screen.getByRole('switch')).toBeInTheDocument();
   });
 
-  it('escalates toggle detail', () => {
-    const calls = props.onDetailToggled.mock.calls;
-    expect(calls.length).toBe(0);
-    wrapper.find('.detail-row-expanded-accent').prop('onClick')();
-    expect(calls).toEqual([[spanID]]);
+  it('calls onDetailToggled with the spanID when the switch is clicked', async () => {
+    const user = userEvent.setup();
+    render(<SpanDetailRow {...props} />);
+    const toggleSwitch = screen.getByRole('switch');
+    expect(props.onDetailToggled).not.toHaveBeenCalled();
+    await user.click(toggleSwitch);
+    expect(props.onDetailToggled).toHaveBeenCalledTimes(1);
+    expect(props.onDetailToggled).toHaveBeenCalledWith(props.span.spanID);
   });
 
   it('renders the span tree offset', () => {
-    const spanTreeOffset = <SpanTreeOffset span={props.span} showChildrenIcon={false} />;
-    expect(wrapper.contains(spanTreeOffset)).toBe(true);
+    render(<SpanDetailRow {...props} />);
+    expect(MockSpanTreeOffset).toHaveBeenCalledTimes(1);
+    expect(MockSpanTreeOffset).toHaveBeenCalledWith(
+      expect.objectContaining({
+        span: props.span,
+        showChildrenIcon: false,
+      })
+    );
   });
 
   it('renders the "expanded accent"', () => {
-    const elm = <span className="detail-row-expanded-accent" style={{ borderColor: props.color }} />;
-    expect(wrapper.containsMatchingElement(elm)).toBe(true);
+    render(<SpanDetailRow {...props} />);
+    const accentSwitch = screen.getByRole('switch');
+    expect(accentSwitch).toBeInTheDocument();
+    expect(accentSwitch).toHaveClass('detail-row-expanded-accent');
+    expect(accentSwitch).toHaveStyle(`border-color: ${props.color}`);
   });
 
   it('renders the SpanDetail', () => {
-    const spanDetailNode = wrapper.find(SpanDetail);
-    expect(spanDetailNode.exists()).toBe(true);
+    render(<SpanDetailRow {...props} />);
+    expect(screen.getByTestId('mocked-span-detail')).toBeInTheDocument();
+    expect(MockSpanDetail).toHaveBeenCalledTimes(1);
+    const receivedProps = MockSpanDetail.mock.calls[0][0];
 
-    expect(spanDetailNode.prop('detailState')).toBe(props.detailState);
-    expect(spanDetailNode.prop('linksGetter')).toEqual(expect.any(Function));
-    expect(spanDetailNode.prop('logItemToggle')).toBe(props.logItemToggle);
-    expect(spanDetailNode.prop('logsToggle')).toBe(props.logsToggle);
-    expect(spanDetailNode.prop('processToggle')).toBe(props.processToggle);
-    expect(spanDetailNode.prop('span')).toBe(props.span);
-    expect(spanDetailNode.prop('tagsToggle')).toBe(props.tagsToggle);
-    expect(spanDetailNode.prop('traceStartTime')).toBe(props.traceStartTime);
+    expect(receivedProps.detailState).toBe(props.detailState);
+    expect(receivedProps.linksGetter).toEqual(expect.any(Function));
+    expect(receivedProps.logItemToggle).toBe(props.logItemToggle);
+    expect(receivedProps.logsToggle).toBe(props.logsToggle);
+    expect(receivedProps.processToggle).toBe(props.processToggle);
+    expect(receivedProps.span).toBe(props.span);
+    expect(receivedProps.tagsToggle).toBe(props.tagsToggle);
+    expect(receivedProps.traceStartTime).toBe(props.traceStartTime);
   });
 
   it('adds span when calling linksGetter', () => {
-    const spanDetail = wrapper.find(SpanDetail);
-    const linksGetter = spanDetail.prop('linksGetter');
+    render(<SpanDetailRow {...props} />);
+    expect(MockSpanDetail).toHaveBeenCalled();
+    const receivedProps = MockSpanDetail.mock.calls[0][0];
+    const linksGetter = receivedProps.linksGetter;
     const tags = [{ key: 'myKey', value: 'myValue' }];
     const linksGetterResponse = {};
     props.linksGetter.mockReturnValueOnce(linksGetterResponse);
