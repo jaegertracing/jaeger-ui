@@ -15,17 +15,9 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { Table, Tag } from 'antd';
-
-import CohortTable, { NEED_MORE_TRACES_MESSAGE } from './CohortTable';
-import TraceTimelineLink from './TraceTimelineLink';
-import RelativeDate from '../../common/RelativeDate';
-import TraceName from '../../common/TraceName';
+import CohortTable from './CohortTable';
 import { fetchedState } from '../../../constants';
 import * as dateUtils from '../../../utils/date';
-
-const { Column } = Table;
 
 describe('CohortTable', () => {
   const cohort = [
