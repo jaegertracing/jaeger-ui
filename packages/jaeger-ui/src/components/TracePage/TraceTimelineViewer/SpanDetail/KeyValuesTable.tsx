@@ -52,7 +52,7 @@ const stringListMarkup = (value: any[]) => (
   </div>
 );
 
-const scalarMarkup = (value: string | Number | Boolean) => {
+const scalarMarkup = (value: string | number | boolean) => {
   let className;
   switch (typeof value) {
     case 'boolean': {

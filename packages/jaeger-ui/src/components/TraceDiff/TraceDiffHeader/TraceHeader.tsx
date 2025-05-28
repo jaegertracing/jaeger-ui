@@ -62,6 +62,7 @@ export function Attrs({
       <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
         <span className="u-tx-muted">Spans: </span>{' '}
         <strong data-testid="TraceDiffHeader--traceAttr--spans">{totalSpans || 0}</strong>
+        <IoChevronDown className="TraceDiffHeader--traceTitleChevron" />
       </li>
     </ul>
   );
@@ -100,7 +101,6 @@ export default function TraceHeader({
             <span className="u-tx-muted">Select a Trace...</span>
           )}
         </span>
-        <IoChevronDown className="TraceDiffHeader--traceTitleChevron" />
       </h1>
       <AttrsComponent startTime={startTime} duration={duration} totalSpans={totalSpans} />
     </div>

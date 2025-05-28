@@ -16,6 +16,10 @@ import * as React from 'react';
 import { cacheAs, Digraph, LayoutManager } from '@jaegertracing/plexus';
 import cx from 'classnames';
 import { connect } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { getConfigValue } from '../../../utils/config/get-config';
+import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import prefixUrl from '../../../utils/prefix-url';
 
 import renderNode, { getNodeEmphasisRenderer } from './renderNode';
 import { getUiFindVertexKeys, getEdgesAndVertices } from './traceDiffGraphUtils';
@@ -46,7 +50,43 @@ export class UnconnectedTraceDiffGraph extends React.PureComponent<Props> {
   render() {
     const { a, b, uiFind = '' } = this.props;
     if (!a || !b) {
-      return <h1 className="u-mt-vast u-tx-muted ub-tx-center">At least two Traces are needed</h1>;
+      return (
+        <div className="TraceDiffGraph--emptyState" data-testid="trace-diff-empty-state">
+          <div className="TraceDiffGraph--emptyStateContent">
+            <div className="TraceDiffGraph--emptyStateHeader">
+              <div className="TraceDiffGraph--traceA">A</div>
+              <div className="TraceDiffGraph--separator" />
+              <div className="TraceDiffGraph--traceB">B</div>
+            </div>
+            <h1 className="TraceDiffGraph--emptyStateTitle">At least two Traces are needed</h1>
+            <p className="ub-tx-center">
+              Select traces using the dropdowns above or from the search results page
+            </p>
+            <div className="TraceDiffGraph--emptyStateActions">
+              <Link
+                to={prefixUrl('/search')}
+                className="TraceDiffGraph--emptyStateButton"
+                data-testid="go-to-search-button"
+              >
+                Go to Search
+              </Link>
+              <button
+                type="button"
+                className="TraceDiffGraph--helpButton"
+                data-testid="learn-how-button"
+                onClick={() => {
+                  const helpLink = getConfigValue('traceDiff.helpLink');
+                  if (helpLink) {
+                    window.open(helpLink, getTargetEmptyOrBlank());
+                  }
+                }}
+              >
+                Learn how to compare traces
+              </button>
+            </div>
+          </div>
+        </div>
+      );
     }
     if (a.error || b.error) {
       return (
