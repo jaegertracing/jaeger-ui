@@ -14,11 +14,15 @@
 
 import React from 'react';
 import { shallow } from 'enzyme';
+import { render } from '@testing-library/react';
 
 import TraceTimelineViewer, { TraceTimelineViewerImpl } from './index';
+import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import TimelineHeaderRow from './TimelineHeaderRow';
+
+jest.mock('./VirtualizedTraceView', () => () => <div data-testid="virtualized-trace-view-mock" />);
 
 describe('<TraceTimelineViewer>', () => {
   const trace = transformTraceData(traceGenerator.trace({}));
@@ -54,6 +58,11 @@ describe('<TraceTimelineViewer>', () => {
   beforeEach(() => {
     wrapper = shallow(<TraceTimelineViewerImpl {...props} />, options);
     connectedWrapper = shallow(<TraceTimelineViewer store={options.context.store} {...props} />, options);
+    jest.spyOn(KeyboardShortcuts, 'merge');
+  });
+
+  afterEach(() => {
+    KeyboardShortcuts.merge.mockRestore();
   });
 
   it('it does not explode', () => {
@@ -71,5 +80,30 @@ describe('<TraceTimelineViewer>', () => {
     expect(props.expandAll.mock.calls.length).toBe(1);
     expect(props.expandOne.mock.calls.length).toBe(1);
     expect(props.collapseOne.mock.calls.length).toBe(1);
+  });
+
+  it('it should call mergeShortcuts with the correct callbacks on mount', () => {
+    render(<TraceTimelineViewerImpl {...props} />);
+    expect(KeyboardShortcuts.merge).toHaveBeenCalledWith({
+      collapseAll: expect.any(Function),
+      expandAll: expect.any(Function),
+      collapseOne: expect.any(Function),
+      expandOne: expect.any(Function),
+    });
+  });
+
+  it('it should call mergeShortcuts when callback props change', () => {
+    const { rerender } = render(<TraceTimelineViewerImpl {...props} />);
+    KeyboardShortcuts.merge.mockClear();
+
+    const newCollapseAll = jest.fn();
+    rerender(<TraceTimelineViewerImpl {...props} collapseAll={newCollapseAll} />);
+
+    expect(KeyboardShortcuts.merge).toHaveBeenCalledWith({
+      collapseAll: expect.any(Function),
+      expandAll: expect.any(Function),
+      collapseOne: expect.any(Function),
+      expandOne: expect.any(Function),
+    });
   });
 });

@@ -16,8 +16,9 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import CanvasSpanGraph from './CanvasSpanGraph';
+import CanvasSpanGraph, { getColor } from './CanvasSpanGraph';
 import * as renderUtils from './render-into-canvas'; // Import the module to mock
+import colorGenerator from '../../../../utils/color-generator';
 
 // Mock the renderIntoCanvas function
 jest.mock('./render-into-canvas');
@@ -62,5 +63,13 @@ describe('<CanvasSpanGraph />', () => {
     // Check if renderIntoCanvas was called again on update
     expect(renderUtils.default).toHaveBeenCalledTimes(2);
     expect(renderUtils.default).toHaveBeenCalledWith(canvas, items, props.valueWidth, expect.any(Function));
+  });
+
+  it('calls colorGenerator.getRgbColorByKey with correct hex', () => {
+    const spy = jest.spyOn(colorGenerator, 'getRgbColorByKey');
+    const hex = '#abcdef';
+    getColor(hex);
+    expect(spy).toHaveBeenCalledWith(hex);
+    spy.mockRestore();
   });
 });
