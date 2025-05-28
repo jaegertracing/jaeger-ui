@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import memoizeOne from 'memoize-one';
-import _uniq from 'lodash/uniq';
 import { Trace, Span } from '../../../types/trace';
 import { ITableSpan } from './types';
 import colorGenerator from '../../../utils/color-generator';
@@ -163,6 +162,28 @@ function getDefaultStatsValue(trace: Trace) {
   };
 }
 
+function getTagValueFromSpan(tagKey: string, span: Span) {
+  let tagValue = null as null | string;
+  if (tagKey === operationName) {
+    tagValue = span.operationName;
+  } else if (tagKey === serviceName) {
+    tagValue = span.process.serviceName;
+  } else {
+    for (let tagIndex = 0; tagIndex < span.tags.length; tagIndex++) {
+      const tag = span.tags[tagIndex];
+
+      if (tag.key !== tagKey) {
+        continue;
+      }
+
+      tagValue = tag.value;
+      break;
+    }
+  }
+
+  return tagValue;
+}
+
 /**
  * Is used if only one dropdown is selected.
  */
@@ -179,23 +200,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   const spanIdsWithSelectedTag = new Set<string>();
 
   for (let i = 0; i < allSpans.length; i++) {
-    let tagValue = null as null | string;
-    if (selectedTagKey === operationName) {
-      tagValue = allSpans[i].operationName;
-    } else if (selectedTagKey === serviceName) {
-      tagValue = allSpans[i].process.serviceName;
-    } else {
-      for (let tagIndex = 0; tagIndex < allSpans[i].tags.length; tagIndex++) {
-        const tag = allSpans[i].tags[tagIndex];
-
-        if (tag.key !== selectedTagKey) {
-          continue;
-        }
-
-        tagValue = tag.value;
-        break;
-      }
-    }
+    const tagValue = getTagValueFromSpan(selectedTagKey, allSpans[i]);
 
     if (!tagValue) {
       continue;
@@ -295,53 +300,48 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
  * Creates columns for the children.
  */
 function buildDetail(
-  diffNamesA: string[],
   tempArray: Span[],
   allSpans: Span[],
   selectedTagKeySecond: string,
   parentName: string,
-  isDetail: boolean,
   trace: Trace
 ) {
   const newColumnValues = [];
-  for (let j = 0; j < diffNamesA.length; j++) {
-    let color = '';
-    let resultValue = {
-      selfTotal: 0,
-      selfAvg: 0,
-      selfMin: trace.duration,
-      selfMax: 0,
-      total: 0,
-      avg: 0,
-      min: trace.duration,
-      max: 0,
-      count: 0,
-      percent: 0,
-    };
-    for (let l = 0; l < tempArray.length; l++) {
-      if (isDetail) {
-        for (let a = 0; a < tempArray[l].tags.length; a++) {
-          if (
-            tempArray[l].tags[a].key === selectedTagKeySecond &&
-            diffNamesA[j] === tempArray[l].tags[a].value
-          ) {
-            resultValue = computeColumnValues(trace, tempArray[l], allSpans, resultValue);
-          }
-        }
-      } else if (selectedTagKeySecond === serviceName) {
-        if (diffNamesA[j] === tempArray[l].process.serviceName) {
-          resultValue = computeColumnValues(trace, tempArray[l], allSpans, resultValue);
-          color = colorGenerator.getColorByKey(tempArray[l].process.serviceName);
-        }
-      } else if (diffNamesA[j] === tempArray[l].operationName) {
-        resultValue = computeColumnValues(trace, tempArray[l], allSpans, resultValue);
-      }
+
+  const statsPerTagValue = {} as Record<string, StatsPerTag>;
+  const uniqueValuesForSelectedTag = new Set<string>();
+
+  for (let i = 0; i < tempArray.length; i++) {
+    const tagValue = getTagValueFromSpan(selectedTagKeySecond, tempArray[i]);
+
+    if (!tagValue) {
+      continue;
     }
+
+    statsPerTagValue[tagValue] = computeColumnValues(
+      trace,
+      tempArray[i],
+      allSpans,
+      statsPerTagValue[tagValue] ?? getDefaultStatsValue(trace)
+    );
+
+    uniqueValuesForSelectedTag.add(tagValue);
+  }
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const tagValue of uniqueValuesForSelectedTag) {
+    const resultValue = statsPerTagValue[tagValue];
+
+    let color = '';
+    if (selectedTagKeySecond === serviceName) {
+      color = colorGenerator.getColorByKey(tagValue);
+    }
+
     resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
     resultValue.avg = resultValue.total / resultValue.count;
     let buildOneColumnValue = {
       hasSubgroupValue: true,
-      name: diffNamesA[j],
+      name: tagValue,
       count: resultValue.count,
       total: resultValue.total,
       avg: resultValue.avg,
@@ -446,84 +446,57 @@ function valueSecondDropdown(
   const allSpans = trace.spans;
   const allTableValues = [];
 
+  const isSecondDropdownTag = selectedTagKeySecond !== serviceName && selectedTagKeySecond !== operationName;
+
+  const spansMatchingTagValueFromFirstDropdown = {} as Record<string, Span[]>;
+  for (let i = 0; i < allSpans.length; i++) {
+    const tagValue = getTagValueFromSpan(selectedTagKey, allSpans[i]);
+
+    if (!tagValue) {
+      continue;
+    }
+
+    if (tagValue in spansMatchingTagValueFromFirstDropdown) {
+      spansMatchingTagValueFromFirstDropdown[tagValue].push(allSpans[i]);
+    } else {
+      spansMatchingTagValueFromFirstDropdown[tagValue] = [allSpans[i]];
+    }
+  }
+
   for (let i = 0; i < actualTableValues.length; i++) {
     // if the table is already in the detail view, then these entries are not considered
-    if (!actualTableValues[i].isDetail) {
-      const tempArray = [];
-      let diffNamesA = [] as any;
-      // all Spans withe the same value (first dropdown)
-      for (let j = 0; j < allSpans.length; j++) {
-        if (selectedTagKey === serviceName) {
-          if (actualTableValues[i].name === allSpans[j].process.serviceName) {
-            tempArray.push(allSpans[j]);
-            diffNamesA.push(allSpans[j].operationName);
-          }
-        } else if (selectedTagKey === operationName) {
-          if (actualTableValues[i].name === allSpans[j].operationName) {
-            tempArray.push(allSpans[j]);
-            diffNamesA.push(allSpans[j].process.serviceName);
-          }
-          // if first dropdown is a tag
-        } else {
-          for (let l = 0; l < allSpans[j].tags.length; l++) {
-            if (
-              allSpans[j].tags[l].key === selectedTagKey &&
-              actualTableValues[i].name === allSpans[j].tags[l].value
-            ) {
-              tempArray.push(allSpans[j]);
-              if (selectedTagKeySecond === operationName) {
-                diffNamesA.push(allSpans[j].operationName);
-              } else if (selectedTagKeySecond === serviceName) {
-                diffNamesA.push(allSpans[j].process.serviceName);
-              }
-            }
-          }
-        }
-      }
-      let newColumnValues = [] as any;
-      // if second dropdown is no tag
-      if (selectedTagKeySecond === serviceName || selectedTagKeySecond === operationName) {
-        diffNamesA = _uniq(diffNamesA);
-        newColumnValues = buildDetail(
-          diffNamesA,
-          tempArray,
-          allSpans,
-          selectedTagKeySecond,
-          actualTableValues[i].name,
-          false,
-          trace
-        );
-      } else {
-        // second dropdown is a tag
-        diffNamesA = [] as any;
-        for (let j = 0; j < tempArray.length; j++) {
-          for (let l = 0; l < tempArray[j].tags.length; l++) {
-            if (tempArray[j].tags[l].key === selectedTagKeySecond) {
-              diffNamesA.push(tempArray[j].tags[l].value);
-            }
-          }
-        }
-        diffNamesA = _uniq(diffNamesA);
-        newColumnValues = buildDetail(
-          diffNamesA,
-          tempArray,
-          allSpans,
-          selectedTagKeySecond,
-          actualTableValues[i].name,
-          true,
-          trace
-        );
-      }
+    if (actualTableValues[i].isDetail) {
+      continue;
+    }
+
+    const spansWithSecondTag = spansMatchingTagValueFromFirstDropdown[actualTableValues[i].name];
+
+    // true for row with name Without Tag: ${selectedTagKey}
+    const isTableValueWithoutTag = spansWithSecondTag === undefined;
+    if (isTableValueWithoutTag) {
       allTableValues.push(actualTableValues[i]);
-      if (newColumnValues.length > 0) {
-        for (let j = 0; j < newColumnValues.length; j++) {
-          allTableValues.push(newColumnValues[j]);
-        }
+      continue;
+    }
+
+    const newColumnValues = buildDetail(
+      spansWithSecondTag,
+      allSpans,
+      selectedTagKeySecond,
+      actualTableValues[i].name,
+      trace
+    );
+
+    allTableValues.push(actualTableValues[i]);
+
+    if (newColumnValues.length > 0) {
+      for (let j = 0; j < newColumnValues.length; j++) {
+        allTableValues.push(newColumnValues[j]);
       }
     }
   }
+
   // if second dropdown is a tag a rest must be created
-  if (selectedTagKeySecond !== serviceName && selectedTagKeySecond !== operationName) {
+  if (isSecondDropdownTag) {
     return generateDetailRest(allTableValues, selectedTagKeySecond, trace);
     // if no tag is selected the values can be returned
   }
