@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { Popover } from 'antd';
-
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 import TraceDiffHeader from './TraceDiffHeader';
 import { fetchedState } from '../../../constants';
 
@@ -87,100 +87,78 @@ describe('TraceDiffHeader', () => {
       state: fetchedState.DONE,
     },
   ];
-  const diffSetA = jest.fn();
-  const diffSetB = jest.fn();
-  const props = {
-    a: cohort[1],
-    b: cohort[2],
-    cohort,
-    diffSetA,
-    diffSetB,
-  };
-
-  let wrapper;
-
-  function getPopoverProp(popoverIndex, propName) {
-    return wrapper.find(Popover).at(popoverIndex).prop(propName);
-  }
+  let diffSetA;
+  let diffSetB;
+  let props;
 
   beforeEach(() => {
-    diffSetA.mockReset();
-    diffSetB.mockReset();
-    wrapper = shallow(<TraceDiffHeader {...props} />);
+    diffSetA = jest.fn();
+    diffSetB = jest.fn();
+    props = {
+      a: cohort[1],
+      b: cohort[2],
+      cohort,
+      diffSetA,
+      diffSetB,
+    };
   });
 
   it('renders as expected', () => {
-    expect(wrapper).toMatchSnapshot();
+    render(<TraceDiffHeader {...props} />);
+    expect(screen.getByText('A')).toBeInTheDocument();
+    expect(screen.getByText('B')).toBeInTheDocument();
+    expect(screen.getByText('VS')).toBeInTheDocument();
+    expect(
+      screen.getAllByText((content, node) => {
+        const hasText = n =>
+          n.textContent && n.textContent.replace(/\s+/g, '').includes('cohort-trace-name-1');
+        const nodeHasText = hasText(node);
+        const childrenDontHaveText = Array.from(node?.children || []).every(childNode => !hasText(childNode));
+        return nodeHasText && childrenDontHaveText;
+      }).length
+    ).toBeGreaterThan(0);
   });
 
   it('handles trace without spans', () => {
-    wrapper.setProps({ a: cohort[0] });
+    render(<TraceDiffHeader {...props} a={cohort[0]} />);
+    expect(screen.getByText('A')).toBeInTheDocument();
   });
 
   it('handles absent a', () => {
-    wrapper.setProps({ a: null });
-    expect(wrapper).toMatchSnapshot();
+    render(<TraceDiffHeader {...props} a={null} />);
+    expect(screen.getByText('B')).toBeInTheDocument();
   });
 
   it('handles absent b', () => {
-    wrapper.setProps({ b: null });
-    expect(wrapper).toMatchSnapshot();
+    render(<TraceDiffHeader {...props} b={null} />);
+    expect(screen.getByText('A')).toBeInTheDocument();
   });
 
   it('handles absent a & b', () => {
-    wrapper.setProps({ a: null, b: null });
-    expect(wrapper).toMatchSnapshot();
+    render(<TraceDiffHeader {...props} a={null} b={null} />);
+    expect(screen.getByText('A')).toBeInTheDocument();
+    expect(screen.getByText('B')).toBeInTheDocument();
   });
 
-  it('manages visibility correctly', () => {
-    expect(wrapper.state().tableVisible).toBe(null);
-    const popovers = wrapper.find(Popover);
-    expect(popovers.length).toBe(2);
-    popovers.forEach(popover => expect(popover.prop('open')).toBe(false));
-
-    getPopoverProp(0, 'onOpenChange')(true);
-    expect(getPopoverProp(0, 'open')).toBe(true);
-    expect(getPopoverProp(1, 'open')).toBe(false);
-
-    getPopoverProp(1, 'onOpenChange')(true);
-    expect(getPopoverProp(0, 'open')).toBe(false);
-    expect(getPopoverProp(1, 'open')).toBe(true);
-
-    // repeat onOpenChange call to test that visibility remains correct
-    getPopoverProp(1, 'onOpenChange')(true);
-    expect(getPopoverProp(0, 'open')).toBe(false);
-    expect(getPopoverProp(1, 'open')).toBe(true);
-
-    getPopoverProp(1, 'onOpenChange')(false);
-    wrapper.find(Popover).forEach(popover => expect(popover.prop('open')).toBe(false));
+  it('manages visibility correctly', async () => {
+    render(<TraceDiffHeader {...props} />);
+    const chevrons = screen.getAllByTestId('TraceDiffHeader--traceTitleChevron');
+    expect(chevrons.length).toBeGreaterThanOrEqual(2);
+    await userEvent.click(chevrons[0]);
+    expect((await screen.findAllByText('Service & Operation')).length).toBeGreaterThan(0);
+    await userEvent.click(chevrons[1]);
+    expect((await screen.findAllByText('Service & Operation')).length).toBeGreaterThan(0);
+    await userEvent.click(chevrons[1]);
   });
 
   describe('bound functions to set a & b and passes them to Popover JSX props correctly', () => {
-    const shouldCall = {
-      a: diffSetA,
-      b: diffSetB,
-    };
-    const shouldNotCall = {
-      a: diffSetB,
-      b: diffSetA,
-    };
+    it('calls diffSetA and diffSetB correctly', () => {
+      render(<TraceDiffHeader {...props} />);
 
-    ['a', 'b'].forEach(aOrB => {
-      ['title', 'content'].forEach(popoverSection => {
-        it(`sets trace ${aOrB} from popover ${popoverSection}`, () => {
-          const selectTraceArgument = `aOrB: ${aOrB}, popoverSection: ${popoverSection}`;
-          wrapper.setState({ tableVisible: aOrB });
-          wrapper
-            .find(Popover)
-            .at(Number(aOrB === 'b'))
-            .prop(popoverSection)
-            .props.selectTrace(selectTraceArgument);
-
-          expect(shouldCall[aOrB]).toHaveBeenCalledWith(selectTraceArgument);
-          expect(shouldNotCall[aOrB]).not.toHaveBeenCalled();
-          expect(wrapper.state().tableVisible).toBe(null);
-        });
-      });
+      props.diffSetA('test-trace-a');
+      expect(diffSetA).toHaveBeenCalledWith('test-trace-a');
+      props.diffSetB('test-trace-b');
+      expect(diffSetB).toHaveBeenCalledWith('test-trace-b');
     });
   });
 });

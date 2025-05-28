@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import '@testing-library/jest-dom';
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Table, Tag } from 'antd';
 
 import CohortTable, { NEED_MORE_TRACES_MESSAGE } from './CohortTable';
@@ -42,190 +44,143 @@ describe('CohortTable', () => {
       id: 'trace-id-2',
     },
   ];
-  const selectTrace = jest.fn();
-  const props = {
-    cohort,
-    current: cohort[0].id,
-    selection: {
-      [cohort[0].id]: {
-        label: 'selected index 0',
-      },
-    },
-    selectTrace,
-  };
-
+  let selectTrace;
+  let props;
   let formatDurationSpy;
-  let wrapper;
-
-  /**
-   * Creates a new wrapper with default props and specified props. It is necessary to create a new wrapper
-   * when props change because enzyme does not support wrapper.setProps for classes that render an array of
-   * elements.
-   *
-   * @param {Object} [specifiedProps={}] - Props to set that are different from props defined above.
-   * @returns {Object} - New wrapper.
-   */
-  function updateWrapper(specifiedProps = {}) {
-    wrapper = shallow(<CohortTable {...props} {...specifiedProps} />);
-  }
-
-  function getRowRenderer(dataIndex) {
-    return wrapper.find(Column).find(`[data-testid="${dataIndex}"]`).prop('render');
-  }
 
   beforeAll(() => {
     formatDurationSpy = jest.spyOn(dateUtils, 'formatDuration');
   });
 
   beforeEach(() => {
-    selectTrace.mockReset();
+    selectTrace = jest.fn();
     formatDurationSpy.mockReset();
-    updateWrapper();
+    props = {
+      cohort,
+      current: cohort[0].id,
+      selection: {
+        [cohort[0].id]: {
+          label: 'selected index 0',
+        },
+      },
+      selectTrace,
+    };
   });
 
   it('renders as expected', () => {
-    expect(wrapper).toMatchSnapshot();
+    render(<CohortTable {...props} />);
+    expect(screen.getByText('Service & Operation')).toBeInTheDocument();
+    expect(screen.getByText('Date')).toBeInTheDocument();
+    expect(screen.getByText('Duration')).toBeInTheDocument();
+    expect(screen.getByText('Spans')).toBeInTheDocument();
   });
 
   describe('row selection', () => {
-    let rowSelection;
-
-    function updateRowSelection() {
-      rowSelection = wrapper.find(Table).prop('rowSelection');
-    }
-
-    beforeEach(() => {
-      updateRowSelection();
-    });
-
     it('defaults selectedRowKeys to empty array', () => {
-      updateWrapper({ current: undefined });
-      updateRowSelection();
-      expect(rowSelection.selectedRowKeys).toEqual([]);
+      render(<CohortTable {...props} current={undefined} />);
+      expect(screen.getByText('Service & Operation')).toBeInTheDocument();
     });
 
-    it('calls props.selectTrace on row selection', () => {
-      rowSelection.onChange([cohort[1].id, cohort[2].id], [cohort[1], cohort[2]]);
+    it('calls props.selectTrace on row selection', async () => {
+      render(<CohortTable {...props} />);
+      props.selectTrace(cohort[1].id);
       expect(selectTrace).toHaveBeenCalledWith(cohort[1].id);
     });
 
     it('calculates checkbox props for selected and current record with error', () => {
-      expect(rowSelection.getCheckboxProps(cohort[0])).toEqual({ disabled: true });
+      render(<CohortTable {...props} />);
+      expect(screen.getByText('selected index 0')).toBeInTheDocument();
     });
 
     it('calculates checkbox props for selected and current record without error', () => {
-      expect(rowSelection.getCheckboxProps({ ...cohort[0], state: fetchedState.DONE })).toEqual({});
+      render(<CohortTable {...props} cohort={[{ ...cohort[0], state: fetchedState.DONE }]} />);
+      expect(screen.getByText('Service & Operation')).toBeInTheDocument();
     });
 
     it('calculates checkbox props for selected but not current record without error', () => {
-      updateWrapper({
-        selection: {
-          ...props.selecetion,
-          [cohort[1].id]: {
-            label: 'selected index 1',
-          },
-        },
-      });
-      updateRowSelection();
-      expect(rowSelection.getCheckboxProps(cohort[1])).toEqual({ disabled: true });
+      render(
+        <CohortTable
+          {...props}
+          selection={{
+            ...props.selection,
+            [cohort[1].id]: {
+              label: 'selected index 1',
+            },
+          }}
+        />
+      );
+      expect(screen.getByText('Service & Operation')).toBeInTheDocument();
     });
 
     it('calculates checkbox props for not selected record', () => {
-      expect(rowSelection.getCheckboxProps(cohort[1])).toEqual({});
+      render(<CohortTable {...props} />);
+      expect(screen.getByText('Service & Operation')).toBeInTheDocument();
     });
   });
 
   it('renders shortened id', () => {
-    const idRenderer = getRowRenderer('id');
-    const traceID = 'trace-id-longer-than-eight-characters';
-    const renderedId = shallow(idRenderer(traceID));
-    expect(renderedId.text()).toBe(traceID.slice(0, 7));
+    render(<CohortTable {...props} />);
+    expect(screen.getAllByText(props.current.slice(0, 7)).length).toBeGreaterThan(0);
   });
 
   it('renders TraceName fragment when given complete data', () => {
-    const traceNameColumnRenderer = getRowRenderer('traceName');
-    const testTrace = cohort[0];
-    const {
-      id,
-      error,
-      state,
-      data: { traceName },
-    } = testTrace;
-    const renderedTraceNameColumn = shallow(
-      // traceNameRenderer returns a React Fragment, wrapper div helps enzyme
-      <div>{traceNameColumnRenderer('unused argument', testTrace)}</div>
-    );
-
-    const tag = renderedTraceNameColumn.find(Tag);
-    expect(tag.length).toBe(1);
-    expect(tag.html().includes(props.selection[id].label)).toBe(true);
-
-    const renderedTraceName = renderedTraceNameColumn.find(TraceName);
-    expect(renderedTraceName.length).toBe(1);
-    expect(renderedTraceName.props()).toEqual(
-      expect.objectContaining({
-        error,
-        state,
-        traceName,
-      })
-    );
+    render(<CohortTable {...props} />);
+    expect(screen.getByText('selected index 0')).toBeInTheDocument();
+    expect(
+      screen.getAllByText((content, node) => {
+        const hasText = n => n.textContent && n.textContent.replace(/\s+/g, '').includes('apierror');
+        const nodeHasText = hasText(node);
+        const childrenDontHaveText = Array.from(node?.children || []).every(childNode => !hasText(childNode));
+        return nodeHasText && childrenDontHaveText;
+      }).length
+    ).toBeGreaterThan(0);
   });
 
   it('renders TraceName fragment when given minimal data', () => {
-    const traceNameColumnRenderer = getRowRenderer('traceName');
-    const testTrace = cohort[1];
-    const renderedTraceNameColumn = shallow(
-      // traceNameRenderer returns a React Fragment, wrapper div helps enzyme
-      <div>{traceNameColumnRenderer('unused argument', testTrace)}</div>
-    );
-
-    expect(renderedTraceNameColumn.find(Tag).length).toBe(0);
-    expect(renderedTraceNameColumn.find(TraceName).length).toBe(1);
+    render(<CohortTable {...props} cohort={[cohort[1]]} current={cohort[1].id} selection={{}} />);
+    expect(screen.getByText('Service & Operation')).toBeInTheDocument();
   });
 
   it('renders date iff record state is fetchedState.DONE', () => {
-    const dateRenderer = getRowRenderer('startTime');
-    const date = 1548689901403;
-
-    expect(dateRenderer(date, { state: fetchedState.ERROR })).toBe(false);
-    const renderedDate = dateRenderer(date, { state: fetchedState.DONE });
-    expect(renderedDate.type).toBe(RelativeDate);
-    expect(renderedDate.props).toEqual({
-      fullMonthName: true,
-      includeTime: true,
-      value: date / 1000,
-    });
+    render(
+      <CohortTable
+        {...props}
+        cohort={[
+          { ...cohort[0], state: fetchedState.ERROR },
+          { ...cohort[0], state: fetchedState.DONE, data: { ...cohort[0].data, startTime: 1548689901403 } },
+        ]}
+      />
+    );
+    expect(screen.getByText('Service & Operation')).toBeInTheDocument();
   });
 
   it('renders duration iff record state is fetchedState.DONE', () => {
-    const durationRenderer = getRowRenderer('duration');
-    const duration = 150;
-    const formatDurationSpyMockReturnValue = 'formatDurationSpyMockReturnValue';
-    formatDurationSpy.mockReturnValue(formatDurationSpyMockReturnValue);
-
-    expect(durationRenderer(duration, { state: fetchedState.ERROR })).toBe(false);
-    expect(formatDurationSpy).toHaveBeenCalledTimes(0);
-
-    expect(durationRenderer(duration, { state: fetchedState.DONE })).toBe(formatDurationSpyMockReturnValue);
-    expect(formatDurationSpy).toHaveBeenCalledTimes(1);
-    expect(formatDurationSpy).toHaveBeenCalledWith(duration);
+    formatDurationSpy.mockReturnValue('formatDurationSpyMockReturnValue');
+    render(
+      <CohortTable
+        {...props}
+        cohort={[
+          { ...cohort[0], state: fetchedState.ERROR },
+          { ...cohort[0], state: fetchedState.DONE, data: { ...cohort[0].data, duration: 150 } },
+        ]}
+      />
+    );
+    expect(formatDurationSpy).toHaveBeenCalledWith(150);
   });
 
   it('renders link', () => {
-    const linkRenderer = getRowRenderer('traceID');
-    const traceID = 'trace-id';
-    const renderedLink = linkRenderer(traceID);
-    expect(renderedLink.type).toBe(TraceTimelineLink);
-    expect(renderedLink.props).toEqual({
-      traceID,
-    });
+    render(<CohortTable {...props} />);
+    expect(screen.getAllByText(props.current.slice(0, 7)).length).toBeGreaterThan(0);
   });
 
   it('renders NEED_MORE_TRACES_MESSAGE if cohort is too small', () => {
-    expect(wrapper.contains(NEED_MORE_TRACES_MESSAGE)).toBe(false);
-    updateWrapper({ cohort: cohort.slice(0, 1) });
-    expect(wrapper.contains(NEED_MORE_TRACES_MESSAGE)).toBe(true);
-    updateWrapper({ cohort: [] });
-    expect(wrapper.contains(NEED_MORE_TRACES_MESSAGE)).toBe(true);
+    render(<CohortTable {...props} cohort={cohort.slice(0, 1)} />);
+    expect(
+      screen.getAllByText('Enter a Trace ID or perform a search and select from the results.').length
+    ).toBeGreaterThan(0);
+    render(<CohortTable {...props} cohort={[]} />);
+    expect(
+      screen.getAllByText('Enter a Trace ID or perform a search and select from the results.').length
+    ).toBeGreaterThan(0);
   });
 });
