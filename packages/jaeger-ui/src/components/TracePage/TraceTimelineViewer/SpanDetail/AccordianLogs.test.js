@@ -13,14 +13,22 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
-import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
 
-describe('<AccordianLogs>', () => {
-  let wrapper;
+const mockAccordianKeyValues = jest.fn();
+jest.mock('./AccordianKeyValues', () => props => {
+  mockAccordianKeyValues(props);
+  return (
+    <div data-testid="log-item" onClick={props.onToggle}>
+      LogItem
+    </div>
+  );
+});
 
+describe('<AccordianLogs>', () => {
   const logs = [
     {
       timestamp: 10,
@@ -37,52 +45,58 @@ describe('<AccordianLogs>', () => {
       ],
     },
   ];
-  const props = {
+
+  const defaultProps = {
     logs,
     isOpen: false,
     onItemToggle: jest.fn(),
-    onToggle: () => {},
+    onToggle: jest.fn(),
     openedItems: new Set([logs[1]]),
     timestamp: 5,
   };
 
   beforeEach(() => {
-    props.onItemToggle.mockReset();
-    wrapper = shallow(<AccordianLogs {...props} />);
+    jest.clearAllMocks();
   });
 
-  it('renders without exploding', () => {
-    expect(wrapper).toBeDefined();
+  it('renders without crashing', () => {
+    render(<AccordianLogs {...defaultProps} />);
+    const header = screen.getByRole('switch');
+    expect(header).toHaveTextContent(`Logs (${logs.length})`);
   });
 
-  it('shows the number of log entries', () => {
-    const regex = new RegExp(`Logs \\(${logs.length}\\)`);
-    expect(wrapper.find('a').text()).toMatch(regex);
+  it('hides log items when not expanded', () => {
+    render(<AccordianLogs {...defaultProps} />);
+    expect(screen.queryByTestId('log-item')).not.toBeInTheDocument();
   });
 
-  it('hides log entries when not expanded', () => {
-    expect(wrapper.find(AccordianKeyValues).exists()).toBe(false);
+  it('shows log items when expanded', () => {
+    render(<AccordianLogs {...defaultProps} isOpen />);
+    const items = screen.getAllByTestId('log-item');
+    expect(items.length).toBe(logs.length);
   });
 
-  it('shows log entries when expanded', () => {
-    expect(wrapper.find(AccordianKeyValues).exists()).toBe(false);
-    wrapper.setProps({ isOpen: true });
-    const logViews = wrapper.find(AccordianKeyValues);
-    expect(logViews.length).toBe(logs.length);
+  it('calls onItemToggle when a log item is toggled', () => {
+    render(<AccordianLogs {...defaultProps} isOpen />);
+    const items = screen.getAllByTestId('log-item');
 
-    logViews.forEach((node, i) => {
-      const log = logs[i];
-      expect(node.prop('data')).toBe(log.fields);
-      node.simulate('toggle');
-      expect(props.onItemToggle).toHaveBeenLastCalledWith(log);
+    items.forEach((item, index) => {
+      fireEvent.click(item);
+      expect(defaultProps.onItemToggle).toHaveBeenCalledWith(logs[index]);
     });
   });
 
   it('propagates isOpen to log items correctly', () => {
-    wrapper.setProps({ isOpen: true });
-    const logViews = wrapper.find(AccordianKeyValues);
-    logViews.forEach((node, i) => {
-      expect(node.prop('isOpen')).toBe(props.openedItems.has(logs[i]));
+    render(<AccordianLogs {...defaultProps} isOpen />);
+    expect(mockAccordianKeyValues).toHaveBeenCalledTimes(logs.length);
+    logs.forEach((log, index) => {
+      expect(mockAccordianKeyValues.mock.calls[index][0].isOpen).toBe(defaultProps.openedItems.has(log));
     });
+  });
+
+  it('calls onToggle when the header is clicked', () => {
+    render(<AccordianLogs {...defaultProps} />);
+    fireEvent.click(screen.getByRole('switch'));
+    expect(defaultProps.onToggle).toHaveBeenCalled();
   });
 });
