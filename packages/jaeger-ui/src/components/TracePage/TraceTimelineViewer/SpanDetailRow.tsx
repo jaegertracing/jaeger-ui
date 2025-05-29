@@ -40,63 +40,63 @@ type SpanDetailRowProps = {
   focusSpan: (uiFind: string) => void;
 };
 
-export default class SpanDetailRow extends React.PureComponent<SpanDetailRowProps> {
-  _detailToggle = () => {
-    this.props.onDetailToggled(this.props.span.spanID);
+const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
+  const _detailToggle = () => {
+    props.onDetailToggled(props.span.spanID);
   };
 
-  _linksGetter = (items: KeyValuePair[], itemIndex: number) => {
-    const { linksGetter, span } = this.props;
+  const _linksGetter = (items: KeyValuePair[], itemIndex: number) => {
+    const { linksGetter, span } = props;
     return linksGetter(span, items, itemIndex);
   };
 
-  render() {
-    const {
-      color,
-      columnDivision,
-      detailState,
-      logItemToggle,
-      logsToggle,
-      processToggle,
-      referencesToggle,
-      warningsToggle,
-      span,
-      tagsToggle,
-      traceStartTime,
-      focusSpan,
-    } = this.props;
-    return (
-      <TimelineRow className="detail-row">
-        <TimelineRow.Cell width={columnDivision}>
-          <SpanTreeOffset span={span} showChildrenIcon={false} />
-          <span>
-            <span
-              className="detail-row-expanded-accent"
-              aria-checked="true"
-              onClick={this._detailToggle}
-              role="switch"
-              style={{ borderColor: color }}
-            />
-          </span>
-        </TimelineRow.Cell>
-        <TimelineRow.Cell width={1 - columnDivision}>
-          <div className="detail-info-wrapper" style={{ borderTopColor: color }}>
-            <SpanDetail
-              detailState={detailState}
-              linksGetter={this._linksGetter}
-              logItemToggle={logItemToggle}
-              logsToggle={logsToggle}
-              processToggle={processToggle}
-              referencesToggle={referencesToggle}
-              warningsToggle={warningsToggle}
-              span={span}
-              tagsToggle={tagsToggle}
-              traceStartTime={traceStartTime}
-              focusSpan={focusSpan}
-            />
-          </div>
-        </TimelineRow.Cell>
-      </TimelineRow>
-    );
-  }
-}
+  const {
+    color,
+    columnDivision,
+    detailState,
+    logItemToggle,
+    logsToggle,
+    processToggle,
+    referencesToggle,
+    warningsToggle,
+    span,
+    tagsToggle,
+    traceStartTime,
+    focusSpan,
+  } = props;
+  return (
+    <TimelineRow className="detail-row">
+      <TimelineRow.Cell width={columnDivision}>
+        <SpanTreeOffset span={span} showChildrenIcon={false} />
+        <span>
+          <span
+            className="detail-row-expanded-accent"
+            aria-checked="true"
+            onClick={_detailToggle}
+            role="switch"
+            style={{ borderColor: color }}
+          />
+        </span>
+      </TimelineRow.Cell>
+      <TimelineRow.Cell width={1 - columnDivision}>
+        <div className="detail-info-wrapper" style={{ borderTopColor: color }}>
+          <SpanDetail
+            detailState={detailState}
+            linksGetter={_linksGetter}
+            logItemToggle={logItemToggle}
+            logsToggle={logsToggle}
+            processToggle={processToggle}
+            referencesToggle={referencesToggle}
+            warningsToggle={warningsToggle}
+            span={span}
+            tagsToggle={tagsToggle}
+            traceStartTime={traceStartTime}
+            focusSpan={focusSpan}
+          />
+        </div>
+      </TimelineRow.Cell>
+    </TimelineRow>
+  );
+});
+
+export default SpanDetailRow;

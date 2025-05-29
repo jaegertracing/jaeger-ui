@@ -63,3 +63,106 @@ limitations under the License.
   border-radius: 0;
   box-shadow: 0 0 2px 2px #ccc;
 }
+
+.TraceDiffGraph--emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(100vh - 150px);
+  width: 100%;
+}
+
+.TraceDiffGraph--emptyStateContent {
+  max-width: 500px;
+  text-align: center;
+  padding: 2rem;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.TraceDiffGraph--emptyStateHeader {
+  margin: 0.5rem 0 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 120px;
+  height: 60px;
+  position: relative;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.TraceDiffGraph--traceA,
+.TraceDiffGraph--traceB {
+  font-size: 32px;
+  font-weight: bold;
+  color: rgb(0, 0, 0);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+}
+
+.TraceDiffGraph--traceA {
+  left: 40px;
+  transform: translate(-50%, -50%);
+}
+
+.TraceDiffGraph--traceB {
+  left: 80px;
+  transform: translate(-50%, -50%);
+}
+
+.TraceDiffGraph--separator {
+  position: absolute;
+  left: 60px;
+  top: 15px;
+  width: 3px;
+  height: 30px;
+  background-color: #199;
+  transform: translateX(-50%);
+}
+
+.TraceDiffGraph--emptyStateTitle {
+  margin-top: 0.5 rem;
+  margin-bottom: 0.75rem;
+  color: #aaa;
+  text-align: center;
+  font-weight: 600;
+}
+
+.TraceDiffGraph--emptyStateActions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.TraceDiffGraph--emptyStateButton {
+  background-color: #199;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.TraceDiffGraph--emptyStateButton:hover {
+  background-color: rgb(28, 138, 138);
+  color: white;
+  text-decoration: none;
+}
+
+.TraceDiffGraph--helpButton {
+  background-color: transparent;
+  border: 1px solid #199;
+  color: #199;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
