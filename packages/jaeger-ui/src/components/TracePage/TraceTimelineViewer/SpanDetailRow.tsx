@@ -38,6 +38,8 @@ type SpanDetailRowProps = {
   tagsToggle: (spanID: string) => void;
   traceStartTime: number;
   focusSpan: (uiFind: string) => void;
+  currentViewRangeTime: [number, number];
+  traceDuration: number;
 };
 
 const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
@@ -63,6 +65,8 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     tagsToggle,
     traceStartTime,
     focusSpan,
+    currentViewRangeTime,
+    traceDuration,
   } = props;
   return (
     <TimelineRow className="detail-row">
@@ -92,6 +96,8 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
             tagsToggle={tagsToggle}
             traceStartTime={traceStartTime}
             focusSpan={focusSpan}
+            currentViewRangeTime={currentViewRangeTime}
+            traceDuration={traceDuration}
           />
         </div>
       </TimelineRow.Cell>
