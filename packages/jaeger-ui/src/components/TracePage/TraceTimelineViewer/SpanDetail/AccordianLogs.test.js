@@ -127,4 +127,21 @@ describe('<AccordianLogs>', () => {
     expect(items.length).toBe(defaultInRangeLogsCount);
     expect(screen.getByRole('button', { name: /show all/i })).toBeInTheDocument();
   });
+
+  it('is interactive by default', () => {
+    const { interactive, ...propsWithoutInteractive } = defaultProps;
+    render(<AccordianLogs {...propsWithoutInteractive} isOpen />);
+
+    const header = screen.getByRole('switch');
+    expect(header).toBeInTheDocument();
+    fireEvent.click(header);
+    expect(propsWithoutInteractive.onToggle).toHaveBeenCalledTimes(1);
+    expect(mockAccordianKeyValues).toHaveBeenCalledTimes(defaultInRangeLogsCount);
+
+    mockAccordianKeyValues.mock.calls.forEach(callArgs => {
+      const childProps = callArgs[0];
+      expect(childProps.interactive).toBe(true);
+      expect(childProps.onToggle).toBeInstanceOf(Function);
+    });
+  });
 });
