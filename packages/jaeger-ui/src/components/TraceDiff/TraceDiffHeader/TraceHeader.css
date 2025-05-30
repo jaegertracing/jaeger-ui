@@ -22,6 +22,8 @@ limitations under the License.
   flex-direction: column;
   flex: 1;
   min-width: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .TraceDiffHeader--traceTitle {
@@ -32,8 +34,17 @@ limitations under the License.
   margin: 0;
   padding: 0.25rem 2.5rem 0.25rem 1.25rem;
   position: relative;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-height: 2.5em;
+}
+
+.TraceDiffHeader--traceTitle span {
+  display: inline-block;
+  max-width: calc(100% - 2em);
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+.TraceDiffHeader--traceTitle span .u-tx-muted {
   white-space: nowrap;
 }
 
@@ -43,15 +54,17 @@ limitations under the License.
 
 .TraceDiffHeader--traceTitleChevron {
   color: #199;
-  font-size: 1.5em;
-  display: inline-block;
-  vertical-align: middle;
+  font-size: 0.75em;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
   transition: transform 0.2s ease;
-  margin-left: 20px;
+  flex-shrink: 0;
 }
 
 .TraceDiffHeader--traceSection:hover .TraceDiffHeader--traceTitleChevron {
-  transform: translateY(2px);
+  transform: translateY(calc(-50% + 2px));
 }
 
 .TraceDiffHeader--traceAttributes {
