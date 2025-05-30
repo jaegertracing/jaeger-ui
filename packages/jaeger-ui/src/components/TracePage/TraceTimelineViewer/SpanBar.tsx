@@ -44,6 +44,7 @@ type TCommonProps = {
   span: Span;
   longLabel: string;
   shortLabel: string;
+  traceDuration: number;
 };
 
 function toPercent(value: number) {
@@ -106,6 +107,7 @@ function SpanBar(props: TCommonProps) {
     span,
     shortLabel,
     longLabel,
+    traceDuration,
   } = props;
   // group logs based on timestamps
   const logGroups = _groupBy(span.logs, log => {
@@ -156,6 +158,8 @@ function SpanBar(props: TCommonProps) {
                 isOpen
                 logs={logGroups[positionKey]}
                 timestamp={traceStartTime}
+                currentViewRangeTime={[0, 1]}
+                traceDuration={traceDuration}
               />
             }
           >

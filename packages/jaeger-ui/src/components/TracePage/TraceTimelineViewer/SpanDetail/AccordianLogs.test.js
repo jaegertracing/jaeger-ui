@@ -46,6 +46,9 @@ describe('<AccordianLogs>', () => {
     },
   ];
 
+  const defaultInRangeLogs = [logs[0]];
+  const defaultInRangeLogsCount = defaultInRangeLogs.length;
+  const defaultTotalCount = logs.length;
   const defaultProps = {
     logs,
     isOpen: false,
@@ -53,6 +56,9 @@ describe('<AccordianLogs>', () => {
     onToggle: jest.fn(),
     openedItems: new Set([logs[1]]),
     timestamp: 5,
+    traceDuration: 100,
+    currentViewRangeTime: [0.0, 0.12],
+    interactive: true,
   };
 
   beforeEach(() => {
@@ -62,7 +68,8 @@ describe('<AccordianLogs>', () => {
   it('renders without crashing', () => {
     render(<AccordianLogs {...defaultProps} />);
     const header = screen.getByRole('switch');
-    expect(header).toHaveTextContent(`Logs (${logs.length})`);
+    expect(header).toHaveTextContent(`Logs (${defaultInRangeLogsCount} of ${defaultTotalCount})`);
+    expect(screen.getByRole('button', { name: /show all/i })).toBeInTheDocument();
   });
 
   it('hides log items when not expanded', () => {
@@ -73,7 +80,7 @@ describe('<AccordianLogs>', () => {
   it('shows log items when expanded', () => {
     render(<AccordianLogs {...defaultProps} isOpen />);
     const items = screen.getAllByTestId('log-item');
-    expect(items.length).toBe(logs.length);
+    expect(items.length).toBe(defaultInRangeLogsCount);
   });
 
   it('calls onItemToggle when a log item is toggled', () => {
@@ -82,21 +89,59 @@ describe('<AccordianLogs>', () => {
 
     items.forEach((item, index) => {
       fireEvent.click(item);
-      expect(defaultProps.onItemToggle).toHaveBeenCalledWith(logs[index]);
+      expect(defaultProps.onItemToggle).toHaveBeenCalledWith(defaultInRangeLogs[index]);
     });
   });
 
   it('propagates isOpen to log items correctly', () => {
     render(<AccordianLogs {...defaultProps} isOpen />);
-    expect(mockAccordianKeyValues).toHaveBeenCalledTimes(logs.length);
-    logs.forEach((log, index) => {
-      expect(mockAccordianKeyValues.mock.calls[index][0].isOpen).toBe(defaultProps.openedItems.has(log));
-    });
+    expect(mockAccordianKeyValues).toHaveBeenCalledTimes(defaultInRangeLogsCount);
+    expect(mockAccordianKeyValues.mock.calls[0][0].isOpen).toBe(
+      defaultProps.openedItems.has(defaultInRangeLogs[0])
+    );
   });
 
   it('calls onToggle when the header is clicked', () => {
     render(<AccordianLogs {...defaultProps} />);
     fireEvent.click(screen.getByRole('switch'));
     expect(defaultProps.onToggle).toHaveBeenCalled();
+  });
+
+  it('shows all logs when "show all" is clicked', () => {
+    render(<AccordianLogs {...defaultProps} isOpen />);
+    fireEvent.click(screen.getByRole('button', { name: /show all/i }));
+    expect(screen.getByRole('switch')).toHaveTextContent(`Logs (${defaultTotalCount})`);
+    const items = screen.getAllByTestId('log-item');
+    expect(items.length).toBe(defaultTotalCount);
+    expect(screen.getByRole('button', { name: /show in range/i })).toBeInTheDocument();
+  });
+
+  it('displays in-range logs again when "show in range" is clicked', () => {
+    render(<AccordianLogs {...defaultProps} isOpen />);
+    fireEvent.click(screen.getByRole('button', { name: /show all/i }));
+    fireEvent.click(screen.getByRole('button', { name: /show in range/i }));
+    expect(screen.getByRole('switch')).toHaveTextContent(
+      `Logs (${defaultInRangeLogsCount} of ${defaultTotalCount})`
+    );
+    const items = screen.getAllByTestId('log-item');
+    expect(items.length).toBe(defaultInRangeLogsCount);
+    expect(screen.getByRole('button', { name: /show all/i })).toBeInTheDocument();
+  });
+
+  it('is interactive by default', () => {
+    const { interactive, ...propsWithoutInteractive } = defaultProps;
+    render(<AccordianLogs {...propsWithoutInteractive} isOpen />);
+
+    const header = screen.getByRole('switch');
+    expect(header).toBeInTheDocument();
+    fireEvent.click(header);
+    expect(propsWithoutInteractive.onToggle).toHaveBeenCalledTimes(1);
+    expect(mockAccordianKeyValues).toHaveBeenCalledTimes(defaultInRangeLogsCount);
+
+    mockAccordianKeyValues.mock.calls.forEach(callArgs => {
+      const childProps = callArgs[0];
+      expect(childProps.interactive).toBe(true);
+      expect(childProps.onToggle).toBeInstanceOf(Function);
+    });
   });
 });

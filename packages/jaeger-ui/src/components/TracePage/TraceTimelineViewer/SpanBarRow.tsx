@@ -57,6 +57,7 @@ type SpanBarRowProps = {
   traceStartTime: number;
   span: Span;
   focusSpan: (spanID: string) => void;
+  traceDuration: number;
 };
 
 /**
@@ -98,6 +99,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       traceStartTime,
       span,
       focusSpan,
+      traceDuration,
     } = this.props;
     const {
       duration,
@@ -211,6 +213,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
             hintSide={hintSide}
             traceStartTime={traceStartTime}
             span={span}
+            traceDuration={traceDuration}
           />
         </TimelineRow.Cell>
       </TimelineRow>
