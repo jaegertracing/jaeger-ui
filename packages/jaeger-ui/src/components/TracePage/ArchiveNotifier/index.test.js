@@ -15,8 +15,8 @@
 import React from 'react';
 import { render, cleanup } from '@testing-library/react';
 import { notification } from 'antd';
-import ArchiveNotifier from './index';
 import { IoTimeOutline } from 'react-icons/io5';
+import ArchiveNotifier from './index';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import { Details, Message } from '../../common/ErrorMessage';
 
