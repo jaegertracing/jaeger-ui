@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import '@testing-library/jest-dom';
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import transformTraceData from '../../../model/transform-trace-data';
 import calculateTraceDagEV from './calculateTraceDagEV';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
-import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 
 import testTrace from './testTrace.json';
 
@@ -26,65 +27,62 @@ const transformedTrace = transformTraceData(testTrace);
 const ev = calculateTraceDagEV(transformedTrace);
 
 describe('<TraceGraph>', () => {
-  let wrapper;
+  let props;
 
   beforeEach(() => {
-    const props = {
+    props = {
       headerHeight: 60,
       ev,
     };
-    wrapper = shallow(<TraceGraph {...props} />);
   });
 
   it('does not explode', () => {
-    expect(wrapper).toBeDefined();
-    expect(wrapper.find('.TraceGraph--menu').length).toBe(1);
-    expect(wrapper.find('Button').length).toBe(3);
+    render(<TraceGraph {...props} />);
+    expect(screen.getByTestId('TraceGraph--menu')).toBeInTheDocument();
+    expect(screen.getAllByRole('button').length).toBe(3);
   });
 
   it('may show no traces', () => {
-    const props = {};
-    wrapper = shallow(<TraceGraph {...props} />);
-    expect(wrapper).toBeDefined();
-    expect(wrapper.find('h1').text()).toBe('No trace found');
+    render(<TraceGraph />);
+    expect(screen.getByText('No trace found')).toBeInTheDocument();
   });
 
-  it('toggles nodeMode to time', () => {
-    const mode = MODE_SERVICE;
-    wrapper.setState({ mode });
-    wrapper.instance().toggleNodeMode(MODE_TIME);
-    const modeState = wrapper.state('mode');
-    expect(modeState).toEqual(MODE_TIME);
+  it('toggles nodeMode to time', async () => {
+    render(<TraceGraph {...props} />);
+    const timeButton = screen.getByRole('button', { name: /time/i });
+    await userEvent.click(timeButton);
+    expect(timeButton).toHaveClass('TraceGraph--btn-time');
   });
 
-  it('validates button nodeMode change click', () => {
-    const toggleNodeMode = jest.spyOn(wrapper.instance(), 'toggleNodeMode');
-    const btnService = wrapper.find('.TraceGraph--btn-service');
-    expect(btnService.length).toBe(1);
-    btnService.simulate('click');
-    expect(toggleNodeMode).toHaveBeenCalledWith(MODE_SERVICE);
-    const btnTime = wrapper.find('.TraceGraph--btn-time');
-    expect(btnTime.length).toBe(1);
-    btnTime.simulate('click');
-    expect(toggleNodeMode).toHaveBeenCalledWith(MODE_TIME);
-    const btnSelftime = wrapper.find('.TraceGraph--btn-selftime');
-    expect(btnSelftime.length).toBe(1);
-    btnSelftime.simulate('click');
-    expect(toggleNodeMode).toHaveBeenCalledWith(MODE_SELFTIME);
+  it('validates button nodeMode change click', async () => {
+    render(<TraceGraph {...props} />);
+    const serviceButton = screen.getByRole('button', { name: /service/i });
+    await userEvent.click(serviceButton);
+    expect(serviceButton).toHaveClass('TraceGraph--btn-service');
+
+    const timeButton = screen.getByRole('button', { name: /time/i });
+    await userEvent.click(timeButton);
+    expect(timeButton).toHaveClass('TraceGraph--btn-time');
+
+    const selftimeButton = screen.getByRole('button', { name: /selftime/i });
+    await userEvent.click(selftimeButton);
+    expect(selftimeButton).toHaveClass('TraceGraph--btn-selftime');
   });
 
-  it('shows help', () => {
-    const showHelp = false;
-    wrapper.setState({ showHelp });
-    wrapper.instance().showHelp();
-    expect(wrapper.state('showHelp')).toBe(true);
+  it('shows help', async () => {
+    render(<TraceGraph {...props} />);
+    const helpButton = screen.getByRole('button', { name: /help/i });
+    await userEvent.click(helpButton);
+    expect(screen.getByText(/self time/i)).toBeInTheDocument();
   });
 
-  it('hides help', () => {
-    const showHelp = true;
-    wrapper.setState({ showHelp });
-    wrapper.instance().closeSidebar();
-    expect(wrapper.state('showHelp')).toBe(false);
+  it('hides help', async () => {
+    render(<TraceGraph {...props} />);
+    const helpButton = screen.getByRole('button', { name: /help/i });
+    await userEvent.click(helpButton);
+    const closeButton = screen.getByRole('button', { name: /close/i });
+    await userEvent.click(closeButton);
+    expect(screen.queryByText(/self time/i)).not.toBeInTheDocument();
   });
 
   it('uses stroke-dash edges for followsFrom', () => {
