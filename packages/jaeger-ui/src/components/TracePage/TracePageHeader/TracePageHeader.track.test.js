@@ -56,6 +56,18 @@ describe('TracePageHeader.track', () => {
       fn: 'trackRawJsonView',
     },
     {
+      action: track.ACTION_STATISTICS,
+      category: track.CATEGORY_ALT_VIEW,
+      msg: 'tracks a GA event for viewing trace statistics',
+      fn: 'trackStatisticsView',
+    },
+    {
+      action: track.ACTION_TRACE_SPANS_VIEW,
+      category: track.CATEGORY_ALT_VIEW,
+      msg: 'tracks a GA event for viewing trace spans table',
+      fn: 'trackTraceSpansView',
+    },
+    {
       action: OPEN,
       arg: false,
       category: track.CATEGORY_SLIM_HEADER,
