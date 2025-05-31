@@ -29,7 +29,7 @@ function toHighlights(isHighlightGroup: TIsHighlightGroupFn, match: RegExpMatchA
       if (isHighlightGroup(i)) {
         return <mark key={`${tx + i}`}>{tx}</mark>;
       }
-      return <span key={`text-${i}`}>{tx}</span>;
+      return tx;
     })
     .filter(Boolean);
   return <span>{texts}</span>;
