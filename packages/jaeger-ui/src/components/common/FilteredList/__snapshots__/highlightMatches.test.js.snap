@@ -3,13 +3,21 @@
 exports[`highlightMatches(query, text) matches contains: been-kat-br[eak]able 1`] = `
 <span>
   <span>
-    been-kat-br
+    <span
+      key="text-1"
+    >
+      been-kat-br
+    </span>
     <mark
       key="eak2"
     >
       eak
     </mark>
-    able
+    <span
+      key="text-3"
+    >
+      able
+    </span>
   </span>
 </span>
 `;
@@ -17,31 +25,51 @@ exports[`highlightMatches(query, text) matches contains: been-kat-br[eak]able 1`
 exports[`highlightMatches(query, text) matches letters, in sequence: h[i]ghl[i]ght[i]ng-the-th[i]ngs 1`] = `
 <span>
   <span>
-    h
+    <span
+      key="text-1"
+    >
+      h
+    </span>
     <mark
       key="i2"
     >
       i
     </mark>
-    ghl
+    <span
+      key="text-3"
+    >
+      ghl
+    </span>
     <mark
       key="i4"
     >
       i
     </mark>
-    ght
+    <span
+      key="text-5"
+    >
+      ght
+    </span>
     <mark
       key="i6"
     >
       i
     </mark>
-    ng-the-th
+    <span
+      key="text-7"
+    >
+      ng-the-th
+    </span>
     <mark
       key="i8"
     >
       i
     </mark>
-    ngs
+    <span
+      key="text-9"
+    >
+      ngs
+    </span>
   </span>
 </span>
 `;
@@ -54,13 +82,21 @@ exports[`highlightMatches(query, text) matches the acronym: [e]xactly [e]xact sl
     >
       e
     </mark>
-    xactly 
+    <span
+      key="text-3"
+    >
+      xactly 
+    </span>
     <mark
       key="e4"
     >
       e
     </mark>
-    xact sleek bespoke
+    <span
+      key="text-5"
+    >
+      xact sleek bespoke
+    </span>
   </span>
 </span>
 `;
@@ -73,13 +109,21 @@ exports[`highlightMatches(query, text) matches the acronym: [e]xactly[E]xactSlee
     >
       e
     </mark>
-    xactly
+    <span
+      key="text-3"
+    >
+      xactly
+    </span>
     <mark
       key="E4"
     >
       E
     </mark>
-    xactSleekBespoke
+    <span
+      key="text-5"
+    >
+      xactSleekBespoke
+    </span>
   </span>
 </span>
 `;
@@ -87,13 +131,21 @@ exports[`highlightMatches(query, text) matches the acronym: [e]xactly[E]xactSlee
 exports[`highlightMatches(query, text) matches the start of a word: camelcase[Cas]e 1`] = `
 <span>
   <span>
-    camelcase
+    <span
+      key="text-1"
+    >
+      camelcase
+    </span>
     <mark
       key="Cas2"
     >
       Cas
     </mark>
-    e
+    <span
+      key="text-3"
+    >
+      e
+    </span>
   </span>
 </span>
 `;
@@ -101,13 +153,21 @@ exports[`highlightMatches(query, text) matches the start of a word: camelcase[Ca
 exports[`highlightMatches(query, text) matches the start of a word: kebabcase-[ca]se 1`] = `
 <span>
   <span>
-    kebabcase-
+    <span
+      key="text-1"
+    >
+      kebabcase-
+    </span>
     <mark
       key="ca2"
     >
       ca
     </mark>
-    se
+    <span
+      key="text-3"
+    >
+      se
+    </span>
   </span>
 </span>
 `;
@@ -120,7 +180,11 @@ exports[`highlightMatches(query, text) matches the start of the text: [eg]g ego 
     >
       eg
     </mark>
-    g ego
+    <span
+      key="text-2"
+    >
+      g ego
+    </span>
   </span>
 </span>
 `;
