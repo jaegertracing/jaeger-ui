@@ -44,10 +44,10 @@ function shouldDisplayAsStringList(key: string) {
 const stringListMarkup = (value: any[]) => (
   <div className="json-markup">
     {value.map((item, i) => (
-      <>
+      <React.Fragment key={i}>
         {i > 0 && ', '}
         <span className="json-markup-string">{item}</span>
-      </>
+      </React.Fragment>
     ))}
   </div>
 );
