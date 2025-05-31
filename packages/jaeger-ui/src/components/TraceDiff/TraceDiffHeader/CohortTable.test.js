@@ -15,9 +15,10 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import CohortTable from './CohortTable';
+import userEvent from '@testing-library/user-event';
 import { fetchedState } from '../../../constants';
 import * as dateUtils from '../../../utils/date';
+import CohortTable from './CohortTable';
 
 describe('CohortTable', () => {
   const cohort = [
@@ -70,12 +71,14 @@ describe('CohortTable', () => {
   describe('row selection', () => {
     it('defaults selectedRowKeys to empty array', () => {
       render(<CohortTable {...props} current={undefined} />);
+      expect(screen.queryByRole('radio', { checked: true })).not.toBeInTheDocument();
       expect(screen.getByText('Service & Operation')).toBeInTheDocument();
     });
 
     it('calls props.selectTrace on row selection', async () => {
       render(<CohortTable {...props} />);
-      props.selectTrace(cohort[1].id);
+      const radioButtons = screen.getAllByRole('radio');
+      await userEvent.click(radioButtons[1]);
       expect(selectTrace).toHaveBeenCalledWith(cohort[1].id);
     });
 

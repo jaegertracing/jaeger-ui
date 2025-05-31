@@ -151,6 +151,24 @@ describe('TraceDiffHeader', () => {
     await userEvent.click(chevrons[1]);
   });
 
+  describe('_diffSetTrace method', () => {
+    it('calls diffSetA when which is "a"', () => {
+      const component = new TraceDiffHeader(props);
+      const setState = jest.spyOn(component, 'setState');
+      component._diffSetTrace('a', cohort[3].id);
+      expect(diffSetA).toHaveBeenCalledWith(cohort[3].id);
+      expect(setState).toHaveBeenCalledWith({ tableVisible: null });
+    });
+
+    it('calls diffSetB when which is "b"', () => {
+      const component = new TraceDiffHeader(props);
+      const setState = jest.spyOn(component, 'setState');
+      component._diffSetTrace('b', cohort[3].id);
+      expect(diffSetB).toHaveBeenCalledWith(cohort[3].id);
+      expect(setState).toHaveBeenCalledWith({ tableVisible: null });
+    });
+  });
+
   describe('bound functions to set a & b and passes them to Popover JSX props correctly', () => {
     it('calls diffSetA and diffSetB correctly', () => {
       render(<TraceDiffHeader {...props} />);
