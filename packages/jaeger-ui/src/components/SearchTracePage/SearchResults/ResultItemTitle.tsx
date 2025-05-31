@@ -39,7 +39,7 @@ type Props = {
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
   traceID: string;
   traceName?: string;
-  disableComparision?: boolean;
+  disableComparison?: boolean;
 };
 
 const DEFAULT_DURATION_PERCENT = 0;
@@ -62,7 +62,7 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
 
   render() {
     const {
-      disableComparision,
+      disableComparison,
       duration,
       durationPercent,
       error,
@@ -98,7 +98,7 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
 
     return (
       <div className="ResultItemTitle">
-        {!disableComparision && <Checkbox {...checkboxProps} />}
+        {!disableComparison && <Checkbox {...checkboxProps} />}
         {/* TODO: Shouldn't need cast */}
         <WrapperComponent {...(wrapperProps as any)}>
           <span
@@ -106,10 +106,11 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
             style={{ width: `${durationPercent || DEFAULT_DURATION_PERCENT}%` }}
           />
           {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
-          <h3 className="ResultItemTitle--title">
+          <h3 className={`ResultItemTitle--title ${error ? 'is-error' : ''}`}>
             <TraceName error={error} state={state} traceName={traceName} />
             <TraceId traceId={traceID} className="ResultItemTitle--idExcerpt" />
           </h3>
+
         </WrapperComponent>
       </div>
     );

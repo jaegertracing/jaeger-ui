@@ -87,8 +87,9 @@ export default class ResultItem extends React.PureComponent<Props, State> {
       this.props;
     const { duration, services, startTime, traceName, traceID } = trace;
     return (
-      <div className="ResultItem" onClick={trackTraceConversions} role="button">
-        <ResultItemTitle
+      <Link to={linkTo} className="ResultItem" onClick={trackTraceConversions}>
+        <div role="button">
+             <ResultItemTitle
           duration={duration}
           durationPercent={durationPercent}
           isInDiffCohort={isInDiffCohort}
@@ -96,8 +97,9 @@ export default class ResultItem extends React.PureComponent<Props, State> {
           toggleComparison={toggleComparison}
           traceID={traceID}
           traceName={traceName}
-          disableComparision={disableComparision}
-        />
+          disableComparison={disableComparision}
+        </div>
+        </Link>
         <Link to={linkTo}>
           <Row>
             <Col span={4} className="ub-p2">
