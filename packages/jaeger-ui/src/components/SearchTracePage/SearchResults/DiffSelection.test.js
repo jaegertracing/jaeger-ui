@@ -47,23 +47,28 @@ describe('DiffSelection', () => {
   ];
 
   it('renders a trace as expected', () => {
-    const { container } = render(
+    render(
       <MemoryRouter>
         <DiffSelection traces={traces.slice(0, 1)} toggleComparison={toggleComparison} />
       </MemoryRouter>
     );
 
-    expect(container.querySelectorAll('.ResultItemTitle')).toHaveLength(1);
+    expect(screen.getByText('1 Selected for comparison')).toBeInTheDocument();
+    expect(screen.getByText('Compare Traces')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '1 Selected for comparison' })).toBeInTheDocument();
   });
 
   it('renders multiple traces as expected', () => {
-    const { container } = render(
+    render(
       <MemoryRouter>
         <DiffSelection traces={traces} toggleComparison={toggleComparison} />
       </MemoryRouter>
     );
 
-    expect(container.querySelectorAll('.ResultItemTitle')).toHaveLength(traces.length);
+    const resultItems = document.querySelectorAll('.ResultItemTitle');
+    expect(resultItems).toHaveLength(traces.length);
+    expect(screen.getByText('2 Selected for comparison')).toBeInTheDocument();
+    expect(screen.getByText('Compare Traces')).toBeInTheDocument();
   });
 
   it('renders CTA_MESSAGE when given empty traces array', () => {

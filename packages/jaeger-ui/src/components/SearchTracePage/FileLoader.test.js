@@ -18,20 +18,26 @@ import '@testing-library/jest-dom';
 
 import FileLoader from './FileLoader';
 
-jest.mock('antd', () => ({
-  ...jest.requireActual('antd'),
-  Upload: {
-    ...jest.requireActual('antd').Upload,
-    Dragger: jest.fn(({ beforeUpload, children, ...props }) => {
-      global.mockBeforeUpload = beforeUpload;
-      return (
-        <div data-testid="upload-dragger" {...props}>
-          {children}
-        </div>
-      );
-    }),
-  },
-}));
+jest.mock('antd', () => {
+  const antd = jest.requireActual('antd');
+  const { Upload } = antd;
+  const MockedDragger = ({ beforeUpload, children, ...props }) => {
+    global.mockBeforeUpload = beforeUpload;
+    return (
+      <div data-testid="upload-dragger" {...props}>
+        {children}
+      </div>
+    );
+  };
+
+  return {
+    ...antd,
+    Upload: {
+      ...Upload,
+      Dragger: MockedDragger,
+    },
+  };
+});
 
 describe('<FileLoader />', () => {
   const mockLoadJsonTraces = jest.fn();
