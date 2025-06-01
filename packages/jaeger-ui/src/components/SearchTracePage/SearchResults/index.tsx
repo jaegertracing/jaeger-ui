@@ -153,7 +153,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
     );
     if (loading) {
       return (
-        <React.Fragment>
+        <React.Fragment key="loading">
           {diffCohort.length > 0 && diffSelection}
           <LoadingIndicator className="u-mt-vast" centered />
         </React.Fragment>
@@ -161,7 +161,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
     }
     if (!Array.isArray(traces) || !traces.length) {
       return (
-        <React.Fragment>
+        <React.Fragment key="no-results">
           {diffCohort.length > 0 && diffSelection}
           {!skipMessage && (
             <div className="u-simple-card" data-test={markers.NO_RESULTS}>

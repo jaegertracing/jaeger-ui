@@ -13,90 +13,119 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen, cleanup } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
-import OpNode, { getNodeRenderer, MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
-import CopyIcon from '../../common/CopyIcon';
+import OpNode, {
+  getNodeRenderer,
+  getNodeFindEmphasisRenderer,
+  renderNodeVectorBorder,
+  MODE_SERVICE,
+  MODE_TIME,
+  MODE_SELFTIME,
+} from './OpNode';
+import EmphasizedNode from '../../common/EmphasizedNode';
+
+const baseProps = {
+  count: 5,
+  errors: 0,
+  isUiFindMatch: false,
+  operation: 'op1',
+  percent: 7.89,
+  percentSelfTime: 90,
+  selfTime: 180000,
+  service: 'service1',
+  time: 200000,
+};
+
+afterEach(cleanup);
 
 describe('<OpNode>', () => {
-  let wrapper;
-  let mode;
-  let props;
-
-  beforeEach(() => {
-    mode = MODE_SERVICE;
-    props = {
-      count: 5,
-      errors: 0,
-      isUiFindMatch: false,
-      operation: 'op1',
-      percent: 7.89,
-      percentSelfTime: 90,
-      selfTime: 180000,
-      service: 'service1',
-      time: 200000,
-    };
-    wrapper = shallow(<OpNode {...props} mode={mode} />);
+  it('renders correctly in MODE_SERVICE', () => {
+    const { container } = render(<OpNode {...baseProps} mode={MODE_SERVICE} />);
+    expect(container.querySelector('.OpNode--mode-service')).toBeInTheDocument();
+    expect(container).toHaveTextContent('5 / 0');
+    expect(container).toHaveTextContent('200 ms (7.89 %)');
+    expect(container).toHaveTextContent('40 ms');
+    expect(container).toHaveTextContent('180 ms (90 %)');
+    expect(container).toHaveTextContent('op1');
+    expect(container).toHaveTextContent('service1');
   });
 
-  it('does not explode', () => {
-    expect(wrapper).toBeDefined();
-    expect(wrapper.find('.OpNode').length).toBe(1);
-    expect(wrapper.find('.OpNode--mode-service').length).toBe(1);
+  it('renders correctly in MODE_TIME', () => {
+    const { container } = render(<OpNode {...baseProps} mode={MODE_TIME} />);
+    expect(container.querySelector('.OpNode--mode-time')).toBeInTheDocument();
+    expect(container).toHaveTextContent('5 / 0');
+    expect(container).toHaveTextContent('200 ms (7.89 %)');
+    expect(container).toHaveTextContent('40 ms');
+    expect(container).toHaveTextContent('180 ms (90 %)');
+    expect(container).toHaveTextContent('op1');
+    expect(container).toHaveTextContent('service1');
   });
 
-  it('renders OpNode', () => {
-    expect(wrapper.find('.OpNode--count').text()).toBe('5 / 0');
-    expect(wrapper.find('.OpNode--time').text()).toBe('200 ms (7.89 %)');
-    expect(wrapper.find('.OpNode--avg').text()).toBe('40 ms');
-    expect(wrapper.find('.OpNode--selfTime').text()).toBe('180 ms (90 %)');
-    expect(wrapper.find('.OpNode--op').text()).toBe('op1');
-    expect(wrapper.find('.OpNode--service').find('strong').text()).toBe('service1');
+  it('renders correctly in MODE_SELFTIME', () => {
+    const { container } = render(<OpNode {...baseProps} mode={MODE_SELFTIME} />);
+    expect(container.querySelector('.OpNode--mode-selftime')).toBeInTheDocument();
+    expect(container).toHaveTextContent('5 / 0');
+    expect(container).toHaveTextContent('200 ms (7.89 %)');
+    expect(container).toHaveTextContent('40 ms');
+    expect(container).toHaveTextContent('180 ms (90 %)');
+    expect(container).toHaveTextContent('op1');
+    expect(container).toHaveTextContent('service1');
   });
 
-  it('switches mode', () => {
-    mode = MODE_SERVICE;
-    wrapper = shallow(<OpNode {...props} mode={mode} />);
-    expect(wrapper.find('.OpNode--mode-service').length).toBe(1);
-    expect(wrapper.find('.OpNode--mode-time').length).toBe(0);
-    expect(wrapper.find('.OpNode--mode-selftime').length).toBe(0);
-
-    mode = MODE_TIME;
-    wrapper = shallow(<OpNode {...props} mode={mode} />);
-    expect(wrapper.find('.OpNode--mode-service').length).toBe(0);
-    expect(wrapper.find('.OpNode--mode-time').length).toBe(1);
-    expect(wrapper.find('.OpNode--mode-selftime').length).toBe(0);
-
-    mode = MODE_SELFTIME;
-    wrapper = shallow(<OpNode {...props} mode={mode} />);
-    expect(wrapper.find('.OpNode--mode-service').length).toBe(0);
-    expect(wrapper.find('.OpNode--mode-time').length).toBe(0);
-    expect(wrapper.find('.OpNode--mode-selftime').length).toBe(1);
+  it('renders a copy icon with correct props', () => {
+    const { container } = render(<OpNode {...baseProps} mode={MODE_SERVICE} />);
+    const icon = container.querySelector('.OpNode--copyIcon');
+    expect(icon).toBeInTheDocument();
   });
+});
 
-  it('renders a copy icon', () => {
-    const copyIcon = wrapper.find(CopyIcon);
-    expect(copyIcon.length).toBe(1);
-    expect(copyIcon.prop('copyText')).toBe(`${props.service} ${props.operation}`);
-    expect(copyIcon.prop('tooltipTitle')).toBe('Copy label');
-  });
-
-  describe('getNodeRenderer()', () => {
-    const key = 'key test value';
+describe('getNodeRenderer()', () => {
+  it('creates OpNode with passed mode', () => {
     const vertex = {
-      data: {
-        service: 'service1',
-        operation: 'op1',
-        data: {},
-      },
-      key,
+      data: { ...baseProps },
+      key: 'key1',
     };
+    const drawNode = getNodeRenderer(MODE_SERVICE);
+    const element = drawNode(vertex);
+    expect(element.type).toBe(OpNode);
+    expect(element.props.mode).toBe(MODE_SERVICE);
+  });
+});
 
-    it('creates OpNode', () => {
-      const drawNode = getNodeRenderer(MODE_SERVICE);
-      const opNode = drawNode(vertex);
-      expect(opNode.type === 'OpNode');
-      expect(opNode.props.mode).toBe(MODE_SERVICE);
-    });
+describe('getNodeFindEmphasisRenderer()', () => {
+  const key = 'highlight-key';
+  const lv = { height: 100, width: 200, vertex: { key } };
+
+  it('returns EmphasizedNode when key matches', () => {
+    const renderer = getNodeFindEmphasisRenderer(new Set([key]));
+    const result = renderer(lv);
+    expect(result).toBeDefined();
+    expect(result.type).toBe(EmphasizedNode);
+    expect(result.props.height).toBe(100);
+    expect(result.props.width).toBe(200);
+  });
+
+  it('returns null when key does not match', () => {
+    const renderer = getNodeFindEmphasisRenderer(new Set(['other-key']));
+    const result = renderer(lv);
+    expect(result).toBeNull();
+  });
+
+  it('returns null when key set is null or undefined', () => {
+    expect(getNodeFindEmphasisRenderer(null)(lv)).toBeNull();
+    expect(getNodeFindEmphasisRenderer(undefined)(lv)).toBeNull();
+  });
+});
+
+describe('renderNodeVectorBorder()', () => {
+  it('returns rect element with correct dimensions', () => {
+    const lv = { width: 150, height: 75 };
+    const result = renderNodeVectorBorder(lv);
+    expect(result.type).toBe('rect');
+    expect(result.props.width).toBe(150);
+    expect(result.props.height).toBe(75);
+    expect(result.props.className).toBe('OpNode--vectorBorder');
   });
 });

@@ -51,7 +51,11 @@ export class DiffNode extends React.PureComponent<Props> {
       <table className={`DiffNode ${className}`}>
         <tbody className="DiffNode--body">
           <tr>
-            <td className={`DiffNode--metricCell ${className}`} rowSpan={isSame ? 2 : 1}>
+            <td
+              className={`DiffNode--metricCell ${className}`}
+              rowSpan={isSame ? 2 : 1}
+              data-testid="diff-metric-cell"
+            >
               {isSame ? null : <span className="DiffNode--metricSymbol">{chgSign}</span>}
               {isSame ? a : abs(b - a)}
             </td>
@@ -66,7 +70,7 @@ export class DiffNode extends React.PureComponent<Props> {
           </tr>
           <tr>
             {isSame ? null : (
-              <td className={`DiffNode--metricCell ${className}`}>
+              <td className={`DiffNode--metricCell ${className}`} data-testid="diff-percent-cell">
                 <span className="DiffNode--metricSymbol">{chgSign}</span>
                 {a === 0 || b === 0 ? 100 : abs(((a - b) / max(a, b)) * 100).toFixed(0)}
                 <span className="DiffNode--metricSymbol">%</span>
