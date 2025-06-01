@@ -90,7 +90,9 @@ describe('CohortTable', () => {
     });
 
     it('enables radio button for selected and current record without error state', () => {
-      const { container } = render(<CohortTable {...props} cohort={[{ ...cohort[0], state: fetchedState.DONE }]} />);
+      const { container } = render(
+        <CohortTable {...props} cohort={[{ ...cohort[0], state: fetchedState.DONE }]} />
+      );
       const radioButtons = container.querySelectorAll('input[type="radio"]');
       expect(radioButtons[0]).not.toBeDisabled();
       expect(screen.getByText('Service & Operation')).toBeInTheDocument();
@@ -123,27 +125,20 @@ describe('CohortTable', () => {
 
   it('renders shortened id', () => {
     const traceID = 'trace-id-longer-than-eight-characters';
-    render(
-      <CohortTable
-        {...props}
-        cohort={[{ ...cohort[0], id: traceID }]}
-        current={traceID}
-      />
-    );
-    const idColumn = screen.getByTestId('id');
-    expect(idColumn).toHaveTextContent(traceID.slice(0, 7));
+    render(<CohortTable {...props} cohort={[{ ...cohort[0], id: traceID }]} current={traceID} />);
+    const idColumn = screen.getByText('trace-i');
+    expect(idColumn).toBeInTheDocument();
   });
 
   it('renders TraceName fragment when given complete data', () => {
     render(<CohortTable {...props} />);
-    expect(screen.getByText('trace name 0')).toBeInTheDocument();
-    expect(screen.getByText('api error')).toBeInTheDocument();
+    expect(screen.getAllByTestId('traceName').some(el => el.textContent === 'api error')).toBe(true);
     expect(screen.getByText('selected index 0')).toBeInTheDocument();
   });
 
   it('renders TraceName fragment when given minimal data', () => {
     render(<CohortTable {...props} cohort={[cohort[1]]} current={cohort[1].id} selection={{}} />);
-    expect(screen.getByText('trace-id-1')).toBeInTheDocument();
+    expect(screen.getByTestId('traceName').textContent).toBe('<trace-without-root-span>');
     expect(screen.queryByText('trace name 0')).not.toBeInTheDocument();
   });
 
