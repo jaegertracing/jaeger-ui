@@ -16,75 +16,32 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-
-jest.mock('./TraceGraph', () => {
-  const MockTraceGraph = function (props) {
-    if (!props.ev) {
-      return <h1 className="u-mt-vast u-tx-muted ub-tx-center">No trace found</h1>;
-    }
-
-    return (
-      <div className="TraceGraph--graphWrapper" data-testid="trace-graph">
-        <div data-testid="mock-digraph" className="TraceGraph--dag">
-          <div>Vertices: {props.ev.vertices ? props.ev.vertices.size : 0}</div>
-          <div>Edges: {props.ev.edges ? props.ev.edges.length : 0}</div>
-        </div>
-        <a
-          className="TraceGraph--experimental"
-          href="https://github.com/jaegertracing/jaeger-ui/issues/293"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Experimental
-        </a>
-        <div className="TraceGraph--sidebar-container">
-          <ul className="TraceGraph--menu" data-testid="TraceGraph--menu">
-            <li>
-              <button data-testid="help-button" aria-label="Help" onClick={() => {}}>
-                Help
-              </button>
-            </li>
-            <li>
-              <button
-                data-testid="service-button"
-                className="TraceGraph--btn-service is-active"
-                onClick={() => {}}
-              >
-                Service
-              </button>
-            </li>
-            <li>
-              <button data-testid="time-button" className="TraceGraph--btn-time" onClick={() => {}}>
-                Time
-              </button>
-            </li>
-            <li>
-              <button data-testid="selftime-button" className="TraceGraph--btn-selftime" onClick={() => {}}>
-                Selftime
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
-    );
-  };
-
-  function mockSetOnEdgePath(edge) {
-    return edge.followsFrom ? { strokeDasharray: 4 } : {};
-  }
-
-  return {
-    __esModule: true,
-    default: MockTraceGraph,
-    setOnEdgePath: mockSetOnEdgePath,
-  };
-});
-
 import transformTraceData from '../../../model/transform-trace-data';
 import calculateTraceDagEV from './calculateTraceDagEV';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
-
 import testTrace from './testTrace.json';
+
+jest.mock('@jaegertracing/plexus', () => {
+  const Digraph = ({ children, ...props }) => (
+    <div data-testid="mock-digraph" {...props}>
+      {children}
+    </div>
+  );
+
+  Digraph.propsFactories = {
+    classNameIsSmall: () => ({ className: 'is-small' }),
+    scaleOpacity: () => ({ opacity: 1 }),
+    scaleStrokeOpacity: () => ({ strokeOpacity: 1 }),
+  };
+
+  return {
+    Digraph,
+    LayoutManager: jest.fn().mockImplementation(() => ({
+      stopAndRelease: jest.fn(),
+    })),
+    cacheAs: (key, fn) => fn,
+  };
+});
 
 const transformedTrace = transformTraceData(testTrace);
 const ev = calculateTraceDagEV(transformedTrace);
@@ -101,8 +58,7 @@ describe('<TraceGraph>', () => {
 
   it('does not explode', () => {
     render(<TraceGraph {...props} />);
-    expect(screen.getByTestId('TraceGraph--menu')).toBeInTheDocument();
-    expect(screen.getAllByRole('button').length).toBe(4);
+    expect(screen.getByTestId('mock-digraph')).toBeInTheDocument();
   });
 
   it('may show no traces', () => {
@@ -112,48 +68,39 @@ describe('<TraceGraph>', () => {
 
   it('toggles nodeMode to time', async () => {
     render(<TraceGraph {...props} />);
-    const timeButton = screen.getByTestId('time-button');
+    const timeButton = screen.getByRole('button', { name: 'T' });
     await userEvent.click(timeButton);
     expect(timeButton).toHaveClass('TraceGraph--btn-time');
   });
 
   it('validates button nodeMode change click', async () => {
     render(<TraceGraph {...props} />);
-    const serviceButton = screen.getByTestId('service-button');
+    const serviceButton = screen.getByRole('button', { name: 'S' });
     await userEvent.click(serviceButton);
     expect(serviceButton).toHaveClass('TraceGraph--btn-service');
 
-    const timeButton = screen.getByTestId('time-button');
+    const timeButton = screen.getByRole('button', { name: 'T' });
     await userEvent.click(timeButton);
     expect(timeButton).toHaveClass('TraceGraph--btn-time');
 
-    const selftimeButton = screen.getByTestId('selftime-button');
+    const selftimeButton = screen.getByRole('button', { name: 'ST' });
     await userEvent.click(selftimeButton);
     expect(selftimeButton).toHaveClass('TraceGraph--btn-selftime');
   });
 
   it('shows help', async () => {
-    document.body.innerHTML = '<div class="TraceGraph--sidebar-container"></div>';
     render(<TraceGraph {...props} />);
-    const helpButton = screen.getByTestId('help-button');
-    await userEvent.click(helpButton);
-
-    const helpContent = document.createElement('div');
-    helpContent.className = 'TraceGraph--help-content';
-    helpContent.innerHTML =
-      '(*) <b>Self time</b> is the total time spent in a span when it was not waiting on children.';
-    document.querySelector('.TraceGraph--sidebar-container').appendChild(helpContent);
-
-    expect(screen.getByText(/self time/i)).toBeInTheDocument();
+    const helpIcon = screen.getByTestId('help-icon');
+    await userEvent.click(helpIcon);
+    expect(screen.getByText(/self-time = 10ms - 2 \* 4ms = 2ms/i)).toBeInTheDocument();
   });
 
   it('hides help', async () => {
-    document.body.innerHTML =
-      '<div class="TraceGraph--sidebar-container"><div class="TraceGraph--help-content">(*) <b>Self time</b> is the total time spent in a span when it was not waiting on children.<button aria-label="Close" data-testid="close-button">Close</button></div></div>';
     render(<TraceGraph {...props} />);
-    const closeButton = screen.getByTestId('close-button');
+    const helpIcon = screen.getByTestId('help-icon');
+    await userEvent.click(helpIcon);
+    const closeButton = screen.getByRole('button', { name: /close/i });
     await userEvent.click(closeButton);
-    document.querySelector('.TraceGraph--help-content').remove();
     expect(screen.queryByText(/self time/i)).not.toBeInTheDocument();
   });
 
@@ -163,5 +110,53 @@ describe('<TraceGraph>', () => {
 
     const edge2 = { from: 0, to: 1, followsFrom: false };
     expect(setOnEdgePath(edge2)).toEqual({});
+  });
+
+  it('handles uiFind mode correctly', () => {
+    const propsWithUiFind = {
+      ...props,
+      uiFind: 'test-service',
+      uiFindVertexKeys: new Set(['key1', 'key2']),
+    };
+    render(<TraceGraph {...propsWithUiFind} />);
+    const wrapper = screen.getByTestId('mock-digraph').parentElement;
+    expect(wrapper).toHaveClass('is-uiFind-mode');
+  });
+
+  it('initializes with correct default mode', () => {
+    render(<TraceGraph {...props} />);
+    const serviceButton = screen.getByRole('button', { name: 'S' });
+    expect(serviceButton).toHaveClass('TraceGraph--btn-service');
+  });
+
+  it('updates mode state when clicking different mode buttons', async () => {
+    render(<TraceGraph {...props} />);
+
+    const timeButton = screen.getByRole('button', { name: 'T' });
+    await userEvent.click(timeButton);
+    expect(timeButton).toHaveClass('TraceGraph--btn-time');
+
+    const selftimeButton = screen.getByRole('button', { name: 'ST' });
+    await userEvent.click(selftimeButton);
+    expect(selftimeButton).toHaveClass('TraceGraph--btn-selftime');
+  });
+
+  it('renders experimental link with correct attributes', () => {
+    render(<TraceGraph {...props} />);
+    const experimentalLink = screen.getByText('Experimental');
+    expect(experimentalLink).toHaveAttribute('href', 'https://github.com/jaegertracing/jaeger-ui/issues/293');
+    expect(experimentalLink).toHaveAttribute('target', '_blank');
+    expect(experimentalLink).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  it('handles layout manager initialization', () => {
+    const propsWithConfig = {
+      ...props,
+      traceGraphConfig: {
+        layoutManagerMemory: 1024,
+      },
+    };
+    render(<TraceGraph {...propsWithConfig} />);
+    expect(screen.getByTestId('mock-digraph')).toBeInTheDocument();
   });
 });

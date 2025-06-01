@@ -213,7 +213,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
         <div className="TraceGraph--sidebar-container">
           <ul className="TraceGraph--menu">
             <li>
-              <IoHelpCircleOutline onClick={this.showHelp} />
+              <IoHelpCircleOutline onClick={this.showHelp} data-testid="help-icon" />
             </li>
             <li>
               <Tooltip placement="left" title="Service">
@@ -260,7 +260,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
               title="Help"
               bordered={false}
               extra={
-                <a onClick={this.closeSidebar} role="button">
+                <a onClick={this.closeSidebar} role="button" aria-label="Close">
                   <IoClose />
                 </a>
               }
