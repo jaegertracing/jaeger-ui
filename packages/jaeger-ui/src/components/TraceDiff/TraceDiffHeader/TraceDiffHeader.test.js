@@ -103,15 +103,18 @@ describe('TraceDiffHeader', () => {
     };
   });
 
-  it('renders as expected', () => {
+  it('renders UI elements (A, B, VS labels) and trace name at correct DOM level', () => {
     render(<TraceDiffHeader {...props} />);
     expect(screen.getByText('A')).toBeInTheDocument();
     expect(screen.getByText('B')).toBeInTheDocument();
     expect(screen.getByText('VS')).toBeInTheDocument();
+    // This test searches for text nodes containing 'cohort-trace-name-1' while ensuring that:
+    // 1. The text is present in the node itself (not just in its children)
+    // 2. The text is not present in any of the node's children
+    // This helps verify that the trace name is rendered at the correct level in the DOM hierarchy
     expect(
       screen.getAllByText((content, node) => {
-        const hasText = n =>
-          n.textContent && n.textContent.replace(/\s+/g, '').includes('cohort-trace-name-1');
+        const hasText = n => n.textContent && n.textContent.includes('cohort-trace-name-1');
         const nodeHasText = hasText(node);
         const childrenDontHaveText = Array.from(node?.children || []).every(childNode => !hasText(childNode));
         return nodeHasText && childrenDontHaveText;
@@ -122,25 +125,28 @@ describe('TraceDiffHeader', () => {
   it('handles trace without spans', () => {
     render(<TraceDiffHeader {...props} a={cohort[0]} />);
     expect(screen.getByText('A')).toBeInTheDocument();
+    const traceNameElements = screen.getAllByTestId('traceName');
+    const hasErrorText = traceNameElements.some(element => element.textContent.includes('error 0'));
+    expect(hasErrorText).toBe(true);
   });
 
   it('handles absent a', () => {
     render(<TraceDiffHeader {...props} a={null} />);
-    expect(screen.getByText('B')).toBeInTheDocument();
+    expect(screen.getByText('B', { selector: '.TraceDiffHeader--label' })).toBeInTheDocument();
   });
 
   it('handles absent b', () => {
     render(<TraceDiffHeader {...props} b={null} />);
-    expect(screen.getByText('A')).toBeInTheDocument();
+    expect(screen.getByText('A', { selector: '.TraceDiffHeader--label' })).toBeInTheDocument();
   });
 
   it('handles absent a & b', () => {
     render(<TraceDiffHeader {...props} a={null} b={null} />);
-    expect(screen.getByText('A')).toBeInTheDocument();
-    expect(screen.getByText('B')).toBeInTheDocument();
+    expect(screen.getByText('A', { selector: '.TraceDiffHeader--label' })).toBeInTheDocument();
+    expect(screen.getByText('B', { selector: '.TraceDiffHeader--label' })).toBeInTheDocument();
   });
 
-  it('manages visibility correctly', async () => {
+  it('toggles popover visibility when clicking on trace title chevrons', async () => {
     render(<TraceDiffHeader {...props} />);
     const chevrons = screen.getAllByTestId('TraceDiffHeader--traceTitleChevron');
     expect(chevrons.length).toBeGreaterThanOrEqual(2);
@@ -152,7 +158,7 @@ describe('TraceDiffHeader', () => {
   });
 
   describe('_diffSetTrace method', () => {
-    it('calls diffSetA when which is "a"', () => {
+    it('calls diffSetA when parameter "which" equals "a"', () => {
       const component = new TraceDiffHeader(props);
       const setState = jest.spyOn(component, 'setState');
       component._diffSetTrace('a', cohort[3].id);
@@ -160,7 +166,7 @@ describe('TraceDiffHeader', () => {
       expect(setState).toHaveBeenCalledWith({ tableVisible: null });
     });
 
-    it('calls diffSetB when which is "b"', () => {
+    it('calls diffSetB when parameter "which" equals "b"', () => {
       const component = new TraceDiffHeader(props);
       const setState = jest.spyOn(component, 'setState');
       component._diffSetTrace('b', cohort[3].id);
