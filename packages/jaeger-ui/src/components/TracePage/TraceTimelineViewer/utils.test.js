@@ -15,11 +15,14 @@
 import {
   findServerChildSpan,
   createViewedBoundsFunc,
+  createSparseViewedBoundsFunc,
+  analyzeTraceGaps,
   isClientSpan,
   isErrorSpan,
   isServerSpan,
   spanContainsErredSpan,
   spanHasTag,
+  DEFAULT_SPARSE_TRACE_CONFIG,
 } from './utils';
 
 import traceGenerator from '../../../demo/trace-generators';
@@ -152,6 +155,139 @@ describe('TraceTimelineViewer/utils', () => {
       expect(findServerChildSpan(spans)).toBeFalsy();
       spans[1].depth = spans[0].depth;
       expect(findServerChildSpan(spans)).toBeFalsy();
+    });
+  });
+
+  describe('Sparse Trace Visualization', () => {
+    describe('analyzeTraceGaps()', () => {
+      it('should identify gaps between spans', () => {
+        const spans = [
+          {
+            spanID: 'span1',
+            startTime: 1000,
+            duration: 100,
+          },
+          {
+            spanID: 'span2',
+            startTime: 5000, // 3900 microsecond gap
+            duration: 200,
+          },
+        ];
+
+        const gaps = analyzeTraceGaps(spans, 1000, 4200, DEFAULT_SPARSE_TRACE_CONFIG);
+
+        expect(gaps).toHaveLength(1);
+        expect(gaps[0].startTime).toBe(1100);
+        expect(gaps[0].endTime).toBe(5000);
+        expect(gaps[0].duration).toBe(3900);
+        expect(gaps[0].shouldCollapse).toBe(true); // 3900 > 200 * 3
+      });
+
+      it('should not collapse small gaps', () => {
+        const spans = [
+          {
+            spanID: 'span1',
+            startTime: 1000,
+            duration: 1000,
+          },
+          {
+            spanID: 'span2',
+            startTime: 2500, // 500 microsecond gap
+            duration: 1000,
+          },
+        ];
+
+        const gaps = analyzeTraceGaps(spans, 1000, 2500, DEFAULT_SPARSE_TRACE_CONFIG);
+
+        expect(gaps).toHaveLength(1);
+        expect(gaps[0].shouldCollapse).toBe(false); // 500 < 1000 * 3
+      });
+
+      it('should handle overlapping spans', () => {
+        const spans = [
+          {
+            spanID: 'span1',
+            startTime: 1000,
+            duration: 2000,
+          },
+          {
+            spanID: 'span2',
+            startTime: 1500, // Overlapping
+            duration: 1000,
+          },
+        ];
+
+        const gaps = analyzeTraceGaps(spans, 1000, 3000, DEFAULT_SPARSE_TRACE_CONFIG);
+
+        expect(gaps).toHaveLength(0); // No gaps for overlapping spans
+      });
+
+      it('should respect minimum gap duration threshold', () => {
+        const spans = [
+          {
+            spanID: 'span1',
+            startTime: 1000,
+            duration: 100,
+          },
+          {
+            spanID: 'span2',
+            startTime: 1500, // 400 microsecond gap (less than 1 second minimum)
+            duration: 100,
+          },
+        ];
+
+        const gaps = analyzeTraceGaps(spans, 1000, 1600, DEFAULT_SPARSE_TRACE_CONFIG);
+
+        expect(gaps).toHaveLength(0); // Gap too small (< 1 second)
+      });
+    });
+
+    describe('createSparseViewedBoundsFunc()', () => {
+      it('should return standard bounds function when no collapsible gaps', () => {
+        const viewRange = {
+          min: 1000,
+          max: 5000,
+          viewStart: 0,
+          viewEnd: 1,
+        };
+        const gaps = [];
+
+        const boundsFunc = createSparseViewedBoundsFunc(viewRange, gaps);
+        const result = boundsFunc(2000, 3000);
+
+        expect(result.start).toBeCloseTo(0.25);
+        expect(result.end).toBeCloseTo(0.5);
+      });
+
+      it('should compress timeline when gaps are collapsed', () => {
+        const viewRange = {
+          min: 1000,
+          max: 10000,
+          viewStart: 0,
+          viewEnd: 1,
+        };
+        const gaps = [
+          {
+            startTime: 2000,
+            endTime: 8000,
+            duration: 6000,
+            shouldCollapse: true,
+            collapsedWidth: 0.02, // 2% of timeline
+          },
+        ];
+
+        const boundsFunc = createSparseViewedBoundsFunc(viewRange, gaps);
+
+        // Test span before the gap
+        const beforeGap = boundsFunc(1500, 1800);
+        expect(beforeGap.start).toBeGreaterThan(0);
+        expect(beforeGap.end).toBeLessThan(1);
+
+        // Test span after the gap
+        const afterGap = boundsFunc(8500, 9000);
+        expect(afterGap.start).toBeGreaterThan(0);
+        expect(afterGap.end).toBeLessThan(1);
+      });
     });
   });
 });

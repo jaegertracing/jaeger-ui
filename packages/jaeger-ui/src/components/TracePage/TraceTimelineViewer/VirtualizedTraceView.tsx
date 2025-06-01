@@ -30,13 +30,19 @@ import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 import {
   createViewedBoundsFunc,
+  createSparseViewedBoundsFunc,
+  analyzeTraceGaps,
   findServerChildSpan,
   isErrorSpan,
   isKindClient,
   isKindProducer,
   spanContainsErredSpan,
   ViewedBoundsFunctionType,
+  TimelineGap,
+  DEFAULT_SPARSE_TRACE_CONFIG,
+  SparseTraceConfig,
 } from './utils';
+import TimelineGapComponent from './TimelineGap';
 import { Accessors } from '../ScrollManager';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
@@ -54,6 +60,9 @@ type RowState = {
   isDetail: boolean;
   span: Span;
   spanIndex: number;
+} | {
+  isGap: true;
+  gap: TimelineGap;
 };
 
 type TVirtualizedTraceViewOwnProps = {
@@ -103,13 +112,31 @@ const NUM_TICKS = 5;
 function generateRowStates(
   spans: Span[] | TNil,
   childrenHiddenIDs: Set<string>,
-  detailStates: Map<string, DetailState | TNil>
+  detailStates: Map<string, DetailState | TNil>,
+  gaps: TimelineGap[] = []
 ): RowState[] {
   if (!spans) {
     return [];
   }
   let collapseDepth = null;
-  const rowStates = [];
+  const rowStates: RowState[] = [];
+  const gapsByPosition = new Map<number, TimelineGap>();
+
+  // Map gaps to their positions relative to spans
+  gaps.forEach(gap => {
+    for (let i = 0; i < spans.length - 1; i++) {
+      const currentSpan = spans[i];
+      const nextSpan = spans[i + 1];
+      const currentSpanEndTime = currentSpan.startTime + currentSpan.duration;
+
+      if (Math.abs(gap.startTime - currentSpanEndTime) < 1000 && // 1ms tolerance
+          Math.abs(gap.endTime - nextSpan.startTime) < 1000) {
+        gapsByPosition.set(i, gap);
+        break;
+      }
+    }
+  });
+
   for (let i = 0; i < spans.length; i++) {
     const span = spans[i];
     const { spanID, depth } = span;
@@ -139,6 +166,15 @@ function generateRowStates(
         spanIndex: i,
       });
     }
+
+    // Add gap row if there's a gap after this span
+    const gap = gapsByPosition.get(i);
+    if (gap && gap.shouldCollapse) {
+      rowStates.push({
+        isGap: true,
+        gap,
+      });
+    }
   }
   return rowStates;
 }
@@ -146,9 +182,10 @@ function generateRowStates(
 function generateRowStatesFromTrace(
   trace: Trace | TNil,
   childrenHiddenIDs: Set<string>,
-  detailStates: Map<string, DetailState | TNil>
+  detailStates: Map<string, DetailState | TNil>,
+  gaps: TimelineGap[] = []
 ): RowState[] {
-  return trace ? generateRowStates(trace.spans, childrenHiddenIDs, detailStates) : [];
+  return trace ? generateRowStates(trace.spans, childrenHiddenIDs, detailStates, gaps) : [];
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -199,8 +236,10 @@ function mergeChildrenCriticalPath(
   return criticalPathSections;
 }
 
-const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
+const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace, _isEqual);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
+const memoizedSparseViewBoundsFunc = memoizeOne(createSparseViewedBoundsFunc, _isEqual);
+const memoizedAnalyzeTraceGaps = memoizeOne(analyzeTraceGaps);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
 const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: criticalPathSection[]) =>
   _groupBy(criticalPath, x => x.spanId)
@@ -209,6 +248,9 @@ const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: criticalPathSect
 // export from tests
 export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
   listView: ListView | TNil;
+  private sparseTraceConfig: SparseTraceConfig = DEFAULT_SPARSE_TRACE_CONFIG;
+  private collapsedGaps: Set<TimelineGap> = new Set();
+
   constructor(props: VirtualizedTraceViewProps) {
     super(props);
     const { setTrace, trace, uiFind } = props;
@@ -259,7 +301,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   getRowStates(): RowState[] {
     const { childrenHiddenIDs, detailStates, trace } = this.props;
-    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates);
+    const gaps = this.getTraceGaps();
+    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, gaps);
   }
 
   getClippingCssClasses(): string {
@@ -267,17 +310,45 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     return memoizedGetCssClasses(currentViewRangeTime);
   }
 
+  getTraceGaps(): TimelineGap[] {
+    const { trace } = this.props;
+    if (!trace) return [];
+
+    return memoizedAnalyzeTraceGaps(
+      trace.spans,
+      trace.startTime,
+      trace.duration,
+      this.sparseTraceConfig
+    );
+  }
+
   getViewedBounds(): ViewedBoundsFunctionType {
     const { currentViewRangeTime, trace } = this.props;
     const [zoomStart, zoomEnd] = currentViewRangeTime;
 
-    return memoizedViewBoundsFunc({
+    const viewRange = {
       min: trace.startTime,
       max: trace.endTime,
       viewStart: zoomStart,
       viewEnd: zoomEnd,
-    });
+    };
+
+    if (this.sparseTraceConfig.enabled) {
+      const gaps = this.getTraceGaps();
+      return memoizedSparseViewBoundsFunc(viewRange, gaps);
+    }
+
+    return memoizedViewBoundsFunc(viewRange);
   }
+
+  toggleGapCollapse = (gap: TimelineGap) => {
+    if (this.collapsedGaps.has(gap)) {
+      this.collapsedGaps.delete(gap);
+    } else {
+      this.collapsedGaps.add(gap);
+    }
+    this.forceUpdate();
+  };
 
   focusSpan = (uiFind: string) => {
     const { trace, focusUiFindMatches, location, history } = this.props;
@@ -315,13 +386,20 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   getCollapsedChildren = () => this.props.childrenHiddenIDs;
 
-  mapRowIndexToSpanIndex = (index: number) => this.getRowStates()[index].spanIndex;
+  mapRowIndexToSpanIndex = (index: number) => {
+    const rowState = this.getRowStates()[index];
+    if ('isGap' in rowState) {
+      throw new Error(`Row ${index} is a gap, not a span`);
+    }
+    return rowState.spanIndex;
+  };
 
   mapSpanIndexToRowIndex = (index: number) => {
     const max = this.getRowStates().length;
     for (let i = 0; i < max; i++) {
-      const { spanIndex } = this.getRowStates()[i];
-      if (spanIndex === index) {
+      const rowState = this.getRowStates()[i];
+      if ('isGap' in rowState) continue;
+      if (rowState.spanIndex === index) {
         return i;
       }
     }
@@ -339,17 +417,36 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   // use long form syntax to avert flow error
   // https://github.com/facebook/flow/issues/3076#issuecomment-290944051
   getKeyFromIndex = (index: number) => {
-    const { isDetail, span } = this.getRowStates()[index];
+    const rowState = this.getRowStates()[index];
+    if ('isGap' in rowState) {
+      return `gap--${rowState.gap.startTime}--${rowState.gap.endTime}`;
+    }
+    const { isDetail, span } = rowState;
     return `${span.spanID}--${isDetail ? 'detail' : 'bar'}`;
   };
 
   getIndexFromKey = (key: string) => {
     const parts = key.split('--');
+    if (parts[0] === 'gap') {
+      const startTime = Number(parts[1]);
+      const endTime = Number(parts[2]);
+      const max = this.getRowStates().length;
+      for (let i = 0; i < max; i++) {
+        const rowState = this.getRowStates()[i];
+        if ('isGap' in rowState && rowState.gap.startTime === startTime && rowState.gap.endTime === endTime) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
     const _spanID = parts[0];
     const _isDetail = parts[1] === 'detail';
     const max = this.getRowStates().length;
     for (let i = 0; i < max; i++) {
-      const { span, isDetail } = this.getRowStates()[i];
+      const rowState = this.getRowStates()[i];
+      if ('isGap' in rowState) continue;
+      const { span, isDetail } = rowState;
       if (span.spanID === _spanID && isDetail === _isDetail) {
         return i;
       }
@@ -358,7 +455,11 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   };
 
   getRowHeight = (index: number) => {
-    const { span, isDetail } = this.getRowStates()[index];
+    const rowState = this.getRowStates()[index];
+    if ('isGap' in rowState) {
+      return DEFAULT_HEIGHTS.bar; // Same height as span bars
+    }
+    const { span, isDetail } = rowState;
     if (!isDetail) {
       return DEFAULT_HEIGHTS.bar;
     }
@@ -374,11 +475,36 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   };
 
   renderRow = (key: string, style: React.CSSProperties, index: number, attrs: object) => {
-    const { isDetail, span, spanIndex } = this.getRowStates()[index];
+    const rowState = this.getRowStates()[index];
+
+    if ('isGap' in rowState) {
+      return this.renderGapRow(rowState.gap, key, style, attrs);
+    }
+
+    const { isDetail, span, spanIndex } = rowState;
     return isDetail
       ? this.renderSpanDetailRow(span, key, style, attrs)
       : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
   };
+
+  renderGapRow(gap: TimelineGap, key: string, style: React.CSSProperties, attrs: object) {
+    const { spanNameColumnWidth, trace } = this.props;
+    if (!trace) return null;
+
+    const isCollapsed = this.collapsedGaps.has(gap) || gap.shouldCollapse;
+
+    return (
+      <div className="VirtualizedTraceView--row VirtualizedTraceView--gapRow" key={key} style={style} {...attrs}>
+        <TimelineGapComponent
+          gap={gap}
+          isCollapsed={isCollapsed}
+          onToggleCollapse={this.toggleGapCollapse}
+          columnDivision={spanNameColumnWidth}
+          traceDuration={trace.duration}
+        />
+      </div>
+    );
+  }
 
   getCriticalPathSections(
     isCollapsed: boolean,

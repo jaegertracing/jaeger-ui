@@ -27,3 +27,8 @@ limitations under the License.
 .VirtualizedTraceView--row {
   width: 100%;
 }
+
+.VirtualizedTraceView--gapRow {
+  background-color: #fafafa;
+  border-bottom: 1px solid #e8e8e8;
+}
