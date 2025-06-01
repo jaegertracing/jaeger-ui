@@ -82,18 +82,22 @@ describe('CohortTable', () => {
       expect(selectTrace).toHaveBeenCalledWith(cohort[1].id);
     });
 
-    it('calculates checkbox props for selected and current record with error', () => {
-      render(<CohortTable {...props} />);
+    it('disables radio button for selected and current record with error state', () => {
+      const { container } = render(<CohortTable {...props} />);
+      const radioButtons = container.querySelectorAll('input[type="radio"]');
+      expect(radioButtons[0]).toBeDisabled();
       expect(screen.getByText('selected index 0')).toBeInTheDocument();
     });
 
-    it('calculates checkbox props for selected and current record without error', () => {
-      render(<CohortTable {...props} cohort={[{ ...cohort[0], state: fetchedState.DONE }]} />);
+    it('enables radio button for selected and current record without error state', () => {
+      const { container } = render(<CohortTable {...props} cohort={[{ ...cohort[0], state: fetchedState.DONE }]} />);
+      const radioButtons = container.querySelectorAll('input[type="radio"]');
+      expect(radioButtons[0]).not.toBeDisabled();
       expect(screen.getByText('Service & Operation')).toBeInTheDocument();
     });
 
-    it('calculates checkbox props for selected but not current record without error', () => {
-      render(
+    it('disables radio button for selected but not current record', () => {
+      const { container } = render(
         <CohortTable
           {...props}
           selection={{
@@ -104,36 +108,43 @@ describe('CohortTable', () => {
           }}
         />
       );
-      expect(screen.getByText('Service & Operation')).toBeInTheDocument();
+      const radioButtons = container.querySelectorAll('input[type="radio"]');
+      expect(radioButtons[1]).toBeDisabled();
+      expect(screen.getByText('selected index 1')).toBeInTheDocument();
     });
 
-    it('calculates checkbox props for not selected record', () => {
-      render(<CohortTable {...props} />);
+    it('enables radio button for non-selected record without error state', () => {
+      const { container } = render(<CohortTable {...props} />);
+      const radioButtons = container.querySelectorAll('input[type="radio"]');
+      expect(radioButtons[1]).not.toBeDisabled();
       expect(screen.getByText('Service & Operation')).toBeInTheDocument();
     });
   });
 
   it('renders shortened id', () => {
-    render(<CohortTable {...props} />);
-    expect(screen.getAllByText(props.current.slice(0, 7)).length).toBeGreaterThan(0);
+    const traceID = 'trace-id-longer-than-eight-characters';
+    render(
+      <CohortTable
+        {...props}
+        cohort={[{ ...cohort[0], id: traceID }]}
+        current={traceID}
+      />
+    );
+    const idColumn = screen.getByTestId('id');
+    expect(idColumn).toHaveTextContent(traceID.slice(0, 7));
   });
 
   it('renders TraceName fragment when given complete data', () => {
     render(<CohortTable {...props} />);
+    expect(screen.getByText('trace name 0')).toBeInTheDocument();
+    expect(screen.getByText('api error')).toBeInTheDocument();
     expect(screen.getByText('selected index 0')).toBeInTheDocument();
-    expect(
-      screen.getAllByText((content, node) => {
-        const hasText = n => n.textContent && n.textContent.replace(/\s+/g, '').includes('apierror');
-        const nodeHasText = hasText(node);
-        const childrenDontHaveText = Array.from(node?.children || []).every(childNode => !hasText(childNode));
-        return nodeHasText && childrenDontHaveText;
-      }).length
-    ).toBeGreaterThan(0);
   });
 
   it('renders TraceName fragment when given minimal data', () => {
     render(<CohortTable {...props} cohort={[cohort[1]]} current={cohort[1].id} selection={{}} />);
-    expect(screen.getByText('Service & Operation')).toBeInTheDocument();
+    expect(screen.getByText('trace-id-1')).toBeInTheDocument();
+    expect(screen.queryByText('trace name 0')).not.toBeInTheDocument();
   });
 
   it('renders date iff record state is fetchedState.DONE', () => {
