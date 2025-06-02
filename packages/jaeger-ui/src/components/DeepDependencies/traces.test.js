@@ -92,7 +92,13 @@ describe('mapStateToProps', () => {
     sanitizeUrlStateSpy = jest.spyOn(url, 'sanitizeUrlState').mockImplementation(u => u);
     transformDdgDataSpy = jest.spyOn(transformDdgData, 'default').mockReturnValue(mockModel);
     transformTracesToPathsSpy = jest.spyOn(transformTracesToPaths, 'default').mockReturnValue(mockPayload);
-    spies = [getUrlStateSpy, makeGraphSpy, sanitizeUrlStateSpy, transformDdgDataSpy, transformTracesToPathsSpy];
+    spies = [
+      getUrlStateSpy,
+      makeGraphSpy,
+      sanitizeUrlStateSpy,
+      transformDdgDataSpy,
+      transformTracesToPathsSpy,
+    ];
   });
 
   beforeEach(() => {
