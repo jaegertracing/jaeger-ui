@@ -66,18 +66,18 @@ describe('stripEmbeddedState()', () => {
     });
   });
 
-it('does not strip anything except uiEmbed when version is not v0', () => {
-  const input = {
-    uiEmbed: 'v1',
-    uiSearchHideGraph: '1',
-    uiTimelineCollapseTitle: '1',
-  };
+  it('does not strip anything except uiEmbed when version is not v0', () => {
+    const input = {
+      uiEmbed: 'v1',
+      uiSearchHideGraph: '1',
+      uiTimelineCollapseTitle: '1',
+    };
 
-  expect(stripEmbeddedState(input)).toEqual({
-    uiSearchHideGraph: '1',
-    uiTimelineCollapseTitle: '1',
+    expect(stripEmbeddedState(input)).toEqual({
+      uiSearchHideGraph: '1',
+      uiTimelineCollapseTitle: '1',
+    });
   });
-});
 
   it('works when uiEmbed is undefined', () => {
     const input = {

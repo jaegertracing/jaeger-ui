@@ -97,4 +97,40 @@ describe('fileReader.readJsonFile', () => {
     const p = readJsonFile({ file });
     return expect(p).resolves.toMatchObject(expectedOutput);
   });
+
+  it('handles FileReader error', () => {
+    const file = new File([''], 'error.json');
+    const mockReader = { readAsText: jest.fn(), onerror: null, error: new Error('Read error') };
+
+    jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
+    const promise = readJsonFile({ file });
+
+    mockReader.onerror();
+
+    return expect(promise).rejects.toThrow(/Read error/);
+  });
+
+  it('handles FileReader abort', () => {
+    const file = new File([''], 'abort.json');
+    const mockReader = { readAsText: jest.fn(), onabort: null };
+
+    jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
+    const promise = readJsonFile({ file });
+
+    mockReader.onabort();
+
+    return expect(promise).rejects.toThrow(/aborted/);
+  });
+
+  it('rejects if FileReader result is not a string', () => {
+    const file = new File(['{ "test": true }'], 'dummy.json');
+    const mockReader = { readAsText: jest.fn(), onload: null, result: {} };
+
+    jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
+    const promise = readJsonFile({ file });
+
+    mockReader.onload();
+
+    return expect(promise).rejects.toThrow(/Invalid result type/);
+  });
 });
