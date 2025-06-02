@@ -16,30 +16,64 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Digraph, LayoutManager, cacheAs } from '@jaegertracing/plexus';
 import transformTraceData from '../../../model/transform-trace-data';
 import calculateTraceDagEV from './calculateTraceDagEV';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import testTrace from './testTrace.json';
 
-jest.mock('@jaegertracing/plexus', () => {
-  const Digraph = ({ children, ...props }) => (
-    <div data-testid="mock-digraph" {...props}>
-      {children}
-    </div>
-  );
+const MOCK_MODE_SERVICE = 'service';
+const MOCK_MODE_TIME = 'time';
+const MOCK_MODE_SELFTIME = 'selftime';
 
-  Digraph.propsFactories = {
+jest.mock('@jaegertracing/plexus', () => {
+  const MockDigraph = ({ children, layers, ...props }) => {
+    const nodeLayer = layers.find(layer => layer.key === 'nodes');
+    const mode = nodeLayer?.renderNode?.toString().includes('trace-graph/nodes/render/')
+      ? nodeLayer.renderNode.toString().match(/trace-graph\/nodes\/render\/([^)]+)/)[1]
+      : MOCK_MODE_SERVICE;
+
+    const domProps = Object.entries(props).reduce((acc, [key, value]) => {
+      if (typeof value === 'boolean') {
+        acc[key] = value.toString();
+      } else if (typeof value === 'object' || typeof value === 'function') {
+        return acc;
+      } else {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+
+    return (
+      <div data-testid="mock-digraph" data-mode={mode} {...domProps}>
+        {children}
+      </div>
+    );
+  };
+
+  MockDigraph.propsFactories = {
     classNameIsSmall: () => ({ className: 'is-small' }),
     scaleOpacity: () => ({ opacity: 1 }),
     scaleStrokeOpacity: () => ({ strokeOpacity: 1 }),
   };
 
+  const MockLayoutManager = jest.fn().mockImplementation(() => ({
+    stopAndRelease: jest.fn(),
+  }));
+
+  const mockCacheAs = (key, fn) => {
+    const cachedFn = (...args) => fn(...args);
+    Object.defineProperty(cachedFn, 'toString', {
+      value: () => key,
+      configurable: true,
+    });
+    return cachedFn;
+  };
+
   return {
-    Digraph,
-    LayoutManager: jest.fn().mockImplementation(() => ({
-      stopAndRelease: jest.fn(),
-    })),
-    cacheAs: (key, fn) => fn,
+    Digraph: MockDigraph,
+    LayoutManager: MockLayoutManager,
+    cacheAs: mockCacheAs,
   };
 });
 
@@ -70,22 +104,22 @@ describe('<TraceGraph>', () => {
     render(<TraceGraph {...props} />);
     const timeButton = screen.getByRole('button', { name: 'T' });
     await userEvent.click(timeButton);
-    expect(timeButton).toHaveClass('TraceGraph--btn-time');
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MOCK_MODE_TIME);
   });
 
   it('validates button nodeMode change click', async () => {
     render(<TraceGraph {...props} />);
     const serviceButton = screen.getByRole('button', { name: 'S' });
     await userEvent.click(serviceButton);
-    expect(serviceButton).toHaveClass('TraceGraph--btn-service');
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MOCK_MODE_SERVICE);
 
     const timeButton = screen.getByRole('button', { name: 'T' });
     await userEvent.click(timeButton);
-    expect(timeButton).toHaveClass('TraceGraph--btn-time');
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MOCK_MODE_TIME);
 
     const selftimeButton = screen.getByRole('button', { name: 'ST' });
     await userEvent.click(selftimeButton);
-    expect(selftimeButton).toHaveClass('TraceGraph--btn-selftime');
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MOCK_MODE_SELFTIME);
   });
 
   it('shows help', async () => {
@@ -125,20 +159,24 @@ describe('<TraceGraph>', () => {
 
   it('initializes with correct default mode', () => {
     render(<TraceGraph {...props} />);
-    const serviceButton = screen.getByRole('button', { name: 'S' });
-    expect(serviceButton).toHaveClass('TraceGraph--btn-service');
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MOCK_MODE_SERVICE);
   });
 
   it('updates mode state when clicking different mode buttons', async () => {
     render(<TraceGraph {...props} />);
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MOCK_MODE_SERVICE);
 
     const timeButton = screen.getByRole('button', { name: 'T' });
     await userEvent.click(timeButton);
-    expect(timeButton).toHaveClass('TraceGraph--btn-time');
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MOCK_MODE_TIME);
 
     const selftimeButton = screen.getByRole('button', { name: 'ST' });
     await userEvent.click(selftimeButton);
-    expect(selftimeButton).toHaveClass('TraceGraph--btn-selftime');
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MOCK_MODE_SELFTIME);
+
+    const serviceButton = screen.getByRole('button', { name: 'S' });
+    await userEvent.click(serviceButton);
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MOCK_MODE_SERVICE);
   });
 
   it('renders experimental link with correct attributes', () => {
@@ -158,5 +196,10 @@ describe('<TraceGraph>', () => {
     };
     render(<TraceGraph {...propsWithConfig} />);
     expect(screen.getByTestId('mock-digraph')).toBeInTheDocument();
+    expect(LayoutManager).toHaveBeenCalledWith(
+      expect.objectContaining({
+        totalMemory: 1024,
+      })
+    );
   });
 });
