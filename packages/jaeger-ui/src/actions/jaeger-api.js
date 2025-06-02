@@ -45,6 +45,12 @@ export const searchTraces = createAction(
   query => ({ query })
 );
 
+export const searchTracesWithPagination = createAction(
+  '@JAEGER_API/SEARCH_TRACES_PAGINATED',
+  query => JaegerAPI.searchTraces(query),
+  query => ({ query })
+);
+
 export const fetchServices = createAction('@JAEGER_API/FETCH_SERVICES', () => JaegerAPI.fetchServices());
 
 export const fetchServiceOperations = createAction(

@@ -72,6 +72,12 @@ export type ReduxState = {
       results: string[];
       state?: FetchedState;
       query?: SearchQuery;
+      pagination?: {
+        currentPage: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+      };
     };
   };
   traceDiff: TTraceDiffState;

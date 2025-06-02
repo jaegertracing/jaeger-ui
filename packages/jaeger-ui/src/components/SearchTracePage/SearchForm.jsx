@@ -212,6 +212,7 @@ export function convertQueryParamsToFormDates({ start, end }) {
 export function submitForm(fields, searchTraces) {
   const {
     resultsLimit,
+    pageSize,
     service,
     startDate,
     startDateTime,
@@ -245,10 +246,15 @@ export function submitForm(fields, searchTraces) {
 
   trackFormInput(resultsLimit, operation, tags, minDuration, maxDuration, lookback, service);
 
+  // Use pageSize if available, otherwise fall back to resultsLimit for backward compatibility
+  const effectivePageSize = pageSize || resultsLimit;
+
   searchTraces({
     service,
     operation: operation !== DEFAULT_OPERATION ? operation : undefined,
-    limit: resultsLimit,
+    limit: effectivePageSize,
+    pageSize: effectivePageSize,
+    page: 1, // Always start from page 1 when submitting the form
     lookback,
     start,
     end,
@@ -274,6 +280,7 @@ export class SearchFormImpl extends React.PureComponent {
         minDuration: this.props.initialValues?.minDuration,
         maxDuration: this.props.initialValues?.maxDuration,
         resultsLimit: this.props.initialValues?.resultsLimit,
+        pageSize: this.props.initialValues?.pageSize,
       },
     };
   }
@@ -566,17 +573,20 @@ export class SearchFormImpl extends React.PureComponent {
           </Col>
         </Row>
 
-        <FormItem label="Limit Results">
-          <Input
-            name="resultsLimit"
-            value={this.state.formData.resultsLimit}
+        <FormItem label="Page Size">
+          <Select
+            name="pageSize"
+            value={this.state.formData.pageSize || this.state.formData.resultsLimit}
             disabled={submitting}
-            type="number"
-            placeholder="Limit Results"
-            min={1}
-            max={getConfigValue('search.maxLimit')}
-            onChange={e => this.handleChange({ resultsLimit: e.target.value })}
-          />
+            placeholder="Page Size"
+            onChange={value => this.handleChange({ pageSize: value, resultsLimit: value })}
+            style={{ width: '100%' }}
+          >
+            <Option value={10}>10</Option>
+            <Option value={20}>20</Option>
+            <Option value={50}>50</Option>
+            <Option value={100}>100</Option>
+          </Select>
         </FormItem>
 
         <Button
@@ -617,6 +627,8 @@ export function mapStateToProps(state) {
   const {
     service,
     limit,
+    pageSize,
+    page,
     start,
     end,
     operation,
@@ -709,6 +721,7 @@ export function mapStateToProps(state) {
     initialValues: {
       service: service || lastSearchService || '-',
       resultsLimit: limit || DEFAULT_LIMIT,
+      pageSize: pageSize || limit || DEFAULT_LIMIT,
       lookback: lookback || DEFAULT_LOOKBACK,
       startDate: queryStartDate || today,
       startDateTime: queryStartDateTime || '00:00',

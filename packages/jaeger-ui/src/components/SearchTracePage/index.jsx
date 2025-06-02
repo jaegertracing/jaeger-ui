@@ -81,6 +81,20 @@ export class SearchTracePageImpl extends Component {
     trackSortByChange(sortBy);
   };
 
+  handlePageChange = (page, pageSize) => {
+    const { queryOfResults, searchTraces } = this.props;
+    if (queryOfResults) {
+      // Create new query with updated pagination parameters
+      const newQuery = {
+        ...queryOfResults,
+        page,
+        pageSize,
+        limit: pageSize, // Keep limit for backward compatibility
+      };
+      searchTraces(newQuery);
+    }
+  };
+
   goToTrace = traceID => {
     const { queryOfResults } = this.props;
     const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
@@ -161,6 +175,8 @@ export class SearchTracePageImpl extends Component {
               rawTraces={traceResultsToDownload}
               sortBy={this.state.sortBy}
               handleSortChange={this.handleSortChange}
+              pagination={pagination}
+              onPageChange={this.handlePageChange}
             />
           )}
           {showLogo && (
@@ -222,7 +238,7 @@ SearchTracePageImpl.propTypes = {
 
 const stateTraceXformer = memoizeOne(stateTrace => {
   const { traces: traceMap, rawTraces, search } = stateTrace;
-  const { query, results, state, error: traceError } = search;
+  const { query, results, state, error: traceError, pagination } = search;
 
   const loadingTraces = state === fetchedState.LOADING;
   const traces = results.map(id => traceMap[id].data);
@@ -230,7 +246,7 @@ const stateTraceXformer = memoizeOne(stateTrace => {
     null,
     traces.map(tr => tr.duration)
   );
-  return { traces, rawTraces, maxDuration, traceError, loadingTraces, query };
+  return { traces, rawTraces, maxDuration, traceError, loadingTraces, query, pagination };
 });
 
 const stateTraceDiffXformer = memoizeOne((stateTrace, stateTraceDiff) => {
@@ -274,6 +290,7 @@ export function mapStateToProps(state) {
     maxDuration,
     traceError,
     loadingTraces,
+    pagination,
   } = stateTraceXformer(state.trace);
   const diffCohort = stateTraceDiffXformer(state.trace, traceDiff);
   const { loadingServices, services, serviceError } = stateServicesXformer(stServices);
@@ -299,6 +316,7 @@ export function mapStateToProps(state) {
     maxTraceDuration: maxDuration,
     sortedTracesXformer,
     urlQueryParams: Object.keys(query).length > 0 ? query : null,
+    pagination,
   };
 }
 

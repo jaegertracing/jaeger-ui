@@ -174,7 +174,7 @@ export function analyzeTraceGaps(
   traceDuration: number,
   config: SparseTraceConfig = DEFAULT_SPARSE_TRACE_CONFIG
 ): TimelineGap[] {
-  if (!config.enabled || spans.length === 0) {
+  if (!config.enabled || !spans || spans.length === 0) {
     return [];
   }
 
