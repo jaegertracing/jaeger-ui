@@ -22,18 +22,17 @@ export type TProps = {
   bannerText: TQualityMetrics['bannerText'];
 };
 
-export default class BannerText extends React.PureComponent<TProps> {
-  render() {
-    const { bannerText } = this.props;
-    if (!bannerText) return null;
+const BannerText: React.FC<TProps> = ({ bannerText }) => {
+  if (!bannerText) return null;
 
-    const { styling = undefined, value: text } =
-      typeof bannerText === 'object' ? bannerText : { value: bannerText };
+  const { styling = undefined, value: text } =
+    typeof bannerText === 'object' ? bannerText : { value: bannerText };
 
-    return (
-      <div className="BannerText" style={styling}>
-        {text}
-      </div>
-    );
-  }
-}
+  return (
+    <div className="BannerText" style={styling}>
+      {text}
+    </div>
+  );
+};
+
+export default React.memo(BannerText);
