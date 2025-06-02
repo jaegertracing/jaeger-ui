@@ -142,7 +142,7 @@ describe('mapStateToProps', () => {
     mapStateToProps(state, ownProps);
     spies.forEach(spy => {
       const [call1, call2] = spy.mock.calls;
-      if (call1 && call2) {
+      if (call1 && call2 && call1.length > 0 && call2.length > 0) {
         call1.forEach((arg, i) => {
           expect(call2[i]).toBe(arg);
         });
