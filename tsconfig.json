@@ -1,0 +1,30 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "target": "es2016",
+    "lib": ["es2017", "dom", "dom.iterable", "webworker"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "jsx": "preserve"
+  },
+  "include": [],
+  "files": [],
+  "references": [
+    {
+      "path": "packages/jaeger-ui/tsconfig.lint.json"
+    },
+    {
+      "path": "packages/plexus/tsconfig.json"
+    }
+  ]
+}

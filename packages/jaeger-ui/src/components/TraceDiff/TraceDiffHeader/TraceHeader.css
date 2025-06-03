@@ -1,0 +1,86 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+.TraceDiffHeader--traceHeader {
+  align-items: stretch;
+  background: #fafafa;
+  border-right: 1px solid #d8d8d8;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.TraceDiffHeader--traceTitle {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  font-size: 1.7em;
+  margin: 0;
+  padding: 0.25rem 2.5rem 0.25rem 1.25rem;
+  position: relative;
+  min-height: 2.5em;
+}
+
+.TraceDiffHeader--traceTitle span {
+  display: inline-block;
+  max-width: calc(100% - 2em);
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+.TraceDiffHeader--traceTitle span .u-tx-muted {
+  white-space: nowrap;
+}
+
+.TraceDiffHeader--traceTitle.is-error {
+  color: #c00;
+}
+
+.TraceDiffHeader--traceTitleChevron {
+  color: #199;
+  font-size: 0.75em;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.TraceDiffHeader--traceSection:hover .TraceDiffHeader--traceTitleChevron {
+  transform: translateY(calc(-50% + 2px));
+}
+
+.TraceDiffHeader--traceAttributes {
+  list-style: none;
+  margin: 0;
+  padding: 8px 15px;
+  background: #fafafa;
+  border-top: 1px solid #f0f0f0;
+}
+
+.TraceDiffHeader--traceAttr {
+  display: inline-block;
+  margin-right: 1rem;
+  font-size: 13px;
+}
+
+.TraceDiffHeader--traceAttr strong {
+  font-weight: 600;
+}

@@ -1,0 +1,524 @@
+{
+  "data": [
+    {
+      "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+      "spans": [
+        {
+          "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+          "spanID": "26f5ef9dbb885479",
+          "operationName": "ohboy.do",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+              "spanID": "49b8e9efa1e8a3b1",
+              "span": {
+                "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+                "spanID": "49b8e9efa1e8a3b1",
+                "operationName": "info",
+                "references": [
+                  {
+                    "refType": "CHILD_OF",
+                    "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+                    "spanID": "eff3153be6b1fb93",
+                    "span": {
+                      "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+                      "spanID": "eff3153be6b1fb93",
+                      "operationName": "main",
+                      "references": [],
+                      "startTime": 1711138246940000,
+                      "duration": 176321,
+                      "tags": [
+                        {
+                          "key": "otel.library.name",
+                          "type": "string",
+                          "value": "widgets"
+                        },
+                        {
+                          "key": "otel.library.version",
+                          "type": "string",
+                          "value": "1.2.3"
+                        },
+                        {
+                          "key": "span.kind",
+                          "type": "string",
+                          "value": "internal"
+                        }
+                      ],
+                      "logs": [],
+                      "processID": "p1",
+                      "warnings": [],
+                      "process": {
+                        "serviceName": "example-trace",
+                        "tags": [
+                          {
+                            "key": "telemetry.sdk.language",
+                            "type": "string",
+                            "value": "nodejs"
+                          },
+                          {
+                            "key": "telemetry.sdk.name",
+                            "type": "string",
+                            "value": "opentelemetry"
+                          },
+                          {
+                            "key": "telemetry.sdk.version",
+                            "type": "string",
+                            "value": "1.22.0"
+                          }
+                        ]
+                      },
+                      "relativeStartTime": 0,
+                      "depth": 0,
+                      "hasChildren": true,
+                      "childSpanIds": ["49b8e9efa1e8a3b1"]
+                    }
+                  }
+                ],
+                "startTime": 1711138246943000,
+                "duration": 173150,
+                "tags": [
+                  {
+                    "key": "otel.library.name",
+                    "type": "string",
+                    "value": "widgets"
+                  },
+                  {
+                    "key": "otel.library.version",
+                    "type": "string",
+                    "value": "1.2.3"
+                  },
+                  {
+                    "key": "span.kind",
+                    "type": "string",
+                    "value": "internal"
+                  }
+                ],
+                "logs": [],
+                "processID": "p1",
+                "warnings": [],
+                "process": {
+                  "serviceName": "example-trace",
+                  "tags": [
+                    {
+                      "key": "telemetry.sdk.language",
+                      "type": "string",
+                      "value": "nodejs"
+                    },
+                    {
+                      "key": "telemetry.sdk.name",
+                      "type": "string",
+                      "value": "opentelemetry"
+                    },
+                    {
+                      "key": "telemetry.sdk.version",
+                      "type": "string",
+                      "value": "1.22.0"
+                    }
+                  ]
+                },
+                "relativeStartTime": 3000,
+                "depth": 1,
+                "hasChildren": true,
+                "childSpanIds": ["e76628f4e6dde174", "26f5ef9dbb885479"]
+              }
+            }
+          ],
+          "startTime": 1711138246978000,
+          "duration": 46460,
+          "tags": [
+            {
+              "key": "otel.library.name",
+              "type": "string",
+              "value": "ohboy"
+            },
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "internal"
+            }
+          ],
+          "logs": [],
+          "processID": "p1",
+          "warnings": [],
+          "process": {
+            "serviceName": "example-trace",
+            "tags": [
+              {
+                "key": "telemetry.sdk.language",
+                "type": "string",
+                "value": "nodejs"
+              },
+              {
+                "key": "telemetry.sdk.name",
+                "type": "string",
+                "value": "opentelemetry"
+              },
+              {
+                "key": "telemetry.sdk.version",
+                "type": "string",
+                "value": "1.22.0"
+              }
+            ]
+          },
+          "relativeStartTime": 38000,
+          "depth": 2,
+          "hasChildren": false,
+          "childSpanIds": []
+        },
+        {
+          "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+          "spanID": "e76628f4e6dde174",
+          "operationName": "ohboy.do",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+              "spanID": "49b8e9efa1e8a3b1",
+              "span": {
+                "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+                "spanID": "49b8e9efa1e8a3b1",
+                "operationName": "info",
+                "references": [
+                  {
+                    "refType": "CHILD_OF",
+                    "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+                    "spanID": "eff3153be6b1fb93",
+                    "span": {
+                      "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+                      "spanID": "eff3153be6b1fb93",
+                      "operationName": "main",
+                      "references": [],
+                      "startTime": 1711138246940000,
+                      "duration": 176321,
+                      "tags": [
+                        {
+                          "key": "otel.library.name",
+                          "type": "string",
+                          "value": "widgets"
+                        },
+                        {
+                          "key": "otel.library.version",
+                          "type": "string",
+                          "value": "1.2.3"
+                        },
+                        {
+                          "key": "span.kind",
+                          "type": "string",
+                          "value": "internal"
+                        }
+                      ],
+                      "logs": [],
+                      "processID": "p1",
+                      "warnings": [],
+                      "process": {
+                        "serviceName": "example-trace",
+                        "tags": [
+                          {
+                            "key": "telemetry.sdk.language",
+                            "type": "string",
+                            "value": "nodejs"
+                          },
+                          {
+                            "key": "telemetry.sdk.name",
+                            "type": "string",
+                            "value": "opentelemetry"
+                          },
+                          {
+                            "key": "telemetry.sdk.version",
+                            "type": "string",
+                            "value": "1.22.0"
+                          }
+                        ]
+                      },
+                      "relativeStartTime": 0,
+                      "depth": 0,
+                      "hasChildren": true,
+                      "childSpanIds": ["49b8e9efa1e8a3b1"]
+                    }
+                  }
+                ],
+                "startTime": 1711138246943000,
+                "duration": 173150,
+                "tags": [
+                  {
+                    "key": "otel.library.name",
+                    "type": "string",
+                    "value": "widgets"
+                  },
+                  {
+                    "key": "otel.library.version",
+                    "type": "string",
+                    "value": "1.2.3"
+                  },
+                  {
+                    "key": "span.kind",
+                    "type": "string",
+                    "value": "internal"
+                  }
+                ],
+                "logs": [],
+                "processID": "p1",
+                "warnings": [],
+                "process": {
+                  "serviceName": "example-trace",
+                  "tags": [
+                    {
+                      "key": "telemetry.sdk.language",
+                      "type": "string",
+                      "value": "nodejs"
+                    },
+                    {
+                      "key": "telemetry.sdk.name",
+                      "type": "string",
+                      "value": "opentelemetry"
+                    },
+                    {
+                      "key": "telemetry.sdk.version",
+                      "type": "string",
+                      "value": "1.22.0"
+                    }
+                  ]
+                },
+                "relativeStartTime": 3000,
+                "depth": 1,
+                "hasChildren": true,
+                "childSpanIds": ["e76628f4e6dde174", "26f5ef9dbb885479"]
+              }
+            }
+          ],
+          "startTime": 1711138247025000,
+          "duration": 71355,
+          "tags": [
+            {
+              "key": "otel.library.name",
+              "type": "string",
+              "value": "ohboy"
+            },
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "internal"
+            }
+          ],
+          "logs": [],
+          "processID": "p1",
+          "warnings": [],
+          "process": {
+            "serviceName": "example-trace",
+            "tags": [
+              {
+                "key": "telemetry.sdk.language",
+                "type": "string",
+                "value": "nodejs"
+              },
+              {
+                "key": "telemetry.sdk.name",
+                "type": "string",
+                "value": "opentelemetry"
+              },
+              {
+                "key": "telemetry.sdk.version",
+                "type": "string",
+                "value": "1.22.0"
+              }
+            ]
+          },
+          "relativeStartTime": 85000,
+          "depth": 2,
+          "hasChildren": false,
+          "childSpanIds": []
+        },
+        {
+          "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+          "spanID": "49b8e9efa1e8a3b1",
+          "operationName": "info",
+          "references": [
+            {
+              "refType": "CHILD_OF",
+              "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+              "spanID": "eff3153be6b1fb93",
+              "span": {
+                "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+                "spanID": "eff3153be6b1fb93",
+                "operationName": "main",
+                "references": [],
+                "startTime": 1711138246940000,
+                "duration": 176321,
+                "tags": [
+                  {
+                    "key": "otel.library.name",
+                    "type": "string",
+                    "value": "widgets"
+                  },
+                  {
+                    "key": "otel.library.version",
+                    "type": "string",
+                    "value": "1.2.3"
+                  },
+                  {
+                    "key": "span.kind",
+                    "type": "string",
+                    "value": "internal"
+                  }
+                ],
+                "logs": [],
+                "processID": "p1",
+                "warnings": [],
+                "process": {
+                  "serviceName": "example-trace",
+                  "tags": [
+                    {
+                      "key": "telemetry.sdk.language",
+                      "type": "string",
+                      "value": "nodejs"
+                    },
+                    {
+                      "key": "telemetry.sdk.name",
+                      "type": "string",
+                      "value": "opentelemetry"
+                    },
+                    {
+                      "key": "telemetry.sdk.version",
+                      "type": "string",
+                      "value": "1.22.0"
+                    }
+                  ]
+                },
+                "relativeStartTime": 0,
+                "depth": 0,
+                "hasChildren": true,
+                "childSpanIds": ["49b8e9efa1e8a3b1"]
+              }
+            }
+          ],
+          "startTime": 1711138246943000,
+          "duration": 173150,
+          "tags": [
+            {
+              "key": "otel.library.name",
+              "type": "string",
+              "value": "widgets"
+            },
+            {
+              "key": "otel.library.version",
+              "type": "string",
+              "value": "1.2.3"
+            },
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "internal"
+            }
+          ],
+          "logs": [],
+          "processID": "p1",
+          "warnings": [],
+          "process": {
+            "serviceName": "example-trace",
+            "tags": [
+              {
+                "key": "telemetry.sdk.language",
+                "type": "string",
+                "value": "nodejs"
+              },
+              {
+                "key": "telemetry.sdk.name",
+                "type": "string",
+                "value": "opentelemetry"
+              },
+              {
+                "key": "telemetry.sdk.version",
+                "type": "string",
+                "value": "1.22.0"
+              }
+            ]
+          },
+          "relativeStartTime": 3000,
+          "depth": 1,
+          "hasChildren": true,
+          "childSpanIds": ["e76628f4e6dde174", "26f5ef9dbb885479"]
+        },
+        {
+          "traceID": "c620759e5d60fafb8ee0922b30e06bc6",
+          "spanID": "eff3153be6b1fb93",
+          "operationName": "main",
+          "references": [],
+          "startTime": 1711138246940000,
+          "duration": 176321,
+          "tags": [
+            {
+              "key": "otel.library.name",
+              "type": "string",
+              "value": "widgets"
+            },
+            {
+              "key": "otel.library.version",
+              "type": "string",
+              "value": "1.2.3"
+            },
+            {
+              "key": "span.kind",
+              "type": "string",
+              "value": "internal"
+            }
+          ],
+          "logs": [],
+          "processID": "p1",
+          "warnings": [],
+          "process": {
+            "serviceName": "example-trace",
+            "tags": [
+              {
+                "key": "telemetry.sdk.language",
+                "type": "string",
+                "value": "nodejs"
+              },
+              {
+                "key": "telemetry.sdk.name",
+                "type": "string",
+                "value": "opentelemetry"
+              },
+              {
+                "key": "telemetry.sdk.version",
+                "type": "string",
+                "value": "1.22.0"
+              }
+            ]
+          },
+          "relativeStartTime": 0,
+          "depth": 0,
+          "hasChildren": true,
+          "childSpanIds": ["49b8e9efa1e8a3b1"]
+        }
+      ],
+      "processes": {
+        "p1": {
+          "serviceName": "example-trace",
+          "tags": [
+            {
+              "key": "telemetry.sdk.language",
+              "type": "string",
+              "value": "nodejs"
+            },
+            {
+              "key": "telemetry.sdk.name",
+              "type": "string",
+              "value": "opentelemetry"
+            },
+            {
+              "key": "telemetry.sdk.version",
+              "type": "string",
+              "value": "1.22.0"
+            }
+          ]
+        }
+      },
+      "warnings": null
+    }
+  ],
+  "total": 0,
+  "limit": 0,
+  "offset": 0,
+  "errors": null
+}

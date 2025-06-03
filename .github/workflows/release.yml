@@ -1,0 +1,41 @@
+name: Publish release
+
+on:
+  release:
+    types:
+      - published
+
+# See https://github.com/jaegertracing/jaeger/issues/4017
+# and https://github.com/ossf/scorecard/blob/main/docs/checks.md#token-permissions
+permissions:
+  deployments: write
+  contents: write
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          cache: npm
+          node-version: '22'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+        id: npm-build
+
+      - name: Package artifacts
+        id: package-artifacts
+        run: tar -czvf ./assets.tar.gz --strip-components=3  packages/jaeger-ui/build/
+        if: steps.npm-build.outcome == 'success'
+
+      - name: Upload artifacts
+        uses: svenstaro/upload-release-action@1beeb572c19a9242f4361f4cee78f8e0d9aec5df
+        with:
+          file: 'assets.tar.gz'
+          overwrite: true
+          tag: ${{ github.ref }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        if: steps.package-artifacts.outcome == 'success'

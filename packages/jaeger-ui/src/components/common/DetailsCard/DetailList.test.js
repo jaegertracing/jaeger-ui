@@ -1,0 +1,39 @@
+// Copyright (c) 2020 Uber Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
+
+import DetailList from './DetailList';
+
+describe('DetailList', () => {
+  const details = ['foo', 'bar', 'baz'];
+
+  it('renders list items with the provided details', () => {
+    render(<DetailList details={details} />);
+
+    // Check if each detail string is rendered within a list item
+    details.forEach(detail => {
+      // Antd List renders items with role='listitem' implicitly
+      // We find the list item and check if it contains the expected text
+      const listItem = screen.getByText(detail).closest('li');
+      expect(listItem).toBeInTheDocument();
+      expect(listItem).toHaveTextContent(detail);
+    });
+
+    // Optionally, check the total number of list items
+    expect(screen.getAllByRole('listitem')).toHaveLength(details.length);
+  });
+});

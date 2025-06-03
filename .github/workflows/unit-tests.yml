@@ -1,0 +1,38 @@
+name: "Unit Tests"
+
+on:
+  merge_group:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ (github.event.pull_request && github.event.pull_request.number) || github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          cache: npm
+          node-version: '22'
+      - run: npm ci
+      - run: npm ls --all
+      - run: npm run coverage
+      - name: Upload coverage to codecov.io
+        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
+        with:
+          fail_ci_if_error: true
+          verbose: true
+          # Using upload token helps against rate limiting errors.
+          # Cannot define it as secret as we need it accessible from forks.
+          # See https://github.com/codecov/codecov-action/issues/837
+          token: 31c3122b-7b49-4267-a117-8c9354a97119

@@ -1,0 +1,110 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CohortTable renders as expected 1`] = `
+Array [
+  <Table
+    dataSource={
+      Array [
+        Object {
+          "data": Object {
+            "traceName": "trace name 0",
+          },
+          "error": "api error",
+          "id": "trace-id-0",
+          "state": "FETCH_ERROR",
+        },
+        Object {
+          "id": "trace-id-1",
+        },
+        Object {
+          "id": "trace-id-2",
+        },
+      ]
+    }
+    key="table"
+    pagination={false}
+    rowKey="id"
+    rowSelection={
+      Object {
+        "getCheckboxProps": [Function],
+        "hideDefaultSelections": true,
+        "onChange": [Function],
+        "selectedRowKeys": Array [
+          "trace-id-0",
+        ],
+        "type": "radio",
+      }
+    }
+    size="middle"
+  >
+    <Column
+      data-testid="id"
+      dataIndex="id"
+      key="traceID"
+      render={[Function]}
+      title=""
+    />
+    <Column
+      data-testid="traceName"
+      dataIndex={
+        Array [
+          "data",
+          "traceName",
+        ]
+      }
+      key="traceName"
+      render={[Function]}
+      sortOrder="descend"
+      title="Service & Operation"
+    />
+    <Column
+      data-testid="startTime"
+      dataIndex={
+        Array [
+          "data",
+          "startTime",
+        ]
+      }
+      key="startTime"
+      render={[Function]}
+      title="Date"
+    />
+    <Column
+      data-testid="duration"
+      dataIndex={
+        Array [
+          "data",
+          "duration",
+        ]
+      }
+      key="duration"
+      render={[Function]}
+      title="Duration"
+    />
+    <Column
+      dataIndex={
+        Array [
+          "data",
+          "spans",
+          "length",
+        ]
+      }
+      key="spans"
+      title="Spans"
+    />
+    <Column
+      className="ub-tx-center"
+      data-testid="traceID"
+      dataIndex={
+        Array [
+          "data",
+          "traceID",
+        ]
+      }
+      key="link"
+      render={[Function]}
+    />
+  </Table>,
+  "",
+]
+`;

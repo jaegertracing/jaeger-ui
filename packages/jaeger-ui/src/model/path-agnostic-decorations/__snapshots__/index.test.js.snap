@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`extractDecorationFromState prefers operation specific decoration over service decoration 1`] = `
+<CircularProgressbar
+  backgroundHue={120}
+  decorationHue={0}
+  maxValue={108}
+  strokeWidth={10}
+  text="42"
+  value={42}
+/>
+`;
+
+exports[`extractDecorationFromState returns service decoration 1`] = `
+<CircularProgressbar
+  backgroundHue={120}
+  decorationHue={0}
+  maxValue={108}
+  strokeWidth={10}
+  text="42"
+  value={42}
+/>
+`;
