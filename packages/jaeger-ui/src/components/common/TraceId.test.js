@@ -16,6 +16,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import { TraceId } from './TraceId';
 import { getConfigValue } from '../../utils/config/get-config';
+import ClickToCopy from './ClickToCopy';
 
 jest.mock('../../utils/config/get-config', () => ({
   getConfigValue: jest.fn(),
@@ -45,8 +46,8 @@ describe('TraceIdDisplayLength', () => {
       getConfigValue.mockReturnValue(undefined);
       wrapper = createWrapper();
 
-      const displayedText = wrapper.text();
-      expect(displayedText).toEqual(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
+      const clickToCopy = wrapper.find(ClickToCopy);
+      expect(clickToCopy.prop('text')).toEqual(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
     });
 
     it('renders the config length when provided', () => {
@@ -54,47 +55,54 @@ describe('TraceIdDisplayLength', () => {
       getConfigValue.mockReturnValue(configuredLength);
       wrapper = createWrapper();
 
-      const displayedText = wrapper.text();
-      expect(displayedText).toEqual(MOCK_TRACE_ID.slice(0, configuredLength));
+      const clickToCopy = wrapper.find(ClickToCopy);
+      expect(clickToCopy.prop('text')).toEqual(MOCK_TRACE_ID.slice(0, configuredLength));
     });
   });
 
   describe('Edge case handling', () => {
-    it('renders the full traceId when it is shorter then configured length', () => {
+    it('renders the full traceId when it is shorter than configured length', () => {
       const shortTraceId = '12345';
       const configuredLength = 10;
       getConfigValue.mockReturnValue(configuredLength);
 
       wrapper = createWrapper({ traceId: shortTraceId });
-      expect(wrapper.text()).toEqual(shortTraceId);
+      const clickToCopy = wrapper.find(ClickToCopy);
+      expect(clickToCopy.prop('text')).toBe(shortTraceId);
     });
 
-    it('renders when traceId is undefiend', () => {
+    it('renders when traceId is empty', () => {
       wrapper = createWrapper({ traceId: '' });
-      expect(wrapper.text()).toEqual('');
+      const clickToCopy = wrapper.find(ClickToCopy);
+      expect(clickToCopy.prop('text')).toBe('');
     });
   });
 
   describe('Style handling', () => {
-    it('applies custom className when provided', () => {
-      wrapper = createWrapper({ className: CUSTOM_CLASS });
-      expect(wrapper.hasClass(CUSTOM_CLASS)).toBe(true);
+    beforeEach(() => {
+      getConfigValue.mockReturnValue(7);
     });
 
-    it('default classes for styling', () => {
+    it('applies custom className when provided', () => {
+      wrapper = createWrapper({ className: CUSTOM_CLASS });
+      const expectedClass = `TraceIDLength TraceIDLength--short u-tx-muted ${CUSTOM_CLASS}`;
+      expect(wrapper.find(ClickToCopy).prop('className')).toBe(expectedClass);
+    });
+
+    it('uses default classes for styling', () => {
       wrapper = createWrapper();
-      expect(wrapper.hasClass('TraceIDLength')).toBe(true);
-      expect(wrapper.hasClass('u-tx-muted')).toBe(true);
+      const expectedClass = 'TraceIDLength TraceIDLength--short u-tx-muted ';
+      expect(wrapper.find(ClickToCopy).prop('className')).toBe(expectedClass);
     });
 
     it('adds a length-based class depending on the configuration', () => {
-      getConfigValue.mockReturnValue(DEFAULT_LENGTH);
+      getConfigValue.mockReturnValue(7);
       wrapper = createWrapper();
-      expect(wrapper.hasClass('TraceIDLength--short')).toBe(true);
+      expect(wrapper.find(ClickToCopy).prop('className')).toContain('TraceIDLength--short');
 
       getConfigValue.mockReturnValue(32);
       wrapper = createWrapper();
-      expect(wrapper.hasClass('TraceIDLength--full')).toBe(true);
+      expect(wrapper.find(ClickToCopy).prop('className')).toContain('TraceIDLength--full');
     });
   });
 });

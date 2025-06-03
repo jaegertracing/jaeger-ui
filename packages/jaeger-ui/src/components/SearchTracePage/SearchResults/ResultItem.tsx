@@ -87,7 +87,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
       this.props;
     const { duration, services, startTime, traceName, traceID } = trace;
     return (
-      <div className="ResultItem" onClick={trackTraceConversions} role="button">
+      <div className="ResultItem" data-testid="result-item">
         <ResultItemTitle
           duration={duration}
           durationPercent={durationPercent}
@@ -98,7 +98,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
           traceName={traceName}
           disableComparision={disableComparision}
         />
-        <Link to={linkTo}>
+        <Link to={linkTo} onClick={trackTraceConversions}>
           <Row>
             <Col span={4} className="ub-p2">
               <Tag className="ub-m1" data-testid={markers.NUM_SPANS}>

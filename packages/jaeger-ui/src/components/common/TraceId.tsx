@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { getConfigValue } from '../../utils/config/get-config';
+import ClickToCopy from './ClickToCopy';
 import './TraceId.css';
 
 type Props = {
@@ -26,7 +27,23 @@ export function TraceId({ traceId, className = '' }: Props) {
   const traceIdDisplay = traceId ? traceId.slice(0, traceIdDisplayLength) : '';
   const lengthClass = traceIdDisplayLength === 7 ? 'TraceIDLength--short' : 'TraceIDLength--full';
 
-  return <small className={`TraceIDLength ${lengthClass} u-tx-muted  ${className} `}>{traceIdDisplay}</small>;
+  const handleCopy = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const textArea = document.createElement('textarea');
+    textArea.value = traceId;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+  };
+
+  return (
+    <ClickToCopy
+      text={traceIdDisplay}
+      className={`TraceIDLength ${lengthClass} u-tx-muted ${className}`}
+      onCustomCopy={handleCopy}
+    />
+  );
 }
 
 export default TraceId;
