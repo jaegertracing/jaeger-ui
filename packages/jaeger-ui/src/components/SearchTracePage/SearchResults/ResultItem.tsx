@@ -87,7 +87,12 @@ export default class ResultItem extends React.PureComponent<Props, State> {
       this.props;
     const { duration, services, startTime, traceName, traceID } = trace;
     return (
-      <div className="ResultItem" onClick={trackTraceConversions} role="button">
+      <div
+        className="ResultItem"
+        onClick={trackTraceConversions}
+        role="button"
+        data-testid="result-item-button"
+      >
         <ResultItemTitle
           duration={duration}
           durationPercent={durationPercent}
