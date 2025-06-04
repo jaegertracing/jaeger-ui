@@ -18,8 +18,7 @@ import { Tooltip } from 'antd';
 type Props = {
   text: string;
   className?: string;
-  children?: React.ReactNode;
-  onCustomCopy?: (e: React.MouseEvent) => void;
+  children: React.ReactNode;
 };
 
 function copy(text: string) {
@@ -31,7 +30,7 @@ function copy(text: string) {
   document.body.removeChild(textArea);
 }
 
-function ClickToCopy({ text, className = '', children, onCustomCopy }: Props) {
+function ClickToCopy({ text, className = '', children }: Props) {
   const [isCopied, setIsCopied] = useState(false);
   const [previousClick, setPreviousClick] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout>();
@@ -68,13 +67,13 @@ function ClickToCopy({ text, className = '', children, onCustomCopy }: Props) {
 
   return (
     <Tooltip title={isCopied ? 'Copied to clipboard' : 'Copy to clipboard'}>
-      <span
-        className={className}
-        onClick={whenClicked}
-        role="button"
+      <span 
+        className={className} 
+        onClick={whenClicked} 
+        role="button" 
         tabIndex={0}
       >
-        {text}
+        {children}
       </span>
     </Tooltip>
   );

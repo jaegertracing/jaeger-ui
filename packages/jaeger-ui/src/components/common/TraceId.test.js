@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { shallow, mount } from 'enzyme';
 import { TraceId } from './TraceId';
 import { getConfigValue } from '../../utils/config/get-config';
 import ClickToCopy from './ClickToCopy';
@@ -47,7 +47,8 @@ describe('TraceIdDisplayLength', () => {
       wrapper = createWrapper();
 
       const clickToCopy = wrapper.find(ClickToCopy);
-      expect(clickToCopy.prop('text')).toEqual(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
+      expect(clickToCopy.prop('text')).toEqual(MOCK_TRACE_ID);
+      expect(clickToCopy.prop('children')).toEqual(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
     });
 
     it('renders the config length when provided', () => {
@@ -56,7 +57,8 @@ describe('TraceIdDisplayLength', () => {
       wrapper = createWrapper();
 
       const clickToCopy = wrapper.find(ClickToCopy);
-      expect(clickToCopy.prop('text')).toEqual(MOCK_TRACE_ID.slice(0, configuredLength));
+      expect(clickToCopy.prop('text')).toEqual(MOCK_TRACE_ID);
+      expect(clickToCopy.prop('children')).toEqual(MOCK_TRACE_ID.slice(0, configuredLength));
     });
   });
 

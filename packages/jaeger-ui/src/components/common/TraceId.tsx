@@ -27,22 +27,10 @@ export function TraceId({ traceId, className = '' }: Props) {
   const traceIdDisplay = traceId ? traceId.slice(0, traceIdDisplayLength) : '';
   const lengthClass = traceIdDisplayLength === 7 ? 'TraceIDLength--short' : 'TraceIDLength--full';
 
-  const handleCopy = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const textArea = document.createElement('textarea');
-    textArea.value = traceId;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textArea);
-  };
-
   return (
-    <ClickToCopy
-      text={traceIdDisplay}
-      className={`TraceIDLength ${lengthClass} u-tx-muted ${className}`}
-      onCustomCopy={handleCopy}
-    />
+    <ClickToCopy text={traceId} className={`TraceIDLength ${lengthClass} u-tx-muted ${className}`}>
+      {traceIdDisplay}
+    </ClickToCopy>
   );
 }
 
