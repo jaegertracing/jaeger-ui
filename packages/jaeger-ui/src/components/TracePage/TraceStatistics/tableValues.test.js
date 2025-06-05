@@ -53,6 +53,28 @@ const transformedTraceWithMultipleSpansWithTheSameValueInDifferentTags = transfo
 );
 
 describe('tableValues', () => {
+  it("getColumnValuesSecondDropdown doesn't return duplicated data when input contains details", () => {
+    let resultArray = getColumnValues('Service Name', transformedTrace);
+
+    resultArray = getColumnValuesSecondDropdown(
+      resultArray,
+      'Service Name',
+      'Operation Name',
+      transformedTrace
+    );
+
+    expect(resultArray.length).toBe(6);
+
+    resultArray = getColumnValuesSecondDropdown(
+      resultArray,
+      'Service Name',
+      'Operation Name',
+      transformedTrace
+    );
+
+    expect(resultArray.length).toBe(6);
+  });
+
   it('get values only first nameSelector is selected (Service Name)', () => {
     const resultArray = getColumnValues('Service Name', transformedTrace);
 
