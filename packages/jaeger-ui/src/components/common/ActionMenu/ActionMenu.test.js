@@ -4,7 +4,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Checkbox } from 'antd';
 import { IoLocate } from 'react-icons/io5';
 import NewWindowIcon from '../NewWindowIcon';
 import ActionsMenu from './ActionsMenu';
@@ -69,6 +68,9 @@ describe('<ActionsMenu>', () => {
     ];
     render(<ActionsMenu items={itemsWithHidden} />);
     expect(screen.queryByText('Hidden Action')).not.toBeInTheDocument();
+    expect(screen.getByText('Action 1')).toBeInTheDocument();
+    expect(screen.getByText('Action 2')).toBeInTheDocument();
+    expect(screen.getByText('Action 3')).toBeInTheDocument();
   });
 
   it('renders menu item with icon', () => {
@@ -87,6 +89,7 @@ describe('<ActionsMenu>', () => {
     const checkbox = screen.getByRole('checkbox');
     expect(checkbox).toBeInTheDocument();
     expect(checkbox).toBeChecked();
+    expect(checkbox).not.toHaveAttribute('aria-checked', 'mixed');
   });
 
   it('calls onClick when menu item is clicked', () => {
@@ -99,6 +102,7 @@ describe('<ActionsMenu>', () => {
     render(<ActionsMenu {...defaultProps} />);
     const checkbox = screen.getByRole('checkbox');
     expect(checkbox).toBeInTheDocument();
+    expect(screen.queryByTestId('io-locate-icon')).not.toBeInTheDocument();
   });
 
   it('applies custom className when provided', () => {
