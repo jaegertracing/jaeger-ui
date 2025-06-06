@@ -50,3 +50,31 @@ limitations under the License.
   flex-grow: 1;
   position: relative;
 }
+
+/* Enhanced trace card hover effects */
+.SearchResults .ub-list-reset > .ub-my3 {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.SearchResults .ub-list-reset > .ub-my3:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Ensure ResultItem component maintains proper styling within the hover container */
+.SearchResults .ub-list-reset > .ub-my3:hover > * {
+  /* Prevent any child elements from interfering with the hover effect */
+  pointer-events: auto;
+}
+
+/* Optional: Add a subtle background color change on hover */
+.SearchResults .ub-list-reset > .ub-my3:hover {
+  background-color: rgba(248, 250, 252, 0.5);
+}
+
+/* Smooth transition for any existing borders or backgrounds in ResultItem */
+.SearchResults .ub-list-reset > .ub-my3 > * {
+  transition: inherit;
+}
