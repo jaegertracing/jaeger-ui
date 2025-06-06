@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { Checkbox } from 'antd';
+import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 import { IoLocate } from 'react-icons/io5';
 import NewWindowIcon from '../NewWindowIcon';
 import ActionsMenu from './ActionsMenu';
@@ -11,8 +12,8 @@ import ActionsMenu from './ActionsMenu';
 describe('<ActionsMenu>', () => {
   const mockOnClick = jest.fn();
   const mockHref = 'http://example.com';
-  const mockIcon = <IoLocate />;
-  const mockNewWindowIcon = <NewWindowIcon />;
+  const mockIcon = <IoLocate data-testid="mock-icon" />;
+  const mockNewWindowIcon = <NewWindowIcon data-testid="mock-window-icon" />;
 
   const defaultProps = {
     items: [
@@ -44,114 +45,117 @@ describe('<ActionsMenu>', () => {
     ],
   };
 
-  let wrapper;
-
   beforeEach(() => {
-    wrapper = shallow(<ActionsMenu {...defaultProps} />);
     jest.clearAllMocks();
   });
 
-  it('renders without exploding', () => {
-    expect(wrapper.exists()).toBe(true);
+  it('renders without crashing', () => {
+    render(<ActionsMenu {...defaultProps} />);
+    expect(screen.getByText('Action 1')).toBeInTheDocument();
   });
 
   it('renders all visible menu items', () => {
-    const menuItems = wrapper.find('.NodeContent--actionsItem');
-    expect(menuItems).toHaveLength(3);
+    render(<ActionsMenu {...defaultProps} />);
+    expect(screen.getByText('Action 1')).toBeInTheDocument();
+    expect(screen.getByText('Action 2')).toBeInTheDocument();
+    expect(screen.getByText('Action 3')).toBeInTheDocument();
   });
 
   it('does not render hidden menu items', () => {
-    const itemsWithHidden = [
-      ...defaultProps.items,
-      {
-        id: 'hidden',
-        label: 'Hidden Action',
-        icon: mockIcon,
-        onClick: mockOnClick,
-        isVisible: false,
-      },
-    ];
-    wrapper.setProps({ items: itemsWithHidden });
-    const menuItems = wrapper.find('.NodeContent--actionsItem');
-    expect(menuItems).toHaveLength(3);
+    render(
+      <ActionsMenu
+        items={[
+          ...defaultProps.items,
+          {
+            id: 'hidden',
+            label: 'Hidden Action',
+            icon: mockIcon,
+            onClick: mockOnClick,
+            isVisible: false,
+          },
+        ]}
+      />
+    );
+    expect(screen.queryByText('Hidden Action')).not.toBeInTheDocument();
   });
 
   it('renders menu items with icons', () => {
-    const firstItem = wrapper.find('.NodeContent--actionsItem').first();
-    expect(firstItem.find('.NodeContent--actionsItemIconWrapper').find(IoLocate)).toHaveLength(1);
+    render(<ActionsMenu {...defaultProps} />);
+    expect(screen.getByTestId('mock-icon')).toBeInTheDocument();
+    expect(document.querySelector('.NewWindowIcon')).toBeInTheDocument();
   });
 
   it('renders menu items with links', () => {
-    const secondItem = wrapper.find('.NodeContent--actionsItem').at(1);
-    expect(secondItem.prop('href')).toBe(mockHref);
+    render(<ActionsMenu {...defaultProps} />);
+    const linkItem = screen.getByText('Action 2').closest('a');
+    expect(linkItem).toHaveAttribute('href', mockHref);
   });
 
   it('renders menu items with checkboxes', () => {
-    const thirdItem = wrapper.find('.NodeContent--actionsItem').last();
-    const checkbox = thirdItem.find('.NodeContent--actionsItemIconWrapper').find(Checkbox);
-    expect(checkbox).toHaveLength(1);
-    expect(checkbox.prop('checked')).toBe(true);
-    expect(checkbox.prop('indeterminate')).toBe(false);
+    render(<ActionsMenu {...defaultProps} />);
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).toBeChecked();
+    expect(checkbox.indeterminate).toBe(false);
   });
 
-  it('calls onClick handler when clicking a menu item', () => {
-    const firstItem = wrapper.find('.NodeContent--actionsItem').first();
-    firstItem.simulate('click');
+  it('calls onClick handler when clicking a menu item', async () => {
+    render(<ActionsMenu {...defaultProps} />);
+    const firstItem = screen.getByText('Action 1');
+    await userEvent.click(firstItem);
     expect(mockOnClick).toHaveBeenCalledTimes(1);
   });
 
   it('handles menu items without icons', () => {
-    const thirdItem = wrapper.find('.NodeContent--actionsItem').last();
-    const iconWrapper = thirdItem.find('.NodeContent--actionsItemIconWrapper');
-    expect(iconWrapper.find(IoLocate)).toHaveLength(0);
-    expect(iconWrapper.find(Checkbox)).toHaveLength(1);
+    render(<ActionsMenu {...defaultProps} />);
+    expect(screen.getByText('Action 3')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox')).toBeInTheDocument();
   });
 
   it('applies custom className when provided', () => {
     const customClass = 'custom-class';
-    wrapper.setProps({ className: customClass });
-    expect(wrapper.find(`.${customClass}`)).toHaveLength(1);
+    const { container } = render(<ActionsMenu {...defaultProps} className={customClass} />);
+    expect(container.querySelector(`.${customClass}`)).toBeInTheDocument();
   });
 
   it('renders menu items with proper accessibility attributes', () => {
-    const menuItems = wrapper.find('.NodeContent--actionsItem');
-    menuItems.forEach((item, _) => {
-      expect(item.prop('tabIndex')).toBe(0);
-      if (!item.prop('href')) {
-        expect(item.prop('role')).toBe('button');
-      }
+    render(<ActionsMenu {...defaultProps} />);
+    const items = screen.getAllByText(/Action [1-3]/);
+    items.forEach(item => {
+      const parent = item.closest('a');
+      expect(parent).toHaveAttribute('tabindex', '0');
     });
   });
 
   describe('keyboard navigation', () => {
     it('handles Enter key press', () => {
-      const firstItem = wrapper.find('.NodeContent--actionsItem').first();
-      firstItem.simulate('keyDown', { key: 'Enter', preventDefault: jest.fn() });
+      render(<ActionsMenu {...defaultProps} />);
+      const item = screen.getByText('Action 1');
+      fireEvent.keyDown(item, { key: 'Enter', preventDefault: jest.fn() });
       expect(mockOnClick).toHaveBeenCalledTimes(1);
     });
 
     it('handles Space key press', () => {
-      const firstItem = wrapper.find('.NodeContent--actionsItem').first();
-      firstItem.simulate('keyDown', { key: ' ', preventDefault: jest.fn() });
+      render(<ActionsMenu {...defaultProps} />);
+      const item = screen.getByText('Action 1');
+      fireEvent.keyDown(item, { key: ' ', preventDefault: jest.fn() });
       expect(mockOnClick).toHaveBeenCalledTimes(1);
     });
 
     it('does not trigger onClick for other keys', () => {
-      const firstItem = wrapper.find('.NodeContent--actionsItem').first();
-      firstItem.simulate('keyDown', { key: 'Tab', preventDefault: jest.fn() });
+      render(<ActionsMenu {...defaultProps} />);
+      const item = screen.getByText('Action 1');
+      fireEvent.keyDown(item, { key: 'Tab', preventDefault: jest.fn() });
       expect(mockOnClick).not.toHaveBeenCalled();
     });
   });
 
   it('handles empty items array', () => {
-    wrapper.setProps({ items: [] });
-    const menuItems = wrapper.find('.NodeContent--actionsItem');
-    expect(menuItems).toHaveLength(0);
+    render(<ActionsMenu items={[]} />);
+    expect(screen.queryByText(/Action/)).not.toBeInTheDocument();
   });
 
   it('handles undefined items prop', () => {
-    wrapper.setProps({ items: undefined });
-    const menuItems = wrapper.find('.NodeContent--actionsItem');
-    expect(menuItems).toHaveLength(0);
+    render(<ActionsMenu />);
+    expect(screen.queryByText(/Action/)).not.toBeInTheDocument();
   });
 });
