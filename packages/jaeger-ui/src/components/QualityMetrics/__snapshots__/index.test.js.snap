@@ -65,7 +65,7 @@ exports[`QualityMetrics UnconnectedQualityMetrics render renders with metrics 1`
     setLookback={[Function]}
     setService={[Function]}
   />
-  <BannerText
+  <Memo(BannerText)
     bannerText="test banner text"
   />
   <div
@@ -74,7 +74,7 @@ exports[`QualityMetrics UnconnectedQualityMetrics render renders with metrics 1`
     <div
       className="QualityMetrics--ScoreCards"
     >
-      <ScoreCard
+      <Memo(ScoreCard)
         key="score0"
         link="trace.quality.documentation/link"
         score={
@@ -83,7 +83,7 @@ exports[`QualityMetrics UnconnectedQualityMetrics render renders with metrics 1`
           }
         }
       />
-      <ScoreCard
+      <Memo(ScoreCard)
         key="score1"
         link="trace.quality.documentation/link"
         score={
@@ -96,7 +96,7 @@ exports[`QualityMetrics UnconnectedQualityMetrics render renders with metrics 1`
     <div
       className="QualityMetrics--MetricCards"
     >
-      <MetricCard
+      <Memo(MetricCard)
         key="metric 0"
         metric={
           Object {
@@ -104,7 +104,7 @@ exports[`QualityMetrics UnconnectedQualityMetrics render renders with metrics 1`
           }
         }
       />
-      <MetricCard
+      <Memo(MetricCard)
         key="metric 1"
         metric={
           Object {
