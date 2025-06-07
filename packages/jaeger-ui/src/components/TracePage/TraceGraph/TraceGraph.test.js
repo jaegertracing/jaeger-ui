@@ -25,7 +25,7 @@ import testTrace from './testTrace.json';
 
 jest.mock('@jaegertracing/plexus', () => {
   const DEFAULT_MODE = 'service';
-  
+
   const MockDigraph = ({ children, layers, ...props }) => {
     const nodeLayer = layers.find(layer => layer.key === 'nodes');
     const mode = nodeLayer?.renderNode?.toString().includes('trace-graph/nodes/render/')
