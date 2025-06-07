@@ -25,7 +25,7 @@ describe('<ListItem>', () => {
       setValue: jest.fn(),
       focusedIndex: null,
       highlightQuery: '',
-      options: ['a', 'b'],
+      options: ['apple', 'banana'],
       selectedValue: null,
     },
   };
@@ -41,7 +41,7 @@ describe('<ListItem>', () => {
 
   it('renders and highlights correct option', () => {
     renderItem();
-    expect(screen.getByText('a')).toBeInTheDocument();
+    expect(screen.getByText('apple')).toBeInTheDocument();
   });
 
   it('is focused when index matches focusedIndex', () => {
@@ -52,7 +52,7 @@ describe('<ListItem>', () => {
   });
 
   it('is selected when option equals selectedValue', () => {
-    renderItem({ data: { ...defaultProps.data, selectedValue: 'a' } });
+    renderItem({ data: { ...defaultProps.data, selectedValue: 'apple' } });
     const item = screen.getByRole('switch');
     expect(item).toHaveClass('is-selected');
   });
@@ -60,7 +60,7 @@ describe('<ListItem>', () => {
   it('calls setValue when clicked (single mode)', () => {
     renderItem();
     fireEvent.click(screen.getByRole('switch'));
-    expect(defaultProps.data.setValue).toHaveBeenCalledWith('a');
+    expect(defaultProps.data.setValue).toHaveBeenCalledWith('apple');
   });
 
   describe('multi mode', () => {
@@ -82,7 +82,7 @@ describe('<ListItem>', () => {
         data: {
           ...defaultProps.data,
           multi: true,
-          selectedValue: 'a',
+          selectedValue: 'apple',
         },
       });
       const item = screen.getByRole('switch');
@@ -95,7 +95,7 @@ describe('<ListItem>', () => {
         data: {
           ...defaultProps.data,
           multi: true,
-          selectedValue: new Set(['a', 'b']),
+          selectedValue: new Set(['apple', 'banana']),
         },
       });
       expect(screen.getByRole('checkbox')).toBeChecked();
@@ -122,7 +122,7 @@ describe('<ListItem>', () => {
         },
       });
       fireEvent.click(screen.getByRole('switch'));
-      expect(addValues).toHaveBeenCalledWith(['a']);
+      expect(addValues).toHaveBeenCalledWith(['apple']);
       expect(removeValues).not.toHaveBeenCalled();
     });
 
@@ -131,13 +131,13 @@ describe('<ListItem>', () => {
         data: {
           ...defaultProps.data,
           multi: true,
-          selectedValue: 'a',
+          selectedValue: 'apple',
           addValues,
           removeValues,
         },
       });
       fireEvent.click(screen.getByRole('switch'));
-      expect(removeValues).toHaveBeenCalledWith(['a']);
+      expect(removeValues).toHaveBeenCalledWith(['apple']);
       expect(addValues).not.toHaveBeenCalled();
     });
   });
