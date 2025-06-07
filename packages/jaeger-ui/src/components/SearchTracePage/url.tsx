@@ -102,6 +102,8 @@ export function isSameQuery(a: SearchQuery, b: SearchQuery) {
     eqEq(a.operation, b.operation) &&
     eqEq(a.service, b.service) &&
     eqEq(a.start, b.start) &&
-    eqEq(a.tags, b.tags)
+    eqEq(a.tags, b.tags) &&
+    eqEq(a.page, b.page) &&
+    eqEq(a.pageSize, b.pageSize)
   );
 }
