@@ -44,7 +44,9 @@ describe('TraceIdDisplayLength', () => {
       getConfigValue.mockReturnValue(undefined);
       renderComponent();
 
-      expect(screen.getByText(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH))).toBeInTheDocument();
+      const displayed = MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH);
+      expect(screen.getByText(displayed)).toBeInTheDocument();
+      expect(screen.queryByText(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH + 1))).not.toBeInTheDocument();
     });
 
     it('renders the config length when provided', () => {
@@ -52,7 +54,9 @@ describe('TraceIdDisplayLength', () => {
       getConfigValue.mockReturnValue(configuredLength);
       renderComponent();
 
-      expect(screen.getByText(MOCK_TRACE_ID.slice(0, configuredLength))).toBeInTheDocument();
+      const displayed = MOCK_TRACE_ID.slice(0, configuredLength);
+      expect(screen.getByText(displayed)).toBeInTheDocument();
+      expect(screen.queryByText(MOCK_TRACE_ID.slice(0, configuredLength + 1))).not.toBeInTheDocument();
     });
   });
 
@@ -66,9 +70,11 @@ describe('TraceIdDisplayLength', () => {
       expect(screen.getByText(shortTraceId)).toBeInTheDocument();
     });
 
-    it('renders when traceId is undefiend', () => {
-      renderComponent({ traceId: '' });
-      expect(screen.queryByText(/./)).not.toBeInTheDocument();
+    it('renders an empty <small> element when traceId is an empty string', () => {
+      const { container } = render(<TraceId traceId="" />);
+      const el = container.querySelector('small');
+      expect(el).toBeInTheDocument();
+      expect(el).toBeEmptyDOMElement();
     });
   });
 
