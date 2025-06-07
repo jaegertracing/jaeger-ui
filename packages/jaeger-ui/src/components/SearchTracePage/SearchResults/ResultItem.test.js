@@ -91,9 +91,9 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error ta
       spanID: chance.guid(),
       process: {
         serviceName: firstService.name,
-        tags: []
+        tags: [],
       },
-      tags: []
+      tags: [],
     };
     trace.spans.push(newSpan);
     newSpan.tags.push({ key: 'error', value: true });
