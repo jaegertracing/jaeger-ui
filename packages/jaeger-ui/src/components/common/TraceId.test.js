@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { TraceId } from './TraceId';
 import { getConfigValue } from '../../utils/config/get-config';
 
@@ -26,8 +27,6 @@ describe('TraceIdDisplayLength', () => {
   const MOCK_TRACE_ID = '12345678901234567890';
   const CUSTOM_CLASS = 'custom-class';
 
-  let wrapper;
-
   const defaultProps = {
     traceId: MOCK_TRACE_ID,
   };
@@ -36,26 +35,24 @@ describe('TraceIdDisplayLength', () => {
     jest.clearAllMocks();
   });
 
-  const createWrapper = (props = {}) => {
-    return shallow(<TraceId {...defaultProps} {...props} />);
+  const renderComponent = (props = {}) => {
+    render(<TraceId {...defaultProps} {...props} />);
   };
 
   describe('TraceIdDisplayLength Component', () => {
     it('renders the default traceIdLength 7', () => {
       getConfigValue.mockReturnValue(undefined);
-      wrapper = createWrapper();
+      renderComponent();
 
-      const displayedText = wrapper.text();
-      expect(displayedText).toEqual(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
+      expect(screen.getByText(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH))).toBeInTheDocument();
     });
 
     it('renders the config length when provided', () => {
       const configuredLength = 5;
       getConfigValue.mockReturnValue(configuredLength);
-      wrapper = createWrapper();
+      renderComponent();
 
-      const displayedText = wrapper.text();
-      expect(displayedText).toEqual(MOCK_TRACE_ID.slice(0, configuredLength));
+      expect(screen.getByText(MOCK_TRACE_ID.slice(0, configuredLength))).toBeInTheDocument();
     });
   });
 
@@ -65,36 +62,41 @@ describe('TraceIdDisplayLength', () => {
       const configuredLength = 10;
       getConfigValue.mockReturnValue(configuredLength);
 
-      wrapper = createWrapper({ traceId: shortTraceId });
-      expect(wrapper.text()).toEqual(shortTraceId);
+      renderComponent({ traceId: shortTraceId });
+      expect(screen.getByText(shortTraceId)).toBeInTheDocument();
     });
 
     it('renders when traceId is undefiend', () => {
-      wrapper = createWrapper({ traceId: '' });
-      expect(wrapper.text()).toEqual('');
+      renderComponent({ traceId: '' });
+      expect(screen.queryByText(/./)).not.toBeInTheDocument();
     });
   });
 
   describe('Style handling', () => {
     it('applies custom className when provided', () => {
-      wrapper = createWrapper({ className: CUSTOM_CLASS });
-      expect(wrapper.hasClass(CUSTOM_CLASS)).toBe(true);
+      getConfigValue.mockReturnValue(undefined);
+      renderComponent({ className: CUSTOM_CLASS });
+
+      const el = screen.getByText(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
+      expect(el).toHaveClass(CUSTOM_CLASS);
     });
 
     it('default classes for styling', () => {
-      wrapper = createWrapper();
-      expect(wrapper.hasClass('TraceIDLength')).toBe(true);
-      expect(wrapper.hasClass('u-tx-muted')).toBe(true);
+      renderComponent();
+      const el = screen.getByText(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
+
+      expect(el).toHaveClass('TraceIDLength');
+      expect(el).toHaveClass('u-tx-muted');
     });
 
     it('adds a length-based class depending on the configuration', () => {
       getConfigValue.mockReturnValue(DEFAULT_LENGTH);
-      wrapper = createWrapper();
-      expect(wrapper.hasClass('TraceIDLength--short')).toBe(true);
+      renderComponent();
+      expect(screen.getByText(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH))).toHaveClass('TraceIDLength--short');
 
       getConfigValue.mockReturnValue(32);
-      wrapper = createWrapper();
-      expect(wrapper.hasClass('TraceIDLength--full')).toBe(true);
+      renderComponent();
+      expect(screen.getByText(MOCK_TRACE_ID.slice(0, 32))).toHaveClass('TraceIDLength--full');
     });
   });
 });
