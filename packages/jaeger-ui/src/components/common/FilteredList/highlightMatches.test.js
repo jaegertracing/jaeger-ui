@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom';
 import highlightMatches from './highlightMatches';
 
 describe('highlightMatches(query, text)', () => {
