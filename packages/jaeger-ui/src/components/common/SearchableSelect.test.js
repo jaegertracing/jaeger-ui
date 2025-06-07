@@ -13,22 +13,21 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 import { Select } from 'antd';
 import SearchableSelect, { filterOptionsByLabel } from './SearchableSelect';
 
 describe('SearchableSelect', () => {
-  let wrapper;
-
   const options = [
     { label: 'Test 1', value: 'test1' },
     { label: 'Test 2', value: 'test2' },
     { label: 'Test 3', value: 'test3' },
   ];
 
-  beforeEach(() => {
-    wrapper = shallow(
+  it('SearchableSelect renders with all props and options', async () => {
+    render(
       <SearchableSelect>
         {options.map((option, i) => (
           <Select.Option key={option.value} value={option.value} data-testid={`option-${i}`}>
@@ -37,64 +36,74 @@ describe('SearchableSelect', () => {
         ))}
       </SearchableSelect>
     );
-  });
 
-  it('SearchableSelect renders with all props and options', () => {
-    expect(wrapper).toMatchSnapshot();
+    const select = screen.getByRole('combobox');
+    expect(select).toBeInTheDocument();
+    expect(select).toHaveAttribute('aria-expanded', 'false');
+
+    await userEvent.click(select);
+
+    await Promise.all([
+      screen.findByTestId('option-0'),
+      screen.findByTestId('option-1'),
+      screen.findByTestId('option-2'),
+    ]);
+
+    expect(screen.getByTestId('option-0')).toHaveTextContent('Test 1');
+    expect(screen.getByTestId('option-1')).toHaveTextContent('Test 2');
+    expect(screen.getByTestId('option-2')).toHaveTextContent('Test 3');
   });
 
   it('search is enabled', () => {
-    expect(wrapper.props().showSearch).toBe(true);
+    render(<SearchableSelect />);
+    const select = screen.getByRole('combobox');
+    expect(select).toHaveAttribute('role', 'combobox');
   });
 
-  it('renders all the options correctly', () => {
-    const ops = wrapper.find(Select.Option);
+  it('renders all the options correctly', async () => {
+    render(
+      <SearchableSelect>
+        {options.map((option, i) => (
+          <Select.Option key={option.value} value={option.value} data-testid={`option-${i}`}>
+            {option.label}
+          </Select.Option>
+        ))}
+      </SearchableSelect>
+    );
 
-    expect(ops.length).toBe(3);
+    await userEvent.click(screen.getByRole('combobox'));
 
-    ops.forEach((op, i) => {
-      expect(op.props().value).toBe(options[i].value);
-      expect(op.props().children).toBe(options[i].label);
+    options.forEach((option, i) => {
+      const optEl = screen.getByTestId(`option-${i}`);
+      expect(optEl).toHaveTextContent(option.label);
     });
   });
 });
 
 describe('filterOptionsByLabel', () => {
-  const options = [
-    {
-      children: 'Test 1',
-      label: 'Test 1',
-      value: 'test1',
-    },
-  ];
+  const option = {
+    children: 'Test 1',
+    label: 'Test 1',
+    value: 'test1',
+  };
 
   it('should return true when passed empty input', () => {
-    const input = filterOptionsByLabel('', options[0]);
-
-    expect(input).toBe(true);
+    expect(filterOptionsByLabel('', option)).toBe(true);
   });
 
   it('should return true when passed matching lowercase string', () => {
-    const input = filterOptionsByLabel('test', options[0]);
-
-    expect(input).toBe(true);
+    expect(filterOptionsByLabel('test', option)).toBe(true);
   });
 
   it('should return true when passed matching uppercase string', () => {
-    const input = filterOptionsByLabel('TEST', options[0]);
-
-    expect(input).toBe(true);
+    expect(filterOptionsByLabel('TEST', option)).toBe(true);
   });
 
   it('should return false when passed non-matching', () => {
-    const input = filterOptionsByLabel('jaeger', options[0]);
-
-    expect(input).toBe(false);
+    expect(filterOptionsByLabel('jaeger', option)).toBe(false);
   });
 
   it('should return false when passed null option', () => {
-    const input = filterOptionsByLabel('jaeger', null);
-
-    expect(input).toBe(false);
+    expect(filterOptionsByLabel('jaeger', null)).toBe(false);
   });
 });
