@@ -26,7 +26,7 @@ describe('SearchableSelect', () => {
     { label: 'Test 3', value: 'test3' },
   ];
 
-  it('SearchableSelect renders with all props and options', async () => {
+  it('renders all options when dropdown is opened', async () => {
     render(
       <SearchableSelect>
         {options.map((option, i) => (
@@ -38,9 +38,6 @@ describe('SearchableSelect', () => {
     );
 
     const select = screen.getByRole('combobox');
-    expect(select).toBeInTheDocument();
-    expect(select).toHaveAttribute('aria-expanded', 'false');
-
     await userEvent.click(select);
 
     await Promise.all([
@@ -54,29 +51,20 @@ describe('SearchableSelect', () => {
     expect(screen.getByTestId('option-2')).toHaveTextContent('Test 3');
   });
 
-  it('search is enabled', () => {
-    render(<SearchableSelect />);
-    const select = screen.getByRole('combobox');
-    expect(select).toHaveAttribute('role', 'combobox');
-  });
-
-  it('renders all the options correctly', async () => {
+  it('filters options based on input when showSearch is enabled', async () => {
     render(
       <SearchableSelect>
-        {options.map((option, i) => (
-          <Select.Option key={option.value} value={option.value} data-testid={`option-${i}`}>
-            {option.label}
-          </Select.Option>
-        ))}
+        <Select.Option value="apple">Apple</Select.Option>
+        <Select.Option value="banana">Banana</Select.Option>
       </SearchableSelect>
     );
 
-    await userEvent.click(screen.getByRole('combobox'));
+    const select = screen.getByRole('combobox');
+    await userEvent.click(select);
+    await userEvent.type(select, 'ban');
 
-    options.forEach((option, i) => {
-      const optEl = screen.getByTestId(`option-${i}`);
-      expect(optEl).toHaveTextContent(option.label);
-    });
+    expect(screen.getByText('Banana')).toBeInTheDocument();
+    expect(screen.queryByText('Apple')).not.toBeInTheDocument();
   });
 });
 
