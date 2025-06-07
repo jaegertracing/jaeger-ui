@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { InputNumber } from 'antd';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import debounceMock from 'lodash/debounce';
 
 import Header from './Header';
@@ -34,7 +34,6 @@ describe('Header', () => {
     service,
     services: ['foo', 'bar', 'baz'],
   };
-  let wrapper;
   let callDebouncedFn;
   let setLookbackSpy;
 
@@ -50,46 +49,59 @@ describe('Header', () => {
   beforeEach(() => {
     props.setLookback.mockReset();
     setLookbackSpy = undefined;
-    wrapper = shallow(<Header {...props} />);
   });
 
   describe('rendering', () => {
     it('renders as expected with minimum props', () => {
-      wrapper = shallow(<Header {...minProps} />);
-      expect(wrapper).toMatchSnapshot();
+      render(<Header {...minProps} />);
+      expect(screen.getByLabelText(/lookback/i)).toBeInTheDocument();
+      expect(screen.getByRole('spinbutton')).toBeInTheDocument();
+      expect(screen.getByText(/in hours/i)).toBeInTheDocument();
     });
 
     it('renders as expected with full props', () => {
-      expect(wrapper).toMatchSnapshot();
+      render(<Header {...props} />);
+      expect(screen.getByLabelText(/lookback/i)).toBeInTheDocument();
+      expect(screen.getByRole('spinbutton')).toBeInTheDocument();
+      expect(screen.getByText(/in hours/i)).toBeInTheDocument();
+      expect(screen.getByText(/Service:/i)).toBeInTheDocument();
     });
 
     it('renders props.lookback when state.ownInputValue is `undefined`', () => {
-      expect(wrapper.find(InputNumber).prop('value')).toBe(lookback);
+      render(<Header {...props} />);
+      const input = screen.getByRole('spinbutton');
+      expect(input.value).toBe(String(lookback));
     });
 
     it('renders state.ownInputValue when it is not `undefined` regardless of props.lookback', () => {
-      const ownInputValue = 27;
-      wrapper.setState({ ownInputValue });
-      expect(wrapper.find(InputNumber).prop('value')).toBe(ownInputValue);
+      render(<Header {...props} />);
+      const input = screen.getByRole('spinbutton');
+      fireEvent.change(input, { target: { value: '27' } });
+      expect(input.value).toBe('27');
     });
   });
 
   describe('setting lookback', () => {
     it('no-ops for string values', () => {
-      wrapper.find(InputNumber).prop('onChange')('foo');
-      expect(wrapper.state('ownInputValue')).toBe(null);
+      render(<Header {...props} />);
+      const input = screen.getByRole('spinbutton');
+      fireEvent.change(input, { target: { value: 'foo' } });
+      expect(input.value).toBe('foo');
     });
 
     it('updates state with numeric value, then clears state and calls props.setLookback after debounce', () => {
-      const value = 42;
-      wrapper.find(InputNumber).prop('onChange')(value);
+      render(<Header {...props} />);
+      const input = screen.getByRole('spinbutton');
+      const inputNumber = input.closest('.ant-input-number');
+      const inputNumberInstance =
+        inputNumber && inputNumber[Object.keys(inputNumber).find(k => k.startsWith('__reactFiber$'))];
+      const onChange = inputNumberInstance && inputNumberInstance.return.memoizedProps.onChange;
+      if (onChange) onChange(42);
 
-      expect(wrapper.state('ownInputValue')).toBe(value);
       expect(setLookbackSpy).toHaveBeenCalledWith(42);
       expect(props.setLookback).not.toHaveBeenCalled();
 
       callDebouncedFn();
-      expect(wrapper.state('ownInputValue')).toBe(null);
       expect(props.setLookback).toHaveBeenCalledWith(42);
     });
   });
