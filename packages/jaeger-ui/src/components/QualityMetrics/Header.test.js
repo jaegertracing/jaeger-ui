@@ -68,15 +68,21 @@ describe('Header', () => {
     });
 
     it('renders props.lookback when state.ownInputValue is `undefined`', () => {
-      render(<Header {...props} />);
+      const { rerender } = render(<Header {...props} />);
       const input = screen.getByRole('spinbutton');
       expect(input.value).toBe(String(lookback));
+
+      rerender(<Header {...props} lookback={10} />);
+      expect(input.value).toBe('10');
     });
 
     it('renders state.ownInputValue when it is not `undefined` regardless of props.lookback', () => {
-      render(<Header {...props} />);
+      const { rerender } = render(<Header {...props} />);
       const input = screen.getByRole('spinbutton');
       fireEvent.change(input, { target: { value: '27' } });
+      expect(input.value).toBe('27');
+
+      rerender(<Header {...props} lookback={10} />);
       expect(input.value).toBe('27');
     });
   });
