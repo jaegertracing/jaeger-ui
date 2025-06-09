@@ -80,9 +80,7 @@ describe('DetailTableDropdown', () => {
     };
 
     it('sets selected on open/close cycle and uses it on cancel', () => {
-      const { rerender } = render(
-        <DetailTableDropdown {...baseProps} selectedKeys={altSelected} />
-      );
+      const { rerender } = render(<DetailTableDropdown {...baseProps} selectedKeys={altSelected} />);
 
       simulateOpenClose(rerender);
       fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
@@ -93,16 +91,16 @@ describe('DetailTableDropdown', () => {
     });
 
     it('maintains internal selected if selectedKeys change', () => {
-      const { rerender } = render(
-        <DetailTableDropdown {...baseProps} selectedKeys={[...selectedKeys]} />
-      );
+      const { rerender } = render(<DetailTableDropdown {...baseProps} selectedKeys={[...selectedKeys]} />);
 
-      simulateOpenClose(rerender);
+      rerender(<DetailTableDropdown {...baseProps} selectedKeys={[...selectedKeys]} />);
+      rerender(<DetailTableDropdown {...baseProps} selectedKeys={[...selectedKeys]} />);
 
-      const differentSelection = optionsArray.slice(0, selectedKeys.length); // ['foo', 'bar']
+      const differentSelection = ['foo'];
       rerender(<DetailTableDropdown {...baseProps} selectedKeys={differentSelection} />);
 
       fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+
       expect(setSelectedKeys).toHaveBeenCalledWith(selectedKeys);
     });
   });
