@@ -13,66 +13,69 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import DetailsCard from '.';
 
 describe('DetailsCard', () => {
   const header = 'Details Card Header';
 
   it('renders string details', () => {
-    const details = 'test details';
-    expect(shallow(<DetailsCard details={details} header={header} />)).toMatchSnapshot();
+    render(<DetailsCard details="test details" header={header} />);
+    expect(screen.getByText('test details')).toBeInTheDocument();
+    expect(screen.getByText(header)).toBeInTheDocument();
   });
 
   it('handles empty details array', () => {
-    const details = [];
-    expect(shallow(<DetailsCard details={details} header={header} />)).toMatchSnapshot();
+    const { container } = render(<DetailsCard details={[]} header={header} />);
+    expect(container.querySelector('.DetailsCard--DetailsWrapper')?.textContent).toBe('');
   });
 
   it('renders list details', () => {
     const details = ['foo', 'bar', 'baz'];
-    expect(shallow(<DetailsCard details={details} header={header} />)).toMatchSnapshot();
+    render(<DetailsCard details={details} header={header} />);
+    details.forEach(item => {
+      expect(screen.getByText(item)).toBeInTheDocument();
+    });
   });
 
   it('renders table details', () => {
     const details = [{ value: 'foo' }];
-    expect(shallow(<DetailsCard details={details} header={header} />)).toMatchSnapshot();
+    render(<DetailsCard details={details} header={header} />);
+    expect(screen.getByText('foo')).toBeInTheDocument();
   });
 
   it('renders table details with column defs', () => {
     const columnDefs = ['col'];
     const details = [{ [columnDefs[0]]: 'foo' }];
-    expect(
-      shallow(<DetailsCard columnDefs={columnDefs} details={details} header={header} />)
-    ).toMatchSnapshot();
+    render(<DetailsCard columnDefs={columnDefs} details={details} header={header} />);
+    expect(screen.getByText('foo')).toBeInTheDocument();
   });
 
   it('renders with description', () => {
     const description = 'test description';
-    expect(shallow(<DetailsCard description={description} header={header} />)).toMatchSnapshot();
+    render(<DetailsCard description={description} header={header} details="..." />);
+    expect(screen.getByText(description)).toBeInTheDocument();
   });
 
   it('renders with className', () => {
-    const className = 'test className';
-    expect(shallow(<DetailsCard className={className} header={header} />)).toMatchSnapshot();
+    const className = 'test-className';
+    const { container } = render(<DetailsCard className={className} header={header} details="..." />);
+    expect(container.firstChild).toHaveClass(className);
   });
 
-  it('renders as collapsible', () => {
-    expect(
-      shallow(<DetailsCard header={header} />)
-        .find('.DetailsCard--DetailsWrapper')
-        .hasClass('is-collapsed')
-    ).toBe(false);
+  it('renders as collapsible and toggles collapsed state', () => {
+    const { container } = render(<DetailsCard header={header} details="info" collapsible />);
+    const collapsedWrapper = container.querySelector('.DetailsCard--DetailsWrapper');
+    expect(collapsedWrapper).toHaveClass('is-collapsed');
 
-    const wrapper = shallow(<DetailsCard collapsible header={header} />);
-    expect(wrapper.find('.DetailsCard--DetailsWrapper').hasClass('is-collapsed')).toBe(true);
-    expect(wrapper).toMatchSnapshot();
+    const toggleBtn = container.querySelector('button');
+    expect(toggleBtn).toBeInTheDocument();
 
-    wrapper.find('button').simulate('click');
-    expect(wrapper.find('.DetailsCard--DetailsWrapper').hasClass('is-collapsed')).toBe(false);
+    fireEvent.click(toggleBtn);
+    expect(collapsedWrapper).not.toHaveClass('is-collapsed');
 
-    wrapper.find('button').simulate('click');
-    expect(wrapper.find('.DetailsCard--DetailsWrapper').hasClass('is-collapsed')).toBe(true);
+    fireEvent.click(toggleBtn);
+    expect(collapsedWrapper).toHaveClass('is-collapsed');
   });
 });
