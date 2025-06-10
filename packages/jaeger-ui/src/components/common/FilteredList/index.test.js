@@ -182,63 +182,64 @@ describe('<FilteredList>', () => {
   });
 
   describe('keyboard navigation', () => {
-    beforeEach(() => {
-      jest.useFakeTimers();
-    });
-
-    afterEach(() => {
-      jest.runOnlyPendingTimers();
-      jest.useRealTimers();
-    });
-
     it('sets focus to first visible item on down arrow when no item is focused', async () => {
-      render(<FilteredList {...props} />);
+      jest.useFakeTimers();
+      try {
+        render(<FilteredList {...props} />);
 
-      const input = getFilterInput();
-      input.focus();
+        const input = getFilterInput();
+        input.focus();
 
-      fireEvent.keyDown(input, { key: EKey.ArrowDown });
-      jest.runAllTimers();
+        fireEvent.keyDown(input, { key: EKey.ArrowDown });
+        jest.runAllTimers();
 
-      await waitFor(() => {
-        const items = getListItems();
-        expect(items[0]).toHaveAttribute('data-focused', 'true');
-        items.slice(1).forEach(item => {
-          expect(item).toHaveAttribute('data-focused', 'false');
+        await waitFor(() => {
+          const items = getListItems();
+          expect(items[0]).toHaveAttribute('data-focused', 'true');
+          items.slice(1).forEach(item => {
+            expect(item).toHaveAttribute('data-focused', 'false');
+          });
         });
-      });
+      } finally {
+        jest.useRealTimers();
+      }
     });
 
     it('cycles through items with arrow keys', async () => {
-      render(<FilteredList {...props} />);
+      jest.useFakeTimers();
+      try {
+        render(<FilteredList {...props} />);
 
-      const input = getFilterInput();
-      input.focus();
+        const input = getFilterInput();
+        input.focus();
 
-      fireEvent.keyDown(input, { key: EKey.ArrowDown });
-      jest.runAllTimers();
+        fireEvent.keyDown(input, { key: EKey.ArrowDown });
+        jest.runAllTimers();
 
-      await waitFor(() => {
-        expect(getListItems()[0]).toHaveAttribute('data-focused', 'true');
-      });
+        await waitFor(() => {
+          expect(getListItems()[0]).toHaveAttribute('data-focused', 'true');
+        });
 
-      fireEvent.keyDown(input, { key: EKey.ArrowDown });
-      jest.runAllTimers();
+        fireEvent.keyDown(input, { key: EKey.ArrowDown });
+        jest.runAllTimers();
 
-      await waitFor(() => {
-        const items = getListItems();
-        expect(items[0]).toHaveAttribute('data-focused', 'false');
-        expect(items[1]).toHaveAttribute('data-focused', 'true');
-      });
+        await waitFor(() => {
+          const items = getListItems();
+          expect(items[0]).toHaveAttribute('data-focused', 'false');
+          expect(items[1]).toHaveAttribute('data-focused', 'true');
+        });
 
-      fireEvent.keyDown(input, { key: EKey.ArrowUp });
-      jest.runAllTimers();
+        fireEvent.keyDown(input, { key: EKey.ArrowUp });
+        jest.runAllTimers();
 
-      await waitFor(() => {
-        const items = getListItems();
-        expect(items[0]).toHaveAttribute('data-focused', 'true');
-        expect(items[1]).toHaveAttribute('data-focused', 'false');
-      });
+        await waitFor(() => {
+          const items = getListItems();
+          expect(items[0]).toHaveAttribute('data-focused', 'true');
+          expect(items[1]).toHaveAttribute('data-focused', 'false');
+        });
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 
@@ -313,29 +314,29 @@ describe('<FilteredList>', () => {
   describe('scrolling behavior', () => {
     it('clears focused item on scroll', async () => {
       jest.useFakeTimers();
+      try {
+        render(<FilteredList {...props} />);
 
-      render(<FilteredList {...props} />);
+        const input = getFilterInput();
+        input.focus();
 
-      const input = getFilterInput();
-      input.focus();
+        fireEvent.keyDown(input, { key: EKey.ArrowDown });
 
-      fireEvent.keyDown(input, { key: EKey.ArrowDown });
-
-      await waitFor(() => {
-        expect(getListItems()[0]).toHaveAttribute('data-focused', 'true');
-      });
-
-      fireEvent.scroll(getVirtualList());
-      jest.runAllTimers();
-
-      await waitFor(() => {
-        const items = getListItems();
-        items.forEach(item => {
-          expect(item).toHaveAttribute('data-focused', 'false');
+        await waitFor(() => {
+          expect(getListItems()[0]).toHaveAttribute('data-focused', 'true');
         });
-      });
 
-      jest.useRealTimers();
+        fireEvent.scroll(getVirtualList());
+        jest.runAllTimers();
+
+        await waitFor(() => {
+          getListItems().forEach(item => {
+            expect(item).toHaveAttribute('data-focused', 'false');
+          });
+        });
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 
