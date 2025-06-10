@@ -9,6 +9,29 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.70.0 (2025-06-10)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Fix react fragment key issues in multiple components ([@Parship999](https://github.com/Parship999) in [#2823](https://github.com/jaegertracing/jaeger-ui/pull/2823))
+* Move tracediff header chevron icon ([@Parship999](https://github.com/Parship999) in [#2845](https://github.com/jaegertracing/jaeger-ui/pull/2845))
+* Feat: filter logs based on the selected time range ([@tejas-raskar](https://github.com/tejas-raskar) in [#2844](https://github.com/jaegertracing/jaeger-ui/pull/2844))
+* Enhance tracediff ui components ([@Parship999](https://github.com/Parship999) in [#2806](https://github.com/jaegertracing/jaeger-ui/pull/2806))
+* Rewrite computeselftime to improve performance on trace statistics page ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2767](https://github.com/jaegertracing/jaeger-ui/pull/2767))
+* Fix array return pattern in `labeledlist` component ([@Parship999](https://github.com/Parship999) in [#2812](https://github.com/jaegertracing/jaeger-ui/pull/2812))
+* Allow json logs to occupy entire available width ([@tejas-raskar](https://github.com/tejas-raskar) in [#2814](https://github.com/jaegertracing/jaeger-ui/pull/2814))
+* Feat: convert monitoratmemptystate to a functional component ([@vishvamsinh28](https://github.com/vishvamsinh28) in [#2790](https://github.com/jaegertracing/jaeger-ui/pull/2790))
+* Replace deprecated `overlayclassname` with `classnames.root` ([@abhayporwals](https://github.com/abhayporwals) in [#2772](https://github.com/jaegertracing/jaeger-ui/pull/2772))
+* [fix]: reduce default minimum allowed zoom ([@hari45678](https://github.com/hari45678) in [#2775](https://github.com/jaegertracing/jaeger-ui/pull/2775))
+* Fix dependencygraph dag extra render ([@mdwyer6](https://github.com/mdwyer6) in [#2749](https://github.com/jaegertracing/jaeger-ui/pull/2749))
+
+#### ⚙️ Refactoring
+
+* Convert qualitymetrics components to functional components ([@Parship999](https://github.com/Parship999) in [#2856](https://github.com/jaegertracing/jaeger-ui/pull/2856))
+* Refactor: spandetailrow to functional component ([@tejas-raskar](https://github.com/tejas-raskar) in [#2827](https://github.com/jaegertracing/jaeger-ui/pull/2827))
+* Migrate tracetimelineviewerimpl to a functional component ([@tejas-raskar](https://github.com/tejas-raskar) in [#2816](https://github.com/jaegertracing/jaeger-ui/pull/2816))
+* Refactor canvasspangraph to functional component and improve test coverage ([@vishvamsinh28](https://github.com/vishvamsinh28) in [#2824](https://github.com/jaegertracing/jaeger-ui/pull/2824))
+
 ## v1.69.0 (2025-05-08)
 
 #### 🐞 Bug fixes, Minor Improvements
