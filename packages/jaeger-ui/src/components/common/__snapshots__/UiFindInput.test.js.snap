@@ -3,10 +3,10 @@
 exports[`UiFind rendering renders as expected 1`] = `
 <div>
   <span
-    class="ant-input-affix-wrapper css-dev-only-do-not-override-ut69n1 ant-input-outlined"
+    class="ant-input-affix-wrapper css-dev-only-do-not-override-18afz5u ant-input-outlined"
   >
     <input
-      class="ant-input css-dev-only-do-not-override-ut69n1"
+      class="ant-input css-dev-only-do-not-override-18afz5u"
       placeholder="Find..."
       type="text"
       value=""
