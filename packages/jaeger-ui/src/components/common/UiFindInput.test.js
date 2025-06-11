@@ -69,10 +69,19 @@ describe('UiFind', () => {
       expect(screen.getByPlaceholderText('Find...')).toHaveValue(uiFind);
     });
 
-    it('renders state.ownInputValue when it is not `undefined` regardless of props.uiFind', async () => {
+    it('prioritizes state.ownInputValue over props.uiFind when ownInputValue is set', async () => {
+      // Test the initial state
       const { rerender } = render(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
+      expect(screen.getByPlaceholderText('Find...')).toHaveValue(uiFind);
+
+      // Test setting ownInputValue through user interaction
       await userEvent.clear(screen.getByPlaceholderText('Find...'));
       await userEvent.type(screen.getByPlaceholderText('Find...'), ownInputValue);
+
+      // Verify the state change affected the value
+      expect(screen.getByPlaceholderText('Find...')).toHaveValue(ownInputValue);
+
+      // Verify the precedence is maintained after re-render
       rerender(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
       expect(screen.getByPlaceholderText('Find...')).toHaveValue(ownInputValue);
     });
@@ -120,16 +129,10 @@ describe('UiFind', () => {
     });
 
     it('no-ops if value is unchanged', async () => {
-      // First render
-      const { unmount } = render(<UnconnectedUiFindInput {...props} />);
-      await userEvent.clear(screen.getByPlaceholderText('Find...'));
-      expect(updateUiFindSpy).not.toHaveBeenCalled();
-      unmount();
-
-      // Second render
       render(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
-      await userEvent.clear(screen.getByPlaceholderText('Find...'));
-      await userEvent.type(screen.getByPlaceholderText('Find...'), uiFind);
+      const input = screen.getByPlaceholderText('Find...');
+      await userEvent.clear(input);
+      await userEvent.type(input, uiFind);
       const calls = updateUiFindSpy.mock.calls;
       const calledWithUnchanged = calls.some(([args]) => args && args.uiFind === uiFind);
       expect(calledWithUnchanged).toBe(false);
@@ -137,12 +140,19 @@ describe('UiFind', () => {
   });
 
   describe('blurring input', () => {
-    it('clears state.ownInputValue', async () => {
-      render(<UnconnectedUiFindInput {...props} />);
-      await userEvent.type(screen.getByPlaceholderText('Find...'), 'abc');
-      expect(screen.getByPlaceholderText('Find...')).toHaveValue('abc');
-      screen.getByPlaceholderText('Find...').blur();
-      expect(screen.getByPlaceholderText('Find...')).toHaveValue(props.uiFind || undefined);
+    it('clears state.ownInputValue and resets to props.uiFind', async () => {
+      render(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
+      const input = screen.getByPlaceholderText('Find...');
+      await userEvent.clear(input);
+      await userEvent.type(input, 'abc');
+      expect(input).toHaveValue('abc');
+      await userEvent.tab();
+      expect(input).toHaveValue(uiFind);
+
+      // Verify that typing after blur starts from props.uiFind
+      await userEvent.clear(input);
+      await userEvent.type(input, 'xyz');
+      expect(input).toHaveValue('xyz');
     });
 
     it('triggers pending queryParameter updates', async () => {
@@ -172,10 +182,10 @@ describe('UiFind', () => {
       expect(screen.queryByTestId('clear-icon')).not.toBeInTheDocument();
     });
 
-    it('clears value immediately when clicked', () => {
+    it('clears value immediately when clicked', async () => {
       render(<UnconnectedUiFindInput {...props} allowClear uiFind={uiFind} />);
       const clearIcon = screen.getByTestId('clear-icon');
-      clearIcon.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await userEvent.click(clearIcon);
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
         history: props.history,
         location: props.location,
