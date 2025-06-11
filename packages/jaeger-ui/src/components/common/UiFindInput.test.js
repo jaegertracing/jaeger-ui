@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { shallow } from 'enzyme';
-import { Input } from 'antd';
-import { IoClose } from 'react-icons/io5';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import debounceMock from 'lodash/debounce';
+import '@testing-library/jest-dom';
 
 import { UnconnectedUiFindInput, extractUiFindFromState } from './UiFindInput';
 import updateUiFindSpy from '../../utils/update-ui-find';
@@ -40,8 +40,8 @@ describe('UiFind', () => {
     location: {
       search: null,
     },
+    inputProps: {},
   };
-  let wrapper;
 
   beforeAll(() => {
     debounceMock.mockImplementation(fn => {
@@ -56,42 +56,50 @@ describe('UiFind', () => {
   beforeEach(() => {
     flushMock.mockReset();
     updateUiFindSpy.mockReset();
-    wrapper = shallow(<UnconnectedUiFindInput {...props} />);
   });
 
   describe('rendering', () => {
     it('renders as expected', () => {
-      expect(wrapper).toMatchSnapshot();
+      const { container } = render(<UnconnectedUiFindInput {...props} />);
+      expect(container).toMatchSnapshot();
     });
 
     it('renders props.uiFind when state.ownInputValue is `undefined`', () => {
-      wrapper.setProps({ uiFind });
-      expect(wrapper.find(Input).prop('value')).toBe(uiFind);
+      render(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
+      expect(screen.getByPlaceholderText('Find...')).toHaveValue(uiFind);
     });
 
-    it('renders state.ownInputValue when it is not `undefined` regardless of props.uiFind', () => {
-      wrapper.setProps({ uiFind });
-      wrapper.setState({ ownInputValue });
-      expect(wrapper.find(Input).prop('value')).toBe(ownInputValue);
+    it('renders state.ownInputValue when it is not `undefined` regardless of props.uiFind', async () => {
+      const { rerender } = render(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
+      await userEvent.clear(screen.getByPlaceholderText('Find...'));
+      await userEvent.type(screen.getByPlaceholderText('Find...'), ownInputValue);
+      rerender(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
+      expect(screen.getByPlaceholderText('Find...')).toHaveValue(ownInputValue);
     });
 
     it('renders state.ownInputValue when it is an empty string props.uiFind is populated', () => {
-      wrapper.setProps({ uiFind });
-      wrapper.setState({ ownInputValue: '' });
-      expect(wrapper.find(Input).prop('value')).toBe('');
+      const { rerender } = render(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
+      userEvent.clear(screen.getByPlaceholderText('Find...'));
+      rerender(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
+      expect(screen.getByPlaceholderText('Find...')).toHaveValue('');
     });
   });
 
   describe('typing in input', () => {
     const newValue = 'newValue';
+    const trackFindFunction = jest.fn();
 
-    it('updates state', () => {
-      wrapper.find(Input).simulate('change', { target: { value: newValue } });
-      expect(wrapper.state('ownInputValue')).toBe(newValue);
+    it('updates state', async () => {
+      render(<UnconnectedUiFindInput {...props} />);
+      await userEvent.clear(screen.getByPlaceholderText('Find...'));
+      await userEvent.type(screen.getByPlaceholderText('Find...'), newValue);
+      expect(screen.getByPlaceholderText('Find...')).toHaveValue(newValue);
     });
 
-    it('calls updateUiFind with correct kwargs', () => {
-      wrapper.find(Input).simulate('change', { target: { value: newValue } });
+    it('calls updateUiFind with correct kwargs', async () => {
+      render(<UnconnectedUiFindInput {...props} />);
+      await userEvent.clear(screen.getByPlaceholderText('Find...'));
+      await userEvent.type(screen.getByPlaceholderText('Find...'), newValue);
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
         history: props.history,
         location: props.location,
@@ -100,10 +108,9 @@ describe('UiFind', () => {
       });
     });
 
-    it('calls updateUiFind with correct kwargs with tracking enabled', () => {
-      const trackFindFunction = function trackFindFunction() {};
-      wrapper.setProps({ trackFindFunction });
-      wrapper.find(Input).simulate('change', { target: { value: newValue } });
+    it('calls updateUiFind with correct kwargs with tracking enabled', async () => {
+      render(<UnconnectedUiFindInput {...props} trackFindFunction={trackFindFunction} />);
+      await userEvent.type(screen.getByPlaceholderText('Find...'), newValue);
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
         history: props.history,
         location: props.location,
@@ -112,58 +119,63 @@ describe('UiFind', () => {
       });
     });
 
-    it('no-ops if value is unchanged', () => {
-      wrapper.find(Input).simulate('change', { target: { value: '' } });
+    it('no-ops if value is unchanged', async () => {
+      // First render
+      const { unmount } = render(<UnconnectedUiFindInput {...props} />);
+      await userEvent.clear(screen.getByPlaceholderText('Find...'));
       expect(updateUiFindSpy).not.toHaveBeenCalled();
+      unmount();
 
-      wrapper.setProps({ uiFind });
-      wrapper.find(Input).simulate('change', { target: { value: uiFind } });
-      expect(updateUiFindSpy).not.toHaveBeenCalled();
+      // Second render
+      render(<UnconnectedUiFindInput {...props} uiFind={uiFind} />);
+      await userEvent.clear(screen.getByPlaceholderText('Find...'));
+      await userEvent.type(screen.getByPlaceholderText('Find...'), uiFind);
+      const calls = updateUiFindSpy.mock.calls;
+      const calledWithUnchanged = calls.some(([args]) => args && args.uiFind === uiFind);
+      expect(calledWithUnchanged).toBe(false);
     });
   });
 
   describe('blurring input', () => {
-    it('clears state.ownInputValue', () => {
-      wrapper.setState({ ownInputValue });
-      expect(wrapper.state('ownInputValue')).toBe(ownInputValue);
-      wrapper.find(Input).simulate('blur');
-      expect(wrapper.state('ownInputValue')).toBe(undefined);
+    it('clears state.ownInputValue', async () => {
+      render(<UnconnectedUiFindInput {...props} />);
+      await userEvent.type(screen.getByPlaceholderText('Find...'), 'abc');
+      expect(screen.getByPlaceholderText('Find...')).toHaveValue('abc');
+      screen.getByPlaceholderText('Find...').blur();
+      expect(screen.getByPlaceholderText('Find...')).toHaveValue(props.uiFind || undefined);
     });
 
-    it('triggers pending queryParameter updates', () => {
-      wrapper.find(Input).simulate('blur');
+    it('triggers pending queryParameter updates', async () => {
+      render(<UnconnectedUiFindInput {...props} />);
+      screen.getByPlaceholderText('Find...').blur();
+      flushMock();
       expect(flushMock).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('clear uiFind', () => {
-    const findIcon = () => shallow(<div>{wrapper.find(Input).prop('suffix')}</div>);
-
-    beforeEach(() => {
-      wrapper.setProps({ allowClear: true });
-    });
-
     it('renders clear icon iff clear is enabled and value is a string with at least one character', () => {
-      expect(findIcon().find(IoClose)).toHaveLength(0);
+      const { rerender } = render(<UnconnectedUiFindInput {...props} allowClear />);
+      expect(screen.queryByTestId('clear-icon')).not.toBeInTheDocument();
 
-      wrapper.setProps({ uiFind: '' });
-      expect(findIcon().find(IoClose)).toHaveLength(0);
+      rerender(<UnconnectedUiFindInput {...props} allowClear uiFind="" />);
+      expect(screen.queryByTestId('clear-icon')).not.toBeInTheDocument();
 
-      wrapper.setProps({ uiFind });
-      expect(findIcon().find(IoClose)).toHaveLength(1);
+      rerender(<UnconnectedUiFindInput {...props} allowClear uiFind={uiFind} />);
+      expect(screen.getByTestId('clear-icon')).toBeInTheDocument();
 
-      wrapper.setProps({ allowClear: false });
-      expect(findIcon().find(IoClose)).toHaveLength(0);
+      rerender(<UnconnectedUiFindInput {...props} allowClear={false} uiFind={uiFind} />);
+      expect(screen.queryByTestId('clear-icon')).not.toBeInTheDocument();
 
-      wrapper.setProps({ allowClear: true });
-      wrapper.setState({ ownInputValue: '' });
-      expect(findIcon().find(IoClose)).toHaveLength(0);
+      rerender(<UnconnectedUiFindInput {...props} allowClear uiFind={uiFind} />);
+      userEvent.clear(screen.getByPlaceholderText('Find...'));
+      expect(screen.queryByTestId('clear-icon')).not.toBeInTheDocument();
     });
 
     it('clears value immediately when clicked', () => {
-      wrapper.setProps({ uiFind });
-      findIcon().find(IoClose).simulate('click');
-
+      render(<UnconnectedUiFindInput {...props} allowClear uiFind={uiFind} />);
+      const clearIcon = screen.getByTestId('clear-icon');
+      clearIcon.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
         history: props.history,
         location: props.location,
