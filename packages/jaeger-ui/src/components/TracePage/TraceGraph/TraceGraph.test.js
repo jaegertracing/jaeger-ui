@@ -92,6 +92,8 @@ describe('<TraceGraph>', () => {
   it('does not explode', () => {
     render(<TraceGraph {...props} />);
     expect(screen.getByTestId('mock-digraph')).toBeInTheDocument();
+    expect(document.querySelectorAll('.TraceGraph--menu').length).toBe(1);
+    expect(screen.getAllByRole('button').length).toBe(3);
   });
 
   it('may show no traces', () => {
@@ -99,26 +101,25 @@ describe('<TraceGraph>', () => {
     expect(screen.getByText('No trace found')).toBeInTheDocument();
   });
 
-  it('toggles nodeMode to time', async () => {
+  it('switches node mode when clicking mode buttons', async () => {
     render(<TraceGraph {...props} />);
-    const timeButton = screen.getByRole('button', { name: 'T' });
-    await userEvent.click(timeButton);
-    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_TIME);
-  });
-
-  it('validates button nodeMode change click', async () => {
-    render(<TraceGraph {...props} />);
-    const serviceButton = screen.getByRole('button', { name: 'S' });
-    await userEvent.click(serviceButton);
+    // Initial mode should be service
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
 
+    // Switch to time
     const timeButton = screen.getByRole('button', { name: 'T' });
     await userEvent.click(timeButton);
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_TIME);
 
+    // Switch to selftime
     const selftimeButton = screen.getByRole('button', { name: 'ST' });
     await userEvent.click(selftimeButton);
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SELFTIME);
+
+    // Switch back to service
+    const serviceButton = screen.getByRole('button', { name: 'S' });
+    await userEvent.click(serviceButton);
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
   });
 
   it('shows help', async () => {
@@ -126,6 +127,10 @@ describe('<TraceGraph>', () => {
     const helpIcon = screen.getByTestId('help-icon');
     await userEvent.click(helpIcon);
     expect(screen.getByText(/self-time = 10ms - 2 \* 4ms = 2ms/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Service/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Time/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Self Time/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/FollowsFrom/i)).toBeInTheDocument();
   });
 
   it('hides help', async () => {
@@ -158,23 +163,6 @@ describe('<TraceGraph>', () => {
 
   it('initializes with correct default mode', () => {
     render(<TraceGraph {...props} />);
-    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
-  });
-
-  it('updates mode state when clicking different mode buttons', async () => {
-    render(<TraceGraph {...props} />);
-    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
-
-    const timeButton = screen.getByRole('button', { name: 'T' });
-    await userEvent.click(timeButton);
-    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_TIME);
-
-    const selftimeButton = screen.getByRole('button', { name: 'ST' });
-    await userEvent.click(selftimeButton);
-    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SELFTIME);
-
-    const serviceButton = screen.getByRole('button', { name: 'S' });
-    await userEvent.click(serviceButton);
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
   });
 
