@@ -12,13 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import '@testing-library/jest-dom';
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { shallow } from 'enzyme';
+import { Table, Tag } from 'antd';
+
+import CohortTable, { NEED_MORE_TRACES_MESSAGE } from './CohortTable';
+import TraceTimelineLink from './TraceTimelineLink';
+import RelativeDate from '../../common/RelativeDate';
+import TraceName from '../../common/TraceName';
 import { fetchedState } from '../../../constants';
 import * as dateUtils from '../../../utils/date';
-import CohortTable from './CohortTable';
+
+const { Column } = Table;
 
 describe('CohortTable', () => {
   const cohort = [
@@ -37,151 +42,190 @@ describe('CohortTable', () => {
       id: 'trace-id-2',
     },
   ];
-  let selectTrace;
-  let props;
+  const selectTrace = jest.fn();
+  const props = {
+    cohort,
+    current: cohort[0].id,
+    selection: {
+      [cohort[0].id]: {
+        label: 'selected index 0',
+      },
+    },
+    selectTrace,
+  };
+
   let formatDurationSpy;
+  let wrapper;
+
+  /**
+   * Creates a new wrapper with default props and specified props. It is necessary to create a new wrapper
+   * when props change because enzyme does not support wrapper.setProps for classes that render an array of
+   * elements.
+   *
+   * @param {Object} [specifiedProps={}] - Props to set that are different from props defined above.
+   * @returns {Object} - New wrapper.
+   */
+  function updateWrapper(specifiedProps = {}) {
+    wrapper = shallow(<CohortTable {...props} {...specifiedProps} />);
+  }
+
+  function getRowRenderer(dataIndex) {
+    return wrapper.find(Column).find(`[data-testid="${dataIndex}"]`).prop('render');
+  }
 
   beforeAll(() => {
     formatDurationSpy = jest.spyOn(dateUtils, 'formatDuration');
   });
 
   beforeEach(() => {
-    selectTrace = jest.fn();
+    selectTrace.mockReset();
     formatDurationSpy.mockReset();
-    props = {
-      cohort,
-      current: cohort[0].id,
-      selection: {
-        [cohort[0].id]: {
-          label: 'selected index 0',
-        },
-      },
-      selectTrace,
-    };
+    updateWrapper();
   });
 
   it('renders as expected', () => {
-    render(<CohortTable {...props} />);
-    expect(screen.getByText('Service & Operation')).toBeInTheDocument();
-    expect(screen.getByText('Date')).toBeInTheDocument();
-    expect(screen.getByText('Duration')).toBeInTheDocument();
-    expect(screen.getByText('Spans')).toBeInTheDocument();
+    expect(wrapper).toMatchSnapshot();
   });
 
   describe('row selection', () => {
-    it('defaults selectedRowKeys to empty array', () => {
-      render(<CohortTable {...props} current={undefined} />);
-      expect(screen.queryByRole('radio', { checked: true })).not.toBeInTheDocument();
-      expect(screen.getByText('Service & Operation')).toBeInTheDocument();
+    let rowSelection;
+
+    function updateRowSelection() {
+      rowSelection = wrapper.find(Table).prop('rowSelection');
+    }
+
+    beforeEach(() => {
+      updateRowSelection();
     });
 
-    it('calls props.selectTrace on row selection', async () => {
-      render(<CohortTable {...props} />);
-      const radioButtons = screen.getAllByRole('radio');
-      await userEvent.click(radioButtons[1]);
+    it('defaults selectedRowKeys to empty array', () => {
+      updateWrapper({ current: undefined });
+      updateRowSelection();
+      expect(rowSelection.selectedRowKeys).toEqual([]);
+    });
+
+    it('calls props.selectTrace on row selection', () => {
+      rowSelection.onChange([cohort[1].id, cohort[2].id], [cohort[1], cohort[2]]);
       expect(selectTrace).toHaveBeenCalledWith(cohort[1].id);
     });
 
-    it('disables radio button for selected and current record with error state', () => {
-      const { container } = render(<CohortTable {...props} />);
-      const radioButtons = container.querySelectorAll('input[type="radio"]');
-      expect(radioButtons[0]).toBeDisabled();
-      expect(screen.getByText('selected index 0')).toBeInTheDocument();
+    it('calculates checkbox props for selected and current record with error', () => {
+      expect(rowSelection.getCheckboxProps(cohort[0])).toEqual({ disabled: true });
     });
 
-    it('enables radio button for selected and current record without error state', () => {
-      const { container } = render(
-        <CohortTable {...props} cohort={[{ ...cohort[0], state: fetchedState.DONE }]} />
-      );
-      const radioButtons = container.querySelectorAll('input[type="radio"]');
-      expect(radioButtons[0]).not.toBeDisabled();
-      expect(screen.getByText('Service & Operation')).toBeInTheDocument();
+    it('calculates checkbox props for selected and current record without error', () => {
+      expect(rowSelection.getCheckboxProps({ ...cohort[0], state: fetchedState.DONE })).toEqual({});
     });
 
-    it('disables radio button for selected but not current record', () => {
-      const { container } = render(
-        <CohortTable
-          {...props}
-          selection={{
-            ...props.selection,
-            [cohort[1].id]: {
-              label: 'selected index 1',
-            },
-          }}
-        />
-      );
-      const radioButtons = container.querySelectorAll('input[type="radio"]');
-      expect(radioButtons[1]).toBeDisabled();
-      expect(screen.getByText('selected index 1')).toBeInTheDocument();
+    it('calculates checkbox props for selected but not current record without error', () => {
+      updateWrapper({
+        selection: {
+          ...props.selecetion,
+          [cohort[1].id]: {
+            label: 'selected index 1',
+          },
+        },
+      });
+      updateRowSelection();
+      expect(rowSelection.getCheckboxProps(cohort[1])).toEqual({ disabled: true });
     });
 
-    it('enables radio button for non-selected record without error state', () => {
-      const { container } = render(<CohortTable {...props} />);
-      const radioButtons = container.querySelectorAll('input[type="radio"]');
-      expect(radioButtons[1]).not.toBeDisabled();
-      expect(screen.getByText('Service & Operation')).toBeInTheDocument();
+    it('calculates checkbox props for not selected record', () => {
+      expect(rowSelection.getCheckboxProps(cohort[1])).toEqual({});
     });
   });
 
   it('renders shortened id', () => {
+    const idRenderer = getRowRenderer('id');
     const traceID = 'trace-id-longer-than-eight-characters';
-    render(<CohortTable {...props} cohort={[{ ...cohort[0], id: traceID }]} current={traceID} />);
-    const idColumn = screen.getByText('trace-i');
-    expect(idColumn).toBeInTheDocument();
+    const renderedId = shallow(idRenderer(traceID));
+    expect(renderedId.text()).toBe(traceID.slice(0, 7));
   });
 
   it('renders TraceName fragment when given complete data', () => {
-    render(<CohortTable {...props} />);
-    expect(screen.getAllByTestId('traceName').some(el => el.textContent === 'api error')).toBe(true);
-    expect(screen.getByText('selected index 0')).toBeInTheDocument();
+    const traceNameColumnRenderer = getRowRenderer('traceName');
+    const testTrace = cohort[0];
+    const {
+      id,
+      error,
+      state,
+      data: { traceName },
+    } = testTrace;
+    const renderedTraceNameColumn = shallow(
+      // traceNameRenderer returns a React Fragment, wrapper div helps enzyme
+      <div>{traceNameColumnRenderer('unused argument', testTrace)}</div>
+    );
+
+    const tag = renderedTraceNameColumn.find(Tag);
+    expect(tag.length).toBe(1);
+    expect(tag.html().includes(props.selection[id].label)).toBe(true);
+
+    const renderedTraceName = renderedTraceNameColumn.find(TraceName);
+    expect(renderedTraceName.length).toBe(1);
+    expect(renderedTraceName.props()).toEqual(
+      expect.objectContaining({
+        error,
+        state,
+        traceName,
+      })
+    );
   });
 
   it('renders TraceName fragment when given minimal data', () => {
-    render(<CohortTable {...props} cohort={[cohort[1]]} current={cohort[1].id} selection={{}} />);
-    expect(screen.getByTestId('traceName').textContent).toBe('<trace-without-root-span>');
-    expect(screen.queryByText('trace name 0')).not.toBeInTheDocument();
+    const traceNameColumnRenderer = getRowRenderer('traceName');
+    const testTrace = cohort[1];
+    const renderedTraceNameColumn = shallow(
+      // traceNameRenderer returns a React Fragment, wrapper div helps enzyme
+      <div>{traceNameColumnRenderer('unused argument', testTrace)}</div>
+    );
+
+    expect(renderedTraceNameColumn.find(Tag).length).toBe(0);
+    expect(renderedTraceNameColumn.find(TraceName).length).toBe(1);
   });
 
   it('renders date iff record state is fetchedState.DONE', () => {
-    render(
-      <CohortTable
-        {...props}
-        cohort={[
-          { ...cohort[0], state: fetchedState.ERROR },
-          { ...cohort[0], state: fetchedState.DONE, data: { ...cohort[0].data, startTime: 1548689901403 } },
-        ]}
-      />
-    );
-    expect(screen.getByText('Service & Operation')).toBeInTheDocument();
+    const dateRenderer = getRowRenderer('startTime');
+    const date = 1548689901403;
+
+    expect(dateRenderer(date, { state: fetchedState.ERROR })).toBe(false);
+    const renderedDate = dateRenderer(date, { state: fetchedState.DONE });
+    expect(renderedDate.type).toBe(RelativeDate);
+    expect(renderedDate.props).toEqual({
+      fullMonthName: true,
+      includeTime: true,
+      value: date / 1000,
+    });
   });
 
   it('renders duration iff record state is fetchedState.DONE', () => {
-    formatDurationSpy.mockReturnValue('formatDurationSpyMockReturnValue');
-    render(
-      <CohortTable
-        {...props}
-        cohort={[
-          { ...cohort[0], state: fetchedState.ERROR },
-          { ...cohort[0], state: fetchedState.DONE, data: { ...cohort[0].data, duration: 150 } },
-        ]}
-      />
-    );
-    expect(formatDurationSpy).toHaveBeenCalledWith(150);
+    const durationRenderer = getRowRenderer('duration');
+    const duration = 150;
+    const formatDurationSpyMockReturnValue = 'formatDurationSpyMockReturnValue';
+    formatDurationSpy.mockReturnValue(formatDurationSpyMockReturnValue);
+
+    expect(durationRenderer(duration, { state: fetchedState.ERROR })).toBe(false);
+    expect(formatDurationSpy).toHaveBeenCalledTimes(0);
+
+    expect(durationRenderer(duration, { state: fetchedState.DONE })).toBe(formatDurationSpyMockReturnValue);
+    expect(formatDurationSpy).toHaveBeenCalledTimes(1);
+    expect(formatDurationSpy).toHaveBeenCalledWith(duration);
   });
 
   it('renders link', () => {
-    render(<CohortTable {...props} />);
-    expect(screen.getAllByText(props.current.slice(0, 7)).length).toBeGreaterThan(0);
+    const linkRenderer = getRowRenderer('traceID');
+    const traceID = 'trace-id';
+    const renderedLink = linkRenderer(traceID);
+    expect(renderedLink.type).toBe(TraceTimelineLink);
+    expect(renderedLink.props).toEqual({
+      traceID,
+    });
   });
 
   it('renders NEED_MORE_TRACES_MESSAGE if cohort is too small', () => {
-    render(<CohortTable {...props} cohort={cohort.slice(0, 1)} />);
-    expect(
-      screen.getAllByText('Enter a Trace ID or perform a search and select from the results.').length
-    ).toBeGreaterThan(0);
-    render(<CohortTable {...props} cohort={[]} />);
-    expect(
-      screen.getAllByText('Enter a Trace ID or perform a search and select from the results.').length
-    ).toBeGreaterThan(0);
+    expect(wrapper.contains(NEED_MORE_TRACES_MESSAGE)).toBe(false);
+    updateWrapper({ cohort: cohort.slice(0, 1) });
+    expect(wrapper.contains(NEED_MORE_TRACES_MESSAGE)).toBe(true);
+    updateWrapper({ cohort: [] });
+    expect(wrapper.contains(NEED_MORE_TRACES_MESSAGE)).toBe(true);
   });
 });

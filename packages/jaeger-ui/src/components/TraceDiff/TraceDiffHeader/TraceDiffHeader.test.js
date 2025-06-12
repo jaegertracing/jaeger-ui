@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import TraceDiffHeader from './TraceDiffHeader';
@@ -176,13 +176,41 @@ describe('TraceDiffHeader', () => {
   });
 
   describe('bound functions to set a & b and passes them to Popover JSX props correctly', () => {
-    it('calls diffSetA and diffSetB correctly', () => {
+    it('passes bound methods to CohortTable and handles trace selection', async () => {
       render(<TraceDiffHeader {...props} />);
 
-      props.diffSetA('test-trace-a');
-      expect(diffSetA).toHaveBeenCalledWith('test-trace-a');
-      props.diffSetB('test-trace-b');
-      expect(diffSetB).toHaveBeenCalledWith('test-trace-b');
+      // Test trace A selection
+      const chevrons = screen.getAllByTestId('TraceDiffHeader--traceTitleChevron');
+      await userEvent.click(chevrons[0]);
+
+      const tableRows = await screen.findAllByRole('row');
+      const dataRows = tableRows.slice(1);
+      expect(dataRows.length).toBeGreaterThan(0);
+
+      await userEvent.click(dataRows[0]);
+      expect(diffSetA).toHaveBeenCalledWith(expect.any(String));
+
+      // Verify popover closes after selection
+      await waitFor(() => {
+        expect(screen.queryByText('Service & Operation')).not.toBeInTheDocument();
+      });
+
+      // Clear mocks and test trace B selection
+      diffSetA.mockClear();
+      diffSetB.mockClear();
+
+      await userEvent.click(chevrons[1]);
+      const tableRowsB = await screen.findAllByRole('row');
+      const dataRowsB = tableRowsB.slice(1);
+      expect(dataRowsB.length).toBeGreaterThan(0);
+
+      await userEvent.click(dataRowsB[0]);
+      expect(diffSetB).toHaveBeenCalledWith(expect.any(String));
+
+      // Verify popover closes after selection
+      await waitFor(() => {
+        expect(screen.queryByText('Service & Operation')).not.toBeInTheDocument();
+      });
     });
   });
 });
