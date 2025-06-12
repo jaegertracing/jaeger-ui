@@ -177,6 +177,7 @@ describe('<ListView />', () => {
         _startIndexDrawn: 5,
         _endIndexDrawn: 3,
       });
+      
       const spy = jest.spyOn(ref.current, 'forceUpdate');
       ref.current._positionList();
       expect(spy).toHaveBeenCalled();
