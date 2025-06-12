@@ -101,45 +101,90 @@ describe('<TraceGraph>', () => {
     expect(screen.getByText('No trace found')).toBeInTheDocument();
   });
 
-  it('switches node mode when clicking mode buttons', async () => {
+  it('switches node mode when clicking mode buttons - with state verification', async () => {
+    const setStateSpy = jest.spyOn(TraceGraph.prototype, 'setState');
     render(<TraceGraph {...props} />);
+
     // Initial mode should be service
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
+    const timeButton = screen.getByRole('button', { name: 'T' });
+    const selftimeButton = screen.getByRole('button', { name: 'ST' });
+    const serviceButton = screen.getByRole('button', { name: 'S' });
 
     // Switch to time
-    const timeButton = screen.getByRole('button', { name: 'T' });
     await userEvent.click(timeButton);
+    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_TIME }); // Verify state change
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_TIME);
 
     // Switch to selftime
-    const selftimeButton = screen.getByRole('button', { name: 'ST' });
     await userEvent.click(selftimeButton);
+    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_SELFTIME });
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SELFTIME);
 
     // Switch back to service
-    const serviceButton = screen.getByRole('button', { name: 'S' });
     await userEvent.click(serviceButton);
+    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_SERVICE });
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
+
+    setStateSpy.mockRestore();
   });
 
   it('shows help', async () => {
     render(<TraceGraph {...props} />);
     const helpIcon = screen.getByTestId('help-icon');
     await userEvent.click(helpIcon);
-    expect(screen.getByText(/self-time = 10ms - 2 \* 4ms = 2ms/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Service/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Time/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Self Time/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/FollowsFrom/i)).toBeInTheDocument();
+
+    // Verify help table structure
+    const tables = screen.getAllByRole('table');
+    const helpTable = tables.find(table => table.classList.contains('OpNode--legendNode'));
+    expect(helpTable).toHaveClass('OpNode', 'OpNode--legendNode');
+
+    // Verify table headers
+    expect(screen.getByText('Count / Error')).toBeInTheDocument();
+    expect(screen.getByText('Duration')).toBeInTheDocument();
+    expect(screen.getByText('Operation')).toBeInTheDocument();
+    const selfTimeCells = screen.getAllByText('Self time');
+    expect(selfTimeCells).toHaveLength(2); // One in table header, one in explanation
+
+    // Verify mode descriptions
+    const modeTable = tables.find(table => !table.classList.contains('OpNode--legendNode'));
+    expect(modeTable).toBeInTheDocument();
+
+    // Verify service mode
+    const serviceTexts = screen.getAllByText('Service');
+    expect(serviceTexts).toHaveLength(2); // One in table header, one in mode description
+    expect(screen.getByText('Colored by service')).toBeInTheDocument();
+
+    // Verify time mode
+    expect(screen.getByText('Time')).toBeInTheDocument();
+    expect(screen.getByText('Colored by total time')).toBeInTheDocument();
+
+    // Verify selftime mode
+    expect(screen.getByText('Selftime')).toBeInTheDocument();
+    expect(screen.getByText('Colored by self time (*)')).toBeInTheDocument();
+
+    // Verify edge type explanations
+    expect(screen.getByText('ChildOf')).toBeInTheDocument();
+    expect(screen.getByText('FollowsFrom')).toBeInTheDocument();
+
+    // Verify self time explanation
+    const helpContent = screen.getByTestId('help-content');
+    const selfTimeExplanation = helpContent.querySelector('div:last-child');
+    expect(selfTimeExplanation).toHaveTextContent(
+      '(*) Self time is the total time spent in a span when it was not waiting on children'
+    );
+    expect(selfTimeExplanation).toHaveTextContent(
+      'a 10ms span with two 4ms non-overlapping children would have self-time = 10ms - 2 * 4ms = 2ms'
+    );
   });
 
   it('hides help', async () => {
     render(<TraceGraph {...props} />);
     const helpIcon = screen.getByTestId('help-icon');
     await userEvent.click(helpIcon);
-    const closeButton = screen.getByRole('button', { name: /close/i });
+    const closeButton = screen.getByRole('button', { name: 'Close' });
     await userEvent.click(closeButton);
-    expect(screen.queryByText(/self time/i)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('help-content')).not.toBeInTheDocument();
   });
 
   it('uses stroke-dash edges for followsFrom', () => {

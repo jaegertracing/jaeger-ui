@@ -54,7 +54,7 @@ export function setOnEdgePath(e: any) {
 }
 
 const HELP_CONTENT = (
-  <div className="TraceGraph--help-content">
+  <div className="TraceGraph--help-content" data-testid="help-content">
     {HELP_TABLE}
     <div>
       <table>
