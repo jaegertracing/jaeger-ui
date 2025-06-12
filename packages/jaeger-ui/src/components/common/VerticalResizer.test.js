@@ -50,37 +50,32 @@ describe('VerticalResizer', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   describe('Component Rendering', () => {
-    it('renders the vertical resizer with all required elements', () => {
+    it('renders all required elements without crashing', () => {
       render(<VerticalResizer {...defaultProps} />);
       expect(screen.getByTestId('vertical-resizer')).toBeInTheDocument();
       expect(screen.getByTestId('grip-icon')).toBeInTheDocument();
       expect(screen.getByTestId('dragger')).toBeInTheDocument();
     });
 
-    it('applies correct CSS classes for basic rendering', () => {
+    it('applies base VerticalResizer CSS class and does not apply is-flipped by default', () => {
       render(<VerticalResizer {...defaultProps} />);
       const resizer = screen.getByTestId('vertical-resizer');
       expect(resizer).toHaveClass('VerticalResizer');
       expect(resizer).not.toHaveClass('is-flipped');
     });
 
-    it('applies is-flipped class when rightSide prop is true', () => {
+    it('applies is-flipped class when rightSide is true', () => {
       render(<VerticalResizer {...defaultProps} rightSide />);
-      const resizer = screen.getByTestId('vertical-resizer');
-      expect(resizer).toHaveClass('VerticalResizer', 'is-flipped');
+      expect(screen.getByTestId('vertical-resizer')).toHaveClass('is-flipped');
     });
 
-    it('positions grip icon correctly based on position prop', () => {
+    it('sets grip icon left style based on position prop', () => {
       render(<VerticalResizer {...defaultProps} position={0.3} />);
       expect(screen.getByTestId('grip-icon')).toHaveStyle({ left: '30%' });
     });
 
-    it('positions dragger element correctly when not dragging', () => {
+    it('sets dragger element left style correctly when not dragging', () => {
       render(<VerticalResizer {...defaultProps} position={0.7} />);
       expect(screen.getByTestId('dragger')).toHaveStyle({ left: '70%' });
     });
@@ -183,10 +178,22 @@ describe('VerticalResizer', () => {
   });
 
   describe('Dragging Visual States', () => {
-    it('does not show indicators when not dragging', () => {
+    it('does not apply any dragging classes or styles when not dragging', () => {
       const { container } = render(<VerticalResizer {...defaultProps} />);
       expect(container.querySelector('.isDraggingLeft')).not.toBeInTheDocument();
       expect(container.querySelector('.isDraggingRight')).not.toBeInTheDocument();
+      expect(screen.getByTestId('dragger').style.right).toBe('');
+    });
+
+    it('does not apply dragging classes when dragPosition is same as position', () => {
+      mockDragManager.isDragging.mockReturnValue(true);
+      render(<VerticalResizer {...defaultProps} />);
+      act(() => {
+        draggableManagerConfig.onDragMove({ value: defaultProps.position });
+      });
+      const root = screen.getByTestId('vertical-resizer');
+      expect(root).not.toHaveClass('isDraggingLeft');
+      expect(root).not.toHaveClass('isDraggingRight');
     });
   });
 
@@ -203,18 +210,25 @@ describe('VerticalResizer', () => {
   });
 
   describe('Accessibility', () => {
-    it('marks dragger as aria-hidden', () => {
+    it('marks dragger as aria-hidden="true"', () => {
       render(<VerticalResizer {...defaultProps} />);
-      expect(screen.getByTestId('dragger')).toHaveAttribute('aria-hidden');
+      expect(screen.getByTestId('dragger')).toHaveAttribute('aria-hidden', 'true');
     });
   });
 
   describe('Component Lifecycle', () => {
-    it('updates grip-icon when position prop changes', () => {
+    it('updates grip icon style when position prop changes', () => {
       const { rerender } = render(<VerticalResizer {...defaultProps} position={0.3} />);
       expect(screen.getByTestId('grip-icon')).toHaveStyle({ left: '30%' });
       rerender(<VerticalResizer {...defaultProps} position={0.7} />);
       expect(screen.getByTestId('grip-icon')).toHaveStyle({ left: '70%' });
+    });
+
+    it('disposes DraggableManager on component unmount', () => {
+      const { unmount } = render(<VerticalResizer {...defaultProps} />);
+      mockDragManager.dispose.mockClear();
+      unmount();
+      expect(mockDragManager.dispose).toHaveBeenCalledTimes(1);
     });
   });
 
