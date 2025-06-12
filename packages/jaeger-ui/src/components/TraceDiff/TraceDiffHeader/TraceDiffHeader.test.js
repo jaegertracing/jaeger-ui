@@ -123,11 +123,39 @@ describe('TraceDiffHeader', () => {
   });
 
   it('handles trace without spans', () => {
-    render(<TraceDiffHeader {...props} a={cohort[0]} />);
+    const traceWithoutSpans = {
+      data: {
+        duration: 0,
+        startTime: 0,
+        traceName: 'trace-without-spans',
+        // purposefully missing spans array
+      },
+      error: null,
+      id: 'trace-without-spans-id',
+      state: fetchedState.DONE,
+    };
+
+    render(<TraceDiffHeader {...props} a={traceWithoutSpans} />);
+
+    // Verify the trace header is rendered
     expect(screen.getByText('A')).toBeInTheDocument();
+
+    // Verify the trace name is displayed (handling BreakableText spans)
     const traceNameElements = screen.getAllByTestId('traceName');
-    const hasErrorText = traceNameElements.some(element => element.textContent.includes('error 0'));
-    expect(hasErrorText).toBe(true);
+    const traceNameElement = traceNameElements.find(element =>
+      element.textContent.includes('trace-without-spans')
+    );
+    expect(traceNameElement).toBeInTheDocument();
+
+    // Verify the spans count shows 0
+    const spansElements = screen.getAllByTestId('TraceDiffHeader--traceAttr--spans');
+    const spansElement = spansElements.find(element =>
+      element
+        .closest('[data-testid="TraceDiffHeader--traceHeader"]')
+        ?.querySelector('[data-testid="traceName"]')
+        ?.textContent.includes('trace-without-spans')
+    );
+    expect(spansElement).toHaveTextContent('0');
   });
 
   it('handles absent a', () => {
