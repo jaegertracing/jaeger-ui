@@ -24,4 +24,20 @@ export type SearchQuery = {
   service: string;
   start: number | string;
   tags: string | TNil;
+  // Pagination parameters
+  page?: number;
+  pageSize?: number;
+};
+
+export type SearchResponse = {
+  data: any[];
+  total?: number;
+  errors?: any[];
+};
+
+export type PaginationInfo = {
+  currentPage: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
 };
