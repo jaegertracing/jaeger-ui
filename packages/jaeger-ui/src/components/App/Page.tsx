@@ -17,6 +17,7 @@ import { Layout } from 'antd';
 import cx from 'classnames';
 import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
+import { useEffect } from 'react';
 
 import TopNav from './TopNav';
 import { ReduxState } from '../../types';
@@ -36,38 +37,27 @@ type TProps = {
 const { Header, Content } = Layout;
 
 // export for tests
-export class PageImpl extends React.Component<TProps> {
-  componentDidMount() {
-    const { pathname, search } = this.props;
+export const PageImpl: React.FC<TProps> = ({ children, embedded, pathname, search }) => {
+  useEffect(() => {
     trackPageView(pathname, search);
-  }
+  }, [pathname, search]);
 
-  componentDidUpdate(prevProps: Readonly<TProps>) {
-    const { pathname, search } = prevProps;
-    const { pathname: nextPathname, search: nextSearch } = this.props;
-    if (pathname !== nextPathname || search !== nextSearch) {
-      trackPageView(nextPathname, nextSearch);
-    }
-  }
+  const contentCls = cx({ 'Page--content': true, 'Page--content--no-embedded': !embedded });
 
-  render() {
-    const { embedded } = this.props;
-    const contentCls = cx({ 'Page--content': true, 'Page--content--no-embedded': !embedded });
-    return (
-      <div>
-        <Helmet title="Jaeger UI" />
-        <Layout>
-          {!embedded && (
-            <Header className="Page--topNav">
-              <TopNav />
-            </Header>
-          )}
-          <Content className={contentCls}>{this.props.children}</Content>
-        </Layout>
-      </div>
-    );
-  }
-}
+  return (
+    <div>
+      <Helmet title="Jaeger UI" />
+      <Layout>
+        {!embedded && (
+          <Header className="Page--topNav">
+            <TopNav />
+          </Header>
+        )}
+        <Content className={contentCls}>{children}</Content>
+      </Layout>
+    </div>
+  );
+};
 
 // export for tests
 export function mapStateToProps(state: ReduxState) {
