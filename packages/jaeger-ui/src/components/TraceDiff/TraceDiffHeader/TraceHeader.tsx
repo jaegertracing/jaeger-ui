@@ -100,7 +100,10 @@ export default function TraceHeader({
             <span className="u-tx-muted">Select a Trace...</span>
           )}
         </span>
-        <IoChevronDown className="TraceDiffHeader--traceTitleChevron" />
+        <IoChevronDown
+          className="TraceDiffHeader--traceTitleChevron"
+          data-testid="TraceDiffHeader--traceTitleChevron"
+        />
       </h1>
       <AttrsComponent startTime={startTime} duration={duration} totalSpans={totalSpans} />
     </div>
