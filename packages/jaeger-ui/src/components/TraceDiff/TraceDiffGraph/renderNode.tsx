@@ -65,6 +65,7 @@ export class DiffNode extends React.PureComponent<Props> {
                 className="DiffNode--copyIcon"
                 copyText={`${service} ${operation}`}
                 tooltipTitle="Copy label"
+                buttonText="Copy"
               />
             </td>
           </tr>
