@@ -186,24 +186,20 @@ describe('TraceDiffHeader', () => {
     const traceARow = within(popoverA).getByText('cohort-trace-name-1').closest('tr');
     expect(within(traceARow).getByText('A')).toBeInTheDocument();
 
-    // 2. Open popover B, ensuring popover A disappears first
+    // 2. Open popover B
     await user.click(chevrons[1]);
 
-    // Wait for popover A to disappear
+    // Wait for the final state where only popover B is visible
     await waitFor(() => {
+      // Verify popover A is gone
       expect(screen.queryByText('cohort-trace-name-1')).not.toBeInTheDocument();
-    });
 
-    // Wait for popover B to appear
-    await waitFor(() => {
+      // Verify popover B is visible and has correct content
       const popoverB = screen.getByRole('tooltip');
       expect(popoverB).toBeVisible();
+      const traceBRow = within(popoverB).getByText('cohort-trace-name-2').closest('tr');
+      expect(within(traceBRow).getByText('B')).toBeInTheDocument();
     });
-
-    // Verify popover B content
-    const popoverB = screen.getByRole('tooltip');
-    const traceBRow = within(popoverB).getByText('cohort-trace-name-2').closest('tr');
-    expect(within(traceBRow).getByText('B')).toBeInTheDocument();
 
     // 3. Close popover B
     await user.click(chevrons[1]);
