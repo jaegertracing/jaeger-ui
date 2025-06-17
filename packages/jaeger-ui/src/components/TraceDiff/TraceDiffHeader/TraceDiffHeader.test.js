@@ -179,26 +179,31 @@ describe('TraceDiffHeader', () => {
     await waitFor(() => {
       const popoverA = screen.getByRole('tooltip');
       expect(popoverA).toBeVisible();
-      // Verify it's popover A by checking for the 'A' selection label
-      const traceARow = within(popoverA).getByText('cohort-trace-name-1').closest('tr');
-      expect(within(traceARow).getByText('A')).toBeInTheDocument();
     });
 
-    // 2. Open popover B, which should close popover A
+    // Verify popover A content
+    const popoverA = screen.getByRole('tooltip');
+    const traceARow = within(popoverA).getByText('cohort-trace-name-1').closest('tr');
+    expect(within(traceARow).getByText('A')).toBeInTheDocument();
+
+    // 2. Open popover B, ensuring popover A disappears first
     await user.click(chevrons[1]);
-    
-    // First wait for popover A to disappear
+
+    // Wait for popover A to disappear
     await waitFor(() => {
       expect(screen.queryByText('cohort-trace-name-1')).not.toBeInTheDocument();
     });
 
-    // Then wait for popover B to appear and verify its contents
+    // Wait for popover B to appear
     await waitFor(() => {
       const popoverB = screen.getByRole('tooltip');
       expect(popoverB).toBeVisible();
-      const traceBRow = within(popoverB).getByText('cohort-trace-name-2').closest('tr');
-      expect(within(traceBRow).getByText('B')).toBeInTheDocument();
     });
+
+    // Verify popover B content
+    const popoverB = screen.getByRole('tooltip');
+    const traceBRow = within(popoverB).getByText('cohort-trace-name-2').closest('tr');
+    expect(within(traceBRow).getByText('B')).toBeInTheDocument();
 
     // 3. Close popover B
     await user.click(chevrons[1]);
