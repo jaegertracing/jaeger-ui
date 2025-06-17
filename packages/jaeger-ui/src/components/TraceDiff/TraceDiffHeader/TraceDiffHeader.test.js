@@ -182,24 +182,26 @@ describe('TraceDiffHeader', () => {
     });
 
     // Verify popover A content
-    const popoverA = screen.getByRole('tooltip');
-    const traceARow = within(popoverA).getByText('cohort-trace-name-1').closest('tr');
+    const currentPopover = screen.getByRole('tooltip');
+    const traceARow = within(currentPopover).getByText('cohort-trace-name-1').closest('tr');
     expect(within(traceARow).getByText('A')).toBeInTheDocument();
 
-    // 2. Open popover B
+    // 2. Open popover B - this should close A and open B
     await user.click(chevrons[1]);
 
-    // Wait for the final state where only popover B is visible
+    // Wait for popover transition to complete
     await waitFor(() => {
-      // Verify popover A is gone
-      expect(screen.queryByText('cohort-trace-name-1')).not.toBeInTheDocument();
-
-      // Verify popover B is visible and has correct content
       const popoverB = screen.getByRole('tooltip');
       expect(popoverB).toBeVisible();
+
+      // Verify popover B content (popover A should be gone by mutual exclusion)
       const traceBRow = within(popoverB).getByText('cohort-trace-name-2').closest('tr');
       expect(within(traceBRow).getByText('B')).toBeInTheDocument();
     });
+
+    // Verify that we only have one tooltip (popover B)
+    const tooltips = screen.getAllByRole('tooltip');
+    expect(tooltips).toHaveLength(1);
 
     // 3. Close popover B
     await user.click(chevrons[1]);
