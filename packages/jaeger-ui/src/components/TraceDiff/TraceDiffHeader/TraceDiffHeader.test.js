@@ -13,18 +13,48 @@
 // limitations under the License.
 
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import TraceDiffHeader from './TraceDiffHeader';
 import { fetchedState } from '../../../constants';
+
+// Mocking TraceHeader to ensure stable test IDs are present
+// This helps in simplifying DOM queries.
+jest.mock('./TraceHeader', () => {
+  return jest.fn(props => (
+    <div data-testid="TraceDiffHeader--traceHeader">
+      <span data-testid="traceName">{props.traceName || 'Select a Trace…'}</span>
+      <span data-testid="TraceDiffHeader--traceAttr--spans">{props.totalSpans}</span>
+      <button type="button" data-testid="TraceDiffHeader--traceTitleChevron" />
+    </div>
+  ));
+});
+
+// Mocking CohortTable to allow interaction and verification
+jest.mock('./CohortTable', () => {
+  return jest.fn(({ cohort, selectTrace, selection }) => (
+    <div>
+      <h1>Service & Operation</h1>
+      <table>
+        <tbody>
+          {cohort.map(trace => (
+            <tr key={trace.id} onClick={() => selectTrace(trace.id)}>
+              <td>{trace.data.traceName}</td>
+              <td>{selection[trace.id]?.label}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  ));
+});
 
 describe('TraceDiffHeader', () => {
   const cohort = [
     {
       data: {
         duration: 0,
-        // purposefully missing spans
         startTime: 0,
         traceName: 'cohort-trace-name-0',
       },
@@ -35,11 +65,7 @@ describe('TraceDiffHeader', () => {
     {
       data: {
         duration: 100,
-        spans: [
-          {
-            spanID: 'trace-1-span-0',
-          },
-        ],
+        spans: [{ spanID: 'trace-1-span-0' }],
         startTime: 100,
         traceName: 'cohort-trace-name-1',
       },
@@ -50,14 +76,7 @@ describe('TraceDiffHeader', () => {
     {
       data: {
         duration: 200,
-        spans: [
-          {
-            spanID: 'trace-2-span-1',
-          },
-          {
-            spanID: 'trace-2-span-2',
-          },
-        ],
+        spans: [{ spanID: 'trace-2-span-1' }, { spanID: 'trace-2-span-2' }],
         startTime: 200,
         traceName: 'cohort-trace-name-2',
       },
@@ -68,17 +87,7 @@ describe('TraceDiffHeader', () => {
     {
       data: {
         duration: 300,
-        spans: [
-          {
-            spanID: 'trace-3-span-1',
-          },
-          {
-            spanID: 'trace-3-span-2',
-          },
-          {
-            spanID: 'trace-3-span-3',
-          },
-        ],
+        spans: [{ spanID: 'trace-3-span-1' }, { spanID: 'trace-3-span-2' }, { spanID: 'trace-3-span-3' }],
         startTime: 300,
         traceName: 'cohort-trace-name-3',
       },
@@ -103,26 +112,19 @@ describe('TraceDiffHeader', () => {
     };
   });
 
-  it('renders UI elements (A, B, VS labels) and trace name at correct DOM level', () => {
+  it('renders UI elements and trace names correctly', () => {
     render(<TraceDiffHeader {...props} />);
-    expect(screen.getByText('A')).toBeInTheDocument();
-    expect(screen.getByText('B')).toBeInTheDocument();
+
+    expect(screen.getByText('A', { selector: 'h1' })).toBeInTheDocument();
+    expect(screen.getByText('B', { selector: 'h1' })).toBeInTheDocument();
     expect(screen.getByText('VS')).toBeInTheDocument();
-    // This test searches for text nodes containing 'cohort-trace-name-1' while ensuring that:
-    // 1. The text is present in the node itself (not just in its children)
-    // 2. The text is not present in any of the node's children
-    // This helps verify that the trace name is rendered at the correct level in the DOM hierarchy
-    expect(
-      screen.getAllByText((content, node) => {
-        const hasText = n => n.textContent && n.textContent.includes('cohort-trace-name-1');
-        const nodeHasText = hasText(node);
-        const childrenDontHaveText = Array.from(node?.children || []).every(childNode => !hasText(childNode));
-        return nodeHasText && childrenDontHaveText;
-      }).length
-    ).toBeGreaterThan(0);
+
+    const traceHeaders = screen.getAllByTestId('TraceDiffHeader--traceHeader');
+    expect(within(traceHeaders[0]).getByText('cohort-trace-name-1')).toBeInTheDocument();
+    expect(within(traceHeaders[1]).getByText('cohort-trace-name-2')).toBeInTheDocument();
   });
 
-  it('handles trace without spans', () => {
+  it('handles a trace without spans array', () => {
     const traceWithoutSpans = {
       data: {
         duration: 0,
@@ -136,81 +138,91 @@ describe('TraceDiffHeader', () => {
     };
 
     render(<TraceDiffHeader {...props} a={traceWithoutSpans} />);
+    const traceHeaders = screen.getAllByTestId('TraceDiffHeader--traceHeader');
+    const headerA = traceHeaders[0];
 
-    // Verify the trace header is rendered
-    expect(screen.getByText('A')).toBeInTheDocument();
-
-    // Verify the trace name is displayed (handling BreakableText spans)
-    const traceNameElements = screen.getAllByTestId('traceName');
-    const traceNameElement = traceNameElements.find(element =>
-      element.textContent.includes('trace-without-spans')
-    );
-    expect(traceNameElement).toBeInTheDocument();
-
-    // Verify the spans count shows 0
-    const spansElements = screen.getAllByTestId('TraceDiffHeader--traceAttr--spans');
-    const spansElement = spansElements.find(element =>
-      element
-        .closest('[data-testid="TraceDiffHeader--traceHeader"]')
-        ?.querySelector('[data-testid="traceName"]')
-        ?.textContent.includes('trace-without-spans')
-    );
-    expect(spansElement).toHaveTextContent('0');
+    expect(within(headerA).getByText('trace-without-spans')).toBeInTheDocument();
+    // The mocked component will render an empty string for totalSpans if it's undefined
+    expect(within(headerA).getByTestId('TraceDiffHeader--traceAttr--spans')).toBeEmptyDOMElement();
   });
 
   it('handles absent a', () => {
     render(<TraceDiffHeader {...props} a={null} />);
-    expect(screen.getByText('B', { selector: '.TraceDiffHeader--label' })).toBeInTheDocument();
+    const traceHeaders = screen.getAllByTestId('TraceDiffHeader--traceHeader');
+    expect(within(traceHeaders[0]).getByText('Select a Trace…')).toBeInTheDocument();
+    expect(within(traceHeaders[1]).getByText('cohort-trace-name-2')).toBeInTheDocument();
   });
 
   it('handles absent b', () => {
     render(<TraceDiffHeader {...props} b={null} />);
-    expect(screen.getByText('A', { selector: '.TraceDiffHeader--label' })).toBeInTheDocument();
+    const traceHeaders = screen.getAllByTestId('TraceDiffHeader--traceHeader');
+    expect(within(traceHeaders[0]).getByText('cohort-trace-name-1')).toBeInTheDocument();
+    expect(within(traceHeaders[1]).getByText('Select a Trace…')).toBeInTheDocument();
   });
 
   it('handles absent a & b', () => {
     render(<TraceDiffHeader {...props} a={null} b={null} />);
-    expect(screen.getByText('A', { selector: '.TraceDiffHeader--label' })).toBeInTheDocument();
-    expect(screen.getByText('B', { selector: '.TraceDiffHeader--label' })).toBeInTheDocument();
+    const placeholders = screen.getAllByText('Select a Trace…');
+    expect(placeholders).toHaveLength(2);
   });
 
-  it('toggles popover visibility when clicking on trace title chevrons', async () => {
+  it('toggles popovers with mutual exclusion', async () => {
+    const user = userEvent.setup();
     render(<TraceDiffHeader {...props} />);
     const chevrons = screen.getAllByTestId('TraceDiffHeader--traceTitleChevron');
-    expect(chevrons.length).toBeGreaterThanOrEqual(2);
-    await userEvent.click(chevrons[0]);
-    expect((await screen.findAllByText('Service & Operation')).length).toBeGreaterThan(0);
-    await userEvent.click(chevrons[1]);
-    expect((await screen.findAllByText('Service & Operation')).length).toBeGreaterThan(0);
-    await userEvent.click(chevrons[1]);
+
+    // Initially, no popover is visible
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+    // 1. Open popover A
+    await user.click(chevrons[0]);
+    await waitFor(() => {
+      const popoverA = screen.getByRole('tooltip');
+      expect(popoverA).toBeVisible();
+      // Verify it's popover A by checking for the 'A' selection label
+      const traceARow = within(popoverA).getByText('cohort-trace-name-1').closest('tr');
+      expect(within(traceARow).getByText('A')).toBeInTheDocument();
+    });
+
+    // 2. Open popover B, which should close popover A
+    await user.click(chevrons[1]);
+    await waitFor(() => {
+      const popoverB = screen.getByRole('tooltip');
+      expect(popoverB).toBeVisible();
+      // Verify old popover is gone and the new one is for B
+      expect(screen.queryByText('cohort-trace-name-1')).not.toBeInTheDocument();
+      const traceBRow = within(popoverB).getByText('cohort-trace-name-2').closest('tr');
+      expect(within(traceBRow).getByText('B')).toBeInTheDocument();
+    });
+
+    // 3. Close popover B
+    await user.click(chevrons[1]);
+    await waitFor(() => {
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
   });
 
-  describe('_diffSetTrace method', () => {
-    it('calls diffSetA when parameter "which" equals "a"', () => {
-      const component = new TraceDiffHeader(props);
-      const setState = jest.spyOn(component, 'setState');
-      component._diffSetTrace('a', cohort[3].id);
-      expect(diffSetA).toHaveBeenCalledWith(cohort[3].id);
-      expect(setState).toHaveBeenCalledWith({ tableVisible: null });
-    });
+  it('calls diffSetA or diffSetB when a new trace is selected via popover', async () => {
+    const user = userEvent.setup();
+    render(<TraceDiffHeader {...props} />);
+    const chevrons = screen.getAllByTestId('TraceDiffHeader--traceTitleChevron');
 
-    it('calls diffSetB when parameter "which" equals "b"', () => {
-      const component = new TraceDiffHeader(props);
-      const setState = jest.spyOn(component, 'setState');
-      component._diffSetTrace('b', cohort[3].id);
-      expect(diffSetB).toHaveBeenCalledWith(cohort[3].id);
-      expect(setState).toHaveBeenCalledWith({ tableVisible: null });
-    });
-  });
+    // Test selection for A
+    await user.click(chevrons[0]);
+    const popoverA = await screen.findByRole('tooltip');
+    await user.click(within(popoverA).getByText('cohort-trace-name-3'));
 
-  describe('bound functions to set a & b and passes them to Popover JSX props correctly', () => {
-    it('calls diffSetA and diffSetB correctly', () => {
-      render(<TraceDiffHeader {...props} />);
+    expect(diffSetA).toHaveBeenCalledWith('cohort-id-3');
+    expect(diffSetA).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument());
 
-      props.diffSetA('test-trace-a');
-      expect(diffSetA).toHaveBeenCalledWith('test-trace-a');
-      props.diffSetB('test-trace-b');
-      expect(diffSetB).toHaveBeenCalledWith('test-trace-b');
-    });
+    // Test selection for B
+    await user.click(chevrons[1]);
+    const popoverB = await screen.findByRole('tooltip');
+    await user.click(within(popoverB).getByText('cohort-trace-name-0'));
+
+    expect(diffSetB).toHaveBeenCalledWith('cohort-id-0');
+    expect(diffSetB).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument());
   });
 });
