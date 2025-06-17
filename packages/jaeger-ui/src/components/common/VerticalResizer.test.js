@@ -250,7 +250,7 @@ describe('VerticalResizer', () => {
       expect(root).toHaveClass('isDraggingLeft');
       expect(grip).toHaveStyle({ left: '50%' });
       expect(dragger).toHaveStyle({ left: '30%' });
-      expect(dragger.getAttribute('style')).toMatch(/calc\(50% - 1px\)/);
+      expect(dragger).toHaveStyle({ right: 'calc(50% - 1px)' });
     });
 
     it('applies isDraggingRight and correct styles when dragging right', () => {
