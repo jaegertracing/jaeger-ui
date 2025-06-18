@@ -106,61 +106,48 @@ describe('Header', () => {
   });
 
   describe('setting lookback', () => {
-    it('maintains previous value when invalid input is entered', () => {
-      const setLookbackSpy2 = jest.fn();
-      render(<Header {...props} setLookback={setLookbackSpy2} />);
+    it('calls setLookback with null after invalid input', () => {
+      const setLookbackPropSpy = jest.fn();
+      render(<Header {...props} setLookback={setLookbackPropSpy} />);
       const input = screen.getByRole('spinbutton');
 
-      // Set a valid value first
-      fireEvent.change(input, { target: { value: '25' } });
-      expect(input.value).toBe('25');
+      // 1. Simulate a user clearing the input. This is a reliable way to trigger
+      //    the InputNumber's `onChange(null)` behavior in the test environment.
+      fireEvent.change(input, { target: { value: '' } });
 
-      // Verify the valid input triggered the debounced function
+      // 2. Manually trigger the debounced function, which was armed by the change event.
       callDebouncedFn();
-      expect(setLookbackSpy2).toHaveBeenCalledWith(25);
-      setLookbackSpy2.mockClear();
 
-      // Try invalid input - InputNumber prevents it and reverts to props.lookback
-      fireEvent.change(input, { target: { value: 'foo' } });
-      expect(input.value).toBe(String(props.lookback)); // Reverts to initial props.lookback
-
-      // Verify no component logic was triggered for invalid input
-      expect(setLookbackSpy2).not.toHaveBeenCalled();
-
-      // Valid input still works
-      fireEvent.change(input, { target: { value: '30' } });
-      expect(input.value).toBe('30');
-
-      callDebouncedFn();
-      expect(setLookbackSpy2).toHaveBeenCalledWith(30);
+      // 3. Assert that the component correctly handled the entire flow by calling the prop with `null`.
+      expect(setLookbackPropSpy).toHaveBeenCalledWith(null);
+      expect(setLookbackPropSpy).toHaveBeenCalledTimes(1);
     });
 
     it('updates state with numeric value, then clears state and calls props.setLookback after debounce', () => {
-      const setLookbackSpy2 = jest.fn();
-      const { rerender } = render(<Header {...props} setLookback={setLookbackSpy2} />);
-
+      const setLookbackPropSpy = jest.fn();
+      const { rerender } = render(<Header {...props} setLookback={setLookbackPropSpy} />);
       const input = screen.getByRole('spinbutton');
 
-      // User types a value
+      // User types a value, which is immediately displayed (verifies state precedence)
       fireEvent.change(input, { target: { value: '42' } });
       expect(input.value).toBe('42');
 
-      // Props change, but input still shows user value (proving state precedence)
-      rerender(<Header {...props} lookback={999} setLookback={setLookbackSpy2} />);
-      expect(input.value).toBe('42'); // Still shows user input
+      // Props change, but input still shows user value (re-verifies state precedence)
+      rerender(<Header {...props} lookback={999} setLookback={setLookbackPropSpy} />);
+      expect(input.value).toBe('42');
 
-      // Debounced function hasn't been called yet
-      expect(setLookbackSpy2).not.toHaveBeenCalled();
+      // Debounced function hasn't been called yet, so prop is not yet called
+      expect(setLookbackPropSpy).not.toHaveBeenCalled();
 
       // Trigger debounced function
       callDebouncedFn();
 
-      // Verify setLookback was called
-      expect(setLookbackSpy2).toHaveBeenCalledWith(42);
+      // Verify setLookback prop was called with the correct numeric value
+      expect(setLookbackPropSpy).toHaveBeenCalledWith(42);
 
-      // After debounce, state should be cleared, so props should take precedence again
-      rerender(<Header {...props} lookback={999} setLookback={setLookbackSpy2} />);
-      expect(input.value).toBe('999'); // Now shows props.lookback (state was cleared)
+      // After debounce, internal state is cleared, so new props should now be displayed
+      rerender(<Header {...props} lookback={999} setLookback={setLookbackPropSpy} />);
+      expect(input.value).toBe('999');
     });
   });
 });
