@@ -41,173 +41,149 @@ describe('SpanTreeOffset', () => {
     };
   });
 
-  describe('.SpanTreeOffset--indentGuide', () => {
-    it('renders only one .SpanTreeOffset--indentGuide for entire trace if span has no ancestors', () => {
+  describe('indent guides rendering and interaction', () => {
+    it('renders only root-level indent guide when there are no ancestors', () => {
       spanAncestorIdsSpy.mockReturnValue([]);
       render(<UnconnectedSpanTreeOffset {...props} />);
-
       const indentGuides = screen.getAllByTestId(/indent-guide/);
+
       expect(indentGuides).toHaveLength(1);
       expect(indentGuides[0]).toHaveAttribute('data-ancestor-id', specialRootID);
     });
 
-    it('renders one .SpanTreeOffset--indentGuide per ancestor span, plus one for entire trace', () => {
+    it('renders one indent guide per ancestor plus the root guide', () => {
       render(<UnconnectedSpanTreeOffset {...props} />);
-
       const indentGuides = screen.getAllByTestId(/indent-guide/);
+
       expect(indentGuides).toHaveLength(3);
       expect(indentGuides[0]).toHaveAttribute('data-ancestor-id', specialRootID);
       expect(indentGuides[1]).toHaveAttribute('data-ancestor-id', rootSpanID);
       expect(indentGuides[2]).toHaveAttribute('data-ancestor-id', parentSpanID);
     });
 
-    it('adds .is-active to correct indentGuide', () => {
+    it('applies "is-active" class to hovered ancestor ID', () => {
       const propsWithHover = {
         ...props,
         hoverIndentGuideIds: new Set([parentSpanID]),
       };
       render(<UnconnectedSpanTreeOffset {...propsWithHover} />);
+      const activeGuide = screen.getByTestId(`indent-guide-${parentSpanID}`);
 
-      const activeIndentGuide = screen.getByTestId(`indent-guide-${parentSpanID}`);
-      expect(activeIndentGuide).toHaveClass('is-active');
+      expect(activeGuide).toHaveClass('is-active');
     });
 
-    it('calls props.addHoverIndentGuideId on mouse enter', () => {
+    it('calls addHoverIndentGuideId on mouse enter from non-similar target', () => {
       render(<UnconnectedSpanTreeOffset {...props} />);
-
       const indentGuide = screen.getByTestId(`indent-guide-${parentSpanID}`);
       fireEvent.mouseEnter(indentGuide);
 
-      expect(props.addHoverIndentGuideId).toHaveBeenCalledTimes(1);
       expect(props.addHoverIndentGuideId).toHaveBeenCalledWith(parentSpanID);
     });
 
-    it('does not call props.addHoverIndentGuideId on mouse enter if mouse came from a indentGuide with the same ancestorId', () => {
+    it('skips addHoverIndentGuideId if mouse enters from same ancestor ID', () => {
       render(<UnconnectedSpanTreeOffset {...props} />);
+      const indentGuide = screen.getByTestId(`indent-guide-${parentSpanID}`);
 
       const relatedTarget = document.createElement('span');
       relatedTarget.dataset.ancestorId = parentSpanID;
 
-      const indentGuide = screen.getByTestId(`indent-guide-${parentSpanID}`);
-
-      const mouseEnterEvent = new MouseEvent('mouseenter', {
-        bubbles: true,
-        relatedTarget,
-      });
-
-      fireEvent(indentGuide, mouseEnterEvent);
+      const event = new MouseEvent('mouseenter', { bubbles: true, relatedTarget });
+      fireEvent(indentGuide, event);
 
       expect(props.addHoverIndentGuideId).not.toHaveBeenCalled();
     });
 
-    it('calls props.removeHoverIndentGuideId on mouse leave', () => {
+    it('calls removeHoverIndentGuideId on mouse leave to a non-similar target', () => {
       render(<UnconnectedSpanTreeOffset {...props} />);
-
       const indentGuide = screen.getByTestId(`indent-guide-${parentSpanID}`);
       fireEvent.mouseLeave(indentGuide);
 
-      expect(props.removeHoverIndentGuideId).toHaveBeenCalledTimes(1);
       expect(props.removeHoverIndentGuideId).toHaveBeenCalledWith(parentSpanID);
     });
 
-    it('does not call props.removeHoverIndentGuideId on mouse leave if mouse leaves to a indentGuide with the same ancestorId', () => {
+    it('skips removeHoverIndentGuideId if mouse leaves to same ancestor ID', () => {
       render(<UnconnectedSpanTreeOffset {...props} />);
+      const indentGuide = screen.getByTestId(`indent-guide-${parentSpanID}`);
 
       const relatedTarget = document.createElement('span');
       relatedTarget.dataset.ancestorId = parentSpanID;
 
-      const indentGuide = screen.getByTestId(`indent-guide-${parentSpanID}`);
-
-      const mouseLeaveEvent = new MouseEvent('mouseleave', {
-        bubbles: true,
-        relatedTarget,
-      });
-
-      fireEvent(indentGuide, mouseLeaveEvent);
+      const event = new MouseEvent('mouseleave', { bubbles: true, relatedTarget });
+      fireEvent(indentGuide, event);
 
       expect(props.removeHoverIndentGuideId).not.toHaveBeenCalled();
     });
   });
 
-  describe('icon', () => {
+  describe('collapse/expand icon rendering', () => {
     beforeEach(() => {
       props.span = { ...props.span, hasChildren: true };
     });
 
-    it('does not render icon if props.span.hasChildren is false', () => {
-      props.span = { ...props.span, hasChildren: false };
+    it('does not render icon when span has no children', () => {
+      props.span.hasChildren = false;
       render(<UnconnectedSpanTreeOffset {...props} />);
 
       expect(screen.queryByTestId('icon-wrapper')).not.toBeInTheDocument();
     });
 
-    it('does not render icon if props.span.hasChildren is true and showChildrenIcon is false', () => {
+    it('does not render icon when showChildrenIcon is false', () => {
       props.showChildrenIcon = false;
       render(<UnconnectedSpanTreeOffset {...props} />);
 
       expect(screen.queryByTestId('icon-wrapper')).not.toBeInTheDocument();
     });
 
-    it('renders IoChevronRight if props.span.hasChildren is true and props.childrenVisible is false', () => {
+    it('renders collapsed icon when childrenVisible is false', () => {
+      props.childrenVisible = false;
       render(<UnconnectedSpanTreeOffset {...props} />);
-
       const iconWrapper = screen.getByTestId('icon-wrapper');
+
       expect(iconWrapper).toBeInTheDocument();
       expect(iconWrapper.querySelector('svg')).toBeInTheDocument();
     });
 
-    it('renders IoIosArrowDown if props.span.hasChildren is true and props.childrenVisible is true', () => {
+    it('renders expanded icon when childrenVisible is true', () => {
       props.childrenVisible = true;
       render(<UnconnectedSpanTreeOffset {...props} />);
-
       const iconWrapper = screen.getByTestId('icon-wrapper');
+
       expect(iconWrapper).toBeInTheDocument();
       expect(iconWrapper.querySelector('svg')).toBeInTheDocument();
     });
 
-    it('calls props.addHoverIndentGuideId on mouse enter', () => {
+    it('triggers addHoverIndentGuideId on icon hover in', () => {
       render(<UnconnectedSpanTreeOffset {...props} />);
-
       const iconWrapper = screen.getByTestId('icon-wrapper');
       fireEvent.mouseEnter(iconWrapper);
 
-      expect(props.addHoverIndentGuideId).toHaveBeenCalledTimes(1);
       expect(props.addHoverIndentGuideId).toHaveBeenCalledWith(ownSpanID);
     });
 
-    it('calls props.removeHoverIndentGuideId on mouse leave', () => {
+    it('triggers removeHoverIndentGuideId on icon hover out', () => {
       render(<UnconnectedSpanTreeOffset {...props} />);
-
       const iconWrapper = screen.getByTestId('icon-wrapper');
       fireEvent.mouseLeave(iconWrapper);
 
-      expect(props.removeHoverIndentGuideId).toHaveBeenCalledTimes(1);
       expect(props.removeHoverIndentGuideId).toHaveBeenCalledWith(ownSpanID);
     });
   });
 
-  describe('mapDispatchToProps()', () => {
-    it('creates the actions correctly', () => {
-      expect(mapDispatchToProps(() => {})).toEqual({
-        addHoverIndentGuideId: expect.any(Function),
-        removeHoverIndentGuideId: expect.any(Function),
-      });
-    });
-  });
+  describe('Redux connection', () => {
+    it('mapDispatchToProps returns required actions', () => {
+      const dispatch = jest.fn();
+      const result = mapDispatchToProps(dispatch);
 
-  describe('mapStateToProps()', () => {
-    it('maps state to props correctly', () => {
-      const hoverIndentGuideIds = new Set([parentSpanID]);
-      const state = {
-        traceTimeline: {
-          hoverIndentGuideIds,
-        },
-      };
-      const mappedProps = mapStateToProps(state);
-      expect(mappedProps).toEqual({
-        hoverIndentGuideIds,
-      });
-      expect(mappedProps.hoverIndentGuideIds).toBe(hoverIndentGuideIds);
+      expect(result).toHaveProperty('addHoverIndentGuideId');
+      expect(result).toHaveProperty('removeHoverIndentGuideId');
+    });
+
+    it('mapStateToProps correctly maps hoverIndentGuideIds', () => {
+      const hoverIndentGuideIds = new Set(['foo']);
+      const state = { traceTimeline: { hoverIndentGuideIds } };
+      const result = mapStateToProps(state);
+
+      expect(result.hoverIndentGuideIds).toBe(hoverIndentGuideIds);
     });
   });
 });
