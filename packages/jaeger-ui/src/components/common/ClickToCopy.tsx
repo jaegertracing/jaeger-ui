@@ -67,12 +67,7 @@ function ClickToCopy({ text, className = '', children }: Props) {
 
   return (
     <Tooltip title={isCopied ? 'Copied to clipboard' : 'Copy to clipboard'}>
-      <span 
-        className={className} 
-        onClick={whenClicked} 
-        role="button" 
-        tabIndex={0}
-      >
+      <span className={className} onClick={whenClicked} role="button" tabIndex={0}>
         {children}
       </span>
     </Tooltip>
