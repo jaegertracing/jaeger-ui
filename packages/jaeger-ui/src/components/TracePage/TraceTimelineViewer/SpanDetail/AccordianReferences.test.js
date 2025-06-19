@@ -13,9 +13,19 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import AccordianReferences, { References } from './AccordianReferences';
-import ReferenceLink from '../../url/ReferenceLink';
+
+jest.mock('../../url/ReferenceLink', () => {
+  return function MockReferenceLink({ children, reference }) {
+    return (
+      <div data-testid="reference-link" data-span-id={reference.spanID}>
+        {children}
+      </div>
+    );
+  };
+});
 
 const traceID = 'trace1';
 const references = [
@@ -53,8 +63,6 @@ const references = [
 ];
 
 describe('<AccordianReferences>', () => {
-  let wrapper;
-
   const props = {
     compact: false,
     data: references,
@@ -65,47 +73,62 @@ describe('<AccordianReferences>', () => {
   };
 
   beforeEach(() => {
-    wrapper = shallow(<AccordianReferences {...props} />);
+    jest.clearAllMocks();
   });
 
-  it('renders without exploding', () => {
-    expect(wrapper).toBeDefined();
-    expect(wrapper.exists()).toBe(true);
+  it('renders the component structure correctly without crashing', () => {
+    render(<AccordianReferences {...props} />);
+
+    expect(screen.getByText('References')).toBeInTheDocument();
+    expect(screen.getByText(`(${references.length})`)).toBeInTheDocument();
+
+    const header = screen.getByText('References').closest('.AccordianReferences--header');
+    expect(header).toBeInTheDocument();
+    expect(header).toHaveClass('AccordianReferences--header');
   });
 
-  it('renders the content when it is expanded', () => {
-    wrapper.setProps({ isOpen: true });
-    const content = wrapper.find(References);
-    expect(content.length).toBe(1);
-    expect(content.prop('data')).toBe(references);
+  it('displays References component content when accordion is expanded', () => {
+    const expandedProps = { ...props, isOpen: true };
+    render(<AccordianReferences {...expandedProps} />);
+
+    const referencesList = screen.getByRole('list');
+    expect(referencesList).toBeInTheDocument();
+    expect(referencesList).toHaveClass('ReferencesList--List');
+
+    const referenceLinks = screen.getAllByTestId('reference-link');
+    expect(referenceLinks).toHaveLength(references.length);
   });
 });
 
 describe('<References>', () => {
-  let wrapper;
-
   const props = {
     data: references,
     focusSpan: jest.fn(),
   };
 
   beforeEach(() => {
-    wrapper = shallow(<References {...props} />);
+    jest.clearAllMocks();
   });
 
-  it('render references list', () => {
-    const refLinks = wrapper.find(ReferenceLink);
-    expect(refLinks.length).toBe(references.length);
-    refLinks.forEach((refLink, i) => {
-      const span = references[i].span;
-      const serviceName = refLink.find('span.span-svc-name').text();
-      if (span && span.traceID === traceID) {
-        const endpointName = refLink.find('small.endpoint-name').text();
-        expect(serviceName).toBe(span.process.serviceName);
-        expect(endpointName).toBe(span.operationName);
-      } else {
-        expect(serviceName).toBe('< span in another trace >');
-      }
-    });
+  it('renders complete references list with proper service names and operation details', () => {
+    render(<References {...props} />);
+
+    const referenceLinks = screen.getAllByTestId('reference-link');
+    expect(referenceLinks).toHaveLength(references.length);
+
+    expect(screen.getByText('service1')).toBeInTheDocument();
+    expect(screen.getByText('op1')).toBeInTheDocument();
+
+    expect(screen.getByText('service2')).toBeInTheDocument();
+    expect(screen.getByText('op2')).toBeInTheDocument();
+
+    expect(screen.getByText('< span in another trace >')).toBeInTheDocument();
+
+    const refTypeElements = screen.getAllByText('CHILD_OF');
+    expect(refTypeElements).toHaveLength(references.length);
+
+    expect(screen.getByText('span1')).toBeInTheDocument();
+    expect(screen.getByText('span3')).toBeInTheDocument();
+    expect(screen.getByText('span5')).toBeInTheDocument();
   });
 });
