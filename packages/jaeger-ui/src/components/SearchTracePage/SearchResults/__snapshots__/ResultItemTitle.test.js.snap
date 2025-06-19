@@ -1,45 +1,59 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ResultItemTitle renders as expected 1`] = `
-<div
-  className="ResultItemTitle"
->
-  <Checkbox
-    checked={true}
-    className="ResultItemTitle--item ub-flex-none"
-    disabled={false}
-    onChange={[Function]}
-    onClick={[Function]}
-  />
-  <Link
-    className="ResultItemTitle--item ub-flex-auto"
-    to="linkToValue"
+<div>
+  <div
+    class="ResultItemTitle"
   >
-    <span
-      className="ResultItemTitle--durationBar"
-      style={
-        Object {
-          "width": "10%",
-        }
-      }
-    />
-    <span
-      className="ub-right ub-relative"
+    <label
+      class="ant-checkbox-wrapper ant-checkbox-wrapper-checked ResultItemTitle--item ub-flex-none css-dev-only-do-not-override-ut69n1"
     >
-      150μs
-    </span>
-    <h3
-      className="ResultItemTitle--title"
+      <span
+        class="ant-checkbox ant-wave-target css-dev-only-do-not-override-ut69n1 ant-checkbox-checked"
+      >
+        <input
+          checked=""
+          class="ant-checkbox-input"
+          type="checkbox"
+        />
+        <span
+          class="ant-checkbox-inner"
+        />
+      </span>
+    </label>
+    <a
+      class="ResultItemTitle--item ub-flex-auto"
+      href="/search?traceID=trace-id-longer-than-8"
     >
-      <TraceName
-        state="FETCH_DONE"
-        traceName="traceNameValue"
+      <span
+        class="ResultItemTitle--durationBar"
+        style="width: 10%;"
       />
-      <TraceId
-        className="ResultItemTitle--idExcerpt"
-        traceId="trace-id-longer-than-8"
-      />
-    </h3>
-  </Link>
+      <span
+        class="ub-right ub-relative"
+      >
+        150ms
+      </span>
+      <h3
+        class="ResultItemTitle--title"
+      >
+        <span
+          class="TraceName  "
+          data-testid="traceName"
+        >
+          <span
+            class="BreakableText"
+          >
+            traceNameValue
+          </span>
+        </span>
+        <small
+          class="TraceIDLength TraceIDLength--short u-tx-muted  ResultItemTitle--idExcerpt "
+        >
+          trace-i
+        </small>
+      </h3>
+    </a>
+  </div>
 </div>
 `;
