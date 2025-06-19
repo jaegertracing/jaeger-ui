@@ -6,10 +6,10 @@ exports[`ResultItemTitle renders as expected 1`] = `
     class="ResultItemTitle"
   >
     <label
-      class="ant-checkbox-wrapper ant-checkbox-wrapper-checked ResultItemTitle--item ub-flex-none css-dev-only-do-not-override-ut69n1"
+      class="ant-checkbox-wrapper ant-checkbox-wrapper-checked ResultItemTitle--item ub-flex-none css-dev-only-do-not-override-18afz5u"
     >
       <span
-        class="ant-checkbox ant-wave-target css-dev-only-do-not-override-ut69n1 ant-checkbox-checked"
+        class="ant-checkbox ant-wave-target css-dev-only-do-not-override-18afz5u ant-checkbox-checked"
       >
         <input
           checked=""
