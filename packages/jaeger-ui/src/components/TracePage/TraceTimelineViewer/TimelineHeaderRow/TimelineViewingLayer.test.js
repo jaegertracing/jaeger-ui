@@ -111,9 +111,7 @@ describe('<TimelineViewingLayer>', () => {
     it('handles drag move via _draggerReframe._onDragMove', () => {
       const anchor = 0.25;
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: 0.5 } };
-      const { container } = render(
-        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
-      );
+      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
       fireEvent.mouseDown(container.querySelector('.TimelineViewingLayer'), { clientX: 60 });
       expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({
         reframe: {
@@ -126,9 +124,7 @@ describe('<TimelineViewingLayer>', () => {
     it('handles drag end via _draggerReframe._onDragEnd', () => {
       const anchor = 0.75;
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: 0.5 } };
-      const { container } = render(
-        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
-      );
+      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
       fireEvent.mouseDown(container.querySelector('.TimelineViewingLayer'), { clientX: 60 });
       fireEvent.mouseUp(container.querySelector('.TimelineViewingLayer'), { clientX: 40 });
       const [start, end, source] = props.updateViewRangeTime.mock.calls.at(-1);
@@ -147,9 +143,7 @@ describe('<TimelineViewingLayer>', () => {
     it('renders the cursor when it is the only non-current value set', () => {
       const cursor = mapFromSubRange(viewStart, viewEnd, 0.5);
       const baseViewRangeTime = { ...props.viewRangeTime, cursor };
-      const { container } = render(
-        <TimelineViewingLayer {...props} viewRangeTime={baseViewRangeTime} />
-      );
+      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={baseViewRangeTime} />);
       expect(container.querySelector('.TimelineViewingLayer--cursorGuide')).toBeInTheDocument();
     });
 
@@ -162,9 +156,7 @@ describe('<TimelineViewingLayer>', () => {
       ];
 
       cases.forEach(viewRangeTime => {
-        const { container } = render(
-          <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
-        );
+        const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
         expect(container.querySelector('.TimelineViewingLayer--cursorGuide')).not.toBeInTheDocument();
         cleanup();
       });
@@ -172,49 +164,37 @@ describe('<TimelineViewingLayer>', () => {
 
     it('renders the reframe dragging', () => {
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: viewStart, shift: viewEnd } };
-      const { container } = render(
-        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
-      );
+      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
       expect(container.querySelector('.isDraggingRight.isReframeDrag')).toBeInTheDocument();
     });
 
     it('renders the reframe dragging normalized left', () => {
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: -0.25, shift: viewEnd } };
-      const { container } = render(
-        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
-      );
+      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
       expect(container.querySelector('.isDraggingRight.isReframeDrag')).toBeInTheDocument();
     });
 
     it('renders the reframe dragging normalized right', () => {
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: viewStart, shift: 1.25 } };
-      const { container } = render(
-        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
-      );
+      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
       expect(container.querySelector('.isDraggingRight.isReframeDrag')).toBeInTheDocument();
     });
 
     it('does not render the reframe on out of bounds', () => {
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: 1.5, shift: 1.75 } };
-      const { container } = render(
-        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
-      );
+      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
       expect(container.querySelector('.isReframeDrag')).not.toBeInTheDocument();
     });
 
     it('renders the shiftStart dragging', () => {
       const viewRangeTime = { ...props.viewRangeTime, shiftStart: viewEnd };
-      const { container } = render(
-        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
-      );
+      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
       expect(container.querySelector('.isDraggingRight.isShiftDrag')).toBeInTheDocument();
     });
 
     it('renders the shiftEnd dragging', () => {
       const viewRangeTime = { ...props.viewRangeTime, shiftEnd: viewStart };
-      const { container } = render(
-        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
-      );
+      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
       expect(container.querySelector('.isDraggingLeft.isShiftDrag')).toBeInTheDocument();
     });
   });
