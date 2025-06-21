@@ -53,22 +53,22 @@ describe('ResultItemTitle', () => {
 
   it('renders as expected', () => {
     const { container } = setup(defaultProps);
-    
+
     // Test that the formatted duration is displayed (this is directly rendered by ResultItemTitle)
     expect(screen.getByText(formatDuration(defaultProps.duration))).toBeInTheDocument();
-    
+
     // Test that the component structure is correct
     expect(screen.getByRole('link')).toBeInTheDocument();
     expect(screen.getByRole('checkbox')).toBeInTheDocument();
-    
+
     // Test that the duration bar is rendered with correct width
     const durationBar = container.querySelector('.ResultItemTitle--durationBar');
     expect(durationBar).toBeInTheDocument();
     expect(durationBar).toHaveStyle(`width: ${defaultProps.durationPercent}%`);
-    
+
     // Test that the main container has the correct class
     expect(container.querySelector('.ResultItemTitle')).toBeInTheDocument();
-    
+
     // Test that TraceName and TraceId components are rendered (by checking their presence)
     expect(container.querySelector('.ResultItemTitle--title')).toBeInTheDocument();
     expect(container.querySelector('.ResultItemTitle--idExcerpt')).toBeInTheDocument();
