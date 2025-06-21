@@ -144,6 +144,7 @@ describe('<ListView>', () => {
       let oldInitWrapper;
       const initWrapperMock = jest.fn(elm => {
         if (elm != null) {
+          // jsDom requires `defineProperties` instead of just setting the props
           Object.defineProperties(elm, {
             clientHeight: {
               get: () => clientHeight,
@@ -158,6 +159,8 @@ describe('<ListView>', () => {
 
       beforeAll(() => {
         oldRender = ListView.prototype.render;
+        // `_initWrapper` is not on the prototype, so it needs to be mocked
+        // on each instance, use `render()` as a hook to do that
         ListView.prototype.render = function altRender() {
           if (this._initWrapper !== initWrapperMock) {
             oldInitWrapper = this._initWrapper;
@@ -189,33 +192,29 @@ describe('<ListView>', () => {
       });
 
       it('getViewHeight() returns the viewHeight', () => {
-        if (instance) {
-          expect(instance.getViewHeight()).toBe(clientHeight);
-        }
+        expect(instance).toBeDefined();
+        expect(instance.getViewHeight()).toBe(clientHeight);
       });
 
       it('getBottomVisibleIndex() returns a number', () => {
-        if (instance) {
-          const n = instance.getBottomVisibleIndex();
-          expect(Number.isNaN(n)).toBe(false);
-          expect(n).toEqual(expect.any(Number));
-        }
+        expect(instance).toBeDefined();
+        const n = instance.getBottomVisibleIndex();
+        expect(Number.isNaN(n)).toBe(false);
+        expect(n).toEqual(expect.any(Number));
       });
 
       it('getTopVisibleIndex() returns a number', () => {
-        if (instance) {
-          const n = instance.getTopVisibleIndex();
-          expect(Number.isNaN(n)).toBe(false);
-          expect(n).toEqual(expect.any(Number));
-        }
+        expect(instance).toBeDefined();
+        const n = instance.getTopVisibleIndex();
+        expect(Number.isNaN(n)).toBe(false);
+        expect(n).toEqual(expect.any(Number));
       });
 
       it('getRowPosition() returns a number', () => {
-        if (instance) {
-          const { height, y } = instance.getRowPosition(2);
-          expect(height).toEqual(expect.any(Number));
-          expect(y).toEqual(expect.any(Number));
-        }
+        expect(instance).toBeDefined();
+        const { height, y } = instance.getRowPosition(2);
+        expect(height).toEqual(expect.any(Number));
+        expect(y).toEqual(expect.any(Number));
       });
     });
 
