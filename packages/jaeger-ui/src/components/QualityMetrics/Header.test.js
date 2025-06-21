@@ -67,13 +67,13 @@ describe('Header', () => {
       expect(screen.getByText(/Service:/i)).toBeInTheDocument();
     });
 
-    it('renders props.lookback when component first mounts (ownInputValue is null)', () => {
+    it('renders props.lookback when state.ownInputValue is `undefined`', () => {
       render(<Header {...props} />);
       const input = screen.getByRole('spinbutton');
       expect(input.value).toBe(String(lookback));
     });
 
-    it('updates displayed value when props.lookback changes and ownInputValue is null', () => {
+    it('updates the input value when the lookback prop changes', () => {
       const newLookback = 10;
       const { rerender } = render(<Header {...props} />);
       const input = screen.getByRole('spinbutton');
@@ -106,7 +106,7 @@ describe('Header', () => {
   });
 
   describe('setting lookback', () => {
-    it('calls setLookback with null after invalid input', () => {
+    it('calls setLookback prop with null when the input is cleared', () => {
       const setLookbackPropSpy = jest.fn();
       render(<Header {...props} setLookback={setLookbackPropSpy} />);
       const input = screen.getByRole('spinbutton');
