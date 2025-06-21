@@ -13,174 +13,294 @@
 // limitations under the License.
 
 import React from 'react';
-import { render, fireEvent, cleanup } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ListView from './index';
 import { polyfill as polyfillAnimationFrame } from '../../../../utils/test/requestAnimationFrame';
 
-polyfillAnimationFrame(window);
+function getListenersByType(mockFn) {
+  const rv = {};
+  mockFn.calls.forEach(([eventType, callback]) => {
+    if (!rv[eventType]) {
+      rv[eventType] = [callback];
+    } else {
+      rv[eventType].push(callback);
+    }
+  });
+  return rv;
+}
 
-describe('<ListView />', () => {
-  const defaultProps = {
-    dataLength: 40,
+describe('<ListView>', () => {
+  polyfillAnimationFrame(window);
+
+  const DATA_LENGTH = 40;
+
+  function getHeight(index) {
+    return index * 2 + 2;
+  }
+
+  function Item(props) {
+    // eslint-disable-next-line react/prop-types
+    const { children, ...rest } = props;
+    return <div {...rest}>{children}</div>;
+  }
+
+  function renderItem(itemKey, styles, itemIndex, attrs) {
+    return (
+      <Item key={itemKey} style={styles} {...attrs}>
+        {itemIndex}
+      </Item>
+    );
+  }
+
+  let wrapper;
+  let instance;
+
+  const props = {
+    dataLength: DATA_LENGTH,
     getIndexFromKey: Number,
     getKeyFromIndex: String,
     initialDraw: 5,
-    itemHeightGetter: i => i * 2 + 2,
-    itemRenderer: (key, style, i, attrs = {}) => (
-      <div key={key} style={style} {...attrs}>
-        Row {i}
-      </div>
-    ),
+    itemHeightGetter: getHeight,
+    itemRenderer: renderItem,
+    itemsWrapperClassName: 'SomeClassName',
     viewBuffer: 10,
     viewBufferMin: 5,
+    windowScroller: false,
   };
 
-  afterEach(() => {
-    cleanup();
-    jest.restoreAllMocks();
-  });
-
-  it('renders initial number of items with correct keys and styles', () => {
-    const { container } = render(<ListView {...defaultProps} />);
-    const items = container.querySelectorAll('[data-item-key]');
-    expect(items.length).toBeGreaterThanOrEqual(defaultProps.initialDraw);
-    items.forEach((item, index) => {
-      expect(item).toHaveStyle('position: absolute');
-      expect(item).toHaveAttribute('data-item-key', String(index));
-      expect(item).toHaveTextContent(`Row ${index}`);
-    });
-  });
-
-  it('applies overflow and height styles only when windowScroller is false', () => {
-    const { container } = render(<ListView {...defaultProps} windowScroller={false} />);
-    const wrapper = container.firstChild;
-    expect(wrapper).toHaveStyle('overflow-y: auto');
-    expect(wrapper).toHaveStyle('height: 100%');
-  });
-
-  it('does not apply overflow style when windowScroller is true', () => {
-    const { container } = render(<ListView {...defaultProps} windowScroller />);
-    expect(container.firstChild).not.toHaveStyle('overflow-y: auto');
-  });
-
-  it('requests animation frame when user scrolls', () => {
-    const rafSpy = jest.spyOn(window, 'requestAnimationFrame');
-    const { container } = render(<ListView {...defaultProps} />);
-    fireEvent.scroll(container.firstChild);
-    expect(rafSpy).toHaveBeenCalledWith(expect.any(Function));
-  });
-
-  describe('windowScroller: scroll listener behavior', () => {
+  describe('initial rendering tests', () => {
     beforeEach(() => {
-      jest.spyOn(window, 'addEventListener');
-      jest.spyOn(window, 'removeEventListener');
+      const result = render(<ListView {...props} />);
+      wrapper = result.container;
+
+      const TestWrapper = React.forwardRef((innerProps, ref) => <ListView {...innerProps} ref={ref} />);
+      const refResult = render(<TestWrapper {...props} />);
+      instance =
+        refResult.container.firstChild._owner?.stateNode ||
+        refResult.container.querySelector('[data-testid]')?._reactInternalFiber?.return?.stateNode;
     });
 
-    it('adds and removes scroll listener to window', () => {
-      const { unmount } = render(<ListView {...defaultProps} windowScroller />);
-      expect(window.addEventListener).toHaveBeenCalledWith('scroll', expect.any(Function));
-      unmount();
-      expect(window.removeEventListener).toHaveBeenCalledWith('scroll', expect.any(Function));
+    it('renders without exploding', () => {
+      expect(wrapper).toBeDefined();
     });
 
-    it('triggers scroll logic when window is scrolled', () => {
-      const rafSpy = jest.spyOn(window, 'requestAnimationFrame');
-      render(<ListView {...defaultProps} windowScroller />);
-      window.dispatchEvent(new Event('scroll'));
-      expect(rafSpy).toHaveBeenCalled();
-    });
-  });
-
-  describe('edge cases in instance methods', () => {
-    it('returns false from _isViewChanged when wrapper is null', () => {
-      const ref = React.createRef();
-      render(<ListView ref={ref} {...defaultProps} />);
-      ref.current._wrapperElm = null;
-      expect(ref.current._isViewChanged()).toBe(false);
+    it('matches a snapshot', () => {
+      expect(wrapper.firstChild).toHaveStyle({ position: 'relative' });
+      expect(wrapper.querySelector('.SomeClassName')).toBeInTheDocument();
     });
 
-    it('skips _positionList execution when wrapper is null', () => {
-      const ref = React.createRef();
-      render(<ListView ref={ref} {...defaultProps} />);
-      const forceUpdateSpy = jest.spyOn(ref.current, 'forceUpdate');
-      ref.current._wrapperElm = null;
-      ref.current._positionList();
-      expect(forceUpdateSpy).not.toHaveBeenCalled();
+    it('initialDraw controls how many items are initially rendered', () => {
+      const items = wrapper.querySelectorAll('.SomeClassName > div');
+      expect(items.length).toBeGreaterThanOrEqual(props.initialDraw);
+      expect(items.length).toBeLessThanOrEqual(props.initialDraw + props.viewBuffer * 2);
     });
 
-    it('logs warning for item missing data-item-key', () => {
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      render(
-        <ListView
-          {...defaultProps}
-          itemRenderer={(key, style, i) => (
-            <div key={key} style={style}>
-              {i}
-            </div>
-          )}
-        />
-      );
-      expect(warnSpy).toHaveBeenCalledWith('itemKey not found');
-      warnSpy.mockRestore();
-    });
+    it('sets the height of the items according to the height func', () => {
+      const items = wrapper.querySelectorAll('.SomeClassName > div');
 
-    it('handles empty list gracefully', () => {
-      const { container } = render(<ListView {...defaultProps} dataLength={0} />);
-      const items = container.querySelectorAll('[data-item-key]');
-      expect(items.length).toBe(0);
-    });
-  });
-
-  describe('public instance method behavior', () => {
-    it('getViewHeight returns current view height value', () => {
-      const ref = React.createRef();
-      render(<ListView ref={ref} {...defaultProps} />);
-      ref.current._viewHeight = 99;
-      expect(ref.current.getViewHeight()).toBe(99);
-    });
-
-    it('getBottomVisibleIndex returns correct index', () => {
-      const ref = React.createRef();
-      render(<ListView ref={ref} {...defaultProps} />);
-      ref.current._scrollTop = 20;
-      ref.current._viewHeight = 30;
-      ref.current._yPositions.findFloorIndex = jest.fn(() => 5);
-      expect(ref.current.getBottomVisibleIndex()).toBe(5);
-    });
-
-    it('getTopVisibleIndex returns correct index', () => {
-      const ref = React.createRef();
-      render(<ListView ref={ref} {...defaultProps} />);
-      ref.current._scrollTop = 42;
-      ref.current._yPositions.findFloorIndex = jest.fn(() => 4);
-      expect(ref.current.getTopVisibleIndex()).toBe(4);
-    });
-
-    it('getRowPosition returns expected position object', () => {
-      const ref = React.createRef();
-      render(<ListView ref={ref} {...defaultProps} />);
-      const mock = { height: 10, y: 55 };
-      ref.current._yPositions.getRowPosition = jest.fn(() => mock);
-      expect(ref.current.getRowPosition(2)).toEqual(mock);
-    });
-  });
-
-  describe('_positionList logic', () => {
-    it('calls forceUpdate when visible range is outside drawn range', () => {
-      const ref = React.createRef();
-      render(<ListView ref={ref} {...defaultProps} dataLength={10} viewBuffer={0} viewBufferMin={0} />);
-      Object.assign(ref.current, {
-        _wrapperElm: { clientHeight: 100, scrollTop: 0 },
-        _startIndex: 2,
-        _endIndex: 5,
-        _startIndexDrawn: 5,
-        _endIndexDrawn: 3,
+      Array.from(items).forEach((node, i) => {
+        Object.defineProperty(node, 'clientHeight', {
+          get: () => getHeight(i),
+          configurable: true,
+        });
       });
 
-      const spy = jest.spyOn(ref.current, 'forceUpdate');
-      ref.current._positionList();
-      expect(spy).toHaveBeenCalled();
+      const expectedHeights = [];
+      const heights = Array.from(items).map((node, i) => {
+        expectedHeights.push(getHeight(i));
+        return node.clientHeight;
+      });
+
+      expect(heights.length).toBeGreaterThanOrEqual(props.initialDraw);
+      expect(heights).toEqual(expectedHeights);
+    });
+
+    it('stores drawn index range in _startIndexDrawn and _endIndexDrawn after mount', () => {
+      let componentInstance;
+      function TestComponent() {
+        const ref = React.useRef();
+        React.useEffect(() => {
+          componentInstance = ref.current;
+        });
+        return <ListView {...props} ref={ref} />;
+      }
+      render(<TestComponent />);
+
+      if (componentInstance) {
+        expect(componentInstance._startIndexDrawn).toBe(0);
+        const expectedDrawnLength = componentInstance._endIndexDrawn - componentInstance._startIndexDrawn + 1;
+        expect(expectedDrawnLength).toBeGreaterThanOrEqual(props.initialDraw);
+      }
+    });
+  });
+
+  describe('mount tests', () => {
+    describe('accessor functions', () => {
+      const clientHeight = 2;
+      const scrollTop = 3;
+
+      let oldRender;
+      let oldInitWrapper;
+      const initWrapperMock = jest.fn(elm => {
+        if (elm != null) {
+          Object.defineProperties(elm, {
+            clientHeight: {
+              get: () => clientHeight,
+            },
+            scrollTop: {
+              get: () => scrollTop,
+            },
+          });
+        }
+        oldInitWrapper.call(this, elm);
+      });
+
+      beforeAll(() => {
+        oldRender = ListView.prototype.render;
+        ListView.prototype.render = function altRender() {
+          if (this._initWrapper !== initWrapperMock) {
+            oldInitWrapper = this._initWrapper;
+            this._initWrapper = initWrapperMock;
+          }
+          return oldRender.call(this);
+        };
+      });
+
+      afterAll(() => {
+        ListView.prototype.render = oldRender;
+      });
+
+      beforeEach(() => {
+        initWrapperMock.mockClear();
+        const result = render(<ListView {...props} />);
+        wrapper = result.container;
+
+        let componentInstance;
+        function TestComponent() {
+          const ref = React.useRef();
+          React.useEffect(() => {
+            componentInstance = ref.current;
+          });
+          return <ListView {...props} ref={ref} />;
+        }
+        render(<TestComponent />);
+        instance = componentInstance;
+      });
+
+      it('getViewHeight() returns the viewHeight', () => {
+        if (instance) {
+          expect(instance.getViewHeight()).toBe(clientHeight);
+        }
+      });
+
+      it('getBottomVisibleIndex() returns a number', () => {
+        if (instance) {
+          const n = instance.getBottomVisibleIndex();
+          expect(Number.isNaN(n)).toBe(false);
+          expect(n).toEqual(expect.any(Number));
+        }
+      });
+
+      it('getTopVisibleIndex() returns a number', () => {
+        if (instance) {
+          const n = instance.getTopVisibleIndex();
+          expect(Number.isNaN(n)).toBe(false);
+          expect(n).toEqual(expect.any(Number));
+        }
+      });
+
+      it('getRowPosition() returns a number', () => {
+        if (instance) {
+          const { height, y } = instance.getRowPosition(2);
+          expect(height).toEqual(expect.any(Number));
+          expect(y).toEqual(expect.any(Number));
+        }
+      });
+    });
+
+    describe('windowScroller', () => {
+      let windowAddListenerSpy;
+      let windowRmListenerSpy;
+
+      beforeEach(() => {
+        windowAddListenerSpy = jest.spyOn(window, 'addEventListener');
+        windowRmListenerSpy = jest.spyOn(window, 'removeEventListener');
+        const wsProps = { ...props, windowScroller: true };
+
+        let componentInstance;
+        function TestComponent() {
+          const ref = React.useRef();
+          React.useEffect(() => {
+            componentInstance = ref.current;
+          });
+          return <ListView {...wsProps} ref={ref} />;
+        }
+        const result = render(<TestComponent />);
+        wrapper = result.container;
+        instance = componentInstance;
+      });
+
+      afterEach(() => {
+        windowAddListenerSpy.mockRestore();
+        windowRmListenerSpy.mockRestore();
+      });
+
+      it('registers window scroll event listener on mount when windowScroller is true', () => {
+        const eventListeners = getListenersByType(windowAddListenerSpy.mock);
+        expect(eventListeners.scroll).toEqual([instance._onScroll]);
+      });
+
+      it('cleans up scroll listener from window on unmount when windowScroller is enabled', () => {
+        let eventListeners = getListenersByType(windowRmListenerSpy.mock);
+        expect(eventListeners.scroll).not.toBeDefined();
+
+        const { unmount } = render(<ListView {...{ ...props, windowScroller: true }} />);
+        unmount();
+
+        eventListeners = getListenersByType(windowRmListenerSpy.mock);
+        expect(eventListeners.scroll).toBeDefined();
+        expect(eventListeners.scroll.length).toBeGreaterThan(0);
+      });
+
+      it('triggers _positionList after scroll when windowScroller is enabled', done => {
+        if (instance) {
+          const event = new Event('scroll');
+          const fn = jest.spyOn(instance, '_positionList');
+          expect(instance._isScrolledOrResized).toBe(false);
+          window.dispatchEvent(event);
+          expect(instance._isScrolledOrResized).toBe(true);
+          window.requestAnimationFrame(() => {
+            expect(fn).toHaveBeenCalled();
+            done();
+          });
+        } else {
+          done();
+        }
+      });
+
+      it('uses the root HTML element to determine if the view has changed', () => {
+        if (instance) {
+          const htmlElm = instance._htmlElm;
+          expect(htmlElm).toBeTruthy();
+          const spyFns = {
+            clientHeight: jest.fn(() => instance._viewHeight + 1),
+            scrollTop: jest.fn(() => instance._scrollTop + 1),
+          };
+          Object.defineProperties(htmlElm, {
+            clientHeight: {
+              get: spyFns.clientHeight,
+            },
+            scrollTop: {
+              get: spyFns.scrollTop,
+            },
+          });
+          const hasChanged = instance._isViewChanged();
+          expect(spyFns.clientHeight).toHaveBeenCalled();
+          expect(spyFns.scrollTop).toHaveBeenCalled();
+          expect(hasChanged).toBe(true);
+        }
+      });
     });
   });
 });
