@@ -84,13 +84,21 @@ describe('<KeyValuesTable>', () => {
     { key: 'numericString', value: '12345678901234567890', expected: '12345678901234567890' },
     { key: 'numeric', value: 123456789, expected: '123456789' },
     { key: 'boolean', value: true, expected: 'true' },
-    { key: 'http.request.header.accept', value: ['application/json'], expected: 'application/json' },
+    {
+      key: 'http.request.header.accept',
+      value: ['application/json'],
+      expected: 'application/json',
+    },
     {
       key: 'http.response.header.set_cookie',
       value: JSON.stringify(['name=mos-def', 'code=12345']),
       expected: 'name=mos-def, code=12345',
     },
-    { key: 'jsonkey', value: JSON.stringify(jsonValue), snapshot: true },
+    {
+      key: 'jsonkey',
+      value: JSON.stringify(jsonValue),
+      expected: ['world', 'safe', 'https://example.com', 'true', '42'],
+    },
   ];
 
   it('renders KeyValueTable container with correct structure', () => {
@@ -122,12 +130,13 @@ describe('<KeyValuesTable>', () => {
     expect(valueElements).toHaveLength(data.length);
 
     valueElements.forEach((valueDiv, i) => {
-      if (data[i].expected) {
-        expect(valueDiv).toHaveTextContent(data[i].expected);
-      } else if (data[i].snapshot) {
-        expect(valueDiv).toHaveTextContent('world');
-        expect(valueDiv).toHaveTextContent('safe');
-        expect(valueDiv).toHaveTextContent('42');
+      const expected = data[i].expected;
+      if (Array.isArray(expected)) {
+        expected.forEach(text => {
+          expect(valueDiv).toHaveTextContent(text);
+        });
+      } else {
+        expect(valueDiv).toHaveTextContent(expected);
       }
     });
   });
@@ -139,11 +148,11 @@ describe('<KeyValuesTable>', () => {
         linksGetter={(array, i) =>
           array[i].key === 'span.kind'
             ? [
-                {
-                  url: `http://example.com/?kind=${encodeURIComponent(array[i].value)}`,
-                  text: `More info about ${array[i].value}`,
-                },
-              ]
+              {
+                url: `http://example.com/?kind=${encodeURIComponent(array[i].value)}`,
+                text: `More info about ${array[i].value}`,
+              },
+            ]
             : []
         }
       />
@@ -165,9 +174,9 @@ describe('<KeyValuesTable>', () => {
         linksGetter={(array, i) =>
           array[i].key === 'span.kind'
             ? [
-                { url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 1' },
-                { url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 2' },
-              ]
+              { url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 1' },
+              { url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 2' },
+            ]
             : []
         }
       />
