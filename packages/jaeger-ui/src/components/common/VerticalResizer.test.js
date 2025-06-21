@@ -1,6 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // Licensed under the Apache License, Version 2.0 (the "License");
-// You may not use this file except in compliance with the License.
+// you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 // http://www.apache.org/licenses/LICENSE-2.0
 // Unless required by applicable law or agreed to in writing, software
@@ -82,8 +82,8 @@ describe('<VerticalResizer>', () => {
       const bounds = draggableManagerConfig.getBounds();
       expect(bounds.clientXLeft).toBe(10);
       expect(bounds.width).toBe(100);
-      expect(bounds.maxValue).toBeCloseTo(0.9);
-      expect(bounds.minValue).toBeCloseTo(0.1);
+      expect(bounds.maxValue).toBeCloseTo(1 - props.min);
+      expect(bounds.minValue).toBeCloseTo(1 - props.max);
     });
 
     it('throws if dragged before rendered', () => {
