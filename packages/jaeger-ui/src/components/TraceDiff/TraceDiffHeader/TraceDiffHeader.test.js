@@ -13,18 +13,48 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { Popover } from 'antd';
-
+import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 import TraceDiffHeader from './TraceDiffHeader';
 import { fetchedState } from '../../../constants';
+
+// Mocking TraceHeader to ensure stable test IDs are present
+// This helps in simplifying DOM queries.
+jest.mock('./TraceHeader', () => {
+  return jest.fn(props => (
+    <div data-testid="TraceDiffHeader--traceHeader">
+      <span data-testid="traceName">{props.traceName || 'Select a Trace…'}</span>
+      <span data-testid="TraceDiffHeader--traceAttr--spans">{props.totalSpans}</span>
+      <button type="button" data-testid="TraceDiffHeader--traceTitleChevron" />
+    </div>
+  ));
+});
+
+// Mocking CohortTable to allow interaction and verification
+jest.mock('./CohortTable', () => {
+  return jest.fn(({ cohort, selectTrace, selection }) => (
+    <div>
+      <h1>Service & Operation</h1>
+      <table>
+        <tbody>
+          {cohort.map(trace => (
+            <tr key={trace.id} onClick={() => selectTrace(trace.id)}>
+              <td>{trace.data.traceName}</td>
+              <td>{selection[trace.id]?.label}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  ));
+});
 
 describe('TraceDiffHeader', () => {
   const cohort = [
     {
       data: {
         duration: 0,
-        // purposefully missing spans
         startTime: 0,
         traceName: 'cohort-trace-name-0',
       },
@@ -35,11 +65,7 @@ describe('TraceDiffHeader', () => {
     {
       data: {
         duration: 100,
-        spans: [
-          {
-            spanID: 'trace-1-span-0',
-          },
-        ],
+        spans: [{ spanID: 'trace-1-span-0' }],
         startTime: 100,
         traceName: 'cohort-trace-name-1',
       },
@@ -50,14 +76,7 @@ describe('TraceDiffHeader', () => {
     {
       data: {
         duration: 200,
-        spans: [
-          {
-            spanID: 'trace-2-span-1',
-          },
-          {
-            spanID: 'trace-2-span-2',
-          },
-        ],
+        spans: [{ spanID: 'trace-2-span-1' }, { spanID: 'trace-2-span-2' }],
         startTime: 200,
         traceName: 'cohort-trace-name-2',
       },
@@ -68,17 +87,7 @@ describe('TraceDiffHeader', () => {
     {
       data: {
         duration: 300,
-        spans: [
-          {
-            spanID: 'trace-3-span-1',
-          },
-          {
-            spanID: 'trace-3-span-2',
-          },
-          {
-            spanID: 'trace-3-span-3',
-          },
-        ],
+        spans: [{ spanID: 'trace-3-span-1' }, { spanID: 'trace-3-span-2' }, { spanID: 'trace-3-span-3' }],
         startTime: 300,
         traceName: 'cohort-trace-name-3',
       },
@@ -87,100 +96,150 @@ describe('TraceDiffHeader', () => {
       state: fetchedState.DONE,
     },
   ];
-  const diffSetA = jest.fn();
-  const diffSetB = jest.fn();
-  const props = {
-    a: cohort[1],
-    b: cohort[2],
-    cohort,
-    diffSetA,
-    diffSetB,
-  };
-
-  let wrapper;
-
-  function getPopoverProp(popoverIndex, propName) {
-    return wrapper.find(Popover).at(popoverIndex).prop(propName);
-  }
+  let diffSetA;
+  let diffSetB;
+  let props;
 
   beforeEach(() => {
-    diffSetA.mockReset();
-    diffSetB.mockReset();
-    wrapper = shallow(<TraceDiffHeader {...props} />);
+    diffSetA = jest.fn();
+    diffSetB = jest.fn();
+    props = {
+      a: cohort[1],
+      b: cohort[2],
+      cohort,
+      diffSetA,
+      diffSetB,
+    };
   });
 
-  it('renders as expected', () => {
-    expect(wrapper).toMatchSnapshot();
+  it('renders UI elements and trace names correctly', () => {
+    render(<TraceDiffHeader {...props} />);
+
+    expect(screen.getByText('A', { selector: 'h1' })).toBeInTheDocument();
+    expect(screen.getByText('B', { selector: 'h1' })).toBeInTheDocument();
+    expect(screen.getByText('VS')).toBeInTheDocument();
+
+    const traceHeaders = screen.getAllByTestId('TraceDiffHeader--traceHeader');
+    expect(within(traceHeaders[0]).getByText('cohort-trace-name-1')).toBeInTheDocument();
+    expect(within(traceHeaders[1]).getByText('cohort-trace-name-2')).toBeInTheDocument();
   });
 
   it('handles trace without spans', () => {
-    wrapper.setProps({ a: cohort[0] });
+    const traceWithoutSpans = {
+      data: {
+        duration: 0,
+        startTime: 0,
+        traceName: 'trace-without-spans',
+        // purposefully missing spans array
+      },
+      error: null,
+      id: 'trace-without-spans-id',
+      state: fetchedState.DONE,
+    };
+
+    render(<TraceDiffHeader {...props} a={traceWithoutSpans} />);
+    const traceHeaders = screen.getAllByTestId('TraceDiffHeader--traceHeader');
+    const headerA = traceHeaders[0];
+
+    expect(within(headerA).getByText('trace-without-spans')).toBeInTheDocument();
+    // The mocked component will render an empty string for totalSpans if it's undefined
+    expect(within(headerA).getByTestId('TraceDiffHeader--traceAttr--spans')).toBeEmptyDOMElement();
   });
 
   it('handles absent a', () => {
-    wrapper.setProps({ a: null });
-    expect(wrapper).toMatchSnapshot();
+    render(<TraceDiffHeader {...props} a={null} />);
+    const traceHeaders = screen.getAllByTestId('TraceDiffHeader--traceHeader');
+    expect(within(traceHeaders[0]).getByText('Select a Trace…')).toBeInTheDocument();
+    expect(within(traceHeaders[1]).getByText('cohort-trace-name-2')).toBeInTheDocument();
   });
 
   it('handles absent b', () => {
-    wrapper.setProps({ b: null });
-    expect(wrapper).toMatchSnapshot();
+    render(<TraceDiffHeader {...props} b={null} />);
+    const traceHeaders = screen.getAllByTestId('TraceDiffHeader--traceHeader');
+    expect(within(traceHeaders[0]).getByText('cohort-trace-name-1')).toBeInTheDocument();
+    expect(within(traceHeaders[1]).getByText('Select a Trace…')).toBeInTheDocument();
   });
 
   it('handles absent a & b', () => {
-    wrapper.setProps({ a: null, b: null });
-    expect(wrapper).toMatchSnapshot();
+    render(<TraceDiffHeader {...props} a={null} b={null} />);
+    const placeholders = screen.getAllByText('Select a Trace…');
+    expect(placeholders).toHaveLength(2);
   });
 
-  it('manages visibility correctly', () => {
-    expect(wrapper.state().tableVisible).toBe(null);
-    const popovers = wrapper.find(Popover);
-    expect(popovers.length).toBe(2);
-    popovers.forEach(popover => expect(popover.prop('open')).toBe(false));
+  it('toggles popovers with mutual exclusion', async () => {
+    const user = userEvent.setup();
+    render(<TraceDiffHeader {...props} />);
+    const chevrons = screen.getAllByTestId('TraceDiffHeader--traceTitleChevron');
 
-    getPopoverProp(0, 'onOpenChange')(true);
-    expect(getPopoverProp(0, 'open')).toBe(true);
-    expect(getPopoverProp(1, 'open')).toBe(false);
+    // Initially, no popover is visible
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
 
-    getPopoverProp(1, 'onOpenChange')(true);
-    expect(getPopoverProp(0, 'open')).toBe(false);
-    expect(getPopoverProp(1, 'open')).toBe(true);
+    // 1. Open popover A
+    await user.click(chevrons[0]);
+    await waitFor(
+      () => {
+        const popoverA = screen.getByRole('tooltip');
+        expect(popoverA).toBeVisible();
+      },
+      { timeout: 5000 }
+    );
 
-    // repeat onOpenChange call to test that visibility remains correct
-    getPopoverProp(1, 'onOpenChange')(true);
-    expect(getPopoverProp(0, 'open')).toBe(false);
-    expect(getPopoverProp(1, 'open')).toBe(true);
+    // Verify popover A content
+    const currentPopover = screen.getByRole('tooltip');
+    const traceARow = within(currentPopover).getByText('cohort-trace-name-1').closest('tr');
+    expect(within(traceARow).getByText('A')).toBeInTheDocument();
 
-    getPopoverProp(1, 'onOpenChange')(false);
-    wrapper.find(Popover).forEach(popover => expect(popover.prop('open')).toBe(false));
+    // 2. Open popover B - this should close A and open B
+    await user.click(chevrons[1]);
+
+    // Wait for popover transition to complete
+    await waitFor(
+      () => {
+        const popoverB = screen.getByRole('tooltip');
+        expect(popoverB).toBeVisible();
+
+        // Verify popover B content (popover A should be gone by mutual exclusion)
+        const traceBRow = within(popoverB).getByText('cohort-trace-name-2').closest('tr');
+        expect(within(traceBRow).getByText('B')).toBeInTheDocument();
+      },
+      { timeout: 5000 }
+    );
+
+    // Verify that we only have one tooltip (popover B)
+    const tooltips = screen.getAllByRole('tooltip');
+    expect(tooltips).toHaveLength(1);
+
+    // 3. Close popover B
+    await user.click(chevrons[1]);
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      },
+      { timeout: 5000 }
+    );
   });
 
-  describe('bound functions to set a & b and passes them to Popover JSX props correctly', () => {
-    const shouldCall = {
-      a: diffSetA,
-      b: diffSetB,
-    };
-    const shouldNotCall = {
-      a: diffSetB,
-      b: diffSetA,
-    };
+  it('calls diffSetA or diffSetB when a new trace is selected via popover', async () => {
+    const user = userEvent.setup();
+    render(<TraceDiffHeader {...props} />);
+    const chevrons = screen.getAllByTestId('TraceDiffHeader--traceTitleChevron');
 
-    ['a', 'b'].forEach(aOrB => {
-      ['title', 'content'].forEach(popoverSection => {
-        it(`sets trace ${aOrB} from popover ${popoverSection}`, () => {
-          const selectTraceArgument = `aOrB: ${aOrB}, popoverSection: ${popoverSection}`;
-          wrapper.setState({ tableVisible: aOrB });
-          wrapper
-            .find(Popover)
-            .at(Number(aOrB === 'b'))
-            .prop(popoverSection)
-            .props.selectTrace(selectTraceArgument);
+    // Test selection for A
+    await user.click(chevrons[0]);
+    const popoverA = await screen.findByRole('tooltip');
+    await user.click(within(popoverA).getByText('cohort-trace-name-3'));
 
-          expect(shouldCall[aOrB]).toHaveBeenCalledWith(selectTraceArgument);
-          expect(shouldNotCall[aOrB]).not.toHaveBeenCalled();
-          expect(wrapper.state().tableVisible).toBe(null);
-        });
-      });
-    });
+    expect(diffSetA).toHaveBeenCalledWith('cohort-id-3');
+    expect(diffSetA).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument(), { timeout: 5000 });
+
+    // Test selection for B
+    await user.click(chevrons[1]);
+    const popoverB = await screen.findByRole('tooltip');
+    await user.click(within(popoverB).getByText('cohort-trace-name-0'));
+
+    expect(diffSetB).toHaveBeenCalledWith('cohort-id-0');
+    expect(diffSetB).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument(), { timeout: 5000 });
   });
 });
