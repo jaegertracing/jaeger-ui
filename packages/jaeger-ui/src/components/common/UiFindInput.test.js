@@ -60,8 +60,16 @@ describe('UiFind', () => {
 
   describe('rendering', () => {
     it('renders as expected', () => {
-      const { container } = render(<UnconnectedUiFindInput {...props} />);
-      expect(container).toMatchSnapshot();
+      render(<UnconnectedUiFindInput {...props} />);
+
+      // Test that the input is rendered with correct placeholder
+      expect(screen.getByPlaceholderText('Find...')).toBeInTheDocument();
+
+      // Test that the input has empty value when uiFind is undefined
+      expect(screen.getByPlaceholderText('Find...')).toHaveValue('');
+
+      // Test that no clear icon is present when allowClear is not set
+      expect(screen.queryByTestId('clear-icon')).not.toBeInTheDocument();
     });
 
     it('renders props.uiFind when state.ownInputValue is `undefined`', () => {
