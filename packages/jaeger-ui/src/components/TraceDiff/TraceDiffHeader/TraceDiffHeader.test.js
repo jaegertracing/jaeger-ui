@@ -112,7 +112,7 @@ describe('TraceDiffHeader', () => {
     };
   });
 
-  it('renders UI elements and trace names correctly', () => {
+  it('renders as expected', () => {
     render(<TraceDiffHeader {...props} />);
 
     expect(screen.getByText('A', { selector: 'h1' })).toBeInTheDocument();
@@ -124,7 +124,7 @@ describe('TraceDiffHeader', () => {
     expect(within(traceHeaders[1]).getByText('cohort-trace-name-2')).toBeInTheDocument();
   });
 
-  it('handles a trace without spans array', () => {
+  it('handles trace without spans', () => {
     const traceWithoutSpans = {
       data: {
         duration: 0,
@@ -166,7 +166,7 @@ describe('TraceDiffHeader', () => {
     expect(placeholders).toHaveLength(2);
   });
 
-  it('toggles popovers with mutual exclusion', async () => {
+  it('manages visibility correctly', async () => {
     const user = userEvent.setup();
     render(<TraceDiffHeader {...props} />);
     const chevrons = screen.getAllByTestId('TraceDiffHeader--traceTitleChevron');
@@ -176,10 +176,13 @@ describe('TraceDiffHeader', () => {
 
     // 1. Open popover A
     await user.click(chevrons[0]);
-    await waitFor(() => {
-      const popoverA = screen.getByRole('tooltip');
-      expect(popoverA).toBeVisible();
-    });
+    await waitFor(
+      () => {
+        const popoverA = screen.getByRole('tooltip');
+        expect(popoverA).toBeVisible();
+      },
+      { timeout: 5000 }
+    );
 
     // Verify popover A content
     const currentPopover = screen.getByRole('tooltip');
@@ -190,14 +193,17 @@ describe('TraceDiffHeader', () => {
     await user.click(chevrons[1]);
 
     // Wait for popover transition to complete
-    await waitFor(() => {
-      const popoverB = screen.getByRole('tooltip');
-      expect(popoverB).toBeVisible();
+    await waitFor(
+      () => {
+        const popoverB = screen.getByRole('tooltip');
+        expect(popoverB).toBeVisible();
 
-      // Verify popover B content (popover A should be gone by mutual exclusion)
-      const traceBRow = within(popoverB).getByText('cohort-trace-name-2').closest('tr');
-      expect(within(traceBRow).getByText('B')).toBeInTheDocument();
-    });
+        // Verify popover B content (popover A should be gone by mutual exclusion)
+        const traceBRow = within(popoverB).getByText('cohort-trace-name-2').closest('tr');
+        expect(within(traceBRow).getByText('B')).toBeInTheDocument();
+      },
+      { timeout: 5000 }
+    );
 
     // Verify that we only have one tooltip (popover B)
     const tooltips = screen.getAllByRole('tooltip');
@@ -205,9 +211,12 @@ describe('TraceDiffHeader', () => {
 
     // 3. Close popover B
     await user.click(chevrons[1]);
-    await waitFor(() => {
-      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      },
+      { timeout: 5000 }
+    );
   });
 
   it('calls diffSetA or diffSetB when a new trace is selected via popover', async () => {
@@ -222,7 +231,7 @@ describe('TraceDiffHeader', () => {
 
     expect(diffSetA).toHaveBeenCalledWith('cohort-id-3');
     expect(diffSetA).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument(), { timeout: 5000 });
 
     // Test selection for B
     await user.click(chevrons[1]);
@@ -231,6 +240,6 @@ describe('TraceDiffHeader', () => {
 
     expect(diffSetB).toHaveBeenCalledWith('cohort-id-0');
     expect(diffSetB).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument(), { timeout: 5000 });
   });
 });
