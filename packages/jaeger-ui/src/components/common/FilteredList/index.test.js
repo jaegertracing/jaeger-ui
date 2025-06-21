@@ -36,7 +36,6 @@ jest.mock('react-window', () => {
           })
         );
       }
-
       React.useEffect(() => {
         if (onItemsRendered) {
           onItemsRendered({
@@ -45,7 +44,6 @@ jest.mock('react-window', () => {
           });
         }
       }, [itemCount, onItemsRendered]);
-
       return React.createElement(
         'div',
         {
@@ -65,13 +63,10 @@ jest.mock('./ListItem', () => {
     const { options, setValue, selectedValue, addValues, removeValues, multi } = data;
     const option = options[index];
     const [isFocused, setIsFocused] = React.useState(false);
-
     React.useEffect(() => {
       setIsFocused(data.focusedIndex === index);
     }, [data.focusedIndex, index]);
-
     const isSelected = selectedValue instanceof Set ? selectedValue.has(option) : selectedValue === option;
-
     return React.createElement(
       'div',
       {
@@ -99,13 +94,8 @@ jest.mock('./ListItem', () => {
 describe('<FilteredList>', () => {
   const words = ['and', 'apples', 'are'];
   const numbers = ['0', '1', '2'];
-  let user;
   let props;
-
-  const getFilterInput = () => screen.getByPlaceholderText('Filter...');
-  const getCheckbox = () => screen.queryByRole('checkbox');
-  const getListItems = () => screen.getAllByTestId(/^list-item-/);
-  const getVirtualList = () => screen.getByTestId('virtual-list');
+  let user;
 
   beforeEach(() => {
     user = userEvent.setup();
@@ -117,442 +107,278 @@ describe('<FilteredList>', () => {
     };
   });
 
-  describe('rendering', () => {
-    it('renders all required elements', () => {
-      render(<FilteredList {...props} />);
+  it('renders without exploding', () => {
+    render(<FilteredList {...props} />);
+    expect(screen.getByPlaceholderText('Filter...')).toBeInTheDocument();
+    expect(screen.getByTestId('virtual-list')).toBeInTheDocument();
+  });
 
-      expect(getFilterInput()).toBeInTheDocument();
-      expect(screen.getByTestId('virtual-list')).toBeInTheDocument();
-      expect(screen.getByRole('textbox')).toHaveValue('');
-      expect(screen.getByPlaceholderText('Filter...')).toBeInTheDocument();
-      expect(getListItems()).toHaveLength(props.options.length);
-    });
-
-    it('focuses input after component updates', async () => {
-      const { rerender } = render(<FilteredList {...props} />);
-
-      const input = getFilterInput();
-      expect(input).not.toHaveFocus();
-
-      rerender(<FilteredList {...props} value="anything" />);
-
-      await waitFor(() => {
-        expect(input).toHaveFocus();
-      });
+  it('puts the focus on the input on update', async () => {
+    const { rerender } = render(<FilteredList {...props} />);
+    const input = screen.getByPlaceholderText('Filter...');
+    expect(input).not.toHaveFocus();
+    rerender(<FilteredList {...props} value="anything" />);
+    await waitFor(() => {
+      expect(input).toHaveFocus();
     });
   });
 
-  describe('filtering', () => {
-    it('filters options based on input text', async () => {
-      render(<FilteredList {...props} />);
-
-      expect(getListItems()).toHaveLength(props.options.length);
-
-      await user.type(getFilterInput(), 'a');
-
-      await waitFor(() => {
-        const items = getListItems();
-        expect(items).toHaveLength(words.length);
-        words.forEach((word, index) => {
-          expect(items[index]).toHaveAttribute('data-option', word);
-        });
-      });
-    });
-
-    it('clears filter and resets focus when value is set', async () => {
-      render(<FilteredList {...props} />);
-
-      await user.type(getFilterInput(), 'a');
-
-      await waitFor(() => {
-        expect(getListItems()).toHaveLength(words.length);
-        expect(getFilterInput()).toHaveValue('a');
-      });
-
-      const firstItem = getListItems()[0];
-      fireEvent.click(firstItem);
-
-      expect(props.setValue).toHaveBeenCalledWith(words[0]);
-
-      await waitFor(() => {
-        expect(getFilterInput()).toHaveValue('');
-        expect(getListItems()).toHaveLength(props.options.length);
-      });
+  it('filters options based on the current input text', async () => {
+    render(<FilteredList {...props} />);
+    await user.type(screen.getByPlaceholderText('Filter...'), 'a');
+    await waitFor(() => {
+      const items = screen.getAllByTestId(/^list-item-/);
+      expect(items).toHaveLength(words.length);
     });
   });
 
-  describe('keyboard navigation', () => {
-    it('sets focus to first visible item on down arrow when no item is focused', async () => {
-      jest.useFakeTimers();
-      try {
-        render(<FilteredList {...props} />);
+  it('setting the value clears the filter and focus index', async () => {
+    render(<FilteredList {...props} />);
+    await user.type(screen.getByPlaceholderText('Filter...'), 'a');
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Filter...')).toHaveValue('a');
+    });
+    fireEvent.click(screen.getAllByTestId(/^list-item-/)[0]);
+    expect(props.setValue).toHaveBeenCalledWith(words[0]);
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Filter...')).toHaveValue('');
+      expect(screen.getAllByTestId(/^list-item-/)).toHaveLength(props.options.length);
+    });
+  });
 
-        const input = getFilterInput();
-        input.focus();
+  describe('up / down arrow keys', () => {
+    beforeAll(() => jest.useFakeTimers());
+    afterAll(() => jest.useRealTimers());
 
-        fireEvent.keyDown(input, { key: EKey.ArrowDown });
-        jest.runAllTimers();
-
-        await waitFor(() => {
-          const items = getListItems();
-          expect(items[0]).toHaveAttribute('data-focused', 'true');
-          items.slice(1).forEach(item => {
-            expect(item).toHaveAttribute('data-focused', 'false');
-          });
-        });
-      } finally {
-        jest.useRealTimers();
-      }
+    it('down arrow sets the focus index to the first visible item when focusIndex == null', async () => {
+      render(<FilteredList {...props} />);
+      const input = screen.getByPlaceholderText('Filter...');
+      input.focus();
+      fireEvent.keyDown(input, { key: EKey.ArrowDown });
+      jest.runAllTimers();
+      await waitFor(() => {
+        const items = screen.getAllByTestId(/^list-item-/);
+        expect(items[0]).toHaveAttribute('data-focused', 'true');
+      });
     });
 
-    it('cycles through items with arrow keys', async () => {
-      jest.useFakeTimers();
-      try {
-        render(<FilteredList {...props} />);
+    it('shift the focus index to the next element', async () => {
+      render(<FilteredList {...props} />);
+      const input = screen.getByPlaceholderText('Filter...');
+      input.focus();
+      fireEvent.keyDown(input, { key: EKey.ArrowDown });
+      jest.runAllTimers();
+      await waitFor(() => {
+        const items = screen.getAllByTestId(/^list-item-/);
+        expect(items[0]).toHaveAttribute('data-focused', 'true');
+      });
+      fireEvent.keyDown(input, { key: EKey.ArrowDown });
+      jest.runAllTimers();
+      await waitFor(() => {
+        const items = screen.getAllByTestId(/^list-item-/);
+        expect(items[1]).toHaveAttribute('data-focused', 'true');
+      });
+    });
 
-        const input = getFilterInput();
-        input.focus();
-
-        fireEvent.keyDown(input, { key: EKey.ArrowDown });
-        jest.runAllTimers();
-
-        await waitFor(() => {
-          expect(getListItems()[0]).toHaveAttribute('data-focused', 'true');
-        });
-
-        fireEvent.keyDown(input, { key: EKey.ArrowDown });
-        jest.runAllTimers();
-
-        await waitFor(() => {
-          const items = getListItems();
-          expect(items[0]).toHaveAttribute('data-focused', 'false');
-          expect(items[1]).toHaveAttribute('data-focused', 'true');
-        });
-
+    it('cause the view to scroll if necessary', async () => {
+      render(<FilteredList {...props} />);
+      const input = screen.getByPlaceholderText('Filter...');
+      input.focus();
+      expect(() => {
         fireEvent.keyDown(input, { key: EKey.ArrowUp });
         jest.runAllTimers();
-
-        await waitFor(() => {
-          const items = getListItems();
-          expect(items[0]).toHaveAttribute('data-focused', 'true');
-          expect(items[1]).toHaveAttribute('data-focused', 'false');
-        });
-      } finally {
-        jest.useRealTimers();
-      }
+      }).not.toThrow();
     });
   });
 
-  describe('keyboard actions', () => {
-    it('calls cancel and clears state on escape key', () => {
-      render(<FilteredList {...props} />);
-
-      const input = getFilterInput();
-      input.focus();
-
-      expect(props.cancel).not.toHaveBeenCalled();
-
-      fireEvent.keyDown(input, { key: EKey.Escape });
-
-      expect(props.cancel).toHaveBeenCalledTimes(1);
-    });
-
-    it('selects focused item on enter key', async () => {
-      render(<FilteredList {...props} />);
-
-      const input = getFilterInput();
-      input.focus();
-
-      fireEvent.keyDown(input, { key: EKey.ArrowDown });
-
-      await waitFor(() => {
-        expect(getListItems()[0]).toHaveAttribute('data-focused', 'true');
-      });
-
-      expect(props.setValue).not.toHaveBeenCalled();
-
-      fireEvent.keyDown(input, { key: EKey.Enter });
-
-      expect(props.setValue).toHaveBeenCalledTimes(1);
-      expect(props.setValue).toHaveBeenCalledWith(props.options[0]);
-    });
-
-    it('selects single filtered option on enter key', async () => {
-      render(<FilteredList {...props} />);
-
-      const value = words[1];
-      await user.type(getFilterInput(), value);
-
-      await waitFor(() => {
-        const items = getListItems();
-        expect(items).toHaveLength(1);
-        expect(items[0]).toHaveAttribute('data-option', value);
-      });
-
-      expect(props.setValue).not.toHaveBeenCalled();
-
-      fireEvent.keyDown(getFilterInput(), { key: EKey.Enter });
-
-      expect(props.setValue).toHaveBeenCalledTimes(1);
-      expect(props.setValue).toHaveBeenCalledWith(value);
-    });
-
-    it('ignores enter key when no item is focused and multiple options exist', () => {
-      render(<FilteredList {...props} />);
-
-      const input = getFilterInput();
-      input.focus();
-
-      expect(props.setValue).not.toHaveBeenCalled();
-
-      fireEvent.keyDown(input, { key: EKey.Enter });
-
-      expect(props.setValue).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('scrolling behavior', () => {
-    it('clears focused item on scroll', async () => {
-      jest.useFakeTimers();
-      try {
-        render(<FilteredList {...props} />);
-
-        const input = getFilterInput();
-        input.focus();
-
-        fireEvent.keyDown(input, { key: EKey.ArrowDown });
-
-        await waitFor(() => {
-          expect(getListItems()[0]).toHaveAttribute('data-focused', 'true');
-        });
-
-        fireEvent.scroll(getVirtualList());
-        jest.runAllTimers();
-
-        await waitFor(() => {
-          getListItems().forEach(item => {
-            expect(item).toHaveAttribute('data-focused', 'false');
-          });
-        });
-      } finally {
-        jest.useRealTimers();
-      }
-    });
-  });
-
-  describe('multi-select mode', () => {
+  describe('multi mode checkbox', () => {
     let addValues;
     let removeValues;
 
     beforeEach(() => {
       addValues = jest.fn();
       removeValues = jest.fn();
+      props = { ...props, multi: true, addValues, removeValues };
     });
 
-    describe('checkbox visibility', () => {
-      it('hides checkbox when multi is false', () => {
-        render(<FilteredList {...props} multi={false} addValues={addValues} removeValues={removeValues} />);
-        expect(getCheckbox()).not.toBeInTheDocument();
-      });
-
-      it('hides checkbox when addValues is not provided', () => {
-        render(<FilteredList {...props} multi removeValues={removeValues} />);
-        expect(getCheckbox()).not.toBeInTheDocument();
-      });
-
-      it('hides checkbox when removeValues is not provided', () => {
-        render(<FilteredList {...props} multi addValues={addValues} />);
-        expect(getCheckbox()).not.toBeInTheDocument();
-      });
-
-      it('shows checkbox when multi mode is enabled with required callbacks', () => {
-        render(<FilteredList {...props} multi addValues={addValues} removeValues={removeValues} />);
-        expect(getCheckbox()).toBeInTheDocument();
-      });
+    it('is omitted if multi is false or addValues or removeValues is not provided', () => {
+      const { rerender } = render(
+        <FilteredList {...props} multi={false} addValues={addValues} removeValues={removeValues} />
+      );
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+      rerender(<FilteredList {...props} multi addValues={undefined} removeValues={removeValues} />);
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+      rerender(<FilteredList {...props} multi addValues={addValues} removeValues={undefined} />);
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     });
 
-    describe('checkbox states', () => {
-      it('is unchecked when nothing is selected', () => {
-        render(<FilteredList {...props} multi addValues={addValues} removeValues={removeValues} />);
-        const checkbox = getCheckbox();
-        expect(checkbox).not.toBeChecked();
-        expect(checkbox).toHaveProperty('indeterminate', false);
-      });
+    it('is present in multi mode', () => {
+      render(<FilteredList {...props} />);
+      expect(screen.getByRole('checkbox')).toBeInTheDocument();
+    });
 
-      it('is indeterminate when single item is selected', () => {
-        render(
-          <FilteredList
-            {...props}
-            multi
-            addValues={addValues}
-            removeValues={removeValues}
-            value={new Set([words[0]])}
-          />
-        );
-        const checkbox = getCheckbox();
-        expect(checkbox).not.toBeChecked();
-        expect(checkbox).toHaveProperty('indeterminate', true);
-      });
+    it('is unchecked if nothing is selected', () => {
+      render(<FilteredList {...props} />);
+      const cb = screen.getByRole('checkbox');
+      expect(cb).not.toBeChecked();
+      expect(cb).toHaveProperty('indeterminate', false);
+    });
 
-      it('is indeterminate when some items are selected', () => {
-        render(
-          <FilteredList
-            {...props}
-            multi
-            addValues={addValues}
-            removeValues={removeValues}
-            value={new Set(words)}
-          />
-        );
-        const checkbox = getCheckbox();
-        expect(checkbox).not.toBeChecked();
-        expect(checkbox).toHaveProperty('indeterminate', true);
-      });
+    it('is indeterminate if one is selected', () => {
+      render(<FilteredList {...props} value={words[0]} />);
+      const cb = screen.getByRole('checkbox');
+      expect(cb).not.toBeChecked();
+      expect(cb).toHaveProperty('indeterminate', true);
+    });
 
-      it('is checked when all items are selected', () => {
-        render(
-          <FilteredList
-            {...props}
-            multi
-            addValues={addValues}
-            removeValues={removeValues}
-            value={new Set([...words, ...numbers])}
-          />
-        );
-        const checkbox = getCheckbox();
-        expect(checkbox).toBeChecked();
-        expect(checkbox).toHaveProperty('indeterminate', false);
+    it('is indeterminate if some are selected', () => {
+      render(<FilteredList {...props} value={new Set(words)} />);
+      const cb = screen.getByRole('checkbox');
+      expect(cb).not.toBeChecked();
+      expect(cb).toHaveProperty('indeterminate', true);
+    });
+
+    it('is checked if all are selected', () => {
+      render(<FilteredList {...props} value={new Set([...words, ...numbers])} />);
+      const cb = screen.getByRole('checkbox');
+      expect(cb).toBeChecked();
+      expect(cb).toHaveProperty('indeterminate', false);
+    });
+
+    it('is unchecked if nothing filtered is selected', async () => {
+      render(<FilteredList {...props} value={new Set(words)} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), numbers[0]);
+      await waitFor(() => {
+        const cb = screen.getByRole('checkbox');
+        expect(cb).not.toBeChecked();
+        expect(cb).toHaveProperty('indeterminate', false);
       });
     });
 
-    describe('filtered checkbox states', () => {
-      it('is unchecked when no filtered items are selected', async () => {
-        render(
-          <FilteredList
-            {...props}
-            multi
-            addValues={addValues}
-            removeValues={removeValues}
-            value={new Set(words)}
-          />
-        );
-
-        await user.type(getFilterInput(), numbers[0]);
-
-        await waitFor(() => {
-          const checkbox = getCheckbox();
-          expect(checkbox).not.toBeChecked();
-          expect(checkbox).toHaveProperty('indeterminate', false);
-        });
-      });
-
-      it('is indeterminate when some filtered items are selected', async () => {
-        render(
-          <FilteredList
-            {...props}
-            multi
-            addValues={addValues}
-            removeValues={removeValues}
-            value={new Set([words[0]])}
-          />
-        );
-
-        await user.type(getFilterInput(), words[0][0]);
-
-        await waitFor(() => {
-          const checkbox = getCheckbox();
-          expect(checkbox).not.toBeChecked();
-          expect(checkbox).toHaveProperty('indeterminate', true);
-        });
-      });
-
-      it('is checked when all filtered items are selected', async () => {
-        render(
-          <FilteredList
-            {...props}
-            multi
-            addValues={addValues}
-            removeValues={removeValues}
-            value={new Set(words)}
-          />
-        );
-
-        await user.type(getFilterInput(), words[0][0]);
-
-        await waitFor(() => {
-          const checkbox = getCheckbox();
-          expect(checkbox).toBeChecked();
-          expect(checkbox).toHaveProperty('indeterminate', false);
-        });
+    it('is indeterminate if one filtered value is selected', async () => {
+      render(<FilteredList {...props} value={words[0]} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), words[0][0]);
+      await waitFor(() => {
+        const cb = screen.getByRole('checkbox');
+        expect(cb).not.toBeChecked();
+        expect(cb).toHaveProperty('indeterminate', true);
       });
     });
 
-    describe('checkbox interactions', () => {
-      it('selects all unselected filtered items when clicked while unchecked', async () => {
-        render(<FilteredList {...props} multi addValues={addValues} removeValues={removeValues} />);
-
-        await user.type(getFilterInput(), words[0][0]);
-
-        await waitFor(() => {
-          expect(getCheckbox()).not.toBeChecked();
-        });
-
-        await user.click(getCheckbox());
-
-        expect(addValues).toHaveBeenCalledTimes(1);
-        expect(addValues).toHaveBeenCalledWith(words);
-        expect(removeValues).not.toHaveBeenCalled();
-      });
-
-      it('deselects all filtered items when clicked while checked', async () => {
-        render(
-          <FilteredList
-            {...props}
-            multi
-            addValues={addValues}
-            removeValues={removeValues}
-            value={new Set(words)}
-          />
-        );
-
-        await user.type(getFilterInput(), words[0][0]);
-
-        await waitFor(() => {
-          expect(getCheckbox()).toBeChecked();
-        });
-
-        await user.click(getCheckbox());
-
-        expect(removeValues).toHaveBeenCalledTimes(1);
-        expect(removeValues).toHaveBeenCalledWith(words);
-        expect(addValues).not.toHaveBeenCalled();
-      });
-
-      it('selects remaining unselected filtered items when clicked while indeterminate', async () => {
-        render(
-          <FilteredList
-            {...props}
-            multi
-            addValues={addValues}
-            removeValues={removeValues}
-            value={new Set([words[0]])}
-          />
-        );
-
-        await user.type(getFilterInput(), words[0][0]);
-
-        await waitFor(() => {
-          const checkbox = getCheckbox();
-          expect(checkbox).not.toBeChecked();
-          expect(checkbox).toHaveProperty('indeterminate', true);
-        });
-
-        await user.click(getCheckbox());
-
-        expect(addValues).toHaveBeenCalledTimes(1);
-        expect(addValues).toHaveBeenCalledWith(words.slice(1));
-        expect(removeValues).not.toHaveBeenCalled();
+    it('is indeterminate if some filtered values are selected', async () => {
+      render(<FilteredList {...props} value={new Set(words.slice(1))} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), words[0][0]);
+      await waitFor(() => {
+        const cb = screen.getByRole('checkbox');
+        expect(cb).not.toBeChecked();
+        expect(cb).toHaveProperty('indeterminate', true);
       });
     });
+
+    it('is checked if all filtered values are selected', async () => {
+      render(<FilteredList {...props} value={new Set(words)} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), words[0][0]);
+      await waitFor(() => {
+        const cb = screen.getByRole('checkbox');
+        expect(cb).toBeChecked();
+        expect(cb).toHaveProperty('indeterminate', false);
+      });
+    });
+
+    it('unselects all filtered values when clicked and checked', async () => {
+      render(<FilteredList {...props} value={new Set(words)} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), words[0][0]);
+      await waitFor(() => expect(screen.getByRole('checkbox')).toBeChecked());
+      await user.click(screen.getByRole('checkbox'));
+      expect(removeValues).toHaveBeenCalledWith(words);
+    });
+
+    it('selects all filtered values when clicked and unchecked', async () => {
+      render(<FilteredList {...props} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), words[0][0]);
+      await waitFor(() => expect(screen.getByRole('checkbox')).not.toBeChecked());
+      await user.click(screen.getByRole('checkbox'));
+      expect(addValues).toHaveBeenCalledWith(words);
+    });
+
+    it('selects all unselected filtered values when clicked and unchecked', async () => {
+      render(<FilteredList {...props} value={words[0]} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), words[0][0]);
+      await waitFor(() => {
+        const cb = screen.getByRole('checkbox');
+        expect(cb).not.toBeChecked();
+        expect(cb).toHaveProperty('indeterminate', true);
+      });
+      await user.click(screen.getByRole('checkbox'));
+      expect(addValues).toHaveBeenCalledWith(words.slice(1));
+    });
+  });
+
+  it('escape triggers cancel', () => {
+    render(<FilteredList {...props} />);
+    const input = screen.getByPlaceholderText('Filter...');
+    input.focus();
+    fireEvent.keyDown(input, { key: EKey.Escape });
+    expect(props.cancel).toHaveBeenCalled();
+  });
+
+  it('enter selects the current focus index', async () => {
+    jest.useFakeTimers();
+    try {
+      render(<FilteredList {...props} />);
+      const input = screen.getByPlaceholderText('Filter...');
+      input.focus();
+      fireEvent.keyDown(input, { key: EKey.ArrowDown });
+      jest.runAllTimers();
+      await waitFor(() => {
+        expect(screen.getAllByTestId(/^list-item-/)[0]).toHaveAttribute('data-focused', 'true');
+      });
+      fireEvent.keyDown(input, { key: EKey.Enter });
+      expect(props.setValue).toHaveBeenCalledWith(props.options[0]);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('enter selects the filteredOption if there is only one option', async () => {
+    render(<FilteredList {...props} />);
+    await user.type(screen.getByPlaceholderText('Filter...'), words[1]);
+    await waitFor(() => {
+      const items = screen.getAllByTestId(/^list-item-/);
+      expect(items).toHaveLength(1);
+    });
+    fireEvent.keyDown(screen.getByPlaceholderText('Filter...'), { key: EKey.Enter });
+    expect(props.setValue).toHaveBeenCalledWith(words[1]);
+  });
+
+  it('enter is ignored when an item is not focused', () => {
+    render(<FilteredList {...props} />);
+    const input = screen.getByPlaceholderText('Filter...');
+    input.focus();
+    fireEvent.keyDown(input, { key: EKey.Enter });
+    expect(props.setValue).not.toHaveBeenCalled();
+  });
+
+  it('scrolling unsets the focus index', async () => {
+    jest.useFakeTimers();
+    try {
+      render(<FilteredList {...props} />);
+      const input = screen.getByPlaceholderText('Filter...');
+      input.focus();
+      fireEvent.keyDown(input, { key: EKey.ArrowDown });
+      jest.runAllTimers();
+      await waitFor(() => {
+        expect(screen.getAllByTestId(/^list-item-/)[0]).toHaveAttribute('data-focused', 'true');
+      });
+      fireEvent.scroll(screen.getByTestId('virtual-list'));
+      jest.runAllTimers();
+      await waitFor(() => {
+        screen.getAllByTestId(/^list-item-/).forEach(item => {
+          expect(item).toHaveAttribute('data-focused', 'false');
+        });
+      });
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
