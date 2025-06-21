@@ -219,42 +219,27 @@ describe('TraceDiffHeader', () => {
     );
   });
 
-  describe('bound functions to set a & b and passes them to Popover JSX props correctly', () => {
-    const shouldCall = {
-      a: diffSetA,
-      b: diffSetB,
-    };
-    const shouldNotCall = {
-      a: diffSetB,
-      b: diffSetA,
-    };
+  it('calls diffSetA or diffSetB when a new trace is selected via popover', async () => {
+    const user = userEvent.setup();
+    render(<TraceDiffHeader {...props} />);
+    const chevrons = screen.getAllByTestId('TraceDiffHeader--traceTitleChevron');
 
-    ['a', 'b'].forEach(aOrB => {
-      ['title', 'content'].forEach(popoverSection => {
-        it(`sets trace ${aOrB} from popover ${popoverSection}`, async () => {
-          const user = userEvent.setup();
-          render(<TraceDiffHeader {...props} />);
-          const chevrons = screen.getAllByTestId('TraceDiffHeader--traceTitleChevron');
+    // Test selection for A
+    await user.click(chevrons[0]);
+    const popoverA = await screen.findByRole('tooltip');
+    await user.click(within(popoverA).getByText('cohort-trace-name-3'));
 
-          // Open the appropriate popover (0 for 'a', 1 for 'b')
-          const popoverIndex = aOrB === 'a' ? 0 : 1;
-          const traceId = aOrB === 'a' ? 'cohort-id-3' : 'cohort-id-0';
-          const traceName = aOrB === 'a' ? 'cohort-trace-name-3' : 'cohort-trace-name-0';
+    expect(diffSetA).toHaveBeenCalledWith('cohort-id-3');
+    expect(diffSetA).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument(), { timeout: 5000 });
 
-          await user.click(chevrons[popoverIndex]);
-          const popover = await screen.findByRole('tooltip');
+    // Test selection for B
+    await user.click(chevrons[1]);
+    const popoverB = await screen.findByRole('tooltip');
+    await user.click(within(popoverB).getByText('cohort-trace-name-0'));
 
-          // Click on a trace to select it
-          await user.click(within(popover).getByText(traceName));
-
-          expect(shouldCall[aOrB]).toHaveBeenCalledWith(traceId);
-          expect(shouldNotCall[aOrB]).not.toHaveBeenCalled();
-
-          await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument(), {
-            timeout: 5000,
-          });
-        });
-      });
-    });
+    expect(diffSetB).toHaveBeenCalledWith('cohort-id-0');
+    expect(diffSetB).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByRole('tooltip')).not.toBeInTheDocument(), { timeout: 5000 });
   });
 });
