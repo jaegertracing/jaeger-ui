@@ -112,7 +112,7 @@ describe('TraceDiffHeader', () => {
     };
   });
 
-  it('renders as expected', () => {
+  it('renders UI elements and trace names correctly', () => {
     render(<TraceDiffHeader {...props} />);
 
     expect(screen.getByText('A', { selector: 'h1' })).toBeInTheDocument();
@@ -166,7 +166,7 @@ describe('TraceDiffHeader', () => {
     expect(placeholders).toHaveLength(2);
   });
 
-  it('manages visibility correctly', async () => {
+  it('toggles popovers with mutual exclusion', async () => {
     const user = userEvent.setup();
     render(<TraceDiffHeader {...props} />);
     const chevrons = screen.getAllByTestId('TraceDiffHeader--traceTitleChevron');
