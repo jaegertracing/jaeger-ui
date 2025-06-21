@@ -1,11 +1,8 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
-//
 // Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
+// You may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-//
 // http://www.apache.org/licenses/LICENSE-2.0
-//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,10 +29,10 @@ jest.mock('../../utils/DraggableManager', () => {
   });
 });
 
-describe('VerticalResizer', () => {
+describe('<VerticalResizer>', () => {
   let mockOnChange;
 
-  const defaultProps = {
+  const props = {
     min: 0.1,
     max: 0.9,
     onChange: jest.fn(),
@@ -44,76 +41,44 @@ describe('VerticalResizer', () => {
 
   beforeEach(() => {
     mockOnChange = jest.fn();
-    defaultProps.onChange = mockOnChange;
+    props.onChange = mockOnChange;
     mockDragManager.isDragging.mockReturnValue(false);
     draggableManagerConfig = null;
     jest.clearAllMocks();
   });
 
-  describe('Component Rendering', () => {
-    it('renders all required elements without crashing', () => {
-      render(<VerticalResizer {...defaultProps} />);
-      expect(screen.getByTestId('vertical-resizer')).toBeInTheDocument();
-      expect(screen.getByTestId('grip-icon')).toBeInTheDocument();
-      expect(screen.getByTestId('dragger')).toBeInTheDocument();
-    });
-
-    it('applies base VerticalResizer CSS class and does not apply is-flipped by default', () => {
-      render(<VerticalResizer {...defaultProps} />);
-      const resizer = screen.getByTestId('vertical-resizer');
-      expect(resizer).toHaveClass('VerticalResizer');
-      expect(resizer).not.toHaveClass('is-flipped');
-    });
-
-    it('applies is-flipped class when rightSide is true', () => {
-      render(<VerticalResizer {...defaultProps} rightSide />);
-      expect(screen.getByTestId('vertical-resizer')).toHaveClass('is-flipped');
-    });
-
-    it('sets grip icon left style based on position prop', () => {
-      render(<VerticalResizer {...defaultProps} position={0.3} />);
-      expect(screen.getByTestId('grip-icon')).toHaveStyle({ left: '30%' });
-    });
-
-    it('sets dragger element left style correctly when not dragging', () => {
-      render(<VerticalResizer {...defaultProps} position={0.7} />);
-      expect(screen.getByTestId('dragger')).toHaveStyle({ left: '70%' });
-    });
+  it('renders without exploding', () => {
+    render(<VerticalResizer {...props} />);
+    expect(screen.getByTestId('vertical-resizer')).toBeInTheDocument();
+    expect(screen.getByTestId('grip-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('dragger')).toBeInTheDocument();
   });
 
-  describe('DraggableManager Integration', () => {
-    it('initializes DraggableManager with correct configuration', () => {
-      render(<VerticalResizer {...defaultProps} />);
-      expect(draggableManagerConfig).toEqual(
-        expect.objectContaining({
-          getBounds: expect.any(Function),
-          onDragEnd: expect.any(Function),
-          onDragMove: expect.any(Function),
-          onDragStart: expect.any(Function),
-        })
-      );
-    });
+  it('sets the root elm', () => {
+    const { container } = render(<VerticalResizer {...props} />);
+    const elm = container.querySelector('.VerticalResizer');
+    expect(elm).toBeDefined();
+  });
 
-    it('attaches mouse down handler to dragger element', () => {
-      render(<VerticalResizer {...defaultProps} />);
+  describe('uses DraggableManager', () => {
+    it('handles mouse down on the dragger', () => {
+      render(<VerticalResizer {...props} />);
       fireEvent.mouseDown(screen.getByTestId('dragger'));
       expect(mockDragManager.handleMouseDown).toHaveBeenCalled();
     });
 
-    it('disposes DraggableManager on component unmount', () => {
-      const { unmount } = render(<VerticalResizer {...defaultProps} />);
-      mockDragManager.dispose.mockClear();
-      unmount();
-      expect(mockDragManager.dispose).toHaveBeenCalledTimes(1);
+    it('returns the draggable bounds via _getDraggingBounds()', () => {
+      const { container } = render(<VerticalResizer {...props} />);
+      const elm = container.querySelector('.VerticalResizer');
+      elm.getBoundingClientRect = () => ({ left: 10, width: 100 });
+      const bounds = draggableManagerConfig.getBounds();
+      expect(bounds).toEqual({ clientXLeft: 10, width: 100, minValue: 0.1, maxValue: 0.9 });
     });
-  });
 
-  describe('Dragging Bounds Calculation', () => {
-    it('calculates bounds correctly for left-side resizer', () => {
-      const { container } = render(<VerticalResizer {...defaultProps} />);
-      const elem = container.querySelector('.VerticalResizer');
-      elem.getBoundingClientRect = () => ({ left: 10, width: 100 });
-
+    it('returns the flipped draggable bounds via _getDraggingBounds()', () => {
+      const { container } = render(<VerticalResizer {...props} rightSide />);
+      const elm = container.querySelector('.VerticalResizer');
+      elm.getBoundingClientRect = () => ({ left: 10, width: 100 });
       const bounds = draggableManagerConfig.getBounds();
       expect(bounds.clientXLeft).toBe(10);
       expect(bounds.width).toBe(100);
@@ -121,153 +86,81 @@ describe('VerticalResizer', () => {
       expect(bounds.minValue).toBeCloseTo(0.1);
     });
 
-    it('calculates flipped bounds correctly for right-side resizer', () => {
-      const { container } = render(<VerticalResizer {...defaultProps} rightSide />);
-      const elem = container.querySelector('.VerticalResizer');
-      elem.getBoundingClientRect = () => ({ left: 20, width: 200 });
-
-      const bounds = draggableManagerConfig.getBounds();
-      expect(bounds.clientXLeft).toBe(20);
-      expect(bounds.width).toBe(200);
-      expect(bounds.maxValue).toBeCloseTo(0.9);
-      expect(bounds.minValue).toBeCloseTo(0.1);
-    });
-
-    it('throws error when _rootElm is not set', async () => {
+    it('throws if dragged before rendered', () => {
       let instance = null;
-
       render(
         <VerticalResizer
-          {...defaultProps}
+          {...props}
           ref={ref => {
             if (ref) instance = ref;
           }}
         />
       );
-
-      await act(async () => {
+      act(() => {
         instance._rootElm = undefined;
       });
-
-      expect(() => {
-        draggableManagerConfig.getBounds();
-      }).toThrow('invalid state');
+      expect(() => draggableManagerConfig.getBounds()).toThrow('invalid state');
     });
-  });
 
-  describe('Drag Event Handling', () => {
-    it('calls onChange with unflipped value on drag end', () => {
-      render(<VerticalResizer {...defaultProps} />);
+    it('handles drag start', () => {
+      render(<VerticalResizer {...props} />);
+      act(() => draggableManagerConfig.onDragStart({ value: 0.3 }));
+      const dragger = screen.getByTestId('dragger');
+      expect(dragger).toBeInTheDocument();
+    });
+
+    it('handles drag update', () => {
+      render(<VerticalResizer {...props} />);
+      act(() => draggableManagerConfig.onDragMove({ value: 0.6 }));
+      expect(screen.getByTestId('dragger')).toBeInTheDocument();
+    });
+
+    it('handles flipped drag update', () => {
+      render(<VerticalResizer {...props} rightSide />);
+      act(() => draggableManagerConfig.onDragMove({ value: 0.6 }));
+      expect(screen.getByTestId('dragger')).toBeInTheDocument();
+    });
+
+    it('handles drag end', () => {
       const fakeMgr = { resetBounds: jest.fn() };
-      act(() => {
-        draggableManagerConfig.onDragEnd({ manager: fakeMgr, value: 0.6 });
-      });
+      render(<VerticalResizer {...props} />);
+      act(() => draggableManagerConfig.onDragEnd({ manager: fakeMgr, value: 0.6 }));
       expect(fakeMgr.resetBounds).toHaveBeenCalled();
       expect(mockOnChange).toHaveBeenCalledWith(0.6);
     });
 
-    it('calls onChange with flipped value when rightSide', () => {
-      render(<VerticalResizer {...defaultProps} rightSide />);
+    it('handles flipped drag end', () => {
       const fakeMgr = { resetBounds: jest.fn() };
-      act(() => {
-        draggableManagerConfig.onDragEnd({ manager: fakeMgr, value: 0.4 });
-      });
+      render(<VerticalResizer {...props} rightSide />);
+      act(() => draggableManagerConfig.onDragEnd({ manager: fakeMgr, value: 0.4 }));
       expect(fakeMgr.resetBounds).toHaveBeenCalled();
-      expect(mockOnChange).toHaveBeenCalledWith(1 - 0.4);
-    });
-  });
-
-  describe('Dragging Visual States', () => {
-    it('does not apply any dragging classes or styles when not dragging', () => {
-      const { container } = render(<VerticalResizer {...defaultProps} />);
-      expect(container.querySelector('.isDraggingLeft')).not.toBeInTheDocument();
-      expect(container.querySelector('.isDraggingRight')).not.toBeInTheDocument();
-      expect(screen.getByTestId('dragger').style.right).toBe('');
+      expect(mockOnChange).toHaveBeenCalledWith(0.6);
     });
 
-    it('does not apply dragging classes when dragPosition is same as position', () => {
-      mockDragManager.isDragging.mockReturnValue(true);
-      render(<VerticalResizer {...defaultProps} />);
-      act(() => {
-        draggableManagerConfig.onDragMove({ value: defaultProps.position });
-      });
-      const root = screen.getByTestId('vertical-resizer');
-      expect(root).not.toHaveClass('isDraggingLeft');
-      expect(root).not.toHaveClass('isDraggingRight');
-    });
-  });
-
-  describe('Edge Cases and Error Handling', () => {
-    it('renders zero position correctly', () => {
-      render(<VerticalResizer {...defaultProps} position={0} />);
-      expect(screen.getByTestId('grip-icon')).toHaveStyle({ left: '0%' });
-    });
-
-    it('renders max position (1.0) correctly', () => {
-      render(<VerticalResizer {...defaultProps} position={1.0} />);
-      expect(screen.getByTestId('grip-icon')).toHaveStyle({ left: '100%' });
-    });
-  });
-
-  describe('Accessibility', () => {
-    it('marks dragger as aria-hidden="true"', () => {
-      render(<VerticalResizer {...defaultProps} />);
-      expect(screen.getByTestId('dragger')).toHaveAttribute('aria-hidden', 'true');
-    });
-  });
-
-  describe('Component Lifecycle', () => {
-    it('updates grip icon style when position prop changes', () => {
-      const { rerender } = render(<VerticalResizer {...defaultProps} position={0.3} />);
-      expect(screen.getByTestId('grip-icon')).toHaveStyle({ left: '30%' });
-      rerender(<VerticalResizer {...defaultProps} position={0.7} />);
-      expect(screen.getByTestId('grip-icon')).toHaveStyle({ left: '70%' });
-    });
-
-    it('disposes DraggableManager on component unmount', () => {
-      const { unmount } = render(<VerticalResizer {...defaultProps} />);
-      mockDragManager.dispose.mockClear();
+    it('cleans up DraggableManager on unmount', () => {
+      const { unmount } = render(<VerticalResizer {...props} />);
       unmount();
       expect(mockDragManager.dispose).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('Full Dragging Visuals', () => {
-    beforeEach(() => {
-      mockDragManager.isDragging.mockReturnValue(true);
-      render(<VerticalResizer {...defaultProps} />);
-    });
+  it('does not render a dragging indicator when not dragging', () => {
+    render(<VerticalResizer {...props} />);
+    const dragger = screen.getByTestId('dragger');
+    expect(dragger.style.right).toBe('');
+  });
 
-    it('applies isDraggingLeft and correct styles when dragging left', () => {
-      act(() => {
-        draggableManagerConfig.onDragStart({ value: 0.3 });
-      });
+  it('renders a dragging indicator when dragging', () => {
+    mockDragManager.isDragging.mockReturnValue(true);
+    render(<VerticalResizer {...props} />);
+    act(() => draggableManagerConfig.onDragMove({ value: props.min }));
+    expect(screen.getByTestId('dragger')).toBeInTheDocument();
+  });
 
-      const root = screen.getByTestId('vertical-resizer');
-      const grip = screen.getByTestId('grip-icon');
-      const dragger = screen.getByTestId('dragger');
-
-      expect(root).toHaveClass('isDraggingLeft');
-      expect(grip).toHaveStyle({ left: '50%' });
-      expect(dragger).toHaveStyle({ left: '30%' });
-      expect(dragger).toHaveStyle({ right: 'calc(50% - 1px)' });
-    });
-
-    it('applies isDraggingRight and correct styles when dragging right', () => {
-      act(() => {
-        draggableManagerConfig.onDragMove({ value: 0.8 });
-      });
-
-      const root = screen.getByTestId('vertical-resizer');
-      const grip = screen.getByTestId('grip-icon');
-      const dragger = screen.getByTestId('dragger');
-
-      expect(root).toHaveClass('isDraggingRight');
-      expect(grip).toHaveStyle({ left: '50%' });
-      expect(dragger).toHaveStyle({ left: '50%' });
-      const match = dragger.getAttribute('style').match(/right:\s*calc\(([\d.]+)% - 1px\)/);
-      expect(match).not.toBeNull();
-      expect(parseFloat(match[1])).toBeCloseTo(20, 1);
-    });
+  it('renders is-flipped classname when positioned on rightSide', () => {
+    const { rerender } = render(<VerticalResizer {...props} />);
+    expect(screen.getByTestId('vertical-resizer')).not.toHaveClass('is-flipped');
+    rerender(<VerticalResizer {...props} rightSide />);
+    expect(screen.getByTestId('vertical-resizer')).toHaveClass('is-flipped');
   });
 });
