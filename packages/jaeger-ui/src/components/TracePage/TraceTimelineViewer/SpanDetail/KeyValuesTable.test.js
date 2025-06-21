@@ -148,11 +148,11 @@ describe('<KeyValuesTable>', () => {
         linksGetter={(array, i) =>
           array[i].key === 'span.kind'
             ? [
-              {
-                url: `http://example.com/?kind=${encodeURIComponent(array[i].value)}`,
-                text: `More info about ${array[i].value}`,
-              },
-            ]
+                {
+                  url: `http://example.com/?kind=${encodeURIComponent(array[i].value)}`,
+                  text: `More info about ${array[i].value}`,
+                },
+              ]
             : []
         }
       />
@@ -174,9 +174,9 @@ describe('<KeyValuesTable>', () => {
         linksGetter={(array, i) =>
           array[i].key === 'span.kind'
             ? [
-              { url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 1' },
-              { url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 2' },
-            ]
+                { url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 1' },
+                { url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 2' },
+              ]
             : []
         }
       />
