@@ -108,6 +108,7 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<TProps> {
               'is-active': this.props.hoverIndentGuideIds.has(ancestorId),
             })}
             data-ancestor-id={ancestorId}
+            data-testid={`indent-guide-${ancestorId}`}
             onMouseEnter={event => this.handleMouseEnter(event, ancestorId)}
             onMouseLeave={event => this.handleMouseLeave(event, ancestorId)}
           />
@@ -115,6 +116,7 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<TProps> {
         {icon && (
           <span
             className="SpanTreeOffset--iconWrapper"
+            data-testid="icon-wrapper"
             onMouseEnter={event => this.handleMouseEnter(event, spanID)}
             onMouseLeave={event => this.handleMouseLeave(event, spanID)}
           >
