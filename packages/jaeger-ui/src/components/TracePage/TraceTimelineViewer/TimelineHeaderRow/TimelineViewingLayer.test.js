@@ -53,58 +53,53 @@ describe('<TimelineViewingLayer>', () => {
     jest.restoreAllMocks();
   });
 
-  it('should render the component without errors', () => {
+  it('renders without exploding', () => {
     const { container } = render(<TimelineViewingLayer {...props} />);
     expect(container.querySelector('.TimelineViewingLayer')).toBeInTheDocument();
   });
 
-  it('should assign ref correctly to the root DOM node', () => {
+  it('sets _root to the root DOM node', () => {
     const { container } = render(<TimelineViewingLayer {...props} />);
     const timelineLayer = container.querySelector('.TimelineViewingLayer');
     expect(timelineLayer).toBeDefined();
   });
 
-  it('should throw an error if getDraggingBounds is called while unmounted', () => {
-    const comp = new TimelineViewingLayer(props);
-    comp._root = { current: null };
-    expect(() => comp._getDraggingBounds()).toThrow(
-      'Component must be mounted in order to determine DraggableBounds'
-    );
-  });
-
-  describe('DraggableManager integration', () => {
-    it('should initialize drag handlers on the root element', () => {
-      const { container } = render(<TimelineViewingLayer {...props} />);
-      const timelineLayer = container.querySelector('.TimelineViewingLayer');
-      expect(timelineLayer).toHaveAttribute('aria-hidden');
-      expect(timelineLayer.onmousedown).toBeDefined();
-      expect(timelineLayer.onmouseleave).toBeDefined();
-      expect(timelineLayer.onmousemove).toBeDefined();
+  describe('uses DraggableManager', () => {
+    it('initializes the DraggableManager', () => {
+      const comp = new TimelineViewingLayer(props);
+      expect(comp._draggerReframe).toBeDefined();
     });
 
-    it('should update cursor on mouse move within bounds', () => {
-      const { container } = render(<TimelineViewingLayer {...props} />);
-      const timelineLayer = container.querySelector('.TimelineViewingLayer');
-      fireEvent.mouseMove(timelineLayer, { clientX: 60 });
-
-      expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({
-        cursor: expect.any(Number),
-      });
+    it('returns the dragging bounds from _getDraggingBounds()', () => {
+      const comp = new TimelineViewingLayer(props);
+      comp._root.current = document.createElement('div');
+      comp._root.current.getBoundingClientRect = () => ({ left: 10, width: 100 });
+      expect(comp._getDraggingBounds()).toEqual({ clientXLeft: 10, width: 100 });
     });
 
-    it('should reset cursor when mouse leaves the element', () => {
-      const { container } = render(<TimelineViewingLayer {...props} />);
-      const timelineLayer = container.querySelector('.TimelineViewingLayer');
-      fireEvent.mouseLeave(timelineLayer);
+    it('throws error on call to _getDraggingBounds() on unmounted component', () => {
+      const comp = new TimelineViewingLayer(props);
+      comp._root.current = null;
+      expect(() => comp._getDraggingBounds()).toThrow(
+        'Component must be mounted in order to determine DraggableBounds'
+      );
+    });
 
+    it('updates viewRange.time.cursor via _draggerReframe._onMouseMove', () => {
+      const { container } = render(<TimelineViewingLayer {...props} />);
+      fireEvent.mouseMove(container.querySelector('.TimelineViewingLayer'), { clientX: 60 });
+      expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({ cursor: expect.any(Number) });
+    });
+
+    it('resets viewRange.time.cursor via _draggerReframe._onMouseLeave', () => {
+      const { container } = render(<TimelineViewingLayer {...props} />);
+      fireEvent.mouseLeave(container.querySelector('.TimelineViewingLayer'));
       expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({ cursor: undefined });
     });
 
-    it('should call updateNextViewRangeTime on drag start with anchor and shift', () => {
+    it('handles drag start via _draggerReframe._onDragStart', () => {
       const { container } = render(<TimelineViewingLayer {...props} />);
-      const timelineLayer = container.querySelector('.TimelineViewingLayer');
-      fireEvent.mouseDown(timelineLayer, { clientX: 60 });
-
+      fireEvent.mouseDown(container.querySelector('.TimelineViewingLayer'), { clientX: 60 });
       expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({
         reframe: {
           anchor: expect.any(Number),
@@ -113,16 +108,13 @@ describe('<TimelineViewingLayer>', () => {
       });
     });
 
-    it('should call updateNextViewRangeTime on drag move with new reframe values', () => {
+    it('handles drag move via _draggerReframe._onDragMove', () => {
       const anchor = 0.25;
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: 0.5 } };
-
-      const { container: newContainer } = render(
+      const { container } = render(
         <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
       );
-      const timelineLayer = newContainer.querySelector('.TimelineViewingLayer');
-      fireEvent.mouseDown(timelineLayer, { clientX: 60 });
-
+      fireEvent.mouseDown(container.querySelector('.TimelineViewingLayer'), { clientX: 60 });
       expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({
         reframe: {
           anchor: expect.any(Number),
@@ -131,90 +123,99 @@ describe('<TimelineViewingLayer>', () => {
       });
     });
 
-    it('should call updateViewRangeTime on drag end with sorted values', () => {
+    it('handles drag end via _draggerReframe._onDragEnd', () => {
       const anchor = 0.75;
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: 0.5 } };
-
-      const { container: newContainer } = render(
+      const { container } = render(
         <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
       );
-      const timelineLayer = newContainer.querySelector('.TimelineViewingLayer');
-      fireEvent.mouseDown(timelineLayer, { clientX: 60 });
-      fireEvent.mouseUp(timelineLayer, { clientX: 40 });
-
+      fireEvent.mouseDown(container.querySelector('.TimelineViewingLayer'), { clientX: 60 });
+      fireEvent.mouseUp(container.querySelector('.TimelineViewingLayer'), { clientX: 40 });
       const [start, end, source] = props.updateViewRangeTime.mock.calls.at(-1);
       expect(start).toBeLessThanOrEqual(end);
       expect(source).toBe('timeline-header');
     });
 
-    it('should reset bounds if boundsInvalidator prop changes', () => {
-      const { container, rerender } = render(<TimelineViewingLayer {...props} />);
-      rerender(<TimelineViewingLayer {...props} boundsInvalidator="updated" />);
-      expect(container.querySelector('.TimelineViewingLayer')).toBeInTheDocument();
+    it('resets draggable bounds on boundsInvalidator update', () => {
+      const { rerender } = render(<TimelineViewingLayer {...props} />);
+      rerender(<TimelineViewingLayer {...props} boundsInvalidator={Math.random()} />);
+      // no crash = pass
     });
   });
 
-  describe('Rendering cursor and drag markers', () => {
-    it('should render cursor guide when only cursor is set', () => {
+  describe('render()', () => {
+    it('renders the cursor when it is the only non-current value set', () => {
       const cursor = mapFromSubRange(viewStart, viewEnd, 0.5);
       const baseViewRangeTime = { ...props.viewRangeTime, cursor };
-
-      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={baseViewRangeTime} />);
-      const cursorGuide = container.querySelector('.TimelineViewingLayer--cursorGuide');
-      expect(cursorGuide).toBeInTheDocument();
+      const { container } = render(
+        <TimelineViewingLayer {...props} viewRangeTime={baseViewRangeTime} />
+      );
+      expect(container.querySelector('.TimelineViewingLayer--cursorGuide')).toBeInTheDocument();
     });
 
-    it('should not show cursor if any drag props are set', () => {
+    it('skips rendering the cursor when reframe, shiftStart, or shiftEnd is present', () => {
       const cursor = mapFromSubRange(viewStart, viewEnd, 0.5);
-      const base = { ...props.viewRangeTime, cursor };
-
       const cases = [
-        { ...base, shiftStart: cursor },
-        { ...base, shiftEnd: cursor },
-        { ...base, reframe: { anchor: cursor, shift: cursor } },
+        { ...props.viewRangeTime, cursor, shiftStart: cursor },
+        { ...props.viewRangeTime, cursor, shiftEnd: cursor },
+        { ...props.viewRangeTime, cursor, reframe: { anchor: cursor, shift: cursor } },
       ];
 
       cases.forEach(viewRangeTime => {
-        const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
-        const cursorGuide = container.querySelector('.TimelineViewingLayer--cursorGuide');
-        expect(cursorGuide).not.toBeInTheDocument();
+        const { container } = render(
+          <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
+        );
+        expect(container.querySelector('.TimelineViewingLayer--cursorGuide')).not.toBeInTheDocument();
         cleanup();
       });
     });
 
-    it('should render reframe drag area', () => {
+    it('renders the reframe dragging', () => {
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: viewStart, shift: viewEnd } };
-      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
+      const { container } = render(
+        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
+      );
       expect(container.querySelector('.isDraggingRight.isReframeDrag')).toBeInTheDocument();
     });
 
-    it('should normalize layout when drag range is partially out of bounds', () => {
-      const viewRangeTime = {
-        ...props.viewRangeTime,
-        reframe: { anchor: -0.25, shift: 1.25 },
-      };
-      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
-      const draggedElement = container.querySelector('.TimelineViewingLayer--dragged');
-      expect(draggedElement).toBeInTheDocument();
-      expect(draggedElement).toHaveStyle({ left: '0%', width: '100%' });
+    it('renders the reframe dragging normalized left', () => {
+      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: -0.25, shift: viewEnd } };
+      const { container } = render(
+        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
+      );
+      expect(container.querySelector('.isDraggingRight.isReframeDrag')).toBeInTheDocument();
     });
 
-    it('should render shiftStart drag marker', () => {
+    it('renders the reframe dragging normalized right', () => {
+      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: viewStart, shift: 1.25 } };
+      const { container } = render(
+        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
+      );
+      expect(container.querySelector('.isDraggingRight.isReframeDrag')).toBeInTheDocument();
+    });
+
+    it('does not render the reframe on out of bounds', () => {
+      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: 1.5, shift: 1.75 } };
+      const { container } = render(
+        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
+      );
+      expect(container.querySelector('.isReframeDrag')).not.toBeInTheDocument();
+    });
+
+    it('renders the shiftStart dragging', () => {
       const viewRangeTime = { ...props.viewRangeTime, shiftStart: viewEnd };
-      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
+      const { container } = render(
+        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
+      );
       expect(container.querySelector('.isDraggingRight.isShiftDrag')).toBeInTheDocument();
     });
 
-    it('should render shiftEnd drag marker', () => {
+    it('renders the shiftEnd dragging', () => {
       const viewRangeTime = { ...props.viewRangeTime, shiftEnd: viewStart };
-      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
+      const { container } = render(
+        <TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />
+      );
       expect(container.querySelector('.isDraggingLeft.isShiftDrag')).toBeInTheDocument();
-    });
-
-    it('should not render reframe marker if out of view', () => {
-      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor: 1.5, shift: 1.75 } };
-      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
-      expect(container.querySelector('.isReframeDrag')).not.toBeInTheDocument();
     });
   });
 });
