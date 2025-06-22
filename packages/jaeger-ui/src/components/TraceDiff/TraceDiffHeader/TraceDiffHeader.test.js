@@ -131,7 +131,7 @@ describe('TraceDiffHeader', () => {
     };
   });
 
-  it('renders as expected', () => {
+  it('renders UI elements and trace names correctly', () => {
     render(<TraceDiffHeader {...props} />);
 
     expect(screen.getByText('A', { selector: 'h1' })).toBeInTheDocument();
