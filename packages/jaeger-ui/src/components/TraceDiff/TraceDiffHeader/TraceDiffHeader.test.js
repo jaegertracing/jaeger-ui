@@ -19,8 +19,6 @@ import '@testing-library/jest-dom';
 import TraceDiffHeader from './TraceDiffHeader';
 import { fetchedState } from '../../../constants';
 
-// Mocking TraceHeader to ensure stable test IDs are present
-// This helps in simplifying DOM queries.
 jest.mock('./TraceHeader', () => {
   return jest.fn(props => (
     <div data-testid="TraceDiffHeader--traceHeader">
@@ -31,7 +29,6 @@ jest.mock('./TraceHeader', () => {
   ));
 });
 
-// Mocking CohortTable to allow interaction and verification
 jest.mock('./CohortTable', () => {
   return jest.fn(({ cohort, selectTrace, selection }) => (
     <div>
@@ -55,6 +52,7 @@ describe('TraceDiffHeader', () => {
     {
       data: {
         duration: 0,
+        // purposefully missing spans
         startTime: 0,
         traceName: 'cohort-trace-name-0',
       },
@@ -65,7 +63,11 @@ describe('TraceDiffHeader', () => {
     {
       data: {
         duration: 100,
-        spans: [{ spanID: 'trace-1-span-0' }],
+        spans: [
+          {
+            spanID: 'trace-1-span-0',
+          },
+        ],
         startTime: 100,
         traceName: 'cohort-trace-name-1',
       },
@@ -76,7 +78,14 @@ describe('TraceDiffHeader', () => {
     {
       data: {
         duration: 200,
-        spans: [{ spanID: 'trace-2-span-1' }, { spanID: 'trace-2-span-2' }],
+        spans: [
+          {
+            spanID: 'trace-2-span-1',
+          },
+          {
+            spanID: 'trace-2-span-2',
+          },
+        ],
         startTime: 200,
         traceName: 'cohort-trace-name-2',
       },
@@ -87,7 +96,17 @@ describe('TraceDiffHeader', () => {
     {
       data: {
         duration: 300,
-        spans: [{ spanID: 'trace-3-span-1' }, { spanID: 'trace-3-span-2' }, { spanID: 'trace-3-span-3' }],
+        spans: [
+          {
+            spanID: 'trace-3-span-1',
+          },
+          {
+            spanID: 'trace-3-span-2',
+          },
+          {
+            spanID: 'trace-3-span-3',
+          },
+        ],
         startTime: 300,
         traceName: 'cohort-trace-name-3',
       },
@@ -112,7 +131,7 @@ describe('TraceDiffHeader', () => {
     };
   });
 
-  it('renders UI elements and trace names correctly', () => {
+  it('renders as expected', () => {
     render(<TraceDiffHeader {...props} />);
 
     expect(screen.getByText('A', { selector: 'h1' })).toBeInTheDocument();
