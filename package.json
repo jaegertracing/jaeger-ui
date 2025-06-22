@@ -18,7 +18,7 @@
     "eslint": "8.57.0",
     "eslint-config-airbnb": "19.0.4",
     "eslint-config-prettier": "10.1.1",
-    "eslint-plugin-import": "2.31.0",
+    "eslint-plugin-import": "2.32.0",
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react": "7.37.1",
     "husky": "9.1.0",
