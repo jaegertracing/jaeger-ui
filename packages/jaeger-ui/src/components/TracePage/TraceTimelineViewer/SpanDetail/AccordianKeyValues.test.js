@@ -13,108 +13,114 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import AccordianKeyValues, { KeyValuesSummary } from './AccordianKeyValues';
 import * as markers from './AccordianKeyValues.markers';
-import KeyValuesTable from './KeyValuesTable';
+
+jest.mock('./KeyValuesTable', () => {
+  const MockKeyValuesTable = ({ data, linksGetter }) => (
+    <table
+      data-testid="key-values-table"
+      data-data={JSON.stringify(data)}
+      data-has-links-getter={!!linksGetter}
+    />
+  );
+  return MockKeyValuesTable;
+});
 
 const tags = [
   { key: 'span.kind', value: 'client' },
   { key: 'omg', value: 'mos-def' },
 ];
 
-describe('<KeyValuesSummary>', () => {
-  let wrapper;
-
-  const props = { data: tags };
-
-  beforeEach(() => {
-    wrapper = shallow(<KeyValuesSummary {...props} />);
+describe('<KeyValuesSummary />', () => {
+  it('renders summary list when valid data is provided', () => {
+    const { container } = render(<KeyValuesSummary data={tags} />);
+    expect(container.firstChild).toBeInTheDocument();
   });
 
-  it('renders without exploding', () => {
-    expect(wrapper).toBeDefined();
+  it('returns null when data is null or empty', () => {
+    const { container } = render(<KeyValuesSummary data={null} />);
+    expect(container.firstChild).toBeNull();
   });
 
-  it('returns `null` when props.data is empty', () => {
-    wrapper.setProps({ data: null });
-    expect(wrapper.isEmptyRender()).toBe(true);
+  it('renders the correct number of list items', () => {
+    const { container } = render(<KeyValuesSummary data={tags} />);
+    const listItems = container.querySelectorAll('li');
+    expect(listItems.length).toBe(tags.length);
   });
 
-  it('generates a list from `data`', () => {
-    expect(wrapper.find('li').length).toBe(tags.length);
-  });
-
-  it('renders the data as text', () => {
-    const texts = wrapper.find('li').map(node => node.text());
+  it('displays each key-value pair correctly', () => {
+    const { container } = render(<KeyValuesSummary data={tags} />);
+    const listItems = container.querySelectorAll('li');
+    const texts = Array.from(listItems).map(node => node.textContent);
     const expectedTexts = tags.map(tag => `${tag.key}=${tag.value}`);
     expect(texts).toEqual(expectedTexts);
   });
 });
 
-describe('<AccordianKeyValues>', () => {
-  let wrapper;
-  const mockToggle = jest.fn();
-
-  const props = {
-    compact: false,
+describe('<AccordianKeyValues />', () => {
+  const defaultProps = {
     data: tags,
-    highContrast: false,
     isOpen: false,
     label: 'le-label',
-    onToggle: mockToggle,
+    onToggle: jest.fn(),
+    linksGetter: null,
   };
 
   beforeEach(() => {
-    wrapper = shallow(<AccordianKeyValues {...props} />);
+    jest.clearAllMocks();
   });
 
-  it('renders without exploding', () => {
-    expect(wrapper).toBeDefined();
-    expect(wrapper.exists()).toBe(true);
+  it('renders the component without crashing', () => {
+    const { container } = render(<AccordianKeyValues {...defaultProps} />);
+    expect(container.firstChild).toBeInTheDocument();
   });
 
-  it('calls onToggle when clicked', () => {
-    wrapper.find('.AccordianKeyValues--header').simulate('click');
-    expect(mockToggle).toHaveBeenCalled();
+  it('calls onToggle when header is clicked', () => {
+    render(<AccordianKeyValues {...defaultProps} />);
+    const header = screen.getByText('le-label:').closest('div');
+    fireEvent.click(header);
+    expect(defaultProps.onToggle).toHaveBeenCalledTimes(1);
   });
 
-  it('does not call onToggle if interactive is false', () => {
-    mockToggle.mockClear();
-    wrapper.setProps({ interactive: false });
-    wrapper.update();
-    wrapper.find('.AccordianKeyValues--header').simulate('click');
-    expect(mockToggle).not.toHaveBeenCalled();
+  it('does not call onToggle when interactive is false', () => {
+    render(<AccordianKeyValues {...defaultProps} interactive={false} />);
+    const header = screen.getByText('le-label:').closest('div');
+    fireEvent.click(header);
+    expect(defaultProps.onToggle).not.toHaveBeenCalled();
   });
 
   it('does not apply high contrast styles by default', () => {
-    expect(wrapper.find('.AccordianKeyValues--header').hasClass('is-high-contrast')).toBe(false);
+    render(<AccordianKeyValues {...defaultProps} />);
+    const header = screen.getByText('le-label:').closest('div');
+    expect(header).not.toHaveClass('is-high-contrast');
   });
 
-  it('applies high contrast styles when highContrast is true', () => {
-    wrapper.setProps({ highContrast: true });
-    expect(wrapper.find('.AccordianKeyValues--header').hasClass('is-high-contrast')).toBe(true);
+  it('applies high contrast styles when enabled', () => {
+    render(<AccordianKeyValues {...defaultProps} highContrast />);
+    const header = screen.getByText('le-label:').closest('div');
+    expect(header).toHaveClass('is-high-contrast');
   });
 
-  it('renders the label', () => {
-    const header = wrapper.find(`[data-test="${markers.LABEL}"]`);
-    expect(header.length).toBe(1);
-    expect(header.text()).toBe(`${props.label}:`);
+  it('displays the label with the correct data attribute', () => {
+    render(<AccordianKeyValues {...defaultProps} />);
+    const label = screen.getByText('le-label:');
+    expect(label).toHaveAttribute('data-test', markers.LABEL);
   });
 
-  it('renders the summary instead of the table when it is not expanded', () => {
-    const summary = wrapper.find('.AccordianKeyValues--header').find(KeyValuesSummary);
-    expect(summary.length).toBe(1);
-    expect(summary.prop('data')).toBe(tags);
-    expect(wrapper.find(KeyValuesTable).length).toBe(0);
+  it('shows summary when not expanded', () => {
+    const { container } = render(<AccordianKeyValues {...defaultProps} />);
+    expect(container.querySelector('.AccordianKeyValues--summary')).toBeInTheDocument();
+    expect(container.querySelector('[data-testid="key-values-table"]')).not.toBeInTheDocument();
   });
 
-  it('renders the table instead of the summarywhen it is expanded', () => {
-    wrapper.setProps({ isOpen: true });
-    expect(wrapper.find(KeyValuesSummary).length).toBe(0);
-    const table = wrapper.find(KeyValuesTable);
-    expect(table.length).toBe(1);
-    expect(table.prop('data')).toBe(tags);
+  it('shows key-value table when expanded', () => {
+    const { container } = render(<AccordianKeyValues {...defaultProps} isOpen />);
+    expect(container.querySelector('.AccordianKeyValues--summary')).not.toBeInTheDocument();
+    const table = container.querySelector('[data-testid="key-values-table"]');
+    expect(table).toBeInTheDocument();
+    expect(table).toHaveAttribute('data-data', JSON.stringify(tags));
   });
 });
