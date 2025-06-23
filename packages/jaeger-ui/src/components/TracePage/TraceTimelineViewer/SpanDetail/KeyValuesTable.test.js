@@ -131,7 +131,19 @@ describe('<KeyValuesTable>', () => {
 
     valueElements.forEach((valueDiv, i) => {
       const expected = data[i].expected;
-      if (Array.isArray(expected)) {
+      if (data[i].key === 'jsonkey') {
+        expect(valueDiv).toHaveTextContent('world');
+        expect(valueDiv).toHaveTextContent('safe');
+        expect(valueDiv).toHaveTextContent('https://example.com');
+        expect(valueDiv).toHaveTextContent('https://example.com with "quotes"');
+        expect(valueDiv).toHaveTextContent('true');
+        expect(valueDiv).toHaveTextContent('42');
+        expect(valueDiv).toHaveTextContent('null');
+        expect(valueDiv).toHaveTextContent('x');
+        expect(valueDiv).toHaveTextContent('b');
+        expect(valueDiv).toHaveTextContent('y');
+        expect(valueDiv).toHaveTextContent('a');
+      } else if (Array.isArray(expected)) {
         expected.forEach(text => {
           expect(valueDiv).toHaveTextContent(text);
         });
