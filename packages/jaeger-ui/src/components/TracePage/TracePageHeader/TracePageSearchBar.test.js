@@ -148,6 +148,7 @@ describe('<DefaultTracePageSearchBar>', () => {
 
   it('forwardsRef correctly', () => {
     render(<DefaultTracePageSearchBar {...propsWithoutRef} ref={ref} />);
+    expect(ref.current).not.toBeNull();
 
     const uiFindInput = screen.getByTestId('ui-find-input');
     expect(uiFindInput).toBeInTheDocument();
