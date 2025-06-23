@@ -67,9 +67,8 @@ const NameSelector: React.FC<TProps> = props => {
 
   const clearValueHandler = useCallback(
     (evt: React.MouseEvent) => {
-      if (!clearValue) return;
       evt.stopPropagation();
-      clearValue();
+      clearValue!();
     },
     [clearValue]
   );
