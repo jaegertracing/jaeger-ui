@@ -127,11 +127,10 @@ describe('<ListView>', () => {
       }
       render(<TestComponent />);
 
-      if (componentInstance) {
-        expect(componentInstance._startIndexDrawn).toBe(0);
-        const expectedDrawnLength = componentInstance._endIndexDrawn - componentInstance._startIndexDrawn + 1;
-        expect(expectedDrawnLength).toBeGreaterThanOrEqual(props.initialDraw);
-      }
+      expect(componentInstance).toBeDefined();
+      expect(componentInstance._startIndexDrawn).toBe(0);
+      const expectedDrawnLength = componentInstance._endIndexDrawn - componentInstance._startIndexDrawn + 1;
+      expect(expectedDrawnLength).toBeGreaterThanOrEqual(props.initialDraw);
     });
   });
 
@@ -246,6 +245,7 @@ describe('<ListView>', () => {
       });
 
       it('registers window scroll event listener on mount when windowScroller is true', () => {
+        expect(instance).toBeDefined();
         const eventListeners = getListenersByType(windowAddListenerSpy.mock);
         expect(eventListeners.scroll).toEqual([instance._onScroll]);
       });
@@ -263,42 +263,38 @@ describe('<ListView>', () => {
       });
 
       it('triggers _positionList after scroll when windowScroller is enabled', done => {
-        if (instance) {
-          const event = new Event('scroll');
-          const fn = jest.spyOn(instance, '_positionList');
-          expect(instance._isScrolledOrResized).toBe(false);
-          window.dispatchEvent(event);
-          expect(instance._isScrolledOrResized).toBe(true);
-          window.requestAnimationFrame(() => {
-            expect(fn).toHaveBeenCalled();
-            done();
-          });
-        } else {
+        expect(instance).toBeDefined();
+        const event = new Event('scroll');
+        const fn = jest.spyOn(instance, '_positionList');
+        expect(instance._isScrolledOrResized).toBe(false);
+        window.dispatchEvent(event);
+        expect(instance._isScrolledOrResized).toBe(true);
+        window.requestAnimationFrame(() => {
+          expect(fn).toHaveBeenCalled();
           done();
-        }
+        });
       });
 
       it('uses the root HTML element to determine if the view has changed', () => {
-        if (instance) {
-          const htmlElm = instance._htmlElm;
-          expect(htmlElm).toBeTruthy();
-          const spyFns = {
-            clientHeight: jest.fn(() => instance._viewHeight + 1),
-            scrollTop: jest.fn(() => instance._scrollTop + 1),
-          };
-          Object.defineProperties(htmlElm, {
-            clientHeight: {
-              get: spyFns.clientHeight,
-            },
-            scrollTop: {
-              get: spyFns.scrollTop,
-            },
-          });
-          const hasChanged = instance._isViewChanged();
-          expect(spyFns.clientHeight).toHaveBeenCalled();
-          expect(spyFns.scrollTop).toHaveBeenCalled();
-          expect(hasChanged).toBe(true);
-        }
+        expect(instance).toBeDefined();
+        const htmlElm = instance._htmlElm;
+        expect(htmlElm).toBeTruthy();
+        const spyFns = {
+          clientHeight: jest.fn(() => instance._viewHeight + 1),
+          scrollTop: jest.fn(() => instance._scrollTop + 1),
+        };
+        Object.defineProperties(htmlElm, {
+          clientHeight: {
+            get: spyFns.clientHeight,
+          },
+          scrollTop: {
+            get: spyFns.scrollTop,
+          },
+        });
+        const hasChanged = instance._isViewChanged();
+        expect(spyFns.clientHeight).toHaveBeenCalled();
+        expect(spyFns.scrollTop).toHaveBeenCalled();
+        expect(hasChanged).toBe(true);
       });
     });
   });
