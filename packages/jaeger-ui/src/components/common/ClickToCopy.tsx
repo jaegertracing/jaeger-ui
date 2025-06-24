@@ -36,21 +36,23 @@ function ClickToCopy({ text, className = '', children }: Props) {
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    if (!isCopied) return;
-
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    const checkDeadline = () => {
-      if (Date.now() >= previousClick + 1800) {
-        setIsCopied(false);
-      } else {
-        timeoutRef.current = setTimeout(checkDeadline, 100);
+    if (!isCopied) {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
-    };
-
-    timeoutRef.current = setTimeout(checkDeadline, 100);
+    } else {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      const checkDeadline = () => {
+        if (Date.now() >= previousClick + 1800) {
+          setIsCopied(false);
+        } else {
+          timeoutRef.current = setTimeout(checkDeadline, 100);
+        }
+      };
+      timeoutRef.current = setTimeout(checkDeadline, 100);
+    }
 
     return () => {
       if (timeoutRef.current) {
@@ -67,11 +69,12 @@ function ClickToCopy({ text, className = '', children }: Props) {
 
   return (
     <Tooltip title={isCopied ? 'Copied to clipboard' : 'Copy to clipboard'}>
-      <span 
-        className={className} 
-        onClick={whenClicked} 
-        role="button" 
+      <span
+        className={className}
+        onClick={whenClicked}
+        role="button"
         tabIndex={0}
+        aria-label={isCopied ? 'Copied to clipboard' : 'Copy to clipboard'}
       >
         {children}
       </span>
