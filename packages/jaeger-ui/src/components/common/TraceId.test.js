@@ -58,10 +58,9 @@ describe('TraceIdDisplayLength', () => {
     it('renders the default traceIdLength 7 with ClickToCopy', () => {
       getConfigValue.mockReturnValue(undefined);
       const wrapper = createWrapper();
-
-      const clickToCopy = wrapper.find(ClickToCopy);
-      expect(clickToCopy.prop('text')).toEqual(MOCK_TRACE_ID);
-      expect(clickToCopy.prop('children')).toEqual(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
+      const displayed = MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH);
+      expect(wrapper.find(ClickToCopy).prop('text')).toEqual(MOCK_TRACE_ID);
+      expect(wrapper.find(ClickToCopy).prop('children')).toEqual(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
     });
 
     it('renders the config length when provided', () => {
@@ -78,10 +77,8 @@ describe('TraceIdDisplayLength', () => {
       const configuredLength = 5;
       getConfigValue.mockReturnValue(configuredLength);
       const wrapper = createWrapper();
-
-      const clickToCopy = wrapper.find(ClickToCopy);
-      expect(clickToCopy.prop('text')).toEqual(MOCK_TRACE_ID);
-      expect(clickToCopy.prop('children')).toEqual(MOCK_TRACE_ID.slice(0, configuredLength));
+      expect(wrapper.find(ClickToCopy).prop('text')).toEqual(MOCK_TRACE_ID);
+      expect(wrapper.find(ClickToCopy).prop('children')).toEqual(MOCK_TRACE_ID.slice(0, configuredLength));
     });
   });
 
@@ -99,10 +96,8 @@ describe('TraceIdDisplayLength', () => {
       const shortTraceId = '12345';
       const configuredLength = 10;
       getConfigValue.mockReturnValue(configuredLength);
-
       const wrapper = createWrapper({ traceId: shortTraceId });
-      const clickToCopy = wrapper.find(ClickToCopy);
-      expect(clickToCopy.prop('text')).toBe(shortTraceId);
+      expect(wrapper.find(ClickToCopy).prop('text')).toBe(shortTraceId);
     });
 
     it('renders an empty ClickToCopy element when traceId is an empty string', () => {
@@ -135,7 +130,7 @@ describe('TraceIdDisplayLength', () => {
       expect(wrapper.find(ClickToCopy).prop('className')).toBe(expectedClass);
     });
 
-    it('default classes for styling', () => {
+    it('uses default classes for styling', () => {
       renderComponent();
       const el = screen.getByText(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
 
@@ -162,12 +157,12 @@ describe('TraceIdDisplayLength', () => {
 
     it('adds a length-based class depending on the configuration with ClickToCopy', () => {
       getConfigValue.mockReturnValue(7);
-      const wrapper = createWrapper();
-      expect(wrapper.find(ClickToCopy).prop('className')).toContain('TraceIDLength--short');
+      const wrapperShort = createWrapper();
+      expect(wrapperShort.find(ClickToCopy).prop('className')).toContain('TraceIDLength--short');
 
       getConfigValue.mockReturnValue(32);
-      const wrapper2 = createWrapper();
-      expect(wrapper2.find(ClickToCopy).prop('className')).toContain('TraceIDLength--full');
+      const wrapperFull = createWrapper();
+      expect(wrapperFull.find(ClickToCopy).prop('className')).toContain('TraceIDLength--full');
     });
   });
 });
