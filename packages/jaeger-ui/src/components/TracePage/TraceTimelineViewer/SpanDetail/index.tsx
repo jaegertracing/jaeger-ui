@@ -155,6 +155,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             icon={<IoLinkOutline />}
             placement="topRight"
             tooltipTitle="Copy deep link to this span"
+            buttonText="Copy"
           />
         </small>
       </div>

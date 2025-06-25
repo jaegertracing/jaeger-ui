@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import colorGenerator from './color-generator';
+import colorGenerator, { strToRgb } from './color-generator';
 
 it('gives the same color for the same key', () => {
   colorGenerator.clear();
@@ -34,4 +34,10 @@ it('should clear cache', () => {
   colorGenerator.clear();
   const colorTwo = colorGenerator.getColorByKey('serviceB');
   expect(colorOne).toBe(colorTwo);
+});
+
+it('returns [0,0,0] if invalid color string is passed to strToRgb', () => {
+  expect(strToRgb('#FFF')).toEqual([0, 0, 0]);
+  expect(strToRgb('')).toEqual([0, 0, 0]);
+  expect(strToRgb('#1234567')).toEqual([0, 0, 0]);
 });

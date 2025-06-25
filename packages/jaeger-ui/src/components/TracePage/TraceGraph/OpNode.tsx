@@ -97,6 +97,7 @@ export default class OpNode extends React.PureComponent<Props> {
                 className="OpNode--copyIcon"
                 copyText={`${service} ${operation}`}
                 tooltipTitle="Copy label"
+                buttonText="Copy"
               />
             </td>
             <td className="OpNode--metricCell OpNode--avg">{round2(time / 1000 / count)} ms</td>
