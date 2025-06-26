@@ -79,25 +79,38 @@ describe('<KeyValuesTable>', () => {
     object: { a: 'b', x: 'y' },
   };
   const data = [
-    { key: 'span.kind', value: 'client', expected: 'client' },
-    { key: 'omg', value: 'mos-def', expected: 'mos-def' },
-    { key: 'numericString', value: '12345678901234567890', expected: '12345678901234567890' },
-    { key: 'numeric', value: 123456789, expected: '123456789' },
-    { key: 'boolean', value: true, expected: 'true' },
+    { key: 'span.kind', value: 'client', expected: ['client'] },
+    { key: 'omg', value: 'mos-def', expected: ['mos-def'] },
+    { key: 'numericString', value: '12345678901234567890', expected: ['12345678901234567890'] },
+    { key: 'numeric', value: 123456789, expected: ['123456789'] },
+    { key: 'boolean', value: true, expected: ['true'] },
     {
       key: 'http.request.header.accept',
       value: ['application/json'],
-      expected: 'application/json',
+      expected: ['application/json'],
     },
     {
       key: 'http.response.header.set_cookie',
       value: JSON.stringify(['name=mos-def', 'code=12345']),
-      expected: 'name=mos-def, code=12345',
+      expected: ['name=mos-def', 'code=12345'],
     },
     {
       key: 'jsonkey',
       value: JSON.stringify(jsonValue),
-      expected: ['world', 'safe', 'https://example.com', 'true', '42'],
+      expected: [
+        'world',
+        'safe',
+        'https://example.com',
+        'https://example.com with "quotes"',
+        'true',
+        '42',
+        'null',
+        'x',
+        'y',
+        'b',
+        'a',
+        '<xss>',
+      ],
     },
   ];
 
@@ -130,26 +143,10 @@ describe('<KeyValuesTable>', () => {
     expect(valueElements).toHaveLength(data.length);
 
     valueElements.forEach((valueDiv, i) => {
-      const expected = data[i].expected;
-      if (data[i].key === 'jsonkey') {
-        expect(valueDiv).toHaveTextContent('world');
-        expect(valueDiv).toHaveTextContent('safe');
-        expect(valueDiv).toHaveTextContent('https://example.com');
-        expect(valueDiv).toHaveTextContent('https://example.com with "quotes"');
-        expect(valueDiv).toHaveTextContent('true');
-        expect(valueDiv).toHaveTextContent('42');
-        expect(valueDiv).toHaveTextContent('null');
-        expect(valueDiv).toHaveTextContent('x');
-        expect(valueDiv).toHaveTextContent('b');
-        expect(valueDiv).toHaveTextContent('y');
-        expect(valueDiv).toHaveTextContent('a');
-      } else if (Array.isArray(expected)) {
-        expected.forEach(text => {
-          expect(valueDiv).toHaveTextContent(text);
-        });
-      } else {
-        expect(valueDiv).toHaveTextContent(expected);
-      }
+      const expectedItems = data[i].expected;
+      expectedItems.forEach(expectedText => {
+        expect(valueDiv).toHaveTextContent(expectedText);
+      });
     });
   });
 
