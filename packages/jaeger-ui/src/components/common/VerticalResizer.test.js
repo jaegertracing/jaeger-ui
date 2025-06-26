@@ -106,10 +106,12 @@ describe('<VerticalResizer>', () => {
     });
 
     it('handles drag start', () => {
+      mockDragManager.isDragging.mockReturnValue(true);
       render(<VerticalResizer {...props} />);
       act(() => draggableManagerConfig.onDragStart({ value: 0.3 }));
       const dragger = screen.getByTestId('dragger');
       expect(dragger).toBeInTheDocument();
+      expect(dragger).toHaveStyle({ left: '30%' });
     });
 
     it('handles drag update', () => {
@@ -119,9 +121,12 @@ describe('<VerticalResizer>', () => {
     });
 
     it('handles flipped drag update', () => {
+      mockDragManager.isDragging.mockReturnValue(true);
       render(<VerticalResizer {...props} rightSide />);
       act(() => draggableManagerConfig.onDragMove({ value: 0.6 }));
-      expect(screen.getByTestId('dragger')).toBeInTheDocument();
+      const dragger = screen.getByTestId('dragger');
+      expect(dragger).toBeInTheDocument();
+      expect(dragger).toHaveStyle({ left: '40%' });
     });
 
     it('handles drag end', () => {
@@ -134,10 +139,14 @@ describe('<VerticalResizer>', () => {
 
     it('handles flipped drag end', () => {
       const fakeMgr = { resetBounds: jest.fn() };
-      render(<VerticalResizer {...props} rightSide />);
-      act(() => draggableManagerConfig.onDragEnd({ manager: fakeMgr, value: 0.4 }));
+      render(<VerticalResizer {...props} rightSide />); // 'rightSide' flips the drag direction
+      act(() => {
+        // When rightSide is true, the actual dragPosition becomes (1 - value)
+        // So value: 0.4 → dragPosition: 0.6 → onChange(0.6) should be called
+        draggableManagerConfig.onDragEnd({ manager: fakeMgr, value: 0.4 });
+      });
       expect(fakeMgr.resetBounds).toHaveBeenCalled();
-      expect(mockOnChange).toHaveBeenCalledWith(0.6);
+      expect(mockOnChange).toHaveBeenCalledWith(0.6); // flipped: 1 - 0.4
     });
 
     it('cleans up DraggableManager on unmount', () => {
