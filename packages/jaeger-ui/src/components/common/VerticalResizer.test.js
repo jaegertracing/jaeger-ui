@@ -115,9 +115,16 @@ describe('<VerticalResizer>', () => {
     });
 
     it('handles drag update', () => {
+      mockDragManager.isDragging.mockReturnValue(true);
       render(<VerticalResizer {...props} />);
       act(() => draggableManagerConfig.onDragMove({ value: 0.6 }));
       expect(screen.getByTestId('dragger')).toBeInTheDocument();
+      // When dragging from position 0.5 to 0.6, the dragger shows a highlight
+      // from min(0.5, 0.6) = 0.5 to max(0.5, 0.6) = 0.6
+      expect(screen.getByTestId('dragger')).toHaveStyle({
+        left: '50%',
+        right: 'calc(40% - 1px)',
+      });
     });
 
     it('handles flipped drag update', () => {
