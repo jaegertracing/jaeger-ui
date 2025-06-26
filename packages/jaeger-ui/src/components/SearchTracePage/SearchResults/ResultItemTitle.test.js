@@ -15,23 +15,24 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Router } from 'react-router-dom';
+import { createMemoryHistory } from 'history';
 import '@testing-library/jest-dom';
 
 import ResultItemTitle from './ResultItemTitle';
 import { fetchedState } from '../../../constants';
 import { formatDuration } from '../../../utils/date';
 
-// We wrap the component to provide this context.
-const AllTheProviders = ({ children }) => {
-  return <MemoryRouter>{children}</MemoryRouter>;
-};
-
-const setup = props => {
-  const view = render(<ResultItemTitle {...props} />, { wrapper: AllTheProviders });
+const setup = (props, history) => {
+  // A variable for a component must be capitalized (PascalCase) for JSX to recognize it.
+  const RenderContainer = history ? Router : MemoryRouter;
+  const view = render(<ResultItemTitle {...props} />, {
+    wrapper: ({ children }) => <RenderContainer history={history}>{children}</RenderContainer>,
+  });
   return {
     ...view,
     user: userEvent.setup(),
+    history,
   };
 };
 
@@ -40,7 +41,7 @@ describe('ResultItemTitle', () => {
     duration: 150000, // Using microseconds is more realistic for formatDuration
     durationPercent: 10,
     isInDiffCohort: true,
-    linkTo: '/search?traceID=trace-id-longer-than-8', // more realistic link
+    linkTo: { pathname: '/search', search: `?traceID=trace-id-longer-than-8` }, // Use LocationDescriptor object
     state: fetchedState.DONE,
     toggleComparison: jest.fn(),
     traceID: 'trace-id-longer-than-8',
@@ -53,25 +54,23 @@ describe('ResultItemTitle', () => {
 
   it('renders as expected', () => {
     const { container } = setup(defaultProps);
-
-    // Test that the formatted duration is displayed (this is directly rendered by ResultItemTitle)
+    // Test that the formatted duration is displayed correctly.
     expect(screen.getByText(formatDuration(defaultProps.duration))).toBeInTheDocument();
 
-    // Test that the component structure is correct
-    expect(screen.getByRole('link')).toBeInTheDocument();
-    expect(screen.getByRole('checkbox')).toBeInTheDocument();
+    // Test that the link is rendered with the correct href and contains the title.
+    const link = screen.getByRole('link', { name: /150ms traceNameValue trace-i/i });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', `${defaultProps.linkTo.pathname}${defaultProps.linkTo.search}`);
 
-    // Test that the duration bar is rendered with correct width
+    // Test that the checkbox is rendered and checked by default.
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).toBeInTheDocument();
+    expect(checkbox).toBeChecked();
+
+    // Test that the duration bar is rendered with the correct width.
     const durationBar = container.querySelector('.ResultItemTitle--durationBar');
     expect(durationBar).toBeInTheDocument();
     expect(durationBar).toHaveStyle(`width: ${defaultProps.durationPercent}%`);
-
-    // Test that the main container has the correct class
-    expect(container.querySelector('.ResultItemTitle')).toBeInTheDocument();
-
-    // Test that TraceName and TraceId components are rendered (by checking their presence)
-    expect(container.querySelector('.ResultItemTitle--title')).toBeInTheDocument();
-    expect(container.querySelector('.ResultItemTitle--idExcerpt')).toBeInTheDocument();
   });
 
   describe('Checkbox', () => {
@@ -145,25 +144,28 @@ describe('ResultItemTitle', () => {
     });
 
     it('prevents click propagation from the checkbox', async () => {
-      const { user } = setup(defaultProps);
-      const link = screen.getByRole('link');
+      const history = createMemoryHistory();
+      jest.spyOn(history, 'push');
+      const { user } = setup(defaultProps, history);
 
-      // Ensure the link is functional before testing the checkbox
-      expect(link).toHaveAttribute('href', defaultProps.linkTo);
-
-      // A user click on the checkbox should call the toggle function but NOT navigate.
-      // In a real app this would change the URL. In this test, not throwing an
-      // error and successfully calling the mock is sufficient to prove the link
-      // behavior was prevented.
+      // A user click on the checkbox should call the toggle function.
       await user.click(screen.getByRole('checkbox'));
-
       expect(defaultProps.toggleComparison).toHaveBeenCalledTimes(1);
+
+      // Crucially, it should NOT trigger navigation by the parent Link.
+      // We verify that the history object was not manipulated.
+      expect(history.push).not.toHaveBeenCalled();
+
+      // For comparison, confirm a direct click on the link *does* navigate.
+      await user.click(screen.getByRole('link'));
+      expect(history.push).toHaveBeenCalledWith(defaultProps.linkTo);
     });
   });
 
   describe('WrapperComponent', () => {
     it('renders <Link> when linkTo is provided', () => {
       const { rerender } = setup(defaultProps);
+      // Assert the link is present and contains the expected text.
       expect(screen.getByRole('link', { name: /traceNameValue/i })).toBeInTheDocument();
 
       rerender(
@@ -171,7 +173,15 @@ describe('ResultItemTitle', () => {
           <ResultItemTitle {...defaultProps} linkTo={null} />
         </MemoryRouter>
       );
+
+      // Assert the link is now gone.
       expect(screen.queryByRole('link')).not.toBeInTheDocument();
+
+      // Assert the title is still visible, but now inside a <div>, not an <a>.
+      const titleElement = screen.getByText(/traceNameValue/i);
+      const wrapper = titleElement.closest('.ResultItemTitle--item');
+      expect(wrapper).toBeInTheDocument();
+      expect(wrapper.tagName).toBe('DIV');
     });
 
     it('<Link> targets _blank and sets rel when targetBlank is true', () => {
@@ -192,8 +202,8 @@ describe('ResultItemTitle', () => {
     });
 
     it('hides formated duration when duration is not provided', () => {
-      const { rerender } = setup(defaultProps);
-      // Duration text is visible
+      const { rerender, container } = setup(defaultProps);
+      // Duration text is visible initially.
       expect(screen.getByText(formatDuration(defaultProps.duration))).toBeInTheDocument();
 
       rerender(
@@ -201,8 +211,13 @@ describe('ResultItemTitle', () => {
           <ResultItemTitle {...defaultProps} duration={null} />
         </MemoryRouter>
       );
-      // Duration text is hidden
+      // Duration text is now hidden.
       expect(screen.queryByText(formatDuration(defaultProps.duration))).not.toBeInTheDocument();
+
+      // Verify the rest of the component structure remains intact.
+      // The link, title, and trace ID should still be rendered.
+      expect(screen.getByRole('link', { name: /traceNameValue/i })).toBeInTheDocument();
+      expect(container.querySelector('.ResultItemTitle--idExcerpt')).toBeInTheDocument();
     });
   });
 });
