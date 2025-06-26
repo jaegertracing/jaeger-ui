@@ -272,21 +272,21 @@ describe('<NameSelector>', () => {
     });
 
     it('throws Error when attempting to clear when required (simulated)', () => {
-      // Render the component internally to access instance method for testing the throw
-      const instanceProps = {
+      // Render the component with required=true but also provide clearValue
+      // This simulates the error case we want to test
+      const testProps = {
         label,
         options,
         value: options[0],
         required: true,
         setValue: jest.fn(),
-        // No clearValue needed here as it's required
+        clearValue: jest.fn(), // This should cause the error
       };
-      const instance = new NameSelector(instanceProps);
-      // Mock event object
-      const mockEvent = { stopPropagation: jest.fn() };
 
-      // Use try-catch or expect().toThrow on the instance method call
-      expect(() => instance.clearValue(mockEvent)).toThrow('Cannot clear value of required NameSelector');
+      // The error should be thrown during render
+      expect(() => render(<NameSelector {...testProps} />)).toThrow(
+        'Cannot clear value of required NameSelector'
+      );
     });
   });
 });
