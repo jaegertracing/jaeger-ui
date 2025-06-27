@@ -97,7 +97,7 @@ describe('<OperationTableDetails>', () => {
     const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0] };
     cloneServiceOpsMetrics.latency = 8000;
     render(<OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />);
-    // this test in original just creates the data but doesn't verify it, so we just render it
+    expect(screen.getByText('8s')).toBeInTheDocument();
   });
 
   it('render lower than 0.1 request rate value', () => {
