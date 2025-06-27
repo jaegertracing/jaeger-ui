@@ -76,7 +76,7 @@ describe('<KeyValuesTable>', () => {
     number: 42,
     null: null,
     array: ['x', 'y', 'z'],
-    object: { a: 'b', x: 'y' },
+    object: { apple: 'banana', melon: 'mango' },
   };
   const data = [
     { key: 'span.kind', value: 'client', expected: ['client'] },
