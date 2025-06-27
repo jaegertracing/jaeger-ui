@@ -112,10 +112,8 @@ describe('<OperationTableDetails>', () => {
   it('render request rate number with more than 2 decimal places value', () => {
     const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0] };
     cloneServiceOpsMetrics.requests = 0.2888;
-    const { container } = render(
-      <OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />
-    );
-    expect(container.querySelector('table')).toBeInTheDocument();
+    render(<OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />);
+    expect(screen.getByText('0.28 req/s')).toBeInTheDocument();
   });
 
   it('render lower than 0.1 error rate', () => {
