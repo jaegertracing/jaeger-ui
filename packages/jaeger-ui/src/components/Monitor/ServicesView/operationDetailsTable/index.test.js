@@ -103,9 +103,7 @@ describe('<OperationTableDetails>', () => {
   it('render lower than 0.1 request rate value', () => {
     const cloneServiceOpsMetrics = { ...serviceOpsMetrics[0] };
     cloneServiceOpsMetrics.requests = 0.02;
-    render(
-      <OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />
-    );
+    render(<OperationTableDetails {...props} data={[cloneServiceOpsMetrics]} loading={false} />);
     expect(screen.getByText('< 0.1 req/s')).toBeInTheDocument();
   });
 
