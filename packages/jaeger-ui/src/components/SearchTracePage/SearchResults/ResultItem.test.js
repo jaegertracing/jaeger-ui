@@ -124,7 +124,7 @@ it('calls trackConversions on click', () => {
       disableComparision={false}
     />
   );
-  const resultItem = screen.getByRole('button');
+  const resultItem = screen.getByTestId('result-item-button');
   resultItem.click();
   expect(spy).toHaveBeenCalledWith(tracking.EAltViewActions.Traces);
 });
