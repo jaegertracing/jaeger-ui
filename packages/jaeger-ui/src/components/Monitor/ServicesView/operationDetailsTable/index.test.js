@@ -172,11 +172,11 @@ describe('<OperationTableDetails>', () => {
     const tableRow = screen.getAllByRole('row')[1];
 
     fireEvent.mouseEnter(tableRow);
-
+    expect(tableRow).toHaveClass('table-row--hovered');
     expect(screen.getByText('View traces')).toBeInTheDocument();
 
     fireEvent.mouseLeave(tableRow);
-
+    expect(tableRow).not.toHaveClass('table-row--hovered');
     expect(screen.queryByText('View traces')).not.toBeInTheDocument();
   });
 
