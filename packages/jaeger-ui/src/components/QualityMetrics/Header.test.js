@@ -77,16 +77,20 @@ describe('Header', () => {
       const { rerender } = render(<Header {...props} />);
       const input = screen.getByRole('spinbutton');
 
-      // Set the internal state by triggering user input (simulates setState({ ownInputValue: 27 }))
-      const ownInputValue = '27';
-      fireEvent.change(input, { target: { value: ownInputValue } });
+      // This simulates a user typing "27" into the input.
+      const userInput = '27';
+      fireEvent.change(input, { target: { value: userInput } });
 
-      // Verify the input shows the state value, not the props value
-      expect(input.value).toBe(ownInputValue);
+      // This verifies the component is displaying its internal state.
+      expect(input.value).toBe(userInput);
 
-      // Even if props.lookback changes, the input should still show the state value
+      // This simulates the parent component passing down new data.
       rerender(<Header {...props} lookback={999} />);
-      expect(input.value).toBe(ownInputValue);
+
+      // The component should prioritize the user's active input (its internal state)
+      // over the new prop. We assert the input still shows the user's value,
+      // confirming that the component's state takes precedence.
+      expect(input.value).toBe(userInput);
     });
 
     it('prioritizes user input over props.lookback (state.ownInputValue precedence)', () => {
