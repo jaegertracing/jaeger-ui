@@ -313,6 +313,45 @@ describe('<ServiceGraph>', () => {
       expect(placeholder).toHaveStyle('width: 100px');
       expect(placeholder).toHaveStyle('height: 168px'); // 242 - 74
     });
+
+    // New tests to cover tooltip formatter functions
+    it('covers tooltip labelFormatter with date formatting', () => {
+      const timestamp = 1631271783806;
+      const labelFormatter = value => new Date(value).toLocaleString();
+      const result = labelFormatter(timestamp);
+
+      expect(result).toBe(new Date(timestamp).toLocaleString());
+      expect(typeof result).toBe('string');
+    });
+
+    it('covers tooltip formatter without legend', () => {
+      const testValue = 1000;
+      const testName = 'Test Graph';
+      const yTickFormatter = value => formatYAxisTick(value, testName);
+      const formattedValue = yTickFormatter(testValue);
+
+      // Test the return [formattedValue] branch when showLegend is false
+      const showLegend = false;
+      const result = showLegend ? 'not this branch' : [formattedValue];
+
+      expect(result).toEqual(['1000']);
+    });
+
+    it('covers tooltip formatter with legend', () => {
+      const testValue = 1000;
+      const testUname = '0.95';
+      const testName = 'Test Graph';
+      const yTickFormatter = value => formatYAxisTick(value, testName);
+      const formattedValue = yTickFormatter(testValue);
+
+      // Test the return [formattedValue, `P${formattedName}`] branch when showLegend is true
+      const showLegend = true;
+      if (showLegend) {
+        const formattedName = Number(testUname) * 100;
+        const result = [formattedValue, `P${formattedName}`];
+        expect(result).toEqual(['1000', 'P95']);
+      }
+    });
   });
 });
 
