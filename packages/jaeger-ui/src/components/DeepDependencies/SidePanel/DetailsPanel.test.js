@@ -183,6 +183,19 @@ describe('<SidePanel>', () => {
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noreferrer noopener');
     });
+
+    it('renders details path not found error', async () => {
+      render(<DetailsPanel {...props} />);
+
+      const response = { someOtherData: 'value' };
+
+      res(response);
+
+      const detailsCard = await screen.findByTestId('details-card');
+      expect(detailsCard).toBeInTheDocument();
+      expect(detailsCard).toHaveClass('is-error');
+      expect(detailsCard.textContent).toContain(`\`${props.decorationSchema.detailPath}\` not found in response`);
+    });
   });
 
   describe('componentDidMount', () => {
