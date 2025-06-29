@@ -194,7 +194,9 @@ describe('<SidePanel>', () => {
       const detailsCard = await screen.findByTestId('details-card');
       expect(detailsCard).toBeInTheDocument();
       expect(detailsCard).toHaveClass('is-error');
-      expect(detailsCard.textContent).toContain(`\`${props.decorationSchema.detailPath}\` not found in response`);
+      expect(detailsCard.textContent).toContain(
+        `\`${props.decorationSchema.detailPath}\` not found in response`
+      );
     });
   });
 
