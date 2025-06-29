@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import React, { useRef, useMemo, useCallback } from 'react';
 
 import DraggableManager, { DraggableBounds, DraggingUpdate } from '..';
 import { TNil } from '../../../types';
@@ -21,7 +21,7 @@ import './RegionDemo.css';
 
 type TUpdate = {
   regionCursor?: number | null;
-  regionDragging?: number[] | null;
+  regionDragging?: [number, number] | null;
 };
 
 type RegionDemoProps = {
@@ -30,91 +30,92 @@ type RegionDemoProps = {
   updateState: (update: TUpdate) => void;
 };
 
-export default class RegionDemo extends React.PureComponent<RegionDemoProps> {
-  _dragManager: DraggableManager;
+const RegionDemo: React.FC<RegionDemoProps> = ({ regionCursor, regionDragging, updateState }) => {
+  const realmElmRef = useRef<HTMLDivElement | null>(null);
 
-  _realmElm: HTMLElement | TNil;
-
-  constructor(props: RegionDemoProps) {
-    super(props);
-
-    this._realmElm = null;
-
-    this._dragManager = new DraggableManager({
-      getBounds: this._getDraggingBounds,
-      onDragEnd: this._handleDragEnd,
-      onDragMove: this._handleDragUpdate,
-      onDragStart: this._handleDragUpdate,
-      onMouseMove: this._handleMouseMove,
-      onMouseLeave: this._handleMouseLeave,
-    });
-  }
-
-  _setRealm = (elm: HTMLElement | TNil) => {
-    this._realmElm = elm;
-  };
-
-  _getDraggingBounds = (): DraggableBounds => {
-    if (!this._realmElm) {
-      throw new Error('invalid state');
+  const getDraggingBounds = useCallback((): DraggableBounds => {
+    if (!realmElmRef.current) {
+      throw new Error('invalid state: realmElmRef is not set');
     }
-    const { left: clientXLeft, width } = this._realmElm.getBoundingClientRect();
+    const { left: clientXLeft, width } = realmElmRef.current.getBoundingClientRect();
     return {
       clientXLeft,
       width,
       maxValue: 1,
       minValue: 0,
     };
-  };
+  }, []);
 
-  _handleMouseMove = ({ value }: DraggingUpdate) => {
-    this.props.updateState({ regionCursor: value });
-  };
+  const handleMouseMove = useCallback(
+    ({ value }: DraggingUpdate) => {
+      updateState({ regionCursor: value });
+    },
+    [updateState]
+  );
 
-  _handleMouseLeave = () => {
-    this.props.updateState({ regionCursor: null });
-  };
+  const handleMouseLeave = useCallback(() => {
+    updateState({ regionCursor: null });
+  }, [updateState]);
 
-  _handleDragUpdate = ({ value }: DraggingUpdate) => {
-    const { regionDragging: prevRegionDragging } = this.props;
-    let regionDragging;
-    if (prevRegionDragging) {
-      regionDragging = [prevRegionDragging[0], value];
-    } else {
-      regionDragging = [value, value];
-    }
-    this.props.updateState({ regionDragging });
-  };
+  const handleDragUpdate = useCallback(
+    ({ value }: DraggingUpdate) => {
+      let newRegionDragging: [number, number];
+      if (regionDragging) {
+        newRegionDragging = [regionDragging[0], value];
+      } else {
+        newRegionDragging = [value, value];
+      }
+      updateState({ regionDragging: newRegionDragging });
+    },
+    [regionDragging, updateState]
+  );
 
-  _handleDragEnd = ({ value }: DraggingUpdate) => {
-    this.props.updateState({ regionDragging: null, regionCursor: value });
-  };
+  const handleDragEnd = useCallback(
+    ({ value }: DraggingUpdate) => {
+      updateState({ regionDragging: null, regionCursor: value });
+    },
+    [updateState]
+  );
 
-  render() {
-    const { regionCursor, regionDragging } = this.props;
-    let cursorElm;
-    let regionElm;
-    if (regionDragging) {
-      const [a, b] = regionDragging;
-      const [left, right] = a < b ? [a, 1 - b] : [b, 1 - a];
-      const regionStyle = { left: `${left * 100}%`, right: `${right * 100}%` };
-      regionElm = <div className="RegionDemo--region" style={regionStyle} />;
-    } else if (regionCursor) {
-      const cursorStyle = { left: `${regionCursor * 100}%` };
-      cursorElm = <div className="RegionDemo--regionCursor" style={cursorStyle} />;
-    }
-    return (
-      <div
-        aria-hidden
-        className="RegionDemo--realm"
-        onMouseDown={this._dragManager.handleMouseDown}
-        onMouseMove={this._dragManager.handleMouseMove}
-        onMouseLeave={this._dragManager.handleMouseMove}
-        ref={this._setRealm}
-      >
-        {regionElm}
-        {cursorElm}
-      </div>
-    );
+  const dragManager = useMemo(
+    () =>
+      new DraggableManager({
+        getBounds: getDraggingBounds,
+        onDragEnd: handleDragEnd,
+        onDragMove: handleDragUpdate,
+        onDragStart: handleDragUpdate,
+        onMouseMove: handleMouseMove,
+        onMouseLeave: handleMouseLeave,
+      }),
+    [getDraggingBounds, handleDragEnd, handleDragUpdate, handleMouseMove, handleMouseLeave]
+  );
+
+  let cursorElm;
+  let regionElm;
+
+  if (regionDragging) {
+    const [a, b] = regionDragging;
+    const [left, right] = a < b ? [a, 1 - b] : [b, 1 - a];
+    const regionStyle = { left: `${left * 100}%`, right: `${right * 100}%` };
+    regionElm = <div className="RegionDemo--region" style={regionStyle} />;
+  } else if (regionCursor) {
+    const cursorStyle = { left: `${regionCursor * 100}%` };
+    cursorElm = <div className="RegionDemo--regionCursor" style={cursorStyle} />;
   }
-}
+
+  return (
+    <div
+      aria-hidden
+      className="RegionDemo--realm"
+      onMouseDown={dragManager.handleMouseDown}
+      onMouseMove={dragManager.handleMouseMove}
+      onMouseLeave={dragManager.handleMouseLeave}
+      ref={realmElmRef}
+    >
+      {regionElm}
+      {cursorElm}
+    </div>
+  );
+};
+
+export default RegionDemo;

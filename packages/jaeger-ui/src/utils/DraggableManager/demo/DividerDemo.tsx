@@ -12,70 +12,64 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import React, { useRef, useCallback, useMemo } from 'react';
 
 import { DraggableBounds, DraggingUpdate } from '..';
 import DraggableManager from '../DraggableManager';
-import TNil from '../../../types/TNil';
 
 import './DividerDemo.css';
 
 type DividerDemoProps = {
   position: number;
-  updateState: (udpate: { dividerPosition: number }) => void;
+  updateState: (update: { dividerPosition: number }) => void;
 };
 
-export default class DividerDemo extends React.PureComponent<DividerDemoProps> {
-  _dragManager: DraggableManager;
+const DividerDemo: React.FC<DividerDemoProps> = ({ position, updateState }) => {
+  const realmElmRef = useRef<HTMLDivElement | null>(null);
 
-  _realmElm: HTMLElement | TNil;
-
-  constructor(props: DividerDemoProps) {
-    super(props);
-
-    this._realmElm = null;
-
-    this._dragManager = new DraggableManager({
-      getBounds: this._getDraggingBounds,
-      onDragEnd: this._handleDragEvent,
-      onDragMove: this._handleDragEvent,
-      onDragStart: this._handleDragEvent,
-    });
-  }
-
-  _setRealm = (elm: HTMLElement | TNil) => {
-    this._realmElm = elm;
-  };
-
-  _getDraggingBounds = (): DraggableBounds => {
-    if (!this._realmElm) {
+  const getDraggingBounds = useCallback((): DraggableBounds => {
+    if (!realmElmRef.current) {
       throw new Error('invalid state');
     }
-    const { left: clientXLeft, width } = this._realmElm.getBoundingClientRect();
+    const { left: clientXLeft, width } = realmElmRef.current.getBoundingClientRect();
     return {
       clientXLeft,
       width,
       maxValue: 0.98,
       minValue: 0.02,
     };
-  };
+  }, []);
 
-  _handleDragEvent = ({ value }: DraggingUpdate) => {
-    this.props.updateState({ dividerPosition: value });
-  };
+  const handleDragEvent = useCallback(
+    ({ value }: DraggingUpdate) => {
+      updateState({ dividerPosition: value });
+    },
+    [updateState]
+  );
 
-  render() {
-    const { position } = this.props;
-    const style = { left: `${position * 100}%` };
-    return (
-      <div className="DividerDemo--realm" ref={this._setRealm}>
-        <div
-          aria-hidden
-          className="DividerDemo--divider"
-          onMouseDown={this._dragManager.handleMouseDown}
-          style={style}
-        />
-      </div>
-    );
-  }
-}
+  const dragManager = useMemo(
+    () =>
+      new DraggableManager({
+        getBounds: getDraggingBounds,
+        onDragEnd: handleDragEvent,
+        onDragMove: handleDragEvent,
+        onDragStart: handleDragEvent,
+      }),
+    [getDraggingBounds, handleDragEvent]
+  );
+
+  const style = { left: `${position * 100}%` };
+
+  return (
+    <div className="DividerDemo--realm" ref={realmElmRef}>
+      <div
+        aria-hidden
+        className="DividerDemo--divider"
+        onMouseDown={dragManager.handleMouseDown}
+        style={style}
+      />
+    </div>
+  );
+};
+
+export default DividerDemo;
