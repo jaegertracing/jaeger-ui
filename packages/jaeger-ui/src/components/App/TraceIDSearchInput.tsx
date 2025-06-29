@@ -27,33 +27,26 @@ type Props = {
   history: History;
 };
 
-class TraceIDSearchInput extends React.PureComponent<Props> {
-  goToTrace = (event: React.FormEvent<HTMLFormElement>) => {
+const TraceIDSearchInput: React.FC<Props> = ({ history }) => {
+  const goToTrace = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const target = event.target as any;
     const value = target.elements.idInput.value;
     if (value) {
-      this.props.history.push(getUrl(value));
+      history.push(getUrl(value));
     }
   };
 
-  render() {
-    return (
-      <Form
-        data-testid="TraceIDSearchInput--form"
-        layout="horizontal"
-        onSubmitCapture={this.goToTrace}
-        className="TraceIDSearchInput--form"
-      >
-        <Input
-          data-testid="idInput"
-          name="idInput"
-          placeholder="Lookup by Trace ID..."
-          prefix={<IoSearch />}
-        />
-      </Form>
-    );
-  }
-}
+  return (
+    <Form
+      data-testid="TraceIDSearchInput--form"
+      layout="horizontal"
+      onSubmitCapture={goToTrace}
+      className="TraceIDSearchInput--form"
+    >
+      <Input data-testid="idInput" name="idInput" placeholder="Lookup by Trace ID..." prefix={<IoSearch />} />
+    </Form>
+  );
+};
 
 export default withRouteProps(TraceIDSearchInput);
