@@ -15,7 +15,7 @@
 import _isEqual from 'lodash/isEqual';
 import { handleActions } from 'redux-actions';
 
-import { fetchTrace, fetchMultipleTraces, searchTraces } from '../actions/jaeger-api';
+import { fetchTrace, fetchMultipleTraces, searchTraces, searchTracesWithPagination } from '../actions/jaeger-api';
 import { loadJsonTraces } from '../actions/file-reader-api';
 import { fetchedState } from '../constants';
 import transformTraceData from '../model/transform-trace-data';
@@ -25,6 +25,12 @@ const initialState = {
   search: {
     query: null,
     results: [],
+    pagination: {
+      currentPage: 1,
+      pageSize: 20,
+      totalCount: 0,
+      totalPages: 0,
+    },
   },
 };
 
@@ -95,6 +101,12 @@ function fetchSearchStarted(state, { meta }) {
     query,
     results: [],
     state: fetchedState.LOADING,
+    pagination: {
+      currentPage: query.page || 1,
+      pageSize: query.pageSize || query.limit || 20,
+      totalCount: 0,
+      totalPages: 0,
+    },
   };
   return { ...state, search };
 }
@@ -103,7 +115,7 @@ function searchDone(state, { meta, payload }) {
   if (!_isEqual(state.search.query, meta.query)) {
     return state;
   }
-  const payloadData = payload.data;
+  const payloadData = payload.data || payload;
   const processed = payloadData.map(transformTraceData);
   const resultTraces = {};
   const results = [];
@@ -113,8 +125,22 @@ function searchDone(state, { meta, payload }) {
     resultTraces[id] = { data, id, state: fetchedState.DONE };
     results.push(id);
   }
+
+  // Extract pagination information from payload
+  const totalCount = payload.total || payloadData.length;
+  const currentPage = meta.query.page || 1;
+  const pageSize = meta.query.pageSize || meta.query.limit || 20;
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  const pagination = {
+    currentPage,
+    pageSize,
+    totalCount,
+    totalPages,
+  };
+
   const traces = { ...state.traces, ...resultTraces };
-  const search = { ...state.search, results, state: fetchedState.DONE };
+  const search = { ...state.search, results, state: fetchedState.DONE, pagination };
   return { ...state, search, traces, rawTraces: payloadData };
 }
 
@@ -169,6 +195,10 @@ export default handleActions(
     [`${searchTraces}_PENDING`]: fetchSearchStarted,
     [`${searchTraces}_FULFILLED`]: searchDone,
     [`${searchTraces}_REJECTED`]: searchErred,
+
+    [`${searchTracesWithPagination}_PENDING`]: fetchSearchStarted,
+    [`${searchTracesWithPagination}_FULFILLED`]: searchDone,
+    [`${searchTracesWithPagination}_REJECTED`]: searchErred,
 
     [`${loadJsonTraces}_PENDING`]: loadJsonStarted,
     [`${loadJsonTraces}_FULFILLED`]: loadJsonDone,

@@ -16,4 +16,10 @@ export const DEFAULT_OPERATION = 'all';
 export const DEFAULT_LOOKBACK = '1h';
 export const DEFAULT_LIMIT = 20;
 
+// Pagination constants
+export const DEFAULT_PAGE_SIZE = 20;
+export const DEFAULT_PAGE = 1;
+export const PAGE_SIZE_OPTIONS = ['10', '20', '50', '100'];
+export const MAX_PAGE_SIZE = 100;
+
 export const CHANGE_SERVICE_ACTION_TYPE = '@@redux/searchSideBar/CHANGE_SERVICE';
