@@ -27,14 +27,20 @@ import ServiceGraph, {
 } from './serviceGraph';
 import { serviceMetrics } from '../../../reducers/metrics.mock';
 
+// This will hold the props of the last rendered Tooltip
+let mockTooltipProps;
+
 // Mock Recharts to prevent issues with rendering in JSDOM
-// This mock replaces ResponsiveContainer with a version that has fixed dimensions.
-// It ensures the chart and its children render correctly in the test environment.
 jest.mock('recharts', () => {
   const OriginalModule = jest.requireActual('recharts');
   return {
     ...OriginalModule,
     ResponsiveContainer: props => <OriginalModule.ResponsiveContainer {...props} width={800} height={500} />,
+    // A mocked Tooltip component that captures its props
+    Tooltip: props => {
+      mockTooltipProps = props;
+      return <div data-testid="tooltip" />;
+    },
   };
 });
 
@@ -42,8 +48,8 @@ jest.mock('recharts', () => {
 const mockMetricsData = {
   quantile: 0.95,
   metricPoints: [
-    { x: 1000, y: 1000 },
-    { x: 2000, y: 2000 },
+    { x: 1631271783806, y: 1000 },
+    { x: 1631271883806, y: 2000 },
   ],
 };
 
@@ -76,7 +82,10 @@ const defaultProps = {
 };
 
 describe('<ServiceGraph>', () => {
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    mockTooltipProps = undefined; // Reset mock after each test
+  });
 
   it('renders loading indicator when loading', () => {
     render(<ServiceGraph {...defaultProps} />);
@@ -176,7 +185,7 @@ describe('<ServiceGraph>', () => {
       ...serviceMetrics.service_call_rate,
       metricPoints: [
         { x: 1631271783806, y: 0.0001 },
-        { x: 1631271783807, y: 1000 },
+        { x: 16312717807, y: 1000 },
       ],
     };
     render(<ServiceGraph {...defaultProps} loading={false} metricsData={metricsWithExtremes} />);
@@ -251,44 +260,55 @@ describe('<ServiceGraph>', () => {
     expect(screen.getByText('No Data')).toBeInTheDocument();
   });
 
-  it('formats tooltip values correctly', () => {
-    render(
-      <ServiceGraph
-        {...defaultProps}
-        loading={false}
-        metricsData={serviceMetrics.service_call_rate}
-        showLegend
-      />
-    );
-    expect(screen.getByTestId('service-graph')).toBeInTheDocument();
-  });
-
-  it('formats legend values correctly', () => {
-    render(
-      <ServiceGraph
-        {...defaultProps}
-        loading={false}
-        metricsData={serviceMetrics.service_call_rate}
-        showLegend
-      />
-    );
-    expect(screen.getByTestId('service-graph')).toBeInTheDocument();
-  });
-
   describe('tooltip and legend formatting', () => {
-    it('formats tooltip values correctly', () => {
-      // Logic for showLegend=true
-      const formattedWithLegend = [formatYAxisTick(1000, 'Test Graph'), `P${Number('0.95') * 100}`];
-      expect(formattedWithLegend[0]).toBe('1000');
-      expect(formattedWithLegend[1]).toBe('P95');
+    it('formats tooltip correctly when showLegend is false', () => {
+      render(
+        <ServiceGraph
+          {...defaultProps}
+          name="Latency"
+          loading={false}
+          metricsData={mockMetricsData}
+          showLegend={false}
+        />
+      );
 
-      // Logic for showLegend=false
-      const formattedWithoutLegend = [formatYAxisTick(1000, 'Test Graph')];
-      expect(formattedWithoutLegend[0]).toBe('1000');
+      expect(screen.getByTestId('tooltip')).toBeInTheDocument();
+      expect(mockTooltipProps).toBeDefined();
+
+      // Test labelFormatter
+      const timestamp = 1631271783806;
+      const label = mockTooltipProps.labelFormatter(timestamp);
+      expect(label).toBe(new Date(timestamp).toLocaleString());
+
+      // Test formatter (value, name)
+      const result = mockTooltipProps.formatter(1234.56, '0.95');
+      // formatYAxisTick(1234.56, 'Latency', undefined) should be '1235'
+      expect(result).toEqual(['1235']);
+    });
+
+    it('formats tooltip correctly when showLegend is true', () => {
+      render(
+        <ServiceGraph
+          {...defaultProps}
+          name="Latency"
+          loading={false}
+          metricsData={mockMetricsData}
+          showLegend
+        />
+      );
+
+      expect(screen.getByTestId('tooltip')).toBeInTheDocument();
+      expect(mockTooltipProps).toBeDefined();
+
+      // Test formatter (value, name)
+      const result = mockTooltipProps.formatter(1234.56, '0.95');
+      // formattedValue should be '1235'
+      // formattedName should be Number('0.95') * 100 = 95
+      expect(result).toEqual(['1235', 'P95']);
     });
 
     it('formats legend values correctly', () => {
-      // This logic is now inside the functional component's return statement.
+      // This logic is inside the functional component's return statement.
       // We test the output by rendering the component.
       render(
         <ServiceGraph
@@ -312,96 +332,6 @@ describe('<ServiceGraph>', () => {
       expect(placeholder).toHaveClass('center-placeholder');
       expect(placeholder).toHaveStyle('width: 100px');
       expect(placeholder).toHaveStyle('height: 168px'); // 242 - 74
-    });
-  });
-
-  // New tests for tooltip functionality
-  describe('tooltip formatting functions', () => {
-    it('formats tooltip label using labelFormatter', () => {
-      const testTimestamp = 1631271783806;
-      const expectedDate = new Date(testTimestamp).toLocaleString();
-
-      // Test the labelFormatter logic directly
-      const formattedLabel = new Date(testTimestamp).toLocaleString();
-      expect(formattedLabel).toBe(expectedDate);
-    });
-
-    it('formats tooltip values with showLegend=false using formatter', () => {
-      const testValue = 1500;
-      const graphName = 'Test Graph';
-
-      // Test formatter logic when showLegend is false
-      const yTickFormatter = value => formatYAxisTick(value, graphName);
-      const formattedValue = yTickFormatter(testValue);
-      const result = [formattedValue]; // This is what formatter returns when !showLegend
-
-      expect(result).toEqual(['1500']);
-    });
-
-    it('formats tooltip values with showLegend=true using formatter', () => {
-      const testValue = 1500;
-      const testName = '0.95';
-      const graphName = 'Test Graph';
-
-      // Test formatter logic when showLegend is true
-      const yTickFormatter = value => formatYAxisTick(value, graphName);
-      const formattedValue = yTickFormatter(testValue);
-      const formattedName = Number(testName) * 100;
-      const result = [formattedValue, `P${formattedName}`]; // This is what formatter returns when showLegend
-
-      expect(result).toEqual(['1500', 'P95']);
-    });
-
-    it('handles different quantile values in formatter', () => {
-      const testCases = [
-        { uname: '0.5', expected: 'P50' },
-        { uname: '0.75', expected: 'P75' },
-        { uname: '0.95', expected: 'P95' },
-        { uname: '0.99', expected: 'P99' },
-      ];
-
-      testCases.forEach(({ uname, expected }) => {
-        const formattedName = Number(uname) * 100;
-        const result = `P${formattedName}`;
-        expect(result).toBe(expected);
-      });
-    });
-
-    it('handles edge cases in formatter', () => {
-      const testValue = 0;
-      const uname = '0.5';
-      const graphName = 'Test Graph';
-
-      // Test with zero value
-      const yTickFormatter = value => formatYAxisTick(value, graphName);
-      const formattedValue = yTickFormatter(testValue);
-
-      // When showLegend is false
-      const resultWithoutLegend = [formattedValue];
-      expect(resultWithoutLegend).toEqual(['0']);
-
-      // When showLegend is true
-      const formattedName = Number(uname) * 100;
-      const resultWithLegend = [formattedValue, `P${formattedName}`];
-      expect(resultWithLegend).toEqual(['0', 'P50']);
-    });
-
-    it('handles custom yAxisTickFormat in formatter', () => {
-      const customFormatter = v => `${Math.round(v * 100)}%`;
-      const testValue = 0.123;
-      const uname = '0.95';
-
-      // Test with custom formatter
-      const formattedValue = formatYAxisTick(testValue, 'Test Graph', customFormatter);
-
-      // When showLegend is false
-      const resultWithoutLegend = [formattedValue];
-      expect(resultWithoutLegend).toEqual(['12%']);
-
-      // When showLegend is true
-      const formattedName = Number(uname) * 100;
-      const resultWithLegend = [formattedValue, `P${formattedName}`];
-      expect(resultWithLegend).toEqual(['12%', 'P95']);
     });
   });
 });
