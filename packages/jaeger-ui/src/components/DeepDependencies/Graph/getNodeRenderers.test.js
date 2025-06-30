@@ -49,6 +49,7 @@ describe('getNodeRenderers', () => {
               const vms = new Map([[key, vm]]);
               const { container } = render(getNodeRenderers(findMatches, vms).vectorBorder(testLv));
               const circle = container.querySelector('circle');
+
               expect(circle).toBeInTheDocument();
               if (findMatch) {
                 expect(circle).toHaveClass('is-findMatch');
@@ -70,6 +71,13 @@ describe('getNodeRenderers', () => {
               } else {
                 expect(circle).not.toHaveClass('is-focalNode');
               }
+
+              // Verify SVG attributes previously covered by snapshot
+              // r = width / 2 - 1 => 100 / 2 - 1 = 49
+              // cx, cy = width / 2 => 100 / 2 = 50
+              expect(circle).toHaveAttribute('r', '49');
+              expect(circle).toHaveAttribute('cx', '50');
+              expect(circle).toHaveAttribute('cy', '50');
             });
           });
         });
@@ -113,9 +121,8 @@ describe('getNodeRenderers', () => {
     });
 
     it('returns null if provided vertex is not in set', () => {
-      expect(
-        getNodeRenderers(new Set([{ vertex: { key: `not-${key}` } }]), new Map()).vectorFindColorBand(lv)
-      ).toBe(null);
+      const findMatches = new Set([`not-${key}`]);
+      expect(getNodeRenderers(findMatches, new Map()).vectorFindColorBand(lv)).toBe(null);
     });
 
     it('returns circle with correct size and className', () => {
@@ -124,6 +131,14 @@ describe('getNodeRenderers', () => {
       );
       const circle = container.querySelector('circle');
       expect(circle).toBeInTheDocument();
+
+      // Verify specific className and SVG attributes ---
+      expect(circle).toHaveClass('DdgNode--VectorFindEmphasis--colorBand');
+      // r = width / 2 - 1 => 100 / 2 - 1 = 49
+      // cx, cy = width / 2 => 100 / 2 = 50
+      expect(circle).toHaveAttribute('r', '49');
+      expect(circle).toHaveAttribute('cx', '50');
+      expect(circle).toHaveAttribute('cy', '50');
     });
   });
 });
