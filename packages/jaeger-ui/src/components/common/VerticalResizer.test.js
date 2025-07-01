@@ -173,7 +173,13 @@ describe('<VerticalResizer>', () => {
     mockDragManager.isDragging.mockReturnValue(true);
     render(<VerticalResizer {...props} />);
     act(() => draggableManagerConfig.onDragMove({ value: props.min }));
-    expect(screen.getByTestId('dragger')).toBeInTheDocument();
+    const dragger = screen.getByTestId('dragger');
+    expect(dragger).toBeInTheDocument();
+    expect(dragger).toHaveStyle({
+      left: '10%',
+      right: 'calc(50% - 1px)',
+    });
+    expect(screen.getByTestId('vertical-resizer')).toHaveClass(/isDraggingLeft|isDraggingRight/);
   });
 
   it('renders is-flipped classname when positioned on rightSide', () => {
