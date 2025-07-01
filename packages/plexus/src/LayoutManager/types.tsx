@@ -42,6 +42,14 @@ export type TLayoutOptions = {
   splines?: string;
   useDotEdges?: boolean;
   totalMemory?: number;
+  engine?: 'dot' | 'neato' | 'sfdp';
+  sfdpOptions?: {
+    repulsiveforce?: number;
+    overlap?: boolean;
+    maxiter?: number;
+    dim?: 2 | 3;
+  };
+  dpi?: number;
 };
 
 export type TLayoutWorkerMeta = {

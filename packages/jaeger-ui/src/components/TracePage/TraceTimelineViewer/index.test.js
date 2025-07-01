@@ -13,12 +13,32 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { legacy_createStore as createStore } from 'redux';
+import { Provider } from 'react-redux';
 
 import TraceTimelineViewer, { TraceTimelineViewerImpl } from './index';
+import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
-import TimelineHeaderRow from './TimelineHeaderRow';
+
+jest.mock('./VirtualizedTraceView', () => () => <div data-testid="virtualized-trace-view-mock" />);
+jest.mock('./TimelineHeaderRow', () => props => (
+  <div data-testid="timeline-header-row-mock">
+    <button data-testid="collapse-all-button" type="button" onClick={props.onCollapseAll}>
+      Collapse All
+    </button>
+    <button data-testid="expand-all-button" type="button" onClick={props.onExpandAll}>
+      Expand All
+    </button>
+    <button data-testid="collapse-one-button" type="button" onClick={props.onCollapseOne}>
+      Collapse One
+    </button>
+    <button data-testid="expand-one-button" type="button" onClick={props.onExpandOne}>
+      Expand One
+    </button>
+  </div>
+));
 
 describe('<TraceTimelineViewer>', () => {
   const trace = transformTraceData(traceGenerator.trace({}));
@@ -36,40 +56,78 @@ describe('<TraceTimelineViewer>', () => {
     expandOne: jest.fn(),
     collapseOne: jest.fn(),
   };
-  const options = {
-    context: {
-      store: {
-        getState() {
-          return { traceTimeline: { spanNameColumnWidth: 0.25 } };
-        },
-        subscribe() {},
-        dispatch() {},
-      },
-    },
+
+  const defaultState = {
+    traceTimeline: { spanNameColumnWidth: 0.25 },
   };
 
-  let wrapper;
-  let connectedWrapper;
+  function renderWithRedux(ui, { initialState = defaultState } = {}) {
+    const store = createStore((state = initialState) => state);
+
+    return {
+      ...render(<Provider store={store}>{ui}</Provider>),
+      store,
+    };
+  }
 
   beforeEach(() => {
-    wrapper = shallow(<TraceTimelineViewerImpl {...props} />, options);
-    connectedWrapper = shallow(<TraceTimelineViewer store={options.context.store} {...props} />, options);
+    props.expandAll.mockClear();
+    props.collapseAll.mockClear();
+    props.expandOne.mockClear();
+    props.collapseOne.mockClear();
+    jest.spyOn(KeyboardShortcuts, 'merge').mockClear();
+  });
+
+  afterEach(() => {
+    KeyboardShortcuts.merge.mockRestore();
   });
 
   it('it does not explode', () => {
-    expect(wrapper).toBeDefined();
-    expect(connectedWrapper).toBeDefined();
+    render(<TraceTimelineViewerImpl {...props} />);
+    renderWithRedux(<TraceTimelineViewer {...props} />);
   });
 
   it('it sets up actions', () => {
-    const headerRow = wrapper.find(TimelineHeaderRow);
-    headerRow.props().onCollapseAll();
-    headerRow.props().onExpandAll();
-    headerRow.props().onExpandOne();
-    headerRow.props().onCollapseOne();
-    expect(props.collapseAll.mock.calls.length).toBe(1);
-    expect(props.expandAll.mock.calls.length).toBe(1);
-    expect(props.expandOne.mock.calls.length).toBe(1);
-    expect(props.collapseOne.mock.calls.length).toBe(1);
+    render(<TraceTimelineViewerImpl {...props} />);
+
+    fireEvent.click(screen.getByTestId('collapse-all-button'));
+    expect(props.collapseAll).toHaveBeenCalledTimes(1);
+    expect(props.collapseAll).toHaveBeenCalledWith(props.trace.spans);
+
+    fireEvent.click(screen.getByTestId('expand-all-button'));
+    expect(props.expandAll).toHaveBeenCalledTimes(1);
+    expect(props.expandAll).toHaveBeenCalledWith();
+
+    fireEvent.click(screen.getByTestId('collapse-one-button'));
+    expect(props.collapseOne).toHaveBeenCalledTimes(1);
+    expect(props.collapseOne).toHaveBeenCalledWith(props.trace.spans);
+    fireEvent.click(screen.getByTestId('expand-one-button'));
+    expect(props.expandOne).toHaveBeenCalledTimes(1);
+    expect(props.expandOne).toHaveBeenCalledWith(props.trace.spans);
+  });
+
+  it('it should call mergeShortcuts with the correct callbacks on mount', () => {
+    render(<TraceTimelineViewerImpl {...props} />);
+    expect(KeyboardShortcuts.merge).toHaveBeenCalledWith({
+      collapseAll: expect.any(Function),
+      expandAll: expect.any(Function),
+      collapseOne: expect.any(Function),
+      expandOne: expect.any(Function),
+    });
+  });
+
+  it('it should call mergeShortcuts when callback props change', () => {
+    const { rerender } = render(<TraceTimelineViewerImpl {...props} />);
+    KeyboardShortcuts.merge.mockClear();
+
+    const newCollapseAll = jest.fn();
+    rerender(<TraceTimelineViewerImpl {...props} collapseAll={newCollapseAll} />);
+
+    expect(KeyboardShortcuts.merge).toHaveBeenCalledWith({
+      collapseAll: expect.any(Function),
+      expandAll: expect.any(Function),
+      collapseOne: expect.any(Function),
+      expandOne: expect.any(Function),
+    });
   });
 });

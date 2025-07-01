@@ -13,104 +13,131 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import ListItem from './ListItem';
 
 describe('<ListItem>', () => {
-  let wrapper;
-  const props = {
+  const defaultProps = {
     style: {},
     index: 0,
     data: {
       setValue: jest.fn(),
       focusedIndex: null,
       highlightQuery: '',
-      options: ['a', 'b'],
+      options: ['apple', 'banana'],
       selectedValue: null,
     },
   };
-  const selectedValue = props.data.options[props.index];
+
+  const renderItem = (props = {}) => {
+    const mergedProps = { ...defaultProps, ...props };
+    return render(<ListItem {...mergedProps} />);
+  };
 
   beforeEach(() => {
-    props.data.setValue.mockReset();
-    wrapper = shallow(<ListItem {...props} />);
+    defaultProps.data.setValue.mockReset();
   });
 
-  it('renders without exploding', () => {
-    expect(wrapper).toMatchSnapshot();
+  it('renders and highlights correct option', () => {
+    renderItem();
+    expect(screen.getByText('apple')).toBeInTheDocument();
   });
 
-  it('is focused when the index is the focusIndex', () => {
-    const data = { ...props.data, focusedIndex: props.index };
-    wrapper.setProps({ data });
-    expect(wrapper).toMatchSnapshot();
+  it('is focused when index matches focusedIndex', () => {
+    renderItem({ data: { ...defaultProps.data, focusedIndex: 0 } });
+    const item = screen.getByRole('switch');
+    expect(item).toHaveClass('is-focused');
+    expect(item).toHaveAttribute('aria-checked', 'true');
   });
 
-  it('is selected when options[index] == selectedValue', () => {
-    const data = { ...props.data, selectedValue };
-    wrapper.setProps({ data });
-    expect(wrapper).toMatchSnapshot();
+  it('is selected when option equals selectedValue', () => {
+    renderItem({ data: { ...defaultProps.data, selectedValue: 'apple' } });
+    const item = screen.getByRole('switch');
+    expect(item).toHaveClass('is-selected');
   });
 
-  it('sets the value when clicked', () => {
-    expect(props.data.setValue.mock.calls.length).toBe(0);
-    wrapper.simulate('click');
-    expect(props.data.setValue.mock.calls).toEqual([[selectedValue]]);
+  it('calls setValue when clicked (single mode)', () => {
+    renderItem();
+    fireEvent.click(screen.getByRole('switch'));
+    expect(defaultProps.data.setValue).toHaveBeenCalledWith('apple');
   });
 
   describe('multi mode', () => {
     const addValues = jest.fn();
     const removeValues = jest.fn();
-    const data = { ...props.data, multi: true };
 
     beforeEach(() => {
-      wrapper.setProps({ data });
       addValues.mockReset();
       removeValues.mockReset();
     });
 
-    it('renders without exploding', () => {
-      expect(wrapper).toMatchSnapshot();
+    it('renders checkbox in multi mode', () => {
+      renderItem({ data: { ...defaultProps.data, multi: true } });
+      expect(screen.getByRole('checkbox')).toBeInTheDocument();
     });
 
-    it('renders as selected when selected', () => {
-      wrapper.setProps({ data: { ...data, selectedValue } });
-      expect(wrapper).toMatchSnapshot();
+    it('renders as selected when value is selected', () => {
+      renderItem({
+        data: {
+          ...defaultProps.data,
+          multi: true,
+          selectedValue: 'apple',
+        },
+      });
+      const item = screen.getByRole('switch');
+      expect(item).toHaveClass('is-selected');
+      expect(screen.getByRole('checkbox')).toBeChecked();
     });
 
-    it('renders as selected when selected with others', () => {
-      wrapper.setProps({ data: { ...data, selectedValue: new Set(props.data.options) } });
-      expect(wrapper).toMatchSnapshot();
+    it('renders as selected with multiple values in Set', () => {
+      renderItem({
+        data: {
+          ...defaultProps.data,
+          multi: true,
+          selectedValue: new Set(['apple', 'banana']),
+        },
+      });
+      expect(screen.getByRole('checkbox')).toBeChecked();
     });
 
-    it('no-ops on click when multi add/remove functions are not both available', () => {
-      expect(() => wrapper.simulate('click')).not.toThrow();
+    it('does not error if only addValues or removeValues is passed', () => {
+      expect(() =>
+        renderItem({
+          data: { ...defaultProps.data, multi: true, addValues },
+        })
+      ).not.toThrow();
 
-      wrapper.setProps({ data: { ...data, addValues } });
-      expect(() => wrapper.simulate('click')).not.toThrow();
+      fireEvent.click(screen.getByRole('switch'));
       expect(addValues).not.toHaveBeenCalled();
-      expect(removeValues).not.toHaveBeenCalled();
+    });
 
-      wrapper.setProps({ data: { ...data, removeValues } });
-      expect(() => wrapper.simulate('click')).not.toThrow();
-      expect(addValues).not.toHaveBeenCalled();
+    it('calls addValues when not selected', () => {
+      renderItem({
+        data: {
+          ...defaultProps.data,
+          multi: true,
+          addValues,
+          removeValues,
+        },
+      });
+      fireEvent.click(screen.getByRole('switch'));
+      expect(addValues).toHaveBeenCalledWith(['apple']);
       expect(removeValues).not.toHaveBeenCalled();
     });
 
-    it('selects value when multi add/remove functions are both available', () => {
-      wrapper.setProps({ data: { ...data, addValues, removeValues } });
-      wrapper.simulate('click');
-      expect(addValues).toHaveBeenCalledTimes(1);
-      expect(addValues).toHaveBeenCalledWith([props.data.options[props.index]]);
-      expect(removeValues).not.toHaveBeenCalled();
-    });
-
-    it('removes value when multi add/remove functions are both available and value is selected', () => {
-      wrapper.setProps({ data: { ...data, addValues, removeValues, selectedValue } });
-      wrapper.simulate('click');
-      expect(removeValues).toHaveBeenCalledTimes(1);
-      expect(removeValues).toHaveBeenCalledWith([props.data.options[props.index]]);
+    it('calls removeValues when already selected', () => {
+      renderItem({
+        data: {
+          ...defaultProps.data,
+          multi: true,
+          selectedValue: 'apple',
+          addValues,
+          removeValues,
+        },
+      });
+      fireEvent.click(screen.getByRole('switch'));
+      expect(removeValues).toHaveBeenCalledWith(['apple']);
       expect(addValues).not.toHaveBeenCalled();
     });
   });

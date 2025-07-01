@@ -17,6 +17,7 @@ import cx from 'classnames';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 import _isEqual from 'lodash/isEqual';
+import _groupBy from 'lodash/groupBy';
 
 // import { History as RouterHistory, Location } from 'history';
 
@@ -158,6 +159,8 @@ function getCssClasses(currentViewRange: [number, number]) {
   });
 }
 
+const memoizedSpanByID = memoizeOne((spans: Span[]) => new Map(spans.map(x => [x.spanID, x])));
+
 function mergeChildrenCriticalPath(
   trace: Trace,
   spanID: string,
@@ -167,15 +170,15 @@ function mergeChildrenCriticalPath(
     return [];
   }
   // Define an array to store the IDs of the span and its descendants (if the span is collapsed)
-  const allRequiredSpanIds = [spanID];
+  const allRequiredSpanIds = new Set<string>([spanID]);
 
   // If the span is collapsed, recursively find all of its descendants.
-  const findAllDescendants = (currentChildSpanIds: string[]) => {
+  const findAllDescendants = (currentChildSpanIds: Set<string>) => {
     currentChildSpanIds.forEach(eachId => {
-      const currentChildSpan = trace.spans.find(a => a.spanID === eachId)!;
+      const currentChildSpan = memoizedSpanByID(trace.spans).get(eachId)!;
       if (currentChildSpan.hasChildren) {
-        allRequiredSpanIds.push(...currentChildSpan.childSpanIds);
-        findAllDescendants(currentChildSpan.childSpanIds);
+        currentChildSpan.childSpanIds.forEach(x => allRequiredSpanIds.add(x));
+        findAllDescendants(new Set<string>(currentChildSpan.childSpanIds));
       }
     });
   };
@@ -183,7 +186,7 @@ function mergeChildrenCriticalPath(
 
   const criticalPathSections: criticalPathSection[] = [];
   criticalPath.forEach(each => {
-    if (allRequiredSpanIds.includes(each.spanId)) {
+    if (allRequiredSpanIds.has(each.spanId)) {
       if (criticalPathSections.length !== 0 && each.section_end === criticalPathSections[0].section_start) {
         // Merge Critical Paths if they are consecutive
         criticalPathSections[0].section_start = each.section_start;
@@ -199,6 +202,9 @@ function mergeChildrenCriticalPath(
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
+const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: criticalPathSection[]) =>
+  _groupBy(criticalPath, x => x.spanId)
+);
 
 // export from tests
 export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
@@ -374,6 +380,20 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
   };
 
+  getCriticalPathSections(
+    isCollapsed: boolean,
+    trace: Trace,
+    spanID: string,
+    criticalPath: criticalPathSection[]
+  ) {
+    if (isCollapsed) {
+      return mergeChildrenCriticalPath(trace, spanID, criticalPath);
+    }
+
+    const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
+    return spanID in pathBySpanID ? pathBySpanID[spanID] : [];
+  }
+
   renderSpanBarRow(span: Span, spanIndex: number, key: string, style: React.CSSProperties, attrs: object) {
     const { spanID } = span;
     const { serviceName } = span.process;
@@ -396,9 +416,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
     const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
-    const criticalPathSections = isCollapsed
-      ? mergeChildrenCriticalPath(trace, spanID, criticalPath)
-      : criticalPath.filter(each => each.spanId === spanID);
+    const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
@@ -445,6 +463,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           traceStartTime={trace.startTime}
           span={span}
           focusSpan={this.focusSpan}
+          traceDuration={trace.duration}
         />
       </div>
     );
@@ -464,6 +483,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailToggle,
       spanNameColumnWidth,
       trace,
+      currentViewRangeTime,
     } = this.props;
     const detailState = detailStates.get(spanID);
     if (!trace || !detailState) {
@@ -487,6 +507,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           tagsToggle={detailTagsToggle}
           traceStartTime={trace.startTime}
           focusSpan={this.focusSpan}
+          currentViewRangeTime={currentViewRangeTime}
+          traceDuration={trace.duration}
         />
       </div>
     );

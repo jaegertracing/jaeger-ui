@@ -46,6 +46,7 @@ export default class Selector extends PureComponent<TProps> {
     showChevron?: number
   ) => {
     const { direction } = this.props;
+    const testIdSuffix = `${direction === EDirection.Downstream ? 'down' : 'up'}-${Math.abs(distance)}`;
     return (
       <React.Fragment key={`${distance} ${direction} ${suffix}`}>
         {Boolean(showChevron) && <IoChevronForward className={`${CLASSNAME}--ChevronRight is-${fullness}`} />}
@@ -53,6 +54,7 @@ export default class Selector extends PureComponent<TProps> {
           className={`${CLASSNAME}--btn is-${fullness} ${CLASSNAME}--${suffix}`}
           type="button"
           onClick={() => this.handleClick(distance)}
+          data-testid={`hop-${testIdSuffix}${suffix === 'popover-content' ? '-popover' : ''}`}
         >
           {Math.abs(distance)}
         </button>
@@ -76,6 +78,7 @@ export default class Selector extends PureComponent<TProps> {
         className={`${CLASSNAME}--decrement`}
         type="button"
         onClick={() => handleClick(furthestDistance - direction, direction)}
+        data-testid={`decrement-${direction === EDirection.Downstream ? 'down' : 'up'}`}
       >
         -
       </button>
@@ -87,6 +90,7 @@ export default class Selector extends PureComponent<TProps> {
         className={`${CLASSNAME}--increment`}
         type="button"
         onClick={() => handleClick(furthestDistance + direction, direction)}
+        data-testid={`increment-${direction === EDirection.Downstream ? 'down' : 'up'}`}
       >
         +
       </button>
@@ -103,18 +107,24 @@ export default class Selector extends PureComponent<TProps> {
 
     return (
       <Popover
-        arrowPointAtCenter
-        content={[decrementBtn, ...hops.map(this.makeBtn), incrementBtn]}
+        arrow={{ pointAtCenter: true }}
+        content={
+          <div data-testid={`popover-content-${direction === EDirection.Downstream ? 'down' : 'up'}`}>
+            {[decrementBtn, ...hops.map(this.makeBtn), incrementBtn]}
+          </div>
+        }
         placement="bottom"
         title={`Visible ${lowercaseLabel}`}
       >
-        <span className={CLASSNAME}>
+        <span
+          className={CLASSNAME}
+          data-testid={`hops-selector-${direction === EDirection.Downstream ? 'down' : 'up'}`}
+        >
           <ImSortAmountAsc className={`${CLASSNAME}--AscIcon is-${streamText}`} />
           {streamLabel}
           {furthestBtn}
           <span className={`${CLASSNAME}--delimiter`}>/</span>
           {delimiterBtn}
-          {/* <IoChevronDown className={`${CLASSNAME}--ChevronDown`} /> */}
           <ChevronDown className="ub-ml1" />
         </span>
       </Popover>

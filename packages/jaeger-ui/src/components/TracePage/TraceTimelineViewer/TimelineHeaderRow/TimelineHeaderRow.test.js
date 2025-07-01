@@ -13,100 +13,131 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
-import VerticalResizer from '../../../common/VerticalResizer';
 import TimelineHeaderRow from './TimelineHeaderRow';
-import TimelineViewingLayer from './TimelineViewingLayer';
-import Ticks from '../Ticks';
-import TimelineCollapser from './TimelineCollapser';
+
+jest.mock('../TimelineRow', () => {
+  const TimelineRowMock = ({ children, className }) => (
+    <div className={className || 'TimelineRow'}>{children}</div>
+  );
+  TimelineRowMock.Cell = ({ width, children, className }) => (
+    <div className={`TimelineRow--cellMock ${className || ''}`} data-width={width}>
+      {children}
+    </div>
+  );
+  return {
+    __esModule: true,
+    default: TimelineRowMock,
+  };
+});
+
+jest.mock('../../../common/VerticalResizer', () => ({
+  __esModule: true,
+  default: ({ position, min, max }) => (
+    <div data-testid="vertical-resizer" data-position={position} data-min={min} data-max={max} />
+  ),
+}));
+
+jest.mock('./TimelineViewingLayer', () => ({
+  __esModule: true,
+  default: ({ boundsInvalidator, viewRangeTime }) => (
+    <div
+      data-testid="timeline-viewing-layer"
+      data-bounds-invalidator={boundsInvalidator}
+      data-view-range-time={JSON.stringify(viewRangeTime)}
+    />
+  ),
+}));
+
+jest.mock('../Ticks', () => ({
+  __esModule: true,
+  default: ({ numTicks, startTime, endTime, showLabels }) => (
+    <div
+      data-testid="ticks"
+      data-num-ticks={numTicks}
+      data-start-time={startTime}
+      data-end-time={endTime}
+      data-show-labels={showLabels ? 'true' : 'false'}
+    />
+  ),
+}));
+
+jest.mock('./TimelineCollapser', () => ({
+  __esModule: true,
+  default: () => <div data-testid="timeline-collapser" />,
+}));
 
 describe('<TimelineHeaderRow>', () => {
-  let wrapper;
-
   const nameColumnWidth = 0.25;
   const props = {
     nameColumnWidth,
     duration: 1234,
     numTicks: 5,
-    onCollapseAll: () => {},
-    onCollapseOne: () => {},
-    onColummWidthChange: () => {},
-    onExpandAll: () => {},
-    onExpandOne: () => {},
-    updateNextViewRangeTime: () => {},
-    updateViewRangeTime: () => {},
+    onCollapseAll: jest.fn(),
+    onCollapseOne: jest.fn(),
+    onColummWidthChange: jest.fn(),
+    onExpandAll: jest.fn(),
+    onExpandOne: jest.fn(),
+    updateNextViewRangeTime: jest.fn(),
+    updateViewRangeTime: jest.fn(),
     viewRangeTime: {
       current: [0.1, 0.9],
     },
   };
 
-  beforeEach(() => {
-    wrapper = shallow(<TimelineHeaderRow {...props} />);
-  });
-
   it('renders without exploding', () => {
-    expect(wrapper).toBeDefined();
-    expect(wrapper.find('.TimelineHeaderRow').length).toBe(1);
+    const { container } = render(<TimelineHeaderRow {...props} />);
+    expect(container.querySelector('.TimelineHeaderRow')).toBeInTheDocument();
   });
 
   it('propagates the name column width', () => {
-    const nameCol = wrapper.find({ width: nameColumnWidth });
-    const timelineCol = wrapper.find({ width: 1 - nameColumnWidth });
-    expect(nameCol.length).toBe(1);
-    expect(timelineCol.length).toBe(1);
+    const { container } = render(<TimelineHeaderRow {...props} />);
+    const cells = container.querySelectorAll('.TimelineRow--cellMock');
+
+    expect(cells[0]).toHaveAttribute('data-width', nameColumnWidth.toString());
+    expect(cells[1]).toHaveAttribute('data-width', (1 - nameColumnWidth).toString());
   });
 
   it('renders the title', () => {
-    expect(wrapper.find('h3').text()).toMatch(/Service.*?Operation/);
+    render(<TimelineHeaderRow {...props} />);
+    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Service & Operation');
   });
 
   it('renders the TimelineViewingLayer', () => {
-    const elm = (
-      <TimelineViewingLayer
-        boundsInvalidator={nameColumnWidth}
-        updateNextViewRangeTime={props.updateNextViewRangeTime}
-        updateViewRangeTime={props.updateViewRangeTime}
-        viewRangeTime={props.viewRangeTime}
-      />
-    );
-    expect(wrapper.containsMatchingElement(elm)).toBe(true);
+    render(<TimelineHeaderRow {...props} />);
+    const viewingLayer = screen.getByTestId('timeline-viewing-layer');
+
+    expect(viewingLayer).toBeInTheDocument();
+    expect(viewingLayer).toHaveAttribute('data-bounds-invalidator', nameColumnWidth.toString());
+    expect(viewingLayer).toHaveAttribute('data-view-range-time', JSON.stringify(props.viewRangeTime));
   });
 
   it('renders the Ticks', () => {
+    render(<TimelineHeaderRow {...props} />);
+    const ticks = screen.getByTestId('ticks');
     const [viewStart, viewEnd] = props.viewRangeTime.current;
-    const elm = (
-      <Ticks
-        numTicks={props.numTicks}
-        startTime={viewStart * props.duration}
-        endTime={viewEnd * props.duration}
-        showLabels
-      />
-    );
-    expect(wrapper.containsMatchingElement(elm)).toBe(true);
+
+    expect(ticks).toBeInTheDocument();
+    expect(ticks).toHaveAttribute('data-num-ticks', props.numTicks.toString());
+    expect(ticks).toHaveAttribute('data-start-time', (viewStart * props.duration).toString());
+    expect(ticks).toHaveAttribute('data-end-time', (viewEnd * props.duration).toString());
+    expect(ticks).toHaveAttribute('data-show-labels', 'true');
   });
 
   it('renders the VerticalResizer', () => {
-    const elm = (
-      <VerticalResizer
-        position={nameColumnWidth}
-        onChange={props.onColummWidthChange}
-        min={0.15}
-        max={0.85}
-      />
-    );
-    expect(wrapper.containsMatchingElement(elm)).toBe(true);
+    render(<TimelineHeaderRow {...props} />);
+    const resizer = screen.getByTestId('vertical-resizer');
+
+    expect(resizer).toBeInTheDocument();
+    expect(resizer).toHaveAttribute('data-position', nameColumnWidth.toString());
+    expect(resizer).toHaveAttribute('data-min', '0.15');
+    expect(resizer).toHaveAttribute('data-max', '0.85');
   });
 
   it('renders the TimelineCollapser', () => {
-    const elm = (
-      <TimelineCollapser
-        onCollapseAll={props.onCollapseAll}
-        onExpandAll={props.onExpandAll}
-        onCollapseOne={props.onCollapseOne}
-        onExpandOne={props.onExpandOne}
-      />
-    );
-    expect(wrapper.containsMatchingElement(elm)).toBe(true);
+    render(<TimelineHeaderRow {...props} />);
+    expect(screen.getByTestId('timeline-collapser')).toBeInTheDocument();
   });
 });

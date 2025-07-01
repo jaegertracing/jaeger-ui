@@ -2,18 +2,23 @@
 
 exports[`TraceDiffHeader handles absent a & b 1`] = `
 <header
-  className="TraecDiffHeader"
+  className="TraceDiffHeader"
 >
   <div
-    className="TraecDiffHeader--labelItem-darkened"
+    className="TraceDiffHeader--labelItem"
   >
     <h1
-      className="ub-m0"
+      className="TraceDiffHeader--label"
     >
       A
     </h1>
   </div>
   <Popover
+    classNames={
+      Object {
+        "root": "TraceDiffHeader--popover",
+      }
+    }
     content={
       <CohortTable
         cohort={
@@ -90,7 +95,6 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -100,30 +104,40 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
     trigger="click"
   >
     <div
-      className="ub-flex u-flex-1"
+      className="TraceDiffHeader--traceSection"
     >
       <TraceHeader />
     </div>
   </Popover>
   <div
-    className="TraecDiffHeader--labelItem"
+    className="TraceDiffHeader--divider"
   >
-    <h2
-      className="u-tx-muted ub-mx3 ub-my0"
+    <div
+      className="TraceDiffHeader--vsContainer"
+      data-testid="vs-separator"
     >
-      VS
-    </h2>
+      <span
+        className="TraceDiffHeader--vsLabel"
+      >
+        VS
+      </span>
+    </div>
   </div>
   <div
-    className="TraecDiffHeader--labelItem-darkened"
+    className="TraceDiffHeader--labelItem"
   >
     <h1
-      className="ub-m0"
+      className="TraceDiffHeader--label"
     >
       B
     </h1>
   </div>
   <Popover
+    classNames={
+      Object {
+        "root": "TraceDiffHeader--popover",
+      }
+    }
     content={
       <CohortTable
         cohort={
@@ -200,7 +214,6 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -210,7 +223,7 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
     trigger="click"
   >
     <div
-      className="ub-flex u-flex-1"
+      className="TraceDiffHeader--traceSection"
     >
       <TraceHeader />
     </div>
@@ -220,18 +233,23 @@ exports[`TraceDiffHeader handles absent a & b 1`] = `
 
 exports[`TraceDiffHeader handles absent a 1`] = `
 <header
-  className="TraecDiffHeader"
+  className="TraceDiffHeader"
 >
   <div
-    className="TraecDiffHeader--labelItem-darkened"
+    className="TraceDiffHeader--labelItem"
   >
     <h1
-      className="ub-m0"
+      className="TraceDiffHeader--label"
     >
       A
     </h1>
   </div>
   <Popover
+    classNames={
+      Object {
+        "root": "TraceDiffHeader--popover",
+      }
+    }
     content={
       <CohortTable
         cohort={
@@ -314,7 +332,6 @@ exports[`TraceDiffHeader handles absent a 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -324,30 +341,40 @@ exports[`TraceDiffHeader handles absent a 1`] = `
     trigger="click"
   >
     <div
-      className="ub-flex u-flex-1"
+      className="TraceDiffHeader--traceSection"
     >
       <TraceHeader />
     </div>
   </Popover>
   <div
-    className="TraecDiffHeader--labelItem"
+    className="TraceDiffHeader--divider"
   >
-    <h2
-      className="u-tx-muted ub-mx3 ub-my0"
+    <div
+      className="TraceDiffHeader--vsContainer"
+      data-testid="vs-separator"
     >
-      VS
-    </h2>
+      <span
+        className="TraceDiffHeader--vsLabel"
+      >
+        VS
+      </span>
+    </div>
   </div>
   <div
-    className="TraecDiffHeader--labelItem-darkened"
+    className="TraceDiffHeader--labelItem"
   >
     <h1
-      className="ub-m0"
+      className="TraceDiffHeader--label"
     >
       B
     </h1>
   </div>
   <Popover
+    classNames={
+      Object {
+        "root": "TraceDiffHeader--popover",
+      }
+    }
     content={
       <CohortTable
         cohort={
@@ -431,7 +458,6 @@ exports[`TraceDiffHeader handles absent a 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -441,7 +467,7 @@ exports[`TraceDiffHeader handles absent a 1`] = `
     trigger="click"
   >
     <div
-      className="ub-flex u-flex-1"
+      className="TraceDiffHeader--traceSection"
     >
       <TraceHeader
         duration={200}
@@ -459,18 +485,23 @@ exports[`TraceDiffHeader handles absent a 1`] = `
 
 exports[`TraceDiffHeader handles absent b 1`] = `
 <header
-  className="TraecDiffHeader"
+  className="TraceDiffHeader"
 >
   <div
-    className="TraecDiffHeader--labelItem-darkened"
+    className="TraceDiffHeader--labelItem"
   >
     <h1
-      className="ub-m0"
+      className="TraceDiffHeader--label"
     >
       A
     </h1>
   </div>
   <Popover
+    classNames={
+      Object {
+        "root": "TraceDiffHeader--popover",
+      }
+    }
     content={
       <CohortTable
         cohort={
@@ -554,7 +585,6 @@ exports[`TraceDiffHeader handles absent b 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -564,7 +594,7 @@ exports[`TraceDiffHeader handles absent b 1`] = `
     trigger="click"
   >
     <div
-      className="ub-flex u-flex-1"
+      className="TraceDiffHeader--traceSection"
     >
       <TraceHeader
         duration={100}
@@ -578,24 +608,34 @@ exports[`TraceDiffHeader handles absent b 1`] = `
     </div>
   </Popover>
   <div
-    className="TraecDiffHeader--labelItem"
+    className="TraceDiffHeader--divider"
   >
-    <h2
-      className="u-tx-muted ub-mx3 ub-my0"
+    <div
+      className="TraceDiffHeader--vsContainer"
+      data-testid="vs-separator"
     >
-      VS
-    </h2>
+      <span
+        className="TraceDiffHeader--vsLabel"
+      >
+        VS
+      </span>
+    </div>
   </div>
   <div
-    className="TraecDiffHeader--labelItem-darkened"
+    className="TraceDiffHeader--labelItem"
   >
     <h1
-      className="ub-m0"
+      className="TraceDiffHeader--label"
     >
       B
     </h1>
   </div>
   <Popover
+    classNames={
+      Object {
+        "root": "TraceDiffHeader--popover",
+      }
+    }
     content={
       <CohortTable
         cohort={
@@ -678,7 +718,6 @@ exports[`TraceDiffHeader handles absent b 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -688,7 +727,7 @@ exports[`TraceDiffHeader handles absent b 1`] = `
     trigger="click"
   >
     <div
-      className="ub-flex u-flex-1"
+      className="TraceDiffHeader--traceSection"
     >
       <TraceHeader />
     </div>
@@ -698,18 +737,23 @@ exports[`TraceDiffHeader handles absent b 1`] = `
 
 exports[`TraceDiffHeader renders as expected 1`] = `
 <header
-  className="TraecDiffHeader"
+  className="TraceDiffHeader"
 >
   <div
-    className="TraecDiffHeader--labelItem-darkened"
+    className="TraceDiffHeader--labelItem"
   >
     <h1
-      className="ub-m0"
+      className="TraceDiffHeader--label"
     >
       A
     </h1>
   </div>
   <Popover
+    classNames={
+      Object {
+        "root": "TraceDiffHeader--popover",
+      }
+    }
     content={
       <CohortTable
         cohort={
@@ -796,7 +840,6 @@ exports[`TraceDiffHeader renders as expected 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -806,7 +849,7 @@ exports[`TraceDiffHeader renders as expected 1`] = `
     trigger="click"
   >
     <div
-      className="ub-flex u-flex-1"
+      className="TraceDiffHeader--traceSection"
     >
       <TraceHeader
         duration={100}
@@ -820,24 +863,34 @@ exports[`TraceDiffHeader renders as expected 1`] = `
     </div>
   </Popover>
   <div
-    className="TraecDiffHeader--labelItem"
+    className="TraceDiffHeader--divider"
   >
-    <h2
-      className="u-tx-muted ub-mx3 ub-my0"
+    <div
+      className="TraceDiffHeader--vsContainer"
+      data-testid="vs-separator"
     >
-      VS
-    </h2>
+      <span
+        className="TraceDiffHeader--vsLabel"
+      >
+        VS
+      </span>
+    </div>
   </div>
   <div
-    className="TraecDiffHeader--labelItem-darkened"
+    className="TraceDiffHeader--labelItem"
   >
     <h1
-      className="ub-m0"
+      className="TraceDiffHeader--label"
     >
       B
     </h1>
   </div>
   <Popover
+    classNames={
+      Object {
+        "root": "TraceDiffHeader--popover",
+      }
+    }
     content={
       <CohortTable
         cohort={
@@ -924,7 +977,6 @@ exports[`TraceDiffHeader renders as expected 1`] = `
     }
     onOpenChange={[Function]}
     open={false}
-    overlayClassName="TraceDiffHeader--popover"
     placement="bottomLeft"
     title={
       <TraceIdInput
@@ -934,7 +986,7 @@ exports[`TraceDiffHeader renders as expected 1`] = `
     trigger="click"
   >
     <div
-      className="ub-flex u-flex-1"
+      className="TraceDiffHeader--traceSection"
     >
       <TraceHeader
         duration={200}

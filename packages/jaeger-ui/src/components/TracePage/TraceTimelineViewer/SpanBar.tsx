@@ -44,6 +44,7 @@ type TCommonProps = {
   span: Span;
   longLabel: string;
   shortLabel: string;
+  traceDuration: number;
 };
 
 function toPercent(value: number) {
@@ -52,6 +53,44 @@ function toPercent(value: number) {
 
 function toPercentInDecimal(value: number) {
   return `${value * 100}%`;
+}
+
+function SpanBarCriticalPath(props: { criticalPathViewStart: number; criticalPathViewEnd: number }) {
+  const [shouldLoadTooltip, setShouldLoadTooltip] = useState(false);
+
+  const criticalPath = (
+    <div
+      data-testid="SpanBar--criticalPath"
+      className="SpanBar--criticalPath"
+      onMouseEnter={() => setShouldLoadTooltip(true)}
+      style={{
+        background: 'black',
+        left: toPercentInDecimal(props.criticalPathViewStart),
+        width: toPercentInDecimal(props.criticalPathViewEnd - props.criticalPathViewStart),
+      }}
+    />
+  );
+
+  // Load tooltip only when hovering over critical path segment
+  // to reduce initial load time of trace page by ~300ms for 500 spans
+  if (shouldLoadTooltip) {
+    return (
+      <Tooltip
+        placement="top"
+        // defaultOpen is needed to show the tooltip when shouldLoadTooltip changes to true
+        defaultOpen
+        title={
+          <div>
+            A segment on the <em>critical path</em> of the overall trace/request/workflow.
+          </div>
+        }
+      >
+        {criticalPath}
+      </Tooltip>
+    );
+  }
+
+  return criticalPath;
 }
 
 function SpanBar(props: TCommonProps) {
@@ -68,6 +107,7 @@ function SpanBar(props: TCommonProps) {
     span,
     shortLabel,
     longLabel,
+    traceDuration,
   } = props;
   // group logs based on timestamps
   const logGroups = _groupBy(span.logs, log => {
@@ -109,8 +149,8 @@ function SpanBar(props: TCommonProps) {
         {Object.keys(logGroups).map(positionKey => (
           <Popover
             key={positionKey}
-            arrowPointAtCenter
-            overlayClassName="SpanBar--logHint"
+            arrow={{ pointAtCenter: true }}
+            classNames={{ root: 'SpanBar--logHint' }}
             placement="topLeft"
             content={
               <AccordianLogs
@@ -118,6 +158,8 @@ function SpanBar(props: TCommonProps) {
                 isOpen
                 logs={logGroups[positionKey]}
                 timestamp={traceStartTime}
+                currentViewRangeTime={[0, 1]}
+                traceDuration={traceDuration}
               />
             }
           >
@@ -145,26 +187,13 @@ function SpanBar(props: TCommonProps) {
           const criticalPathViewStart = critcalPathViewBounds.start;
           const criticalPathViewEnd = critcalPathViewBounds.end;
           const key = `${each.spanId}-${index}`;
+
           return (
-            <Tooltip
-              placement="top"
-              title={
-                <div>
-                  A segment on the <em>critical path</em> of the overall trace/request/workflow.
-                </div>
-              }
-            >
-              <div
-                key={key}
-                data-testid="SpanBar--criticalPath"
-                className="SpanBar--criticalPath"
-                style={{
-                  background: 'black',
-                  left: toPercentInDecimal(criticalPathViewStart),
-                  width: toPercentInDecimal(criticalPathViewEnd - criticalPathViewStart),
-                }}
-              />
-            </Tooltip>
+            <SpanBarCriticalPath
+              criticalPathViewStart={criticalPathViewStart}
+              criticalPathViewEnd={criticalPathViewEnd}
+              key={key}
+            />
           );
         })}
     </div>

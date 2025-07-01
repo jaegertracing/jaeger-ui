@@ -24,10 +24,6 @@ type Props = {
   className: string;
 };
 
-type State = {
-  visible: boolean;
-};
-
 type DataRecord = {
   key: string;
   kbds: React.JSX.Element;
@@ -90,36 +86,35 @@ function getHelpModal() {
   return kbdTable;
 }
 
-export default class KeyboardShortcutsHelp extends React.PureComponent<Props, State> {
-  state = {
-    visible: false,
-  };
+export default function KeyboardShortcutsHelp({ className }: Props) {
+  const [visible, setVisible] = React.useState(false);
 
-  onCtaClicked = () => {
+  const onCtaClicked = () => {
     track();
-    this.setState({ visible: true });
+    setVisible(true);
   };
 
-  onCloserClicked = () => this.setState({ visible: false });
+  const onCloserClicked = () => setVisible(false);
 
-  render() {
-    const { className } = this.props;
-    return (
-      <React.Fragment>
-        <Button className={className} htmlType="button" onClick={this.onCtaClicked}>
-          <span className="KeyboardShortcutsHelp--cta">⌘</span>
-        </Button>
-        <Modal
-          title="Keyboard Shortcuts"
-          open={this.state.visible}
-          onOk={this.onCloserClicked}
-          onCancel={this.onCloserClicked}
-          cancelButtonProps={{ style: { display: 'none' } }}
-          bodyStyle={{ padding: 0 }}
-        >
-          {getHelpModal()}
-        </Modal>
-      </React.Fragment>
-    );
-  }
+  return (
+    <React.Fragment>
+      <Button className={className} htmlType="button" onClick={onCtaClicked}>
+        <span className="KeyboardShortcutsHelp--cta">⌘</span>
+      </Button>
+      <Modal
+        title="Keyboard Shortcuts"
+        open={visible}
+        onOk={onCloserClicked}
+        onCancel={onCloserClicked}
+        cancelButtonProps={{ style: { display: 'none' } }}
+        styles={{
+          body: {
+            padding: 0,
+          },
+        }}
+      >
+        {getHelpModal()}
+      </Modal>
+    </React.Fragment>
+  );
 }

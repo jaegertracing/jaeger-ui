@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { Button, Tooltip } from 'antd';
-import * as copy from 'copy-to-clipboard';
-
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import copy from 'copy-to-clipboard';
 import CopyIcon from './CopyIcon';
 
+// Mock the copy-to-clipboard module
 jest.mock('copy-to-clipboard');
 
 describe('<CopyIcon />', () => {
@@ -26,45 +26,89 @@ describe('<CopyIcon />', () => {
     className: 'classNameValue',
     copyText: 'copyTextValue',
     tooltipTitle: 'tooltipTitleValue',
+    buttonText: 'Click to Copy', // Added buttonText for better RTL querying
   };
-  let copySpy;
-  let wrapper;
-
-  beforeAll(() => {
-    copySpy = jest.spyOn(copy, 'default');
-  });
 
   beforeEach(() => {
-    copySpy.mockReset();
-    wrapper = shallow(<CopyIcon {...props} />);
+    jest.clearAllMocks();
+    render(<CopyIcon {...props} />);
   });
 
-  it('renders as expected', () => {
-    expect(wrapper).toMatchSnapshot();
+  it('renders the button with correct text and initial tooltip title', async () => {
+    const copyButton = screen.getByRole('button', { name: props.buttonText });
+    expect(copyButton).toBeInTheDocument();
+    expect(copyButton).toHaveClass('CopyIcon'); // Check the base class
+    expect(copyButton).toHaveClass(props.className); // Check the passed className
   });
 
-  it('updates state and copies when clicked', () => {
-    expect(wrapper.state().hasCopied).toBe(false);
-    expect(copySpy).not.toHaveBeenCalled();
+  it('calls copy-to-clipboard and updates tooltip text when clicked', async () => {
+    const copyButton = screen.getByRole('button', { name: props.buttonText });
 
-    wrapper.find(Button).simulate('click');
-    expect(wrapper.state().hasCopied).toBe(true);
-    expect(copySpy).toHaveBeenCalledWith(props.copyText);
+    // Simulate the user clicking the button
+    fireEvent.click(copyButton);
+
+    // Assert that copy-to-clipboard was called with the correct text
+    expect(copy).toHaveBeenCalledWith(props.copyText);
   });
 
-  it('updates state when tooltip hides and state.hasCopied is true', () => {
-    wrapper.setState({ hasCopied: true });
-    wrapper.find(Tooltip).prop('onOpenChange')(false);
-    expect(wrapper.state().hasCopied).toBe(false);
+  it('resets tooltip text to original title when tooltip hides after copying', async () => {
+    const copyButton = screen.getByRole('button', { name: props.buttonText });
 
-    const state = wrapper.state();
-    wrapper.find(Tooltip).prop('onOpenChange')(false);
-    expect(wrapper.state()).toBe(state);
+    // 1. Hover to show the initial tooltip
+    fireEvent.mouseEnter(copyButton);
+    let tooltip = await screen.findByRole('tooltip');
+    expect(tooltip).toHaveTextContent(props.tooltipTitle);
+
+    // 2. Click the button
+    fireEvent.click(copyButton);
+
+    // 3. Wait for "Copied" text
+    await waitFor(() => {
+      tooltip = screen.getByRole('tooltip'); // Re-find
+      expect(tooltip).toHaveTextContent('Copied');
+    });
+
+    // 4. Move the mouse away to hide the tooltip
+    fireEvent.mouseLeave(copyButton);
+
+    // 5. Wait for the tooltip to disappear
+    await waitFor(() => {
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    // 6. Hover again
+    fireEvent.mouseEnter(copyButton);
+
+    // 7. Wait for the tooltip to reappear and check for the *original* title
+    tooltip = await screen.findByRole('tooltip');
+    expect(tooltip).toHaveTextContent(props.tooltipTitle);
   });
 
-  it('persists state when tooltip opens', () => {
-    wrapper.setState({ hasCopied: true });
-    wrapper.find(Tooltip).prop('onOpenChange')(true);
-    expect(wrapper.state().hasCopied).toBe(true);
+  it('shows "Copied" tooltip when clicked and resets on mouse leave', async () => {
+    const copyButton = screen.getByRole('button', { name: props.buttonText });
+
+    // 1. Hover to show the initial tooltip
+    fireEvent.mouseEnter(copyButton);
+    // Find the tooltip and check its initial content
+    let tooltip = await screen.findByRole('tooltip');
+    expect(tooltip).toHaveTextContent(props.tooltipTitle);
+
+    // 2. Click the button (while implicitly still hovered)
+    fireEvent.click(copyButton);
+
+    // 3. Assert the tooltip content changes to "Copied"
+    await waitFor(() => {
+      // Re-find the tooltip in case it re-rendered and check content
+      tooltip = screen.getByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Copied');
+    });
+
+    // 4. Move the mouse away
+    fireEvent.mouseLeave(copyButton);
+
+    // 5. Assert the tooltip disappears
+    await waitFor(() => {
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
   });
 });

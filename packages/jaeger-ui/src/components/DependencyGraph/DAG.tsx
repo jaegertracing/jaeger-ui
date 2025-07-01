@@ -12,27 +12,55 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { ReactNode } from 'react';
-
+import React, { ReactNode, useState } from 'react';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
+import { TLayoutOptions } from '@jaegertracing/plexus/lib/LayoutManager/types';
+import { IoLocate } from 'react-icons/io5';
+import NewWindowIcon from '../common/NewWindowIcon';
+import ActionsMenu, { IActionMenuItem } from '../common/ActionMenu/ActionsMenu';
+import { getUrl as getSearchUrl } from '../SearchTracePage/url';
 
 import './dag.css';
-
-type TServiceCall = {
-  parent: string;
-  child: string;
-  callCount: number;
-};
+import { DAG_MAX_NUM_SERVICES } from '../../constants';
 
 type TProps = {
-  serviceCalls: TServiceCall[];
+  data: {
+    nodes: TVertex[];
+    edges: TEdge[];
+  };
+  selectedLayout: string;
+  selectedDepth: number;
+  selectedService: string;
+  uiFind?: string;
+  onServiceSelect?: (service: string) => void;
 };
 
-export const renderNode = (vertex: TVertex): ReactNode => {
+export const renderNode = (
+  vertex: TVertex,
+  selectedService: string | null,
+  uiFind?: string,
+  onMouseEnter?: (vertex: TVertex, event: React.MouseEvent) => void,
+  onMouseLeave?: () => void,
+  onClick?: (vertex: TVertex, event: React.MouseEvent) => void
+): ReactNode => {
+  if (!vertex) return null;
+
+  const isFocalNode = vertex.key === selectedService;
+  const isMatch = uiFind ? vertex.key.toLowerCase().includes(uiFind.toLowerCase()) : false;
+
   return (
-    <div className="DAG--node">
-      <div className="DAG--nodeCircle" />
+    <div
+      className="DAG--node"
+      role="button"
+      onMouseEnter={e => onMouseEnter?.(vertex, e)}
+      onMouseLeave={onMouseLeave}
+      onClick={e => {
+        onClick?.(vertex, e);
+      }}
+      style={{ cursor: 'pointer' }}
+    >
+      <div className={`DAG--nodeCircle ${isFocalNode ? 'is-focalNode' : ''} ${isMatch ? 'is-match' : ''}`} />
       <div className="DAG--nodeLabel" data-testid="dagNodeLabel">
         {vertex?.key ?? ''}
       </div>
@@ -40,100 +68,202 @@ export const renderNode = (vertex: TVertex): ReactNode => {
   ) as ReactNode;
 };
 
-const formatServiceCalls = (
-  serviceCalls: TServiceCall[]
-): {
-  nodes: TVertex[];
-  edges: TEdge[];
-} => {
-  const nodeMap: Record<string, boolean> = {};
+export const handleViewTraces = (hoveredNode: TVertex | null) => {
+  window.open(getSearchUrl({ service: hoveredNode?.key }), '_blank');
+};
 
-  const nodes: TVertex[] = [];
-  const edges: TEdge[] = [];
-
-  serviceCalls.forEach(d => {
-    if (d.parent.trim().length !== 0 && d.child.trim().length !== 0) {
-      if (!nodeMap[d.parent]) {
-        nodes.push({ key: d.parent });
-        nodeMap[d.parent] = true;
-      }
-
-      if (!nodeMap[d.child]) {
-        nodes.push({ key: d.child });
-        nodeMap[d.child] = true;
-      }
-
-      edges.push({
-        from: d.parent,
-        to: d.child,
-        label: `${d.callCount}`,
-      });
+export const createHandleNodeClick =
+  (
+    hoveredNode: TVertex | null,
+    setHoveredNode: (node: TVertex | null) => void,
+    setMenuPosition: (position: { x: number; y: number } | null) => void,
+    setIsMenuVisible: (visible: boolean) => void
+  ) =>
+  (vertex: TVertex, event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (hoveredNode?.key === vertex.key) {
+      setHoveredNode(null);
+      setMenuPosition(null);
+      setIsMenuVisible(false);
+    } else {
+      setHoveredNode(vertex);
+      setMenuPosition({ x: event.clientX, y: event.clientY });
+      setIsMenuVisible(true);
     }
-  });
+  };
 
-  return { nodes, edges };
+export const createHandleCanvasClick =
+  (
+    setHoveredNode: (node: TVertex | null) => void,
+    setMenuPosition: (position: { x: number; y: number } | null) => void,
+    setIsMenuVisible: (visible: boolean) => void
+  ) =>
+  () => {
+    setIsMenuVisible(false);
+    setHoveredNode(null);
+    setMenuPosition(null);
+  };
+
+export const createMenuItems = (
+  hoveredNode: TVertex | null,
+  onServiceSelect?: (service: string) => void
+): IActionMenuItem[] => {
+  if (!hoveredNode) return [];
+
+  return [
+    {
+      id: 'set-focus',
+      label: 'Set focus',
+      icon: <IoLocate />,
+      onClick: () => {
+        onServiceSelect?.(hoveredNode.key);
+      },
+    },
+    {
+      id: 'view-traces',
+      label: 'View traces',
+      icon: <NewWindowIcon />,
+      onClick: () => handleViewTraces(hoveredNode),
+    },
+  ];
 };
 
 const { classNameIsSmall } = Digraph.propsFactories;
 
-export default class DAG extends React.Component<TProps> {
-  static defaultProps = {
-    serviceCalls: [],
-  };
-
-  private data: {
-    nodes: TVertex[];
-    edges: TEdge[];
-  };
-
-  private layoutManager: LayoutManager = new LayoutManager({
-    nodesep: 1.5,
-    ranksep: 1.6,
-    rankdir: 'TB',
-    splines: 'polyline',
-    useDotEdges: true,
-  });
-
-  constructor(props: TProps) {
-    super(props);
-
-    this.data = formatServiceCalls(props.serviceCalls);
+const DAGMenu = ({
+  menuPosition,
+  hoveredNode,
+  isMenuVisible,
+  menuItems,
+}: {
+  menuPosition: { x: number; y: number } | null;
+  hoveredNode: TVertex | null;
+  isMenuVisible: boolean;
+  menuItems: IActionMenuItem[];
+}) => {
+  if (!menuPosition || !hoveredNode || !isMenuVisible) {
+    return null;
   }
 
-  componentWillUnmount() {
-    this.layoutManager.stopAndRelease();
-  }
+  return (
+    <div
+      role="menu"
+      style={{
+        position: 'fixed',
+        left: menuPosition.x,
+        top: menuPosition.y - 10,
+        zIndex: 1000,
+        pointerEvents: 'auto',
+      }}
+    >
+      <ActionsMenu items={menuItems} />
+    </div>
+  );
+};
 
-  render() {
+export default function DAG({
+  data,
+  selectedLayout,
+  selectedDepth,
+  selectedService,
+  uiFind,
+  onServiceSelect,
+}: TProps) {
+  const [hoveredNode, setHoveredNode] = useState<TVertex | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
+
+  const handleNodeClick = createHandleNodeClick(
+    hoveredNode,
+    setHoveredNode,
+    setMenuPosition,
+    setIsMenuVisible
+  );
+  const handleCanvasClick = createHandleCanvasClick(setHoveredNode, setMenuPosition, setIsMenuVisible);
+
+  const menuItems: IActionMenuItem[] = React.useMemo(
+    () => createMenuItems(hoveredNode, onServiceSelect),
+    [hoveredNode, onServiceSelect]
+  );
+
+  const forceFocalServiceSelection = data.nodes.length > DAG_MAX_NUM_SERVICES;
+
+  const layoutManager = React.useMemo(() => {
+    const config: TLayoutOptions =
+      selectedLayout === 'dot'
+        ? {
+            nodesep: 1.5,
+            ranksep: 1.6,
+            rankdir: 'TB',
+            splines: 'polyline',
+            useDotEdges: true,
+          }
+        : {
+            engine: 'sfdp',
+            splines: 'false',
+            sfdpOptions: {
+              maxiter: 1,
+              overlap: false,
+              dim: 2,
+            },
+            dpi: data.nodes.length > 100 ? Math.min(data.nodes.length * 2, 2000) : 300,
+          };
+
+    return new LayoutManager(config);
+  }, [selectedLayout, data.nodes.length]);
+
+  React.useEffect(() => {
+    return () => {
+      layoutManager.stopAndRelease();
+    };
+  }, [layoutManager]);
+
+  if (forceFocalServiceSelection) {
     return (
       <div className="DAG">
-        <Digraph<TVertex>
-          zoom
-          minimap
-          className="DAG--dag"
-          setOnGraph={classNameIsSmall}
-          minimapClassName="u-miniMap"
-          layoutManager={this.layoutManager}
-          measurableNodesKey="nodes"
-          layers={[
-            {
-              key: 'edges',
-              defs: [{ localId: 'arrowHead' }],
-              edges: true,
-              layerType: 'svg',
-              markerEndId: 'arrowHead',
-            },
-            {
-              key: 'nodes',
-              layerType: 'html',
-              measurable: true,
-              renderNode,
-            },
-          ]}
-          edges={this.data.edges}
-          vertices={this.data.nodes}
-        />
+        <div className="DAG--error">
+          {`Too many services to render (${data.nodes.length}). Hierarchical layout is disabled. For the Force-Directed layout, please select a focal service and the depth.`}
+        </div>
       </div>
     );
   }
+
+  return (
+    <div className="DAG" onClick={handleCanvasClick} role="button">
+      <Digraph<TVertex>
+        key={`${selectedLayout}-${selectedService}-${selectedDepth}-${uiFind}`}
+        zoom
+        minimap
+        className="DAG--dag"
+        setOnGraph={classNameIsSmall}
+        minimapClassName="u-miniMap"
+        layoutManager={layoutManager}
+        measurableNodesKey="nodes"
+        layers={[
+          {
+            key: 'edges',
+            defs: [{ localId: 'arrowHead' }],
+            edges: true,
+            layerType: 'svg',
+            markerEndId: 'arrowHead',
+          },
+          {
+            key: 'nodes',
+            layerType: 'html',
+            measurable: true,
+            renderNode: (vertex: TVertex) =>
+              renderNode(vertex, selectedService, uiFind, undefined, undefined, handleNodeClick),
+          },
+        ]}
+        edges={data.edges}
+        vertices={data.nodes}
+      />
+      <DAGMenu
+        menuPosition={menuPosition}
+        hoveredNode={hoveredNode}
+        isMenuVisible={isMenuVisible}
+        menuItems={menuItems}
+      />
+    </div>
+  );
 }

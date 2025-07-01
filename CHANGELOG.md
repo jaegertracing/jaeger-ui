@@ -9,6 +9,84 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.70.0 (2025-06-10)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Fix react fragment key issues in multiple components ([@Parship999](https://github.com/Parship999) in [#2823](https://github.com/jaegertracing/jaeger-ui/pull/2823))
+* Move tracediff header chevron icon ([@Parship999](https://github.com/Parship999) in [#2845](https://github.com/jaegertracing/jaeger-ui/pull/2845))
+* Feat: filter logs based on the selected time range ([@tejas-raskar](https://github.com/tejas-raskar) in [#2844](https://github.com/jaegertracing/jaeger-ui/pull/2844))
+* Enhance tracediff ui components ([@Parship999](https://github.com/Parship999) in [#2806](https://github.com/jaegertracing/jaeger-ui/pull/2806))
+* Rewrite computeselftime to improve performance on trace statistics page ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2767](https://github.com/jaegertracing/jaeger-ui/pull/2767))
+* Fix array return pattern in `labeledlist` component ([@Parship999](https://github.com/Parship999) in [#2812](https://github.com/jaegertracing/jaeger-ui/pull/2812))
+* Allow json logs to occupy entire available width ([@tejas-raskar](https://github.com/tejas-raskar) in [#2814](https://github.com/jaegertracing/jaeger-ui/pull/2814))
+* Feat: convert monitoratmemptystate to a functional component ([@vishvamsinh28](https://github.com/vishvamsinh28) in [#2790](https://github.com/jaegertracing/jaeger-ui/pull/2790))
+* Replace deprecated `overlayclassname` with `classnames.root` ([@abhayporwals](https://github.com/abhayporwals) in [#2772](https://github.com/jaegertracing/jaeger-ui/pull/2772))
+* [fix]: reduce default minimum allowed zoom ([@hari45678](https://github.com/hari45678) in [#2775](https://github.com/jaegertracing/jaeger-ui/pull/2775))
+* Fix dependencygraph dag extra render ([@mdwyer6](https://github.com/mdwyer6) in [#2749](https://github.com/jaegertracing/jaeger-ui/pull/2749))
+
+#### ⚙️ Refactoring
+
+* Convert qualitymetrics components to functional components ([@Parship999](https://github.com/Parship999) in [#2856](https://github.com/jaegertracing/jaeger-ui/pull/2856))
+* Refactor: spandetailrow to functional component ([@tejas-raskar](https://github.com/tejas-raskar) in [#2827](https://github.com/jaegertracing/jaeger-ui/pull/2827))
+* Migrate tracetimelineviewerimpl to a functional component ([@tejas-raskar](https://github.com/tejas-raskar) in [#2816](https://github.com/jaegertracing/jaeger-ui/pull/2816))
+* Refactor canvasspangraph to functional component and improve test coverage ([@vishvamsinh28](https://github.com/vishvamsinh28) in [#2824](https://github.com/jaegertracing/jaeger-ui/pull/2824))
+
+## v1.69.0 (2025-05-08)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Reduce load time of trace page by deferring critical path tooltip ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2718](https://github.com/jaegertracing/jaeger-ui/pull/2718))
+* Migrate copyicon tests ([@nojaf](https://github.com/nojaf) in [#2727](https://github.com/jaegertracing/jaeger-ui/pull/2727))
+* [fix]: make reset icon in sdg more intuitive ([@hari45678](https://github.com/hari45678) in [#2723](https://github.com/jaegertracing/jaeger-ui/pull/2723))
+* Migrate from enzyme to @testing-library/react in keyboardshortshelp ([@nojaf](https://github.com/nojaf) in [#2725](https://github.com/jaegertracing/jaeger-ui/pull/2725))
+* Improve performance of trace statistics page when grouping by tag ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2724](https://github.com/jaegertracing/jaeger-ui/pull/2724))
+* Improve performance of expanding and collapsing spans ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2722](https://github.com/jaegertracing/jaeger-ui/pull/2722))
+* Improve performance of trace statistics ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2721](https://github.com/jaegertracing/jaeger-ui/pull/2721))
+* [feat]: add context menu on node to dag ([@hari45678](https://github.com/hari45678) in [#2719](https://github.com/jaegertracing/jaeger-ui/pull/2719))
+* Fix grouping on trace statistics page for tags ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2717](https://github.com/jaegertracing/jaeger-ui/pull/2717))
+* Improve performance when expanding/collapsing span details ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2716](https://github.com/jaegertracing/jaeger-ui/pull/2716))
+
+#### 👷 CI Improvements
+
+* Add ability to use typescript in tests ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2731](https://github.com/jaegertracing/jaeger-ui/pull/2731))
+
+#### ⚙️ Refactoring
+
+* Migrate traceidinput test ([@nojaf](https://github.com/nojaf) in [#2735](https://github.com/jaegertracing/jaeger-ui/pull/2735))
+
+## v1.68.0 (2025-04-05)
+
+#### ✨ New Features
+
+* Feat: change dag styling and add search functionality ([@hari45678](https://github.com/hari45678) in [#2710](https://github.com/jaegertracing/jaeger-ui/pull/2710))
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Add sample graph data when in dev mode ([@hari45678](https://github.com/hari45678) in [#2698](https://github.com/jaegertracing/jaeger-ui/pull/2698))
+* Add depth and layout controls and sfdp layout to dag view ([@hari45678](https://github.com/hari45678) in [#2691](https://github.com/jaegertracing/jaeger-ui/pull/2691))
+* Add sfdp engine in @jaegertracing/plexus ([@hari45678](https://github.com/hari45678) in [#2690](https://github.com/jaegertracing/jaeger-ui/pull/2690))
+* Add handling or error for invalid json formats and tests ([@rohitlohar45](https://github.com/rohitlohar45) in [#2689](https://github.com/jaegertracing/jaeger-ui/pull/2689))
+
+
+## v1.67.0 (2025-03-07)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Replace react-vis with recharts ([@hari45678](https://github.com/hari45678) in [#2679](https://github.com/jaegertracing/jaeger-ui/pull/2679))
+* Add config option to allow displaying full traceid ([@avinpy-255](https://github.com/avinpy-255) in [#2536](https://github.com/jaegertracing/jaeger-ui/pull/2536))
+
+#### 🧹 Refactoring & cleanup
+
+* Migrate detailscard from classbased to function based component ([@yaten2302](https://github.com/yaten2302) in [#2670](https://github.com/jaegertracing/jaeger-ui/pull/2670))
+* [accordiankeyvalues]: replace defaultprops with destructuring ([@its-me-abhishek](https://github.com/its-me-abhishek) in [#2667](https://github.com/jaegertracing/jaeger-ui/pull/2667))
+* Make changes to allow for /api/quality-metrics to work ([@ADI-ROXX](https://github.com/ADI-ROXX) in [#2641](https://github.com/jaegertracing/jaeger-ui/pull/2641))
+* [keyvaluestable]: replace defaultprops with destructuring ([@its-me-abhishek](https://github.com/its-me-abhishek) in [#2666](https://github.com/jaegertracing/jaeger-ui/pull/2666))
+* [traceheader]: replace defaultprops with destructuring ([@its-me-abhishek](https://github.com/its-me-abhishek) in [#2621](https://github.com/jaegertracing/jaeger-ui/pull/2621))
+* [breakabletext]: replace defaultprops with destructuring ([@its-me-abhishek](https://github.com/its-me-abhishek) in [#2619](https://github.com/jaegertracing/jaeger-ui/pull/2619))
+* [timelinerow]: replace defaultprops with destructuring ([@its-me-abhishek](https://github.com/its-me-abhishek) in [#2622](https://github.com/jaegertracing/jaeger-ui/pull/2622))
+
+
 ## v1.66.0 (2025-02-03)
 
 #### 🐞 Bug fixes, Minor Improvements

@@ -13,21 +13,39 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import MonitorATMEmptyState from '.';
+import { getConfigValue } from '../../../utils/config/get-config';
+
+jest.mock('../../../utils/config/get-config', () => ({
+  getConfigValue: jest.fn(),
+}));
 
 describe('<MonitorATMEmptyState>', () => {
-  let wrapper;
+  const mockClickHandler = jest.fn();
 
   beforeEach(() => {
-    wrapper = shallow(<MonitorATMEmptyState />);
+    getConfigValue.mockReturnValue({
+      mainTitle: 'Get started with Service Performance Monitoring',
+      subTitle: 'subtitle',
+      description: 'description',
+      button: {
+        text: 'Click Me',
+        onClick: mockClickHandler,
+      },
+    });
+
+    render(<MonitorATMEmptyState />);
   });
 
-  it('does not explode', () => {
-    expect(wrapper.length).toBe(1);
+  it('renders the title', () => {
+    expect(screen.getByText('Get started with Service Performance Monitoring')).toBeInTheDocument();
   });
 
-  it('ATM snapshot test', () => {
-    expect(wrapper).toMatchSnapshot();
+  it('calls the onClick handler when button is clicked', () => {
+    const button = screen.getByText('Click Me');
+    fireEvent.click(button);
+    expect(mockClickHandler).toHaveBeenCalled();
   });
 });

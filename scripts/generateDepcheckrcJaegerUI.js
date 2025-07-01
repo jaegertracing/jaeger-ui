@@ -28,7 +28,7 @@ const packageNames = [
   ...babelConfiguration.plugins,
 ];
 
-const otherPackages = ['jest-environment-jsdom'];
+const otherPackages = ['jest-environment-jsdom', '@types/jest'];
 
 // Use the selected targetPackage for generating depcheckrcContent
 const depcheckrcContent = {

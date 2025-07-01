@@ -13,70 +13,65 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+
 import AccordianText from './AccordianText';
-import TextList from './TextList';
 
 const warnings = ['Duplicated tag', 'Duplicated spanId'];
 
 describe('<AccordianText>', () => {
-  let wrapper;
-
-  const props = {
-    compact: false,
+  const baseProps = {
     data: warnings,
     isOpen: false,
     label: 'le-label',
   };
 
-  beforeEach(() => {
-    wrapper = shallow(<AccordianText {...props} />);
-  });
-
-  it('renders without exploding', () => {
-    expect(wrapper).toBeDefined();
-    expect(wrapper.exists()).toBe(true);
+  it('renders without crashing', () => {
+    render(<AccordianText {...baseProps} />);
+    expect(screen.getByText(/le-label/i)).toBeInTheDocument();
   });
 
   it('renders the label', () => {
-    const header = wrapper.find(`.AccordianText--header > strong`);
-    expect(header.length).toBe(1);
-    expect(header.text()).toBe(props.label);
+    render(<AccordianText {...baseProps} />);
+    expect(screen.getByText('le-label')).toBeInTheDocument();
   });
 
   it('renders the content when it is expanded', () => {
-    wrapper.setProps({ isOpen: true });
-    const content = wrapper.find(TextList);
-    expect(content.length).toBe(1);
-    expect(content.prop('data')).toBe(warnings);
+    render(<AccordianText {...baseProps} isOpen />);
+    expect(screen.getByText('Duplicated tag')).toBeInTheDocument();
+    expect(screen.getByText('Duplicated spanId')).toBeInTheDocument();
   });
 
   it('disables onClick if data is empty', () => {
-    wrapper = shallow(<AccordianText {...props} data={[]} />);
-    const headerProps = wrapper.find('.AccordianText--header').props();
-    expect(headerProps.onClick).toBeNull();
+    const mockToggle = jest.fn();
+    render(<AccordianText {...baseProps} data={[]} onToggle={mockToggle} />);
+    const header = screen.getByRole('switch');
+    fireEvent.click(header);
+    expect(mockToggle).not.toHaveBeenCalled();
   });
 
-  it('has role="switch" when interactive = true', () => {
-    wrapper = shallow(<AccordianText {...props} isOpen />);
-    const headerProps = wrapper.find('.AccordianText--header').props();
-    expect(headerProps.role).toBe('switch');
+  it('has role="switch" when interactive is true', () => {
+    render(<AccordianText {...baseProps} isOpen />);
+    expect(screen.getByRole('switch')).toBeInTheDocument();
   });
 
-  it('has class "is-empty" class if data is empty', () => {
-    wrapper = shallow(<AccordianText {...props} data={[]} />);
-    expect(wrapper.find('.AccordianText--header').hasClass('is-empty')).toBe(true);
+  it('has class "is-empty" if data is empty', () => {
+    const { container } = render(<AccordianText {...baseProps} data={[]} />);
+    const header = container.querySelector('.AccordianText--header');
+    expect(header).toHaveClass('is-empty');
   });
 
-  it('has class "is-high-contrast" class if highContrast=true', () => {
-    wrapper = shallow(<AccordianText {...props} highContrast />);
-    expect(wrapper.find('.AccordianText--header').hasClass('is-high-contrast')).toBe(true);
+  it('has class "is-high-contrast" if highContrast is true', () => {
+    const { container } = render(<AccordianText {...baseProps} highContrast />);
+    const header = container.querySelector('.AccordianText--header');
+    expect(header).toHaveClass('is-high-contrast');
   });
 
-  it('does not render arrow or clickable header if interactive = false', () => {
-    wrapper = shallow(<AccordianText {...props} interactive={false} />);
-    const header = wrapper.find('.AccordianText--header');
-    expect(header.prop('role')).toBeUndefined();
-    expect(header.find('.u-align-icon').exists()).toBe(false);
+  it('does not render icon or make header interactive when interactive is false', () => {
+    const { container } = render(<AccordianText {...baseProps} interactive={false} />);
+    const header = container.querySelector('.AccordianText--header');
+    expect(header.getAttribute('role')).toBeNull();
+    expect(header.querySelector('.u-align-icon')).not.toBeInTheDocument();
   });
 });

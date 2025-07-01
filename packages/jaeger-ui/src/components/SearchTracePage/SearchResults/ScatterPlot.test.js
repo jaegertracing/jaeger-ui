@@ -13,11 +13,63 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount, shallow } from 'enzyme';
-import { XAxis, XYPlot, YAxis, MarkSeries, Hint } from 'react-vis';
+import { render, fireEvent, act } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
-import ScatterPlot from './ScatterPlot';
+import ScatterPlot, { CustomTooltip } from './ScatterPlot';
 import { ONE_MILLISECOND } from '../../../utils/date';
+import { FALLBACK_TRACE_NAME } from '../../../constants';
+
+// Mock ResizeObserver which is not available in JSDOM but required by Recharts
+class MockResizeObserver {
+  constructor(callback) {
+    this.callback = callback;
+    this.observables = new Set();
+  }
+
+  observe(element) {
+    this.observables.add(element);
+    // Simulate an initial resize event
+    this.callback([{ target: element, contentRect: { width: 1200, height: 800 } }]);
+  }
+
+  unobserve(element) {
+    this.observables.delete(element);
+  }
+
+  disconnect() {
+    this.observables.clear();
+  }
+}
+
+beforeAll(() => {
+  window.ResizeObserver = MockResizeObserver;
+  SVGElement.prototype.getComputedTextLength = jest.fn().mockReturnValue(50);
+  SVGElement.prototype.getBBox = jest.fn().mockReturnValue({
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 50,
+  });
+});
+
+// Mock window resize event
+const mockResizeEvent = () => {
+  const originalAddEventListener = window.addEventListener;
+  const originalRemoveEventListener = window.removeEventListener;
+
+  beforeEach(() => {
+    window.addEventListener = jest.fn();
+    window.removeEventListener = jest.fn();
+  });
+
+  afterEach(() => {
+    window.addEventListener = originalAddEventListener;
+    window.removeEventListener = originalRemoveEventListener;
+  });
+};
+
+mockResizeEvent();
 
 const generateTimestamp = (hours, minutes, seconds) => {
   const UTCMilliseconds = new Date(2018, 10, 13, hours, minutes, seconds).getTime();
@@ -52,94 +104,188 @@ const sampleData = [
   },
 ];
 
-it('<ScatterPlot /> should render base case correctly', () => {
-  const wrapper = shallow(
-    <ScatterPlot
-      data={[
-        { x: Date.now() - 3000, y: 1, traceID: 1 },
-        { x: Date.now() - 2000, y: 2, traceID: 2 },
-        { x: Date.now() - 1000, y: 2, traceID: 2 },
-        { x: Date.now(), y: 3, traceID: 3 },
-      ]}
-    />,
-    { disableLifecycleMethods: true }
-  );
-  expect(wrapper).toBeTruthy();
+describe('ScatterPlot', () => {
+  const mockOnValueClick = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should render base case correctly', () => {
+    const data = [
+      { x: Date.now() - 3000, y: 1, traceID: '1' },
+      { x: Date.now() - 2000, y: 2, traceID: '2' },
+      { x: Date.now() - 1000, y: 2, traceID: '2' },
+      { x: Date.now(), y: 3, traceID: '3' },
+    ];
+    let container;
+    act(() => {
+      const result = render(
+        <ScatterPlot data={data} onValueClick={mockOnValueClick} calculateContainerWidth={() => 1200} />
+      );
+      container = result.container;
+    });
+    expect(container.querySelector('.TraceResultsScatterPlot')).toBeTruthy();
+    expect(container.querySelector('.recharts-responsive-container')).toBeTruthy();
+  });
+
+  it('should render X axis correctly', () => {
+    let container;
+    act(() => {
+      const result = render(
+        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() => 1200} />
+      );
+      container = result.container;
+    });
+
+    const xAxisTicks = container.querySelectorAll('.recharts-xAxis .recharts-cartesian-axis-tick-value');
+    const tickTexts = Array.from(xAxisTicks).map(tick => tick.textContent);
+
+    expect(tickTexts.some(text => text.includes('10:10'))).toBeTruthy();
+    expect(tickTexts.some(text => text.includes('10:11'))).toBeTruthy();
+  });
+
+  it('should render Y axis correctly', () => {
+    let container;
+    act(() => {
+      const result = render(
+        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() => 1200} />
+      );
+      container = result.container;
+    });
+
+    const yAxisTicks = container.querySelectorAll('.recharts-yAxis .recharts-cartesian-axis-tick-value');
+    const tickTexts = Array.from(yAxisTicks).map(tick => tick.textContent);
+
+    expect(tickTexts.some(text => text.includes('ms'))).toBeTruthy();
+  });
+
+  it('should set fixed container width on initial render', () => {
+    let container;
+    act(() => {
+      const result = render(
+        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() => 1200} />
+      );
+      container = result.container;
+    });
+
+    const responsiveContainer = container.querySelector('.recharts-responsive-container');
+    expect(responsiveContainer).toBeTruthy();
+    expect(responsiveContainer.style.width).toBe('100%');
+  });
+
+  it('should update container width on window resize', () => {
+    const calculateContainerWidth = jest.fn().mockReturnValueOnce(1200).mockReturnValueOnce(700);
+
+    let unmount;
+    act(() => {
+      const result = render(
+        <ScatterPlot
+          data={sampleData}
+          onValueClick={mockOnValueClick}
+          calculateContainerWidth={calculateContainerWidth}
+        />
+      );
+      unmount = result.unmount;
+    });
+
+    expect(window.addEventListener).toHaveBeenCalledWith('resize', expect.any(Function));
+
+    act(() => {
+      const resizeHandler = window.addEventListener.mock.calls.find(call => call[0] === 'resize')[1];
+      resizeHandler();
+    });
+
+    expect(calculateContainerWidth).toHaveBeenCalledTimes(2);
+
+    unmount();
+    expect(window.removeEventListener).toHaveBeenCalledWith('resize', expect.any(Function));
+  });
+
+  it('should render Hint correctly', () => {
+    let container;
+    act(() => {
+      const result = render(
+        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() => 1200} />
+      );
+      container = result.container;
+    });
+
+    const scatterPoints = container.querySelectorAll('.recharts-scatter-symbol');
+    expect(scatterPoints.length).toBeGreaterThan(0);
+
+    // Simulate hover over a point
+    fireEvent.mouseOver(scatterPoints[0]);
+    expect(container.querySelector('.scatter-plot-hint')).toBeTruthy();
+
+    // Simulate mouse out
+    fireEvent.mouseOut(scatterPoints[0]);
+    expect(container.querySelector('.scatter-plot-hint')).toBeFalsy();
+  });
+
+  it('should handle click events', () => {
+    let container;
+    act(() => {
+      const result = render(
+        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() => 1200} />
+      );
+      container = result.container;
+    });
+
+    const scatterPoints = container.querySelectorAll('.recharts-scatter-symbol');
+    fireEvent.click(scatterPoints[0]);
+    expect(mockOnValueClick).toHaveBeenCalled();
+  });
+
+  it('should handle zero width container', () => {
+    let container;
+    act(() => {
+      const result = render(
+        <ScatterPlot data={sampleData} onValueClick={mockOnValueClick} calculateContainerWidth={() => 0} />
+      );
+      container = result.container;
+    });
+
+    expect(container.querySelector('.TraceResultsScatterPlot')).toBeTruthy();
+    expect(container.querySelector('.recharts-responsive-container')).toBeFalsy();
+  });
+
+  it('uses default calculateContainerWidth when prop is not provided', () => {
+    render(<ScatterPlot data={sampleData} onValueClick={jest.fn()} />);
+    expect(document.querySelector('.TraceResultsScatterPlot')).toBeInTheDocument();
+  });
 });
 
-it('<ScatterPlot /> should render X axis correctly', () => {
-  const wrapper = mount(
-    <ScatterPlot calculateContainerWidth={() => 1200} data={sampleData} onValueClick={() => null} />
-  );
+describe('CustomTooltip', () => {
+  it('renders with trace name when active and payload is provided', () => {
+    const traceName = 'Test Trace Name';
+    const { container } = render(<CustomTooltip active payload={[{ payload: { name: traceName } }]} />);
 
-  const xAxisText = wrapper.find(XAxis).text();
+    const tooltipElement = container.querySelector('.scatter-plot-hint');
+    expect(tooltipElement).toBeTruthy();
+    expect(tooltipElement.querySelector('h4').textContent).toBe(traceName);
+  });
 
-  expect(xAxisText).toContain('10:10:20 pm');
-  expect(xAxisText).toContain('10:10:30 pm');
-  expect(xAxisText).toContain('10:10:40 pm');
-  expect(xAxisText).toContain('10:10:50 pm');
-  expect(xAxisText).toContain('10:11:00 pm');
-});
+  it('renders with fallback name when trace has no name', () => {
+    const { container } = render(<CustomTooltip active payload={[{ payload: {} }]} />);
 
-it('<ScatterPlot /> should render Y axis correctly', () => {
-  const wrapper = mount(
-    <ScatterPlot calculateContainerWidth={() => 1200} data={sampleData} onValueClick={() => null} />
-  );
+    const tooltipElement = container.querySelector('.scatter-plot-hint');
+    expect(tooltipElement).toBeTruthy();
+    expect(tooltipElement.querySelector('h4').textContent).toBe(FALLBACK_TRACE_NAME);
+  });
 
-  const yAxisText = wrapper.find(YAxis).text();
+  it('returns null when not active', () => {
+    const { container } = render(<CustomTooltip payload={[{ payload: { name: 'Test' } }]} />);
+    expect(container.firstChild).toBeNull();
+  });
 
-  expect(yAxisText).toContain('20ms');
-  expect(yAxisText).toContain('40ms');
-  expect(yAxisText).toContain('60ms');
-  expect(yAxisText).toContain('80ms');
-});
+  it('returns null when payload is empty', () => {
+    const { container } = render(<CustomTooltip active payload={[]} />);
+    expect(container.firstChild).toBeNull();
+  });
 
-it('<ScatterPlot /> should set fixed container width on initial render', () => {
-  const wrapper = mount(
-    <ScatterPlot calculateContainerWidth={() => 1200} data={sampleData} onValueClick={() => null} />
-  );
-
-  const xyPlot = wrapper.find(XYPlot).getDOMNode();
-
-  expect(xyPlot.style.width).toBe('1200px');
-});
-
-it('<ScatterPlot /> should update container width on window resize', () => {
-  const calculateContainerWidth = jest.fn().mockReturnValue(1200).mockReturnValue(700);
-  const wrapper = mount(
-    <ScatterPlot
-      calculateContainerWidth={calculateContainerWidth}
-      data={sampleData}
-      onValueClick={() => null}
-      onValueOut={() => null}
-      onValueOver={() => null}
-    />
-  );
-
-  window.dispatchEvent(new Event('resize'));
-
-  const xyPlot = wrapper.find(XYPlot).getDOMNode();
-
-  expect(xyPlot.style.width).toBe('700px');
-});
-
-it('<ScatterPlot /> should render Hint correctly', () => {
-  const wrapper = mount(
-    <ScatterPlot calculateContainerWidth={() => 1200} data={sampleData} onValueClick={() => null} />
-  );
-  expect(wrapper).toBeDefined();
-
-  const markSeries = wrapper.find(MarkSeries);
-  expect(markSeries.length).toEqual(1);
-
-  const circle = wrapper.find('.rv-xy-plot__series--mark circle:first-child');
-  expect(circle.length).toEqual(1);
-
-  circle.simulate('mouseOver');
-  const hint = wrapper.find(Hint);
-  expect(hint.length).toEqual(1);
-
-  circle.simulate('mouseOut');
-  const noHint = wrapper.find(Hint);
-  expect(noHint.length).toEqual(0);
+  it('returns null when payload is not provided', () => {
+    const { container } = render(<CustomTooltip active />);
+    expect(container.firstChild).toBeNull();
+  });
 });

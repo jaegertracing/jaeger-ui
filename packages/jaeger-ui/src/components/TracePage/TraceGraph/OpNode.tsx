@@ -97,6 +97,7 @@ export default class OpNode extends React.PureComponent<Props> {
                 className="OpNode--copyIcon"
                 copyText={`${service} ${operation}`}
                 tooltipTitle="Copy label"
+                buttonText="Copy"
               />
             </td>
             <td className="OpNode--metricCell OpNode--avg">{round2(time / 1000 / count)} ms</td>
@@ -116,7 +117,7 @@ export default class OpNode extends React.PureComponent<Props> {
     const popoverContent = <div className="OpNode--popoverContent">{table}</div>;
 
     return (
-      <Popover overlayClassName="OpNode--popover" mouseEnterDelay={0.25} content={popoverContent}>
+      <Popover classNames={{ root: 'OpNode--popover' }} mouseEnterDelay={0.25} content={popoverContent}>
         {table}
       </Popover>
     );

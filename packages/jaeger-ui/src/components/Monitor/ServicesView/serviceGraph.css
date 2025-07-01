@@ -17,6 +17,7 @@ limitations under the License.
 .legend-label span {
   display: inherit !important;
   margin-left: 10px !important;
+  font-size: 0.625rem;
 }
 
 .graph-container {
@@ -27,7 +28,7 @@ limitations under the License.
 
 .graph-header {
   margin-bottom: 0;
-  font-size: 14;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -52,4 +53,21 @@ limitations under the License.
 .crosshair-value {
   width: 140;
   color: #6b6b76;
+}
+
+.graph-axis {
+  stroke: #e6e6e9;
+  stroke-width: 2;
+}
+
+.graph-tooltip {
+  font-size: 0.625rem;
+}
+
+.graph-x-axis {
+  font-size: 11px;
+}
+
+.graph-y-axis {
+  font-size: 0.625rem;
 }

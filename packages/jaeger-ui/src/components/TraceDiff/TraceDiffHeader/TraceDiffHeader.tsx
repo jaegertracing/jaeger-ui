@@ -92,12 +92,12 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
       <CohortTable cohort={cohort} current={bId} selectTrace={this._diffSetB} selection={selection} />
     );
     return (
-      <header className="TraecDiffHeader">
-        <div className="TraecDiffHeader--labelItem-darkened">
-          <h1 className="ub-m0">A</h1>
+      <header className="TraceDiffHeader">
+        <div className="TraceDiffHeader--labelItem">
+          <h1 className="TraceDiffHeader--label">A</h1>
         </div>
         <Popover
-          overlayClassName="TraceDiffHeader--popover"
+          classNames={{ root: 'TraceDiffHeader--popover' }}
           trigger="click"
           placement="bottomLeft"
           title={<TraceIdInput selectTrace={this._diffSetA} />}
@@ -105,7 +105,7 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
           open={tableVisible === 'a'}
           onOpenChange={this._toggleTableA}
         >
-          <div className="ub-flex u-flex-1">
+          <div className="TraceDiffHeader--traceSection">
             <TraceHeader
               duration={aData && aData.duration}
               error={aError}
@@ -117,14 +117,16 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
             />
           </div>
         </Popover>
-        <div className="TraecDiffHeader--labelItem">
-          <h2 className="u-tx-muted ub-mx3 ub-my0">VS</h2>
+        <div className="TraceDiffHeader--divider">
+          <div className="TraceDiffHeader--vsContainer" data-testid="vs-separator">
+            <span className="TraceDiffHeader--vsLabel">VS</span>
+          </div>
         </div>
-        <div className="TraecDiffHeader--labelItem-darkened">
-          <h1 className="ub-m0">B</h1>
+        <div className="TraceDiffHeader--labelItem">
+          <h1 className="TraceDiffHeader--label">B</h1>
         </div>
         <Popover
-          overlayClassName="TraceDiffHeader--popover"
+          classNames={{ root: 'TraceDiffHeader--popover' }}
           trigger="click"
           placement="bottomLeft"
           title={<TraceIdInput selectTrace={this._diffSetB} />}
@@ -132,7 +134,7 @@ export default class TraceDiffHeader extends React.PureComponent<Props, State> {
           open={tableVisible === 'b'}
           onOpenChange={this._toggleTableB}
         >
-          <div className="ub-flex u-flex-1">
+          <div className="TraceDiffHeader--traceSection">
             <TraceHeader
               duration={bData && bData.duration}
               error={bError}

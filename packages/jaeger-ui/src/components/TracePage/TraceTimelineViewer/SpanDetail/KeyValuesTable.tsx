@@ -44,15 +44,15 @@ function shouldDisplayAsStringList(key: string) {
 const stringListMarkup = (value: any[]) => (
   <div className="json-markup">
     {value.map((item, i) => (
-      <>
+      <React.Fragment key={i}>
         {i > 0 && ', '}
         <span className="json-markup-string">{item}</span>
-      </>
+      </React.Fragment>
     ))}
   </div>
 );
 
-const scalarMarkup = (value: string | Number | Boolean) => {
+const scalarMarkup = (value: string | number | boolean) => {
   let className;
   switch (typeof value) {
     case 'boolean': {
@@ -178,21 +178,23 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
               // eslint-disable-next-line react/no-array-index-key
               <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
                 <td className="KeyValueTable--keyColumn">{row.key}</td>
-                <td>{valueMarkup}</td>
-                <td className="KeyValueTable--copyColumn">
-                  <CopyIcon
-                    className="KeyValueTable--copyIcon"
-                    copyText={row.value}
-                    tooltipTitle="Copy value"
-                    buttonText="Copy"
-                  />
-                  <CopyIcon
-                    className="KeyValueTable--copyIcon"
-                    icon={<IoCopyOutline />}
-                    copyText={JSON.stringify(row, null, 2)}
-                    tooltipTitle="Copy JSON"
-                    buttonText="JSON"
-                  />
+                <td className="KeyValueTable--valueColumn">
+                  <div className="KeyValueTable--copyContainer">
+                    <CopyIcon
+                      className="KeyValueTable--copyIcon"
+                      copyText={row.value}
+                      tooltipTitle="Copy value"
+                      buttonText="Copy"
+                    />
+                    <CopyIcon
+                      className="KeyValueTable--copyIcon"
+                      icon={<IoCopyOutline />}
+                      copyText={JSON.stringify(row, null, 2)}
+                      tooltipTitle="Copy JSON"
+                      buttonText="JSON"
+                    />
+                  </div>
+                  {valueMarkup}
                 </td>
               </tr>
             );
