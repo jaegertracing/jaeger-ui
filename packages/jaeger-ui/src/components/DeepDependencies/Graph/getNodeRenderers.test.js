@@ -51,6 +51,8 @@ describe('getNodeRenderers', () => {
               const circle = container.querySelector('circle');
 
               expect(circle).toBeInTheDocument();
+              expect(circle).toHaveClass('DdgNode--VectorBorder');
+
               if (findMatch) {
                 expect(circle).toHaveClass('is-findMatch');
               } else {
@@ -94,6 +96,7 @@ describe('getNodeRenderers', () => {
       const { container } = render(getNodeRenderers(new Set([lv.vertex.key]), new Map()).htmlEmphasis(lv));
       const div = container.querySelector('div');
       expect(div).toBeInTheDocument();
+      expect(div).toHaveClass('DdgNode--HtmlEmphasis');
       expect(div).toHaveClass('is-findMatch');
     });
 
@@ -101,6 +104,7 @@ describe('getNodeRenderers', () => {
       const { container } = render(getNodeRenderers(new Set(), new Map()).htmlEmphasis(focalLv));
       const div = container.querySelector('div');
       expect(div).toBeInTheDocument();
+      expect(div).toHaveClass('DdgNode--HtmlEmphasis');
       expect(div).toHaveClass('is-focalNode');
     });
 
@@ -110,6 +114,7 @@ describe('getNodeRenderers', () => {
       );
       const div = container.querySelector('div');
       expect(div).toBeInTheDocument();
+      expect(div).toHaveClass('DdgNode--HtmlEmphasis');
       expect(div).toHaveClass('is-findMatch');
       expect(div).toHaveClass('is-focalNode');
     });
