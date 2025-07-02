@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { useState, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { InputNumber } from 'antd';
 import _debounce from 'lodash/debounce';
 
@@ -32,16 +32,25 @@ type TProps = {
 const Header: React.FC<TProps> = ({ lookback, service, services, setLookback, setService }) => {
   const [ownInputValue, setOwnInputValue] = useState<number | null>(null);
 
-  const debouncedSetLookback = useCallback(
-    _debounce((value: number | null) => {
-      setOwnInputValue(null);
-      setLookback(value);
-    }, 350),
+  const debouncedSetLookback = useMemo(
+    () =>
+      _debounce((value: number | null) => {
+        setOwnInputValue(null);
+        setLookback(value);
+      }, 350),
     [setLookback]
   );
 
+  useEffect(() => {
+    return () => {
+      debouncedSetLookback.cancel();
+    };
+  }, [debouncedSetLookback]);
+
   const handleInputChange = (value: number | string | null) => {
-    if (typeof value === 'string') return;
+    if (typeof value === 'string') {
+      return;
+    }
     setOwnInputValue(value);
     debouncedSetLookback(value);
   };
