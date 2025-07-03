@@ -52,6 +52,7 @@ describe('getNodeRenderers', () => {
 
               expect(circle).toBeInTheDocument();
               expect(circle).toHaveClass('DdgNode--VectorBorder');
+              expect(circle).toHaveAttribute('vector-effect', 'non-scaling-stroke');
 
               if (findMatch) {
                 expect(circle).toHaveClass('is-findMatch');
