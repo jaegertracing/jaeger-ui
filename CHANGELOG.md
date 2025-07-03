@@ -9,6 +9,17 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.71.0 (2025-07-03)
+
+#### ⚙️ Refactoring
+
+* Convert `opsgraph.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2914](https://github.com/jaegertracing/jaeger-ui/pull/2914))
+* Convert `regiondemo.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2910](https://github.com/jaegertracing/jaeger-ui/pull/2910))
+* Convert `dividerdemo.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2909](https://github.com/jaegertracing/jaeger-ui/pull/2909))
+* Convert `draggablemanagerdemo.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2908](https://github.com/jaegertracing/jaeger-ui/pull/2908))
+* Convert `nameselector.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2889](https://github.com/jaegertracing/jaeger-ui/pull/2889))
+* Convert `copyicon.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2887](https://github.com/jaegertracing/jaeger-ui/pull/2887))
+
 ## v1.70.0 (2025-06-10)
 
 #### 🐞 Bug fixes, Minor Improvements
