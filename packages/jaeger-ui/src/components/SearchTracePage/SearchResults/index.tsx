@@ -44,6 +44,7 @@ import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
+import SearchPagination from './SearchPagination';
 
 type SearchResultsProps = {
   cohortAddTrace: (traceId: string) => void;
@@ -64,6 +65,14 @@ type SearchResultsProps = {
   rawTraces: TraceData[];
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
+  // Pagination props
+  pagination?: {
+    currentPage: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+  };
+  onPageChange?: (page: number, pageSize?: number) => void;
 };
 
 type SelectSortProps = {
@@ -144,6 +153,8 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
       traces,
       sortBy,
       handleSortChange,
+      pagination,
+      onPageChange,
     } = this.props;
 
     const traceResultsView = queryString.parse(location.search).view !== 'ddg';
@@ -197,7 +208,18 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
           )}
           <div className="SearchResults--headerOverview">
             <h2 className="ub-m0 u-flex-1">
-              {traces.length} Trace{traces.length > 1 && 's'}
+              {pagination ? (
+                <>
+                  {pagination.totalCount} Trace{pagination.totalCount !== 1 && 's'}
+                  {pagination.totalCount > traces.length && (
+                    <span className="u-tx-muted"> (showing {traces.length})</span>
+                  )}
+                </>
+              ) : (
+                <>
+                  {traces.length} Trace{traces.length > 1 && 's'}
+                </>
+              )}
             </h2>
             {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
             {traceResultsView && <DownloadResults onDownloadResultsClicked={this.onDownloadResultsClicked} />}
@@ -239,6 +261,16 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
               </li>
             ))}
           </ul>
+        )}
+        {traceResultsView && pagination && onPageChange && (
+          <SearchPagination
+            currentPage={pagination.currentPage}
+            pageSize={pagination.pageSize}
+            totalCount={pagination.totalCount}
+            totalPages={pagination.totalPages}
+            onPageChange={onPageChange}
+            loading={loading}
+          />
         )}
       </div>
     );

@@ -1,0 +1,69 @@
+feat: Implement sparse trace visualization with compressed gaps (#459)
+
+This commit implements a comprehensive solution for Issue #459: Sparse traces visualisation.
+The implementation transforms inefficient sparse trace visualization into an intuitive, 
+interactive timeline with compressed gaps.
+
+## Problem Solved
+- Sparse traces with long gaps between span groups were visualized inefficiently
+- Timeline was strictly linear, causing spans to appear as tiny slivers
+- Real-world scenario: Consumer processing messages after hours-long delays
+
+## Solution Overview
+- **Gap Detection**: Automatically identifies large gaps between span groups
+- **Timeline Compression**: Compresses empty spaces while preserving context
+- **Visual Indicators**: GitHub-style blue collapsed gap indicators
+- **Interactive Controls**: Click to expand/collapse gaps
+- **Performance Optimized**: Efficient rendering with memoization
+- **Backward Compatible**: No impact on normal traces
+
+## Key Features
+- Configurable gap detection thresholds (default: 3x span duration)
+- Compressed gaps limited to 2% of timeline width
+- Interactive expand/collapse functionality
+- Hover tooltips with gap details
+- Smooth animations and visual feedback
+- Comprehensive test coverage
+
+## Technical Implementation
+- **Core Algorithm**: `analyzeTraceGaps()` and `createSparseViewedBoundsFunc()`
+- **Visual Component**: `TimelineGap.tsx` with CSS styling
+- **Integration**: Enhanced `VirtualizedTraceView` with gap row support
+- **Configuration**: `DEFAULT_SPARSE_TRACE_CONFIG` with sensible defaults
+- **Testing**: Comprehensive unit and integration tests
+
+## Files Added/Modified
+- `utils.tsx` - Core gap analysis and timeline transformation
+- `TimelineGap.tsx` - Gap visualization component
+- `TimelineGap.css` - Styling for gap indicators
+- `VirtualizedTraceView.tsx` - Integration with existing timeline
+- `VirtualizedTraceView.css` - Additional gap row styling
+- `utils.test.js` - Comprehensive test coverage
+- `SparseTraceDemo.tsx` - Interactive demo component
+
+## Benefits
+- Spans are clearly visible instead of tiny slivers
+- Gap context is preserved and displayed
+- Interactive expand/collapse functionality
+- Performance maintained with efficient rendering
+- Backward compatible with existing functionality
+
+## Configuration
+```typescript
+const DEFAULT_SPARSE_TRACE_CONFIG = {
+  enabled: true,
+  gapThresholdMultiplier: 3,    // Gap must be 3x larger than spans
+  minGapDuration: 1000000,      // 1 second minimum (microseconds)
+  maxCollapsedGapWidth: 0.02,   // 2% maximum width when collapsed
+};
+```
+
+## Testing
+- All existing tests pass
+- New comprehensive test suite for sparse trace functionality
+- Demo component showcasing real-world sparse trace scenario
+- Validation script confirms all features working correctly
+
+Fixes #459
+
+Co-authored-by: Augment Agent <augment@augmentcode.com>
