@@ -106,7 +106,6 @@ export class SearchTracePageImpl extends Component {
       urlQueryParams,
       sortedTracesXformer,
       traces,
-      operationsForService,
     } = this.props;
     const { sortBy } = this.state;
     const traceResults = sortedTracesXformer(traces, sortBy);
@@ -114,19 +113,8 @@ export class SearchTracePageImpl extends Component {
     const showErrors = errors && !loadingTraces;
     const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
     const tabItems = [];
-    let { service } = store.get('lastSearch') || {};
-    if (urlQueryParams && urlQueryParams.service) {
-      service = urlQueryParams.service;
-    }
-    service = service || '-';
-    const opsForSvc = operationsForService && operationsForService[service];
-    const isOpsLoading = service !== '-' && (!opsForSvc || opsForSvc.length === 0);
     if (!loadingServices && services) {
-      if (isOpsLoading) {
-        tabItems.push({ label: 'Search', key: 'searchForm', children: <LoadingIndicator /> });
-      } else {
-        tabItems.push({ label: 'Search', key: 'searchForm', children: <SearchForm services={services} /> });
-      }
+      tabItems.push({ label: 'Search', key: 'searchForm', children: <SearchForm services={services} /> });
     } else {
       tabItems.push({ label: 'Search', key: 'searchForm', children: <LoadingIndicator /> });
     }
@@ -230,7 +218,6 @@ SearchTracePageImpl.propTypes = {
     })
   ),
   loadJsonTraces: PropTypes.func,
-  operationsForService: PropTypes.object,
 };
 
 const stateTraceXformer = memoizeOne(stateTrace => {
@@ -265,13 +252,23 @@ const stateServicesXformer = memoizeOne(stateServices => {
     operationsForService: opsBySvc,
     error: serviceError,
   } = stateServices;
+  // If a service is selected, but its operations are not loaded, return loading state
+  const selectedService = store.get?.('lastSearch')?.service;
+  if (
+    selectedService &&
+    serviceList &&
+    serviceList.includes(selectedService) &&
+    (!opsBySvc || !opsBySvc[selectedService] || opsBySvc[selectedService].length === 0)
+  ) {
+    return { loadingServices: true, services: serviceList, serviceError };
+  }
   const services =
     serviceList &&
     serviceList.map(name => ({
       name,
       operations: opsBySvc[name] || [],
     }));
-  return { loadingServices, services, serviceError, operationsForService: opsBySvc };
+  return { loadingServices, services, serviceError };
 });
 
 // export to test
@@ -289,7 +286,7 @@ export function mapStateToProps(state) {
     loadingTraces,
   } = stateTraceXformer(state.trace);
   const diffCohort = stateTraceDiffXformer(state.trace, traceDiff);
-  const { loadingServices, services, serviceError, operationsForService } = stateServicesXformer(stServices);
+  const { loadingServices, services, serviceError } = stateServicesXformer(stServices);
   const errors = [];
   if (traceError) {
     errors.push(traceError);
@@ -312,7 +309,6 @@ export function mapStateToProps(state) {
     maxTraceDuration: maxDuration,
     sortedTracesXformer,
     urlQueryParams: Object.keys(query).length > 0 ? query : null,
-    operationsForService,
   };
 }
 
