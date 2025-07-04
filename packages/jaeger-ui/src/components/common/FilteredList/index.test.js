@@ -181,13 +181,46 @@ describe('<FilteredList>', () => {
     });
 
     it('cause the view to scroll if necessary', async () => {
-      render(<FilteredList {...props} />);
-      const input = screen.getByPlaceholderText('Filter...');
-      input.focus();
-      expect(() => {
-        fireEvent.keyDown(input, { key: EKey.ArrowUp });
+      jest.useFakeTimers();
+      try {
+        render(<FilteredList {...props} />);
+        const input = screen.getByPlaceholderText('Filter...');
+        input.focus();
+
         jest.runAllTimers();
-      }).not.toThrow();
+
+        fireEvent.keyDown(input, { key: EKey.ArrowDown });
+        jest.runAllTimers();
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId(/^list-item-/)[0]).toHaveAttribute('data-focused', 'true');
+        });
+
+        const totalItems = props.options.length;
+
+        for (let i = 0; i < totalItems - 1; i++) {
+          fireEvent.keyDown(input, { key: EKey.ArrowDown });
+          jest.runAllTimers();
+        }
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId(/^list-item-/)[totalItems - 1]).toHaveAttribute(
+            'data-focused',
+            'true'
+          );
+        });
+
+        for (let i = 0; i < totalItems - 1; i++) {
+          fireEvent.keyDown(input, { key: EKey.ArrowUp });
+          jest.runAllTimers();
+        }
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId(/^list-item-/)[0]).toHaveAttribute('data-focused', 'true');
+        });
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 
