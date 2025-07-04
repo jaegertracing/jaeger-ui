@@ -216,7 +216,9 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
     return (
       <Col span={24}>
         <Table
-          rowClassName={() => 'table-row'}
+          rowClassName={row =>
+            this.state.hoveredRowKey === row.key ? 'table-row table-row--hovered' : 'table-row'
+          }
           columns={columnConfig}
           dataSource={this.props.data}
           pagination={{ defaultPageSize: 20, showSizeChanger: true, pageSizeOptions: ['20', '50', '100'] }}

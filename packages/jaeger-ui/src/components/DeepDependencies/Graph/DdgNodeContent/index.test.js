@@ -21,7 +21,8 @@ jest.mock('./calc-positioning', () => () => ({
 
 /* eslint-disable import/first */
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen, fireEvent, within } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import {
   getNodeRenderer,
@@ -31,7 +32,6 @@ import {
 } from '.';
 import { MAX_LENGTH, MAX_LINKED_TRACES, MIN_LENGTH, PARAM_NAME_LENGTH, RADIUS } from './constants';
 import * as track from '../../index.track';
-import FilteredList from '../../../common/FilteredList';
 import * as getSearchUrl from '../../../SearchTracePage/url';
 
 import { ECheckedStatus, EDdgDensity, EDirection, EViewModifier } from '../../../../model/ddg/types';
@@ -51,6 +51,7 @@ describe('<DdgNodeContent>', () => {
     getVisiblePathElems: jest.fn(),
     hideVertex: jest.fn(),
     isFocalNode: false,
+    isPositioned: true,
     operation,
     selectVertex: jest.fn(),
     setOperation: jest.fn(),
@@ -63,8 +64,6 @@ describe('<DdgNodeContent>', () => {
     vertexKey,
   };
 
-  let wrapper;
-
   beforeEach(() => {
     props.getDecoration.mockClear();
     props.getGenerationVisibility.mockReturnValue(null).mockClear();
@@ -72,67 +71,86 @@ describe('<DdgNodeContent>', () => {
     props.selectVertex.mockReset();
     props.setViewModifier.mockReset();
     props.updateGenerationVisibility.mockReset();
-    wrapper = shallow(<DdgNodeContent {...props} />);
   });
 
   it('does not explode', () => {
-    expect(wrapper.exists()).toBe(true);
+    const { container } = render(<DdgNodeContent {...props} />);
+    expect(container).toBeInTheDocument();
   });
 
   it('omits the operation if it is null', () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper.setProps({ operation: null });
-    expect(wrapper).toMatchSnapshot();
+    const { rerender, container } = render(<DdgNodeContent {...props} />);
+    expect(screen.getByText(/operation/i)).toBeInTheDocument();
+
+    rerender(<DdgNodeContent {...props} operation={null} />);
+    expect(screen.queryByText(/operation/i)).not.toBeInTheDocument();
   });
 
   it('renders the number of operations if there are multiple', () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper.setProps({ operation: operationArray });
-    expect(wrapper).toMatchSnapshot();
+    const { rerender } = render(<DdgNodeContent {...props} />);
+    expect(screen.getByText(/operation/i)).toBeInTheDocument();
+
+    rerender(<DdgNodeContent {...props} operation={operationArray} />);
+    expect(screen.getByText('4 Operations')).toBeInTheDocument();
   });
 
   it('renders correctly when isFocalNode = true and focalNodeUrl = null', () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper.setProps({ focalNodeUrl: null, isFocalNode: true });
-    expect(wrapper).toMatchSnapshot();
+    const { rerender, container } = render(<DdgNodeContent {...props} />);
+    const nodeCore = container.querySelector('.DdgNodeContent--core');
+    expect(nodeCore).not.toHaveClass('is-focalNode');
+
+    rerender(<DdgNodeContent {...props} focalNodeUrl={null} isFocalNode />);
+    expect(nodeCore).toHaveClass('is-focalNode');
   });
 
   it('renders correctly when given decorationProgressbar', () => {
-    expect(wrapper).toMatchSnapshot();
+    const decorationProgressbar = <div data-testid="test-progressbar">Test progressbar</div>;
 
-    const decorationProgressbar = <span>Test progressbar</span>;
-    wrapper.setProps({ decorationProgressbar, decorationValue });
-    expect(wrapper).toMatchSnapshot();
+    const { rerender, container } = render(<DdgNodeContent {...props} />);
+    expect(screen.queryByTestId('test-progressbar')).not.toBeInTheDocument();
+
+    rerender(
+      <DdgNodeContent
+        {...props}
+        decorationProgressbar={decorationProgressbar}
+        decorationValue={decorationValue}
+      />
+    );
+    expect(screen.getByTestId('test-progressbar')).toBeInTheDocument();
+    const nodeCore = container.querySelector('.DdgNodeContent--core');
+    expect(nodeCore).toHaveClass('is-decorated');
   });
 
   it('renders correctly when decorationValue is a string', () => {
-    expect(wrapper).toMatchSnapshot();
+    const { rerender, container } = render(<DdgNodeContent {...props} />);
+    const nodeCore = container.querySelector('.DdgNodeContent--core');
+    expect(nodeCore).not.toHaveClass('is-missingDecoration');
 
-    wrapper.setProps({ decorationValue: 'Error: Status Code 418' });
-    expect(wrapper).toMatchSnapshot();
+    rerender(<DdgNodeContent {...props} decorationValue="Error: Status Code 418" />);
+    expect(nodeCore).toHaveClass('is-missingDecoration');
   });
 
   describe('getDecoration', () => {
     it('gets decoration on mount or change of props.decorationID iff props.decorationID is truthy', () => {
       expect(props.getDecoration).not.toHaveBeenCalled();
 
-      wrapper.setProps({ decorationID });
+      const { rerender } = render(<DdgNodeContent {...props} decorationID={decorationID} />);
       expect(props.getDecoration).toHaveBeenCalledTimes(1);
       expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, operation);
 
-      wrapper.setProps({ decorationID });
+      rerender(<DdgNodeContent {...props} decorationID={decorationID} />);
       expect(props.getDecoration).toHaveBeenCalledTimes(1);
 
       const newDecorationID = `new ${decorationID}`;
-      wrapper.setProps({ decorationID: newDecorationID });
+      rerender(<DdgNodeContent {...props} decorationID={newDecorationID} />);
       expect(props.getDecoration).toHaveBeenCalledTimes(2);
       expect(props.getDecoration).toHaveBeenLastCalledWith(newDecorationID, service, operation);
 
-      wrapper.setProps({ decorationID, operation: operationArray });
+      rerender(<DdgNodeContent {...props} decorationID={decorationID} operation={operationArray} />);
       expect(props.getDecoration).toHaveBeenCalledTimes(3);
       expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, undefined);
 
-      shallow(<DdgNodeContent {...props} decorationID={decorationID} />);
+      render(<DdgNodeContent {...props} decorationID={decorationID} />);
       expect(props.getDecoration).toHaveBeenCalledTimes(4);
       expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, operation);
     });
@@ -142,11 +160,12 @@ describe('<DdgNodeContent>', () => {
     it('calls props.selectVertex iff props.decorationValue is truthy', () => {
       expect(props.selectVertex).not.toHaveBeenCalled();
 
-      wrapper.find('.DdgNodeContent--core').simulate('click');
+      const { rerender, container } = render(<DdgNodeContent {...props} />);
+      fireEvent.click(container.querySelector('.DdgNodeContent--core'));
       expect(props.selectVertex).not.toHaveBeenCalled();
 
-      wrapper.setProps({ decorationValue });
-      wrapper.find('.DdgNodeContent--core').simulate('click');
+      rerender(<DdgNodeContent {...props} decorationValue={decorationValue} />);
+      fireEvent.click(container.querySelector('.DdgNodeContent--core'));
       expect(props.selectVertex).toHaveBeenCalledTimes(1);
       expect(props.selectVertex).toHaveBeenLastCalledWith(props.vertex);
     });
@@ -171,25 +190,30 @@ describe('<DdgNodeContent>', () => {
     });
 
     it('calls setViewModifier on mouse over', () => {
-      wrapper.simulate('mouseover', { type: 'mouseover' });
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
 
       expect(props.setViewModifier).toHaveBeenCalledTimes(1);
       expect(props.setViewModifier).toHaveBeenCalledWith(testIndices, EViewModifier.Hovered, true);
     });
 
     it('calls setViewModifier with all modified indices on mouse out', () => {
-      wrapper.simulate('mouseover', { type: 'mouseover' });
-      wrapper.simulate('mouseout', { type: 'mouseout' });
+      const { unmount, container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+      fireEvent.mouseOut(nodeContent, { type: 'mouseout' });
 
       expect(props.setViewModifier).toHaveBeenCalledTimes(2);
       expect(props.setViewModifier).toHaveBeenCalledWith(testIndices, EViewModifier.Hovered, false);
 
-      wrapper.simulate('mouseover', { type: 'mouseover' });
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
       const moreIndices = [108];
       const moreElems = moreIndices.map(visibilityIdx => ({ visibilityIdx }));
       props.getVisiblePathElems.mockReturnValue(moreElems);
-      wrapper.simulate('mouseover', { type: 'mouseover' });
-      wrapper.simulate('mouseout', { type: 'mouseout' });
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+      fireEvent.mouseOut(nodeContent, { type: 'mouseout' });
 
       expect(props.setViewModifier).toHaveBeenCalledTimes(5);
       expect(props.setViewModifier).toHaveBeenCalledWith(
@@ -200,20 +224,23 @@ describe('<DdgNodeContent>', () => {
     });
 
     it('calls setViewModifier on unmount iff any indices were hovered and not unhovered', () => {
-      wrapper.unmount();
+      const { unmount } = render(<DdgNodeContent {...props} />);
+      unmount();
       expect(props.setViewModifier).toHaveBeenCalledTimes(0);
 
-      wrapper = shallow(<DdgNodeContent {...props} />);
-      wrapper.simulate('mouseover', { type: 'mouseover' });
-      wrapper.simulate('mouseout', { type: 'mouseout' });
+      const { unmount: unmount2, container: container2 } = render(<DdgNodeContent {...props} />);
+      const nodeContent2 = container2.querySelector('.DdgNodeContent');
+      fireEvent.mouseOver(nodeContent2, { type: 'mouseover' });
+      fireEvent.mouseOut(nodeContent2, { type: 'mouseout' });
       expect(props.setViewModifier).toHaveBeenCalledTimes(2);
-      wrapper.unmount();
+      unmount2();
       expect(props.setViewModifier).toHaveBeenCalledTimes(2);
 
-      wrapper = shallow(<DdgNodeContent {...props} />);
-      wrapper.simulate('mouseover', { type: 'mouseover' });
+      const { unmount: unmount3, container: container3 } = render(<DdgNodeContent {...props} />);
+      const nodeContent3 = container3.querySelector('.DdgNodeContent');
+      fireEvent.mouseOver(nodeContent3, { type: 'mouseover' });
       expect(props.setViewModifier).toHaveBeenCalledTimes(3);
-      wrapper.unmount();
+      unmount3();
       expect(props.setViewModifier).toHaveBeenCalledTimes(4);
       expect(props.setViewModifier).toHaveBeenCalledWith(testIndices, EViewModifier.Hovered, false);
     });
@@ -224,30 +251,37 @@ describe('<DdgNodeContent>', () => {
       props.getGenerationVisibility.mockImplementation((_key, direction) =>
         direction === EDirection.Upstream ? parentVisibility : childrenVisibility
       );
-      wrapper.simulate('mouseover', { type: 'mouseover' });
 
-      expect(wrapper.state()).toEqual({
-        childrenVisibility,
-        parentVisibility,
-      });
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+
+      expect(props.getGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Upstream);
+      expect(props.getGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Downstream);
     });
 
     it('handles mouse over event after vis update would hide vertex before unmounting', () => {
       props.getVisiblePathElems.mockReturnValue(undefined);
-      wrapper.simulate('mouseover', { type: 'mouseover' });
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
 
-      expect(wrapper.state()).toEqual({
-        childrenVisibility: null,
-        parentVisibility: null,
-      });
       expect(props.setViewModifier).toHaveBeenCalledWith([], EViewModifier.Hovered, true);
     });
 
     it('clears hoveredIndices on mouse out', () => {
-      wrapper.simulate('mouseover', { type: 'mouseover' });
-      expect(wrapper.instance().hoveredIndices).not.toEqual(new Set());
-      wrapper.simulate('mouseout', { type: 'mouseout' });
-      expect(wrapper.instance().hoveredIndices).toEqual(new Set());
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+      expect(props.setViewModifier).toHaveBeenCalledTimes(1);
+
+      fireEvent.mouseOut(nodeContent, { type: 'mouseout' });
+
+      props.getVisiblePathElems.mockReturnValue([{ visibilityIdx: 999 }]);
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+
+      expect(props.setViewModifier).toHaveBeenLastCalledWith([999], EViewModifier.Hovered, true);
     });
   });
 
@@ -261,23 +295,51 @@ describe('<DdgNodeContent>', () => {
     const noOp = () => {};
 
     it('returns a <DdgNodeContent />', () => {
-      const ddgNode = getNodeRenderer(noOp, noOp, EDdgDensity.PreventPathEntanglement, true, 'testBaseUrl', {
-        maxDuration: '100ms',
-      })(ddgVertex);
-      expect(ddgNode).toBeDefined();
-      expect(ddgNode.props).toMatchSnapshot();
+      const renderNode = getNodeRenderer({
+        baseUrl: 'testBaseUrl',
+        density: EDdgDensity.PreventPathEntanglement,
+        extraUrlArgs: { maxDuration: '100ms' },
+        focusPathsThroughVertex: noOp,
+        getGenerationVisibility: noOp,
+        getVisiblePathElems: noOp,
+        hideVertex: noOp,
+        selectVertex: noOp,
+        setOperation: noOp,
+        setViewModifier: noOp,
+        updateGenerationVisibility: noOp,
+      });
+
+      const node = renderNode(ddgVertex, null, {});
+      expect(node).toBeDefined();
+      expect(node.props.service).toBe(ddgVertex.service);
+      expect(node.props.operation).toBe(ddgVertex.operation);
+      expect(node.props.isPositioned).toBe(true);
     });
 
     it('returns a focal <DdgNodeContent />', () => {
-      const focalNode = getNodeRenderer(
-        noOp,
-        noOp
-      )({
+      const renderNode = getNodeRenderer({
+        baseUrl: 'testBaseUrl',
+        density: EDdgDensity.PreventPathEntanglement,
+        extraUrlArgs: {},
+        focusPathsThroughVertex: noOp,
+        getGenerationVisibility: noOp,
+        getVisiblePathElems: noOp,
+        hideVertex: noOp,
+        selectVertex: noOp,
+        setOperation: noOp,
+        setViewModifier: noOp,
+        updateGenerationVisibility: noOp,
+      });
+
+      const focalVertex = {
         ...ddgVertex,
         isFocalNode: true,
-      });
-      expect(focalNode).toBeDefined();
-      expect(focalNode.props).toMatchSnapshot();
+      };
+
+      const node = renderNode(focalVertex, null, {});
+      expect(node).toBeDefined();
+      expect(node.props.isFocalNode).toBe(true);
+      expect(node.props.focalNodeUrl).toBe(null);
     });
   });
 
@@ -295,6 +357,7 @@ describe('<DdgNodeContent>', () => {
       jest.spyOn(track, 'trackViewTraces');
       jest.spyOn(track, 'trackVertexSetOperation');
       jest.spyOn(getSearchUrl, 'getUrl');
+      jest.spyOn(window, 'open').mockImplementation();
     });
 
     afterEach(() => {
@@ -303,22 +366,38 @@ describe('<DdgNodeContent>', () => {
 
     describe('focusPaths', () => {
       it('calls focusPathsThroughVertex with vertexKey', () => {
-        wrapper.instance().focusPaths();
+        const { container } = render(<DdgNodeContent {...props} />);
+
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const focusPathsAction = Array.from(actionItems).find(item =>
+          item.textContent.includes('Focus paths through this node')
+        );
+
+        fireEvent.click(focusPathsAction);
+
         expect(props.focusPathsThroughVertex).toHaveBeenCalledWith(vertexKey);
       });
     });
 
     describe('hideVertex', () => {
       it('calls hideVertex with vertexKey', () => {
-        wrapper.instance().hideVertex();
+        const { container } = render(<DdgNodeContent {...props} />);
+
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const hideNodeAction = Array.from(actionItems).find(item => item.textContent.includes('Hide node'));
+
+        fireEvent.click(hideNodeAction);
+
         expect(props.hideVertex).toHaveBeenCalledWith(vertexKey);
       });
     });
 
     describe('setOperation', () => {
       it('calls setOperation with the provided operation and tracks the event', () => {
-        const newOperation = 'new-operation';
-        wrapper.instance().setOperation(newOperation);
+        const instance = new DdgNodeContent(props);
+        const newOperation = 'op1';
+        instance.setOperation(newOperation);
+
         expect(props.setOperation).toHaveBeenCalledWith(newOperation);
         expect(track.trackVertexSetOperation).toHaveBeenCalled();
       });
@@ -326,14 +405,18 @@ describe('<DdgNodeContent>', () => {
 
     describe('updateChildren', () => {
       it('calls updateGenerationVisibility with vertexKey and Downstream direction', () => {
-        wrapper.instance().updateChildren();
+        const instance = new DdgNodeContent(props);
+        instance.updateChildren();
+
         expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Downstream);
       });
     });
 
     describe('updateParents', () => {
       it('calls updateGenerationVisibility with vertexKey and Upstream direction', () => {
-        wrapper.instance().updateParents();
+        const instance = new DdgNodeContent(props);
+        instance.updateParents();
+
         expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Upstream);
       });
     });
@@ -352,24 +435,35 @@ describe('<DdgNodeContent>', () => {
       });
 
       it('opens search URL with trace IDs and tracks the event', () => {
-        const windowSpy = jest.spyOn(window, 'open').mockImplementation();
-        wrapper.instance().viewTraces();
+        const { container } = render(<DdgNodeContent {...props} />);
+
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const viewTracesAction = Array.from(actionItems).find(item =>
+          item.textContent.includes('View traces')
+        );
+
+        fireEvent.click(viewTracesAction);
 
         expect(track.trackViewTraces).toHaveBeenCalled();
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({ traceID: mockTraceIds });
-        expect(windowSpy).toHaveBeenCalledWith('mock-search-url-trace1-trace2-trace3', '_blank');
-        windowSpy.mockRestore();
+        expect(window.open).toHaveBeenCalledWith('mock-search-url-trace1-trace2-trace3', '_blank');
       });
 
       it('handles case when getVisiblePathElems returns undefined', () => {
         props.getVisiblePathElems.mockReturnValue(undefined);
-        const windowSpy = jest.spyOn(window, 'open').mockImplementation();
-        wrapper.instance().viewTraces();
+
+        const { container } = render(<DdgNodeContent {...props} />);
+
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const viewTracesAction = Array.from(actionItems).find(item =>
+          item.textContent.includes('View traces')
+        );
+
+        fireEvent.click(viewTracesAction);
 
         expect(track.trackViewTraces).toHaveBeenCalled();
         expect(getSearchUrl.getUrl).not.toHaveBeenCalled();
-        expect(windowSpy).not.toHaveBeenCalled();
-        windowSpy.mockRestore();
+        expect(window.open).not.toHaveBeenCalled();
       });
 
       it('respects MAX_LINKED_TRACES limit', () => {
@@ -383,15 +477,24 @@ describe('<DdgNodeContent>', () => {
         }
         props.getVisiblePathElems.mockReturnValue(mockElems);
 
-        const windowSpy = jest.spyOn(window, 'open').mockImplementation();
-        wrapper.instance().viewTraces();
+        const { container } = render(<DdgNodeContent {...props} />);
 
-        const expectedTraceIds = mockElems.slice(0, MAX_LINKED_TRACES).map(elem => elem.memberOf.traceIDs[0]);
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const viewTracesAction = Array.from(actionItems).find(item =>
+          item.textContent.includes('View traces')
+        );
+
+        fireEvent.click(viewTracesAction);
+
+        const expectedTraceIds = [];
+        for (let i = 0; i < MAX_LINKED_TRACES; i++) {
+          expectedTraceIds.push(`trace-${i}`);
+        }
+
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
           traceID: expectedTraceIds,
         });
-        expect(windowSpy).toHaveBeenCalledWith(`mock-search-url-${expectedTraceIds.join('-')}`, '_blank');
-        windowSpy.mockRestore();
+        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${expectedTraceIds.join('-')}`, '_blank');
       });
 
       it('respects MAX_LENGTH limit', () => {
@@ -404,14 +507,19 @@ describe('<DdgNodeContent>', () => {
         ];
         props.getVisiblePathElems.mockReturnValue(mockElems);
 
-        const windowSpy = jest.spyOn(window, 'open').mockImplementation();
-        wrapper.instance().viewTraces();
+        const { container } = render(<DdgNodeContent {...props} />);
+
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const viewTracesAction = Array.from(actionItems).find(item =>
+          item.textContent.includes('View traces')
+        );
+
+        fireEvent.click(viewTracesAction);
 
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
           traceID: [longTraceId],
         });
-        expect(windowSpy).toHaveBeenCalledWith(`mock-search-url-${longTraceId}`, '_blank');
-        windowSpy.mockRestore();
+        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${longTraceId}`, '_blank');
       });
 
       it('handles duplicate trace IDs', () => {
@@ -423,14 +531,19 @@ describe('<DdgNodeContent>', () => {
         ];
         props.getVisiblePathElems.mockReturnValue(mockElems);
 
-        const windowSpy = jest.spyOn(window, 'open').mockImplementation();
-        wrapper.instance().viewTraces();
+        const { container } = render(<DdgNodeContent {...props} />);
+
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const viewTracesAction = Array.from(actionItems).find(item =>
+          item.textContent.includes('View traces')
+        );
+
+        fireEvent.click(viewTracesAction);
 
         expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
           traceID: [traceId],
         });
-        expect(windowSpy).toHaveBeenCalledWith(`mock-search-url-${traceId}`, '_blank');
-        windowSpy.mockRestore();
+        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${traceId}`, '_blank');
       });
     });
   });
