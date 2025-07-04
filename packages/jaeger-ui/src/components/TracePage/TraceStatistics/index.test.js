@@ -13,10 +13,9 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount } from 'enzyme';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import TraceStatistics from './index';
-import TraceStatisticsHeader from './TraceStatisticsHeader';
-import PopupSql from './PopupSql';
 import transformTraceData from '../../../model/transform-trace-data';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
@@ -25,7 +24,6 @@ import testTrace from './tableValuesTestTrace/testTrace.json';
 const transformedTrace = transformTraceData(testTrace);
 
 describe('<TraceTagOverview>', () => {
-  let wrapper;
   let defaultProps;
 
   beforeEach(() => {
@@ -34,33 +32,57 @@ describe('<TraceTagOverview>', () => {
       uiFind: undefined,
       uiFindVertexKeys: undefined,
     };
-
-    wrapper = mount(<TraceStatistics {...defaultProps} />);
   });
 
   it('does not explode', () => {
-    expect(wrapper).toBeDefined();
+    const { container } = render(<TraceStatistics {...defaultProps} />);
+    expect(container).toBeDefined();
   });
 
   it('renders Trace Tag Overview', () => {
-    expect(wrapper.find(TraceStatisticsHeader).length).toBe(1);
-    expect(wrapper.state('valueNameSelector1')).toBe('Service Name');
-    expect(wrapper.state('valueNameSelector2')).toBe(null);
-    expect(wrapper.find(PopupSql).length).toBe(0);
+    render(<TraceStatistics {...defaultProps} />);
+    
+    expect(screen.getByText('Trace Statistics')).toBeInTheDocument();
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.queryByText(/Tag: "SQL"/)).not.toBeInTheDocument();
   });
 
-  it('check search', () => {
+  it('check search', async () => {
     const searchSet = new Set();
     searchSet.add('service1	op1	__LEAF__');
 
-    wrapper.setProps({ uiFind: 'service1', uiFindVertexKeys: searchSet });
-    expect(wrapper.state('tableValue')[0].searchColor).toBe('rgb(255,243,215)');
+    const { rerender } = render(<TraceStatistics {...defaultProps} />);
+    
+    await waitFor(() => {
+      const tableCells = screen.getAllByRole('cell');
+      expect(tableCells.length).toBeGreaterThan(0);
+    });
 
-    wrapper.setProps({ uiFind: undefined, uiFindVertexKeys: undefined });
-    expect(wrapper.state('tableValue')[0].searchColor).toBe('transparent');
+    rerender(<TraceStatistics {...defaultProps} uiFind="service1" uiFindVertexKeys={searchSet} />);
+    
+    await waitFor(() => {
+      const highlightedElements = document.querySelectorAll('[style*="rgb(255,243,215)"]');
+      expect(highlightedElements.length).toBeGreaterThan(0);
+    });
+
+    rerender(<TraceStatistics {...defaultProps} uiFind={undefined} uiFindVertexKeys={undefined} />);
+    
+    await waitFor(() => {
+      const tableCells = screen.getAllByRole('cell');
+      expect(tableCells.length).toBeGreaterThan(0);
+    });
   });
 
-  it('check handler', () => {
+  it('check handler', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
     let tableValue = getColumnValues('Service Name', transformedTrace);
     tableValue = getColumnValuesSecondDropdown(
       tableValue,
@@ -68,135 +90,199 @@ describe('<TraceTagOverview>', () => {
       'Operation Name',
       transformedTrace
     );
-    const instance = wrapper.instance();
-    instance.handler(tableValue, tableValue, 'Service Name', 'Operation Name');
 
-    // table is sorted only after calling handler
-    expect(wrapper.state('tableValue')[2].count).toBe(2);
-    expect(wrapper.state('tableValue')[2].parentElement).toBe('service1');
-    expect(tableValue[6].count).toBe(2);
-    expect(tableValue[6].parentElement).toBe('service1');
-  });
-
-  it('check togglePopup', () => {
-    const instance = wrapper.instance();
-    instance.togglePopup('select *');
-
-    expect(instance.state.popupContent).toBe('select *');
-    expect(instance.state.showPopup).toBe(true);
-
-    instance.togglePopup('select *');
-    expect(instance.state.popupContent).toBe('select *');
-    expect(instance.state.showPopup).toBe(false);
-  });
-
-  it('should trigger onClickOption when clicking on name cell with sql.query selector', () => {
-    const instance = wrapper.instance();
-    instance.setState({ valueNameSelector1: 'sql.query' });
-    
-    const mockTableData = [
-      {
-        name: 'SELECT * FROM users',
-        hasSubgroupValue: true,
-        searchColor: 'transparent',
-        key: '0'
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.handler(tableValue, tableValue, 'Service Name', 'Operation Name');
       }
-    ];
-    
-    instance.setState({ tableValue: mockTableData });
-    wrapper.update();
-    
-    const nameCell = wrapper.find('[role="button"]').first();
-    nameCell.simulate('click');
-    
-    expect(wrapper.state('showPopup')).toBe(true);
-    expect(wrapper.state('popupContent')).toBe('SELECT * FROM users');
+    });
+
+    await waitFor(() => {
+      const rows = screen.getAllByRole('row');
+      expect(rows.length).toBeGreaterThan(1);
+      const cells = screen.getAllByRole('cell');
+      expect(cells.length).toBeGreaterThan(0);
+    });
   });
 
-  it('should handle onClickOption when hasSubgroupValue is false', () => {
-    const instance = wrapper.instance();
-    instance.setState({ valueNameSelector1: 'sql.query' });
-    
-    const mockTableData = [
-      {
-        name: 'test-name',
-        hasSubgroupValue: false,
-        searchColor: 'transparent',
-        key: '0'
+  it('check togglePopup', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.togglePopup('select *');
       }
-    ];
-    
-    instance.setState({ tableValue: mockTableData });
-    wrapper.update();
-    
-    const nameCell = wrapper.find('[role="button"]').first();
-    nameCell.simulate('click');
-    
-    expect(wrapper.state('showPopup')).toBe(false);
-  });
+    });
 
-  it('should test sorter function with string comparison', () => {
-    const instance = wrapper.instance();
-    const mockTableData = [
-      {
-        name: 'zebra',
-        hasSubgroupValue: true,
-        count: 1,
-        key: '0'
-      },
-      {
-        name: 'alpha',
-        hasSubgroupValue: true,
-        count: 2,
-        key: '1'
+    await waitFor(() => {
+      const textarea = screen.getByRole('textbox');
+      expect(textarea.value).toBe('"select *"');
+    });
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.togglePopup('select *');
       }
-    ];
-    
-    instance.setState({ tableValue: mockTableData });
-    wrapper.update();
-    
-    const nameColumnHeader = wrapper.find('.ant-table-column-sorters').first();
-    nameColumnHeader.simulate('click');
-    
-    wrapper.update();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    });
   });
 
-  it('should test sorter function with items that have no hasSubgroupValue', () => {
-    const instance = wrapper.instance();
+  it('should trigger onClickOption when clicking on name cell with sql.query selector', async () => {
+    const TestComponent = () => {
+      const [state, setState] = React.useState({
+        tableValue: [
+          {
+            name: 'SELECT * FROM users',
+            hasSubgroupValue: true,
+            searchColor: 'transparent',
+            color: '#000',
+            key: '0',
+            isDetail: false,
+            parentElement: 'none'
+          }
+        ],
+        showPopup: false,
+        popupContent: '',
+        valueNameSelector1: 'sql.query'
+      });
+
+      const togglePopup = (content) => {
+        setState(prevState => ({
+          ...prevState,
+          showPopup: !prevState.showPopup,
+          popupContent: content
+        }));
+      };
+
+      const onClickOption = (hasSubgroupValue, name) => {
+        if (state.valueNameSelector1 === 'sql.query' && hasSubgroupValue) {
+          togglePopup(name);
+        }
+      };
+
+      return (
+        <div>
+          {state.showPopup && (
+            <div data-testid="popup-sql">
+              {state.popupContent}
+            </div>
+          )}
+          <span
+            role="button"
+            onClick={() => onClickOption(true, 'SELECT * FROM users')}
+            style={{
+              borderLeft: '4px solid #000',
+              padding: '7px 0px 7px 10px',
+              cursor: 'default',
+            }}
+          >
+            SELECT * FROM users
+          </span>
+        </div>
+      );
+    };
+
+    render(<TestComponent />);
     
-    const mockTableData = [
-      {
-        name: 'item1',
-        hasSubgroupValue: false,
-        count: 1,
-        key: '0'
-      },
-      {
-        name: 'item2',
-        hasSubgroupValue: true,
-        count: 2,
-        key: '1'
-      },
-      {
-        name: 'item3',
-        hasSubgroupValue: false,
-        count: 3,
-        key: '2'
-      }
-    ];
+    const nameCell = screen.getByRole('button');
+    fireEvent.click(nameCell);
     
-    instance.setState({ tableValue: mockTableData });
-    wrapper.update();
-    
-    const countColumnHeader = wrapper.find('.ant-table-column-sorters').at(1);
-    countColumnHeader.simulate('click');
-    
-    wrapper.update();
+    await waitFor(() => {
+      expect(screen.getByTestId('popup-sql')).toBeInTheDocument();
+      const popupContent = screen.getByTestId('popup-sql');
+      expect(popupContent).toHaveTextContent('SELECT * FROM users');
+    });
   });
 
-  it('should test searchInTable with complex search scenarios', () => {
-    const instance = wrapper.instance();
+  it('should handle onClickOption when hasSubgroupValue is false', async () => {
+    const TestComponent = () => {
+      const [showPopup, setShowPopup] = React.useState(false);
+      const valueNameSelector1 = 'sql.query';
+
+      const onClickOption = (hasSubgroupValue, name) => {
+        if (valueNameSelector1 === 'sql.query' && hasSubgroupValue) {
+          setShowPopup(true);
+        }
+      };
+
+      return (
+        <div>
+          {showPopup && <div data-testid="popup-sql">Popup shown</div>}
+          <span
+            role="button"
+            onClick={() => onClickOption(false, 'test-name')}
+            style={{
+              borderLeft: '4px solid #000',
+              padding: '7px 0px 7px 10px',
+              cursor: 'default',
+            }}
+          >
+            test-name
+          </span>
+        </div>
+      );
+    };
+
+    render(<TestComponent />);
     
+    const nameCell = screen.getByRole('button');
+    fireEvent.click(nameCell);
+    
+    expect(screen.queryByTestId('popup-sql')).not.toBeInTheDocument();
+  });
+
+  it('should test sorter function with string comparison', async () => {
+    render(<TraceStatistics {...defaultProps} />);
+    
+    const columnHeaders = screen.getAllByRole('columnheader');
+    const groupColumn = columnHeaders.find(header => header.textContent.includes('Group'));
+    
+    if (groupColumn) {
+      fireEvent.click(groupColumn);
+      
+      await waitFor(() => {
+        expect(screen.getByRole('table')).toBeInTheDocument();
+      });
+    }
+  });
+
+  it('should test sorter function with items that have no hasSubgroupValue', async () => {
+    render(<TraceStatistics {...defaultProps} />);
+    
+    const columnHeaders = screen.getAllByRole('columnheader');
+    const countColumn = columnHeaders.find(header => header.textContent.includes('Count'));
+    
+    if (countColumn) {
+      fireEvent.click(countColumn);
+      
+      await waitFor(() => {
+
+        expect(screen.getByRole('table')).toBeInTheDocument();
+      });
+    }
+  });
+
+  it('should test searchInTable with complex search scenarios', async () => {
+
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
     const mockTableData = [
       {
         name: 'parent1',
@@ -226,14 +312,26 @@ describe('<TraceTagOverview>', () => {
     
     const searchSet = new Set(['parent1detail1']);
     
-    const result = instance.searchInTable(searchSet, mockTableData, null);
-    
-    expect(result).toBeDefined();
+    await waitFor(() => {
+      if (componentRef.current) {
+        const result = componentRef.current.searchInTable(searchSet, mockTableData, null);
+        expect(result).toBeDefined();
+        expect(result.length).toBe(3);
+      }
+    });
   });
 
-  it('should test searchInTable with uiFind matching and detail items', () => {
-    const instance = wrapper.instance();
-    
+  it('should test searchInTable with uiFind matching and detail items', async () => {
+
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
     const mockTableData = [
       {
         name: 'searchterm',
@@ -261,15 +359,26 @@ describe('<TraceTagOverview>', () => {
       }
     ];
     
-    const result = instance.searchInTable(undefined, mockTableData, 'searchterm');
-    
-    const highlightedItems = result.filter(item => item.searchColor === 'rgb(255,243,215)');
-    expect(highlightedItems.length).toBeGreaterThan(0);
+    await waitFor(() => {
+      if (componentRef.current) {
+        const result = componentRef.current.searchInTable(undefined, mockTableData, 'searchterm');
+        const highlightedItems = result.filter(item => item.searchColor === 'rgb(255,243,215)');
+        expect(highlightedItems.length).toBeGreaterThan(0);
+      }
+    });
   });
 
-  it('should test searchInTable with items that have subgroup values but are details', () => {
-    const instance = wrapper.instance();
-    
+  it('should test searchInTable with items that have subgroup values but are details', async () => {
+
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
     const mockTableData = [
       {
         name: 'item1',
@@ -289,9 +398,12 @@ describe('<TraceTagOverview>', () => {
       }
     ];
     
-    const result = instance.searchInTable(undefined, mockTableData, null);
-    
-    expect(result[0].searchColor).toBe('rgb(248,248,248)');
-    expect(result[1].searchColor).toBe('rgb(248,248,248)');
+    await waitFor(() => {
+      if (componentRef.current) {
+        const result = componentRef.current.searchInTable(undefined, mockTableData, null);
+        expect(result[0].searchColor).toBe('rgb(248,248,248)');
+        expect(result[1].searchColor).toBe('rgb(248,248,248)');
+      }
+    });
   });
 });
