@@ -28,6 +28,9 @@ describe('<TraceTagOverview>', () => {
   let wrapper;
   let defaultProps;
 
+  // FIXME Increase timeout for this test suite due to slow Enzyme/React 18 mounting
+  jest.setTimeout(10000);
+
   beforeEach(() => {
     defaultProps = {
       trace: transformedTrace,
@@ -36,6 +39,12 @@ describe('<TraceTagOverview>', () => {
     };
 
     wrapper = mount(<TraceStatistics {...defaultProps} />);
+  });
+
+  afterEach(() => {
+    if (wrapper) {
+      wrapper.unmount();
+    }
   });
 
   it('does not explode', () => {
