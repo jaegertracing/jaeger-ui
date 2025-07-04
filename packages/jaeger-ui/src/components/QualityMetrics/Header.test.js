@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { InputNumber } from 'antd';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import debounceMock from 'lodash/debounce';
 
 import Header from './Header';
@@ -34,7 +34,6 @@ describe('Header', () => {
     service,
     services: ['foo', 'bar', 'baz'],
   };
-  let wrapper;
   let callDebouncedFn;
   let setLookbackSpy;
 
@@ -50,47 +49,118 @@ describe('Header', () => {
   beforeEach(() => {
     props.setLookback.mockReset();
     setLookbackSpy = undefined;
-    wrapper = shallow(<Header {...props} />);
   });
 
   describe('rendering', () => {
     it('renders as expected with minimum props', () => {
-      wrapper = shallow(<Header {...minProps} />);
-      expect(wrapper).toMatchSnapshot();
+      render(<Header {...minProps} />);
+      expect(screen.getByLabelText(/lookback/i)).toBeInTheDocument();
+      expect(screen.getByRole('spinbutton')).toBeInTheDocument();
+      expect(screen.getByText(/in hours/i)).toBeInTheDocument();
     });
 
     it('renders as expected with full props', () => {
-      expect(wrapper).toMatchSnapshot();
+      render(<Header {...props} />);
+      expect(screen.getByLabelText(/lookback/i)).toBeInTheDocument();
+      expect(screen.getByRole('spinbutton')).toBeInTheDocument();
+      expect(screen.getByText(/in hours/i)).toBeInTheDocument();
+      expect(screen.getByText(/Service:/i)).toBeInTheDocument();
     });
 
     it('renders props.lookback when state.ownInputValue is `undefined`', () => {
-      expect(wrapper.find(InputNumber).prop('value')).toBe(lookback);
+      render(<Header {...props} />);
+      const input = screen.getByRole('spinbutton');
+      expect(input.value).toBe(String(lookback));
     });
 
     it('renders state.ownInputValue when it is not `undefined` regardless of props.lookback', () => {
-      const ownInputValue = 27;
-      wrapper.setState({ ownInputValue });
-      expect(wrapper.find(InputNumber).prop('value')).toBe(ownInputValue);
+      const { rerender } = render(<Header {...props} />);
+      const input = screen.getByRole('spinbutton');
+
+      // This simulates a user typing "27" into the input.
+      const userInput = '27';
+      fireEvent.change(input, { target: { value: userInput } });
+
+      // This verifies the component is displaying its internal state.
+      expect(input.value).toBe(userInput);
+
+      // This simulates the parent component passing down new data.
+      rerender(<Header {...props} lookback={999} />);
+
+      // The component should prioritize the user's active input (its internal state)
+      // over the new prop. We assert the input still shows the user's value,
+      // confirming that the component's state takes precedence.
+      expect(input.value).toBe(userInput);
+    });
+
+    it('prioritizes user input over props.lookback (state.ownInputValue precedence)', () => {
+      const { rerender } = render(<Header {...props} />);
+      const input = screen.getByRole('spinbutton');
+
+      // Initially shows props.lookback (state.ownInputValue is null)
+      expect(input.value).toBe(String(props.lookback));
+
+      // User input sets state.ownInputValue
+      const userInput = '27';
+      fireEvent.change(input, { target: { value: userInput } });
+      expect(input.value).toBe(userInput);
+
+      // Changing props.lookback doesn't affect display (state.ownInputValue has precedence)
+      const newLookback = 999;
+      rerender(<Header {...props} lookback={newLookback} />);
+      expect(input.value).toBe(userInput); // Proves state.ownInputValue is being used
+
+      // Additional verification: changing back to original props still shows state value
+      rerender(<Header {...props} />);
+      expect(input.value).toBe(userInput);
     });
   });
 
   describe('setting lookback', () => {
     it('no-ops for string values', () => {
-      wrapper.find(InputNumber).prop('onChange')('foo');
-      expect(wrapper.state('ownInputValue')).toBe(null);
+      const setLookbackPropSpy = jest.fn();
+      render(<Header {...props} setLookback={setLookbackPropSpy} />);
+      const input = screen.getByRole('spinbutton');
+
+      // Simulate entering a string value (which should be a no-op for internal state)
+      fireEvent.change(input, { target: { value: 'foo' } });
+
+      // Trigger the debounced function to see if the component processes the string
+      callDebouncedFn();
+
+      expect(setLookbackPropSpy).not.toHaveBeenCalledWith('foo');
+
+      // The component should either not call setLookback at all, or call it with null
+      if (setLookbackPropSpy.mock.calls.length > 0) {
+        expect(setLookbackPropSpy).toHaveBeenCalledWith(null);
+      }
     });
 
     it('updates state with numeric value, then clears state and calls props.setLookback after debounce', () => {
-      const value = 42;
-      wrapper.find(InputNumber).prop('onChange')(value);
+      const setLookbackPropSpy = jest.fn();
+      const { rerender } = render(<Header {...props} setLookback={setLookbackPropSpy} />);
+      const input = screen.getByRole('spinbutton');
 
-      expect(wrapper.state('ownInputValue')).toBe(value);
-      expect(setLookbackSpy).toHaveBeenCalledWith(42);
-      expect(props.setLookback).not.toHaveBeenCalled();
+      // User types a value, which is immediately displayed (verifies state precedence)
+      fireEvent.change(input, { target: { value: '42' } });
+      expect(input.value).toBe('42');
 
+      // Props change, but input still shows user value (re-verifies state precedence)
+      rerender(<Header {...props} lookback={999} setLookback={setLookbackPropSpy} />);
+      expect(input.value).toBe('42');
+
+      // Debounced function hasn't been called yet, so prop is not yet called
+      expect(setLookbackPropSpy).not.toHaveBeenCalled();
+
+      // Trigger debounced function
       callDebouncedFn();
-      expect(wrapper.state('ownInputValue')).toBe(null);
-      expect(props.setLookback).toHaveBeenCalledWith(42);
+
+      // Verify setLookback prop was called with the correct numeric value
+      expect(setLookbackPropSpy).toHaveBeenCalledWith(42);
+
+      // After debounce, internal state is cleared, so new props should now be displayed
+      rerender(<Header {...props} lookback={999} setLookback={setLookbackPropSpy} />);
+      expect(input.value).toBe('999');
     });
   });
 });

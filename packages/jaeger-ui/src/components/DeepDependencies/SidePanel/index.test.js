@@ -13,12 +13,23 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { Modal } from 'antd';
 
 import SidePanel from '.';
 import * as track from './index.track';
 import * as getConfig from '../../../utils/config/get-config';
+import DetailsPanel from './DetailsPanel';
+
+jest.mock('antd', () => ({
+  Modal: {
+    info: jest.fn(),
+  },
+  Table: () => <div data-testid="mock-table">Table Mock</div>,
+}));
+
+jest.mock('./DetailsPanel', () => jest.fn(() => <div data-testid="details-panel" />));
 
 describe('<SidePanel>', () => {
   let getConfigValueSpy;
@@ -55,93 +66,127 @@ describe('<SidePanel>', () => {
   beforeEach(() => {
     trackDecorationSelectedSpy.mockReset();
     trackDecorationViewDetailsSpy.mockReset();
+    Modal.info.mockReset();
   });
 
   describe('constructor', () => {
     it('inits decorations', () => {
-      const wrapper = shallow(<SidePanel />);
-      expect(wrapper.instance().decorations).toBe(mockConfig);
+      render(<SidePanel />);
+      expect(screen.getByText('1st')).toBeInTheDocument();
+      expect(screen.getByText(testAcronym)).toBeInTheDocument();
+      expect(screen.getByText('LO')).toBeInTheDocument();
     });
 
     it('tracks initial selection', () => {
       expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(0);
 
-      shallow(<SidePanel selectedDecoration={testID} />);
+      render(<SidePanel selectedDecoration={testID} />);
       expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(1);
       expect(trackDecorationSelectedSpy).toHaveBeenLastCalledWith(testID);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(0);
 
-      shallow(<SidePanel selectedVertex={testVertex} />);
+      trackDecorationSelectedSpy.mockReset();
+      trackDecorationViewDetailsSpy.mockReset();
+
+      render(<SidePanel selectedVertex={testVertex} />);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(1);
       expect(trackDecorationViewDetailsSpy).toHaveBeenLastCalledWith(testVertex);
-      expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(1);
+      expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(0);
     });
   });
 
   describe('render', () => {
     it('renders null if there are no decorations', () => {
       getConfigValueSpy.mockReturnValueOnce(undefined);
-      const wrapper = shallow(<SidePanel />);
-      expect(wrapper.getElement()).toBe(null);
+      const { container } = render(<SidePanel />);
+      expect(container.firstChild).toBeNull();
     });
 
     it('renders config decorations with clear button', () => {
-      const wrapper = shallow(<SidePanel />);
-      expect(wrapper).toMatchSnapshot();
+      const { container } = render(<SidePanel />);
+      expect(container.querySelector('.Ddg--SidePanel')).toBeInTheDocument();
+
+      expect(screen.getByText('1st')).toBeInTheDocument();
+      expect(screen.getByText(testAcronym)).toBeInTheDocument();
+      expect(screen.getByText('LO')).toBeInTheDocument();
+
+      expect(screen.getByText('Clear')).toBeInTheDocument();
     });
 
     it('renders selected decoration', () => {
-      const wrapper = shallow(<SidePanel selectedDecoration={testID} />);
-      expect(wrapper).toMatchSnapshot();
+      const { container } = render(<SidePanel selectedDecoration={testID} />);
+
+      const selectedButton = screen.getByText(testAcronym);
+      expect(selectedButton).toHaveClass('is-selected');
+
+      const detailsPanel = container.querySelector('.Ddg--SidePanel--Details');
+      expect(detailsPanel.children.length).toBe(0);
     });
 
     it('ignores selectedVertex without selected decoration', () => {
-      const wrapper = shallow(<SidePanel selectedVertex={testVertex} />);
-      expect(wrapper).toMatchSnapshot();
+      const { container } = render(<SidePanel selectedVertex={testVertex} />);
+
+      const closeButton = container.querySelector('.Ddg--SidePanel--closeBtn');
+      expect(closeButton).toHaveClass('is-hidden');
+
+      const detailsPanel = container.querySelector('.Ddg--SidePanel--Details');
+      expect(detailsPanel.children.length).toBe(0);
     });
 
     it('renders sidePanel and closeBtn when vertex and decoration are both selected', () => {
-      const wrapper = shallow(<SidePanel selectedDecoration={testID} selectedVertex={testVertex} />);
-      expect(wrapper).toMatchSnapshot();
+      const { container } = render(<SidePanel selectedDecoration={testID} selectedVertex={testVertex} />);
+
+      const closeButton = container.querySelector('.Ddg--SidePanel--closeBtn');
+      expect(closeButton).not.toHaveClass('is-hidden');
+
+      expect(screen.getByTestId('details-panel')).toBeInTheDocument();
+      expect(DetailsPanel).toHaveBeenCalledWith(
+        expect.objectContaining({
+          decorationSchema: expect.objectContaining({ id: testID }),
+          operation: testVertex.operation,
+          service: testVertex.service,
+        }),
+        expect.anything()
+      );
     });
   });
 
   describe('componentDidUpdate', () => {
     it('tracks change in vertex from absent to present', () => {
-      const wrapper = shallow(<SidePanel />);
+      const { rerender } = render(<SidePanel />);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(0);
 
-      wrapper.setProps({ selectedVertex: testVertex });
+      rerender(<SidePanel selectedVertex={testVertex} />);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(1);
       expect(trackDecorationViewDetailsSpy).toHaveBeenLastCalledWith(testVertex);
     });
 
     it('tracks change in vertex from present to absent', () => {
-      const wrapper = shallow(<SidePanel selectedVertex={testVertex} />);
+      const { rerender } = render(<SidePanel selectedVertex={testVertex} />);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(1);
 
-      wrapper.setProps({ selectedVertex: undefined });
+      rerender(<SidePanel selectedVertex={undefined} />);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(2);
       expect(trackDecorationViewDetailsSpy).toHaveBeenLastCalledWith(undefined);
     });
 
     it('tracks change in vertex between different vertexes', () => {
-      const wrapper = shallow(<SidePanel selectedVertex={testVertex} />);
+      const { rerender } = render(<SidePanel selectedVertex={testVertex} />);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(1);
       expect(trackDecorationViewDetailsSpy).toHaveBeenLastCalledWith(testVertex);
 
-      const newVertex = { ...testVertex };
-      wrapper.setProps({ selectedVertex: newVertex });
+      const newVertex = { ...testVertex, operation: 'newOp' };
+      rerender(<SidePanel selectedVertex={newVertex} />);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(2);
       expect(trackDecorationViewDetailsSpy).toHaveBeenLastCalledWith(newVertex);
     });
 
     it('does not track unchanged vertex', () => {
-      const wrapper = shallow(<SidePanel selectedVertex={testVertex} />);
+      const { rerender } = render(<SidePanel selectedVertex={testVertex} />);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(1);
       expect(trackDecorationViewDetailsSpy).toHaveBeenLastCalledWith(testVertex);
 
-      wrapper.setProps({ selectedDecoration: testID });
+      rerender(<SidePanel selectedVertex={testVertex} selectedDecoration={testID} />);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(1);
     });
   });
@@ -149,11 +194,16 @@ describe('<SidePanel>', () => {
   describe('clearSelected', () => {
     it('clears selected and tracks clearing', () => {
       const clearSelected = jest.fn();
-      const wrapper = shallow(<SidePanel selectedVertex={testVertex} clearSelected={clearSelected} />);
+      const { container } = render(
+        <SidePanel selectedVertex={testVertex} selectedDecoration={testID} clearSelected={clearSelected} />
+      );
+
       expect(clearSelected).toHaveBeenCalledTimes(0);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(1);
 
-      wrapper.find('button').at(0).simulate('click');
+      const closeButton = container.querySelector('.Ddg--SidePanel--closeBtn');
+      fireEvent.click(closeButton);
+
       expect(clearSelected).toHaveBeenCalledTimes(1);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(2);
       expect(trackDecorationViewDetailsSpy).toHaveBeenLastCalledWith();
@@ -168,23 +218,29 @@ describe('<SidePanel>', () => {
     });
 
     it('selects decoration and tracks selection', () => {
-      const wrapper = shallow(<SidePanel selectDecoration={selectDecoration} />);
+      render(<SidePanel selectDecoration={selectDecoration} />);
       expect(selectDecoration).toHaveBeenCalledTimes(0);
       expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(0);
 
-      wrapper.find(`button[children="${testAcronym}"]`).simulate('click');
+      const decorationBtn = screen.getByText(testAcronym);
+      fireEvent.click(decorationBtn);
+
       expect(selectDecoration).toHaveBeenCalledTimes(1);
+      expect(selectDecoration).toHaveBeenCalledWith(testID);
       expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(1);
       expect(trackDecorationSelectedSpy).toHaveBeenLastCalledWith(testID);
     });
 
     it('clears decoration and tracks clear', () => {
-      const wrapper = shallow(<SidePanel selectDecoration={selectDecoration} selectedDecoration={testID} />);
+      render(<SidePanel selectDecoration={selectDecoration} selectedDecoration={testID} />);
       expect(selectDecoration).toHaveBeenCalledTimes(0);
       expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(1);
 
-      wrapper.find('.Ddg--SidePanel--DecorationBtns > button').last().simulate('click');
+      const clearBtn = screen.getByText('Clear');
+      fireEvent.click(clearBtn);
+
       expect(selectDecoration).toHaveBeenCalledTimes(1);
+      expect(selectDecoration).toHaveBeenCalledWith(undefined);
       expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(2);
       expect(trackDecorationSelectedSpy).toHaveBeenLastCalledWith(undefined);
     });
@@ -198,12 +254,18 @@ describe('<SidePanel>', () => {
     });
 
     it('opens info modal', () => {
-      const wrapper = shallow(<SidePanel />);
+      const { container } = render(<SidePanel />);
       expect(modalInfoSpy).toHaveBeenCalledTimes(0);
 
-      wrapper.find('button').last().simulate('click');
+      const infoBtn = container.querySelector('.Ddg--SidePanel--infoBtn');
+      fireEvent.click(infoBtn);
+
       expect(modalInfoSpy).toHaveBeenCalledTimes(1);
-      expect(modalInfoSpy.mock.calls[0][0]).toMatchSnapshot();
+      const modalProps = modalInfoSpy.mock.calls[0][0];
+      expect(modalProps).toHaveProperty('title', 'Decoration Options');
+      expect(modalProps).toHaveProperty('maskClosable', true);
+      expect(modalProps).toHaveProperty('width', '60vw');
+      expect(modalProps).toHaveProperty('content');
     });
   });
 });

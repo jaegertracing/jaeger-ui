@@ -15,7 +15,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import OperationsGraph from './opsGraph';
+import OperationsGraph, { generatePlaceholder } from './opsGraph';
 import { serviceOpsMetrics } from '../../../../reducers/metrics.mock';
 
 class ResizeObserver {
@@ -112,7 +112,7 @@ describe('<OperationsGraph>', () => {
 
   it('generates placeholder with custom text', () => {
     const customText = 'Custom Placeholder';
-    const placeholder = OperationsGraph.generatePlaceholder(customText);
+    const placeholder = generatePlaceholder(customText);
     render(placeholder);
     const placeholderElement = screen.getByText(customText);
     expect(placeholderElement).toBeInTheDocument();

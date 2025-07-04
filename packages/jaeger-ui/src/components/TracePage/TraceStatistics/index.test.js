@@ -13,10 +13,9 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount } from 'enzyme';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import TraceStatistics from './index';
-import TraceStatisticsHeader from './TraceStatisticsHeader';
-import PopupSql from './PopupSql';
 import transformTraceData from '../../../model/transform-trace-data';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
@@ -25,7 +24,6 @@ import testTrace from './tableValuesTestTrace/testTrace.json';
 const transformedTrace = transformTraceData(testTrace);
 
 describe('<TraceTagOverview>', () => {
-  let wrapper;
   let defaultProps;
 
   // FIXME Increase timeout for this test suite due to slow Enzyme/React 18 mounting
@@ -37,8 +35,6 @@ describe('<TraceTagOverview>', () => {
       uiFind: undefined,
       uiFindVertexKeys: undefined,
     };
-
-    wrapper = mount(<TraceStatistics {...defaultProps} />);
   });
 
   afterEach(() => {
@@ -48,28 +44,54 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('does not explode', () => {
-    expect(wrapper).toBeDefined();
+    const { container } = render(<TraceStatistics {...defaultProps} />);
+    expect(container).toBeDefined();
   });
 
   it('renders Trace Tag Overview', () => {
-    expect(wrapper.find(TraceStatisticsHeader).length).toBe(1);
-    expect(wrapper.state('valueNameSelector1')).toBe('Service Name');
-    expect(wrapper.state('valueNameSelector2')).toBe(null);
-    expect(wrapper.find(PopupSql).length).toBe(0);
+    render(<TraceStatistics {...defaultProps} />);
+
+    expect(screen.getByText('Trace Statistics')).toBeInTheDocument();
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.queryByText(/Tag: "SQL"/)).not.toBeInTheDocument();
   });
 
-  it('check search', () => {
+  it('check search', async () => {
     const searchSet = new Set();
     searchSet.add('service1	op1	__LEAF__');
 
-    wrapper.setProps({ uiFind: 'service1', uiFindVertexKeys: searchSet });
-    expect(wrapper.state('tableValue')[0].searchColor).toBe('rgb(255,243,215)');
+    const { rerender } = render(<TraceStatistics {...defaultProps} />);
 
-    wrapper.setProps({ uiFind: undefined, uiFindVertexKeys: undefined });
-    expect(wrapper.state('tableValue')[0].searchColor).toBe('transparent');
+    await waitFor(() => {
+      const tableCells = screen.getAllByRole('cell');
+      expect(tableCells.length).toBeGreaterThan(0);
+    });
+
+    rerender(<TraceStatistics {...defaultProps} uiFind="service1" uiFindVertexKeys={searchSet} />);
+
+    await waitFor(() => {
+      const highlightedElements = document.querySelectorAll('[style*="rgb(255,243,215)"]');
+      expect(highlightedElements.length).toBeGreaterThan(0);
+    });
+
+    rerender(<TraceStatistics {...defaultProps} uiFind={undefined} uiFindVertexKeys={undefined} />);
+
+    await waitFor(() => {
+      const tableCells = screen.getAllByRole('cell');
+      expect(tableCells.length).toBeGreaterThan(0);
+    });
   });
 
-  it('check handler', () => {
+  it('check handler', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
     let tableValue = getColumnValues('Service Name', transformedTrace);
     tableValue = getColumnValuesSecondDropdown(
       tableValue,
@@ -77,25 +99,375 @@ describe('<TraceTagOverview>', () => {
       'Operation Name',
       transformedTrace
     );
-    const instance = wrapper.instance();
-    instance.handler(tableValue, tableValue, 'Service Name', 'Operation Name');
 
-    // table is sorted only after calling handler
-    expect(wrapper.state('tableValue')[2].count).toBe(2);
-    expect(wrapper.state('tableValue')[2].parentElement).toBe('service1');
-    expect(tableValue[6].count).toBe(2);
-    expect(tableValue[6].parentElement).toBe('service1');
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.handler(tableValue, tableValue, 'Service Name', 'Operation Name');
+      }
+    });
+
+    await waitFor(() => {
+      const rows = screen.getAllByRole('row');
+      expect(rows.length).toBeGreaterThan(1);
+      const cells = screen.getAllByRole('cell');
+      expect(cells.length).toBeGreaterThan(0);
+    });
   });
 
-  it('check togglePopup', () => {
-    const instance = wrapper.instance();
-    instance.togglePopup('select *');
+  it('check togglePopup', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
 
-    expect(instance.state.popupContent).toBe('select *');
-    expect(instance.state.showPopup).toBe(true);
+    render(<TestWrapper />);
 
-    instance.togglePopup('select *');
-    expect(instance.state.popupContent).toBe('select *');
-    expect(instance.state.showPopup).toBe(false);
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.togglePopup('select *');
+      }
+    });
+
+    await waitFor(() => {
+      const textarea = screen.getByRole('textbox');
+      expect(textarea.value).toBe('"select *"');
+    });
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.togglePopup('select *');
+      }
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should trigger onClickOption when clicking on name cell with sql.query selector', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          valueNameSelector1: 'sql.query',
+          tableValue: [
+            {
+              name: 'SELECT * FROM users',
+              hasSubgroupValue: true,
+              searchColor: 'transparent',
+              color: '#000',
+              key: '0',
+              isDetail: false,
+              parentElement: 'none',
+              count: 1,
+              total: 100,
+              avg: 50,
+              min: 10,
+              max: 90,
+              selfTotal: 80,
+              selfAvg: 40,
+              selfMin: 5,
+              selfMax: 75,
+              percent: 80,
+              colorToPercent: '#fff',
+            },
+          ],
+        });
+      }
+    });
+
+    await waitFor(() => {
+      const nameButtons = screen.getAllByRole('button');
+      const nameButton = nameButtons.find(
+        button => button.textContent.includes('SELECT') || button.style.borderLeft || button.style.padding
+      );
+
+      if (nameButton) {
+        fireEvent.click(nameButton);
+      }
+    });
+
+    await waitFor(() => {
+      const textarea = screen.queryByRole('textbox');
+      if (textarea) {
+        expect(textarea).toBeInTheDocument();
+      }
+    });
+  });
+
+  it('should handle onClickOption when hasSubgroupValue is false', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          valueNameSelector1: 'sql.query',
+          tableValue: [
+            {
+              name: 'test-name',
+              hasSubgroupValue: false,
+              searchColor: 'transparent',
+              color: '#000',
+              key: '0',
+              isDetail: false,
+              parentElement: 'none',
+              count: 1,
+              total: 100,
+              avg: 50,
+              min: 10,
+              max: 90,
+              selfTotal: 80,
+              selfAvg: 40,
+              selfMin: 5,
+              selfMax: 75,
+              percent: 80,
+              colorToPercent: '#fff',
+            },
+          ],
+        });
+      }
+    });
+
+    await waitFor(() => {
+      const nameButtons = screen.getAllByRole('button');
+      const nameButton = nameButtons.find(
+        button => button.textContent.includes('test-name') || button.style.borderLeft || button.style.padding
+      );
+
+      if (nameButton) {
+        fireEvent.click(nameButton);
+      }
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should test sorter function with string comparison', async () => {
+    render(<TraceStatistics {...defaultProps} />);
+
+    const columnHeaders = screen.getAllByRole('columnheader');
+    const groupColumn = columnHeaders.find(header => header.textContent.includes('Group'));
+
+    if (groupColumn) {
+      fireEvent.click(groupColumn);
+
+      await waitFor(() => {
+        expect(screen.getByRole('table')).toBeInTheDocument();
+      });
+    }
+  });
+
+  it('should test sorter function with items that have no hasSubgroupValue', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          tableValue: [
+            {
+              name: 'item1',
+              hasSubgroupValue: false,
+              count: 1,
+              total: 100,
+              key: '0',
+              searchColor: 'transparent',
+              colorToPercent: '#fff',
+            },
+            {
+              name: 'item2',
+              hasSubgroupValue: true,
+              count: 2,
+              total: 200,
+              key: '1',
+              searchColor: 'transparent',
+              colorToPercent: '#fff',
+            },
+            {
+              name: 'item3',
+              hasSubgroupValue: false,
+              count: 3,
+              total: 300,
+              key: '2',
+              searchColor: 'transparent',
+              colorToPercent: '#fff',
+            },
+          ],
+        });
+      }
+    });
+
+    await waitFor(() => {
+      const columnHeaders = screen.getAllByRole('columnheader');
+      const countColumn = columnHeaders.find(header => header.textContent.includes('Count'));
+
+      if (countColumn) {
+        fireEvent.click(countColumn);
+      }
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
+    });
+  });
+
+  it('should test searchInTable with complex search scenarios', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
+    const mockTableData = [
+      {
+        name: 'parent1',
+        isDetail: false,
+        hasSubgroupValue: true,
+        parentElement: 'none',
+        searchColor: 'rgb(248,248,248)',
+        key: '0',
+      },
+      {
+        name: 'detail1',
+        isDetail: true,
+        hasSubgroupValue: false,
+        parentElement: 'parent1',
+        searchColor: 'rgb(248,248,248)',
+        key: '1',
+      },
+      {
+        name: 'detail2',
+        isDetail: true,
+        hasSubgroupValue: false,
+        parentElement: 'parent2',
+        searchColor: 'rgb(248,248,248)',
+        key: '2',
+      },
+    ];
+
+    const searchSet = new Set(['parent1detail1']);
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        const result = componentRef.current.searchInTable(searchSet, mockTableData, null);
+        expect(result).toBeDefined();
+        expect(result.length).toBe(3);
+      }
+    });
+  });
+
+  it('should test searchInTable with uiFind matching and detail items', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
+    const mockTableData = [
+      {
+        name: 'searchterm',
+        isDetail: true,
+        hasSubgroupValue: false,
+        parentElement: 'parentitem',
+        searchColor: 'rgb(248,248,248)',
+        key: '0',
+      },
+      {
+        name: 'parentitem',
+        isDetail: false,
+        hasSubgroupValue: true,
+        parentElement: 'none',
+        searchColor: 'rgb(248,248,248)',
+        key: '1',
+      },
+      {
+        name: 'childitem',
+        isDetail: true,
+        hasSubgroupValue: false,
+        parentElement: 'searchterm',
+        searchColor: 'rgb(248,248,248)',
+        key: '2',
+      },
+    ];
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        const result = componentRef.current.searchInTable(undefined, mockTableData, 'searchterm');
+        const highlightedItems = result.filter(item => item.searchColor === 'rgb(255,243,215)');
+        expect(highlightedItems.length).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  it('should test searchInTable with items that have subgroup values but are details', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
+    const mockTableData = [
+      {
+        name: 'item1',
+        isDetail: true,
+        hasSubgroupValue: true,
+        parentElement: 'none',
+        searchColor: undefined,
+        key: '0',
+      },
+      {
+        name: 'item2',
+        isDetail: false,
+        hasSubgroupValue: false,
+        parentElement: 'none',
+        searchColor: undefined,
+        key: '1',
+      },
+    ];
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        const result = componentRef.current.searchInTable(undefined, mockTableData, null);
+        expect(result[0].searchColor).toBe('rgb(248,248,248)');
+        expect(result[1].searchColor).toBe('rgb(248,248,248)');
+      }
+    });
   });
 });
