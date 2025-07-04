@@ -379,6 +379,7 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('should test searchInTable with uiFind matching and detail items', async () => {
+    
     let componentRef;
     const TestWrapper = () => {
       const ref = React.useRef();
