@@ -191,6 +191,15 @@ function fetchOpsMetricsDone(
             service_operation_call_rate: 0,
             service_operation_error_rate: 0,
           };
+          const count: {
+            service_operation_latencies: number;
+            service_operation_call_rate: number;
+            service_operation_error_rate: number;
+          } = {
+            service_operation_latencies: 0,
+            service_operation_call_rate: 0,
+            service_operation_error_rate: 0,
+          };
           metricDetails.labels.forEach((label: { name: string; value: string }) => {
             if (label.name === 'operation') {
               opsName = label.value;
@@ -219,6 +228,7 @@ function fetchOpsMetricsDone(
               try {
                 y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
                 avg[metric.name] += y;
+                count[metric.name] += 1; // Increment count for non-NaN values
               } catch (e) {
                 y = null;
               }
@@ -230,8 +240,8 @@ function fetchOpsMetricsDone(
             });
 
             opsMetrics[opsName].metricPoints.avg[metric.name] =
-              metricDetails.metricPoints.length > 0
-                ? parseFloat((avg[metric.name] / metricDetails.metricPoints.length).toFixed(2))
+              count[metric.name] > 0
+                ? parseFloat((avg[metric.name] / count[metric.name]).toFixed(2))
                 : null;
           }
         });
