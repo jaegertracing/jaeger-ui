@@ -240,9 +240,7 @@ function fetchOpsMetricsDone(
             });
 
             opsMetrics[opsName].metricPoints.avg[metric.name] =
-              count[metric.name] > 0
-                ? parseFloat((avg[metric.name] / count[metric.name]).toFixed(2))
-                : null;
+              count[metric.name] > 0 ? parseFloat((avg[metric.name] / count[metric.name]).toFixed(2)) : null;
           }
         });
       } else {
