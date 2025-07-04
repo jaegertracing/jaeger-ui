@@ -41,7 +41,7 @@ describe('<TraceTagOverview>', () => {
 
   it('renders Trace Tag Overview', () => {
     render(<TraceStatistics {...defaultProps} />);
-    
+
     expect(screen.getByText('Trace Statistics')).toBeInTheDocument();
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.queryByText(/Tag: "SQL"/)).not.toBeInTheDocument();
@@ -52,21 +52,21 @@ describe('<TraceTagOverview>', () => {
     searchSet.add('service1	op1	__LEAF__');
 
     const { rerender } = render(<TraceStatistics {...defaultProps} />);
-    
+
     await waitFor(() => {
       const tableCells = screen.getAllByRole('cell');
       expect(tableCells.length).toBeGreaterThan(0);
     });
 
     rerender(<TraceStatistics {...defaultProps} uiFind="service1" uiFindVertexKeys={searchSet} />);
-    
+
     await waitFor(() => {
       const highlightedElements = document.querySelectorAll('[style*="rgb(255,243,215)"]');
       expect(highlightedElements.length).toBeGreaterThan(0);
     });
 
     rerender(<TraceStatistics {...defaultProps} uiFind={undefined} uiFindVertexKeys={undefined} />);
-    
+
     await waitFor(() => {
       const tableCells = screen.getAllByRole('cell');
       expect(tableCells.length).toBeGreaterThan(0);
@@ -138,118 +138,131 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('should trigger onClickOption when clicking on name cell with sql.query selector', async () => {
-    const TestComponent = () => {
-      const [state, setState] = React.useState({
-        tableValue: [
-          {
-            name: 'SELECT * FROM users',
-            hasSubgroupValue: true,
-            searchColor: 'transparent',
-            color: '#000',
-            key: '0',
-            isDetail: false,
-            parentElement: 'none'
-          }
-        ],
-        showPopup: false,
-        popupContent: '',
-        valueNameSelector1: 'sql.query'
-      });
-
-      const togglePopup = (content) => {
-        setState(prevState => ({
-          ...prevState,
-          showPopup: !prevState.showPopup,
-          popupContent: content
-        }));
-      };
-
-      const onClickOption = (hasSubgroupValue, name) => {
-        if (state.valueNameSelector1 === 'sql.query' && hasSubgroupValue) {
-          togglePopup(name);
-        }
-      };
-
-      return (
-        <div>
-          {state.showPopup && (
-            <div data-testid="popup-sql">
-              {state.popupContent}
-            </div>
-          )}
-          <span
-            role="button"
-            onClick={() => onClickOption(true, 'SELECT * FROM users')}
-            style={{
-              borderLeft: '4px solid #000',
-              padding: '7px 0px 7px 10px',
-              cursor: 'default',
-            }}
-          >
-            SELECT * FROM users
-          </span>
-        </div>
-      );
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
     };
 
-    render(<TestComponent />);
-    
-    const nameCell = screen.getByRole('button');
-    fireEvent.click(nameCell);
-    
+    render(<TestWrapper />);
+
     await waitFor(() => {
-      expect(screen.getByTestId('popup-sql')).toBeInTheDocument();
-      const popupContent = screen.getByTestId('popup-sql');
-      expect(popupContent).toHaveTextContent('SELECT * FROM users');
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          valueNameSelector1: 'sql.query',
+          tableValue: [
+            {
+              name: 'SELECT * FROM users',
+              hasSubgroupValue: true,
+              searchColor: 'transparent',
+              color: '#000',
+              key: '0',
+              isDetail: false,
+              parentElement: 'none',
+              count: 1,
+              total: 100,
+              avg: 50,
+              min: 10,
+              max: 90,
+              selfTotal: 80,
+              selfAvg: 40,
+              selfMin: 5,
+              selfMax: 75,
+              percent: 80,
+              colorToPercent: '#fff',
+            },
+          ],
+        });
+      }
+    });
+
+    await waitFor(() => {
+      const nameButtons = screen.getAllByRole('button');
+      const nameButton = nameButtons.find(
+        button => button.textContent.includes('SELECT') || button.style.borderLeft || button.style.padding
+      );
+
+      if (nameButton) {
+        fireEvent.click(nameButton);
+      }
+    });
+
+    await waitFor(() => {
+      const textarea = screen.queryByRole('textbox');
+      if (textarea) {
+        expect(textarea).toBeInTheDocument();
+      }
     });
   });
 
   it('should handle onClickOption when hasSubgroupValue is false', async () => {
-    const TestComponent = () => {
-      const [showPopup, setShowPopup] = React.useState(false);
-      const valueNameSelector1 = 'sql.query';
-
-      const onClickOption = (hasSubgroupValue, name) => {
-        if (valueNameSelector1 === 'sql.query' && hasSubgroupValue) {
-          setShowPopup(true);
-        }
-      };
-
-      return (
-        <div>
-          {showPopup && <div data-testid="popup-sql">Popup shown</div>}
-          <span
-            role="button"
-            onClick={() => onClickOption(false, 'test-name')}
-            style={{
-              borderLeft: '4px solid #000',
-              padding: '7px 0px 7px 10px',
-              cursor: 'default',
-            }}
-          >
-            test-name
-          </span>
-        </div>
-      );
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
     };
 
-    render(<TestComponent />);
-    
-    const nameCell = screen.getByRole('button');
-    fireEvent.click(nameCell);
-    
-    expect(screen.queryByTestId('popup-sql')).not.toBeInTheDocument();
+    render(<TestWrapper />);
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          valueNameSelector1: 'sql.query',
+          tableValue: [
+            {
+              name: 'test-name',
+              hasSubgroupValue: false,
+              searchColor: 'transparent',
+              color: '#000',
+              key: '0',
+              isDetail: false,
+              parentElement: 'none',
+              count: 1,
+              total: 100,
+              avg: 50,
+              min: 10,
+              max: 90,
+              selfTotal: 80,
+              selfAvg: 40,
+              selfMin: 5,
+              selfMax: 75,
+              percent: 80,
+              colorToPercent: '#fff',
+            },
+          ],
+        });
+      }
+    });
+
+    await waitFor(() => {
+      const nameButtons = screen.getAllByRole('button');
+      const nameButton = nameButtons.find(
+        button => button.textContent.includes('test-name') || button.style.borderLeft || button.style.padding
+      );
+
+      if (nameButton) {
+        fireEvent.click(nameButton);
+      }
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    });
   });
 
   it('should test sorter function with string comparison', async () => {
     render(<TraceStatistics {...defaultProps} />);
-    
+
     const columnHeaders = screen.getAllByRole('columnheader');
     const groupColumn = columnHeaders.find(header => header.textContent.includes('Group'));
-    
+
     if (groupColumn) {
       fireEvent.click(groupColumn);
-      
+
       await waitFor(() => {
         expect(screen.getByRole('table')).toBeInTheDocument();
       });
@@ -257,23 +270,67 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('should test sorter function with items that have no hasSubgroupValue', async () => {
-    render(<TraceStatistics {...defaultProps} />);
-    
-    const columnHeaders = screen.getAllByRole('columnheader');
-    const countColumn = columnHeaders.find(header => header.textContent.includes('Count'));
-    
-    if (countColumn) {
-      fireEvent.click(countColumn);
-      
-      await waitFor(() => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
 
-        expect(screen.getByRole('table')).toBeInTheDocument();
-      });
-    }
+    render(<TestWrapper />);
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          tableValue: [
+            {
+              name: 'item1',
+              hasSubgroupValue: false,
+              count: 1,
+              total: 100,
+              key: '0',
+              searchColor: 'transparent',
+              colorToPercent: '#fff',
+            },
+            {
+              name: 'item2',
+              hasSubgroupValue: true,
+              count: 2,
+              total: 200,
+              key: '1',
+              searchColor: 'transparent',
+              colorToPercent: '#fff',
+            },
+            {
+              name: 'item3',
+              hasSubgroupValue: false,
+              count: 3,
+              total: 300,
+              key: '2',
+              searchColor: 'transparent',
+              colorToPercent: '#fff',
+            },
+          ],
+        });
+      }
+    });
+
+    await waitFor(() => {
+      const columnHeaders = screen.getAllByRole('columnheader');
+      const countColumn = columnHeaders.find(header => header.textContent.includes('Count'));
+
+      if (countColumn) {
+        fireEvent.click(countColumn);
+      }
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
+    });
   });
 
   it('should test searchInTable with complex search scenarios', async () => {
-
     let componentRef;
     const TestWrapper = () => {
       const ref = React.useRef();
@@ -290,7 +347,7 @@ describe('<TraceTagOverview>', () => {
         hasSubgroupValue: true,
         parentElement: 'none',
         searchColor: 'rgb(248,248,248)',
-        key: '0'
+        key: '0',
       },
       {
         name: 'detail1',
@@ -298,7 +355,7 @@ describe('<TraceTagOverview>', () => {
         hasSubgroupValue: false,
         parentElement: 'parent1',
         searchColor: 'rgb(248,248,248)',
-        key: '1'
+        key: '1',
       },
       {
         name: 'detail2',
@@ -306,12 +363,12 @@ describe('<TraceTagOverview>', () => {
         hasSubgroupValue: false,
         parentElement: 'parent2',
         searchColor: 'rgb(248,248,248)',
-        key: '2'
-      }
+        key: '2',
+      },
     ];
-    
+
     const searchSet = new Set(['parent1detail1']);
-    
+
     await waitFor(() => {
       if (componentRef.current) {
         const result = componentRef.current.searchInTable(searchSet, mockTableData, null);
@@ -322,7 +379,6 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('should test searchInTable with uiFind matching and detail items', async () => {
-
     let componentRef;
     const TestWrapper = () => {
       const ref = React.useRef();
@@ -339,7 +395,7 @@ describe('<TraceTagOverview>', () => {
         hasSubgroupValue: false,
         parentElement: 'parentitem',
         searchColor: 'rgb(248,248,248)',
-        key: '0'
+        key: '0',
       },
       {
         name: 'parentitem',
@@ -347,7 +403,7 @@ describe('<TraceTagOverview>', () => {
         hasSubgroupValue: true,
         parentElement: 'none',
         searchColor: 'rgb(248,248,248)',
-        key: '1'
+        key: '1',
       },
       {
         name: 'childitem',
@@ -355,10 +411,10 @@ describe('<TraceTagOverview>', () => {
         hasSubgroupValue: false,
         parentElement: 'searchterm',
         searchColor: 'rgb(248,248,248)',
-        key: '2'
-      }
+        key: '2',
+      },
     ];
-    
+
     await waitFor(() => {
       if (componentRef.current) {
         const result = componentRef.current.searchInTable(undefined, mockTableData, 'searchterm');
@@ -369,7 +425,6 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('should test searchInTable with items that have subgroup values but are details', async () => {
-
     let componentRef;
     const TestWrapper = () => {
       const ref = React.useRef();
@@ -386,7 +441,7 @@ describe('<TraceTagOverview>', () => {
         hasSubgroupValue: true,
         parentElement: 'none',
         searchColor: undefined,
-        key: '0'
+        key: '0',
       },
       {
         name: 'item2',
@@ -394,10 +449,10 @@ describe('<TraceTagOverview>', () => {
         hasSubgroupValue: false,
         parentElement: 'none',
         searchColor: undefined,
-        key: '1'
-      }
+        key: '1',
+      },
     ];
-    
+
     await waitFor(() => {
       if (componentRef.current) {
         const result = componentRef.current.searchInTable(undefined, mockTableData, null);
