@@ -42,7 +42,7 @@ describe('getNodeRenderers', () => {
               pathHovered
             )} .is-pathHovered,\tand ${wvwo(focalNode)} .is-focalNode`, () => {
               const testLv = focalNode ? focalLv : lv;
-              const findMatches = new Set(findMatch ? [testLv.vertex.key] : undefined);
+              const findMatches = new Set(findMatch ? [testLv.vertex.key] : []);
               const vm =
                 // eslint-disable-next-line no-bitwise
                 (hovered ? EViewModifier.Hovered : 0) | (pathHovered ? EViewModifier.PathHovered : 0);
