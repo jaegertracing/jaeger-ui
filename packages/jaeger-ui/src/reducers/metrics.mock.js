@@ -985,7 +985,7 @@ const serviceOpsMetricsWithNull = [
     dataPoints: {
       avg: {
         service_operation_call_rate: 0.02,
-        service_operation_error_rate: 0,
+        service_operation_error_rate: null,
         service_operation_latencies: 2,
       },
       service_operation_call_rate: [
@@ -1031,7 +1031,7 @@ const serviceOpsMetricsWithNull = [
       avg: {
         service_operation_call_rate: 0.01,
         service_operation_error_rate: 1,
-        service_operation_latencies: 0,
+        service_operation_latencies: null,
       },
       service_operation_call_rate: [
         {
@@ -1077,7 +1077,7 @@ const serviceOpsMetricsZeroDivision = [
     dataPoints: {
       avg: {
         service_operation_call_rate: 0.02,
-        service_operation_error_rate: 0,
+        service_operation_error_rate: null,
         service_operation_latencies: 0,
       },
       service_operation_call_rate: [
@@ -1123,7 +1123,7 @@ const serviceOpsMetricsZeroDivision = [
       avg: {
         service_operation_call_rate: 0.01,
         service_operation_error_rate: 1,
-        service_operation_latencies: 0,
+        service_operation_latencies: null,
       },
       service_operation_call_rate: [
         {
