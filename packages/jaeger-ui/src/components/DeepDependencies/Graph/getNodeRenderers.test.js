@@ -54,18 +54,26 @@ describe('getNodeRenderers', () => {
               expect(circle).toHaveClass('DdgNode--VectorBorder');
               expect(circle).toHaveAttribute('vector-effect', 'non-scaling-stroke');
 
-              const expectClass = (className, shouldHave) => {
-                if (shouldHave) {
-                  expect(circle).toHaveClass(className);
-                } else {
-                  expect(circle).not.toHaveClass(className);
-                }
-              };
-
-              expectClass('is-findMatch', findMatch);
-              expectClass('is-hovered', hovered);
-              expectClass('is-pathHovered', pathHovered);
-              expectClass('is-focalNode', focalNode);
+              if (findMatch) {
+                expect(circle).toHaveClass('is-findMatch');
+              } else {
+                expect(circle).not.toHaveClass('is-findMatch');
+              }
+              if (hovered) {
+                expect(circle).toHaveClass('is-hovered');
+              } else {
+                expect(circle).not.toHaveClass('is-hovered');
+              }
+              if (pathHovered) {
+                expect(circle).toHaveClass('is-pathHovered');
+              } else {
+                expect(circle).not.toHaveClass('is-pathHovered');
+              }
+              if (focalNode) {
+                expect(circle).toHaveClass('is-focalNode');
+              } else {
+                expect(circle).not.toHaveClass('is-focalNode');
+              }
 
               // Verify SVG attributes previously covered by snapshot
               // r = width / 2 - 1 => 100 / 2 - 1 = 49
