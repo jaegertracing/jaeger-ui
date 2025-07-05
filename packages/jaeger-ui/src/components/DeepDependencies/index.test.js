@@ -977,6 +977,7 @@ describe('DeepDependencyGraphPage', () => {
       const graphState = 'testGraphState';
       const graphStateWithoutOp = 'testGraphStateWithoutOp';
       const reduxState = { ...state };
+      // TODO: Remove 0s once time buckets are implemented
       _set(reduxState, ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })], graphState);
       _set(reduxState, ['ddg', getStateEntryKey({ service, start: 0, end: 0 })], graphStateWithoutOp);
 
@@ -997,6 +998,7 @@ describe('DeepDependencyGraphPage', () => {
     it('includes graph iff graphState.state is fetchedState.DONE', () => {
       const loadingState = { state: fetchedState.LOADING };
       const reduxState = { ...state };
+      // TODO: Remove 0s once time buckets are implemented
       _set(reduxState, ['ddg', getStateEntryKey({ service, operation, start: 0, end: 0 })], loadingState);
       const result = mapStateToProps(reduxState, ownProps);
       expect(result.graph).toBe(undefined);
