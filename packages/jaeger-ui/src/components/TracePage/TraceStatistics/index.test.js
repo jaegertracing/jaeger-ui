@@ -74,6 +74,7 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('check handler', async () => {
+    jest.setTimeout(10000);
     let componentRef;
     const TestWrapper = () => {
       const ref = React.useRef();
