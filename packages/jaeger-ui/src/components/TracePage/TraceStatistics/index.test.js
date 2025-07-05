@@ -87,9 +87,12 @@ describe('<TraceTagOverview>', () => {
     render(<TestWrapper />);
 
     // Wait for component to be ready
-    await waitFor(() => {
-      expect(componentRef.current).toBeDefined();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(componentRef.current).toBeDefined();
+      },
+      { timeout: 3000 }
+    );
 
     let tableValue = getColumnValues('Service Name', transformedTrace);
     tableValue = getColumnValuesSecondDropdown(
@@ -105,12 +108,15 @@ describe('<TraceTagOverview>', () => {
     });
 
     // Wait for the table to update with new data
-    await waitFor(() => {
-      const rows = screen.getAllByRole('row');
-      expect(rows.length).toBeGreaterThan(1);
-      const cells = screen.getAllByRole('cell');
-      expect(cells.length).toBeGreaterThan(0);
-    }, { timeout: 8000 });
+    await waitFor(
+      () => {
+        const rows = screen.getAllByRole('row');
+        expect(rows.length).toBeGreaterThan(1);
+        const cells = screen.getAllByRole('cell');
+        expect(cells.length).toBeGreaterThan(0);
+      },
+      { timeout: 8000 }
+    );
   }, 15000);
 
   it('check togglePopup', async () => {
