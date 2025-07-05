@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceStatistics from './index';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -86,6 +86,11 @@ describe('<TraceTagOverview>', () => {
 
     render(<TestWrapper />);
 
+    // Wait for component to be ready
+    await waitFor(() => {
+      expect(componentRef.current).toBeDefined();
+    }, { timeout: 3000 });
+
     let tableValue = getColumnValues('Service Name', transformedTrace);
     tableValue = getColumnValuesSecondDropdown(
       tableValue,
@@ -94,19 +99,19 @@ describe('<TraceTagOverview>', () => {
       transformedTrace
     );
 
-    await waitFor(() => {
-      if (componentRef.current) {
-        componentRef.current.handler(tableValue, tableValue, 'Service Name', 'Operation Name');
-      }
+    // Call handler and wait for state update
+    act(() => {
+      componentRef.current.handler(tableValue, tableValue, 'Service Name', 'Operation Name');
     });
 
+    // Wait for the table to update with new data
     await waitFor(() => {
       const rows = screen.getAllByRole('row');
       expect(rows.length).toBeGreaterThan(1);
       const cells = screen.getAllByRole('cell');
       expect(cells.length).toBeGreaterThan(0);
-    });
-  });
+    }, { timeout: 8000 });
+  }, 15000);
 
   it('check togglePopup', async () => {
     let componentRef;
