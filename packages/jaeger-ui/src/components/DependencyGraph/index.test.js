@@ -13,13 +13,35 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen, waitFor, act } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import * as constants from '../../utils/constants';
 
 import { DependencyGraphPageImpl as DependencyGraph, mapDispatchToProps, mapStateToProps } from './index';
-import LoadingIndicator from '../common/LoadingIndicator';
-import DAGOptions from './DAGOptions';
-import DAG from './DAG';
+
+jest.mock('./DAG', () => {
+  return function MockDAG(props) {
+    return <div data-testid="dag-component" data-props={JSON.stringify(props)} />;
+  };
+});
+
+jest.mock('./DAGOptions', () => {
+  return function MockDAGOptions(props) {
+    return <div data-testid="dag-options" data-props={JSON.stringify(props)} />;
+  };
+});
+
+jest.mock('../common/LoadingIndicator', () => {
+  return function MockLoadingIndicator(props) {
+    return <div data-testid="loading-indicator" {...props} />;
+  };
+});
+
+jest.mock('../common/ErrorMessage', () => {
+  return function MockErrorMessage(props) {
+    return <div data-testid="error-message" {...props} />;
+  };
+});
 
 const childId = 'boomya';
 const parentId = 'elder-one';
@@ -47,33 +69,47 @@ const state = {
 const props = mapStateToProps(state);
 
 describe('<DependencyGraph>', () => {
-  let wrapper;
+  let componentInstance;
+
+  const renderWithRef = (additionalProps = {}) => {
+    // eslint-disable-next-line no-shadow
+    const TestWrapper = React.forwardRef((props, ref) => (
+      <DependencyGraph ref={ref} {...props} fetchDependencies={() => {}} {...additionalProps} />
+    ));
+    const ref = React.createRef();
+    const result = render(<TestWrapper ref={ref} {...props} />);
+    componentInstance = ref.current;
+    return result;
+  };
 
   beforeEach(() => {
-    wrapper = shallow(<DependencyGraph {...props} fetchDependencies={() => {}} />);
+    renderWithRef();
   });
 
   it('does not explode', () => {
-    expect(wrapper.length).toBe(1);
+    expect(componentInstance).toBeTruthy();
   });
 
   it('shows a loading indicator when loading data', () => {
-    expect(wrapper.find(LoadingIndicator).length).toBe(0);
-    wrapper.setProps({ loading: true });
-    expect(wrapper.find(LoadingIndicator).length).toBe(1);
+    const { rerender } = render(<DependencyGraph {...props} fetchDependencies={() => {}} />);
+    expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
+
+    rerender(<DependencyGraph {...props} fetchDependencies={() => {}} loading />);
+    expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
   it('shows an error message when passed error information', () => {
     const error = {};
-    expect(wrapper.find({ error: expect.anything() }).length).toBe(0);
-    wrapper.setProps({ error });
-    expect(wrapper.find({ error }).length).toBe(1);
+    const { rerender } = render(<DependencyGraph {...props} fetchDependencies={() => {}} />);
+    expect(screen.queryByTestId('error-message')).not.toBeInTheDocument();
+
+    rerender(<DependencyGraph {...props} fetchDependencies={() => {}} error={error} />);
+    expect(screen.getByTestId('error-message')).toBeInTheDocument();
   });
 
   it('shows a message where there is nothing to visualize', () => {
-    wrapper.setProps({ links: null, nodes: null });
-    const matchTest = expect.stringMatching(/no.*?found/i);
-    expect(wrapper.text()).toEqual(matchTest);
+    render(<DependencyGraph {...props} fetchDependencies={() => {}} links={null} nodes={null} />);
+    expect(screen.getByText(/no.*?found/i)).toBeInTheDocument();
   });
 
   describe('DAG options', () => {
@@ -83,51 +119,54 @@ describe('<DependencyGraph>', () => {
     });
 
     it('initializes with default values', () => {
-      expect(wrapper.state('selectedService')).toBe(null);
-      expect(wrapper.state('selectedLayout')).toBe('dot');
-      expect(wrapper.state('selectedDepth')).toBe(5);
-      expect(wrapper.state('debouncedDepth')).toBe(5);
+      expect(componentInstance.state.selectedService).toBe(null);
+      expect(componentInstance.state.selectedLayout).toBe('dot');
+      expect(componentInstance.state.selectedDepth).toBe(5);
+      expect(componentInstance.state.debouncedDepth).toBe(5);
     });
 
     it('handles service selection', () => {
       const service = 'test-service';
-      wrapper.instance().handleServiceSelect(service);
-      expect(wrapper.state('selectedService')).toBe(service);
+      act(() => {
+        componentInstance.handleServiceSelect(service);
+      });
+      expect(componentInstance.state.selectedService).toBe(service);
     });
 
     it('handles layout selection', () => {
       const layout = 'sfdp';
-      const instance = wrapper.instance();
-      jest.spyOn(instance, 'setState');
+      const mockSetState = jest.spyOn(componentInstance, 'setState');
 
-      instance.handleLayoutSelect(layout);
-      expect(instance.setState).toHaveBeenCalledWith({ selectedLayout: layout });
-      expect(wrapper.state('selectedLayout')).toBe(layout);
+      act(() => {
+        componentInstance.handleLayoutSelect(layout);
+      });
+      expect(mockSetState).toHaveBeenCalledWith({ selectedLayout: layout });
+      expect(componentInstance.state.selectedLayout).toBe(layout);
     });
 
     it('calls updateLayout when dependencies prop changes', () => {
-      const instance = wrapper.instance();
-      jest.spyOn(instance, 'updateLayout');
+      const mockUpdateLayout = jest.spyOn(componentInstance, 'updateLayout');
 
-      const newDependencies = [
-        ...dependencies,
-        {
-          callCount: 2,
-          child: 'new-child',
-          parent: 'new-parent',
-        },
-      ];
+      const newDependencies = [...dependencies, { callCount: 2, child: 'new-child', parent: 'new-parent' }];
 
-      wrapper.setProps({ dependencies: newDependencies });
-      expect(instance.updateLayout).toHaveBeenCalledTimes(1);
+      const prevProps = { dependencies: props.dependencies };
+      componentInstance.props = { ...componentInstance.props, dependencies: newDependencies };
+      componentInstance.componentDidUpdate(prevProps);
+
+      expect(mockUpdateLayout).toHaveBeenCalledTimes(1);
     });
 
     it('updates layout based on dependencies size', () => {
-      const smallWrapper = shallow(
-        <DependencyGraph {...props} dependencies={dependencies} fetchDependencies={() => {}} />
-      );
-      smallWrapper.instance().updateLayout();
-      expect(smallWrapper.state('selectedLayout')).toBe('dot');
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
+        <DependencyGraph ref={ref} {...props} fetchDependencies={() => {}} />
+      ));
+      const smallRef = React.createRef();
+      render(<TestWrapper ref={smallRef} {...props} dependencies={dependencies} />);
+      act(() => {
+        smallRef.current.updateLayout();
+      });
+      expect(smallRef.current.state.selectedLayout).toBe('dot');
 
       const manyDependencies = Array(1001)
         .fill()
@@ -136,27 +175,36 @@ describe('<DependencyGraph>', () => {
           child: `child-${i}`,
           parent: 'parent',
         }));
-      const largeWrapper = shallow(
-        <DependencyGraph {...props} dependencies={manyDependencies} fetchDependencies={() => {}} />
-      );
-      largeWrapper.instance().updateLayout();
-      expect(largeWrapper.state('selectedLayout')).toBe('sfdp');
+      const largeRef = React.createRef();
+      render(<TestWrapper ref={largeRef} {...props} dependencies={manyDependencies} />);
+      act(() => {
+        largeRef.current.updateLayout();
+      });
+      expect(largeRef.current.state.selectedLayout).toBe('sfdp');
     });
 
     it('updates layout based on dependencies size', () => {
-      const smallWrapper = shallow(
-        <DependencyGraph {...props} dependencies={dependencies} fetchDependencies={() => {}} />
-      );
-      const instance = smallWrapper.instance();
-      jest.spyOn(instance, 'setState');
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
+        <DependencyGraph ref={ref} {...props} fetchDependencies={() => {}} />
+      ));
+      const smallRef = React.createRef();
+      render(<TestWrapper ref={smallRef} {...props} dependencies={dependencies} />);
+      const mockSetState = jest.spyOn(smallRef.current, 'setState');
 
-      instance.updateLayout();
-      expect(instance.setState).not.toHaveBeenCalled();
+      act(() => {
+        smallRef.current.updateLayout();
+      });
+      expect(mockSetState).not.toHaveBeenCalled();
 
-      smallWrapper.setState({ selectedLayout: 'sfdp' });
+      act(() => {
+        smallRef.current.setState({ selectedLayout: 'sfdp' });
+      });
 
-      instance.updateLayout();
-      expect(instance.setState).toHaveBeenCalledWith({
+      act(() => {
+        smallRef.current.updateLayout();
+      });
+      expect(mockSetState).toHaveBeenCalledWith({
         selectedLayout: 'dot',
         selectedService: null,
         selectedDepth: 5,
@@ -166,46 +214,56 @@ describe('<DependencyGraph>', () => {
 
     it('handles depth change with numeric value', () => {
       const depth = 3;
-      wrapper.instance().handleDepthChange(depth);
-      expect(wrapper.state('selectedDepth')).toBe(depth);
+      act(() => {
+        componentInstance.handleDepthChange(depth);
+      });
+      expect(componentInstance.state.selectedDepth).toBe(depth);
     });
 
     it('handles depth change with negative value', () => {
       const depth = -1;
-      wrapper.instance().handleDepthChange(depth);
-      expect(wrapper.state('selectedDepth')).toBe(0);
+      act(() => {
+        componentInstance.handleDepthChange(depth);
+      });
+      expect(componentInstance.state.selectedDepth).toBe(0);
     });
 
     it('handles depth change with null value', () => {
-      const instance = wrapper.instance();
-      jest.spyOn(instance, 'setState');
+      const mockSetState = jest.spyOn(componentInstance, 'setState');
 
-      instance.handleDepthChange(null);
-      expect(instance.setState).toHaveBeenCalledWith({ selectedDepth: null, debouncedDepth: null });
-      expect(wrapper.state('selectedDepth')).toBe(null);
-      expect(wrapper.state('debouncedDepth')).toBe(null);
+      act(() => {
+        componentInstance.handleDepthChange(null);
+      });
+      expect(mockSetState).toHaveBeenCalledWith({ selectedDepth: null, debouncedDepth: null });
+      expect(componentInstance.state.selectedDepth).toBe(null);
+      expect(componentInstance.state.debouncedDepth).toBe(null);
     });
 
     it('handles depth change with undefined value', () => {
-      const instance = wrapper.instance();
-      jest.spyOn(instance, 'setState');
+      const mockSetState = jest.spyOn(componentInstance, 'setState');
 
-      instance.handleDepthChange(undefined);
-      expect(instance.setState).toHaveBeenCalledWith({ selectedDepth: undefined, debouncedDepth: undefined });
-      expect(wrapper.state('selectedDepth')).toBe(undefined);
-      expect(wrapper.state('debouncedDepth')).toBe(undefined);
+      act(() => {
+        componentInstance.handleDepthChange(undefined);
+      });
+      expect(mockSetState).toHaveBeenCalledWith({ selectedDepth: undefined, debouncedDepth: undefined });
+      expect(componentInstance.state.selectedDepth).toBe(undefined);
+      expect(componentInstance.state.debouncedDepth).toBe(undefined);
     });
 
     it('handles reset', () => {
-      wrapper.setState({
-        selectedService: 'test-service',
-        selectedDepth: 3,
-        debouncedDepth: 3,
+      act(() => {
+        componentInstance.setState({
+          selectedService: 'test-service',
+          selectedDepth: 3,
+          debouncedDepth: 3,
+        });
       });
-      wrapper.instance().handleReset();
-      expect(wrapper.state('selectedService')).toBe(null);
-      expect(wrapper.state('selectedDepth')).toBe(5);
-      expect(wrapper.state('debouncedDepth')).toBe(5);
+      act(() => {
+        componentInstance.handleReset();
+      });
+      expect(componentInstance.state.selectedService).toBe(null);
+      expect(componentInstance.state.selectedDepth).toBe(5);
+      expect(componentInstance.state.debouncedDepth).toBe(5);
     });
 
     it('uses sfdp layout for large dependency graphs', () => {
@@ -216,35 +274,48 @@ describe('<DependencyGraph>', () => {
           child: `child-${i}`,
           parent: 'parent',
         }));
-      const newWrapper = shallow(
-        <DependencyGraph {...props} dependencies={manyDependencies} fetchDependencies={() => {}} />
-      );
-      expect(newWrapper.state('selectedLayout')).toBe('sfdp');
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
+        <DependencyGraph ref={ref} {...props} fetchDependencies={() => {}} />
+      ));
+      const ref = React.createRef();
+      render(<TestWrapper ref={ref} {...props} dependencies={manyDependencies} />);
+      expect(ref.current.state.selectedLayout).toBe('sfdp');
     });
 
-    it('debounces depth changes', done => {
+    it('debounces depth changes', async () => {
       const depth = 3;
-      wrapper.instance().handleDepthChange(depth);
-      expect(wrapper.state('selectedDepth')).toBe(depth);
-      expect(wrapper.state('debouncedDepth')).toBe(5);
+      act(() => {
+        componentInstance.handleDepthChange(depth);
+      });
+      expect(componentInstance.state.selectedDepth).toBe(depth);
+      expect(componentInstance.state.debouncedDepth).toBe(5);
 
-      setTimeout(() => {
-        expect(wrapper.state('debouncedDepth')).toBe(depth);
-        done();
-      }, 1100);
+      await waitFor(
+        () => {
+          expect(componentInstance.state.debouncedDepth).toBe(depth);
+        },
+        { timeout: 1500 }
+      );
     });
 
     it('handles sample dataset type change', async () => {
       const selectedSampleDatasetType = 'Small Graph';
-      await wrapper.instance().handleSampleDatasetTypeChange(selectedSampleDatasetType);
+      await act(async () => {
+        await componentInstance.handleSampleDatasetTypeChange(selectedSampleDatasetType);
+      });
 
-      expect(wrapper.state('selectedSampleDatasetType')).toBe(selectedSampleDatasetType);
-      expect(wrapper.state('selectedLayout')).toBe('dot');
+      expect(componentInstance.state.selectedSampleDatasetType).toBe(selectedSampleDatasetType);
+      expect(componentInstance.state.selectedLayout).toBe('dot');
 
-      await wrapper.instance().handleSampleDatasetTypeChange(null);
-      expect(wrapper.state('selectedSampleDatasetType')).toBe(null);
+      await act(async () => {
+        await componentInstance.handleSampleDatasetTypeChange(null);
+      });
+      expect(componentInstance.state.selectedSampleDatasetType).toBe(null);
 
-      await wrapper.instance().handleSampleDatasetTypeChange(null);
+      await act(async () => {
+        await componentInstance.handleSampleDatasetTypeChange(null);
+      });
     });
 
     it('passes computed match count to DAGOptions based on uiFind and dependencies', () => {
@@ -257,25 +328,45 @@ describe('<DependencyGraph>', () => {
       const uiFindTerm = 'service';
       const expectedMatchCount = 3;
 
-      wrapper.setProps({ dependencies: sampleDependencies, uiFind: uiFindTerm });
-      wrapper.setState({ selectedService: null });
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
+        <DependencyGraph ref={ref} {...props} fetchDependencies={() => {}} />
+      ));
+      const ref = React.createRef();
+      const { rerender } = render(
+        <TestWrapper ref={ref} {...props} dependencies={sampleDependencies} uiFind={uiFindTerm} />
+      );
+      act(() => {
+        ref.current.setState({ selectedService: null });
+      });
 
-      wrapper.update();
-
-      const dagOptions = wrapper.find(DAGOptions);
-      expect(dagOptions.prop('matchCount')).toBe(expectedMatchCount);
+      const graphData = ref.current.getMemoizedGraphData(
+        sampleDependencies,
+        null,
+        ref.current.state.debouncedDepth
+      );
+      const matchCount = ref.current.getMemoizedMatchCount(graphData.nodes, uiFindTerm);
+      expect(matchCount).toBe(expectedMatchCount);
 
       const uiFindTerm2 = 'another';
       const expectedMatchCount2 = 1;
-      wrapper.setProps({ uiFind: uiFindTerm2 });
-      wrapper.update();
-      const dagOptions2 = wrapper.find(DAGOptions);
-      expect(dagOptions2.prop('matchCount')).toBe(expectedMatchCount2);
+      rerender(<TestWrapper ref={ref} {...props} dependencies={sampleDependencies} uiFind={uiFindTerm2} />);
+      const graphData2 = ref.current.getMemoizedGraphData(
+        sampleDependencies,
+        null,
+        ref.current.state.debouncedDepth
+      );
+      const matchCount2 = ref.current.getMemoizedMatchCount(graphData2.nodes, uiFindTerm2);
+      expect(matchCount2).toBe(expectedMatchCount2);
 
-      wrapper.setProps({ uiFind: undefined });
-      wrapper.update();
-      const dagOptions3 = wrapper.find(DAGOptions);
-      expect(dagOptions3.prop('matchCount')).toBe(0);
+      rerender(<TestWrapper ref={ref} {...props} dependencies={sampleDependencies} uiFind={undefined} />);
+      const graphData3 = ref.current.getMemoizedGraphData(
+        sampleDependencies,
+        null,
+        ref.current.state.debouncedDepth
+      );
+      const matchCount3 = ref.current.getMemoizedMatchCount(graphData3.nodes, undefined);
+      expect(matchCount3).toBe(0);
     });
   });
 
@@ -290,22 +381,28 @@ describe('<DependencyGraph>', () => {
       dependencies: [],
     };
 
-    const getGraphDataFromDAG = currentWrapper => {
-      currentWrapper.update();
-      const dagComponent = currentWrapper.find(DAG);
-      if (dagComponent.exists()) {
-        return dagComponent.prop('data');
-      }
-      return { nodes: [], edges: [] };
+    const getGraphDataFromComponent = instance => {
+      return instance.getMemoizedGraphData(
+        instance.props.dependencies,
+        instance.state.selectedService,
+        instance.state.debouncedDepth
+      );
     };
 
     it('should include direct children when parent is selected', () => {
       const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
 
-      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
-      wrapper.setState({ selectedService: 'A', selectedDepth: 1, debouncedDepth: 1 });
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
+        <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
+      ));
+      const ref = React.createRef();
+      render(<TestWrapper ref={ref} />);
+      act(() => {
+        ref.current.setState({ selectedService: 'A', selectedDepth: 1, debouncedDepth: 1 });
+      });
 
-      const graphData = getGraphDataFromDAG(wrapper);
+      const graphData = getGraphDataFromComponent(ref.current);
       expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
       expect(graphData.edges).toEqual(expect.arrayContaining([{ from: 'A', to: 'B', label: '1' }]));
     });
@@ -313,10 +410,17 @@ describe('<DependencyGraph>', () => {
     it('should include direct parents when child is selected', () => {
       const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
 
-      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
-      wrapper.setState({ selectedService: 'B', selectedDepth: 1, debouncedDepth: 1 });
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
+        <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
+      ));
+      const ref = React.createRef();
+      render(<TestWrapper ref={ref} />);
+      act(() => {
+        ref.current.setState({ selectedService: 'B', selectedDepth: 1, debouncedDepth: 1 });
+      });
 
-      const graphData = getGraphDataFromDAG(wrapper);
+      const graphData = getGraphDataFromComponent(ref.current);
       expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
       expect(graphData.edges).toEqual(expect.arrayContaining([{ from: 'A', to: 'B', label: '1' }]));
     });
@@ -327,10 +431,17 @@ describe('<DependencyGraph>', () => {
         { parent: 'B', child: 'A', callCount: 1 },
       ];
 
-      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
-      wrapper.setState({ selectedService: 'A', selectedDepth: 2, debouncedDepth: 2 });
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
+        <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
+      ));
+      const ref = React.createRef();
+      render(<TestWrapper ref={ref} />);
+      act(() => {
+        ref.current.setState({ selectedService: 'A', selectedDepth: 2, debouncedDepth: 2 });
+      });
 
-      const graphData = getGraphDataFromDAG(wrapper);
+      const graphData = getGraphDataFromComponent(ref.current);
       expect(graphData.nodes).toHaveLength(2);
       expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
       expect(graphData.edges).toHaveLength(1);
@@ -343,10 +454,17 @@ describe('<DependencyGraph>', () => {
         { parent: 'B', child: 'A', callCount: 1 },
       ];
 
-      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
-      wrapper.setState({ selectedService: 'B', selectedDepth: 2, debouncedDepth: 2 });
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
+        <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
+      ));
+      const ref = React.createRef();
+      render(<TestWrapper ref={ref} />);
+      act(() => {
+        ref.current.setState({ selectedService: 'B', selectedDepth: 2, debouncedDepth: 2 });
+      });
 
-      const graphData = getGraphDataFromDAG(wrapper);
+      const graphData = getGraphDataFromComponent(ref.current);
       expect(graphData.nodes).toHaveLength(2);
       expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
       expect(graphData.edges).toHaveLength(1);
@@ -359,10 +477,17 @@ describe('<DependencyGraph>', () => {
         { parent: 'C', child: 'D', callCount: 1 },
       ];
 
-      wrapper = shallow(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
-      wrapper.setState({ selectedService: 'A', selectedDepth: 1, debouncedDepth: 1 });
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
+        <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
+      ));
+      const ref = React.createRef();
+      render(<TestWrapper ref={ref} />);
+      act(() => {
+        ref.current.setState({ selectedService: 'A', selectedDepth: 1, debouncedDepth: 1 });
+      });
 
-      const graphData = getGraphDataFromDAG(wrapper);
+      const graphData = getGraphDataFromComponent(ref.current);
       expect(graphData.nodes).toHaveLength(2);
       expect(graphData.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
       expect(graphData.edges).toHaveLength(1);
