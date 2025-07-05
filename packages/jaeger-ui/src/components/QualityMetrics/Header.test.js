@@ -126,11 +126,13 @@ describe('Header', () => {
       render(<Header {...props} />);
       const input = screen.getByRole('spinbutton');
 
-      // Simulate entering a string value (which should be a no-op for internal state)
-      fireEvent.change(input, { target: { value: 'foo' } });
+      // Simulate user typing an intermediate character like a minus sign.
+      fireEvent.change(input, { target: { value: '-' } });
 
-      // Assert that the debounced function was NOT called, which is the correct behavior.
+      // `handleInputChange` should receive the string '-', see it's a string, and return early.
       expect(setLookbackSpy).not.toHaveBeenCalled();
+
+      expect(props.setLookback).not.toHaveBeenCalled();
     });
 
     it('updates state with numeric value, then clears state and calls props.setLookback after debounce', () => {
