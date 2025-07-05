@@ -47,11 +47,10 @@ const Header: React.FC<TProps> = ({ lookback, service, services, setLookback, se
   }, [debouncedSetLookback]);
 
   const handleInputChange = (value: number | string | null) => {
-    if (typeof value === 'string') {
-      return;
+    if (typeof value !== 'string') {
+      setOwnInputValue(value);
+      debouncedSetLookback(value);
     }
-    setOwnInputValue(value);
-    debouncedSetLookback(value);
   };
 
   const lookbackValue = ownInputValue !== null ? ownInputValue : lookback;
