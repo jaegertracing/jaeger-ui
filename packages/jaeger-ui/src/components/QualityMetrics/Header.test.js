@@ -123,22 +123,14 @@ describe('Header', () => {
 
   describe('setting lookback', () => {
     it('no-ops for string values', () => {
-      const setLookbackPropSpy = jest.fn();
-      render(<Header {...props} setLookback={setLookbackPropSpy} />);
+      render(<Header {...props} />);
       const input = screen.getByRole('spinbutton');
 
       // Simulate entering a string value (which should be a no-op for internal state)
       fireEvent.change(input, { target: { value: 'foo' } });
 
-      // Trigger the debounced function to see if the component processes the string
-      callDebouncedFn();
-
-      expect(setLookbackPropSpy).not.toHaveBeenCalledWith('foo');
-
-      // The component should either not call setLookback at all, or call it with null
-      if (setLookbackPropSpy.mock.calls.length > 0) {
-        expect(setLookbackPropSpy).toHaveBeenCalledWith(null);
-      }
+      // Assert that the debounced function was NOT called, which is the correct behavior.
+      expect(setLookbackSpy).not.toHaveBeenCalled();
     });
 
     it('updates state with numeric value, then clears state and calls props.setLookback after debounce', () => {
