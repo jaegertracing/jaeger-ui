@@ -26,9 +26,6 @@ const transformedTrace = transformTraceData(testTrace);
 describe('<TraceTagOverview>', () => {
   let defaultProps;
 
-  // FIXME Increase timeout for this test suite due to slow Enzyme/React 18 mounting
-  jest.setTimeout(10000);
-
   beforeEach(() => {
     defaultProps = {
       trace: transformedTrace,
