@@ -42,12 +42,17 @@ describe('Header', () => {
       setLookbackSpy = jest.fn((...args) => {
         callDebouncedFn = () => fn(...args);
       });
+      setLookbackSpy.cancel = jest.fn();
       return setLookbackSpy;
     });
   });
 
   beforeEach(() => {
     props.setLookback.mockReset();
+    if (setLookbackSpy) {
+      setLookbackSpy.mockClear();
+      setLookbackSpy.cancel.mockClear();
+    }
     setLookbackSpy = undefined;
   });
 
