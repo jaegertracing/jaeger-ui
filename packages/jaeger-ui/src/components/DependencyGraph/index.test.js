@@ -392,7 +392,8 @@ describe('<DependencyGraph>', () => {
     it('should include direct children when parent is selected', () => {
       const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
 
-      const TestWrapper = React.forwardRef((ref) => (
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
       ));
       const ref = React.createRef();
@@ -409,7 +410,8 @@ describe('<DependencyGraph>', () => {
     it('should include direct parents when child is selected', () => {
       const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
 
-      const TestWrapper = React.forwardRef((ref) => (
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
       ));
       const ref = React.createRef();
@@ -429,7 +431,8 @@ describe('<DependencyGraph>', () => {
         { parent: 'B', child: 'A', callCount: 1 },
       ];
 
-      const TestWrapper = React.forwardRef((ref) => (
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
       ));
       const ref = React.createRef();
@@ -451,7 +454,8 @@ describe('<DependencyGraph>', () => {
         { parent: 'B', child: 'A', callCount: 1 },
       ];
 
-      const TestWrapper = React.forwardRef((ref) => (
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
       ));
       const ref = React.createRef();
@@ -473,7 +477,8 @@ describe('<DependencyGraph>', () => {
         { parent: 'C', child: 'D', callCount: 1 },
       ];
 
-      const TestWrapper = React.forwardRef((ref) => (
+      // eslint-disable-next-line no-shadow
+      const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
       ));
       const ref = React.createRef();
