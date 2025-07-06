@@ -22,6 +22,7 @@ import {
   computeLinks,
   createGetLinks,
   computeTraceLink,
+  getTraceLinks,
 } from './link-patterns';
 
 describe('processTemplate()', () => {
@@ -506,5 +507,23 @@ describe('getLinks()', () => {
       },
     ]);
     expect(cache.get(span.tags[0])).toBe(result);
+  });
+
+  it('returns an empty array when trace is undefined', () => {
+    expect(getTraceLinks(undefined)).toEqual([]);
+  });
+
+  it('returns trace links when valid trace is passed', () => {
+    const trace = {
+      processes: [],
+      traceName: 'theTrace',
+      traceID: 'trc1',
+      spans: [],
+      startTime: 1000,
+      endTime: 2000,
+      duration: 1000,
+      services: [],
+    };
+    expect(getTraceLinks(trace)).toBeInstanceOf(Array);
   });
 });
