@@ -14,6 +14,7 @@
 
 /* eslint-disable import/first */
 
+/* istanbul ignore next -- jest.mock setup lines are not covered */
 jest.mock('./index.track');
 jest.mock('./keyboard-shortcuts');
 jest.mock('./scroll-page');
