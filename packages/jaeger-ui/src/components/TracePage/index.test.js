@@ -14,19 +14,19 @@
 
 /* eslint-disable import/first */
 
-/* istanbul ignore next */ jest.mock('./index.track');
-/* istanbul ignore next */ jest.mock('./keyboard-shortcuts');
-/* istanbul ignore next */ jest.mock('./scroll-page');
-/* istanbul ignore next */ jest.mock('../../utils/filter-spans');
-/* istanbul ignore next */ jest.mock('../../utils/update-ui-find');
-/* istanbul ignore next */ jest.mock('./TraceGraph/TraceGraph');
-/* istanbul ignore next */ jest.mock('./TracePageHeader/SpanGraph');
-/* istanbul ignore next */ jest.mock('./TracePageHeader/TracePageHeader.track');
-/* istanbul ignore next */ jest.mock('./TracePageHeader/TracePageSearchBar');
-/* istanbul ignore next */ jest.mock('./TraceTimelineViewer');
-/* istanbul ignore next */ jest.mock('./CriticalPath/index');
+jest.mock('./index.track');
+jest.mock('./keyboard-shortcuts');
+jest.mock('./scroll-page');
+jest.mock('../../utils/filter-spans');
+jest.mock('../../utils/update-ui-find');
+// mock these to enable render()
+jest.mock('./TraceGraph/TraceGraph');
+jest.mock('./TracePageHeader/SpanGraph');
+jest.mock('./TracePageHeader/TracePageHeader.track');
+jest.mock('./TracePageHeader/TracePageSearchBar');
+jest.mock('./TraceTimelineViewer');
+jest.mock('./CriticalPath/index');
 
-/* istanbul ignore next */
 jest.mock('./ScrollManager', () => {
   return jest.fn().mockImplementation(() => ({
     setTrace: jest.fn(),
@@ -40,7 +40,6 @@ jest.mock('./ScrollManager', () => {
   }));
 });
 
-/* istanbul ignore next */
 jest.mock('./ArchiveNotifier', () => {
   return function MockArchiveNotifier({ acknowledge }) {
     return (
@@ -53,7 +52,6 @@ jest.mock('./ArchiveNotifier', () => {
   };
 });
 
-/* istanbul ignore next */
 jest.mock('./TracePageHeader', () => {
   const React = jest.requireActual('react');
   return React.forwardRef(function MockTracePageHeader(props, ref) {
@@ -139,7 +137,6 @@ jest.mock('./TracePageHeader', () => {
   });
 });
 
-/* istanbul ignore next */
 jest.mock('./TraceTimelineViewer', () => {
   return function MockTraceTimelineViewer(props) {
     return (
@@ -174,7 +171,6 @@ jest.mock('./TraceTimelineViewer', () => {
   };
 });
 
-/* istanbul ignore next */
 jest.mock('./TracePageHeader/SpanGraph', () => {
   return function MockSpanGraph(props) {
     return (
@@ -199,42 +195,36 @@ jest.mock('./TracePageHeader/SpanGraph', () => {
   };
 });
 
-/* istanbul ignore next */
 jest.mock('./TraceGraph/TraceGraph', () => {
   return function MockTraceGraph(props) {
     return <div data-testid="trace-graph">Graph View</div>;
   };
 });
 
-/* istanbul ignore next */
 jest.mock('./TraceStatistics/index', () => {
   return function MockTraceStatistics(props) {
     return <div data-testid="trace-statistics">Statistics View</div>;
   };
 });
 
-/* istanbul ignore next */
 jest.mock('./TraceSpanView/index', () => {
   return function MockTraceSpanView(props) {
     return <div data-testid="trace-span-view">Span View</div>;
   };
 });
 
-/* istanbul ignore next */
 jest.mock('./TraceFlamegraph/index', () => {
   return function MockTraceFlamegraph(props) {
     return <div data-testid="trace-flamegraph">Flamegraph View</div>;
   };
 });
 
-/* istanbul ignore next */
 jest.mock('../common/LoadingIndicator', () => {
   return function MockLoadingIndicator() {
     return <div data-testid="loading-indicator">Loading...</div>;
   };
 });
 
-/* istanbul ignore next */
 jest.mock('../common/ErrorMessage', () => {
   return function MockErrorMessage({ error }) {
     return <div data-testid="error-message">{error}</div>;
