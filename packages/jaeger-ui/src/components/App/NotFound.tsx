@@ -19,7 +19,7 @@ import ErrorMessage from '../common/ErrorMessage';
 import prefixUrl from '../../utils/prefix-url';
 
 type NotFoundProps = {
-  error?: Error | string | null;
+  error: Error | string;
 };
 
 export default function NotFound({ error }: NotFoundProps) {
