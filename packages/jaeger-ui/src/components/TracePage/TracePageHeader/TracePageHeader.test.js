@@ -16,9 +16,10 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
-
-import { TracePageHeaderFn as TracePageHeader, HEADER_ITEMS } from './TracePageHeader';
-import TracePageHeaderWithRef from './TracePageHeader';
+import TracePageHeaderWithRef, {
+  TracePageHeaderFn as TracePageHeader,
+  HEADER_ITEMS,
+} from './TracePageHeader';
 import traceGenerator from '../../../demo/trace-generators';
 import { getTraceName } from '../../../model/trace-viewer';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -143,9 +144,7 @@ describe('<TracePageHeader>', () => {
   it('renders collapsible title and triggers onSlimViewClicked on click', () => {
     const onSlimViewClicked = jest.fn();
 
-    renderWithRouter(
-      <TracePageHeader {...defaultProps} canCollapse onSlimViewClicked={onSlimViewClicked} />
-    );
+    renderWithRouter(<TracePageHeader {...defaultProps} canCollapse onSlimViewClicked={onSlimViewClicked} />);
 
     const clickableTitle = screen.getByRole('switch');
     expect(clickableTitle).toBeInTheDocument();
@@ -293,9 +292,6 @@ describe('<TracePageHeader>', () => {
   });
   describe('<TracePageHeaderWithRef>', () => {
     it('renders default export (forwardRef wrapper) correctly', () => {
-      const trace = transformTraceData(traceGenerator.trace({}));
-      const mockRef = React.createRef();
-
       const props = {
         trace,
         canCollapse: false,
@@ -327,9 +323,9 @@ describe('<TracePageHeader>', () => {
 
       renderWithRouter(<TracePageHeaderWithRef {...props} />);
       expect(
-        screen.getAllByTestId('trace-name').some(
-          el => el.getAttribute('data-trace-name') === props.trace.traceName
-        )
+        screen
+          .getAllByTestId('trace-name')
+          .some(el => el.getAttribute('data-trace-name') === props.trace.traceName)
       ).toBe(true);
     });
   });
