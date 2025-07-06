@@ -20,7 +20,6 @@ jest.mock('./keyboard-shortcuts');
 jest.mock('./scroll-page');
 jest.mock('../../utils/filter-spans');
 jest.mock('../../utils/update-ui-find');
-// mock these to enable render()
 jest.mock('./TraceGraph/TraceGraph');
 jest.mock('./TracePageHeader/SpanGraph');
 jest.mock('./TracePageHeader/TracePageHeader.track');
