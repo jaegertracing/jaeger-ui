@@ -30,8 +30,8 @@ type Props = {
 class TraceIDSearchInput extends React.PureComponent<Props> {
   goToTrace = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const target = event.target as HTMLFormElement;
-    const value = (target.elements.namedItem('idInput') as HTMLInputElement)?.value;
+    const form = event.currentTarget;
+    const value = (form.elements.namedItem('idInput') as HTMLInputElement)?.value;
     if (value) {
       this.props.history.push(getUrl(value));
     }
