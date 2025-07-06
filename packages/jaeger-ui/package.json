@@ -41,7 +41,7 @@
     "less": "4.3.0",
     "react-test-renderer": "^18.3.1",
     "rollup-plugin-visualizer": "^6.0.0",
-    "sinon": "^20.0.0",
+    "sinon": "^21.0.0",
     "terser": "^5.31.0",
     "vite": "^6.0.7",
     "vite-plugin-imp": "^2.4.0"
@@ -80,7 +80,7 @@
     "react-router-dom": "5.3.4",
     "react-router-dom-v5-compat": "^6.24.0",
     "react-window": "^1.8.10",
-    "recharts": "^2.15.1",
+    "recharts": "^3.0.0",
     "redux": "^5.0.1",
     "redux-actions": "2.6.5",
     "redux-first-history": "^5.2.0",

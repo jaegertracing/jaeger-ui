@@ -27,33 +27,29 @@ type Props = {
   history: History;
 };
 
-class TraceIDSearchInput extends React.PureComponent<Props> {
-  goToTrace = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const value = (form.elements.namedItem('idInput') as HTMLInputElement)?.value;
-    if (value) {
-      this.props.history.push(getUrl(value));
-    }
-  };
+const TraceIDSearchInput: React.FC<Props> = ({ history }) => {
+  const goToTrace = React.useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const value = (form.elements.namedItem('idInput') as HTMLInputElement)?.value;
+      if (value) {
+        history.push(getUrl(value));
+      }
+    },
+    [history]
+  );
 
-  render() {
-    return (
-      <Form
-        data-testid="TraceIDSearchInput--form"
-        layout="horizontal"
-        onSubmitCapture={this.goToTrace}
-        className="TraceIDSearchInput--form"
-      >
-        <Input
-          data-testid="idInput"
-          name="idInput"
-          placeholder="Lookup by Trace ID..."
-          prefix={<IoSearch />}
-        />
-      </Form>
-    );
-  }
-}
+  return (
+    <Form
+      data-testid="TraceIDSearchInput--form"
+      layout="horizontal"
+      onSubmitCapture={goToTrace}
+      className="TraceIDSearchInput--form"
+    >
+      <Input data-testid="idInput" name="idInput" placeholder="Lookup by Trace ID..." prefix={<IoSearch />} />
+    </Form>
+  );
+};
 
-export default withRouteProps(TraceIDSearchInput);
+export default withRouteProps(React.memo(TraceIDSearchInput));
