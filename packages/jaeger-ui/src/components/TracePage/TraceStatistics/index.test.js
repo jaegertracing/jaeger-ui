@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceStatistics from './index';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -24,18 +24,13 @@ import testTrace from './tableValuesTestTrace/testTrace.json';
 const transformedTrace = transformTraceData(testTrace);
 
 describe('<TraceTagOverview>', () => {
-  let defaultProps;
+  const defaultProps = {
+    trace: transformedTrace,
+    uiFind: undefined,
+    uiFindVertexKeys: undefined,
+  };
 
-  // FIXME Increase timeout for this test suite due to slow Enzyme/React 18 mounting
-  jest.setTimeout(10000);
-
-  beforeEach(() => {
-    defaultProps = {
-      trace: transformedTrace,
-      uiFind: undefined,
-      uiFindVertexKeys: undefined,
-    };
-  });
+  afterEach(cleanup);
 
   it('does not explode', () => {
     const { container } = render(<TraceStatistics {...defaultProps} />);
@@ -77,6 +72,14 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('check handler', async () => {
+    async function timedAct(fn, label) {
+      const startTime = performance.now();
+      await act(fn);
+      const endTime = performance.now();
+      const elapsedTime = (endTime - startTime).toFixed(2); // Two decimal places for ms
+      console.log(`[${label}] took ${elapsedTime} ms`);
+    }
+
     let componentRef;
     const TestWrapper = () => {
       const ref = React.useRef();
@@ -84,7 +87,9 @@ describe('<TraceTagOverview>', () => {
       return <TraceStatistics ref={ref} {...defaultProps} />;
     };
 
-    render(<TestWrapper />);
+    await timedAct(async () => {
+      render(<TestWrapper />);
+    }, 'render');
 
     let tableValue = getColumnValues('Service Name', transformedTrace);
     tableValue = getColumnValuesSecondDropdown(
@@ -94,18 +99,14 @@ describe('<TraceTagOverview>', () => {
       transformedTrace
     );
 
-    await waitFor(() => {
-      if (componentRef.current) {
-        componentRef.current.handler(tableValue, tableValue, 'Service Name', 'Operation Name');
-      }
-    });
+    await timedAct(async () => {
+      componentRef.current.handler(tableValue, tableValue, 'Service Name', 'Operation Name');
+    }, 'call handler');
 
-    await waitFor(() => {
-      const rows = screen.getAllByRole('row');
-      expect(rows.length).toBeGreaterThan(1);
-      const cells = screen.getAllByRole('cell');
-      expect(cells.length).toBeGreaterThan(0);
-    });
+    const rows = screen.getAllByRole('row');
+    expect(rows.length).toBeGreaterThan(1);
+    const cells = screen.getAllByRole('cell');
+    expect(cells.length).toBeGreaterThan(0);
   });
 
   it('check togglePopup', async () => {
