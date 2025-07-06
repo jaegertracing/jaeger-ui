@@ -16,8 +16,10 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
-
-import { TracePageHeaderFn as TracePageHeader, HEADER_ITEMS } from './TracePageHeader';
+import TracePageHeaderWithRef, {
+  TracePageHeaderFn as TracePageHeader,
+  HEADER_ITEMS,
+} from './TracePageHeader';
 import traceGenerator from '../../../demo/trace-generators';
 import { getTraceName } from '../../../model/trace-viewer';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -137,6 +139,18 @@ describe('<TracePageHeader>', () => {
   it('renders a <header />', () => {
     const headers = document.querySelectorAll('header');
     expect(headers).toHaveLength(1);
+  });
+
+  it('renders collapsible title and triggers onSlimViewClicked on click', () => {
+    const onSlimViewClicked = jest.fn();
+
+    renderWithRouter(<TracePageHeader {...defaultProps} canCollapse onSlimViewClicked={onSlimViewClicked} />);
+
+    const clickableTitle = screen.getByRole('switch');
+    expect(clickableTitle).toBeInTheDocument();
+
+    clickableTitle.click();
+    expect(onSlimViewClicked).toHaveBeenCalledTimes(1);
   });
 
   it('renders an empty <div> if a trace is not present', () => {
@@ -274,6 +288,45 @@ describe('<TracePageHeader>', () => {
         </MemoryRouter>
       );
       expect(screen.queryAllByRole('link')).toHaveLength(0);
+    });
+  });
+  describe('<TracePageHeaderWithRef>', () => {
+    it('renders default export (forwardRef wrapper) correctly', () => {
+      const props = {
+        trace,
+        canCollapse: false,
+        clearSearch: jest.fn(),
+        focusUiFindMatches: jest.fn(),
+        hideMap: false,
+        hideSummary: false,
+        linkToStandalone: '/standalone',
+        nextResult: jest.fn(),
+        onArchiveClicked: jest.fn(),
+        onSlimViewClicked: jest.fn(),
+        onTraceViewChange: jest.fn(),
+        prevResult: jest.fn(),
+        resultCount: 0,
+        showArchiveButton: false,
+        showShortcutsHelp: false,
+        showStandaloneLink: false,
+        disableJsonView: false,
+        showViewOptions: false,
+        slimView: false,
+        textFilter: '',
+        toSearch: null,
+        viewType: ETraceViewType.TraceTimelineViewer,
+        updateNextViewRangeTime: jest.fn(),
+        updateViewRangeTime: jest.fn(),
+        viewRange: { time: { current: [0, 1] } },
+        ref: mockRef,
+      };
+
+      renderWithRouter(<TracePageHeaderWithRef {...props} />);
+      expect(
+        screen
+          .getAllByTestId('trace-name')
+          .some(el => el.getAttribute('data-trace-name') === props.trace.traceName)
+      ).toBe(true);
     });
   });
 });

@@ -41,7 +41,7 @@ jest.mock('./TimelineHeaderRow', () => props => (
 ));
 
 describe('<TraceTimelineViewer>', () => {
-  const trace = transformTraceData(traceGenerator.trace({}));
+  const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 5 }));
   const props = {
     trace,
     textFilter: null,
