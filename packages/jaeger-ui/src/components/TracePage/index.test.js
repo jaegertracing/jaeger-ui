@@ -41,10 +41,10 @@ jest.mock('./ScrollManager', () => {
 });
 
 jest.mock('./ArchiveNotifier', () => {
-  return function MockArchiveNotifier({ acknowledge, archivedState }) {
+  return function MockArchiveNotifier({ acknowledge }) {
     return (
       <div data-testid="archive-notifier">
-        <button onClick={acknowledge} data-testid="acknowledge-archive">
+        <button type="button" onClick={acknowledge} data-testid="acknowledge-archive">
           Acknowledge
         </button>
       </div>
@@ -53,47 +53,69 @@ jest.mock('./ArchiveNotifier', () => {
 });
 
 jest.mock('./TracePageHeader', () => {
-  const React = require('react');
+  const React = jest.requireActual('react');
   return React.forwardRef(function MockTracePageHeader(props, ref) {
     return (
       <div data-testid="trace-page-header" ref={ref}>
-        <button onClick={props.focusUiFindMatches} data-testid="focus-matches">
+        <button type="button" onClick={props.focusUiFindMatches} data-testid="focus-matches">
           Focus Matches
         </button>
-        <button onClick={props.nextResult} data-testid="next-result">
+        <button type="button" onClick={props.nextResult} data-testid="next-result">
           Next
         </button>
-        <button onClick={props.prevResult} data-testid="prev-result">
+        <button type="button" onClick={props.prevResult} data-testid="prev-result">
           Previous
         </button>
-        <button onClick={props.onArchiveClicked} data-testid="archive-trace">
+        <button type="button" onClick={props.onArchiveClicked} data-testid="archive-trace">
           Archive
         </button>
-        <button onClick={() => props.onSlimViewClicked(!props.slimView)} data-testid="toggle-slim-view">
+        <button
+          type="button"
+          onClick={() => props.onSlimViewClicked(!props.slimView)}
+          data-testid="toggle-slim-view"
+        >
           Toggle Slim View
         </button>
-        <button onClick={() => props.onTraceViewChange('TraceGraph')} data-testid="change-to-graph">
+        <button
+          type="button"
+          onClick={() => props.onTraceViewChange('TraceGraph')}
+          data-testid="change-to-graph"
+        >
           Graph View
         </button>
-        <button onClick={() => props.onTraceViewChange('TraceSpansView')} data-testid="change-to-spans">
+        <button
+          type="button"
+          onClick={() => props.onTraceViewChange('TraceSpansView')}
+          data-testid="change-to-spans"
+        >
           Spans View
         </button>
-        <button onClick={() => props.onTraceViewChange('TraceStatistics')} data-testid="change-to-stats">
+        <button
+          type="button"
+          onClick={() => props.onTraceViewChange('TraceStatistics')}
+          data-testid="change-to-stats"
+        >
           Statistics View
         </button>
         <button
+          type="button"
           onClick={() => props.onTraceViewChange('TraceTimelineViewer')}
           data-testid="change-to-timeline"
         >
           Timeline View
         </button>
-        <button onClick={() => props.onTraceViewChange('TraceFlamegraph')} data-testid="change-to-flamegraph">
+        <button
+          type="button"
+          onClick={() => props.onTraceViewChange('TraceFlamegraph')}
+          data-testid="change-to-flamegraph"
+        >
           Flamegraph View
         </button>
-        <button onClick={() => props.clearSearch()} data-testid="clear-search">
+        <button type="button" onClick={() => props.clearSearch()} data-testid="clear-search">
           Clear Search
         </button>
         <button
+          type="button"
           onClick={() => props.updateNextViewRangeTime({ cursor: 123 })}
           data-testid="update-next-view-range"
         >
@@ -120,21 +142,27 @@ jest.mock('./TraceTimelineViewer', () => {
     return (
       <div data-testid="trace-timeline-viewer">
         <button
+          type="button"
           onClick={() => props.updateViewRangeTime(0.25, 0.75, 'test-src')}
           data-testid="update-view-range"
         >
           Update View Range
         </button>
         <button
+          type="button"
           onClick={() => props.updateNextViewRangeTime({ cursor: 123 })}
           data-testid="update-next-view-range"
         >
           Update Next View Range
         </button>
-        <button onClick={props.registerAccessors} data-testid="register-accessors">
+        <button type="button" onClick={props.registerAccessors} data-testid="register-accessors">
           Register Accessors
         </button>
-        <button onClick={props.scrollToFirstVisibleSpan} data-testid="scroll-to-first-visible-span">
+        <button
+          type="button"
+          onClick={props.scrollToFirstVisibleSpan}
+          data-testid="scroll-to-first-visible-span"
+        >
           Scroll To First Visible Span
         </button>
         <span data-testid="view-range">{JSON.stringify(props.viewRange)}</span>
@@ -148,12 +176,14 @@ jest.mock('./TracePageHeader/SpanGraph', () => {
     return (
       <div data-testid="span-graph">
         <button
+          type="button"
           onClick={() => props.updateViewRangeTime(0.25, 0.75, 'test-src')}
           data-testid="span-graph-update-view-range"
         >
           Update View Range
         </button>
         <button
+          type="button"
           onClick={() => props.updateNextViewRangeTime({ cursor: 123 })}
           data-testid="span-graph-update-next-view-range"
         >
@@ -536,7 +566,7 @@ describe('<TracePage>', () => {
   });
 
   it('renders a loading indicator when loading', () => {
-    wrapper.rerender(<TracePage {...defaultProps} trace={null} loading={true} />);
+    wrapper.rerender(<TracePage {...defaultProps} trace={null} loading />);
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
@@ -1099,7 +1129,7 @@ describe('<TracePage>', () => {
             tracePageRef = ref;
           }}
           {...defaultProps}
-          archiveEnabled={true}
+          archiveEnabled
         />
       );
       expect(screen.getByTestId('archive-notifier')).toBeInTheDocument();
@@ -1114,7 +1144,7 @@ describe('<TracePage>', () => {
           }}
           {...defaultProps}
           acknowledgeArchive={acknowledgeArchive}
-          archiveEnabled={true}
+          archiveEnabled
         />
       );
 
