@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "jaeger-ui",
-  "version": "1.70.0",
+  "version": "1.71.0",
   "main": "src/index.tsx",
   "license": "Apache-2.0",
   "homepage": ".",
@@ -50,7 +50,7 @@
     "@ant-design/compatible": "^5.1.4",
     "@jaegertracing/plexus": "0.2.0",
     "@pyroscope/flamegraph": "0.21.4",
-    "@sentry/browser": "9.29.0",
+    "@sentry/browser": "9.35.0",
     "antd": "^5.23.3",
     "chance": "^1.0.10",
     "classnames": "^2.5.1",

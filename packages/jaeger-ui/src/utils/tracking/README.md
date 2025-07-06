@@ -230,7 +230,6 @@ Setup:
 - Ensure you have the repository cloned and all dependencies installed. Run the following command in the terminal
   - `npm install`
 - Start the local development server
-
   - `npm start` This will open the application in your default browser
 
 Steps to put gaID:
