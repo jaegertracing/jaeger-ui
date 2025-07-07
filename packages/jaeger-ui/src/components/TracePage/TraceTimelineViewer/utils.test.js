@@ -20,6 +20,8 @@ import {
   isServerSpan,
   spanContainsErredSpan,
   spanHasTag,
+  isKindClient,
+  isKindProducer
 } from './utils';
 
 import traceGenerator from '../../../demo/trace-generators';
@@ -153,5 +155,25 @@ describe('TraceTimelineViewer/utils', () => {
       spans[1].depth = spans[0].depth;
       expect(findServerChildSpan(spans)).toBeFalsy();
     });
+
+    it('tests isKindClient function', ()=>{
+      const span = { depth: 0, tags: [{ key: 'span.kind', value: 'producer' }] }
+      const result = isKindClient(span)
+      expect(result).toEqual(false)
+      
+      const span2 = { depth: 0, tags: [{ key: 'span.kind', value: 'client' }] }
+      const result2 = isKindClient(span2)
+      expect(result2).toEqual(true)
+    })
+
+    it('tests isKindProducer function', ()=>{
+      const span = { depth: 0, tags: [{ key: 'span.kind', value: 'producer' }] }
+      const result = isKindProducer(span)
+      expect(result).toEqual(true)
+      
+      const span2 = { depth: 0, tags: [{ key: 'span.kind', value: 'client' }] }
+      const result2 = isKindProducer(span2)
+      expect(result2).toEqual(false)
+    })
   });
 });
