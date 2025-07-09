@@ -93,7 +93,7 @@ describe('<VerticalResizer>', () => {
       const { unmount } = render(<VerticalResizer {...props} />);
       // Unmount the component. This causes React to set rootElmRef.current to null.
       unmount();
-      expect(() => draggableManagerConfig.getBounds()).toThrow('invalid state');
+      expect(() => draggableManagerConfig.getBounds()).toThrow('Invalid state: root element not found');
     });
 
     it('handles drag start', () => {
