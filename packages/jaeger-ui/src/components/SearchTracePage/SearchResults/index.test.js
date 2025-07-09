@@ -1,17 +1,3 @@
-// Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -22,9 +8,18 @@ import * as orderBy from '../../../model/order-by';
 import readJsonFile from '../../../utils/readJsonFile';
 import { getUrl } from '../url';
 
+// Import the mocks as variables, so we can access .mock.calls etc.
+import AltViewOptions from './AltViewOptions';
+import DiffSelection from './DiffSelection';
+import ResultItem from './ResultItem';
+import ScatterPlot from './ScatterPlot';
+import DownloadResults from './DownloadResults';
+import SearchResultsDDG from '../../DeepDependencies/traces';
+import LoadingIndicator from '../../common/LoadingIndicator';
+
 jest.mock('./AltViewOptions', () =>
   jest.fn(({ onDdgViewClicked }) => (
-    <button type='button' data-testid="alt-toggle" onClick={onDdgViewClicked}>
+    <button type="button" data-testid="alt-toggle" onClick={onDdgViewClicked}>
       toggle
     </button>
   ))
@@ -34,21 +29,29 @@ jest.mock('./DiffSelection', () =>
   jest.fn(({ traces }) => <div data-testid="diffselection">{traces.length}</div>)
 );
 
-jest.mock('./ResultItem', () => jest.fn(({ trace }) => <div data-testid={`result-${trace.traceID}`} />));
+jest.mock('./ResultItem', () =>
+  jest.fn(({ trace }) => <div data-testid={`result-${trace.traceID}`} />)
+);
 
-jest.mock('./ScatterPlot', () => jest.fn(props => <div data-testid="scatterplot" {...props} />));
+jest.mock('./ScatterPlot', () =>
+  jest.fn(props => <div data-testid="scatterplot" {...props} />)
+);
 
 jest.mock('./DownloadResults', () =>
   jest.fn(({ onDownloadResultsClicked }) => (
-    <button type='button' data-testid="download" onClick={onDownloadResultsClicked}>
+    <button type="button" data-testid="download" onClick={onDownloadResultsClicked}>
       download
     </button>
   ))
 );
 
-jest.mock('../../DeepDependencies/traces', () => jest.fn(() => <div data-testid="ddg" />));
+jest.mock('../../DeepDependencies/traces', () =>
+  jest.fn(() => <div data-testid="ddg" />)
+);
 
-jest.mock('../../common/LoadingIndicator', () => jest.fn(() => <div data-testid="loading" />));
+jest.mock('../../common/LoadingIndicator', () =>
+  jest.fn(() => <div data-testid="loading" />)
+);
 
 jest.mock('../../common/SearchableSelect', () => {
   const mockReact = jest.requireActual('react');
@@ -148,7 +151,7 @@ describe('<SearchResults>', () => {
       },
     ];
     render(<SearchResults {...baseProps} traces={errorTrace} />);
-    const scatterProps = require('./ScatterPlot').mock.calls[0][0];
+    const scatterProps = ScatterPlot.mock.calls[0][0];
     expect(scatterProps.data[0].color).toBe('red');
   });
 
@@ -160,7 +163,7 @@ describe('<SearchResults>', () => {
   it('calls goToTrace when a ScatterPlot point is clicked', () => {
     const goTo = jest.fn();
     render(<SearchResults {...baseProps} goToTrace={goTo} />);
-    const scatterProps = require('./ScatterPlot').mock.calls[0][0];
+    const scatterProps = ScatterPlot.mock.calls[0][0];
     scatterProps.onValueClick({ traceID: 'a' });
     expect(goTo).toHaveBeenCalledWith('a');
   });
@@ -173,14 +176,14 @@ describe('<SearchResults>', () => {
 
     it('shows a result entry for each trace', () => {
       render(<SearchResults {...baseProps} />);
-      expect(require('./ResultItem').mock.calls).toHaveLength(baseTraces.length);
+      expect(ResultItem.mock.calls).toHaveLength(baseTraces.length);
     });
 
     it('deep links traces', () => {
       const uiFind = 'ui-find';
       const spanLinks = { [baseTraces[0].traceID]: uiFind };
       render(<SearchResults {...baseProps} spanLinks={spanLinks} />);
-      const [first, second] = require('./ResultItem').mock.calls;
+      const [first, second] = ResultItem.mock.calls;
       expect(first[0].linkTo.search).toBe(`uiFind=${uiFind}`);
       expect(second[0].linkTo.search).toBeUndefined();
     });
@@ -199,7 +202,7 @@ describe('<SearchResults>', () => {
         { traceID: `000${traceID1}`, spans: [], processes: {} },
       ];
       render(<SearchResults {...baseProps} traces={zeroIDTraces} spanLinks={spanLinks} />);
-      const calls = require('./ResultItem').mock.calls;
+      const calls = ResultItem.mock.calls;
       expect(calls[0][0].linkTo.search).toBe(`uiFind=${uiFind0}`);
       expect(calls[1][0].linkTo.search).toBe(`uiFind=${uiFind1}`);
     });
@@ -249,16 +252,15 @@ describe('<SearchResults>', () => {
       });
 
       it('shows ddg instead of scatterplot and results', () => {
-        const ResultItemMock = require('./ResultItem');
         const { rerender } = render(<SearchResults {...baseProps} />);
         expect(screen.queryByTestId('ddg')).not.toBeInTheDocument();
-        expect(ResultItemMock).toHaveBeenCalledTimes(baseTraces.length);
+        expect(ResultItem.mock.calls).toHaveLength(baseTraces.length);
         expect(screen.queryByTestId('scatterplot')).toBeInTheDocument();
 
-        ResultItemMock.mockClear();
+        ResultItem.mockClear();
         rerender(<SearchResults {...baseProps} location={{ search: '?view=ddg' }} />);
         expect(screen.getByTestId('ddg')).toBeInTheDocument();
-        expect(ResultItemMock).not.toHaveBeenCalled();
+        expect(ResultItem).not.toHaveBeenCalled();
         expect(screen.queryByTestId('scatterplot')).not.toBeInTheDocument();
       });
     });
