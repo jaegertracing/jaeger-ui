@@ -7,15 +7,8 @@ import * as track from './index.track';
 import * as orderBy from '../../../model/order-by';
 import readJsonFile from '../../../utils/readJsonFile';
 import { getUrl } from '../url';
-
-// Import the mocks as variables, so we can access .mock.calls etc.
-import AltViewOptions from './AltViewOptions';
-import DiffSelection from './DiffSelection';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
-import DownloadResults from './DownloadResults';
-import SearchResultsDDG from '../../DeepDependencies/traces';
-import LoadingIndicator from '../../common/LoadingIndicator';
 
 jest.mock('./AltViewOptions', () =>
   jest.fn(({ onDdgViewClicked }) => (
@@ -29,13 +22,9 @@ jest.mock('./DiffSelection', () =>
   jest.fn(({ traces }) => <div data-testid="diffselection">{traces.length}</div>)
 );
 
-jest.mock('./ResultItem', () =>
-  jest.fn(({ trace }) => <div data-testid={`result-${trace.traceID}`} />)
-);
+jest.mock('./ResultItem', () => jest.fn(({ trace }) => <div data-testid={`result-${trace.traceID}`} />));
 
-jest.mock('./ScatterPlot', () =>
-  jest.fn(props => <div data-testid="scatterplot" {...props} />)
-);
+jest.mock('./ScatterPlot', () => jest.fn(props => <div data-testid="scatterplot" {...props} />));
 
 jest.mock('./DownloadResults', () =>
   jest.fn(({ onDownloadResultsClicked }) => (
@@ -45,13 +34,9 @@ jest.mock('./DownloadResults', () =>
   ))
 );
 
-jest.mock('../../DeepDependencies/traces', () =>
-  jest.fn(() => <div data-testid="ddg" />)
-);
+jest.mock('../../DeepDependencies/traces', () => jest.fn(() => <div data-testid="ddg" />));
 
-jest.mock('../../common/LoadingIndicator', () =>
-  jest.fn(() => <div data-testid="loading" />)
-);
+jest.mock('../../common/LoadingIndicator', () => jest.fn(() => <div data-testid="loading" />));
 
 jest.mock('../../common/SearchableSelect', () => {
   const mockReact = jest.requireActual('react');
