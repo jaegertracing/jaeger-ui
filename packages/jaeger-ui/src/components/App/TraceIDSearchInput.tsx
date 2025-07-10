@@ -31,8 +31,8 @@ const TraceIDSearchInput: React.FC<Props> = ({ history }) => {
   const goToTrace = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      const target = event.target as any;
-      const value = target.elements.idInput.value;
+      const form = event.currentTarget;
+      const value = (form.elements.namedItem('idInput') as HTMLInputElement)?.value;
       if (value) {
         history.push(getUrl(value));
       }
