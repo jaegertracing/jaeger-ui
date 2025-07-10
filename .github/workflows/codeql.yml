@@ -16,8 +16,6 @@ permissions:
 
 jobs:
   codeql-analyze:
-    # Run only on pull requests, see https://github.com/github/codeql-action/issues/1537
-    if: ${{ github.event_name == 'pull_request' }}
     permissions:
       actions: read  # for github/codeql-action/init to get workflow details
       contents: read  # for actions/checkout to fetch code
