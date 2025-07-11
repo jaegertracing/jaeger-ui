@@ -22,7 +22,6 @@
 
 // NOTICE: do not use shallow() for snapshot testing if possible.
 
-/* eslint-disable import/no-extraneous-dependencies */
 import React from 'react';
 import ShallowRenderer from 'react-test-renderer/shallow';
 import { isFragment, isLazy, isPortal, isMemo, isSuspense, isForwardRef } from 'react-is';

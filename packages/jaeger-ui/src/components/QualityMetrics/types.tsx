@@ -17,7 +17,6 @@ import * as React from 'react';
 import { TExample } from '../common/ExamplesLink';
 import { TColumnDef, TRow } from '../common/DetailsCard/types';
 
-// eslint-disable-next-line import/prefer-default-export
 export type TQualityMetrics = {
   traceQualityDocumentationLink: string;
   bannerText?:

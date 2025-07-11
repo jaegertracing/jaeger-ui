@@ -254,7 +254,6 @@ describe('SearchTracePage/url', () => {
     it('returns `true` if no considered keys are changed or omitted', () => {
       expect(isSameQuery(baseQuery, { ...baseQuery })).toBe(true);
 
-      // eslint-disable-next-line camelcase
       const { [otherKey]: _omitted, ...copy } = baseQuery;
       expect(isSameQuery(baseQuery, copy)).toBe(true);
       expect(isSameQuery(baseQuery, { ...copy, [otherKey]: 'changed' })).toBe(true);

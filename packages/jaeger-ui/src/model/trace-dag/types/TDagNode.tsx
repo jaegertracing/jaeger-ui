@@ -20,5 +20,4 @@ type TDagNode<TData extends { [k: string]: unknown }> = TData & {
   children: Set<NodeID>;
 };
 
-// eslint-disable-next-line no-undef
 export default TDagNode;

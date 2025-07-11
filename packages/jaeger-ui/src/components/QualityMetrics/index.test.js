@@ -58,13 +58,12 @@ describe('QualityMetrics', () => {
     describe('constructor', () => {
       it('fetches services if none are provided', () => {
         const { services: _ses, ...propsWithoutServices } = props;
-        // eslint-disable-next-line no-new
+
         new UnconnectedQualityMetrics(propsWithoutServices);
         expect(props.fetchServices).toHaveBeenCalledTimes(1);
       });
 
       it('no-ops if services are provided', () => {
-        // eslint-disable-next-line no-new
         new UnconnectedQualityMetrics(props);
         expect(props.fetchServices).not.toHaveBeenCalled();
       });

@@ -49,7 +49,6 @@ jest.mock('./SidePanel', () => {
 
 jest.mock('../common/ErrorMessage', () => {
   return function MockErrorMessage(props) {
-    // eslint-disable-next-line react/no-unknown-property
     return <div data-testid="error-message" error={JSON.stringify(props.error)} />;
   };
 });
@@ -118,19 +117,19 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('fetches services if services are not provided', () => {
-        new DeepDependencyGraphPageImpl({ ...props, services: [] }); // eslint-disable-line no-new
+        new DeepDependencyGraphPageImpl({ ...props, services: [] });
         expect(props.fetchServices).not.toHaveBeenCalled();
-        new DeepDependencyGraphPageImpl(props); // eslint-disable-line no-new
+        new DeepDependencyGraphPageImpl(props);
         expect(props.fetchServices).toHaveBeenCalledTimes(1);
       });
 
       it('fetches operations if service is provided without operations', () => {
         const { service, ...urlState } = props.urlState;
-        new DeepDependencyGraphPageImpl({ ...props, urlState }); // eslint-disable-line no-new
+        new DeepDependencyGraphPageImpl({ ...props, urlState });
         expect(props.fetchServiceServerOps).not.toHaveBeenCalled();
-        new DeepDependencyGraphPageImpl({ ...props, serverOpsForService: { [service]: [] } }); // eslint-disable-line no-new
+        new DeepDependencyGraphPageImpl({ ...props, serverOpsForService: { [service]: [] } });
         expect(props.fetchServiceServerOps).not.toHaveBeenCalled();
-        new DeepDependencyGraphPageImpl(props); // eslint-disable-line no-new
+        new DeepDependencyGraphPageImpl(props);
         expect(props.fetchServiceServerOps).toHaveBeenLastCalledWith(service);
         expect(props.fetchServiceServerOps).toHaveBeenCalledTimes(1);
       });
