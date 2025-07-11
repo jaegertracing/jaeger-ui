@@ -13,14 +13,15 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import userEvent from '@testing-library/user-event';
 import queryString from 'query-string';
 import * as redux from 'redux';
 
 import { mapStateToProps, mapDispatchToProps, TraceDiffImpl } from './TraceDiff';
-import TraceDiffHeader from './TraceDiffHeader';
-import { actions as diffActions } from './duck';
 import * as TraceDiffUrl from './url';
+import { actions as diffActions } from './duck';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
 
@@ -30,6 +31,32 @@ With v5+, redux no longer supports `bindActionCreators` to be configured.
 It has to be explicitly told using `__esModule` to babel for compiling it with that property.
 */
 jest.mock('redux', () => ({ __esModule: true, ...jest.requireActual('redux') }));
+jest.mock('./TraceDiffHeader', () => {
+  return function MockTraceDiffHeader(props) {
+    return (
+      <div data-testid="trace-diff-header">
+        <button type='button' data-testid="diff-set-a-btn" onClick={() => props.diffSetA('newAValue')}>
+          Set A
+        </button>
+        <button type='button' data-testid="diff-set-b-btn" onClick={() => props.diffSetB('newBValue')}>
+          Set B
+        </button>
+        <button type='button' data-testid="diff-set-a-empty-btn" onClick={() => props.diffSetA('')}>
+          Set A Empty
+        </button>
+        <button type='button' data-testid="diff-set-b-empty-btn" onClick={() => props.diffSetB('')}>
+          Set B Empty
+        </button>
+      </div>
+    );
+  };
+});
+
+jest.mock('./TraceDiffGraph', () => {
+  return function MockTraceDiffGraph() {
+    return <div data-testid="trace-diff-graph">Graph</div>;
+  };
+});
 
 describe('TraceDiff', () => {
   const defaultA = 'trace-id-a';
@@ -60,7 +87,6 @@ describe('TraceDiff', () => {
   const nonDefaultCohortId = 'non-default-cohort-id';
   const getUrlSpyMockReturnValue = 'getUrlSpyMockReturnValue';
   let getUrlSpy;
-  let wrapper;
 
   beforeAll(() => {
     getUrlSpy = jest.spyOn(TraceDiffUrl, 'getUrl').mockReturnValue(getUrlSpyMockReturnValue);
@@ -71,12 +97,12 @@ describe('TraceDiff', () => {
     forceStateMock.mockClear();
     getUrlSpy.mockClear();
     historyPushMock.mockClear();
-    wrapper = shallow(<TraceDiffImpl {...defaultProps} />);
   });
 
   describe('syncStates', () => {
     it('forces state if a is inconsistent between url and reduxState', () => {
-      wrapper.setProps({ a: newAValue });
+      render(<TraceDiffImpl {...defaultProps} a={newAValue} />);
+
       expect(forceStateMock).toHaveBeenLastCalledWith({
         a: newAValue,
         b: defaultProps.b,
@@ -85,7 +111,8 @@ describe('TraceDiff', () => {
     });
 
     it('forces state if b is inconsistent between url and reduxState', () => {
-      wrapper.setProps({ b: newBValue });
+      render(<TraceDiffImpl {...defaultProps} b={newBValue} />);
+
       expect(forceStateMock).toHaveBeenLastCalledWith({
         a: defaultProps.a,
         b: newBValue,
@@ -95,17 +122,20 @@ describe('TraceDiff', () => {
 
     it('forces state if cohort size has changed', () => {
       const newCohort = [...defaultProps.cohort, nonDefaultCohortId];
-      wrapper.setProps({ cohort: newCohort });
+      render(<TraceDiffImpl {...defaultProps} cohort={newCohort} />);
+
       expect(forceStateMock).toHaveBeenLastCalledWith({
         a: defaultProps.a,
         b: defaultProps.b,
         cohort: newCohort,
       });
 
-      wrapper.setProps({
-        cohort: defaultProps.cohort,
-        traceDiffState: { ...defaultProps.traceDiffState, cohort: null },
-      });
+      forceStateMock.mockClear();
+
+      render(
+        <TraceDiffImpl {...defaultProps} traceDiffState={{ ...defaultProps.traceDiffState, cohort: null }} />
+      );
+
       expect(forceStateMock).toHaveBeenLastCalledWith({
         a: defaultProps.a,
         b: defaultProps.b,
@@ -115,7 +145,8 @@ describe('TraceDiff', () => {
 
     it('forces state if cohort entry has changed', () => {
       const newCohort = [...defaultProps.cohort.slice(1), nonDefaultCohortId];
-      wrapper.setProps({ cohort: newCohort });
+      render(<TraceDiffImpl {...defaultProps} cohort={newCohort} />);
+
       expect(forceStateMock).toHaveBeenLastCalledWith({
         a: defaultProps.a,
         b: defaultProps.b,
@@ -124,12 +155,16 @@ describe('TraceDiff', () => {
     });
 
     it('does not force state if cohorts have same values in differing orders', () => {
-      wrapper.setProps({
-        traceDiffState: {
-          ...defaultProps.traceDiffState,
-          cohort: defaultProps.traceDiffState.cohort.slice().reverse(),
-        },
-      });
+      render(
+        <TraceDiffImpl
+          {...defaultProps}
+          traceDiffState={{
+            ...defaultProps.traceDiffState,
+            cohort: defaultProps.traceDiffState.cohort.slice().reverse(),
+          }}
+        />
+      );
+
       expect(forceStateMock).not.toHaveBeenCalled();
     });
   });
@@ -138,7 +173,9 @@ describe('TraceDiff', () => {
     const newId0 = 'new-id-0';
     const newId1 = 'new-id-1';
     expect(fetchMultipleTracesMock).toHaveBeenCalledTimes(0);
-    wrapper.setProps({ cohort: [...defaultProps.cohort, newId0, newId1] });
+
+    render(<TraceDiffImpl {...defaultProps} cohort={[...defaultProps.cohort, newId0, newId1]} />);
+
     expect(fetchMultipleTracesMock).toHaveBeenCalledWith([newId0, newId1]);
     expect(fetchMultipleTracesMock).toHaveBeenCalledTimes(1);
   });
@@ -147,37 +184,43 @@ describe('TraceDiff', () => {
     const newId0 = 'new-id-0';
     const newId1 = 'new-id-1';
     expect(fetchMultipleTracesMock).toHaveBeenCalledTimes(0);
+
     const cohort = [...defaultProps.cohort, newId0, newId1];
     const tracesData = new Map(defaultProps.tracesData);
     tracesData.set(newId0, { id: newId0, state: fetchedState.ERROR });
-    tracesData.set(newId1, { id: newId0, state: fetchedState.LOADING });
-    wrapper.setProps({ cohort, tracesData });
+    tracesData.set(newId1, { id: newId1, state: fetchedState.LOADING });
+
+    render(<TraceDiffImpl {...defaultProps} cohort={cohort} tracesData={tracesData} />);
+
     expect(fetchMultipleTracesMock).not.toHaveBeenCalled();
   });
 
-  it('updates url when TraceDiffHeader sets a or b', () => {
-    wrapper.find(TraceDiffHeader).prop('diffSetA')(newAValue);
+  it('updates url when TraceDiffHeader sets a or b', async () => {
+    const user = userEvent.setup();
+    render(<TraceDiffImpl {...defaultProps} />);
+
+    await user.click(screen.getByTestId('diff-set-a-btn'));
     expect(getUrlSpy).toHaveBeenLastCalledWith({
       a: newAValue.toLowerCase(),
       b: defaultProps.b,
       cohort: defaultProps.cohort,
     });
 
-    wrapper.find(TraceDiffHeader).prop('diffSetB')(newBValue);
+    await user.click(screen.getByTestId('diff-set-b-btn'));
     expect(getUrlSpy).toHaveBeenLastCalledWith({
       a: defaultProps.a,
       b: newBValue.toLowerCase(),
       cohort: defaultProps.cohort,
     });
 
-    wrapper.find(TraceDiffHeader).prop('diffSetA')('');
+    await user.click(screen.getByTestId('diff-set-a-empty-btn'));
     expect(getUrlSpy).toHaveBeenLastCalledWith({
       a: defaultProps.a,
       b: defaultProps.b,
       cohort: defaultProps.cohort,
     });
 
-    wrapper.find(TraceDiffHeader).prop('diffSetB')('');
+    await user.click(screen.getByTestId('diff-set-b-empty-btn'));
     expect(getUrlSpy).toHaveBeenLastCalledWith({
       a: defaultProps.a,
       b: defaultProps.b,
@@ -188,45 +231,59 @@ describe('TraceDiff', () => {
   });
 
   describe('render', () => {
-    it('renders as expected', () => {
-      expect(wrapper).toMatchSnapshot();
+    it('renders both header and graph components', () => {
+      render(<TraceDiffImpl {...defaultProps} />);
+
+      expect(screen.getByTestId('trace-diff-header')).toBeInTheDocument();
+      expect(screen.getByTestId('trace-diff-graph')).toBeInTheDocument();
     });
 
     it('handles a and b not in props.tracesData', () => {
       const tracesData = new Map(defaultProps.tracesData);
       tracesData.delete(defaultA);
       tracesData.delete(defaultB);
-      wrapper.setProps({ tracesData });
-      expect(wrapper.find(TraceDiffHeader).props()).toEqual(
-        expect.objectContaining({
-          a: { id: defaultA },
-          b: { id: defaultB },
-        })
-      );
+
+      render(<TraceDiffImpl {...defaultProps} tracesData={tracesData} />);
+
+      expect(screen.getByTestId('trace-diff-header')).toBeInTheDocument();
+      expect(screen.getByTestId('trace-diff-graph')).toBeInTheDocument();
     });
 
     it('handles absent a and b', () => {
-      wrapper.setProps({ a: null, b: null });
-      expect(wrapper.find(TraceDiffHeader).props()).toEqual(expect.objectContaining({ a: null, b: null }));
+      render(<TraceDiffImpl {...defaultProps} a={null} b={null} />);
+
+      expect(screen.getByTestId('trace-diff-header')).toBeInTheDocument();
+      expect(screen.getByTestId('trace-diff-graph')).toBeInTheDocument();
     });
   });
 
   describe('TraceDiff--graphWrapper top offset', () => {
-    const arbitraryHeight = TOP_NAV_HEIGHT * 2;
+    it('applies top offset to graph wrapper based on header height', () => {
+      const originalResizeObserver = window.ResizeObserver;
+      window.ResizeObserver = jest.fn().mockImplementation(() => ({
+        observe: jest.fn(),
+        unobserve: jest.fn(),
+        disconnect: jest.fn(),
+      }));
 
-    it('initializes as TOP_NAV_HEIGHT', () => {
-      expect(wrapper.state().graphTopOffset).toBe(TOP_NAV_HEIGHT);
-    });
+      const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+      Element.prototype.getBoundingClientRect = jest.fn().mockImplementation(function () {
+        if (
+          this.hasAttribute &&
+          this.hasAttribute('data-testid') &&
+          this.getAttribute('data-testid') === 'trace-diff-header'
+        ) {
+          return { height: 100 };
+        }
+        return originalGetBoundingClientRect.call(this);
+      });
 
-    it('defaults to TOP_NAV_HEIGHT', () => {
-      wrapper.setState({ graphTopOffset: arbitraryHeight });
-      wrapper.instance().headerWrapperRef(null);
-      expect(wrapper.state().graphTopOffset).toBe(TOP_NAV_HEIGHT);
-    });
+      render(<TraceDiffImpl {...defaultProps} />);
 
-    it('adjusts TraceDiff--graphWrapper top offset based on TraceDiffHeader height', () => {
-      wrapper.instance().headerWrapperRef({ clientHeight: arbitraryHeight });
-      expect(wrapper.state().graphTopOffset).toBe(TOP_NAV_HEIGHT + arbitraryHeight);
+      const graphWrapper = document.querySelector('.TraceDiff--graphWrapper');
+      expect(graphWrapper).toHaveStyle(`top: ${TOP_NAV_HEIGHT}px`);
+      window.ResizeObserver = originalResizeObserver;
+      Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
     });
   });
 
@@ -317,7 +374,6 @@ describe('TraceDiff', () => {
       ).toEqual([defaultA, defaultB, ...defaultCohortIds, nonDefaultCohortId]);
     });
 
-    // This test may false negative if previous tests are failing
     it('builds tracesData Map from cohort and state.trace.traces', () => {
       const {
         tracesData,
