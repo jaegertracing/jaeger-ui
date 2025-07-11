@@ -69,6 +69,14 @@ jest.mock('./MetricCard', () => {
   };
 });
 
+jest.mock(
+  '../common/ExamplesLink',
+  () =>
+    function MockExamplesLink() {
+      return <div>ExamplesLink Component</div>;
+    }
+);
+
 describe('QualityMetrics', () => {
   describe('UnconnectedQualityMetrics', () => {
     const props = {
@@ -194,7 +202,7 @@ describe('QualityMetrics', () => {
           try {
             await promise;
           } catch (e) {
-            throw new Error('Error: '.e.message);
+            // intentionally left blank
           }
         });
 
@@ -310,7 +318,7 @@ describe('QualityMetrics', () => {
           try {
             await promise;
           } catch (e) {
-            throw new Error('Error: '.e.message);
+            // intentionally left blank
           }
         });
 
@@ -352,6 +360,35 @@ describe('QualityMetrics', () => {
         expect(screen.getAllByTestId('metric-card')).toHaveLength(2);
         expect(screen.getByText('metric 0')).toBeInTheDocument();
         expect(screen.getByText('metric 1')).toBeInTheDocument();
+      });
+
+      it('renders client versions when qualityMetrics.clients is present', async () => {
+        render(<UnconnectedQualityMetrics {...props} />);
+
+        const metricsWithClients = {
+          bannerText: 'banner',
+          traceQualityDocumentationLink: 'doc/link',
+          scores: [],
+          metrics: [],
+          clients: [
+            {
+              version: '1.2.3',
+              minVersion: '1.0.0',
+              count: 5,
+              examples: ['ex1', 'ex2'],
+            },
+          ],
+        };
+
+        await act(async () => {
+          res(metricsWithClients);
+        });
+
+        expect(screen.getByText('Client Versions')).toBeInTheDocument();
+        expect(screen.getByText('1.2.3')).toBeInTheDocument();
+        expect(screen.getByText('1.0.0')).toBeInTheDocument();
+        expect(screen.getByText('5')).toBeInTheDocument();
+        expect(screen.getByText('ExamplesLink Component')).toBeInTheDocument();
       });
     });
   });
