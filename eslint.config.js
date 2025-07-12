@@ -67,7 +67,12 @@ export default [
 
   // ES Module scripts files
   {
-    files: ['scripts/utils/parse-traces.js', 'scripts/check-license.js', 'scripts/run-depcheck.js'],
+    files: [
+      'scripts/utils/parse-traces.js',
+      'scripts/check-license.js',
+      'scripts/run-depcheck.js',
+      'scripts/generateDepcheckrcJaegerUI.js',
+    ],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
