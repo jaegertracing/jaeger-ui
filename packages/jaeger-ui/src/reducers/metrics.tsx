@@ -89,7 +89,8 @@ function fetchServiceMetricsDone(
               try {
                 y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
                 max = y > max ? y : max;
-              } catch (e) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              } catch (_) {
                 y = null;
               }
               return {
@@ -225,7 +226,8 @@ function fetchOpsMetricsDone(
                 y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
                 avg[metric.name] += y;
                 count[metric.name] += 1; // Increment count for non-NaN values
-              } catch (e) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              } catch (_) {
                 y = null;
               }
 

@@ -11,6 +11,23 @@ import jestPlugin from 'eslint-plugin-jest';
 export default [
   js.configs.recommended,
 
+  // Global ignores for build artifacts and generated files
+  {
+    ignores: [
+      'packages/*/dist/**',
+      'packages/*/lib/**',
+      'packages/*/build/**',
+      '**/*.d.ts', // Ignore all TypeScript declaration files
+      '**/node_modules/**',
+      '**/.git/**',
+      '**/.DS_Store',
+      '**/coverage/**',
+      '**/tsconfig.tsbuildinfo',
+      '**/index.tsbuildinfo',
+      '**/layout.worker.bundled.js', // Ignore bundled worker files
+    ],
+  },
+
   // Node.js scripts files (CommonJS)
   {
     files: ['scripts/**/*.js'],
@@ -206,6 +223,13 @@ export default [
         Element: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        // Additional test environment globals
+        require: 'readonly',
+        HTMLCanvasElement: 'readonly',
+        HTMLElement: 'readonly',
+        HTMLDivElement: 'readonly',
+        React: 'readonly',
+        process: 'readonly',
       },
     },
     plugins: {
@@ -226,7 +250,18 @@ export default [
     },
     rules: {
       'prettier/prettier': ['error'],
-      'no-unused-vars': 'warn',
+      'no-unused-vars': [
+        'warn',
+        {
+          vars: 'all',
+          args: 'after-used',
+          ignoreRestSiblings: true,
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
+      'react/jsx-uses-react': 'error',
+      'react/jsx-uses-vars': 'error',
       'react/jsx-curly-brace-presence': ['error', 'never'],
       'react/jsx-filename-extension': 'off',
       'react/prop-types': 'off',
@@ -316,8 +351,20 @@ export default [
       'no-self-compare': 'off',
       'no-underscore-dangle': 'off',
       'prefer-destructuring': 'off',
+      'no-unused-vars': [
+        'warn',
+        {
+          vars: 'all',
+          args: 'after-used',
+          ignoreRestSiblings: true,
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
 
       // React
+      'react/jsx-uses-react': 'error',
+      'react/jsx-uses-vars': 'error',
       'react/jsx-curly-brace-presence': ['error', 'never'],
       'react/jsx-filename-extension': 'off',
       'react/forbid-prop-types': 'warn',
@@ -373,16 +420,42 @@ export default [
     },
   },
 
+  // Web Worker files
+  {
+    files: ['**/*.worker.js', '**/*.worker.bundled.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        self: 'readonly',
+        importScripts: 'readonly',
+        postMessage: 'readonly',
+        onmessage: 'readonly',
+        addEventListener: 'readonly',
+        removeEventListener: 'readonly',
+        console: 'readonly',
+      },
+    },
+    plugins: {
+      prettier: prettierPlugin,
+    },
+    rules: {
+      'prettier/prettier': ['error'],
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      'no-undef': 'off',
+    },
+  },
+
   // TS / TSX files
   {
     files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['packages/plexus/demo/**/*.tsx'],
+    ignores: ['packages/plexus/demo/**/*.tsx', '**/*.d.ts', '**/vite.config.ts', '**/vite-env.d.ts'], // Exclude build tooling files
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
       parser: typescriptParser,
       parserOptions: {
-        project: ['./packages/*/tsconfig.json'],
+        project: ['./packages/jaeger-ui/tsconfig.json', './packages/plexus/tsconfig.json'],
         tsconfigRootDir: process.cwd(),
         ecmaFeatures: {
           jsx: true,
@@ -448,6 +521,13 @@ export default [
     rules: {
       'prettier/prettier': ['error'],
 
+      // Turn off base ESLint rules that conflict with TypeScript rules
+      'no-unused-vars': 'off', // Use @typescript-eslint/no-unused-vars instead
+      'no-redeclare': 'off', // Use @typescript-eslint/no-redeclare instead
+      'no-shadow': 'off', // Use @typescript-eslint/no-shadow instead
+      'no-use-before-define': 'off', // Use @typescript-eslint/no-use-before-define instead
+      'no-useless-constructor': 'off', // Use @typescript-eslint/no-useless-constructor instead
+
       // TS-specific rules
       '@typescript-eslint/naming-convention': [
         'error',
@@ -458,13 +538,10 @@ export default [
         },
       ],
       '@typescript-eslint/no-this-alias': 'off',
-      'no-use-before-define': 'off',
       '@typescript-eslint/no-use-before-define': 'warn',
-      'no-redeclare': 'off',
       '@typescript-eslint/no-redeclare': 'warn',
-      'no-shadow': 'off',
       '@typescript-eslint/no-shadow': 'warn',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-require-imports': 'warn',
       '@typescript-eslint/no-empty-function': 'off',
@@ -473,6 +550,25 @@ export default [
       '@typescript-eslint/no-unsafe-function-type': 'warn',
       '@typescript-eslint/no-wrapper-object-types': 'warn',
       '@typescript-eslint/ban-ts-comment': 'warn',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-member-accessibility': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/ban-types': 'off',
+      '@typescript-eslint/no-inferrable-types': 'off',
+      '@typescript-eslint/no-useless-constructor': 'warn', // From old plexus config
+
+      // React rules for TypeScript files
+      'react/jsx-uses-react': 'error',
+      'react/jsx-uses-vars': 'error',
+      'react/jsx-curly-brace-presence': ['error', 'never'],
+      'react/jsx-filename-extension': 'off',
+      'react/prop-types': 'off',
+
+      // JSX A11y rules for TypeScript files
+      'jsx-a11y/anchor-is-valid': 'off',
+      'jsx-a11y/click-events-have-key-events': 'off',
+      'jsx-a11y/no-static-element-interactions': 'warn',
+      'jsx-a11y/control-has-associated-label': 'off',
     },
   },
 
@@ -517,14 +613,25 @@ export default [
     },
     rules: {
       'prettier/prettier': ['error'],
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': 'warn',
+      'no-unused-vars': 'off', // Turn off base rule for TypeScript files
+      'no-undef': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          vars: 'all',
+          args: 'after-used',
+          ignoreRestSiblings: true,
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
       '@typescript-eslint/naming-convention': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-member-accessibility': 'off',
       'react/jsx-curly-brace-presence': ['error', 'never'],
       'react/jsx-filename-extension': 'off',
       'react/prop-types': 'off',
-      'no-unused-vars': 'warn',
-      'no-undef': 'off',
     },
   },
 

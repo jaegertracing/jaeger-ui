@@ -242,7 +242,6 @@ describe('deepDependencyGraph reducers', () => {
           viewModifiers: new Map(),
         };
 
-        /* eslint-disable @typescript-eslint/no-unused-vars */
         const { operation: _op, ...emphasizedPayloadWithoutOp } = emphasizedPayload;
         const newState = addViewModifier(operationlessDoneState, emphasizedPayloadWithoutOp);
         const expected = _cloneDeep(operationlessDoneState);

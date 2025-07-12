@@ -31,6 +31,7 @@ function tryParseJson(value: string) {
   // otherwise just return as is
   try {
     return jsonObjectOrArrayStartRegex.test(value) ? JSON.parse(value) : value;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_) {
     return value;
   }

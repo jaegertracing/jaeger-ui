@@ -60,7 +60,7 @@ const ListItem: React.FC<IListItemProps> = React.memo(props => {
     }
   }, [multi, addValues, removeValues, isSelected, value, setValue]);
 
-  const { width: _, ...style } = styleOrig;
+  const { width: _, ...style } = styleOrig; // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const cls = cx('FilteredList--ListItem', {
     'is-focused': index === focusedIndex,

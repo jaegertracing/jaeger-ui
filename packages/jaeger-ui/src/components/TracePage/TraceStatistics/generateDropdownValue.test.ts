@@ -17,7 +17,6 @@ import transformTraceData from '../../../model/transform-trace-data';
 
 import testTrace from './tableValuesTestTrace/testTrace.json';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const transformedTrace = transformTraceData(testTrace as any)!;
 
 describe(' generateDropdownValue', () => {

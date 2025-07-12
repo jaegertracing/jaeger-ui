@@ -15,7 +15,6 @@
 import _flatten from 'lodash/flatten';
 import _uniq from 'lodash/uniq';
 import { Trace } from '../../../types/trace';
-import { ITableSpan } from './types';
 
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
