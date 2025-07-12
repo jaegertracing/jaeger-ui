@@ -5,7 +5,9 @@
         [
           "babel-plugin-react-remove-properties",
           {
-            "properties": ["data-testid"]
+            "properties": [
+              "data-testid"
+            ]
           }
         ]
       ]

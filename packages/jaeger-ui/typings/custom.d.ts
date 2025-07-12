@@ -28,7 +28,7 @@ declare interface Window {
 
 declare const __REACT_APP_GA_DEBUG__: string | undefined;
 declare const __REACT_APP_VSN_STATE__: string | undefined;
-declare const __APP_ENVIRONMENT__: ?(string | undefined);
+declare const __APP_ENVIRONMENT__: string | undefined;
 
 declare module 'combokeys' {
   export default class Combokeys {
@@ -41,6 +41,4 @@ declare module 'combokeys' {
 declare module 'react-helmet';
 declare module 'json-markup';
 declare module 'tween-functions';
-declare module '*.png' {
-  export default '' as string;
-}
+declare module '*.png' { export default '' as string; }

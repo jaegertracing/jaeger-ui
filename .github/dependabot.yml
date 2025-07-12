@@ -2,7 +2,7 @@ version: 2
 updates:
   - package-ecosystem: docker
     schedule:
-      interval: 'monthly'
+      interval: "monthly"
     directories:
       - /.github/workflows/Dockerfile
 

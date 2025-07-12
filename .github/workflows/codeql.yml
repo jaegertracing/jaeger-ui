@@ -1,6 +1,7 @@
-name: 'CodeQL'
+name: "CodeQL"
 
 on:
+  workflow_dispatch:
   merge_group:
   pull_request:
     branches: [main]
@@ -16,12 +17,13 @@ permissions:
 
 jobs:
   codeql-analyze:
-    # Run only on pull requests, see https://github.com/github/codeql-action/issues/1537
-    if: ${{ github.event_name == 'pull_request' }}
+    # Allow PRs and main branch, but exclude merge_group
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+
     permissions:
-      actions: read # for github/codeql-action/init to get workflow details
-      contents: read # for actions/checkout to fetch code
-      security-events: write # for github/codeql-action/autobuild to send a status report
+      actions: read  # for github/codeql-action/init to get workflow details
+      contents: read  # for actions/checkout to fetch code
+      security-events: write  # for github/codeql-action/autobuild to send a status report
     name: CodeQL Analyze
     runs-on: ubuntu-latest
 

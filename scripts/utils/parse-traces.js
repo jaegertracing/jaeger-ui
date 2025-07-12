@@ -25,20 +25,20 @@ function processTraceFile(filePath) {
   try {
     const fileContent = readFileSync(filePath, 'utf8');
     const jsonData = JSON.parse(fileContent);
-
+    
     const dependencies = [];
-
+    
     // Process each trace in the data
     jsonData.data.forEach(trace => {
       const spans = trace.spans;
       const processes = trace.processes;
-
+      
       // Create a map of spanID to service name
       const spanServiceMap = {};
       spans.forEach(span => {
         spanServiceMap[span.spanID] = processes[span.processID]?.serviceName;
       });
-
+      
       // Process references to find parent-child relationships
       spans.forEach(span => {
         if (span.references && span.references.length > 0) {
@@ -46,11 +46,11 @@ function processTraceFile(filePath) {
             if (ref.refType === 'CHILD_OF') {
               const childService = spanServiceMap[span.spanID];
               const parentService = spanServiceMap[ref.spanID];
-
+              
               if (childService && parentService && childService !== parentService) {
                 dependencies.push({
                   parent: parentService,
-                  child: childService,
+                  child: childService
                 });
               }
             }
@@ -58,7 +58,7 @@ function processTraceFile(filePath) {
         }
       });
     });
-
+    
     return dependencies;
   } catch (error) {
     console.error(`Error processing file ${filePath}:`, error.message);
@@ -69,7 +69,7 @@ function processTraceFile(filePath) {
 // Function to count occurrences of each unique parent-child relationship
 function countDependencies(dependencies) {
   const dependencyMap = new Map();
-
+  
   dependencies.forEach(dep => {
     const key = `${dep.parent}:${dep.child}`;
     if (dependencyMap.has(key)) {
@@ -78,17 +78,17 @@ function countDependencies(dependencies) {
       dependencyMap.set(key, 1);
     }
   });
-
+  
   const result = [];
   dependencyMap.forEach((count, key) => {
     const [parent, child] = key.split(':');
     result.push({
       parent,
       child,
-      callCount: count,
+      callCount: count
     });
   });
-
+  
   return result;
 }
 
@@ -97,26 +97,26 @@ async function generateDependencyArray(dirPath, outputPath) {
   try {
     const files = readdirSync(dirPath);
     const jsonFiles = files.filter(file => file.endsWith('.json'));
-
+    
     console.log(`Found ${jsonFiles.length} JSON files in ${dirPath}`);
-
+    
     let allDependencies = [];
-
+    
     // Process each JSON file
     jsonFiles.forEach((file, index) => {
       const filePath = join(dirPath, file);
       console.log(`Processing file ${index + 1}/${jsonFiles.length}: ${file}`);
-
+      
       const dependencies = processTraceFile(filePath);
       allDependencies = allDependencies.concat(dependencies);
     });
-
+    
     // Count and format dependencies
     const dependencyArray = countDependencies(allDependencies);
-
+    
     // Write the result to output file
     writeFileSync(outputPath, JSON.stringify(dependencyArray, null, 2), 'utf8');
-
+    
     console.log(`Successfully generated dependency array with ${dependencyArray.length} relationships`);
     console.log(`Output saved to: ${outputPath}`);
   } catch (error) {
