@@ -274,6 +274,50 @@ describe('CustomTooltip', () => {
     expect(tooltipElement.querySelector('h4').textContent).toBe(FALLBACK_TRACE_NAME);
   });
 
+  it('renders stats information when active and payload is provided', () => {
+    const payload = {
+      name: 'Test Trace',
+      size: 42,
+      services: [{ name: 'service1' }, { name: 'service2' }],
+      rootSpanName: 'GET /api/test',
+    };
+    const { container } = render(<CustomTooltip active payload={[{ payload }]} />);
+
+    const tooltipElement = container.querySelector('.scatter-plot-hint');
+    expect(tooltipElement).toBeTruthy();
+
+    const statsElement = container.querySelector('.scatter-plot-hint-stats');
+    expect(statsElement).toBeTruthy();
+    expect(statsElement.textContent).toContain('Spans: 42');
+    expect(statsElement.textContent).toContain('Services: 2');
+    expect(statsElement.textContent).toContain('Root Operation: GET /api/test');
+  });
+
+  it('handles missing services data', () => {
+    const payload = {
+      name: 'Test Trace',
+      size: 10,
+      rootSpanName: 'test-operation',
+    };
+    const { container } = render(<CustomTooltip active payload={[{ payload }]} />);
+
+    const statsElement = container.querySelector('.scatter-plot-hint-stats');
+    expect(statsElement.textContent).toContain('Services: 0');
+  });
+
+  it('handles missing rootSpanName', () => {
+    const payload = {
+      name: 'Test Trace',
+      size: 15,
+      services: [{ name: 'service1' }, { name: 'service2' }],
+    };
+    const { container } = render(<CustomTooltip active payload={[{ payload }]} />);
+
+    const statsElement = container.querySelector('.scatter-plot-hint-stats');
+    expect(statsElement.textContent).toContain('Services: 2');
+    expect(statsElement.textContent).toContain('Root Operation: Unknown');
+  });
+
   it('returns null when not active', () => {
     const { container } = render(<CustomTooltip payload={[{ payload: { name: 'Test' } }]} />);
     expect(container.firstChild).toBeNull();
