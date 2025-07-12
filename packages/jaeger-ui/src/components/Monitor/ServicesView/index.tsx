@@ -134,7 +134,13 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
   if (!serviceErrorRate) return null;
 
   const convertedMetricsPoints = serviceErrorRate.metricPoints.map((metricPoint: Points) => {
-    return { ...metricPoint, y: metricPoint.y! * 100 };
+    const y = metricPoint.y;
+
+    if (y === null || y === undefined || Number.isNaN(y)) {
+      return { ...metricPoint, y: null };
+    }
+
+    return { ...metricPoint, y: y * 100 };
   });
 
   return { ...serviceErrorRate, metricPoints: convertedMetricsPoints };
