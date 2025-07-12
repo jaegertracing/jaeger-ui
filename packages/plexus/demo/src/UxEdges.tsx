@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { render } from 'react-dom';
 
 import { LayoutManager } from '../../src';
@@ -68,9 +68,8 @@ const UxEdges = () => (
             edges: true,
             setOnContainer: { style: { cursor: 'default', opacity: 0, strokeWidth: 4 } },
             setOnEdge: layoutEdge => ({
-              // eslint-disable-next-line no-console
               onMouseOver: () => console.log('mouse over', layoutEdge),
-              // eslint-disable-next-line no-console
+
               onMouseOut: () => console.log('mouse out', layoutEdge),
             }),
           },

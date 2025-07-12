@@ -108,7 +108,7 @@ export default function AccordianLogs({
           {_sortBy(logsToDisplay, 'timestamp').map((log, i) => (
             <AccordianKeyValues
               // `i` is necessary in the key because timestamps can repeat
-              // eslint-disable-next-line react/no-array-index-key
+
               key={`${log.timestamp}-${i}`}
               className={i < logsToDisplay.length - 1 ? 'ub-mb1' : null}
               data={log.fields || []}

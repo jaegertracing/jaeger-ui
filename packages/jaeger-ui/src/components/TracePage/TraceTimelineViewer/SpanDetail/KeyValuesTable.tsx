@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/no-extraneous-dependencies */
 import * as React from 'react';
 import { Dropdown } from 'antd';
 import { IoOpenOutline, IoList, IoCopyOutline } from 'react-icons/io5';
@@ -32,6 +31,7 @@ function tryParseJson(value: string) {
   // otherwise just return as is
   try {
     return jsonObjectOrArrayStartRegex.test(value) ? JSON.parse(value) : value;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_) {
     return value;
   }
@@ -175,7 +175,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             }
             return (
               // `i` is necessary in the key because row.key can repeat
-              // eslint-disable-next-line react/no-array-index-key
+
               <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
                 <td className="KeyValueTable--keyColumn">{row.key}</td>
                 <td className="KeyValueTable--valueColumn">

@@ -15,7 +15,6 @@
 import { TPropFactoryFn, TSetProps } from './types';
 
 function reduce(a: Record<string, any>, b: Record<string, any>) {
-  // eslint-disable-next-line prefer-const
   let { className, style, ...rest } = a;
   const { className: bClassName, style: bStyle, ...bRest } = b;
   // merge className props

@@ -204,9 +204,7 @@ describe('google analytics tracking', () => {
       );
     });
 
-    /* eslint-disable no-console */
     it('isDebugMode = true', () => {
-      // eslint-disable-next-line no-import-assign
       console.log = jest.fn();
 
       trackingDebug.init();

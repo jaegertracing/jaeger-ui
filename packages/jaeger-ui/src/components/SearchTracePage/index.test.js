@@ -16,7 +16,6 @@ import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 
 jest.mock('store');
 
-/* eslint-disable import/first */
 import React from 'react';
 import { mount } from 'enzyme';
 import store from 'store';

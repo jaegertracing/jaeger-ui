@@ -41,7 +41,8 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
       let traceObj;
       try {
         traceObj = JSON.parse(reader.result);
-      } catch (error) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_) {
         try {
           traceObj = tryParseMultiLineInput(reader.result);
         } catch (error) {

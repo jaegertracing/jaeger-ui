@@ -32,5 +32,4 @@ export type TDdgStateEntry =
 
 type TDdgState = Record<string, TDdgStateEntry>;
 
-// eslint-disable-next-line no-undef
 export default TDdgState;

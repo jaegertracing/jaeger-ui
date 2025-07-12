@@ -46,7 +46,7 @@ export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }, base
 function firstParam(arg: string | string[]): string {
   if (Array.isArray(arg)) {
     const returnVal = arg[0];
-    console.warn(`Found multiple query parameters: "${arg}", using "${returnVal}"`); // eslint-disable-line no-console
+    console.warn(`Found multiple query parameters: "${arg}", using "${returnVal}"`);
     return returnVal;
   }
   return arg;

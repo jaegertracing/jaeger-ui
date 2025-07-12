@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable no-console, import/first */
-
 jest.mock('./process-deprecation');
 
 import getConfig, { getConfigValue } from './get-config';

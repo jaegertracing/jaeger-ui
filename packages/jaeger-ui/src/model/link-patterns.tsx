@@ -88,7 +88,6 @@ export function processLinkPattern(pattern: any): ProcessedLinkPattern | TNil {
       parameters: _uniq(url.parameters.concat(text.parameters)),
     };
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error(`Ignoring invalid link pattern: ${error}`, pattern);
     return null;
   }
@@ -217,7 +216,6 @@ export function computeLinks(
           return true;
         }
 
-        // eslint-disable-next-line no-console
         console.warn(
           `Skipping link pattern, missing parameter ${parameter} for key ${item.key} in ${type}.`,
           pattern.object

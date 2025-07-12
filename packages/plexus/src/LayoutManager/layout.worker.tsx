@@ -27,7 +27,7 @@ type TMessageErrorTarget = {
 };
 
 // TODO: Use WorkerGlobalScope instead of Worker
-// eslint-disable-next-line no-restricted-globals
+
 const ctx: Worker & TMessageErrorTarget = self as any;
 
 let currentMeta: TLayoutWorkerMeta | null;

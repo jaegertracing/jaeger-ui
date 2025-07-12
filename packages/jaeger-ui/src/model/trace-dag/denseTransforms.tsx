@@ -31,7 +31,6 @@ function fixLeafService(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   }
   const { operation: parentOp } = parent;
   if (parentOp.indexOf(peerSvc) === 0 && parentOp.slice(-operation.length) === operation) {
-    // eslint-disable-next-line no-param-reassign
     denseSpan.service = peerSvc;
   }
 }
@@ -76,7 +75,7 @@ function fixHttpOperation(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   if (parent.operation.indexOf(service) === 0 || parentPeerSvc.indexOf(service) === 0) {
     const rx = new RegExp(`^${service}(::)?`);
     const endpoint = parent.operation.replace(rx, '');
-    // eslint-disable-next-line no-param-reassign
+
     denseSpan.operation = `${httpMethod} ${endpoint}`;
   }
 }
@@ -97,7 +96,7 @@ function skipAnnotationSpans(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>
   if (!parent || !child) {
     return;
   }
-  // eslint-disable-next-line no-param-reassign
+
   denseSpan.skipToChild = parent.span.processID === span.processID;
 }
 
@@ -118,7 +117,7 @@ function skipClientSpans(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   if (!parent || !child) {
     return;
   }
-  // eslint-disable-next-line no-param-reassign
+
   denseSpan.skipToChild =
     child.tags[tagKeys.SPAN_KIND] === 'client' && parent.span.processID === span.processID;
 }

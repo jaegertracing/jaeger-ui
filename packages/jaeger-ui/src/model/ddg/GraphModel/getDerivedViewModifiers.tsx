@@ -38,13 +38,12 @@ export default function getDerivedViewModifiers(
   const visibleIndices = this.getVisibleIndices(visEncoding);
 
   const pushVertexVm = (vm: number, key: string) => {
-    // eslint-disable-next-line no-bitwise
     vertices.set(key, (vertices.get(key) || 0) | vm);
   };
 
   const pushEdgeVm = (vm: number, from: string, to: string) => {
     const edgeId = getEdgeId(from, to);
-    // eslint-disable-next-line no-bitwise
+
     edges.set(edgeId, (edges.get(edgeId) || 0) | vm);
   };
 

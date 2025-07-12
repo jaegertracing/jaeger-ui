@@ -35,6 +35,7 @@ const TrackingImplementation = () => {
       }
       versionShort = joiner.join(' ');
       versionLong = data.pretty;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_) {
       versionShort = versionInfo;
       versionLong = versionInfo;

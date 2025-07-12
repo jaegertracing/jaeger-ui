@@ -66,7 +66,6 @@ function transformDdgData(
       // Default value necessary as sort is not called if there is only one path
       hashArg.push(pathCompareValues.get(payloadPath) || payloadPath.map(stringifyEntry).join());
 
-      // eslint-disable-next-line camelcase
       const { exemplar_trace_id: traceIDs } = group(attributes);
 
       // Path with stand-in values is necessary for assigning PathElem.memberOf
@@ -133,7 +132,7 @@ function transformDdgData(
   let upstreamElems: PathElem[] | void;
   const visIdxToPathElem: PathElem[] = [];
   function setIdx(pathElem: PathElem) {
-    pathElem.visibilityIdx = visIdxToPathElem.length; // eslint-disable-line no-param-reassign
+    pathElem.visibilityIdx = visIdxToPathElem.length;
     visIdxToPathElem.push(pathElem);
   }
   do {

@@ -152,7 +152,7 @@ const calcRects = _memoize(
   function calcRects(str: string | string[], span: HTMLSpanElement): TRect[] {
     const lengths = (Array.isArray(str) ? [`${str.length} Operations}`] : str.match(WORD_RX) || [str]).map(
       s => {
-        span.innerHTML = s; // eslint-disable-line no-param-reassign
+        span.innerHTML = s;
         return span.getClientRects()[0].width;
       }
     );

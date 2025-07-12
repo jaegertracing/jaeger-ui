@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable camelcase */
-/* eslint-disable default-case */
-
 import { handleActions } from 'redux-actions';
 
 import { fetchAllServiceMetrics, fetchAggregatedServiceMetrics } from '../actions/jaeger-api';
@@ -92,7 +89,8 @@ function fetchServiceMetricsDone(
               try {
                 y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
                 max = y > max ? y : max;
-              } catch (e) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              } catch (_) {
                 y = null;
               }
               return {
@@ -169,7 +167,6 @@ function fetchOpsMetricsDone(
         };
       } = null;
 
-  // eslint-disable-next-line no-undef-init
   let serviceOpsMetrics: ServiceOpsMetrics[] | undefined = undefined;
 
   if (payload) {
@@ -229,7 +226,8 @@ function fetchOpsMetricsDone(
                 y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
                 avg[metric.name] += y;
                 count[metric.name] += 1; // Increment count for non-NaN values
-              } catch (e) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              } catch (_) {
                 y = null;
               }
 

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { render } from 'react-dom';
 
 import largeDag, { getNodeLabel as getLargeNodeLabel, TLargeNode } from './data-large';
@@ -37,7 +37,7 @@ const VOWELS = new Set(['a', 'e', 'i', 'o', 'u', 'y']);
 
 const setOnNode = (vertex: TVertex) => ({
   className: 'DemoGraph--node',
-  // eslint-disable-next-line no-console
+
   onClick: () => console.log(vertex.key),
 });
 

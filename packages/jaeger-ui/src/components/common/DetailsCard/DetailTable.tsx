@@ -87,10 +87,8 @@ export const _makeColumns = ({ defs, rows }: { defs: TColumnDefs; rows: TRow[] }
     let style: React.CSSProperties | undefined;
     let title: string;
     if (typeof def === 'string') {
-      // eslint-disable-next-line no-multi-assign
       key = title = dataIndex = def;
     } else {
-      // eslint-disable-next-line no-multi-assign
       key = title = dataIndex = def.key;
       if (def.label) title = def.label;
       if (def.styling) style = def.styling;

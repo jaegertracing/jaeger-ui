@@ -32,7 +32,7 @@ export function KeyValuesSummary({ data }: { data: KeyValuePair[] }) {
     <ul className="AccordianKeyValues--summary">
       {data.map((item, i) => (
         // `i` is necessary in the key because item.key can repeat
-        // eslint-disable-next-line react/no-array-index-key
+
         <li className="AccordianKeyValues--summaryItem" key={`${item.key}-${i}`}>
           <span className="AccordianKeyValues--summaryLabel">{item.key}</span>
           <span className="AccordianKeyValues--summaryDelim">=</span>

@@ -58,7 +58,6 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
       prevProps.service !== this.props.service ||
       prevProps.decorationSchema !== this.props.decorationSchema
     ) {
-      // eslint-disable-next-line react/no-did-update-set-state
       this.setState({
         details: undefined,
         detailsErred: false,

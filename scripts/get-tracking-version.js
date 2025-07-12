@@ -21,7 +21,6 @@
 // See the comment on `getVersion(..)` function below for details.
 // See also packages/jaeger-ui/src/utils/tracking/README.md
 
-/* eslint-disable @typescript-eslint/no-var-requires */
 const spawnSync = require('child_process').spawnSync;
 
 const version = require('../package.json').version;

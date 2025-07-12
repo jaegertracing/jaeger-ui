@@ -24,5 +24,4 @@ type TPathAgnosticDecorations = Record<
   }
 >;
 
-// eslint-disable-next-line no-undef
 export default TPathAgnosticDecorations;

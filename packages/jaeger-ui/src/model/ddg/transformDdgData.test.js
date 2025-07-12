@@ -181,7 +181,6 @@ describe('transform ddg data', () => {
     const { focalPayloadElem, doubleFocalPath, simplePath, wrap } = testResources;
     const payload = wrap([simplePath, doubleFocalPath]);
     payload.dependencies.forEach((dependency, i) => {
-      // eslint-disable-next-line no-param-reassign
       dependency.attributes = [
         {
           key: 'exemplar_trace_id',

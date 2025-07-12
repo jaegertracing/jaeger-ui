@@ -64,10 +64,10 @@ export function trackDensityChange(
   });
 
   if (prevIndex === undefined) {
-    console.warn(`Received unknown density ${prevDensity}`); // eslint-disable-line no-console
+    console.warn(`Received unknown density ${prevDensity}`);
   }
   if (nextIndex === undefined) {
-    console.warn(`Received unknown density ${nextDensity}`); // eslint-disable-line no-console
+    console.warn(`Received unknown density ${nextDensity}`);
     return;
   }
   if (prevIndex === undefined) return;

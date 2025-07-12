@@ -38,7 +38,7 @@ export type Process = {
 
 export type SpanReference = {
   refType: 'CHILD_OF' | 'FOLLOWS_FROM';
-  // eslint-disable-next-line no-use-before-define
+
   span: Span | null | undefined;
   spanID: string;
   traceID: string;

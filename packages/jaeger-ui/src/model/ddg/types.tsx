@@ -22,8 +22,8 @@ export enum EViewModifier {
   None,
   Hovered,
   Selected,
-  Emphasized = 1 << 2, // eslint-disable-line no-bitwise
-  PathHovered = 1 << 3, // eslint-disable-line no-bitwise
+  Emphasized = 1 << 2,
+  PathHovered = 1 << 3,
 }
 
 export enum EDdgDensity {
@@ -54,7 +54,7 @@ export type TDdgPayloadPath = {
   path: TDdgPayloadEntry[];
   // TODO: Everett Tech Debt: Fix KeyValuePair types
   attributes: {
-    key: 'exemplar_trace_id'; // eslint-disable-line camelcase
+    key: 'exemplar_trace_id';
     value: string;
   }[];
 };

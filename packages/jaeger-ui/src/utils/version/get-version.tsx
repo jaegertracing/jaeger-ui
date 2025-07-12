@@ -20,7 +20,6 @@ export default function getVersion() {
   const getJaegerVersion = window.getJaegerVersion;
   if (typeof getJaegerVersion !== 'function') {
     if (!haveWarnedFactoryFn) {
-      // eslint-disable-next-line no-console
       console.warn('Embedded version information not available');
       haveWarnedFactoryFn = true;
     }

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable camelcase */
 import { Exception, Breadcrumb } from '@sentry/browser';
 
 import prefixUrl from '../prefix-url';
@@ -36,7 +35,6 @@ const FETCH_SYMBOLS = [
   { sym: '__IGNORE__', word: '', rx: /\.js(\.map)?$/i },
 ];
 
-// eslint-disable-next-line no-console
 const warn = console.warn.bind(console);
 
 // common aspect of local URLs

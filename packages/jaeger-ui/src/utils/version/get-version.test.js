@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable no-console, import/first */
-
 import getVersion from './get-version';
 import defaultVersion from '../../constants/default-version';
 

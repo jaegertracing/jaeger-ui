@@ -212,7 +212,6 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
     uniqueValuesForSelectedTag.add(tagValue);
   }
 
-  // eslint-disable-next-line no-restricted-syntax
   for (const tagValue of uniqueValuesForSelectedTag) {
     const resultValue = statsPerTagValue[tagValue];
 

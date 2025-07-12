@@ -365,7 +365,7 @@ describe('<MonitorATMServicesView>', () => {
 });
 
 describe('<MonitorATMServicesView> on page switch', () => {
-  /* eslint-disable @typescript-eslint/no-unused-vars */
+  /* eslint-disable no-unused-vars */
   let wrapper;
   const stateOnPageSwitch = {
     services: {

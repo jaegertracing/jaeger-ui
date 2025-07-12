@@ -19,7 +19,6 @@ type TOneOf<A, B, C = {}, D = {}, E = {}> =
   | ({ [P in Exclude<keyof (A & B & C & E), keyof D>]?: undefined } & D)
   | ({ [P in Exclude<keyof (A & B & C & D), keyof E>]?: undefined } & E);
 
-// eslint-disable-next-line no-undef
 export default TOneOf;
 
 export type TOneOfTwo<A, B> =
