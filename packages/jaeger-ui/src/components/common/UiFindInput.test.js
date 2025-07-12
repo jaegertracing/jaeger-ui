@@ -28,6 +28,7 @@ jest.mock('../../utils/update-ui-find');
 
 describe('UiFind', () => {
   const flushMock = jest.fn();
+  const cancelMock = jest.fn();
   const queryStringParseSpy = jest.spyOn(parseQuery, 'default');
 
   const uiFind = 'uiFind';
@@ -49,6 +50,7 @@ describe('UiFind', () => {
         fn(...args);
       }
       debounceFunction.flush = flushMock;
+      debounceFunction.cancel = cancelMock;
       return debounceFunction;
     });
   });

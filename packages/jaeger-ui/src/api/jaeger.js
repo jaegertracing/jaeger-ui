@@ -32,7 +32,7 @@ export function getMessageFromError(errData, status) {
   }
   try {
     return JSON.stringify(errData);
-  } catch (_) {
+  } catch {
     return String(errData);
   }
 }
@@ -57,7 +57,7 @@ function getJSON(url, options = {}) {
       try {
         data = JSON.parse(bodyText);
         bodyTextFmt = JSON.stringify(data, null, 2);
-      } catch (_) {
+      } catch {
         data = null;
         bodyTextFmt = null;
       }
