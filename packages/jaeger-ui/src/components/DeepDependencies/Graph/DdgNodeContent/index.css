@@ -90,3 +90,14 @@ limitations under the License.
   pointer-events: all;
   transition-delay: 0s;
 }
+
+.DdgNodeContent--actionsWrapper-below {
+  bottom: auto !important;
+  top: 100% !important;
+  border-radius: 3px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+  margin-top: 2px;
+}
