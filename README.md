@@ -88,6 +88,26 @@ The above command will run a web server on `http://localhost:5173` that will ser
 | `npm run fmt`    | Apply Prettier source code formatting                                 |
 | `npm run build`  | Runs production build. Outputs files to `packages/jaeger-ui/build`.   |
 
+#### Code Coverage
+
+This project uses Jest for testing with high coverage standards and Codecov integration for tracking.
+
+| Command | Description |
+| --- | --- |
+| `npm test -- --coverage` | Run all tests with coverage report |
+| `npm test -- --coverage --collectCoverageFrom="src/path/to/file.tsx"` | Coverage for specific files |
+| `npm test -- --testPathPattern=Component --coverage` | Coverage for specific test patterns |
+| `npm test -- --coverage --coverageReporters=text-lcov --coverageReporters=html` | Generate detailed coverage reports |
+
+**Coverage Metrics:**
+
+- **Statements**: % of executable statements covered by tests
+- **Branches**: % of conditional branches (if/else, switch cases) covered
+- **Functions**: % of functions called during tests
+- **Lines**: % of lines executed during tests
+
+**Example**: `npm test -- --testPathPattern=DdgNodeContent --coverage --collectCoverageFrom="src/components/DeepDependencies/Graph/DdgNodeContent/index.tsx"`
+
 ### Running on Windows OS
 
 While we don't natively support Windows OS for running the Jaeger UI Dev Environment, you can use Windows Subsystem for Linux (WSL) to run it.
