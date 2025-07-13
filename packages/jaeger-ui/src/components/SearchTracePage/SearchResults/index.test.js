@@ -115,12 +115,20 @@ describe('<SearchResults>', () => {
   });
 
   it('hide scatter plot if queryparam hideGraph', () => {
-    render(<SearchResults {...baseProps} hideGraph />);
+    const { rerender } = render(<SearchResults {...baseProps} hideGraph={false} />);
+    expect(screen.getByTestId('scatterplot')).toBeInTheDocument();
+
+    rerender(<SearchResults {...baseProps} hideGraph />);
     expect(screen.queryByTestId('scatterplot')).not.toBeInTheDocument();
   });
 
   it('hide DiffSelection when disableComparisons = true', () => {
-    render(<SearchResults {...baseProps} disableComparisons />);
+    const { rerender } = render(
+      <SearchResults {...baseProps} disableComparisons={false} diffCohort={[{ id: 'a' }]} />
+    );
+    expect(screen.getByTestId('diffselection')).toBeInTheDocument();
+
+    rerender(<SearchResults {...baseProps} disableComparisons diffCohort={[{ id: 'a' }]} />);
     expect(screen.queryByTestId('diffselection')).not.toBeInTheDocument();
   });
 
@@ -146,7 +154,13 @@ describe('<SearchResults>', () => {
         startTime: 0,
         duration: 1,
         processes: {},
-        spans: [{ tags: [{ key: 'error', value: true }] }],
+        spans: [
+          {
+            process: { serviceName: 'svc-A' },
+            operationName: 'op-A',
+            tags: [{ key: 'error', value: true }],
+          },
+        ],
       },
     ];
     render(<SearchResults {...baseProps} traces={errorTrace} />);
@@ -168,45 +182,51 @@ describe('<SearchResults>', () => {
   });
 
   it('handles trace with no spans', () => {
-    wrapper.setProps({
-      traces: [
-        {
-          traceID: 'no-spans',
-          traceName: 'Empty Trace',
-          startTime: 0,
-          duration: 1,
-          processes: {},
-          spans: [],
-        },
-      ],
-    });
-    const data = wrapper.find(ScatterPlot).prop('data');
-    expect(data[0].rootSpanName).toBe('Unknown');
-    expect(data[0].services).toEqual([]);
+    render(
+      <SearchResults
+        {...baseProps}
+        traces={[
+          {
+            traceID: 'no-spans',
+            traceName: 'Empty Trace',
+            startTime: 0,
+            duration: 1,
+            processes: {},
+            spans: [],
+          },
+        ]}
+      />
+    );
+    const data = ScatterPlot.mock.calls[0][0].data[0];
+    expect(data.rootSpanName).toBe('Unknown');
+    expect(data.services).toEqual([]);
   });
 
   it('handles trace with no services property', () => {
-    wrapper.setProps({
-      traces: [
-        {
-          traceID: 'no-services',
-          traceName: 'No Services',
-          startTime: 0,
-          duration: 1,
-          processes: {},
-          spans: [
-            {
-              process: { serviceName: 'test-service' },
-              operationName: 'test-operation',
-              tags: [],
-            },
-          ],
-        },
-      ],
-    });
-    const data = wrapper.find(ScatterPlot).prop('data');
-    expect(data[0].services).toEqual([]);
-    expect(data[0].rootSpanName).toBe('test-operation');
+    render(
+      <SearchResults
+        {...baseProps}
+        traces={[
+          {
+            traceID: 'no-services',
+            traceName: 'No Services',
+            startTime: 0,
+            duration: 1,
+            processes: {},
+            spans: [
+              {
+                process: { serviceName: 'test-service' },
+                operationName: 'test-operation',
+                tags: [],
+              },
+            ],
+          },
+        ]}
+      />
+    );
+    const data = ScatterPlot.mock.calls[0][0].data[0];
+    expect(data.services).toEqual([]);
+    expect(data.rootSpanName).toBe('op-A');
   });
 
   describe('search finished with results', () => {
@@ -222,10 +242,10 @@ describe('<SearchResults>', () => {
 
     it('deep links traces', () => {
       const uiFind = 'ui-find';
-      const spanLinks = { [baseTraces[0].traceID]: uiFind };
+      const spanLinks = { [baseTraces[0].traceID]: 'foobar' };
       render(<SearchResults {...baseProps} spanLinks={spanLinks} />);
       const [first, second] = ResultItem.mock.calls;
-      expect(first[0].linkTo.search).toBe(`uiFind=${uiFind}`);
+      expect(first[0].linkTo.search).toBe('uiFind=foobar');
       expect(second[0].linkTo.search).toBeUndefined();
     });
 
@@ -313,7 +333,10 @@ describe('<SearchResults>', () => {
       });
 
       it('does not show DownloadResults when view is ddg', () => {
-        render(<SearchResults {...baseProps} location={{ search: '?view=ddg' }} />);
+        const { rerender } = render(<SearchResults {...baseProps} location={{ search: '?view=traces' }} />);
+        expect(screen.getByTestId('download')).toBeInTheDocument();
+
+        rerender(<SearchResults {...baseProps} location={{ search: '?view=ddg' }} />);
         expect(screen.queryByTestId('download')).not.toBeInTheDocument();
       });
 
