@@ -59,7 +59,7 @@ export default function processDeprecation(config: object, deprecation: IDepreca
           `The value at "${formerKey}" is being ignored in favor of the value at "${currentKey}"`
         );
       }
-      // eslint-disable-next-line no-console
+
       console.warn(warnings.join('\n'));
     }
   }

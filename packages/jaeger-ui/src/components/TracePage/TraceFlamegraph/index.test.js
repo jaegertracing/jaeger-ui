@@ -24,7 +24,7 @@ jest.mock('@pyroscope/flamegraph', () => {
   const originalModule = jest.requireActual('@pyroscope/flamegraph');
   return {
     ...originalModule, // Keep original convertJaegerTraceToProfile
-    // eslint-disable-next-line react/prop-types
+
     FlamegraphRenderer: jest.fn(({ profile }) => (
       <div data-testid="flamegraph-renderer">
         {profile ? `Profile Loaded - Units: ${profile.metadata?.units}` : 'No Profile Data'}
@@ -34,7 +34,7 @@ jest.mock('@pyroscope/flamegraph', () => {
 });
 
 // Re-import FlamegraphRenderer after mocking
-// eslint-disable-next-line import/order
+
 const { FlamegraphRenderer } = require('@pyroscope/flamegraph');
 
 const profile = convertJaegerTraceToProfile(testTrace.data);

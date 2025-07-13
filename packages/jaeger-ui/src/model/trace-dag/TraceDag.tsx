@@ -25,7 +25,6 @@ export default class TraceDag<TData extends { [k: string]: unknown }> {
 
     function addDenseSpan(denseSpan: TDenseSpan | undefined, parentNodeID: NodeID | null) {
       if (!denseSpan) {
-        // eslint-disable-next-line no-console
         console.warn(`Missing dense span`);
         return;
       }

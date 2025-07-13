@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 // Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");

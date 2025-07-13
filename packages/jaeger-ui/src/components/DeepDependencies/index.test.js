@@ -49,7 +49,6 @@ jest.mock('./SidePanel', () => {
 
 jest.mock('../common/ErrorMessage', () => {
   return function MockErrorMessage(props) {
-    // eslint-disable-next-line react/no-unknown-property
     return <div data-testid="error-message" error={JSON.stringify(props.error)} />;
   };
 });
@@ -105,7 +104,7 @@ describe('DeepDependencyGraphPage', () => {
         getDerivedViewModifiers: () => ({ edges: new Map(), vertices: new Map() }),
       },
     };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const { operation: _o, ...urlStateWithoutOp } = props.urlState;
     const ddgPageImpl = new DeepDependencyGraphPageImpl(props);
     const ddgWithoutGraph = new DeepDependencyGraphPageImpl(propsWithoutGraph);
@@ -118,19 +117,19 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('fetches services if services are not provided', () => {
-        new DeepDependencyGraphPageImpl({ ...props, services: [] }); // eslint-disable-line no-new
+        new DeepDependencyGraphPageImpl({ ...props, services: [] });
         expect(props.fetchServices).not.toHaveBeenCalled();
-        new DeepDependencyGraphPageImpl(props); // eslint-disable-line no-new
+        new DeepDependencyGraphPageImpl(props);
         expect(props.fetchServices).toHaveBeenCalledTimes(1);
       });
 
       it('fetches operations if service is provided without operations', () => {
         const { service, ...urlState } = props.urlState;
-        new DeepDependencyGraphPageImpl({ ...props, urlState }); // eslint-disable-line no-new
+        new DeepDependencyGraphPageImpl({ ...props, urlState });
         expect(props.fetchServiceServerOps).not.toHaveBeenCalled();
-        new DeepDependencyGraphPageImpl({ ...props, serverOpsForService: { [service]: [] } }); // eslint-disable-line no-new
+        new DeepDependencyGraphPageImpl({ ...props, serverOpsForService: { [service]: [] } });
         expect(props.fetchServiceServerOps).not.toHaveBeenCalled();
-        new DeepDependencyGraphPageImpl(props); // eslint-disable-line no-new
+        new DeepDependencyGraphPageImpl(props);
         expect(props.fetchServiceServerOps).toHaveBeenLastCalledWith(service);
         expect(props.fetchServiceServerOps).toHaveBeenCalledTimes(1);
       });
@@ -173,7 +172,6 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('leaves unspecified, previously-undefined values as undefined', () => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { start: _s, end: _e, ...otherUrlState } = props.urlState;
         const otherProps = {
           ...props,
@@ -344,7 +342,6 @@ describe('DeepDependencyGraphPage', () => {
           const distance = -3;
           const prevVisEncoding = props.urlState.visEncoding;
 
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { graphState: _, ...graphStatelessProps } = props;
           const graphStateless = new DeepDependencyGraphPageImpl(graphStatelessProps);
           graphStateless.setDistance(distance, direction);
@@ -597,12 +594,10 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('no-ops if not given dispatch fn or graph or service', () => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { addViewModifier: _add, ...propsWithoutAdd } = props;
         const ddgWithoutAdd = new DeepDependencyGraphPageImpl(propsWithoutAdd);
         ddgWithoutAdd.setViewModifier(vertexKey, EViewModifier.emphasized, true);
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { removeViewModifierFromIndices: _remove, ...propsWithoutRemove } = props;
         const ddgWithoutRemove = new DeepDependencyGraphPageImpl(propsWithoutRemove);
         ddgWithoutRemove.setViewModifier(vertexKey, EViewModifier.emphasized, false);
@@ -612,7 +607,6 @@ describe('DeepDependencyGraphPage', () => {
         expect(props.removeViewModifierFromIndices).not.toHaveBeenCalled();
 
         const {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           urlState: { service: _service, ...urlStateWithoutService },
           ...propsWithoutService
         } = props;
@@ -872,7 +866,6 @@ describe('DeepDependencyGraphPage', () => {
         rerender(<TestComponent serverOpsForService={serverOpsForService} urlState={props.urlState} />);
         expect(screen.getByTestId('header')).toBeInTheDocument();
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { service: _, ...urlStateWithoutService } = props.urlState;
         rerender(
           <TestComponent serverOpsForService={serverOpsForService} urlState={urlStateWithoutService} />
@@ -984,7 +977,6 @@ describe('DeepDependencyGraphPage', () => {
       const result = mapStateToProps(reduxState, ownProps);
       expect(result.graphState).toEqual(graphState);
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { operation: _op, ...rest } = expected.urlState;
       getUrlStateSpy.mockReturnValue(rest);
       const resultWithoutOp = mapStateToProps(reduxState, ownProps);

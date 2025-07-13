@@ -77,7 +77,6 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       if (window.dataLayer !== undefined && Array.isArray(window.dataLayer)) {
         window.dataLayer.push(args);
         if (isDebugMode) {
-          // eslint-disable-next-line no-console
           console.log('[GA Tracking]', ...args);
         }
       }
@@ -170,9 +169,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
             gtag('set', {
               [dimension]: match[1],
             });
-          }
-          // eslint-disable-next-line no-console
-          else console.warn(`${cookie} not present in cookies, could not set dimension: ${dimension}`);
+          } else console.warn(`${cookie} not present in cookies, could not set dimension: ${dimension}`);
         }
       );
     }

@@ -21,7 +21,6 @@ import { Key as EKey } from 'ts-key-enum';
 import FilteredList from './index';
 
 jest.mock('react-window', () => {
-  // eslint-disable-next-line no-shadow
   const React = jest.requireActual('react');
   return {
     FixedSizeList: ({ children, itemData, itemCount, onItemsRendered, onScroll }) => {
@@ -57,7 +56,6 @@ jest.mock('react-window', () => {
 });
 
 jest.mock('./ListItem', () => {
-  // eslint-disable-next-line no-shadow
   const React = jest.requireActual('react');
   return ({ index, data }) => {
     const { options, setValue, selectedValue, addValues, removeValues, multi } = data;

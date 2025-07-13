@@ -22,7 +22,6 @@ import defaultConfig, { deprecations, mergeFields } from '../../constants/defaul
 function getUiConfig() {
   const getter = window.getJaegerUiConfig;
   if (typeof getter !== 'function') {
-    // eslint-disable-next-line no-console
     console.warn('Embedded config not available');
     return { ...defaultConfig };
   }

@@ -18,5 +18,4 @@ import TDagNode from './TDagNode';
 
 type TDagPlexusVertex<T extends { [k: string]: unknown }> = TVertex<{ data: TDagNode<T> }>;
 
-// eslint-disable-next-line no-undef
 export default TDagPlexusVertex;

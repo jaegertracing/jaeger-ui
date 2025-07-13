@@ -103,7 +103,6 @@ export function getDecoration(
         // istanbul ignore next : Unreachable error to appease TS, resolve made to exist at top at function
         else throw new Error('`resolve` unexpectedly undefined');
 
-        // eslint-disable-next-line no-multi-assign
         doneCount = pendingCount = pendingData = pendingPromise = resolve = undefined;
       }
     });

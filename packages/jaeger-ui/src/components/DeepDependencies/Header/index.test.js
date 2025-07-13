@@ -72,7 +72,6 @@ jest.mock('../../common/UiFindInput', () => {
 
     mockReact.useEffect(() => {
       if (props.forwardedRef) {
-        // eslint-disable-next-line no-param-reassign
         props.forwardedRef.current = {
           focus: () => {
             if (inputRef.current) {

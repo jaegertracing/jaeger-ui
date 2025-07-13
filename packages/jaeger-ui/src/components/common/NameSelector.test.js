@@ -23,9 +23,9 @@ import NameSelector, { DEFAULT_PLACEHOLDER } from './NameSelector';
 // We just need to test the interaction between NameSelector and FilteredList
 jest.mock('./FilteredList', () => {
   // Import React inside the factory function
-  // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires, no-shadow
+
   const React = require('react');
-  // eslint-disable-next-line react/display-name
+
   return React.forwardRef(({ cancel, options, value, setValue }, ref) => {
     React.useImperativeHandle(ref, () => ({
       focusInput: jest.fn(),

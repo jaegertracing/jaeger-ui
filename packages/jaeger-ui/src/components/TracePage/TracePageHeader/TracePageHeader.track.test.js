@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/first */
-
 jest.mock('../../../utils/tracking');
 
 import * as track from './TracePageHeader.track'; /* {
