@@ -35,16 +35,16 @@ jest.mock('./TraceDiffHeader', () => {
   return function MockTraceDiffHeader(props) {
     return (
       <div data-testid="trace-diff-header">
-        <button type='button' data-testid="diff-set-a-btn" onClick={() => props.diffSetA('newAValue')}>
+        <button type="button" data-testid="diff-set-a-btn" onClick={() => props.diffSetA('newAValue')}>
           Set A
         </button>
-        <button type='button' data-testid="diff-set-b-btn" onClick={() => props.diffSetB('newBValue')}>
+        <button type="button" data-testid="diff-set-b-btn" onClick={() => props.diffSetB('newBValue')}>
           Set B
         </button>
-        <button type='button' data-testid="diff-set-a-empty-btn" onClick={() => props.diffSetA('')}>
+        <button type="button" data-testid="diff-set-a-empty-btn" onClick={() => props.diffSetA('')}>
           Set A Empty
         </button>
-        <button type='button' data-testid="diff-set-b-empty-btn" onClick={() => props.diffSetB('')}>
+        <button type="button" data-testid="diff-set-b-empty-btn" onClick={() => props.diffSetB('')}>
           Set B Empty
         </button>
       </div>
@@ -297,19 +297,11 @@ describe('TraceDiff', () => {
 
       const ref = React.createRef();
 
-      const { rerender, container } = render(
-        <TraceDiffImpl {...defaultProps} ref={ref} />
-      );
+      const { rerender, container } = render(<TraceDiffImpl {...defaultProps} ref={ref} />);
 
       ref.current.headerWrapperRef(mockDiv);
 
-      rerender(
-        <TraceDiffImpl
-          {...defaultProps}
-          ref={ref}
-          cohort={[...defaultProps.cohort, 'new-id']}
-        />
-      );
+      rerender(<TraceDiffImpl {...defaultProps} ref={ref} cohort={[...defaultProps.cohort, 'new-id']} />);
 
       const graphWrapper = container.querySelector('.TraceDiff--graphWrapper');
       expect(graphWrapper).toHaveStyle(`top: ${expectedTop}px`);
@@ -452,7 +444,7 @@ describe('TraceDiff', () => {
     });
 
     it('correctly binds actions to dispatch', () => {
-      const dispatchMock = () => { };
+      const dispatchMock = () => {};
       const result = mapDispatchToProps(dispatchMock);
       expect(result.fetchMultipleTraces).toBe(fetchMultipleTracesMock);
       expect(result.forceState).toBe(forceStateMock);
