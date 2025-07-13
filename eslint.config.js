@@ -72,6 +72,7 @@ export default [
       'scripts/check-license.js',
       'scripts/run-depcheck.js',
       'scripts/generateDepcheckrcJaegerUI.js',
+      'scripts/generateDepcheckrcPlexus.js',
     ],
     languageOptions: {
       ecmaVersion: 'latest',
