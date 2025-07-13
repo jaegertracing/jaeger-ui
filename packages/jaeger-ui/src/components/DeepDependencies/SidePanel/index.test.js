@@ -64,9 +64,9 @@ describe('<SidePanel>', () => {
   });
 
   beforeEach(() => {
-    trackDecorationSelectedSpy.mockReset();
-    trackDecorationViewDetailsSpy.mockReset();
-    Modal.info.mockReset();
+    trackDecorationSelectedSpy.mockClear();
+    trackDecorationViewDetailsSpy.mockClear();
+    Modal.info.mockClear();
   });
 
   describe('constructor', () => {
@@ -78,20 +78,19 @@ describe('<SidePanel>', () => {
     });
 
     it('tracks initial selection', () => {
-      expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(0);
-
-      render(<SidePanel selectedDecoration={testID} />);
+      const { rerender } = render(<SidePanel selectedDecoration={testID} />);
       expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(1);
       expect(trackDecorationSelectedSpy).toHaveBeenLastCalledWith(testID);
-      expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(0);
+      expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(1);
+      expect(trackDecorationViewDetailsSpy).toHaveBeenLastCalledWith(undefined);
 
-      trackDecorationSelectedSpy.mockReset();
-      trackDecorationViewDetailsSpy.mockReset();
+      trackDecorationSelectedSpy.mockClear();
+      trackDecorationViewDetailsSpy.mockClear();
 
-      render(<SidePanel selectedVertex={testVertex} />);
+      rerender(<SidePanel selectedVertex={testVertex} />);
       expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(1);
       expect(trackDecorationViewDetailsSpy).toHaveBeenLastCalledWith(testVertex);
-      expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(0);
+      expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -154,10 +153,10 @@ describe('<SidePanel>', () => {
   describe('componentDidUpdate', () => {
     it('tracks change in vertex from absent to present', () => {
       const { rerender } = render(<SidePanel />);
-      expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(0);
+      expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(1);
 
       rerender(<SidePanel selectedVertex={testVertex} />);
-      expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(1);
+      expect(trackDecorationViewDetailsSpy).toHaveBeenCalledTimes(2);
       expect(trackDecorationViewDetailsSpy).toHaveBeenLastCalledWith(testVertex);
     });
 
@@ -214,25 +213,29 @@ describe('<SidePanel>', () => {
     const selectDecoration = jest.fn();
 
     beforeEach(() => {
-      selectDecoration.mockReset();
+      selectDecoration.mockClear();
     });
 
     it('selects decoration and tracks selection', () => {
-      render(<SidePanel selectDecoration={selectDecoration} />);
+      const { rerender } = render(<SidePanel selectDecoration={selectDecoration} />);
       expect(selectDecoration).toHaveBeenCalledTimes(0);
-      expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(0);
+      expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(1);
 
       const decorationBtn = screen.getByText(testAcronym);
       fireEvent.click(decorationBtn);
 
       expect(selectDecoration).toHaveBeenCalledTimes(1);
       expect(selectDecoration).toHaveBeenCalledWith(testID);
-      expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(1);
+
+      rerender(<SidePanel selectDecoration={selectDecoration} selectedDecoration={testID} />);
+      expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(2);
       expect(trackDecorationSelectedSpy).toHaveBeenLastCalledWith(testID);
     });
 
     it('clears decoration and tracks clear', () => {
-      render(<SidePanel selectDecoration={selectDecoration} selectedDecoration={testID} />);
+      const { rerender } = render(
+        <SidePanel selectDecoration={selectDecoration} selectedDecoration={testID} />
+      );
       expect(selectDecoration).toHaveBeenCalledTimes(0);
       expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(1);
 
@@ -241,6 +244,8 @@ describe('<SidePanel>', () => {
 
       expect(selectDecoration).toHaveBeenCalledTimes(1);
       expect(selectDecoration).toHaveBeenCalledWith(undefined);
+
+      rerender(<SidePanel selectDecoration={selectDecoration} selectedDecoration={undefined} />);
       expect(trackDecorationSelectedSpy).toHaveBeenCalledTimes(2);
       expect(trackDecorationSelectedSpy).toHaveBeenLastCalledWith(undefined);
     });
