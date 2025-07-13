@@ -34,9 +34,23 @@ import './ScatterPlot.css';
 
 export const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const numServices = data.services ? data.services.length : 0;
+
     return (
       <div className="scatter-plot-hint">
-        <h4>{payload[0].payload.name || FALLBACK_TRACE_NAME}</h4>
+        <h4>{data.name || FALLBACK_TRACE_NAME}</h4>
+        <div className="scatter-plot-hint-stats">
+          <div>
+            <strong>Spans:</strong> {data.size}
+          </div>
+          <div>
+            <strong>Services:</strong> {numServices}
+          </div>
+          <div>
+            <strong>Root Operation:</strong> {data.rootSpanName || 'Unknown'}
+          </div>
+        </div>
       </div>
     );
   }
@@ -182,6 +196,13 @@ const valueShape = PropTypes.shape({
   traceID: PropTypes.string,
   size: PropTypes.number,
   name: PropTypes.string,
+  services: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string,
+      numberOfSpans: PropTypes.number,
+    })
+  ),
+  rootSpanName: PropTypes.string,
 });
 
 ScatterPlot.propTypes = {

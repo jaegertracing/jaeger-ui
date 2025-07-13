@@ -175,6 +175,44 @@ describe('<MonitorATMServicesView>', () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it('handles null error rate values in metrics', () => {
+    const testMetrics = {
+      ...originInitialState,
+      serviceMetrics: {
+        service_latencies: serviceMetrics.service_latencies,
+        service_error_rate: {
+          metricPoints: [
+            { x: 1, y: null },
+            { x: 2, y: 0.25 },
+          ],
+          quantile: 0.5,
+          serviceName: 'cartservice',
+        },
+        service_call_rate: serviceMetrics.service_call_rate,
+      },
+      serviceOpsMetrics,
+      loading: false,
+      isATMActivated: true,
+    };
+
+    wrapper.setProps({
+      services: ['s1'],
+      selectedService: 's1',
+      metrics: testMetrics,
+    });
+
+    // Verify the error rate data transformation
+    const errorRateGraph = wrapper.find(ServiceGraph).find({ name: 'Error rate (%)' });
+    expect(errorRateGraph.prop('metricsData')).toEqual({
+      metricPoints: [
+        { x: 1, y: null },
+        { x: 2, y: 25 },
+      ],
+      quantile: 0.5,
+      serviceName: 'cartservice',
+    });
+  });
+
   it('render one service latency', () => {
     wrapper.setProps({
       metrics: {
