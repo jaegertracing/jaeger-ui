@@ -285,6 +285,35 @@ describe('TraceDiff', () => {
       window.ResizeObserver = originalResizeObserver;
       Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
     });
+
+    it('calls setGraphTopOffset and updates graphTopOffset state on header ref change', () => {
+      const mockHeight = 120;
+      const expectedTop = TOP_NAV_HEIGHT + mockHeight;
+
+      const mockDiv = document.createElement('div');
+      Object.defineProperty(mockDiv, 'clientHeight', {
+        value: mockHeight,
+      });
+
+      const ref = React.createRef();
+
+      const { rerender, container } = render(
+        <TraceDiffImpl {...defaultProps} ref={ref} />
+      );
+
+      ref.current.headerWrapperRef(mockDiv);
+
+      rerender(
+        <TraceDiffImpl
+          {...defaultProps}
+          ref={ref}
+          cohort={[...defaultProps.cohort, 'new-id']}
+        />
+      );
+
+      const graphWrapper = container.querySelector('.TraceDiff--graphWrapper');
+      expect(graphWrapper).toHaveStyle(`top: ${expectedTop}px`);
+    });
   });
 
   describe('mapStateToProps', () => {
@@ -423,7 +452,7 @@ describe('TraceDiff', () => {
     });
 
     it('correctly binds actions to dispatch', () => {
-      const dispatchMock = () => {};
+      const dispatchMock = () => { };
       const result = mapDispatchToProps(dispatchMock);
       expect(result.fetchMultipleTraces).toBe(fetchMultipleTracesMock);
       expect(result.forceState).toBe(forceStateMock);
