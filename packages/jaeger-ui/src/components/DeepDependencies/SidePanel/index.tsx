@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
+import React, { useMemo, useEffect, useCallback } from 'react';
 import { Modal, Table } from 'antd';
 import { IoExitOutline, IoInformationCircleOutline } from 'react-icons/io5';
 
@@ -31,36 +31,35 @@ type TProps = {
   selectedVertex?: TDdgVertex;
 };
 
-export default class SidePanel extends React.PureComponent<TProps> {
-  decorations: TPathAgnosticDecorationSchema[] | undefined;
+const SidePanel: React.FC<TProps> = props => {
+  const { clearSelected, selectDecoration, selectedDecoration, selectedVertex } = props;
 
-  constructor(props: TProps) {
-    super(props);
+  const decorations: TPathAgnosticDecorationSchema[] | undefined = useMemo(
+    () => getConfigValue('pathAgnosticDecorations'),
+    []
+  );
 
-    const { selectedDecoration, selectedVertex } = props;
-    if (selectedDecoration) track.trackDecorationSelected(selectedDecoration);
-    if (selectedVertex) track.trackDecorationViewDetails(selectedVertex);
+  useEffect(() => {
+    track.trackDecorationSelected(selectedDecoration);
+  }, [selectedDecoration]);
 
-    this.decorations = getConfigValue('pathAgnosticDecorations');
-  }
+  useEffect(() => {
+    track.trackDecorationViewDetails(selectedVertex);
+  }, [selectedVertex]);
 
-  componentDidUpdate(prevProps: TProps) {
-    if (prevProps.selectedVertex !== this.props.selectedVertex) {
-      track.trackDecorationViewDetails(this.props.selectedVertex);
-    }
-  }
-
-  clearSelected = () => {
+  const handleClearSelected = useCallback(() => {
     track.trackDecorationViewDetails();
-    this.props.clearSelected();
-  };
+    clearSelected();
+  }, [clearSelected]);
 
-  selectDecoration = (decoration?: string) => {
-    track.trackDecorationSelected(decoration);
-    this.props.selectDecoration(decoration);
-  };
+  const handleSelectDecoration = useCallback(
+    (decoration?: string) => {
+      selectDecoration(decoration);
+    },
+    [selectDecoration]
+  );
 
-  openInfoModal = () => {
+  const handleOpenInfoModal = useCallback(() => {
     Modal.info({
       content: (
         <Table
@@ -76,7 +75,7 @@ export default class SidePanel extends React.PureComponent<TProps> {
               title: 'Name',
             },
           ]}
-          dataSource={this.decorations}
+          dataSource={decorations}
           rowKey={(schema: TPathAgnosticDecorationSchema) => schema.id}
         />
       ),
@@ -84,59 +83,61 @@ export default class SidePanel extends React.PureComponent<TProps> {
       title: 'Decoration Options',
       width: '60vw',
     });
-  };
+  }, [decorations]);
 
-  render() {
-    if (!this.decorations) return null;
-
-    const { selectedDecoration, selectedVertex } = this.props;
-
-    const selectedSchema = this.decorations.find(({ id }) => id === selectedDecoration);
-
-    return (
-      <div className="Ddg--SidePanel">
-        <div className="Ddg--SidePanel--Btns">
-          <button
-            className={`Ddg--SidePanel--closeBtn ${selectedVertex && selectedSchema ? '' : 'is-hidden'}`}
-            type="button"
-            onClick={this.clearSelected}
-          >
-            <IoExitOutline />
-          </button>
-          <div className="Ddg--SidePanel--DecorationBtns">
-            {this.decorations.map(({ acronym, id }) => (
-              <button
-                key={id}
-                className={`Ddg--SidePanel--decorationBtn ${id === selectedDecoration ? 'is-selected' : ''}`}
-                type="button"
-                onClick={() => this.selectDecoration(id)}
-              >
-                {acronym}
-              </button>
-            ))}
-            <button
-              key="clearBtn"
-              className="Ddg--SidePanel--decorationBtn"
-              type="button"
-              onClick={() => this.selectDecoration()}
-            >
-              Clear
-            </button>
-          </div>
-          <button className="Ddg--SidePanel--infoBtn" onClick={this.openInfoModal} type="button">
-            <IoInformationCircleOutline />
-          </button>
-        </div>
-        <div className={`Ddg--SidePanel--Details ${selectedVertex && selectedSchema ? '.is-expanded' : ''}`}>
-          {selectedVertex && selectedSchema && (
-            <DetailsPanel
-              decorationSchema={selectedSchema}
-              operation={selectedVertex.operation}
-              service={selectedVertex.service}
-            />
-          )}
-        </div>
-      </div>
-    );
+  if (!decorations) {
+    return null;
   }
-}
+
+  const selectedSchema = decorations.find(
+    ({ id }: TPathAgnosticDecorationSchema) => id === selectedDecoration
+  );
+
+  return (
+    <div className="Ddg--SidePanel">
+      <div className="Ddg--SidePanel--Btns">
+        <button
+          className={`Ddg--SidePanel--closeBtn ${selectedVertex && selectedSchema ? '' : 'is-hidden'}`}
+          type="button"
+          onClick={handleClearSelected}
+        >
+          <IoExitOutline />
+        </button>
+        <div className="Ddg--SidePanel--DecorationBtns">
+          {decorations.map(({ acronym, id }: TPathAgnosticDecorationSchema) => (
+            <button
+              key={id}
+              className={`Ddg--SidePanel--decorationBtn ${id === selectedDecoration ? 'is-selected' : ''}`}
+              type="button"
+              onClick={() => handleSelectDecoration(id)}
+            >
+              {acronym}
+            </button>
+          ))}
+          <button
+            key="clearBtn"
+            className="Ddg--SidePanel--decorationBtn"
+            type="button"
+            onClick={() => handleSelectDecoration()}
+          >
+            Clear
+          </button>
+        </div>
+        <button className="Ddg--SidePanel--infoBtn" onClick={handleOpenInfoModal} type="button">
+          <IoInformationCircleOutline />
+        </button>
+      </div>
+      <div className={`Ddg--SidePanel--Details ${selectedVertex && selectedSchema ? '.is-expanded' : ''}`}>
+        {selectedVertex && selectedSchema && (
+          <DetailsPanel
+            decorationSchema={selectedSchema}
+            operation={selectedVertex.operation}
+            service={selectedVertex.service}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default React.memo(SidePanel);

@@ -81,6 +81,7 @@ type TProps = TDispatchProps &
 type TState = {
   childrenVisibility?: ECheckedStatus | null;
   parentVisibility?: ECheckedStatus | null;
+  shouldPositionTooltipBelow?: boolean;
 };
 
 export function getNodeRenderer({
@@ -145,6 +146,7 @@ export function measureNode() {
 export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TState> {
   state: TState = {};
   hoveredIndices: Set<number> = new Set();
+  private nodeRef = React.createRef<HTMLDivElement>();
 
   constructor(props: TProps) {
     super(props);
@@ -170,6 +172,17 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
       getDecoration(decorationID, service, typeof operation === 'string' ? operation : undefined);
     }
   }
+
+  private checkTooltipPosition = () => {
+    if (!this.nodeRef.current) return;
+    const header = document.querySelector('.DdgHeader--controlHeader');
+    if (!header) return;
+    const shouldPositionBelow =
+      this.nodeRef.current.getBoundingClientRect().top - 200 < header.getBoundingClientRect().bottom + 20;
+    if (this.state.shouldPositionTooltipBelow !== shouldPositionBelow) {
+      this.setState({ shouldPositionTooltipBelow: shouldPositionBelow });
+    }
+  };
 
   private focusPaths = () => {
     const { focusPathsThroughVertex, vertexKey } = this.props;
@@ -245,6 +258,7 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
     setViewModifier(visIndices, EViewModifier.Hovered, hovered);
 
     if (hovered) {
+      if (this.state.shouldPositionTooltipBelow === undefined) this.checkTooltipPosition();
       this.setState({
         childrenVisibility: getGenerationVisibility(vertexKey, EDirection.Downstream),
         parentVisibility: getGenerationVisibility(vertexKey, EDirection.Upstream),
@@ -327,7 +341,12 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
     ];
 
     return (
-      <div className="DdgNodeContent" onMouseOver={this.onMouseUx} onMouseOut={this.onMouseUx}>
+      <div
+        ref={this.nodeRef}
+        className="DdgNodeContent"
+        onMouseOver={this.onMouseUx}
+        onMouseOut={this.onMouseUx}
+      >
         {decorationProgressbar}
         <div
           className={cx('DdgNodeContent--core', {
@@ -367,7 +386,12 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
             )}
           </div>
         </div>
-        <ActionsMenu items={menuItems} className="DdgNodeContent--actionsWrapper" />
+        <ActionsMenu
+          items={menuItems}
+          className={cx('DdgNodeContent--actionsWrapper', {
+            'DdgNodeContent--actionsWrapper-below': this.state.shouldPositionTooltipBelow,
+          })}
+        />
       </div>
     );
   }

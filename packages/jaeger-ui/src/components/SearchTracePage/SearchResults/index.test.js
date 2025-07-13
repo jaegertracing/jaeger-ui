@@ -167,6 +167,48 @@ describe('<SearchResults>', () => {
     expect(goTo).toHaveBeenCalledWith('a');
   });
 
+  it('handles trace with no spans', () => {
+    wrapper.setProps({
+      traces: [
+        {
+          traceID: 'no-spans',
+          traceName: 'Empty Trace',
+          startTime: 0,
+          duration: 1,
+          processes: {},
+          spans: [],
+        },
+      ],
+    });
+    const data = wrapper.find(ScatterPlot).prop('data');
+    expect(data[0].rootSpanName).toBe('Unknown');
+    expect(data[0].services).toEqual([]);
+  });
+
+  it('handles trace with no services property', () => {
+    wrapper.setProps({
+      traces: [
+        {
+          traceID: 'no-services',
+          traceName: 'No Services',
+          startTime: 0,
+          duration: 1,
+          processes: {},
+          spans: [
+            {
+              process: { serviceName: 'test-service' },
+              operationName: 'test-operation',
+              tags: [],
+            },
+          ],
+        },
+      ],
+    });
+    const data = wrapper.find(ScatterPlot).prop('data');
+    expect(data[0].services).toEqual([]);
+    expect(data[0].rootSpanName).toBe('test-operation');
+  });
+
   describe('search finished with results', () => {
     it('shows a scatter plot', () => {
       render(<SearchResults {...baseProps} />);
