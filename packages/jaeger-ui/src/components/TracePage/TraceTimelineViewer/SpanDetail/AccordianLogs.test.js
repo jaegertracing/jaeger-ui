@@ -68,6 +68,8 @@ describe('<AccordianLogs>', () => {
   ];
 
   const defaultTotalCount = logs.length;
+  const defaultInRangeLogs = [logs[0]];
+  const defaultInRangeLogsCount = defaultInRangeLogs.length;
   const defaultProps = {
     logs,
     isOpen: false,
@@ -98,7 +100,7 @@ describe('<AccordianLogs>', () => {
   it('shows log items when expanded', () => {
     render(<AccordianLogs {...defaultProps} isOpen />);
     const items = screen.getAllByTestId('log-item');
-    expect(items.length).toBe(3); // Shows first 3 logs by default
+    expect(items.length).toBe(defaultInRangeLogsCount);
   });
 
   it('calls onItemToggle when a log item is toggled', () => {
@@ -107,14 +109,16 @@ describe('<AccordianLogs>', () => {
 
     items.forEach((item, index) => {
       fireEvent.click(item);
-      expect(defaultProps.onItemToggle).toHaveBeenCalledWith(logs[index]); // First 3 logs
+      expect(defaultProps.onItemToggle).toHaveBeenCalledWith(defaultInRangeLogs[index]);
     });
   });
 
   it('propagates isOpen to log items correctly', () => {
     render(<AccordianLogs {...defaultProps} isOpen />);
-    expect(mockAccordianKeyValues).toHaveBeenCalledTimes(3); // First 3 logs
-    expect(mockAccordianKeyValues.mock.calls[0][0].isOpen).toBe(defaultProps.openedItems.has(logs[0]));
+    expect(mockAccordianKeyValues).toHaveBeenCalledTimes(defaultInRangeLogsCount);
+    expect(mockAccordianKeyValues.mock.calls[0][0].isOpen).toBe(
+      defaultProps.openedItems.has(defaultInRangeLogs[0])
+    );
   });
 
   it('calls onToggle when the header is clicked', () => {
@@ -131,7 +135,7 @@ describe('<AccordianLogs>', () => {
     expect(header).toBeInTheDocument();
     fireEvent.click(header);
     expect(propsWithoutInteractive.onToggle).toHaveBeenCalledTimes(1);
-    expect(mockAccordianKeyValues).toHaveBeenCalledTimes(3); // First 3 logs
+    expect(mockAccordianKeyValues).toHaveBeenCalledTimes(defaultInRangeLogsCount);
 
     mockAccordianKeyValues.mock.calls.forEach(callArgs => {
       const childProps = callArgs[0];

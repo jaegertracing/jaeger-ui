@@ -46,6 +46,8 @@ export default function AccordianLogs({
   onItemToggle,
   onToggle,
   timestamp,
+  currentViewRangeTime,
+  traceDuration,
 }: AccordianLogsProps) {
   let arrow: React.ReactNode | null = null;
   let HeaderComponent: 'span' | 'a' = 'span';
@@ -60,11 +62,17 @@ export default function AccordianLogs({
     }
   }, [hasAutoOpened, isOpen, logs, onToggle]);
 
+  const inRangeLogs = React.useMemo(() => {
+    const viewStartAbsolute = timestamp + currentViewRangeTime[0] * traceDuration;
+    const viewEndAbsolute = timestamp + currentViewRangeTime[1] * traceDuration;
+    return logs.filter(log => log.timestamp >= viewStartAbsolute && log.timestamp <= viewEndAbsolute);
+  }, [logs, timestamp, currentViewRangeTime, traceDuration]);
+
   const autoExpandCount = 3;
-  const logsToDisplay = expandedOnce ? logs : logs.slice(0, autoExpandCount);
+  const logsToDisplay = expandedOnce ? inRangeLogs : inRangeLogs.slice(0, autoExpandCount);
 
   const totalCount = logs.length;
-  const hasMoreLogs = logs.length > autoExpandCount && !expandedOnce;
+  const hasMoreLogs = inRangeLogs.length > autoExpandCount && !expandedOnce;
 
   const title = `Logs (${totalCount})`;
   let showMoreLink: React.ReactNode = null;
