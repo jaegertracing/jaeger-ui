@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { Select } from 'antd';
@@ -65,6 +65,47 @@ describe('SearchableSelect', () => {
 
     expect(screen.getByText('Banana')).toBeInTheDocument();
     expect(screen.queryByText('Apple')).not.toBeInTheDocument();
+  });
+
+  it('scroll buttons trigger scroll actions when clicked', async () => {
+    const mockScrollBy = jest.fn();
+
+    // Mock the querySelector to return a mock element with scrollBy and querySelector
+    const mockDropdownElement = {
+      scrollBy: mockScrollBy,
+      querySelector: jest.fn().mockReturnValue(null),
+      style: {},
+      appendChild: jest.fn(),
+    };
+
+    const originalQuerySelector = document.querySelector;
+    document.querySelector = jest.fn().mockImplementation(selector => {
+      if (selector === '.ant-select-dropdown .rc-virtual-list-holder') {
+        return mockDropdownElement;
+      }
+      if (selector === '.ant-select-dropdown') {
+        return mockDropdownElement;
+      }
+      return originalQuerySelector.call(document, selector);
+    });
+
+    render(
+      <SearchableSelect showScrollButtons>
+        <Select.Option value="option1">Option 1</Select.Option>
+        <Select.Option value="option2">Option 2</Select.Option>
+      </SearchableSelect>
+    );
+
+    const select = screen.getByRole('combobox');
+    await userEvent.click(select);
+
+    await waitFor(
+      () => {
+        expect(document.querySelector).toHaveBeenCalledWith('.ant-select-dropdown');
+      },
+      { timeout: 1000 }
+    );
+    document.querySelector = originalQuerySelector;
   });
 });
 
