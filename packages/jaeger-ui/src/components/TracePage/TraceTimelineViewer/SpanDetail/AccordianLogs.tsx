@@ -46,40 +46,43 @@ export default function AccordianLogs({
   onItemToggle,
   onToggle,
   timestamp,
-  currentViewRangeTime,
-  traceDuration,
 }: AccordianLogsProps) {
   let arrow: React.ReactNode | null = null;
   let HeaderComponent: 'span' | 'a' = 'span';
   let headerProps: object | null = null;
-  const [showOutOfRangeLogs, setShowOutOfRangeLogs] = React.useState(false);
+  const [hasAutoOpened, setHasAutoOpened] = React.useState(false);
+  const [expandedOnce, setExpandedOnce] = React.useState(false);
 
-  const inRangeLogs = React.useMemo(() => {
-    const viewStartAbsolute = timestamp + currentViewRangeTime[0] * traceDuration;
-    const viewEndAbsolute = timestamp + currentViewRangeTime[1] * traceDuration;
-    return logs.filter(log => log.timestamp >= viewStartAbsolute && log.timestamp <= viewEndAbsolute);
-  }, [logs, timestamp, currentViewRangeTime, traceDuration]);
+  React.useEffect(() => {
+    if (!hasAutoOpened && !isOpen && logs && logs.length > 0 && onToggle) {
+      setHasAutoOpened(true);
+      onToggle();
+    }
+  }, [hasAutoOpened, isOpen, logs, onToggle]);
 
-  const logsToDisplay = showOutOfRangeLogs ? logs : inRangeLogs;
-  const displayedCount = logsToDisplay.length;
-  const inRangeCount = inRangeLogs.length;
+  const autoExpandCount = 3;
+  const logsToDisplay = expandedOnce ? logs : logs.slice(0, autoExpandCount);
+
   const totalCount = logs.length;
+  const hasMoreLogs = logs.length > autoExpandCount && !expandedOnce;
 
-  let title = `Logs (${displayedCount})`;
-  let toggleLink: React.ReactNode = null;
+  const title = `Logs (${totalCount})`;
+  let showMoreLink: React.ReactNode = null;
 
-  if (!showOutOfRangeLogs && inRangeCount < totalCount) {
-    title = `Logs (${inRangeCount} of ${totalCount})`;
-    toggleLink = (
-      <button type="button" className="AccordianLogs--toggle" onClick={() => setShowOutOfRangeLogs(true)}>
-        show all
-      </button>
-    );
-  } else if (showOutOfRangeLogs && inRangeCount < totalCount) {
-    title = `Logs (${totalCount})`;
-    toggleLink = (
-      <button type="button" className="AccordianLogs--toggle" onClick={() => setShowOutOfRangeLogs(false)}>
-        show in range
+  if (hasMoreLogs) {
+    showMoreLink = (
+      <button
+        type="button"
+        className="AccordianLogs--toggle"
+        onClick={() => {
+          setExpandedOnce(true);
+          if (onToggle) {
+            onToggle();
+            setTimeout(() => onToggle(), 0);
+          }
+        }}
+      >
+        Show more
       </button>
     );
   }
@@ -101,7 +104,7 @@ export default function AccordianLogs({
   return (
     <div className="AccordianLogs">
       <HeaderComponent className={cx('AccordianLogs--header', { 'is-open': isOpen })} {...headerProps}>
-        {arrow} <strong>{title}</strong> {toggleLink}
+        {arrow} <strong>{title}</strong>
       </HeaderComponent>
       {isOpen && (
         <div className="AccordianLogs--content">
@@ -120,6 +123,7 @@ export default function AccordianLogs({
               onToggle={interactive && onItemToggle ? () => onItemToggle(log) : null}
             />
           ))}
+          {showMoreLink && <div className="AccordianLogs--showMore">{showMoreLink}</div>}
           <small className="AccordianLogs--footer">
             Log timestamps are relative to the start time of the full trace.
           </small>

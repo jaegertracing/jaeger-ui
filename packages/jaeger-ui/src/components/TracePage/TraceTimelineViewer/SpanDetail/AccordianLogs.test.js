@@ -44,10 +44,29 @@ describe('<AccordianLogs>', () => {
         { key: 'more', value: 'stuff' },
       ],
     },
+    {
+      timestamp: 30,
+      fields: [
+        { key: 'message', value: 'third log message' },
+        { key: 'data', value: 'value' },
+      ],
+    },
+    {
+      timestamp: 40,
+      fields: [
+        { key: 'message', value: 'fourth log message' },
+        { key: 'extra', value: 'info' },
+      ],
+    },
+    {
+      timestamp: 50,
+      fields: [
+        { key: 'message', value: 'fifth log message' },
+        { key: 'final', value: 'data' },
+      ],
+    },
   ];
 
-  const defaultInRangeLogs = [logs[0]];
-  const defaultInRangeLogsCount = defaultInRangeLogs.length;
   const defaultTotalCount = logs.length;
   const defaultProps = {
     logs,
@@ -68,8 +87,7 @@ describe('<AccordianLogs>', () => {
   it('renders without crashing', () => {
     render(<AccordianLogs {...defaultProps} />);
     const header = screen.getByRole('switch');
-    expect(header).toHaveTextContent(`Logs (${defaultInRangeLogsCount} of ${defaultTotalCount})`);
-    expect(screen.getByRole('button', { name: /show all/i })).toBeInTheDocument();
+    expect(header).toHaveTextContent(`Logs (${defaultTotalCount})`);
   });
 
   it('hides log items when not expanded', () => {
@@ -80,7 +98,7 @@ describe('<AccordianLogs>', () => {
   it('shows log items when expanded', () => {
     render(<AccordianLogs {...defaultProps} isOpen />);
     const items = screen.getAllByTestId('log-item');
-    expect(items.length).toBe(defaultInRangeLogsCount);
+    expect(items.length).toBe(3); // Shows first 3 logs by default
   });
 
   it('calls onItemToggle when a log item is toggled', () => {
@@ -89,43 +107,20 @@ describe('<AccordianLogs>', () => {
 
     items.forEach((item, index) => {
       fireEvent.click(item);
-      expect(defaultProps.onItemToggle).toHaveBeenCalledWith(defaultInRangeLogs[index]);
+      expect(defaultProps.onItemToggle).toHaveBeenCalledWith(logs[index]); // First 3 logs
     });
   });
 
   it('propagates isOpen to log items correctly', () => {
     render(<AccordianLogs {...defaultProps} isOpen />);
-    expect(mockAccordianKeyValues).toHaveBeenCalledTimes(defaultInRangeLogsCount);
-    expect(mockAccordianKeyValues.mock.calls[0][0].isOpen).toBe(
-      defaultProps.openedItems.has(defaultInRangeLogs[0])
-    );
+    expect(mockAccordianKeyValues).toHaveBeenCalledTimes(3); // First 3 logs
+    expect(mockAccordianKeyValues.mock.calls[0][0].isOpen).toBe(defaultProps.openedItems.has(logs[0]));
   });
 
   it('calls onToggle when the header is clicked', () => {
     render(<AccordianLogs {...defaultProps} />);
     fireEvent.click(screen.getByRole('switch'));
     expect(defaultProps.onToggle).toHaveBeenCalled();
-  });
-
-  it('shows all logs when "show all" is clicked', () => {
-    render(<AccordianLogs {...defaultProps} isOpen />);
-    fireEvent.click(screen.getByRole('button', { name: /show all/i }));
-    expect(screen.getByRole('switch')).toHaveTextContent(`Logs (${defaultTotalCount})`);
-    const items = screen.getAllByTestId('log-item');
-    expect(items.length).toBe(defaultTotalCount);
-    expect(screen.getByRole('button', { name: /show in range/i })).toBeInTheDocument();
-  });
-
-  it('displays in-range logs again when "show in range" is clicked', () => {
-    render(<AccordianLogs {...defaultProps} isOpen />);
-    fireEvent.click(screen.getByRole('button', { name: /show all/i }));
-    fireEvent.click(screen.getByRole('button', { name: /show in range/i }));
-    expect(screen.getByRole('switch')).toHaveTextContent(
-      `Logs (${defaultInRangeLogsCount} of ${defaultTotalCount})`
-    );
-    const items = screen.getAllByTestId('log-item');
-    expect(items.length).toBe(defaultInRangeLogsCount);
-    expect(screen.getByRole('button', { name: /show all/i })).toBeInTheDocument();
   });
 
   it('is interactive by default', () => {
@@ -136,12 +131,32 @@ describe('<AccordianLogs>', () => {
     expect(header).toBeInTheDocument();
     fireEvent.click(header);
     expect(propsWithoutInteractive.onToggle).toHaveBeenCalledTimes(1);
-    expect(mockAccordianKeyValues).toHaveBeenCalledTimes(defaultInRangeLogsCount);
+    expect(mockAccordianKeyValues).toHaveBeenCalledTimes(3); // First 3 logs
 
     mockAccordianKeyValues.mock.calls.forEach(callArgs => {
       const childProps = callArgs[0];
       expect(childProps.interactive).toBe(true);
       expect(childProps.onToggle).toBeInstanceOf(Function);
+    });
+  });
+
+  describe('Auto-expand functionality', () => {
+    const propsWithManyLogs = {
+      ...defaultProps,
+      logs,
+      currentViewRangeTime: [0.0, 1.0],
+    };
+
+    it('shows first 3 logs initially, then all logs after "show more" is clicked', () => {
+      render(<AccordianLogs {...propsWithManyLogs} isOpen />);
+
+      expect(screen.getAllByTestId('log-item').length).toBe(3);
+      expect(screen.getByRole('button', { name: /show more/i })).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /show more/i }));
+
+      expect(screen.getAllByTestId('log-item').length).toBe(5);
+      expect(screen.queryByRole('button', { name: /show more/i })).not.toBeInTheDocument();
     });
   });
 });
