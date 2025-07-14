@@ -67,9 +67,9 @@ describe('<AccordianLogs>', () => {
     },
   ];
 
-  const defaultTotalCount = logs.length;
   const defaultInRangeLogs = [logs[0]];
   const defaultInRangeLogsCount = defaultInRangeLogs.length;
+  const defaultTotalCount = logs.length;
   const defaultProps = {
     logs,
     isOpen: false,
