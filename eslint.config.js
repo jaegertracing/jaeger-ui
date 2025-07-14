@@ -183,6 +183,7 @@ export default [
       '**/index.tsbuildinfo',
       '**/index.d.ts',
       '**/layout.worker.bundled.js',
+      '**/demo/**',
     ],
   },
 
