@@ -192,6 +192,18 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       expect(newRegisterAccessors).toHaveBeenCalled();
     });
+    
+    it('calls setTrace when trace has changed', () => {
+      const prevProps = { ...mockProps };
+      const newTrace = { ...trace, traceID: 'new-id' };
+      const updatedProps = { ...mockProps, trace: newTrace };
+
+      const component = new VirtualizedTraceViewImpl(updatedProps);
+      component.listView = {};
+      component.componentDidUpdate(prevProps);
+
+      expect(mockProps.setTrace).toHaveBeenCalledWith(newTrace, mockProps.uiFind);
+    });
   });
 
   it('returns the current view range via getViewRange()', () => {
@@ -311,6 +323,10 @@ describe('<VirtualizedTraceViewImpl>', () => {
       verify(`${spans[1].spanID}--bar`, 1);
       verify(`${spans[4].spanID}--bar`, 2);
     });
+
+    it('returns -1 for unmatched span key', () => {
+      expect(instance.getIndexFromKey('nonexistent-span-id--bar')).toBe(-1);
+    });
   });
 
   describe('getRowHeight()', () => {
@@ -422,6 +438,18 @@ describe('<VirtualizedTraceViewImpl>', () => {
         expect(spanBarRow.props.noInstrumentedServer).not.toBeNull();
       });
     });
+
+    it('renderSpanBarRow returns null if trace is falsy', () => {
+      const component = new VirtualizedTraceViewImpl({ ...mockProps, trace: null });
+      const result = component.renderSpanBarRow(trace.spans[0], 0, 'key', {}, {});
+      expect(result).toBeNull();
+    });
+
+    it('renderSpanDetailRow returns null if detailState is missing', () => {
+      const component = new VirtualizedTraceViewImpl(mockProps);
+      const result = component.renderSpanDetailRow(trace.spans[0], 'key', {}, {});
+      expect(result).toBeNull();
+    });
   });
 
   describe('Critical Path rendering', () => {
@@ -451,6 +479,18 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       const instance = document.querySelector('.VirtualizedTraceView--spans');
       expect(instance).toBeInTheDocument();
+    });
+
+    it('returns [] from mergeChildrenCriticalPath when criticalPath is falsy', () => {
+      const spanID = trace.spans[0].spanID;
+      const result = VirtualizedTraceViewImpl.prototype.getCriticalPathSections.call(
+        { props: { ...mockProps, trace } },
+        true,
+        trace,
+        spanID,
+        undefined
+      );
+      expect(result).toEqual([]);
     });
   });
 
@@ -516,6 +556,13 @@ describe('<VirtualizedTraceViewImpl>', () => {
       });
 
       expect(focusUiFindMatchesMock).toHaveBeenLastCalledWith(trace, spanName, false);
+    });
+  });
+
+  describe('getAccessors()', () => {
+    it('throws when getAccessors is called before listView is set', () => {
+      const component = new VirtualizedTraceViewImpl(mockProps);
+      expect(() => component.getAccessors()).toThrow('ListView unavailable');
     });
   });
 
