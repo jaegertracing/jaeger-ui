@@ -72,7 +72,6 @@ describe('<DependencyGraph>', () => {
   let componentInstance;
 
   const renderWithRef = (additionalProps = {}) => {
-    // eslint-disable-next-line no-shadow
     const TestWrapper = React.forwardRef((props, ref) => (
       <DependencyGraph ref={ref} {...props} fetchDependencies={() => {}} {...additionalProps} />
     ));
@@ -157,7 +156,6 @@ describe('<DependencyGraph>', () => {
     });
 
     it('updates layout based on dependencies size', () => {
-      // eslint-disable-next-line no-shadow
       const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...props} fetchDependencies={() => {}} />
       ));
@@ -183,8 +181,7 @@ describe('<DependencyGraph>', () => {
       expect(largeRef.current.state.selectedLayout).toBe('sfdp');
     });
 
-    it('updates layout based on dependencies size', () => {
-      // eslint-disable-next-line no-shadow
+    it('updates layout based on dependencies size with state tracking', () => {
       const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...props} fetchDependencies={() => {}} />
       ));
@@ -274,7 +271,7 @@ describe('<DependencyGraph>', () => {
           child: `child-${i}`,
           parent: 'parent',
         }));
-      // eslint-disable-next-line no-shadow
+
       const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...props} fetchDependencies={() => {}} />
       ));
@@ -328,7 +325,6 @@ describe('<DependencyGraph>', () => {
       const uiFindTerm = 'service';
       const expectedMatchCount = 3;
 
-      // eslint-disable-next-line no-shadow
       const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...props} fetchDependencies={() => {}} />
       ));
@@ -392,7 +388,6 @@ describe('<DependencyGraph>', () => {
     it('should include direct children when parent is selected', () => {
       const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
 
-      // eslint-disable-next-line no-shadow
       const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
       ));
@@ -410,7 +405,6 @@ describe('<DependencyGraph>', () => {
     it('should include direct parents when child is selected', () => {
       const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
 
-      // eslint-disable-next-line no-shadow
       const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
       ));
@@ -431,7 +425,6 @@ describe('<DependencyGraph>', () => {
         { parent: 'B', child: 'A', callCount: 1 },
       ];
 
-      // eslint-disable-next-line no-shadow
       const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
       ));
@@ -454,7 +447,6 @@ describe('<DependencyGraph>', () => {
         { parent: 'B', child: 'A', callCount: 1 },
       ];
 
-      // eslint-disable-next-line no-shadow
       const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
       ));
@@ -477,7 +469,6 @@ describe('<DependencyGraph>', () => {
         { parent: 'C', child: 'D', callCount: 1 },
       ];
 
-      // eslint-disable-next-line no-shadow
       const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...baseProps} dependencies={testDependencies} />
       ));

@@ -26,7 +26,7 @@ const sitePrefix = baseNode ? baseNode.href : `${global.location.origin}/`;
 
 // Configure the webpack publicPath to match the <base>:
 // https://webpack.js.org/guides/public-path/#on-the-fly
-// eslint-disable-next-line camelcase
+
 window.__webpack_public_path__ = sitePrefix;
 
 export default sitePrefix;

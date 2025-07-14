@@ -96,7 +96,7 @@ describe('<MonitorATMServicesView>', () => {
     expect(wrapper.find(LoadingIndicator).length).toBe(0);
   });
 
-  it('render one service latency', () => {
+  it('renders with one service latency', () => {
     wrapper.setProps({
       services: ['s1'],
       selectedService: undefined,
@@ -365,7 +365,6 @@ describe('<MonitorATMServicesView>', () => {
 });
 
 describe('<MonitorATMServicesView> on page switch', () => {
-  /* eslint-disable @typescript-eslint/no-unused-vars */
   let wrapper;
   const stateOnPageSwitch = {
     services: {

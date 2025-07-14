@@ -21,7 +21,6 @@ rafPolyfill();
 // Jest 28+ makes use of the TextEncoder API, which is not provided by JSDOM
 global.TextEncoder = TextEncoder;
 
-/* eslint-disable import/no-extraneous-dependencies */
 const Enzyme = require('enzyme');
 const EnzymeAdapter = require('@wojtekmaj/enzyme-adapter-react-17');
 const createSerializer = require('enzyme-to-json').createSerializer;

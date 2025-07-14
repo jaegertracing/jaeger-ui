@@ -30,7 +30,7 @@ const comparators: Record<string, (a: Trace, b: Trace) => number> = {
  * @param  {Trace[]} traces The `Trace` array to sort.
  * @param  {string} sortBy A sort specification, see ./order-by.js.
  */
-// eslint-disable-next-line import/prefer-default-export
+
 export function sortTraces(traces: Trace[], sortBy: string) {
   const comparator = comparators[sortBy] || comparators[LONGEST_FIRST];
   traces.sort(comparator);

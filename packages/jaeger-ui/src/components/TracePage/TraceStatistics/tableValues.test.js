@@ -472,7 +472,7 @@ describe('check self time', () => {
     expect(resultArray[4].selfTotal).toBe(1.67);
   });
 
-  it('spans among each other', () => {
+  it('spans among each other grouped', () => {
     let resultArray = getColumnValues('Service Name', transformedTraceSpanAmongEachOtheGrouped);
     resultArray = getColumnValuesSecondDropdown(
       resultArray,

@@ -17,9 +17,10 @@ declare const global: {
   location: Location;
 };
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 declare interface Window {
   // For setting the site-prefix
-  __webpack_public_path__: string; // eslint-disable-line camelcase
+  __webpack_public_path__: string;
   // For getting ui config
   getJaegerUiConfig?: () => Record<string, any>;
   getJaegerStorageCapabilities?: () => Record<string, any>;
@@ -41,4 +42,6 @@ declare module 'combokeys' {
 declare module 'react-helmet';
 declare module 'json-markup';
 declare module 'tween-functions';
-declare module '*.png' { export default '' as string; }
+declare module '*.png' {
+  export default '' as string;
+}

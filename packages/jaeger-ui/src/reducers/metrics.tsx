@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable camelcase */
-/* eslint-disable default-case */
-
 import { handleActions } from 'redux-actions';
 
 import { fetchAllServiceMetrics, fetchAggregatedServiceMetrics } from '../actions/jaeger-api';
@@ -169,7 +166,6 @@ function fetchOpsMetricsDone(
         };
       } = null;
 
-  // eslint-disable-next-line no-undef-init
   let serviceOpsMetrics: ServiceOpsMetrics[] | undefined = undefined;
 
   if (payload) {
