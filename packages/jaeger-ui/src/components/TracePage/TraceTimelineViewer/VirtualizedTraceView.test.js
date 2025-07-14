@@ -34,6 +34,12 @@ jest.mock('./ListView', () => {
 });
 
 describe('<VirtualizedTraceViewImpl>', () => {
+  let focusUiFindMatchesMock;
+  let mockProps;
+  let trace;
+  let criticalPath;
+  let instance;
+
   beforeEach(() => {
     trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
     criticalPath = memoizedTraceCriticalPath(trace);
@@ -71,14 +77,9 @@ describe('<VirtualizedTraceViewImpl>', () => {
       },
     };
 
+    // eslint-disable-next-line no-use-before-define
     instance = createTestInstance(mockProps);
   });
-  
-  let focusUiFindMatchesMock;
-  let mockProps;
-  let trace;
-  let criticalPath;
-  let instance;
 
   function expandRow(rowIndex) {
     const detailStates = new Map();
@@ -147,10 +148,11 @@ describe('<VirtualizedTraceViewImpl>', () => {
     render(<VirtualizedTraceViewImpl {...mockProps} />);
     expect(mockProps.setTrace).toHaveBeenCalledWith(trace, mockProps.uiFind);
 
+    const { rerender } = render(<VirtualizedTraceViewImpl {...mockProps} trace={trace} />);
     mockProps.setTrace.mockReset();
     const traceID = 'some-other-id';
     const _trace = { ...trace, traceID };
-    render(<VirtualizedTraceViewImpl {...mockProps} trace={_trace} />);
+    rerender(<VirtualizedTraceViewImpl {...mockProps} trace={_trace} />);
     expect(mockProps.setTrace).toHaveBeenCalledWith(_trace, mockProps.uiFind);
   });
 
