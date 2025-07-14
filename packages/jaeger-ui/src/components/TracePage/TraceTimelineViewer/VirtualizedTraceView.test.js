@@ -34,6 +34,46 @@ jest.mock('./ListView', () => {
 });
 
 describe('<VirtualizedTraceViewImpl>', () => {
+  beforeEach(() => {
+    trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
+    criticalPath = memoizedTraceCriticalPath(trace);
+    focusUiFindMatchesMock = jest.fn();
+
+    mockProps = {
+      childrenHiddenIDs: new Set(),
+      childrenToggle: jest.fn(),
+      clearShouldScrollToFirstUiFindMatch: jest.fn(),
+      currentViewRangeTime: [0.25, 0.75],
+      detailLogItemToggle: jest.fn(),
+      detailLogsToggle: jest.fn(),
+      detailProcessToggle: jest.fn(),
+      detailStates: new Map(),
+      detailTagsToggle: jest.fn(),
+      detailToggle: jest.fn(),
+      detailWarningsToggle: jest.fn(),
+      detailReferencesToggle: jest.fn(),
+      findMatchesIDs: null,
+      registerAccessors: jest.fn(),
+      scrollToFirstVisibleSpan: jest.fn(),
+      setSpanNameColumnWidth: jest.fn(),
+      focusUiFindMatches: focusUiFindMatchesMock,
+      setTrace: jest.fn(),
+      shouldScrollToFirstUiFindMatch: false,
+      spanNameColumnWidth: 0.5,
+      trace,
+      criticalPath,
+      uiFind: 'uiFind',
+      history: {
+        replace: jest.fn(),
+      },
+      location: {
+        search: null,
+      },
+    };
+
+    instance = createTestInstance(mockProps);
+  });
+  
   let focusUiFindMatchesMock;
   let mockProps;
   let trace;
@@ -87,46 +127,6 @@ describe('<VirtualizedTraceViewImpl>', () => {
       shouldComponentUpdate: virtualizedTraceView.shouldComponentUpdate,
     };
   }
-
-  beforeEach(() => {
-    trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
-    criticalPath = memoizedTraceCriticalPath(trace);
-    focusUiFindMatchesMock = jest.fn();
-
-    mockProps = {
-      childrenHiddenIDs: new Set(),
-      childrenToggle: jest.fn(),
-      clearShouldScrollToFirstUiFindMatch: jest.fn(),
-      currentViewRangeTime: [0.25, 0.75],
-      detailLogItemToggle: jest.fn(),
-      detailLogsToggle: jest.fn(),
-      detailProcessToggle: jest.fn(),
-      detailStates: new Map(),
-      detailTagsToggle: jest.fn(),
-      detailToggle: jest.fn(),
-      detailWarningsToggle: jest.fn(),
-      detailReferencesToggle: jest.fn(),
-      findMatchesIDs: null,
-      registerAccessors: jest.fn(),
-      scrollToFirstVisibleSpan: jest.fn(),
-      setSpanNameColumnWidth: jest.fn(),
-      focusUiFindMatches: focusUiFindMatchesMock,
-      setTrace: jest.fn(),
-      shouldScrollToFirstUiFindMatch: false,
-      spanNameColumnWidth: 0.5,
-      trace,
-      criticalPath,
-      uiFind: 'uiFind',
-      history: {
-        replace: jest.fn(),
-      },
-      location: {
-        search: null,
-      },
-    };
-
-    instance = createTestInstance(mockProps);
-  });
 
   it('renders without exploding', () => {
     const { container } = render(<VirtualizedTraceViewImpl {...mockProps} />);
