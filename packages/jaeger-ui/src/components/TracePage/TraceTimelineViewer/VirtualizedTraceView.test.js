@@ -84,7 +84,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       getRowStates: () => virtualizedTraceView.getRowStates(),
       focusSpan: virtualizedTraceView.focusSpan,
       linksGetter: virtualizedTraceView.linksGetter,
-      shouldComponentUpdate: virtualizedTraceView.shouldComponentUpdate
+      shouldComponentUpdate: virtualizedTraceView.shouldComponentUpdate,
     };
   }
 
@@ -192,7 +192,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       expect(newRegisterAccessors).toHaveBeenCalled();
     });
-    
+
     it('calls setTrace when trace has changed', () => {
       const prevProps = { ...mockProps };
       const newTrace = { ...trace, traceID: 'new-id' };
@@ -395,7 +395,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       instance = createTestInstance({
         ...mockProps,
         childrenHiddenIDs,
-        trace: altTrace
+        trace: altTrace,
       });
 
       const rowResult = instance.renderRow('some-key', {}, 0, {});
@@ -428,7 +428,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
         const altTrace = updateSpan(trace, leafSpanIndex, { tags: tag });
         instance = createTestInstance({
           ...mockProps,
-          trace: altTrace
+          trace: altTrace,
         });
 
         const rowResult = instance.renderRow('some-key', {}, leafSpanIndex, {});
@@ -462,8 +462,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
         />
       );
 
-      const instance = document.querySelector('.VirtualizedTraceView--spans');
-      expect(instance).toBeInTheDocument();
+      const localInstance = document.querySelector('.VirtualizedTraceView--spans');
+      expect(localInstance).toBeInTheDocument();
     });
 
     it('renders Critical Path segments merged if consecutive when row is collapsed', () => {
@@ -477,8 +477,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
         />
       );
 
-      const instance = document.querySelector('.VirtualizedTraceView--spans');
-      expect(instance).toBeInTheDocument();
+      const localInstance = document.querySelector('.VirtualizedTraceView--spans');
+      expect(localInstance).toBeInTheDocument();
     });
 
     it('returns [] from mergeChildrenCriticalPath when criticalPath is falsy', () => {
