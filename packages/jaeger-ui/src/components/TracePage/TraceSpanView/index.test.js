@@ -112,7 +112,6 @@ describe('<TraceSpanView>', () => {
     fireEvent.change(operationSelect, { target: { value: 'op2' } });
 
     expect(operationSelect.value).toBe('op2');
-
   });
 
   it('check handler', () => {
