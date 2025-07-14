@@ -34,6 +34,7 @@
   "include": [
     "src",
     // easier to add `./typings` here than deal with typeRoots, paths, etc.
+    "demo",
     "./typings"
   ]
 }

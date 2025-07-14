@@ -181,7 +181,7 @@ describe('<DependencyGraph>', () => {
       expect(largeRef.current.state.selectedLayout).toBe('sfdp');
     });
 
-    it('updates layout based on dependencies size', () => {
+    it('updates layout based on dependencies size with state tracking', () => {
       const TestWrapper = React.forwardRef((props, ref) => (
         <DependencyGraph ref={ref} {...props} fetchDependencies={() => {}} />
       ));

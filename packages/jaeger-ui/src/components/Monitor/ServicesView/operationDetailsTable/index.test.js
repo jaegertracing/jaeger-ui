@@ -72,7 +72,7 @@ describe('<OperationTableDetails>', () => {
   });
 });
 
-describe('<OperationTableDetails>', () => {
+describe('<OperationTableDetails> with data', () => {
   let originalProps;
 
   beforeEach(() => {

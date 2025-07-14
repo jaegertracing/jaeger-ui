@@ -74,7 +74,7 @@ describe('google analytics tracking', () => {
       ]);
     });
 
-    it('check init function (no cookies)', () => {
+    it('check init function (with cookies)', () => {
       document.cookie = 'page=1;';
       tracking.init();
       expect(window.dataLayer).toEqual([

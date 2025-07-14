@@ -92,7 +92,6 @@ describe('QualityMetrics', () => {
       },
     };
 
-    /* eslint-disable no-unused-vars */
     const { service: _s, ...propsWithoutService } = props;
     let fetchQualityMetricsSpy;
     let promise;

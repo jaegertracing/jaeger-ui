@@ -36,7 +36,7 @@ describe('findLastFinishingChildSpanId', () => {
     expect(lastFinishingChildSpan).toStrictEqual(sanitizedSpanMap.get('span-D'));
   });
 
-  it('Should find lfc of a span correctly', () => {
+  it('Should find lfc of a span correctly with test2', () => {
     const refinedSpanData = getChildOfSpans(test2.trace.spans);
     const spanMap = refinedSpanData.reduce((map, span) => {
       map.set(span.spanID, span);

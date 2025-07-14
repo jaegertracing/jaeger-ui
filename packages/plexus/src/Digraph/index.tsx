@@ -162,7 +162,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
   private renderLayers() {
     const { classNamePrefix, layers: topLayers } = this.props;
     const getClassName = this.makeClassNameFactory(classNamePrefix || '');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const { sizeVertices: _, ...partialGraphState } = this.state;
     const graphState = {
       ...partialGraphState,

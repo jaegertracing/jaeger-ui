@@ -213,7 +213,7 @@ describe('<MonitorATMServicesView>', () => {
     });
   });
 
-  it('render one service latency', () => {
+  it('render one service latency snapshot', () => {
     wrapper.setProps({
       metrics: {
         ...originInitialState,
@@ -365,7 +365,6 @@ describe('<MonitorATMServicesView>', () => {
 });
 
 describe('<MonitorATMServicesView> on page switch', () => {
-  /* eslint-disable no-unused-vars */
   let wrapper;
   const stateOnPageSwitch = {
     services: {

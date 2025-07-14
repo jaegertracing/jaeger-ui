@@ -174,7 +174,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             }
             return (
               // `i` is necessary in the key because row.key can repeat
-              // eslint-disable-next-line react/no-array-index-key
+
               <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
                 <td className="KeyValueTable--keyColumn">{row.key}</td>
                 <td className="KeyValueTable--valueColumn">
