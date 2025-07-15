@@ -72,12 +72,11 @@ export default function AccordianLogs({
   const logsToDisplay = expandedOnce ? inRangeLogs : inRangeLogs.slice(0, autoExpandCount);
 
   const totalCount = logs.length;
-  const hasMoreLogs = inRangeLogs.length > autoExpandCount && !expandedOnce;
 
   const title = `Logs (${totalCount})`;
   let showMoreLink: React.ReactNode = null;
 
-  if (hasMoreLogs) {
+  if (inRangeLogs.length > autoExpandCount && !expandedOnce) {
     showMoreLink = (
       <button
         type="button"
