@@ -13,6 +13,17 @@
 // limitations under the License.
 
 const babelJest = require('babel-jest').default;
+const importMetaTransform = function() {
+  return {
+    visitor: {
+      MetaProperty(path) {
+        if (path.node.meta.name === 'import' && path.node.property.name === 'meta') {
+          path.replaceWithSourceString('process');
+        }
+      }
+    }
+  };
+};
 
 const babelConfiguration = {
   presets: [
@@ -26,19 +37,20 @@ const babelConfiguration = {
   plugins: [
     'babel-plugin-inline-react-svg',
     ['@babel/plugin-transform-modules-commonjs', { allowTopLevelThis: true }],
-    function() {
-      return {
-        visitor: {
-          MetaProperty(path) {
-            if (path.node.meta.name === 'import' && path.node.property.name === 'meta') {
-              path.replaceWithSourceString('process');
-            }
-          }
-        }
-      };
-    }
+    importMetaTransform
+  ],
+}
+
+// Export configuration for depcheck (without the function)
+const babelConfigurationForDepcheck = {
+  presets: babelConfiguration.presets,
+  plugins: [
+    'babel-plugin-inline-react-svg',
+    ['@babel/plugin-transform-modules-commonjs', { allowTopLevelThis: true }],
+    // Note: custom function plugins are excluded for depcheck compatibility
   ],
 }
 
 module.exports = babelJest.createTransformer(babelConfiguration);
 module.exports.babelConfiguration = babelConfiguration;
+module.exports.babelConfigurationForDepcheck = babelConfigurationForDepcheck;
