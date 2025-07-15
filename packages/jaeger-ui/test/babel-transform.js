@@ -16,12 +16,29 @@ const babelJest = require('babel-jest').default;
 
 const babelConfiguration = {
   presets: [
-    ['@babel/preset-env', { targets: { node: 'current' } }],
+    ['@babel/preset-env', {
+      targets: { node: 'current' },
+      modules: 'commonjs'
+    }],
     ['@babel/preset-react', { development: !process.env.CI }],
     '@babel/preset-typescript',
   ],
-  plugins: ['babel-plugin-inline-react-svg'],
-};
+  plugins: [
+    'babel-plugin-inline-react-svg',
+    ['@babel/plugin-transform-modules-commonjs', { allowTopLevelThis: true }],
+    function() {
+      return {
+        visitor: {
+          MetaProperty(path) {
+            if (path.node.meta.name === 'import' && path.node.property.name === 'meta') {
+              path.replaceWithSourceString('process');
+            }
+          }
+        }
+      };
+    }
+  ],
+}
 
 module.exports = babelJest.createTransformer(babelConfiguration);
 module.exports.babelConfiguration = babelConfiguration;
