@@ -13,10 +13,20 @@
 // limitations under the License.
 
 const babelJest = require('babel-jest').default;
+
+// Custom Babel plugin to transform import.meta for Jest compatibility
+// Problem: Redux-actions 3.x is ESM-only and uses import.meta.NODE_ENV internally.
+// jest runs in CommonJS mode and cannot parse import.meta syntax, causing:
+// SyntaxError: Cannot use 'import.meta' outside a module
+// Solution: Transform import.meta to process during Jest transformation.
+// This allows ESM-only packages to work in Jest's CommonJS test environment.
+// Production code is unaffected, this only runs during testing.
 const importMetaTransform = function() {
   return {
     visitor: {
       MetaProperty(path) {
+        // Transform any occurrence of import.meta to process
+        // e.g., import.meta.NODE_ENV becomes process.NODE_ENV
         if (path.node.meta.name === 'import' && path.node.property.name === 'meta') {
           path.replaceWithSourceString('process');
         }

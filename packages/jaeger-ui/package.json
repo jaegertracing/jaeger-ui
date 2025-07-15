@@ -121,7 +121,7 @@
       "\\.([jt]sx?|svg)$": "./test/babel-transform.js"
     },
     "transformIgnorePatterns": [
-      "[/\\\\\\\\]node_modules[/\\\\\\\\](?!redux-actions).+\\\\.(js|jsx|mjs|cjs|ts|tsx)$"
+      "[/\\\\]node_modules[/\\\\](?!redux-actions|query-string|decode-uri-component|filter-obj|split-on-first|sinon|d3-.*).+\\.(js|jsx|mjs|cjs|ts|tsx)$"
     ],
     "testEnvironment": "jsdom",
     "snapshotFormat": {
