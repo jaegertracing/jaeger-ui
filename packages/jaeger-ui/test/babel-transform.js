@@ -25,8 +25,8 @@ const importMetaTransform = function() {
   return {
     visitor: {
       MetaProperty(path) {
-        // Transform any occurrence of import.meta to process
-        // e.g., import.meta.NODE_ENV becomes process.NODE_ENV
+        // Transform import.meta.NODE_ENV ==> process.NODE_ENV for Jest.
+        // https://github.com/jaegertracing/jaeger-ui/pull/2980
         if (path.node.meta.name === 'import' && path.node.property.name === 'meta') {
           path.replaceWithSourceString('process');
         }
