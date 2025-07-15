@@ -15,19 +15,24 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { babelConfiguration } from '../packages/jaeger-ui/test/babel-transform.js';
+import { babelConfigurationForDepcheck } from '../packages/jaeger-ui/test/babel-transform.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const packageNames = [
-  ...babelConfiguration.presets.flatMap(preset => {
+  ...babelConfigurationForDepcheck.presets.flatMap(preset => {
     if (Array.isArray(preset)) {
       return [preset[0]];
     }
     return [preset];
   }),
-  ...babelConfiguration.plugins,
+  ...babelConfigurationForDepcheck.plugins.flatMap(plugin => {
+    if (Array.isArray(plugin)) {
+      return [plugin[0]];
+    }
+    return [plugin];
+  }),
 ];
 
 const otherPackages = ['jest-environment-jsdom', '@types/jest'];
