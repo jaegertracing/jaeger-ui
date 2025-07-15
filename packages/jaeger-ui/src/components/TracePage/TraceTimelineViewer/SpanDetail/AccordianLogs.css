@@ -18,6 +18,8 @@ limitations under the License.
   border: 1px solid #d8d8d8;
   position: relative;
   margin-bottom: 0.25rem;
+  overflow: visible;
+  z-index: auto;
 }
 
 .AccordianLogs--header {
@@ -47,4 +49,18 @@ limitations under the License.
 
 .AccordianLogs--footer {
   color: #999;
+}
+
+.AccordianLogs--showMore {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  text-align: left;
+  clear: both;
+  display: block;
+}
+
+.AccordianLogs--toggle {
+  font-weight: bold;
+  font-style: normal;
+  padding: 0.25rem 0.5rem;
 }
