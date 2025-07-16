@@ -84,324 +84,185 @@ export const Placeholder = ({
   );
 };
 
-// Helper functions for testing
-export const createServiceGraphHelpers = (props: TProps) => {
-  const getData = (): ServiceMetricsObject[] => {
-    const { metricsData } = props;
+// Helper functions moved outside component
+const HEIGHT = 242;
+const COLORS: string[] = ['#869ADD', '#EA9977', '#DCA3D2'];
 
-    if (metricsData === null) {
-      return [];
-    }
-
-    const data = Array.isArray(metricsData) ? metricsData : [metricsData];
-    return data.sort((a, b) => b.quantile - a.quantile);
-  };
-
-  const getMetricsData = (): MetricDataPoint[] => {
-    const serviceMetricObjects = getData();
-    if (serviceMetricObjects.length === 0 || !serviceMetricObjects[0].metricPoints) {
-      return [];
-    }
-
-    const result = Array(serviceMetricObjects[0].metricPoints.length);
-    for (let i = 0; i < serviceMetricObjects[0].metricPoints.length; i++) {
-      result[i] = {
-        x: serviceMetricObjects[0].metricPoints[i].x,
-        ...serviceMetricObjects.reduce((acc: Record<string, number | null>, obj) => {
-          acc[obj.quantile.toString()] = obj.metricPoints[i].y;
-          return acc;
-        }, {}),
-      };
-    }
-    return result;
-  };
-
-  const calculateYDomain = (data: MetricDataPoint[]): number[] => {
-    if (!data || data.length === 0) return [0, 1];
-
-    let min = Infinity;
-    let max = -Infinity;
-
-    data.forEach(point => {
-      Object.entries(point).forEach(([key, value]) => {
-        if (key !== 'x' && value !== null) {
-          min = Math.min(min, value);
-          max = Math.max(max, value);
-        }
-      });
-    });
-
-    if (min === Infinity || max === -Infinity) return [0, 1];
-
-    const range = max - min;
-    const padding = range * 0.1;
-    min = Math.max(0, min - padding);
-    max += padding;
-
-    const magnitude = Math.floor(Math.log10(max - min));
-    const roundTo = 10 ** (magnitude - 1);
-
-    return [Math.floor(min / roundTo) * roundTo, Math.ceil(max / roundTo) * roundTo];
-  };
-
-  const calculateYAxisTicks = (domain: number[]): number[] => {
-    const [min, max] = domain;
-    const step = (max - min) / 4;
-    return Array.from({ length: 5 }, (_, i) => min + step * i);
-  };
-
-  const formatYAxisTick = (value: number): string => {
-    const { name, yAxisTickFormat } = props;
-
-    if (yAxisTickFormat) {
-      return String(yAxisTickFormat(value));
-    }
-
-    if (name.includes('Error rate')) {
-      return value.toFixed(0);
-    }
-
-    if (value === 0) return '0';
-    if (value < 0.01) return value.toExponential(2);
-    if (value < 1) return value.toFixed(3);
-    if (value < 10) return value.toFixed(2);
-    if (value < 100) return value.toFixed(1);
-    return value.toFixed(0);
-  };
-
-  const calculateNumericTicks = (xDomain: number[]): number[] => {
-    const [start, end] = xDomain;
-    const count = 7;
-    const step = (end - start) / (count - 1);
-
-    return Array.from({ length: count }, (_, i) => start + step * i);
-  };
-
-  const renderLines = (): JSX.Element[] => {
-    const { metricsData, color } = props;
-    const colors: string[] = ['#869ADD', '#EA9977', '#DCA3D2'];
-
-    if (metricsData) {
-      const graphs: JSX.Element[] = [];
-      let i = 0;
-
-      getData().forEach((line: ServiceMetricsObject, idx: number) => {
-        graphs.push(
-          <Area
-            key={i++}
-            type="linear"
-            dataKey={line.quantile.toString()}
-            stroke={color || colors[idx]}
-            strokeWidth={2}
-            fill={color || colors[idx]}
-            fillOpacity={0.1}
-            connectNulls={false}
-            isAnimationActive={false}
-          />
-        );
-      });
-
-      return graphs;
-    }
-
+const getData = (
+  metricsData: ServiceMetricsObject | ServiceMetricsObject[] | null
+): ServiceMetricsObject[] => {
+  if (metricsData === null) {
     return [];
-  };
+  }
 
-  const generatePlaceholder = (placeHolder: React.ReactNode): JSX.Element => {
-    const { width } = props;
-    const height = 242;
-
-    return (
-      <div
-        className="center-placeholder"
-        style={{
-          width,
-          height: height - 74,
-        }}
-      >
-        {placeHolder}
-      </div>
-    );
-  };
-
-  return {
-    getData,
-    getMetricsData,
-    calculateYDomain,
-    calculateYAxisTicks,
-    formatYAxisTick,
-    calculateNumericTicks,
-    renderLines,
-    generatePlaceholder,
-    colors: ['#869ADD', '#EA9977', '#DCA3D2'],
-    height: 242,
-    props,
-  };
+  const data = Array.isArray(metricsData) ? metricsData : [metricsData];
+  return data.sort((a, b) => b.quantile - a.quantile);
 };
 
-export const ServiceGraphImpl: React.FC<TProps> = props => {
-  const height = 242;
-  const colors: string[] = ['#869ADD', '#EA9977', '#DCA3D2'];
+const getMetricsData = (
+  metricsData: ServiceMetricsObject | ServiceMetricsObject[] | null
+): MetricDataPoint[] => {
+  const serviceMetricObjects = getData(metricsData);
+  if (serviceMetricObjects.length === 0 || !serviceMetricObjects[0].metricPoints) {
+    return [];
+  }
 
-  const getData = (): ServiceMetricsObject[] => {
-    const { metricsData } = props;
+  const result = Array(serviceMetricObjects[0].metricPoints.length);
+  for (let i = 0; i < serviceMetricObjects[0].metricPoints.length; i++) {
+    result[i] = {
+      x: serviceMetricObjects[0].metricPoints[i].x,
+      ...serviceMetricObjects.reduce((acc: Record<string, number | null>, obj) => {
+        acc[obj.quantile.toString()] = obj.metricPoints[i].y;
+        return acc;
+      }, {}),
+    };
+  }
+  return result;
+};
 
-    if (metricsData === null) {
-      return [];
-    }
+const calculateYDomain = (data: MetricDataPoint[]): number[] => {
+  if (!data || data.length === 0) return [0, 1];
 
-    const data = Array.isArray(metricsData) ? metricsData : [metricsData];
-    return data.sort((a, b) => b.quantile - a.quantile);
-  };
+  let min = Infinity;
+  let max = -Infinity;
 
-  const getMetricsData = (): MetricDataPoint[] => {
-    const serviceMetricObjects = getData();
-    if (serviceMetricObjects.length === 0 || !serviceMetricObjects[0].metricPoints) {
-      return [];
-    }
+  data.forEach(point => {
+    Object.entries(point).forEach(([key, value]) => {
+      if (key !== 'x' && value !== null) {
+        min = Math.min(min, value);
+        max = Math.max(max, value);
+      }
+    });
+  });
 
-    const result = Array(serviceMetricObjects[0].metricPoints.length);
-    for (let i = 0; i < serviceMetricObjects[0].metricPoints.length; i++) {
-      result[i] = {
-        x: serviceMetricObjects[0].metricPoints[i].x,
-        ...serviceMetricObjects.reduce((acc: Record<string, number | null>, obj) => {
-          acc[obj.quantile.toString()] = obj.metricPoints[i].y;
-          return acc;
-        }, {}),
-      };
-    }
-    return result;
-  };
+  if (min === Infinity || max === -Infinity) return [0, 1];
 
-  const calculateYDomain = (data: MetricDataPoint[]): number[] => {
-    if (!data || data.length === 0) return [0, 1];
+  const range = max - min;
+  const padding = range * 0.1;
+  min = Math.max(0, min - padding);
+  max += padding;
 
-    let min = Infinity;
-    let max = -Infinity;
+  const magnitude = Math.floor(Math.log10(max - min));
+  const roundTo = 10 ** (magnitude - 1);
 
-    data.forEach(point => {
-      Object.entries(point).forEach(([key, value]) => {
-        if (key !== 'x' && value !== null) {
-          min = Math.min(min, value);
-          max = Math.max(max, value);
-        }
-      });
+  return [Math.floor(min / roundTo) * roundTo, Math.ceil(max / roundTo) * roundTo];
+};
+
+const calculateYAxisTicks = (domain: number[]): number[] => {
+  const [min, max] = domain;
+  const step = (max - min) / 4;
+  return Array.from({ length: 5 }, (_, i) => min + step * i);
+};
+
+const formatYAxisTick = (value: number, name: string, yAxisTickFormat?: (v: number) => number): string => {
+  if (yAxisTickFormat) {
+    return String(yAxisTickFormat(value));
+  }
+
+  if (name.includes('Error rate')) {
+    return value.toFixed(0);
+  }
+
+  if (value === 0) return '0';
+  if (value < 0.01) return value.toExponential(2);
+  if (value < 1) return value.toFixed(3);
+  if (value < 10) return value.toFixed(2);
+  if (value < 100) return value.toFixed(1);
+  return value.toFixed(0);
+};
+
+const renderLines = (
+  metricsData: ServiceMetricsObject | ServiceMetricsObject[] | null,
+  color?: string
+): JSX.Element[] => {
+  if (metricsData) {
+    const graphs: JSX.Element[] = [];
+    let i = 0;
+
+    getData(metricsData).forEach((line: ServiceMetricsObject, idx: number) => {
+      graphs.push(
+        <Area
+          key={i++}
+          type="linear"
+          dataKey={line.quantile.toString()}
+          stroke={color || COLORS[idx]}
+          strokeWidth={2}
+          fill={color || COLORS[idx]}
+          fillOpacity={0.1}
+          connectNulls={false}
+          isAnimationActive={false}
+        />
+      );
     });
 
-    if (min === Infinity || max === -Infinity) return [0, 1];
+    return graphs;
+  }
 
-    const range = max - min;
-    const padding = range * 0.1;
-    min = Math.max(0, min - padding);
-    max += padding;
+  return [];
+};
 
-    const magnitude = Math.floor(Math.log10(max - min));
-    const roundTo = 10 ** (magnitude - 1);
+const generatePlaceholder = (placeHolder: React.ReactNode, width: number): JSX.Element => {
+  return (
+    <div
+      className="center-placeholder"
+      style={{
+        width,
+        height: HEIGHT - 74,
+      }}
+    >
+      {placeHolder}
+    </div>
+  );
+};
 
-    return [Math.floor(min / roundTo) * roundTo, Math.ceil(max / roundTo) * roundTo];
-  };
+const calculateNumericTicks = (xDomain: number[]): number[] => {
+  const [start, end] = xDomain;
+  const count = 7;
+  const step = (end - start) / (count - 1);
 
-  const calculateYAxisTicks = (domain: number[]): number[] => {
-    const [min, max] = domain;
-    const step = (max - min) / 4;
-    return Array.from({ length: 5 }, (_, i) => min + step * i);
-  };
+  return Array.from({ length: count }, (_, i) => start + step * i);
+};
 
-  const formatYAxisTick = (value: number): string => {
-    const { name, yAxisTickFormat } = props;
-
-    if (yAxisTickFormat) {
-      return String(yAxisTickFormat(value));
-    }
-
-    if (name.includes('Error rate')) {
-      return value.toFixed(0);
-    }
-
-    if (value === 0) return '0';
-    if (value < 0.01) return value.toExponential(2);
-    if (value < 1) return value.toFixed(3);
-    if (value < 10) return value.toFixed(2);
-    if (value < 100) return value.toFixed(1);
-    return value.toFixed(0);
-  };
-
-  const renderLines = (): JSX.Element[] => {
-    const { metricsData, color } = props;
-
-    if (metricsData) {
-      const graphs: JSX.Element[] = [];
-      let i = 0;
-
-      getData().forEach((line: ServiceMetricsObject, idx: number) => {
-        graphs.push(
-          <Area
-            key={i++}
-            type="linear"
-            dataKey={line.quantile.toString()}
-            stroke={color || colors[idx]}
-            strokeWidth={2}
-            fill={color || colors[idx]}
-            fillOpacity={0.1}
-            connectNulls={false}
-            isAnimationActive={false}
-          />
-        );
-      });
-
-      return graphs;
-    }
-
-    return [];
-  };
-
-  const calculateNumericTicks = (xDomain: number[]): number[] => {
-    const [start, end] = xDomain;
-    const count = 7;
-    const step = (end - start) / (count - 1);
-
-    return Array.from({ length: count }, (_, i) => start + step * i);
-  };
-
-  const {
-    width,
-    yDomain,
-    showHorizontalLines,
-    showLegend,
-    loading,
-    metricsData,
-    marginClassName,
-    name,
-    error,
-    xDomain,
-  } = props;
-
+export const ServiceGraphImpl: React.FC<TProps> = ({
+  width,
+  yDomain,
+  showHorizontalLines,
+  showLegend,
+  loading,
+  metricsData,
+  marginClassName,
+  name,
+  error,
+  xDomain,
+  color,
+  yAxisTickFormat,
+}) => {
   if (loading || !xDomain || xDomain[0] === undefined || xDomain[1] === undefined)
     return (
-      <Placeholder name={name} marginClassName={marginClassName} width={width} height={height}>
+      <Placeholder name={name} marginClassName={marginClassName} width={width} height={HEIGHT}>
         <LoadingIndicator centered />
       </Placeholder>
     );
 
   if (error)
     return (
-      <Placeholder name={name} marginClassName={marginClassName} width={width} height={height}>
+      <Placeholder name={name} marginClassName={marginClassName} width={width} height={HEIGHT}>
         Could not fetch data
       </Placeholder>
     );
 
   if (metricsData === null)
     return (
-      <Placeholder name={name} marginClassName={marginClassName} width={width} height={height}>
+      <Placeholder name={name} marginClassName={marginClassName} width={width} height={HEIGHT}>
         No Data
       </Placeholder>
     );
 
-  const data = getMetricsData();
+  const data = getMetricsData(metricsData);
   const effectiveYDomain = yDomain || calculateYDomain(data);
 
   const legendFormatter = (value: string): JSX.Element => {
-    const dataVal = getData();
+    const dataVal = getData(metricsData);
     const foundIdx = dataVal.findIndex(d => d.quantile.toString() === value);
     if (foundIdx === -1) return <span>N/A</span>;
     const quantile = dataVal[foundIdx]?.quantile;
@@ -409,9 +270,13 @@ export const ServiceGraphImpl: React.FC<TProps> = props => {
     return <span>{quantile * 100}th</span>;
   };
 
+  const formatYAxisTickCallback = (value: number): string => {
+    return formatYAxisTick(value, name, yAxisTickFormat);
+  };
+
   return (
-    <Placeholder name={name} marginClassName={marginClassName} width={width} height={height}>
-      <ResponsiveContainer width="100%" height={height}>
+    <Placeholder name={name} marginClassName={marginClassName} width={width} height={HEIGHT}>
+      <ResponsiveContainer width="100%" height={HEIGHT}>
         <AreaChart data={data} margin={{ top: 20, bottom: 55, left: 0, right: 0 }}>
           <XAxis
             domain={xDomain}
@@ -428,7 +293,7 @@ export const ServiceGraphImpl: React.FC<TProps> = props => {
           />
           <YAxis
             domain={effectiveYDomain}
-            tickFormatter={formatYAxisTick}
+            tickFormatter={formatYAxisTickCallback}
             className="graph-y-axis"
             tickLine={{ className: 'graph-axis' }}
             axisLine={{ className: 'graph-axis' }}
@@ -439,17 +304,17 @@ export const ServiceGraphImpl: React.FC<TProps> = props => {
           />
           <CartesianGrid horizontal={showHorizontalLines} vertical={false} />
 
-          {renderLines()}
+          {renderLines(metricsData, color)}
 
           <Tooltip
             contentStyle={{ fontSize: '0.625rem' }}
             labelFormatter={(value: number) => new Date(value).toLocaleString()}
             formatter={(value: number, uname: string) => {
               if (!showLegend) {
-                return [formatYAxisTick(value)];
+                return [formatYAxisTick(value, name, yAxisTickFormat)];
               }
               const formattedName = Number(uname) * 100;
-              return [formatYAxisTick(value), `P${formattedName}`];
+              return [formatYAxisTick(value, name, yAxisTickFormat), `P${formattedName}`];
             }}
           />
 
@@ -466,6 +331,20 @@ export const ServiceGraphImpl: React.FC<TProps> = props => {
       </ResponsiveContainer>
     </Placeholder>
   );
+};
+
+// Export helper functions for testing
+export {
+  getData,
+  getMetricsData,
+  calculateYDomain,
+  calculateYAxisTicks,
+  formatYAxisTick,
+  renderLines,
+  generatePlaceholder,
+  calculateNumericTicks,
+  HEIGHT,
+  COLORS,
 };
 
 export default ServiceGraphImpl;
