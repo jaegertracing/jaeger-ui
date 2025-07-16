@@ -24,20 +24,14 @@ import { UnconnectedDetailsPanel as DetailsPanel } from './DetailsPanel';
 jest.mock('../../common/VerticalResizer', () => {
   // eslint-disable-next-line react/display-name
   return ({ onChange, position }) => (
-    <div
+    <button
+      type="button"
       data-testid="vertical-resizer"
       data-position={position}
       onClick={() => onChange(0.6)}
-      onKeyDown={e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          onChange(0.6);
-        }
-      }}
-      role="button"
-      tabIndex={0}
     >
       Mock Resizer
-    </div>
+    </button>
   );
 });
 
