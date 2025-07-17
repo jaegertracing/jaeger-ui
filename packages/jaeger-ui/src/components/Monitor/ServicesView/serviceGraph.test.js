@@ -272,11 +272,6 @@ describe('<ServiceGraph>', () => {
     // Test tooltip formatting logic directly
     const formattedValue = serviceGraphUtils.formatYAxisTick(5.123, 'Test Graph');
     expect(formattedValue).toBe('5.12');
-
-    // Test tooltip label formatter
-    const timestamp = 1631271783806;
-    const formattedDate = new Date(timestamp).toLocaleString();
-    expect(formattedDate).toBeTruthy(); // Just verify it returns a string
   });
 
   it('tests tooltip formatter with and without legend', () => {
@@ -530,7 +525,9 @@ describe('ServiceGraphImpl methods', () => {
       // Test createTooltipLabelFormatter
       const labelFormatter = serviceGraphUtils.createTooltipLabelFormatter();
       const timestamp = 1631271783806;
-      expect(labelFormatter(timestamp)).toBeTruthy();
+      const result = labelFormatter(timestamp);
+      expect(typeof result).toBe('string');
+      expect(result).toContain('2021');
 
       // Test createLegendFormatter
       const legendFormatter = serviceGraphUtils.createLegendFormatter(serviceMetrics.service_call_rate);

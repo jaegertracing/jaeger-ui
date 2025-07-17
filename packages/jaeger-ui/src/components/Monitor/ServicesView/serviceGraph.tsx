@@ -167,14 +167,6 @@ export const serviceGraphUtils = {
     return value.toFixed(0);
   },
 
-  calculateNumericTicks: (xDomain: number[]): number[] => {
-    const [start, end] = xDomain;
-    const count = 7;
-    const step = (end - start) / (count - 1);
-
-    return Array.from({ length: count }, (_, i) => start + step * i);
-  },
-
   renderLines: (
     metricsData: ServiceMetricsObject | ServiceMetricsObject[] | null,
     color?: string
@@ -232,6 +224,14 @@ export const serviceGraphUtils = {
     if (foundIdx === -1) return <span>N/A</span>;
     const quantile = dataVal[foundIdx].quantile; // Safe to access since we filtered out nulls
     return <span>{quantile * 100}th</span>;
+  },
+
+  calculateNumericTicks: (xDomain: number[]): number[] => {
+    const [start, end] = xDomain;
+    const count = 7;
+    const step = (end - start) / (count - 1);
+
+    return Array.from({ length: count }, (_, i) => start + step * i);
   },
 
   // Additional functions for testing inline functions
