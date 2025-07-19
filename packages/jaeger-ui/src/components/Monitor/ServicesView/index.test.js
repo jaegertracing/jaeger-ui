@@ -68,20 +68,27 @@ jest.mock('../EmptyState', () => {
 });
 
 jest.mock('./serviceGraph', () => {
-  return function ServiceGraph({ yAxisTickFormat }) {
+  return function ServiceGraph({ yAxisTickFormat, name, error }) {
     const testValue = yAxisTickFormat ? yAxisTickFormat(1000) : null;
     return (
-      <div data-testid="service-graph">
-        Service Graph
+      <div data-testid={`service-graph-${name?.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
+        Service Graph: {name}
         {testValue && <span data-testid="tick-format-result">{testValue}</span>}
+        {error && <span data-testid="graph-error">Error occurred</span>}
       </div>
     );
   };
 });
 
 jest.mock('./operationDetailsTable', () => {
-  return function OperationTableDetails() {
-    return <div data-testid="operation-table">Operation Table</div>;
+  return function OperationTableDetails({ loading, error, data }) {
+    return (
+      <div data-testid="operation-table">
+        {loading && <span data-testid="table-loading">Loading operations...</span>}
+        {error && <span data-testid="table-error">Error loading operations</span>}
+        {data && <span data-testid="table-data">Operations data loaded</span>}
+      </div>
+    );
   };
 });
 
@@ -167,7 +174,9 @@ describe('<MonitorATMServicesView>', () => {
   });
 
   it('does not explode', () => {
-    expect(wrapper.container.firstChild).toBeTruthy();
+    expect(screen.getByText('Service')).toBeInTheDocument();
+    expect(screen.getByText('Span Kind')).toBeInTheDocument();
+    expect(screen.getByTestId('select-a-service-input')).toBeInTheDocument();
   });
 
   it('shows a loading indicator when loading services list', () => {
@@ -187,7 +196,7 @@ describe('<MonitorATMServicesView>', () => {
     cleanup();
     const loadedProps = {
       ...props,
-      services: ['s1'],
+      services: ['apple'],
       selectedService: undefined,
       metrics: {
         ...originInitialState,
@@ -202,13 +211,14 @@ describe('<MonitorATMServicesView>', () => {
     };
     renderWithRouter(<MonitorATMServicesView {...loadedProps} />);
     expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
+    expect(screen.getByText('Service')).toBeInTheDocument();
   });
 
   it('renders with one service latency', () => {
     cleanup();
     const singleLatencyProps = {
       ...props,
-      services: ['s1'],
+      services: ['apple'],
       selectedService: undefined,
       metrics: {
         ...originInitialState,
@@ -221,8 +231,9 @@ describe('<MonitorATMServicesView>', () => {
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
     };
-    const { container } = renderWithRouter(<MonitorATMServicesView {...singleLatencyProps} />);
-    expect(container.firstChild).toBeTruthy();
+    renderWithRouter(<MonitorATMServicesView {...singleLatencyProps} />);
+    expect(screen.getByTestId('service-graph-latency--ms-')).toBeInTheDocument();
+    expect(screen.getByText(/Operations metrics under/)).toBeInTheDocument();
   });
 
   it('Render ATM not configured page', () => {
@@ -254,7 +265,7 @@ describe('<MonitorATMServicesView>', () => {
     cleanup();
     const propsWithServices = {
       ...props,
-      services: ['s1'],
+      services: ['apple'],
       metrics: {
         ...originInitialState,
         serviceMetrics,
@@ -273,10 +284,10 @@ describe('<MonitorATMServicesView>', () => {
 
   it('ATM snapshot test (DOM)', () => {
     cleanup();
-    mockFetchServices.mockResolvedValue(['s1', 's2']);
+    mockFetchServices.mockResolvedValue(['apple', 'orange']);
     const snapshotProps = {
       ...props,
-      services: ['s1', 's2'],
+      services: ['apple', 'orange'],
       metrics: {
         ...originInitialState,
         serviceMetrics,
@@ -288,9 +299,10 @@ describe('<MonitorATMServicesView>', () => {
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
     };
-    const { container } = renderWithRouter(<MonitorATMServicesView {...snapshotProps} />);
-    expect(container.firstChild).toBeTruthy();
+    renderWithRouter(<MonitorATMServicesView {...snapshotProps} />);
     expect(screen.getAllByText('Service')[0]).toBeInTheDocument();
+    expect(screen.getByText('apple')).toBeInTheDocument();
+    expect(screen.getByText('orange')).toBeInTheDocument();
   });
 
   it('ATM snapshot test with no metrics (DOM)', () => {
@@ -311,9 +323,9 @@ describe('<MonitorATMServicesView>', () => {
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
     };
-    const { container } = renderWithRouter(<MonitorATMServicesView {...noMetricsProps} />);
-    expect(container.firstChild).toBeTruthy();
+    renderWithRouter(<MonitorATMServicesView {...noMetricsProps} />);
     expect(screen.getAllByText(/No data yet!/)[0]).toBeInTheDocument();
+    expect(screen.getByText(/instructions/)).toBeInTheDocument();
   });
 
   it('handles null error rate values in metrics', () => {
@@ -339,16 +351,17 @@ describe('<MonitorATMServicesView>', () => {
 
     const errorRateProps = {
       ...props,
-      services: ['s1'],
-      selectedService: 's1',
+      services: ['apple'],
+      selectedService: 'apple',
       metrics: testMetrics,
       fetchServices: mockFetchServices,
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
     };
 
-    const { container } = renderWithRouter(<MonitorATMServicesView {...errorRateProps} />);
-    expect(container.firstChild).toBeTruthy();
+    renderWithRouter(<MonitorATMServicesView {...errorRateProps} />);
+    expect(screen.getByTestId('service-graph-error-rate----')).toBeInTheDocument();
+    expect(screen.getByText('Service')).toBeInTheDocument();
   });
 
   it('render one service latency', () => {
@@ -366,8 +379,9 @@ describe('<MonitorATMServicesView>', () => {
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
     };
-    const { container } = renderWithRouter(<MonitorATMServicesView {...oneLatencyProps} />);
-    expect(container.firstChild).toBeTruthy();
+    renderWithRouter(<MonitorATMServicesView {...oneLatencyProps} />);
+    expect(screen.getByTestId('service-graph-latency--ms-')).toBeInTheDocument();
+    expect(screen.getByText('Span Kind')).toBeInTheDocument();
   });
 
   it('ComponentWillUnmount remove listener', () => {
@@ -394,312 +408,324 @@ describe('<MonitorATMServicesView>', () => {
     renderWithRouter(<MonitorATMServicesView {...testProps} />);
 
     global.dispatchEvent(new Event('resize'));
-    expect(wrapper.container.firstChild).toBeTruthy();
+    const spanKindSelectors = screen.getAllByTestId('span-kind-selector');
+    expect(spanKindSelectors.length).toBeGreaterThan(0);
+    expect(spanKindSelectors[0]).toBeInTheDocument();
   });
 
-  it('should handle service change and call tracking', async () => {
-    cleanup();
-    const user = userEvent.setup();
-    const trackSelectServiceSpy = jest.spyOn(track, 'trackSelectService').mockImplementation(() => {});
+  describe('User interactions and tracking', () => {
+    let trackSelectServiceSpy;
+    let trackSelectSpanKindSpy;
+    let trackSelectTimeframeSpy;
+    let trackSearchOperationSpy;
+    let trackViewAllTracesSpy;
 
-    const serviceProps = {
-      ...props,
-      services: ['service1', 'service2'],
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-        isATMActivated: true,
-      },
-      fetchServices: mockFetchServices,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
-
-    renderWithRouter(<MonitorATMServicesView {...serviceProps} />);
-
-    const serviceSelect = screen.getByTestId('select-a-service-input');
-    await user.selectOptions(serviceSelect, 'service2');
-
-    await waitFor(() => {
-      expect(trackSelectServiceSpy).toHaveBeenCalledWith('service2');
+    beforeEach(() => {
+      trackSelectServiceSpy = jest.spyOn(track, 'trackSelectService').mockImplementation(() => {});
+      trackSelectSpanKindSpy = jest.spyOn(track, 'trackSelectSpanKind').mockImplementation(() => {});
+      trackSelectTimeframeSpy = jest.spyOn(track, 'trackSelectTimeframe').mockImplementation(() => {});
+      trackSearchOperationSpy = jest.spyOn(track, 'trackSearchOperation').mockImplementation(() => {});
+      trackViewAllTracesSpy = jest.spyOn(track, 'trackViewAllTraces').mockImplementation(() => {});
     });
 
-    expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
-    expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
-
-    trackSelectServiceSpy.mockRestore();
-  });
-
-  it('should handle span kind change and call tracking', async () => {
-    cleanup();
-    const user = userEvent.setup();
-    const trackSelectSpanKindSpy = jest.spyOn(track, 'trackSelectSpanKind').mockImplementation(() => {});
-
-    const spanKindProps = {
-      ...props,
-      services: ['service1'],
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-        isATMActivated: true,
-      },
-      fetchServices: mockFetchServices,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
-
-    renderWithRouter(<MonitorATMServicesView {...spanKindProps} />);
-
-    const spanKindSelect = screen.getByTestId('span-kind-selector');
-    await user.selectOptions(spanKindSelect, 'client');
-
-    await waitFor(() => {
-      expect(trackSelectSpanKindSpy).toHaveBeenCalledWith('Client');
+    afterEach(() => {
+      trackSelectServiceSpy.mockRestore();
+      trackSelectSpanKindSpy.mockRestore();
+      trackSelectTimeframeSpy.mockRestore();
+      trackSearchOperationSpy.mockRestore();
+      trackViewAllTracesSpy.mockRestore();
     });
 
-    expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
-    expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
+    it('should handle service change and call tracking', async () => {
+      cleanup();
+      const user = userEvent.setup();
 
-    trackSelectSpanKindSpy.mockRestore();
-  });
+      const serviceProps = {
+        ...props,
+        services: ['apple', 'orange'],
+        metrics: {
+          ...originInitialState,
+          serviceMetrics,
+          serviceOpsMetrics,
+          loading: false,
+          isATMActivated: true,
+        },
+        fetchServices: mockFetchServices,
+        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      };
 
-  it('should handle timeframe change and call tracking', async () => {
-    cleanup();
-    const user = userEvent.setup();
-    const trackSelectTimeframeSpy = jest.spyOn(track, 'trackSelectTimeframe').mockImplementation(() => {});
+      renderWithRouter(<MonitorATMServicesView {...serviceProps} />);
 
-    const timeframeProps = {
-      ...props,
-      services: ['service1'],
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-        isATMActivated: true,
-      },
-      fetchServices: mockFetchServices,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
+      const serviceSelect = screen.getByTestId('select-a-service-input');
+      await user.selectOptions(serviceSelect, 'orange');
 
-    renderWithRouter(<MonitorATMServicesView {...timeframeProps} />);
+      await waitFor(() => {
+        expect(trackSelectServiceSpy).toHaveBeenCalledWith('orange');
+      });
 
-    const timeframeSelect = screen.getByTestId('select-a-timeframe-input');
-    await user.selectOptions(timeframeSelect, String(2 * 3600000));
-
-    await waitFor(() => {
-      expect(trackSelectTimeframeSpy).toHaveBeenCalledWith('Last 2 hours');
+      expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
+      expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
     });
 
-    expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
-    expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
+    it('should handle span kind change and call tracking', async () => {
+      cleanup();
+      const user = userEvent.setup();
 
-    trackSelectTimeframeSpy.mockRestore();
-  });
-
-  it('should test yAxisTickFormat function through ServiceGraph', () => {
-    cleanup();
-    const formatProps = {
-      ...props,
-      services: ['service1'],
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-        isATMActivated: true,
-      },
-      fetchServices: mockFetchServices,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
-
-    renderWithRouter(<MonitorATMServicesView {...formatProps} />);
-
-    const tickFormatResult = screen.getAllByTestId('tick-format-result')[0];
-    expect(tickFormatResult).toBeInTheDocument();
-  });
-
-  it('search test', async () => {
-    cleanup();
-    const user = userEvent.setup();
-    const trackSearchOperationSpy = jest.spyOn(track, 'trackSearchOperation').mockImplementation(() => {});
-
-    const searchProps = {
-      ...props,
-      services: ['s1', 's2'],
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-        isATMActivated: true,
-      },
-      fetchServices: mockFetchServices,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
-
-    renderWithRouter(<MonitorATMServicesView {...searchProps} />);
-
-    const searchInput = screen.getByTestId('select-operation-input');
-
-    await user.type(searchInput, 'place');
-    expect(searchInput.value).toBe('place');
-    expect(trackSearchOperationSpy).toHaveBeenCalledWith('place');
-
-    await user.clear(searchInput);
-    await user.type(searchInput, 'qqq');
-    expect(searchInput.value).toBe('qqq');
-    expect(trackSearchOperationSpy).toHaveBeenCalledWith('qqq');
-
-    await user.clear(searchInput);
-    expect(searchInput.value).toBe('');
-
-    trackSearchOperationSpy.mockRestore();
-  });
-
-  it('Error in serviceLatencies ', () => {
-    cleanup();
-    const errorProps = {
-      ...props,
-      services: ['s1', 's2'],
-      selectedService: 's1',
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-        isATMActivated: true,
-        serviceError: {
-          ...originInitialState.serviceError,
-          service_latencies_50: new Error('some API error'),
+      const spanKindProps = {
+        ...props,
+        services: ['apple'],
+        metrics: {
+          ...originInitialState,
+          serviceMetrics,
+          serviceOpsMetrics,
+          loading: false,
+          isATMActivated: true,
         },
-      },
-      fetchServices: mockFetchServices,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
+        fetchServices: mockFetchServices,
+        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      };
 
-    const { container } = renderWithRouter(<MonitorATMServicesView {...errorProps} />);
-    expect(container.firstChild).toBeTruthy();
+      renderWithRouter(<MonitorATMServicesView {...spanKindProps} />);
 
-    cleanup();
-    const partialErrorProps = {
-      ...props,
-      services: ['s1', 's2'],
-      selectedService: 's1',
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-        isATMActivated: true,
-        serviceError: {
-          ...originInitialState.serviceError,
-          service_latencies_50: new Error('some API error'),
-          service_latencies_75: new Error('some API error'),
+      const spanKindSelect = screen.getByTestId('span-kind-selector');
+      await user.selectOptions(spanKindSelect, 'client');
+
+      await waitFor(() => {
+        expect(trackSelectSpanKindSpy).toHaveBeenCalledWith('Client');
+      });
+
+      expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
+      expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
+    });
+
+    it('should handle timeframe change and call tracking', async () => {
+      cleanup();
+      const user = userEvent.setup();
+
+      const timeframeProps = {
+        ...props,
+        services: ['apple'],
+        metrics: {
+          ...originInitialState,
+          serviceMetrics,
+          serviceOpsMetrics,
+          loading: false,
+          isATMActivated: true,
         },
-      },
-      fetchServices: mockFetchServices,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
+        fetchServices: mockFetchServices,
+        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      };
 
-    const { container: container2 } = renderWithRouter(<MonitorATMServicesView {...partialErrorProps} />);
-    expect(container2.firstChild).toBeTruthy();
+      renderWithRouter(<MonitorATMServicesView {...timeframeProps} />);
 
-    cleanup();
-    const fullErrorProps = {
-      ...props,
-      services: ['s1', 's2'],
-      selectedService: 's1',
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-        isATMActivated: true,
-        serviceError: {
-          service_latencies_50: new Error('some API error'),
-          service_latencies_75: new Error('some API error'),
-          service_latencies_95: new Error('some API error'),
+      const timeframeSelect = screen.getByTestId('select-a-timeframe-input');
+      await user.selectOptions(timeframeSelect, String(2 * 3600000));
+
+      await waitFor(() => {
+        expect(trackSelectTimeframeSpy).toHaveBeenCalledWith('Last 2 hours');
+      });
+
+      expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
+      expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
+    });
+
+    it('should test yAxisTickFormat function through ServiceGraph', () => {
+      cleanup();
+      const formatProps = {
+        ...props,
+        services: ['apple'],
+        metrics: {
+          ...originInitialState,
+          serviceMetrics,
+          serviceOpsMetrics,
+          loading: false,
+          isATMActivated: true,
         },
-      },
-      fetchServices: mockFetchServices,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
+        fetchServices: mockFetchServices,
+        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      };
 
-    const { container: container3 } = renderWithRouter(<MonitorATMServicesView {...fullErrorProps} />);
-    expect(container3.firstChild).toBeTruthy();
-  });
+      renderWithRouter(<MonitorATMServicesView {...formatProps} />);
 
-  it('Should track view all traces', async () => {
-    cleanup();
-    const user = userEvent.setup();
-    const trackViewAllTracesSpy = jest.spyOn(track, 'trackViewAllTraces').mockImplementation(() => {});
+      const tickFormatResult = screen.getAllByTestId('tick-format-result')[0];
+      expect(tickFormatResult).toBeInTheDocument();
+      expect(tickFormatResult).toHaveTextContent('1');
+    });
 
-    const trackingProps = {
-      ...props,
-      metrics: {
-        ...originInitialState,
-        serviceOpsMetrics,
-        serviceMetrics,
-        loading: false,
-        isATMActivated: true,
-      },
-      services: ['service1', 'service2'],
-      fetchServices: mockFetchServices,
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
+    it('search test', async () => {
+      cleanup();
+      const user = userEvent.setup();
 
-    renderWithRouter(<MonitorATMServicesView {...trackingProps} />);
+      const searchProps = {
+        ...props,
+        services: ['apple', 'orange'],
+        metrics: {
+          ...originInitialState,
+          serviceMetrics,
+          serviceOpsMetrics,
+          loading: false,
+          isATMActivated: true,
+        },
+        fetchServices: mockFetchServices,
+        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      };
 
-    const viewAllTracesLink = screen.getByText('View all traces');
-    await user.click(viewAllTracesLink);
-    expect(trackViewAllTracesSpy).toHaveBeenCalled();
+      renderWithRouter(<MonitorATMServicesView {...searchProps} />);
 
-    trackViewAllTracesSpy.mockRestore();
-  });
+      const searchInput = screen.getByTestId('select-operation-input');
 
-  it('fetches metrics when services prop changes', () => {
-    const fetchAll = jest.fn();
-    const fetchAgg = jest.fn();
-    const baseProps = {
-      ...props,
-      fetchServices: jest.fn(),
-      fetchAllServiceMetrics: fetchAll,
-      fetchAggregatedServiceMetrics: fetchAgg,
-      services: [],
-      metrics: { ...originInitialState, isATMActivated: true },
-    };
+      await user.type(searchInput, 'place');
+      expect(searchInput.value).toBe('place');
+      expect(trackSearchOperationSpy).toHaveBeenCalledWith('place');
 
-    const { rerender } = renderWithRouter(<MonitorATMServicesView {...baseProps} />);
-    expect(fetchAll).not.toHaveBeenCalled();
+      await user.clear(searchInput);
+      await user.type(searchInput, 'qqq');
+      expect(searchInput.value).toBe('qqq');
+      expect(trackSearchOperationSpy).toHaveBeenCalledWith('qqq');
 
-    rerender(
-      <MemoryRouter>
-        <MonitorATMServicesView
-          {...baseProps}
-          services={['s1']}
-          metrics={{
-            ...baseProps.metrics,
-            serviceMetrics,
-            serviceOpsMetrics,
-          }}
-        />
-      </MemoryRouter>
-    );
+      await user.clear(searchInput);
+      expect(searchInput.value).toBe('');
+    });
 
-    expect(fetchAll).toHaveBeenCalled();
-    expect(fetchAgg).toHaveBeenCalled();
+    it('Error in serviceLatencies ', () => {
+      cleanup();
+      const errorProps = {
+        ...props,
+        services: ['apple', 'orange'],
+        selectedService: 'apple',
+        metrics: {
+          ...originInitialState,
+          serviceMetrics,
+          serviceOpsMetrics,
+          loading: false,
+          isATMActivated: true,
+          serviceError: {
+            ...originInitialState.serviceError,
+            service_latencies_50: new Error('some API error'),
+          },
+        },
+        fetchServices: mockFetchServices,
+        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      };
+
+      renderWithRouter(<MonitorATMServicesView {...errorProps} />);
+      expect(screen.getByText('Service')).toBeInTheDocument();
+
+      cleanup();
+      const partialErrorProps = {
+        ...props,
+        services: ['apple', 'orange'],
+        selectedService: 'apple',
+        metrics: {
+          ...originInitialState,
+          serviceMetrics,
+          serviceOpsMetrics,
+          loading: false,
+          isATMActivated: true,
+          serviceError: {
+            ...originInitialState.serviceError,
+            service_latencies_50: new Error('some API error'),
+            service_latencies_75: new Error('some API error'),
+          },
+        },
+        fetchServices: mockFetchServices,
+        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      };
+
+      renderWithRouter(<MonitorATMServicesView {...partialErrorProps} />);
+      expect(screen.getByText('Service')).toBeInTheDocument();
+
+      cleanup();
+      const fullErrorProps = {
+        ...props,
+        services: ['apple', 'orange'],
+        selectedService: 'apple',
+        metrics: {
+          ...originInitialState,
+          serviceMetrics,
+          serviceOpsMetrics,
+          loading: false,
+          isATMActivated: true,
+          serviceError: {
+            service_latencies_50: new Error('some API error'),
+            service_latencies_75: new Error('some API error'),
+            service_latencies_95: new Error('some API error'),
+          },
+        },
+        fetchServices: mockFetchServices,
+        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      };
+
+      renderWithRouter(<MonitorATMServicesView {...fullErrorProps} />);
+      expect(screen.getByTestId('graph-error')).toBeInTheDocument();
+    });
+
+    it('Should track view all traces', async () => {
+      cleanup();
+      const user = userEvent.setup();
+
+      const trackingProps = {
+        ...props,
+        metrics: {
+          ...originInitialState,
+          serviceOpsMetrics,
+          serviceMetrics,
+          loading: false,
+          isATMActivated: true,
+        },
+        services: ['apple', 'orange'],
+        fetchServices: mockFetchServices,
+        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      };
+
+      renderWithRouter(<MonitorATMServicesView {...trackingProps} />);
+
+      const viewAllTracesLink = screen.getByText('View all traces');
+      await user.click(viewAllTracesLink);
+      expect(trackViewAllTracesSpy).toHaveBeenCalled();
+    });
+
+    it('fetches metrics when services prop changes', () => {
+      const fetchAll = jest.fn();
+      const fetchAgg = jest.fn();
+      const baseProps = {
+        ...props,
+        fetchServices: jest.fn(),
+        fetchAllServiceMetrics: fetchAll,
+        fetchAggregatedServiceMetrics: fetchAgg,
+        services: [],
+        metrics: { ...originInitialState, isATMActivated: true },
+      };
+
+      const { rerender } = renderWithRouter(<MonitorATMServicesView {...baseProps} />);
+      expect(fetchAll).not.toHaveBeenCalled();
+
+      rerender(
+        <MemoryRouter>
+          <MonitorATMServicesView
+            {...baseProps}
+            services={['apple']}
+            metrics={{
+              ...baseProps.metrics,
+              serviceMetrics,
+              serviceOpsMetrics,
+            }}
+          />
+        </MemoryRouter>
+      );
+
+      expect(fetchAll).toHaveBeenCalled();
+      expect(fetchAgg).toHaveBeenCalled();
+    });
   });
 });
 
@@ -707,7 +733,7 @@ describe('<MonitorATMServicesView> on page switch', () => {
   let wrapper;
   const stateOnPageSwitch = {
     services: {
-      services: ['s1'],
+      services: ['apple'],
     },
     metrics: originInitialState,
     selectedService: undefined,
