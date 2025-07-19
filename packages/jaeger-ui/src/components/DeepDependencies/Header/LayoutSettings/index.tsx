@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Checkbox, Popover, Radio } from 'antd';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { RadioChangeEvent } from 'antd/es/radio';
@@ -35,6 +35,9 @@ const cssCls = (() => {
   const CLASSNAME_PREFIX = 'Ddg--LayoutSettings';
   return (namePart?: string) => (namePart ? `${CLASSNAME_PREFIX}--${namePart}` : CLASSNAME_PREFIX);
 })();
+
+// key used to store density selection in local storage
+const STORED_DENSITY_KEY = 'ddg.layout.density';
 
 // exported for tests
 export const densityOptions = [
@@ -72,99 +75,98 @@ export const densityOptions = [
   },
 ];
 
-export default class LayoutSettings extends React.PureComponent<TProps> {
-  componentDidMount() {
-    // Check local storage for previously selected density
-    const storedDensity = localStorage.getItem(LayoutSettings.STORED_DENSITY_KEY);
+const LayoutSettings: React.FC<TProps> = ({ density, setDensity, showOperations, toggleShowOperations }) => {
+  // Replicates componentDidMount to set density from localStorage on initial render
+  useEffect(() => {
+    const storedDensity = localStorage.getItem(STORED_DENSITY_KEY);
     if (storedDensity && densityOptions.some(option => option.option === storedDensity)) {
-      // Set the stored density as the default if it's a valid option
-      this.props.setDensity(storedDensity as EDdgDensity);
+      setDensity(storedDensity as EDdgDensity);
     }
-  }
+  }, [setDensity]);
 
-  // key used to store density selection in local storage
-  private static readonly STORED_DENSITY_KEY = 'ddg.layout.density';
+  // Memoized handler for updating density to prevent re-creation on re-renders
+  const handleUpdateDensity = useCallback(
+    (event: RadioChangeEvent) => {
+      const { value: nextDensity } = event.target;
+      if (density === nextDensity) return;
 
-  private updateDensity = (event: RadioChangeEvent) => {
-    const { density: prevDensity } = this.props;
-    const { value: nextDensity } = event.target;
+      localStorage.setItem(STORED_DENSITY_KEY, nextDensity);
+      trackDensityChange(density, nextDensity, densityOptions);
+      setDensity(nextDensity);
+    },
+    [density, setDensity]
+  );
 
-    if (prevDensity === nextDensity) return;
+  // Memoized handler for toggling operations visibility
+  const handleToggleShowOperations = useCallback(
+    (event: CheckboxChangeEvent) => {
+      const { checked } = event.target;
+      trackToggleShowOp(checked);
+      toggleShowOperations(checked);
+    },
+    [toggleShowOperations]
+  );
 
-    // Save the selected density in local storage
-    localStorage.setItem(LayoutSettings.STORED_DENSITY_KEY, nextDensity);
-
-    trackDensityChange(prevDensity, nextDensity, densityOptions);
-    this.props.setDensity(nextDensity);
-  };
-
-  private toggleShowOperations = (event: CheckboxChangeEvent) => {
-    const { checked } = event.target;
-    trackToggleShowOp(checked);
-    this.props.toggleShowOperations(checked);
-  };
-
-  render() {
-    const { density, showOperations } = this.props;
-    const content = (
-      <table className={cssCls('optionsTable')}>
-        <tbody>
-          <tr>
-            <td className={cssCls('optionGroupTitle')}>Aggregations</td>
+  const content = (
+    <table className={cssCls('optionsTable')}>
+      <tbody>
+        <tr>
+          <td className={cssCls('optionGroupTitle')}>Aggregations</td>
+          <td>
+            <Checkbox
+              className={cssCls('option')}
+              checked={showOperations}
+              onChange={handleToggleShowOperations}
+            >
+              <div className={cssCls('optionDescription')}>
+                <h4>Show operations</h4>
+                <p>
+                  Controls whether or not the operations are considered when creating nodes for the graph.
+                </p>
+              </div>
+            </Checkbox>
+          </td>
+        </tr>
+      </tbody>
+      <tbody>
+        {densityOptions.map((config, i) => (
+          <tr key={config.option}>
+            {i === 0 && (
+              <td className={cssCls('optionGroupTitle')} rowSpan={densityOptions.length}>
+                Graph density
+              </td>
+            )}
             <td>
-              <Checkbox
+              <Radio
                 className={cssCls('option')}
-                checked={showOperations}
-                onChange={this.toggleShowOperations}
+                onChange={handleUpdateDensity}
+                value={config.option}
+                checked={density === config.option}
               >
                 <div className={cssCls('optionDescription')}>
-                  <h4>Show operations</h4>
+                  <h4>{config.title}</h4>
                   <p>
-                    Controls whether or not the operations are considered when creating nodes for the graph.
+                    {config.note && <em className={cssCls('optionNote')}>{config.note}</em>}
+                    {config.note && ' – '}
+                    {config.description}
                   </p>
                 </div>
-              </Checkbox>
+              </Radio>
             </td>
           </tr>
-        </tbody>
-        <tbody>
-          {densityOptions.map((config, i) => (
-            <tr key={config.option}>
-              {i === 0 && (
-                <td className={cssCls('optionGroupTitle')} rowSpan={densityOptions.length}>
-                  Graph density
-                </td>
-              )}
-              <td>
-                <Radio
-                  className={cssCls('option')}
-                  onChange={this.updateDensity}
-                  value={config.option}
-                  checked={density === config.option}
-                >
-                  <div className={cssCls('optionDescription')}>
-                    <h4>{config.title}</h4>
-                    <p>
-                      {config.note && <em className={cssCls('optionNote')}>{config.note}</em>}
-                      {config.note && ' – '}
-                      {config.description}
-                    </p>
-                  </div>
-                </Radio>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-    return (
-      <Popover arrowPointAtCenter content={content} placement="bottomLeft" title="Layout settings">
-        <div className={cssCls()}>
-          {settingsIcon}
-          Layout
-          <ChevronDown className="ub-ml2" />
-        </div>
-      </Popover>
-    );
-  }
-}
+        ))}
+      </tbody>
+    </table>
+  );
+  return (
+    <Popover arrowPointAtCenter content={content} placement="bottomLeft" title="Layout settings">
+      <div className={cssCls()}>
+        {settingsIcon}
+        Layout
+        <ChevronDown className="ub-ml2" />
+      </div>
+    </Popover>
+  );
+};
+
+export default React.memo(LayoutSettings);
