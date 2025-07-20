@@ -70,7 +70,7 @@
       "eslint --cache --fix",
       "prettier --write"
     ],
-    "*.{json,md,css}": [
+    "*.{json,css}": [
       "prettier --write"
     ]
   }
