@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React, { Component } from 'react';
-import { bindActionCreators } from 'redux';
+import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import memoizeOne from 'memoize-one';
 import debounce from 'lodash/debounce';
@@ -392,7 +392,7 @@ export function mapStateToProps(state: ReduxState): Omit<TProps, 'fetchDependenc
 }
 
 // export for tests
-export function mapDispatchToProps(dispatch: any): Pick<TProps, 'fetchDependencies'> {
+export function mapDispatchToProps(dispatch: Dispatch): Pick<TProps, 'fetchDependencies'> {
   const { fetchDependencies } = bindActionCreators(jaegerApiActions, dispatch);
   return { fetchDependencies };
 }
