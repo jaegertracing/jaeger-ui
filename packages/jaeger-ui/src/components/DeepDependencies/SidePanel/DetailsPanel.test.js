@@ -23,9 +23,14 @@ import { UnconnectedDetailsPanel as DetailsPanel } from './DetailsPanel';
 
 jest.mock('../../common/VerticalResizer', () => {
   return ({ onChange, position }) => (
-    <div data-testid="vertical-resizer" data-position={position} onClick={() => onChange(0.6)}>
+    <button
+      type="button"
+      data-testid="vertical-resizer"
+      data-position={position}
+      onClick={() => onChange(0.6)}
+    >
       Mock Resizer
-    </div>
+    </button>
   );
 });
 
