@@ -112,6 +112,40 @@ describe('<SearchTracePage>', () => {
     store.get = oldFn;
   });
 
+  it('keeps services in loading state when selected service from localStorage has no operations loaded', () => {
+    const { mapStateToProps } = require('./index');
+    const oldFn = store.get;
+    store.get = jest.fn(() => ({ service: 'svc-a', operation: 'op-a' }));
+
+    // Create state where service exists but operations are not loaded yet
+    const state = {
+      embedded: null,
+      router: { location: { search: '' } },
+      services: {
+        loading: false,
+        services: ['svc-a', 'svc-b'],
+        operationsForService: {}, // No operations loaded yet for svc-a
+        error: null,
+      },
+      traceDiff: { cohort: [] },
+      config: { disableFileUploadControl: false },
+      trace: {
+        search: {
+          query: null,
+          results: [],
+          state: 'DONE',
+          error: null,
+        },
+        traces: {},
+        rawTraces: [],
+      },
+    };
+    const result = mapStateToProps(state);
+    expect(result.loadingServices).toBe(true);
+    expect(result.services).toEqual(['svc-a', 'svc-b']);
+    store.get = oldFn;
+  });
+
   it('calls sortedTracesXformer with correct arguments', () => {
     const sortBy = MOST_RECENT;
     wrapper.setState({ sortBy });
