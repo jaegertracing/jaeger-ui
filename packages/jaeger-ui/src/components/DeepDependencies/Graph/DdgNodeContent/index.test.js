@@ -20,7 +20,7 @@ jest.mock('./calc-positioning', () => () => ({
 }));
 
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import {
@@ -78,7 +78,7 @@ describe('<DdgNodeContent>', () => {
   });
 
   it('omits the operation if it is null', () => {
-    const { rerender, container } = render(<DdgNodeContent {...props} />);
+    const { rerender } = render(<DdgNodeContent {...props} />);
     expect(screen.getByText(/operation/i)).toBeInTheDocument();
 
     rerender(<DdgNodeContent {...props} operation={null} />);
@@ -198,7 +198,7 @@ describe('<DdgNodeContent>', () => {
     });
 
     it('calls setViewModifier with all modified indices on mouse out', () => {
-      const { unmount, container } = render(<DdgNodeContent {...props} />);
+      const { container } = render(<DdgNodeContent {...props} />);
       const nodeContent = container.querySelector('.DdgNodeContent');
 
       fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
