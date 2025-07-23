@@ -76,6 +76,12 @@ function ClickToCopy({ text, className = '', children }: Props) {
       <span
         className={className}
         onClick={whenClicked}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            whenClicked();
+            e.preventDefault();
+          }
+        }}
         role="button"
         tabIndex={0}
         aria-label={isCopied ? 'Copied to clipboard' : 'Copy to clipboard'}

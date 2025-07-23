@@ -10,7 +10,6 @@ build
 
 # reports
 coverage
-.nyc_output
 junit.xml
 
 # misc
@@ -18,8 +17,8 @@ junit.xml
 npm-debug.log
 .vscode
 .idea
-yarn-error.log
 .eslintcache
+.envrc
 .vscode
 
 # scripts
