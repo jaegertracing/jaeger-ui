@@ -65,7 +65,7 @@ function ClickToCopy({ text, className = '', children }: Props) {
   }, [isCopied, previousClick]);
 
   const whenClicked = () => {
-    console.log('ClickToCopy clicked!', text); // Debug log
+    console.log('ClickToCopy clicked!', text);
     copy(text);
     setIsCopied(true);
     setPreviousClick(Date.now());
