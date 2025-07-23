@@ -250,6 +250,15 @@ const stateServicesXformer = memoizeOne(stateServices => {
     operationsForService: opsBySvc,
     error: serviceError,
   } = stateServices;
+  const selectedService = store.get?.('lastSearch')?.service;
+  if (
+    selectedService &&
+    serviceList &&
+    serviceList.includes(selectedService) &&
+    (!opsBySvc || !opsBySvc[selectedService] || opsBySvc[selectedService].length === 0)
+  ) {
+    return { loadingServices: true, services: serviceList, serviceError };
+  }
   const services =
     serviceList &&
     serviceList.map(name => ({
