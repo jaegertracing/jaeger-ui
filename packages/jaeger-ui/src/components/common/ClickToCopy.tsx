@@ -33,16 +33,18 @@ function copy(text: string) {
 function ClickToCopy({ text, className = '', children }: Props) {
   const [isCopied, setIsCopied] = useState(false);
   const [previousClick, setPreviousClick] = useState(0);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!isCopied) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
     } else {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
       const checkDeadline = () => {
         if (Date.now() >= previousClick + 1800) {
@@ -57,6 +59,7 @@ function ClickToCopy({ text, className = '', children }: Props) {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
     };
   }, [isCopied, previousClick]);

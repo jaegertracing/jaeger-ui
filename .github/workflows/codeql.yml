@@ -1,4 +1,4 @@
-name: "CodeQL"
+name: 'CodeQL'
 
 on:
   workflow_dispatch:
@@ -21,9 +21,9 @@ jobs:
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
 
     permissions:
-      actions: read  # for github/codeql-action/init to get workflow details
-      contents: read  # for actions/checkout to fetch code
-      security-events: write  # for github/codeql-action/autobuild to send a status report
+      actions: read # for github/codeql-action/init to get workflow details
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/autobuild to send a status report
     name: CodeQL Analyze
     runs-on: ubuntu-latest
 

@@ -23,13 +23,14 @@ type Props = {
 };
 
 export function TraceId({ traceId, className = '' }: Props) {
+  if (!traceId) return null;
   const traceIdDisplayLength = getConfigValue('traceIdDisplayLength') || 7;
   const traceIdDisplay = traceId ? traceId.slice(0, traceIdDisplayLength) : '';
   const lengthClass = traceIdDisplayLength === 7 ? 'TraceIDLength--short' : 'TraceIDLength--full';
 
   return (
-    <ClickToCopy text={traceId} className={`TraceIDLength ${lengthClass} u-tx-muted  ${className}`}>
-      {traceIdDisplay}
+    <ClickToCopy text={traceId} className="button-styles">
+      <small className={`TraceIDLength ${lengthClass} u-tx-muted  ${className}`}>{traceIdDisplay}</small>
     </ClickToCopy>
   );
 }

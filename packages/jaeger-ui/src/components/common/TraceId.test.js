@@ -70,15 +70,9 @@ describe('TraceIdDisplayLength', () => {
       expect(screen.getByText(shortTraceId)).toBeInTheDocument();
     });
 
-    it('renders an empty <small> element when traceId is an empty string', () => {
+    it('does not render a <small> element when traceId is an empty string', () => {
       const { container } = render(<TraceId traceId="" />);
-      const el = container.querySelector('small');
-      if (el) {
-        expect(el).toBeInTheDocument();
-        expect(el).toBeEmptyDOMElement();
-      } else {
-        expect(el).toBeNull();
-      }
+      expect(container.querySelector('small')).toBeNull();
     });
   });
 
