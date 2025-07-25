@@ -1,0 +1,191 @@
+/* Copyright (c) 2024 The Jaeger Authors. */
+
+.TimelineGap--container {
+  display: flex;
+  height: 24px;
+  position: relative;
+  border-bottom: 1px solid #e8e8e8;
+  background-color: #fafafa;
+}
+
+.TimelineGap--nameColumn {
+  border-right: 1px solid #ddd;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  font-size: 11px;
+  color: #666;
+}
+
+.TimelineGap--timelineColumn {
+  position: relative;
+  background-color: #fafafa;
+}
+
+.TimelineGap--gap {
+  position: absolute;
+  height: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+}
+
+.TimelineGap--collapsed {
+  background: linear-gradient(90deg, 
+    #e6f7ff 0%, 
+    #bae7ff 25%, 
+    #91d5ff 50%, 
+    #bae7ff 75%, 
+    #e6f7ff 100%
+  );
+  border: 1px solid #40a9ff;
+  min-width: 20px;
+  z-index: 10;
+}
+
+.TimelineGap--expanded {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 10px,
+    #f0f0f0 10px,
+    #f0f0f0 20px
+  );
+  border: 1px dashed #ccc;
+  opacity: 0.7;
+}
+
+.TimelineGap--hovered {
+  transform: scaleY(1.2);
+  z-index: 15;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.TimelineGap--collapsed.TimelineGap--hovered {
+  background: linear-gradient(90deg, 
+    #d6f7ff 0%, 
+    #aae7ff 25%, 
+    #81d5ff 50%, 
+    #aae7ff 75%, 
+    #d6f7ff 100%
+  );
+  border-color: #1890ff;
+}
+
+.TimelineGap--collapsedIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.TimelineGap--zigzag {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    #1890ff 25%, 
+    transparent 50%, 
+    #1890ff 75%, 
+    transparent 100%
+  );
+  position: relative;
+}
+
+.TimelineGap--zigzag::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -1px;
+  width: 100%;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    #1890ff 0px,
+    #1890ff 2px,
+    transparent 2px,
+    transparent 6px
+  );
+}
+
+.TimelineGap--duration {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid #40a9ff;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 10px;
+  color: #1890ff;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.TimelineGap--expandedIndicator {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.TimelineGap--emptySpace {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 2px;
+}
+
+.TimelineGap--collapseHint {
+  font-size: 10px;
+  color: #666;
+  text-align: center;
+  padding: 2px 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.TimelineGap--expanded:hover .TimelineGap--collapseHint {
+  opacity: 1;
+}
+
+.TimelineGap--tooltip {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.TimelineGap--tooltip > div {
+  margin-bottom: 2px;
+}
+
+.TimelineGap--tooltip > div:last-child {
+  margin-bottom: 0;
+  font-weight: 500;
+  color: #1890ff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .TimelineGap--duration {
+    font-size: 9px;
+    padding: 1px 2px;
+  }
+  
+  .TimelineGap--collapseHint {
+    font-size: 9px;
+  }
+}
