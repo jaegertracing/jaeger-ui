@@ -190,10 +190,6 @@ describe('convertToTimeUnit', () => {
     const input = 172800000000;
     expect(convertToTimeUnit(input, 'days')).toBe(2);
   });
-  it('convert duration to days', () => {
-    const input = 172800000000;
-    expect(convertToTimeUnit(input, 'days')).toBe(2);
-  });
 });
 
 describe('formatRelativeDate', () => {

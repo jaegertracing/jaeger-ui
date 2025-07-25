@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Checkbox } from 'antd';
 import cx from 'classnames';
 import { ListChildComponentProps } from 'react-window';
@@ -34,50 +34,52 @@ interface IListItemProps extends ListChildComponentProps {
   };
 }
 
-export default class ListItem extends React.PureComponent<IListItemProps> {
-  isSelected = () => {
-    const { data, index } = this.props;
-    const { options, selectedValue } = data;
-    const isSelected =
-      typeof selectedValue === 'string' || !selectedValue
-        ? options[index] === selectedValue
-        : selectedValue.has(options[index]);
-    return isSelected;
-  };
+const ListItem: React.FC<IListItemProps> = React.memo(props => {
+  const { data, index, style: styleOrig } = props;
+  const { addValues, focusedIndex, highlightQuery, multi, options, removeValues, selectedValue, setValue } =
+    data;
 
-  onClicked = () => {
-    const { data, index } = this.props;
-    const { addValues, multi, options, removeValues, setValue } = data;
-    const value = options[index];
+  const value = options[index];
+
+  const isSelected = useMemo(() => {
+    if (typeof selectedValue === 'string' || !selectedValue) {
+      return value === selectedValue;
+    }
+    return selectedValue.has(value);
+  }, [value, selectedValue]);
+
+  const onClicked = useCallback(() => {
     if (multi && addValues && removeValues) {
-      if (this.isSelected()) removeValues([value]);
-      else addValues([value]);
-    } else setValue(value);
-  };
+      if (isSelected) {
+        removeValues([value]);
+      } else {
+        addValues([value]);
+      }
+    } else {
+      setValue(value);
+    }
+  }, [multi, addValues, removeValues, isSelected, value, setValue]);
 
-  render() {
-    const { data, index, style: styleOrig } = this.props;
-    // omit the width from the style so the panel can scroll horizontally
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { width: _, ...style } = styleOrig;
-    const { focusedIndex, highlightQuery, multi, options } = data;
-    const isSelected = this.isSelected();
-    const cls = cx('FilteredList--ListItem', {
-      'is-focused': index === focusedIndex,
-      'is-selected': isSelected,
-      'is-striped': index % 2,
-    });
-    return (
-      <div
-        className={cls}
-        style={style}
-        onClick={this.onClicked}
-        role="switch"
-        aria-checked={index === focusedIndex ? 'true' : 'false'}
-      >
-        {multi && <Checkbox className="FilteredList--ListItem--Checkbox" checked={isSelected} />}
-        {highlightMatches(highlightQuery, options[index])}
-      </div>
-    );
-  }
-}
+  const { width: _, ...style } = styleOrig;
+
+  const cls = cx('FilteredList--ListItem', {
+    'is-focused': index === focusedIndex,
+    'is-selected': isSelected,
+    'is-striped': index % 2,
+  });
+
+  return (
+    <div
+      className={cls}
+      style={style}
+      onClick={onClicked}
+      role="switch"
+      aria-checked={index === focusedIndex ? 'true' : 'false'}
+    >
+      {multi && <Checkbox className="FilteredList--ListItem--Checkbox" checked={isSelected} />}
+      {highlightMatches(highlightQuery, value)}
+    </div>
+  );
+});
+
+export default ListItem;

@@ -22,16 +22,19 @@ import JaegerAPI from '../../../api/jaeger';
 import { UnconnectedDetailsPanel as DetailsPanel } from './DetailsPanel';
 
 jest.mock('../../common/VerticalResizer', () => {
-  // eslint-disable-next-line react/display-name
   return ({ onChange, position }) => (
-    <div data-testid="vertical-resizer" data-position={position} onClick={() => onChange(0.6)}>
+    <button
+      type="button"
+      data-testid="vertical-resizer"
+      data-position={position}
+      onClick={() => onChange(0.6)}
+    >
       Mock Resizer
-    </div>
+    </button>
   );
 });
 
 jest.mock('../../common/DetailsCard', () => {
-  // eslint-disable-next-line react/display-name
   return ({ className, details }) => (
     <div data-testid="details-card" className={className}>
       {typeof details === 'string' ? details : JSON.stringify(details)}

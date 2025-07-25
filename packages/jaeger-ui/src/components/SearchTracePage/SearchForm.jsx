@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -658,12 +657,10 @@ export function mapStateToProps(state) {
   // continue to parse tagParams to remain backward compatible with older URLs
   // but, parse to logfmt format instead of the former "key:value|k2:v2"
   if (tagParams) {
-    // eslint-disable-next-line no-inner-declarations
     function convFormerTag(accum, value) {
       const parts = value.split(':', 2);
       const key = parts[0];
       if (key) {
-        // eslint-disable-next-line no-param-reassign
         accum[key] = parts[1] == null ? '' : parts[1];
         return true;
       }

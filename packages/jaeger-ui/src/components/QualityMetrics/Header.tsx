@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { InputNumber } from 'antd';
 import _debounce from 'lodash/debounce';
 
@@ -28,47 +28,50 @@ type TProps = {
   setService: (service: string) => void;
 };
 
-type TState = {
-  ownInputValue: number | null;
+const Header: React.FC<TProps> = ({ lookback, service, services, setLookback, setService }) => {
+  const [ownInputValue, setOwnInputValue] = useState<number | null>(null);
+
+  const debouncedSetLookback = useMemo(
+    () =>
+      _debounce((value: number | null) => {
+        setOwnInputValue(null);
+        setLookback(value);
+      }, 350),
+    [setLookback]
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedSetLookback.cancel();
+    };
+  }, [debouncedSetLookback]);
+
+  const handleInputChange = (value: number | string | null) => {
+    if (typeof value !== 'string') {
+      setOwnInputValue(value);
+      debouncedSetLookback(value);
+    }
+  };
+
+  const lookbackValue = ownInputValue !== null ? ownInputValue : lookback;
+
+  return (
+    <header className="QualityMetrics--Header">
+      <NameSelector
+        label="Service"
+        placeholder="Select a service…"
+        value={service || null}
+        setValue={setService}
+        required
+        options={services || []}
+      />
+      <label className="QualityMetrics--Header--LookbackLabel" htmlFor="inputNumber">
+        Lookback:
+      </label>
+      <InputNumber id="inputNumber" onChange={handleInputChange} min={1} value={lookbackValue} />
+      <span className="QualityMetrics--Header--LookbackSuffix">(in hours)</span>
+    </header>
+  );
 };
 
-export default class Header extends React.PureComponent<TProps, TState> {
-  state: TState = {
-    ownInputValue: null,
-  };
-
-  setLookback = _debounce((lookback: number | null) => {
-    this.setState({ ownInputValue: null });
-    this.props.setLookback(lookback);
-  }, 350);
-
-  handleInputChange = (value: number | null) => {
-    if (typeof value === 'string') return;
-    this.setState({ ownInputValue: value });
-    this.setLookback(value);
-  };
-
-  render() {
-    const { lookback, service, services, setService } = this.props;
-    const { ownInputValue } = this.state;
-    const lookbackValue = ownInputValue !== null ? ownInputValue : lookback;
-
-    return (
-      <header className="QualityMetrics--Header">
-        <NameSelector
-          label="Service"
-          placeholder="Select a service…"
-          value={service || null}
-          setValue={setService}
-          required
-          options={services || []}
-        />
-        <label className="QualityMetrics--Header--LookbackLabel" htmlFor="inputNumber">
-          Lookback:
-        </label>
-        <InputNumber id="inputNumber" onChange={this.handleInputChange} min={1} value={lookbackValue} />
-        <span className="QualityMetrics--Header--LookbackSuffix">(in hours)</span>
-      </header>
-    );
-  }
-}
+export default Header;

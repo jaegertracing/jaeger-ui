@@ -14,5 +14,4 @@
 
 type TNonEmptyArray<T> = [T, ...T[]];
 
-// eslint-disable-next-line no-undef
 export default TNonEmptyArray;

@@ -29,7 +29,6 @@ export default function updateUiFind({
   trackFindFunction?: (uiFind: string | TNil) => void;
   uiFind?: string | TNil;
 }) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { uiFind: _oldUiFind, ...queryParams } = queryString.parse(location.search);
   if (trackFindFunction) trackFindFunction(uiFind);
   if (uiFind) (queryParams as Record<string, string>).uiFind = uiFind;

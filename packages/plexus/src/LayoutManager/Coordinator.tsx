@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable no-console */
-
 import * as convCoord from './dot/conv-coord';
 import convInputs from './convInputs';
-// eslint-disable-next-line import/order, import/no-unresolved
+
 import LayoutWorker from './layout.worker.bundled';
 
 import {

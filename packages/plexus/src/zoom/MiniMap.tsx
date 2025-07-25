@@ -16,7 +16,6 @@ import * as React from 'react';
 
 import { HiMiniArrowsPointingOut, HiMagnifyingGlassPlus, HiMagnifyingGlassMinus } from 'react-icons/hi2';
 
-/* eslint-disable react/no-unused-prop-types */
 type TProps = {
   classNamePrefix?: string | void;
   className?: string | void;
@@ -31,7 +30,6 @@ type TProps = {
   x?: number;
   y?: number;
 };
-/* eslint-enable react/no-unused-prop-types */
 
 const LENGTH_TARGET_PX = 80;
 

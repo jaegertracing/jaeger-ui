@@ -44,7 +44,6 @@ describe('getNodeRenderers', () => {
               const testLv = focalNode ? focalLv : lv;
               const findMatches = new Set(findMatch ? [testLv.vertex.key] : []);
               const vm =
-                // eslint-disable-next-line no-bitwise
                 (hovered ? EViewModifier.Hovered : 0) | (pathHovered ? EViewModifier.PathHovered : 0);
               const vms = new Map([[key, vm]]);
               const { container } = render(getNodeRenderers(findMatches, vms).vectorBorder(testLv));

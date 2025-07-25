@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable react/require-default-props */
-
 import React, { Component } from 'react';
 import { Col, Row, Tabs } from 'antd';
 import PropTypes from 'prop-types';
@@ -178,9 +176,9 @@ export class SearchTracePageImpl extends Component {
 }
 SearchTracePageImpl.propTypes = {
   isHomepage: PropTypes.bool,
-  // eslint-disable-next-line react/forbid-prop-types
+
   traceResultsToDownload: PropTypes.array,
-  // eslint-disable-next-line react/forbid-prop-types
+
   diffCohort: PropTypes.array,
   cohortAddTrace: PropTypes.func,
   cohortRemoveTrace: PropTypes.func,
@@ -252,6 +250,15 @@ const stateServicesXformer = memoizeOne(stateServices => {
     operationsForService: opsBySvc,
     error: serviceError,
   } = stateServices;
+  const selectedService = store.get?.('lastSearch')?.service;
+  if (
+    selectedService &&
+    serviceList &&
+    serviceList.includes(selectedService) &&
+    (!opsBySvc || !opsBySvc[selectedService] || opsBySvc[selectedService].length === 0)
+  ) {
+    return { loadingServices: true, services: serviceList, serviceError };
+  }
   const services =
     serviceList &&
     serviceList.map(name => ({

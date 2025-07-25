@@ -29,7 +29,7 @@ export default function getSetOnEdge(edgesViewModifiers: Map<string, number>) {
   }
   return function setOnEdge(lv: TLayoutEdge<unknown>, utils: TRendererUtils) {
     const edgeId = getEdgeId(lv.edge.from, lv.edge.to);
-    // eslint-disable-next-line no-bitwise
+
     if ((edgesViewModifiers.get(edgeId) || 0) & EViewModifier.PathHovered) {
       const markerEnd = `url(#${utils.getGlobalId('arrow-hovered')})`;
       return { markerEnd, className: 'Ddg--Edge is-pathHovered' };

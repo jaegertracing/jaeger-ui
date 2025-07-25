@@ -75,7 +75,6 @@ export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TStat
 
   componentDidUpdate(prevProps: TProps) {
     if (prevProps.service !== this.props.service || prevProps.lookback !== this.props.lookback) {
-      // eslint-disable-next-line react/no-did-update-set-state
       this.setState({
         qualityMetrics: undefined,
         error: undefined,

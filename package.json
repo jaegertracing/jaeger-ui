@@ -2,6 +2,7 @@
   "private": true,
   "name": "jaeger-ui-monorepo",
   "version": "0.0.1",
+  "type": "module",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -11,20 +12,23 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.24.6",
-    "@typescript-eslint/eslint-plugin": "^8.32.0",
-    "@typescript-eslint/parser": "^8.32.0",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "cross-env": "^7.0.3",
     "depcheck": "1.4.7",
-    "eslint": "8.57.0",
-    "eslint-config-airbnb": "19.0.4",
-    "eslint-config-prettier": "10.1.1",
-    "eslint-plugin-import": "2.32.0",
-    "eslint-plugin-jsx-a11y": "^6.8.0",
-    "eslint-plugin-react": "7.37.1",
+    "eslint": "^9.30.1",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jest": "^29.0.1",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-prettier": "^5.5.1",
+    "eslint-plugin-react": "^7.37.1",
+    "eslint-plugin-testing-library": "^7.5.4",
     "husky": "9.1.0",
     "jsdom": "^26.0.0",
+    "lint-staged": "^15.5.2",
     "npm-run-all2": "8.0.1",
-    "prettier": "3.6.2",
+    "prettier": "^3.6.2",
     "rxjs-compat": "6.6.7",
     "typescript": "5.8.2"
   },
@@ -45,7 +49,7 @@
     "eslint": "eslint --cache 'scripts/*.{js,jsx,ts,tsx}' 'packages/*/src/**/*.{js,jsx,ts,tsx}' 'packages/*/*.{js,jsx,ts,tsx,mts}'",
     "fmt": "npm run prettier",
     "lint": "npm-run-all -ln --parallel prettier-lint tsc-lint eslint check-license",
-    "prepare": "npm run --workspace @jaegertracing/plexus prepublishOnly",
+    "prepare": "husky && npm run --workspace @jaegertracing/plexus prepublishOnly",
     "prettier": "prettier --write '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}'",
     "prettier-lint": "prettier --list-different '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}' || (echo '*** PLEASE RUN npm run prettier AND RESUBMIT ***' && false)",
     "test": "npm run --workspaces test --",
@@ -61,9 +65,13 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm-run-all -ln --parallel lint test"
-    }
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mts}": [
+      "eslint --cache --fix",
+      "prettier --write"
+    ],
+    "*.{json,css}": [
+      "prettier --write"
+    ]
   }
 }

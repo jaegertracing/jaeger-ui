@@ -19,9 +19,8 @@ jest.mock('./calc-positioning', () => () => ({
   svcMarginTop: 10,
 }));
 
-/* eslint-disable import/first */
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import {
@@ -79,7 +78,7 @@ describe('<DdgNodeContent>', () => {
   });
 
   it('omits the operation if it is null', () => {
-    const { rerender, container } = render(<DdgNodeContent {...props} />);
+    const { rerender } = render(<DdgNodeContent {...props} />);
     expect(screen.getByText(/operation/i)).toBeInTheDocument();
 
     rerender(<DdgNodeContent {...props} operation={null} />);
@@ -199,7 +198,7 @@ describe('<DdgNodeContent>', () => {
     });
 
     it('calls setViewModifier with all modified indices on mouse out', () => {
-      const { unmount, container } = render(<DdgNodeContent {...props} />);
+      const { container } = render(<DdgNodeContent {...props} />);
       const nodeContent = container.querySelector('.DdgNodeContent');
 
       fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
@@ -282,6 +281,147 @@ describe('<DdgNodeContent>', () => {
       fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
 
       expect(props.setViewModifier).toHaveBeenLastCalledWith([999], EViewModifier.Hovered, true);
+    });
+  });
+
+  describe('tooltip positioning', () => {
+    let mockGetBoundingClientRect;
+    let mockQuerySelector;
+
+    beforeEach(() => {
+      mockGetBoundingClientRect = jest.fn(() => ({
+        top: 100,
+        bottom: 200,
+        left: 50,
+        right: 150,
+        width: 100,
+        height: 100,
+      }));
+
+      mockQuerySelector = jest.fn(selector => {
+        if (selector === '.DdgHeader--controlHeader') {
+          return {
+            getBoundingClientRect: () => ({
+              top: 0,
+              bottom: 80,
+              left: 0,
+              right: 1000,
+              width: 1000,
+              height: 80,
+            }),
+          };
+        }
+        return null;
+      });
+
+      Element.prototype.getBoundingClientRect = mockGetBoundingClientRect;
+      document.querySelector = mockQuerySelector;
+
+      jest.spyOn(global, 'setTimeout').mockImplementation(fn => fn());
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('positions tooltip below when node is near header', () => {
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+
+      const tooltip = container.querySelector('.DdgNodeContent--actionsWrapper-below');
+      expect(tooltip).toBeInTheDocument();
+    });
+
+    it('positions tooltip above when node is far from header', () => {
+      mockGetBoundingClientRect.mockReturnValue({
+        top: 400,
+        bottom: 500,
+        left: 50,
+        right: 150,
+        width: 100,
+        height: 100,
+      });
+
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+
+      const tooltip = container.querySelector('.DdgNodeContent--actionsWrapper-below');
+      expect(tooltip).not.toBeInTheDocument();
+    });
+
+    it('handles case when header element is not found', () => {
+      mockQuerySelector.mockReturnValue(null);
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+
+      const tooltip = container.querySelector('.DdgNodeContent--actionsWrapper-below');
+      expect(tooltip).not.toBeInTheDocument();
+    });
+
+    it('handles case when node ref is not available', () => {
+      const instance = new DdgNodeContent(props);
+      instance.nodeRef = { current: null };
+      mockQuerySelector.mockClear();
+
+      expect(() => {
+        instance.checkTooltipPosition();
+      }).not.toThrow();
+
+      expect(mockQuerySelector).not.toHaveBeenCalled();
+    });
+
+    it('does not update state when tooltip position has not changed', () => {
+      const instance = new DdgNodeContent(props);
+      instance.nodeRef = {
+        current: {
+          getBoundingClientRect: () => ({
+            top: 100,
+            bottom: 200,
+            left: 50,
+            right: 150,
+            width: 100,
+            height: 100,
+          }),
+        },
+      };
+
+      // set initial state directly (not using setState on unmounted component)
+      instance.state = { shouldPositionTooltipBelow: true };
+
+      // Spy on setState
+      const setStateSpy = jest.spyOn(instance, 'setState');
+
+      // call checkTooltipPosition with same conditions that would result in true
+      instance.checkTooltipPosition();
+
+      // setState should not be called since position hasn't changed (still true)
+      expect(setStateSpy).not.toHaveBeenCalled();
+
+      setStateSpy.mockRestore();
+    });
+
+    it('does not check position when already determined on subsequent hovers', () => {
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+
+      // First hover to determine position
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+
+      // clear mock calls
+      mockQuerySelector.mockClear();
+
+      // mouse out and hover again
+      fireEvent.mouseOut(nodeContent, { type: 'mouseout' });
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+
+      // checkTooltipPosition should not be called again
+      expect(mockQuerySelector).not.toHaveBeenCalledWith('.DdgHeader--controlHeader');
     });
   });
 

@@ -34,6 +34,7 @@ import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getLocation } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
+import { getTracePageHeaderParts } from '../../../model/trace-viewer';
 import { stripEmbeddedState } from '../../../utils/embedded-url';
 
 import { FetchedTrace } from '../../../types';
@@ -181,14 +182,20 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
           {!hideGraph && traceResultsView && (
             <div className="ub-p3 SearchResults--headerScatterPlot">
               <ScatterPlot
-                data={traces.map(t => ({
-                  x: t.startTime,
-                  y: t.duration,
-                  traceID: t.traceID,
-                  size: t.spans.length,
-                  name: t.traceName,
-                  color: t.spans.some(sp => sp.tags.some(isErrorTag)) ? 'red' : '#12939A',
-                }))}
+                data={traces.map(t => {
+                  const rootSpanInfo =
+                    t.spans && t.spans.length > 0 ? getTracePageHeaderParts(t.spans) : null;
+                  return {
+                    x: t.startTime,
+                    y: t.duration,
+                    traceID: t.traceID,
+                    size: t.spans.length,
+                    name: t.traceName,
+                    color: t.spans.some(sp => sp.tags.some(isErrorTag)) ? 'red' : '#12939A',
+                    services: t.services || [],
+                    rootSpanName: rootSpanInfo?.operationName || 'Unknown',
+                  };
+                })}
                 onValueClick={(t: Trace) => {
                   goToTrace(t.traceID);
                 }}

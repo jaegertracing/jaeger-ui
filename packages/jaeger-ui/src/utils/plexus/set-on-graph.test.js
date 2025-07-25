@@ -17,7 +17,7 @@ import { setOnNodesContainer, setOnEdgesContainer, setOnNode } from './set-on-gr
 describe('Set on graph utils', () => {
   describe('setOnNodesContainer', () => {
     function getComputedWidth(k) {
-      const { style } = setOnNodesContainer({ zoomTransform: k != undefined ? { k } : undefined }); // eslint-disable-line eqeqeq
+      const { style } = setOnNodesContainer({ zoomTransform: k != undefined ? { k } : undefined });
       return Number.parseInt(style.outline.replace(/[^.\d]/g, ''), 10);
     }
 
