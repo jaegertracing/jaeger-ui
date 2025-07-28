@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount, shallow } from 'enzyme';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import TraceSpanView from './index';
 import transformTraceData from '../../../model/transform-trace-data';
 
@@ -21,8 +22,35 @@ import testTrace from '../TraceStatistics/tableValuesTestTrace/testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
 
+jest.mock('../../common/SearchableSelect', () => {
+  const mockReact = jest.requireActual('react');
+
+  return ({ 'data-testid': testId, onChange, value, children }) => {
+    const options = mockReact.Children.toArray(children).map(child => ({
+      value: child.props.value,
+      label: child.props.children[0],
+    }));
+
+    return (
+      <select
+        data-testid={testId}
+        value={value || []}
+        onChange={e => {
+          onChange([e.target.value]);
+        }}
+      >
+        <option value="">Select...</option>
+        {options.map(opt => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    );
+  };
+});
+
 describe('<TraceSpanView>', () => {
-  let wrapper;
   let defaultProps;
 
   beforeEach(() => {
@@ -31,48 +59,77 @@ describe('<TraceSpanView>', () => {
       uiFind: undefined,
       uiFindVertexKeys: undefined,
     };
-
-    wrapper = mount(<TraceSpanView {...defaultProps} />);
   });
 
   it('does not explode', () => {
-    expect(wrapper).toBeDefined();
-    expect(wrapper.find('.title--TraceSpanView').length).toBe(1);
-    expect(wrapper.find('.span-view-table').length).toBe(3);
-    expect(wrapper.find('table').length).toBe(1);
-    expect(wrapper.find('colgroup').length).toBe(1);
-    expect(wrapper.find('Pagination').length).toBe(2);
-    expect(wrapper.find('Button').length).toBe(1);
-    expect(wrapper.find('.ant-form-item-control-input').length).toBe(3);
-  });
-  it('Should change value when onChange was called', () => {
-    const event = ['service2'];
-    wrapper = shallow(<TraceSpanView {...defaultProps} />);
+    const { container } = render(<TraceSpanView {...defaultProps} />);
 
-    wrapper.find({ 'data-testid': 'select-service' }).simulate('change', event);
-    expect(wrapper.state('selectedServiceName')).toEqual(['service2']);
+    expect(screen.getByText('Trace Tabular View')).toBeInTheDocument();
+    expect(screen.getByRole('table')).toBeInTheDocument();
+
+    const spanViewTables = container.querySelectorAll('.span-view-table');
+    expect(spanViewTables.length).toBe(1);
+
+    expect(container.querySelector('colgroup')).toBeInTheDocument();
+
+    const paginationElements = container.querySelectorAll('.ant-pagination');
+    expect(paginationElements.length).toBe(1);
+
+    expect(screen.getByText('Reset Filters')).toBeInTheDocument();
+
+    const formControls = container.querySelectorAll('.ant-form-item-control-input');
+    expect(formControls.length).toBe(3);
   });
+
+  it('Should change value when onChange was called', () => {
+    render(<TraceSpanView {...defaultProps} />);
+
+    const serviceSelect = screen.getByTestId('select-service');
+
+    fireEvent.change(serviceSelect, { target: { value: 'service2' } });
+
+    expect(serviceSelect.value).toBe('service2');
+  });
+
   it('Should change value when onChange and Rest the value when called reset', () => {
-    const event = ['service2'];
-    wrapper = shallow(<TraceSpanView {...defaultProps} />);
-    wrapper.find({ 'data-testid': 'select-service' }).simulate('change', event);
-    expect(wrapper.state('selectedServiceName')).toEqual(['service2']);
-    wrapper.find('.reset-filter Button').simulate('click');
-    expect(wrapper.state('selectedServiceName')).toEqual([]);
+    render(<TraceSpanView {...defaultProps} />);
+
+    const serviceSelect = screen.getByTestId('select-service');
+    fireEvent.change(serviceSelect, { target: { value: 'service2' } });
+    expect(serviceSelect.value).toBe('service2');
+
+    const resetButton = screen.getByText('Reset Filters');
+    fireEvent.click(resetButton);
+
+    expect(serviceSelect.value).toBe('');
   });
-  it('Should change value when onChange OperatioName DDwas called', () => {
-    const event = ['op2', 'op3'];
-    wrapper = shallow(<TraceSpanView {...defaultProps} />);
-    wrapper.find({ 'data-testid': 'select-operation' }).simulate('change', event);
-    expect(wrapper.state('selectedOperationName')).toEqual(['op2', 'op3']);
+
+  it('Should change value when onChange OperationName DD was called', () => {
+    render(<TraceSpanView {...defaultProps} />);
+
+    const operationSelect = screen.getByTestId('select-operation');
+
+    fireEvent.change(operationSelect, { target: { value: 'op2' } });
+
+    expect(operationSelect.value).toBe('op2');
   });
+
   it('check handler', () => {
-    const instance = wrapper.instance();
-    expect(instance.state.serviceNamesList).toBeDefined();
-    expect(instance.state.serviceNamesList.length).toBe(2);
-    expect(instance.state.serviceNamesList).toEqual(['service1', 'service2']);
-    expect(instance.state.operationNamesList).toBeDefined();
-    expect(instance.state.operationNamesList.length).toBe(6);
-    expect(instance.state.operationNamesList).toEqual(['op1', 'op2', 'op3', 'op4', 'op6', 'op7']);
+    render(<TraceSpanView {...defaultProps} />);
+
+    const serviceSelect = screen.getByTestId('select-service');
+    const serviceOptions = Array.from(serviceSelect.querySelectorAll('option')).slice(1);
+
+    expect(serviceOptions.length).toBe(2);
+    expect(serviceOptions[0].textContent).toBe('service1');
+    expect(serviceOptions[1].textContent).toBe('service2');
+
+    const operationSelect = screen.getByTestId('select-operation');
+    const operationOptions = Array.from(operationSelect.querySelectorAll('option')).slice(1);
+
+    expect(operationOptions.length).toBe(6);
+    expect(operationOptions.map(opt => opt.textContent.trim())).toEqual(
+      expect.arrayContaining(['op1', 'op2', 'op3', 'op4', 'op6', 'op7'])
+    );
   });
 });

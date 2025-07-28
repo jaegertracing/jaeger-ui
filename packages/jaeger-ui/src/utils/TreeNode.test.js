@@ -21,7 +21,7 @@ it('TreeNode constructor should return a tree node', () => {
   expect(node.children).toEqual([]);
 });
 
-it('TreeNode constructor should return a tree node', () => {
+it('TreeNode constructor should return a tree node with children', () => {
   const node = new TreeNode(4, [new TreeNode(3)]);
 
   expect(node.value).toBe(4);

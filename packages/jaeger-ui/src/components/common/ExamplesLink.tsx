@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as React from 'react';
-
 import { getUrl } from '../SearchTracePage/url';
 import NewWindowIcon from './NewWindowIcon';
 
@@ -51,17 +50,15 @@ function getGetUrlArg(examples: TExample[]): { spanLinks: Record<string, string>
   };
 }
 
-export default class ExamplesLink extends React.PureComponent<TProps> {
-  render() {
-    const { examples, includeText } = this.props;
+const ExamplesLink: React.FC<TProps> = ({ examples, includeText }) => {
+  if (!examples || !examples.length) return null;
 
-    if (!examples || !examples.length) return null;
+  return (
+    <a href={getUrl(getGetUrlArg(examples))} target="_blank" rel="noopener noreferrer">
+      {includeText && 'Examples '}
+      <NewWindowIcon />
+    </a>
+  );
+};
 
-    return (
-      <a href={getUrl(getGetUrlArg(examples))} target="_blank" rel="noopener noreferrer">
-        {includeText && 'Examples '}
-        <NewWindowIcon />
-      </a>
-    );
-  }
-}
+export default ExamplesLink;

@@ -20,6 +20,7 @@ import _values from 'lodash/values';
 import { IoArrowBack, IoFileTrayFull, IoChevronForward } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 
+import { Helmet } from 'react-helmet';
 import AltViewOptions from './AltViewOptions';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import SpanGraph from './SpanGraph';
@@ -28,7 +29,6 @@ import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceVi
 import LabeledList from '../../common/LabeledList';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
-import { getTraceName } from '../../../model/trace-viewer';
 import { TNil } from '../../../types';
 import { Trace } from '../../../types/trace';
 import { formatDatetime, formatDuration } from '../../../utils/date';
@@ -37,6 +37,7 @@ import { getTraceLinks } from '../../../model/link-patterns';
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import TraceId from '../../common/TraceId';
 
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
@@ -149,15 +150,17 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
       return { ...rest, value: renderer(trace) };
     });
 
+  const traceShortID = trace.traceID.slice(0, 7);
+
   const title = (
     <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>
-      <TraceName traceName={getTraceName(trace.spans)} />{' '}
-      <small className="u-tx-muted">{trace.traceID.slice(0, 7)}</small>
+      <TraceName traceName={trace.traceName} /> <TraceId traceId={trace.traceID} />
     </h1>
   );
 
   return (
     <header className="TracePageHeader">
+      <Helmet title={`${trace.traceEmoji} ${traceShortID}: ${trace.tracePageTitle} — Jaeger UI`} />
       <div className="TracePageHeader--titleRow">
         {toSearch && (
           <Link className="TracePageHeader--back" to={toSearch}>

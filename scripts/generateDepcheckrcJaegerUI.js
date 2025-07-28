@@ -12,23 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable @typescript-eslint/no-var-requires */
-const fs = require('fs');
-const path = require('path');
-const { babelConfiguration } = require('../packages/jaeger-ui/test/babel-transform');
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { babelConfigurationForDepcheck } from '../packages/jaeger-ui/test/babel-transform.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const packageNames = [
-  ...babelConfiguration.presets.flatMap(preset => {
+  ...babelConfigurationForDepcheck.presets.flatMap(preset => {
     if (Array.isArray(preset)) {
       return [preset[0]];
     }
     return [preset];
   }),
-  ...babelConfiguration.plugins,
+  ...babelConfigurationForDepcheck.plugins.flatMap(plugin => {
+    if (Array.isArray(plugin)) {
+      return [plugin[0]];
+    }
+    return [plugin];
+  }),
 ];
 
-const otherPackages = ['jest-environment-jsdom'];
+const otherPackages = ['jest-environment-jsdom', '@types/jest'];
 
 // Use the selected targetPackage for generating depcheckrcContent
 const depcheckrcContent = {

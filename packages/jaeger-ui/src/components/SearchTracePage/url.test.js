@@ -242,7 +242,6 @@ describe('SearchTracePage/url', () => {
       expect(isSameQuery(baseQuery)).toBe(false);
     });
 
-    /* eslint-disable @typescript-eslint/no-unused-vars */
     it('returns `false` if a considered key is changed or omitted', () => {
       queryKeys.forEach(key => {
         const { [key]: _omitted, ...rest } = baseQuery;
@@ -254,7 +253,6 @@ describe('SearchTracePage/url', () => {
     it('returns `true` if no considered keys are changed or omitted', () => {
       expect(isSameQuery(baseQuery, { ...baseQuery })).toBe(true);
 
-      // eslint-disable-next-line camelcase
       const { [otherKey]: _omitted, ...copy } = baseQuery;
       expect(isSameQuery(baseQuery, copy)).toBe(true);
       expect(isSameQuery(baseQuery, { ...copy, [otherKey]: 'changed' })).toBe(true);

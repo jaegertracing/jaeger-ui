@@ -13,12 +13,18 @@
 // limitations under the License.
 
 import { TLayoutEdge, TLayoutGraph, TLayoutVertex, TSizeVertex } from '../../types';
+import { TLayoutOptions } from '../types';
 
 const round = Math.round;
 
-const DPI = 72;
+export function getDpi(options?: TLayoutOptions | void): number {
+  const DEFAULT_DPI = 72;
+  const dpi = options?.dpi ?? DEFAULT_DPI;
+  return dpi;
+}
 
-export function vertexToDot(v: TSizeVertex): TSizeVertex {
+export function vertexToDot(v: TSizeVertex, options?: TLayoutOptions | void): TSizeVertex {
+  const DPI = getDpi(options);
   // expect only width and height for going to dot
   const { vertex, height, width } = v;
   return {
@@ -28,7 +34,12 @@ export function vertexToDot(v: TSizeVertex): TSizeVertex {
   };
 }
 
-export function edgeToPixels(graph: TLayoutGraph, e: TLayoutEdge<{}>): TLayoutEdge<{}> {
+export function edgeToPixels(
+  graph: TLayoutGraph,
+  e: TLayoutEdge<{}>,
+  options?: TLayoutOptions | void
+): TLayoutEdge<{}> {
+  const DPI = getDpi(options);
   const { height: h } = graph;
   const { edge, pathPoints } = e;
   return {
@@ -38,7 +49,8 @@ export function edgeToPixels(graph: TLayoutGraph, e: TLayoutEdge<{}>): TLayoutEd
   };
 }
 
-export function graphToPixels(graph: TLayoutGraph) {
+export function graphToPixels(graph: TLayoutGraph, options?: TLayoutOptions | void) {
+  const DPI = getDpi(options);
   const { height, scale, width } = graph;
   return {
     scale,
@@ -47,7 +59,12 @@ export function graphToPixels(graph: TLayoutGraph) {
   };
 }
 
-export function vertexToPixels(graph: TLayoutGraph, v: TLayoutVertex): TLayoutVertex {
+export function vertexToPixels(
+  graph: TLayoutGraph,
+  v: TLayoutVertex,
+  options?: TLayoutOptions | void
+): TLayoutVertex {
+  const DPI = getDpi(options);
   const { height: h } = graph;
   const { vertex, height, left, top, width } = v;
   return {

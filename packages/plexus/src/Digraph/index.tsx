@@ -31,7 +31,6 @@ import {
   TSetProps,
 } from './types';
 import { assignMergeCss, getProps } from './utils';
-// TODO(joe): don't use stuff in ../DirectedGraph
 import LayoutManager from '../LayoutManager';
 import { TCancelled, TEdge, TLayoutDone, TSizeVertex, TVertex } from '../types';
 import TNonEmptyArray from '../types/TNonEmptyArray';
@@ -163,7 +162,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
   private renderLayers() {
     const { classNamePrefix, layers: topLayers } = this.props;
     const getClassName = this.makeClassNameFactory(classNamePrefix || '');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const { sizeVertices: _, ...partialGraphState } = this.state;
     const graphState = {
       ...partialGraphState,

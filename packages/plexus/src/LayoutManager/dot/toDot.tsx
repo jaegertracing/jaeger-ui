@@ -26,12 +26,32 @@ const DEFAULT_GRAPH_ATTRS = {
   splines: 'true',
 };
 
+const DEFAULT_SFDP_GRAPH_ATTRS = {
+  sfdpOptions: {
+    overlap: false,
+    maxiter: 10,
+    dim: 2,
+  },
+};
+
 function makeGraphWrapper(options?: TLayoutOptions | null) {
-  const { nodesep, rankdir, ranksep, sep, shape, splines } = { ...DEFAULT_GRAPH_ATTRS, ...options };
+  const { nodesep, rankdir, ranksep, sep, shape, splines, sfdpOptions, engine } = {
+    ...DEFAULT_GRAPH_ATTRS,
+    ...DEFAULT_SFDP_GRAPH_ATTRS,
+    ...options,
+  };
+  const sfdpAttrs =
+    sfdpOptions && engine === 'sfdp'
+      ? `layout=sfdp, ${Object.entries(sfdpOptions)
+          .map(([key, value]) => `${key}=${value}`)
+          .join(', ')}`
+      : '';
   return `digraph G {
-  graph[nodesep=${nodesep.toFixed(3)}, rankdir=${rankdir}, ranksep=${ranksep.toFixed(3)}, sep=${sep.toFixed(
-    3
-  )}, splines=${splines}];
+  graph[${
+    engine === 'sfdp'
+      ? sfdpAttrs
+      : `nodesep=${nodesep.toFixed(3)}, rankdir=${rankdir}, ranksep=${ranksep.toFixed(3)}`
+  }, sep=${sep.toFixed(3)}, splines=${splines}];
   node [shape=${shape}, fixedsize=true, label="", color="_", fillcolor="_"];
   edge [arrowhead=none, arrowtail=none];`;
 }

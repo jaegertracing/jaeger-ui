@@ -23,24 +23,9 @@ import { formatDuration } from '../../../utils/date';
 
 import { FetchedState, TNil } from '../../../types';
 import { ApiError } from '../../../types/api-error';
+import TraceId from '../../common/TraceId';
 
 import './TraceHeader.css';
-
-type Props = {
-  duration: number | TNil;
-  error?: ApiError;
-  startTime: number | TNil;
-  state: FetchedState | TNil;
-  traceID: string | TNil;
-  traceName: string | TNil;
-  totalSpans: number | TNil;
-};
-
-type AttrsProps = {
-  startTime: number | TNil;
-  duration: number | TNil;
-  totalSpans: number | TNil;
-};
 
 // exported for tests
 export function EmptyAttrs() {
@@ -54,8 +39,15 @@ export function EmptyAttrs() {
 }
 
 // exported for tests
-export function Attrs(props: AttrsProps) {
-  const { startTime, duration, totalSpans } = props;
+export function Attrs({
+  startTime,
+  duration,
+  totalSpans,
+}: {
+  startTime: number | TNil;
+  duration: number | TNil;
+  totalSpans: number | TNil;
+}) {
   return (
     <ul className="TraceDiffHeader--traceAttributes" data-testid="TraceDiffHeader--traceAttributes">
       <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
@@ -75,8 +67,23 @@ export function Attrs(props: AttrsProps) {
   );
 }
 
-export default function TraceHeader(props: Props) {
-  const { duration, error, startTime, state, traceID, totalSpans, traceName } = props;
+export default function TraceHeader({
+  duration,
+  error,
+  startTime,
+  state,
+  traceID,
+  totalSpans,
+  traceName,
+}: {
+  duration: number | TNil;
+  error?: ApiError;
+  startTime: number | TNil;
+  state: FetchedState | TNil;
+  traceID: string | TNil;
+  traceName: string | TNil;
+  totalSpans: number | TNil;
+}) {
   const AttrsComponent = state === fetchedState.DONE ? Attrs : EmptyAttrs;
 
   return (
@@ -86,9 +93,7 @@ export default function TraceHeader(props: Props) {
           {traceID ? (
             <React.Fragment>
               <TraceName key="name" traceName={traceName} error={error} state={state} />{' '}
-              <small key="id" className="u-tx-muted ub-pr2">
-                {traceID.slice(0, 7)}
-              </small>
+              <TraceId key="id" traceId={traceID} className="ub-pr2" />
               <TraceTimelineLink traceID={traceID} />
             </React.Fragment>
           ) : (
@@ -101,7 +106,3 @@ export default function TraceHeader(props: Props) {
     </div>
   );
 }
-
-TraceHeader.defaultProps = {
-  error: undefined,
-};

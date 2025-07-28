@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/no-extraneous-dependencies */
 import * as React from 'react';
 import { Dropdown } from 'antd';
 import { IoOpenOutline, IoList, IoCopyOutline } from 'react-icons/io5';
@@ -44,15 +43,15 @@ function shouldDisplayAsStringList(key: string) {
 const stringListMarkup = (value: any[]) => (
   <div className="json-markup">
     {value.map((item, i) => (
-      <>
+      <React.Fragment key={i}>
         {i > 0 && ', '}
         <span className="json-markup-string">{item}</span>
-      </>
+      </React.Fragment>
     ))}
   </div>
 );
 
-const scalarMarkup = (value: string | Number | Boolean) => {
+const scalarMarkup = (value: string | number | boolean) => {
   let className;
   switch (typeof value) {
     case 'boolean': {
@@ -117,14 +116,10 @@ function formatValue(key: string, value: any) {
 }
 
 export const LinkValue = (props: { href: string; title?: string; children: React.ReactNode }) => (
-  <a href={props.href} title={props.title} target="_blank" rel="noopener noreferrer">
+  <a href={props.href} title={props.title || ''} target="_blank" rel="noopener noreferrer">
     {props.children} <IoOpenOutline className="KeyValueTable--linkIcon" />
   </a>
 );
-
-LinkValue.defaultProps = {
-  title: '',
-};
 
 const linkValueList = (links: Link[]) => {
   const dropdownItems = links.map(({ text, url }, index) => ({
@@ -179,24 +174,26 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             }
             return (
               // `i` is necessary in the key because row.key can repeat
-              // eslint-disable-next-line react/no-array-index-key
+
               <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
                 <td className="KeyValueTable--keyColumn">{row.key}</td>
-                <td>{valueMarkup}</td>
-                <td className="KeyValueTable--copyColumn">
-                  <CopyIcon
-                    className="KeyValueTable--copyIcon"
-                    copyText={row.value}
-                    tooltipTitle="Copy value"
-                    buttonText="Copy"
-                  />
-                  <CopyIcon
-                    className="KeyValueTable--copyIcon"
-                    icon={<IoCopyOutline />}
-                    copyText={JSON.stringify(row, null, 2)}
-                    tooltipTitle="Copy JSON"
-                    buttonText="JSON"
-                  />
+                <td className="KeyValueTable--valueColumn">
+                  <div className="KeyValueTable--copyContainer">
+                    <CopyIcon
+                      className="KeyValueTable--copyIcon"
+                      copyText={row.value}
+                      tooltipTitle="Copy value"
+                      buttonText="Copy"
+                    />
+                    <CopyIcon
+                      className="KeyValueTable--copyIcon"
+                      icon={<IoCopyOutline />}
+                      copyText={JSON.stringify(row, null, 2)}
+                      tooltipTitle="Copy JSON"
+                      buttonText="JSON"
+                    />
+                  </div>
+                  {valueMarkup}
                 </td>
               </tr>
             );

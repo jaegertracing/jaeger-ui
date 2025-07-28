@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/first */
 jest.mock('isomorphic-fetch', () =>
   jest.fn(() =>
     Promise.resolve({
@@ -95,7 +94,7 @@ describe('fetchQualityMetrics', () => {
     const service = 'test-service';
     JaegerAPI.fetchQualityMetrics(service, hours);
     expect(fetchMock).toHaveBeenLastCalledWith(
-      `/qualitymetrics-v2?${queryString.stringify({ service, hours })}`,
+      `/api/quality-metrics?${queryString.stringify({ service, hours })}`,
       defaultOptions
     );
   });

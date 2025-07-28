@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/first */
 jest.mock('./TopNav', () => () => <div />);
 jest.mock('../../utils/tracking');
 
@@ -61,6 +60,14 @@ describe('<Page>', () => {
     const { rerender } = render(<Page {...props} />);
     rerender(<Page {...newProps} />);
     expect(trackPageView).toHaveBeenCalledWith(newProps.pathname, newProps.search);
+  });
+
+  it('tracks a pageView when the search changes but pathname is same', () => {
+    trackPageView.mockReset();
+    const staticPathname = '/same-path';
+    const { rerender } = render(<Page pathname={staticPathname} search="?a=1" />);
+    rerender(<Page pathname={staticPathname} search="?a=2" />);
+    expect(trackPageView).toHaveBeenCalledWith(staticPathname, '?a=2');
   });
 
   describe('Page embedded', () => {

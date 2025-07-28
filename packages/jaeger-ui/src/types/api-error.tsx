@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type ApiError = // eslint-disable-line import/prefer-default-export
-
-    | string
-    | {
-        message: string;
-        httpStatus?: number;
-        httpStatusText?: string;
-        httpUrl?: string;
-        httpQuery?: string;
-        httpBody?: string;
-      };
+export type ApiError =
+  | string
+  | {
+      message: string;
+      httpStatus?: number;
+      httpStatusText?: string;
+      httpUrl?: string;
+      httpQuery?: string;
+      httpBody?: string;
+    };

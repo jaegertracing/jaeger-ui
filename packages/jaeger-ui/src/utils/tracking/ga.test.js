@@ -15,7 +15,7 @@
 import * as GA from './ga';
 import { getAppEnvironment } from '../constants';
 
-jest.mock('./conv-raven-to-ga', () => () => ({
+jest.mock('./conv-sentry-to-ga', () => () => ({
   category: 'jaeger/a',
   action: 'some-action',
   message: 'jaeger/a',
@@ -74,7 +74,7 @@ describe('google analytics tracking', () => {
       ]);
     });
 
-    it('check init function (no cookies)', () => {
+    it('check init function (with cookies)', () => {
       document.cookie = 'page=1;';
       tracking.init();
       expect(window.dataLayer).toEqual([
@@ -166,7 +166,7 @@ describe('google analytics tracking', () => {
     });
   });
 
-  it('converting raven-js errors', () => {
+  it('converting sentry errors', () => {
     window.onunhandledrejection({
       reason: new Error('abc'),
     });
@@ -204,9 +204,7 @@ describe('google analytics tracking', () => {
       );
     });
 
-    /* eslint-disable no-console */
     it('isDebugMode = true', () => {
-      // eslint-disable-next-line no-import-assign
       console.log = jest.fn();
 
       trackingDebug.init();

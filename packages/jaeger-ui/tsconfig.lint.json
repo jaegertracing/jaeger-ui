@@ -32,8 +32,7 @@
     "src/actions/jaeger-api.js",
     "src/api/jaeger.js",
     "src/components/App/index.jsx",
-    "src/components/DependencyGraph/DependencyForceGraph.jsx",
-    "src/components/DependencyGraph/index.jsx",
+    "src/components/DependencyGraph/index.tsx",
     "src/components/SearchTracePage/index.jsx",
     "src/components/SearchTracePage/SearchForm.jsx",
     "src/components/SearchTracePage/SearchForm.markers.js",
@@ -50,6 +49,8 @@
     "src/reducers/trace.js",
     "src/utils/configure-store.js",
     "src/utils/sort.js",
+    "src/components/DependencyGraph/sample_data/large.json",
+    "src/components/DependencyGraph/sample_data/small.json",
     "package.json"
   ]
 }

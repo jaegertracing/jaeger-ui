@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable camelcase */
-/* eslint-disable default-case */
-
 import { handleActions } from 'redux-actions';
 
 import { fetchAllServiceMetrics, fetchAggregatedServiceMetrics } from '../actions/jaeger-api';
@@ -46,7 +43,7 @@ const initialState: MetricsReduxState = {
   },
   isATMActivated: null,
   loading: false,
-  operationMetricsLoading: null,
+  operationMetricsLoading: undefined,
   serviceMetrics: null,
   serviceOpsMetrics: undefined,
 };
@@ -169,7 +166,6 @@ function fetchOpsMetricsDone(
         };
       } = null;
 
-  // eslint-disable-next-line no-undef-init
   let serviceOpsMetrics: ServiceOpsMetrics[] | undefined = undefined;
 
   if (payload) {
@@ -183,6 +179,15 @@ function fetchOpsMetricsDone(
 
           let opsName: string | null = null;
           const avg: {
+            service_operation_latencies: number;
+            service_operation_call_rate: number;
+            service_operation_error_rate: number;
+          } = {
+            service_operation_latencies: 0,
+            service_operation_call_rate: 0,
+            service_operation_error_rate: 0,
+          };
+          const count: {
             service_operation_latencies: number;
             service_operation_call_rate: number;
             service_operation_error_rate: number;
@@ -219,6 +224,7 @@ function fetchOpsMetricsDone(
               try {
                 y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
                 avg[metric.name] += y;
+                count[metric.name] += 1; // Increment count for non-NaN values
               } catch (e) {
                 y = null;
               }
@@ -230,9 +236,7 @@ function fetchOpsMetricsDone(
             });
 
             opsMetrics[opsName].metricPoints.avg[metric.name] =
-              metricDetails.metricPoints.length > 0
-                ? parseFloat((avg[metric.name] / metricDetails.metricPoints.length).toFixed(2))
-                : null;
+              count[metric.name] > 0 ? parseFloat((avg[metric.name] / count[metric.name]).toFixed(2)) : null;
           }
         });
       } else {

@@ -15,7 +15,6 @@
 import { Router } from 'react-router-dom';
 import { Location } from 'history';
 
-import { Action } from 'redux';
 import { ApiError } from './api-error';
 import { TracesArchive } from './archive';
 import { Config } from './config';
@@ -41,9 +40,13 @@ export type FetchedTrace = {
   state?: FetchedState;
 };
 
+export type LocationState = {
+  fromSearch?: string;
+};
+
 export type ReduxState = {
   archive: TracesArchive;
-  type: Action;
+  type: string;
   config: Config;
   ddg: TDdgState;
   dependencies: {
@@ -53,7 +56,7 @@ export type ReduxState = {
   };
   embedded: EmbeddedState;
   router: Router & {
-    location: Location;
+    location: Location<LocationState>;
   };
   services: {
     services: string[] | TNil;

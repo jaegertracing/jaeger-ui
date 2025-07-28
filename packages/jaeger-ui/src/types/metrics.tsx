@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable camelcase */
-
 import { ApiError } from './api-error';
 
 export type MetricsType = 'latencies' | 'calls' | 'errors';
@@ -124,7 +122,7 @@ export type MetricsReduxState = {
   };
   isATMActivated: null | boolean;
   loading: boolean;
-  operationMetricsLoading: null | boolean;
+  operationMetricsLoading: undefined | boolean;
   serviceMetrics: ServiceMetrics | null;
   serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
 };

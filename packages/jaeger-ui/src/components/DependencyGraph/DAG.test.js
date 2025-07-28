@@ -15,8 +15,31 @@
 import React from 'react';
 import ShallowRenderer from 'react-test-renderer/shallow';
 import { render, screen } from '@testing-library/react';
-import { shallow } from 'enzyme';
-import DAG, { renderNode } from './DAG';
+import '@testing-library/jest-dom';
+import { LayoutManager } from '@jaegertracing/plexus';
+import DAG, {
+  renderNode,
+  handleViewTraces,
+  createHandleNodeClick,
+  createHandleCanvasClick,
+  createMenuItems,
+} from './DAG';
+import { DAG_MAX_NUM_SERVICES } from '../../constants';
+import * as urlModule from '../SearchTracePage/url';
+
+// Mock useEffect to handle cleanup functions and uiFind match count
+jest.spyOn(React, 'useEffect').mockImplementation(f => {
+  const cleanup = f();
+  return () => {
+    if (typeof cleanup === 'function') {
+      cleanup();
+    }
+  };
+});
+
+jest.spyOn(React, 'useState').mockImplementation(initialValue => [initialValue, jest.fn()]);
+
+jest.spyOn(React, 'useRef').mockImplementation(() => ({ current: null }));
 
 // mock canvas API (we don't care about canvas results)
 
@@ -62,40 +85,215 @@ describe('<DAG>', () => {
 
   beforeEach(() => {
     renderer = new ShallowRenderer();
+    jest.clearAllMocks();
   });
 
   it('shows correct number of nodes and vertices', () => {
-    const serviceCalls = [
-      {
-        callCount: 1,
-        child: 'child-id',
-        parent: 'parent-id',
-      },
-    ];
+    const data = {
+      nodes: [{ key: 'parent-id' }, { key: 'child-id' }],
+      edges: [{ from: 'parent-id', to: 'child-id', label: '1' }],
+    };
 
-    renderer.render(<DAG serviceCalls={serviceCalls} />);
+    renderer.render(<DAG data={data} />);
     const element = renderer.getRenderOutput();
-
-    expect(element.props.children.props.vertices.length).toBe(2);
-    expect(element.props.children.props.edges.length).toBe(1);
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(2);
+    expect(digraph.props.edges).toHaveLength(1);
   });
 
   it('does not show nodes with empty strings or string with only spaces', () => {
-    const serviceCalls = [
-      {
-        callCount: 1,
-        child: '',
-        parent: ' ',
-      },
-    ];
+    const data = { nodes: [], edges: [] };
 
-    renderer.render(<DAG serviceCalls={serviceCalls} />);
+    renderer.render(<DAG data={data} />);
     const element = renderer.getRenderOutput();
+    const digraph = element.props.children[0];
 
     // Empty or blank strings getting skipped is desirable
     // But should not cause the component to break
-    expect(element.props.children.props.vertices.length).toBe(0);
-    expect(element.props.children.props.edges.length).toBe(0);
+    expect(digraph.props.vertices).toHaveLength(0);
+    expect(digraph.props.edges).toHaveLength(0);
+  });
+
+  it('shows filtered graph when selectedService and selectedDepth are provided', () => {
+    const data = {
+      nodes: [{ key: 'service-a' }, { key: 'service-b' }, { key: 'service-c' }],
+      edges: [
+        { from: 'service-a', to: 'service-b', label: '1' },
+        { from: 'service-b', to: 'service-c', label: '2' },
+      ],
+    };
+
+    renderer.render(<DAG data={data} selectedService="service-a" selectedDepth={2} selectedLayout="dot" />);
+    const element = renderer.getRenderOutput();
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(3);
+    expect(digraph.props.edges).toHaveLength(2);
+  });
+
+  it('handles bidirectional connections in depth filtering', () => {
+    const data = {
+      nodes: [{ key: 'service-a' }, { key: 'service-b' }, { key: 'service-c' }],
+      edges: [
+        { from: 'service-a', to: 'service-b', label: '1' },
+        { from: 'service-c', to: 'service-b', label: '2' },
+      ],
+    };
+
+    renderer.render(<DAG data={data} selectedService="service-b" selectedDepth={1} selectedLayout="dot" />);
+    const element = renderer.getRenderOutput();
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(3);
+    expect(digraph.props.edges).toHaveLength(2);
+  });
+
+  it('respects depth limit', () => {
+    const data = {
+      nodes: [{ key: 'service-a' }, { key: 'service-b' }],
+      edges: [{ from: 'service-a', to: 'service-b', label: '1' }],
+    };
+
+    renderer.render(<DAG data={data} selectedService="service-a" selectedDepth={1} selectedLayout="dot" />);
+    const element = renderer.getRenderOutput();
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(2);
+    expect(digraph.props.edges).toHaveLength(1);
+  });
+
+  it('uses sfdp layout for large graphs', () => {
+    const serviceCalls = Array.from({ length: 101 }, (_, i) => ({
+      parent: `service-${i}`,
+      child: `service-${i + 1}`,
+      callCount: 1,
+    }));
+    const nodes = new Set();
+    const edges = serviceCalls.map(call => {
+      nodes.add(call.parent);
+      nodes.add(call.child);
+      return { from: call.parent, to: call.child, label: `${call.callCount}` };
+    });
+    const data = {
+      nodes: Array.from(nodes).map(key => ({ key })),
+      edges,
+    };
+
+    renderer.render(<DAG data={data} selectedLayout="sfdp" />);
+    const element = renderer.getRenderOutput();
+    const digraph = element.props.children[0];
+    expect(digraph.props.layoutManager.options).toMatchObject({
+      engine: 'sfdp',
+      dpi: expect.any(Number),
+    });
+  });
+
+  it('uses dot layout for small graphs', () => {
+    const data = {
+      nodes: [{ key: 'service-a' }, { key: 'service-b' }, { key: 'service-c' }],
+      edges: [
+        { from: 'service-a', to: 'service-b', label: '1' },
+        { from: 'service-b', to: 'service-c', label: '2' },
+      ],
+    };
+
+    renderer.render(<DAG data={data} selectedLayout="dot" />);
+    const element = renderer.getRenderOutput();
+    const digraph = element.props.children[0];
+    expect(digraph.props.layoutManager.options).toMatchObject({
+      nodesep: 1.5,
+      ranksep: 1.6,
+      rankdir: 'TB',
+      splines: 'polyline',
+      useDotEdges: true,
+    });
+  });
+
+  it('handles empty serviceCalls array', () => {
+    renderer.render(<DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" />);
+    const element = renderer.getRenderOutput();
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(0);
+    expect(digraph.props.edges).toHaveLength(0);
+  });
+
+  it('handles null or undefined maxDepth values', () => {
+    const data = {
+      nodes: [{ key: 'service-a' }, { key: 'service-b' }, { key: 'service-c' }],
+      edges: [
+        { from: 'service-a', to: 'service-b', label: '1' },
+        { from: 'service-b', to: 'service-c', label: '2' },
+      ],
+    };
+
+    renderer.render(
+      <DAG data={data} selectedService="service-a" selectedDepth={null} selectedLayout="dot" />
+    );
+    const element = renderer.getRenderOutput();
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(3);
+    expect(digraph.props.edges).toHaveLength(2);
+  });
+
+  it('shows error message when too many services to render', () => {
+    const serviceCalls = Array.from({ length: DAG_MAX_NUM_SERVICES + 1 }, (_, i) => ({
+      parent: `service-${i}`,
+      child: `service-${i + 1}`,
+      callCount: 1,
+    }));
+
+    const nodes = new Set();
+    const edges = serviceCalls.map(call => {
+      nodes.add(call.parent);
+      nodes.add(call.child);
+      return { from: call.parent, to: call.child, label: `${call.callCount}` };
+    });
+    const data = {
+      nodes: Array.from(nodes).map(key => ({ key })),
+      edges,
+    };
+    expect(data.nodes.length).toBeGreaterThan(DAG_MAX_NUM_SERVICES);
+
+    renderer.render(<DAG data={data} selectedLayout="dot" selectedDepth={1} selectedService="" />);
+    const element = renderer.getRenderOutput();
+
+    expect(element.type).toBe('div');
+    expect(element.props.className).toBe('DAG');
+    expect(element.props.children.type).toBe('div');
+    expect(element.props.children.props.className).toBe('DAG--error');
+  });
+
+  it('correctly passes selectedService and uiFind to renderNode in Digraph layers', () => {
+    const selectedService = 'test-service';
+    const uiFind = 'test';
+
+    renderer.render(
+      <DAG
+        data={{
+          nodes: [{ key: 'test-service' }, { key: 'other-service' }],
+          edges: [{ from: 'test-service', to: 'other-service', label: '1' }],
+        }}
+        selectedService={selectedService}
+        selectedLayout="dot"
+        selectedDepth={1}
+        uiFind={uiFind}
+      />
+    );
+    const element = renderer.getRenderOutput();
+    const digraph = element.props.children[0];
+    const renderNodeFn = digraph.props.layers[1].renderNode;
+    const result = renderNodeFn({ key: 'test-service' });
+
+    expect(result.props.children[1].props.className).toBe('DAG--nodeLabel');
+    expect(result.props.children[0].props.className).toContain('is-focalNode');
+    expect(result.props.children[0].props.className).toContain('is-match');
+  });
+
+  it('defaults serviceCalls to empty array when not provided', () => {
+    renderer.render(
+      <DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" selectedDepth={1} selectedService="" />
+    );
+    const element = renderer.getRenderOutput();
+    const digraph = element.props.children[0];
+    expect(digraph.props.vertices).toHaveLength(0);
+    expect(digraph.props.edges).toHaveLength(0);
   });
 });
 
@@ -105,7 +303,7 @@ describe('renderNode', () => {
       key: 'Test',
     };
 
-    render(renderNode(vertex));
+    render(renderNode(vertex, null));
 
     const element = await screen.findByTestId('dagNodeLabel');
 
@@ -117,31 +315,23 @@ describe('renderNode', () => {
       key: 2,
     };
 
-    render(renderNode(vertex));
+    render(renderNode(vertex, null));
 
     const element = await screen.findByTestId('dagNodeLabel');
 
     expect(element.textContent).toBe('2');
   });
 
-  it('displays nothing if vertext is undefined', async () => {
+  it('displays nothing if vertext is undefined', () => {
     const vertex = undefined;
-
-    render(renderNode(vertex));
-
-    const element = await screen.findByTestId('dagNodeLabel');
-
-    expect(element.textContent).toBe('');
+    const result = renderNode(vertex, null);
+    expect(result).toBeNull();
   });
 
-  it('displays nothing if vertext is null', async () => {
+  it('displays nothing if vertext is null', () => {
     const vertex = null;
-
-    render(renderNode(vertex));
-
-    const element = await screen.findByTestId('dagNodeLabel');
-
-    expect(element.textContent).toBe('');
+    const result = renderNode(vertex, null);
+    expect(result).toBeNull();
   });
 
   it('displays nothing if vertext key is undefined', async () => {
@@ -149,7 +339,7 @@ describe('renderNode', () => {
       key: undefined,
     };
 
-    render(renderNode(vertex));
+    render(renderNode(vertex, null));
 
     const element = await screen.findByTestId('dagNodeLabel');
 
@@ -161,19 +351,253 @@ describe('renderNode', () => {
       key: null,
     };
 
-    render(renderNode(vertex));
+    render(renderNode(vertex, null));
 
     const element = await screen.findByTestId('dagNodeLabel');
 
     expect(element.textContent).toBe('');
   });
+
+  it('should call onClick when provided', () => {
+    const vertex = { key: 'test-service' };
+    const event = { clientX: 100, clientY: 200 };
+    const onClick = jest.fn();
+    const uiFind = '';
+
+    const result = renderNode(vertex, null, uiFind, null, null, onClick);
+    result.props.onClick(event);
+
+    expect(onClick).toHaveBeenCalledWith(vertex, event);
+  });
+
+  it('should handle onMouseEnter with optional chaining when onMouseEnter is undefined', () => {
+    const vertex = { key: 'test-service' };
+    const event = { clientX: 100, clientY: 200 };
+    const uiFind = '';
+
+    const result = renderNode(vertex, null, uiFind, undefined);
+
+    expect(() => result.props.onMouseEnter(event)).not.toThrow();
+  });
 });
 
 describe('clean up', () => {
+  let renderer;
+
+  beforeEach(() => {
+    renderer = new ShallowRenderer();
+    jest.clearAllMocks();
+  });
+
   it('stops LayoutManager before unmounting', () => {
-    const wrapper = shallow(<DAG serviceCalls={[]} />);
-    const stopAndReleaseSpy = jest.spyOn(wrapper.instance().layoutManager, 'stopAndRelease');
-    wrapper.unmount();
+    const stopAndReleaseSpy = jest.spyOn(LayoutManager.prototype, 'stopAndRelease');
+    renderer.render(<DAG data={{ nodes: [], edges: [] }} />);
+    const cleanupFunctions = React.useEffect.mock.results
+      .map(result => result.value)
+      .filter(fn => typeof fn === 'function');
+
+    cleanupFunctions.forEach(cleanup => cleanup());
+
     expect(stopAndReleaseSpy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('handleViewTraces', () => {
+  let windowOpenSpy;
+  let getSearchUrlSpy;
+
+  beforeEach(() => {
+    windowOpenSpy = jest.spyOn(window, 'open').mockImplementation(() => {});
+    getSearchUrlSpy = jest.spyOn(urlModule, 'getUrl').mockReturnValue('http://test-url');
+  });
+
+  afterEach(() => {
+    windowOpenSpy.mockRestore();
+    getSearchUrlSpy.mockRestore();
+  });
+
+  it('should open a new window with the correct URL when a node is provided', () => {
+    const hoveredNode = { key: 'test-service' };
+
+    handleViewTraces(hoveredNode);
+
+    expect(getSearchUrlSpy).toHaveBeenCalledWith({ service: 'test-service' });
+    expect(windowOpenSpy).toHaveBeenCalledWith('http://test-url', '_blank');
+  });
+
+  it('should handle null node gracefully', () => {
+    handleViewTraces(null);
+
+    expect(getSearchUrlSpy).toHaveBeenCalledWith({ service: undefined });
+    expect(windowOpenSpy).toHaveBeenCalledWith('http://test-url', '_blank');
+  });
+});
+
+describe('handleNodeClick and handleCanvasClick', () => {
+  let setHoveredNodeMock;
+  let setMenuPositionMock;
+  let setIsMenuVisibleMock;
+
+  beforeEach(() => {
+    setHoveredNodeMock = jest.fn();
+    setMenuPositionMock = jest.fn();
+    setIsMenuVisibleMock = jest.fn();
+  });
+
+  it('should toggle menu visibility when clicking the same node', () => {
+    const vertex = { key: 'test-service' };
+    const event = {
+      stopPropagation: jest.fn(),
+      clientX: 100,
+      clientY: 200,
+    };
+
+    const handleNodeClick = createHandleNodeClick(
+      null,
+      setHoveredNodeMock,
+      setMenuPositionMock,
+      setIsMenuVisibleMock
+    );
+    handleNodeClick(vertex, event);
+
+    expect(event.stopPropagation).toHaveBeenCalled();
+    expect(setHoveredNodeMock).toHaveBeenCalledWith(vertex);
+    expect(setMenuPositionMock).toHaveBeenCalledWith({ x: 100, y: 200 });
+    expect(setIsMenuVisibleMock).toHaveBeenCalledWith(true);
+
+    setHoveredNodeMock.mockClear();
+    setMenuPositionMock.mockClear();
+    setIsMenuVisibleMock.mockClear();
+    event.stopPropagation.mockClear();
+
+    const handleNodeClickWithHoveredNode = createHandleNodeClick(
+      vertex,
+      setHoveredNodeMock,
+      setMenuPositionMock,
+      setIsMenuVisibleMock
+    );
+    handleNodeClickWithHoveredNode(vertex, event);
+
+    expect(event.stopPropagation).toHaveBeenCalled();
+    expect(setHoveredNodeMock).toHaveBeenCalledWith(null);
+    expect(setMenuPositionMock).toHaveBeenCalledWith(null);
+    expect(setIsMenuVisibleMock).toHaveBeenCalledWith(false);
+  });
+
+  it('should close menu when clicking canvas', () => {
+    const handleCanvasClick = createHandleCanvasClick(
+      setHoveredNodeMock,
+      setMenuPositionMock,
+      setIsMenuVisibleMock
+    );
+    handleCanvasClick();
+
+    expect(setIsMenuVisibleMock).toHaveBeenCalledWith(false);
+    expect(setHoveredNodeMock).toHaveBeenCalledWith(null);
+    expect(setMenuPositionMock).toHaveBeenCalledWith(null);
+  });
+});
+
+describe('createMenuItems', () => {
+  it('should return empty array when hoveredNode is null', () => {
+    const result = createMenuItems(null);
+    expect(result).toEqual([]);
+  });
+
+  it('should return menu items when hoveredNode is provided', () => {
+    const hoveredNode = { key: 'test-service' };
+    const onServiceSelect = jest.fn();
+
+    const result = createMenuItems(hoveredNode, onServiceSelect);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].id).toBe('set-focus');
+    expect(result[0].label).toBe('Set focus');
+    expect(result[1].id).toBe('view-traces');
+    expect(result[1].label).toBe('View traces');
+
+    result[0].onClick();
+    expect(onServiceSelect).toHaveBeenCalledWith('test-service');
+
+    const windowOpenSpy = jest.spyOn(window, 'open').mockImplementation(() => {});
+    result[1].onClick();
+    expect(windowOpenSpy).toHaveBeenCalled();
+    windowOpenSpy.mockRestore();
+  });
+});
+
+describe('DAGMenu', () => {
+  let renderer;
+
+  beforeEach(() => {
+    renderer = new ShallowRenderer();
+  });
+
+  it('should render menu when all conditions are met', () => {
+    const menuPosition = { x: 100, y: 200 };
+    const hoveredNode = { key: 'test-service' };
+    const isMenuVisible = true;
+    const menuItems = [
+      { id: 'set-focus', label: 'Set focus', icon: <div />, onClick: jest.fn() },
+      { id: 'view-traces', label: 'View traces', icon: <div />, onClick: jest.fn() },
+    ];
+
+    const DAGComponent = renderer.render(
+      <DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" selectedDepth={1} selectedService="" />
+    );
+
+    const DAGMenuComponent = DAGComponent.props.children[1];
+
+    const result = DAGMenuComponent.type({
+      menuPosition,
+      hoveredNode,
+      isMenuVisible,
+      menuItems,
+    });
+
+    expect(result).toBeTruthy();
+    expect(result.props.role).toBe('menu');
+    expect(result.props.style).toEqual({
+      position: 'fixed',
+      left: 100,
+      top: 190,
+      zIndex: 1000,
+      pointerEvents: 'auto',
+    });
+
+    const renderedMenuItems = result.props.children.props.items;
+    expect(renderedMenuItems).toEqual(menuItems);
+  });
+
+  it('should not render menu when any condition is not met', () => {
+    const DAGComponent = renderer.render(
+      <DAG data={{ nodes: [], edges: [] }} selectedLayout="dot" selectedDepth={1} selectedService="" />
+    );
+
+    const DAGMenuComponent = DAGComponent.props.children[1];
+
+    const result1 = DAGMenuComponent.type({
+      menuPosition: null,
+      hoveredNode: { key: 'test-service' },
+      isMenuVisible: true,
+      menuItems: [],
+    });
+    expect(result1).toBeNull();
+
+    const result2 = DAGMenuComponent.type({
+      menuPosition: { x: 100, y: 200 },
+      hoveredNode: null,
+      isMenuVisible: true,
+      menuItems: [],
+    });
+    expect(result2).toBeNull();
+
+    const result3 = DAGMenuComponent.type({
+      menuPosition: { x: 100, y: 200 },
+      hoveredNode: { key: 'test-service' },
+      isMenuVisible: false,
+      menuItems: [],
+    });
+    expect(result3).toBeNull();
   });
 });

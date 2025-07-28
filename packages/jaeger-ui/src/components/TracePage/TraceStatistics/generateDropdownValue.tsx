@@ -23,28 +23,25 @@ const operationName = 'Operation Name';
 /**
  * Used to get the values if tag is picked from the first dropdown.
  */
-function getValueTagIsPicked(tableValue: ITableSpan[], trace: Trace, nameSelectorTitle: string) {
+function getValueTagIsPicked(trace: Trace, tagKeyFromFirstDropdown: string) {
   const allSpans = trace.spans;
-  let spansWithFilterTag = [];
+  const tagKeys = new Set<string>();
 
-  // add all Spans with this tag key
-
-  for (let i = 0; i < tableValue.length; i++) {
-    if (tableValue[i].hasSubgroupValue) {
-      for (let j = 0; j < allSpans.length; j++) {
-        for (let l = 0; l < allSpans[j].tags.length; l++) {
-          if (nameSelectorTitle === allSpans[j].tags[l].key) {
-            spansWithFilterTag.push(allSpans[j]);
-          }
-        }
+  for (let j = 0; j < allSpans.length; j++) {
+    let spanContainsTagFromFirstDropdown = false;
+    for (let l = 0; l < allSpans[j].tags.length; l++) {
+      if (tagKeyFromFirstDropdown === allSpans[j].tags[l].key) {
+        spanContainsTagFromFirstDropdown = true;
+        break;
       }
     }
-  }
-  spansWithFilterTag = _uniq(spansWithFilterTag);
 
-  const tags = spansWithFilterTag.map(o => o.tags);
-  let tagKeys = _uniq(_flatten(tags).map(o => o.key));
-  tagKeys = tagKeys.filter(o => o !== nameSelectorTitle);
+    if (spanContainsTagFromFirstDropdown) {
+      allSpans[j].tags.forEach(x => tagKeys.add(x.key));
+    }
+  }
+
+  tagKeys.delete(tagKeyFromFirstDropdown);
 
   return [serviceName, operationName, ...tagKeys];
 }
@@ -76,10 +73,10 @@ export function generateDropdownValue(trace: Trace) {
   return values;
 }
 
-export function generateSecondDropdownValue(tableValue: ITableSpan[], trace: Trace, dropdownTitle1: string) {
+export function generateSecondDropdownValue(trace: Trace, dropdownTitle1: string) {
   let values;
   if (dropdownTitle1 !== serviceName && dropdownTitle1 !== operationName) {
-    values = getValueTagIsPicked(tableValue, trace, dropdownTitle1);
+    values = getValueTagIsPicked(trace, dropdownTitle1);
   } else {
     values = getValueNoTagIsPicked(trace, dropdownTitle1);
   }

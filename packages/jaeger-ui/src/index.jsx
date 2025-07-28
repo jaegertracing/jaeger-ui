@@ -14,7 +14,7 @@
 
 // site-prefix.js must be the first import of the main webpack entrypoint
 // because it configures the webpack publicPath.
-/* eslint-disable import/first */
+
 import './site-prefix';
 
 import React from 'react';
@@ -26,7 +26,7 @@ import JaegerUIApp from './components/App';
 import { context as trackingContext } from './utils/tracking';
 
 // these need to go after the App import
-/* eslint-disable import/first */
+
 import 'u-basscss/css/flexbox.css';
 import 'u-basscss/css/layout.css';
 import 'u-basscss/css/margin.css';

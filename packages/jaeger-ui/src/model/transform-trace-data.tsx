@@ -16,7 +16,7 @@ import _isEqual from 'lodash/isEqual';
 
 import { getTraceSpanIdsAsTree, TREE_ROOT_ID } from '../selectors/trace';
 import { getConfigValue } from '../utils/config/get-config';
-import { getTraceName } from './trace-viewer';
+import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-viewer';
 import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
 
@@ -82,7 +82,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const spanIdCounts = new Map<string, number>();
   const spanMap = new Map<string, Span>();
   // filter out spans with empty start times
-  // eslint-disable-next-line no-param-reassign
+
   data.spans = data.spans.filter(span => Boolean(span.startTime));
 
   const numSpans = data.spans.length;
@@ -100,10 +100,8 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     let spanID = span.spanID;
     const idCount = spanIdCounts.get(spanID);
     if (idCount != null) {
-      // eslint-disable-next-line no-console
       console.warn(`Dupe spanID, ${idCount + 1} x ${spanID}`, span, spanMap.get(spanID));
       if (_isEqual(span, spanMap.get(spanID))) {
-        // eslint-disable-next-line no-console
         console.warn('\t two spans with same ID have `isEqual(...) === true`');
       }
       spanIdCounts.set(spanID, idCount + 1);
@@ -153,7 +151,6 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.references.forEach((ref, index) => {
       const refSpan = spanMap.get(ref.spanID) as Span;
       if (refSpan) {
-        // eslint-disable-next-line no-param-reassign
         ref.span = refSpan;
         if (index > 0) {
           // Don't take into account the parent, just other references.
@@ -170,12 +167,16 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     spans.push(span);
   });
   const traceName = getTraceName(spans);
+  const tracePageTitle = getTracePageTitle(spans);
+  const traceEmoji = getTraceEmoji(spans);
   const services = Object.keys(svcCounts).map(name => ({ name, numberOfSpans: svcCounts[name] }));
   return {
     services,
     spans,
     traceID,
     traceName,
+    tracePageTitle,
+    traceEmoji,
     // TODO why not store `tree` here for easier access to tree structure?
     // ...
     // Can't use spread operator for intersection types

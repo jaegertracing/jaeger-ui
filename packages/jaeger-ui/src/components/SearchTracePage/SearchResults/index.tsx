@@ -18,7 +18,6 @@ import * as React from 'react';
 import { Select } from 'antd';
 import { History as RouterHistory, Location } from 'history';
 import { Link } from 'react-router-dom';
-import { Field, formValueSelector, reduxForm } from 'redux-form';
 import queryString from 'query-string';
 
 import AltViewOptions from './AltViewOptions';
@@ -35,8 +34,8 @@ import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getLocation } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
+import { getTracePageHeaderParts } from '../../../model/trace-viewer';
 import { stripEmbeddedState } from '../../../utils/embedded-url';
-import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
 
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
@@ -64,6 +63,13 @@ type SearchResultsProps = {
   spanLinks?: Record<string, string> | undefined;
   traces: Trace[];
   rawTraces: TraceData[];
+  sortBy: string;
+  handleSortChange: (sortBy: string) => void;
+};
+
+type SelectSortProps = {
+  sortBy: string;
+  handleSortChange: (sortBy: string) => void;
 };
 
 const Option = Select.Option;
@@ -71,33 +77,20 @@ const Option = Select.Option;
 /**
  * Contains the dropdown to sort and filter trace search results
  */
-function SelectSortImpl() {
+export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   return (
     <label>
       Sort:{' '}
-      <Field
-        name="sortBy"
-        component={reduxFormFieldAdapter({ AntInputComponent: SearchableSelect })}
-        props={{}}
-      >
+      <SearchableSelect value={sortBy} onChange={(value: string) => handleSortChange(value)}>
         <Option value={orderBy.MOST_RECENT}>Most Recent</Option>
         <Option value={orderBy.LONGEST_FIRST}>Longest First</Option>
         <Option value={orderBy.SHORTEST_FIRST}>Shortest First</Option>
         <Option value={orderBy.MOST_SPANS}>Most Spans</Option>
         <Option value={orderBy.LEAST_SPANS}>Least Spans</Option>
-      </Field>
+      </SearchableSelect>
     </label>
   );
 }
-
-const SelectSort = reduxForm({
-  form: 'traceResultsSort',
-  initialValues: {
-    sortBy: orderBy.MOST_RECENT,
-  },
-})(SelectSortImpl);
-
-export const sortFormSelector = formValueSelector('traceResultsSort');
 
 // export for tests
 export function createBlob(rawTraces: TraceData[]) {
@@ -150,6 +143,8 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
       skipMessage,
       spanLinks,
       traces,
+      sortBy,
+      handleSortChange,
     } = this.props;
 
     const traceResultsView = queryString.parse(location.search).view !== 'ddg';
@@ -159,7 +154,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
     );
     if (loading) {
       return (
-        <React.Fragment>
+        <React.Fragment key="loading">
           {diffCohort.length > 0 && diffSelection}
           <LoadingIndicator className="u-mt-vast" centered />
         </React.Fragment>
@@ -167,7 +162,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
     }
     if (!Array.isArray(traces) || !traces.length) {
       return (
-        <React.Fragment>
+        <React.Fragment key="no-results">
           {diffCohort.length > 0 && diffSelection}
           {!skipMessage && (
             <div className="u-simple-card" data-test={markers.NO_RESULTS}>
@@ -187,14 +182,20 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
           {!hideGraph && traceResultsView && (
             <div className="ub-p3 SearchResults--headerScatterPlot">
               <ScatterPlot
-                data={traces.map(t => ({
-                  x: t.startTime,
-                  y: t.duration,
-                  traceID: t.traceID,
-                  size: t.spans.length,
-                  name: t.traceName,
-                  color: t.spans.some(sp => sp.tags.some(isErrorTag)) ? 'red' : '#12939A',
-                }))}
+                data={traces.map(t => {
+                  const rootSpanInfo =
+                    t.spans && t.spans.length > 0 ? getTracePageHeaderParts(t.spans) : null;
+                  return {
+                    x: t.startTime,
+                    y: t.duration,
+                    traceID: t.traceID,
+                    size: t.spans.length,
+                    name: t.traceName,
+                    color: t.spans.some(sp => sp.tags.some(isErrorTag)) ? 'red' : '#12939A',
+                    services: t.services || [],
+                    rootSpanName: rootSpanInfo?.operationName || 'Unknown',
+                  };
+                })}
                 onValueClick={(t: Trace) => {
                   goToTrace(t.traceID);
                 }}
@@ -205,7 +206,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
             <h2 className="ub-m0 u-flex-1">
               {traces.length} Trace{traces.length > 1 && 's'}
             </h2>
-            {traceResultsView && <SelectSort />}
+            {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
             {traceResultsView && <DownloadResults onDownloadResultsClicked={this.onDownloadResultsClicked} />}
             <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={this.onDdgViewClicked} />
             {showStandaloneLink && (

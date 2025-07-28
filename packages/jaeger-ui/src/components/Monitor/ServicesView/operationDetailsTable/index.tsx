@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import isEqual from 'lodash/isEqual';
 import isArray from 'lodash/isArray';
-import { Table, Progress, Button, Tooltip, Col } from 'antd';
+import { Table, Progress, Button, Tooltip, Col, TableProps } from 'antd';
 import { IoInformationCircleOutline } from 'react-icons/io5';
 import REDGraph from './opsGraph';
 import LoadingIndicator from '../../../common/LoadingIndicator';
@@ -29,7 +29,7 @@ import { trackSortOperations, trackViewTraces } from './index.track';
 type TProps = {
   data: ServiceOpsMetrics[] | undefined;
   error: MetricsReduxState['opsError'];
-  loading: boolean | null;
+  loading: boolean | undefined;
   endTime: number;
   lookback: number;
   serviceName: string;
@@ -38,11 +38,6 @@ type TProps = {
 type TSortingState = {
   columnKey?: React.Key;
   order?: string | null;
-};
-
-type TState = {
-  hoveredRowKey: number;
-  tableSorting: TSortingState[];
 };
 
 const tableTitles = new Map([
@@ -68,29 +63,50 @@ function formatTimeValue(value: number) {
   const formattedTime = formatValue(convertToTimeUnit(value, timeUnit));
   return `${formattedTime}${convertTimeUnitToShortTerm(timeUnit)}`;
 }
-export class OperationTableDetails extends React.PureComponent<TProps, TState> {
-  state: TState = {
-    hoveredRowKey: -1,
-    tableSorting: [
-      {
-        order: 'descend',
-        columnKey: 'impact',
-      },
-    ],
-  };
 
-  render() {
-    const { loading, error } = this.props;
+const OperationTableDetails: React.FC<TProps> = ({
+  data,
+  error,
+  loading,
+  endTime,
+  lookback,
+  serviceName,
+}) => {
+  const [hoveredRowKey, setHoveredRowKey] = useState<number>(-1);
+  const [tableSorting, setTableSorting] = useState<TSortingState[]>([
+    {
+      order: 'descend',
+      columnKey: 'impact',
+    },
+  ]);
 
-    if (loading) {
-      return <LoadingIndicator centered />;
-    }
+  const handleRowMouseEnter = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    setHoveredRowKey(parseInt(event.currentTarget.getAttribute('data-row-key')!, 10));
+  }, []);
 
-    if (error.opsCalls && error.opsErrors && error.opsLatencies) {
-      return <div className="ops-table-error-placeholder">Couldn’t fetch data</div>;
-    }
+  const handleRowMouseLeave = useCallback(() => {
+    setHoveredRowKey(-1);
+  }, []);
 
-    const columnConfig = [
+  const handleTableChange: TableProps<ServiceOpsMetrics>['onChange'] = useCallback(
+    (_pagination: any, _filters: any, sorter: any) => {
+      const activeSorters = isArray(sorter) ? sorter : [sorter];
+      if (!isEqual(activeSorters, tableSorting)) {
+        const lastColumn = activeSorters[activeSorters.length - 1] ?? tableSorting[tableSorting.length - 1];
+        const lastColumnKey = lastColumn.columnKey as string;
+        const clickedColumn = tableTitles.get(lastColumnKey);
+
+        if (clickedColumn) {
+          trackSortOperations(clickedColumn);
+        }
+        setTableSorting(activeSorters);
+      }
+    },
+    [tableSorting]
+  );
+
+  const columnConfig = useMemo(
+    () => [
       {
         title: tableTitles.get('name'),
         className: 'header-item',
@@ -162,7 +178,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             <span style={{ float: 'left', color: '#459798' }}>
               {tableTitles.get('impact')} &nbsp;
               <Tooltip
-                overlayClassName="impact-tooltip"
+                classNames={{ root: 'impact-tooltip' }}
                 placement="top"
                 title="The result of multiplying avg. duration and requests per minute, showing the most used and slowest endpoints"
               >
@@ -178,8 +194,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
         sorter: (a: ServiceOpsMetrics, b: ServiceOpsMetrics) => a.impact - b.impact,
         render: (value: ServiceOpsMetrics['impact'], row: ServiceOpsMetrics) => {
           let viewTraceButton = null;
-          if (this.state.hoveredRowKey === row.key) {
-            const { endTime, lookback, serviceName } = this.props;
+          if (hoveredRowKey === row.key) {
             viewTraceButton = (
               <Button
                 href={prefixUrl(
@@ -211,47 +226,33 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
           );
         },
       },
-    ];
+    ],
+    [error, hoveredRowKey, endTime, lookback, serviceName]
+  );
 
-    return (
-      <Col span={24}>
-        <Table
-          rowClassName={() => 'table-row'}
-          columns={columnConfig}
-          dataSource={this.props.data}
-          pagination={{ defaultPageSize: 20, showSizeChanger: true, pageSizeOptions: ['20', '50', '100'] }}
-          onRow={() => {
-            return {
-              onMouseEnter: (event: any) => {
-                this.setState({
-                  hoveredRowKey: parseInt(event.currentTarget.getAttribute('data-row-key'), 10),
-                });
-              },
-              onMouseLeave: () => {
-                this.setState({
-                  hoveredRowKey: -1,
-                });
-              },
-            };
-          }}
-          onChange={(pagination, filters, sorter) => {
-            const activeSorters = isArray(sorter) ? sorter : [sorter];
-            const { tableSorting } = this.state;
-
-            if (!isEqual(activeSorters, tableSorting)) {
-              const lastColumn =
-                activeSorters[activeSorters.length - 1] ?? tableSorting[tableSorting.length - 1];
-              const lastColumnKey = lastColumn.columnKey as string;
-              const clickedColumn = tableTitles.get(lastColumnKey);
-
-              trackSortOperations(clickedColumn!);
-              this.setState({ tableSorting: activeSorters });
-            }
-          }}
-        />
-      </Col>
-    );
+  if (loading) {
+    return <LoadingIndicator centered />;
   }
-}
+
+  if (error.opsCalls && error.opsErrors && error.opsLatencies) {
+    return <div className="ops-table-error-placeholder">Couldn’t fetch data</div>;
+  }
+
+  return (
+    <Col span={24}>
+      <Table
+        rowClassName={row => (hoveredRowKey === row.key ? 'table-row table-row--hovered' : 'table-row')}
+        columns={columnConfig}
+        dataSource={data}
+        pagination={{ defaultPageSize: 20, showSizeChanger: true, pageSizeOptions: ['20', '50', '100'] }}
+        onRow={() => ({
+          onMouseEnter: handleRowMouseEnter,
+          onMouseLeave: handleRowMouseLeave,
+        })}
+        onChange={handleTableChange}
+      />
+    </Col>
+  );
+};
 
 export default OperationTableDetails;

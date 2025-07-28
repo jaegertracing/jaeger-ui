@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable no-console */
-
 import * as convCoord from './dot/conv-coord';
 import convInputs from './convInputs';
-// eslint-disable-next-line import/order, import/no-unresolved
+
 import LayoutWorker from './layout.worker.bundled';
 
 import {
@@ -97,7 +95,7 @@ export default class Coordinator {
     this.busyWorkers.forEach(killWorker);
     this.busyWorkers.length = 0;
     const { edges, unmapEdges, unmapVertices, vertices: _vertices } = convInputs(inEdges, inVertices);
-    const vertices = _vertices.map(convCoord.vertexToDot);
+    const vertices = _vertices.map(v => convCoord.vertexToDot(v, options));
     this.currentLayout = {
       id,
       cleaned: { edges, vertices },
@@ -221,7 +219,7 @@ export default class Coordinator {
     }
     const { edges, graph, meta, vertices } = workerMessage;
     const { workerId } = meta;
-    const { cleaned, input, status } = layout;
+    const { cleaned, input, status, options } = layout;
     const { phase: stPhase, workerId: stWorkerId } = status;
 
     if ((phase as any) !== stPhase || workerId !== stWorkerId) {
@@ -233,10 +231,11 @@ export default class Coordinator {
       return;
     }
 
+    const layoutOptions = options || undefined;
     const adjVertexCoords = convCoord.vertexToPixels.bind(null, graph);
-    const adjCleanVertices = vertices.map<TLayoutVertex>(adjVertexCoords);
+    const adjCleanVertices = vertices.map<TLayoutVertex>(v => adjVertexCoords(v, layoutOptions));
     const adjVertices = input.unmapVertices(adjCleanVertices);
-    const adjGraph = convCoord.graphToPixels(graph);
+    const adjGraph = convCoord.graphToPixels(graph, layoutOptions);
 
     if (phase === EWorkerPhase.Positions || phase === EWorkerPhase.DotOnly) {
       this.callback({
@@ -248,7 +247,7 @@ export default class Coordinator {
     }
     // phase is either edges or dot-only
     if (edges) {
-      const pixelEdges = edges.map(edge => convCoord.edgeToPixels(graph, edge));
+      const pixelEdges = edges.map(edge => convCoord.edgeToPixels(graph, edge, layoutOptions));
       const mergedEdges = input.unmapEdges(pixelEdges);
       this.callback({
         type: ECoordinatorPhase.Done,

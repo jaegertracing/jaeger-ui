@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,25 +24,25 @@ import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Field, reduxForm, formValueSelector } from 'redux-form';
 import store from 'store';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
-import reduxFormFieldAdapter from '../../utils/redux-form-field-adapter';
-import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
+import {
+  DEFAULT_OPERATION,
+  DEFAULT_LIMIT,
+  DEFAULT_LOOKBACK,
+  CHANGE_SERVICE_ACTION_TYPE,
+} from '../../constants/search-form';
 import { getConfigValue } from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
+import ValidatedFormField from '../../utils/ValidatedFormField';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
-
-const AdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input });
-const AdaptedSelect = reduxFormFieldAdapter({ AntInputComponent: SearchableSelect });
-const ValidatedAdaptedInput = reduxFormFieldAdapter({ AntInputComponent: Input, isValidatedInput: true });
 
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
   const start = `${startDate} ${startDateTime}`;
@@ -259,23 +258,61 @@ export function submitForm(fields, searchTraces) {
 }
 
 export class SearchFormImpl extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      formData: {
+        service: this.props.initialValues?.service,
+        operation: this.props.initialValues?.operation,
+        tags: this.props.initialValues?.tags,
+        lookback: this.props.initialValues?.lookback,
+        startDate: this.props.initialValues?.startDate,
+        startDateTime: this.props.initialValues?.startDateTime,
+        endDate: this.props.initialValues?.endDate,
+        endDateTime: this.props.initialValues?.endDateTime,
+        minDuration: this.props.initialValues?.minDuration,
+        maxDuration: this.props.initialValues?.maxDuration,
+        resultsLimit: this.props.initialValues?.resultsLimit,
+      },
+    };
+  }
+
+  handleChange = fieldData => {
+    this.setState(prevState => ({
+      formData: {
+        ...prevState.formData,
+        ...fieldData,
+      },
+    }));
+    if (fieldData.service) {
+      this.props.changeServiceHandler(fieldData.service);
+      this.setState(prevState => ({
+        formData: {
+          ...prevState.formData,
+          operation: DEFAULT_OPERATION,
+        },
+      }));
+    }
+  };
+
+  handleSubmit = e => {
+    e.preventDefault();
+    this.props.submitFormHandler(this.state.formData);
+  };
+
   render() {
-    const {
-      handleSubmit,
-      invalid,
-      searchMaxLookback,
-      selectedLookback,
-      selectedService = '-',
-      services,
-      submitting: disabled,
-    } = this.props;
+    const { invalid, searchMaxLookback, services, submitting } = this.props;
+    const { formData } = this.state;
+    const { service: selectedService, lookback: selectedLookback } = formData;
     const selectedServicePayload = services.find(s => s.name === selectedService);
     const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
     const noSelectedService = selectedService === '-' || !selectedService;
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
+    const invalidDuration =
+      validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
 
     return (
-      <Form layout="vertical" onSubmitCapture={handleSubmit}>
+      <Form layout="vertical" onSubmitCapture={this.handleSubmit}>
         <FormItem
           label={
             <span>
@@ -283,20 +320,19 @@ export class SearchFormImpl extends React.PureComponent {
             </span>
           }
         >
-          <Field
+          <SearchableSelect
             name="service"
-            component={AdaptedSelect}
+            value={this.state.formData.service}
             placeholder="Select A Service"
-            props={{
-              disabled,
-            }}
+            disabled={submitting}
+            onChange={value => this.handleChange({ service: value })}
           >
             {services.map(service => (
               <Option key={service.name} value={service.name}>
                 {service.name}
               </Option>
             ))}
-          </Field>
+          </SearchableSelect>
         </FormItem>
         <FormItem
           label={
@@ -305,20 +341,19 @@ export class SearchFormImpl extends React.PureComponent {
             </span>
           }
         >
-          <Field
+          <SearchableSelect
             name="operation"
-            component={AdaptedSelect}
+            value={this.state.formData.operation}
+            disabled={submitting || noSelectedService}
             placeholder="Select An Operation"
-            props={{
-              disabled: disabled || noSelectedService,
-            }}
+            onChange={value => this.handleChange({ operation: value })}
           >
             {['all'].concat(opsForSvc).map(op => (
               <Option key={op} value={op}>
                 {op}
               </Option>
             ))}
-          </Field>
+          </SearchableSelect>
         </FormItem>
 
         <FormItem
@@ -328,37 +363,62 @@ export class SearchFormImpl extends React.PureComponent {
               <Popover
                 placement="topLeft"
                 trigger="click"
-                title={[
+                title={
                   <h3 key="title" className="SearchForm--tagsHintTitle">
                     Values should be in the{' '}
                     <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
                       logfmt
                     </a>{' '}
                     format.
-                  </h3>,
-                  <ul key="info" className="SearchForm--tagsHintInfo">
-                    <li>Use space for AND conjunctions</li>
-                    <li>
-                      Values containing whitespace or equal-sign &apos;=&apos; should be enclosed in quotes
-                    </li>
-                    <li>
-                      Elasticsearch/OpenSearch storage supports regexp query, therefore{' '}
-                      <a
-                        href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        reserved characters
-                      </a>{' '}
-                      need to be escaped for exact match queries.
-                    </li>
-                  </ul>,
-                ]}
+                  </h3>
+                }
                 content={
                   <div>
-                    <code className="SearchForm--tagsHintEg">
-                      error=true db.statement=&quot;select * from User&quot;
-                    </code>
+                    <ul key="info" className="SearchForm--tagsHintInfo">
+                      <li>Use space for AND conjunctions.</li>
+                      <li>
+                        Values containing whitespace or equal-sign &apos;=&apos; should be enclosed in quotes.
+                      </li>
+                      <li>
+                        Elasticsearch/OpenSearch storage supports regex query, therefore{' '}
+                        <a
+                          href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          reserved characters
+                        </a>{' '}
+                        need to be escaped for exact match queries.
+                      </li>
+                    </ul>
+                    <p>Examples:</p>
+                    <ul className="SearchForm--tagsHintInfo">
+                      <li>
+                        <code className="SearchForm--tagsHintEg">error=true</code>
+                      </li>
+                      <li>
+                        <code className="SearchForm--tagsHintEg">
+                          db.statement=&quot;select * from User&quot;
+                        </code>
+                      </li>
+                      <li>
+                        <code className="SearchForm--tagsHintEg">
+                          http.url=&quot;http://0.0.0.0:8081/customer\\?customer=123&quot;
+                        </code>
+                        <div>
+                          Note: when using Elasticsearch/OpenSearch the{' '}
+                          <a
+                            href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
+                            rel="noopener noreferrer"
+                            target="_blank"
+                          >
+                            regex-reserved
+                          </a>{' '}
+                          character <code className="SearchForm--tagsHintEg">&quot;?&quot;</code> must be
+                          escaped with <code className="SearchForm--tagsHintEg">&quot;\\&quot;</code>.
+                        </div>
+                      </li>
+                    </ul>
                   </div>
                 }
               >
@@ -367,26 +427,26 @@ export class SearchFormImpl extends React.PureComponent {
             </div>
           }
         >
-          <Field
+          <Input
             name="tags"
-            component={AdaptedInput}
+            value={this.state.formData.tags}
+            disabled={submitting}
             placeholder="http.status_code=200 error=true"
-            props={{ disabled }}
+            onChange={e => this.handleChange({ tags: e.target.value })}
           />
         </FormItem>
 
         <FormItem label="Lookback">
-          <Field
+          <SearchableSelect
             name="lookback"
-            component={AdaptedSelect}
-            props={{
-              disabled,
-              defaultValue: '1h',
-            }}
+            value={this.state.formData.lookback}
+            disabled={submitting}
+            defaultValue={DEFAULT_LOOKBACK}
+            onChange={value => this.handleChange({ lookback: value })}
           >
             {optionsWithinMaxLookback(searchMaxLookback)}
             <Option value="custom">Custom Time Range</Option>
-          </Field>
+          </SearchableSelect>
         </FormItem>
 
         {selectedLookback === 'custom' && [
@@ -411,17 +471,24 @@ export class SearchFormImpl extends React.PureComponent {
           >
             <Row gutter={16}>
               <Col className="gutter-row" span={14}>
-                <Field
+                <Input
                   name="startDate"
+                  value={this.state.formData.startDate}
+                  disabled={submitting}
                   type="date"
-                  component={AdaptedInput}
                   placeholder="Start Date"
-                  props={{ disabled }}
+                  onChange={e => this.handleChange({ startDate: e.target.value })}
                 />
               </Col>
 
               <Col className="gutter-row" span={10}>
-                <Field name="startDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+                <Input
+                  name="startDateTime"
+                  value={this.state.formData.startDateTime}
+                  disabled={submitting}
+                  type="time"
+                  onChange={e => this.handleChange({ startDateTime: e.target.value })}
+                />
               </Col>
             </Row>
           </FormItem>,
@@ -447,17 +514,24 @@ export class SearchFormImpl extends React.PureComponent {
           >
             <Row gutter={16}>
               <Col className="gutter-row" span={14}>
-                <Field
+                <Input
                   name="endDate"
+                  value={this.state.formData.endDate}
+                  disabled={submitting}
                   type="date"
-                  component={AdaptedInput}
                   placeholder="End Date"
-                  props={{ disabled }}
+                  onChange={e => this.handleChange({ endDate: e.target.value })}
                 />
               </Col>
 
               <Col className="gutter-row" span={10}>
-                <Field name="endDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+                <Input
+                  name="endDateTime"
+                  value={this.state.formData.endDateTime}
+                  disabled={submitting}
+                  type="time"
+                  onChange={e => this.handleChange({ endDateTime: e.target.value })}
+                />
               </Col>
             </Row>
           </FormItem>,
@@ -466,43 +540,48 @@ export class SearchFormImpl extends React.PureComponent {
         <Row gutter={16}>
           <Col className="gutter-row" span={12}>
             <FormItem label="Max Duration">
-              <Field
+              <ValidatedFormField
                 name="maxDuration"
-                component={ValidatedAdaptedInput}
-                placeholder={placeholderDurationFields}
-                props={{ disabled }}
+                value={this.state.formData.maxDuration}
+                disabled={submitting}
                 validate={validateDurationFields}
+                placeholder={placeholderDurationFields}
+                onChange={e => this.handleChange({ maxDuration: e.target.value })}
               />
             </FormItem>
           </Col>
 
           <Col className="gutter-row" span={12}>
             <FormItem label="Min Duration">
-              <Field
+              <ValidatedFormField
                 name="minDuration"
-                component={ValidatedAdaptedInput}
-                placeholder={placeholderDurationFields}
-                props={{ disabled }}
+                value={this.state.formData.minDuration}
+                disabled={submitting}
                 validate={validateDurationFields}
+                placeholder={placeholderDurationFields}
+                onChange={e => this.handleChange({ minDuration: e.target.value })}
               />
             </FormItem>
           </Col>
         </Row>
 
         <FormItem label="Limit Results">
-          <Field
+          <Input
             name="resultsLimit"
+            value={this.state.formData.resultsLimit}
+            disabled={submitting}
             type="number"
-            component={AdaptedInput}
             placeholder="Limit Results"
-            props={{ disabled, min: 1, max: getConfigValue('search.maxLimit') }}
+            min={1}
+            max={getConfigValue('search.maxLimit')}
+            onChange={e => this.handleChange({ resultsLimit: e.target.value })}
           />
         </FormItem>
 
         <Button
           htmlType="submit"
           className="SearchForm--submit"
-          disabled={disabled || noSelectedService || invalid}
+          disabled={submitting || noSelectedService || invalid || invalidDuration}
           data-test={markers.SUBMIT_BTN}
         >
           Find Traces
@@ -513,7 +592,6 @@ export class SearchFormImpl extends React.PureComponent {
 }
 
 SearchFormImpl.propTypes = {
-  handleSubmit: PropTypes.func.isRequired,
   invalid: PropTypes.bool,
   submitting: PropTypes.bool,
   searchMaxLookback: PropTypes.shape({
@@ -526,19 +604,13 @@ SearchFormImpl.propTypes = {
       operations: PropTypes.arrayOf(PropTypes.string),
     })
   ),
-  selectedService: PropTypes.string,
-  selectedLookback: PropTypes.string,
 };
 
 SearchFormImpl.defaultProps = {
   invalid: false,
   services: [],
   submitting: false,
-  selectedService: null,
-  selectedLookback: null,
 };
-
-export const searchSideBarFormSelector = formValueSelector('searchSideBar');
 
 export function mapStateToProps(state) {
   const {
@@ -585,12 +657,10 @@ export function mapStateToProps(state) {
   // continue to parse tagParams to remain backward compatible with older URLs
   // but, parse to logfmt format instead of the former "key:value|k2:v2"
   if (tagParams) {
-    // eslint-disable-next-line no-inner-declarations
     function convFormerTag(accum, value) {
       const parts = value.split(':', 2);
       const key = parts[0];
       if (key) {
-        // eslint-disable-next-line no-param-reassign
         accum[key] = parts[1] == null ? '' : parts[1];
         return true;
       }
@@ -648,23 +718,19 @@ export function mapStateToProps(state) {
       traceIDs: traceIDs || null,
     },
     searchMaxLookback: _get(state, 'config.search.maxLookback'),
-    selectedService: searchSideBarFormSelector(state, 'service'),
-    selectedLookback: searchSideBarFormSelector(state, 'lookback'),
   };
 }
 
 export function mapDispatchToProps(dispatch) {
   const { searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
   return {
-    onSubmit: fields => submitForm(fields, searchTraces),
+    changeServiceHandler: service =>
+      dispatch({
+        type: CHANGE_SERVICE_ACTION_TYPE,
+        payload: service,
+      }),
+    submitFormHandler: fields => submitForm(fields, searchTraces),
   };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(
-  reduxForm({
-    form: 'searchSideBar',
-  })(SearchFormImpl)
-);
+export default connect(mapStateToProps, mapDispatchToProps)(SearchFormImpl);

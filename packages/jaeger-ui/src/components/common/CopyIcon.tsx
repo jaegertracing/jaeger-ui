@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { useState } from 'react';
 
 import { Button, Tooltip } from 'antd';
 import { TooltipPlacement } from 'antd/es/tooltip/index';
@@ -31,54 +32,40 @@ type PropsType = {
   buttonText: string;
 };
 
-type StateType = {
-  hasCopied: boolean;
-};
+const CopyIcon: React.FC<PropsType> = ({
+  className,
+  copyText,
+  icon = <IoCopyOutline />,
+  placement = 'top',
+  tooltipTitle,
+  buttonText,
+}) => {
+  const [hasCopied, setHasCopied] = useState(false);
 
-export default class CopyIcon extends React.PureComponent<PropsType, StateType> {
-  static defaultProps: Partial<PropsType> = {
-    className: undefined,
-    icon: <IoCopyOutline />,
-    placement: 'top',
+  const handleClick = () => {
+    setHasCopied(true);
+    copy(copyText);
   };
 
-  state = {
-    hasCopied: false,
-  };
-
-  handleClick = () => {
-    this.setState({
-      hasCopied: true,
-    });
-    copy(this.props.copyText);
-  };
-
-  handleTooltipVisibilityChange = (visible: boolean) => {
-    if (!visible && this.state.hasCopied) {
-      this.setState({
-        hasCopied: false,
-      });
+  const handleTooltipVisibilityChange = (visible: boolean) => {
+    if (!visible && hasCopied) {
+      setHasCopied(false);
     }
   };
 
-  render() {
-    return (
-      <Tooltip
-        arrowPointAtCenter
-        mouseLeaveDelay={0}
-        onOpenChange={this.handleTooltipVisibilityChange}
-        placement={this.props.placement}
-        title={this.state.hasCopied ? 'Copied' : this.props.tooltipTitle}
-      >
-        <Button
-          className={cx(this.props.className, 'CopyIcon')}
-          htmlType="button"
-          icon={this.props.icon}
-          onClick={this.handleClick}
-        >
-          {this.props.buttonText}
-        </Button>
-      </Tooltip>
-    );
-  }
-}
+  return (
+    <Tooltip
+      arrow={{ pointAtCenter: true }}
+      mouseLeaveDelay={0}
+      onOpenChange={handleTooltipVisibilityChange}
+      placement={placement}
+      title={hasCopied ? 'Copied' : tooltipTitle}
+    >
+      <Button className={cx(className, 'CopyIcon')} htmlType="button" icon={icon} onClick={handleClick}>
+        {buttonText}
+      </Button>
+    </Tooltip>
+  );
+};
+
+export default CopyIcon;

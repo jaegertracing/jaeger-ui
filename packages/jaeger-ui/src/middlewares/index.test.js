@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/first */
 jest.mock(
   'node-fetch',
   () => () =>
@@ -23,10 +22,9 @@ jest.mock(
     })
 );
 
-import { change } from 'redux-form';
-
 import * as jaegerMiddlewares from './index';
 import { fetchServiceOperations } from '../actions/jaeger-api';
+import { CHANGE_SERVICE_ACTION_TYPE } from '../constants/search-form';
 
 it('jaegerMiddlewares should contain the promise middleware', () => {
   expect(typeof jaegerMiddlewares.promise).toBe('function');
@@ -36,8 +34,11 @@ it('loadOperationsForServiceMiddleware fetches operations for services', () => {
   const { loadOperationsForServiceMiddleware } = jaegerMiddlewares;
   const dispatch = jest.fn();
   const next = jest.fn();
-  const action = change('searchSideBar', 'service', 'yo');
+  const action = {
+    type: CHANGE_SERVICE_ACTION_TYPE,
+    payload: 'yo',
+  };
   loadOperationsForServiceMiddleware({ dispatch })(next)(action);
   expect(dispatch).toHaveBeenCalledWith(fetchServiceOperations('yo'));
-  expect(dispatch).toHaveBeenCalledWith(change('searchSideBar', 'operation', 'all'));
+  expect(next).toHaveBeenCalledWith(action);
 });

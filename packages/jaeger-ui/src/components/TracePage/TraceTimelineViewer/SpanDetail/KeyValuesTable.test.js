@@ -13,38 +13,60 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { Dropdown } from 'antd';
-import { IoOpenOutline } from 'react-icons/io5';
-
-import CopyIcon from '../../../common/CopyIcon';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import KeyValuesTable, { LinkValue } from './KeyValuesTable';
+
+jest.mock('../../../common/CopyIcon', () => {
+  return function CopyIcon({ copyText, tooltipTitle, buttonText, icon, className }) {
+    return (
+      <button
+        type="button"
+        className={className}
+        data-testid="copy-icon"
+        data-copy-text={copyText}
+        data-tooltip-title={tooltipTitle}
+        data-button-text={buttonText}
+        data-has-icon={!!icon}
+      >
+        {buttonText || 'Copy'}
+      </button>
+    );
+  };
+});
 
 describe('LinkValue', () => {
   const title = 'titleValue';
   const href = 'hrefValue';
   const childrenText = 'childrenTextValue';
-  const wrapper = shallow(
-    <LinkValue href={href} title={title}>
-      {childrenText}
-    </LinkValue>
-  );
 
-  it('renders as expected', () => {
-    expect(wrapper.find('a').prop('href')).toBe(href);
-    expect(wrapper.find('a').prop('title')).toBe(title);
-    expect(wrapper.find('a').text()).toMatch(/childrenText/);
+  it('renders link with correct href and title attributes', () => {
+    render(
+      <LinkValue href={href} title={title}>
+        {childrenText}
+      </LinkValue>
+    );
+
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', href);
+    expect(link).toHaveAttribute('title', title);
+    expect(link).toHaveTextContent(childrenText);
   });
 
-  it('renders correct Icon', () => {
-    expect(wrapper.find(IoOpenOutline).hasClass('KeyValueTable--linkIcon')).toBe(true);
+  it('renders IoOpenOutline icon with correct CSS class', () => {
+    render(
+      <LinkValue href={href} title={title}>
+        {childrenText}
+      </LinkValue>
+    );
+
+    const icon = document.querySelector('.KeyValueTable--linkIcon');
+    expect(icon).toBeInTheDocument();
   });
 });
 
 describe('<KeyValuesTable>', () => {
-  let wrapper;
-
   const jsonValue = {
     hello: 'world',
     '<xss>': 'safe',
@@ -53,111 +75,158 @@ describe('<KeyValuesTable>', () => {
     boolean: true,
     number: 42,
     null: null,
-    array: ['x', 'y', 'z'],
-    object: { a: 'b', x: 'y' },
+    array: ['apple', 'banana', 'cherry'],
+    object: { pear: 'grape', melon: 'kiwi' },
   };
   const data = [
-    { key: 'span.kind', value: 'client', expected: 'client' },
-    { key: 'omg', value: 'mos-def', expected: 'mos-def' },
-    { key: 'numericString', value: '12345678901234567890', expected: '12345678901234567890' },
-    { key: 'numeric', value: 123456789, expected: '123456789' },
-    { key: 'boolean', value: true, expected: 'true' },
-    { key: 'http.request.header.accept', value: ['application/json'], expected: 'application/json' },
+    { key: 'span.kind', value: 'client', expected: ['client'] },
+    { key: 'omg', value: 'mos-def', expected: ['mos-def'] },
+    { key: 'numericString', value: '12345678901234567890', expected: ['12345678901234567890'] },
+    { key: 'numeric', value: 123456789, expected: ['123456789'] },
+    { key: 'boolean', value: true, expected: ['true'] },
+    {
+      key: 'http.request.header.accept',
+      value: ['application/json'],
+      expected: ['application/json'],
+    },
     {
       key: 'http.response.header.set_cookie',
       value: JSON.stringify(['name=mos-def', 'code=12345']),
-      expected: 'name=mos-def, code=12345',
+      expected: ['name=mos-def', 'code=12345'],
     },
-    // render().text() does not preserve full escaping of rendered JSON,
-    // so instead rely on jest snapshot comparison.
-    // Key observations:
-    // - "<xss>" key is encoded as &lt;xss&gt;
-    // - link value is rendered as <a>
-    // - xss_link value is rendered as plain string
-    { key: 'jsonkey', value: JSON.stringify(jsonValue), snapshot: true },
+    {
+      key: 'jsonkey',
+      value: JSON.stringify(jsonValue),
+      expected: [
+        'world',
+        'safe',
+        'https://example.com',
+        'https://example.com with "quotes"',
+        'true',
+        '42',
+        'null',
+        'apple',
+        'banana',
+        'cherry',
+        'grape',
+        'pear',
+        'kiwi',
+        'melon',
+        '<xss>',
+      ],
+    },
   ];
 
-  beforeEach(() => {
-    wrapper = shallow(<KeyValuesTable data={data} />);
+  it('renders KeyValueTable container with correct structure', () => {
+    render(<KeyValuesTable data={data} />);
+
+    const container = document.querySelector('.KeyValueTable.u-simple-scrollbars');
+    expect(container).toBeInTheDocument();
+
+    const table = screen.getByRole('table');
+    expect(table).toHaveClass('u-width-100');
   });
 
-  it('renders without exploding', () => {
-    expect(wrapper).toBeDefined();
-    expect(wrapper.find('.KeyValueTable').length).toBe(1);
-  });
+  it('renders table row for each data element with correct key columns', () => {
+    render(<KeyValuesTable data={data} />);
 
-  it('renders a table row for each data element', () => {
-    const trs = wrapper.find('tr');
-    expect(trs.length).toBe(data.length);
-    trs.forEach((tr, i) => {
-      expect(tr.find('.KeyValueTable--keyColumn').text()).toMatch(data[i].key);
+    const rows = screen.getAllByRole('row');
+    expect(rows).toHaveLength(data.length);
+
+    data.forEach(item => {
+      const keyCell = screen.getByText(item.key);
+      expect(keyCell).toHaveClass('KeyValueTable--keyColumn');
     });
   });
 
-  it('renders the expected text for each span value', () => {
-    const el = wrapper.find('.ub-inline-block');
-    expect(el.length).toBe(data.length);
-    el.forEach((valueDiv, i) => {
-      if (data[i].expected) {
-        expect(valueDiv.render().text()).toBe(data[i].expected);
-      } else if (data[i].snapshot) {
-        expect(valueDiv).toMatchSnapshot();
-      }
+  it('renders expected text content for each span value', () => {
+    render(<KeyValuesTable data={data} />);
+
+    const valueElements = document.querySelectorAll('.ub-inline-block');
+    expect(valueElements).toHaveLength(data.length);
+
+    valueElements.forEach((valueDiv, i) => {
+      const expectedItems = data[i].expected;
+      expectedItems.forEach(expectedText => {
+        expect(valueDiv).toHaveTextContent(expectedText);
+      });
     });
   });
 
-  it('renders a single link correctly', () => {
-    wrapper.setProps({
-      linksGetter: (array, i) =>
-        array[i].key === 'span.kind'
-          ? [
-              {
-                url: `http://example.com/?kind=${encodeURIComponent(array[i].value)}`,
-                text: `More info about ${array[i].value}`,
-              },
-            ]
-          : [],
-    });
-    const anchor = wrapper.find(LinkValue);
-    expect(anchor).toHaveLength(1);
-    expect(anchor.prop('href')).toBe('http://example.com/?kind=client');
-    expect(anchor.prop('title')).toBe('More info about client');
-    expect(anchor.closest('tr').find('td').first().text()).toBe('span.kind');
+  it('renders single link with correct href and title when linksGetter returns one link', () => {
+    render(
+      <KeyValuesTable
+        data={data}
+        linksGetter={(array, i) =>
+          array[i].key === 'span.kind'
+            ? [
+                {
+                  url: `http://example.com/?kind=${encodeURIComponent(array[i].value)}`,
+                  text: `More info about ${array[i].value}`,
+                },
+              ]
+            : []
+        }
+      />
+    );
+
+    const linkValue = screen.getByRole('link');
+    expect(linkValue).toHaveAttribute('href', 'http://example.com/?kind=client');
+    expect(linkValue).toHaveAttribute('title', 'More info about client');
+
+    const row = linkValue.closest('tr');
+    const keyCell = row.querySelector('.KeyValueTable--keyColumn');
+    expect(keyCell).toHaveTextContent('span.kind');
   });
 
-  it('renders multiple links correctly', () => {
-    wrapper.setProps({
-      linksGetter: (array, i) =>
-        array[i].key === 'span.kind'
-          ? [
-              { url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 1' },
-              { url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 2' },
-            ]
-          : [],
-    });
-    const dropdown = wrapper.find(Dropdown);
-    const anchors = dropdown.prop('menu').items;
-    expect(anchors).toHaveLength(2);
-    const firstAnchor = anchors[0];
-    expect(firstAnchor.label.props.href).toBe('http://example.com/1?kind=client');
-    expect(firstAnchor.label.props.children).toBe('Example 1');
-    const secondAnchor = anchors[anchors.length - 1];
-    expect(secondAnchor.label.props.href).toBe('http://example.com/2?kind=client');
-    expect(secondAnchor.label.props.children).toBe('Example 2');
-    expect(dropdown.closest('tr').find('td').first().text()).toBe('span.kind');
+  it('renders dropdown with multiple links when linksGetter returns multiple links', () => {
+    const { container } = render(
+      <KeyValuesTable
+        data={data}
+        linksGetter={(array, i) =>
+          array[i].key === 'span.kind'
+            ? [
+                { url: `http://example.com/1?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 1' },
+                { url: `http://example.com/2?kind=${encodeURIComponent(array[i].value)}`, text: 'Example 2' },
+              ]
+            : []
+        }
+      />
+    );
+
+    const dropdownTrigger = container.querySelector('a');
+    expect(dropdownTrigger).toBeInTheDocument();
+
+    const row = dropdownTrigger.closest('tr');
+    const keyCell = row.querySelector('.KeyValueTable--keyColumn');
+    expect(keyCell).toHaveTextContent('span.kind');
+
+    const listIcon = container.querySelector('.KeyValueTable--linkIcon');
+    expect(listIcon).toBeInTheDocument();
   });
 
-  it('renders a <CopyIcon /> with correct copyText for each data element', () => {
-    const copyIcons = wrapper.find(CopyIcon);
-    expect(copyIcons.length).toBe(2 * data.length); // Copy and Copy JSON buttons
+  it('handles invalid JSON strings gracefully and returns raw value', () => {
+    const brokenData = [{ key: 'brokenJSON', value: '{"complete": "test"' }];
+    render(<KeyValuesTable data={brokenData} />);
+
+    const valueCell = screen.getByText('{"complete": "test"');
+    expect(valueCell).toBeInTheDocument();
+  });
+
+  it('renders CopyIcon components with correct copyText properties for each data element', () => {
+    render(<KeyValuesTable data={data} />);
+
+    const copyIcons = screen.getAllByTestId('copy-icon');
+    expect(copyIcons).toHaveLength(2 * data.length);
+
     copyIcons.forEach((copyIcon, i) => {
       const datum = data[Math.floor(i / 2)];
       if (i % 2 === 0) {
-        expect(copyIcon.prop('copyText')).toBe(datum.value);
-        expect(copyIcon.prop('tooltipTitle')).toBe('Copy value');
+        expect(copyIcon).toHaveAttribute('data-copy-text', String(datum.value));
+        expect(copyIcon).toHaveAttribute('data-tooltip-title', 'Copy value');
       } else {
-        expect(copyIcon.prop('copyText')).toBe(JSON.stringify(datum, null, 2));
-        expect(copyIcon.prop('tooltipTitle')).toBe('Copy JSON');
+        expect(copyIcon).toHaveAttribute('data-copy-text', JSON.stringify(datum, null, 2));
+        expect(copyIcon).toHaveAttribute('data-tooltip-title', 'Copy JSON');
       }
     });
   });

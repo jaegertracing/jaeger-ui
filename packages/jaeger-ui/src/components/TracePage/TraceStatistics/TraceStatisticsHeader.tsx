@@ -203,11 +203,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
 
   render() {
     const optionsNameSelector1 = generateDropdownValue(this.props.trace);
-    const optionsNameSelector2 = generateSecondDropdownValue(
-      this.props.wholeTable,
-      this.props.trace,
-      this.state.valueNameSelector1
-    );
+    const optionsNameSelector2 = generateSecondDropdownValue(this.props.trace, this.state.valueNameSelector1);
 
     return (
       <div className="TraceStatisticsHeader">

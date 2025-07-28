@@ -15,13 +15,13 @@
 import _get from 'lodash/get';
 import memoizeOne from 'memoize-one';
 
+import { Config } from '../../types/config';
 import processDeprecation from './process-deprecation';
 import defaultConfig, { deprecations, mergeFields } from '../../constants/default-config';
 
 function getUiConfig() {
   const getter = window.getJaegerUiConfig;
   if (typeof getter !== 'function') {
-    // eslint-disable-next-line no-console
     console.warn('Embedded config not available');
     return { ...defaultConfig };
   }
@@ -38,7 +38,7 @@ function getCapabilities() {
  * Merge the embedded config from the query service (if present) with the
  * default config from `../../constants/default-config`.
  */
-const getConfig = memoizeOne(function getConfig() {
+const getConfig = memoizeOne(function getConfig(): Config {
   const capabilities = getCapabilities();
 
   const embedded = getUiConfig();

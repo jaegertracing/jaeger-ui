@@ -20,5 +20,4 @@ type TTraceDiffState = {
   cohort: string[];
 };
 
-// eslint-disable-next-line no-undef
 export default TTraceDiffState;
