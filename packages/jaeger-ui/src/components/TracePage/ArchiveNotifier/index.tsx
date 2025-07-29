@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { notification } from 'antd';
 import { IoTimeOutline } from 'react-icons/io5';
 
@@ -33,11 +33,7 @@ type Props = {
   acknowledge: () => void;
 };
 
-type State = {
-  notifiedState: ENotifiedState | null;
-};
-
-function getNextNotifiedState(props: Props) {
+function getNextNotifiedState(props: Props): ENotifiedState | null {
   const { archivedState } = props;
   if (!archivedState) {
     return null;
@@ -93,32 +89,24 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
   }
 }
 
-function processProps(notifiedState: ENotifiedState | null, props: Props) {
-  const nxNotifiedState = getNextNotifiedState(props);
-  updateNotification(notifiedState, nxNotifiedState, props);
-  return nxNotifiedState;
-}
+const ArchiveNotifier: React.FC<Props> = props => {
+  const notifiedStateRef = useRef<ENotifiedState | null>(null);
 
-export default class ArchiveNotifier extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    const notifiedState = processProps(null, props);
-    this.state = { notifiedState };
-  }
+  useEffect(() => {
+    const nextNotifiedState = getNextNotifiedState(props);
+    updateNotification(notifiedStateRef.current, nextNotifiedState, props);
+    notifiedStateRef.current = nextNotifiedState;
+  }, [props.archivedState]);
 
-  static getDerivedStateFromProps(props: Props, state: State) {
-    const notifiedState = processProps(state.notifiedState, props);
-    return { notifiedState };
-  }
+  useEffect(() => {
+    return () => {
+      if (notifiedStateRef.current) {
+        notification.destroy(notifiedStateRef.current);
+      }
+    };
+  }, []);
 
-  componentWillUnmount() {
-    const { notifiedState } = this.state;
-    if (notifiedState) {
-      notification.destroy(notifiedState);
-    }
-  }
+  return null;
+};
 
-  render() {
-    return null;
-  }
-}
+export default React.memo(ArchiveNotifier);
