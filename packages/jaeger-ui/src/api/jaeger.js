@@ -82,6 +82,7 @@ function getJSON(url, options = {}) {
 
 export const DEFAULT_API_ROOT = prefixUrl('/api/');
 export const ANALYTICS_ROOT = prefixUrl('/analytics/');
+export const DEEP_DEPENDENCIES_ROOT = prefixUrl(getConfig().deepDependencies.apiEndpoint);
 export const QUALITY_METRICS_ROOT = prefixUrl(getConfig().qualityMetrics.apiEndpoint);
 export const DEFAULT_DEPENDENCY_LOOKBACK = dayjs.duration(1, 'weeks').asMilliseconds();
 
@@ -94,7 +95,7 @@ const JaegerAPI = {
     return getJSON(url);
   },
   fetchDeepDependencyGraph(query) {
-    return getJSON(`${ANALYTICS_ROOT}v1/dependencies`, { query });
+    return getJSON(DEEP_DEPENDENCIES_ROOT, { query });
   },
   fetchDependencies(endTs = new Date().getTime(), lookback = DEFAULT_DEPENDENCY_LOOKBACK) {
     return getJSON(`${this.apiRoot}dependencies`, { query: { endTs, lookback } });

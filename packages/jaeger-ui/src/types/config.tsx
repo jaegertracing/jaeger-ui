@@ -195,6 +195,8 @@ export type Config = {
 
   deepDependencies?: {
     menuEnabled?: boolean;
+    menuLabel?: string;
+    apiEndpoint?: string;
   };
   pathAgnosticDecorations?: readonly TPathAgnosticDecorationSchema[];
   qualityMetrics?: {
