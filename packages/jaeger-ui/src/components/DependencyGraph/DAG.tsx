@@ -130,7 +130,7 @@ export const createMenuItems = (
 
 const { classNameIsSmall } = Digraph.propsFactories;
 
-const DAGMenu = ({
+export const DAGMenu = ({
   menuPosition,
   hoveredNode,
   isMenuVisible,
