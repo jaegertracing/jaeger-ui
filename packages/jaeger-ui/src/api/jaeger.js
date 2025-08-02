@@ -81,7 +81,6 @@ function getJSON(url, options = {}) {
 }
 
 export const DEFAULT_API_ROOT = prefixUrl('/api/');
-export const ANALYTICS_ROOT = prefixUrl('/analytics/');
 export const DEEP_DEPENDENCIES_ROOT = prefixUrl(getConfig().deepDependencies.apiEndpoint);
 export const QUALITY_METRICS_ROOT = prefixUrl(getConfig().qualityMetrics.apiEndpoint);
 export const DEFAULT_DEPENDENCY_LOOKBACK = dayjs.duration(1, 'weeks').asMilliseconds();
