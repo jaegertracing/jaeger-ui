@@ -179,6 +179,12 @@ describe('search traces', () => {
       query,
       results: [],
       state: fetchedState.LOADING,
+      pagination: {
+        currentPage: 1,
+        pageSize: 20,
+        totalCount: 0,
+        totalPages: 0,
+      },
     };
     expect(state.search).toEqual(outcome);
   });
@@ -205,6 +211,12 @@ describe('search traces', () => {
         query,
         state: fetchedState.DONE,
         results: [id],
+        pagination: {
+          currentPage: 1,
+          pageSize: 20,
+          totalCount: 1,
+          totalPages: 1,
+        },
       },
     };
     expect(state).toEqual(outcome);
@@ -276,6 +288,12 @@ describe('load json traces', () => {
         query: null,
         state: fetchedState.DONE,
         results: [id],
+        pagination: {
+          currentPage: 1,
+          pageSize: 20,
+          totalCount: 0,
+          totalPages: 0,
+        },
       },
     };
     expect(state).toEqual(outcome);
