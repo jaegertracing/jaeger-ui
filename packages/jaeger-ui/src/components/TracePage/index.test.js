@@ -153,9 +153,34 @@ describe('<TracePage>', () => {
   describe('viewing uiFind matches', () => {
     describe('focusUiFindMatches', () => {
       let trackFocusSpy;
+      let getUiFindVertexKeysSpy;
 
       beforeAll(() => {
         trackFocusSpy = jest.spyOn(track, 'trackFocusMatches');
+        getUiFindVertexKeysSpy = jest.spyOn(getUiFindVertexKeys, 'getUiFindVertexKeys');
+      });
+
+      beforeEach(() => {
+        trackFocusSpy.mockReset();
+        getUiFindVertexKeysSpy.mockReset();
+      });
+
+      it('handles missing trace data gracefully', () => {
+        const testProps = { ...defaultProps, trace: null };
+        const instance = new TracePage(testProps);
+        const focusUiFindMatches = jest.fn();
+        instance.props = { ...testProps, focusUiFindMatches };
+        instance.focusUiFindMatches();
+        expect(focusUiFindMatches).not.toHaveBeenCalled();
+      });
+
+      it('handles undefined uiFind gracefully', () => {
+        const testProps = { ...defaultProps, trace: null, uiFind: undefined };
+        const instance = new TracePage(testProps);
+        const focusUiFindMatches = jest.fn();
+        instance.props = { ...testProps, focusUiFindMatches };
+        instance.focusUiFindMatches();
+        expect(focusUiFindMatches).not.toHaveBeenCalled();
       });
 
       beforeEach(() => {
@@ -633,6 +658,9 @@ describe('<TracePage>', () => {
       const testProps = { ...defaultProps, archiveTrace };
       const instance = new TracePage(testProps);
 
+      instance.archiveTrace();
+      expect(archiveTrace).toHaveBeenCalledWith(defaultProps.id);
+
       if (instance.onArchiveClicked) {
         instance.onArchiveClicked();
         expect(archiveTrace).toHaveBeenCalledWith(defaultProps.id);
@@ -647,10 +675,44 @@ describe('<TracePage>', () => {
       calculateTraceDagEVSpy = jest.spyOn(calculateTraceDagEV, 'default');
     });
 
+    it('updates next view range time correctly', () => {
+      const testProps = { ...defaultProps };
+      const instance = new TracePage(testProps);
+      const update = { cursor: 0.5 };
+
+      instance.setState = jest.fn();
+      instance.updateNextViewRangeTime(update);
+
+      expect(instance.setState).toHaveBeenCalled();
+      const stateUpdate = instance.setState.mock.calls[0][0];
+      const mockState = { viewRange: { time: { current: [0, 1] } } };
+      const newState = stateUpdate(mockState);
+
+      expect(newState.viewRange.time).toEqual({
+        ...mockState.viewRange.time,
+        ...update,
+      });
+    });
+
     it('propagates headerHeight changes', () => {
-      const { container } = renderWithRouter(<TracePage {...defaultProps} />);
-      expect(container.firstChild).toBeInTheDocument();
-      // Component should handle header height changes
+      const testProps = { ...defaultProps };
+      const instance = new TracePage(testProps);
+      instance.setState = jest.fn();
+
+      // Test setting header height with element
+      const mockElement = { clientHeight: 100 };
+      instance.setHeaderHeight(mockElement);
+      expect(instance.setState).toHaveBeenCalledWith({ headerHeight: 100 });
+
+      // Reset setState mock before testing null
+      instance.setState.mockReset();
+      instance.setHeaderHeight(mockElement);
+      expect(instance.setState).toHaveBeenLastCalledWith({ headerHeight: 100 });
+
+      // Test with different height
+      const newMockElement = { clientHeight: 200 };
+      instance.setHeaderHeight(newMockElement);
+      expect(instance.setState).toHaveBeenLastCalledWith({ headerHeight: 200 });
     });
 
     it('initializes slimView correctly', () => {
@@ -678,22 +740,105 @@ describe('<TracePage>', () => {
     });
 
     it('propagates traceView changes', () => {
-      const { rerender } = renderWithRouter(<TracePage {...defaultProps} />);
+      const instance = new TracePage(defaultProps);
+      instance.setState = jest.fn();
 
-      rerender(<TracePage {...defaultProps} viewType={ETraceViewType.TraceGraph} />);
-      // calculateTraceDagEV may or may not be called depending on conditions
+      calculateTraceDagEVSpy.mockReset();
 
-      rerender(<TracePage {...defaultProps} viewType={ETraceViewType.TraceSpansView} />);
-      rerender(<TracePage {...defaultProps} viewType={ETraceViewType.TraceStatistics} />);
+      // Test each view type transition
+      [
+        ETraceViewType.TraceGraph,
+        ETraceViewType.TraceSpansView,
+        ETraceViewType.TraceStatistics,
+        ETraceViewType.TraceTimelineViewer,
+        ETraceViewType.TraceFlamegraph,
+      ].forEach(viewType => {
+        instance.setTraceView(viewType);
+        expect(instance.setState).toHaveBeenCalledWith({ viewType });
+      });
+    });
 
-      rerender(<TracePage {...defaultProps} trace={{}} viewType={ETraceViewType.TraceTimelineViewer} />);
-      // Component should handle view type changes
+    it('calculates DAG only for TraceGraph view', () => {
+      const instance = new TracePage(defaultProps);
+      instance.setState = jest.fn();
+      calculateTraceDagEVSpy.mockReset();
+
+      // Should calculate DAG for TraceGraph
+      instance.setTraceView(ETraceViewType.TraceGraph);
+      expect(calculateTraceDagEVSpy).toHaveBeenCalled();
+
+      calculateTraceDagEVSpy.mockReset();
+
+      // Should not calculate DAG for other views
+      [
+        ETraceViewType.TraceSpansView,
+        ETraceViewType.TraceStatistics,
+        ETraceViewType.TraceTimelineViewer,
+        ETraceViewType.TraceFlamegraph,
+      ].forEach(viewType => {
+        instance.setTraceView(viewType);
+        expect(calculateTraceDagEVSpy).not.toHaveBeenCalled();
+      });
+    });
+
+    it('sets trace view and calculates DAG when switching to TraceGraph', () => {
+      const testProps = {
+        ...defaultProps,
+        trace: {
+          data: { spans: [], processes: {} },
+        },
+      };
+      const instance = new TracePage(testProps);
+      instance.setState = jest.fn();
+
+      instance.setTraceView(ETraceViewType.TraceGraph);
+
+      expect(calculateTraceDagEVSpy).toHaveBeenCalledWith(testProps.trace.data);
+      expect(instance.setState).toHaveBeenCalledWith({ viewType: ETraceViewType.TraceGraph });
+    });
+
+    it('sets trace view without calculating DAG for non-graph views', () => {
+      const testProps = {
+        ...defaultProps,
+        viewType: ETraceViewType.TraceTimelineViewer,
+        trace: {
+          data: { spans: [], processes: {} },
+        },
+      };
+      const instance = new TracePage(testProps);
+      instance.setState = jest.fn();
+      calculateTraceDagEVSpy.mockClear();
+
+      instance.setTraceView(ETraceViewType.TraceTimelineViewer);
+
+      expect(calculateTraceDagEVSpy).not.toHaveBeenCalled();
+      expect(instance.setState).toHaveBeenCalledWith({ viewType: ETraceViewType.TraceTimelineViewer });
     });
 
     it('propagates viewRange changes', () => {
       const { container } = renderWithRouter(<TracePage {...defaultProps} />);
       expect(container.firstChild).toBeInTheDocument();
-      // Component should handle view range changes through props
+    });
+
+    it('sets state correctly for different view types', () => {
+      const headerHeight = 100;
+      const testProps = {
+        ...defaultProps,
+        trace: {
+          data: { spans: [], processes: {} },
+          state: fetchedState.DONE,
+        },
+      };
+
+      const instance = new TracePage(testProps);
+      instance.setState = jest.fn();
+
+      [ETraceViewType.TraceStatistics, ETraceViewType.TraceSpansView, ETraceViewType.TraceFlamegraph].forEach(
+        viewType => {
+          instance.setTraceView(viewType);
+          expect(instance.setState).toHaveBeenCalledWith({ viewType });
+        }
+      );
     });
   });
 
@@ -717,9 +862,20 @@ describe('<TracePage>', () => {
       const instance = new TracePage(testProps);
 
       const trackRangeSpy = jest.spyOn(track, 'trackRange').mockImplementation(() => {});
+      const prevRange = [0, 1];
+      instance.state = {
+        viewRange: {
+          time: {
+            current: prevRange,
+          },
+        },
+      };
 
       const src = 'some-source';
       const range = [0.25, 0.75];
+      instance.updateViewRangeTime(range[0], range[1], src);
+
+      expect(trackRangeSpy).toHaveBeenCalledWith(src, range, prevRange);
 
       if (instance.updateViewRangeTime) {
         instance.updateViewRangeTime(...range, src);
