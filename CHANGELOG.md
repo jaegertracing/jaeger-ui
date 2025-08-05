@@ -37,7 +37,7 @@ Run `make changelog` to generate content.
 * Convert deepdependencies/header/index.tsx component to functional component ([@Parship999](https://github.com/Parship999) in [#2985](https://github.com/jaegertracing/jaeger-ui/pull/2985))
 * Convert `traces.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2959](https://github.com/jaegertracing/jaeger-ui/pull/2959))
 * Convert `sidepanel/index.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2960](https://github.com/jaegertracing/jaeger-ui/pull/2960))
-* Convet `uifindinput.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2954](https://github.com/jaegertracing/jaeger-ui/pull/2954))
+* Convert `uifindinput.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2954](https://github.com/jaegertracing/jaeger-ui/pull/2954))
 * Convert `detailtabledropdown.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2948](https://github.com/jaegertracing/jaeger-ui/pull/2948))
 * Convert `listitem.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2950](https://github.com/jaegertracing/jaeger-ui/pull/2950))
 * Convert `page.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2947](https://github.com/jaegertracing/jaeger-ui/pull/2947))
