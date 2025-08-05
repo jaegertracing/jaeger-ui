@@ -329,14 +329,16 @@ describe('<DAG>', () => {
 
     let renderNodeFn;
 
+    const originalMockImplementation = Digraph.mockImplementation;
     Digraph.mockImplementation(props => {
       renderNodeFn = props.layers?.find(l => l.key === 'nodes')?.renderNode;
       return <div data-testid="digraph-mock" />;
     });
-
     render(
       <DAG data={data} selectedLayout="dot" selectedDepth={1} selectedService="test-node" uiFind="test" />
     );
+
+    Digraph.mockImplementation = originalMockImplementation;
 
     expect(typeof renderNodeFn).toBe('function');
 
