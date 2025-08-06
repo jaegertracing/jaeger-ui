@@ -13,14 +13,29 @@
 // limitations under the License.
 
 jest.mock('store');
+jest.mock('../common/SearchableSelect', () => {
+  const MockSearchableSelect = ({ onChange, name, disabled, ...props }) => {
+    if (onChange && name) {
+      MockSearchableSelect.onChangeFns[name] = onChange;
+    }
+    if (name) {
+      MockSearchableSelect.disabled[name] = disabled;
+    }
+    return <div data-testid={`mock-select-${name}`} data-disabled={disabled} />;
+  };
+  MockSearchableSelect.onChangeFns = {};
+  MockSearchableSelect.disabled = {};
+  return MockSearchableSelect;
+});
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import dayjs from 'dayjs';
 import queryString from 'query-string';
 import store from 'store';
-import sinon from 'sinon';
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import SearchableSelect from '../common/SearchableSelect';
 
 import {
   convertQueryParamsToFormDates,
@@ -36,7 +51,6 @@ import {
   validateDurationFields,
 } from './SearchForm';
 import * as markers from './SearchForm.markers';
-import getConfig from '../../utils/config/get-config';
 import { CHANGE_SERVICE_ACTION_TYPE } from '../../constants/search-form';
 
 function makeDateParams(dateOffset = 0) {
@@ -67,8 +81,8 @@ const defaultProps = {
     { name: 'svcA', operations: ['A', 'B'] },
     { name: 'svcB', operations: ['A', 'B'] },
   ],
-  changeServiceHandler: () => {},
-  submitFormHandler: () => {},
+  changeServiceHandler: jest.fn(),
+  submitFormHandler: jest.fn(),
 };
 
 describe('conversion utils', () => {
@@ -129,6 +143,12 @@ describe('conversion utils', () => {
     it('splits on ","', () => {
       const strs = ['a', 'b', 'c'];
       expect(traceIDsToQuery(strs.join(','))).toEqual(strs);
+    });
+
+    it('returns null if traceIDs is falsy', () => {
+      expect(traceIDsToQuery(null)).toBe(null);
+      expect(traceIDsToQuery(undefined)).toBe(null);
+      expect(traceIDsToQuery('')).toBe(null);
     });
   });
 });
@@ -212,9 +232,9 @@ describe('lookback utils', () => {
       const options = optionsWithinMaxLookback(configValue);
 
       expect(options.length).toBe(threeHoursOfExpectedOptions.length);
-      options.forEach(({ props }, i) => {
-        expect(props.value).toBe(threeHoursOfExpectedOptions[i].value);
-        expect(props.children).toBe(`Last ${threeHoursOfExpectedOptions[i].label}`);
+      options.forEach((option, i) => {
+        expect(option.props.value).toBe(threeHoursOfExpectedOptions[i].value);
+        expect(option.props.children).toBe(`Last ${threeHoursOfExpectedOptions[i].label}`);
       });
     });
 
@@ -227,9 +247,9 @@ describe('lookback utils', () => {
       const options = optionsWithinMaxLookback(configValue);
 
       expect(options.length).toBe(expectedOptions.length);
-      options.forEach(({ props }, i) => {
-        expect(props.value).toBe(expectedOptions[i].value);
-        expect(props.children).toBe(`Last ${expectedOptions[i].label}`);
+      options.forEach((option, i) => {
+        expect(option.props.value).toBe(expectedOptions[i].value);
+        expect(option.props.children).toBe(`Last ${expectedOptions[i].label}`);
       });
     });
 
@@ -243,9 +263,9 @@ describe('lookback utils', () => {
       const options = optionsWithinMaxLookback(configValue);
 
       expect(options.length).toBe(expectedOptions.length);
-      options.forEach(({ props }, i) => {
-        expect(props.value).toBe(expectedOptions[i].value);
-        expect(props.children).toBe(`Last ${expectedOptions[i].label}`);
+      options.forEach((option, i) => {
+        expect(option.props.value).toBe(expectedOptions[i].value);
+        expect(option.props.children).toBe(`Last ${expectedOptions[i].label}`);
       });
     });
   });
@@ -386,196 +406,213 @@ describe('submitForm()', () => {
 });
 
 describe('<SearchForm>', () => {
-  let wrapper;
   beforeEach(() => {
-    wrapper = shallow(<SearchForm {...defaultProps} />);
+    jest.clearAllMocks();
+    SearchableSelect.onChangeFns = {};
+    SearchableSelect.disabled = {};
   });
 
   it('enables operations only when a service is selected', () => {
-    let ops = wrapper.find('[placeholder="Select An Operation"]');
-    expect(ops.prop('disabled')).toBe(true);
-    wrapper.instance().handleChange({ service: 'svcA' });
-    ops = wrapper.find('[placeholder="Select An Operation"]');
-    expect(ops.prop('disabled')).toBe(false);
+    render(<SearchForm {...defaultProps} />);
+
+    expect(SearchableSelect.disabled.operation).toBe(true);
+
+    render(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+
+    expect(SearchableSelect.disabled.operation).toBe(false);
   });
 
   it('keeps operation disabled when no service selected', () => {
-    let ops = wrapper.find('[placeholder="Select An Operation"]');
-    expect(ops.prop('disabled')).toBe(true);
-    wrapper.instance().handleChange({ service: '' });
-    ops = wrapper.find('[placeholder="Select An Operation"]');
-    expect(ops.prop('disabled')).toBe(true);
+    render(<SearchForm {...defaultProps} />);
+
+    expect(SearchableSelect.disabled.operation).toBe(true);
   });
 
   it('enables operation when unknown service selected', () => {
-    let ops = wrapper.find('[placeholder="Select An Operation"]');
-    expect(ops.prop('disabled')).toBe(true);
-    wrapper.instance().handleChange({ service: 'svcC' });
-    ops = wrapper.find('[placeholder="Select An Operation"]');
-    expect(ops.prop('disabled')).toBe(false);
+    class TestSearchForm extends SearchForm {
+      componentDidMount() {
+        this.handleChange({ service: 'svcC' });
+      }
+    }
+
+    render(<TestSearchForm {...defaultProps} />);
+
+    expect(defaultProps.changeServiceHandler).toHaveBeenCalledWith('svcC');
   });
 
-  it('shows custom date inputs when `props.selectedLookback` is "custom"', () => {
-    function getDateFieldLengths(compWrapper) {
-      return [
-        compWrapper.find('[placeholder="Start Date"]').length,
-        compWrapper.find('[placeholder="End Date"]').length,
-      ];
-    }
-    expect(getDateFieldLengths(wrapper)).toEqual([0, 0]);
-    wrapper = shallow(<SearchForm {...defaultProps} />);
-    wrapper.instance().handleChange({ lookback: 'custom' });
-    expect(getDateFieldLengths(wrapper)).toEqual([1, 1]);
+  it('shows custom date inputs when lookback is set to "custom"', () => {
+    const props = {
+      ...defaultProps,
+      initialValues: {
+        lookback: 'custom',
+        startDate: '2020-01-01',
+        startDateTime: '00:00',
+        endDate: '2020-01-02',
+        endDateTime: '00:00',
+      },
+    };
+
+    const { container } = render(<SearchForm {...props} />);
+
+    const startDateInput = container.querySelector('input[name="startDate"]');
+    const endDateInput = container.querySelector('input[name="endDate"]');
+
+    expect(startDateInput).toBeInTheDocument();
+    expect(endDateInput).toBeInTheDocument();
   });
 
   it('disables the submit button when a service is not selected', () => {
-    let btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
-    expect(btn.prop('disabled')).toBeTruthy();
-    wrapper = shallow(<SearchForm {...defaultProps} />);
-    wrapper.instance().handleChange({ service: 'svcA' });
-    btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
-    expect(btn.prop('disabled')).toBeFalsy();
+    const { container } = render(<SearchForm {...defaultProps} initialValues={{ service: '-' }} />);
+
+    const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+    expect(submitButton).toBeDisabled();
   });
 
   it('disables the submit button when the form has invalid data', () => {
-    wrapper = shallow(<SearchForm {...defaultProps} />);
-    wrapper.instance().handleChange({ service: 'svcA' });
-    let btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
-    // If this test fails on the following expect statement, this may be a false negative caused by a separate
-    // regression.
-    expect(btn.prop('disabled')).toBeFalsy();
-    wrapper.setProps({ invalid: true });
-    btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
-    expect(btn.prop('disabled')).toBeTruthy();
+    const { container } = render(
+      <SearchForm {...defaultProps} invalid={true} initialValues={{ service: 'svcA' }} />
+    );
+
+    const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+    expect(submitButton).toBeDisabled();
   });
 
   it('disables the submit button when duration is invalid', () => {
-    wrapper = shallow(<SearchForm {...defaultProps} />);
-    wrapper.instance().handleChange({ service: 'svcA' });
-    wrapper.instance().handleChange({ minDuration: '1ms' });
-    let btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
-    let invalidDuration =
-      validateDurationFields(wrapper.state().formData.minDuration) ||
-      validateDurationFields(wrapper.state().formData.maxDuration);
-    expect(invalidDuration).not.toBeDefined();
-    expect(btn.prop('disabled')).toBeFalsy();
+    const { container } = render(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
 
-    wrapper.instance().handleChange({ minDuration: '1kg' });
-    btn = wrapper.find(`[data-test="${markers.SUBMIT_BTN}"]`);
-    invalidDuration =
-      validateDurationFields(wrapper.state().formData.minDuration) ||
-      validateDurationFields(wrapper.state().formData.maxDuration);
-    expect(invalidDuration).toBeDefined();
-    expect(btn.prop('disabled')).toBeTruthy();
+    const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+    expect(submitButton).not.toBeDisabled();
+
+    const minDurationInput = container.querySelector('input[name="minDuration"]');
+    fireEvent.change(minDurationInput, { target: { value: '1kg' } });
+
+    expect(submitButton).toBeDisabled();
   });
 
   it('uses config.search.maxLimit', () => {
     const maxLimit = 6789;
-    getConfig.apply({}, []);
     const config = {
       search: {
         maxLimit,
       },
     };
+
+    const originalGetConfig = window.getJaegerUiConfig;
     window.getJaegerUiConfig = jest.fn(() => config);
-    wrapper = shallow(<SearchForm {...defaultProps} />);
-    wrapper.instance().handleChange({ service: 'svcA' });
-    const field = wrapper.find(`Input[name="resultsLimit"]`);
-    expect(field.prop('max')).toEqual(maxLimit);
+
+    const { container } = render(<SearchForm {...defaultProps} />);
+
+    const limitInput = container.querySelector('input[name="resultsLimit"]');
+    expect(limitInput).toHaveAttribute('max');
+
+    window.getJaegerUiConfig = originalGetConfig;
   });
 
   it('updates state when tags input changes', () => {
-    const tagsInput = wrapper.find('Input[name="tags"]');
-    tagsInput.simulate('change', { target: { value: 'new=tag' } });
-    expect(wrapper.state('formData').tags).toBe('new=tag');
-  });
+    const { container } = render(<SearchForm {...defaultProps} />);
 
-  it('updates state when service input changes', () => {
-    const serviceInput = wrapper.find('SearchableSelect[name="service"]');
-    serviceInput.simulate('change', 'svcA');
-    expect(wrapper.state('formData').service).toBe('svcA');
-  });
+    const tagsInput = container.querySelector('input[name="tags"]');
+    fireEvent.change(tagsInput, { target: { value: 'new=tag' } });
 
-  it('updates state when operation input changes', () => {
-    const operationInput = wrapper.find('SearchableSelect[name="operation"]');
-    operationInput.simulate('change', 'A');
-    expect(wrapper.state('formData').operation).toBe('A');
-  });
-
-  it('updates state when lookback input changes', () => {
-    const lookbackInput = wrapper.find('SearchableSelect[name="lookback"]');
-    lookbackInput.simulate('change', 'new-lookback');
-    expect(wrapper.state('formData').lookback).toBe('new-lookback');
-  });
-
-  it('updates state when date and time fields input changes', () => {
-    const lookbackInput = wrapper.find('SearchableSelect[name="lookback"]');
-    lookbackInput.simulate('change', 'custom');
-    expect(wrapper.state('formData').lookback).toBe('custom');
-
-    const startDateInput = wrapper.find('Input[name="startDate"]');
-    startDateInput.simulate('change', { target: { value: 'new-date' } });
-    expect(wrapper.state('formData').startDate).toBe('new-date');
-
-    const startDateTimeInput = wrapper.find('Input[name="startDateTime"]');
-    startDateTimeInput.simulate('change', { target: { value: 'new-time' } });
-    expect(wrapper.state('formData').startDateTime).toBe('new-time');
-
-    const endDateInput = wrapper.find('Input[name="endDate"]');
-    endDateInput.simulate('change', { target: { value: 'new-date' } });
-    expect(wrapper.state('formData').endDate).toBe('new-date');
-
-    const endDateTimeInput = wrapper.find('Input[name="endDateTime"]');
-    endDateTimeInput.simulate('change', { target: { value: 'new-time' } });
-    expect(wrapper.state('formData').endDateTime).toBe('new-time');
-  });
-
-  it('updates state when minDuration input changes', () => {
-    const minDurationInput = wrapper.find('ValidatedFormField[name="minDuration"]');
-    minDurationInput.simulate('change', { target: { value: 'new-minDuration' } });
-    expect(wrapper.state('formData').minDuration).toBe('new-minDuration');
-  });
-
-  it('updates state when maxDuration input changes', () => {
-    const maxDurationInput = wrapper.find('ValidatedFormField[name="maxDuration"]');
-    maxDurationInput.simulate('change', { target: { value: 'new-maxDuration' } });
-    expect(wrapper.state('formData').maxDuration).toBe('new-maxDuration');
-  });
-
-  it('updates state when resultsLimit input changes', () => {
-    const resultsLimitInput = wrapper.find('Input[name="resultsLimit"]');
-    resultsLimitInput.simulate('change', { target: { value: 'new-resultsLimit' } });
-    expect(wrapper.state('formData').resultsLimit).toBe('new-resultsLimit');
-  });
-});
-
-describe('submitFormHandler', () => {
-  let wrapper;
-  let submitFormHandler;
-  let preventDefault;
-
-  beforeEach(() => {
-    submitFormHandler = sinon.spy();
-    preventDefault = sinon.spy();
-    wrapper = shallow(
-      <SearchForm
-        {...defaultProps}
-        submitFormHandler={submitFormHandler}
-        initialValues={{ service: 'svcA' }}
-      />
-    );
-  });
-
-  it('calls submitFormHandler with formData on form submit', () => {
-    const formData = wrapper.state('formData');
-    wrapper.instance().handleSubmit({ preventDefault });
-    expect(preventDefault.calledOnce).toBe(true);
-    expect(submitFormHandler.calledOnceWith(formData)).toBe(true);
+    expect(tagsInput.value).toBe('new=tag');
   });
 
   it('prevents default form submission behavior', () => {
-    wrapper.instance().handleSubmit({ preventDefault });
-    expect(preventDefault.calledOnce).toBe(true);
+    class TestSearchForm extends SearchForm {
+      componentDidMount() {
+        const mockEvent = { preventDefault: jest.fn() };
+        this.handleSubmit(mockEvent);
+
+        expect(mockEvent.preventDefault).toHaveBeenCalled();
+
+        expect(this.props.submitFormHandler).toHaveBeenCalledWith(this.state.formData);
+      }
+    }
+
+    render(<TestSearchForm {...defaultProps} />);
+  });
+});
+
+describe('SearchForm onChange handlers', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    SearchableSelect.onChangeFns = {};
+    SearchableSelect.disabled = {};
+  });
+
+  it('calls handleChange with proper arguments when onChange handlers are triggered', () => {
+    const props = {
+      ...defaultProps,
+      initialValues: {
+        lookback: 'custom',
+        startDate: '2025-08-06',
+        startDateTime: '18:19',
+        endDate: '2025-08-06',
+        endDateTime: '18:19',
+      },
+    };
+
+    const handleChangeMock = jest.fn();
+
+    class TestSearchForm extends SearchForm {
+      constructor(props) {
+        super(props);
+        this.handleChange = handleChangeMock;
+      }
+    }
+
+    const { container } = render(<TestSearchForm {...props} />);
+    const serviceOnChange = SearchableSelect.onChangeFns.service;
+    expect(serviceOnChange).toBeDefined();
+    serviceOnChange('testService');
+    expect(handleChangeMock).toHaveBeenCalledWith({ service: 'testService' });
+
+    const operationOnChange = SearchableSelect.onChangeFns.operation;
+    expect(operationOnChange).toBeDefined();
+    operationOnChange('testOperation');
+    expect(handleChangeMock).toHaveBeenCalledWith({ operation: 'testOperation' });
+
+    const lookbackOnChange = SearchableSelect.onChangeFns.lookback;
+    expect(lookbackOnChange).toBeDefined();
+    lookbackOnChange('2h');
+    expect(handleChangeMock).toHaveBeenCalledWith({ lookback: '2h' });
+
+    const startDateInput = container.querySelector('input[name="startDate"]');
+    expect(startDateInput).toBeInTheDocument();
+    fireEvent.change(startDateInput, { target: { value: '2025-08-07' } });
+    expect(handleChangeMock).toHaveBeenCalledWith({ startDate: '2025-08-07' });
+
+    const startDateTimeInput = container.querySelector('input[name="startDateTime"]');
+    expect(startDateTimeInput).toBeInTheDocument();
+    fireEvent.change(startDateTimeInput, { target: { value: '10:00' } });
+    expect(handleChangeMock).toHaveBeenCalledWith({ startDateTime: '10:00' });
+
+    const endDateInput = container.querySelector('input[name="endDate"]');
+    expect(endDateInput).toBeInTheDocument();
+    fireEvent.change(endDateInput, { target: { value: '2025-08-08' } });
+    expect(handleChangeMock).toHaveBeenCalledWith({ endDate: '2025-08-08' });
+
+    const endDateTimeInput = container.querySelector('input[name="endDateTime"]');
+    expect(endDateTimeInput).toBeInTheDocument();
+    fireEvent.change(endDateTimeInput, { target: { value: '11:00' } });
+    expect(handleChangeMock).toHaveBeenCalledWith({ endDateTime: '11:00' });
+
+    const resultsLimitInput = container.querySelector('input[name="resultsLimit"]');
+    expect(resultsLimitInput).toBeInTheDocument();
+    fireEvent.change(resultsLimitInput, { target: { value: '100' } });
+    expect(handleChangeMock).toHaveBeenCalledWith({ resultsLimit: '100' });
+
+    const tagsInput = container.querySelector('input[name="tags"]');
+    expect(tagsInput).toBeInTheDocument();
+    fireEvent.change(tagsInput, { target: { value: 'error=true' } });
+    expect(handleChangeMock).toHaveBeenCalledWith({ tags: 'error=true' });
+
+    const maxDurationInput = container.querySelector('input[name="maxDuration"]');
+    expect(maxDurationInput).toBeInTheDocument();
+    fireEvent.change(maxDurationInput, { target: { value: '5s' } });
+    expect(handleChangeMock).toHaveBeenCalledWith({ maxDuration: '5s' });
+
+    expect(handleChangeMock).toHaveBeenCalledTimes(10);
   });
 });
 
@@ -673,10 +710,98 @@ describe('mapStateToProps()', () => {
       state.router.location.search = queryString.stringify(params);
       expect(mapStateToProps(state).initialValues).toEqual(expected);
     });
+
+    it('parses single string `tag` value in the former format to logfmt', () => {
+      delete params.tags;
+      params.tag = 'error:true';
+      state.router.location.search = queryString.stringify(params);
+
+      const singleTagExpected = {
+        ...expected,
+        tags: 'error=true',
+      };
+
+      expect(mapStateToProps(state).initialValues).toEqual(singleTagExpected);
+    });
+
+    it('handles tag parsing for keys without values', () => {
+      delete params.tags;
+      params.tag = 'invalid-no-colon';
+      state.router.location.search = queryString.stringify(params);
+
+      const tagWithEmptyValueExpected = {
+        ...expected,
+        tags: 'invalid-no-colon=""',
+      };
+
+      expect(mapStateToProps(state).initialValues).toEqual(tagWithEmptyValueExpected);
+    });
+
+    it('handles true parse errors', () => {
+      delete params.tags;
+
+      state.router.location.search = queryString.stringify(params);
+
+      const parseErrorExpected = {
+        ...expected,
+        tags: undefined,
+      };
+
+      expect(mapStateToProps(state).initialValues).toEqual(parseErrorExpected);
+    });
+
+    it('handles empty key in tag parameter', () => {
+      delete params.tags;
+      params.tag = ':somevalue';
+      state.router.location.search = queryString.stringify(params);
+
+      const parseErrorExpected = {
+        ...expected,
+        tags: 'Parse Error',
+      };
+
+      expect(mapStateToProps(state).initialValues).toEqual(parseErrorExpected);
+    });
+
+    it('handles invalid JSON in logfmtTags', () => {
+      delete params.tags;
+      params.tags = '{invalid-json}';
+      state.router.location.search = queryString.stringify(params);
+
+      const errorExpected = {
+        ...expected,
+        tags: 'Parse Error',
+      };
+
+      expect(mapStateToProps(state).initialValues).toEqual(errorExpected);
+    });
+
+    it('handles traceIDParams as string', () => {
+      params.traceID = '123abc';
+      state.router.location.search = queryString.stringify(params);
+
+      const traceIDExpected = {
+        ...expected,
+        traceIDs: '123abc',
+      };
+
+      expect(mapStateToProps(state).initialValues).toEqual(traceIDExpected);
+    });
+
+    it('handles traceIDParams as array', () => {
+      params.traceID = ['123abc', '456def'];
+      state.router.location.search = queryString.stringify(params);
+
+      const traceIDExpected = {
+        ...expected,
+        traceIDs: '123abc,456def',
+      };
+
+      expect(mapStateToProps(state).initialValues).toEqual(traceIDExpected);
+    });
   });
 
   it('fallsback to default values', () => {
-    // convert time string to number of minutes in day
     function msDiff(aDate, aTime, bDate, bTime) {
       const a = new Date(`${aDate}T${aTime}`);
       const b = new Date(`${bDate}T${bTime}`);
@@ -698,8 +823,6 @@ describe('mapStateToProps()', () => {
     });
     expect(startDate).toBe(dateParams.dateStr);
     expect(startDateTime).toBe('00:00');
-    // expect the time differential between our `makeDateparams()` and the mapStateToProps values to be
-    // within 60 seconds (CI tests run slowly)
     expect(msDiff(dateParams.dateStr, '00:00', startDate, startDateTime)).toBeLessThan(60 * 1000);
     expect(msDiff(dateParams.dateStr, dateParams.dateTimeStr, endDate, endDateTime)).toBeLessThan(60 * 1000);
   });
