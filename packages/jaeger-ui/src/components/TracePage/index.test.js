@@ -290,17 +290,44 @@ describe('<TracePage>', () => {
     });
   });
 
-  it('uses props.uiFind, props.trace.traceID, and props.trace.spans.length to create filterSpans memo cache key', () => {
-    // Force filterSpans to be called with specific test values
-    filterSpansSpy.mockImplementation((uiFind, spans) => {
-      // This implementation ensures the function returns a value
-      // but also allows us to verify it was called with the right arguments
-      return new Set(['test']);
-    });
-
+  it('uses uiFind, trace.traceID, and trace.data.spans.length to compute memo cache key for filterSpans', () => {
     const uiFind = 'uiFind';
-    render(<TracePage {...defaultProps} uiFind={uiFind} />);
-    expect(filterSpansSpy).toHaveBeenCalledWith(uiFind, defaultProps.trace.data.spans);
+    const trace = transformTraceData(traceGenerator.trace({}));
+    const baseProps = {
+      ...defaultProps,
+      uiFind: undefined,
+      trace: { data: trace, state: fetchedState.DONE },
+    };
+
+    filterSpansSpy.mockClear();
+    filterSpansSpy.mockImplementation(() => new Set());
+
+    const { rerender } = render(<TracePage {...baseProps} />);
+    expect(filterSpansSpy).not.toHaveBeenCalled();
+
+    rerender(<TracePage {...baseProps} uiFind={uiFind} />);
+    expect(filterSpansSpy).toHaveBeenCalledTimes(1);
+    expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, baseProps.trace.data.spans);
+
+    const newTrace1 = {
+      ...baseProps.trace,
+      traceID: 'new-trace-id',
+    };
+    rerender(<TracePage {...baseProps} uiFind={uiFind} trace={newTrace1} />);
+    expect(filterSpansSpy).toHaveBeenCalledTimes(2);
+    expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, newTrace1.data.spans);
+
+    const reducedSpans = [...baseProps.trace.data.spans.slice(0, baseProps.trace.data.spans.length / 2)];
+    const newTrace2 = {
+      ...baseProps.trace,
+      data: {
+        ...baseProps.trace.data,
+        spans: reducedSpans,
+      },
+    };
+    rerender(<TracePage {...baseProps} uiFind={uiFind} trace={newTrace2} />);
+    expect(filterSpansSpy).toHaveBeenCalledTimes(3);
+    expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, reducedSpans);
   });
 
   it('renders a a loading indicator when not provided a fetched trace', () => {
