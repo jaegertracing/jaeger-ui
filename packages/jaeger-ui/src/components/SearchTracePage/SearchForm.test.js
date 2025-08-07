@@ -823,6 +823,8 @@ describe('mapStateToProps()', () => {
     });
     expect(startDate).toBe(dateParams.dateStr);
     expect(startDateTime).toBe('00:00');
+    // expect the time differential between our `makeDateparams()` and the mapStateToProps values to be
+    // within 60 seconds (CI tests run slowly)
     expect(msDiff(dateParams.dateStr, '00:00', startDate, startDateTime)).toBeLessThan(60 * 1000);
     expect(msDiff(dateParams.dateStr, dateParams.dateTimeStr, endDate, endDateTime)).toBeLessThan(60 * 1000);
   });
