@@ -398,48 +398,46 @@ describe('<TracePage>', () => {
     TracePage.prototype.componentDidUpdate = originalComponentDidUpdate;
   });
 
-  it('updates _scrollManager when recieving props', () => {
+  it('calls scrollManager.setTrace when trace data changes', () => {
     const setTraceMock = jest.fn();
 
-    const originalComponentDidUpdate = TracePage.prototype.componentDidUpdate;
-    TracePage.prototype.componentDidUpdate = function (prevProps) {
-      if (this.props.trace && (!prevProps.trace || prevProps.trace.data !== this.props.trace.data)) {
-        const scrollManager = this._scrollManager;
-        scrollManager.setTrace = setTraceMock;
-        scrollManager.setTrace(this.props.trace.data);
-      }
-    };
+    ScrollManager.mockImplementation(() => ({
+      scrollToNextVisibleSpan: jest.fn(),
+      scrollToPrevVisibleSpan: jest.fn(),
+      setAccessors: jest.fn(),
+      scrollToFirstVisibleSpan: jest.fn(),
+      destroy: jest.fn(),
+      setTrace: setTraceMock,
+    }));
 
     const { rerender } = render(<TracePage {...defaultProps} trace={null} />);
-    rerender(<TracePage {...defaultProps} trace={{ data: trace }} />);
+    rerender(<TracePage {...defaultProps} trace={{ data: trace, state: fetchedState.DONE }} />);
 
     expect(setTraceMock).toHaveBeenCalledWith(trace);
-
-    TracePage.prototype.componentDidUpdate = originalComponentDidUpdate;
   });
 
-  it('performs misc cleanup when unmounting', () => {
-    resetShortcuts.mockReset();
-    cancelScroll.mockReset();
+  it('calls resetShortcuts, cancelScroll, and scrollManager.destroy on unmount', () => {
     const destroyMock = jest.fn();
-
-    const originalComponentWillUnmount = TracePage.prototype.componentWillUnmount;
-    TracePage.prototype.componentWillUnmount = function () {
-      resetShortcuts();
-      cancelScroll();
-
-      this._scrollManager.destroy = destroyMock;
-      this._scrollManager.destroy();
+    const scrollManagerMock = {
+      scrollToNextVisibleSpan: jest.fn(),
+      scrollToPrevVisibleSpan: jest.fn(),
+      setAccessors: jest.fn(),
+      scrollToFirstVisibleSpan: jest.fn(),
+      destroy: destroyMock,
+      setTrace: jest.fn(),
     };
+
+    ScrollManager.mockImplementation(() => scrollManagerMock);
+
+    const resetShortcutsMock = jest.spyOn(require('./keyboard-shortcuts'), 'reset');
+    const cancelScrollMock = jest.spyOn(require('./scroll-page'), 'cancel');
 
     const { unmount } = render(<TracePage {...defaultProps} />);
     unmount();
 
-    expect(resetShortcuts).toHaveBeenCalled();
-    expect(cancelScroll).toHaveBeenCalled();
+    expect(resetShortcutsMock).toHaveBeenCalled();
+    expect(cancelScrollMock).toHaveBeenCalled();
     expect(destroyMock).toHaveBeenCalled();
-
-    TracePage.prototype.componentWillUnmount = originalComponentWillUnmount;
   });
 
   it('sets up keyboard shortcuts including adjViewRange in componentDidMount', () => {
