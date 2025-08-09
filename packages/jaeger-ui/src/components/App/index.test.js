@@ -137,11 +137,8 @@ describe('JaegerUIApp', () => {
   it('should handle root path redirect', () => {
     const { container } = renderWithPath('/');
     expect(container).toBeInTheDocument();
-  });
-
-  it('should handle prefix path redirects', () => {
-    const { container } = renderWithPath('/prefix');
-    expect(container).toBeInTheDocument();
+    expect(mockHistory.replace).toHaveBeenCalledTimes(1);
+    expect(mockHistory.replace).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/search' }));
   });
 
   it('should handle constructor with props', () => {
