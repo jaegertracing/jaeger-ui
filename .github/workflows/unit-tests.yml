@@ -25,6 +25,8 @@ jobs:
           cache: npm
           node-version: '22'
       - run: npm ci
+      - run: node -v
+      - run: npm -v
       - run: npm ls --all
       - run: npm run coverage
       - name: Upload coverage to codecov.io
