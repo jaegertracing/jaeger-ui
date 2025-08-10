@@ -61,7 +61,7 @@ const HELP_CONTENT = (
         <tbody>
           <tr>
             <td>
-              <Button htmlType="button" shape="circle" size="small">
+              <Button htmlType="button" shape="circle" size="small" className="active">
                 S
               </Button>
             </td>
@@ -218,7 +218,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
             <li>
               <Tooltip placement="left" title="Service">
                 <Button
-                  className="TraceGraph--btn-service"
+                  className={cx('TraceGraph--btn-service', { active: mode === MODE_SERVICE })}
                   htmlType="button"
                   shape="circle"
                   size="small"
@@ -231,7 +231,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
             <li>
               <Tooltip placement="left" title="Time">
                 <Button
-                  className="TraceGraph--btn-time"
+                  className={cx('TraceGraph--btn-time', { active: mode === MODE_TIME })}
                   htmlType="button"
                   shape="circle"
                   size="small"
@@ -244,7 +244,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
             <li>
               <Tooltip placement="left" title="Selftime">
                 <Button
-                  className="TraceGraph--btn-selftime"
+                  className={cx('TraceGraph--btn-selftime', { active: mode === MODE_SELFTIME })}
                   htmlType="button"
                   shape="circle"
                   size="small"
