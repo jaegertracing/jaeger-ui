@@ -66,6 +66,6 @@ describe('processScripts', () => {
 
   it('handles no scripts', () => {
     getConfigValueSpy.mockReturnValue(undefined);
-    expect(processScripts).not.toThrowError();
+    expect(processScripts).not.toThrow();
   });
 });
