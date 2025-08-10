@@ -210,7 +210,7 @@ describe('visibility-codec', () => {
             direction: -1,
             ddgModel,
           })
-        ).toThrowError();
+        ).toThrow();
       });
     });
   });

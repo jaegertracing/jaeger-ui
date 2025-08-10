@@ -162,7 +162,7 @@ describe('transform ddg data', () => {
     const { simplePath, noFocalPath, doubleFocalPath, focalPayloadElem } = testResources;
     expect(() =>
       transformDdgData(testResources.wrap([simplePath, noFocalPath, doubleFocalPath]), focalPayloadElem)
-    ).toThrowError(/focalNode/);
+    ).toThrow(/focalNode/);
   });
 
   it('creates equal hashes iff paths are equivalent', () => {
