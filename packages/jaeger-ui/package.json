@@ -27,7 +27,7 @@
     "@types/react-router-dom": "^5.1.0",
     "@types/react-window": "^1.8.0",
     "@types/redux-actions": "2.2.1",
-    "@vitejs/plugin-legacy": "^6.0.0",
+    "@vitejs/plugin-legacy": "^7.0.0",
     "@vitejs/plugin-react": "^5.0.0",
     "babel-jest": "^30.0.0",
     "babel-plugin-inline-react-svg": "^2.0.2",
