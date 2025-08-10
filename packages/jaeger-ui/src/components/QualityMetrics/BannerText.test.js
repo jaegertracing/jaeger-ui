@@ -34,7 +34,7 @@ describe('BannerText', () => {
         bannerText={{
           styling: {
             background: 'red',
-            color: 'white',
+            color: 'rgb(255, 255, 255)',
           },
           value: 'foo text',
         }}
@@ -42,6 +42,6 @@ describe('BannerText', () => {
     );
 
     expect(screen.getByText('foo text')).toBeInTheDocument();
-    expect(screen.getByText('foo text')).toHaveStyle('background: red; color: white;');
+    expect(screen.getByText('foo text')).toHaveStyle('background: red; color: rgb(255, 255, 255);');
   });
 });
