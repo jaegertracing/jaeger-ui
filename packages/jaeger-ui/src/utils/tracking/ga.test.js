@@ -176,20 +176,30 @@ describe('google analytics tracking', () => {
     ]);
   });
 
+  it('sets event_value from number and value param', () => {
+    tracking.trackEvent('jaeger/cat', 'act', 3.7);
+    tracking.trackEvent('jaeger/cat', 'act', 'lbl', 9.2);
+    expect(window.dataLayer[0][2].event_value).toBe(4);
+    expect(window.dataLayer[1][2].event_value).toBe(9);
+  });
+
+  it('init() exits when isEnabled() is false', () => {
+    getAppEnvironment.mockReturnValueOnce('production');
+    const noGA = GA.default({ tracking: {} }, 'vS', 'vL');
+    window.dataLayer = [];
+    noGA.init();
+    expect(window.dataLayer).toEqual([]); // no GA calls
+  });
+
   describe('Debug mode', () => {
     let trackingDebug;
+    let originalHref;
 
     beforeAll(() => {
-      const originalWindow = { ...window };
-      const windowSpy = jest.spyOn(global, 'window', 'get');
-      windowSpy.mockImplementation(() => ({
-        ...originalWindow,
-        location: {
-          ...originalWindow.location,
-          href: 'http://my.test/page',
-          search: 'ga-debug=true',
-        },
-      }));
+      originalHref = window.location.href;
+      // Keep same origin; only change the search to enable GA debug mode
+      const path = window.location.pathname || '/';
+      window.history.pushState({}, '', `${path}?ga-debug=true`);
 
       trackingDebug = GA.default(
         {
@@ -202,6 +212,11 @@ describe('google analytics tracking', () => {
         'c0mm1ts',
         'c0mm1tL'
       );
+    });
+
+    afterAll(() => {
+      // Restore original URL for other tests
+      window.history.pushState({}, '', originalHref);
     });
 
     it('isDebugMode = true', () => {
