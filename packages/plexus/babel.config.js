@@ -26,7 +26,7 @@ function getBabelConfig(api) {
           removeImport: true,
         },
       ],
-      '@babel/plugin-proposal-class-properties',
+      '@babel/plugin-transform-class-properties',
     ],
     presets: [
       [

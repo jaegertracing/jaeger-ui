@@ -60,7 +60,7 @@
     "lodash": "^4.17.19",
     "logfmt": "^1.4.0",
     "lru-memoize": "^1.1.0",
-    "match-sorter": "^8.0.0",
+    "match-sorter": "^8.1.0",
     "memoize-one": "^6.0.0",
     "object-hash": "^3.0.0",
     "prop-types": "^15.5.10",
