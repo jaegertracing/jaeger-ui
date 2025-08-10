@@ -113,3 +113,9 @@ limitations under the License.
 .TraceGraph--miniMap > .plexus-MiniMap--button:hover {
   background: #ddd;
 }
+
+.TraceGraph--menu .ant-btn.active {
+  background-color: #1890ff;
+  color: white;
+  border-color: #1890ff;
+}
