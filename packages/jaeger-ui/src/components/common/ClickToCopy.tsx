@@ -36,16 +36,7 @@ function ClickToCopy({ text, className = '', children }: Props) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!isCopied) {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-    } else {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
+    if (isCopied) {
       const checkDeadline = () => {
         if (Date.now() >= previousClick + 1800) {
           setIsCopied(false);
@@ -55,7 +46,6 @@ function ClickToCopy({ text, className = '', children }: Props) {
       };
       timeoutRef.current = setTimeout(checkDeadline, 100);
     }
-
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -65,7 +55,6 @@ function ClickToCopy({ text, className = '', children }: Props) {
   }, [isCopied, previousClick]);
 
   const whenClicked = () => {
-    console.log('ClickToCopy clicked!', text);
     copy(text);
     setIsCopied(true);
     setPreviousClick(Date.now());
@@ -76,7 +65,7 @@ function ClickToCopy({ text, className = '', children }: Props) {
       <span
         className={className}
         onClick={whenClicked}
-        onKeyDown={(e) => {
+        onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ' ') {
             whenClicked();
             e.preventDefault();

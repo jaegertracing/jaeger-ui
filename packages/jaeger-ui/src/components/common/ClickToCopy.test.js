@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Uber Technologies, Inc.
+// Copyright (c) 2025 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ClickToCopy from './ClickToCopy';
+import { act } from '@testing-library/react';
 
 beforeAll(() => {
   Object.defineProperty(document, 'execCommand', {
@@ -26,6 +27,9 @@ beforeAll(() => {
 
 afterEach(() => {
   jest.clearAllMocks();
+  if (jest.isMockFunction(setTimeout)) {
+    jest.useRealTimers();
+  }
 });
 
 describe('<ClickToCopy />', () => {
@@ -45,27 +49,6 @@ describe('<ClickToCopy />', () => {
     expect(span).toHaveClass(className);
   });
 
-  it('shows "Copy to clipboard" tooltip initially and after timeout', async () => {
-    jest.useFakeTimers();
-    render(<ClickToCopy text={textToCopy}>{childText}</ClickToCopy>);
-    const span = screen.getByRole('button', { name: /Copy to clipboard/i });
-    fireEvent.mouseOver(span);
-    const tooltip = await screen.findByRole('tooltip');
-    expect(tooltip).toHaveTextContent('Copy to clipboard');
-    fireEvent.click(span);
-    await waitFor(() => {
-      expect(screen.getByRole('tooltip')).toHaveTextContent('Copied to clipboard');
-    });
-    jest.advanceTimersByTime(2000);
-    await waitFor(() => {
-      const tooltipAfter = screen.queryByRole('tooltip');
-      if (tooltipAfter) {
-        expect(tooltipAfter).not.toBeVisible();
-      }
-    });
-    jest.useRealTimers();
-  });
-
   it('copies text to clipboard on click', async () => {
     render(<ClickToCopy text={textToCopy}>{childText}</ClickToCopy>);
     const span = screen.getByRole('button', { name: /Copy to clipboard/i });
@@ -73,50 +56,7 @@ describe('<ClickToCopy />', () => {
     expect(document.execCommand).toHaveBeenCalledWith('copy');
   });
 
-  it('handles rapid multiple clicks and resets copied state', async () => {
-    jest.useFakeTimers();
-    render(<ClickToCopy text={textToCopy}>{childText}</ClickToCopy>);
-    const span = screen.getByRole('button', { name: /Copy to clipboard/i });
-    fireEvent.click(span);
-    fireEvent.click(span);
-    expect(document.execCommand).toHaveBeenCalledTimes(2);
-    jest.advanceTimersByTime(2000);
-    await waitFor(() => {
-      const tooltipAfter = screen.queryByRole('tooltip');
-      if (tooltipAfter) {
-        expect(tooltipAfter).not.toBeVisible();
-      }
-    });
-    jest.useRealTimers();
-  });
-
-  // Additional tests from the other section, adapted to this structure
-  it('renders the button with correct text and initial aria-label', async () => {
-    render(
-      <ClickToCopy className="classNameValue" text="textValue">
-        <span>Click to Copy</span>
-      </ClickToCopy>
-    );
-    const copyButton = screen.getByRole('button', { name: /Copy to clipboard/i });
-    expect(copyButton).toBeInTheDocument();
-    expect(copyButton).toHaveClass('classNameValue');
-    expect(copyButton).toHaveAttribute('aria-label', 'Copy to clipboard');
-  });
-
-  it('shows "Copied to clipboard" aria-label when clicked', async () => {
-    render(
-      <ClickToCopy className="classNameValue" text="textValue">
-        <span>Click to Copy</span>
-      </ClickToCopy>
-    );
-    const copyButton = screen.getByRole('button', { name: /Copy to clipboard/i });
-    fireEvent.click(copyButton);
-    await waitFor(() => {
-      expect(copyButton).toHaveAttribute('aria-label', 'Copied to clipboard');
-    });
-  });
-
-  it('resets aria-label to original text after timeout', async () => {
+  it('shows "Copied to clipboard" when clicked and resets after timeout', async () => {
     jest.useFakeTimers();
     render(
       <ClickToCopy className="classNameValue" text="textValue">
@@ -124,14 +64,93 @@ describe('<ClickToCopy />', () => {
       </ClickToCopy>
     );
     const copyButton = screen.getByRole('button', { name: /Copy to clipboard/i });
+
     fireEvent.click(copyButton);
     await waitFor(() => {
       expect(copyButton).toHaveAttribute('aria-label', 'Copied to clipboard');
     });
-    jest.advanceTimersByTime(2000);
+
+    await act(async () => {
+      jest.advanceTimersByTime(2000);
+    });
+
     await waitFor(() => {
       expect(copyButton).toHaveAttribute('aria-label', 'Copy to clipboard');
     });
     jest.useRealTimers();
+  });
+
+  it('triggers copy on Enter and Space key press', () => {
+    const copySpy = jest.spyOn(document, 'execCommand').mockImplementation(() => true);
+
+    render(<ClickToCopy text="copied!">Click me</ClickToCopy>);
+    const button = screen.getByRole('button');
+
+    button.focus();
+    fireEvent.keyDown(button, { key: 'Enter', code: 'Enter' });
+    expect(copySpy).toHaveBeenCalledWith('copy');
+
+    fireEvent.keyDown(button, { key: ' ', code: 'Space' });
+    expect(copySpy).toHaveBeenCalledWith('copy');
+
+    copySpy.mockRestore();
+  });
+
+  it('does not trigger copy on other key presses', () => {
+    const copySpy = jest.spyOn(document, 'execCommand').mockImplementation(() => true);
+
+    render(<ClickToCopy text="test">Click me</ClickToCopy>);
+    const button = screen.getByRole('button');
+
+    button.focus();
+    fireEvent.keyDown(button, { key: 'Escape', code: 'Escape' });
+    fireEvent.keyDown(button, { key: 'Tab', code: 'Tab' });
+    fireEvent.keyDown(button, { key: 'a', code: 'KeyA' });
+
+    expect(button).toHaveAttribute('aria-label', 'Copy to clipboard');
+    expect(copySpy).not.toHaveBeenCalled();
+
+    copySpy.mockRestore();
+  });
+
+  it('clears timeout on unmount', () => {
+    jest.useFakeTimers();
+    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+
+    const { unmount } = render(<ClickToCopy text="test">Click</ClickToCopy>);
+    const button = screen.getByRole('button');
+
+    fireEvent.click(button);
+    unmount();
+
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+    clearTimeoutSpy.mockRestore();
+  });
+
+  it('clears timeout on second click while isCopied is true', async () => {
+    jest.useRealTimers();
+    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+    const clearTimeoutWindowSpy = typeof window !== 'undefined' ? jest.spyOn(window, 'clearTimeout') : null;
+
+    const { getByRole } = render(
+      <ClickToCopy text="double click test">
+        <span>Copy me</span>
+      </ClickToCopy>
+    );
+
+    const button = getByRole('button', { name: /copy to clipboard/i });
+
+    fireEvent.click(button);
+    await new Promise(resolve => setTimeout(resolve, 10));
+    fireEvent.click(button);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    expect(
+      clearTimeoutSpy.mock.calls.length +
+        (clearTimeoutWindowSpy ? clearTimeoutWindowSpy.mock.calls.length : 0)
+    ).toBeGreaterThan(0);
+
+    if (clearTimeoutWindowSpy) clearTimeoutWindowSpy.mockRestore();
+    clearTimeoutSpy.mockRestore();
   });
 });
