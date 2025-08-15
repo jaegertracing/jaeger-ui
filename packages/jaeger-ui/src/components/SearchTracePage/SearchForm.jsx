@@ -443,6 +443,7 @@ export class SearchFormImpl extends React.PureComponent {
             disabled={submitting}
             defaultValue={DEFAULT_LOOKBACK}
             onChange={value => this.handleChange({ lookback: value })}
+            showScrollButtons
           >
             {optionsWithinMaxLookback(searchMaxLookback)}
             <Option value="custom">Custom Time Range</Option>
