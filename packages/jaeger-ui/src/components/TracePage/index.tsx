@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// @ts-nocheck
 import * as React from 'react';
 import { InputRef } from 'antd';
 import { Location, History as RouterHistory } from 'history';

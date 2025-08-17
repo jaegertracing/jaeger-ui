@@ -478,6 +478,28 @@ describe('tableValues', () => {
     expect(resultArray[3].selfMax).toBe(2.4);
     expect(resultArray[3].percent).toBe(98.51);
   });
+
+  it('returns allTableValues when second dropdown is not a tag (falls through)', () => {
+    const first = getColumnValues('Operation Name', transformedTrace);
+    const afterSecond = getColumnValuesSecondDropdown(
+      first,
+      'Operation Name',
+      'Service Name',
+      transformedTrace
+    );
+
+    expect(afterSecond.some(r => String(r.name).startsWith('Without Tag: '))).toBe(false);
+
+    expect(Array.isArray(afterSecond)).toBe(true);
+    expect(afterSecond.length).toBeGreaterThan(0);
+  });
+
+  it('returns first-dropdown values again when second dropdown is "Reset"', () => {
+    const first = getColumnValues('Service Name', transformedTrace);
+    const resetResult = getColumnValuesSecondDropdown(first, 'Service Name', 'Reset', transformedTrace);
+
+    expect(resetResult).toEqual(getColumnValues('Service Name', transformedTrace));
+  });
 });
 
 describe('check self time', () => {
