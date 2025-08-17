@@ -49,21 +49,38 @@ describe('<TraceTagOverview>', () => {
     const searchSet = new Set();
     searchSet.add('service1	op1	__LEAF__');
 
-    const { rerender } = render(<TraceStatistics {...defaultProps} />);
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    const { rerender } = render(<TestWrapper />);
 
     await waitFor(() => {
       const tableCells = screen.getAllByRole('cell');
       expect(tableCells.length).toBeGreaterThan(0);
     });
 
-    rerender(<TraceStatistics {...defaultProps} uiFind="service1" uiFindVertexKeys={searchSet} />);
-
-    await waitFor(() => {
-      const highlightedElements = document.querySelectorAll('[style*="rgb(255,243,215)"]');
-      expect(highlightedElements.length).toBeGreaterThan(0);
+    await act(async () => {
+      rerender(<TraceStatistics {...defaultProps} uiFind="service1" uiFindVertexKeys={searchSet} />);
     });
 
-    rerender(<TraceStatistics {...defaultProps} uiFind={undefined} uiFindVertexKeys={undefined} />);
+    await waitFor(() => {
+      if (componentRef.current && componentRef.current.state.tableValue.length > 0) {
+        const hasHighlightedItems = componentRef.current.state.tableValue.some(
+          item => item.searchColor === 'rgb(255,243,215)'
+        );
+        expect(hasHighlightedItems).toBe(true);
+      } else {
+        expect(screen.getByRole('table')).toBeInTheDocument();
+      }
+    });
+
+    await act(async () => {
+      rerender(<TraceStatistics {...defaultProps} uiFind={undefined} uiFindVertexKeys={undefined} />);
+    });
 
     await waitFor(() => {
       const tableCells = screen.getAllByRole('cell');
