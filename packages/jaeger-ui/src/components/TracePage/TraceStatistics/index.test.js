@@ -49,37 +49,57 @@ describe('<TraceTagOverview>', () => {
     const searchSet = new Set();
     searchSet.add('service1	op1	__LEAF__');
 
-    let componentRef;
+    let componentInstance;
     const TestWrapper = () => {
-      const ref = React.useRef();
-      componentRef = ref;
-      return <TraceStatistics ref={ref} {...defaultProps} />;
+      return (
+        <TraceStatistics
+          ref={ref => {
+            componentInstance = ref;
+          }}
+          {...defaultProps}
+        />
+      );
     };
 
     const { rerender } = render(<TestWrapper />);
 
     await waitFor(() => {
-      const tableCells = screen.getAllByRole('cell');
-      expect(tableCells.length).toBeGreaterThan(0);
+      expect(componentInstance).toBeTruthy();
+      expect(componentInstance.state.tableValue).toBeDefined();
     });
 
     await act(async () => {
-      rerender(<TraceStatistics {...defaultProps} uiFind="service1" uiFindVertexKeys={searchSet} />);
+      rerender(
+        <TraceStatistics
+          ref={ref => {
+            componentInstance = ref;
+          }}
+          {...defaultProps}
+          uiFind="service1"
+          uiFindVertexKeys={searchSet}
+        />
+      );
     });
 
     await waitFor(() => {
-      if (componentRef.current && componentRef.current.state.tableValue.length > 0) {
-        const hasHighlightedItems = componentRef.current.state.tableValue.some(
-          item => item.searchColor === 'rgb(255,243,215)'
-        );
-        expect(hasHighlightedItems).toBe(true);
-      } else {
-        expect(screen.getByRole('table')).toBeInTheDocument();
-      }
+      expect(componentInstance.state.tableValue.length).toBeGreaterThan(0);
+      const hasHighlightedItems = componentInstance.state.tableValue.some(
+        item => item.searchColor === 'rgb(255,243,215)'
+      );
+      expect(hasHighlightedItems).toBe(true);
     });
 
     await act(async () => {
-      rerender(<TraceStatistics {...defaultProps} uiFind={undefined} uiFindVertexKeys={undefined} />);
+      rerender(
+        <TraceStatistics
+          ref={ref => {
+            componentInstance = ref;
+          }}
+          {...defaultProps}
+          uiFind={undefined}
+          uiFindVertexKeys={undefined}
+        />
+      );
     });
 
     await waitFor(() => {
