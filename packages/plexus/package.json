@@ -20,8 +20,8 @@
     "@babel/preset-react": "7.27.1",
     "@babel/preset-typescript": "7.27.0",
     "@types/d3-zoom": "3.0.8",
-    "@types/react": "^18.3.11",
-    "@types/react-dom": "18.3.0",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
     "@typescript-eslint/eslint-plugin": "^8.32.0",
     "@typescript-eslint/parser": "^8.32.0",
     "babel-loader": "10.0.0",
@@ -32,8 +32,8 @@
     "html-loader": "5.1.0",
     "html-webpack-plugin": "5.6.0",
     "npm-run-all2": "8.0.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "rimraf": "6.0.1",
     "style-loader": "4.0.0",
     "webpack": "^5.101.0",
@@ -43,11 +43,11 @@
     "worker-loader": "3.0.8"
   },
   "peerDependencies": {
-    "react": "^18.x",
-    "react-dom": "^18.x"
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   },
   "dependencies": {
-    "@viz-js/viz": "^3.11.0",
+    "@viz-js/viz": "^3.16.0",
     "d3-selection": "^3.0.0",
     "d3-zoom": "^3.0.0",
     "memoize-one": "6.0.0",

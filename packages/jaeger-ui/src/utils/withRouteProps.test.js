@@ -50,13 +50,15 @@ describe('withRouteProps', () => {
         location: expect.objectContaining({
           pathname: '/test',
           search: '?param=value',
+          hash: '',
+          state: undefined,
         }),
         pathname: '/test',
         search: '?param=value',
         params: {},
         history: mockHistory,
       }),
-      {}
+      undefined
     );
   });
 });
