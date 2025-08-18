@@ -60,12 +60,12 @@ describe('Tween', () => {
       it('schedules setTimeout if there is a delay', () => {
         const delay = 10;
         const tween = new Tween({ ...baseOptions, delay, onUpdate: jest.fn() });
-        expect(setTimeoutFn).lastCalledWith(tween._frameCallback, delay);
+        expect(setTimeoutFn).toHaveBeenLastCalledWith(tween._frameCallback, delay);
       });
 
       it('schedules animation frame if there isnt a delay', () => {
         const tween = new Tween({ ...baseOptions, onUpdate: jest.fn() });
-        expect(rafFn).lastCalledWith(tween._frameCallback);
+        expect(rafFn).toHaveBeenLastCalledWith(tween._frameCallback);
       });
     });
   });
@@ -131,7 +131,7 @@ describe('Tween', () => {
       tween._frameCallback();
       const current = tween.getCurrent();
       expect(current).toBeDefined();
-      expect(fn).lastCalledWith(current);
+      expect(fn).toHaveBeenLastCalledWith(current);
     });
 
     it('does not call onComplete if there is an onComplete callback and the tween is not complete', () => {

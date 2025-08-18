@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// @ts-nocheck
 import React from 'react';
 import { Tooltip } from 'antd';
 import { LuChevronsRight } from 'react-icons/lu';

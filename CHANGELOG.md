@@ -9,6 +9,43 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.72.0 (2025-08-05)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Do not mark help-wanted issues as stale ([@Parship999](https://github.com/Parship999) in [#3000](https://github.com/jaegertracing/jaeger-ui/pull/3000))
+* Fix the issue of operation reset to all when reloading the search screen ([@Parship999](https://github.com/Parship999) in [#2995](https://github.com/jaegertracing/jaeger-ui/pull/2995))
+* Enable automated closing of stale pull requests and issues ([@Parship999](https://github.com/Parship999) in [#2994](https://github.com/jaegertracing/jaeger-ui/pull/2994))
+* Setup husky pre-commit hook with lint-staged ([@gkbishnoi07](https://github.com/gkbishnoi07) in [#2983](https://github.com/jaegertracing/jaeger-ui/pull/2983))
+* Upgrade redux-actions to 3.x ([@Parship999](https://github.com/Parship999) in [#2980](https://github.com/jaegertracing/jaeger-ui/pull/2980))
+* Feat: upgrade to eslint 9+ with flat configuration ([@gkbishnoi07](https://github.com/gkbishnoi07) in [#2966](https://github.com/jaegertracing/jaeger-ui/pull/2966))
+* Add code coverage explanation to readme.md ([@Parship999](https://github.com/Parship999) in [#2968](https://github.com/jaegertracing/jaeger-ui/pull/2968))
+* Fix the ddg node tooltip position ([@Parship999](https://github.com/Parship999) in [#2967](https://github.com/jaegertracing/jaeger-ui/pull/2967))
+* Implemented the mouse-over popup functionality for the dots on the time series view ([@Parship999](https://github.com/Parship999) in [#2964](https://github.com/jaegertracing/jaeger-ui/pull/2964))
+* Fix ui bug of convertserviceerrorratetopercentages ([@pipiland2612](https://github.com/pipiland2612) in [#2957](https://github.com/jaegertracing/jaeger-ui/pull/2957))
+* Fix bug when calculate groupbyoperation metrics ([@pipiland2612](https://github.com/pipiland2612) in [#2923](https://github.com/jaegertracing/jaeger-ui/pull/2923))
+
+#### 👷 CI Improvements
+
+* Fix: enable codeql scan on main to resolve configuration missing error ([@gkbishnoi07](https://github.com/gkbishnoi07) in [#2958](https://github.com/jaegertracing/jaeger-ui/pull/2958))
+
+#### ⚙️ Refactoring
+
+* Convert archivenotifier/index to functional component ([@Parship999](https://github.com/Parship999) in [#2999](https://github.com/jaegertracing/jaeger-ui/pull/2999))
+* Convert tracediffgraph.tsx from class to functional component ([@Parship999](https://github.com/Parship999) in [#2998](https://github.com/jaegertracing/jaeger-ui/pull/2998))
+* Convert layoutsettings/index.tsx component to functional component ([@Parship999](https://github.com/Parship999) in [#2986](https://github.com/jaegertracing/jaeger-ui/pull/2986))
+* Convert deepdependencies/header/index.tsx component to functional component ([@Parship999](https://github.com/Parship999) in [#2985](https://github.com/jaegertracing/jaeger-ui/pull/2985))
+* Convert `traces.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2959](https://github.com/jaegertracing/jaeger-ui/pull/2959))
+* Convert `sidepanel/index.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2960](https://github.com/jaegertracing/jaeger-ui/pull/2960))
+* Convert `uifindinput.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2954](https://github.com/jaegertracing/jaeger-ui/pull/2954))
+* Convert `detailtabledropdown.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2948](https://github.com/jaegertracing/jaeger-ui/pull/2948))
+* Convert `listitem.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2950](https://github.com/jaegertracing/jaeger-ui/pull/2950))
+* Convert `page.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2947](https://github.com/jaegertracing/jaeger-ui/pull/2947))
+* Convert `qualitymetrics/header.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2915](https://github.com/jaegertracing/jaeger-ui/pull/2915))
+* Convert `operationdetailstable/index.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2928](https://github.com/jaegertracing/jaeger-ui/pull/2928))
+* Convert `traceidsearchinput.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2929](https://github.com/jaegertracing/jaeger-ui/pull/2929))
+* Fix eslint warnings in ddg component ([@Parship999](https://github.com/Parship999) in [#2920](https://github.com/jaegertracing/jaeger-ui/pull/2920))
+
 ## v1.71.0 (2025-07-03)
 
 #### ⚙️ Refactoring

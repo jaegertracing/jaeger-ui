@@ -12,9 +12,11 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@babel/cli": "7.28.0",
+    "@babel/core": "^7.28.0",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.0.0",
     "depcheck": "1.4.7",
     "eslint": "^9.30.1",
     "eslint-config-prettier": "^10.1.1",
@@ -26,16 +28,16 @@
     "eslint-plugin-testing-library": "^7.5.4",
     "husky": "9.1.0",
     "jsdom": "^26.0.0",
-    "lint-staged": "^15.5.2",
+    "lint-staged": "^16.0.0",
     "npm-run-all2": "8.0.1",
     "prettier": "^3.6.2",
     "rxjs-compat": "6.6.7",
-    "typescript": "5.8.2"
+    "typescript": "^5.9.2"
   },
   "overrides": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "cheerio": "1.0.0-rc.12"
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "yaml": "2.8.0"
   },
   "workspaces": [
     "packages/plexus",

@@ -95,7 +95,7 @@ describe('getDerivedViewModifiers', () => {
           outOfBoundsEncoding,
           new Map([[outOfBounds, EViewModifier.Hovered]])
         )
-      ).toThrowError(`Invalid vis ids: ${outOfBounds}`);
+      ).toThrow(`Invalid vis ids: ${outOfBounds}`);
     });
 
     it('errors if elem with VM does not have vertex', () => {
@@ -108,7 +108,7 @@ describe('getDerivedViewModifiers', () => {
           visEncoding,
           new Map([[idxToDelete, EViewModifier.Hovered]])
         )
-      ).toThrowError(`Path elem without vertex: ${elemToDelete}`);
+      ).toThrow(`Path elem without vertex: ${elemToDelete}`);
     });
   });
 });
