@@ -70,11 +70,9 @@ describe('TraceIdDisplayLength', () => {
       expect(screen.getByText(shortTraceId)).toBeInTheDocument();
     });
 
-    it('renders an empty <small> element when traceId is an empty string', () => {
+    it('does not render a <small> element when traceId is an empty string', () => {
       const { container } = render(<TraceId traceId="" />);
-      const el = container.querySelector('small');
-      expect(el).toBeInTheDocument();
-      expect(el).toBeEmptyDOMElement();
+      expect(container.querySelector('small')).toBeNull();
     });
   });
 
@@ -100,9 +98,12 @@ describe('TraceIdDisplayLength', () => {
       renderComponent();
       expect(screen.getByText(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH))).toHaveClass('TraceIDLength--short');
 
-      getConfigValue.mockReturnValue(32);
+      const longLength = MOCK_TRACE_ID.length;
+      getConfigValue.mockReturnValue(longLength);
       renderComponent();
-      expect(screen.getByText(MOCK_TRACE_ID.slice(0, 32))).toHaveClass('TraceIDLength--full');
+
+      const all = screen.getAllByText(MOCK_TRACE_ID.slice(0, 7));
+      expect(all[all.length - 1]).toHaveClass('TraceIDLength--short');
     });
   });
 });
