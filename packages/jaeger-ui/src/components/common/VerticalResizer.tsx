@@ -34,7 +34,12 @@ const VerticalResizer: React.FC<VerticalResizerProps> = ({ max, min, onChange, p
 
   const getDraggingBounds = useCallback((): DraggableBounds => {
     if (!rootElmRef.current) {
-      throw new Error('Invalid state: root element not found');
+      return {
+        clientXLeft: 0,
+        width: 0,
+        minValue: 0,
+        maxValue: 0,
+      };
     }
     const { left: clientXLeft, width } = rootElmRef.current.getBoundingClientRect();
 
@@ -88,9 +93,9 @@ const VerticalResizer: React.FC<VerticalResizerProps> = ({ max, min, onChange, p
     };
   }, [dragManager]);
 
-  let left = `${position * 100}%`;
-  let draggerStyle: React.CSSProperties = { left };
+  let draggerStyle: React.CSSProperties;
   let isDraggingCls = '';
+  const gripStyle: React.CSSProperties = { left: `${position * 100}%` };
 
   if (dragManager.isDragging() && dragPosition != null) {
     isDraggingCls = cx({
@@ -98,14 +103,18 @@ const VerticalResizer: React.FC<VerticalResizerProps> = ({ max, min, onChange, p
       isDraggingRight: dragPosition > position,
     });
 
-    left = `${dragPosition * 100}%`;
+    // Draw a highlight from the current dragged position back to the original
+    // position, e.g. highlight the change. Draw the highlight via `left` and
+    // `right` css styles (simpler than using `width`).
     const draggerLeft = `${Math.min(position, dragPosition) * 100}%`;
+    // subtract 1px for draggerRight to deal with the right border being off
+    // by 1px when dragging left
     const draggerRight = `calc(${(1 - Math.max(position, dragPosition)) * 100}% - 1px)`;
 
     draggerStyle = { left: draggerLeft, right: draggerRight };
+  } else {
+    draggerStyle = gripStyle;
   }
-
-  const gripStyle: React.CSSProperties = { left: `${position * 100}%` };
 
   return (
     <div
