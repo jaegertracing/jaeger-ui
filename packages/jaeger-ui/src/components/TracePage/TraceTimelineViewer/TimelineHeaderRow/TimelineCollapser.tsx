@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// @ts-nocheck
 import React from 'react';
 import { Tooltip } from 'antd';
 import { LuChevronsRight } from 'react-icons/lu';
@@ -32,12 +31,7 @@ function getTitle(value: string) {
 }
 
 export default class TimelineCollapser extends React.PureComponent<CollapserProps> {
-  containerRef: React.RefObject<HTMLDivElement>;
-
-  constructor(props: CollapserProps) {
-    super(props);
-    this.containerRef = React.createRef();
-  }
+  containerRef = React.createRef<HTMLDivElement>();
 
   // TODO: Something less hacky than createElement to help TypeScript / AntD
   getContainer = () => this.containerRef.current || document.createElement('div');

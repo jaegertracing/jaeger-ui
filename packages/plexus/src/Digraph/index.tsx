@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// @ts-nocheck
 import * as React from 'react';
 import memoizeOne from 'memoize-one';
 
@@ -112,7 +111,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
     return (name: string) => `${classNamePrefix} ${classNamePrefix}-Digraph--${name}`;
   });
 
-  rootRef: React.RefObject<HTMLDivElement> = React.createRef();
+  rootRef = React.createRef<HTMLDivElement>();
 
   zoomManager: ZoomManager | null = null;
 
