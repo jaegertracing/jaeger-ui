@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// @ts-nocheck
 import * as React from 'react';
 import { InputRef } from 'antd';
 import { Location, History as RouterHistory } from 'history';
@@ -134,7 +133,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
   _headerElm: HTMLElement | TNil;
   _filterSpans: typeof filterSpans;
-  _searchBar: React.RefObject<InputRef>;
+  _searchBar = React.createRef<InputRef>();
   _scrollManager: ScrollManager;
   traceDagEV: TEv | TNil;
 
@@ -163,7 +162,6 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       scrollBy,
       scrollTo,
     });
-    this._searchBar = React.createRef();
     resetShortcuts();
   }
 
