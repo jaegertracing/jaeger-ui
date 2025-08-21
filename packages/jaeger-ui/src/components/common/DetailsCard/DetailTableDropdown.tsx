@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// @ts-nocheck
 import React, { Key, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Tooltip } from 'antd';
 import { IoTrash, IoBan, IoCheckmark } from 'react-icons/io5';
@@ -31,7 +30,7 @@ const DetailTableDropdown: React.FC<TProps> = props => {
   const { clearFilters = () => {}, confirm, options, selectedKeys, setSelectedKeys } = props;
   const confirmedSelectionRef = useRef<Key[]>(selectedKeys);
   const [isCancelled, setIsCancelled] = useState(false);
-  const prevSelectedKeysRef = useRef<Key[]>();
+  const prevSelectedKeysRef = useRef<Key[]>([]);
 
   useEffect(() => {
     const prevKeys = prevSelectedKeysRef.current;
