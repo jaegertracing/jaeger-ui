@@ -183,6 +183,26 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
     return selectedService || store.get('lastAtmSearchService') || services[0];
   }, [props, selectedService]);
 
+  // handleServiceChange method
+  const handleServiceChange = useCallback((value: string) => {
+    setSelectedService(value);
+    trackSelectService(value);
+  }, []);
+
+  // handleSpanKindChange method
+  const handleSpanKindChange = useCallback((value: string) => {
+    setSelectedSpanKind(value as spanKinds);
+    const { label } = spanKindOptions.find(option => option.value === value)!;
+    trackSelectSpanKind(label);
+  }, []);
+
+  // handleTimeFrameChange method
+  const handleTimeFrameChange = useCallback((value: number) => {
+    setSelectedTimeFrame(value);
+    const { label } = timeFrameOptions.find(option => option.value === value)!;
+    trackSelectTimeframe(label);
+  }, []);
+
   // fetchMetrics method
   const fetchMetrics = useCallback(() => {
     const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, services } = props;
@@ -211,26 +231,6 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
       setSearchOps('');
     }
   }, [props, selectedService, selectedSpanKind, selectedTimeFrame, getSelectedService]);
-
-  // handleServiceChange method
-  const handleServiceChange = useCallback((value: string) => {
-    setSelectedService(value);
-    trackSelectService(value);
-  }, []);
-
-  // handleSpanKindChange method
-  const handleSpanKindChange = useCallback((value: string) => {
-    setSelectedSpanKind(value as spanKinds);
-    const { label } = spanKindOptions.find(option => option.value === value)!;
-    trackSelectSpanKind(label);
-  }, []);
-
-  // handleTimeFrameChange method
-  const handleTimeFrameChange = useCallback((value: number) => {
-    setSelectedTimeFrame(value);
-    const { label } = timeFrameOptions.find(option => option.value === value)!;
-    trackSelectTimeframe(label);
-  }, []);
 
   // componentDidMount equivalent
   useEffect(() => {
