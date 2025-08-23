@@ -133,7 +133,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
   _headerElm: HTMLElement | TNil;
   _filterSpans: typeof filterSpans;
-  _searchBar: React.RefObject<InputRef>;
+  _searchBar = React.createRef<InputRef>();
   _scrollManager: ScrollManager;
   traceDagEV: TEv | TNil;
 
@@ -162,7 +162,6 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       scrollBy,
       scrollTo,
     });
-    this._searchBar = React.createRef();
     resetShortcuts();
   }
 

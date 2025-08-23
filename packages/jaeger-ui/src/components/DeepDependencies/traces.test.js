@@ -36,20 +36,22 @@ describe('TracesDdgImpl', () => {
       {}
     );
     const search = queryString.stringify({ ...extraUrlArgs, extraParam: 'extraParam' });
+    const location = { search };
 
     const { getByTestId } = render(
-      <TracesDdgImpl location={{ search }} propName0="propValue0" propName1="propValue1" />
+      <TracesDdgImpl location={location} propName0="propValue0" propName1="propValue1" />
     );
 
     expect(DeepDependencyGraphPageImpl).toHaveBeenCalledWith(
       expect.objectContaining({
         propName0: 'propValue0',
         propName1: 'propValue1',
+        location,
         baseUrl: ROUTE_PATH,
         extraUrlArgs,
         showSvcOpsHeader: false,
       }),
-      {}
+      undefined
     );
     expect(getByTestId('ddg-impl')).toBeInTheDocument();
   });

@@ -49,21 +49,58 @@ describe('<TraceTagOverview>', () => {
     const searchSet = new Set();
     searchSet.add('service1	op1	__LEAF__');
 
-    const { rerender } = render(<TraceStatistics {...defaultProps} />);
+    let componentInstance;
+    const TestWrapper = () => {
+      return (
+        <TraceStatistics
+          ref={ref => {
+            componentInstance = ref;
+          }}
+          {...defaultProps}
+        />
+      );
+    };
+
+    const { rerender } = render(<TestWrapper />);
 
     await waitFor(() => {
-      const tableCells = screen.getAllByRole('cell');
-      expect(tableCells.length).toBeGreaterThan(0);
+      expect(componentInstance).toBeTruthy();
+      expect(componentInstance.state.tableValue).toBeDefined();
     });
 
-    rerender(<TraceStatistics {...defaultProps} uiFind="service1" uiFindVertexKeys={searchSet} />);
+    await act(async () => {
+      rerender(
+        <TraceStatistics
+          ref={ref => {
+            componentInstance = ref;
+          }}
+          {...defaultProps}
+          uiFind="service1"
+          uiFindVertexKeys={searchSet}
+        />
+      );
+    });
 
     await waitFor(() => {
-      const highlightedElements = document.querySelectorAll('[style*="rgb(255,243,215)"]');
-      expect(highlightedElements.length).toBeGreaterThan(0);
+      expect(componentInstance.state.tableValue.length).toBeGreaterThan(0);
+      const hasHighlightedItems = componentInstance.state.tableValue.some(
+        item => item.searchColor === 'rgb(255,243,215)'
+      );
+      expect(hasHighlightedItems).toBe(true);
     });
 
-    rerender(<TraceStatistics {...defaultProps} uiFind={undefined} uiFindVertexKeys={undefined} />);
+    await act(async () => {
+      rerender(
+        <TraceStatistics
+          ref={ref => {
+            componentInstance = ref;
+          }}
+          {...defaultProps}
+          uiFind={undefined}
+          uiFindVertexKeys={undefined}
+        />
+      );
+    });
 
     await waitFor(() => {
       const tableCells = screen.getAllByRole('cell');

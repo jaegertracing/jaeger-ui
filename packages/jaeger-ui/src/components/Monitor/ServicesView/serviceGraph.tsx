@@ -61,7 +61,7 @@ export const Placeholder = ({
   width,
   height,
   children,
-}: TPlaceholder): JSX.Element => {
+}: TPlaceholder): React.JSX.Element => {
   return (
     <div
       className={`graph-container ${marginClassName}`}
@@ -171,11 +171,11 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
     return value.toFixed(0);
   };
 
-  renderLines(): JSX.Element[] {
+  renderLines(): React.JSX.Element[] {
     const { metricsData, color } = this.props;
 
     if (metricsData) {
-      const graphs: JSX.Element[] = [];
+      const graphs: React.JSX.Element[] = [];
       let i = 0;
 
       this.getData().forEach((line: ServiceMetricsObject, idx: number) => {
@@ -200,7 +200,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
     return [];
   }
 
-  generatePlaceholder(placeHolder: React.ReactNode): JSX.Element {
+  generatePlaceholder(placeHolder: React.ReactNode): React.JSX.Element {
     const { width } = this.props;
 
     return (
@@ -224,7 +224,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
     return Array.from({ length: count }, (_, i) => start + step * i);
   }
 
-  render(): JSX.Element {
+  render(): React.JSX.Element {
     const {
       width,
       yDomain,
@@ -262,7 +262,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
     const data = this.getMetricsData();
     const effectiveYDomain = yDomain || this.calculateYDomain(data);
 
-    const legendFormatter = (value: string): JSX.Element => {
+    const legendFormatter = (value: string): React.JSX.Element => {
       const dataVal = this.getData();
       const foundIdx = dataVal.findIndex(d => d.quantile.toString() === value);
       if (foundIdx === -1) return <span>N/A</span>;
