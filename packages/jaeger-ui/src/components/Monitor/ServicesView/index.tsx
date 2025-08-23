@@ -178,10 +178,12 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   }, []);
 
   // getSelectedService method
+
   const getSelectedService = useCallback(() => {
     const { services } = props;
     return selectedService || store.get('lastAtmSearchService') || services[0];
-  }, [props, selectedService]);
+  }, [props.services, selectedService]);
+
 
   // handleServiceChange method
   const handleServiceChange = useCallback((value: string) => {
