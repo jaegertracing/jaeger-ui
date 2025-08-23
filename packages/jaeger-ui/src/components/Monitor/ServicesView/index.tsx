@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Row, Col, Input, Alert, Select } from 'antd';
 import { ActionFunction, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
+import _isEqual from 'lodash/isEqual';
 import _isEmpty from 'lodash/isEmpty';
-// @ts-expect-error - store module doesn't have types
+// @ts-ignore
 import store from 'store';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
@@ -50,6 +51,16 @@ import {
 } from './index.track';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
+
+type StateType = {
+  graphWidth: number;
+  serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
+  searchOps: string;
+  graphXDomain: number[];
+  selectedService: string;
+  selectedSpanKind: spanKinds;
+  selectedTimeFrame: number;
+};
 
 type TReduxProps = {
   services: string[];
@@ -137,20 +148,10 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 
 // export for tests
 export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
-  const {
-    services,
-    metrics,
-    servicesLoading,
-    fetchServices,
-    fetchAllServiceMetrics,
-    fetchAggregatedServiceMetrics,
-  } = props;
-
-  const graphDivWrapper = useRef<HTMLInputElement>(null);
-  const endTimeRef = useRef<number>(Date.now());
-  const docsLink = useMemo(() => getConfigValue('monitor.docsLink'), []);
-
-  // State hooks
+  const docsLink = getConfigValue('monitor.docsLink');
+  const graphDivWrapper = useRef<HTMLDivElement>(null);
+  const serviceSelectorValue = '';
+  const [endTime, setEndTime] = useState<number>(Date.now());
   const [graphWidth, setGraphWidth] = useState<number>(300);
   const [serviceOpsMetrics, setServiceOpsMetrics] = useState<ServiceOpsMetrics[] | undefined>(undefined);
   const [searchOps, setSearchOps] = useState<string>('');
@@ -163,34 +164,40 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
     store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds
   );
 
-  // Helper functions
+  // calcGraphXDomain method
   const calcGraphXDomain = useCallback(() => {
     const currentTime = Date.now();
     setGraphXDomain([currentTime - selectedTimeFrame, currentTime]);
   }, [selectedTimeFrame]);
 
+  // updateDimensions method
   const updateDimensions = useCallback(() => {
     if (graphDivWrapper.current) {
       setGraphWidth(graphDivWrapper.current.offsetWidth - 24);
     }
   }, []);
 
+  // getSelectedService method
   const getSelectedService = useCallback(() => {
+    const { services } = props;
     return selectedService || store.get('lastAtmSearchService') || services[0];
-  }, [selectedService, services]);
+  }, [props, selectedService]);
 
+  // fetchMetrics method
   const fetchMetrics = useCallback(() => {
-    const currentService = getSelectedService();
+    const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, services } = props;
+    const currentService = selectedService || services[0];
 
     if (currentService) {
-      endTimeRef.current = Date.now();
+      const newEndTime = Date.now();
+      setEndTime(newEndTime);
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
       store.set('lastAtmSearchService', getSelectedService());
 
       const metricQueryPayload = {
         quantile: 0.95,
-        endTs: endTimeRef.current,
+        endTs: newEndTime,
         lookback: selectedTimeFrame,
         step: 60 * 1000,
         ratePer: 10 * 60 * 1000,
@@ -203,55 +210,58 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
       setServiceOpsMetrics(undefined);
       setSearchOps('');
     }
-  }, [
-    selectedSpanKind,
-    selectedTimeFrame,
-    getSelectedService,
-    fetchAllServiceMetrics,
-    fetchAggregatedServiceMetrics,
-  ]);
+  }, [props, selectedService, selectedSpanKind, selectedTimeFrame, getSelectedService]);
 
+  // handleServiceChange method
   const handleServiceChange = useCallback((value: string) => {
     setSelectedService(value);
     trackSelectService(value);
   }, []);
 
+  // handleSpanKindChange method
   const handleSpanKindChange = useCallback((value: string) => {
     setSelectedSpanKind(value as spanKinds);
     const { label } = spanKindOptions.find(option => option.value === value)!;
     trackSelectSpanKind(label);
   }, []);
 
+  // handleTimeFrameChange method
   const handleTimeFrameChange = useCallback((value: number) => {
     setSelectedTimeFrame(value);
     const { label } = timeFrameOptions.find(option => option.value === value)!;
     trackSelectTimeframe(label);
   }, []);
 
+  // componentDidMount equivalent
   useEffect(() => {
+    const { fetchServices } = props;
     fetchServices();
+    window.addEventListener('resize', updateDimensions);
     updateDimensions();
     calcGraphXDomain();
 
-    window.addEventListener('resize', updateDimensions);
     return () => {
       window.removeEventListener('resize', updateDimensions);
     };
-  }, [fetchServices, updateDimensions, calcGraphXDomain]);
+  }, [updateDimensions, calcGraphXDomain]);
 
+  // componentDidUpdate equivalent
   useEffect(() => {
+    const { services } = props;
     if (services.length !== 0) {
       fetchMetrics();
     }
-  }, [services, fetchMetrics]);
+  }, [props.services, fetchMetrics]);
+
+  useEffect(() => {
+    calcGraphXDomain();
+  }, [selectedTimeFrame, calcGraphXDomain]);
 
   useEffect(() => {
     fetchMetrics();
-    if (selectedTimeFrame) {
-      calcGraphXDomain();
-    }
-  }, [selectedService, selectedSpanKind, selectedTimeFrame, fetchMetrics, calcGraphXDomain]);
+  }, [selectedService, selectedSpanKind, fetchMetrics]);
 
+  const { services, metrics, servicesLoading } = props;
   const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
   const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
   const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
@@ -433,7 +443,7 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
             loading={metrics.operationMetricsLoading}
             error={metrics.opsError}
             data={serviceOpsMetrics === undefined ? metrics.serviceOpsMetrics : serviceOpsMetrics}
-            endTime={endTimeRef.current}
+            endTime={endTime}
             lookback={selectedTimeFrame}
             serviceName={getSelectedService()}
           />
