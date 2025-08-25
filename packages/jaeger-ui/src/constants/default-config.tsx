@@ -105,6 +105,11 @@ const defaultConfig: Config = {
       },
     },
     docsLink: 'https://www.jaegertracing.io/docs/latest/spm/',
+    tagFilters: [
+      { label: 'Environment', value: 'environment' },
+      { label: 'Version', value: 'version' },
+      { label: 'Region', value: 'region' },
+    ],
   },
   disableFileUploadControl: false,
   disableJsonView: false,
