@@ -83,7 +83,13 @@ export function getData(
     return [];
   }
 
-  const data = Array.isArray(metricsData) ? metricsData : [metricsData];
+  // Filter out objects with no metric points or empty metric points arrays
+  const data = Array.isArray(metricsData)
+    ? metricsData.filter(m => m && m.metricPoints && m.metricPoints.length > 0)
+    : metricsData && metricsData.metricPoints && metricsData.metricPoints.length > 0
+      ? [metricsData]
+      : [];
+
   return data.sort((a, b) => b.quantile - a.quantile);
 }
 
@@ -229,14 +235,29 @@ function ServiceGraphImpl({
       </Placeholder>
     );
 
-  if (metricsData === null)
+  const data = getMetricsData(metricsData);
+
+  // Check for null data or empty data or data with no valid y values
+  let hasValidData = false;
+  if (data.length > 0) {
+    for (const point of data) {
+      for (const [key, value] of Object.entries(point)) {
+        if (key !== 'x' && value !== null && value !== undefined && !isNaN(Number(value))) {
+          hasValidData = true;
+          break;
+        }
+      }
+      if (hasValidData) break;
+    }
+  }
+
+  if (metricsData === null || !hasValidData)
     return (
       <Placeholder name={name} marginClassName={marginClassName} width={width} height={HEIGHT}>
-        No Data
+        No data available
       </Placeholder>
     );
 
-  const data = getMetricsData(metricsData);
   const effectiveYDomain = yDomain || calculateYDomain(data);
 
   const legendFormatter = (value: string): React.JSX.Element => {
