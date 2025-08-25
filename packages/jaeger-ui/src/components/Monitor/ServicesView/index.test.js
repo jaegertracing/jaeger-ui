@@ -39,7 +39,10 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
 }));
 
 jest.mock('../../../utils/config/get-config', () => ({
-  getConfigValue: jest.fn(() => 'https://www.jaegertracing.io/docs/latest/spm/'),
+  getConfigValue: jest.fn(key => {
+    if (key === 'monitor.docsLink') return 'https://www.jaegertracing.io/docs/latest/spm/';
+    return null;
+  }),
   __esModule: true,
   default: jest.fn(() => ({
     qualityMetrics: {
@@ -176,7 +179,9 @@ describe('<MonitorATMServicesView>', () => {
   it('does not explode', () => {
     expect(screen.getByText('Service')).toBeInTheDocument();
     expect(screen.getByText('Span Kind')).toBeInTheDocument();
+    expect(screen.getByText('Tags')).toBeInTheDocument();
     expect(screen.getByTestId('select-a-service-input')).toBeInTheDocument();
+    expect(screen.getByTestId('tags-selector')).toBeInTheDocument();
   });
 
   it('shows a loading indicator when loading services list', () => {
@@ -417,6 +422,7 @@ describe('<MonitorATMServicesView>', () => {
     let trackSelectServiceSpy;
     let trackSelectSpanKindSpy;
     let trackSelectTimeframeSpy;
+    let trackSelectTagsSpy;
     let trackSearchOperationSpy;
     let trackViewAllTracesSpy;
 
@@ -424,6 +430,7 @@ describe('<MonitorATMServicesView>', () => {
       trackSelectServiceSpy = jest.spyOn(track, 'trackSelectService').mockImplementation(() => {});
       trackSelectSpanKindSpy = jest.spyOn(track, 'trackSelectSpanKind').mockImplementation(() => {});
       trackSelectTimeframeSpy = jest.spyOn(track, 'trackSelectTimeframe').mockImplementation(() => {});
+      trackSelectTagsSpy = jest.spyOn(track, 'trackSelectTags').mockImplementation(() => {});
       trackSearchOperationSpy = jest.spyOn(track, 'trackSearchOperation').mockImplementation(() => {});
       trackViewAllTracesSpy = jest.spyOn(track, 'trackViewAllTraces').mockImplementation(() => {});
     });
@@ -432,6 +439,7 @@ describe('<MonitorATMServicesView>', () => {
       trackSelectServiceSpy.mockRestore();
       trackSelectSpanKindSpy.mockRestore();
       trackSelectTimeframeSpy.mockRestore();
+      trackSelectTagsSpy.mockRestore();
       trackSearchOperationSpy.mockRestore();
       trackViewAllTracesSpy.mockRestore();
     });
@@ -494,6 +502,38 @@ describe('<MonitorATMServicesView>', () => {
 
       await waitFor(() => {
         expect(trackSelectSpanKindSpy).toHaveBeenCalledWith('Client');
+      });
+
+      expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
+      expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
+    });
+
+    it('should handle tags change and call tracking', async () => {
+      cleanup();
+      const user = userEvent.setup();
+
+      const tagsProps = {
+        ...props,
+        services: ['apple'],
+        metrics: {
+          ...originInitialState,
+          serviceMetrics,
+          serviceOpsMetrics,
+          loading: false,
+          isATMActivated: true,
+        },
+        fetchServices: mockFetchServices,
+        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      };
+
+      renderWithRouter(<MonitorATMServicesView {...tagsProps} />);
+
+      const tagsSelect = screen.getByTestId('tags-selector');
+      await user.selectOptions(tagsSelect, 'environment:prod');
+
+      await waitFor(() => {
+        expect(trackSelectTagsSpy).toHaveBeenCalledWith('environment:prod');
       });
 
       expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
