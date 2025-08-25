@@ -71,6 +71,18 @@ export type MonitorConfig = {
   menuEnabled?: boolean;
   emptyState?: MonitorEmptyStateConfig;
   docsLink?: string;
+  tagFilters?: readonly TagFilter[];
+  tagAttributes?: readonly TagAttribute[];
+};
+
+export type TagFilter = {
+  label: string;
+  value: string;
+};
+
+export type TagAttribute = {
+  name: string;
+  label: string;
 };
 
 export type TraceGraphConfig = {
