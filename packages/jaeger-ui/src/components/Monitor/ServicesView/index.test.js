@@ -41,11 +41,6 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
 jest.mock('../../../utils/config/get-config', () => ({
   getConfigValue: jest.fn(key => {
     if (key === 'monitor.docsLink') return 'https://www.jaegertracing.io/docs/latest/spm/';
-    if (key === 'monitor.tagFilters')
-      return [
-        { label: 'Environment: Production', value: 'environment:prod' },
-        { label: 'Version: v1.0', value: 'version:v1.0' },
-      ];
     return null;
   }),
   __esModule: true,
