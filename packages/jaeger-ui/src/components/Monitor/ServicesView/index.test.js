@@ -43,8 +43,8 @@ jest.mock('../../../utils/config/get-config', () => ({
     if (key === 'monitor.docsLink') return 'https://www.jaegertracing.io/docs/latest/spm/';
     if (key === 'monitor.tagFilters')
       return [
-        { label: 'Environment: Production', value: 'environment=production' },
-        { label: 'Version: v1.0', value: 'version=v1.0' },
+        { label: 'Environment: Production', value: 'environment:prod' },
+        { label: 'Version: v1.0', value: 'version:v1.0' },
       ];
     return null;
   }),
@@ -535,10 +535,10 @@ describe('<MonitorATMServicesView>', () => {
       renderWithRouter(<MonitorATMServicesView {...tagsProps} />);
 
       const tagsSelect = screen.getByTestId('tags-selector');
-      await user.selectOptions(tagsSelect, 'environment=production');
+      await user.selectOptions(tagsSelect, 'environment:prod');
 
       await waitFor(() => {
-        expect(trackSelectTagsSpy).toHaveBeenCalledWith('environment=production');
+        expect(trackSelectTagsSpy).toHaveBeenCalledWith('environment:prod');
       });
 
       expect(mockFetchAllServiceMetrics).toHaveBeenCalled();

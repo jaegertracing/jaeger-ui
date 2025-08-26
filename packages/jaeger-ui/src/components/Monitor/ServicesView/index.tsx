@@ -61,7 +61,7 @@ type StateType = {
   selectedService: string;
   selectedSpanKind: spanKinds;
   selectedTimeFrame: number;
-  selectedTags: string;
+  selectedTags: string | undefined;
 };
 
 type TReduxProps = {
@@ -162,7 +162,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     selectedService: store.get('lastAtmSearchService') || '',
     selectedSpanKind: store.get('lastAtmSearchSpanKind') || 'server',
     selectedTimeFrame: store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds,
-    selectedTags: store.get('lastAtmSearchTags') || '',
+    selectedTags: store.get('lastAtmSearchTags') || undefined,
   };
 
   constructor(props: TProps) {
@@ -232,9 +232,9 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     });
   };
 
-  handleTagsChange = (value: string) => {
+  handleTagsChange = (value: string | undefined) => {
     trackSelectTags(value || 'None');
-    this.setState({ selectedTags: value }, () => {
+    this.setState({ selectedTags: value || undefined }, () => {
       this.fetchMetrics();
     });
   };
@@ -348,7 +348,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
               <SearchableSelect
                 value={selectedTags}
                 onChange={this.handleTagsChange}
-                placeholder="Select Tags"
+                placeholder="Select tags to filter"
                 className="tags-selector"
                 disabled={metrics.operationMetricsLoading}
                 loading={metrics.operationMetricsLoading}
