@@ -258,7 +258,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
         step: 60 * 1000,
         ratePer: 10 * 60 * 1000,
         spanKind: selectedSpanKind,
-        ...(selectedTags && { tags: selectedTags }),
+        ...(selectedTags && { tag: selectedTags }),
       };
 
       fetchAllServiceMetrics(currentService, metricQueryPayload);
