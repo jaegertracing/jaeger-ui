@@ -102,7 +102,6 @@ export const spanKindOptions = [
   { label: 'Consumer', value: 'consumer' },
 ];
 
-// export for tests
 export const getLoopbackInterval = (interval: number) => {
   if (interval === undefined) return '';
 
@@ -126,7 +125,6 @@ const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMet
   return getSuitableTimeUnit(maxValue * 1000);
 };
 
-// export for tests
 export const yAxisTickFormat = (timeInMS: number, displayTimeUnit: string) =>
   convertToTimeUnit(timeInMS * 1000, displayTimeUnit);
 
@@ -146,7 +144,6 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
   return { ...serviceErrorRate, metricPoints: convertedMetricsPoints };
 };
 
-// export for tests
 export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   const docsLink = getConfigValue('monitor.docsLink');
   const graphDivWrapper = useRef<HTMLDivElement>(null);
@@ -164,47 +161,39 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
     store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds
   );
 
-  // calcGraphXDomain method
   const calcGraphXDomain = useCallback(() => {
     const currentTime = Date.now();
     setGraphXDomain([currentTime - selectedTimeFrame, currentTime]);
   }, [selectedTimeFrame]);
 
-  // updateDimensions method
   const updateDimensions = useCallback(() => {
     if (graphDivWrapper.current) {
       setGraphWidth(graphDivWrapper.current.offsetWidth - 24);
     }
   }, []);
 
-  // getSelectedService method
-
   const getSelectedService = useCallback(() => {
     const { services } = props;
     return selectedService || store.get('lastAtmSearchService') || services[0];
   }, [props.services, selectedService]);
 
-  // handleServiceChange method
   const handleServiceChange = useCallback((value: string) => {
     setSelectedService(value);
     trackSelectService(value);
   }, []);
 
-  // handleSpanKindChange method
   const handleSpanKindChange = useCallback((value: string) => {
     setSelectedSpanKind(value as spanKinds);
     const { label } = spanKindOptions.find(option => option.value === value)!;
     trackSelectSpanKind(label);
   }, []);
 
-  // handleTimeFrameChange method
   const handleTimeFrameChange = useCallback((value: number) => {
     setSelectedTimeFrame(value);
     const { label } = timeFrameOptions.find(option => option.value === value)!;
     trackSelectTimeframe(label);
   }, []);
 
-  // fetchMetrics method
   const fetchMetrics = useCallback(() => {
     const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, services } = props;
     const currentService = selectedService || services[0];
