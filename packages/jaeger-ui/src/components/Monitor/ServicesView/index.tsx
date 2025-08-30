@@ -47,6 +47,7 @@ import {
   trackSelectService,
   trackSelectSpanKind,
   trackSelectTimeframe,
+  trackSelectTags,
   trackViewAllTraces,
 } from './index.track';
 import withRouteProps from '../../../utils/withRouteProps';
@@ -60,6 +61,7 @@ type StateType = {
   selectedService: string;
   selectedSpanKind: spanKinds;
   selectedTimeFrame: number;
+  selectedTags: string | undefined;
 };
 
 type TReduxProps = {
@@ -160,6 +162,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     selectedService: store.get('lastAtmSearchService') || '',
     selectedSpanKind: store.get('lastAtmSearchSpanKind') || 'server',
     selectedTimeFrame: store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds,
+    selectedTags: store.get('lastAtmSearchTags') || undefined,
   };
 
   constructor(props: TProps) {
@@ -229,9 +232,16 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     });
   };
 
+  handleTagsChange = (value: string | undefined) => {
+    trackSelectTags(value || 'None');
+    this.setState({ selectedTags: value || undefined }, () => {
+      this.fetchMetrics();
+    });
+  };
+
   fetchMetrics() {
     const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, services } = this.props;
-    const { selectedService, selectedSpanKind, selectedTimeFrame } = this.state;
+    const { selectedService, selectedSpanKind, selectedTimeFrame, selectedTags } = this.state;
     const currentService = selectedService || services[0];
 
     if (currentService) {
@@ -239,6 +249,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
       store.set('lastAtmSearchService', this.getSelectedService());
+      store.set('lastAtmSearchTags', selectedTags);
 
       const metricQueryPayload = {
         quantile: 0.95,
@@ -247,6 +258,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
         step: 60 * 1000,
         ratePer: 10 * 60 * 1000,
         spanKind: selectedSpanKind,
+        ...(selectedTags && { tag: selectedTags }),
       };
 
       fetchAllServiceMetrics(currentService, metricQueryPayload);
@@ -264,7 +276,8 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
 
   render() {
     const { services, metrics, servicesLoading } = this.props;
-    const { selectedSpanKind, selectedTimeFrame, searchOps, graphWidth, graphXDomain } = this.state;
+    const { selectedSpanKind, selectedTimeFrame, selectedTags, searchOps, graphWidth, graphXDomain } =
+      this.state;
     const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
     const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
     const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
@@ -326,6 +339,24 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 {spanKindOptions.map(option => (
                   <Option key={option.value} value={option.value}>
                     {option.label}
+                  </Option>
+                ))}
+              </SearchableSelect>
+            </Col>
+            <Col span={6}>
+              <h2 className="span-kind-selector-header">Tags</h2>
+              <SearchableSelect
+                value={selectedTags}
+                onChange={this.handleTagsChange}
+                placeholder="Select tags to filter"
+                className="tags-selector"
+                disabled={metrics.operationMetricsLoading}
+                loading={metrics.operationMetricsLoading}
+                allowClear
+              >
+                {(getConfigValue('monitor.tagFilters') || []).map((tagFilter: any) => (
+                  <Option key={tagFilter.value} value={tagFilter.value}>
+                    {tagFilter.label}
                   </Option>
                 ))}
               </SearchableSelect>
