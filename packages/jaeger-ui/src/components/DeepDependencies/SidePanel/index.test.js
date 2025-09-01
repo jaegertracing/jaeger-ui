@@ -145,7 +145,7 @@ describe('<SidePanel>', () => {
           operation: testVertex.operation,
           service: testVertex.service,
         }),
-        undefined
+        expect.anything()
       );
     });
   });

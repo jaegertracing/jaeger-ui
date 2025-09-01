@@ -51,7 +51,7 @@ describe('TracesDdgImpl', () => {
         extraUrlArgs,
         showSvcOpsHeader: false,
       }),
-      undefined
+      expect.anything()
     );
     expect(getByTestId('ddg-impl')).toBeInTheDocument();
   });
