@@ -66,14 +66,8 @@ describe('<SpanGraph>', () => {
     render(<SpanGraph {...defaultProps} />);
     const expectedTicks = 4;
 
-    expect(TickLabels).toHaveBeenCalledWith(
-      expect.objectContaining({ numTicks: expectedTicks }),
-      {}
-    );
-    expect(ViewingLayer).toHaveBeenCalledWith(
-      expect.objectContaining({ numTicks: expectedTicks }),
-      {}
-    );
+    expect(TickLabels).toHaveBeenCalledWith(expect.objectContaining({ numTicks: expectedTicks }), {});
+    expect(ViewingLayer).toHaveBeenCalledWith(expect.objectContaining({ numTicks: expectedTicks }), {});
   });
 
   it('passes correct items to CanvasSpanGraph', () => {
