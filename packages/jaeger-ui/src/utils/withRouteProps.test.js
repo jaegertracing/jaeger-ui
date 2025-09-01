@@ -58,7 +58,7 @@ describe('withRouteProps', () => {
         params: {},
         history: mockHistory,
       }),
-      expect.anything()
+      {}
     );
   });
 });

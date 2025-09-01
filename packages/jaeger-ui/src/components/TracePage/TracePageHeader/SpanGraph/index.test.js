@@ -68,11 +68,11 @@ describe('<SpanGraph>', () => {
 
     expect(TickLabels).toHaveBeenCalledWith(
       expect.objectContaining({ numTicks: expectedTicks }),
-      expect.anything()
+      {}
     );
     expect(ViewingLayer).toHaveBeenCalledWith(
       expect.objectContaining({ numTicks: expectedTicks }),
-      expect.anything()
+      {}
     );
   });
 
@@ -89,7 +89,7 @@ describe('<SpanGraph>', () => {
         valueWidth: trace.duration,
         items: expectedItems,
       }),
-      expect.anything()
+      {}
     );
   });
 
