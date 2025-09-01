@@ -42,7 +42,8 @@ describe('TracesDdgImpl', () => {
       <TracesDdgImpl location={location} propName0="propValue0" propName1="propValue1" />
     );
 
-    expect(DeepDependencyGraphPageImpl).toHaveBeenCalledWith(
+    const [firstArg] = DeepDependencyGraphPageImpl.mock.calls[0];
+    expect(firstArg).toEqual(
       expect.objectContaining({
         propName0: 'propValue0',
         propName1: 'propValue1',
@@ -50,8 +51,7 @@ describe('TracesDdgImpl', () => {
         baseUrl: ROUTE_PATH,
         extraUrlArgs,
         showSvcOpsHeader: false,
-      }),
-      {}
+      })
     );
     expect(getByTestId('ddg-impl')).toBeInTheDocument();
   });

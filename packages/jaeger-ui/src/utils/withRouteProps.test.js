@@ -45,7 +45,8 @@ describe('withRouteProps', () => {
       </HistoryProvider>
     );
 
-    expect(WrappedComponent).toHaveBeenCalledWith(
+    const [wrappedProps] = WrappedComponent.mock.calls[0];
+    expect(wrappedProps).toEqual(
       expect.objectContaining({
         location: expect.objectContaining({
           pathname: '/test',
@@ -57,8 +58,7 @@ describe('withRouteProps', () => {
         search: '?param=value',
         params: {},
         history: mockHistory,
-      }),
-      {}
+      })
     );
   });
 });

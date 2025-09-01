@@ -66,8 +66,10 @@ describe('<SpanGraph>', () => {
     render(<SpanGraph {...defaultProps} />);
     const expectedTicks = 4;
 
-    expect(TickLabels).toHaveBeenCalledWith(expect.objectContaining({ numTicks: expectedTicks }), {});
-    expect(ViewingLayer).toHaveBeenCalledWith(expect.objectContaining({ numTicks: expectedTicks }), {});
+    const [tickLabelsProps] = TickLabels.mock.calls[0];
+    const [viewingLayerProps] = ViewingLayer.mock.calls[0];
+    expect(tickLabelsProps).toEqual(expect.objectContaining({ numTicks: expectedTicks }));
+    expect(viewingLayerProps).toEqual(expect.objectContaining({ numTicks: expectedTicks }));
   });
 
   it('passes correct items to CanvasSpanGraph', () => {
@@ -78,12 +80,12 @@ describe('<SpanGraph>', () => {
       serviceName: span.process.serviceName,
     }));
 
-    expect(CanvasSpanGraph).toHaveBeenCalledWith(
+    const [canvasProps] = CanvasSpanGraph.mock.calls[0];
+    expect(canvasProps).toEqual(
       expect.objectContaining({
         valueWidth: trace.duration,
         items: expectedItems,
-      }),
-      {}
+      })
     );
   });
 
