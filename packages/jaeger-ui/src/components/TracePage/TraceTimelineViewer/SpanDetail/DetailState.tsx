@@ -37,7 +37,7 @@ export default class DetailState {
     this.isReferencesOpen = Boolean(isReferencesOpen);
     this.isWarningsOpen = Boolean(isWarningsOpen);
     this.logs = {
-      isOpen: Boolean(logs && logs.isOpen),
+      isOpen: logs ? Boolean(logs.isOpen) : true,
       openedItems: logs && logs.openedItems ? new Set(logs.openedItems) : new Set(),
     };
   }

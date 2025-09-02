@@ -126,6 +126,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             timestamp={traceStartTime}
             currentViewRangeTime={currentViewRangeTime}
             traceDuration={traceDuration}
+            spanID={spanID}
           />
         )}
         {warnings && warnings.length > 0 && (
