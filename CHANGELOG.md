@@ -9,6 +9,24 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.73.0 (2025-09-02)
+
+#### ✨ New Features
+
+* Upgrade project to react 19 ([@vishvamsinh28](https://github.com/vishvamsinh28) in [#3040](https://github.com/jaegertracing/jaeger-ui/pull/3040))
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Make the scrollbar always visible in lookback dropdown ([@Parship999](https://github.com/Parship999) in [#3048](https://github.com/jaegertracing/jaeger-ui/pull/3048))
+* Add click to copy for trace id ([@Darshit42](https://github.com/Darshit42) in [#2997](https://github.com/jaegertracing/jaeger-ui/pull/2997))
+* Improve performance on trace statistics page after value for sub-group is selected ([@DamianMaslanka5](https://github.com/DamianMaslanka5) in [#2843](https://github.com/jaegertracing/jaeger-ui/pull/2843))
+* Highlight active mode button in tracegraph ([@Saquib45](https://github.com/Saquib45) in [#3034](https://github.com/jaegertracing/jaeger-ui/pull/3034))
+
+#### ⚙️ Refactoring
+
+* Fix typescript ref typing errors across react components ([@vishvamsinh28](https://github.com/vishvamsinh28) in [#3042](https://github.com/jaegertracing/jaeger-ui/pull/3042))
+* Convert `VerticalResizer.tsx` from class component to functional component ([@Parship999](https://github.com/Parship999) in [#2951](https://github.com/jaegertracing/jaeger-ui/pull/2951))
+
 ## v1.72.0 (2025-08-05)
 
 #### 🐞 Bug fixes, Minor Improvements
