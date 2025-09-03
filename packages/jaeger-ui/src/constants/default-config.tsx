@@ -115,6 +115,8 @@ const defaultConfig: Config = {
 
   deepDependencies: {
     menuEnabled: false,
+    menuLabel: 'Deep Dependencies',
+    apiEndpoint: '/api/deep-dependencies',
   },
   qualityMetrics: {
     menuEnabled: false,
