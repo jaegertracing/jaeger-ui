@@ -263,11 +263,11 @@ function main() {
         process.exit(0);
     }
     
-    // Run version updater
-    runVersionUpdater(newVersion);
-    
-    // Check git status
+    // Check git status BEFORE making any changes
     checkGitStatus();
+    
+    // Run version updater AFTER confirming clean git state
+    runVersionUpdater(newVersion);
     
     // Create release branch
     const branchName = createReleaseBranch(newVersion);
