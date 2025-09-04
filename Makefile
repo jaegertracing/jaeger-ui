@@ -4,6 +4,11 @@ changelog:
 	chmod 755 ./scripts/release-notes.py
 	./scripts/release-notes.py --exclude-dependabot --repo jaeger-ui --verbose
 
+.PHONY: prepare-release
+prepare-release:
+	@echo "Starting automated release preparation..."
+	@node scripts/release/prepare-release.js
+
 .PHONY: draft-release
 draft-release:
 	wget https://raw.githubusercontent.com/jaegertracing/jaeger/main/scripts/release/draft.py -O ./scripts/draft-release.py -q
