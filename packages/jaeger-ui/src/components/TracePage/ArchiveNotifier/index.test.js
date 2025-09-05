@@ -100,9 +100,9 @@ describe('<ArchiveNotifier>', () => {
   it('sets internal notifiedState to null on archivedState.isAcknowledged', () => {
     const props = { ...defaultProps, archivedState: { isAcknowledged: true } };
     render(<ArchiveNotifier {...props} />);
-    expect(notification.success).not.toBeCalled();
-    expect(notification.info).not.toBeCalled();
-    expect(notification.warning).not.toBeCalled();
+    expect(notification.success).not.toHaveBeenCalled();
+    expect(notification.info).not.toHaveBeenCalled();
+    expect(notification.warning).not.toHaveBeenCalled();
   });
 
   it('calls notification.info when isLoading is true', () => {

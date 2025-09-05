@@ -212,7 +212,7 @@ describe('GraphModel', () => {
               density: EDdgDensity.PreventPathEntanglement,
               showOp: true,
             })
-        ).toThrowError();
+        ).toThrow();
       });
     });
   });
@@ -817,7 +817,7 @@ describe('GraphModel', () => {
     });
 
     it('throws error if given absent vertex', () => {
-      expect(() => overlapGraph.getVisWithVertices(['absent key'])).toThrowError(/does not exist in graph/);
+      expect(() => overlapGraph.getVisWithVertices(['absent key'])).toThrow(/does not exist in graph/);
     });
   });
 

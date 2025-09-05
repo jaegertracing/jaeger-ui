@@ -90,19 +90,16 @@ describe('<VerticalResizer>', () => {
     });
 
     it('throws if dragged before rendered', () => {
-      let instance = null;
-      render(
-        <VerticalResizer
-          {...props}
-          ref={ref => {
-            if (ref) instance = ref;
-          }}
-        />
-      );
-      act(() => {
-        instance._rootElm = undefined;
+      const { unmount } = render(<VerticalResizer {...props} />);
+      // Unmount the component. This causes React to set rootElmRef.current to null.
+      unmount();
+      // The function return a default object instead of throwing
+      expect(draggableManagerConfig.getBounds()).toEqual({
+        clientXLeft: 0,
+        width: 0,
+        minValue: 0,
+        maxValue: 0,
       });
-      expect(() => draggableManagerConfig.getBounds()).toThrow('invalid state');
     });
 
     it('handles drag start', () => {

@@ -45,9 +45,9 @@ type TState = {
 };
 
 export default class FilteredList extends React.PureComponent<TProps, TState> {
-  inputRef: React.RefObject<HTMLInputElement> = React.createRef();
-  vlistRef: React.RefObject<VList> = React.createRef();
-  wrapperRef: React.RefObject<HTMLDivElement> = React.createRef();
+  inputRef = React.createRef<HTMLInputElement>();
+  vlistRef = React.createRef<VList>();
+  wrapperRef = React.createRef<HTMLDivElement>();
   state: TState = {
     filterText: '',
     focusedIndex: null,

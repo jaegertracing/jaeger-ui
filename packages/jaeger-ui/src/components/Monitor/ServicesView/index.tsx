@@ -149,7 +149,7 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 // export for tests
 export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, StateType> {
   docsLink: string;
-  graphDivWrapper: React.RefObject<HTMLInputElement>;
+  graphDivWrapper = React.createRef<HTMLDivElement>();
   serviceSelectorValue = '';
   endTime: number = Date.now();
   state: StateType = {
@@ -164,7 +164,6 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
 
   constructor(props: TProps) {
     super(props);
-    this.graphDivWrapper = React.createRef();
     this.docsLink = getConfigValue('monitor.docsLink');
   }
 

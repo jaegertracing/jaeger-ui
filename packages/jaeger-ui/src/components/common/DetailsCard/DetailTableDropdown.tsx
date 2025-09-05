@@ -30,7 +30,7 @@ const DetailTableDropdown: React.FC<TProps> = props => {
   const { clearFilters = () => {}, confirm, options, selectedKeys, setSelectedKeys } = props;
   const confirmedSelectionRef = useRef<Key[]>(selectedKeys);
   const [isCancelled, setIsCancelled] = useState(false);
-  const prevSelectedKeysRef = useRef<Key[]>();
+  const prevSelectedKeysRef = useRef<Key[]>([]);
 
   useEffect(() => {
     const prevKeys = prevSelectedKeysRef.current;

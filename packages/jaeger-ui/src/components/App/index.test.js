@@ -13,13 +13,143 @@
 // limitations under the License.
 
 import React from 'react';
-import shallow from '../../utils/ReactShallowRenderer.test';
+import { render } from '@testing-library/react';
+import '@testing-library/jest-dom';
+
+jest.mock('./NotFound', () => () => <div data-testid="not-found" />);
+jest.mock('./Page', () => ({ children }) => <div data-testid="page">{children}</div>);
+jest.mock('../DependencyGraph', () => () => <div data-testid="dependency-graph" />);
+jest.mock('../DeepDependencies', () => () => <div data-testid="deep-dependencies" />);
+jest.mock('../QualityMetrics', () => () => <div data-testid="quality-metrics" />);
+jest.mock('../SearchTracePage', () => () => <div data-testid="search-trace" />);
+jest.mock('../TraceDiff', () => () => <div data-testid="trace-diff" />);
+jest.mock('../TracePage', () => () => <div data-testid="trace-page" />);
+jest.mock('../Monitor', () => () => <div data-testid="monitor" />);
+
+jest.mock('../DependencyGraph/url', () => ({ ROUTE_PATH: '/dependencies' }));
+jest.mock('../DeepDependencies/url', () => ({ ROUTE_PATH: '/deep-dependencies' }));
+jest.mock('../QualityMetrics/url', () => ({ ROUTE_PATH: '/quality-metrics' }));
+jest.mock('../SearchTracePage/url', () => ({ ROUTE_PATH: '/search' }));
+jest.mock('../TraceDiff/url', () => ({ ROUTE_PATH: '/trace-diff' }));
+jest.mock('../TracePage/url', () => ({ ROUTE_PATH: '/trace' }));
+jest.mock('../Monitor/url', () => ({ ROUTE_PATH: '/monitor' }));
+
+jest.mock('../../api/jaeger', () => ({
+  __esModule: true,
+  default: { apiRoot: null },
+  DEFAULT_API_ROOT: 'http://localhost:16686/api',
+}));
+
+jest.mock('../../utils/config/process-scripts', () => jest.fn());
+jest.mock('../../utils/prefix-url', () => jest.fn(() => '/prefix'));
+
+const createMockHistory = (pathname = '/') => ({
+  length: 1,
+  action: 'POP',
+  location: { pathname, search: '', hash: '', state: null },
+  push: jest.fn(),
+  replace: jest.fn(),
+  go: jest.fn(),
+  goBack: jest.fn(),
+  goForward: jest.fn(),
+  block: jest.fn(),
+  listen: jest.fn(() => jest.fn()),
+  createHref: jest.fn(),
+});
+
+let mockHistory = createMockHistory();
+
+jest.mock('../../utils/configure-store', () => ({
+  get history() {
+    return mockHistory;
+  },
+  store: {
+    getState: jest.fn(() => ({})),
+    dispatch: jest.fn(),
+    subscribe: jest.fn(),
+    replaceReducer: jest.fn(),
+    [Symbol.observable]: jest.fn(),
+  },
+}));
+
+jest.mock('../../utils/useHistory', () => ({
+  HistoryProvider: ({ children }) => children,
+}));
+
+jest.mock('../common/vars.css', () => ({}));
+jest.mock('../common/utils.css', () => ({}));
+jest.mock('antd/dist/reset.css', () => ({}));
+jest.mock('./index.css', () => ({}));
 
 import JaegerUIApp from './index';
+import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
+import processScripts from '../../utils/config/process-scripts';
+
+const renderWithPath = pathname => {
+  mockHistory = createMockHistory(pathname);
+  return render(<JaegerUIApp />);
+};
 
 describe('JaegerUIApp', () => {
-  it('does not explode', () => {
-    const wrapper = shallow(<JaegerUIApp />);
-    expect(wrapper).toMatchSnapshot();
+  beforeEach(() => {
+    jest.clearAllMocks();
+    JaegerAPI.apiRoot = null;
+    mockHistory = createMockHistory();
+  });
+
+  it('should initialize API and process scripts', () => {
+    renderWithPath('/search');
+    expect(JaegerAPI.apiRoot).toBe(DEFAULT_API_ROOT);
+    expect(processScripts).toHaveBeenCalled();
+  });
+
+  it('should render Page wrapper', () => {
+    const { getByTestId } = renderWithPath('/search');
+    expect(getByTestId('page')).toBeInTheDocument();
+  });
+
+  it('should render without throwing errors', () => {
+    expect(() => renderWithPath('/search')).not.toThrow();
+  });
+
+  const routes = [
+    ['/search', 'search-trace'],
+    ['/trace-diff', 'trace-diff'],
+    ['/trace/123', 'trace-page'],
+    ['/dependencies', 'dependency-graph'],
+    ['/deep-dependencies', 'deep-dependencies'],
+    ['/quality-metrics', 'quality-metrics'],
+    ['/monitor', 'monitor'],
+  ];
+
+  routes.forEach(([path, testId]) => {
+    it(`should render correct component for ${path}`, () => {
+      const { getByTestId } = renderWithPath(path);
+      expect(getByTestId(testId)).toBeInTheDocument();
+    });
+  });
+
+  it('should render NotFound for unknown routes', () => {
+    const { getByTestId } = renderWithPath('/unknown');
+    expect(getByTestId('not-found')).toBeInTheDocument();
+  });
+
+  it('should handle root path redirect', () => {
+    const { container } = renderWithPath('/');
+    expect(container).toBeInTheDocument();
+    expect(mockHistory.replace).toHaveBeenCalledTimes(1);
+    expect(mockHistory.replace).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/search' }));
+  });
+
+  it('should handle constructor with props', () => {
+    expect(() => new JaegerUIApp({})).not.toThrow();
+  });
+
+  it('should have complete render method coverage', () => {
+    const { container } = renderWithPath('/search');
+
+    expect(container.firstChild).toBeDefined();
+    expect(container.querySelector('[data-testid="page"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-testid="search-trace"]')).toBeInTheDocument();
   });
 });

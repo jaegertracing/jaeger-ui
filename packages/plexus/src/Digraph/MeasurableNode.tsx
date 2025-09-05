@@ -30,8 +30,8 @@ type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNo
 const SVG_HIDDEN_STYLE = { visibility: 'hidden' };
 
 export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T>> {
-  htmlRef: React.RefObject<HTMLDivElement> = React.createRef();
-  svgRef: React.RefObject<SVGGElement> = React.createRef();
+  htmlRef = React.createRef<HTMLDivElement>();
+  svgRef = React.createRef<SVGGElement>();
 
   private measureHtml() {
     const { current } = this.htmlRef;

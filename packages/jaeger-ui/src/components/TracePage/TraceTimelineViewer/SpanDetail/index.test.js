@@ -280,14 +280,6 @@ describe('<SpanDetail>', () => {
   });
 
   it('renders copy icon with deep link URL containing the span ID parameter', () => {
-    Object.defineProperty(window, 'location', {
-      value: {
-        origin: 'https://example.com',
-        pathname: '/trace/test',
-      },
-      writable: true,
-    });
-
     render(<SpanDetail {...props} />);
 
     const copyIcon = screen.getByTestId('copy-icon');
