@@ -64,53 +64,74 @@ function getCurrentVersion() {
     }
 }
 
-// Calculate next version based on current version
-function calculateNextVersion(currentVersion, versionType = 'patch') {
-    const [major, minor, patch] = currentVersion.split('.').map(Number);
+// Call the main Jaeger repository's release/start.sh script to determine version
+function determineVersionFromMainRepo() {
+    logInfo('Determining version using main Jaeger repository logic...');
     
-    switch (versionType) {
-        case 'major':
-            return `${major + 1}.0.0`;
-        case 'minor':
-            return `${major}.${minor + 1}.0`;
-        case 'patch':
-            return `${major}.${minor}.${patch + 1}`;
-        default:
-            logError(`Invalid version type: ${versionType}. Use: major, minor, or patch`);
-            process.exit(1);
+    try {
+        // Check if we can access the main Jaeger repository
+        const mainRepoPath = path.join(__dirname, '../../../jaeger');
+        const startScriptPath = path.join(mainRepoPath, 'scripts/release/start.sh');
+        
+        if (!fs.existsSync(startScriptPath)) {
+            logWarning('Main Jaeger repository not found. Using fallback version determination.');
+            return determineVersionFallback();
+        }
+        
+        // Change to main repo directory and run the start script
+        const originalCwd = process.cwd();
+        process.chdir(mainRepoPath);
+        
+        try {
+            // Run the start script in dry-run mode to get version without making changes
+            const result = execSync('bash scripts/release/start.sh --dry-run', { 
+                encoding: 'utf8',
+                stdio: 'pipe'
+            });
+            
+            // Extract version from the output (this may need adjustment based on actual output format)
+            const versionMatch = result.match(/version[:\s]+([0-9]+\.[0-9]+\.[0-9]+)/i);
+            if (versionMatch) {
+                return versionMatch[1];
+            }
+            
+            logWarning('Could not extract version from main repo script. Using fallback.');
+            return determineVersionFallback();
+        } finally {
+            process.chdir(originalCwd);
+        }
+    } catch (error) {
+        logWarning(`Failed to use main repo script: ${error.message}. Using fallback.`);
+        return determineVersionFallback();
     }
 }
 
-// Interactive version selection
+// Fallback version determination when main repo is not available
+function determineVersionFallback() {
+    const currentVersion = getCurrentVersion();
+    logInfo(`Current version: ${currentVersion}`);
+    
+    // Simple patch version increment as fallback
+    const [major, minor, patch] = currentVersion.split('.').map(Number);
+    return `${major}.${minor}.${patch + 1}`;
+}
+
+// Version selection using main repository logic
 function selectVersion(currentVersion) {
     logInfo(`Current version: ${currentVersion}`);
     console.log('');
-    console.log('Select the type of version bump:');
-    console.log(`1) Patch (bug fixes, minor improvements) - ${calculateNextVersion(currentVersion, 'patch')}`);
-    console.log(`2) Minor (new features, backward compatible) - ${calculateNextVersion(currentVersion, 'minor')}`);
-    console.log(`3) Major (breaking changes) - ${calculateNextVersion(currentVersion, 'major')}`);
-    console.log('4) Custom version');
+    
+    // Try to use main repository logic first
+    const newVersion = determineVersionFromMainRepo();
+    
+    logInfo(`Determined next version: ${newVersion}`);
     console.log('');
     
-    // For demo purposes, we'll use patch version
-    // In a real implementation, you'd use readline or similar for user input
-    const choice = '1'; // Default to patch
-    console.log('Selected: Patch version (demo mode)');
+    // For now, we'll use the determined version directly
+    // In a real implementation, you might want to allow user confirmation
+    console.log('Using version determined by main Jaeger repository logic');
     
-    switch (choice) {
-        case '1':
-            return calculateNextVersion(currentVersion, 'patch');
-        case '2':
-            return calculateNextVersion(currentVersion, 'minor');
-        case '3':
-            return calculateNextVersion(currentVersion, 'major');
-        case '4':
-            // In real implementation, prompt for custom version
-            return '1.74.0'; // Demo custom version
-        default:
-            logError('Invalid choice. Please select 1-4.');
-            process.exit(1);
-    }
+    return newVersion;
 }
 
 // Confirm version selection

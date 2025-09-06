@@ -63,21 +63,17 @@ function getCurrentVersion() {
     }
 }
 
-// Calculate next version based on current version
-function calculateNextVersion(currentVersion, versionType = 'patch') {
-    const [major, minor, patch] = currentVersion.split('.').map(Number);
+// Simulate version determination using main repository logic
+function simulateVersionDetermination(currentVersion) {
+    logInfo('Simulating version determination using main Jaeger repository logic...');
     
-    switch (versionType) {
-        case 'major':
-            return `${major + 1}.0.0`;
-        case 'minor':
-            return `${major}.${minor + 1}.0`;
-        case 'patch':
-            return `${major}.${minor}.${patch + 1}`;
-        default:
-            logError(`Invalid version type: ${versionType}. Use: major, minor, or patch`);
-            process.exit(1);
-    }
+    // In the real implementation, this would call the main repo's start.sh script
+    // For demo purposes, we'll simulate a patch version increment
+    const [major, minor, patch] = currentVersion.split('.').map(Number);
+    const patchVersion = `${major}.${minor}.${patch + 1}`;
+    
+    logInfo(`Main repo logic would determine: ${patchVersion}`);
+    return patchVersion;
 }
 
 // Simulate the complete workflow
@@ -89,20 +85,16 @@ function simulateWorkflow() {
     const currentVersion = getCurrentVersion();
     logInfo(`Current version: ${currentVersion}`);
     
-    // Step 2: Calculate next versions
-    const patchVersion = calculateNextVersion(currentVersion, 'patch');
-    const minorVersion = calculateNextVersion(currentVersion, 'minor');
-    const majorVersion = calculateNextVersion(currentVersion, 'major');
+    // Step 2: Simulate version determination using main repo logic
+    const selectedVersion = simulateVersionDetermination(currentVersion);
     
-    console.log('\n📋 Available version options:');
-    console.log(`1) Patch (bug fixes)     → ${patchVersion}`);
-    console.log(`2) Minor (new features)  → ${minorVersion}`);
-    console.log(`3) Major (breaking)      → ${majorVersion}`);
-    console.log(`4) Custom version        → Enter manually`);
+    console.log('\n📋 Version determination process:');
+    console.log('   🔍 Checking main Jaeger repository...');
+    console.log('   📋 Using release/start.sh script logic...');
+    console.log(`   ✅ Determined version: ${selectedVersion}`);
     
-    // Step 3: Simulate version selection (demo uses patch)
-    const selectedVersion = patchVersion;
-    console.log(`\n✅ Selected: Patch version → ${selectedVersion}`);
+    // Step 3: Show version selection result
+    console.log(`\n✅ Using version determined by main repository: ${selectedVersion}`);
     
     // Step 4: Show what would be updated
     console.log('\n🔧 Files that would be updated:');
@@ -177,8 +169,9 @@ function simulateWorkflow() {
     console.log('\n🔗 Integration with existing tools:');
     console.log('   📦 make changelog     → Downloads from main Jaeger repo');
     console.log('   📦 make draft-release → Downloads from main Jaeger repo');
-    console.log('   📦 make prepare-release → NEW: Our automation');
+    console.log('   📦 make prepare-release → NEW: Uses main repo version logic');
     console.log('   📦 GitHub Actions     → Existing release workflow');
+    console.log('   📦 release/start.sh   → Main repo version determination');
     
     console.log('\n✨ Demo completed! This shows the complete automation workflow.');
     console.log('   To run the actual automation: make prepare-release');
