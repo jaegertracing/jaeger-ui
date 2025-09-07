@@ -204,13 +204,7 @@ Closes #3056`;
         
         try {
             // Use body file to avoid command line argument issues
-            execSync([
-                'gh', 'pr', 'create',
-                '--title', prTitle,
-                '--body-file', tempFile,
-                '--label', 'changelog:skip',
-                '--head', branchName
-            ], { stdio: 'inherit' });
+            execSync(`gh pr create --title "${prTitle}" --body-file "${tempFile}" --label "changelog:skip" --head "${branchName}"`, { stdio: 'inherit' });
             
             logSuccess('GitHub pull request created successfully');
         } finally {
