@@ -7,7 +7,14 @@ changelog:
 .PHONY: prepare-release
 prepare-release:
 	@echo "Starting automated release preparation..."
-	@node scripts/release/prepare-release.js
+	@echo "Usage: make prepare-release VERSION=x.y.z"
+	@echo "Example: make prepare-release VERSION=1.74.0"
+	@if [ -z "$(VERSION)" ]; then \
+		echo "Error: VERSION is required"; \
+		echo "Usage: make prepare-release VERSION=x.y.z"; \
+		exit 1; \
+	fi
+	@node scripts/release/prepare.js $(VERSION)
 
 .PHONY: draft-release
 draft-release:
