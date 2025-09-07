@@ -20,9 +20,11 @@ limitations under the License.
   font-weight: 800;
 }
 
-/* .tag-selector {
-  padding-left: 10px;
-} */
+.tag-selector {
+  /* padding-left: 10px; */
+  min-width: 150px; /* Minimum width for usability */
+  width: 100%; /* Allow width to grow based on content */
+}
 
 .multi-tag-selector {
   padding: 5px;
