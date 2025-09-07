@@ -198,16 +198,27 @@ After merging this PR:
 Closes #3056`;
 
     try {
-        const ghCommand = [
-            'gh', 'pr', 'create',
-            '--title', prTitle,
-            '--body', prBody,
-            '--label', 'changelog:skip',
-            '--head', branchName
-        ];
+        // Write PR body to temporary file to avoid shell escaping issues
+        const tempFile = path.join(__dirname, `pr-body-${Date.now()}.md`);
+        fs.writeFileSync(tempFile, prBody);
         
-        execSync(ghCommand.join(' '), { stdio: 'inherit' });
-        logSuccess('GitHub pull request created successfully');
+        try {
+            // Use body file to avoid command line argument issues
+            execSync([
+                'gh', 'pr', 'create',
+                '--title', prTitle,
+                '--body-file', tempFile,
+                '--label', 'changelog:skip',
+                '--head', branchName
+            ], { stdio: 'inherit' });
+            
+            logSuccess('GitHub pull request created successfully');
+        } finally {
+            // Clean up temporary file
+            if (fs.existsSync(tempFile)) {
+                fs.unlinkSync(tempFile);
+            }
+        }
     } catch (error) {
         logError(`Failed to create pull request: ${error.message}`);
         logWarning('You can create the PR manually using GitHub CLI or web interface');
