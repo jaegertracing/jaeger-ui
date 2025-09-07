@@ -117,7 +117,7 @@ const MultiTagSelector = ({ service, onChange, disabled = false, value = '' }) =
           <Col key={attribute.name}>
             <h2 className="tag-selector-header">{attribute.label}</h2>
             <SearchableSelect
-              placeholder={`Select ${attribute.label.toLowerCase()}`}
+              placeholder={`Select`}
               value={selectedValues[attribute.name] || undefined}
               onChange={val => handleValueChange(attribute.name, val)}
               loading={loading[attribute.name]}
