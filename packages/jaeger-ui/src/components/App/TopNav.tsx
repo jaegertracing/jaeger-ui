@@ -110,7 +110,7 @@ function isItem(itemOrGroup: ConfigMenuItem | ConfigMenuGroup): itemOrGroup is C
 const itemsGlobalLeft: MenuProps['items'] = [
   {
     label: (
-      <Link to={prefixUrl('/')} style={{ fontSize: '14px', fontWeight: 500 }}>
+      <Link to={prefixUrl('/')} style={{ fontSize: '14px', fontWeight: 500, outline: 'revert' }}>
         JAEGER UI
       </Link>
     ),
