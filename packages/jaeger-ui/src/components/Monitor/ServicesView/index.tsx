@@ -209,15 +209,25 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
       store.set('lastAtmSearchService', currentService);
       store.set('lastAtmSearchTags', selectedTags);
 
-      const metricQueryPayload = {
+      const metricQueryPayload: MetricsAPIQueryParams = {
         quantile: 0.95,
         endTs: newEndTime,
         lookback: selectedTimeFrame,
         step: 60 * 1000,
         ratePer: 10 * 60 * 1000,
         spanKind: selectedSpanKind,
-        ...(selectedTags && { tag: selectedTags }),
       };
+
+      // Add tags parameter based on format
+      if (selectedTags) {
+        if (selectedTags.startsWith('{') && selectedTags.endsWith('}')) {
+          // It's JSON format, use 'tags' parameter
+          (metricQueryPayload as any).tags = selectedTags;
+        } else {
+          // It's key:value format, use 'tag' parameter
+          (metricQueryPayload as any).tag = selectedTags;
+        }
+      }
 
       fetchAllServiceMetrics(currentService, metricQueryPayload);
       fetchAggregatedServiceMetrics(currentService, metricQueryPayload);
