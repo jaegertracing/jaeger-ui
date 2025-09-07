@@ -29,9 +29,20 @@ const MultiTagSelector = ({ service, onChange, disabled = false, value = '' }) =
   const valueAsObject = useMemo(() => {
     if (!value || typeof value !== 'string') return {};
 
+    // Try to parse as JSON first
+    if (value.startsWith('{') && value.endsWith('}')) {
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        console.error('Failed to parse tag JSON', e);
+        // Fall back to space-delimited format if JSON parsing fails
+      }
+    }
+
+    // Parse as space-delimited key:value pairs
     const obj = {};
     value.split(' ').forEach(pair => {
-      const [key, val] = pair.split('=');
+      const [key, val] = pair.split(':');
       if (key && val) {
         obj[key] = val;
       }
@@ -95,12 +106,21 @@ const MultiTagSelector = ({ service, onChange, disabled = false, value = '' }) =
         delete newSelectedValues[attributeName];
       }
 
-      // Convert to tag string format
-      const tagString = Object.entries(newSelectedValues)
-        .map(([key, val]) => `${key}=${val}`)
-        .join(' ');
+      // Format based on number of tags
+      const tagCount = Object.keys(newSelectedValues).length;
 
-      onChange(tagString);
+      if (tagCount === 0) {
+        // No tags selected
+        onChange('');
+      } else if (tagCount === 1) {
+        // Single tag: use simple format key:value
+        const [key, val] = Object.entries(newSelectedValues)[0];
+        onChange(`${key}:${val}`);
+      } else {
+        // Multiple tags: use JSON format
+        const jsonString = JSON.stringify(newSelectedValues);
+        onChange(jsonString);
+      }
 
       return newSelectedValues;
     });
