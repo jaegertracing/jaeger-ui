@@ -144,7 +144,14 @@ export function TopNavImpl(props: Props) {
           NAV_LINKS.map(({ matches, to, text }) => {
             const url = typeof to === 'string' ? to : to(props);
             const key = matches(pathname) ? pathname : url;
-            return { key, label: <Link to={url}>{text}</Link> };
+            return {
+              key,
+              label: (
+                <Link style={{ outline: 'revert' }} to={url}>
+                  {text}
+                </Link>
+              ),
+            };
           })
         )}
         className="Menu--item"
