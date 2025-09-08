@@ -99,6 +99,23 @@ export function spanContainsErredSpan(spans: Span[], parentSpanIndex: number) {
 }
 
 /**
+ * Collect the spanIDs of all descendant spans that contain an error tag.
+ * Descendants are spans after parentSpanIndex with strictly greater depth
+ * until depth drops back to parent's depth or less.
+ */
+export function getDescendantErroredSpanIDs(spans: Span[], parentSpanIndex: number): string[] {
+  const erroredIds: string[] = [];
+  const { depth } = spans[parentSpanIndex];
+  let i = parentSpanIndex + 1;
+  for (; i < spans.length && spans[i].depth > depth; i++) {
+    if (isErrorSpan(spans[i])) {
+      erroredIds.push(spans[i].spanID);
+    }
+  }
+  return erroredIds;
+}
+
+/**
  * Expects the first span to be the parent span.
  */
 export function findServerChildSpan(spans: Span[]) {

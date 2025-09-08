@@ -53,6 +53,8 @@ type SpanBarRowProps = {
       }
     | TNil;
   showErrorIcon: boolean;
+  hasOwnError: boolean;
+  bubbledErrorIds: string[];
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
   span: Span;
@@ -95,6 +97,8 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       rpc,
       noInstrumentedServer,
       showErrorIcon,
+      hasOwnError,
+      bubbledErrorIds,
       getViewedBounds,
       traceStartTime,
       span,
@@ -150,7 +154,25 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
               <span
                 className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
               >
-                {showErrorIcon && <IoAlert className="SpanBarRow--errorIcon" />}
+                {showErrorIcon &&
+                  (hasOwnError ? (
+                    <IoAlert className="SpanBarRow--errorIcon" />
+                  ) : (
+                    <a
+                      className="SpanBarRow--bubbledErrorPill"
+                      role="button"
+                      title="Click to navigate to descendant error span(s)"
+                      onClick={e => {
+                        e.stopPropagation();
+                        if (bubbledErrorIds && bubbledErrorIds.length) {
+                          // Join IDs with spaces to OR-match via filter logic
+                          focusSpan(bubbledErrorIds.join(' '));
+                        }
+                      }}
+                    >
+                      <IoAlert className="SpanBarRow--bubbledErrorIcon" />
+                    </a>
+                  ))}
                 {serviceName}{' '}
                 {rpc && (
                   <span>
