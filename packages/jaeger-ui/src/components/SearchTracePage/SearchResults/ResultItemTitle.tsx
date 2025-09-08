@@ -63,6 +63,7 @@ export default function ResultItemTitle({
     toggleComparison(traceID, isInDiffCohort);
   }, [toggleComparison, traceID, isInDiffCohort]);
 
+  // Use a div when the ResultItemTitle doesn't link to anything
   let WrapperComponent: string | typeof Link = 'div';
   const wrapperProps: Record<string, any> = {
     className: 'ResultItemTitle--item ub-flex-auto',
