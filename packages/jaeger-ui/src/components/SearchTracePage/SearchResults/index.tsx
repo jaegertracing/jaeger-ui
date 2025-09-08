@@ -259,10 +259,4 @@ export function UnconnectedSearchResults(props: SearchResultsProps) {
   );
 }
 
-UnconnectedSearchResults.defaultProps = {
-  skipMessage: false,
-  spanLinks: undefined,
-  queryOfResults: undefined,
-};
-
 export default withRouteProps(UnconnectedSearchResults);
