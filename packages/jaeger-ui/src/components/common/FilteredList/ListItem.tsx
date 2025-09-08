@@ -15,13 +15,14 @@
 import React, { useCallback, useMemo } from 'react';
 import { Checkbox } from 'antd';
 import cx from 'classnames';
-import { ListChildComponentProps } from 'react-window';
 
 import highlightMatches from './highlightMatches';
 
 import './ListItem.css';
 
-interface IListItemProps extends ListChildComponentProps {
+interface IListItemProps {
+  index: number;
+  style?: React.CSSProperties;
   data: {
     addValues?: (values: string[]) => void;
     focusedIndex: number | null;
@@ -60,7 +61,7 @@ const ListItem: React.FC<IListItemProps> = React.memo(props => {
     }
   }, [multi, addValues, removeValues, isSelected, value, setValue]);
 
-  const { width: _, ...style } = styleOrig;
+  const { width, ...style } = styleOrig || {};
 
   const cls = cx('FilteredList--ListItem', {
     'is-focused': index === focusedIndex,

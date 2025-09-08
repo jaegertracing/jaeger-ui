@@ -20,37 +20,24 @@ import { Key as EKey } from 'ts-key-enum';
 
 import FilteredList from './index';
 
-jest.mock('react-window', () => {
+jest.mock('@tanstack/react-virtual', () => {
   const React = jest.requireActual('react');
   return {
-    FixedSizeList: ({ children, itemData, itemCount, onItemsRendered, onScroll }) => {
+    useVirtualizer: ({ count }) => {
       const items = [];
-      for (let i = 0; i < itemCount; i++) {
-        items.push(
-          React.createElement(children, {
-            key: i,
-            index: i,
-            data: itemData,
-            style: { height: 35 },
-          })
-        );
+      for (let i = 0; i < Math.min(count, 11); i++) {
+        items.push({
+          key: i,
+          index: i,
+          start: i * 35,
+          size: 35,
+        });
       }
-      React.useEffect(() => {
-        if (onItemsRendered) {
-          onItemsRendered({
-            visibleStartIndex: 0,
-            visibleStopIndex: Math.min(itemCount - 1, 10),
-          });
-        }
-      }, [itemCount, onItemsRendered]);
-      return React.createElement(
-        'div',
-        {
-          'data-testid': 'virtual-list',
-          onScroll: onScroll ? () => onScroll({ scrollUpdateWasRequested: false }) : undefined,
-        },
-        items
-      );
+      return {
+        getVirtualItems: () => items,
+        getTotalSize: () => count * 35,
+        scrollToIndex: jest.fn(),
+      };
     },
   };
 });
@@ -108,7 +95,7 @@ describe('<FilteredList>', () => {
   it('renders without exploding', () => {
     render(<FilteredList {...props} />);
     expect(screen.getByPlaceholderText('Filter...')).toBeInTheDocument();
-    expect(screen.getByTestId('virtual-list')).toBeInTheDocument();
+    expect(screen.getByText(words[0])).toBeInTheDocument();
   });
 
   it('puts the focus on the input on update', async () => {
@@ -401,7 +388,7 @@ describe('<FilteredList>', () => {
       await waitFor(() => {
         expect(screen.getAllByTestId(/^list-item-/)[0]).toHaveAttribute('data-focused', 'true');
       });
-      fireEvent.scroll(screen.getByTestId('virtual-list'));
+      fireEvent.scroll(screen.getByText(words[0]).closest('.FilteredList--list'));
       jest.runAllTimers();
       await waitFor(() => {
         screen.getAllByTestId(/^list-item-/).forEach(item => {
