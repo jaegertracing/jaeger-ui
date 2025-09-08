@@ -399,4 +399,22 @@ describe('<FilteredList>', () => {
       jest.useRealTimers();
     }
   });
+
+  describe('ref methods', () => {
+    it('exposes focusInput method via ref', () => {
+      const ref = React.createRef();
+      render(<FilteredList {...props} ref={ref} />);
+
+      expect(ref.current.focusInput).toBeDefined();
+      expect(typeof ref.current.focusInput).toBe('function');
+    });
+  });
+
+  describe('virtual list', () => {
+    it('renders list items with virtualization', () => {
+      render(<FilteredList {...props} />);
+      expect(screen.getByText(words[0])).toBeInTheDocument();
+      expect(screen.getByText(numbers[0])).toBeInTheDocument();
+    });
+  });
 });
