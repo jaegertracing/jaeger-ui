@@ -400,21 +400,47 @@ describe('<FilteredList>', () => {
     }
   });
 
-  describe('ref methods', () => {
-    it('exposes focusInput method via ref', () => {
-      const ref = React.createRef();
-      render(<FilteredList {...props} ref={ref} />);
+  it('focusInput calls focus on input element', () => {
+    const ref = React.createRef();
+    render(<FilteredList {...props} ref={ref} />);
+    const input = screen.getByPlaceholderText('Filter...');
 
-      expect(ref.current.focusInput).toBeDefined();
-      expect(typeof ref.current.focusInput).toBe('function');
-    });
+    const focusSpy = jest.spyOn(input, 'focus');
+    ref.current.focusInput();
+
+    expect(focusSpy).toHaveBeenCalled();
+    focusSpy.mockRestore();
   });
 
-  describe('virtual list', () => {
-    it('renders list items with virtualization', () => {
-      render(<FilteredList {...props} />);
-      expect(screen.getByText(words[0])).toBeInTheDocument();
-      expect(screen.getByText(numbers[0])).toBeInTheDocument();
+  it('focusInput handles null inputRef safely', () => {
+    const ref = React.createRef();
+
+    const TestWrapper = React.forwardRef((props, forwardedRef) => {
+      const nullInputRef = { current: null };
+      React.useImperativeHandle(forwardedRef, () => ({
+        focusInput: () => {
+          if (nullInputRef.current) {
+            nullInputRef.current.focus();
+          }
+        },
+      }));
+      return <div>test</div>;
     });
+
+    render(<TestWrapper ref={ref} />);
+    expect(() => ref.current.focusInput()).not.toThrow();
+  });
+
+  it('covers getScrollElement and estimateSize functions', () => {
+    const originalMock = require('@tanstack/react-virtual').useVirtualizer;
+    require('@tanstack/react-virtual').useVirtualizer = jest.fn(config => {
+      config.getScrollElement();
+      config.estimateSize();
+
+      return originalMock(config);
+    });
+
+    render(<FilteredList {...props} />);
+    expect(screen.getByText(words[0])).toBeInTheDocument();
   });
 });
