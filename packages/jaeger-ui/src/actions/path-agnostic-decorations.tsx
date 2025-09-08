@@ -73,7 +73,7 @@ export function getDecoration(
 
   pendingCount = pendingCount ? pendingCount + 1 : 1;
   const { summaryUrl, opSummaryUrl, summaryPath, opSummaryPath } = schema;
-  let promise: Promise<Record<string, any>>;
+  let promise: Promise<Record<string, unknown>>;
   let getPath: string;
   let setPath: string;
   if (opSummaryPath && opSummaryUrl && operation) {
@@ -103,7 +103,6 @@ export function getDecoration(
         // istanbul ignore next : Unreachable error to appease TS, resolve made to exist at top at function
         else throw new Error('`resolve` unexpectedly undefined');
 
-        // eslint-disable-next-line no-multi-assign
         doneCount = pendingCount = pendingData = pendingPromise = resolve = undefined;
       }
     });
@@ -116,7 +115,10 @@ const fullActions = createActions<Promise<TNewData> | undefined>({
   [actionTypes.GET_DECORATION]: getDecoration,
 });
 
-export default (fullActions as any).jaegerUi.pathAgnosticDecorations as Record<
-  string,
-  ActionFunctionAny<Action<Promise<TNewData> | undefined>>
->;
+export default (
+  fullActions as unknown as {
+    jaegerUi: {
+      pathAgnosticDecorations: Record<string, ActionFunctionAny<Action<Promise<TNewData> | undefined>>>;
+    };
+  }
+).jaegerUi.pathAgnosticDecorations;

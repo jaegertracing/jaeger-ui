@@ -15,11 +15,18 @@
 import transformTraceData from '../../../model/transform-trace-data';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
-const testTraceNormal = require('./tableValuesTestTrace/testTraceNormal.json');
-const traceSpanAmongEachOther = require('./tableValuesTestTrace/spansAmongEachOther.json');
-const traceSpanAmongEachOtherGrouped = require('./tableValuesTestTrace/spansAmongEachOtherGrouped.json');
-const traceSpanAmongEachOtherGroupedAndSpans = require('./tableValuesTestTrace/spanAmongEachOtherGroupedAndSpans.json');
-const traceSpanLongerAsParent = require('./tableValuesTestTrace/spanLongerAsParent.json');
+import testTraceNormal from './tableValuesTestTrace/testTraceNormal.json';
+import traceSpanAmongEachOther from './tableValuesTestTrace/spansAmongEachOther.json';
+import traceSpanAmongEachOtherGrouped from './tableValuesTestTrace/spansAmongEachOtherGrouped.json';
+import traceSpanAmongEachOtherGroupedAndSpans from './tableValuesTestTrace/spanAmongEachOtherGroupedAndSpans.json';
+import traceSpanLongerAsParent from './tableValuesTestTrace/spanLongerAsParent.json';
+import traceWithOverlappingChildrenLongerThanParent from './tableValuesTestTrace/traceWithOverlappingChildrenLongerThanParent.json';
+import traceWithTwoNonOverlappingChildren from './tableValuesTestTrace/traceWithTwoNonOverlappingChildren.json';
+import traceWithOverlappingChildren from './tableValuesTestTrace/traceWithOverlappingChildren.json';
+import traceWithSingleChildLongerThanParentAndStartsAfterParent from './tableValuesTestTrace/traceWithSingleChildLongerThanParentAndStartsAfterParent.json';
+import traceWithThreeShortChildren from './tableValuesTestTrace/traceWithThreeShortChildren.json';
+import traceWithTwoChildrenStartedAtTraceStart from './tableValuesTestTrace/traceWithTwoChildrenStartedAtTraceStart.json';
+import traceWithMultipleSpansWithTheSameValueInDifferentTags from './tableValuesTestTrace/traceWithMultipleSpansWithTheSameValueInDifferentTags.json';
 
 const transformedTrace = transformTraceData(testTraceNormal);
 const transformedTraceSpanAmongEachOthe = transformTraceData(traceSpanAmongEachOther);
@@ -28,8 +35,46 @@ const transformedTraceSpanAmongEachOtheGroupedAndSpans = transformTraceData(
   traceSpanAmongEachOtherGroupedAndSpans
 );
 const transformedTraceSpanLongerAsParent = transformTraceData(traceSpanLongerAsParent);
+const transformedTraceWithOverlappingChildrenLongerThanParent = transformTraceData(
+  traceWithOverlappingChildrenLongerThanParent
+);
+const transformedTraceWithTwoNonOverlappingChildren = transformTraceData(traceWithTwoNonOverlappingChildren);
+const transformedTraceWithOverlappingChildren = transformTraceData(traceWithOverlappingChildren);
+const transformedtraceWithSingleChildLongerThanParentAndStartsAfterParent = transformTraceData(
+  traceWithSingleChildLongerThanParentAndStartsAfterParent
+);
+const transformedTraceWithThreeShortChildren = transformTraceData(traceWithThreeShortChildren);
+const transformedTraceWithTwoChildrenStartedAtTraceStart = transformTraceData(
+  traceWithTwoChildrenStartedAtTraceStart
+);
+
+const transformedTraceWithMultipleSpansWithTheSameValueInDifferentTags = transformTraceData(
+  traceWithMultipleSpansWithTheSameValueInDifferentTags
+);
 
 describe('tableValues', () => {
+  it("getColumnValuesSecondDropdown doesn't return duplicated data when input contains details", () => {
+    let resultArray = getColumnValues('Service Name', transformedTrace);
+
+    resultArray = getColumnValuesSecondDropdown(
+      resultArray,
+      'Service Name',
+      'Operation Name',
+      transformedTrace
+    );
+
+    expect(resultArray.length).toBe(6);
+
+    resultArray = getColumnValuesSecondDropdown(
+      resultArray,
+      'Service Name',
+      'Operation Name',
+      transformedTrace
+    );
+
+    expect(resultArray.length).toBe(6);
+  });
+
   it('get values only first nameSelector is selected (Service Name)', () => {
     const resultArray = getColumnValues('Service Name', transformedTrace);
 
@@ -433,6 +478,28 @@ describe('tableValues', () => {
     expect(resultArray[3].selfMax).toBe(2.4);
     expect(resultArray[3].percent).toBe(98.51);
   });
+
+  it('returns allTableValues when second dropdown is not a tag (falls through)', () => {
+    const first = getColumnValues('Operation Name', transformedTrace);
+    const afterSecond = getColumnValuesSecondDropdown(
+      first,
+      'Operation Name',
+      'Service Name',
+      transformedTrace
+    );
+
+    expect(afterSecond.some(r => String(r.name).startsWith('Without Tag: '))).toBe(false);
+
+    expect(Array.isArray(afterSecond)).toBe(true);
+    expect(afterSecond.length).toBeGreaterThan(0);
+  });
+
+  it('returns first-dropdown values again when second dropdown is "Reset"', () => {
+    const first = getColumnValues('Service Name', transformedTrace);
+    const resetResult = getColumnValuesSecondDropdown(first, 'Service Name', 'Reset', transformedTrace);
+
+    expect(resetResult).toEqual(getColumnValues('Service Name', transformedTrace));
+  });
 });
 
 describe('check self time', () => {
@@ -449,7 +516,7 @@ describe('check self time', () => {
     expect(resultArray[4].selfTotal).toBe(1.67);
   });
 
-  it('spans among each other', () => {
+  it('spans among each other grouped', () => {
     let resultArray = getColumnValues('Service Name', transformedTraceSpanAmongEachOtheGrouped);
     resultArray = getColumnValuesSecondDropdown(
       resultArray,
@@ -481,5 +548,92 @@ describe('check self time', () => {
     );
 
     expect(resultArray[2].selfTotal).toBe(1.22);
+  });
+
+  it('span with two overlapping children longer than their parent and a third short child span', () => {
+    const [serviceOne] = getColumnValues(
+      'Service Name',
+      transformedTraceWithOverlappingChildrenLongerThanParent
+    );
+    expect(serviceOne.selfTotal).toBe(0.03);
+  });
+
+  it('span with two children that do not overlap and one is longer than its parent', () => {
+    const [serviceOne] = getColumnValues('Service Name', transformedTraceWithTwoNonOverlappingChildren);
+    expect(serviceOne.selfTotal).toBe(0.03);
+  });
+
+  it('span with two overlapping children where one is longer than its parent', () => {
+    const [serviceOne] = getColumnValues('Service Name', transformedTraceWithOverlappingChildren);
+    expect(serviceOne.selfTotal).toBe(0);
+  });
+
+  it('span with single child span longer than its parent', () => {
+    const [serviceOne] = getColumnValues(
+      'Service Name',
+      transformedtraceWithSingleChildLongerThanParentAndStartsAfterParent
+    );
+    expect(serviceOne.selfTotal).toBe(0.04);
+  });
+
+  it('span with three children shorter than their parent, two of which overlap', () => {
+    const [serviceOne] = getColumnValues('Service Name', transformedTraceWithThreeShortChildren);
+    expect(serviceOne.selfTotal).toBe(0.01);
+  });
+
+  it('span with two children started at trace start time', () => {
+    const [serviceOne] = getColumnValues('Service Name', transformedTraceWithTwoChildrenStartedAtTraceStart);
+    expect(serviceOne.selfTotal).toBe(0);
+  });
+
+  it('two spans with different tags and the same value, spans without app.test should be in other group', () => {
+    const resultArray = getColumnValues(
+      'app.test',
+      transformedTraceWithMultipleSpansWithTheSameValueInDifferentTags
+    );
+
+    const appTestGroup = resultArray[0];
+    const otherGroup = resultArray[1];
+
+    expect(appTestGroup.count).toBe(2);
+    expect(otherGroup.count).toBe(2);
+    expect(resultArray.length).toBe(2);
+  });
+
+  it('two spans with different tags and the same value, second dropdown', () => {
+    const resultArray = getColumnValues(
+      'app.test',
+      transformedTraceWithMultipleSpansWithTheSameValueInDifferentTags
+    );
+
+    const resultArraySecondGroupBy = getColumnValuesSecondDropdown(
+      resultArray,
+      'app.test',
+      'Operation Name',
+      transformedTraceWithMultipleSpansWithTheSameValueInDifferentTags
+    );
+
+    const detailsWithAppTestTag = resultArraySecondGroupBy.filter(x => x.isDetail);
+    expect(detailsWithAppTestTag.length).toBe(2);
+    expect(resultArraySecondGroupBy.length).toBe(4);
+  });
+
+  it('two spans with different tags and the same value, second dropdown with tag', () => {
+    const resultArray = getColumnValues(
+      'app.test',
+      transformedTraceWithMultipleSpansWithTheSameValueInDifferentTags
+    );
+
+    const resultArraySecondGroupBy = getColumnValuesSecondDropdown(
+      resultArray,
+      'app.test',
+      'app.test-group2',
+      transformedTraceWithMultipleSpansWithTheSameValueInDifferentTags
+    );
+
+    const detailsWithAppTestTag = resultArraySecondGroupBy.filter(x => x.isDetail);
+    expect(detailsWithAppTestTag.length).toBe(1);
+    expect(detailsWithAppTestTag[0].count).toBe(1);
+    expect(resultArraySecondGroupBy.length).toBe(3);
   });
 });

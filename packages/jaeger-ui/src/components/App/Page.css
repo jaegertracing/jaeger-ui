@@ -19,7 +19,7 @@ limitations under the License.
   padding: 0;
   position: fixed;
   width: 100%;
-  z-index: 3;
+  z-index: 11;
 }
 
 .Page--content {
@@ -29,5 +29,12 @@ limitations under the License.
   min-height: calc(100% - var(--nav-height));
   position: absolute;
   right: 0;
+}
+
+.Page--content--no-embedded {
   top: var(--nav-height);
+}
+
+.ant-menu-item:hover {
+  background-color: transparent !important;
 }

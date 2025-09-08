@@ -171,7 +171,7 @@ describe('deepDependencyGraph reducers', () => {
     const multiPayload = {
       ...meta.query,
       visibilityIndices,
-      viewModifier: EViewModifier.Emphasized | EViewModifier.Selected, // eslint-disable-line no-bitwise
+      viewModifier: EViewModifier.Emphasized | EViewModifier.Selected,
     };
     const multiViewModifierMap = new Map();
     visibilityIndices.forEach(idx => multiViewModifierMap.set(idx, multiPayload.viewModifier));
@@ -241,6 +241,7 @@ describe('deepDependencyGraph reducers', () => {
           state: fetchedState.DONE,
           viewModifiers: new Map(),
         };
+
         const { operation: _op, ...emphasizedPayloadWithoutOp } = emphasizedPayload;
         const newState = addViewModifier(operationlessDoneState, emphasizedPayloadWithoutOp);
         const expected = _cloneDeep(operationlessDoneState);

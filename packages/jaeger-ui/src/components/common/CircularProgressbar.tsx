@@ -26,19 +26,25 @@ type TProps = {
   value: number;
 };
 
-export default class CircularProgressbar extends React.PureComponent<TProps> {
-  render() {
-    const { backgroundHue, decorationHue = 0, maxValue, strokeWidth, text, value } = this.props;
-    const scale = (value / maxValue) ** (1 / 4);
-    const saturation = 20 + Math.ceil(scale * 80);
-    const light = 50 + Math.ceil((1 - scale) * 30);
-    const decorationColor = `hsl(${decorationHue}, ${saturation}%, ${light}%)`;
-    const backgroundScale = ((maxValue - value) / maxValue) ** (1 / 4);
-    const backgroundSaturation = 20 + Math.ceil(backgroundScale * 80);
-    const backgroundLight = 50 + Math.ceil((1 - backgroundScale) * 30);
-    const decorationBackgroundColor = `hsl(${backgroundHue}, ${backgroundSaturation}%, ${backgroundLight}%)`;
+const CircularProgressbar: React.FC<TProps> = ({
+  backgroundHue,
+  decorationHue = 0,
+  maxValue,
+  strokeWidth,
+  text,
+  value,
+}) => {
+  const scale = (value / maxValue) ** (1 / 4);
+  const saturation = 20 + Math.ceil(scale * 80);
+  const light = 50 + Math.ceil((1 - scale) * 30);
+  const decorationColor = `hsl(${decorationHue}, ${saturation}%, ${light}%)`;
+  const backgroundScale = ((maxValue - value) / maxValue) ** (1 / 4);
+  const backgroundSaturation = 20 + Math.ceil(backgroundScale * 80);
+  const backgroundLight = 50 + Math.ceil((1 - backgroundScale) * 30);
+  const decorationBackgroundColor = `hsl(${backgroundHue}, ${backgroundSaturation}%, ${backgroundLight}%)`;
 
-    return (
+  return (
+    <div data-testid="circular-progress-bar">
       <CircularProgressbarImpl
         styles={{
           path: {
@@ -58,6 +64,8 @@ export default class CircularProgressbar extends React.PureComponent<TProps> {
         text={text}
         value={value}
       />
-    );
-  }
-}
+    </div>
+  );
+};
+
+export default CircularProgressbar;

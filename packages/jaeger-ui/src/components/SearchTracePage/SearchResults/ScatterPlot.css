@@ -14,10 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.TraceResultsScatterPlot .rv-xy-plot__series.rv-xy-plot__series--mark {
-  cursor: pointer;
-}
-
 .scatter-plot-hint {
   color: #444;
   background: #f8f8f8;
@@ -25,4 +21,24 @@ limitations under the License.
   border-radius: 3px;
   padding: 0.5em;
   margin: 0.5em;
+  min-width: 200px;
+}
+
+.scatter-plot-hint h4 {
+  margin: 0 0 0.5em 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.scatter-plot-hint-stats {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.scatter-plot-hint-stats div {
+  margin-bottom: 0.25em;
+}
+
+.scatter-plot-hint-stats div:last-child {
+  margin-bottom: 0;
 }

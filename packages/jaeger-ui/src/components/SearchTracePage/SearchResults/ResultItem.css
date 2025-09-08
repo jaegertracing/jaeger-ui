@@ -27,4 +27,15 @@ limitations under the License.
 .ResultItem--serviceTag {
   border-left-width: 15px;
   margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.ResultItem--errorIcon {
+  background: #db2828;
+  border-radius: 6.5px;
+  color: #fff;
+  font-size: 0.85em;
+  margin-right: 0.25rem;
+  padding: 1px;
 }

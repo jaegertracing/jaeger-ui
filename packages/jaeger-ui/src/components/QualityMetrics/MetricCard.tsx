@@ -33,65 +33,64 @@ const dividToFixedFloorPercentage = (pass: number, fail: number) => {
   return `${str.substring(0, str.indexOf('.') + 2)}%`;
 };
 
-export default class MetricCard extends React.PureComponent<TProps> {
-  render() {
-    const {
-      metric: {
-        name,
-        description,
-        metricDocumentationLink,
-        passCount,
-        passExamples,
-        failureCount,
-        failureExamples,
-        exemptionCount,
-        exemptionExamples,
-        details,
-      },
-    } = this.props;
-    return (
-      <div className="MetricCard">
-        <div className="MetricCard--CircularProgressbarWrapper">
-          <CircularProgressbar
-            backgroundHue={passCount === 0 ? 0 : undefined}
-            decorationHue={passCount === 0 ? 0 : 120}
-            maxValue={passCount + failureCount}
-            text={dividToFixedFloorPercentage(passCount, failureCount)}
-            value={passCount}
-          />
-        </div>
-        <div className="MetricCard--Body">
-          <span className="MetricCard--TitleHeader">
-            {name}{' '}
-            <Tooltip arrowPointAtCenter title="Metric Documentation">
-              <a href={metricDocumentationLink} target="_blank" rel="noreferrer noopener">
-                <NewWindowIcon />
-              </a>
-            </Tooltip>
-          </span>
-          <p className="MetricCard--Description">{description}</p>
-          <div className="MetricCard--CountsWrapper">
-            <CountCard count={passCount} examples={passExamples} title="Passing" />
-            <CountCard count={failureCount} examples={failureExamples} title="Failing" />
-            <CountCard count={exemptionCount} examples={exemptionExamples} title="Exemptions" />
-          </div>
-          {details &&
-            details.map(
-              detail =>
-                Boolean(detail.rows && detail.rows.length) && (
-                  <DetailsCard
-                    key={`${detail.description}${JSON.stringify(detail.columns)}`}
-                    className="MetricCard--Details"
-                    collapsible
-                    columnDefs={detail.columns}
-                    description={detail.description}
-                    details={detail.rows}
-                    header={detail.header || 'Details'}
-                  />
-                )
-            )}
-        </div>
+const MetricCard: React.FC<TProps> = ({ metric }) => {
+  const {
+    name,
+    description,
+    metricDocumentationLink,
+    passCount,
+    passExamples,
+    failureCount,
+    failureExamples,
+    exemptionCount,
+    exemptionExamples,
+    details,
+  } = metric;
+
+  return (
+    <div className="MetricCard">
+      <div className="MetricCard--CircularProgressbarWrapper">
+        <CircularProgressbar
+          backgroundHue={passCount === 0 ? 0 : undefined}
+          decorationHue={passCount === 0 ? 0 : 120}
+          maxValue={passCount + failureCount}
+          text={dividToFixedFloorPercentage(passCount, failureCount)}
+          value={passCount}
+        />
       </div>
-    );
-  }
-}
+      <div className="MetricCard--Body">
+        <span className="MetricCard--TitleHeader">
+          {name}{' '}
+          <Tooltip arrow={{ pointAtCenter: true }} title="Metric Documentation">
+            <a href={metricDocumentationLink} target="_blank" rel="noreferrer noopener">
+              <NewWindowIcon />
+            </a>
+          </Tooltip>
+        </span>
+        <p className="MetricCard--Description">{description}</p>
+        <div className="MetricCard--CountsWrapper">
+          <CountCard count={passCount} examples={passExamples} title="Passing" />
+          <CountCard count={failureCount} examples={failureExamples} title="Failing" />
+          <CountCard count={exemptionCount} examples={exemptionExamples} title="Exemptions" />
+        </div>
+        {details &&
+          details.map(
+            detail =>
+              Boolean(detail.rows && detail.rows.length) && (
+                <DetailsCard
+                  key={`${detail.description}${JSON.stringify(detail.columns)}`}
+                  className="MetricCard--Details"
+                  collapsible
+                  columnDefs={detail.columns}
+                  description={detail.description}
+                  details={detail.rows}
+                  header={detail.header || 'Details'}
+                />
+              )
+          )}
+      </div>
+    </div>
+  );
+};
+
+export default React.memo(MetricCard);

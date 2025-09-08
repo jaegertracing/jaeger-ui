@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
-import { Popover } from 'antd';
+import React, { useState } from 'react';
+import { Popover, Tooltip } from 'antd';
 import _groupBy from 'lodash/groupBy';
-import { onlyUpdateForKeys, compose, withState, withProps } from 'recompose';
 
 import AccordianLogs from './SpanDetail/AccordianLogs';
 
 import { ViewedBoundsFunctionType } from './utils';
 import { TNil } from '../../../types';
-import { Span } from '../../../types/trace';
+import { Span, criticalPathSection } from '../../../types/trace';
 
 import './SpanBar.css';
 
@@ -30,6 +29,7 @@ type TCommonProps = {
   hintSide: string;
   // onClick: (evt: React.MouseEvent<any>) => void;
   onClick?: (evt: React.MouseEvent<any>) => void;
+  criticalPath: criticalPathSection[];
   viewEnd: number;
   viewStart: number;
   getViewedBounds: ViewedBoundsFunctionType;
@@ -42,37 +42,72 @@ type TCommonProps = {
     | TNil;
   traceStartTime: number;
   span: Span;
-};
-
-type TInnerProps = {
-  label: string;
-  setLongLabel: () => void;
-  setShortLabel: () => void;
-} & TCommonProps;
-
-type TOuterProps = {
   longLabel: string;
   shortLabel: string;
-} & TCommonProps;
+  traceDuration: number;
+};
 
 function toPercent(value: number) {
   return `${(value * 100).toFixed(1)}%`;
 }
 
-function SpanBar(props: TInnerProps) {
+function toPercentInDecimal(value: number) {
+  return `${value * 100}%`;
+}
+
+function SpanBarCriticalPath(props: { criticalPathViewStart: number; criticalPathViewEnd: number }) {
+  const [shouldLoadTooltip, setShouldLoadTooltip] = useState(false);
+
+  const criticalPath = (
+    <div
+      data-testid="SpanBar--criticalPath"
+      className="SpanBar--criticalPath"
+      onMouseEnter={() => setShouldLoadTooltip(true)}
+      style={{
+        background: 'black',
+        left: toPercentInDecimal(props.criticalPathViewStart),
+        width: toPercentInDecimal(props.criticalPathViewEnd - props.criticalPathViewStart),
+      }}
+    />
+  );
+
+  // Load tooltip only when hovering over critical path segment
+  // to reduce initial load time of trace page by ~300ms for 500 spans
+  if (shouldLoadTooltip) {
+    return (
+      <Tooltip
+        placement="top"
+        // defaultOpen is needed to show the tooltip when shouldLoadTooltip changes to true
+        defaultOpen
+        title={
+          <div>
+            A segment on the <em>critical path</em> of the overall trace/request/workflow.
+          </div>
+        }
+      >
+        {criticalPath}
+      </Tooltip>
+    );
+  }
+
+  return criticalPath;
+}
+
+function SpanBar(props: TCommonProps) {
   const {
+    criticalPath,
     viewEnd,
     viewStart,
     getViewedBounds,
     color,
-    label,
     hintSide,
     onClick,
-    setLongLabel,
-    setShortLabel,
     rpc,
     traceStartTime,
     span,
+    shortLabel,
+    longLabel,
+    traceDuration,
   } = props;
   // group logs based on timestamps
   const logGroups = _groupBy(span.logs, log => {
@@ -80,6 +115,16 @@ function SpanBar(props: TInnerProps) {
     // round to the nearest 0.2%
     return toPercent(Math.round(posPercent * 500) / 500);
   });
+
+  const [label, setLabel] = useState(shortLabel);
+
+  const setShortLabel = () => {
+    setLabel(shortLabel);
+  };
+
+  const setLongLabel = () => {
+    setLabel(longLabel);
+  };
 
   return (
     <div
@@ -104,8 +149,8 @@ function SpanBar(props: TInnerProps) {
         {Object.keys(logGroups).map(positionKey => (
           <Popover
             key={positionKey}
-            arrowPointAtCenter
-            overlayClassName="SpanBar--logHint"
+            arrow={{ pointAtCenter: true }}
+            classNames={{ root: 'SpanBar--logHint' }}
             placement="topLeft"
             content={
               <AccordianLogs
@@ -113,10 +158,16 @@ function SpanBar(props: TInnerProps) {
                 isOpen
                 logs={logGroups[positionKey]}
                 timestamp={traceStartTime}
+                currentViewRangeTime={[0, 1]}
+                traceDuration={traceDuration}
               />
             }
           >
-            <div className="SpanBar--logMarker" style={{ left: positionKey }} />
+            <div
+              data-testid="SpanBar--logMarker"
+              className="SpanBar--logMarker"
+              style={{ left: positionKey, zIndex: 3 }}
+            />
           </Popover>
         ))}
       </div>
@@ -130,25 +181,23 @@ function SpanBar(props: TInnerProps) {
           }}
         />
       )}
+      {criticalPath &&
+        criticalPath.map((each, index) => {
+          const critcalPathViewBounds = getViewedBounds(each.section_start, each.section_end);
+          const criticalPathViewStart = critcalPathViewBounds.start;
+          const criticalPathViewEnd = critcalPathViewBounds.end;
+          const key = `${each.spanId}-${index}`;
+
+          return (
+            <SpanBarCriticalPath
+              criticalPathViewStart={criticalPathViewStart}
+              criticalPathViewEnd={criticalPathViewEnd}
+              key={key}
+            />
+          );
+        })}
     </div>
   );
 }
 
-export default compose<TInnerProps, TOuterProps>(
-  withState('label', 'setLabel', (props: { shortLabel: string }) => props.shortLabel),
-  withProps(
-    ({
-      setLabel,
-      shortLabel,
-      longLabel,
-    }: {
-      setLabel: (label: string) => void;
-      shortLabel: string;
-      longLabel: string;
-    }) => ({
-      setLongLabel: () => setLabel(longLabel),
-      setShortLabel: () => setLabel(shortLabel),
-    })
-  ),
-  onlyUpdateForKeys(['label', 'rpc', 'viewStart', 'viewEnd'])
-)(SpanBar);
+export default SpanBar;

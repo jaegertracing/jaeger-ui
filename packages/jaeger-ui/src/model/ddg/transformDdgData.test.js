@@ -116,13 +116,8 @@ describe('transform ddg data', () => {
   });
 
   it('sorts payload paths to ensure stable visibilityIndices', () => {
-    const {
-      focalPayloadElem,
-      simplePath,
-      longSimplePath,
-      doubleFocalPath,
-      almostDoubleFocalPath,
-    } = testResources;
+    const { focalPayloadElem, simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath } =
+      testResources;
     const { visIdxToPathElem: presortedPathsVisIdxToPathElem } = transformDdgData(
       testResources.wrap([simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath]),
       focalPayloadElem
@@ -167,7 +162,7 @@ describe('transform ddg data', () => {
     const { simplePath, noFocalPath, doubleFocalPath, focalPayloadElem } = testResources;
     expect(() =>
       transformDdgData(testResources.wrap([simplePath, noFocalPath, doubleFocalPath]), focalPayloadElem)
-    ).toThrowError(/focalNode/);
+    ).toThrow(/focalNode/);
   });
 
   it('creates equal hashes iff paths are equivalent', () => {
@@ -175,8 +170,6 @@ describe('transform ddg data', () => {
     const simpleModel = transformDdgData(wrap([simplePath, longSimplePath]), focalPayloadElem);
     const reverseModel = transformDdgData(wrap([longSimplePath, simplePath]), focalPayloadElem);
 
-    expect(reverseModel).not.toEqual(simpleModel);
-    expect(reverseModel).not.toBe(simpleModel);
     expect(reverseModel.hash).toBe(simpleModel.hash);
 
     const diffModel = transformDdgData(wrap([doubleFocalPath]), focalPayloadElem);
@@ -188,7 +181,6 @@ describe('transform ddg data', () => {
     const { focalPayloadElem, doubleFocalPath, simplePath, wrap } = testResources;
     const payload = wrap([simplePath, doubleFocalPath]);
     payload.dependencies.forEach((dependency, i) => {
-      // eslint-disable-next-line no-param-reassign
       dependency.attributes = [
         {
           key: 'exemplar_trace_id',

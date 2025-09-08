@@ -13,9 +13,10 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { screen, render } from '@testing-library/react';
 
 import CircularProgressbar from './CircularProgressbar';
+import '@testing-library/jest-dom';
 
 describe('CircularProgressbar', () => {
   const minProps = {
@@ -31,11 +32,16 @@ describe('CircularProgressbar', () => {
     text: 'test text',
   };
 
-  it('renders as expected with all props', () => {
-    expect(shallow(<CircularProgressbar {...fullProps} />)).toMatchSnapshot();
+  it('handles minimal props', () => {
+    render(<CircularProgressbar {...minProps} />);
+
+    expect(screen.getByTestId('circular-progress-bar')).toBeInTheDocument();
   });
 
-  it('handles minimal props', () => {
-    expect(shallow(<CircularProgressbar {...minProps} />)).toMatchSnapshot();
+  it('renders as expected with all props', () => {
+    render(<CircularProgressbar {...fullProps} />);
+
+    expect(screen.getByTestId('circular-progress-bar')).toBeInTheDocument();
+    expect(screen.getByText(fullProps.text)).toBeInTheDocument();
   });
 });

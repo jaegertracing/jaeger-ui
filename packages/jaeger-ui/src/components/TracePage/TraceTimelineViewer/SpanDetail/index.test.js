@@ -12,181 +12,280 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/first */
 jest.mock('../utils');
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
-import AccordianKeyValues from './AccordianKeyValues';
-import AccordianLogs from './AccordianLogs';
 import DetailState from './DetailState';
 import SpanDetail from './index';
 import { formatDuration } from '../utils';
-import CopyIcon from '../../../common/CopyIcon';
-import LabeledList from '../../../common/LabeledList';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 
-describe('<SpanDetail>', () => {
-  let wrapper;
-
-  // use `transformTraceData` on a fake trace to get a fully processed span
-  const span = transformTraceData(traceGenerator.trace({ numberOfSpans: 1 })).spans[0];
-  const detailState = new DetailState()
-    .toggleLogs()
-    .toggleProcess()
-    .toggleReferences()
-    .toggleTags();
-  const traceStartTime = 5;
-  const props = {
-    detailState,
-    span,
-    traceStartTime,
-    logItemToggle: jest.fn(),
-    logsToggle: jest.fn(),
-    processToggle: jest.fn(),
-    tagsToggle: jest.fn(),
-    warningsToggle: jest.fn(),
-    referencesToggle: jest.fn(),
+jest.mock('./AccordianKeyValues', () => {
+  return function MockAccordianKeyValues({ label, onToggle }) {
+    return (
+      <div data-testid={`accordian-keyvalues-${label.toLowerCase()}`}>
+        <button type="button" onClick={onToggle} data-testid={`toggle-${label.toLowerCase()}`}>
+          Toggle {label}
+        </button>
+      </div>
+    );
   };
-  span.logs = [
-    {
-      timestamp: 10,
-      fields: [{ key: 'message', value: 'oh the log message' }, { key: 'something', value: 'else' }],
-    },
-    {
-      timestamp: 20,
-      fields: [{ key: 'message', value: 'oh the next log message' }, { key: 'more', value: 'stuff' }],
-    },
-  ];
+});
 
-  span.warnings = ['Warning 1', 'Warning 2'];
+jest.mock('./AccordianLogs', () => {
+  return function MockAccordianLogs({ onToggle, onItemToggle }) {
+    return (
+      <div data-testid="accordian-logs">
+        <button type="button" onClick={onToggle} data-testid="toggle-logs">
+          Toggle Logs
+        </button>
+        <button type="button" onClick={() => onItemToggle('test-log')} data-testid="toggle-log-item">
+          Toggle Log Item
+        </button>
+      </div>
+    );
+  };
+});
 
-  span.references = [
-    {
-      refType: 'CHILD_OF',
-      span: {
-        spanID: 'span2',
-        traceID: 'trace1',
-        operationName: 'op1',
-        process: {
-          serviceName: 'service1',
-        },
-      },
-      spanID: 'span1',
-      traceID: 'trace1',
-    },
-    {
-      refType: 'CHILD_OF',
-      span: {
-        spanID: 'span3',
-        traceID: 'trace1',
-        operationName: 'op2',
-        process: {
-          serviceName: 'service2',
-        },
-      },
-      spanID: 'span4',
-      traceID: 'trace1',
-    },
-    {
-      refType: 'CHILD_OF',
-      span: {
-        spanID: 'span6',
-        traceID: 'trace2',
-        operationName: 'op2',
-        process: {
-          serviceName: 'service2',
-        },
-      },
-      spanID: 'span5',
-      traceID: 'trace2',
-    },
-  ];
+jest.mock('./AccordianReferences', () => {
+  return function MockAccordianReferences({ onToggle }) {
+    return (
+      <div data-testid="accordian-references">
+        <button type="button" onClick={onToggle} data-testid="toggle-references">
+          Toggle References
+        </button>
+      </div>
+    );
+  };
+});
+
+jest.mock('./AccordianText', () => {
+  return function MockAccordianText({ onToggle }) {
+    return (
+      <div data-testid="accordian-warnings">
+        <button type="button" onClick={onToggle} data-testid="toggle-warnings">
+          Toggle Warnings
+        </button>
+      </div>
+    );
+  };
+});
+
+jest.mock('../../../common/LabeledList', () => {
+  return function MockLabeledList({ items }) {
+    return (
+      <div data-testid="labeled-list">
+        {items.map(item => (
+          <div key={item.key} data-testid={`item-${item.key}`}>
+            {item.label} {item.value}
+          </div>
+        ))}
+      </div>
+    );
+  };
+});
+
+jest.mock('../../../common/CopyIcon', () => {
+  return function MockCopyIcon({ copyText }) {
+    return (
+      <button type="button" data-testid="copy-icon" data-copy-text={copyText}>
+        Copy
+      </button>
+    );
+  };
+});
+
+describe('<SpanDetail>', () => {
+  let props;
+  let span;
+  let detailState;
 
   beforeEach(() => {
     formatDuration.mockReset();
-    props.tagsToggle.mockReset();
-    props.processToggle.mockReset();
-    props.logsToggle.mockReset();
-    props.logItemToggle.mockReset();
-    wrapper = shallow(<SpanDetail {...props} />);
+    formatDuration.mockImplementation(duration => `${duration}ms`);
+
+    span = transformTraceData(traceGenerator.trace({ numberOfSpans: 1 })).spans[0];
+    detailState = new DetailState().toggleLogs().toggleProcess().toggleReferences().toggleTags();
+    const traceStartTime = 5;
+
+    props = {
+      detailState,
+      span,
+      traceStartTime,
+      currentViewRangeTime: [0, 100],
+      traceDuration: 1000,
+      logItemToggle: jest.fn(),
+      logsToggle: jest.fn(),
+      processToggle: jest.fn(),
+      tagsToggle: jest.fn(),
+      warningsToggle: jest.fn(),
+      referencesToggle: jest.fn(),
+      focusSpan: jest.fn(),
+      linksGetter: jest.fn(),
+    };
+
+    span.logs = [
+      {
+        timestamp: 10,
+        fields: [
+          { key: 'message', value: 'oh the log message' },
+          { key: 'something', value: 'else' },
+        ],
+      },
+      {
+        timestamp: 20,
+        fields: [
+          { key: 'message', value: 'oh the next log message' },
+          { key: 'more', value: 'stuff' },
+        ],
+      },
+    ];
+
+    span.warnings = ['Warning 1', 'Warning 2'];
+
+    span.references = [
+      {
+        refType: 'CHILD_OF',
+        span: {
+          spanID: 'span2',
+          traceID: 'trace1',
+          operationName: 'op1',
+          process: {
+            serviceName: 'service1',
+          },
+        },
+        spanID: 'span1',
+        traceID: 'trace1',
+      },
+      {
+        refType: 'CHILD_OF',
+        span: {
+          spanID: 'span3',
+          traceID: 'trace1',
+          operationName: 'op2',
+          process: {
+            serviceName: 'service2',
+          },
+        },
+        spanID: 'span4',
+        traceID: 'trace1',
+      },
+      {
+        refType: 'CHILD_OF',
+        span: {
+          spanID: 'span6',
+          traceID: 'trace2',
+          operationName: 'op2',
+          process: {
+            serviceName: 'service2',
+          },
+        },
+        spanID: 'span5',
+        traceID: 'trace2',
+      },
+    ];
   });
 
-  it('renders without exploding', () => {
-    expect(wrapper).toBeDefined();
+  it('renders the component successfully without errors', () => {
+    render(<SpanDetail {...props} />);
+    expect(screen.getByRole('heading', { level: 2 })).toBeInTheDocument();
   });
 
-  it('shows the operation name', () => {
-    expect(wrapper.find('h2').text()).toBe(span.operationName);
+  it('displays the span operation name as the main heading', () => {
+    render(<SpanDetail {...props} />);
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading).toHaveTextContent(span.operationName);
   });
 
-  it('lists the service name, duration and start time', () => {
-    const words = ['Duration:', 'Service:', 'Start Time:'];
-    const overview = wrapper.find(LabeledList);
-    expect(
-      overview
-        .prop('items')
-        .map(item => item.label)
-        .sort()
-    ).toEqual(words);
+  it('renders overview items with service name, duration and start time labels', () => {
+    render(<SpanDetail {...props} />);
+
+    const labeledList = screen.getByTestId('labeled-list');
+    expect(labeledList).toBeInTheDocument();
+
+    expect(screen.getByTestId('item-svc')).toBeInTheDocument();
+    expect(screen.getByTestId('item-duration')).toBeInTheDocument();
+    expect(screen.getByTestId('item-start')).toBeInTheDocument();
+
+    expect(screen.getByTestId('item-svc')).toHaveTextContent('Service:');
+    expect(screen.getByTestId('item-duration')).toHaveTextContent('Duration:');
+    expect(screen.getByTestId('item-start')).toHaveTextContent('Start Time:');
   });
 
-  it('renders the span tags', () => {
-    const target = <AccordianKeyValues data={span.tags} label="Tags" isOpen={detailState.isTagsOpen} />;
-    expect(wrapper.containsMatchingElement(target)).toBe(true);
-    wrapper.find({ data: span.tags }).simulate('toggle');
-    expect(props.tagsToggle).toHaveBeenLastCalledWith(span.spanID);
+  it('renders span tags accordian and triggers toggle callback with span ID', () => {
+    render(<SpanDetail {...props} />);
+
+    const tagsAccordian = screen.getByTestId('accordian-keyvalues-tags');
+    expect(tagsAccordian).toBeInTheDocument();
+
+    const toggleButton = screen.getByTestId('toggle-tags');
+    fireEvent.click(toggleButton);
+
+    expect(props.tagsToggle).toHaveBeenCalledWith(span.spanID);
   });
 
-  it('renders the process tags', () => {
-    const target = (
-      <AccordianKeyValues data={span.process.tags} label="Process" isOpen={detailState.isProcessOpen} />
-    );
-    expect(wrapper.containsMatchingElement(target)).toBe(true);
-    wrapper.find({ data: span.process.tags }).simulate('toggle');
-    expect(props.processToggle).toHaveBeenLastCalledWith(span.spanID);
+  it('renders process tags accordian and triggers toggle callback with span ID', () => {
+    render(<SpanDetail {...props} />);
+
+    const processAccordian = screen.getByTestId('accordian-keyvalues-process');
+    expect(processAccordian).toBeInTheDocument();
+
+    const toggleButton = screen.getByTestId('toggle-process');
+    fireEvent.click(toggleButton);
+
+    expect(props.processToggle).toHaveBeenCalledWith(span.spanID);
   });
 
-  it('renders the logs', () => {
-    const somethingUniq = {};
-    const target = (
-      <AccordianLogs
-        logs={span.logs}
-        isOpen={detailState.logs.isOpen}
-        openedItems={detailState.logs.openedItems}
-        timestamp={traceStartTime}
-      />
-    );
-    expect(wrapper.containsMatchingElement(target)).toBe(true);
-    const accordianLogs = wrapper.find(AccordianLogs);
-    accordianLogs.simulate('toggle');
-    accordianLogs.simulate('itemToggle', somethingUniq);
-    expect(props.logsToggle).toHaveBeenLastCalledWith(span.spanID);
-    expect(props.logItemToggle).toHaveBeenLastCalledWith(span.spanID, somethingUniq);
+  it('renders logs accordian and triggers both main toggle and item toggle callbacks', () => {
+    render(<SpanDetail {...props} />);
+
+    const logsAccordian = screen.getByTestId('accordian-logs');
+    expect(logsAccordian).toBeInTheDocument();
+
+    const toggleButton = screen.getByTestId('toggle-logs');
+    fireEvent.click(toggleButton);
+    expect(props.logsToggle).toHaveBeenCalledWith(span.spanID);
+
+    const logItemButton = screen.getByTestId('toggle-log-item');
+    fireEvent.click(logItemButton);
+    expect(props.logItemToggle).toHaveBeenCalledWith(span.spanID, 'test-log');
   });
 
-  it('renders the warnings', () => {
-    const warningElm = wrapper.find({ data: span.warnings });
-    expect(warningElm.length).toBe(1);
-    warningElm.simulate('toggle');
-    expect(props.warningsToggle).toHaveBeenLastCalledWith(span.spanID);
+  it('renders warnings accordian and triggers toggle callback with span ID', () => {
+    render(<SpanDetail {...props} />);
+
+    const warningsAccordian = screen.getByTestId('accordian-warnings');
+    expect(warningsAccordian).toBeInTheDocument();
+
+    const toggleButton = screen.getByTestId('toggle-warnings');
+    fireEvent.click(toggleButton);
+
+    expect(props.warningsToggle).toHaveBeenCalledWith(span.spanID);
   });
 
-  it('renders the references', () => {
-    const refElem = wrapper.find({ data: span.references });
-    expect(refElem.length).toBe(1);
-    refElem.simulate('toggle');
-    expect(props.referencesToggle).toHaveBeenLastCalledWith(span.spanID);
+  it('renders references accordian and triggers toggle callback with span ID', () => {
+    render(<SpanDetail {...props} />);
+
+    const referencesAccordian = screen.getByTestId('accordian-references');
+    expect(referencesAccordian).toBeInTheDocument();
+
+    const toggleButton = screen.getByTestId('toggle-references');
+    fireEvent.click(toggleButton);
+
+    expect(props.referencesToggle).toHaveBeenCalledWith(span.spanID);
   });
 
-  it('renders CopyIcon with deep link URL', () => {
-    expect(
-      wrapper
-        .find(CopyIcon)
-        .prop('copyText')
-        .includes(`?uiFind=${props.span.spanID}`)
-    ).toBe(true);
+  it('renders copy icon with deep link URL containing the span ID parameter', () => {
+    render(<SpanDetail {...props} />);
+
+    const copyIcon = screen.getByTestId('copy-icon');
+    const copyText = copyIcon.getAttribute('data-copy-text');
+
+    expect(copyIcon).toBeInTheDocument();
+    expect(copyText).toContain(`?uiFind=${props.span.spanID}`);
   });
 });

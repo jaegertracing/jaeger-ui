@@ -15,6 +15,7 @@
 import React from 'react';
 import { Divider } from 'antd';
 
+import { IoLinkOutline } from 'react-icons/io5';
 import AccordianKeyValues from './AccordianKeyValues';
 import AccordianLogs from './AccordianLogs';
 import AccordianReferences from './AccordianReferences';
@@ -41,6 +42,8 @@ type SpanDetailProps = {
   warningsToggle: (spanID: string) => void;
   referencesToggle: (spanID: string) => void;
   focusSpan: (uiFind: string) => void;
+  currentViewRangeTime: [number, number];
+  traceDuration: number;
 };
 
 export default function SpanDetail(props: SpanDetailProps) {
@@ -56,19 +59,12 @@ export default function SpanDetail(props: SpanDetailProps) {
     warningsToggle,
     referencesToggle,
     focusSpan,
+    currentViewRangeTime,
+    traceDuration,
   } = props;
   const { isTagsOpen, isProcessOpen, logs: logsState, isWarningsOpen, isReferencesOpen } = detailState;
-  const {
-    operationName,
-    process,
-    duration,
-    relativeStartTime,
-    spanID,
-    logs,
-    tags,
-    warnings,
-    references,
-  } = span;
+  const { operationName, process, duration, relativeStartTime, spanID, logs, tags, warnings, references } =
+    span;
   const overviewItems = [
     {
       key: 'svc',
@@ -128,6 +124,9 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => logsToggle(spanID)}
             onItemToggle={logItem => logItemToggle(spanID, logItem)}
             timestamp={traceStartTime}
+            currentViewRangeTime={currentViewRangeTime}
+            traceDuration={traceDuration}
+            spanID={spanID}
           />
         )}
         {warnings && warnings.length > 0 && (
@@ -154,9 +153,10 @@ export default function SpanDetail(props: SpanDetailProps) {
           <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {spanID}
           <CopyIcon
             copyText={deepLinkCopyText}
-            icon="link"
+            icon={<IoLinkOutline />}
             placement="topRight"
             tooltipTitle="Copy deep link to this span"
+            buttonText="Copy"
           />
         </small>
       </div>

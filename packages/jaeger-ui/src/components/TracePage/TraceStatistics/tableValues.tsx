@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as _ from 'lodash';
+import memoizeOne from 'memoize-one';
 import { Trace, Span } from '../../../types/trace';
 import { ITableSpan } from './types';
 import colorGenerator from '../../../utils/color-generator';
@@ -20,81 +20,77 @@ import colorGenerator from '../../../utils/color-generator';
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
 
-/**
- * Return the lowest startTime.
- */
-function getLowestStartTime(allOverlay: Span[]) {
-  let result;
-  const temp = _.minBy(allOverlay, function calc(a) {
-    return a.relativeStartTime;
+function parentChildOfMap(allSpans: Span[]): Record<string, Span[]> {
+  const parentChildOfMap: Record<string, Span[]> = {};
+  allSpans.forEach(s => {
+    if (s.references) {
+      // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM (prod-cons)
+      const parentIDs = s.references.filter(r => r.refType === 'CHILD_OF').map(r => r.spanID);
+      parentIDs.forEach((pID: string) => {
+        parentChildOfMap[pID] = parentChildOfMap[pID] || [];
+        parentChildOfMap[pID].push(s);
+      });
+    }
   });
-  if (temp !== undefined) {
-    result = { duration: temp.duration, lowestStartTime: temp.relativeStartTime };
-  } else {
-    result = { duration: -1, lowestStartTime: -1 };
-  }
-  return result;
+  return parentChildOfMap;
 }
 
-/**
- * Determines whether the cut spans belong together and then calculates the duration.
- */
-function getDuration(lowestStartTime: number, duration: number, allOverlay: Span[]) {
-  let durationChange = duration;
-  let didDelete = false;
-  for (let i = 0; i < allOverlay.length; i++) {
-    if (lowestStartTime + durationChange >= allOverlay[i].relativeStartTime) {
-      if (lowestStartTime + durationChange < allOverlay[i].relativeStartTime + allOverlay[i].duration) {
-        const tempDuration =
-          allOverlay[i].relativeStartTime + allOverlay[i].duration - lowestStartTime + durationChange;
-        durationChange = tempDuration;
-      }
-      allOverlay.splice(i, 1);
-      didDelete = true;
+const memoizedParentChildOfMap = memoizeOne(parentChildOfMap);
+
+function getChildOfSpans(parentID: string, allSpans: Span[]): Span[] {
+  return memoizedParentChildOfMap(allSpans)[parentID] || [];
+}
+
+function computeSelfTime(parentSpan: Span, allSpans: Span[]): number {
+  if (!parentSpan.hasChildren) return parentSpan.duration;
+
+  let parentSpanSelfTime = parentSpan.duration;
+  let previousChildEndTime = parentSpan.startTime;
+
+  const children = getChildOfSpans(parentSpan.spanID, allSpans).sort((a, b) => a.startTime - b.startTime);
+
+  const parentSpanEndTime = parentSpan.startTime + parentSpan.duration;
+
+  for (let index = 0; index < children.length; index++) {
+    const child = children[index];
+
+    const childEndTime = child.startTime + child.duration;
+    const childStartsAfterParentEnded = child.startTime > parentSpanEndTime;
+    const childEndsBeforePreviousChild = childEndTime < previousChildEndTime;
+
+    // parent |..................|
+    // child    |.......|                     - previousChild
+    // child     |.....|                      - childEndsBeforePreviousChild is true, skipped
+    // child                         |......| - childStartsAfterParentEnded is true, skipped
+    if (childStartsAfterParentEnded || childEndsBeforePreviousChild) {
+      continue;
+    }
+
+    // parent |.....................|
+    // child    |.......|                    - previousChild
+    // child        |.....|                  - nonOverlappingStartTime is previousChildEndTime
+    // child                |.....|          - nonOverlappingStartTime is child.startTime
+    const nonOverlappingStartTime = Math.max(previousChildEndTime, child.startTime);
+    const childEndTimeOrParentEndTime = Math.min(parentSpanEndTime, childEndTime);
+
+    const nonOverlappingDuration = childEndTimeOrParentEndTime - nonOverlappingStartTime;
+    parentSpanSelfTime -= nonOverlappingDuration;
+
+    // last span which can be included in self time calculation, because it ends after parent span ends
+    // parent |......................|
+    // child                      |.....|        - last span included in self time calculation
+    // child                       |.........|   - skipped
+    if (childEndTimeOrParentEndTime === parentSpanEndTime) {
       break;
     }
+
+    previousChildEndTime = childEndTime;
   }
-  const result = { allOverlay, duration: durationChange, didDelete };
-  return result;
+
+  return parentSpanSelfTime;
 }
 
-/**
- * Return the selfTime of overlay spans.
- */
-function onlyOverlay(allOverlay: Span[], allChildren: Span[], tempSelf: number, span: Span) {
-  let tempSelfChange = tempSelf;
-  let duration = 0;
-  let resultGetDuration = { allOverlay, duration, didDelete: false };
-  const noOverlay = _.difference(allChildren, allOverlay);
-  let lowestStartTime = 0;
-  let totalDuration = 0;
-  const result = getLowestStartTime(allOverlay);
-  lowestStartTime = result.lowestStartTime;
-  duration = result.duration;
-
-  do {
-    resultGetDuration = getDuration(lowestStartTime, duration, resultGetDuration.allOverlay);
-    if (!resultGetDuration.didDelete && resultGetDuration.allOverlay.length > 0) {
-      totalDuration = resultGetDuration.duration;
-      const temp = getLowestStartTime(resultGetDuration.allOverlay);
-      lowestStartTime = temp.lowestStartTime;
-      duration = temp.duration;
-    }
-  } while (resultGetDuration.allOverlay.length > 1);
-  duration = resultGetDuration.duration + totalDuration;
-  // no cut is observed
-  for (let i = 0; i < noOverlay.length; i++) {
-    duration += noOverlay[i].duration;
-  }
-  tempSelfChange += span.duration - duration;
-
-  return tempSelfChange;
-}
-
-/**
- * Used to calculated the content.
- */
-function calculateContent(trace: Trace, span: Span, allSpans: Span[], resultValue: any) {
+function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultValue: StatsPerTag) {
   const resultValueChange = resultValue;
   resultValueChange.count += 1;
   resultValueChange.total += span.duration;
@@ -104,127 +100,8 @@ function calculateContent(trace: Trace, span: Span, allSpans: Span[], resultValu
   if (resultValueChange.max < span.duration) {
     resultValueChange.max = span.duration;
   }
-  // selfTime
-  let tempSelf = 0;
-  let longerAsParent = false;
-  let kinderSchneiden = false;
-  let allOverlay = [];
-  const longerAsParentSpan = [];
-  if (span.hasChildren) {
-    const allChildren = [] as any;
-    for (let i = 0; i < allSpans.length; i++) {
-      // i am a child?
-      if (allSpans[i].references.length === 1) {
-        if (span.spanID === allSpans[i].references[0].spanID) {
-          allChildren.push(allSpans[i]);
-        }
-      }
-    }
-    // i only have one child
-    if (allChildren.length === 1) {
-      if (
-        span.relativeStartTime + span.duration >=
-        allChildren[0].relativeStartTime + allChildren[0].duration
-      ) {
-        tempSelf = span.duration - allChildren[0].duration;
-      } else {
-        tempSelf = allChildren[0].relativeStartTime - span.relativeStartTime;
-      }
-    } else {
-      // is the child longer as parent
-      for (let i = 0; i < allChildren.length; i++) {
-        if (
-          span.duration + span.relativeStartTime <
-          allChildren[i].duration + allChildren[i].relativeStartTime
-        ) {
-          longerAsParent = true;
-          longerAsParentSpan.push(allChildren[i]);
-        }
-      }
-      // Do the children overlap?
-      for (let i = 0; i < allChildren.length; i++) {
-        for (let j = 0; j < allChildren.length; j++) {
-          // aren't they the same kids?
-          if (allChildren[i].spanID !== allChildren[j].spanID) {
-            // if yes the children cut themselves or lie into each other
-            if (
-              allChildren[i].relativeStartTime <= allChildren[j].relativeStartTime &&
-              allChildren[i].relativeStartTime + allChildren[i].duration >= allChildren[j].relativeStartTime
-            ) {
-              kinderSchneiden = true;
-              allOverlay.push(allChildren[i]);
-              allOverlay.push(allChildren[j]);
-            }
-          }
-        }
-      }
-      allOverlay = [...new Set(allOverlay)];
-      // diff options
-      if (!longerAsParent && !kinderSchneiden) {
-        tempSelf = span.duration;
-        for (let i = 0; i < allChildren.length; i++) {
-          tempSelf -= allChildren[i].duration;
-        }
-      } else if (longerAsParent && kinderSchneiden) {
-        // cut only longerAsParent
-        if (_.isEmpty(_.xor(allOverlay, longerAsParentSpan))) {
-          // find ealiesr longerasParent
-          const earliestLongerAsParent = _.minBy(longerAsParentSpan, function calc(a) {
-            return a.relativeStartTime;
-          });
-          // remove all children wo are longer as Parent
-          const allChildrenWithout = _.difference(allChildren, longerAsParentSpan);
-          tempSelf = earliestLongerAsParent.relativeStartTime - span.relativeStartTime;
-          for (let i = 0; i < allChildrenWithout.length; i++) {
-            tempSelf -= allChildrenWithout[i].duration;
-          }
-        } else {
-          const overlayOnly = _.difference(allOverlay, longerAsParentSpan);
-          const allChildrenWithout = _.difference(allChildren, longerAsParentSpan);
-          const earliestLongerAsParent = _.minBy(longerAsParentSpan, function calc(a) {
-            return a.relativeStartTime;
-          });
 
-          // overlay between longerAsParent and overlayOnly
-          const overlayWithout = [];
-          for (let i = 0; i < overlayOnly.length; i++) {
-            if (!earliestLongerAsParent.relativeStartTime <= overlayOnly[i].relativeStartTime) {
-              overlayWithout.push(overlayOnly[i]);
-            }
-          }
-          for (let i = 0; i < overlayWithout.length; i++) {
-            if (
-              overlayWithout[i].relativeStartTime + overlayWithout[i].duration >
-              earliestLongerAsParent.relativeStartTime
-            ) {
-              overlayWithout[i].duration -=
-                overlayWithout[i].relativeStartTime +
-                overlayWithout[i].duration -
-                earliestLongerAsParent.relativeStartTime;
-            }
-          }
-
-          tempSelf = onlyOverlay(overlayWithout, allChildrenWithout, tempSelf, span);
-          const diff = span.relativeStartTime + span.duration - earliestLongerAsParent.relativeStartTime;
-          tempSelf -= diff;
-        }
-      } else if (longerAsParent) {
-        // span is longer as Parent
-        tempSelf = longerAsParentSpan[0].relativeStartTime - span.relativeStartTime;
-        for (let i = 0; i < allChildren.length; i++) {
-          if (allChildren[i].spanID !== longerAsParentSpan[0].spanID) {
-            tempSelf -= allChildren[i].duration;
-          }
-        }
-      } else {
-        // Overlay
-        tempSelf = onlyOverlay(allOverlay, allChildren, tempSelf, span);
-      }
-    }
-    // no children
-  } else {
-    tempSelf += span.duration;
-  }
+  const tempSelf = computeSelfTime(span, allSpans);
   if (resultValueChange.selfMin > tempSelf) {
     resultValueChange.selfMin = tempSelf;
   }
@@ -257,82 +134,102 @@ function buildOneColumn(oneColumn: ITableSpan) {
   return oneColumnChange;
 }
 
+type StatsPerTag = {
+  selfTotal: number;
+  selfMin: number;
+  selfMax: number;
+  selfAvg: number;
+  total: number;
+  avg: number;
+  min: number;
+  max: number;
+  count: number;
+  percent: number;
+};
+
+function getDefaultStatsValue(trace: Trace) {
+  return {
+    selfTotal: 0,
+    selfMin: trace.duration,
+    selfMax: 0,
+    selfAvg: 0,
+    total: 0,
+    avg: 0,
+    min: trace.duration,
+    max: 0,
+    count: 0,
+    percent: 0,
+  };
+}
+
+function getTagValueFromSpan(tagKey: string, span: Span) {
+  let tagValue = null as null | string;
+  if (tagKey === operationName) {
+    tagValue = span.operationName;
+  } else if (tagKey === serviceName) {
+    tagValue = span.process.serviceName;
+  } else {
+    for (let tagIndex = 0; tagIndex < span.tags.length; tagIndex++) {
+      const tag = span.tags[tagIndex];
+
+      if (tag.key !== tagKey) {
+        continue;
+      }
+
+      tagValue = tag.value;
+      break;
+    }
+  }
+
+  return tagValue;
+}
+
 /**
  * Is used if only one dropdown is selected.
  */
 function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
-  let color = '';
-  let allDiffColumnValues = [];
   const allSpans = trace.spans;
-  // all possibilities that can be displayed
-  if (selectedTagKey === serviceName) {
-    const temp = _.chain(allSpans)
-      .groupBy(x => x.process.serviceName)
-      .map((value, key) => ({ key }))
-      .uniq()
-      .value();
-    for (let i = 0; i < temp.length; i++) {
-      allDiffColumnValues.push(temp[i].key);
-    }
-  } else if (selectedTagKey === operationName) {
-    const temp = _.chain(allSpans)
-      .groupBy(x => x.operationName)
-      .map((value, key) => ({ key }))
-      .uniq()
-      .value();
-    for (let i = 0; i < temp.length; i++) {
-      allDiffColumnValues.push(temp[i].key);
-    }
-  } else {
-    for (let i = 0; i < allSpans.length; i++) {
-      for (let j = 0; j < allSpans[i].tags.length; j++) {
-        if (allSpans[i].tags[j].key === selectedTagKey) {
-          allDiffColumnValues.push(allSpans[i].tags[j].value);
-        }
-      }
-    }
-    allDiffColumnValues = [...new Set(allDiffColumnValues)];
-  }
+
   // used to build the table
   const allTableValues = [];
   const spanWithNoSelectedTag = []; // is only needed when there are Others
-  for (let i = 0; i < allDiffColumnValues.length; i++) {
-    let resultValue = {
-      selfTotal: 0,
-      selfMin: trace.duration,
-      selfMax: 0,
-      selfAvg: 0,
-      total: 0,
-      avg: 0,
-      min: trace.duration,
-      max: 0,
-      count: 0,
-      percent: 0,
-    };
-    for (let j = 0; j < allSpans.length; j++) {
-      if (selectedTagKey === serviceName) {
-        if (allSpans[j].process.serviceName === allDiffColumnValues[i]) {
-          resultValue = calculateContent(trace, allSpans[j], allSpans, resultValue);
-          color = colorGenerator.getColorByKey(allSpans[j].process.serviceName);
-        }
-      } else if (selectedTagKey === operationName) {
-        if (allSpans[j].operationName === allDiffColumnValues[i]) {
-          resultValue = calculateContent(trace, allSpans[j], allSpans, resultValue);
-        }
-      } else {
-        // used when a tag is selected
-        for (let l = 0; l < allSpans[j].tags.length; l++) {
-          if (allSpans[j].tags[l].value === allDiffColumnValues[i]) {
-            resultValue = calculateContent(trace, allSpans[j], allSpans, resultValue);
-          }
-        }
-      }
+
+  const uniqueValuesForSelectedTag = new Set<string>();
+
+  const statsPerTagValue = {} as Record<string, StatsPerTag>;
+  const spanIdsWithSelectedTag = new Set<string>();
+
+  for (let i = 0; i < allSpans.length; i++) {
+    const tagValue = getTagValueFromSpan(selectedTagKey, allSpans[i]);
+
+    if (!tagValue) {
+      continue;
     }
+
+    statsPerTagValue[tagValue] = computeColumnValues(
+      trace,
+      allSpans[i],
+      allSpans,
+      statsPerTagValue[tagValue] ?? getDefaultStatsValue(trace)
+    );
+
+    spanIdsWithSelectedTag.add(allSpans[i].spanID);
+    uniqueValuesForSelectedTag.add(tagValue);
+  }
+
+  for (const tagValue of uniqueValuesForSelectedTag) {
+    const resultValue = statsPerTagValue[tagValue];
+
+    let color = '';
+    if (selectedTagKey === serviceName) {
+      color = colorGenerator.getColorByKey(tagValue);
+    }
+
     resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
     resultValue.avg = resultValue.total / resultValue.count;
     let tableSpan = {
-      type: 'defined',
-      name: allDiffColumnValues[i],
+      hasSubgroupValue: true,
+      name: tagValue,
       count: resultValue.count,
       total: resultValue.total,
       avg: resultValue.avg,
@@ -348,6 +245,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
       searchColor: '',
       parentElement: 'none',
       colorToPercent: 'tranparent',
+      traceID: '',
     };
     tableSpan = buildOneColumn(tableSpan);
     allTableValues.push(tableSpan);
@@ -355,40 +253,23 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   // checks if there is OTHERS
   if (selectedTagKey !== serviceName && selectedTagKey !== operationName) {
     for (let i = 0; i < allSpans.length; i++) {
-      let isIn = false;
-      for (let j = 0; j < allSpans[i].tags.length; j++) {
-        for (let l = 0; l < allDiffColumnValues.length; l++) {
-          if (allSpans[i].tags[j].value === allDiffColumnValues[l]) {
-            isIn = true;
-          }
-        }
-      }
-      if (!isIn) {
+      const spanHasSelectedTag = spanIdsWithSelectedTag.has(allSpans[i].spanID);
+
+      if (!spanHasSelectedTag) {
         spanWithNoSelectedTag.push(allSpans[i]);
       }
     }
     // Others is calculated
-    let resultValue = {
-      selfTotal: 0,
-      selfAvg: 0,
-      selfMin: trace.duration,
-      selfMax: 0,
-      total: 0,
-      avg: 0,
-      min: trace.duration,
-      max: 0,
-      count: 0,
-      percent: 0,
-    };
+    let resultValue = getDefaultStatsValue(trace);
     for (let i = 0; i < spanWithNoSelectedTag.length; i++) {
-      resultValue = calculateContent(trace, spanWithNoSelectedTag[i], allSpans, resultValue);
+      resultValue = computeColumnValues(trace, spanWithNoSelectedTag[i], allSpans, resultValue);
     }
     if (resultValue.count !== 0) {
       // Others is build
       resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
       resultValue.avg = resultValue.total / resultValue.count;
       let tableSpanOTHERS = {
-        type: 'undefined',
+        hasSubgroupValue: false,
         name: `Without Tag: ${selectedTagKey}`,
         count: resultValue.count,
         total: resultValue.total,
@@ -405,6 +286,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
         searchColor: 'transparent',
         parentElement: '',
         colorToPercent: 'rgb(248,248,248)',
+        traceID: '',
       };
       tableSpanOTHERS = buildOneColumn(tableSpanOTHERS);
       allTableValues.push(tableSpanOTHERS);
@@ -417,50 +299,48 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
  * Creates columns for the children.
  */
 function buildDetail(
-  diffNamesA: string[],
   tempArray: Span[],
   allSpans: Span[],
   selectedTagKeySecond: string,
   parentName: string,
-  isDetail: boolean,
   trace: Trace
 ) {
   const newColumnValues = [];
-  for (let j = 0; j < diffNamesA.length; j++) {
-    let color = '';
-    let resultValue = {
-      selfTotal: 0,
-      selfAvg: 0,
-      selfMin: trace.duration,
-      selfMax: 0,
-      total: 0,
-      avg: 0,
-      min: trace.duration,
-      max: 0,
-      count: 0,
-      percent: 0,
-    };
-    for (let l = 0; l < tempArray.length; l++) {
-      if (isDetail) {
-        for (let a = 0; a < tempArray[l].tags.length; a++) {
-          if (diffNamesA[j] === tempArray[l].tags[a].value) {
-            resultValue = calculateContent(trace, tempArray[l], allSpans, resultValue);
-          }
-        }
-      } else if (selectedTagKeySecond === serviceName) {
-        if (diffNamesA[j] === tempArray[l].process.serviceName) {
-          resultValue = calculateContent(trace, tempArray[l], allSpans, resultValue);
-          color = colorGenerator.getColorByKey(tempArray[l].process.serviceName);
-        }
-      } else if (diffNamesA[j] === tempArray[l].operationName) {
-        resultValue = calculateContent(trace, tempArray[l], allSpans, resultValue);
-      }
+
+  const statsPerTagValue = {} as Record<string, StatsPerTag>;
+  const uniqueValuesForSelectedTag = new Set<string>();
+
+  for (let i = 0; i < tempArray.length; i++) {
+    const tagValue = getTagValueFromSpan(selectedTagKeySecond, tempArray[i]);
+
+    if (!tagValue) {
+      continue;
     }
+
+    statsPerTagValue[tagValue] = computeColumnValues(
+      trace,
+      tempArray[i],
+      allSpans,
+      statsPerTagValue[tagValue] ?? getDefaultStatsValue(trace)
+    );
+
+    uniqueValuesForSelectedTag.add(tagValue);
+  }
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const tagValue of uniqueValuesForSelectedTag) {
+    const resultValue = statsPerTagValue[tagValue];
+
+    let color = '';
+    if (selectedTagKeySecond === serviceName) {
+      color = colorGenerator.getColorByKey(tagValue);
+    }
+
     resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
     resultValue.avg = resultValue.total / resultValue.count;
     let buildOneColumnValue = {
-      type: 'defined',
-      name: diffNamesA[j],
+      hasSubgroupValue: true,
+      name: tagValue,
       count: resultValue.count,
       total: resultValue.total,
       avg: resultValue.avg,
@@ -476,6 +356,7 @@ function buildDetail(
       searchColor: '',
       parentElement: parentName,
       colorToPercent: 'rgb(248,248,248)',
+      traceID: '',
     };
     buildOneColumnValue = buildOneColumn(buildOneColumnValue);
     newColumnValues.push(buildOneColumnValue);
@@ -517,7 +398,7 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
             }
           }
           if (rest) {
-            resultValue = calculateContent(trace, allSpans[j], allSpans, resultValue);
+            resultValue = computeColumnValues(trace, allSpans[j], allSpans, resultValue);
           }
         }
       }
@@ -525,7 +406,7 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
       resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
       if (resultValue.count !== 0) {
         let buildOneColumnValue = {
-          type: 'undefined',
+          hasSubgroupValue: false,
           name: `Without Tag: ${selectedTagKeySecond}`,
           count: resultValue.count,
           total: resultValue.total,
@@ -542,6 +423,7 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
           searchColor: '',
           parentElement: allColumnValues[i].name,
           colorToPercent: 'rgb(248,248,248)',
+          traceID: '',
         };
         buildOneColumnValue = buildOneColumn(buildOneColumnValue);
         newTable.push(buildOneColumnValue);
@@ -563,81 +445,57 @@ function valueSecondDropdown(
   const allSpans = trace.spans;
   const allTableValues = [];
 
+  const isSecondDropdownTag = selectedTagKeySecond !== serviceName && selectedTagKeySecond !== operationName;
+
+  const spansMatchingTagValueFromFirstDropdown = {} as Record<string, Span[]>;
+  for (let i = 0; i < allSpans.length; i++) {
+    const tagValue = getTagValueFromSpan(selectedTagKey, allSpans[i]);
+
+    if (!tagValue) {
+      continue;
+    }
+
+    if (tagValue in spansMatchingTagValueFromFirstDropdown) {
+      spansMatchingTagValueFromFirstDropdown[tagValue].push(allSpans[i]);
+    } else {
+      spansMatchingTagValueFromFirstDropdown[tagValue] = [allSpans[i]];
+    }
+  }
+
   for (let i = 0; i < actualTableValues.length; i++) {
     // if the table is already in the detail view, then these entries are not considered
-    if (!actualTableValues[i].isDetail) {
-      const tempArray = [];
-      let diffNamesA = [] as any;
-      // all Spans withe the same value (first dropdown)
-      for (let j = 0; j < allSpans.length; j++) {
-        if (selectedTagKey === serviceName) {
-          if (actualTableValues[i].name === allSpans[j].process.serviceName) {
-            tempArray.push(allSpans[j]);
-            diffNamesA.push(allSpans[j].operationName);
-          }
-        } else if (selectedTagKey === operationName) {
-          if (actualTableValues[i].name === allSpans[j].operationName) {
-            tempArray.push(allSpans[j]);
-            diffNamesA.push(allSpans[j].process.serviceName);
-          }
-          // if first dropdown is a tag
-        } else {
-          for (let l = 0; l < allSpans[j].tags.length; l++) {
-            if (actualTableValues[i].name === allSpans[j].tags[l].value) {
-              tempArray.push(allSpans[j]);
-              if (selectedTagKeySecond === operationName) {
-                diffNamesA.push(allSpans[j].operationName);
-              } else if (selectedTagKeySecond === serviceName) {
-                diffNamesA.push(allSpans[j].process.serviceName);
-              }
-            }
-          }
-        }
-      }
-      let newColumnValues = [] as any;
-      // if second dropdown is no tag
-      if (selectedTagKeySecond === serviceName || selectedTagKeySecond === operationName) {
-        diffNamesA = [...new Set(diffNamesA)];
-        newColumnValues = buildDetail(
-          diffNamesA,
-          tempArray,
-          allSpans,
-          selectedTagKeySecond,
-          actualTableValues[i].name,
-          false,
-          trace
-        );
-      } else {
-        // second dropdown is a tag
-        diffNamesA = [] as any;
-        for (let j = 0; j < tempArray.length; j++) {
-          for (let l = 0; l < tempArray[j].tags.length; l++) {
-            if (tempArray[j].tags[l].key === selectedTagKeySecond) {
-              diffNamesA.push(tempArray[j].tags[l].value);
-            }
-          }
-        }
-        diffNamesA = [...new Set(diffNamesA)];
-        newColumnValues = buildDetail(
-          diffNamesA,
-          tempArray,
-          allSpans,
-          selectedTagKeySecond,
-          actualTableValues[i].name,
-          true,
-          trace
-        );
-      }
+    if (actualTableValues[i].isDetail) {
+      continue;
+    }
+
+    const spansWithSecondTag = spansMatchingTagValueFromFirstDropdown[actualTableValues[i].name];
+
+    // true for row with name Without Tag: ${selectedTagKey}
+    const isTableValueWithoutTag = spansWithSecondTag === undefined;
+    if (isTableValueWithoutTag) {
       allTableValues.push(actualTableValues[i]);
-      if (newColumnValues.length > 0) {
-        for (let j = 0; j < newColumnValues.length; j++) {
-          allTableValues.push(newColumnValues[j]);
-        }
+      continue;
+    }
+
+    const newColumnValues = buildDetail(
+      spansWithSecondTag,
+      allSpans,
+      selectedTagKeySecond,
+      actualTableValues[i].name,
+      trace
+    );
+
+    allTableValues.push(actualTableValues[i]);
+
+    if (newColumnValues.length > 0) {
+      for (let j = 0; j < newColumnValues.length; j++) {
+        allTableValues.push(newColumnValues[j]);
       }
     }
   }
+
   // if second dropdown is a tag a rest must be created
-  if (selectedTagKeySecond !== serviceName && selectedTagKeySecond !== operationName) {
+  if (isSecondDropdownTag) {
     return generateDetailRest(allTableValues, selectedTagKeySecond, trace);
     // if no tag is selected the values can be returned
   }

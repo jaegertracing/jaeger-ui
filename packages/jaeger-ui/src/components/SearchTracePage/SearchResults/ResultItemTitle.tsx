@@ -14,6 +14,7 @@
 
 import * as React from 'react';
 import { Checkbox } from 'antd';
+import { LocationDescriptor } from 'history';
 import { Link } from 'react-router-dom';
 
 import TraceName from '../../common/TraceName';
@@ -24,13 +25,15 @@ import { FetchedState, TNil } from '../../../types';
 import { ApiError } from '../../../types/api-error';
 
 import './ResultItemTitle.css';
+import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import TraceId from '../../common/TraceId';
 
 type Props = {
   duration?: number;
   durationPercent?: number;
   error?: ApiError;
   isInDiffCohort: boolean;
-  linkTo: string | TNil;
+  linkTo: LocationDescriptor | TNil;
   state?: FetchedState | TNil;
   targetBlank?: boolean;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
@@ -72,12 +75,14 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
     } = this.props;
     // Use a div when the ResultItemTitle doesn't link to anything
     let WrapperComponent: string | typeof Link = 'div';
-    const wrapperProps: Record<string, string> = { className: 'ResultItemTitle--item ub-flex-auto' };
+    const wrapperProps: Record<string, string | LocationDescriptor> = {
+      className: 'ResultItemTitle--item ub-flex-auto',
+    };
     if (linkTo) {
       wrapperProps.to = linkTo;
       WrapperComponent = Link;
       if (targetBlank) {
-        wrapperProps.target = '_blank';
+        wrapperProps.target = getTargetEmptyOrBlank();
         wrapperProps.rel = 'noopener noreferrer';
       }
     }
@@ -95,7 +100,7 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
       <div className="ResultItemTitle">
         {!disableComparision && <Checkbox {...checkboxProps} />}
         {/* TODO: Shouldn't need cast */}
-        <WrapperComponent {...(wrapperProps as { [key: string]: any; to: string })}>
+        <WrapperComponent {...(wrapperProps as any)}>
           <span
             className="ResultItemTitle--durationBar"
             style={{ width: `${durationPercent || DEFAULT_DURATION_PERCENT}%` }}
@@ -103,7 +108,7 @@ export default class ResultItemTitle extends React.PureComponent<Props> {
           {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
           <h3 className="ResultItemTitle--title">
             <TraceName error={error} state={state} traceName={traceName} />
-            <small className="ResultItemTitle--idExcerpt">{traceID.slice(0, 7)}</small>
+            <TraceId traceId={traceID} className="ResultItemTitle--idExcerpt" />
           </h3>
         </WrapperComponent>
       </div>

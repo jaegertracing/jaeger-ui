@@ -13,24 +13,34 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import CountCard from './CountCard';
 
 describe('CountCard', () => {
   const count = 108;
   const title = 'Test Title';
+  const examples = ['Examples'];
 
   it('renders null when props.count or props.title is absent', () => {
-    expect(shallow(<CountCard count={count} />).type()).toBe(null);
-    expect(shallow(<CountCard title={title} />).type()).toBe(null);
+    const { container: containerWithoutTitle } = render(<CountCard count={count} />);
+    expect(containerWithoutTitle.firstChild).toBe(null);
+    const { container: containerWithoutCount } = render(<CountCard title={title} />);
+    expect(containerWithoutCount.firstChild).toBe(null);
   });
 
   it('renders as expected when given count and title', () => {
-    expect(shallow(<CountCard count={count} title={title} />)).toMatchSnapshot();
+    render(<CountCard count={count} title={title} />);
+
+    expect(screen.getByText(count)).toBeInTheDocument();
+    expect(screen.getByText(title)).toBeInTheDocument();
   });
 
   it('renders as expected when given count, title, and examples', () => {
-    expect(shallow(<CountCard count={count} title={title} examples={['foo']} />)).toMatchSnapshot();
+    render(<CountCard count={count} title={title} examples={examples} />);
+
+    expect(screen.getByText(count)).toBeInTheDocument();
+    expect(screen.getByText(title)).toBeInTheDocument();
+    expect(screen.getByText(examples[0])).toBeInTheDocument();
   });
 });

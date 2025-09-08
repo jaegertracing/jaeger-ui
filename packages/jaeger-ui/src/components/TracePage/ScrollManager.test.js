@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/first */
 jest.mock('./scroll-page');
 
 import { scrollBy, scrollTo } from './scroll-page';
@@ -74,15 +73,14 @@ describe('ScrollManager', () => {
     });
 
     it('is a noop if an invalid rowPosition is returned by the accessors', () => {
-      // eslint-disable-next-line no-console
       const oldWarn = console.warn;
-      // eslint-disable-next-line no-console
+
       console.warn = () => {};
       manager._scrollPast(null, null);
       expect(accessors.getRowPosition.mock.calls.length).toBe(1);
       expect(accessors.getViewHeight.mock.calls.length).toBe(0);
       expect(scrollTo.mock.calls.length).toBe(0);
-      // eslint-disable-next-line no-console
+
       console.warn = oldWarn;
     });
 
@@ -137,9 +135,9 @@ describe('ScrollManager', () => {
       accessors.getTopRowIndexVisible.mockReturnValue(5);
       accessors.getBottomRowIndexVisible.mockReturnValue(5);
       manager._scrollToVisibleSpan(-1);
-      expect(scrollPastMock).lastCalledWith(5, -1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(5, -1);
       manager._scrollToVisibleSpan(1);
-      expect(scrollPastMock).lastCalledWith(5, 1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(5, 1);
     });
 
     it('skips spans that are out of view', () => {
@@ -148,9 +146,9 @@ describe('ScrollManager', () => {
       accessors.getTopRowIndexVisible.mockReturnValue(trace.spans.length - 1);
       accessors.getBottomRowIndexVisible.mockReturnValue(0);
       manager._scrollToVisibleSpan(1);
-      expect(scrollPastMock).lastCalledWith(4, 1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(4, 1);
       manager._scrollToVisibleSpan(-1);
-      expect(scrollPastMock).lastCalledWith(4, -1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(4, -1);
     });
 
     it('skips spans that do not match the text search', () => {
@@ -158,9 +156,9 @@ describe('ScrollManager', () => {
       accessors.getBottomRowIndexVisible.mockReturnValue(0);
       accessors.getSearchedSpanIDs = () => new Set([trace.spans[4].spanID]);
       manager._scrollToVisibleSpan(1);
-      expect(scrollPastMock).lastCalledWith(4, 1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(4, 1);
       manager._scrollToVisibleSpan(-1);
-      expect(scrollPastMock).lastCalledWith(4, -1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(4, -1);
     });
 
     it('scrolls to boundary when scrolling away from closest spanID in findMatches', () => {
@@ -170,10 +168,10 @@ describe('ScrollManager', () => {
       accessors.getSearchedSpanIDs = () => new Set([trace.spans[closetFindMatchesSpanID].spanID]);
 
       manager._scrollToVisibleSpan(1);
-      expect(scrollPastMock).lastCalledWith(trace.spans.length - 1, 1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(trace.spans.length - 1, 1);
 
       manager._scrollToVisibleSpan(-1);
-      expect(scrollPastMock).lastCalledWith(0, -1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(0, -1);
     });
 
     it('scrolls to last visible row when boundary is hidden', () => {
@@ -187,7 +185,7 @@ describe('ScrollManager', () => {
       );
 
       manager._scrollToVisibleSpan(1);
-      expect(scrollPastMock).lastCalledWith(parentOfLastRowWithHiddenChildrenIndex, 1);
+      expect(scrollPastMock).toHaveBeenLastCalledWith(parentOfLastRowWithHiddenChildrenIndex, 1);
     });
 
     describe('scrollToNextVisibleSpan() and scrollToPrevVisibleSpan()', () => {
@@ -213,9 +211,9 @@ describe('ScrollManager', () => {
 
       it('skips spans that are hidden because their parent is collapsed', () => {
         manager.scrollToNextVisibleSpan();
-        expect(scrollPastMock).lastCalledWith(4, 1);
+        expect(scrollPastMock).toHaveBeenLastCalledWith(4, 1);
         manager.scrollToPrevVisibleSpan();
-        expect(scrollPastMock).lastCalledWith(4, -1);
+        expect(scrollPastMock).toHaveBeenLastCalledWith(4, -1);
       });
 
       it('ignores references with unknown types', () => {
@@ -223,9 +221,9 @@ describe('ScrollManager', () => {
         const spans = trace.spans;
         spans[2].references = [{ refType: 'OTHER' }];
         manager.scrollToNextVisibleSpan();
-        expect(scrollPastMock).lastCalledWith(2, 1);
+        expect(scrollPastMock).toHaveBeenLastCalledWith(2, 1);
         manager.scrollToPrevVisibleSpan();
-        expect(scrollPastMock).lastCalledWith(4, -1);
+        expect(scrollPastMock).toHaveBeenLastCalledWith(4, -1);
       });
 
       it('handles more than one level of ancestry', () => {
@@ -233,9 +231,9 @@ describe('ScrollManager', () => {
         const spans = trace.spans;
         spans[2].references = getRefs(spans[1].spanID);
         manager.scrollToNextVisibleSpan();
-        expect(scrollPastMock).lastCalledWith(4, 1);
+        expect(scrollPastMock).toHaveBeenLastCalledWith(4, 1);
         manager.scrollToPrevVisibleSpan();
-        expect(scrollPastMock).lastCalledWith(4, -1);
+        expect(scrollPastMock).toHaveBeenLastCalledWith(4, -1);
       });
     });
 
@@ -254,9 +252,9 @@ describe('ScrollManager', () => {
   describe('scrollPageDown() and scrollPageUp()', () => {
     it('scrolls by +/~ viewHeight when invoked', () => {
       manager.scrollPageDown();
-      expect(scrollBy).lastCalledWith(0.95 * accessors.getViewHeight(), true);
+      expect(scrollBy).toHaveBeenLastCalledWith(0.95 * accessors.getViewHeight(), true);
       manager.scrollPageUp();
-      expect(scrollBy).lastCalledWith(-0.95 * accessors.getViewHeight(), true);
+      expect(scrollBy).toHaveBeenLastCalledWith(-0.95 * accessors.getViewHeight(), true);
     });
 
     it('is a no-op if _accessors or _scroller is not defined', () => {

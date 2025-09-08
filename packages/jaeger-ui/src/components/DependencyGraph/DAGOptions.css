@@ -1,0 +1,159 @@
+/* Copyright (c) 2025 The Jaeger Authors
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License. */
+
+.service-selector-header {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.layout-selector-header {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.dag-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.selector-group {
+  display: flex;
+  align-items: center;
+}
+
+.selector-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.selector-label-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.selector-label {
+  font-size: 14px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.hint-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.hint-info {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: #666;
+}
+
+.hint-info li {
+  margin-bottom: 4px;
+}
+
+.select-a-service-input,
+.layout-selector-input,
+.number-input {
+  min-width: 200px;
+}
+
+.number-input .ant-input-number-handler-wrap {
+  opacity: 1;
+}
+
+.hint-trigger {
+  border: 1px solid #999;
+  border-radius: 100px;
+  color: #999;
+  cursor: pointer;
+  padding: 1px;
+}
+
+.hint-trigger:hover {
+  color: #000;
+  border-color: #000;
+}
+
+.reset-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 200px;
+}
+
+.reset-icon {
+  color: #999;
+  cursor: pointer;
+  font-size: 20px;
+  transition: color 0.3s ease;
+}
+
+.reset-icon:hover {
+  color: #000;
+}
+
+.search-input-container {
+  min-width: 200px;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-input {
+  flex: 1;
+}
+
+.search-match-count {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background-color: #fffb8f;
+}
+
+.data-selector {
+  margin-left: auto;
+  align-self: flex-end;
+  min-width: 200px;
+}
+
+.reset-button {
+  margin-left: 8px;
+  margin-right: 30px;
+  height: 32px;
+  background-color: #f5f5f5;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.reset-button:hover {
+  background-color: #e6e6e6;
+  border-color: #d9d9d9;
+  color: rgba(0, 0, 0, 0.85);
+}

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import React from 'react';
 import _set from 'lodash/set';
 import queryString from 'query-string';
 
@@ -62,7 +63,17 @@ describe('extractDecorationFromState', () => {
         decorationValue,
       })
     );
-    expect(res.decorationProgressbar).toMatchSnapshot();
+    expect(res.decorationProgressbar).toBeDefined();
+    expect(React.isValidElement(res.decorationProgressbar)).toBe(true);
+    expect(res.decorationProgressbar.props).toEqual({
+      backgroundHue: 120,
+      decorationHue: 0,
+      maxValue: decorationMax,
+      strokeWidth: 10,
+      text: '42',
+      value: decorationValue,
+    });
+    expect(res.decorationProgressbar.key).toBe(`${service}\t${operation}`);
   });
 
   it('returns service decoration', () => {
@@ -76,7 +87,17 @@ describe('extractDecorationFromState', () => {
         decorationValue,
       })
     );
-    expect(res.decorationProgressbar).toMatchSnapshot();
+    expect(res.decorationProgressbar).toBeDefined();
+    expect(React.isValidElement(res.decorationProgressbar)).toBe(true);
+    expect(res.decorationProgressbar.props).toEqual({
+      backgroundHue: 120,
+      decorationHue: 0,
+      maxValue: decorationMax,
+      strokeWidth: 10,
+      text: '42',
+      value: decorationValue,
+    });
+    expect(res.decorationProgressbar.key).toBe(`${service}\t${operation}`);
   });
 
   it('omits CircularProgressbar if value is a string', () => {

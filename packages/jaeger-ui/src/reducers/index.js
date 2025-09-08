@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { reducer as formReducer } from 'redux-form';
-
 import config from './config';
 import dependencies from './dependencies';
 import ddg from './ddg';
 import pathAgnosticDecorations from './path-agnostic-decorations';
 import embedded from './embedded';
 import services from './services';
+import metrics from './metrics';
 import trace from './trace';
 
 export default {
@@ -29,6 +28,6 @@ export default {
   embedded,
   pathAgnosticDecorations,
   services,
+  metrics,
   trace,
-  form: formReducer,
 };

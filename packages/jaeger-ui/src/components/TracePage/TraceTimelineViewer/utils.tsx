@@ -62,7 +62,7 @@ export function createViewedBoundsFunc(viewRange: {
  *                        items.
  * @return {boolean}      True if a match was found.
  */
-export function spanHasTag(key: string, value: any, span: Span) {
+export function spanHasTag(key: string, value: string | boolean, span: Span) {
   if (!Array.isArray(span.tags) || !span.tags.length) {
     return false;
   }
@@ -117,7 +117,10 @@ export function findServerChildSpan(spans: Span[]) {
   return null;
 }
 
-export const isKindClient = (span: Span): Boolean =>
+export const isKindClient = (span: Span): boolean =>
   span.tags.some(({ key, value }) => key === 'span.kind' && value === 'client');
+
+export const isKindProducer = (span: Span): boolean =>
+  span.tags.some(({ key, value }) => key === 'span.kind' && value === 'producer');
 
 export { formatDuration } from '../../../utils/date';

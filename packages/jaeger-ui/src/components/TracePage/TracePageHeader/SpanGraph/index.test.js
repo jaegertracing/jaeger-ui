@@ -13,76 +13,96 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-
-import CanvasSpanGraph from './CanvasSpanGraph';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import SpanGraph from './index';
+import CanvasSpanGraph from './CanvasSpanGraph';
 import TickLabels from './TickLabels';
 import ViewingLayer from './ViewingLayer';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
-import { polyfill as polyfillAnimationFrame } from '../../../../utils/test/requestAnimationFrame';
+import * as canvasSpanGraphModule from './CanvasSpanGraph';
+
+jest.mock('./CanvasSpanGraph', () => jest.fn(() => <div data-testid="CanvasSpanGraph" />));
+jest.mock('./TickLabels', () => jest.fn(() => <div data-testid="TickLabels" />));
+jest.mock('./ViewingLayer', () => jest.fn(() => <div data-testid="ViewingLayer" />));
 
 describe('<SpanGraph>', () => {
-  polyfillAnimationFrame(window);
-
   const trace = transformTraceData(traceGenerator.trace({}));
-  const props = {
+  const defaultProps = {
     trace,
-    updateViewRangeTime: () => {},
+    updateViewRangeTime: jest.fn(),
+    updateNextViewRangeTime: jest.fn(),
     viewRange: {
-      time: {
-        current: [0, 1],
-      },
+      time: { current: [0, 1] },
     },
   };
 
-  let wrapper;
-
-  beforeEach(() => {
-    wrapper = shallow(<SpanGraph {...props} />);
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('renders a <CanvasSpanGraph />', () => {
-    expect(wrapper.find(CanvasSpanGraph).length).toBe(1);
+    render(<SpanGraph {...defaultProps} />);
+    expect(screen.getByTestId('CanvasSpanGraph')).toBeInTheDocument();
   });
 
   it('renders a <TickLabels />', () => {
-    expect(wrapper.find(TickLabels).length).toBe(1);
+    render(<SpanGraph {...defaultProps} />);
+    expect(screen.getByTestId('TickLabels')).toBeInTheDocument();
+  });
+
+  it('renders a <ViewingLayer />', () => {
+    render(<SpanGraph {...defaultProps} />);
+    expect(screen.getByTestId('ViewingLayer')).toBeInTheDocument();
   });
 
   it('returns a <div> if a trace is not provided', () => {
-    wrapper = shallow(<SpanGraph {...props} trace={null} />);
-    expect(wrapper.matchesElement(<div />)).toBeTruthy();
+    const { container } = render(<SpanGraph {...defaultProps} trace={null} />);
+    expect(container.querySelector('div')).toBeTruthy();
   });
 
-  it('passes the number of ticks to render to components', () => {
-    const tickHeader = wrapper.find(TickLabels);
-    const viewingLayer = wrapper.find(ViewingLayer);
-    expect(tickHeader.prop('numTicks')).toBeGreaterThan(1);
-    expect(viewingLayer.prop('numTicks')).toBeGreaterThan(1);
-    expect(tickHeader.prop('numTicks')).toBe(viewingLayer.prop('numTicks'));
+  it('passes the same numTicks to TickLabels and ViewingLayer', () => {
+    render(<SpanGraph {...defaultProps} />);
+    const expectedTicks = 4;
+
+    const [tickLabelsProps] = TickLabels.mock.calls[0];
+    const [viewingLayerProps] = ViewingLayer.mock.calls[0];
+    expect(tickLabelsProps).toEqual(expect.objectContaining({ numTicks: expectedTicks }));
+    expect(viewingLayerProps).toEqual(expect.objectContaining({ numTicks: expectedTicks }));
   });
 
-  it('passes items to CanvasSpanGraph', () => {
-    const canvasGraph = wrapper.find(CanvasSpanGraph).first();
-    const items = trace.spans.map(span => ({
+  it('passes correct items to CanvasSpanGraph', () => {
+    render(<SpanGraph {...defaultProps} />);
+    const expectedItems = trace.spans.map(span => ({
       valueOffset: span.relativeStartTime,
       valueWidth: span.duration,
       serviceName: span.process.serviceName,
     }));
-    expect(canvasGraph.prop('items')).toEqual(items);
+
+    const [canvasProps] = CanvasSpanGraph.mock.calls[0];
+    expect(canvasProps).toEqual(
+      expect.objectContaining({
+        valueWidth: trace.duration,
+        items: expectedItems,
+      })
+    );
   });
 
-  it('does not regenerate CanvasSpanGraph without new trace', () => {
-    const canvasGraph = wrapper.find(CanvasSpanGraph).first();
-    const items = canvasGraph.prop('items');
+  it('uses memoization and does not regenerate items if props unchanged', () => {
+    const { rerender } = render(<SpanGraph {...defaultProps} />);
 
-    wrapper.instance().forceUpdate();
+    const firstCall = canvasSpanGraphModule.default.mock.calls[0];
+    expect(firstCall).toBeDefined();
+    const firstItems = firstCall[0].items;
 
-    const newCanvasGraph = wrapper.find(CanvasSpanGraph).first();
-    const newItems = newCanvasGraph.prop('items');
+    rerender(<SpanGraph {...defaultProps} />);
 
-    expect(newItems).toBe(items);
+    const secondCall =
+      canvasSpanGraphModule.default.mock.calls[canvasSpanGraphModule.default.mock.calls.length - 1];
+    expect(secondCall).toBeDefined();
+    const secondItems = secondCall[0].items;
+
+    expect(secondItems).toBe(firstItems);
   });
 });

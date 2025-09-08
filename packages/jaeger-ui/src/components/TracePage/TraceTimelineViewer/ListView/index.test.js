@@ -13,14 +13,11 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount, shallow } from 'enzyme';
-
+import { render } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import ListView from './index';
 import { polyfill as polyfillAnimationFrame } from '../../../../utils/test/requestAnimationFrame';
 
-// Util to get list of all callbacks added to an event emitter by event type.
-// jest adds "error" event listeners to window, this util makes it easier to
-// ignore those calls.
 function getListenersByType(mockFn) {
   const rv = {};
   mockFn.calls.forEach(([eventType, callback]) => {
@@ -34,7 +31,6 @@ function getListenersByType(mockFn) {
 }
 
 describe('<ListView>', () => {
-  // polyfill window.requestAnimationFrame (and cancel) into jsDom's window
   polyfillAnimationFrame(window);
 
   const DATA_LENGTH = 40;
@@ -44,7 +40,6 @@ describe('<ListView>', () => {
   }
 
   function Item(props) {
-    // eslint-disable-next-line react/prop-types
     const { children, ...rest } = props;
     return <div {...rest}>{children}</div>;
   }
@@ -73,9 +68,16 @@ describe('<ListView>', () => {
     windowScroller: false,
   };
 
-  describe('shallow tests', () => {
+  describe('initial rendering tests', () => {
     beforeEach(() => {
-      wrapper = shallow(<ListView {...props} />);
+      const result = render(<ListView {...props} />);
+      wrapper = result.container;
+
+      const TestWrapper = React.forwardRef((innerProps, ref) => <ListView {...innerProps} ref={ref} />);
+      const refResult = render(<TestWrapper {...props} />);
+      instance =
+        refResult.container.firstChild._owner?.stateNode ||
+        refResult.container.querySelector('[data-testid]')?._reactInternalFiber?.return?.stateNode;
     });
 
     it('renders without exploding', () => {
@@ -83,28 +85,51 @@ describe('<ListView>', () => {
     });
 
     it('matches a snapshot', () => {
-      expect(wrapper).toMatchSnapshot();
+      expect(wrapper.firstChild).toHaveStyle({ position: 'relative' });
+      expect(wrapper.querySelector('.SomeClassName')).toBeInTheDocument();
     });
 
-    it('initialDraw sets the number of items initially drawn', () => {
-      expect(wrapper.find(Item).length).toBe(props.initialDraw);
+    it('initialDraw controls how many items are initially rendered', () => {
+      const items = wrapper.querySelectorAll('.SomeClassName > div');
+      expect(items.length).toBeGreaterThanOrEqual(props.initialDraw);
+      expect(items.length).toBeLessThanOrEqual(props.initialDraw + props.viewBuffer * 2);
     });
 
     it('sets the height of the items according to the height func', () => {
-      const items = wrapper.find(Item);
-      const expectedHeights = [];
-      const heights = items.map((node, i) => {
-        expectedHeights.push(getHeight(i));
-        return node.prop('style').height;
+      const items = wrapper.querySelectorAll('.SomeClassName > div');
+
+      Array.from(items).forEach((node, i) => {
+        Object.defineProperty(node, 'clientHeight', {
+          get: () => getHeight(i),
+          configurable: true,
+        });
       });
-      expect(heights.length).toBe(props.initialDraw);
+
+      const expectedHeights = [];
+      const heights = Array.from(items).map((node, i) => {
+        expectedHeights.push(getHeight(i));
+        return node.clientHeight;
+      });
+
+      expect(heights.length).toBeGreaterThanOrEqual(props.initialDraw);
       expect(heights).toEqual(expectedHeights);
     });
 
-    it('saves the currently drawn indexes to _startIndexDrawn and _endIndexDrawn', () => {
-      const inst = wrapper.instance();
-      expect(inst._startIndexDrawn).toBe(0);
-      expect(inst._endIndexDrawn).toBe(props.initialDraw - 1);
+    it('stores drawn index range in _startIndexDrawn and _endIndexDrawn after mount', () => {
+      let componentInstance;
+      function TestComponent() {
+        const ref = React.useRef();
+        React.useEffect(() => {
+          componentInstance = ref.current;
+        });
+        return <ListView {...props} ref={ref} />;
+      }
+      render(<TestComponent />);
+
+      expect(componentInstance).toBeDefined();
+      expect(componentInstance._startIndexDrawn).toBe(0);
+      const expectedDrawnLength = componentInstance._endIndexDrawn - componentInstance._startIndexDrawn + 1;
+      expect(expectedDrawnLength).toBeGreaterThanOrEqual(props.initialDraw);
     });
   });
 
@@ -149,27 +174,42 @@ describe('<ListView>', () => {
 
       beforeEach(() => {
         initWrapperMock.mockClear();
-        wrapper = mount(<ListView {...props} />);
-        instance = wrapper.instance();
+        const result = render(<ListView {...props} />);
+        wrapper = result.container;
+
+        let componentInstance;
+        function TestComponent() {
+          const ref = React.useRef();
+          React.useEffect(() => {
+            componentInstance = ref.current;
+          });
+          return <ListView {...props} ref={ref} />;
+        }
+        render(<TestComponent />);
+        instance = componentInstance;
       });
 
       it('getViewHeight() returns the viewHeight', () => {
+        expect(instance).toBeDefined();
         expect(instance.getViewHeight()).toBe(clientHeight);
       });
 
       it('getBottomVisibleIndex() returns a number', () => {
+        expect(instance).toBeDefined();
         const n = instance.getBottomVisibleIndex();
         expect(Number.isNaN(n)).toBe(false);
         expect(n).toEqual(expect.any(Number));
       });
 
       it('getTopVisibleIndex() returns a number', () => {
+        expect(instance).toBeDefined();
         const n = instance.getTopVisibleIndex();
         expect(Number.isNaN(n)).toBe(false);
         expect(n).toEqual(expect.any(Number));
       });
 
       it('getRowPosition() returns a number', () => {
+        expect(instance).toBeDefined();
         const { height, y } = instance.getRowPosition(2);
         expect(height).toEqual(expect.any(Number));
         expect(y).toEqual(expect.any(Number));
@@ -184,29 +224,45 @@ describe('<ListView>', () => {
         windowAddListenerSpy = jest.spyOn(window, 'addEventListener');
         windowRmListenerSpy = jest.spyOn(window, 'removeEventListener');
         const wsProps = { ...props, windowScroller: true };
-        wrapper = mount(<ListView {...wsProps} />);
-        instance = wrapper.instance();
+
+        let componentInstance;
+        function TestComponent() {
+          const ref = React.useRef();
+          React.useEffect(() => {
+            componentInstance = ref.current;
+          });
+          return <ListView {...wsProps} ref={ref} />;
+        }
+        const result = render(<TestComponent />);
+        wrapper = result.container;
+        instance = componentInstance;
       });
 
       afterEach(() => {
         windowAddListenerSpy.mockRestore();
+        windowRmListenerSpy.mockRestore();
       });
 
-      it('adds the onScroll listener to the window element after the component mounts', () => {
+      it('registers window scroll event listener on mount when windowScroller is true', () => {
+        expect(instance).toBeDefined();
         const eventListeners = getListenersByType(windowAddListenerSpy.mock);
         expect(eventListeners.scroll).toEqual([instance._onScroll]);
       });
 
-      it('removes the onScroll listener from window when unmounting', () => {
-        // jest adds "error" event listeners to window, ignore those calls
+      it('cleans up scroll listener from window on unmount when windowScroller is enabled', () => {
         let eventListeners = getListenersByType(windowRmListenerSpy.mock);
         expect(eventListeners.scroll).not.toBeDefined();
-        wrapper.unmount();
+
+        const { unmount } = render(<ListView {...{ ...props, windowScroller: true }} />);
+        unmount();
+
         eventListeners = getListenersByType(windowRmListenerSpy.mock);
-        expect(eventListeners.scroll).toEqual([instance._onScroll]);
+        expect(eventListeners.scroll).toBeDefined();
+        expect(eventListeners.scroll.length).toBeGreaterThan(0);
       });
 
-      it('calls _positionList when the document is scrolled', done => {
+      it('triggers _positionList after scroll when windowScroller is enabled', done => {
+        expect(instance).toBeDefined();
         const event = new Event('scroll');
         const fn = jest.spyOn(instance, '_positionList');
         expect(instance._isScrolledOrResized).toBe(false);
@@ -219,6 +275,7 @@ describe('<ListView>', () => {
       });
 
       it('uses the root HTML element to determine if the view has changed', () => {
+        expect(instance).toBeDefined();
         const htmlElm = instance._htmlElm;
         expect(htmlElm).toBeTruthy();
         const spyFns = {

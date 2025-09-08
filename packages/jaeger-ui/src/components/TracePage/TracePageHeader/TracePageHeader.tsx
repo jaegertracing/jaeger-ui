@@ -13,15 +13,14 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, Input } from 'antd';
+import { Button, InputRef } from 'antd';
 import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
-import IoAndroidArrowBack from 'react-icons/lib/io/android-arrow-back';
-import IoIosFilingOutline from 'react-icons/lib/io/ios-filing-outline';
-import MdKeyboardArrowRight from 'react-icons/lib/md/keyboard-arrow-right';
+import { IoArrowBack, IoFileTrayFull, IoChevronForward } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 
+import { Helmet } from 'react-helmet';
 import AltViewOptions from './AltViewOptions';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import SpanGraph from './SpanGraph';
@@ -30,7 +29,6 @@ import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceVi
 import LabeledList from '../../common/LabeledList';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
-import { getTraceName } from '../../../model/trace-viewer';
 import { TNil } from '../../../types';
 import { Trace } from '../../../types/trace';
 import { formatDatetime, formatDuration } from '../../../utils/date';
@@ -38,6 +36,8 @@ import { getTraceLinks } from '../../../model/link-patterns';
 
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
+import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
+import TraceId from '../../common/TraceId';
 
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
@@ -55,6 +55,7 @@ type TracePageHeaderEmbedProps = {
   showArchiveButton: boolean;
   showShortcutsHelp: boolean;
   showStandaloneLink: boolean;
+  disableJsonView: boolean;
   showViewOptions: boolean;
   slimView: boolean;
   textFilter: string | TNil;
@@ -105,7 +106,7 @@ export const HEADER_ITEMS = [
   },
 ];
 
-export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwardedRef: React.Ref<Input> }) {
+export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwardedRef: React.Ref<InputRef> }) {
   const {
     canCollapse,
     clearSearch,
@@ -124,6 +125,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     showShortcutsHelp,
     showStandaloneLink,
     showViewOptions,
+    disableJsonView,
     slimView,
     textFilter,
     toSearch,
@@ -148,19 +150,21 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
       return { ...rest, value: renderer(trace) };
     });
 
+  const traceShortID = trace.traceID.slice(0, 7);
+
   const title = (
     <h1 className={`TracePageHeader--title ${canCollapse ? 'is-collapsible' : ''}`}>
-      <TraceName traceName={getTraceName(trace.spans)} />{' '}
-      <small className="u-tx-muted">{trace.traceID.slice(0, 7)}</small>
+      <TraceName traceName={trace.traceName} /> <TraceId traceId={trace.traceID} />
     </h1>
   );
 
   return (
     <header className="TracePageHeader">
+      <Helmet title={`${trace.traceEmoji} ${traceShortID}: ${trace.tracePageTitle} — Jaeger UI`} />
       <div className="TracePageHeader--titleRow">
         {toSearch && (
           <Link className="TracePageHeader--back" to={toSearch}>
-            <IoAndroidArrowBack />
+            <IoArrowBack />
           </Link>
         )}
         {links && links.length > 0 && <ExternalLinks links={links} />}
@@ -171,9 +175,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
             role="switch"
             aria-checked={!slimView}
           >
-            <MdKeyboardArrowRight
-              className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`}
-            />
+            <IoChevronForward className={`TracePageHeader--detailToggle ${!slimView ? 'is-expanded' : ''}`} />
             {title}
           </a>
         ) : (
@@ -191,11 +193,16 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
         />
         {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
         {showViewOptions && (
-          <AltViewOptions onTraceViewChange={onTraceViewChange} traceID={trace.traceID} viewType={viewType} />
+          <AltViewOptions
+            disableJsonView={disableJsonView}
+            onTraceViewChange={onTraceViewChange}
+            traceID={trace.traceID}
+            viewType={viewType}
+          />
         )}
         {showArchiveButton && (
           <Button className="ub-mr2 ub-flex ub-items-center" htmlType="button" onClick={onArchiveClicked}>
-            <IoIosFilingOutline className="TracePageHeader--archiveIcon" />
+            <IoFileTrayFull className="TracePageHeader--archiveIcon" />
             Archive Trace
           </Button>
         )}
@@ -203,7 +210,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           <Link
             className="u-tx-inherit ub-nowrap ub-mx2"
             to={linkToStandalone}
-            target="_blank"
+            target={getTargetEmptyOrBlank()}
             rel="noopener noreferrer"
           >
             <NewWindowIcon isLarge />
@@ -223,6 +230,6 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
   );
 }
 
-export default React.forwardRef((props: TracePageHeaderEmbedProps, ref: React.Ref<Input>) => (
+export default React.forwardRef((props: TracePageHeaderEmbedProps, ref: React.Ref<InputRef>) => (
   <TracePageHeaderFn {...props} forwardedRef={ref} />
 ));

@@ -102,7 +102,7 @@ export function _initOpSpan() {
  *     recursive call stack.
  * @returns {number} - Width of narrowest rectangle that contains given words across given lines.
  */
-function calcWidth(lengths: number[], lines: number, longestThusFar: number = 0): number {
+function calcWidth(lengths: number[], lines: number, longestThusFar = 0): number {
   // Base case: all words on one line means line length is total word length
   const total = lengths.reduce((sum, curr) => curr + sum, 0);
   if (lines === 1) return total;
@@ -152,7 +152,7 @@ const calcRects = _memoize(
   function calcRects(str: string | string[], span: HTMLSpanElement): TRect[] {
     const lengths = (Array.isArray(str) ? [`${str.length} Operations}`] : str.match(WORD_RX) || [str]).map(
       s => {
-        span.innerHTML = s; // eslint-disable-line no-param-reassign
+        span.innerHTML = s;
         return span.getClientRects()[0].width;
       }
     );
@@ -166,7 +166,7 @@ const calcRects = _memoize(
     }
     return rects;
   },
-  (str: string, span: HTMLSpanElement) => `${str}\t${span.style.fontWeight}`
+  (str: string | string[], span: HTMLSpanElement) => `${str}\t${span.style.fontWeight}`
 );
 
 const sq = (n: number): number => n ** 2;
@@ -242,17 +242,15 @@ function smallestRadius(svcRects: TRect[], opRects?: TRect[]): TSmallestRadiusRV
   return rv;
 }
 
-const calcPositioning: (
-  service: string,
-  operation?: string | string[] | null
-) => TSmallestRadiusRV = _memoize(
-  function calcPositioningImpl(service: string, operation?: string | string[] | null) {
-    const svcRects = calcRects(service, _initSvcSpan());
-    const opRects = operation ? calcRects(operation, _initOpSpan()) : undefined;
+const calcPositioning: (service: string, operation?: string | string[] | null) => TSmallestRadiusRV =
+  _memoize(
+    function calcPositioningImpl(service: string, operation?: string | string[] | null) {
+      const svcRects = calcRects(service, _initSvcSpan());
+      const opRects = operation ? calcRects(operation, _initOpSpan()) : undefined;
 
-    return smallestRadius(svcRects, opRects);
-  },
-  (service: string, operation?: string | null) => `${service}\t${operation}`
-);
+      return smallestRadius(svcRects, opRects);
+    },
+    (service: string, operation?: string | string[] | null) => `${service}\t${operation}`
+  );
 
 export default calcPositioning;

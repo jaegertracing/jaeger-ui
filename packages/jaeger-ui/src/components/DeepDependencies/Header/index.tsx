@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
-import { Icon, Input, Tooltip } from 'antd';
-import MdVisibility from 'react-icons/lib/md/visibility';
-import MdVisibilityOff from 'react-icons/lib/md/visibility-off';
+import React, { useRef, useCallback, useMemo } from 'react';
+import { InputRef, Tooltip } from 'antd';
+import { IoSearch, IoEye, IoEyeOff } from 'react-icons/io5';
 
 import HopsSelector from './HopsSelector';
 import NameSelector from '../../common/NameSelector';
@@ -46,137 +45,136 @@ type TProps = {
   uiFindCount: number | undefined;
   visEncoding?: string;
 };
-export default class Header extends React.PureComponent<TProps> {
-  private _uiFindInput: React.RefObject<Input> = React.createRef();
 
-  static defaultProps = {
-    showParameters: true,
-  };
+const Header: React.FC<TProps> = ({
+  clearOperation,
+  density,
+  distanceToPathElems,
+  hiddenUiFindMatches,
+  operation,
+  operations,
+  service,
+  services,
+  setDensity,
+  setDistance,
+  setOperation,
+  setService,
+  showOperations,
+  showParameters = true, // Default prop handled here
+  showVertices,
+  toggleShowOperations,
+  uiFindCount,
+  visEncoding,
+}) => {
+  const uiFindInput = useRef<InputRef>(null);
 
-  focusUiFindInput = () => {
-    if (this._uiFindInput.current) {
-      this._uiFindInput.current.focus();
+  const focusUiFindInput = useCallback(() => {
+    uiFindInput.current?.focus();
+  }, []);
+
+  const handleSetOperation = useCallback(
+    (op: string) => {
+      trackHeaderSetOperation();
+      setOperation(op);
+    },
+    [setOperation]
+  );
+
+  const handleInfoClick = useCallback(() => {
+    trackShowMatches();
+    if (hiddenUiFindMatches) {
+      showVertices(Array.from(hiddenUiFindMatches));
     }
-  };
+  }, [hiddenUiFindMatches, showVertices]);
 
-  getUiFindInfo = () => {
-    const { hiddenUiFindMatches, uiFindCount } = this.props;
+  const uiFindInfo = useMemo(() => {
+    if (uiFindCount === undefined) {
+      return null;
+    }
 
-    if (uiFindCount === undefined) return null;
+    const hasHidden = !!hiddenUiFindMatches?.size;
+    const hiddenCount = hiddenUiFindMatches?.size || 0;
 
-    let hasHidden = false;
-    let hiddenInfo: React.ReactNode = null;
     let tipText = uiFindCount ? 'All matches are visible' : 'No matches';
-    if (hiddenUiFindMatches && hiddenUiFindMatches.size) {
-      const { size } = hiddenUiFindMatches;
-      hasHidden = true;
-      tipText = `Click to view ${size} hidden match${size !== 1 ? 'es' : ''}`;
-      hiddenInfo = (
-        <span className="DdgHeader--uiFindInfo--hidden">
-          {size}
-          <MdVisibilityOff className="DdgHeader--uiFindInfo--icon" />
-        </span>
-      );
+    if (hasHidden) {
+      tipText = `Click to view ${hiddenCount} hidden match${hiddenCount !== 1 ? 'es' : ''}`;
     }
 
     return (
-      <Tooltip overlayClassName="DdgHeader--uiFindInfo--tooltip" placement="topRight" title={tipText}>
+      <Tooltip classNames={{ root: 'DdgHeader--uiFindInfo--tooltip' }} placement="topRight" title={tipText}>
         {/* arbitrary span is necessary as Tooltip alters child's styling */}
         <span>
           <button
             className="DdgHeader--uiFindInfo"
             disabled={!hasHidden}
-            onClick={this.handleInfoClick}
+            onClick={handleInfoClick}
             type="button"
           >
             {uiFindCount}
-            {(uiFindCount !== 0 || hasHidden) && <MdVisibility className="DdgHeader--uiFindInfo--icon" />}
-            {hiddenInfo}
+            {(uiFindCount !== 0 || hasHidden) && <IoEye className="DdgHeader--uiFindInfo--icon" />}
+            {hasHidden && (
+              <span className="DdgHeader--uiFindInfo--hidden">
+                {hiddenCount}
+                <IoEyeOff className="DdgHeader--uiFindInfo--icon" />
+              </span>
+            )}
           </button>
         </span>
       </Tooltip>
     );
-  };
+  }, [uiFindCount, hiddenUiFindMatches, handleInfoClick]);
 
-  setOperation = (operation: string) => {
-    trackHeaderSetOperation();
-    this.props.setOperation(operation);
-  };
-
-  handleInfoClick = () => {
-    trackShowMatches();
-    const { hiddenUiFindMatches, showVertices } = this.props;
-    if (hiddenUiFindMatches) showVertices(Array.from(hiddenUiFindMatches));
-  };
-
-  render() {
-    const {
-      clearOperation,
-      density,
-      distanceToPathElems,
-      operation,
-      operations,
-      service,
-      services,
-      setDensity,
-      setDistance,
-      setService,
-      showOperations,
-      showParameters,
-      toggleShowOperations,
-      visEncoding,
-    } = this.props;
-
-    return (
-      <header className="DdgHeader">
-        {showParameters && (
-          <div className="DdgHeader--paramsHeader">
+  return (
+    <header className="DdgHeader">
+      {showParameters && (
+        <div className="DdgHeader--paramsHeader">
+          <NameSelector
+            label="Service"
+            placeholder="Select a service…"
+            value={service || null}
+            setValue={setService}
+            required
+            options={services || []}
+          />
+          {service && (
             <NameSelector
-              label="Service"
-              placeholder="Select a service…"
-              value={service || null}
-              setValue={setService}
-              required
-              options={services || []}
+              clearValue={clearOperation}
+              label="Operation"
+              placeholder="Filter by operation…"
+              value={operation || null}
+              setValue={handleSetOperation}
+              options={operations || []}
             />
-            {service && (
-              <NameSelector
-                clearValue={clearOperation}
-                label="Operation"
-                placeholder="Filter by operation…"
-                value={operation || null}
-                setValue={this.setOperation}
-                options={operations || []}
-              />
-            )}
-          </div>
-        )}
-        <div className="DdgHeader--controlHeader">
-          <LayoutSettings
-            density={density}
-            setDensity={setDensity}
-            showOperations={showOperations}
-            toggleShowOperations={toggleShowOperations}
-          />
-          <HopsSelector
-            distanceToPathElems={distanceToPathElems}
-            handleClick={setDistance}
-            visEncoding={visEncoding}
-          />
-          <div className="DdgHeader--findWrapper">
-            <div className="DdgHeader--uiFind" role="button" onClick={this.focusUiFindInput}>
-              <Icon className="DdgHeader--uiFindSearchIcon" type="search" />
-              <UiFindInput
-                allowClear
-                forwardedRef={this._uiFindInput}
-                inputProps={{ className: 'DdgHeader--uiFindInput' }}
-                trackFindFunction={trackFilter}
-              />
-              {this.getUiFindInfo()}
-            </div>
+          )}
+        </div>
+      )}
+      <div className="DdgHeader--controlHeader">
+        <LayoutSettings
+          density={density}
+          setDensity={setDensity}
+          showOperations={showOperations}
+          toggleShowOperations={toggleShowOperations}
+        />
+        <HopsSelector
+          distanceToPathElems={distanceToPathElems}
+          handleClick={setDistance}
+          visEncoding={visEncoding}
+        />
+        <div className="DdgHeader--findWrapper">
+          <div className="DdgHeader--uiFind" role="button" onClick={focusUiFindInput}>
+            <IoSearch className="DdgHeader--uiFindSearchIcon" />
+            <UiFindInput
+              allowClear
+              forwardedRef={uiFindInput}
+              inputProps={{ className: 'DdgHeader--uiFindInput' }}
+              trackFindFunction={trackFilter}
+            />
+            {uiFindInfo}
           </div>
         </div>
-      </header>
-    );
-  }
-}
+      </div>
+    </header>
+  );
+};
+
+export default Header;

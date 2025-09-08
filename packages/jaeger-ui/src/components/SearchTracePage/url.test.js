@@ -17,6 +17,10 @@ import * as reactRouterDom from 'react-router-dom';
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 import { ROUTE_PATH, getUrl, getUrlState, isSameQuery, matches } from './url';
 
+jest.mock('react-router-dom', () => ({
+  matchPath: jest.fn(),
+}));
+
 describe('SearchTracePage/url', () => {
   const span0 = 'span-0';
   const span1 = 'span-1';
@@ -240,7 +244,6 @@ describe('SearchTracePage/url', () => {
 
     it('returns `false` if a considered key is changed or omitted', () => {
       queryKeys.forEach(key => {
-        // eslint-disable-next-line camelcase
         const { [key]: _omitted, ...rest } = baseQuery;
         expect(isSameQuery(baseQuery, rest)).toBe(false);
         expect(isSameQuery(baseQuery, { ...rest, [key]: 'changed' })).toBe(false);
@@ -250,7 +253,6 @@ describe('SearchTracePage/url', () => {
     it('returns `true` if no considered keys are changed or omitted', () => {
       expect(isSameQuery(baseQuery, { ...baseQuery })).toBe(true);
 
-      // eslint-disable-next-line camelcase
       const { [otherKey]: _omitted, ...copy } = baseQuery;
       expect(isSameQuery(baseQuery, copy)).toBe(true);
       expect(isSameQuery(baseQuery, { ...copy, [otherKey]: 'changed' })).toBe(true);

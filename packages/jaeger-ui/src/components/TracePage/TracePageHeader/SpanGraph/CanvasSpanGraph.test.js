@@ -13,20 +13,63 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
-import CanvasSpanGraph from './CanvasSpanGraph';
+import CanvasSpanGraph, { getColor } from './CanvasSpanGraph';
+import * as renderUtils from './render-into-canvas'; // Import the module to mock
+import colorGenerator from '../../../../utils/color-generator';
 
-describe('<CanvasSpanGraph>', () => {
-  it('renders without exploding', () => {
-    const items = [{ valueWidth: 1, valueOffset: 1, serviceName: 'service-name-0' }];
-    const wrapper = shallow(<CanvasSpanGraph items={[]} valueWidth={4000} />);
-    expect(wrapper).toBeDefined();
-    wrapper.instance()._setCanvasRef({
-      getContext: () => ({
-        fillRect: () => {},
-      }),
+// Mock the renderIntoCanvas function
+jest.mock('./render-into-canvas');
+
+describe('<CanvasSpanGraph />', () => {
+  const items = [{ valueWidth: 1, valueOffset: 1, serviceName: 'service-name-0' }];
+  const props = {
+    items: [],
+    valueWidth: 4000,
+  };
+
+  // Store the original prototype
+  const originalGetContext = HTMLCanvasElement.prototype.getContext;
+
+  beforeEach(() => {
+    // Mock getContext before each test
+    HTMLCanvasElement.prototype.getContext = () => ({
+      fillRect: jest.fn(),
+      clearRect: jest.fn(),
+      // Add other methods if needed by renderIntoCanvas
     });
-    wrapper.setProps({ items });
+    // Reset the mock before each test
+    renderUtils.default.mockClear();
+  });
+
+  afterEach(() => {
+    // Restore the original prototype after each test
+    HTMLCanvasElement.prototype.getContext = originalGetContext;
+  });
+
+  it('renders without exploding', () => {
+    const { container, rerender } = render(<CanvasSpanGraph {...props} />);
+    const canvas = container.querySelector('.CanvasSpanGraph');
+
+    expect(canvas).toBeInTheDocument();
+    // Check if renderIntoCanvas was called on mount
+    expect(renderUtils.default).toHaveBeenCalledTimes(1);
+
+    // Update props and rerender
+    rerender(<CanvasSpanGraph {...props} items={items} />);
+
+    // Check if renderIntoCanvas was called again on update
+    expect(renderUtils.default).toHaveBeenCalledTimes(2);
+    expect(renderUtils.default).toHaveBeenCalledWith(canvas, items, props.valueWidth, expect.any(Function));
+  });
+
+  it('calls colorGenerator.getRgbColorByKey with correct hex', () => {
+    const spy = jest.spyOn(colorGenerator, 'getRgbColorByKey');
+    const hex = '#abcdef';
+    getColor(hex);
+    expect(spy).toHaveBeenCalledWith(hex);
+    spy.mockRestore();
   });
 });

@@ -25,6 +25,7 @@ import {
   TDdgActionMeta,
   TDdgAddViewModifierPayload,
   TDdgClearViewModifiersFromIndicesPayload,
+  TDdgModel,
   TDdgPayload,
   TDdgRemoveViewModifierFromIndicesPayload,
   TDdgRemoveViewModifierPayload,
@@ -33,18 +34,24 @@ import {
 import TDdgState, { TDdgStateEntry } from '../types/TDdgState';
 import guardReducer, { guardReducerWithMeta } from '../utils/guardReducer';
 
+interface IDoneState {
+  state: typeof fetchedState.DONE;
+  model: TDdgModel;
+  viewModifiers: Map<number, number>;
+}
+
 export function addViewModifier(state: TDdgState, payload: TDdgAddViewModifierPayload) {
   const { visibilityIndices, viewModifier } = payload;
   const key = getStateEntryKey(payload);
   const stateEntry: TDdgStateEntry | void = state[key];
   if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
-    console.warn('Cannot set view modifiers for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
+    console.warn('Cannot set view modifiers for unloaded Deep Dependency Graph');
     return state;
   }
 
-  const viewModifiers = new Map(stateEntry.viewModifiers);
+  const viewModifiers = new Map((stateEntry as IDoneState).viewModifiers);
   visibilityIndices.forEach(idx => {
-    viewModifiers.set(idx, (viewModifiers.get(idx) || 0) | viewModifier); // eslint-disable-line no-bitwise
+    viewModifiers.set(idx, (viewModifiers.get(idx) || 0) | viewModifier);
   });
 
   return {
@@ -61,17 +68,15 @@ export function viewModifierRemoval(state: TDdgState, payload: TDdgViewModifierR
   const key = getStateEntryKey(payload);
   const stateEntry: TDdgStateEntry | void = state[key];
   if (!stateEntry || stateEntry.state !== fetchedState.DONE) {
-    console.warn('Cannot change view modifiers for unloaded Deep Dependency Graph'); // eslint-disable-line no-console
+    console.warn('Cannot change view modifiers for unloaded Deep Dependency Graph');
     return state;
   }
 
-  const viewModifiers = new Map(stateEntry.viewModifiers);
+  const viewModifiers = new Map((stateEntry as IDoneState).viewModifiers);
   const indicesToUpdate = visibilityIndices || Array.from(viewModifiers.keys());
 
   indicesToUpdate.forEach(idx => {
-    const newValue = viewModifier
-      ? (viewModifiers.get(idx) || 0) & ~viewModifier // eslint-disable-line no-bitwise
-      : EViewModifier.None;
+    const newValue = viewModifier ? (viewModifiers.get(idx) || 0) & ~viewModifier : EViewModifier.None;
 
     if (newValue === EViewModifier.None) {
       viewModifiers.delete(idx);

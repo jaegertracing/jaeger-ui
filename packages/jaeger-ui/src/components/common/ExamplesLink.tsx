@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as React from 'react';
-
 import { getUrl } from '../SearchTracePage/url';
 import NewWindowIcon from './NewWindowIcon';
 
@@ -39,27 +38,27 @@ function hasSpans(example: TExample | TExampleWithSpans): example is TExampleWit
 function getGetUrlArg(examples: TExample[]): { spanLinks: Record<string, string>; traceID: string[] } {
   const spanLinks: Record<string, string> = {};
   const traceID: string[] = [];
+
   examples.forEach((example: TExample) => {
     if (hasSpans(example)) spanLinks[example.traceID] = example.spanIDs.join(' ');
     else traceID.push(example.traceID);
   });
+
   return {
     spanLinks,
     traceID,
   };
 }
 
-export default class ExamplesLink extends React.PureComponent<TProps> {
-  render() {
-    const { examples, includeText } = this.props;
+const ExamplesLink: React.FC<TProps> = ({ examples, includeText }) => {
+  if (!examples || !examples.length) return null;
 
-    if (!examples || !examples.length) return null;
+  return (
+    <a href={getUrl(getGetUrlArg(examples))} target="_blank" rel="noopener noreferrer">
+      {includeText && 'Examples '}
+      <NewWindowIcon />
+    </a>
+  );
+};
 
-    return (
-      <a href={getUrl(getGetUrlArg(examples))} target="_blank" rel="noopener noreferrer">
-        {includeText && 'Examples '}
-        <NewWindowIcon />
-      </a>
-    );
-  }
-}
+export default ExamplesLink;

@@ -13,15 +13,14 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Input } from 'antd';
+import { InputRef } from 'antd';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
-import { connect, Dispatch } from 'react-redux';
-import { match as Match } from 'react-router-dom';
-import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
@@ -49,15 +48,20 @@ import { extractUiFindFromState } from '../common/UiFindInput';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { fetchedState } from '../../constants';
-import { FetchedTrace, ReduxState, TNil } from '../../types';
+import { FetchedTrace, LocationState, ReduxState, TNil } from '../../types';
 import { Trace } from '../../types/trace';
 import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
+import TraceSpanView from './TraceSpanView/index';
+import TraceFlamegraph from './TraceFlamegraph/index';
+import { StorageCapabilities, TraceGraphConfig } from '../../types/config';
 
 import './index.css';
+import memoizedTraceCriticalPath from './CriticalPath/index';
+import withRouteProps from '../../utils/withRouteProps';
 
 type TDispatchProps = {
   acknowledgeArchive: (id: string) => void;
@@ -68,18 +72,22 @@ type TDispatchProps = {
 
 type TOwnProps = {
   history: RouterHistory;
-  location: Location;
-  match: Match<{ id: string }>;
+  location: Location<LocationState>;
+  params: { id: string };
 };
 
 type TReduxProps = {
   archiveEnabled: boolean;
+  storageCapabilities: StorageCapabilities | TNil;
   archiveTraceState: TraceArchive | TNil;
+  criticalPathEnabled: boolean;
   embedded: null | EmbeddedState;
   id: string;
   searchUrl: null | string;
+  disableJsonView: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
+  traceGraphConfig?: TraceGraphConfig;
 };
 
 type TProps = TDispatchProps & TOwnProps & TReduxProps;
@@ -97,7 +105,7 @@ const VIEW_CHANGE_BASE = 0.005;
 const VIEW_CHANGE_FAST = 0.05;
 
 // export for tests
-export const shortcutConfig = {
+export const shortcutConfig: { [name: string]: [number, number] } = {
   panLeft: [-VIEW_CHANGE_BASE, -VIEW_CHANGE_BASE],
   panLeftFast: [-VIEW_CHANGE_FAST, -VIEW_CHANGE_FAST],
   panRight: [VIEW_CHANGE_BASE, VIEW_CHANGE_BASE],
@@ -125,7 +133,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
   _headerElm: HTMLElement | TNil;
   _filterSpans: typeof filterSpans;
-  _searchBar: React.RefObject<Input>;
+  _searchBar = React.createRef<InputRef>();
   _scrollManager: ScrollManager;
   traceDagEV: TEv | TNil;
 
@@ -154,7 +162,6 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       scrollBy,
       scrollTo,
     });
-    this._searchBar = React.createRef();
     resetShortcuts();
   }
 
@@ -165,12 +172,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     if (!this._scrollManager) {
       throw new Error('Invalid state - scrollManager is unset');
     }
-    const {
-      scrollPageDown,
-      scrollPageUp,
-      scrollToNextVisibleSpan,
-      scrollToPrevVisibleSpan,
-    } = this._scrollManager;
+    const { scrollPageDown, scrollPageUp, scrollToNextVisibleSpan, scrollToPrevVisibleSpan } =
+      this._scrollManager;
     const adjViewRange = (a: number, b: number) => this._adjustViewRange(a, b, 'kbd');
     const shortcutCallbacks = makeShortcutCallbacks(adjViewRange);
     shortcutCallbacks.scrollPageDown = scrollPageDown;
@@ -321,7 +324,19 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   render() {
-    const { archiveEnabled, archiveTraceState, embedded, id, searchUrl, uiFind, trace } = this.props;
+    const {
+      archiveEnabled,
+      storageCapabilities,
+      archiveTraceState,
+      criticalPathEnabled,
+      embedded,
+      id,
+      uiFind,
+      trace,
+      disableJsonView,
+      traceGraphConfig,
+      location: { state: locationState },
+    } = this.props;
     const { slimView, viewType, headerHeight, viewRange } = this.state;
     if (!trace || trace.state === fetchedState.LOADING) {
       return <LoadingIndicator className="u-mt-vast" centered />;
@@ -345,6 +360,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
 
     const isEmbedded = Boolean(embedded);
+    const hasArchiveStorage = Boolean(storageCapabilities?.archiveStorage);
     const headerProps = {
       focusUiFindMatches: this.focusUiFindMatches,
       slimView,
@@ -365,17 +381,19 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       prevResult: this.prevResult,
       ref: this._searchBar,
       resultCount: findCount,
-      showArchiveButton: !isEmbedded && archiveEnabled,
+      disableJsonView,
+      showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
-      toSearch: searchUrl,
+      toSearch: (locationState && locationState.fromSearch) || null,
       trace: data,
       updateNextViewRangeTime: this.updateNextViewRangeTime,
       updateViewRangeTime: this.updateViewRangeTime,
     };
 
     let view;
+    const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data) : [];
     if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
       view = (
         <TraceTimelineViewer
@@ -383,6 +401,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
           findMatchesIDs={spanFindMatches}
           trace={data}
+          criticalPath={criticalPath}
           updateNextViewRangeTime={this.updateNextViewRangeTime}
           updateViewRangeTime={this.updateViewRangeTime}
           viewRange={viewRange}
@@ -395,10 +414,15 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           ev={this.traceDagEV}
           uiFind={uiFind}
           uiFindVertexKeys={graphFindMatches}
+          traceGraphConfig={traceGraphConfig}
         />
       );
-    } else {
+    } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
       view = <TraceStatistics trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
+    } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
+      view = <TraceSpanView trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
+    } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
+      view = <TraceFlamegraph trace={trace} />;
     }
 
     return (
@@ -417,23 +441,30 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { id } = ownProps.match.params;
+  const { id } = ownProps.params;
   const { archive, config, embedded, router } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
   const archiveEnabled = Boolean(config.archiveEnabled);
+  const storageCapabilities = config.storageCapabilities;
+  const { disableJsonView, criticalPathEnabled } = config;
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
+  const { traceGraph: traceGraphConfig } = config;
 
   return {
     ...extractUiFindFromState(state),
     archiveEnabled,
+    storageCapabilities,
     archiveTraceState,
+    criticalPathEnabled,
     embedded,
     id,
     searchUrl,
+    disableJsonView,
     trace,
+    traceGraphConfig,
   };
 }
 
@@ -445,7 +476,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TracePageImpl);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(TracePageImpl));

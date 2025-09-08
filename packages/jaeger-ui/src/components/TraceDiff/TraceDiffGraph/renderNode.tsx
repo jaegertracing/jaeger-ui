@@ -51,7 +51,11 @@ export class DiffNode extends React.PureComponent<Props> {
       <table className={`DiffNode ${className}`}>
         <tbody className="DiffNode--body">
           <tr>
-            <td className={`DiffNode--metricCell ${className}`} rowSpan={isSame ? 2 : 1}>
+            <td
+              className={`DiffNode--metricCell ${className}`}
+              rowSpan={isSame ? 2 : 1}
+              data-testid="diff-metric-cell"
+            >
               {isSame ? null : <span className="DiffNode--metricSymbol">{chgSign}</span>}
               {isSame ? a : abs(b - a)}
             </td>
@@ -61,12 +65,13 @@ export class DiffNode extends React.PureComponent<Props> {
                 className="DiffNode--copyIcon"
                 copyText={`${service} ${operation}`}
                 tooltipTitle="Copy label"
+                buttonText="Copy"
               />
             </td>
           </tr>
           <tr>
             {isSame ? null : (
-              <td className={`DiffNode--metricCell ${className}`}>
+              <td className={`DiffNode--metricCell ${className}`} data-testid="diff-percent-cell">
                 <span className="DiffNode--metricSymbol">{chgSign}</span>
                 {a === 0 || b === 0 ? 100 : abs(((a - b) / max(a, b)) * 100).toFixed(0)}
                 <span className="DiffNode--metricSymbol">%</span>
@@ -79,7 +84,7 @@ export class DiffNode extends React.PureComponent<Props> {
     );
 
     return (
-      <Popover overlayClassName={`DiffNode--popover ${className}`} mouseEnterDelay={0.25} content={table}>
+      <Popover classNames={{ root: `DiffNode--popover ${className}` }} mouseEnterDelay={0.25} content={table}>
         {table}
       </Popover>
     );
@@ -94,7 +99,7 @@ export default function renderNode(vertex: TDagPlexusVertex<TDiffCounts>) {
 }
 
 export function getNodeEmphasisRenderer(keys: Set<string>) {
-  return function drawEmphasizedNode(lv: TLayoutVertex<any>) {
+  return function drawEmphasizedNode(lv: TLayoutVertex) {
     if (!keys.has(lv.vertex.key)) {
       return null;
     }

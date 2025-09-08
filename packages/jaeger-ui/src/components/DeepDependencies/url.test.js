@@ -12,10 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import queryString from 'query-string';
 import * as reactRouterDom from 'react-router-dom';
 
 import { ROUTE_PATH, matches, getUrl, getUrlState, sanitizeUrlState } from './url';
+import * as parseQuery from '../../utils/parseQuery';
+
+jest.mock('react-router-dom', () => ({
+  matchPath: jest.fn(),
+}));
 
 describe('DeepDependencyGraph/url', () => {
   describe('matches', () => {
@@ -107,7 +111,7 @@ describe('DeepDependencyGraph/url', () => {
     let parseSpy;
 
     beforeAll(() => {
-      parseSpy = jest.spyOn(queryString, 'parse');
+      parseSpy = jest.spyOn(parseQuery, 'default');
       warnSpy = jest.spyOn(console, 'warn').mockImplementation();
     });
 
@@ -130,6 +134,7 @@ describe('DeepDependencyGraph/url', () => {
     it('handles absent values', () => {
       ['end', 'hash', 'operation', 'service', 'start', 'visEncoding'].forEach(param => {
         const { [param]: unused, ...rest } = expectedParams;
+
         const { [param]: alsoUnused, ...rv } = acceptableParams;
         parseSpy.mockReturnValue(rv);
         expect(getUrlState(getSearch())).toEqual(rest);
@@ -138,6 +143,7 @@ describe('DeepDependencyGraph/url', () => {
 
     it("defaults `density` to 'ppe'", () => {
       const { density: unused, ...rest } = expectedParams;
+
       const { density: alsoUnused, ...rv } = acceptableParams;
       parseSpy.mockReturnValue(rv);
       expect(getUrlState(getSearch())).toEqual({ ...rest, density: 'ppe' });

@@ -24,12 +24,7 @@ type Props = {
   wordRegexp?: RegExp;
 };
 
-// TODO typescript doesn't understand text or null as react nodes
-// https://github.com/Microsoft/TypeScript/issues/21699
-export default function BreakableText(
-  props: Props
-): any /* React.ReactNode /* React.ReactElement | React.ReactElement[] \*\/ */ {
-  const { className, text, wordRegexp = WORD_RX } = props;
+export default function BreakableText({ className = 'BreakableText', text, wordRegexp = WORD_RX }: Props) {
   if (!text) {
     return typeof text === 'string' ? text : null;
   }
@@ -47,8 +42,3 @@ export default function BreakableText(
   }
   return spans;
 }
-
-BreakableText.defaultProps = {
-  className: 'BreakableText',
-  wordRegexp: WORD_RX,
-};

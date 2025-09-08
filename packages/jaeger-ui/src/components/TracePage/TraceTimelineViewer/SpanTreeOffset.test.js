@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { shallow } from 'enzyme';
 import React from 'react';
-import IoChevronRight from 'react-icons/lib/io/chevron-right';
-import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import { mapDispatchToProps, mapStateToProps, UnconnectedSpanTreeOffset } from './SpanTreeOffset';
 import spanAncestorIdsSpy from '../../../utils/span-ancestor-ids';
@@ -28,10 +27,8 @@ describe('SpanTreeOffset', () => {
   const rootSpanID = 'rootSpanID';
   const specialRootID = 'root';
   let props;
-  let wrapper;
 
   beforeEach(() => {
-    // Mock implementation instead of Mock return value so that each call returns a new array (like normal)
     spanAncestorIdsSpy.mockImplementation(() => [parentSpanID, rootSpanID]);
     props = {
       addHoverIndentGuideId: jest.fn(),
@@ -42,101 +39,135 @@ describe('SpanTreeOffset', () => {
         spanID: ownSpanID,
       },
     };
-    wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
   });
 
   describe('.SpanTreeOffset--indentGuide', () => {
     it('renders only one .SpanTreeOffset--indentGuide for entire trace if span has no ancestors', () => {
       spanAncestorIdsSpy.mockReturnValue([]);
-      wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
-      const indentGuides = wrapper.find('.SpanTreeOffset--indentGuide');
+      const { container } = render(<UnconnectedSpanTreeOffset {...props} />);
+      const indentGuides = container.querySelectorAll('.SpanTreeOffset--indentGuide');
       expect(indentGuides.length).toBe(1);
-      expect(indentGuides.prop('data-ancestor-id')).toBe(specialRootID);
+      expect(indentGuides[0].getAttribute('data-ancestor-id')).toBe(specialRootID);
     });
 
     it('renders one .SpanTreeOffset--indentGuide per ancestor span, plus one for entire trace', () => {
-      const indentGuides = wrapper.find('.SpanTreeOffset--indentGuide');
+      const { container } = render(<UnconnectedSpanTreeOffset {...props} />);
+      const indentGuides = container.querySelectorAll('.SpanTreeOffset--indentGuide');
       expect(indentGuides.length).toBe(3);
-      expect(indentGuides.at(0).prop('data-ancestor-id')).toBe(specialRootID);
-      expect(indentGuides.at(1).prop('data-ancestor-id')).toBe(rootSpanID);
-      expect(indentGuides.at(2).prop('data-ancestor-id')).toBe(parentSpanID);
+      expect(indentGuides[0].getAttribute('data-ancestor-id')).toBe(specialRootID);
+      expect(indentGuides[1].getAttribute('data-ancestor-id')).toBe(rootSpanID);
+      expect(indentGuides[2].getAttribute('data-ancestor-id')).toBe(parentSpanID);
     });
 
     it('adds .is-active to correct indentGuide', () => {
-      props.hoverIndentGuideIds = new Set([parentSpanID]);
-      wrapper = shallow(<UnconnectedSpanTreeOffset {...props} />);
-      const activeIndentGuide = wrapper.find('.is-active');
+      const propsWithHover = {
+        ...props,
+        hoverIndentGuideIds: new Set([parentSpanID]),
+      };
+      const { container } = render(<UnconnectedSpanTreeOffset {...propsWithHover} />);
+      const activeIndentGuide = container.querySelectorAll('.is-active');
       expect(activeIndentGuide.length).toBe(1);
-      expect(activeIndentGuide.prop('data-ancestor-id')).toBe(parentSpanID);
+      expect(activeIndentGuide[0].getAttribute('data-ancestor-id')).toBe(parentSpanID);
     });
 
     it('calls props.addHoverIndentGuideId on mouse enter', () => {
-      wrapper.find({ 'data-ancestor-id': parentSpanID }).simulate('mouseenter', {});
+      const { container } = render(<UnconnectedSpanTreeOffset {...props} />);
+      const indentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
+      fireEvent.mouseEnter(indentGuide, {});
       expect(props.addHoverIndentGuideId).toHaveBeenCalledTimes(1);
       expect(props.addHoverIndentGuideId).toHaveBeenCalledWith(parentSpanID);
     });
 
     it('does not call props.addHoverIndentGuideId on mouse enter if mouse came from a indentGuide with the same ancestorId', () => {
+      const { container } = render(<UnconnectedSpanTreeOffset {...props} />);
+      const indentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
       const relatedTarget = document.createElement('span');
       relatedTarget.dataset.ancestorId = parentSpanID;
-      wrapper.find({ 'data-ancestor-id': parentSpanID }).simulate('mouseenter', {
+
+      const event = new MouseEvent('mouseenter', {
+        bubbles: true,
         relatedTarget,
       });
+      fireEvent(indentGuide, event);
+
       expect(props.addHoverIndentGuideId).not.toHaveBeenCalled();
     });
 
     it('calls props.removeHoverIndentGuideId on mouse leave', () => {
-      wrapper.find({ 'data-ancestor-id': parentSpanID }).simulate('mouseleave', {});
+      const { container } = render(<UnconnectedSpanTreeOffset {...props} />);
+      const indentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
+      fireEvent.mouseLeave(indentGuide, {});
       expect(props.removeHoverIndentGuideId).toHaveBeenCalledTimes(1);
       expect(props.removeHoverIndentGuideId).toHaveBeenCalledWith(parentSpanID);
     });
 
     it('does not call props.removeHoverIndentGuideId on mouse leave if mouse leaves to a indentGuide with the same ancestorId', () => {
+      const { container } = render(<UnconnectedSpanTreeOffset {...props} />);
+      const indentGuide = container.querySelector(`[data-ancestor-id="${parentSpanID}"]`);
       const relatedTarget = document.createElement('span');
       relatedTarget.dataset.ancestorId = parentSpanID;
-      wrapper.find({ 'data-ancestor-id': parentSpanID }).simulate('mouseleave', {
+
+      const event = new MouseEvent('mouseleave', {
+        bubbles: true,
         relatedTarget,
       });
+      fireEvent(indentGuide, event);
+
       expect(props.removeHoverIndentGuideId).not.toHaveBeenCalled();
     });
   });
 
   describe('icon', () => {
+    let renderResult;
+
     beforeEach(() => {
-      wrapper.setProps({ span: { ...props.span, hasChildren: true } });
+      const updatedProps = { ...props, span: { ...props.span, hasChildren: true } };
+      renderResult = render(<UnconnectedSpanTreeOffset {...updatedProps} />);
     });
 
     it('does not render icon if props.span.hasChildren is false', () => {
-      wrapper.setProps({ span: { ...props.span, hasChildren: false } });
-      expect(wrapper.find(IoChevronRight).length).toBe(0);
-      expect(wrapper.find(IoIosArrowDown).length).toBe(0);
+      const propsWithoutChildren = { ...props, span: { ...props.span, hasChildren: false } };
+      const { container } = render(<UnconnectedSpanTreeOffset {...propsWithoutChildren} />);
+      expect(container.querySelector('svg')).toBeNull();
     });
 
     it('does not render icon if props.span.hasChildren is true and showChildrenIcon is false', () => {
-      wrapper.setProps({ showChildrenIcon: false });
-      expect(wrapper.find(IoChevronRight).length).toBe(0);
-      expect(wrapper.find(IoIosArrowDown).length).toBe(0);
+      const propsWithIconDisabled = {
+        ...props,
+        span: { ...props.span, hasChildren: true },
+        showChildrenIcon: false,
+      };
+      const { container } = render(<UnconnectedSpanTreeOffset {...propsWithIconDisabled} />);
+      expect(container.querySelector('svg')).toBeNull();
     });
 
     it('renders IoChevronRight if props.span.hasChildren is true and props.childrenVisible is false', () => {
-      expect(wrapper.find(IoChevronRight).length).toBe(1);
-      expect(wrapper.find(IoIosArrowDown).length).toBe(0);
+      const { container } = renderResult;
+      expect(container.querySelector('svg')).not.toBeNull();
     });
 
     it('renders IoIosArrowDown if props.span.hasChildren is true and props.childrenVisible is true', () => {
-      wrapper.setProps({ childrenVisible: true });
-      expect(wrapper.find(IoChevronRight).length).toBe(0);
-      expect(wrapper.find(IoIosArrowDown).length).toBe(1);
+      const propsWithVisibleChildren = {
+        ...props,
+        span: { ...props.span, hasChildren: true },
+        childrenVisible: true,
+      };
+      const { container } = render(<UnconnectedSpanTreeOffset {...propsWithVisibleChildren} />);
+      expect(container.querySelector('svg')).not.toBeNull();
     });
 
     it('calls props.addHoverIndentGuideId on mouse enter', () => {
-      wrapper.find('.SpanTreeOffset--iconWrapper').simulate('mouseenter', {});
+      const { container } = renderResult;
+      const iconWrapper = container.querySelector('.SpanTreeOffset--iconWrapper');
+      fireEvent.mouseEnter(iconWrapper, {});
       expect(props.addHoverIndentGuideId).toHaveBeenCalledTimes(1);
       expect(props.addHoverIndentGuideId).toHaveBeenCalledWith(ownSpanID);
     });
 
     it('calls props.removeHoverIndentGuideId on mouse leave', () => {
-      wrapper.find('.SpanTreeOffset--iconWrapper').simulate('mouseleave', {});
+      const { container } = renderResult;
+      const iconWrapper = container.querySelector('.SpanTreeOffset--iconWrapper');
+      fireEvent.mouseLeave(iconWrapper, {});
       expect(props.removeHoverIndentGuideId).toHaveBeenCalledTimes(1);
       expect(props.removeHoverIndentGuideId).toHaveBeenCalledWith(ownSpanID);
     });

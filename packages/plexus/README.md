@@ -104,9 +104,7 @@ npm install --save @jaegertracing/plexus
 ```tsx
 import * as React from 'react';
 
-import { LayoutManager } from 'plexus';
-// TODO(joe): Update import after killing `DirectedGraph`
-import Digraph from 'plexus/Digraph';
+import { LayoutManager, Diagraph } from 'plexus';
 ```
 
 ### Data
@@ -588,7 +586,7 @@ type TRenderDefEntryFn = (
 ```
 
 |  | Argument | Type and description |
-| :-: | :-- | :-- |
+| :-: | :-- | :-- | --- |
 | 0 | graphState | `TExposedGraphState` |
 |  |  | The current state of the graph. See [`TExposedGraphState`](#texposedgraphstate) for details.<br>&nbsp; |
 | 1 | entryProps | `Record<string, unknown> | null` |

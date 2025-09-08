@@ -16,10 +16,9 @@
  * All timestamps are in microseconds
  */
 
-// TODO: Everett Tech Debt: Fix KeyValuePair types
-export type KeyValuePair = {
+export type KeyValuePair<ValueType = string> = {
   key: string;
-  value: any;
+  value: ValueType;
 };
 
 export type Link = {
@@ -39,7 +38,7 @@ export type Process = {
 
 export type SpanReference = {
   refType: 'CHILD_OF' | 'FOLLOWS_FROM';
-  // eslint-disable-next-line no-use-before-define
+
   span: Span | null | undefined;
   spanID: string;
   traceID: string;
@@ -56,6 +55,7 @@ export type SpanData = {
   tags?: Array<KeyValuePair>;
   references?: Array<SpanReference>;
   warnings?: Array<string> | null;
+  childSpanIds?: Array<string>;
 };
 
 export type Span = SpanData & {
@@ -66,6 +66,7 @@ export type Span = SpanData & {
   tags: NonNullable<SpanData['tags']>;
   references: NonNullable<SpanData['references']>;
   warnings: NonNullable<SpanData['warnings']>;
+  childSpanIds: NonNullable<SpanData['childSpanIds']>;
   subsidiarilyReferencedBy: Array<SpanReference>;
 };
 
@@ -80,5 +81,14 @@ export type Trace = TraceData & {
   spans: Span[];
   startTime: number;
   traceName: string;
+  tracePageTitle: string;
+  traceEmoji: string;
   services: { name: string; numberOfSpans: number }[];
+};
+
+// It is a section of span that lies on critical path
+export type criticalPathSection = {
+  spanId: string;
+  section_start: number;
+  section_end: number;
 };

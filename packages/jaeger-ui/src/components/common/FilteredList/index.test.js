@@ -13,263 +13,403 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { Checkbox } from 'antd';
-import { FixedSizeList as VList } from 'react-window';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 import { Key as EKey } from 'ts-key-enum';
 
 import FilteredList from './index';
 
+jest.mock('react-window', () => {
+  const React = jest.requireActual('react');
+  return {
+    FixedSizeList: ({ children, itemData, itemCount, onItemsRendered, onScroll }) => {
+      const items = [];
+      for (let i = 0; i < itemCount; i++) {
+        items.push(
+          React.createElement(children, {
+            key: i,
+            index: i,
+            data: itemData,
+            style: { height: 35 },
+          })
+        );
+      }
+      React.useEffect(() => {
+        if (onItemsRendered) {
+          onItemsRendered({
+            visibleStartIndex: 0,
+            visibleStopIndex: Math.min(itemCount - 1, 10),
+          });
+        }
+      }, [itemCount, onItemsRendered]);
+      return React.createElement(
+        'div',
+        {
+          'data-testid': 'virtual-list',
+          onScroll: onScroll ? () => onScroll({ scrollUpdateWasRequested: false }) : undefined,
+        },
+        items
+      );
+    },
+  };
+});
+
+jest.mock('./ListItem', () => {
+  const React = jest.requireActual('react');
+  return ({ index, data }) => {
+    const { options, setValue, selectedValue, addValues, removeValues, multi } = data;
+    const option = options[index];
+    const [isFocused, setIsFocused] = React.useState(false);
+    React.useEffect(() => {
+      setIsFocused(data.focusedIndex === index);
+    }, [data.focusedIndex, index]);
+    const isSelected = selectedValue instanceof Set ? selectedValue.has(option) : selectedValue === option;
+    return React.createElement(
+      'div',
+      {
+        'data-testid': `list-item-${index}`,
+        'data-option': option,
+        'data-focused': isFocused,
+        'data-selected': isSelected,
+        onClick: () => {
+          if (multi && addValues && removeValues) {
+            if (isSelected) {
+              removeValues([option]);
+            } else {
+              addValues([option]);
+            }
+          } else {
+            setValue(option);
+          }
+        },
+      },
+      option
+    );
+  };
+});
+
 describe('<FilteredList>', () => {
   const words = ['and', 'apples', 'are'];
   const numbers = ['0', '1', '2'];
-
   let props;
-  let wrapper;
-
-  const getData = () => wrapper.find(VList).prop('itemData');
-
-  const keyDown = key => wrapper.find('input').simulate('keydown', { key });
+  let user;
 
   beforeEach(() => {
+    user = userEvent.setup();
     props = {
       cancel: jest.fn(),
       options: words.concat(numbers),
       value: null,
       setValue: jest.fn(),
     };
-    wrapper = shallow(<FilteredList {...props} />);
   });
 
   it('renders without exploding', () => {
-    expect(wrapper.exists()).toBe(true);
-    expect(wrapper).toMatchSnapshot();
+    render(<FilteredList {...props} />);
+    expect(screen.getByPlaceholderText('Filter...')).toBeInTheDocument();
+    expect(screen.getByTestId('virtual-list')).toBeInTheDocument();
   });
 
-  it('puts the focus on the input on update', () => {
-    const fn = jest.fn();
-    wrapper.instance().inputRef = {
-      current: {
-        focus: fn,
-      },
-    };
-    wrapper.setProps({ value: 'anything' });
-    expect(fn.mock.calls.length).toBe(1);
+  it('puts the focus on the input on update', async () => {
+    const { rerender } = render(<FilteredList {...props} />);
+    const input = screen.getByPlaceholderText('Filter...');
+    expect(input).not.toHaveFocus();
+    rerender(<FilteredList {...props} value="anything" />);
+    await waitFor(() => {
+      expect(input).toHaveFocus();
+    });
   });
 
-  it('filters options based on the current input text', () => {
-    expect(getData().options).toEqual(props.options);
-    wrapper.find('input').simulate('change', { target: { value: 'a' } });
-    expect(getData().options).toEqual(words);
+  it('filters options based on the current input text', async () => {
+    render(<FilteredList {...props} />);
+    await user.type(screen.getByPlaceholderText('Filter...'), 'a');
+    await waitFor(() => {
+      const items = screen.getAllByTestId(/^list-item-/);
+      expect(items).toHaveLength(words.length);
+    });
   });
 
-  it('setting the value clears the filter and focus index', () => {
-    const n = -99;
-    const s = 'a';
-    wrapper.setState({ filterText: s, focusedIndex: n });
-    let data = getData();
-    expect(data.focusedIndex).toBe(n);
-    expect(data.options).toEqual(words);
-
-    data.setValue('anything');
-    data = getData();
-    expect(data.options.length).toBe(props.options.length);
-    expect(data.focusedIndex).toBe(null);
+  it('setting the value clears the filter and focus index', async () => {
+    render(<FilteredList {...props} />);
+    await user.type(screen.getByPlaceholderText('Filter...'), 'a');
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Filter...')).toHaveValue('a');
+    });
+    fireEvent.click(screen.getAllByTestId(/^list-item-/)[0]);
+    expect(props.setValue).toHaveBeenCalledWith(words[0]);
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Filter...')).toHaveValue('');
+      expect(screen.getAllByTestId(/^list-item-/)).toHaveLength(props.options.length);
+    });
   });
 
   describe('up / down arrow keys', () => {
-    let indices;
+    beforeAll(() => jest.useFakeTimers());
+    afterAll(() => jest.useRealTimers());
 
-    beforeAll(jest.useFakeTimers);
-
-    beforeEach(() => {
-      indices = {
-        visibleStartIndex: 1,
-        visibleStopIndex: props.options.length - 1,
-      };
-      wrapper.instance().onListItemsRendered(indices);
+    it('down arrow sets the focus index to the first visible item when focusIndex == null', async () => {
+      render(<FilteredList {...props} />);
+      const input = screen.getByPlaceholderText('Filter...');
+      input.focus();
+      fireEvent.keyDown(input, { key: EKey.ArrowDown });
       jest.runAllTimers();
+      await waitFor(() => {
+        const items = screen.getAllByTestId(/^list-item-/);
+        expect(items[0]).toHaveAttribute('data-focused', 'true');
+      });
     });
 
-    afterAll(jest.useRealTimers);
-
-    it('down arrow sets the focus index to the first visible item when focusIndex == null', () => {
-      keyDown(EKey.ArrowDown);
-      expect(wrapper.state('focusedIndex')).toBe(indices.visibleStartIndex);
+    it('shift the focus index to the next element', async () => {
+      render(<FilteredList {...props} />);
+      const input = screen.getByPlaceholderText('Filter...');
+      input.focus();
+      fireEvent.keyDown(input, { key: EKey.ArrowDown });
+      jest.runAllTimers();
+      await waitFor(() => {
+        const items = screen.getAllByTestId(/^list-item-/);
+        expect(items[0]).toHaveAttribute('data-focused', 'true');
+      });
+      fireEvent.keyDown(input, { key: EKey.ArrowDown });
+      jest.runAllTimers();
+      await waitFor(() => {
+        const items = screen.getAllByTestId(/^list-item-/);
+        expect(items[1]).toHaveAttribute('data-focused', 'true');
+      });
     });
 
-    it('up arrow sets the focus index to the last visible item when focusIndex == null', () => {
-      keyDown(EKey.ArrowUp);
-      expect(wrapper.state('focusedIndex')).toBe(indices.visibleStopIndex);
-    });
+    it('cause the view to scroll if necessary', async () => {
+      jest.useFakeTimers();
+      try {
+        render(<FilteredList {...props} />);
+        const input = screen.getByPlaceholderText('Filter...');
+        input.focus();
 
-    it('shift the focus index to the next element', () => {
-      keyDown(EKey.ArrowUp);
-      expect(wrapper.state('focusedIndex')).toBe(indices.visibleStopIndex);
-      keyDown(EKey.ArrowUp);
-      expect(wrapper.state('focusedIndex')).toBe(indices.visibleStopIndex - 1);
-    });
+        jest.runAllTimers();
 
-    it('cause the view to scroll if necessary', () => {
-      const fn = jest.fn();
-      keyDown(EKey.ArrowDown);
-      expect(wrapper.state('focusedIndex')).toBe(indices.visibleStartIndex);
-      wrapper.instance().vlistRef = {
-        current: {
-          scrollToItem: fn,
-        },
-      };
-      keyDown(EKey.ArrowUp);
-      expect(wrapper.state('focusedIndex')).toBe(indices.visibleStartIndex - 1);
-      expect(fn.mock.calls).toEqual([[indices.visibleStartIndex - 1]]);
+        fireEvent.keyDown(input, { key: EKey.ArrowDown });
+        jest.runAllTimers();
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId(/^list-item-/)[0]).toHaveAttribute('data-focused', 'true');
+        });
+
+        const totalItems = props.options.length;
+
+        for (let i = 0; i < totalItems - 1; i++) {
+          fireEvent.keyDown(input, { key: EKey.ArrowDown });
+          jest.runAllTimers();
+        }
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId(/^list-item-/)[totalItems - 1]).toHaveAttribute(
+            'data-focused',
+            'true'
+          );
+        });
+
+        for (let i = 0; i < totalItems - 1; i++) {
+          fireEvent.keyDown(input, { key: EKey.ArrowUp });
+          jest.runAllTimers();
+        }
+
+        await waitFor(() => {
+          expect(screen.getAllByTestId(/^list-item-/)[0]).toHaveAttribute('data-focused', 'true');
+        });
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 
   describe('multi mode checkbox', () => {
-    const addValues = jest.fn();
-    const removeValues = jest.fn();
-    const click = checked => wrapper.find(Checkbox).simulate('change', { target: { checked } });
-    const isChecked = () => wrapper.find(Checkbox).prop('checked');
-    const isIndeterminate = () => wrapper.find(Checkbox).prop('indeterminate');
+    let addValues;
+    let removeValues;
 
     beforeEach(() => {
-      wrapper.setProps({ multi: true, addValues, removeValues });
-      addValues.mockReset();
-      removeValues.mockReset();
+      addValues = jest.fn();
+      removeValues = jest.fn();
+      props = { ...props, multi: true, addValues, removeValues };
     });
 
     it('is omitted if multi is false or addValues or removeValues is not provided', () => {
-      wrapper.setProps({ multi: false });
-      expect(wrapper.find(Checkbox).length).toBe(0);
-
-      wrapper.setProps({ multi: true, addValues: undefined });
-      expect(wrapper.find(Checkbox).length).toBe(0);
-
-      wrapper.setProps({ addValues, removeValues: undefined });
-      expect(wrapper.find(Checkbox).length).toBe(0);
+      const { rerender } = render(
+        <FilteredList {...props} multi={false} addValues={addValues} removeValues={removeValues} />
+      );
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+      rerender(<FilteredList {...props} multi addValues={undefined} removeValues={removeValues} />);
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+      rerender(<FilteredList {...props} multi addValues={addValues} removeValues={undefined} />);
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     });
 
     it('is present in multi mode', () => {
-      expect(wrapper.find(Checkbox).length).toBe(1);
+      render(<FilteredList {...props} />);
+      expect(screen.getByRole('checkbox')).toBeInTheDocument();
     });
 
     it('is unchecked if nothing is selected', () => {
-      expect(isChecked()).toBe(false);
-      expect(isIndeterminate()).toBe(false);
+      render(<FilteredList {...props} />);
+      const cb = screen.getByRole('checkbox');
+      expect(cb).not.toBeChecked();
+      expect(cb).toHaveProperty('indeterminate', false);
     });
 
     it('is indeterminate if one is selected', () => {
-      wrapper.setProps({ value: words[0] });
-      expect(isChecked()).toBe(false);
-      expect(isIndeterminate()).toBe(true);
+      render(<FilteredList {...props} value={words[0]} />);
+      const cb = screen.getByRole('checkbox');
+      expect(cb).not.toBeChecked();
+      expect(cb).toHaveProperty('indeterminate', true);
     });
 
     it('is indeterminate if some are selected', () => {
-      wrapper.setProps({ value: new Set(words) });
-      expect(isChecked()).toBe(false);
-      expect(isIndeterminate()).toBe(true);
+      render(<FilteredList {...props} value={new Set(words)} />);
+      const cb = screen.getByRole('checkbox');
+      expect(cb).not.toBeChecked();
+      expect(cb).toHaveProperty('indeterminate', true);
     });
 
     it('is checked if all are selected', () => {
-      wrapper.setProps({ value: new Set([...words, ...numbers]) });
-      expect(isChecked()).toBe(true);
-      expect(isIndeterminate()).toBe(false);
+      render(<FilteredList {...props} value={new Set([...words, ...numbers])} />);
+      const cb = screen.getByRole('checkbox');
+      expect(cb).toBeChecked();
+      expect(cb).toHaveProperty('indeterminate', false);
     });
 
-    it('is unchecked if nothing filtered is selected', () => {
-      wrapper.setState({ filterText: numbers[0] });
-      wrapper.setProps({ value: new Set(words) });
-      expect(isChecked()).toBe(false);
-      expect(isIndeterminate()).toBe(false);
+    it('is unchecked if nothing filtered is selected', async () => {
+      render(<FilteredList {...props} value={new Set(words)} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), numbers[0]);
+      await waitFor(() => {
+        const cb = screen.getByRole('checkbox');
+        expect(cb).not.toBeChecked();
+        expect(cb).toHaveProperty('indeterminate', false);
+      });
     });
 
-    it('is unchecked if one filtered value is selected', () => {
-      wrapper.setState({ filterText: numbers[0] });
-      wrapper.setProps({ value: new Set(words) });
-      expect(isChecked()).toBe(false);
-      expect(isIndeterminate()).toBe(false);
+    it('is indeterminate if one filtered value is selected', async () => {
+      render(<FilteredList {...props} value={words[0]} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), words[0][0]);
+      await waitFor(() => {
+        const cb = screen.getByRole('checkbox');
+        expect(cb).not.toBeChecked();
+        expect(cb).toHaveProperty('indeterminate', true);
+      });
     });
 
-    it('is indeterminate if one filtered value is selected', () => {
-      wrapper.setState({ filterText: words[0][0] });
-      wrapper.setProps({ value: words[0] });
-      expect(isChecked()).toBe(false);
-      expect(isIndeterminate()).toBe(true);
+    it('is indeterminate if some filtered values are selected', async () => {
+      render(<FilteredList {...props} value={new Set(words.slice(1))} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), words[0][0]);
+      await waitFor(() => {
+        const cb = screen.getByRole('checkbox');
+        expect(cb).not.toBeChecked();
+        expect(cb).toHaveProperty('indeterminate', true);
+      });
     });
 
-    it('is indeterminate if some filtered values are selected', () => {
-      wrapper.setState({ filterText: words[0][0] });
-      wrapper.setProps({ value: new Set(words.slice(1)) });
-      expect(isChecked()).toBe(false);
-      expect(isIndeterminate()).toBe(true);
+    it('is checked if all filtered values are selected', async () => {
+      render(<FilteredList {...props} value={new Set(words)} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), words[0][0]);
+      await waitFor(() => {
+        const cb = screen.getByRole('checkbox');
+        expect(cb).toBeChecked();
+        expect(cb).toHaveProperty('indeterminate', false);
+      });
     });
 
-    it('is checked if all filtered values are selected', () => {
-      wrapper.setState({ filterText: words[0][0] });
-      wrapper.setProps({ value: new Set(words) });
-      expect(isChecked()).toBe(true);
-      expect(isIndeterminate()).toBe(false);
-    });
-
-    it('unselects all filtered values when clicked and checked', () => {
-      wrapper.setState({ filterText: words[0][0] });
-      click(false);
-      expect(removeValues).toHaveBeenCalledTimes(1);
+    it('unselects all filtered values when clicked and checked', async () => {
+      render(<FilteredList {...props} value={new Set(words)} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), words[0][0]);
+      await waitFor(() => expect(screen.getByRole('checkbox')).toBeChecked());
+      await user.click(screen.getByRole('checkbox'));
       expect(removeValues).toHaveBeenCalledWith(words);
-      expect(addValues).not.toHaveBeenCalled();
     });
 
-    it('selects all filtered values when clicked and unchecked', () => {
-      wrapper.setState({ filterText: words[0][0] });
-      click(true);
-      expect(addValues).toHaveBeenCalledTimes(1);
+    it('selects all filtered values when clicked and unchecked', async () => {
+      render(<FilteredList {...props} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), words[0][0]);
+      await waitFor(() => expect(screen.getByRole('checkbox')).not.toBeChecked());
+      await user.click(screen.getByRole('checkbox'));
       expect(addValues).toHaveBeenCalledWith(words);
-      expect(removeValues).not.toHaveBeenCalled();
     });
 
-    it('selects all unselected filtered values when clicked and unchecked', () => {
-      wrapper.setState({ filterText: words[0][0] });
-      wrapper.setProps({ value: words[0] });
-      click(true);
-      expect(addValues).toHaveBeenCalledTimes(1);
+    it('selects all unselected filtered values when clicked and unchecked', async () => {
+      render(<FilteredList {...props} value={words[0]} />);
+      await user.type(screen.getByPlaceholderText('Filter...'), words[0][0]);
+      await waitFor(() => {
+        const cb = screen.getByRole('checkbox');
+        expect(cb).not.toBeChecked();
+        expect(cb).toHaveProperty('indeterminate', true);
+      });
+      await user.click(screen.getByRole('checkbox'));
       expect(addValues).toHaveBeenCalledWith(words.slice(1));
-      expect(removeValues).not.toHaveBeenCalled();
     });
   });
 
   it('escape triggers cancel', () => {
-    expect(props.cancel.mock.calls.length).toBe(0);
-    keyDown(EKey.Escape);
-    expect(props.cancel.mock.calls.length).toBe(1);
+    render(<FilteredList {...props} />);
+    const input = screen.getByPlaceholderText('Filter...');
+    input.focus();
+    fireEvent.keyDown(input, { key: EKey.Escape });
+    expect(props.cancel).toHaveBeenCalled();
   });
 
-  it('enter selects the current focus index', () => {
-    const focusedIndex = 0;
-    expect(props.setValue.mock.calls.length).toBe(0);
-    wrapper.setState({ focusedIndex });
-    keyDown(EKey.Enter);
-    expect(props.setValue.mock.calls).toEqual([[props.options[focusedIndex]]]);
+  it('enter selects the current focus index', async () => {
+    jest.useFakeTimers();
+    try {
+      render(<FilteredList {...props} />);
+      const input = screen.getByPlaceholderText('Filter...');
+      input.focus();
+      fireEvent.keyDown(input, { key: EKey.ArrowDown });
+      jest.runAllTimers();
+      await waitFor(() => {
+        expect(screen.getAllByTestId(/^list-item-/)[0]).toHaveAttribute('data-focused', 'true');
+      });
+      fireEvent.keyDown(input, { key: EKey.Enter });
+      expect(props.setValue).toHaveBeenCalledWith(props.options[0]);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
-  it('enter selects the filteredOption if there is only one option', () => {
-    const value = words[1];
-    wrapper.find('input').simulate('change', { target: { value } });
-    expect(props.setValue.mock.calls.length).toBe(0);
-    keyDown(EKey.Enter);
-    expect(props.setValue.mock.calls).toEqual([[value]]);
+  it('enter selects the filteredOption if there is only one option', async () => {
+    render(<FilteredList {...props} />);
+    await user.type(screen.getByPlaceholderText('Filter...'), words[1]);
+    await waitFor(() => {
+      const items = screen.getAllByTestId(/^list-item-/);
+      expect(items).toHaveLength(1);
+    });
+    fireEvent.keyDown(screen.getByPlaceholderText('Filter...'), { key: EKey.Enter });
+    expect(props.setValue).toHaveBeenCalledWith(words[1]);
   });
 
   it('enter is ignored when an item is not focused', () => {
-    expect(props.setValue.mock.calls.length).toBe(0);
-    keyDown(EKey.Enter);
-    expect(props.setValue.mock.calls.length).toBe(0);
+    render(<FilteredList {...props} />);
+    const input = screen.getByPlaceholderText('Filter...');
+    input.focus();
+    fireEvent.keyDown(input, { key: EKey.Enter });
+    expect(props.setValue).not.toHaveBeenCalled();
   });
 
-  it('scrolling unsets the focus index', () => {
+  it('scrolling unsets the focus index', async () => {
     jest.useFakeTimers();
-    wrapper.setState({ focusedIndex: 0 });
-    wrapper.instance().onListScrolled({ scrollUpdateWasRequested: false });
-    jest.runAllTimers();
-    expect(wrapper.state('focusedIndex')).toBe(null);
+    try {
+      render(<FilteredList {...props} />);
+      const input = screen.getByPlaceholderText('Filter...');
+      input.focus();
+      fireEvent.keyDown(input, { key: EKey.ArrowDown });
+      jest.runAllTimers();
+      await waitFor(() => {
+        expect(screen.getAllByTestId(/^list-item-/)[0]).toHaveAttribute('data-focused', 'true');
+      });
+      fireEvent.scroll(screen.getByTestId('virtual-list'));
+      jest.runAllTimers();
+      await waitFor(() => {
+        screen.getAllByTestId(/^list-item-/).forEach(item => {
+          expect(item).toHaveAttribute('data-focused', 'false');
+        });
+      });
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

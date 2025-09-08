@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
-import { Icon, notification } from 'antd';
+import React, { useEffect, useRef } from 'react';
+import { notification } from 'antd';
+import { IoTimeOutline } from 'react-icons/io5';
 
-import ErrorMessage from '../../common/ErrorMessage';
+import LoadingIndicator from '../../common/LoadingIndicator';
+import { Details, Message } from '../../common/ErrorMessage';
 import { TNil } from '../../../types';
 import { TraceArchive } from '../../../types/archive';
 
@@ -31,11 +33,7 @@ type Props = {
   acknowledge: () => void;
 };
 
-type State = {
-  notifiedState: ENotifiedState | null;
-};
-
-function getNextNotifiedState(props: Props) {
+function getNextNotifiedState(props: Props): ENotifiedState | null {
   const { archivedState } = props;
   if (!archivedState) {
     return null;
@@ -51,14 +49,14 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
     return;
   }
   if (oldState) {
-    notification.close(oldState);
+    notification.destroy(oldState);
   }
   if (nextState === ENotifiedState.Progress) {
     notification.info({
       key: ENotifiedState.Progress,
       description: null,
       duration: 0,
-      icon: <Icon type="loading" />,
+      icon: <LoadingIndicator />,
       message: 'Archiving trace...',
     });
     return;
@@ -67,13 +65,13 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
   if (nextState === ENotifiedState.Outcome) {
     if (archivedState && 'error' in archivedState) {
       const { error } = archivedState;
-      notification.warn({
+      notification.warning({
         key: ENotifiedState.Outcome,
         className: 'ArchiveNotifier--errorNotification',
-        message: <ErrorMessage.Message error={error} wrap />,
-        description: <ErrorMessage.Details error={error} wrap />,
+        message: <Message error={error} wrap />,
+        description: <Details error={error} wrap />,
         duration: null,
-        icon: <Icon type="clock-circle-o" className="ArchiveNotifier--errorIcon" />,
+        icon: <IoTimeOutline className="ArchiveNotifier--errorIcon" />,
         onClose: acknowledge,
       });
     } else if (archivedState && 'isArchived' in archivedState && archivedState.isArchived) {
@@ -81,7 +79,7 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
         key: ENotifiedState.Outcome,
         description: null,
         duration: null,
-        icon: <Icon type="clock-circle-o" className="ArchiveNotifier--doneIcon" />,
+        icon: <IoTimeOutline className="ArchiveNotifier--doneIcon" />,
         message: 'This trace has been archived.',
         onClose: acknowledge,
       });
@@ -91,32 +89,24 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
   }
 }
 
-function processProps(notifiedState: ENotifiedState | null, props: Props) {
-  const nxNotifiedState = getNextNotifiedState(props);
-  updateNotification(notifiedState, nxNotifiedState, props);
-  return nxNotifiedState;
-}
+const ArchiveNotifier: React.FC<Props> = props => {
+  const notifiedStateRef = useRef<ENotifiedState | null>(null);
 
-export default class ArchiveNotifier extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    const notifiedState = processProps(null, props);
-    this.state = { notifiedState };
-  }
+  useEffect(() => {
+    const nextNotifiedState = getNextNotifiedState(props);
+    updateNotification(notifiedStateRef.current, nextNotifiedState, props);
+    notifiedStateRef.current = nextNotifiedState;
+  }, [props.archivedState]);
 
-  static getDerivedStateFromProps(props: Props, state: State) {
-    const notifiedState = processProps(state.notifiedState, props);
-    return { notifiedState };
-  }
+  useEffect(() => {
+    return () => {
+      if (notifiedStateRef.current) {
+        notification.destroy(notifiedStateRef.current);
+      }
+    };
+  }, []);
 
-  componentWillUnmount() {
-    const { notifiedState } = this.state;
-    if (notifiedState) {
-      notification.close(notifiedState);
-    }
-  }
+  return null;
+};
 
-  render() {
-    return null;
-  }
-}
+export default React.memo(ArchiveNotifier);

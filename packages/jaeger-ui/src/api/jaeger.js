@@ -13,10 +13,14 @@
 // limitations under the License.
 
 import fetch from 'isomorphic-fetch';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import _duration from 'dayjs/plugin/duration';
 import queryString from 'query-string';
 
+import getConfig from '../utils/config/get-config';
 import prefixUrl from '../utils/prefix-url';
+
+dayjs.extend(_duration);
 
 // export for tests
 export function getMessageFromError(errData, status) {
@@ -28,7 +32,7 @@ export function getMessageFromError(errData, status) {
   }
   try {
     return JSON.stringify(errData);
-  } catch (_) {
+  } catch {
     return String(errData);
   }
 }
@@ -36,7 +40,12 @@ export function getMessageFromError(errData, status) {
 function getJSON(url, options = {}) {
   const { query = null, ...init } = options;
   init.credentials = 'same-origin';
-  const queryStr = query ? `?${queryString.stringify(query)}` : '';
+  let queryStr = '';
+
+  if (query) {
+    queryStr = `?${typeof query === 'string' ? query : queryString.stringify(query)}`;
+  }
+
   return fetch(`${url}${queryStr}`, init).then(response => {
     if (response.status < 400) {
       return response.json();
@@ -48,7 +57,7 @@ function getJSON(url, options = {}) {
       try {
         data = JSON.parse(bodyText);
         bodyTextFmt = JSON.stringify(data, null, 2);
-      } catch (_) {
+      } catch {
         data = null;
         bodyTextFmt = null;
       }
@@ -73,7 +82,8 @@ function getJSON(url, options = {}) {
 
 export const DEFAULT_API_ROOT = prefixUrl('/api/');
 export const ANALYTICS_ROOT = prefixUrl('/analytics/');
-export const DEFAULT_DEPENDENCY_LOOKBACK = moment.duration(1, 'weeks').asMilliseconds();
+export const QUALITY_METRICS_ROOT = prefixUrl(getConfig().qualityMetrics.apiEndpoint);
+export const DEFAULT_DEPENDENCY_LOOKBACK = dayjs.duration(1, 'weeks').asMilliseconds();
 
 const JaegerAPI = {
   apiRoot: DEFAULT_API_ROOT,
@@ -90,10 +100,13 @@ const JaegerAPI = {
     return getJSON(`${this.apiRoot}dependencies`, { query: { endTs, lookback } });
   },
   fetchQualityMetrics(service, hours) {
-    return getJSON(`/qualitymetrics-v2`, { query: { hours, service } });
+    return getJSON(QUALITY_METRICS_ROOT, { query: { hours, service } });
   },
   fetchServiceOperations(serviceName) {
     return getJSON(`${this.apiRoot}services/${encodeURIComponent(serviceName)}/operations`);
+  },
+  transformOTLP(traces) {
+    return getJSON(`${this.apiRoot}transform`, { method: 'POST', body: JSON.stringify(traces) });
   },
   fetchServiceServerOps(service) {
     return getJSON(`${this.apiRoot}operations`, {
@@ -111,6 +124,13 @@ const JaegerAPI = {
   },
   searchTraces(query) {
     return getJSON(`${this.apiRoot}traces`, { query });
+  },
+  fetchMetrics(metricType, serviceNameList, query) {
+    const servicesName = serviceNameList.map(serviceName => `service=${serviceName}`).join(',');
+
+    return getJSON(`${this.apiRoot}metrics/${metricType}`, {
+      query: `${servicesName}&${queryString.stringify(query)}`,
+    }).then(d => ({ ...d, quantile: query.quantile }));
   },
 };
 

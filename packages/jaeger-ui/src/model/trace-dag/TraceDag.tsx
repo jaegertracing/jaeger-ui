@@ -18,14 +18,13 @@ import { TDenseSpan, TDiffCounts, NodeID, TDenseSpanMembers } from './types';
 import TDagNode from './types/TDagNode';
 import { Trace } from '../../types/trace';
 
-export default class TraceDag<TData extends { [k: string]: unknown } = {}> {
+export default class TraceDag<TData extends { [k: string]: unknown }> {
   static newFromTrace(trace: Trace, idFactory: TIdFactory = ancestralPathParentOrLeaf) {
     const dag: TraceDag<TDenseSpanMembers> = new TraceDag();
     const { denseSpansMap, rootIDs } = new DenseTrace(trace);
 
     function addDenseSpan(denseSpan: TDenseSpan | undefined, parentNodeID: NodeID | null) {
       if (!denseSpan) {
-        // eslint-disable-next-line no-console
         console.warn(`Missing dense span`);
         return;
       }

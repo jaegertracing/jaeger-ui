@@ -1,10 +1,32 @@
-# Google Analytics (GA) Tracking In Jaeger UI
+# App Analytics
 
-Page-views and errors are tracked in production when a GA tracking ID is provided in the UI config and error tracking is not disabled via the UI config. See the [documentation](http://jaeger.readthedocs.io/en/latest/deployment/#ui-configuration) for details on the UI config.
+App analytics (page views and errors) are supported in Jaeger UI through integration with Google Analytics or via customized plugins. The `tracking` section of the UI config must be provided. See the [documentation](https://www.jaegertracing.io/docs/latest/frontend-ui/) for details on the UI config.
 
 The page-view tracking is pretty basic, so details aren't provided. The GA tracking is configured with [App Tracking](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#apptracking) data. These fields, described [below](#app-tracking), can be used as a secondary dimension when viewing event data in GA. The error tracking is described, [below](#error-tracking).
 
-## App Tracking
+To enable custom plugin, one must use Javascript-version of the configuration and replace the `gaID` field with `customWebAnalytics`, e.g. in `UIconfig.js`:
+
+```javascript
+function UIConfig() {
+  return {
+     ...other properties
+     tracking: {
+       customWebAnalytics: function () {
+         return {
+           init: () => { /* initialization actions */ },
+           trackPageView: (pathname, search) => {},
+           trackError: (description) => {},
+           trackEvent: (category, action, labelOrValue, value) => {},
+           context: null,
+           isEnabled: () => false,
+         }
+       }
+     }
+  }
+}
+```
+
+## GA Tracking
 
 The following fields are sent for each GA session:
 
@@ -13,7 +35,7 @@ The following fields are sent for each GA session:
 - [Application ID](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#appId)
   - Set to `github.com/jaegertracing/jaeger-ui`
 - [Application Version](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference#appVersion)
-  - Example: `0.0.1 | github.com/jaegertracing/jaeger-ui | 8c50c6c | 2f +2 -12 | master`
+  - Example: `0.0.1 | github.com/jaegertracing/jaeger-ui | 8c50c6c | 2f +2 -12 | main`
   - A dynamic value set to: `<version> | <git remote> | <short SHA> | <diff shortstat> | <branch name>`
   - Truncated to 96 characters
   - **version** - `package.json#version`
@@ -97,7 +119,7 @@ HTMLBodyElement.r             # also in chunk.6b341ae2.js
 
 The `+33 -56` means there are 33 inserted lines and 56 deleted lines in the edits made to the two tracked files.
 
-Note: The git status is determined when the build is generated or when `yarn start` is initially executed to start the dev server.
+Note: The git status is determined when the build is generated or when `npm run start` is initially executed to start the dev server.
 
 #### Event: Label - Breadcrumbs
 
@@ -200,3 +222,22 @@ You get a lot for free when using Raven.js:
 - Some global handlers are added
 
 Implementing the above from scratch would require substantial effort. Meanwhile, Raven.js is well tested.
+
+### Steps to Verify the gaID Integration
+
+Setup:
+
+- Ensure you have the repository cloned and all dependencies installed. Run the following command in the terminal
+  - `npm install`
+- Start the local development server
+  - `npm start` This will open the application in your default browser
+
+Steps to put gaID:
+
+- Place the GA Measurement ID in `default-config.tsx`.
+
+- Verify navigation events using **TagHound**. Screenshots of the events being tracked are attached.
+
+- **Note**: Ensure GTM tracking is enabled in **TagHound**, otherwise the Google tags will not be tracked.
+
+- This test works in the local environment, but data logs may not appear in Google Analytics. This is likely because the GA dashboard doesn’t collect data from `localhost`.

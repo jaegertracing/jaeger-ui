@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable no-console, import/first */
-
 import getVersion from './get-version';
 import defaultVersion from '../../constants/default-version';
 
@@ -34,9 +32,9 @@ describe('getVersion()', () => {
     console.warn = oldWarn;
   });
 
-  describe('`window.getVersion` is not a function', () => {
+  describe('`window.getJaegerVersion` is not a function', () => {
     beforeAll(() => {
-      window.getVersion = undefined;
+      window.getJaegerVersion = undefined;
     });
 
     it('warns once', () => {
@@ -51,7 +49,7 @@ describe('getVersion()', () => {
     });
   });
 
-  describe('`window.getVersion` is a function', () => {
+  describe('`window.getJaegerVersion` is a function', () => {
     let embedded;
     let getJaegerVersion;
 

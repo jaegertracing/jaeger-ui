@@ -13,8 +13,9 @@
 // limitations under the License.
 
 import sitePrefix from '../site-prefix';
+import { getAppEnvironment } from './constants';
 
-const origin = process.env.NODE_ENV === 'test' ? global.location.origin : window.location.origin;
+const origin = getAppEnvironment() === 'test' ? global.location.origin : window.location.origin;
 
 /**
  * Generate the URL prefix from `sitePrefix` and use it for all subsequent calls

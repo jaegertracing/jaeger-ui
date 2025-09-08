@@ -13,109 +13,125 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { Button } from 'antd';
-
-import FilteredList from '../FilteredList';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import DetailTableDropdown from './DetailTableDropdown';
+import FilteredList from '../FilteredList';
 
-describe('DetailTable', () => {
-  const options = ['foo', 'bar', 'baz'];
-  const props = {
-    clearFilters: jest.fn(),
-    confirm: jest.fn(),
+jest.mock('../FilteredList', () => jest.fn(() => <div data-testid="FilteredList" />));
+
+describe('DetailTableDropdown', () => {
+  const optionsArray = ['foo', 'bar', 'baz'];
+  const options = new Set(optionsArray);
+  const selectedKeys = ['bar', 'baz'];
+  const confirm = jest.fn();
+  const clearFilters = jest.fn();
+  const setSelectedKeys = jest.fn();
+
+  const baseProps = {
     options,
-    selectedKeys: options.slice(1),
-    setSelectedKeys: jest.fn(),
+    selectedKeys,
+    confirm,
+    clearFilters,
+    setSelectedKeys,
   };
-  let wrapper;
 
   beforeEach(() => {
-    props.clearFilters.mockReset();
-    props.confirm.mockReset();
-    props.setSelectedKeys.mockReset();
-    wrapper = shallow(<DetailTableDropdown {...props} />);
+    confirm.mockReset();
+    clearFilters.mockReset();
+    setSelectedKeys.mockReset();
+    FilteredList.mockImplementation(() => <div data-testid="FilteredList" />);
   });
 
   describe('render', () => {
-    it('renders as expected', () => {
-      expect(wrapper).toMatchSnapshot();
+    it('renders without crashing and shows expected UI elements', () => {
+      render(<DetailTableDropdown {...baseProps} />);
+      expect(screen.getByTestId('FilteredList')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /clear filter/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /apply/i })).toBeInTheDocument();
     });
 
     it('filters duplicates and numbers out of selectedKeys', () => {
-      const dupedKeysWithNumbers = props.selectedKeys
-        .concat(props.selectedKeys)
-        .concat([4, 8, 15, 16, 23, 42]);
-      wrapper.setProps({ selectedKeys: dupedKeysWithNumbers });
-      expect(wrapper.find(FilteredList).prop('value')).toEqual(new Set(props.selectedKeys));
+      let filteredValue;
+      FilteredList.mockImplementation(({ value }) => {
+        filteredValue = value;
+        return <div data-testid="FilteredList" />;
+      });
+
+      const dupedKeysWithNumbers = selectedKeys.concat(selectedKeys).concat([4, 8, 15]);
+      render(<DetailTableDropdown {...baseProps} selectedKeys={dupedKeysWithNumbers} />);
+      expect(filteredValue).toEqual(new Set(selectedKeys));
     });
 
     it('handles missing clearFilters prop', () => {
-      wrapper.setProps({ clearFilters: undefined });
-      expect(() =>
-        wrapper
-          .find(Button)
-          .first()
-          .simulate('click')
-      ).not.toThrow();
+      render(<DetailTableDropdown {...{ ...baseProps, clearFilters: undefined }} />);
+      const clearBtn = screen.getByRole('button', { name: /clear filter/i });
+      expect(() => fireEvent.click(clearBtn)).not.toThrow();
     });
   });
 
-  describe('cancel', () => {
-    const selectedKeys = [options[0]];
+  describe('cancel behavior', () => {
+    const altSelected = ['foo'];
 
-    it('resets to this.selectedKeys on cancel and calls confirm once props reflect cancellation', () => {
-      wrapper.instance().selected = selectedKeys;
-      expect(props.confirm).not.toHaveBeenCalled();
-      expect(props.setSelectedKeys).not.toHaveBeenCalled();
+    const simulateOpenClose = rerender => {
+      rerender(<DetailTableDropdown {...baseProps} selectedKeys={[...altSelected]} />);
+      rerender(<DetailTableDropdown {...baseProps} selectedKeys={[...altSelected]} />);
+    };
 
-      wrapper
-        .find(Button)
-        .at(1)
-        .simulate('click');
-      expect(props.setSelectedKeys).toHaveBeenCalledTimes(1);
-      expect(props.setSelectedKeys).toHaveBeenCalledWith(selectedKeys);
-      expect(props.confirm).not.toHaveBeenCalled();
+    it('sets selected on open/close cycle and uses it on cancel', () => {
+      const { rerender } = render(<DetailTableDropdown {...baseProps} selectedKeys={altSelected} />);
 
-      wrapper.setProps({ selectedKeys });
-      expect(props.setSelectedKeys).toHaveBeenCalledTimes(1);
-      expect(props.confirm).toHaveBeenCalledTimes(1);
+      simulateOpenClose(rerender);
+      fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+      expect(setSelectedKeys).toHaveBeenCalledWith(altSelected);
+
+      rerender(<DetailTableDropdown {...baseProps} selectedKeys={[...altSelected]} />);
+      expect(confirm).toHaveBeenCalled();
     });
 
-    it('updates this.selectedKeys on open/close', () => {
-      expect(wrapper.instance().selected).not.toEqual(selectedKeys);
+    it('maintains internal selected if selectedKeys change', () => {
+      const { rerender } = render(<DetailTableDropdown {...baseProps} selectedKeys={[...selectedKeys]} />);
 
-      wrapper.setProps({ selectedKeys: selectedKeys.slice() });
-      expect(wrapper.instance().selected).not.toEqual(selectedKeys);
+      rerender(<DetailTableDropdown {...baseProps} selectedKeys={[...selectedKeys]} />);
+      rerender(<DetailTableDropdown {...baseProps} selectedKeys={[...selectedKeys]} />);
 
-      wrapper.setProps({ selectedKeys: selectedKeys.slice() });
-      expect(wrapper.instance().selected).toEqual(selectedKeys);
-    });
+      const differentSelection = ['foo'];
+      rerender(<DetailTableDropdown {...baseProps} selectedKeys={differentSelection} />);
 
-    it('maintains this.selectedKeys on changed selection', () => {
-      wrapper.instance().selected = selectedKeys;
-      wrapper.setProps({ selectedKeys: props.options.slice(0, props.selectedKeys.length) });
-      expect(wrapper.instance().selected).toBe(selectedKeys);
+      fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+
+      expect(setSelectedKeys).toHaveBeenCalledWith(selectedKeys);
     });
   });
 
   describe('FilteredList interactions', () => {
-    const getFn = propName => wrapper.find(FilteredList).prop(propName);
+    const getFn = propName => {
+      let fn;
+      FilteredList.mockImplementation(props => {
+        fn = props[propName];
+        return <div data-testid="FilteredList" />;
+      });
+      render(<DetailTableDropdown {...baseProps} />);
+      return fn;
+    };
 
-    it('adds values', () => {
-      const newValues = props.options.map(o => `not-${o}`);
-      getFn('addValues')(newValues);
-      expect(props.setSelectedKeys).toHaveBeenCalledWith([...props.selectedKeys, ...newValues]);
+    it('calls setSelectedKeys with added values', () => {
+      const addValues = getFn('addValues');
+      addValues(['new']);
+      expect(setSelectedKeys).toHaveBeenCalledWith([...selectedKeys, 'new']);
     });
 
-    it('removes values', () => {
-      getFn('removeValues')([props.selectedKeys[0]]);
-      expect(props.setSelectedKeys).toHaveBeenCalledWith(props.selectedKeys.slice(1));
+    it('calls setSelectedKeys with removed values', () => {
+      const removeValues = getFn('removeValues');
+      removeValues([selectedKeys[0]]);
+      expect(setSelectedKeys).toHaveBeenCalledWith([selectedKeys[1]]);
     });
 
-    it('sets a value', () => {
-      getFn('setValue')(props.options[0]);
-      expect(props.setSelectedKeys).toHaveBeenCalledWith([props.options[0]]);
+    it('calls setSelectedKeys with a single new value', () => {
+      const setValue = getFn('setValue');
+      setValue('foo');
+      expect(setSelectedKeys).toHaveBeenCalledWith(['foo']);
     });
   });
 });

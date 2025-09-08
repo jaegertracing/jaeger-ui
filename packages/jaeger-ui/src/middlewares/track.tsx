@@ -13,16 +13,15 @@
 // limitations under the License.
 
 import { Action } from 'redux-actions';
-import { Dispatch, Store } from 'react-redux';
+import { Dispatch, Store } from 'redux';
 
-import { middlewareHooks as searchHooks } from '../components/SearchTracePage/SearchForm.track';
 import { middlewareHooks as timelineHooks } from '../components/TracePage/TraceTimelineViewer/duck.track';
-import { isGaEnabled } from '../utils/tracking';
+import { isWaEnabled } from '../utils/tracking';
 import { ReduxState } from '../types';
 
 type TMiddlewareFn = (store: Store<ReduxState>, action: Action<any>) => void;
 
-const middlewareHooks: { [actionType: string]: TMiddlewareFn } = { ...timelineHooks, ...searchHooks };
+const middlewareHooks: { [actionType: string]: TMiddlewareFn } = { ...timelineHooks };
 
 function trackingMiddleware(store: Store<ReduxState>) {
   return function inner(next: Dispatch<ReduxState>) {
@@ -36,4 +35,4 @@ function trackingMiddleware(store: Store<ReduxState>) {
   };
 }
 
-export default isGaEnabled ? trackingMiddleware : undefined;
+export default isWaEnabled ? trackingMiddleware : undefined;

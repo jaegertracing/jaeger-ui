@@ -28,12 +28,7 @@ describe('getPathElemHasher()', () => {
     return str
       .trim()
       .split('\n')
-      .map(line =>
-        line
-          .trim()
-          .split(/\s+/g)
-          .map(makePayloadEntry)
-      );
+      .map(line => line.trim().split(/\s+/g).map(makePayloadEntry));
   }
 
   const payloadStr = `
@@ -110,9 +105,9 @@ describe('getPathElemHasher()', () => {
         density: `${EDdgDensity.MostConcise} ${EDdgDensity.MostConcise}`,
         showOp: true,
       });
-    expect(invalidDensity).toThrowError();
+    expect(invalidDensity).toThrow();
 
     const missingDensity = () => new GraphModel({ ddgModel, density: undefined, showOp: true });
-    expect(missingDensity).toThrowError(/has not been implemented/);
+    expect(missingDensity).toThrow(/has not been implemented/);
   });
 });

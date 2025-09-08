@@ -1,27 +1,38 @@
 name: "Unit Tests"
 
-on: [push, pull_request]
+on:
+  merge_group:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ (github.event.pull_request && github.event.pull_request.number) || github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   unit-tests:
-    strategy:
-      fail-fast: true
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2-beta
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: '10'
-      - name: install yarn
-        run: |
-          curl -o- -L https://yarnpkg.com/install.sh | bash
-          echo $HOME/.yarn/bin >>"$GITHUB_PATH"
-          echo $HOME/.config/yarn/global/node_modules/.bin >>"$GITHUB_PATH"
-      - run: yarn install --frozen-lockfile
-      - run: yarn lint
-      - run: yarn build
-      - run: yarn coverage
+          cache: npm
+          node-version: '22'
+      - run: npm ci
+      - run: npm ls --all
+      - run: npm run coverage
       - name: Upload coverage to codecov.io
-        run: |
-          yarn global add codecov
-          codecov
+        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5.5.0
+        with:
+          fail_ci_if_error: true
+          verbose: true
+          # Using upload token helps against rate limiting errors.
+          # Cannot define it as secret as we need it accessible from forks.
+          # See https://github.com/codecov/codecov-action/issues/837
+          token: 31c3122b-7b49-4267-a117-8c9354a97119

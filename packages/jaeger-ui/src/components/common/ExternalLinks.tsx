@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Dropdown, Menu } from 'antd';
+import { Dropdown } from 'antd';
 import * as React from 'react';
 import { Link } from '../../types/trace';
 import NewWindowIcon from './NewWindowIcon';
@@ -23,7 +23,7 @@ type ExternalLinksProps = {
 
 const LinkValue = (props: {
   href: string;
-  title?: string;
+  title: string;
   children?: React.ReactNode;
   className?: string;
 }) => (
@@ -39,26 +39,31 @@ const LinkValue = (props: {
 );
 
 // export for testing
-export const linkValueList = (links: Link[]) => (
-  <Menu>
-    {links.map(({ text, url }, index) => (
-      // `index` is necessary in the key because url can repeat
-      // eslint-disable-next-line react/no-array-index-key
-      <Menu.Item key={`${url}-${index}`}>
-        <LinkValue href={url}>{text}</LinkValue>
-      </Menu.Item>
-    ))}
-  </Menu>
-);
+export const linkValueList = (links: Link[]) => {
+  const dropdownItems = links.map(({ text, url }, index) => ({
+    label: (
+      <LinkValue href={url} title={text}>
+        {text}
+      </LinkValue>
+    ),
+    key: `${url}-${index}`,
+  }));
 
+  return dropdownItems;
+};
+
+// ExternalLinks are displayed as a menu at the trace level.
+// Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/7f0d84bc-c2fb-488c-9e50-1ec9484ea1e6
 export default function ExternalLinks(props: ExternalLinksProps) {
   const { links } = props;
+
   if (links.length === 1) {
     return <LinkValue href={links[0].url} title={links[0].text} className="TracePageHeader--back" />;
   }
+
   return (
-    <Dropdown overlay={linkValueList(links)} placement="bottomRight" trigger={['click']}>
-      <a className="TracePageHeader--back">
+    <Dropdown menu={{ items: linkValueList(links) }} placement="bottomRight" trigger={['click']}>
+      <a className="TracePageHeader--back" data-testid="dropdown">
         <NewWindowIcon isLarge />
       </a>
     </Dropdown>

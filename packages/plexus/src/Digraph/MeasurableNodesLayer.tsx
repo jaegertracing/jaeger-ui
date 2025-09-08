@@ -39,14 +39,14 @@ type TProps<T = {}, U = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> &
   };
 
 type TState<T> = {
-  nodeRefs: React.RefObject<MeasurableNode<T>>[];
+  nodeRefs: Array<React.RefObject<MeasurableNode<T>>>;
   vertices: TVertex<T>[];
 };
 
-function createRefs<T>(length: number) {
-  const rv: React.RefObject<T>[] = [];
+function createRefs<T>(length: number): Array<React.RefObject<T>> {
+  const rv: Array<React.RefObject<T>> = [];
   for (let i = 0; i < length; i++) {
-    rv.push(React.createRef<T>());
+    rv.push(React.createRef<T>() as React.RefObject<T>);
   }
   return rv;
 }

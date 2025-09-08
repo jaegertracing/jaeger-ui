@@ -13,15 +13,31 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
-import { Menu, Dropdown, Tooltip } from 'antd';
+import { render, screen, fireEvent, within } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import ReferencesButton from './ReferencesButton';
 import transformTraceData from '../../../model/transform-trace-data';
 import traceGenerator from '../../../demo/trace-generators';
-import ReferenceLink from '../url/ReferenceLink';
 
-describe(ReferencesButton, () => {
+jest.mock('../url/ReferenceLink', () => {
+  const MockReferenceLink = ({ children, className, reference }) => (
+    <a
+      className={className}
+      data-testid="reference-link"
+      data-spanid={reference.spanID}
+      data-traceid={reference.traceID}
+    >
+      {children}
+    </a>
+  );
+  MockReferenceLink.displayName = 'ReferenceLink';
+  return MockReferenceLink;
+});
+
+jest.mock('../../common/NewWindowIcon', () => () => <span data-testid="new-window-icon">↗</span>);
+
+describe('<ReferencesButton>', () => {
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
   const oneReference = trace.spans[1].references;
 
@@ -43,41 +59,47 @@ describe(ReferencesButton, () => {
   );
 
   const baseProps = {
-    focusSpan: () => {},
+    focusSpan: jest.fn(),
+    tooltipText: 'Test tooltip text',
+    children: <span data-testid="button-children">References</span>,
   };
 
-  it('renders single reference', () => {
-    const props = { ...baseProps, references: oneReference };
-    const wrapper = shallow(<ReferencesButton {...props} />);
-    const dropdown = wrapper.find(Dropdown);
-    const refLink = wrapper.find(ReferenceLink);
-    const tooltip = wrapper.find(Tooltip);
-
-    expect(dropdown.length).toBe(0);
-    expect(refLink.length).toBe(1);
-    expect(refLink.prop('reference')).toBe(oneReference[0]);
-    expect(refLink.first().props().className).toBe('ReferencesButton-MultiParent');
-    expect(tooltip.length).toBe(1);
-    expect(tooltip.prop('title')).toBe(props.tooltipText);
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('renders multiple references', () => {
-    const props = { ...baseProps, references: moreReferences };
-    const wrapper = shallow(<ReferencesButton {...props} />);
-    const dropdown = wrapper.find(Dropdown);
-    expect(dropdown.length).toBe(1);
-    const menuInstance = shallow(dropdown.first().props().overlay);
-    const submenuItems = menuInstance.find(Menu.Item);
-    expect(submenuItems.length).toBe(3);
-    submenuItems.forEach((submenuItem, i) => {
-      expect(submenuItem.find(ReferenceLink).prop('reference')).toBe(moreReferences[i]);
+  it('renders a single reference directly as a ReferenceLink', () => {
+    render(<ReferencesButton {...baseProps} references={oneReference} />);
+
+    const referenceLink = screen.getByTestId('reference-link');
+    expect(referenceLink).toBeInTheDocument();
+    expect(referenceLink).toHaveClass('ReferencesButton-MultiParent');
+    expect(referenceLink).toHaveAttribute('data-spanid', oneReference[0].spanID);
+
+    const trigger = screen.getByTestId('button-children');
+    expect(trigger).toBeInTheDocument();
+    expect(trigger.textContent).toBe('References');
+
+    expect(trigger.closest('a')).not.toBeNull();
+  });
+
+  it('renders multiple references as dropdown menu items', async () => {
+    render(<ReferencesButton {...baseProps} references={moreReferences} />);
+
+    const trigger = screen.getByTestId('button-children').closest('a');
+    expect(trigger).toHaveClass('ReferencesButton-MultiParent');
+    expect(trigger).toBeInTheDocument();
+
+    fireEvent.click(trigger);
+
+    const items = await screen.findAllByTestId('reference-link');
+    expect(items).toHaveLength(3);
+
+    items.forEach((item, idx) => {
+      expect(item).toHaveAttribute('data-spanid', moreReferences[idx].spanID);
     });
-    expect(
-      submenuItems
-        .at(2)
-        .find(ReferenceLink)
-        .childAt(0)
-        .text()
-    ).toBe(`(another trace) - ${moreReferences[2].spanID}`);
+
+    const externalItem = items.find(item => item.getAttribute('data-spanid') === externalSpanID);
+    expect(within(externalItem).getByTestId('new-window-icon')).toBeInTheDocument();
   });
 });

@@ -16,31 +16,30 @@ import * as React from 'react';
 
 import './EmphasizedNode.css';
 
-type Props = {
+type EmphasizedNodeProps = {
   height: number;
   width: number;
 };
 
-export default class EmphasizedNode extends React.PureComponent<Props> {
-  render() {
-    const { height, width } = this.props;
-    return (
-      <>
-        <rect
-          className="EmphasizedNode--contrast is-non-scaling"
-          vectorEffect="non-scaling-stroke"
-          width={width}
-          height={height}
-        />
-        <rect className="EmphasizedNode--contrast is-scaling" width={width} height={height} />
-        <rect
-          className="EmphasizedNode is-non-scaling"
-          vectorEffect="non-scaling-stroke"
-          width={width}
-          height={height}
-        />
-        <rect className="EmphasizedNode is-scaling" width={width} height={height} />
-      </>
-    );
-  }
+function EmphasizedNode({ height, width }: EmphasizedNodeProps) {
+  return (
+    <svg>
+      <rect
+        className="EmphasizedNode--contrast is-non-scaling"
+        vectorEffect="non-scaling-stroke"
+        width={width}
+        height={height}
+      />
+      <rect className="EmphasizedNode--contrast is-scaling" width={width} height={height} />
+      <rect
+        className="EmphasizedNode is-non-scaling"
+        vectorEffect="non-scaling-stroke"
+        width={width}
+        height={height}
+      />
+      <rect className="EmphasizedNode is-scaling" width={width} height={height} />
+    </svg>
+  );
 }
+
+export default EmphasizedNode;

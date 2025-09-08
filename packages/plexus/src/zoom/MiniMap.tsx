@@ -14,22 +14,22 @@
 
 import * as React from 'react';
 
-import resetZoomIcon from './resetZoomIcon';
+import { HiMiniArrowsPointingOut, HiMagnifyingGlassPlus, HiMagnifyingGlassMinus } from 'react-icons/hi2';
 
-/* eslint-disable react/no-unused-prop-types */
 type TProps = {
   classNamePrefix?: string | void;
   className?: string | void;
   contentHeight: number;
   contentWidth: number;
   viewAll: () => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
   viewportHeight: number;
   viewportWidth: number;
   k?: number;
   x?: number;
   y?: number;
 };
-/* eslint-enable react/no-unused-prop-types */
 
 const LENGTH_TARGET_PX = 80;
 
@@ -67,11 +67,10 @@ function getViewTransform(props: TProps, displaySize: { width: number; height: n
   };
 }
 
-function getClassNames(props: TProps) {
-  const { className, classNamePrefix } = props;
-  const base = `${classNamePrefix || 'plexus'}-MiniMap`;
+function getClassNames(className: string, classNamePrefix: string) {
+  const base = `${classNamePrefix}-MiniMap`;
   return {
-    root: `${base} ${className || ''}`,
+    root: `${base} ${className}`,
     item: `${base}--item`,
     map: `${base}--map`,
     mapActive: `${base}--mapActive`,
@@ -79,8 +78,8 @@ function getClassNames(props: TProps) {
   };
 }
 
-export function MiniMap(props: TProps) {
-  const css = getClassNames(props);
+export function MiniMap({ className = '', classNamePrefix = 'plexus', ...props }: TProps) {
+  const css = getClassNames(className, classNamePrefix);
   const mapSize = getMapSize(props);
   const activeXform = getViewTransform(props, mapSize);
   return (
@@ -88,16 +87,17 @@ export function MiniMap(props: TProps) {
       <div className={`${css.item} ${css.map}`} style={mapSize}>
         <div className={css.mapActive} style={{ ...activeXform, ...mapSize }} />
       </div>
+      <div className={`${css.item} ${css.button}`} onClick={props.zoomIn} role="button">
+        <HiMagnifyingGlassPlus />
+      </div>
+      <div className={`${css.item} ${css.button}`} onClick={props.zoomOut} role="button">
+        <HiMagnifyingGlassMinus />
+      </div>
       <div className={`${css.item} ${css.button}`} onClick={props.viewAll} role="button">
-        {resetZoomIcon}
+        <HiMiniArrowsPointingOut />
       </div>
     </div>
   );
 }
-
-MiniMap.defaultProps = {
-  className: '',
-  classNamePrefix: 'plexus',
-};
 
 export default React.memo(MiniMap);

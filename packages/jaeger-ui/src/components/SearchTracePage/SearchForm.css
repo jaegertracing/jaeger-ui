@@ -35,10 +35,45 @@ limitations under the License.
   margin-top: 0.5em;
 }
 
+.SearchForm--submit {
+  background-color: #11939a;
+  color: white;
+  float: right;
+}
+
+.SearchForm--submit:hover {
+  background-color: #fff;
+  float: right;
+}
+
+.SearchForm--submit:active {
+  background-color: #fff;
+  float: right;
+}
+
 .SearchForm--tagsHintInfo {
   padding-left: 1.7em;
 }
 
 .SearchForm--tagsHintEg {
   color: teal;
+}
+
+.ant-select-dropdown .rc-virtual-list-holder {
+  overflow-y: auto !important;
+}
+
+/* ensure scrollbar is always visible, not just on hover */
+.ant-select-dropdown::-webkit-scrollbar,
+.ant-select-dropdown .rc-virtual-list::-webkit-scrollbar,
+.ant-select-dropdown .rc-virtual-list-holder::-webkit-scrollbar {
+  width: 8px;
+  background-color: #f1f1f1;
+}
+
+.ant-select-dropdown::-webkit-scrollbar-thumb,
+.ant-select-dropdown .rc-virtual-list::-webkit-scrollbar-thumb,
+.ant-select-dropdown .rc-virtual-list-holder::-webkit-scrollbar-thumb {
+  background-color: #292929;
+  border-radius: 4px;
 }

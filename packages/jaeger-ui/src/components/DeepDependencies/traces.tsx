@@ -13,12 +13,13 @@
 // limitations under the License.
 
 import * as React from 'react';
+import { History as RouterHistory, Location } from 'history';
 import _get from 'lodash/get';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
 
-import { DeepDependencyGraphPageImpl, TOwnProps, TProps, TReduxProps } from '.';
+import { DeepDependencyGraphPageImpl, TReduxProps } from '.';
 import { getUrlState, sanitizeUrlState } from './url';
 import { ROUTE_PATH } from '../SearchTracePage/url';
 import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
@@ -59,22 +60,30 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   };
 }
 
+type TOwnProps = {
+  history: RouterHistory;
+  location: Location;
+};
+
+type TracesDdgImplProps = TOwnProps & TReduxProps;
+
 // export for tests
-export class TracesDdgImpl extends React.PureComponent<TProps & { showSvcOpsHeader: never; baseUrl: never }> {
-  render(): React.ReactNode {
-    const { location } = this.props;
-    const urlArgs = queryString.parse(location.search);
-    const { end, start, limit, lookback, maxDuration, minDuration, view } = urlArgs;
-    const extraArgs = { end, start, limit, lookback, maxDuration, minDuration, view };
-    return (
-      <DeepDependencyGraphPageImpl
-        baseUrl={ROUTE_PATH}
-        extraUrlArgs={extraArgs}
-        showSvcOpsHeader={false}
-        {...this.props}
-      />
-    );
-  }
-}
+export const TracesDdgImpl: React.FC<TracesDdgImplProps> = React.memo(props => {
+  const { location } = props;
+  const urlArgs = queryString.parse(location.search);
+  const { end, start, limit, lookback, maxDuration, minDuration, view } = urlArgs;
+  const extraArgs = { end, start, limit, lookback, maxDuration, minDuration, view };
+
+  return (
+    <DeepDependencyGraphPageImpl
+      baseUrl={ROUTE_PATH}
+      extraUrlArgs={extraArgs}
+      showSvcOpsHeader={false}
+      {...props}
+    />
+  );
+});
+
+TracesDdgImpl.displayName = 'TracesDdgImpl';
 
 export default connect(mapStateToProps)(TracesDdgImpl);

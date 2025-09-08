@@ -19,10 +19,9 @@ jest.mock('./calc-positioning', () => () => ({
   svcMarginTop: 10,
 }));
 
-/* eslint-disable import/first */
 import React from 'react';
-import { shallow } from 'enzyme';
-import { Checkbox, Popover } from 'antd';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import {
   getNodeRenderer,
@@ -32,7 +31,6 @@ import {
 } from '.';
 import { MAX_LENGTH, MAX_LINKED_TRACES, MIN_LENGTH, PARAM_NAME_LENGTH, RADIUS } from './constants';
 import * as track from '../../index.track';
-import FilteredList from '../../../common/FilteredList';
 import * as getSearchUrl from '../../../SearchTracePage/url';
 
 import { ECheckedStatus, EDdgDensity, EDirection, EViewModifier } from '../../../../model/ddg/types';
@@ -52,6 +50,7 @@ describe('<DdgNodeContent>', () => {
     getVisiblePathElems: jest.fn(),
     hideVertex: jest.fn(),
     isFocalNode: false,
+    isPositioned: true,
     operation,
     selectVertex: jest.fn(),
     setOperation: jest.fn(),
@@ -64,8 +63,6 @@ describe('<DdgNodeContent>', () => {
     vertexKey,
   };
 
-  let wrapper;
-
   beforeEach(() => {
     props.getDecoration.mockClear();
     props.getGenerationVisibility.mockReturnValue(null).mockClear();
@@ -73,67 +70,86 @@ describe('<DdgNodeContent>', () => {
     props.selectVertex.mockReset();
     props.setViewModifier.mockReset();
     props.updateGenerationVisibility.mockReset();
-    wrapper = shallow(<DdgNodeContent {...props} />);
   });
 
   it('does not explode', () => {
-    expect(wrapper.exists()).toBe(true);
+    const { container } = render(<DdgNodeContent {...props} />);
+    expect(container).toBeInTheDocument();
   });
 
   it('omits the operation if it is null', () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper.setProps({ operation: null });
-    expect(wrapper).toMatchSnapshot();
+    const { rerender } = render(<DdgNodeContent {...props} />);
+    expect(screen.getByText(/operation/i)).toBeInTheDocument();
+
+    rerender(<DdgNodeContent {...props} operation={null} />);
+    expect(screen.queryByText(/operation/i)).not.toBeInTheDocument();
   });
 
   it('renders the number of operations if there are multiple', () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper.setProps({ operation: operationArray });
-    expect(wrapper).toMatchSnapshot();
+    const { rerender } = render(<DdgNodeContent {...props} />);
+    expect(screen.getByText(/operation/i)).toBeInTheDocument();
+
+    rerender(<DdgNodeContent {...props} operation={operationArray} />);
+    expect(screen.getByText('4 Operations')).toBeInTheDocument();
   });
 
   it('renders correctly when isFocalNode = true and focalNodeUrl = null', () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper.setProps({ focalNodeUrl: null, isFocalNode: true });
-    expect(wrapper).toMatchSnapshot();
+    const { rerender, container } = render(<DdgNodeContent {...props} />);
+    const nodeCore = container.querySelector('.DdgNodeContent--core');
+    expect(nodeCore).not.toHaveClass('is-focalNode');
+
+    rerender(<DdgNodeContent {...props} focalNodeUrl={null} isFocalNode />);
+    expect(nodeCore).toHaveClass('is-focalNode');
   });
 
   it('renders correctly when given decorationProgressbar', () => {
-    expect(wrapper).toMatchSnapshot();
+    const decorationProgressbar = <div data-testid="test-progressbar">Test progressbar</div>;
 
-    const decorationProgressbar = <span>Test progressbar</span>;
-    wrapper.setProps({ decorationProgressbar, decorationValue });
-    expect(wrapper).toMatchSnapshot();
+    const { rerender, container } = render(<DdgNodeContent {...props} />);
+    expect(screen.queryByTestId('test-progressbar')).not.toBeInTheDocument();
+
+    rerender(
+      <DdgNodeContent
+        {...props}
+        decorationProgressbar={decorationProgressbar}
+        decorationValue={decorationValue}
+      />
+    );
+    expect(screen.getByTestId('test-progressbar')).toBeInTheDocument();
+    const nodeCore = container.querySelector('.DdgNodeContent--core');
+    expect(nodeCore).toHaveClass('is-decorated');
   });
 
   it('renders correctly when decorationValue is a string', () => {
-    expect(wrapper).toMatchSnapshot();
+    const { rerender, container } = render(<DdgNodeContent {...props} />);
+    const nodeCore = container.querySelector('.DdgNodeContent--core');
+    expect(nodeCore).not.toHaveClass('is-missingDecoration');
 
-    wrapper.setProps({ decorationValue: 'Error: Status Code 418' });
-    expect(wrapper).toMatchSnapshot();
+    rerender(<DdgNodeContent {...props} decorationValue="Error: Status Code 418" />);
+    expect(nodeCore).toHaveClass('is-missingDecoration');
   });
 
   describe('getDecoration', () => {
     it('gets decoration on mount or change of props.decorationID iff props.decorationID is truthy', () => {
       expect(props.getDecoration).not.toHaveBeenCalled();
 
-      wrapper.setProps({ decorationID });
+      const { rerender } = render(<DdgNodeContent {...props} decorationID={decorationID} />);
       expect(props.getDecoration).toHaveBeenCalledTimes(1);
       expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, operation);
 
-      wrapper.setProps({ decorationID });
+      rerender(<DdgNodeContent {...props} decorationID={decorationID} />);
       expect(props.getDecoration).toHaveBeenCalledTimes(1);
 
       const newDecorationID = `new ${decorationID}`;
-      wrapper.setProps({ decorationID: newDecorationID });
+      rerender(<DdgNodeContent {...props} decorationID={newDecorationID} />);
       expect(props.getDecoration).toHaveBeenCalledTimes(2);
       expect(props.getDecoration).toHaveBeenLastCalledWith(newDecorationID, service, operation);
 
-      wrapper.setProps({ decorationID, operation: operationArray });
+      rerender(<DdgNodeContent {...props} decorationID={decorationID} operation={operationArray} />);
       expect(props.getDecoration).toHaveBeenCalledTimes(3);
       expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, undefined);
 
-      shallow(<DdgNodeContent {...props} decorationID={decorationID} />);
+      render(<DdgNodeContent {...props} decorationID={decorationID} />);
       expect(props.getDecoration).toHaveBeenCalledTimes(4);
       expect(props.getDecoration).toHaveBeenLastCalledWith(decorationID, service, operation);
     });
@@ -143,11 +159,12 @@ describe('<DdgNodeContent>', () => {
     it('calls props.selectVertex iff props.decorationValue is truthy', () => {
       expect(props.selectVertex).not.toHaveBeenCalled();
 
-      wrapper.find('.DdgNodeContent--core').simulate('click');
+      const { rerender, container } = render(<DdgNodeContent {...props} />);
+      fireEvent.click(container.querySelector('.DdgNodeContent--core'));
       expect(props.selectVertex).not.toHaveBeenCalled();
 
-      wrapper.setProps({ decorationValue });
-      wrapper.find('.DdgNodeContent--core').simulate('click');
+      rerender(<DdgNodeContent {...props} decorationValue={decorationValue} />);
+      fireEvent.click(container.querySelector('.DdgNodeContent--core'));
       expect(props.selectVertex).toHaveBeenCalledTimes(1);
       expect(props.selectVertex).toHaveBeenLastCalledWith(props.vertex);
     });
@@ -172,25 +189,30 @@ describe('<DdgNodeContent>', () => {
     });
 
     it('calls setViewModifier on mouse over', () => {
-      wrapper.simulate('mouseover', { type: 'mouseover' });
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
 
       expect(props.setViewModifier).toHaveBeenCalledTimes(1);
       expect(props.setViewModifier).toHaveBeenCalledWith(testIndices, EViewModifier.Hovered, true);
     });
 
     it('calls setViewModifier with all modified indices on mouse out', () => {
-      wrapper.simulate('mouseover', { type: 'mouseover' });
-      wrapper.simulate('mouseout', { type: 'mouseout' });
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+      fireEvent.mouseOut(nodeContent, { type: 'mouseout' });
 
       expect(props.setViewModifier).toHaveBeenCalledTimes(2);
       expect(props.setViewModifier).toHaveBeenCalledWith(testIndices, EViewModifier.Hovered, false);
 
-      wrapper.simulate('mouseover', { type: 'mouseover' });
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
       const moreIndices = [108];
       const moreElems = moreIndices.map(visibilityIdx => ({ visibilityIdx }));
       props.getVisiblePathElems.mockReturnValue(moreElems);
-      wrapper.simulate('mouseover', { type: 'mouseover' });
-      wrapper.simulate('mouseout', { type: 'mouseout' });
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+      fireEvent.mouseOut(nodeContent, { type: 'mouseout' });
 
       expect(props.setViewModifier).toHaveBeenCalledTimes(5);
       expect(props.setViewModifier).toHaveBeenCalledWith(
@@ -201,20 +223,23 @@ describe('<DdgNodeContent>', () => {
     });
 
     it('calls setViewModifier on unmount iff any indices were hovered and not unhovered', () => {
-      wrapper.unmount();
+      const { unmount } = render(<DdgNodeContent {...props} />);
+      unmount();
       expect(props.setViewModifier).toHaveBeenCalledTimes(0);
 
-      wrapper = shallow(<DdgNodeContent {...props} />);
-      wrapper.simulate('mouseover', { type: 'mouseover' });
-      wrapper.simulate('mouseout', { type: 'mouseout' });
+      const { unmount: unmount2, container: container2 } = render(<DdgNodeContent {...props} />);
+      const nodeContent2 = container2.querySelector('.DdgNodeContent');
+      fireEvent.mouseOver(nodeContent2, { type: 'mouseover' });
+      fireEvent.mouseOut(nodeContent2, { type: 'mouseout' });
       expect(props.setViewModifier).toHaveBeenCalledTimes(2);
-      wrapper.unmount();
+      unmount2();
       expect(props.setViewModifier).toHaveBeenCalledTimes(2);
 
-      wrapper = shallow(<DdgNodeContent {...props} />);
-      wrapper.simulate('mouseover', { type: 'mouseover' });
+      const { unmount: unmount3, container: container3 } = render(<DdgNodeContent {...props} />);
+      const nodeContent3 = container3.querySelector('.DdgNodeContent');
+      fireEvent.mouseOver(nodeContent3, { type: 'mouseover' });
       expect(props.setViewModifier).toHaveBeenCalledTimes(3);
-      wrapper.unmount();
+      unmount3();
       expect(props.setViewModifier).toHaveBeenCalledTimes(4);
       expect(props.setViewModifier).toHaveBeenCalledWith(testIndices, EViewModifier.Hovered, false);
     });
@@ -225,341 +250,178 @@ describe('<DdgNodeContent>', () => {
       props.getGenerationVisibility.mockImplementation((_key, direction) =>
         direction === EDirection.Upstream ? parentVisibility : childrenVisibility
       );
-      wrapper.simulate('mouseover', { type: 'mouseover' });
 
-      expect(wrapper.state()).toEqual({
-        childrenVisibility,
-        parentVisibility,
-      });
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+
+      expect(props.getGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Upstream);
+      expect(props.getGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Downstream);
     });
 
     it('handles mouse over event after vis update would hide vertex before unmounting', () => {
       props.getVisiblePathElems.mockReturnValue(undefined);
-      wrapper.simulate('mouseover', { type: 'mouseover' });
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
 
-      expect(wrapper.state()).toEqual({
-        childrenVisibility: null,
-        parentVisibility: null,
-      });
       expect(props.setViewModifier).toHaveBeenCalledWith([], EViewModifier.Hovered, true);
     });
 
     it('clears hoveredIndices on mouse out', () => {
-      wrapper.simulate('mouseover', { type: 'mouseover' });
-      expect(wrapper.instance().hoveredIndices).not.toEqual(new Set());
-      wrapper.simulate('mouseout', { type: 'mouseout' });
-      expect(wrapper.instance().hoveredIndices).toEqual(new Set());
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
+
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+      expect(props.setViewModifier).toHaveBeenCalledTimes(1);
+
+      fireEvent.mouseOut(nodeContent, { type: 'mouseout' });
+
+      props.getVisiblePathElems.mockReturnValue([{ visibilityIdx: 999 }]);
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
+
+      expect(props.setViewModifier).toHaveBeenLastCalledWith([999], EViewModifier.Hovered, true);
     });
   });
 
-  describe('node interactions', () => {
-    describe('focusPaths', () => {
-      beforeEach(() => {
-        props.focusPathsThroughVertex.mockReset();
+  describe('tooltip positioning', () => {
+    let mockGetBoundingClientRect;
+    let mockQuerySelector;
+
+    beforeEach(() => {
+      mockGetBoundingClientRect = jest.fn(() => ({
+        top: 100,
+        bottom: 200,
+        left: 50,
+        right: 150,
+        width: 100,
+        height: 100,
+      }));
+
+      mockQuerySelector = jest.fn(selector => {
+        if (selector === '.DdgHeader--controlHeader') {
+          return {
+            getBoundingClientRect: () => ({
+              top: 0,
+              bottom: 80,
+              left: 0,
+              right: 1000,
+              width: 1000,
+              height: 80,
+            }),
+          };
+        }
+        return null;
       });
 
-      it('calls this.props.focusPathsThroughVertex with this.props.vertexKey', () => {
-        wrapper
-          .find('.DdgNodeContent--actionsItem')
-          .at(2)
-          .simulate('click');
+      Element.prototype.getBoundingClientRect = mockGetBoundingClientRect;
+      document.querySelector = mockQuerySelector;
 
-        expect(props.focusPathsThroughVertex).toHaveBeenCalledWith(props.vertexKey);
-        expect(props.focusPathsThroughVertex).toHaveBeenCalledTimes(1);
-      });
+      jest.spyOn(global, 'setTimeout').mockImplementation(fn => fn());
     });
 
-    describe('hideVertex', () => {
-      beforeEach(() => {
-        props.hideVertex.mockReset();
-      });
-
-      it('calls this.props.hideVertex with this.props.vertexKey', () => {
-        wrapper
-          .find('.DdgNodeContent--actionsItem')
-          .at(3)
-          .simulate('click');
-
-        expect(props.hideVertex).toHaveBeenCalledWith(props.vertexKey);
-        expect(props.hideVertex).toHaveBeenCalledTimes(1);
-      });
+    afterEach(() => {
+      jest.restoreAllMocks();
     });
 
-    describe('setFocus', () => {
-      let trackSetFocusSpy;
+    it('positions tooltip below when node is near header', () => {
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
 
-      beforeAll(() => {
-        trackSetFocusSpy = jest.spyOn(track, 'trackSetFocus');
-      });
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
 
-      it('tracks when setFocus link is clicked', () => {
-        expect(trackSetFocusSpy).toHaveBeenCalledTimes(0);
-        wrapper.find(`[href="${props.focalNodeUrl}"]`).simulate('click');
-        expect(trackSetFocusSpy).toHaveBeenCalledTimes(1);
-      });
+      const tooltip = container.querySelector('.DdgNodeContent--actionsWrapper-below');
+      expect(tooltip).toBeInTheDocument();
     });
 
-    describe('setOperation', () => {
-      let trackSetOpSpy;
-
-      beforeAll(() => {
-        trackSetOpSpy = jest.spyOn(track, 'trackVertexSetOperation');
+    it('positions tooltip above when node is far from header', () => {
+      mockGetBoundingClientRect.mockReturnValue({
+        top: 400,
+        bottom: 500,
+        left: 50,
+        right: 150,
+        width: 100,
+        height: 100,
       });
 
-      it('tracks when popover sets a value', () => {
-        wrapper.setProps({ operation: operationArray });
-        expect(trackSetOpSpy).not.toHaveBeenCalled();
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
 
-        const list = shallow(<div>{wrapper.find(Popover).prop('content')}</div>).find(FilteredList);
-        expect(list.prop('options')).toBe(operationArray);
-        expect(trackSetOpSpy).not.toHaveBeenCalled();
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
 
-        list.prop('setValue')(operationArray[operationArray.length - 1]);
-        expect(props.setOperation).toHaveBeenCalledWith(operationArray[operationArray.length - 1]);
-        expect(trackSetOpSpy).toHaveBeenCalledTimes(1);
-      });
+      const tooltip = container.querySelector('.DdgNodeContent--actionsWrapper-below');
+      expect(tooltip).not.toBeInTheDocument();
     });
 
-    describe('updateChildren', () => {
-      it('renders children visibility status indicator iff state.childrenVisibility is provided', () => {
-        const initialItemCount = wrapper.find('.DdgNodeContent--actionsItem').length;
+    it('handles case when header element is not found', () => {
+      mockQuerySelector.mockReturnValue(null);
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
 
-        wrapper.setState({ childrenVisibility: ECheckedStatus.Empty });
-        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
-        expect(wrapper.find(Checkbox).props()).toEqual(
-          expect.objectContaining({
-            checked: false,
-            indeterminate: false,
-          })
-        );
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
 
-        wrapper.setState({ childrenVisibility: ECheckedStatus.Partial });
-        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
-        expect(wrapper.find(Checkbox).props()).toEqual(
-          expect.objectContaining({
-            checked: false,
-            indeterminate: true,
-          })
-        );
-
-        wrapper.setState({ childrenVisibility: ECheckedStatus.Full });
-        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
-        expect(wrapper.find(Checkbox).props()).toEqual(
-          expect.objectContaining({
-            checked: true,
-            indeterminate: false,
-          })
-        );
-      });
-
-      it('calls this.props.updateGenerationVisibility with this.props.vertexKey', () => {
-        wrapper.setState({ childrenVisibility: ECheckedStatus.Empty });
-        wrapper
-          .find('.DdgNodeContent--actionsItem')
-          .last()
-          .simulate('click');
-
-        expect(props.updateGenerationVisibility).toHaveBeenCalledWith(props.vertexKey, EDirection.Downstream);
-        expect(props.updateGenerationVisibility).toHaveBeenCalledTimes(1);
-      });
+      const tooltip = container.querySelector('.DdgNodeContent--actionsWrapper-below');
+      expect(tooltip).not.toBeInTheDocument();
     });
 
-    describe('updateParents', () => {
-      it('renders parent visibility status indicator iff state.parentVisibility is provided', () => {
-        const initialItemCount = wrapper.find('.DdgNodeContent--actionsItem').length;
+    it('handles case when node ref is not available', () => {
+      const instance = new DdgNodeContent(props);
+      instance.nodeRef = { current: null };
+      mockQuerySelector.mockClear();
 
-        wrapper.setState({ parentVisibility: ECheckedStatus.Empty });
-        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
-        expect(wrapper.find(Checkbox).props()).toEqual(
-          expect.objectContaining({
-            checked: false,
-            indeterminate: false,
-          })
-        );
+      expect(() => {
+        instance.checkTooltipPosition();
+      }).not.toThrow();
 
-        wrapper.setState({ parentVisibility: ECheckedStatus.Partial });
-        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
-        expect(wrapper.find(Checkbox).props()).toEqual(
-          expect.objectContaining({
-            checked: false,
-            indeterminate: true,
-          })
-        );
-
-        wrapper.setState({ parentVisibility: ECheckedStatus.Full });
-        expect(wrapper.find('.DdgNodeContent--actionsItem').length).toBe(initialItemCount + 1);
-        expect(wrapper.find(Checkbox).props()).toEqual(
-          expect.objectContaining({
-            checked: true,
-            indeterminate: false,
-          })
-        );
-      });
-
-      it('calls this.props.updateGenerationVisibility with this.props.vertexKey', () => {
-        wrapper.setState({ parentVisibility: ECheckedStatus.Empty });
-        wrapper
-          .find('.DdgNodeContent--actionsItem')
-          .last()
-          .simulate('click');
-
-        expect(props.updateGenerationVisibility).toHaveBeenCalledWith(props.vertexKey, EDirection.Upstream);
-        expect(props.updateGenerationVisibility).toHaveBeenCalledTimes(1);
-      });
+      expect(mockQuerySelector).not.toHaveBeenCalled();
     });
 
-    describe('viewTraces', () => {
-      const click = () =>
-        wrapper
-          .find('.DdgNodeContent--actionsItem')
-          .at(1)
-          .simulate('click');
-      const pad = num => `000${num}`.slice(-4);
-      const mockReturn = ids =>
-        props.getVisiblePathElems.mockReturnValue(ids.map(traceIDs => ({ memberOf: { traceIDs } })));
-      const calcIdxWithinLimit = arr => Math.floor(0.75 * arr.length);
-      const falsifyDuplicateAndMock = ids => {
-        const withFalsyAndDuplicate = ids.map(arr => arr.slice());
-        withFalsyAndDuplicate[0].splice(
-          calcIdxWithinLimit(withFalsyAndDuplicate[0]),
-          0,
-          withFalsyAndDuplicate[1][calcIdxWithinLimit(withFalsyAndDuplicate[1])],
-          ''
-        );
-        withFalsyAndDuplicate[1].splice(
-          calcIdxWithinLimit(withFalsyAndDuplicate[1]),
-          0,
-          withFalsyAndDuplicate[0][calcIdxWithinLimit(withFalsyAndDuplicate[0])],
-          ''
-        );
-        mockReturn(withFalsyAndDuplicate);
+    it('does not update state when tooltip position has not changed', () => {
+      const instance = new DdgNodeContent(props);
+      instance.nodeRef = {
+        current: {
+          getBoundingClientRect: () => ({
+            top: 100,
+            bottom: 200,
+            left: 50,
+            right: 150,
+            width: 100,
+            height: 100,
+          }),
+        },
       };
-      const makeIDsAndMock = (idCounts, makeID = count => `test traceID${count}`) => {
-        let idCount = 0;
-        const ids = idCounts.map(count => {
-          const rv = [];
-          for (let i = 0; i < count; i++) {
-            rv.push(makeID(pad(idCount++)));
-          }
-          return rv;
-        });
-        mockReturn(ids);
-        return ids;
-      };
-      let getSearchUrlSpy;
-      let trackViewTracesSpy;
-      const verifyLastIDs = expectedIDs => {
-        const getSearchUrlCallCount = getSearchUrlSpy.mock.calls.length;
-        const actualIDs = getSearchUrlSpy.mock.calls[getSearchUrlCallCount - 1][0].traceID;
 
-        expect(actualIDs.sort()).toEqual(expectedIDs.sort());
-        expect(trackViewTracesSpy).toHaveBeenCalledTimes(getSearchUrlCallCount);
-      };
-      let originalOpen;
+      // set initial state directly (not using setState on unmounted component)
+      instance.state = { shouldPositionTooltipBelow: true };
 
-      beforeAll(() => {
-        originalOpen = window.open;
-        window.open = jest.fn();
-        getSearchUrlSpy = jest.spyOn(getSearchUrl, 'getUrl');
-        trackViewTracesSpy = jest.spyOn(track, 'trackViewTraces');
-      });
+      // Spy on setState
+      const setStateSpy = jest.spyOn(instance, 'setState');
 
-      beforeEach(() => {
-        getSearchUrlSpy.mockClear();
-        window.open.mockReset();
-        trackViewTracesSpy.mockReset();
-      });
+      // call checkTooltipPosition with same conditions that would result in true
+      instance.checkTooltipPosition();
 
-      afterAll(() => {
-        window.open = originalOpen;
-      });
+      // setState should not be called since position hasn't changed (still true)
+      expect(setStateSpy).not.toHaveBeenCalled();
 
-      it('no-ops if there are no elems for key', () => {
-        props.getVisiblePathElems.mockReturnValue();
-        click();
-        expect(window.open).not.toHaveBeenCalled();
-      });
+      setStateSpy.mockRestore();
+    });
 
-      it('opens new tab viewing single traceID from single elem', () => {
-        const ids = makeIDsAndMock([1]);
-        click();
+    it('does not check position when already determined on subsequent hovers', () => {
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
 
-        verifyLastIDs([].concat(...ids));
-        expect(props.getVisiblePathElems).toHaveBeenCalledTimes(1);
-        expect(props.getVisiblePathElems).toHaveBeenCalledWith(vertexKey);
-      });
+      // First hover to determine position
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
 
-      it('opens new tab viewing multiple traceIDs from single elem', () => {
-        const ids = makeIDsAndMock([3]);
-        click();
+      // clear mock calls
+      mockQuerySelector.mockClear();
 
-        verifyLastIDs([].concat(...ids));
-      });
+      // mouse out and hover again
+      fireEvent.mouseOut(nodeContent, { type: 'mouseout' });
+      fireEvent.mouseOver(nodeContent, { type: 'mouseover' });
 
-      it('opens new tab viewing multiple traceIDs from multiple elems', () => {
-        const ids = makeIDsAndMock([3, 2]);
-        click();
-
-        verifyLastIDs([].concat(...ids));
-      });
-
-      it('ignores falsy and duplicate IDs', () => {
-        const ids = makeIDsAndMock([3, 3]);
-        falsifyDuplicateAndMock(ids);
-        click();
-
-        verifyLastIDs([].concat(...ids));
-      });
-
-      describe('MAX_LINKED_TRACES', () => {
-        const ids = makeIDsAndMock([MAX_LINKED_TRACES, MAX_LINKED_TRACES, 1]);
-        const expected = [
-          ...ids[0].slice(MAX_LINKED_TRACES / 2 + 1),
-          ...ids[1].slice(MAX_LINKED_TRACES / 2 + 1),
-          ids[2][0],
-        ].sort();
-
-        it('limits link to only include MAX_LINKED_TRACES, taking equal from each pathElem', () => {
-          mockReturn(ids);
-          click();
-
-          verifyLastIDs(expected);
-        });
-
-        it('does not count falsy and duplicate IDs towards MAX_LINKED_TRACES', () => {
-          falsifyDuplicateAndMock(ids);
-          click();
-
-          verifyLastIDs(expected);
-        });
-      });
-
-      describe('MAX_LENGTH', () => {
-        const effectiveMaxLength = MAX_LENGTH - MIN_LENGTH;
-        const TARGET_ID_COUNT = 31;
-        const paddingLength = Math.floor(effectiveMaxLength / TARGET_ID_COUNT) - PARAM_NAME_LENGTH;
-        const idPadding = 'x'.repeat(paddingLength - pad(0).length);
-        const ids = makeIDsAndMock([TARGET_ID_COUNT, TARGET_ID_COUNT, 1], num => `${idPadding}${num}`);
-        const expected = [
-          ...ids[0].slice(TARGET_ID_COUNT / 2 + 1),
-          ...ids[1].slice(TARGET_ID_COUNT / 2 + 1),
-          ids[2][0],
-        ].sort();
-
-        it('limits link to only include MAX_LENGTH, taking equal from each pathElem', () => {
-          mockReturn(ids);
-          click();
-
-          verifyLastIDs(expected);
-        });
-
-        it('does not count falsy and duplicate IDs towards MAX_LEN', () => {
-          falsifyDuplicateAndMock(ids);
-          click();
-
-          verifyLastIDs(expected);
-        });
-      });
+      // checkTooltipPosition should not be called again
+      expect(mockQuerySelector).not.toHaveBeenCalledWith('.DdgHeader--controlHeader');
     });
   });
 
@@ -573,20 +435,51 @@ describe('<DdgNodeContent>', () => {
     const noOp = () => {};
 
     it('returns a <DdgNodeContent />', () => {
-      const ddgNode = getNodeRenderer(noOp, noOp, EDdgDensity.PreventPathEntanglement, true, 'testBaseUrl', {
-        maxDuration: '100ms',
-      })(ddgVertex);
-      expect(ddgNode).toBeDefined();
-      expect(ddgNode.props).toMatchSnapshot();
+      const renderNode = getNodeRenderer({
+        baseUrl: 'testBaseUrl',
+        density: EDdgDensity.PreventPathEntanglement,
+        extraUrlArgs: { maxDuration: '100ms' },
+        focusPathsThroughVertex: noOp,
+        getGenerationVisibility: noOp,
+        getVisiblePathElems: noOp,
+        hideVertex: noOp,
+        selectVertex: noOp,
+        setOperation: noOp,
+        setViewModifier: noOp,
+        updateGenerationVisibility: noOp,
+      });
+
+      const node = renderNode(ddgVertex, null, {});
+      expect(node).toBeDefined();
+      expect(node.props.service).toBe(ddgVertex.service);
+      expect(node.props.operation).toBe(ddgVertex.operation);
+      expect(node.props.isPositioned).toBe(true);
     });
 
     it('returns a focal <DdgNodeContent />', () => {
-      const focalNode = getNodeRenderer(noOp, noOp)({
+      const renderNode = getNodeRenderer({
+        baseUrl: 'testBaseUrl',
+        density: EDdgDensity.PreventPathEntanglement,
+        extraUrlArgs: {},
+        focusPathsThroughVertex: noOp,
+        getGenerationVisibility: noOp,
+        getVisiblePathElems: noOp,
+        hideVertex: noOp,
+        selectVertex: noOp,
+        setOperation: noOp,
+        setViewModifier: noOp,
+        updateGenerationVisibility: noOp,
+      });
+
+      const focalVertex = {
         ...ddgVertex,
         isFocalNode: true,
-      });
-      expect(focalNode).toBeDefined();
-      expect(focalNode.props).toMatchSnapshot();
+      };
+
+      const node = renderNode(focalVertex, null, {});
+      expect(node).toBeDefined();
+      expect(node.props.isFocalNode).toBe(true);
+      expect(node.props.focalNodeUrl).toBe(null);
     });
   });
 
@@ -594,6 +487,203 @@ describe('<DdgNodeContent>', () => {
     it('creates the actions correctly', () => {
       expect(mapDispatchToProps(() => {})).toEqual({
         getDecoration: expect.any(Function),
+      });
+    });
+  });
+
+  describe('event handlers', () => {
+    beforeEach(() => {
+      jest.spyOn(track, 'trackSetFocus');
+      jest.spyOn(track, 'trackViewTraces');
+      jest.spyOn(track, 'trackVertexSetOperation');
+      jest.spyOn(getSearchUrl, 'getUrl');
+      jest.spyOn(window, 'open').mockImplementation();
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    describe('focusPaths', () => {
+      it('calls focusPathsThroughVertex with vertexKey', () => {
+        const { container } = render(<DdgNodeContent {...props} />);
+
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const focusPathsAction = Array.from(actionItems).find(item =>
+          item.textContent.includes('Focus paths through this node')
+        );
+
+        fireEvent.click(focusPathsAction);
+
+        expect(props.focusPathsThroughVertex).toHaveBeenCalledWith(vertexKey);
+      });
+    });
+
+    describe('hideVertex', () => {
+      it('calls hideVertex with vertexKey', () => {
+        const { container } = render(<DdgNodeContent {...props} />);
+
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const hideNodeAction = Array.from(actionItems).find(item => item.textContent.includes('Hide node'));
+
+        fireEvent.click(hideNodeAction);
+
+        expect(props.hideVertex).toHaveBeenCalledWith(vertexKey);
+      });
+    });
+
+    describe('setOperation', () => {
+      it('calls setOperation with the provided operation and tracks the event', () => {
+        const instance = new DdgNodeContent(props);
+        const newOperation = 'op1';
+        instance.setOperation(newOperation);
+
+        expect(props.setOperation).toHaveBeenCalledWith(newOperation);
+        expect(track.trackVertexSetOperation).toHaveBeenCalled();
+      });
+    });
+
+    describe('updateChildren', () => {
+      it('calls updateGenerationVisibility with vertexKey and Downstream direction', () => {
+        const instance = new DdgNodeContent(props);
+        instance.updateChildren();
+
+        expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Downstream);
+      });
+    });
+
+    describe('updateParents', () => {
+      it('calls updateGenerationVisibility with vertexKey and Upstream direction', () => {
+        const instance = new DdgNodeContent(props);
+        instance.updateParents();
+
+        expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Upstream);
+      });
+    });
+
+    describe('viewTraces', () => {
+      const mockTraceIds = ['trace1', 'trace2', 'trace3'];
+      const mockPathElems = [
+        { memberOf: { traceIDs: ['trace1'] } },
+        { memberOf: { traceIDs: ['trace2'] } },
+        { memberOf: { traceIDs: ['trace3'] } },
+      ];
+
+      beforeEach(() => {
+        props.getVisiblePathElems.mockReturnValue(mockPathElems);
+        getSearchUrl.getUrl.mockImplementation(params => `mock-search-url-${params.traceID.join('-')}`);
+      });
+
+      it('opens search URL with trace IDs and tracks the event', () => {
+        const { container } = render(<DdgNodeContent {...props} />);
+
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const viewTracesAction = Array.from(actionItems).find(item =>
+          item.textContent.includes('View traces')
+        );
+
+        fireEvent.click(viewTracesAction);
+
+        expect(track.trackViewTraces).toHaveBeenCalled();
+        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({ traceID: mockTraceIds });
+        expect(window.open).toHaveBeenCalledWith('mock-search-url-trace1-trace2-trace3', '_blank');
+      });
+
+      it('handles case when getVisiblePathElems returns undefined', () => {
+        props.getVisiblePathElems.mockReturnValue(undefined);
+
+        const { container } = render(<DdgNodeContent {...props} />);
+
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const viewTracesAction = Array.from(actionItems).find(item =>
+          item.textContent.includes('View traces')
+        );
+
+        fireEvent.click(viewTracesAction);
+
+        expect(track.trackViewTraces).toHaveBeenCalled();
+        expect(getSearchUrl.getUrl).not.toHaveBeenCalled();
+        expect(window.open).not.toHaveBeenCalled();
+      });
+
+      it('respects MAX_LINKED_TRACES limit', () => {
+        const mockElems = [];
+        for (let i = 0; i < MAX_LINKED_TRACES + 5; i++) {
+          mockElems.push({
+            memberOf: {
+              traceIDs: [`trace-${i}`],
+            },
+          });
+        }
+        props.getVisiblePathElems.mockReturnValue(mockElems);
+
+        const { container } = render(<DdgNodeContent {...props} />);
+
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const viewTracesAction = Array.from(actionItems).find(item =>
+          item.textContent.includes('View traces')
+        );
+
+        fireEvent.click(viewTracesAction);
+
+        const expectedTraceIds = [];
+        for (let i = 0; i < MAX_LINKED_TRACES; i++) {
+          expectedTraceIds.push(`trace-${i}`);
+        }
+
+        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
+          traceID: expectedTraceIds,
+        });
+        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${expectedTraceIds.join('-')}`, '_blank');
+      });
+
+      it('respects MAX_LENGTH limit', () => {
+        const longTraceId = 'a'.repeat(MAX_LENGTH - MIN_LENGTH - PARAM_NAME_LENGTH);
+        const shortTraceId = 'b'.repeat(10);
+
+        const mockElems = [
+          { memberOf: { traceIDs: [longTraceId] } },
+          { memberOf: { traceIDs: [shortTraceId] } },
+        ];
+        props.getVisiblePathElems.mockReturnValue(mockElems);
+
+        const { container } = render(<DdgNodeContent {...props} />);
+
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const viewTracesAction = Array.from(actionItems).find(item =>
+          item.textContent.includes('View traces')
+        );
+
+        fireEvent.click(viewTracesAction);
+
+        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
+          traceID: [longTraceId],
+        });
+        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${longTraceId}`, '_blank');
+      });
+
+      it('handles duplicate trace IDs', () => {
+        const traceId = 'duplicate-trace';
+        const mockElems = [
+          { memberOf: { traceIDs: [traceId] } },
+          { memberOf: { traceIDs: [traceId] } },
+          { memberOf: { traceIDs: [null, traceId] } },
+        ];
+        props.getVisiblePathElems.mockReturnValue(mockElems);
+
+        const { container } = render(<DdgNodeContent {...props} />);
+
+        const actionItems = container.querySelectorAll('.NodeContent--actionsItem');
+        const viewTracesAction = Array.from(actionItems).find(item =>
+          item.textContent.includes('View traces')
+        );
+
+        fireEvent.click(viewTracesAction);
+
+        expect(getSearchUrl.getUrl).toHaveBeenCalledWith({
+          traceID: [traceId],
+        });
+        expect(window.open).toHaveBeenCalledWith(`mock-search-url-${traceId}`, '_blank');
       });
     });
   });

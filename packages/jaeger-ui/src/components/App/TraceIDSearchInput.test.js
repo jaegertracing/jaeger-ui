@@ -15,42 +15,43 @@
  */
 
 import React from 'react';
-import { mount } from 'enzyme';
-
 import { createMemoryHistory } from 'history';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { Router } from 'react-router-dom';
 import TraceIDSearchInput from './TraceIDSearchInput';
+import { HistoryProvider } from '../../utils/useHistory';
 
 describe('<TraceIDSearchInput />', () => {
-  let wrapper;
   let history;
 
   beforeEach(() => {
     history = createMemoryHistory();
-    wrapper = mount(
-      <Router history={history}>
-        <TraceIDSearchInput />
-      </Router>
-    ).find('form');
+    render(
+      <HistoryProvider history={history}>
+        <Router history={history}>
+          <TraceIDSearchInput />
+        </Router>
+      </HistoryProvider>
+    );
   });
 
   it('renders as expected', () => {
-    expect(wrapper).toMatchSnapshot();
+    expect(screen.getByTestId('idInput')).toBeInTheDocument();
   });
 
   it('pushes input id to history', () => {
-    const idInput = wrapper.find('input');
     const traceId = 'MOCK-TRACE-ID';
-    idInput.instance().value = traceId;
-
-    wrapper.simulate('submit');
+    const idInput = screen.getByPlaceholderText('Lookup by Trace ID...');
+    fireEvent.change(idInput, { target: { value: traceId } });
+    fireEvent.submit(screen.getByTestId('TraceIDSearchInput--form'));
 
     expect(history.length).toEqual(2);
     expect(history.location.pathname).toEqual(`/trace/${traceId}`);
   });
 
   it('does not push to history on falsy input value', () => {
-    wrapper.simulate('submit');
+    fireEvent.submit(screen.getByTestId('TraceIDSearchInput--form'));
 
     expect(history.length).toEqual(1);
   });

@@ -14,8 +14,9 @@
 
 import _isEmpty from 'lodash/isEmpty';
 import memoizeOne from 'memoize-one';
-import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
+import queryString from 'query-string';
+import parseQuery from '../../utils/parseQuery';
 
 import { EDdgDensity, TDdgSparseUrlState } from '../../model/ddg/types';
 import prefixUrl from '../../utils/prefix-url';
@@ -45,7 +46,7 @@ export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }, base
 function firstParam(arg: string | string[]): string {
   if (Array.isArray(arg)) {
     const returnVal = arg[0];
-    console.warn(`Found multiple query parameters: "${arg}", using "${returnVal}"`); // eslint-disable-line no-console
+    console.warn(`Found multiple query parameters: "${arg}", using "${returnVal}"`);
     return returnVal;
   }
   return arg;
@@ -62,7 +63,7 @@ export const getUrlState = memoizeOne(function getUrlState(search: string): TDdg
     showOp,
     start,
     visEncoding,
-  } = queryString.parse(search);
+  } = parseQuery(search);
   const rv: TDdgSparseUrlState = {
     density: firstParam(density) as EDdgDensity,
   };
@@ -100,6 +101,6 @@ export const sanitizeUrlState = memoizeOne(function sanitizeUrlStateImpl(
   if (hash && state.hash === hash) {
     return state;
   }
-  const { visEncoding, ...sanitized } = state; // eslint-disable-line @typescript-eslint/no-unused-vars
+  const { visEncoding, ...sanitized } = state;
   return sanitized;
 });

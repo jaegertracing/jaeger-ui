@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
+import React, { Key, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Tooltip } from 'antd';
-import FaCheck from 'react-icons/lib/fa/check.js';
-import FaTrash from 'react-icons/lib/fa/trash.js';
-import TiCancel from 'react-icons/lib/ti/cancel.js';
+import { IoTrash, IoBan, IoCheckmark } from 'react-icons/io5';
 
 import FilteredList from '../FilteredList';
 
@@ -28,94 +26,108 @@ type TProps = TFilterDropdownProps & {
   options: Set<string>;
 };
 
-export default class DetailTableDropdown extends React.PureComponent<TProps> {
-  cancelled = false;
-  selected: React.Key[] = [];
+const DetailTableDropdown: React.FC<TProps> = props => {
+  const { clearFilters = () => {}, confirm, options, selectedKeys, setSelectedKeys } = props;
+  const confirmedSelectionRef = useRef<Key[]>(selectedKeys);
+  const [isCancelled, setIsCancelled] = useState(false);
+  const prevSelectedKeysRef = useRef<Key[]>([]);
 
-  componentDidUpdate(prevProps: TProps) {
-    const { confirm, selectedKeys } = this.props;
-
-    // If the entries in selectedKeys is unchanged, the dropdown has opened or closed.
-    // Record the selectedKeys at this time for future cancellations.
-    if (selectedKeys.length === prevProps.selectedKeys.length) {
-      const prevKeys = new Set(prevProps.selectedKeys);
-      if (selectedKeys.every(key => prevKeys.has(key))) {
-        this.selected = selectedKeys;
+  useEffect(() => {
+    const prevKeys = prevSelectedKeysRef.current;
+    if (prevKeys && selectedKeys.length === prevKeys.length) {
+      const prevKeysSet = new Set(prevKeys);
+      if (selectedKeys.every(key => prevKeysSet.has(key))) {
+        confirmedSelectionRef.current = selectedKeys;
       }
     }
+    prevSelectedKeysRef.current = selectedKeys;
 
-    // Unfortunately antd requires setSelectedKeys and confirm to be called in different cycles.
-    if (this.cancelled) {
-      this.cancelled = false;
+    if (isCancelled) {
       confirm();
+      setIsCancelled(false);
     }
-  }
+  }, [selectedKeys, isCancelled, confirm]);
 
-  cancel = () => {
-    // Unfortunately antd requires setSelectedKeys and confirm to be called in different cycles.
-    this.cancelled = true;
-    this.props.setSelectedKeys(this.selected);
-  };
+  const cancel = useCallback(() => {
+    setSelectedKeys(confirmedSelectionRef.current);
+    setIsCancelled(true);
+  }, [setSelectedKeys]);
 
-  render() {
-    const { clearFilters = () => {}, confirm, options, selectedKeys, setSelectedKeys } = this.props;
-
-    const value = new Set<string>();
+  const value = useMemo(() => {
+    const valueSet = new Set<string>();
     selectedKeys.forEach(selected => {
-      if (typeof selected === 'string') value.add(selected);
+      if (typeof selected === 'string') valueSet.add(selected);
     });
+    return valueSet;
+  }, [selectedKeys]);
 
-    return (
-      <div>
-        <FilteredList
-          addValues={(values: string[]) => {
-            setSelectedKeys([...selectedKeys, ...values]);
-          }}
-          multi
-          options={Array.from(options)}
-          removeValues={(values: string[]) => {
-            const remove = new Set<React.Key>(values);
-            setSelectedKeys(selectedKeys.filter(key => !remove.has(key)));
-          }}
-          setValue={(v: string) => {
-            setSelectedKeys([v]);
-          }}
-          value={value}
-        />
-        <div className="DetailTableDropdown--Footer">
-          <Tooltip overlayClassName="DetailTableDropdown--Tooltip" title="Remove filter from this column">
-            <Button className="DetailTableDropdown--Btn Clear" onClick={clearFilters}>
-              <FaTrash size={18} />
-              Clear Filter
+  const addValues = useCallback(
+    (values: string[]) => {
+      setSelectedKeys([...selectedKeys, ...values]);
+    },
+    [selectedKeys, setSelectedKeys]
+  );
+
+  const removeValues = useCallback(
+    (values: string[]) => {
+      const remove = new Set<Key>(values);
+      setSelectedKeys(selectedKeys.filter(key => !remove.has(key)));
+    },
+    [selectedKeys, setSelectedKeys]
+  );
+
+  const setValue = useCallback(
+    (v: string) => {
+      setSelectedKeys([v]);
+    },
+    [setSelectedKeys]
+  );
+
+  return (
+    <div>
+      <FilteredList
+        addValues={addValues}
+        multi
+        options={Array.from(options)}
+        removeValues={removeValues}
+        setValue={setValue}
+        value={value}
+      />
+      <div className="DetailTableDropdown--Footer">
+        <Tooltip classNames={{ root: 'DetailTableDropdown--Tooltip' }} title="Remove filter from this column">
+          <Button className="DetailTableDropdown--Btn Clear" onClick={clearFilters}>
+            <IoTrash size={18} />
+            Clear Filter
+          </Button>
+        </Tooltip>
+        <div className="DetailTableDropdown--Footer--CancelConfirm">
+          <Tooltip
+            classNames={{ root: 'DetailTableDropdown--Tooltip' }}
+            title="Cancel changes to this column's filter"
+          >
+            <Button className="DetailTableDropdown--Btn Cancel" onClick={cancel}>
+              <IoBan size={20} />
+              Cancel
             </Button>
           </Tooltip>
-          <div className="DetailTableDropdown--Footer--CancelConfirm">
-            <Tooltip
-              overlayClassName="DetailTableDropdown--Tooltip"
-              title="Cancel changes to this column's filter"
-            >
-              <Button className="DetailTableDropdown--Btn Cancel" onClick={this.cancel}>
-                <TiCancel size={20} />
-                Cancel
-              </Button>
-            </Tooltip>
-            <Tooltip
-              overlayClassName="DetailTableDropdown--Tooltip"
-              title={
-                <div className="DetailTableDropdown--Tooltip--Body">
-                  <span>Apply changes to this column{"'"}s filter</span>
-                  <span>Same effect as clicking outside the dropdown</span>
-                </div>
-              }
-            >
-              <Button className="DetailTableDropdown--Btn Apply" onClick={confirm}>
-                <FaCheck size={18} />
-                Apply
-              </Button>
-            </Tooltip>
-          </div>
+          <Tooltip
+            classNames={{ root: 'DetailTableDropdown--Tooltip' }}
+            title={
+              <div className="DetailTableDropdown--Tooltip--Body">
+                <span>Apply changes to this column&apos;s filter</span>
+                <span>Same effect as clicking outside the dropdown</span>
+              </div>
+            }
+          >
+            <Button className="DetailTableDropdown--Btn Apply" onClick={confirm}>
+              <IoCheckmark size={18} />
+              Apply
+            </Button>
+          </Tooltip>
         </div>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
+
+export default React.memo(DetailTableDropdown);

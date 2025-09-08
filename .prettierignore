@@ -1,0 +1,10 @@
+# Ignore generated files
+packages/jaeger-ui/index.d.ts
+
+# Ignore downloaded scripts
+scripts/release-notes.py
+scripts/draft-release.py
+
+# Ignore some docs because prettier has different ideas about its formatting.
+CHANGELOG.md
+RELEASE.md

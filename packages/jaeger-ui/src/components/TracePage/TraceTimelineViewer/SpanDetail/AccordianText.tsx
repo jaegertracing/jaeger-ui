@@ -14,8 +14,7 @@
 
 import * as React from 'react';
 import cx from 'classnames';
-import IoIosArrowDown from 'react-icons/lib/io/ios-arrow-down';
-import IoIosArrowRight from 'react-icons/lib/io/ios-arrow-right';
+import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import TextList from './TextList';
 import { TNil } from '../../../../types';
 
@@ -32,20 +31,31 @@ type AccordianTextProps = {
   onToggle?: null | (() => void);
 };
 
-export default function AccordianText(props: AccordianTextProps) {
-  const { className, data, headerClassName, highContrast, interactive, isOpen, label, onToggle } = props;
+export default function AccordianText({
+  className = null,
+  data,
+  headerClassName,
+  highContrast = false,
+  interactive = true,
+  isOpen,
+  label,
+  onToggle = null,
+}: AccordianTextProps) {
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
+
   let arrow: React.ReactNode | null = null;
-  let headerProps: Object | null = null;
+  let headerProps: object | null = null;
+
   if (interactive) {
-    arrow = isOpen ? <IoIosArrowDown className={iconCls} /> : <IoIosArrowRight className={iconCls} />;
+    arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
     headerProps = {
       'aria-checked': isOpen,
       onClick: isEmpty ? null : onToggle,
       role: 'switch',
     };
   }
+
   return (
     <div className={className || ''}>
       <div
@@ -62,10 +72,3 @@ export default function AccordianText(props: AccordianTextProps) {
     </div>
   );
 }
-
-AccordianText.defaultProps = {
-  className: null,
-  highContrast: false,
-  interactive: true,
-  onToggle: null,
-};

@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { fireEvent, render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import ReferenceLink from './ReferenceLink';
 
@@ -37,24 +38,22 @@ describe(ReferenceLink, () => {
 
   describe('rendering', () => {
     it('render for this trace', () => {
-      const component = shallow(<ReferenceLink reference={sameTraceRef} focusSpan={focusMock} />);
-      const link = component.find('a');
-      expect(link.length).toBe(1);
-      expect(link.props().role).toBe('button');
+      render(<ReferenceLink reference={sameTraceRef} focusSpan={focusMock} />);
+      expect(screen.getAllByRole('button').length).toBe(1);
     });
 
     it('render for external trace', () => {
-      const component = shallow(<ReferenceLink reference={externalRef} focusSpan={focusMock} />);
-      const link = component.find('a[href="/trace/trace2?uiFind=span2"]');
-      expect(link.length).toBe(1);
+      render(<ReferenceLink reference={externalRef} focusSpan={focusMock} />);
+      expect(screen.getByRole('link')).toHaveAttribute('href', '/trace/trace2?uiFind=span2');
     });
   });
+
   describe('focus span', () => {
     it('call focusSpan', () => {
       focusMock.mockReset();
-      const component = shallow(<ReferenceLink reference={sameTraceRef} focusSpan={focusMock} />);
-      const link = component.find('a');
-      link.simulate('click');
+      render(<ReferenceLink reference={sameTraceRef} focusSpan={focusMock} />);
+
+      fireEvent.click(screen.getByRole('button'));
       expect(focusMock).toHaveBeenLastCalledWith('span1');
     });
   });

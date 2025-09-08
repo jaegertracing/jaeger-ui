@@ -13,26 +13,51 @@
 // limitations under the License.
 
 import React from 'react';
-import { mount, shallow } from 'enzyme';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 import SpanBarRow from './SpanBarRow';
-import SpanTreeOffset from './SpanTreeOffset';
-import ReferencesButton from './ReferencesButton';
 
-jest.mock('./SpanTreeOffset');
+jest.mock('./SpanTreeOffset', () => ({
+  __esModule: true,
+  default: jest.fn(({ span, childrenVisible, onClick }) => (
+    <div data-testid="span-tree-offset" onClick={onClick}>
+      SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
+    </div>
+  )),
+}));
+
+jest.mock('./ReferencesButton', () => ({
+  __esModule: true,
+  default: jest.fn(({ tooltipText, references, children }) => (
+    <button
+      type="button"
+      data-testid="references-button"
+      data-tooltip={tooltipText}
+      data-references={JSON.stringify(references)}
+    >
+      {children}
+    </button>
+  )),
+}));
+
+jest.mock('./SpanBar', () => ({
+  __esModule: true,
+  default: jest.fn(() => <div data-testid="span-bar">SpanBar</div>),
+}));
 
 describe('<SpanBarRow>', () => {
   const spanID = 'some-id';
-  const props = {
+  const defaultProps = {
     className: 'a-class-name',
     color: 'color-a',
-    columnDivision: '0.5',
+    criticalPath: [],
+    columnDivision: 0.5,
     isChildrenExpanded: true,
     isDetailExpanded: false,
-    isFilteredOut: false,
+    isMatchingFilter: false,
     onDetailToggled: jest.fn(),
     onChildrenToggled: jest.fn(),
-    operationName: 'op-name',
     numTicks: 5,
     rpc: {
       viewStart: 0.25,
@@ -42,124 +67,89 @@ describe('<SpanBarRow>', () => {
       serviceName: 'rpc-service-name',
     },
     showErrorIcon: false,
-    getViewedBounds: () => ({ start: 0, end: 1 }),
+    getViewedBounds: jest.fn().mockReturnValue({ start: 0.5, end: 0.6 }),
     span: {
       duration: 'test-duration',
       hasChildren: true,
+      operationName: 'op-name',
       process: {
         serviceName: 'service-name',
       },
       spanID,
       logs: [],
+      startTime: 100,
     },
+    traceStartTime: 0,
+    traceDuration: 1000,
+    focusSpan: jest.fn(),
   };
 
-  let wrapper;
-
   beforeEach(() => {
-    props.onDetailToggled.mockReset();
-    props.onChildrenToggled.mockReset();
-    wrapper = mount(<SpanBarRow {...props} />);
+    jest.clearAllMocks();
+    defaultProps.onDetailToggled.mockReset();
+    defaultProps.onChildrenToggled.mockReset();
   });
 
-  it('renders without exploding', () => {
-    expect(wrapper).toBeDefined();
+  it('renders correctly with essential elements', () => {
+    render(<SpanBarRow {...defaultProps} />);
+    expect(screen.getByTestId('span-tree-offset')).toBeVisible();
+    expect(screen.getByRole('switch')).toBeVisible();
   });
 
-  it('escalates detail toggling', () => {
-    const { onDetailToggled } = props;
-    expect(onDetailToggled.mock.calls.length).toBe(0);
-    wrapper.find('div.span-view').prop('onClick')();
-    expect(onDetailToggled.mock.calls).toEqual([[spanID]]);
+  it('triggers onDetailToggled when view area is clicked', () => {
+    render(<SpanBarRow {...defaultProps} />);
+    const spanView = screen.getByTestId('span-bar').closest('div.span-view');
+    fireEvent.click(spanView);
+    expect(defaultProps.onDetailToggled).toHaveBeenCalledTimes(1);
+    expect(defaultProps.onDetailToggled).toHaveBeenCalledWith(spanID);
   });
 
-  it('escalates children toggling', () => {
-    const { onChildrenToggled } = props;
-    expect(onChildrenToggled.mock.calls.length).toBe(0);
-    wrapper.find(SpanTreeOffset).prop('onClick')();
-    expect(onChildrenToggled.mock.calls).toEqual([[spanID]]);
+  it('triggers onChildrenToggled when SpanTreeOffset is clicked', () => {
+    render(<SpanBarRow {...defaultProps} />);
+    const treeOffset = screen.getByTestId('span-tree-offset');
+    fireEvent.click(treeOffset);
+    expect(defaultProps.onChildrenToggled).toHaveBeenCalledTimes(1);
+    expect(defaultProps.onChildrenToggled).toHaveBeenCalledWith(spanID);
   });
 
-  it('render references button', () => {
-    const span = Object.assign(
-      {
-        references: [
-          {
-            refType: 'CHILD_OF',
-            traceID: 'trace1',
-            spanID: 'span0',
-            span: {
-              spanID: 'span0',
-            },
-          },
-          {
-            refType: 'CHILD_OF',
-            traceID: 'otherTrace',
-            spanID: 'span1',
-            span: {
-              spanID: 'span1',
-            },
-          },
-        ],
-      },
-      props.span
-    );
-
-    const spanRow = shallow(<SpanBarRow {...props} span={span} />);
-    const refButton = spanRow.find(ReferencesButton);
-    expect(refButton.length).toEqual(1);
-    expect(refButton.at(0).props().tooltipText).toEqual('Contains multiple references');
+  it('shows ReferencesButton when span has multiple references', () => {
+    const span = {
+      ...defaultProps.span,
+      references: [
+        { refType: 'CHILD_OF', traceID: 't1', spanID: 's1', span: { spanID: 's1' } },
+        { refType: 'CHILD_OF', traceID: 't2', spanID: 's2', span: { spanID: 's2' } },
+      ],
+    };
+    render(<SpanBarRow {...defaultProps} span={span} />);
+    const btn = screen.getByTestId('references-button');
+    expect(btn).toBeVisible();
+    expect(btn).toHaveAttribute('data-tooltip', 'Contains multiple references');
   });
 
-  it('render referenced to by single span', () => {
-    const span = Object.assign(
-      {
-        subsidiarilyReferencedBy: [
-          {
-            refType: 'CHILD_OF',
-            traceID: 'trace1',
-            spanID: 'span0',
-            span: {
-              spanID: 'span0',
-            },
-          },
-        ],
-      },
-      props.span
-    );
-    const spanRow = shallow(<SpanBarRow {...props} span={span} />);
-    const refButton = spanRow.find(ReferencesButton);
-    expect(refButton.length).toEqual(1);
-    expect(refButton.at(0).props().tooltipText).toEqual('This span is referenced by another span');
+  it('shows tooltip for a single downstream reference', () => {
+    const span = {
+      ...defaultProps.span,
+      subsidiarilyReferencedBy: [
+        { refType: 'CHILD_OF', traceID: 't1', spanID: 's1', span: { spanID: 's1' } },
+      ],
+    };
+    render(<SpanBarRow {...defaultProps} span={span} />);
+    const btn = screen.getByTestId('references-button');
+    expect(btn).toBeVisible();
+    expect(btn).toHaveAttribute('data-tooltip', 'This span is referenced by another span');
   });
 
-  it('render referenced to by multiple span', () => {
-    const span = Object.assign(
-      {
-        subsidiarilyReferencedBy: [
-          {
-            refType: 'CHILD_OF',
-            traceID: 'trace1',
-            spanID: 'span0',
-            span: {
-              spanID: 'span0',
-            },
-          },
-          {
-            refType: 'CHILD_OF',
-            traceID: 'trace1',
-            spanID: 'span1',
-            span: {
-              spanID: 'span1',
-            },
-          },
-        ],
-      },
-      props.span
-    );
-    const spanRow = shallow(<SpanBarRow {...props} span={span} />);
-    const refButton = spanRow.find(ReferencesButton);
-    expect(refButton.length).toEqual(1);
-    expect(refButton.at(0).props().tooltipText).toEqual('This span is referenced by multiple other spans');
+  it('shows tooltip for multiple downstream references', () => {
+    const span = {
+      ...defaultProps.span,
+      subsidiarilyReferencedBy: [
+        { refType: 'CHILD_OF', traceID: 't1', spanID: 's1', span: { spanID: 's1' } },
+        { refType: 'CHILD_OF', traceID: 't2', spanID: 's2', span: { spanID: 's2' } },
+      ],
+    };
+    render(<SpanBarRow {...defaultProps} span={span} />);
+    const btn = screen.getByTestId('references-button');
+    expect(btn).toBeVisible();
+    expect(btn).toHaveAttribute('data-tooltip', 'This span is referenced by multiple other spans');
   });
 });

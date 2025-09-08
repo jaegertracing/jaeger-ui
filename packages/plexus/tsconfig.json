@@ -22,16 +22,18 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "declaration": true,
     "emitDeclarationOnly": true,
     "jsx": "preserve",
-    "outDir": "lib"
+    "outDir": "lib",
+    "rootDir": "src",
+    "composite": true
   },
   "include": [
     "src",
     // easier to add `./typings` here than deal with typeRoots, paths, etc.
-    "../../typings"
+    "./typings"
   ]
 }

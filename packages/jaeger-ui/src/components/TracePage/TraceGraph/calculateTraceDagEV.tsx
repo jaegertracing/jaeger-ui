@@ -31,10 +31,11 @@ export function isError(tags: Array<KeyValuePair>) {
       return errorTag.value;
     }
   }
+
   return false;
 }
 
-function mapFollowsFrom(
+export function mapFollowsFrom(
   edges: TEdge[],
   nodes: TDagNode<TSumSpan & TDenseSpanMembers>[]
 ): TEdge<{ followsFrom: boolean }>[] {
@@ -82,7 +83,7 @@ export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan & TDenseSpanM
 
   baseDag.nodesMap.forEach(node => {
     const ntime = node.members.reduce((p, m) => p + m.span.duration, 0);
-    const numErrors = node.members.reduce((p, m) => (p + isError(m.span.tags) ? 1 : 0), 0);
+    const numErrors = node.members.reduce((p, m) => p + (isError(m.span.tags) ? 1 : 0), 0);
     const childDurationsDRange = node.members.reduce((p, m) => {
       // Using DRange to handle overlapping spans (fork-join)
       const cdr = new DRange(m.span.startTime, m.span.startTime + m.span.duration).intersect(

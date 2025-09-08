@@ -36,7 +36,7 @@ const COLORS_HEX = [
 ];
 
 // TS needs the precise return type
-function strToRgb(s: string): [number, number, number] {
+export function strToRgb(s: string): [number, number, number] {
   if (s.length !== 7) {
     return [0, 0, 0];
   }

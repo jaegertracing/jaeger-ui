@@ -83,7 +83,6 @@ export default class LayoutManager {
     if (data.type === ECoordinatorPhase.Positions) {
       const { isPositionsResolved, resolvePositions } = pendingResult;
       if (isPositionsResolved) {
-        // eslint-disable-next-line no-console
         console.warn('Duplicate positiosn update', data);
         return;
       }

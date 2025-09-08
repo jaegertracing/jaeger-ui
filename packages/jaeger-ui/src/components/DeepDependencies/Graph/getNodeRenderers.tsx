@@ -22,9 +22,8 @@ import './getNodeRenderers.css';
 
 export default function getNodeRenderers(findMatches: Set<string>, viewModifiers: Map<string, number>) {
   function vectorBorder(lv: TLayoutVertex<TDdgVertex>) {
-    // eslint-disable-next-line no-bitwise
     const isHovered = (viewModifiers.get(lv.vertex.key) || 0) & EViewModifier.Hovered;
-    // eslint-disable-next-line no-bitwise
+
     const isPathHovered = (viewModifiers.get(lv.vertex.key) || 0) & EViewModifier.PathHovered;
     const className = cx('DdgNode--VectorBorder', {
       'is-findMatch': findMatches.has(lv.vertex.key),
@@ -43,7 +42,7 @@ export default function getNodeRenderers(findMatches: Set<string>, viewModifiers
     );
   }
 
-  function htmlEmphasis(lv: TLayoutVertex<any>) {
+  function htmlEmphasis(lv: TLayoutVertex<{ isFocalNode: boolean }>) {
     const matchClasses = cx({
       'is-findMatch': findMatches.has(lv.vertex.key),
       'is-focalNode': lv.vertex.isFocalNode,
@@ -62,10 +61,11 @@ export default function getNodeRenderers(findMatches: Set<string>, viewModifiers
     };
   }
 
-  function vectorFindColorBand(lv: TLayoutVertex<any>) {
+  function vectorFindColorBand(lv: TLayoutVertex) {
     if (!findMatches.has(lv.vertex.key)) {
       return null;
     }
+
     return (
       <circle
         className="DdgNode--VectorFindEmphasis--colorBand"

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint-disable import/first */
 jest.mock('isomorphic-fetch', () =>
   jest.fn(() =>
     Promise.resolve({
@@ -95,7 +94,7 @@ describe('fetchQualityMetrics', () => {
     const service = 'test-service';
     JaegerAPI.fetchQualityMetrics(service, hours);
     expect(fetchMock).toHaveBeenLastCalledWith(
-      `/qualitymetrics-v2?${queryString.stringify({ service, hours })}`,
+      `/api/quality-metrics?${queryString.stringify({ service, hours })}`,
       defaultOptions
     );
   });
@@ -110,6 +109,15 @@ describe('fetchServiceServerOps', () => {
       `${DEFAULT_API_ROOT}operations?${queryString.stringify(query)}`,
       defaultOptions
     );
+  });
+});
+
+describe('transformOTLP', () => {
+  it('GETs the transformed trace of Jaeger kind when provided with OTLP', () => {
+    const trace = JSON.parse('{"test" : true}');
+    const body = { ...defaultOptions, body: JSON.stringify(trace), method: 'POST' };
+    JaegerAPI.transformOTLP(trace);
+    expect(fetchMock).toHaveBeenLastCalledWith(`${DEFAULT_API_ROOT}transform`, body);
   });
 });
 
@@ -199,5 +207,46 @@ describe('getMessageFromError()', () => {
       data.data = data;
       expect(getMessageFromError(data)).toBe(String(data));
     });
+  });
+});
+
+describe('fetchMetrics', () => {
+  it('GETs metrics query', () => {
+    fetchMock.mockReset();
+    const metricsType = 'latencies';
+    const serviceName = ['serviceName'];
+    const query = {
+      quantile: 95,
+    };
+    fetchMock.mockReturnValue(
+      Promise.resolve({
+        status: 200,
+        json: () => Promise.resolve({ someObj: {} }),
+      })
+    );
+
+    JaegerAPI.fetchMetrics(metricsType, serviceName, query);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      `${DEFAULT_API_ROOT}metrics/${metricsType}?service=${serviceName}&${queryString.stringify(query)}`,
+      defaultOptions
+    );
+  });
+
+  it('fetchMetrics() should add quantile to response', async () => {
+    const metricsType = 'latencies';
+    const serviceName = ['serviceName'];
+    const query = {
+      quantile: 95,
+    };
+
+    fetchMock.mockReturnValue(
+      Promise.resolve({
+        status: 200,
+        json: () => Promise.resolve({ someObj: {} }),
+      })
+    );
+
+    const resp = await JaegerAPI.fetchMetrics(metricsType, serviceName, query);
+    expect(resp.quantile).toBe(query.quantile);
   });
 });

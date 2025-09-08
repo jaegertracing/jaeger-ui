@@ -200,6 +200,7 @@ describe('search traces', () => {
           state: fetchedState.DONE,
         },
       },
+      rawTraces: [trace],
       search: {
         query,
         state: fetchedState.DONE,
@@ -292,5 +293,31 @@ describe('load json traces', () => {
       state: fetchedState.ERROR,
     };
     expect(state.search).toEqual(outcome);
+  });
+
+  it('handles error when processing json trace data', () => {
+    const initialState = {
+      traces: {},
+      search: {
+        results: ['existing-trace-id'],
+        state: fetchedState.LOADING,
+      },
+    };
+    const corruptedTrace = {
+      ...trace,
+      spans: null,
+    };
+
+    const state = traceReducer(initialState, {
+      type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_FULFILLED}`,
+      payload: { data: [corruptedTrace] },
+    });
+
+    expect(state.search).toEqual({
+      error: expect.any(Error),
+      results: [],
+      state: fetchedState.ERROR,
+    });
+    expect(state.traces).toEqual({});
   });
 });

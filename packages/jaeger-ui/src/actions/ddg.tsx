@@ -47,7 +47,10 @@ const fullActions = createActions<TDdgAddViewModifierPayload | TDdgViewModifierR
   [actionTypes.REMOVE_VIEW_MODIFIER_FROM_INDICES]: removeViewModifierFromIndices,
 });
 
-export default (fullActions as any).jaegerUi.deepDependencyGraph as Record<
-  string,
-  ActionFunctionAny<Action<TDdgViewModifierRemovalPayload>>
->;
+type FullActionsType = {
+  jaegerUi: {
+    deepDependencyGraph: Record<string, ActionFunctionAny<Action<TDdgViewModifierRemovalPayload>>>;
+  };
+};
+
+export default (fullActions as unknown as FullActionsType).jaegerUi.deepDependencyGraph;
