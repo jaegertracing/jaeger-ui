@@ -1,18 +1,7 @@
 // Copyright (c) 2025 The Jaeger Authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Col, Row, Select } from 'antd';
 import JaegerAPI from '../../../api/jaeger';
 import { getConfigValue } from '../../../utils/config/get-config';
@@ -60,12 +49,18 @@ const MultiTagSelector = ({ service, onChange, disabled = false, value = '' }) =
 
   // Fetch values for all attributes when dependencies change
   useEffect(() => {
+    // Only fetch if we have attributes and a service
+    if (!tagAttributes.length || !service) return;
+
+    // Function to fetch values for a single attribute
     const fetchTagValuesForAttribute = async attributeName => {
       if (!attributeName) return;
 
+      // Set loading state for this attribute
       setLoading(prev => ({ ...prev, [attributeName]: true }));
 
       try {
+        // Fetch values from API
         const values = await JaegerAPI.fetchTagValues(attributeName, service);
         setTagValues(prev => ({
           ...prev,
@@ -82,12 +77,10 @@ const MultiTagSelector = ({ service, onChange, disabled = false, value = '' }) =
       }
     };
 
-    // Only fetch if we have attributes
-    if (tagAttributes.length > 0) {
-      tagAttributes.forEach(attr => {
-        fetchTagValuesForAttribute(attr.name);
-      });
-    }
+    // Fetch values for each attribute
+    tagAttributes.forEach(attr => {
+      fetchTagValuesForAttribute(attr.name);
+    });
   }, [service, tagAttributes]);
 
   // Update selected values when value prop changes
@@ -96,7 +89,8 @@ const MultiTagSelector = ({ service, onChange, disabled = false, value = '' }) =
   }, [valueAsObject]);
 
   // Handle value selection for a specific attribute
-  const handleValueChange = useCallback((attributeName, selectedValue) => {
+  const handleValueChange = (attributeName, selectedValue) => {
+    // Pure state update function - no side effects
     setSelectedValues(prevValues => {
       const newSelectedValues = { ...prevValues };
 
@@ -106,25 +100,24 @@ const MultiTagSelector = ({ service, onChange, disabled = false, value = '' }) =
         delete newSelectedValues[attributeName];
       }
 
-      // Format based on number of tags
-      const tagCount = Object.keys(newSelectedValues).length;
-
-      if (tagCount === 0) {
-        // No tags selected
-        onChange('');
-      } else if (tagCount === 1) {
-        // Single tag: use simple format key:value
-        const [key, val] = Object.entries(newSelectedValues)[0];
-        onChange(`${key}:${val}`);
-      } else {
-        // Multiple tags: use JSON format
-        const jsonString = JSON.stringify(newSelectedValues);
-        onChange(jsonString);
-      }
-
       return newSelectedValues;
     });
-  }, []); // Remove onChange from dependencies since it's used inside setState callback
+  };
+
+  // Use an effect to handle parent onChange when selectedValues change
+  useEffect(() => {
+    // Format and call parent onChange with appropriate format
+    const tagCount = Object.keys(selectedValues).length;
+
+    if (tagCount === 0) {
+      onChange('');
+    } else if (tagCount === 1) {
+      const [key, val] = Object.entries(selectedValues)[0];
+      onChange(`${key}:${val}`);
+    } else {
+      onChange(JSON.stringify(selectedValues));
+    }
+  }, [selectedValues, onChange]);
 
   if (tagAttributes.length === 0) {
     return null;
@@ -137,7 +130,7 @@ const MultiTagSelector = ({ service, onChange, disabled = false, value = '' }) =
           <Col key={attribute.name}>
             <h2 className="tag-selector-header">{attribute.label}</h2>
             <SearchableSelect
-              placeholder={`Select`}
+              placeholder="Select"
               value={selectedValues[attribute.name] || undefined}
               onChange={val => handleValueChange(attribute.name, val)}
               loading={loading[attribute.name]}

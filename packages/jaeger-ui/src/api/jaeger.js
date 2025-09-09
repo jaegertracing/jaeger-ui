@@ -125,7 +125,7 @@ const JaegerAPI = {
   fetchTagValues(tagName, service) {
     const query = { key: tagName };
     if (service) query.service = service;
-    return getJSON(`${this.apiRoot}metrics/labels`, { query }).then(response => response.data || []);
+    return getJSON(`${this.apiRoot}metrics/attributes`, { query }).then(response => response.data || []);
   },
   searchTraces(query) {
     return getJSON(`${this.apiRoot}traces`, { query });
