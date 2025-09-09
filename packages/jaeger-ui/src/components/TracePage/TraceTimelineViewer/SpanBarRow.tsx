@@ -158,9 +158,9 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                   (hasOwnError ? (
                     <IoAlert className="SpanBarRow--errorIcon" />
                   ) : (
-                    <a
+                    <button
+                      type="button"
                       className="SpanBarRow--bubbledErrorPill"
-                      role="button"
                       title="Click to navigate to descendant error span(s)"
                       onClick={e => {
                         e.stopPropagation();
@@ -171,7 +171,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                       }}
                     >
                       <IoAlert className="SpanBarRow--bubbledErrorIcon" />
-                    </a>
+                    </button>
                   ))}
                 {serviceName}{' '}
                 {rpc && (
