@@ -40,7 +40,10 @@
     "webpack-cli": "^6.0.0",
     "webpack-dev-server": "^5.0.4",
     "webpack-node-externals": "3.0.0",
-    "worker-loader": "3.0.8"
+    "worker-loader": "3.0.8",
+    "babel-jest": "^30.0.0",
+    "jest": "^30.0.0",
+    "jest-environment-jsdom": "^30.0.0"
   },
   "peerDependencies": {
     "react": "^19.1.1",
@@ -62,9 +65,26 @@
     "_tasks/bundle-worker": "webpack --mode $NODE_ENV --config webpack.layout-worker.config.js",
     "_tasks/dev-server": "webpack-dev-server --mode $NODE_ENV --config webpack.dev.config.js",
     "build": "NODE_ENV=production npm-run-all -ln --serial _tasks/clean/* _tasks/bundle-worker --parallel _tasks/build/**",
-    "coverage": "echo 'NO TESTS YET'",
+    "coverage": "jest --coverage",
     "prepublishOnly": "npm run build",
     "start": "NODE_ENV='development' npm-run-all -ln --serial _tasks/clean/worker _tasks/bundle-worker --parallel '_tasks/bundle-worker --watch' _tasks/dev-server",
-    "test": "echo 'NO TESTS YET'"
+    "test": "jest --maxWorkers=50%"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "transform": {
+      "\\.([jt]sx?|svg)$": "../jaeger-ui/test/babel-transform.js"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx,js,jsx}",
+      "!src/**/*.d.ts"
+    ]
   }
 }
