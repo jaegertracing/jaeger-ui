@@ -35,19 +35,88 @@ interface IDeprecation {
  * - The value at the deprecated config property is ignored in favor of the value at the new property
  */
 export default function processDeprecation(config: object, deprecation: IDeprecation, issueWarning: boolean) {
-  const { formerKey, currentKey } = deprecation;
+  const { formerKey, currentKey } = deprecation || ({} as IDeprecation);
+
+  // Basic validation of inputs
+  const isObjectLike = typeof config === 'object' && config !== null;
+  const isValidKey = (key: unknown) => typeof key === 'string' && key.trim().length > 0;
+  const hasDangerousSegment = (path: string) => {
+    const segments = path.split('.');
+    return segments.some(seg => seg === '__proto__' || seg === 'prototype' || seg === 'constructor');
+  };
+  const canSafelySet = (target: unknown, path: string) => {
+    if (!isObjectLike || typeof path !== 'string') return false;
+    const segments = path.split('.');
+    let cursor: any = target;
+    for (let i = 0; i < segments.length - 1; i++) {
+      const seg = segments[i];
+      if (cursor == null) return false;
+      const next = cursor[seg as keyof typeof cursor];
+      if (next === undefined) {
+        // creating new branch is safe
+        cursor = {};
+        continue;
+      }
+      if (typeof next !== 'object' || next === null) {
+        return false;
+      }
+      cursor = next;
+    }
+    return true;
+  };
+
+  // If config or keys are malformed, do nothing but optionally warn
+  if (
+    !isObjectLike ||
+    !isValidKey(formerKey) ||
+    !isValidKey(currentKey) ||
+    hasDangerousSegment(formerKey) ||
+    hasDangerousSegment(currentKey)
+  ) {
+    if (issueWarning) {
+      const reasons: string[] = [];
+      if (!isObjectLike) reasons.push('config must be a non-null object');
+      if (!isValidKey(formerKey)) reasons.push('formerKey must be a non-empty string');
+      if (!isValidKey(currentKey)) reasons.push('currentKey must be a non-empty string');
+      if (isValidKey(formerKey) && hasDangerousSegment(formerKey))
+        reasons.push(`formerKey contains a dangerous path segment`);
+      if (isValidKey(currentKey) && hasDangerousSegment(currentKey))
+        reasons.push(`currentKey contains a dangerous path segment`);
+      if (reasons.length) {
+        console.warn(`Skipping deprecated config processing: ${reasons.join('; ')}`);
+      }
+    }
+    return;
+  }
+
   if (_has(config, formerKey)) {
     let isTransfered = false;
     let isIgnored = false;
-    if (!_has(config, currentKey)) {
-      // the new key is not set so transfer the value at the old key
-      const value = _get(config, formerKey);
-      _set(config, currentKey, value);
-      isTransfered = true;
-    } else {
-      isIgnored = true;
+    let didUnsetFormer = false;
+    try {
+      if (!_has(config, currentKey)) {
+        // Only transfer if setting won't overwrite non-object intermediates
+        if (canSafelySet(config, currentKey)) {
+          const value = _get(config, formerKey);
+          _set(config, currentKey, value);
+          isTransfered = true;
+          _unset(config, formerKey);
+          didUnsetFormer = true;
+        } else if (issueWarning) {
+          console.warn(
+            `Skipping move from "${formerKey}" to "${currentKey}": cannot safely create nested path without overwriting non-object values`
+          );
+        }
+      } else {
+        isIgnored = true;
+        _unset(config, formerKey);
+        didUnsetFormer = true;
+      }
+    } catch (err) {
+      if (issueWarning) {
+        console.warn(`Failed processing deprecation from "${formerKey}" to "${currentKey}": ${String(err)}`);
+      }
     }
-    _unset(config, formerKey);
 
     if (issueWarning) {
       const warnings = [`"${formerKey}" is deprecated, instead use "${currentKey}"`];
@@ -59,8 +128,13 @@ export default function processDeprecation(config: object, deprecation: IDepreca
           `The value at "${formerKey}" is being ignored in favor of the value at "${currentKey}"`
         );
       }
+      if (!isTransfered && !isIgnored && !didUnsetFormer) {
+        warnings.push(`The deprecated value at "${formerKey}" was left unchanged due to safety checks`);
+      }
 
-      console.warn(warnings.join('\n'));
+      if (warnings.length) {
+        console.warn(warnings.join('\n'));
+      }
     }
   }
 }
