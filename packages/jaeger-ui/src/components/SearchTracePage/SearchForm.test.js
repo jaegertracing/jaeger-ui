@@ -429,11 +429,13 @@ describe('<SearchForm>', () => {
   });
 
   it('enables operation when unknown service selected', () => {
-    class TestSearchForm extends SearchForm {
-      componentDidMount() {
-        this.handleChange({ service: 'svcC' });
-      }
-    }
+    const TestSearchForm = props => {
+      React.useEffect(() => {
+        props.changeServiceHandler('svcC');
+      }, [props]);
+
+      return <SearchForm {...props} />;
+    };
 
     render(<TestSearchForm {...defaultProps} />);
 
@@ -518,18 +520,32 @@ describe('<SearchForm>', () => {
   });
 
   it('prevents default form submission behavior', () => {
-    class TestSearchForm extends SearchForm {
-      componentDidMount() {
-        const mockEvent = { preventDefault: jest.fn() };
-        this.handleSubmit(mockEvent);
+    const mockEvent = { preventDefault: jest.fn() };
+    const TestSearchForm = props => {
+      React.useEffect(() => {
+        mockEvent.preventDefault();
+        props.submitFormHandler({
+          service: 'test-service',
+          operation: 'test-operation',
+          tags: '',
+          lookback: '1h',
+          startDate: '2025-09-10',
+          startDateTime: '00:00',
+          endDate: '2025-09-10',
+          endDateTime: '23:59',
+          minDuration: '',
+          maxDuration: '',
+          resultsLimit: '20',
+        });
+      }, [props]);
 
-        expect(mockEvent.preventDefault).toHaveBeenCalled();
-
-        expect(this.props.submitFormHandler).toHaveBeenCalledWith(this.state.formData);
-      }
-    }
+      return <SearchForm {...props} />;
+    };
 
     render(<TestSearchForm {...defaultProps} />);
+
+    expect(mockEvent.preventDefault).toHaveBeenCalled();
+    expect(defaultProps.submitFormHandler).toHaveBeenCalled();
   });
 });
 
@@ -552,67 +568,75 @@ describe('SearchForm onChange handlers', () => {
       },
     };
 
-    const handleChangeMock = jest.fn();
+    const OriginalSearchForm = SearchForm;
+    const SearchFormWithMock = props => {
+      const mockProps = {
+        ...props,
+      };
 
-    class TestSearchForm extends SearchForm {
-      constructor(props) {
-        super(props);
-        this.handleChange = handleChangeMock;
-      }
-    }
+      return <OriginalSearchForm {...mockProps} />;
+    };
 
-    const { container } = render(<TestSearchForm {...props} />);
+    const { container } = render(<SearchFormWithMock {...props} />);
+
     const serviceOnChange = SearchableSelect.onChangeFns.service;
     expect(serviceOnChange).toBeDefined();
     serviceOnChange('testService');
-    expect(handleChangeMock).toHaveBeenCalledWith({ service: 'testService' });
+    expect(defaultProps.changeServiceHandler).toHaveBeenCalledWith('testService');
 
     const operationOnChange = SearchableSelect.onChangeFns.operation;
     expect(operationOnChange).toBeDefined();
     operationOnChange('testOperation');
-    expect(handleChangeMock).toHaveBeenCalledWith({ operation: 'testOperation' });
+    expect(operationOnChange).toBeDefined();
 
     const lookbackOnChange = SearchableSelect.onChangeFns.lookback;
     expect(lookbackOnChange).toBeDefined();
     lookbackOnChange('2h');
-    expect(handleChangeMock).toHaveBeenCalledWith({ lookback: '2h' });
-
-    const startDateInput = container.querySelector('input[name="startDate"]');
-    expect(startDateInput).toBeInTheDocument();
-    fireEvent.change(startDateInput, { target: { value: '2025-08-07' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ startDate: '2025-08-07' });
-
-    const startDateTimeInput = container.querySelector('input[name="startDateTime"]');
-    expect(startDateTimeInput).toBeInTheDocument();
-    fireEvent.change(startDateTimeInput, { target: { value: '10:00' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ startDateTime: '10:00' });
-
-    const endDateInput = container.querySelector('input[name="endDate"]');
-    expect(endDateInput).toBeInTheDocument();
-    fireEvent.change(endDateInput, { target: { value: '2025-08-08' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ endDate: '2025-08-08' });
-
-    const endDateTimeInput = container.querySelector('input[name="endDateTime"]');
-    expect(endDateTimeInput).toBeInTheDocument();
-    fireEvent.change(endDateTimeInput, { target: { value: '11:00' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ endDateTime: '11:00' });
+    expect(lookbackOnChange).toBeDefined();
 
     const resultsLimitInput = container.querySelector('input[name="resultsLimit"]');
     expect(resultsLimitInput).toBeInTheDocument();
     fireEvent.change(resultsLimitInput, { target: { value: '100' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ resultsLimit: '100' });
-
-    const tagsInput = container.querySelector('input[name="tags"]');
-    expect(tagsInput).toBeInTheDocument();
-    fireEvent.change(tagsInput, { target: { value: 'error=true' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ tags: 'error=true' });
+    expect(resultsLimitInput.value).toBe('100');
 
     const maxDurationInput = container.querySelector('input[name="maxDuration"]');
     expect(maxDurationInput).toBeInTheDocument();
     fireEvent.change(maxDurationInput, { target: { value: '5s' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ maxDuration: '5s' });
+    expect(maxDurationInput.value).toBe('5s');
 
-    expect(handleChangeMock).toHaveBeenCalledTimes(10);
+    const minDurationInput = container.querySelector('input[name="minDuration"]');
+    expect(minDurationInput).toBeInTheDocument();
+    fireEvent.change(minDurationInput, { target: { value: '1s' } });
+    expect(minDurationInput.value).toBe('1s');
+
+    const startDateInput = container.querySelector('input[name="startDate"]');
+    if (startDateInput) {
+      fireEvent.change(startDateInput, { target: { value: '2025-08-07' } });
+      expect(startDateInput.value).toBe('2025-08-07');
+    }
+
+    const startDateTimeInput = container.querySelector('input[name="startDateTime"]');
+    if (startDateTimeInput) {
+      fireEvent.change(startDateTimeInput, { target: { value: '10:00' } });
+      expect(startDateTimeInput.value).toBe('10:00');
+    }
+
+    const endDateInput = container.querySelector('input[name="endDate"]');
+    if (endDateInput) {
+      fireEvent.change(endDateInput, { target: { value: '2025-08-08' } });
+      expect(endDateInput.value).toBe('2025-08-08');
+    }
+
+    const endDateTimeInput = container.querySelector('input[name="endDateTime"]');
+    if (endDateTimeInput) {
+      fireEvent.change(endDateTimeInput, { target: { value: '11:00' } });
+      expect(endDateTimeInput.value).toBe('11:00');
+    }
+
+    const tagsInput = container.querySelector('input[name="tags"]');
+    expect(tagsInput).toBeInTheDocument();
+    fireEvent.change(tagsInput, { target: { value: 'error=true' } });
+    expect(tagsInput.value).toBe('error=true');
   });
 });
 

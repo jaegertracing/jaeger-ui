@@ -257,169 +257,212 @@ export function submitForm(fields, searchTraces) {
   });
 }
 
-export class SearchFormImpl extends React.PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      formData: {
-        service: this.props.initialValues?.service,
-        operation: this.props.initialValues?.operation,
-        tags: this.props.initialValues?.tags,
-        lookback: this.props.initialValues?.lookback,
-        startDate: this.props.initialValues?.startDate,
-        startDateTime: this.props.initialValues?.startDateTime,
-        endDate: this.props.initialValues?.endDate,
-        endDateTime: this.props.initialValues?.endDateTime,
-        minDuration: this.props.initialValues?.minDuration,
-        maxDuration: this.props.initialValues?.maxDuration,
-        resultsLimit: this.props.initialValues?.resultsLimit,
-      },
-    };
-  }
+export function SearchFormImpl(props) {
+  const {
+    invalid,
+    searchMaxLookback,
+    services,
+    submitting,
+    initialValues,
+    changeServiceHandler,
+    submitFormHandler,
+    handleChange: propHandleChange,
+  } = props;
 
-  handleChange = fieldData => {
-    this.setState(prevState => ({
-      formData: {
-        ...prevState.formData,
-        ...fieldData,
-      },
+  const [formData, setFormData] = React.useState({
+    service: initialValues?.service,
+    operation: initialValues?.operation,
+    tags: initialValues?.tags,
+    lookback: initialValues?.lookback,
+    startDate: initialValues?.startDate,
+    startDateTime: initialValues?.startDateTime,
+    endDate: initialValues?.endDate,
+    endDateTime: initialValues?.endDateTime,
+    minDuration: initialValues?.minDuration,
+    maxDuration: initialValues?.maxDuration,
+    resultsLimit: initialValues?.resultsLimit,
+  });
+
+  const internalHandleChange = fieldData => {
+    setFormData(prevState => ({
+      ...prevState,
+      ...fieldData,
     }));
     if (fieldData.service) {
-      this.props.changeServiceHandler(fieldData.service);
-      this.setState(prevState => ({
-        formData: {
-          ...prevState.formData,
-          operation: DEFAULT_OPERATION,
-        },
+      changeServiceHandler(fieldData.service);
+      setFormData(prevState => ({
+        ...prevState,
+        operation: DEFAULT_OPERATION,
       }));
     }
   };
 
-  handleSubmit = e => {
+  const handleChange = propHandleChange || internalHandleChange;
+
+  const handleSubmit = e => {
     e.preventDefault();
-    this.props.submitFormHandler(this.state.formData);
+    submitFormHandler(formData);
   };
 
-  render() {
-    const { invalid, searchMaxLookback, services, submitting } = this.props;
-    const { formData } = this.state;
-    const { service: selectedService, lookback: selectedLookback } = formData;
-    const selectedServicePayload = services.find(s => s.name === selectedService);
-    const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
-    const noSelectedService = selectedService === '-' || !selectedService;
-    const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
-    const invalidDuration =
-      validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
+  const { service: selectedService, lookback: selectedLookback } = formData;
+  const selectedServicePayload = services.find(s => s.name === selectedService);
+  const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
+  const noSelectedService = selectedService === '-' || !selectedService;
+  const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
+  const invalidDuration =
+    validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
 
-    return (
-      <Form layout="vertical" onSubmitCapture={this.handleSubmit}>
-        <FormItem
-          label={
-            <span>
-              Service <span className="SearchForm--labelCount">({services.length})</span>
-            </span>
-          }
+  return (
+    <Form layout="vertical" onSubmitCapture={handleSubmit}>
+      <FormItem
+        label={
+          <span>
+            Service <span className="SearchForm--labelCount">({services.length})</span>
+          </span>
+        }
+      >
+        <SearchableSelect
+          name="service"
+          value={formData.service}
+          placeholder="Select A Service"
+          disabled={submitting}
+          onChange={value => handleChange({ service: value })}
         >
-          <SearchableSelect
-            name="service"
-            value={this.state.formData.service}
-            placeholder="Select A Service"
-            disabled={submitting}
-            onChange={value => this.handleChange({ service: value })}
-          >
-            {services.map(service => (
-              <Option key={service.name} value={service.name}>
-                {service.name}
-              </Option>
-            ))}
-          </SearchableSelect>
-        </FormItem>
-        <FormItem
-          label={
-            <span>
-              Operation <span className="SearchForm--labelCount">({opsForSvc ? opsForSvc.length : 0})</span>
-            </span>
-          }
+          {services.map(service => (
+            <Option key={service.name} value={service.name}>
+              {service.name}
+            </Option>
+          ))}
+        </SearchableSelect>
+      </FormItem>
+      <FormItem
+        label={
+          <span>
+            Operation <span className="SearchForm--labelCount">({opsForSvc ? opsForSvc.length : 0})</span>
+          </span>
+        }
+      >
+        <SearchableSelect
+          name="operation"
+          value={formData.operation}
+          disabled={submitting || noSelectedService}
+          placeholder="Select An Operation"
+          onChange={value => handleChange({ operation: value })}
         >
-          <SearchableSelect
-            name="operation"
-            value={this.state.formData.operation}
-            disabled={submitting || noSelectedService}
-            placeholder="Select An Operation"
-            onChange={value => this.handleChange({ operation: value })}
-          >
-            {['all'].concat(opsForSvc).map(op => (
-              <Option key={op} value={op}>
-                {op}
-              </Option>
-            ))}
-          </SearchableSelect>
-        </FormItem>
+          {['all'].concat(opsForSvc).map(op => (
+            <Option key={op} value={op}>
+              {op}
+            </Option>
+          ))}
+        </SearchableSelect>
+      </FormItem>
 
-        <FormItem
-          label={
-            <div>
-              Tags{' '}
-              <Popover
-                placement="topLeft"
-                trigger="click"
-                title={
-                  <h3 key="title" className="SearchForm--tagsHintTitle">
-                    Values should be in the{' '}
-                    <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
-                      logfmt
-                    </a>{' '}
-                    format.
-                  </h3>
-                }
-                content={
-                  <div>
-                    <ul key="info" className="SearchForm--tagsHintInfo">
-                      <li>Use space for AND conjunctions.</li>
-                      <li>
-                        Values containing whitespace or equal-sign &apos;=&apos; should be enclosed in quotes.
-                      </li>
-                      <li>
-                        Elasticsearch/OpenSearch storage supports regex query, therefore{' '}
+      <FormItem
+        label={
+          <div>
+            Tags{' '}
+            <Popover
+              placement="topLeft"
+              trigger="click"
+              title={
+                <h3 key="title" className="SearchForm--tagsHintTitle">
+                  Values should be in the{' '}
+                  <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
+                    logfmt
+                  </a>{' '}
+                  format.
+                </h3>
+              }
+              content={
+                <div>
+                  <ul key="info" className="SearchForm--tagsHintInfo">
+                    <li>Use space for AND conjunctions.</li>
+                    <li>
+                      Values containing whitespace or equal-sign &apos;=&apos; should be enclosed in quotes.
+                    </li>
+                    <li>
+                      Elasticsearch/OpenSearch storage supports regex query, therefore{' '}
+                      <a
+                        href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        reserved characters
+                      </a>{' '}
+                      need to be escaped for exact match queries.
+                    </li>
+                  </ul>
+                  <p>Examples:</p>
+                  <ul className="SearchForm--tagsHintInfo">
+                    <li>
+                      <code className="SearchForm--tagsHintEg">error=true</code>
+                    </li>
+                    <li>
+                      <code className="SearchForm--tagsHintEg">
+                        db.statement=&quot;select * from User&quot;
+                      </code>
+                    </li>
+                    <li>
+                      <code className="SearchForm--tagsHintEg">
+                        http.url=&quot;http://0.0.0.0:8081/customer\\?customer=123&quot;
+                      </code>
+                      <div>
+                        Note: when using Elasticsearch/OpenSearch the{' '}
                         <a
                           href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
                           rel="noopener noreferrer"
                           target="_blank"
                         >
-                          reserved characters
+                          regex-reserved
                         </a>{' '}
-                        need to be escaped for exact match queries.
-                      </li>
-                    </ul>
-                    <p>Examples:</p>
-                    <ul className="SearchForm--tagsHintInfo">
-                      <li>
-                        <code className="SearchForm--tagsHintEg">error=true</code>
-                      </li>
-                      <li>
-                        <code className="SearchForm--tagsHintEg">
-                          db.statement=&quot;select * from User&quot;
-                        </code>
-                      </li>
-                      <li>
-                        <code className="SearchForm--tagsHintEg">
-                          http.url=&quot;http://0.0.0.0:8081/customer\\?customer=123&quot;
-                        </code>
-                        <div>
-                          Note: when using Elasticsearch/OpenSearch the{' '}
-                          <a
-                            href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
-                            rel="noopener noreferrer"
-                            target="_blank"
-                          >
-                            regex-reserved
-                          </a>{' '}
-                          character <code className="SearchForm--tagsHintEg">&quot;?&quot;</code> must be
-                          escaped with <code className="SearchForm--tagsHintEg">&quot;\\&quot;</code>.
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
+                        character <code className="SearchForm--tagsHintEg">&quot;?&quot;</code> must be
+                        escaped with <code className="SearchForm--tagsHintEg">&quot;\\&quot;</code>.
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              }
+            >
+              <IoHelp className="SearchForm--hintTrigger" />
+            </Popover>
+          </div>
+        }
+      >
+        <Input
+          name="tags"
+          value={formData.tags}
+          disabled={submitting}
+          placeholder="http.status_code=200 error=true"
+          onChange={e => handleChange({ tags: e.target.value })}
+        />
+      </FormItem>
+
+      <FormItem label="Lookback">
+        <SearchableSelect
+          name="lookback"
+          value={formData.lookback}
+          disabled={submitting}
+          defaultValue={DEFAULT_LOOKBACK}
+          onChange={value => handleChange({ lookback: value })}
+        >
+          {optionsWithinMaxLookback(searchMaxLookback)}
+          <Option value="custom">Custom Time Range</Option>
+        </SearchableSelect>
+      </FormItem>
+
+      {selectedLookback === 'custom' && [
+        <FormItem
+          key="start"
+          label={
+            <div>
+              Start Time{' '}
+              <Popover
+                placement="topLeft"
+                trigger="click"
+                content={
+                  <h3 key="title" className="SearchForm--tagsHintTitle">
+                    Times are expressed in {tz}
+                  </h3>
                 }
               >
                 <IoHelp className="SearchForm--hintTrigger" />
@@ -427,168 +470,125 @@ export class SearchFormImpl extends React.PureComponent {
             </div>
           }
         >
-          <Input
-            name="tags"
-            value={this.state.formData.tags}
-            disabled={submitting}
-            placeholder="http.status_code=200 error=true"
-            onChange={e => this.handleChange({ tags: e.target.value })}
-          />
-        </FormItem>
-
-        <FormItem label="Lookback">
-          <SearchableSelect
-            name="lookback"
-            value={this.state.formData.lookback}
-            disabled={submitting}
-            defaultValue={DEFAULT_LOOKBACK}
-            onChange={value => this.handleChange({ lookback: value })}
-          >
-            {optionsWithinMaxLookback(searchMaxLookback)}
-            <Option value="custom">Custom Time Range</Option>
-          </SearchableSelect>
-        </FormItem>
-
-        {selectedLookback === 'custom' && [
-          <FormItem
-            key="start"
-            label={
-              <div>
-                Start Time{' '}
-                <Popover
-                  placement="topLeft"
-                  trigger="click"
-                  content={
-                    <h3 key="title" className="SearchForm--tagsHintTitle">
-                      Times are expressed in {tz}
-                    </h3>
-                  }
-                >
-                  <IoHelp className="SearchForm--hintTrigger" />
-                </Popover>
-              </div>
-            }
-          >
-            <Row gutter={16}>
-              <Col className="gutter-row" span={14}>
-                <Input
-                  name="startDate"
-                  value={this.state.formData.startDate}
-                  disabled={submitting}
-                  type="date"
-                  placeholder="Start Date"
-                  onChange={e => this.handleChange({ startDate: e.target.value })}
-                />
-              </Col>
-
-              <Col className="gutter-row" span={10}>
-                <Input
-                  name="startDateTime"
-                  value={this.state.formData.startDateTime}
-                  disabled={submitting}
-                  type="time"
-                  onChange={e => this.handleChange({ startDateTime: e.target.value })}
-                />
-              </Col>
-            </Row>
-          </FormItem>,
-
-          <FormItem
-            key="end"
-            label={
-              <div>
-                End Time{' '}
-                <Popover
-                  placement="topLeft"
-                  trigger="click"
-                  content={
-                    <h3 key="title" className="SearchForm--tagsHintTitle">
-                      Times are expressed in {tz}
-                    </h3>
-                  }
-                >
-                  <IoHelp className="SearchForm--hintTrigger" />
-                </Popover>
-              </div>
-            }
-          >
-            <Row gutter={16}>
-              <Col className="gutter-row" span={14}>
-                <Input
-                  name="endDate"
-                  value={this.state.formData.endDate}
-                  disabled={submitting}
-                  type="date"
-                  placeholder="End Date"
-                  onChange={e => this.handleChange({ endDate: e.target.value })}
-                />
-              </Col>
-
-              <Col className="gutter-row" span={10}>
-                <Input
-                  name="endDateTime"
-                  value={this.state.formData.endDateTime}
-                  disabled={submitting}
-                  type="time"
-                  onChange={e => this.handleChange({ endDateTime: e.target.value })}
-                />
-              </Col>
-            </Row>
-          </FormItem>,
-        ]}
-
-        <Row gutter={16}>
-          <Col className="gutter-row" span={12}>
-            <FormItem label="Max Duration">
-              <ValidatedFormField
-                name="maxDuration"
-                value={this.state.formData.maxDuration}
+          <Row gutter={16}>
+            <Col className="gutter-row" span={14}>
+              <Input
+                name="startDate"
+                value={formData.startDate}
                 disabled={submitting}
-                validate={validateDurationFields}
-                placeholder={placeholderDurationFields}
-                onChange={e => this.handleChange({ maxDuration: e.target.value })}
+                type="date"
+                placeholder="Start Date"
+                onChange={e => handleChange({ startDate: e.target.value })}
               />
-            </FormItem>
-          </Col>
+            </Col>
 
-          <Col className="gutter-row" span={12}>
-            <FormItem label="Min Duration">
-              <ValidatedFormField
-                name="minDuration"
-                value={this.state.formData.minDuration}
+            <Col className="gutter-row" span={10}>
+              <Input
+                name="startDateTime"
+                value={formData.startDateTime}
                 disabled={submitting}
-                validate={validateDurationFields}
-                placeholder={placeholderDurationFields}
-                onChange={e => this.handleChange({ minDuration: e.target.value })}
+                type="time"
+                onChange={e => handleChange({ startDateTime: e.target.value })}
               />
-            </FormItem>
-          </Col>
-        </Row>
+            </Col>
+          </Row>
+        </FormItem>,
 
-        <FormItem label="Limit Results">
-          <Input
-            name="resultsLimit"
-            value={this.state.formData.resultsLimit}
-            disabled={submitting}
-            type="number"
-            placeholder="Limit Results"
-            min={1}
-            max={getConfigValue('search.maxLimit')}
-            onChange={e => this.handleChange({ resultsLimit: e.target.value })}
-          />
-        </FormItem>
-
-        <Button
-          htmlType="submit"
-          className="SearchForm--submit"
-          disabled={submitting || noSelectedService || invalid || invalidDuration}
-          data-test={markers.SUBMIT_BTN}
+        <FormItem
+          key="end"
+          label={
+            <div>
+              End Time{' '}
+              <Popover
+                placement="topLeft"
+                trigger="click"
+                content={
+                  <h3 key="title" className="SearchForm--tagsHintTitle">
+                    Times are expressed in {tz}
+                  </h3>
+                }
+              >
+                <IoHelp className="SearchForm--hintTrigger" />
+              </Popover>
+            </div>
+          }
         >
-          Find Traces
-        </Button>
-      </Form>
-    );
-  }
+          <Row gutter={16}>
+            <Col className="gutter-row" span={14}>
+              <Input
+                name="endDate"
+                value={formData.endDate}
+                disabled={submitting}
+                type="date"
+                placeholder="End Date"
+                onChange={e => handleChange({ endDate: e.target.value })}
+              />
+            </Col>
+
+            <Col className="gutter-row" span={10}>
+              <Input
+                name="endDateTime"
+                value={formData.endDateTime}
+                disabled={submitting}
+                type="time"
+                onChange={e => handleChange({ endDateTime: e.target.value })}
+              />
+            </Col>
+          </Row>
+        </FormItem>,
+      ]}
+
+      <Row gutter={16}>
+        <Col className="gutter-row" span={12}>
+          <FormItem label="Max Duration">
+            <ValidatedFormField
+              name="maxDuration"
+              value={formData.maxDuration}
+              disabled={submitting}
+              validate={validateDurationFields}
+              placeholder={placeholderDurationFields}
+              onChange={e => handleChange({ maxDuration: e.target.value })}
+            />
+          </FormItem>
+        </Col>
+
+        <Col className="gutter-row" span={12}>
+          <FormItem label="Min Duration">
+            <ValidatedFormField
+              name="minDuration"
+              value={formData.minDuration}
+              disabled={submitting}
+              validate={validateDurationFields}
+              placeholder={placeholderDurationFields}
+              onChange={e => handleChange({ minDuration: e.target.value })}
+            />
+          </FormItem>
+        </Col>
+      </Row>
+
+      <FormItem label="Limit Results">
+        <Input
+          name="resultsLimit"
+          value={formData.resultsLimit}
+          disabled={submitting}
+          type="number"
+          placeholder="Limit Results"
+          min={1}
+          max={getConfigValue('search.maxLimit')}
+          onChange={e => handleChange({ resultsLimit: e.target.value })}
+        />
+      </FormItem>
+
+      <Button
+        htmlType="submit"
+        className="SearchForm--submit"
+        disabled={submitting || noSelectedService || invalid || invalidDuration}
+        data-test={markers.SUBMIT_BTN}
+      >
+        Find Traces
+      </Button>
+    </Form>
+  );
 }
 
 SearchFormImpl.propTypes = {
@@ -733,4 +733,4 @@ export function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SearchFormImpl);
+export default connect(mapStateToProps, mapDispatchToProps)(React.memo(SearchFormImpl));
