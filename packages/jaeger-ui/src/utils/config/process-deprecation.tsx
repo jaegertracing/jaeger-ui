@@ -45,7 +45,7 @@ export default function processDeprecation(config: object, deprecation: IDepreca
     return segments.some(seg => seg === '__proto__' || seg === 'prototype' || seg === 'constructor');
   };
   const canSafelySet = (target: unknown, path: string) => {
-    if (!isObjectLike || typeof path !== 'string') return false;
+    if (typeof target !== 'object' || target === null || typeof path !== 'string') return false;
     const segments = path.split('.');
     let cursor: any = target;
     for (let i = 0; i < segments.length - 1; i++) {
