@@ -105,7 +105,7 @@ export function spanContainsErredSpan(spans: Span[], parentSpanIndex: number) {
  */
 export function getDescendantErroredSpanIDs(spans: Span[], parentSpanIndex: number): string[] {
   const erroredIds: string[] = [];
-  if (parentSpanIndex < 0 || parentSpanIndex >= spans.length) {
+  if (!spans || !Array.isArray(spans) || parentSpanIndex < 0 || parentSpanIndex >= spans.length) {
     return erroredIds;
   }
   const { depth } = spans[parentSpanIndex];
