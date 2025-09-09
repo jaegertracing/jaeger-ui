@@ -266,24 +266,11 @@ export function SearchFormImpl(props) {
     initialValues,
     changeServiceHandler,
     submitFormHandler,
-    handleChange: propHandleChange,
   } = props;
 
-  const [formData, setFormData] = React.useState({
-    service: initialValues?.service,
-    operation: initialValues?.operation,
-    tags: initialValues?.tags,
-    lookback: initialValues?.lookback,
-    startDate: initialValues?.startDate,
-    startDateTime: initialValues?.startDateTime,
-    endDate: initialValues?.endDate,
-    endDateTime: initialValues?.endDateTime,
-    minDuration: initialValues?.minDuration,
-    maxDuration: initialValues?.maxDuration,
-    resultsLimit: initialValues?.resultsLimit,
-  });
+  const [formData, setFormData] = React.useState(initialValues || {});
 
-  const internalHandleChange = fieldData => {
+  const handleChange = fieldData => {
     setFormData(prevState => ({
       ...prevState,
       ...fieldData,
@@ -296,8 +283,6 @@ export function SearchFormImpl(props) {
       }));
     }
   };
-
-  const handleChange = propHandleChange || internalHandleChange;
 
   const handleSubmit = e => {
     e.preventDefault();
