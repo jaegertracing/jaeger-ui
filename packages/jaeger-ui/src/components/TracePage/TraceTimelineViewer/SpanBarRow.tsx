@@ -164,7 +164,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
                       title="Click to navigate to descendant error span(s)"
                       onClick={e => {
                         e.stopPropagation();
-                        if (bubbledErrorIds && bubbledErrorIds.length) {
+                        if (bubbledErrorIds.length) {
                           // Join IDs with spaces to OR-match via filter logic
                           focusSpan(bubbledErrorIds.join(' '));
                         }
