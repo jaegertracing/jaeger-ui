@@ -34,6 +34,7 @@ import {
   isErrorSpan,
   isKindClient,
   isKindProducer,
+  getDescendantErroredSpanIDs,
   spanContainsErredSpan,
   ViewedBoundsFunctionType,
 } from './utils';
@@ -442,7 +443,9 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
-    const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
+    const hasOwnError = isErrorSpan(span);
+    const bubbledErrorIds = isCollapsed ? getDescendantErroredSpanIDs(trace.spans, spanIndex) : [];
+    const showErrorIcon = hasOwnError || bubbledErrorIds.length > 0;
     const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
@@ -486,6 +489,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           rpc={rpc}
           noInstrumentedServer={noInstrumentedServer}
           showErrorIcon={showErrorIcon}
+          hasOwnError={hasOwnError}
+          bubbledErrorIds={bubbledErrorIds}
           getViewedBounds={this.getViewedBounds()}
           traceStartTime={trace.startTime}
           span={span}
