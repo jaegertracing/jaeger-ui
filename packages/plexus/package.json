@@ -82,6 +82,15 @@
       "jsx",
       "json"
     ],
+    "testMatch": [
+      "**/__tests__/**/*.(ts|tsx|js|jsx)",
+      "**/*.(test|spec).(ts|tsx|js|jsx)"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/lib/",
+      "/dist/"
+    ],
     "collectCoverageFrom": [
       "src/**/*.{ts,tsx,js,jsx}",
       "!src/**/*.d.ts"
