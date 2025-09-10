@@ -220,7 +220,7 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
       setServiceOpsMetrics(undefined);
       setSearchOps('');
     }
-  }, [props, selectedService, selectedSpanKind, selectedTimeFrame, getSelectedService]);
+  }, [props, selectedService, selectedSpanKind, selectedTimeFrame]);
 
   // componentDidMount equivalent
   useEffect(() => {
