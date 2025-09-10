@@ -206,7 +206,7 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
       setEndTime(newEndTime);
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
-      store.set('lastAtmSearchService', getSelectedService());
+      store.set('lastAtmSearchService', currentService);
 
       const metricQueryPayload = {
         quantile: 0.95,
