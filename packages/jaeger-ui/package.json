@@ -115,6 +115,10 @@
       "\\.(css|png)$": "./test/generic-file-transform.js",
       "\\.([jt]sx?|svg)$": "./test/babel-transform.js"
     },
+    "moduleNameMapper": {
+      "^@jaegertracing/plexus$": "<rootDir>/test/mocks/plexusMock.js",
+      "^@jaegertracing/plexus/(.*)$": "<rootDir>/test/mocks/plexusMock.js"
+    },
     "transformIgnorePatterns": [
       "[/\\\\\\\\]node_modules[/\\\\\\\\](?!redux-actions).+\\\\.(js|jsx|mjs|cjs|ts|tsx)$"
     ],
