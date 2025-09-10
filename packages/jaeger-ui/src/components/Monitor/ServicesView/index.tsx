@@ -250,11 +250,9 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
     calcGraphXDomain();
   }, [selectedTimeFrame, calcGraphXDomain]);
 
-
   useEffect(() => {
     fetchMetrics();
   }, [selectedService, selectedSpanKind, selectedTimeFrame, fetchMetrics]);
-
 
   const { services, metrics, servicesLoading } = props;
   const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
