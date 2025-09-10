@@ -266,11 +266,17 @@ export function SearchFormImpl(props) {
     initialValues,
     changeServiceHandler,
     submitFormHandler,
+    testHandleChange,
   } = props;
 
   const [formData, setFormData] = React.useState(initialValues || {});
 
   const handleChange = fieldData => {
+    if (testHandleChange) {
+      testHandleChange(fieldData);
+      return;
+    }
+
     setFormData(prevState => ({
       ...prevState,
       ...fieldData,

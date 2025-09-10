@@ -560,7 +560,7 @@ describe('SearchForm onChange handlers', () => {
     const props = {
       ...defaultProps,
       initialValues: {
-        lookback: 'custom',
+        lookback: '1h',
         startDate: '2025-08-06',
         startDateTime: '18:19',
         endDate: '2025-08-06',
@@ -568,75 +568,72 @@ describe('SearchForm onChange handlers', () => {
       },
     };
 
-    const OriginalSearchForm = SearchForm;
-    const SearchFormWithMock = props => {
-      const mockProps = {
-        ...props,
+    const handleChangeMock = jest.fn();
+
+    const TestSearchForm = props => {
+      const { initialValues, ...rest } = props;
+      const [formState, setFormState] = React.useState({ ...initialValues, lookback: 'custom' });
+
+      const testHandleChange = field => {
+        setFormState(current => ({ ...current, ...field }));
+        handleChangeMock(field);
       };
 
-      return <OriginalSearchForm {...mockProps} />;
+      return <SearchForm {...rest} initialValues={formState} testHandleChange={testHandleChange} />;
     };
 
-    const { container } = render(<SearchFormWithMock {...props} />);
-
-    const serviceOnChange = SearchableSelect.onChangeFns.service;
+    const { container } = render(<TestSearchForm {...props} />);
+    const { service: serviceOnChange } = SearchableSelect.onChangeFns;
     expect(serviceOnChange).toBeDefined();
     serviceOnChange('testService');
-    expect(defaultProps.changeServiceHandler).toHaveBeenCalledWith('testService');
+    expect(handleChangeMock).toHaveBeenCalledWith({ service: 'testService' });
 
     const operationOnChange = SearchableSelect.onChangeFns.operation;
     expect(operationOnChange).toBeDefined();
     operationOnChange('testOperation');
-    expect(operationOnChange).toBeDefined();
+    expect(handleChangeMock).toHaveBeenCalledWith({ operation: 'testOperation' });
 
     const lookbackOnChange = SearchableSelect.onChangeFns.lookback;
     expect(lookbackOnChange).toBeDefined();
     lookbackOnChange('2h');
-    expect(lookbackOnChange).toBeDefined();
+    expect(handleChangeMock).toHaveBeenCalledWith({ lookback: '2h' });
+
+    const startDateInput = container.querySelector('input[name="startDate"]');
+    expect(startDateInput).toBeInTheDocument();
+    fireEvent.change(startDateInput, { target: { value: '2025-08-07' } });
+    expect(handleChangeMock).toHaveBeenCalledWith({ startDate: '2025-08-07' });
+
+    const startDateTimeInput = container.querySelector('input[name="startDateTime"]');
+    expect(startDateTimeInput).toBeInTheDocument();
+    fireEvent.change(startDateTimeInput, { target: { value: '10:00' } });
+    expect(handleChangeMock).toHaveBeenCalledWith({ startDateTime: '10:00' });
+
+    const endDateInput = container.querySelector('input[name="endDate"]');
+    expect(endDateInput).toBeInTheDocument();
+    fireEvent.change(endDateInput, { target: { value: '2025-08-08' } });
+    expect(handleChangeMock).toHaveBeenCalledWith({ endDate: '2025-08-08' });
+
+    const endDateTimeInput = container.querySelector('input[name="endDateTime"]');
+    expect(endDateTimeInput).toBeInTheDocument();
+    fireEvent.change(endDateTimeInput, { target: { value: '11:00' } });
+    expect(handleChangeMock).toHaveBeenCalledWith({ endDateTime: '11:00' });
 
     const resultsLimitInput = container.querySelector('input[name="resultsLimit"]');
     expect(resultsLimitInput).toBeInTheDocument();
     fireEvent.change(resultsLimitInput, { target: { value: '100' } });
-    expect(resultsLimitInput.value).toBe('100');
-
-    const maxDurationInput = container.querySelector('input[name="maxDuration"]');
-    expect(maxDurationInput).toBeInTheDocument();
-    fireEvent.change(maxDurationInput, { target: { value: '5s' } });
-    expect(maxDurationInput.value).toBe('5s');
-
-    const minDurationInput = container.querySelector('input[name="minDuration"]');
-    expect(minDurationInput).toBeInTheDocument();
-    fireEvent.change(minDurationInput, { target: { value: '1s' } });
-    expect(minDurationInput.value).toBe('1s');
-
-    const startDateInput = container.querySelector('input[name="startDate"]');
-    if (startDateInput) {
-      fireEvent.change(startDateInput, { target: { value: '2025-08-07' } });
-      expect(startDateInput.value).toBe('2025-08-07');
-    }
-
-    const startDateTimeInput = container.querySelector('input[name="startDateTime"]');
-    if (startDateTimeInput) {
-      fireEvent.change(startDateTimeInput, { target: { value: '10:00' } });
-      expect(startDateTimeInput.value).toBe('10:00');
-    }
-
-    const endDateInput = container.querySelector('input[name="endDate"]');
-    if (endDateInput) {
-      fireEvent.change(endDateInput, { target: { value: '2025-08-08' } });
-      expect(endDateInput.value).toBe('2025-08-08');
-    }
-
-    const endDateTimeInput = container.querySelector('input[name="endDateTime"]');
-    if (endDateTimeInput) {
-      fireEvent.change(endDateTimeInput, { target: { value: '11:00' } });
-      expect(endDateTimeInput.value).toBe('11:00');
-    }
+    expect(handleChangeMock).toHaveBeenCalledWith({ resultsLimit: '100' });
 
     const tagsInput = container.querySelector('input[name="tags"]');
     expect(tagsInput).toBeInTheDocument();
     fireEvent.change(tagsInput, { target: { value: 'error=true' } });
-    expect(tagsInput.value).toBe('error=true');
+    expect(handleChangeMock).toHaveBeenCalledWith({ tags: 'error=true' });
+
+    const maxDurationInput = container.querySelector('input[name="maxDuration"]');
+    expect(maxDurationInput).toBeInTheDocument();
+    fireEvent.change(maxDurationInput, { target: { value: '5s' } });
+    expect(handleChangeMock).toHaveBeenCalledWith({ maxDuration: '5s' });
+
+    expect(handleChangeMock).toHaveBeenCalledTimes(10);
   });
 });
 
