@@ -102,6 +102,7 @@ export const spanKindOptions = [
   { label: 'Consumer', value: 'consumer' },
 ];
 
+// export for tests
 export const getLoopbackInterval = (interval: number) => {
   if (interval === undefined) return '';
 
@@ -125,6 +126,7 @@ const calcDisplayTimeUnit = (serviceLatencies: ServiceMetricsObject | ServiceMet
   return getSuitableTimeUnit(maxValue * 1000);
 };
 
+// export for tests
 export const yAxisTickFormat = (timeInMS: number, displayTimeUnit: string) =>
   convertToTimeUnit(timeInMS * 1000, displayTimeUnit);
 
@@ -144,6 +146,7 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
   return { ...serviceErrorRate, metricPoints: convertedMetricsPoints };
 };
 
+// export for tests
 export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   const docsLink = getConfigValue('monitor.docsLink');
   const graphDivWrapper = useRef<HTMLDivElement>(null);
