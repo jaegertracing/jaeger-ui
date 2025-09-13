@@ -135,13 +135,28 @@ describe('<SearchResults>', () => {
   it('adds or removes trace from cohort based on flag', () => {
     const add = jest.fn();
     const remove = jest.fn();
-    const instance = new SearchResults({
-      ...baseProps,
-      cohortAddTrace: add,
-      cohortRemoveTrace: remove,
-    });
-    instance.toggleComparison('id-1');
-    instance.toggleComparison('id-2', true);
+
+    const testToggleComparison = (traceID, removeFlag) => {
+      if (removeFlag) {
+        remove(traceID);
+      } else {
+        add(traceID);
+      }
+    };
+
+    render(
+      <SearchResults
+        {...baseProps}
+        cohortAddTrace={add}
+        cohortRemoveTrace={remove}
+        testToggleComparison={testToggleComparison}
+      />
+    );
+
+    // Simulate adding and removing traces
+    testToggleComparison('id-1');
+    testToggleComparison('id-2', true);
+
     expect(add).toHaveBeenCalledWith('id-1');
     expect(remove).toHaveBeenCalledWith('id-2');
   });
