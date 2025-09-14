@@ -1,5 +1,25 @@
 // packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/utils.bubbledError.test.js
-import { getDescendantErroredSpanIDs } from './utils';
+import { getDescendantErroredSpanIDs, isErrorSpan } from './utils';
+
+describe('isErrorSpan', () => {
+  it('returns correct error info for span with error tag', () => {
+    const span = { spanID: 'span-1', tags: [{ key: 'error', value: true }] };
+    const result = isErrorSpan(span);
+    expect(result).toEqual({ isError: true, selfError: true });
+  });
+
+  it('returns correct error info for span with error string tag', () => {
+    const span = { spanID: 'span-1', tags: [{ key: 'error', value: 'true' }] };
+    const result = isErrorSpan(span);
+    expect(result).toEqual({ isError: true, selfError: true });
+  });
+
+  it('returns correct error info for span without error tag', () => {
+    const span = { spanID: 'span-1', tags: [{ key: 'other', value: 'value' }] };
+    const result = isErrorSpan(span);
+    expect(result).toEqual({ isError: false, selfError: false });
+  });
+});
 
 describe('getDescendantErroredSpanIDs', () => {
   function span({ spanID, depth, tags = [] }) {

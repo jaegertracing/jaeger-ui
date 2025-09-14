@@ -75,9 +75,19 @@ describe('TraceTimelineViewer/utils', () => {
       const msg = `${testCase.name}() is true only when a ${testCase.key}=${testCase.value} tag is present`;
       it(msg, () => {
         const span = { tags: traceGenerator.tags() };
-        expect(testCase.fn(span)).toBe(false);
-        span.tags.push(testCase);
-        expect(testCase.fn(span)).toBe(true);
+        if (testCase.name === 'isErrorSpan') {
+          // isErrorSpan now returns an object with isError and selfError properties
+          expect(testCase.fn(span).isError).toBe(false);
+          expect(testCase.fn(span).selfError).toBe(false);
+          span.tags.push(testCase);
+          expect(testCase.fn(span).isError).toBe(true);
+          expect(testCase.fn(span).selfError).toBe(true);
+        } else {
+          // Other functions still return boolean
+          expect(testCase.fn(span)).toBe(false);
+          span.tags.push(testCase);
+          expect(testCase.fn(span)).toBe(true);
+        }
       });
     });
   });

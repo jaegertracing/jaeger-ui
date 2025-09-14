@@ -8,7 +8,7 @@ import SpanBarRow from './SpanBarRow';
 jest.mock('./SpanTreeOffset', () => ({
   __esModule: true,
   default: jest.fn(({ span, childrenVisible, onClick }) => (
-    <div data-testid="span-tree-offset" onClick={onClick}>
+    <div data-testid="span-tree-offset" onClick={onClick} role="button" tabIndex={0}>
       SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
     </div>
   )),
@@ -71,8 +71,18 @@ describe('SpanBarRow bubbled error pill', () => {
     render(<SpanBarRow {...baseProps} hasOwnError bubbledErrorIds={[]} showErrorIcon />);
 
     // solid icon present
-    expect(document.querySelector('.SpanBarRow--errorIcon')).toBeInTheDocument();
+    expect(
+      document.querySelector('.SpanBarRow--errorIcon:not(.SpanBarRow--errorIcon--bubbled)')
+    ).toBeInTheDocument();
     // bubbled pill absent
     expect(screen.queryByTitle('Click to navigate to descendant error span(s)')).not.toBeInTheDocument();
+  });
+
+  it('renders bubbled error pill with correct CSS classes', () => {
+    render(<SpanBarRow {...baseProps} />);
+
+    const bubbledPill = screen.getByTitle('Click to navigate to descendant error span(s)');
+    expect(bubbledPill).toHaveClass('SpanBarRow--errorIcon');
+    expect(bubbledPill).toHaveClass('SpanBarRow--errorIcon--bubbled');
   });
 });

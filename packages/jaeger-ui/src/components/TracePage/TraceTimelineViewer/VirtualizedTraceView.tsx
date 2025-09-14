@@ -35,7 +35,6 @@ import {
   isKindClient,
   isKindProducer,
   getDescendantErroredSpanIDs,
-  spanContainsErredSpan,
   ViewedBoundsFunctionType,
 } from './utils';
 import { Accessors } from '../ScrollManager';
@@ -443,7 +442,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
-    const hasOwnError = isErrorSpan(span);
+    const hasOwnError = isErrorSpan(span).selfError;
     const bubbledErrorIds = isCollapsed ? getDescendantErroredSpanIDs(trace.spans, spanIndex) : [];
     const showErrorIcon = hasOwnError || bubbledErrorIds.length > 0;
     const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);

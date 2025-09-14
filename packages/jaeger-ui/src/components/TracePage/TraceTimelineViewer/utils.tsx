@@ -74,7 +74,19 @@ export const isServerSpan = spanHasTag.bind(null, 'span.kind', 'server');
 
 const isErrorBool = spanHasTag.bind(null, 'error', true);
 const isErrorStr = spanHasTag.bind(null, 'error', 'true');
-export const isErrorSpan = (span: Span) => isErrorBool(span) || isErrorStr(span);
+
+export interface IErrorSpanInfo {
+  isError: boolean;
+  selfError: boolean;
+}
+
+export const isErrorSpan = (span: Span): IErrorSpanInfo => {
+  const selfError = isErrorBool(span) || isErrorStr(span);
+  return {
+    isError: selfError,
+    selfError,
+  };
+};
 
 /**
  * Returns `true` if at least one of the descendants of the `parentSpanIndex`
@@ -91,7 +103,7 @@ export function spanContainsErredSpan(spans: Span[], parentSpanIndex: number) {
   const { depth } = spans[parentSpanIndex];
   let i = parentSpanIndex + 1;
   for (; i < spans.length && spans[i].depth > depth; i++) {
-    if (isErrorSpan(spans[i])) {
+    if (isErrorSpan(spans[i]).isError) {
       return true;
     }
   }
@@ -111,7 +123,7 @@ export function getDescendantErroredSpanIDs(spans: Span[], parentSpanIndex: numb
   const { depth } = spans[parentSpanIndex];
   let i = parentSpanIndex + 1;
   for (; i < spans.length && spans[i].depth > depth; i++) {
-    if (isErrorSpan(spans[i])) {
+    if (isErrorSpan(spans[i]).isError) {
       erroredIds.push(spans[i].spanID);
     }
   }
