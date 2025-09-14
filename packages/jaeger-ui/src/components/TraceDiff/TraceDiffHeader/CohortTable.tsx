@@ -45,9 +45,8 @@ export const NEED_MORE_TRACES_MESSAGE = (
   </h3>
 );
 
-export default class CohortTable extends React.PureComponent<Props> {
-  getCheckboxProps = (record: FetchedTrace) => {
-    const { current, selection } = this.props;
+const CohortTable: React.FC<Props> = ({ cohort, current, selection, selectTrace }) => {
+  const getCheckboxProps = (record: FetchedTrace) => {
     const { id, state } = record;
     if (state === fetchedState.ERROR || (id in selection && id !== current)) {
       return { disabled: true };
@@ -55,17 +54,15 @@ export default class CohortTable extends React.PureComponent<Props> {
     return {};
   };
 
-  render() {
-    const { cohort, current, selection, selectTrace } = this.props;
-    const rowSelection = {
-      ...defaultRowSelection,
-      getCheckboxProps: this.getCheckboxProps,
-      onChange: (selectedRowKeys: React.Key[], selectedRows: FetchedTrace[]) =>
-        selectTrace(selectedRows[0].id),
-      selectedRowKeys: current ? [current] : [],
-    };
+  const rowSelection = {
+    ...defaultRowSelection,
+    getCheckboxProps,
+    onChange: (selectedRowKeys: React.Key[], selectedRows: FetchedTrace[]) => selectTrace(selectedRows[0].id),
+    selectedRowKeys: current ? [current] : [],
+  };
 
-    return [
+  return (
+    <>
       <Table
         key="table"
         size="middle"
@@ -137,8 +134,10 @@ export default class CohortTable extends React.PureComponent<Props> {
           key="link"
           render={value => <TraceTimelineLink traceID={value} />}
         />
-      </Table>,
-      cohort.length < 2 && NEED_MORE_TRACES_MESSAGE,
-    ];
-  }
-}
+      </Table>
+      {cohort.length < 2 && NEED_MORE_TRACES_MESSAGE}
+    </>
+  );
+};
+
+export default React.memo(CohortTable);
