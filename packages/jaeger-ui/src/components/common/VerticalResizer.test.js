@@ -60,7 +60,7 @@ describe('<VerticalResizer>', () => {
   it('sets the root elm', () => {
     const { container } = render(<VerticalResizer {...props} />);
     const elm = container.querySelector('.VerticalResizer');
-    expect(elm).not.toBeNull();
+    expect(elm).toBeTruthy();
   });
 
   describe('uses DraggableManager', () => {
@@ -73,9 +73,7 @@ describe('<VerticalResizer>', () => {
     it('returns the draggable bounds via _getDraggingBounds()', () => {
       const { container } = render(<VerticalResizer {...props} />);
       const elm = container.querySelector('.VerticalResizer');
-      if (!elm) {
-        throw new Error('Expected .VerticalResizer element to exist in the DOM');
-      }
+      expect(elm).toBeTruthy();
       elm.getBoundingClientRect = () => ({ left: 10, width: 100 });
       const bounds = draggableManagerConfig.getBounds();
       expect(bounds).toEqual({ clientXLeft: 10, width: 100, minValue: 0.1, maxValue: 0.9 });
@@ -84,9 +82,7 @@ describe('<VerticalResizer>', () => {
     it('returns the flipped draggable bounds via _getDraggingBounds()', () => {
       const { container } = render(<VerticalResizer {...props} rightSide />);
       const elm = container.querySelector('.VerticalResizer');
-      if (!elm) {
-        throw new Error('Expected .VerticalResizer element to exist in the DOM');
-      }
+      expect(elm).toBeTruthy();
       elm.getBoundingClientRect = () => ({ left: 10, width: 100 });
       const bounds = draggableManagerConfig.getBounds();
       expect(bounds.clientXLeft).toBe(10);
