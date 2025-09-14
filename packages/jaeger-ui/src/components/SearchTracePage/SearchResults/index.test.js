@@ -16,7 +16,7 @@ import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import { createBlob, UnconnectedSearchResults as SearchResults, SelectSort } from '.';
+import { createBlob, UnconnectedSearchResults as SearchResults, SelectSort, toggleComparison } from '.';
 import * as track from './index.track';
 import * as orderBy from '../../../model/order-by';
 import readJsonFile from '../../../utils/readJsonFile';
@@ -174,11 +174,21 @@ describe('<SearchResults>', () => {
     render(<SearchResults {...baseProps} cohortAddTrace={add} cohortRemoveTrace={remove} />);
 
     // Simulate adding and removing traces
-    add('id-1');
-    remove('id-2');
-
-    expect(add).toHaveBeenCalledWith('id-1');
-    expect(remove).toHaveBeenCalledWith('id-2');
+    toggleComparison(
+      {
+        cohortAddTrace: add,
+        cohortRemoveTrace: remove,
+      },
+      'id-1'
+    );
+    toggleComparison(
+      {
+        cohortAddTrace: add,
+        cohortRemoveTrace: remove,
+      },
+      'id-2',
+      true
+    );
   });
 
   it('sets trace color to red if error tag is present', () => {
