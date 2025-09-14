@@ -76,14 +76,31 @@ const isErrorBool = spanHasTag.bind(null, 'error', true);
 const isErrorStr = spanHasTag.bind(null, 'error', 'true');
 
 export interface IErrorSpanInfo {
-  isError: boolean;
-  selfError: boolean;
+  isError: boolean; // true if this span OR its descendants have errors
+  selfError: boolean; // true if only this span has errors
 }
 
 export const isErrorSpan = (span: Span): IErrorSpanInfo => {
   const selfError = isErrorBool(span) || isErrorStr(span);
   return {
-    isError: selfError,
+    isError: selfError, // For now, same as selfError - will be enhanced when context is available
+    selfError,
+  };
+};
+
+/**
+ * Enhanced version of isErrorSpan that can determine if a span has errors including descendants.
+ * This requires the full spans array and span index for context.
+ */
+export const isErrorSpanWithContext = (spans: Span[], spanIndex: number): IErrorSpanInfo => {
+  const span = spans[spanIndex];
+  const selfError = isErrorBool(span) || isErrorStr(span);
+
+  // Check if any descendants have errors using the existing logic
+  const hasErrorDescendants = getDescendantErroredSpanIDs(spans, spanIndex).length > 0;
+
+  return {
+    isError: selfError || hasErrorDescendants,
     selfError,
   };
 };
@@ -103,7 +120,7 @@ export function spanContainsErredSpan(spans: Span[], parentSpanIndex: number) {
   const { depth } = spans[parentSpanIndex];
   let i = parentSpanIndex + 1;
   for (; i < spans.length && spans[i].depth > depth; i++) {
-    if (isErrorSpan(spans[i]).isError) {
+    if (isErrorSpan(spans[i]).selfError) {
       return true;
     }
   }
@@ -123,7 +140,7 @@ export function getDescendantErroredSpanIDs(spans: Span[], parentSpanIndex: numb
   const { depth } = spans[parentSpanIndex];
   let i = parentSpanIndex + 1;
   for (; i < spans.length && spans[i].depth > depth; i++) {
-    if (isErrorSpan(spans[i]).isError) {
+    if (isErrorSpan(spans[i]).selfError) {
       erroredIds.push(spans[i].spanID);
     }
   }

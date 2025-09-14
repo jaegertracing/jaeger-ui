@@ -32,6 +32,7 @@ import {
   createViewedBoundsFunc,
   findServerChildSpan,
   isErrorSpan,
+  isErrorSpanWithContext,
   isKindClient,
   isKindProducer,
   getDescendantErroredSpanIDs,
@@ -442,9 +443,10 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
-    const hasOwnError = isErrorSpan(span).selfError;
+    const errorInfo = isErrorSpanWithContext(trace.spans, spanIndex);
+    const hasOwnError = errorInfo.selfError;
     const bubbledErrorIds = isCollapsed ? getDescendantErroredSpanIDs(trace.spans, spanIndex) : [];
-    const showErrorIcon = hasOwnError || bubbledErrorIds.length > 0;
+    const showErrorIcon = errorInfo.isError;
     const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
