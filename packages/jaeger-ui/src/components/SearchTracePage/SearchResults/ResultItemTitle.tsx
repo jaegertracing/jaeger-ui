@@ -46,72 +46,59 @@ const DEFAULT_DURATION_PERCENT = 0;
 
 const stopCheckboxPropagation = (evt: React.MouseEvent) => evt.stopPropagation();
 
-export default class ResultItemTitle extends React.PureComponent<Props> {
-  static defaultProps: Partial<Props> = {
-    disableComparision: false,
-    durationPercent: DEFAULT_DURATION_PERCENT,
-    error: undefined,
-    state: undefined,
-    targetBlank: false,
-  };
-
-  toggleComparison = () => {
-    const { isInDiffCohort, toggleComparison, traceID } = this.props;
+export default function ResultItemTitle({
+  duration,
+  durationPercent = DEFAULT_DURATION_PERCENT,
+  error,
+  isInDiffCohort,
+  linkTo,
+  state,
+  targetBlank = false,
+  toggleComparison,
+  traceID,
+  traceName,
+  disableComparision = false,
+}: Props) {
+  const onToggleComparison = React.useCallback(() => {
     toggleComparison(traceID, isInDiffCohort);
+  }, [toggleComparison, traceID, isInDiffCohort]);
+
+  // Use a div when the ResultItemTitle doesn't link to anything
+  let WrapperComponent: string | typeof Link = 'div';
+  const wrapperProps: Record<string, any> = {
+    className: 'ResultItemTitle--item ub-flex-auto',
+  };
+  if (linkTo) {
+    WrapperComponent = Link;
+    wrapperProps.to = linkTo;
+    if (targetBlank) {
+      wrapperProps.target = getTargetEmptyOrBlank();
+      wrapperProps.rel = 'noopener noreferrer';
+    }
+  }
+
+  const isErred = state === fetchedState.ERROR;
+  // Separate propagation management and toggle manegement due to ant-design#16400
+  const checkboxProps = {
+    className: 'ResultItemTitle--item ub-flex-none',
+    checked: !isErred && isInDiffCohort,
+    disabled: isErred,
+    onChange: onToggleComparison,
+    onClick: stopCheckboxPropagation,
   };
 
-  render() {
-    const {
-      disableComparision,
-      duration,
-      durationPercent,
-      error,
-      isInDiffCohort,
-      linkTo,
-      state,
-      targetBlank,
-      traceID,
-      traceName,
-    } = this.props;
-    // Use a div when the ResultItemTitle doesn't link to anything
-    let WrapperComponent: string | typeof Link = 'div';
-    const wrapperProps: Record<string, string | LocationDescriptor> = {
-      className: 'ResultItemTitle--item ub-flex-auto',
-    };
-    if (linkTo) {
-      wrapperProps.to = linkTo;
-      WrapperComponent = Link;
-      if (targetBlank) {
-        wrapperProps.target = getTargetEmptyOrBlank();
-        wrapperProps.rel = 'noopener noreferrer';
-      }
-    }
-    const isErred = state === fetchedState.ERROR;
-    // Separate propagation management and toggle manegement due to ant-design#16400
-    const checkboxProps = {
-      className: 'ResultItemTitle--item ub-flex-none',
-      checked: !isErred && isInDiffCohort,
-      disabled: isErred,
-      onChange: this.toggleComparison,
-      onClick: stopCheckboxPropagation,
-    };
-
-    return (
-      <div className="ResultItemTitle">
-        {!disableComparision && <Checkbox {...checkboxProps} />}
-        {/* TODO: Shouldn't need cast */}
-        <WrapperComponent {...(wrapperProps as any)}>
-          <span
-            className="ResultItemTitle--durationBar"
-            style={{ width: `${durationPercent || DEFAULT_DURATION_PERCENT}%` }}
-          />
-          {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
-          <h3 className="ResultItemTitle--title">
-            <TraceName error={error} state={state} traceName={traceName} />
-            <TraceId traceId={traceID} className="ResultItemTitle--idExcerpt" />
-          </h3>
-        </WrapperComponent>
-      </div>
-    );
-  }
+  return (
+    <div className="ResultItemTitle">
+      {!disableComparision && <Checkbox {...checkboxProps} />}
+      {/* TODO: Shouldn't need cast */}
+      <WrapperComponent {...(wrapperProps as any)}>
+        <span className="ResultItemTitle--durationBar" style={{ width: `${durationPercent}%` }} />
+        {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
+        <h3 className="ResultItemTitle--title">
+          <TraceName error={error} state={state} traceName={traceName} />
+          <TraceId traceId={traceID} className="ResultItemTitle--idExcerpt" />
+        </h3>
+      </WrapperComponent>
+    </div>
+  );
 }
