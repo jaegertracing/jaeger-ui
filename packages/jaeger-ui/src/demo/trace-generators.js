@@ -90,11 +90,14 @@ export default chance.mixin({
     // long trace
     // very short trace
     // average case
-    numberOfSpans = chance.pickone([
-      Math.max(1, Math.ceil(chance.normal({ mean: 200, dev: 10 })) + 1),
-      Math.ceil(chance.integer({ min: 3, max: 10 })),
-      Math.max(1, Math.ceil(chance.normal({ mean: 45, dev: 15 })) + 1),
-    ]),
+    numberOfSpans = Math.max(
+      1,
+      chance.pickone([
+        Math.ceil(chance.normal({ mean: 200, dev: 10 })) + 1,
+        Math.ceil(chance.integer({ min: 3, max: 10 })),
+        Math.ceil(chance.normal({ mean: 45, dev: 15 })) + 1,
+      ])
+    ),
     numberOfProcesses = chance.integer({ min: 1, max: 10 }),
     maxDepth = chance.integer({ min: 1, max: 10 }),
     spansPerLevel = null,
