@@ -48,6 +48,9 @@ function getParentSpanId(span, levels) {
 
 /* this simulates the hierarchy created by CHILD_OF tags */
 function attachReferences(spans, depth, spansPerLevel) {
+  if (spans.length === 0) {
+    return spans;
+  }
   let levels = [[spans[0].spanID]];
 
   const duplicateLevelFilter = currentLevels => span =>
@@ -88,9 +91,9 @@ export default chance.mixin({
     // very short trace
     // average case
     numberOfSpans = chance.pickone([
-      Math.ceil(chance.normal({ mean: 200, dev: 10 })) + 1,
+      Math.max(1, Math.ceil(chance.normal({ mean: 200, dev: 10 })) + 1),
       Math.ceil(chance.integer({ min: 3, max: 10 })),
-      Math.ceil(chance.normal({ mean: 45, dev: 15 })) + 1,
+      Math.max(1, Math.ceil(chance.normal({ mean: 45, dev: 15 })) + 1),
     ]),
     numberOfProcesses = chance.integer({ min: 1, max: 10 }),
     maxDepth = chance.integer({ min: 1, max: 10 }),
