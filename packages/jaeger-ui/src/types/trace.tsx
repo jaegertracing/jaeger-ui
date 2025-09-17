@@ -68,6 +68,7 @@ export type Span = SpanData & {
   warnings: NonNullable<SpanData['warnings']>;
   childSpanIds: NonNullable<SpanData['childSpanIds']>;
   subsidiarilyReferencedBy: Array<SpanReference>;
+  operationLabel: string;
 };
 
 export type TraceData = {
