@@ -41,7 +41,7 @@ const packageNames = [
   }),
 ];
 
-const otherPackages = ['rimraf', 'webpack-cli'];
+const otherPackages = ['rimraf', 'webpack-cli', 'babel-jest', 'jest-environment-jsdom', 'jest'];
 
 // Use the selected targetPackage for generating depcheckrcContent
 const depcheckrcContent = {
