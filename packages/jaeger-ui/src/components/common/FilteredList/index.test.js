@@ -412,4 +412,13 @@ describe('<FilteredList>', () => {
       jest.useRealTimers();
     }
   });
+
+  it('focusInput method focuses the input when called via ref', () => {
+    const ref = React.createRef();
+    render(<FilteredList {...props} ref={ref} />);
+    const input = screen.getByPlaceholderText('Filter...');
+    expect(input).not.toHaveFocus();
+    ref.current.focusInput();
+    expect(input).toHaveFocus();
+  });
 });
