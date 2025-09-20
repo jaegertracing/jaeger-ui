@@ -31,10 +31,6 @@ type Props = {
   diffSetB: (traceId: string) => void;
 };
 
-type State = {
-  tableVisible: ('a' | 'b') | null;
-};
-
 const TraceDiffHeader: React.FC<Props> = ({ a, b, cohort, diffSetA, diffSetB }) => {
   const [tableVisible, setTableVisible] = React.useState<('a' | 'b') | null>(null);
 

@@ -65,6 +65,7 @@ export default function ResultItemTitle({
 
   // Use a div when the ResultItemTitle doesn't link to anything
   let WrapperComponent: string | typeof Link = 'div';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const wrapperProps: Record<string, any> = {
     className: 'ResultItemTitle--item ub-flex-auto',
   };

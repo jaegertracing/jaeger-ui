@@ -181,7 +181,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps) {
 }
 
 // export for tests
-export function mapDispatchToProps(dispatch: Dispatch<any>) {
+export function mapDispatchToProps(dispatch: Dispatch<ReduxState>) {
   const { fetchMultipleTraces } = bindActionCreators(jaegerApiActions, dispatch);
   const { forceState } = bindActionCreators(diffActions, dispatch);
   return { fetchMultipleTraces, forceState };
