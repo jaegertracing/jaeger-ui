@@ -344,8 +344,22 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
       <div
         ref={this.nodeRef}
         className="DdgNodeContent"
+        role="button"
+        tabIndex={0}
         onMouseOver={this.onMouseUx}
         onMouseOut={this.onMouseUx}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            // Trigger the same hover effect as mouse events
+            const { getVisiblePathElems, setViewModifier, vertexKey } = this.props;
+            const visIndices = (getVisiblePathElems(vertexKey) || []).map(({ visibilityIdx }) => {
+              this.hoveredIndices.add(visibilityIdx);
+              return visibilityIdx;
+            });
+            setViewModifier(visIndices, EViewModifier.Hovered, true);
+          }
+        }}
       >
         {decorationProgressbar}
         <div

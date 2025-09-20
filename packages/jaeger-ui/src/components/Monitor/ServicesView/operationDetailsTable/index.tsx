@@ -15,7 +15,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import isEqual from 'lodash/isEqual';
 import isArray from 'lodash/isArray';
-import { Table, Progress, Button, Tooltip, Col, TableProps } from 'antd';
+import { Table, Progress, Button, Tooltip, Col, TableProps, TablePaginationConfig } from 'antd';
 import { IoInformationCircleOutline } from 'react-icons/io5';
 import REDGraph from './opsGraph';
 import LoadingIndicator from '../../../common/LoadingIndicator';
@@ -89,7 +89,7 @@ const OperationTableDetails: React.FC<TProps> = ({
   }, []);
 
   const handleTableChange: TableProps<ServiceOpsMetrics>['onChange'] = useCallback(
-    (_pagination: any, _filters: any, sorter: any) => {
+    (_pagination: TablePaginationConfig, _filters: Record<string, any>, sorter: any) => {
       const activeSorters = isArray(sorter) ? sorter : [sorter];
       if (!isEqual(activeSorters, tableSorting)) {
         const lastColumn = activeSorters[activeSorters.length - 1] ?? tableSorting[tableSorting.length - 1];
