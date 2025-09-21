@@ -77,7 +77,7 @@ const isErrorStr = spanHasTag.bind(null, 'error', 'true');
 
 export interface IErrorSpanInfo {
   isError: boolean; // true if this span OR its descendants have errors
-  selfError: boolean; // true if only this span has errors
+  selfError: boolean; // true if this span directly contains an error
 }
 
 export const isErrorSpan = (span: Span): IErrorSpanInfo => {
