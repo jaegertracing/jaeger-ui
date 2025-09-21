@@ -18,7 +18,7 @@ import { Checkbox, Tooltip } from 'antd';
 import _debounce from 'lodash/debounce';
 import { matchSorter } from 'match-sorter';
 import { IoSearch } from 'react-icons/io5';
-import { FixedSizeList as VList, ListOnItemsRenderedProps, ListOnScrollProps } from 'react-window';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Key as EKey } from 'ts-key-enum';
 
 import ListItem from './ListItem';
@@ -45,12 +45,10 @@ export interface IFilteredListRef {
 const FilteredList = forwardRef<IFilteredListRef, TProps>(
   ({ addValues, cancel, multi, options, removeValues, setValue, value }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
-    const vlistRef = useRef<VList>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
+    const listRef = useRef<HTMLDivElement>(null);
 
     const [filterText, setFilterText] = useState('');
-    const [visibleStartIndex, setVisibleStartIndex] = useState(0);
-    const [visibleStopIndex, setVisibleStopIndex] = useState(0);
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
     useImperativeHandle(ref, () => ({
@@ -72,6 +70,19 @@ const FilteredList = forwardRef<IFilteredListRef, TProps>(
     const filteredOptions = useMemo(() => {
       return filterText ? matchSorter(options, filterText) : options;
     }, [options, filterText]);
+
+    const virtualizer = useVirtualizer({
+      count: filteredOptions.length,
+      getScrollElement: () => listRef.current,
+      estimateSize: () => ITEM_HEIGHT,
+      overscan: 25,
+    });
+
+    const visibleItems = virtualizer.getVirtualItems();
+    const [visibleStartIndex, visibleStopIndex] = useMemo(() => {
+      if (visibleItems.length === 0) return [0, 0];
+      return [visibleItems[0].index, visibleItems[visibleItems.length - 1].index];
+    }, [visibleItems]);
 
     const getFilteredCheckbox = useCallback(
       (filtered: string[]) => {
@@ -145,7 +156,7 @@ const FilteredList = forwardRef<IFilteredListRef, TProps>(
               newFocusedIndex !== null &&
               (newFocusedIndex < visibleStartIndex + 1 || newFocusedIndex > visibleStopIndex - 1)
             ) {
-              vlistRef.current?.scrollToItem(newFocusedIndex);
+              virtualizer.scrollToIndex(newFocusedIndex);
             }
             break;
           }
@@ -157,25 +168,21 @@ const FilteredList = forwardRef<IFilteredListRef, TProps>(
           default: // no-op
         }
       },
-      [focusedIndex, visibleStartIndex, visibleStopIndex, filteredOptions, cancel, handleSetValue]
+      [
+        focusedIndex,
+        visibleStartIndex,
+        visibleStopIndex,
+        filteredOptions,
+        cancel,
+        handleSetValue,
+        virtualizer,
+      ]
     );
 
     const onListScrolled = useMemo(
       () =>
-        _debounce((scrollInfo: ListOnScrollProps) => {
-          if (!scrollInfo.scrollUpdateWasRequested) {
-            setFocusedIndex(null);
-          }
-        }, 80),
-      []
-    );
-
-    const onListItemsRendered = useMemo(
-      () =>
-        _debounce((viewInfo: ListOnItemsRenderedProps) => {
-          const { visibleStartIndex: startIndex, visibleStopIndex: stopIndex } = viewInfo;
-          setVisibleStartIndex(startIndex);
-          setVisibleStopIndex(stopIndex);
+        _debounce(() => {
+          setFocusedIndex(null);
         }, 80),
       []
     );
@@ -196,7 +203,6 @@ const FilteredList = forwardRef<IFilteredListRef, TProps>(
       selectedValue: value,
       setValue: handleSetValue,
     };
-
     return (
       <div ref={wrapperRef}>
         <div className="FilteredList--filterWrapper">
@@ -214,21 +220,46 @@ const FilteredList = forwardRef<IFilteredListRef, TProps>(
             />
           </label>
         </div>
-        <VList
-          key={filterText}
+        <div
+          ref={listRef}
           className="FilteredList--list u-simple-scrollbars"
-          height={Math.min(options.length * ITEM_HEIGHT, MAX_HEIGHT)}
-          itemCount={filteredOptions.length}
-          itemData={data}
-          itemSize={ITEM_HEIGHT}
-          width={650}
-          overscanCount={25}
-          onItemsRendered={onListItemsRendered}
+          style={{
+            height: Math.min(options.length * ITEM_HEIGHT, MAX_HEIGHT),
+            width: 650,
+            overflow: 'auto',
+          }}
           onScroll={onListScrolled}
-          ref={vlistRef}
         >
-          {ListItem}
-        </VList>
+          <div
+            style={{
+              height: virtualizer.getTotalSize(),
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {visibleItems.map(virtualItem => (
+              <div
+                key={virtualItem.key}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: virtualItem.size,
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                <ListItem
+                  index={virtualItem.index}
+                  data={data}
+                  style={{
+                    height: virtualItem.size,
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

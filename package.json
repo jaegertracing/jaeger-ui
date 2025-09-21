@@ -75,5 +75,8 @@
     "*.{json,css}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "@tanstack/react-virtual": "^3.13.12"
   }
 }
