@@ -252,7 +252,7 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
 
   useEffect(() => {
     fetchMetrics();
-  }, [selectedService, selectedSpanKind, selectedTimeFrame, fetchMetrics]);
+  }, [selectedService, selectedSpanKind, selectedTimeFrame]);
 
   const { services, metrics, servicesLoading } = props;
   const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
