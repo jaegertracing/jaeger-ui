@@ -101,6 +101,7 @@ export const sanitizeUrlState = memoizeOne(function sanitizeUrlStateImpl(
   if (hash && state.hash === hash) {
     return state;
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { visEncoding, ...sanitized } = state;
   return sanitized;
 });

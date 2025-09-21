@@ -139,13 +139,13 @@ describe('<SidePanel>', () => {
       expect(closeButton).not.toHaveClass('is-hidden');
 
       expect(screen.getByTestId('details-panel')).toBeInTheDocument();
-      expect(DetailsPanel).toHaveBeenCalledWith(
+      const [detailsPanelProps] = DetailsPanel.mock.calls[0];
+      expect(detailsPanelProps).toEqual(
         expect.objectContaining({
           decorationSchema: expect.objectContaining({ id: testID }),
           operation: testVertex.operation,
           service: testVertex.service,
-        }),
-        undefined
+        })
       );
     });
   });

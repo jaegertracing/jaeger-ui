@@ -18,7 +18,7 @@ import { ActionFunction, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
 import _isEqual from 'lodash/isEqual';
 import _isEmpty from 'lodash/isEmpty';
-// @ts-ignore
+// @ts-expect-error - store module lacks proper TypeScript definitions
 import store from 'store';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
@@ -36,6 +36,7 @@ import {
   ServiceMetricsObject,
   ServiceOpsMetrics,
   spanKinds,
+  FetchAggregatedServiceMetricsResponse,
 } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
@@ -71,8 +72,12 @@ type TReduxProps = {
 type TProps = TReduxProps & TDispatchProps;
 
 type TDispatchProps = {
-  fetchServices: ActionFunction<Action<Promise<any>>>;
-  fetchAggregatedServiceMetrics: ActionFunction<Action<Promise<any>>, string, MetricsAPIQueryParams>;
+  fetchServices: ActionFunction<Action<Promise<string[]>>>;
+  fetchAggregatedServiceMetrics: ActionFunction<
+    Action<Promise<FetchAggregatedServiceMetricsResponse>>,
+    string,
+    MetricsAPIQueryParams
+  >;
   fetchAllServiceMetrics: (serviceName: string, query: MetricsAPIQueryParams) => void;
 };
 
@@ -473,15 +478,16 @@ export function mapStateToProps(state: ReduxState): TReduxProps {
 }
 
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchServices, fetchAllServiceMetrics, fetchAggregatedServiceMetrics } = bindActionCreators<
-    object,
-    any
-  >(jaegerApiActions, dispatch);
+  const { fetchServices, fetchAllServiceMetrics, fetchAggregatedServiceMetrics } = bindActionCreators(
+    jaegerApiActions,
+    dispatch
+  );
 
   return {
-    fetchServices,
-    fetchAllServiceMetrics,
-    fetchAggregatedServiceMetrics,
+    fetchServices: fetchServices as unknown as TDispatchProps['fetchServices'],
+    fetchAllServiceMetrics: fetchAllServiceMetrics as unknown as TDispatchProps['fetchAllServiceMetrics'],
+    fetchAggregatedServiceMetrics:
+      fetchAggregatedServiceMetrics as unknown as TDispatchProps['fetchAggregatedServiceMetrics'],
   };
 }
 

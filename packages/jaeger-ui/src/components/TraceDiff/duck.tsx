@@ -49,7 +49,8 @@ const fullActions = createActions<TTraceIdValue | TNewStateValue>({
   [actionTypes.FORCE_STATE]: (newState: TTraceDiffState) => ({ newState }),
 });
 
-export const actions = (fullActions as any).jaegerUi.traceDiff as TTraceDiffActions;
+export const actions = (fullActions as unknown as { jaegerUi: { traceDiff: TTraceDiffActions } }).jaegerUi
+  .traceDiff;
 
 function cohortAddTrace(state: TTraceDiffState, { traceID }: TTraceIdValue) {
   if (state.cohort.indexOf(traceID) >= 0) {

@@ -215,6 +215,11 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     setTrace(trace, uiFind);
   }
 
+  componentDidMount(): void {
+    window.addEventListener('jaeger:list-resize', this._handleListResize);
+    window.addEventListener('jaeger:detail-measure', this._handleDetailMeasure as any);
+  }
+
   shouldComponentUpdate(nextProps: VirtualizedTraceViewProps) {
     // If any prop updates, VirtualizedTraceViewImpl should update.
     const nextPropKeys = Object.keys(nextProps) as (keyof VirtualizedTraceViewProps)[];
@@ -256,6 +261,28 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       clearShouldScrollToFirstUiFindMatch();
     }
   }
+
+  componentWillUnmount(): void {
+    window.removeEventListener('jaeger:list-resize', this._handleListResize);
+    window.removeEventListener('jaeger:detail-measure', this._handleDetailMeasure as any);
+  }
+
+  _handleListResize = () => {
+    if (this.listView) {
+      // Force ListView to update and re-scan item heights
+      this.listView.forceUpdate();
+    }
+  };
+
+  _handleDetailMeasure = (evt: { detail?: { spanID?: string } }) => {
+    const spanID = evt && evt.detail && evt.detail.spanID;
+    if (!this.listView || !spanID) {
+      this._handleListResize();
+      return;
+    }
+    // Force the list to re-scan heights
+    this.listView.forceUpdate();
+  };
 
   getRowStates(): RowState[] {
     const { childrenHiddenIDs, detailStates, trace } = this.props;
