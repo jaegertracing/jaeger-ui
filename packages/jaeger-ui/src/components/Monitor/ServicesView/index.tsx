@@ -240,7 +240,7 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
     if (services.length !== 0) {
       fetchMetrics();
     }
-  }, [props.services, fetchMetrics]);
+  }, [props.services]);
 
   useEffect(() => {
     calcGraphXDomain();
