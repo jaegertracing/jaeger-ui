@@ -442,6 +442,7 @@ describe('<FilteredList>', () => {
 
     render(<FilteredList {...props} />);
     expect(screen.getByText(words[0])).toBeInTheDocument();
+  });
 
   it('focusInput method focuses the input when called via ref', () => {
     const ref = React.createRef();
