@@ -48,10 +48,13 @@ import {
   trackSelectService,
   trackSelectSpanKind,
   trackSelectTimeframe,
+  trackSelectTags,
   trackViewAllTraces,
 } from './index.track';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
+// @ts-ignore
+import MultiTagSelector from '../MultiTagSelector/MultiTagSelector.jsx';
 
 type StateType = {
   graphWidth: number;
@@ -61,6 +64,7 @@ type StateType = {
   selectedService: string;
   selectedSpanKind: spanKinds;
   selectedTimeFrame: number;
+  selectedTags: string | undefined;
 };
 
 type TReduxProps = {
@@ -165,6 +169,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     selectedService: store.get('lastAtmSearchService') || '',
     selectedSpanKind: store.get('lastAtmSearchSpanKind') || 'server',
     selectedTimeFrame: store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds,
+    selectedTags: store.get('lastAtmSearchTags') || undefined,
   };
 
   constructor(props: TProps) {
@@ -234,9 +239,16 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     });
   };
 
+  handleTagsChange = (value: string | undefined) => {
+    trackSelectTags(value || 'None');
+    this.setState({ selectedTags: value || undefined }, () => {
+      this.fetchMetrics();
+    });
+  };
+
   fetchMetrics() {
     const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, services } = this.props;
-    const { selectedService, selectedSpanKind, selectedTimeFrame } = this.state;
+    const { selectedService, selectedSpanKind, selectedTimeFrame, selectedTags } = this.state;
     const currentService = selectedService || services[0];
 
     if (currentService) {
@@ -244,8 +256,9 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
       store.set('lastAtmSearchService', this.getSelectedService());
+      store.set('lastAtmSearchTags', selectedTags);
 
-      const metricQueryPayload = {
+      const metricQueryPayload: MetricsAPIQueryParams = {
         quantile: 0.95,
         endTs: this.endTime,
         lookback: selectedTimeFrame,
@@ -253,6 +266,17 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
         ratePer: 10 * 60 * 1000,
         spanKind: selectedSpanKind,
       };
+
+      // Add tags parameter based on format
+      if (selectedTags) {
+        if (selectedTags.startsWith('{') && selectedTags.endsWith('}')) {
+          // It's JSON format, use 'tags' parameter
+          (metricQueryPayload as any).tags = selectedTags;
+        } else {
+          // It's key:value format, use 'tag' parameter
+          (metricQueryPayload as any).tag = selectedTags;
+        }
+      }
 
       fetchAllServiceMetrics(currentService, metricQueryPayload);
       fetchAggregatedServiceMetrics(currentService, metricQueryPayload);
@@ -269,7 +293,8 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
 
   render() {
     const { services, metrics, servicesLoading } = this.props;
-    const { selectedSpanKind, selectedTimeFrame, searchOps, graphWidth, graphXDomain } = this.state;
+    const { selectedSpanKind, selectedTimeFrame, selectedTags, searchOps, graphWidth, graphXDomain } =
+      this.state;
     const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
     const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
     const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
@@ -334,6 +359,14 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                   </Option>
                 ))}
               </SearchableSelect>
+            </Col>
+            <Col span={10}>
+              <MultiTagSelector
+                service={this.getSelectedService()}
+                onChange={this.handleTagsChange}
+                disabled={metrics.operationMetricsLoading}
+                value={selectedTags}
+              />
             </Col>
           </Row>
           <Row align="middle">
