@@ -52,16 +52,6 @@ import {
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
 
-type StateType = {
-  graphWidth: number;
-  serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
-  searchOps: string;
-  graphXDomain: number[];
-  selectedService: string;
-  selectedSpanKind: spanKinds;
-  selectedTimeFrame: number;
-};
-
 type TReduxProps = {
   services: string[];
   servicesLoading: boolean;
@@ -150,7 +140,6 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   const docsLink = getConfigValue('monitor.docsLink');
   const graphDivWrapper = useRef<HTMLDivElement>(null);
-  const serviceSelectorValue = '';
   const [endTime, setEndTime] = useState<number>(Date.now());
   const [graphWidth, setGraphWidth] = useState<number>(300);
   const [serviceOpsMetrics, setServiceOpsMetrics] = useState<ServiceOpsMetrics[] | undefined>(undefined);
@@ -223,7 +212,14 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
       setServiceOpsMetrics(undefined);
       setSearchOps('');
     }
-  }, [fetchAllServiceMetrics, fetchAggregatedServiceMetrics, services, selectedService, selectedSpanKind, selectedTimeFrame]);
+  }, [
+    props.fetchAllServiceMetrics,
+    props.fetchAggregatedServiceMetrics,
+    props.services,
+    selectedService,
+    selectedSpanKind,
+    selectedTimeFrame,
+  ]);
 
   // componentDidMount equivalent
   useEffect(() => {
