@@ -40,7 +40,8 @@ const fullActions = createActions({
   [actionTypes.ACKNOWLEDGE]: traceID => traceID,
 });
 
-export const actions: { [actionType: string]: ActionFunctionAny<any> } = {
+export const actions: { [actionType: string]: ActionFunctionAny<unknown> } = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ...(fullActions as any).jaegerUi.archiveTrace,
   archiveTrace,
 };

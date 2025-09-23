@@ -16,7 +16,6 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Row, Col, Input, Alert, Select } from 'antd';
 import { ActionFunction, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
-import _isEqual from 'lodash/isEqual';
 import _isEmpty from 'lodash/isEmpty';
 // @ts-expect-error - store module lacks proper TypeScript definitions
 import store from 'store';

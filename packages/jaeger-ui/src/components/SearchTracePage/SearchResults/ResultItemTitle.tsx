@@ -64,19 +64,7 @@ export default function ResultItemTitle({
   }, [toggleComparison, traceID, isInDiffCohort]);
 
   // Use a div when the ResultItemTitle doesn't link to anything
-  let WrapperComponent: string | typeof Link = 'div';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const wrapperProps: Record<string, any> = {
-    className: 'ResultItemTitle--item ub-flex-auto',
-  };
-  if (linkTo) {
-    WrapperComponent = Link;
-    wrapperProps.to = linkTo;
-    if (targetBlank) {
-      wrapperProps.target = getTargetEmptyOrBlank();
-      wrapperProps.rel = 'noopener noreferrer';
-    }
-  }
+  const wrapperClassName = 'ResultItemTitle--item ub-flex-auto';
 
   const isErred = state === fetchedState.ERROR;
   // Separate propagation management and toggle manegement due to ant-design#16400
@@ -88,18 +76,32 @@ export default function ResultItemTitle({
     onClick: stopCheckboxPropagation,
   };
 
+  const content = (
+    <>
+      <span className="ResultItemTitle--durationBar" style={{ width: `${durationPercent}%` }} />
+      {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
+      <h3 className="ResultItemTitle--title">
+        <TraceName error={error} state={state} traceName={traceName} />
+        <TraceId traceId={traceID} className="ResultItemTitle--idExcerpt" />
+      </h3>
+    </>
+  );
+
   return (
     <div className="ResultItemTitle">
       {!disableComparision && <Checkbox {...checkboxProps} />}
-      {/* TODO: Shouldn't need cast */}
-      <WrapperComponent {...(wrapperProps as any)}>
-        <span className="ResultItemTitle--durationBar" style={{ width: `${durationPercent}%` }} />
-        {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
-        <h3 className="ResultItemTitle--title">
-          <TraceName error={error} state={state} traceName={traceName} />
-          <TraceId traceId={traceID} className="ResultItemTitle--idExcerpt" />
-        </h3>
-      </WrapperComponent>
+      {linkTo ? (
+        <Link
+          to={linkTo}
+          className={wrapperClassName}
+          target={targetBlank ? getTargetEmptyOrBlank() : undefined}
+          rel={targetBlank ? 'noopener noreferrer' : undefined}
+        >
+          {content}
+        </Link>
+      ) : (
+        <div className={wrapperClassName}>{content}</div>
+      )}
     </div>
   );
 }
