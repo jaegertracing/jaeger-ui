@@ -15,14 +15,25 @@ function getBabelConfig(api) {
       ],
       [
         '@babel/preset-react',
-        { development: env === 'development', useBuiltIns: true, runtime: 'automatic' },
+        {
+          development: !process.env.CI, // Development mode when not in CI (consistent with Jest config)
+          useBuiltIns: true,
+          runtime: 'automatic', // Modern JSX transform - no need to import React for JSX
+        },
       ],
       '@babel/preset-typescript',
     ],
-    plugins: ['babel-plugin-inline-react-svg'],
+    plugins: [
+      'babel-plugin-inline-react-svg', // Inline SVG files as React components
+    ],
     env: {
       production: {
-        plugins: [['babel-plugin-react-remove-properties', { properties: ['data-testid'] }]],
+        plugins: [
+          [
+            'babel-plugin-react-remove-properties',
+            { properties: ['data-testid'] }, // Remove test attributes from production builds
+          ],
+        ],
       },
     },
   };
