@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2025 The Jaeger Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,26 +15,12 @@
 function getBabelConfig(api) {
   const env = api.env();
   return {
-    assumptions: {
-      setPublicClassFields: true,
-    },
-    plugins: [
-      '@babel/plugin-syntax-dynamic-import',
-      [
-        'babel-plugin-transform-react-remove-prop-types',
-        {
-          removeImport: true,
-        },
-      ],
-      '@babel/plugin-transform-class-properties',
-    ],
     presets: [
       [
         '@babel/preset-env',
         {
           // Don't transform ES modules
           modules: false,
-          // this should match the settings in jaeger-ui/package.json
           targets: ['>0.5%', 'not dead', 'not ie <= 11', 'not op_mini all'],
         },
       ],
@@ -48,6 +34,19 @@ function getBabelConfig(api) {
       ],
       '@babel/preset-typescript',
     ],
+    plugins: ['babel-plugin-inline-react-svg'],
+    env: {
+      production: {
+        plugins: [
+          [
+            'babel-plugin-react-remove-properties',
+            {
+              properties: ['data-testid'],
+            },
+          ],
+        ],
+      },
+    },
   };
 }
 
