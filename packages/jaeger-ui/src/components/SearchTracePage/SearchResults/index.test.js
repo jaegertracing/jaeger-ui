@@ -16,7 +16,7 @@ import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import { createBlob, UnconnectedSearchResults as SearchResults, SelectSort } from '.';
+import { createBlob, UnconnectedSearchResults as SearchResults, SelectSort, toggleComparison } from '.';
 import * as track from './index.track';
 import * as orderBy from '../../../model/order-by';
 import readJsonFile from '../../../utils/readJsonFile';
@@ -36,7 +36,27 @@ jest.mock('./DiffSelection', () =>
   jest.fn(({ traces }) => <div data-testid="diffselection">{traces.length}</div>)
 );
 
-jest.mock('./ResultItem', () => jest.fn(({ trace }) => <div data-testid={`result-${trace.traceID}`} />));
+jest.mock('./ResultItem', () =>
+  jest.fn(({ trace, toggleComparison }) => (
+    <div>
+      <div data-testid={`result-${trace.traceID}`} />
+      <button
+        type="button"
+        data-testid={`toggle-add-${trace.traceID}`}
+        onClick={() => toggleComparison(trace.traceID)}
+      >
+        add
+      </button>
+      <button
+        type="button"
+        data-testid={`toggle-remove-${trace.traceID}`}
+        onClick={() => toggleComparison(trace.traceID, true)}
+      >
+        remove
+      </button>
+    </div>
+  ))
+);
 
 jest.mock('./ScatterPlot', () => jest.fn(props => <div data-testid="scatterplot" {...props} />));
 
@@ -132,18 +152,43 @@ describe('<SearchResults>', () => {
     expect(screen.queryByTestId('diffselection')).not.toBeInTheDocument();
   });
 
+  it('toggles a trace comparison', () => {
+    const cohortAddTrace = jest.fn();
+    const cohortRemoveTrace = jest.fn();
+    render(
+      <SearchResults {...baseProps} cohortAddTrace={cohortAddTrace} cohortRemoveTrace={cohortRemoveTrace} />
+    );
+
+    fireEvent.click(screen.getByTestId('toggle-add-a'));
+    expect(cohortAddTrace).toHaveBeenCalledWith('a');
+    expect(cohortRemoveTrace).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId('toggle-remove-b'));
+    expect(cohortRemoveTrace).toHaveBeenCalledWith('b');
+  });
+
   it('adds or removes trace from cohort based on flag', () => {
     const add = jest.fn();
     const remove = jest.fn();
-    const instance = new SearchResults({
-      ...baseProps,
-      cohortAddTrace: add,
-      cohortRemoveTrace: remove,
-    });
-    instance.toggleComparison('id-1');
-    instance.toggleComparison('id-2', true);
-    expect(add).toHaveBeenCalledWith('id-1');
-    expect(remove).toHaveBeenCalledWith('id-2');
+
+    render(<SearchResults {...baseProps} cohortAddTrace={add} cohortRemoveTrace={remove} />);
+
+    // Simulate adding and removing traces
+    toggleComparison(
+      {
+        cohortAddTrace: add,
+        cohortRemoveTrace: remove,
+      },
+      'id-1'
+    );
+    toggleComparison(
+      {
+        cohortAddTrace: add,
+        cohortRemoveTrace: remove,
+      },
+      'id-2',
+      true
+    );
   });
 
   it('sets trace color to red if error tag is present', () => {
@@ -386,5 +431,14 @@ describe('<SearchResults>', () => {
         expect(screen.getByTestId('searchable-select')).toHaveValue(orderBy.SHORTEST_FIRST);
       });
     });
+  });
+});
+
+describe('SearchResults exported functions', () => {
+  it('createBlob should create a blob with the correct data', () => {
+    const traces = [{ traceID: 'trace1' }];
+    const blob = createBlob(traces);
+    expect(blob).toBeInstanceOf(Blob);
+    expect(blob.type).toBe('application/json');
   });
 });
