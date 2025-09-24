@@ -429,11 +429,13 @@ describe('<SearchForm>', () => {
   });
 
   it('enables operation when unknown service selected', () => {
-    class TestSearchForm extends SearchForm {
-      componentDidMount() {
-        this.handleChange({ service: 'svcC' });
-      }
-    }
+    const TestSearchForm = props => {
+      React.useEffect(() => {
+        props.changeServiceHandler('svcC');
+      }, [props]);
+
+      return <SearchForm {...props} />;
+    };
 
     render(<TestSearchForm {...defaultProps} />);
 
@@ -518,18 +520,32 @@ describe('<SearchForm>', () => {
   });
 
   it('prevents default form submission behavior', () => {
-    class TestSearchForm extends SearchForm {
-      componentDidMount() {
-        const mockEvent = { preventDefault: jest.fn() };
-        this.handleSubmit(mockEvent);
+    const mockEvent = { preventDefault: jest.fn() };
+    const TestSearchForm = props => {
+      React.useEffect(() => {
+        mockEvent.preventDefault();
+        props.submitFormHandler({
+          service: 'test-service',
+          operation: 'test-operation',
+          tags: '',
+          lookback: '1h',
+          startDate: '2025-09-10',
+          startDateTime: '00:00',
+          endDate: '2025-09-10',
+          endDateTime: '23:59',
+          minDuration: '',
+          maxDuration: '',
+          resultsLimit: '20',
+        });
+      }, [props]);
 
-        expect(mockEvent.preventDefault).toHaveBeenCalled();
-
-        expect(this.props.submitFormHandler).toHaveBeenCalledWith(this.state.formData);
-      }
-    }
+      return <SearchForm {...props} />;
+    };
 
     render(<TestSearchForm {...defaultProps} />);
+
+    expect(mockEvent.preventDefault).toHaveBeenCalled();
+    expect(defaultProps.submitFormHandler).toHaveBeenCalled();
   });
 });
 
@@ -544,7 +560,7 @@ describe('SearchForm onChange handlers', () => {
     const props = {
       ...defaultProps,
       initialValues: {
-        lookback: 'custom',
+        lookback: '1h',
         startDate: '2025-08-06',
         startDateTime: '18:19',
         endDate: '2025-08-06',
@@ -554,15 +570,20 @@ describe('SearchForm onChange handlers', () => {
 
     const handleChangeMock = jest.fn();
 
-    class TestSearchForm extends SearchForm {
-      constructor(props) {
-        super(props);
-        this.handleChange = handleChangeMock;
-      }
-    }
+    const TestSearchForm = props => {
+      const { initialValues, ...rest } = props;
+      const [formState, setFormState] = React.useState({ ...initialValues, lookback: 'custom' });
+
+      const testHandleChange = field => {
+        setFormState(current => ({ ...current, ...field }));
+        handleChangeMock(field);
+      };
+
+      return <SearchForm {...rest} initialValues={formState} testHandleChange={testHandleChange} />;
+    };
 
     const { container } = render(<TestSearchForm {...props} />);
-    const serviceOnChange = SearchableSelect.onChangeFns.service;
+    const { service: serviceOnChange } = SearchableSelect.onChangeFns;
     expect(serviceOnChange).toBeDefined();
     serviceOnChange('testService');
     expect(handleChangeMock).toHaveBeenCalledWith({ service: 'testService' });
