@@ -26,25 +26,14 @@ function getBabelConfig(api) {
       ],
       [
         '@babel/preset-react',
-        {
-          development: env === 'development',
-          useBuiltIns: true,
-          runtime: 'automatic',
-        },
+        { development: env === 'development', useBuiltIns: true, runtime: 'automatic' },
       ],
       '@babel/preset-typescript',
     ],
     plugins: ['babel-plugin-inline-react-svg'],
     env: {
       production: {
-        plugins: [
-          [
-            'babel-plugin-react-remove-properties',
-            {
-              properties: ['data-testid'],
-            },
-          ],
-        ],
+        plugins: [['babel-plugin-react-remove-properties', { properties: ['data-testid'] }]],
       },
     },
   };
