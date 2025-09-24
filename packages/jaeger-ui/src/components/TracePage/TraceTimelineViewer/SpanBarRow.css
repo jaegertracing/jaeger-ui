@@ -184,6 +184,17 @@ limitations under the License.
   padding: 1px;
 }
 
+.SpanBarRow--errorIcon--bubbled {
+  background: #fff;
+  border: 1px dashed #db2828;
+  color: #db2828;
+  cursor: pointer;
+}
+
+.SpanBarRow--errorIcon--bubbled:hover {
+  background: #ffecec;
+}
+
 .SpanBarRow--rpcColorMarker {
   border-radius: 6.5px;
   display: inline-block;
