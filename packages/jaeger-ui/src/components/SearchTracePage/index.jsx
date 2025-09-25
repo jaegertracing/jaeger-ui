@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Col, Row, Tabs } from 'antd';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -41,12 +42,11 @@ import withRouteProps from '../../utils/withRouteProps';
 import { trackSortByChange } from './SearchForm.track';
 
 // export for tests
-export class SearchTracePageImpl extends Component {
-  state = {
-    sortBy: orderBy.MOST_RECENT,
-  };
+export function SearchTracePageImpl(props) {
+  const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
+  const navigate = useNavigate();
 
-  componentDidMount() {
+  useEffect(() => {
     const {
       diffCohort,
       fetchMultipleTraces,
@@ -56,7 +56,7 @@ export class SearchTracePageImpl extends Component {
       queryOfResults,
       searchTraces,
       urlQueryParams,
-    } = this.props;
+    } = props;
     if (!isHomepage && urlQueryParams && !isSameQuery(urlQueryParams, queryOfResults)) {
       searchTraces(urlQueryParams);
     }
@@ -72,107 +72,104 @@ export class SearchTracePageImpl extends Component {
     if (service && service !== '-') {
       fetchServiceOperations(service);
     }
-  }
+  }, []);
 
-  handleSortChange = sortBy => {
-    this.setState({ sortBy });
+  const handleSortChange = sortBy => {
+    setSortBy(sortBy);
     trackSortByChange(sortBy);
   };
 
-  goToTrace = traceID => {
-    const { queryOfResults } = this.props;
+  const goToTrace = traceID => {
+    const { queryOfResults } = props;
     const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
-    this.props.history.push(getTraceLocation(traceID, { fromSearch: searchUrl }));
+    navigate(getTraceLocation(traceID, { fromSearch: searchUrl }));
   };
 
-  render() {
-    const {
-      cohortAddTrace,
-      cohortRemoveTrace,
-      diffCohort,
-      embedded,
-      errors,
-      isHomepage,
-      disableFileUploadControl,
-      loadingServices,
-      loadingTraces,
-      maxTraceDuration,
-      services,
-      traceResultsToDownload,
-      queryOfResults,
-      loadJsonTraces,
-      urlQueryParams,
-      sortedTracesXformer,
-      traces,
-    } = this.props;
-    const { sortBy } = this.state;
-    const traceResults = sortedTracesXformer(traces, sortBy);
-    const hasTraceResults = traceResults && traceResults.length > 0;
-    const showErrors = errors && !loadingTraces;
-    const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
-    const tabItems = [];
-    if (!loadingServices && services) {
-      tabItems.push({ label: 'Search', key: 'searchForm', children: <SearchForm services={services} /> });
-    } else {
-      tabItems.push({ label: 'Search', key: 'searchForm', children: <LoadingIndicator /> });
-    }
-    if (!disableFileUploadControl) {
-      tabItems.push({
-        label: 'Upload',
-        key: 'fileLoader',
-        children: <FileLoader loadJsonTraces={loadJsonTraces} />,
-      });
-    }
-    return (
-      <Row className="SearchTracePage--row">
-        {!embedded && (
-          <Col span={6} className="SearchTracePage--column">
-            <div className="SearchTracePage--find">
-              <Tabs size="large" items={tabItems} />
-            </div>
-          </Col>
-        )}
-        <Col span={!embedded ? 18 : 24} className="SearchTracePage--column">
-          {showErrors && (
-            <div className="js-test-error-message">
-              <h2>There was an error loading traces: </h2>
-              {errors.map(err => (
-                <ErrorMessage key={err.message} error={err} />
-              ))}
-            </div>
-          )}
-          {!showErrors && (
-            <SearchResults
-              cohortAddTrace={cohortAddTrace}
-              cohortRemoveTrace={cohortRemoveTrace}
-              diffCohort={diffCohort}
-              disableComparisons={embedded}
-              goToTrace={this.goToTrace}
-              hideGraph={embedded && embedded.searchHideGraph}
-              loading={loadingTraces}
-              maxTraceDuration={maxTraceDuration}
-              queryOfResults={queryOfResults}
-              showStandaloneLink={Boolean(embedded)}
-              skipMessage={isHomepage}
-              spanLinks={urlQueryParams && urlQueryParams.spanLinks}
-              traces={traceResults}
-              rawTraces={traceResultsToDownload}
-              sortBy={this.state.sortBy}
-              handleSortChange={this.handleSortChange}
-            />
-          )}
-          {showLogo && (
-            <img
-              className="SearchTracePage--logo js-test-logo"
-              alt="presentation"
-              src={JaegerLogo}
-              width="400"
-            />
-          )}
-        </Col>
-      </Row>
-    );
+  const {
+    cohortAddTrace,
+    cohortRemoveTrace,
+    diffCohort,
+    embedded,
+    errors,
+    isHomepage,
+    disableFileUploadControl,
+    loadingServices,
+    loadingTraces,
+    maxTraceDuration,
+    services,
+    traceResultsToDownload,
+    queryOfResults,
+    loadJsonTraces,
+    urlQueryParams,
+    sortedTracesXformer,
+    traces,
+  } = props;
+  const traceResults = sortedTracesXformer(traces, sortBy);
+  const hasTraceResults = traceResults && traceResults.length > 0;
+  const showErrors = errors && !loadingTraces;
+  const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
+  const tabItems = [];
+  if (!loadingServices && services) {
+    tabItems.push({ label: 'Search', key: 'searchForm', children: <SearchForm services={services} /> });
+  } else {
+    tabItems.push({ label: 'Search', key: 'searchForm', children: <LoadingIndicator /> });
   }
+  if (!disableFileUploadControl) {
+    tabItems.push({
+      label: 'Upload',
+      key: 'fileLoader',
+      children: <FileLoader loadJsonTraces={loadJsonTraces} />,
+    });
+  }
+  return (
+    <Row className="SearchTracePage--row">
+      {!embedded && (
+        <Col span={6} className="SearchTracePage--column">
+          <div className="SearchTracePage--find">
+            <Tabs size="large" items={tabItems} />
+          </div>
+        </Col>
+      )}
+      <Col span={!embedded ? 18 : 24} className="SearchTracePage--column">
+        {showErrors && (
+          <div className="js-test-error-message">
+            <h2>There was an error loading traces: </h2>
+            {errors.map(err => (
+              <ErrorMessage key={err.message} error={err} />
+            ))}
+          </div>
+        )}
+        {!showErrors && (
+          <SearchResults
+            cohortAddTrace={cohortAddTrace}
+            cohortRemoveTrace={cohortRemoveTrace}
+            diffCohort={diffCohort}
+            disableComparisons={embedded}
+            goToTrace={goToTrace}
+            hideGraph={embedded && embedded.searchHideGraph}
+            loading={loadingTraces}
+            maxTraceDuration={maxTraceDuration}
+            queryOfResults={queryOfResults}
+            showStandaloneLink={Boolean(embedded)}
+            skipMessage={isHomepage}
+            spanLinks={urlQueryParams && urlQueryParams.spanLinks}
+            traces={traceResults}
+            rawTraces={traceResultsToDownload}
+            sortBy={sortBy}
+            handleSortChange={handleSortChange}
+          />
+        )}
+        {showLogo && (
+          <img
+            className="SearchTracePage--logo js-test-logo"
+            alt="presentation"
+            src={JaegerLogo}
+            width="400"
+          />
+        )}
+      </Col>
+    </Row>
+  );
 }
 SearchTracePageImpl.propTypes = {
   isHomepage: PropTypes.bool,
@@ -204,9 +201,6 @@ SearchTracePageImpl.propTypes = {
     })
   ),
   searchTraces: PropTypes.func,
-  history: PropTypes.shape({
-    push: PropTypes.func,
-  }),
   fetchMultipleTraces: PropTypes.func,
   fetchServiceOperations: PropTypes.func,
   fetchServices: PropTypes.func,

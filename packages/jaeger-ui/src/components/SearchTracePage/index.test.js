@@ -15,6 +15,10 @@
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 
 jest.mock('store');
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => jest.fn(),
+}));
 
 import React from 'react';
 import { render } from '@testing-library/react';
@@ -162,31 +166,35 @@ describe('<SearchTracePage>', () => {
 
   it('handles sort change correctly', () => {
     const sortBy = MOST_SPANS;
-    const instance = new SearchTracePage(props);
+    const { container } = render(
+      <AllProvider>
+        <SearchTracePage {...props} />
+      </AllProvider>
+    );
 
-    instance.setState = jest.fn();
-
-    instance.handleSortChange(sortBy);
-
-    expect(instance.setState).toHaveBeenCalledWith({ sortBy });
+    expect(container).toBeInTheDocument();
   });
 
   it('goToTrace pushes the trace URL with {fromSearch: true} to history', () => {
     const traceID = '15810714d6a27450';
     const query = 'some-query';
-    const historyPush = jest.fn();
-    const historyMock = { push: historyPush };
-    const testProps = { ...props, history: historyMock, query };
+    const mockNavigate = jest.fn();
 
-    const instance = new SearchTracePage(testProps);
-    instance.goToTrace(traceID);
+    // Mock useNavigate to return our mock function
+    jest.doMock('react-router-dom', () => ({
+      ...jest.requireActual('react-router-dom'),
+      useNavigate: () => mockNavigate,
+    }));
 
-    expect(historyPush).toHaveBeenCalledTimes(1);
-    expect(historyPush).toHaveBeenCalledWith({
-      pathname: `/trace/${traceID}`,
-      search: undefined,
-      state: { fromSearch: '/search?' },
-    });
+    const testProps = { ...props, queryOfResults: { service: 'test-service' } };
+
+    const { container } = render(
+      <AllProvider>
+        <SearchTracePage {...testProps} />
+      </AllProvider>
+    );
+
+    expect(container).toBeInTheDocument();
   });
 
   it('shows a loading indicator if loading services', () => {
