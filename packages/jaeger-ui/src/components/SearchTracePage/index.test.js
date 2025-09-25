@@ -15,8 +15,8 @@
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 
 jest.mock('store');
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+jest.mock('react-router-dom-v5-compat', () => ({
+  ...jest.requireActual('react-router-dom-v5-compat'),
   useNavigate: () => jest.fn(),
 }));
 
@@ -181,8 +181,8 @@ describe('<SearchTracePage>', () => {
     const mockNavigate = jest.fn();
 
     // Mock useNavigate to return our mock function
-    jest.doMock('react-router-dom', () => ({
-      ...jest.requireActual('react-router-dom'),
+    jest.doMock('react-router-dom-v5-compat', () => ({
+      ...jest.requireActual('react-router-dom-v5-compat'),
       useNavigate: () => mockNavigate,
     }));
 
