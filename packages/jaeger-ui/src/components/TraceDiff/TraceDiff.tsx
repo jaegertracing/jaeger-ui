@@ -88,16 +88,13 @@ export function TraceDiffImpl({
   const setGraphTopOffsetCallback = React.useCallback(() => {
     if (headerWrapperElmRef.current) {
       const newGraphTopOffset = TOP_NAV_HEIGHT + headerWrapperElmRef.current.clientHeight;
-      setGraphTopOffset(prevOffset => {
-        if (prevOffset !== newGraphTopOffset) {
-          return newGraphTopOffset;
-        }
-        return prevOffset;
-      });
+      if (graphTopOffset !== newGraphTopOffset) {
+        setGraphTopOffset(newGraphTopOffset);
+      }
     } else {
       setGraphTopOffset(TOP_NAV_HEIGHT);
     }
-  }, []);
+  }, [graphTopOffset]);
 
   const processProps = React.useCallback(() => {
     syncStates({ a, b, cohort }, traceDiffState, forceState);
