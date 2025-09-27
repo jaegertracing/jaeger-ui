@@ -43,6 +43,7 @@ function getBabelConfig(api) {
         {
           development: env === 'development',
           useBuiltIns: true,
+          runtime: 'automatic',
         },
       ],
       '@babel/preset-typescript',

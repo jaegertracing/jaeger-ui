@@ -21,7 +21,7 @@ const babelJest = require('babel-jest').default;
 // Solution: Transform import.meta to process during Jest transformation.
 // This allows ESM-only packages to work in Jest's CommonJS test environment.
 // Production code is unaffected, this only runs during testing.
-const importMetaTransform = function() {
+const importMetaTransform = function () {
   return {
     visitor: {
       MetaProperty(path) {
@@ -30,26 +30,29 @@ const importMetaTransform = function() {
         if (path.node.meta.name === 'import' && path.node.property.name === 'meta') {
           path.replaceWithSourceString('process');
         }
-      }
-    }
+      },
+    },
   };
 };
 
 const babelConfiguration = {
   presets: [
-    ['@babel/preset-env', {
-      targets: { node: 'current' },
-      modules: 'commonjs'
-    }],
-    ['@babel/preset-react', { development: !process.env.CI }],
+    [
+      '@babel/preset-env',
+      {
+        targets: { node: 'current' },
+        modules: 'commonjs',
+      },
+    ],
+    ['@babel/preset-react', { development: !process.env.CI, runtime: 'automatic' }],
     '@babel/preset-typescript',
   ],
   plugins: [
     'babel-plugin-inline-react-svg',
     ['@babel/plugin-transform-modules-commonjs', { allowTopLevelThis: true }],
-    importMetaTransform
+    importMetaTransform,
   ],
-}
+};
 
 // Export configuration for depcheck (without the function)
 const babelConfigurationForDepcheck = {
@@ -59,7 +62,7 @@ const babelConfigurationForDepcheck = {
     ['@babel/plugin-transform-modules-commonjs', { allowTopLevelThis: true }],
     // Note: custom function plugins are excluded for depcheck compatibility
   ],
-}
+};
 
 module.exports = babelJest.createTransformer(babelConfiguration);
 module.exports.babelConfiguration = babelConfiguration;

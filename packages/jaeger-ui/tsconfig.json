@@ -13,5 +13,8 @@
 // limitations under the License.
 {
   "extends": "../../tsconfig",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  },
   "include": ["src/**/*.tsx", "src/**/*.ts", "src/**/*.json", "typings"]
 }
