@@ -15,6 +15,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom';
 
 jest.mock('./NotFound', () => () => <div data-testid="not-found" />);
 jest.mock('./Page', () => ({ children }) => <div data-testid="page">{children}</div>);
@@ -87,7 +88,7 @@ import processScripts from '../../utils/config/process-scripts';
 
 const renderWithPath = pathname => {
   mockHistory = createMockHistory(pathname);
-  return render(<JaegerUIApp />);
+  return render(<JaegerUIApp Router={MemoryRouter} routerProps={{ initialEntries: [pathname] }} />);
 };
 
 describe('JaegerUIApp', () => {
@@ -135,10 +136,10 @@ describe('JaegerUIApp', () => {
   });
 
   it('should handle root path redirect', () => {
-    const { container } = renderWithPath('/');
-    expect(container).toBeInTheDocument();
-    expect(mockHistory.replace).toHaveBeenCalledTimes(1);
-    expect(mockHistory.replace).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/search' }));
+    // Test that when accessing root path, the SearchTracePage component is rendered
+    // This verifies that the Redirect component is working correctly
+    const { getByTestId } = renderWithPath('/');
+    expect(getByTestId('search-trace')).toBeInTheDocument();
   });
 
   it('should handle constructor with props', () => {
