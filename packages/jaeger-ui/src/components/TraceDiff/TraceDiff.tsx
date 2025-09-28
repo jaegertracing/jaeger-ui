@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom-v5-compat';
+import { History as RouterHistory } from 'history';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -45,6 +45,7 @@ type TDispatchProps = {
 };
 
 type TOwnProps = {
+  history: RouterHistory;
   params: TDiffRouteParams;
 };
 
@@ -79,9 +80,8 @@ export function TraceDiffImpl({
   traceDiffState,
   fetchMultipleTraces,
   forceState,
-  params,
+  history,
 }: TStateProps & TDispatchProps & TOwnProps) {
-  const navigate = useNavigate();
   const [graphTopOffset, setGraphTopOffset] = React.useState(TOP_NAV_HEIGHT);
   const headerWrapperElmRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -109,9 +109,9 @@ export function TraceDiffImpl({
     (change: { newA?: string | TNil; newB?: string | TNil }) => {
       const { newA, newB } = change;
       const url = getUrl({ a: newA || a, b: newB || b, cohort });
-      navigate(url);
+      history.push(url);
     },
-    [a, b, cohort, navigate]
+    [a, b, cohort, history]
   );
 
   const diffSetA = React.useCallback(
