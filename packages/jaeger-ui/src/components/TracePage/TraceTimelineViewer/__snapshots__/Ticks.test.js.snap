@@ -1,0 +1,83 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<Ticks> should match snapshot 1`] = `
+<div
+  className="Ticks"
+>
+  <div
+    className="Ticks--tick"
+    key="0"
+    style={
+      Object {
+        "left": "0%",
+      }
+    }
+  >
+    <span
+      className="Ticks--tickLabel "
+    >
+      100μs
+    </span>
+  </div>
+  <div
+    className="Ticks--tick"
+    key="0.25"
+    style={
+      Object {
+        "left": "25%",
+      }
+    }
+  >
+    <span
+      className="Ticks--tickLabel "
+    >
+      125μs
+    </span>
+  </div>
+  <div
+    className="Ticks--tick"
+    key="0.5"
+    style={
+      Object {
+        "left": "50%",
+      }
+    }
+  >
+    <span
+      className="Ticks--tickLabel "
+    >
+      150μs
+    </span>
+  </div>
+  <div
+    className="Ticks--tick"
+    key="0.75"
+    style={
+      Object {
+        "left": "75%",
+      }
+    }
+  >
+    <span
+      className="Ticks--tickLabel "
+    >
+      175μs
+    </span>
+  </div>
+  <div
+    className="Ticks--tick"
+    key="1"
+    style={
+      Object {
+        "left": "100%",
+      }
+    }
+  >
+    <span
+      className="Ticks--tickLabel isEndAnchor"
+    >
+      200μs
+    </span>
+  </div>
+</div>
+`;
