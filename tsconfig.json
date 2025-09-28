@@ -15,7 +15,7 @@
     "isolatedModules": true,
     "declaration": true,
     "emitDeclarationOnly": true,
-    "jsx": "preserve"
+    "jsx": "react-jsx"
   },
   "include": [],
   "files": [],
