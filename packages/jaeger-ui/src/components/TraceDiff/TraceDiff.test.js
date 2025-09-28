@@ -296,6 +296,28 @@ describe('TraceDiff', () => {
       expect(graphWrapper).toBeInTheDocument();
       expect(graphWrapper).toHaveStyle(`top: ${TOP_NAV_HEIGHT}px`);
     });
+
+    it('setGraphTopOffset with different height', () => {
+      const mockHeight = 50;
+      const expectedTop = TOP_NAV_HEIGHT + mockHeight;
+
+      // Mock clientHeight to trigger the state update
+      Object.defineProperty(HTMLDivElement.prototype, 'clientHeight', {
+        configurable: true,
+        value: mockHeight,
+      });
+
+      const { container, rerender } = render(<TraceDiffImpl {...defaultProps} />);
+      rerender(<TraceDiffImpl {...defaultProps} />);
+
+      const graphWrapper = container.querySelector('.TraceDiff--graphWrapper');
+      expect(graphWrapper).toHaveStyle(`top: ${expectedTop}px`);
+
+      Object.defineProperty(HTMLDivElement.prototype, 'clientHeight', {
+        configurable: true,
+        value: 0,
+      });
+    });
   });
 
   describe('mapStateToProps', () => {
