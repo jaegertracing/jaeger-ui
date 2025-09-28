@@ -86,7 +86,7 @@ export function TraceDiffImpl({
   const headerWrapperElmRef = React.useRef<HTMLDivElement | null>(null);
 
   const setGraphTopOffsetCallback = React.useCallback(() => {
-    if (headerWrapperElmRef.current) {
+    if (headerWrapperElmRef.current && headerWrapperElmRef.current.clientHeight !== undefined) {
       const newGraphTopOffset = TOP_NAV_HEIGHT + headerWrapperElmRef.current.clientHeight;
       setGraphTopOffset(prevOffset => {
         if (prevOffset !== newGraphTopOffset) {

@@ -318,6 +318,22 @@ describe('TraceDiff', () => {
         value: 0,
       });
     });
+
+    it('setGraphTopOffset when clientHeight is undefined', () => {
+      Object.defineProperty(HTMLDivElement.prototype, 'clientHeight', {
+        configurable: true,
+        value: undefined,
+      });
+
+      const { container } = render(<TraceDiffImpl {...defaultProps} />);
+      const graphWrapper = container.querySelector('.TraceDiff--graphWrapper');
+      expect(graphWrapper).toHaveStyle(`top: ${TOP_NAV_HEIGHT}px`);
+
+      Object.defineProperty(HTMLDivElement.prototype, 'clientHeight', {
+        configurable: true,
+        value: 0,
+      });
+    });
   });
 
   describe('mapStateToProps', () => {
