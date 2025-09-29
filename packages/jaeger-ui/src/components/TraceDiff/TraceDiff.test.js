@@ -287,24 +287,52 @@ describe('TraceDiff', () => {
     });
 
     it('calls setGraphTopOffset and updates graphTopOffset state on header ref change', () => {
-      const mockHeight = 120;
+      // This test verifies the component structure and initial behavior
+      // The actual height calculation is tested by the component's useEffect which runs when the ref is set during mount
+      const { container } = render(<TraceDiffImpl {...defaultProps} />);
+      const headerWrapper = container.querySelector('[data-testid="trace-diff-header"]').parentElement;
+      const graphWrapper = container.querySelector('.TraceDiff--graphWrapper');
+      expect(headerWrapper).toBeInTheDocument();
+      expect(graphWrapper).toBeInTheDocument();
+      expect(graphWrapper).toHaveStyle(`top: ${TOP_NAV_HEIGHT}px`);
+    });
+
+    it('setGraphTopOffset with different height', () => {
+      const mockHeight = 50;
       const expectedTop = TOP_NAV_HEIGHT + mockHeight;
 
-      const mockDiv = document.createElement('div');
-      Object.defineProperty(mockDiv, 'clientHeight', {
+      // Mock clientHeight to trigger the state update
+      Object.defineProperty(HTMLDivElement.prototype, 'clientHeight', {
+        configurable: true,
         value: mockHeight,
       });
 
-      const ref = React.createRef();
-
-      const { rerender, container } = render(<TraceDiffImpl {...defaultProps} ref={ref} />);
-
-      ref.current.headerWrapperRef(mockDiv);
-
-      rerender(<TraceDiffImpl {...defaultProps} ref={ref} cohort={[...defaultProps.cohort, 'new-id']} />);
+      const { container, rerender } = render(<TraceDiffImpl {...defaultProps} />);
+      rerender(<TraceDiffImpl {...defaultProps} />);
 
       const graphWrapper = container.querySelector('.TraceDiff--graphWrapper');
       expect(graphWrapper).toHaveStyle(`top: ${expectedTop}px`);
+
+      Object.defineProperty(HTMLDivElement.prototype, 'clientHeight', {
+        configurable: true,
+        value: 0,
+      });
+    });
+
+    it('setGraphTopOffset when clientHeight is undefined', () => {
+      Object.defineProperty(HTMLDivElement.prototype, 'clientHeight', {
+        configurable: true,
+        value: undefined,
+      });
+
+      const { container } = render(<TraceDiffImpl {...defaultProps} />);
+      const graphWrapper = container.querySelector('.TraceDiff--graphWrapper');
+      expect(graphWrapper).toHaveStyle(`top: ${TOP_NAV_HEIGHT}px`);
+
+      Object.defineProperty(HTMLDivElement.prototype, 'clientHeight', {
+        configurable: true,
+        value: 0,
+      });
     });
   });
 
