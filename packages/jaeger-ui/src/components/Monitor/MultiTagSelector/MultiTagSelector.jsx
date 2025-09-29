@@ -14,29 +14,16 @@ const MultiTagSelector = ({ service, onChange, disabled = false, value = '' }) =
   const [tagValues, setTagValues] = useState({});
   const [loading, setLoading] = useState({});
 
-  // Convert string value to object format
+  // Convert JSON string value to object format
   const valueAsObject = useMemo(() => {
     if (!value || typeof value !== 'string') return {};
 
-    // Try to parse as JSON first
-    if (value.startsWith('{') && value.endsWith('}')) {
-      try {
-        return JSON.parse(value);
-      } catch (e) {
-        console.error('Failed to parse tag JSON', e);
-        // Fall back to space-delimited format if JSON parsing fails
-      }
+    try {
+      return JSON.parse(value);
+    } catch (e) {
+      console.error('Failed to parse tag JSON', e);
+      return {};
     }
-
-    // Parse as space-delimited key:value pairs
-    const obj = {};
-    value.split(' ').forEach(pair => {
-      const [key, val] = pair.split(':');
-      if (key && val) {
-        obj[key] = val;
-      }
-    });
-    return obj;
   }, [value]);
 
   const [selectedValues, setSelectedValues] = useState(valueAsObject);
@@ -88,6 +75,24 @@ const MultiTagSelector = ({ service, onChange, disabled = false, value = '' }) =
     setSelectedValues(valueAsObject);
   }, [valueAsObject]);
 
+  // Clean up selected values when tag attributes change
+  useEffect(() => {
+    const currentAttributeNames = tagAttributes.map(attr => attr.name);
+
+    setSelectedValues(prevValues => {
+      const cleanedValues = {};
+
+      // Only keep values for attributes that are still in the config
+      Object.entries(prevValues).forEach(([key, value]) => {
+        if (currentAttributeNames.includes(key)) {
+          cleanedValues[key] = value;
+        }
+      });
+
+      return cleanedValues;
+    });
+  }, [tagAttributes]);
+
   // Handle value selection for a specific attribute
   const handleValueChange = (attributeName, selectedValue) => {
     // Pure state update function - no side effects
@@ -106,14 +111,11 @@ const MultiTagSelector = ({ service, onChange, disabled = false, value = '' }) =
 
   // Use an effect to handle parent onChange when selectedValues change
   useEffect(() => {
-    // Format and call parent onChange with appropriate format
+    // Always output JSON format for consistency
     const tagCount = Object.keys(selectedValues).length;
 
     if (tagCount === 0) {
       onChange('');
-    } else if (tagCount === 1) {
-      const [key, val] = Object.entries(selectedValues)[0];
-      onChange(`${key}:${val}`);
     } else {
       onChange(JSON.stringify(selectedValues));
     }

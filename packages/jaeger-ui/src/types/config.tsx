@@ -74,11 +74,6 @@ export type MonitorConfig = {
   tagAttributes?: readonly TagAttribute[];
 };
 
-export type TagFilter = {
-  label: string;
-  value: string;
-};
-
 export type TagAttribute = {
   name: string;
   label: string;

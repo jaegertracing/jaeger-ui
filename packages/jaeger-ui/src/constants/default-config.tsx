@@ -105,6 +105,9 @@ const defaultConfig: Config = {
       },
     },
     docsLink: 'https://www.jaegertracing.io/docs/latest/spm/',
+    // Configure tag attributes for filtering metrics in the Monitor tab
+    // Example: [{ name: 'environment', label: 'Environment' }, { name: 'region', label: 'Region' }]
+    // See docs/MONITOR.md for detailed configuration instructions
     tagAttributes: [],
   },
   disableFileUploadControl: false,

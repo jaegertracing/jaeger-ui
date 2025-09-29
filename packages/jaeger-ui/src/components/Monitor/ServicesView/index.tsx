@@ -159,7 +159,9 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(
     store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds
   );
-  const [selectedTags, setSelectedTags] = useState<string | undefined>(store.get('lastAtmSearchTags') || undefined);
+  const [selectedTags, setSelectedTags] = useState<string | undefined>(
+    store.get('lastAtmSearchTags') || undefined
+  );
 
   const calcGraphXDomain = useCallback(() => {
     const currentTime = Date.now();
@@ -193,9 +195,9 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
     const { label } = timeFrameOptions.find(option => option.value === value)!;
     trackSelectTimeframe(label);
   }, []);
-  const handleTagsChange = useCallback((value: string) => {
+  const handleTagsChange = useCallback((value: string | undefined) => {
     setSelectedTags(value);
-    trackSelectTags(value);
+    trackSelectTags(value || 'None');
   }, []);
   const fetchMetrics = useCallback(() => {
     const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, services } = props;
@@ -216,18 +218,8 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
         step: 60 * 1000,
         ratePer: 10 * 60 * 1000,
         spanKind: selectedSpanKind,
+        ...(selectedTags && { tags: selectedTags }),
       };
-
-      // Add tags parameter based on format
-      if (selectedTags) {
-        if (selectedTags.startsWith('{') && selectedTags.endsWith('}')) {
-          // It's JSON format, use 'tags' parameter
-          (metricQueryPayload as any).tags = selectedTags;
-        } else {
-          // It's key:value format, use 'tag' parameter
-          (metricQueryPayload as any).tag = selectedTags;
-        }
-      }
 
       fetchAllServiceMetrics(currentService, metricQueryPayload);
       fetchAggregatedServiceMetrics(currentService, metricQueryPayload);
@@ -238,10 +230,10 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   }, [
     props.fetchAllServiceMetrics,
     props.fetchAggregatedServiceMetrics,
-    props.services,
     selectedService,
     selectedSpanKind,
     selectedTimeFrame,
+    selectedTags,
   ]);
 
   // componentDidMount equivalent
@@ -271,7 +263,7 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
 
   useEffect(() => {
     fetchMetrics();
-  }, [selectedService, selectedSpanKind, selectedTimeFrame]);
+  }, [fetchMetrics]);
 
   const { services, metrics, servicesLoading } = props;
   const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
@@ -340,13 +332,13 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
             </SearchableSelect>
           </Col>
           <Col span={10}>
-              <MultiTagSelector
-                service={getSelectedService()}
-                onChange={handleTagsChange}
-                disabled={metrics.operationMetricsLoading}
-                value={selectedTags}
-              />
-            </Col>
+            <MultiTagSelector
+              service={getSelectedService()}
+              onChange={handleTagsChange}
+              disabled={metrics.operationMetricsLoading}
+              value={selectedTags}
+            />
+          </Col>
         </Row>
         <Row align="middle">
           <Col span={16}>
