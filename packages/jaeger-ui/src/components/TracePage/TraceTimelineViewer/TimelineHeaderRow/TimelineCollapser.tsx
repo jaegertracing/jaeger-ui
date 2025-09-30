@@ -38,8 +38,7 @@ export default function TimelineCollapser({
 }: CollapserProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // TODO: Something less hacky than createElement to help TypeScript / AntD
-  const getContainer = () => containerRef.current || document.createElement('div');
+  const getContainer = () => containerRef.current || document.body;
 
   return (
     <div className="TimelineCollapser" ref={containerRef}>
