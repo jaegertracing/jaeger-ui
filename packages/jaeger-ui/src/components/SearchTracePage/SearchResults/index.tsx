@@ -223,7 +223,7 @@ export class UnconnectedSearchResults extends React.PureComponent<SearchResultsP
         </div>
         {!traceResultsView && (
           <div className="SearchResults--ddg-container">
-            <SearchResultsDDG location={location} history={history} />
+            <SearchResultsDDG location={location as any} />
           </div>
         )}
         {traceResultsView && diffSelection}
