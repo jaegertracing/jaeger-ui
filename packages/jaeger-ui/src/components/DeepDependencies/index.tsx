@@ -14,6 +14,7 @@
 
 import * as React from 'react';
 import { History as RouterHistory, Location } from 'history';
+import { useNavigate } from 'react-router-dom-v5-compat';
 import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
@@ -83,7 +84,7 @@ export type TReduxProps = TExtractUiFindFromStateReturn & {
 export type TOwnProps = {
   baseUrl: string;
   extraUrlArgs?: { [key: string]: unknown };
-  history: RouterHistory;
+  navigate: ReturnType<typeof useNavigate>;
   location: Location;
   showSvcOpsHeader: boolean;
 };
@@ -255,11 +256,11 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
   };
 
   updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
-    const { baseUrl, extraUrlArgs, graphState, history, uiFind, urlState } = this.props;
+    const { baseUrl, extraUrlArgs, graphState, navigate, uiFind, urlState } = this.props;
     const getUrlArg = { uiFind, ...urlState, ...newValues, ...extraUrlArgs };
     const hash = _get(graphState, 'model.hash');
     if (hash) getUrlArg.hash = hash;
-    history.push(getUrl(getUrlArg, baseUrl));
+    navigate(getUrl(getUrlArg, baseUrl));
   };
 
   render() {
