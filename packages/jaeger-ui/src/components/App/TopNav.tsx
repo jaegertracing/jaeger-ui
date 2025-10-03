@@ -110,7 +110,7 @@ function isItem(itemOrGroup: ConfigMenuItem | ConfigMenuGroup): itemOrGroup is C
 const itemsGlobalLeft: MenuProps['items'] = [
   {
     label: (
-      <Link to={prefixUrl('/')} style={{ fontSize: '14px', fontWeight: 500 }}>
+      <Link to={prefixUrl('/')} style={{ fontSize: '14px', fontWeight: 500, outline: 'revert' }}>
         JAEGER UI
       </Link>
     ),
@@ -139,6 +139,7 @@ export function TopNavImpl(props: Props) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
       <Menu
+        tabIndex={-1}
         theme="dark"
         items={itemsGlobalLeft?.concat(
           NAV_LINKS.map(({ matches, to, text }) => {
@@ -161,6 +162,7 @@ export function TopNavImpl(props: Props) {
         style={{ flex: '1 1 0', minWidth: 0 }}
       />
       <Menu
+        tabIndex={-1}
         theme="dark"
         items={itemsGlobalRight}
         className="Menu--item"
