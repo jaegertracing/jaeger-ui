@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { History as RouterHistory, Location } from 'history';
+import { Location, useNavigate } from 'react-router-dom-v5-compat';
 import _get from 'lodash/get';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
@@ -61,7 +61,6 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 }
 
 type TOwnProps = {
-  history: RouterHistory;
   location: Location;
 };
 
@@ -70,6 +69,7 @@ type TracesDdgImplProps = TOwnProps & TReduxProps;
 // export for tests
 export const TracesDdgImpl: React.FC<TracesDdgImplProps> = React.memo(props => {
   const { location } = props;
+  const navigate = useNavigate();
   const urlArgs = queryString.parse(location.search);
   const { end, start, limit, lookback, maxDuration, minDuration, view } = urlArgs;
   const extraArgs = { end, start, limit, lookback, maxDuration, minDuration, view };
@@ -79,6 +79,7 @@ export const TracesDdgImpl: React.FC<TracesDdgImplProps> = React.memo(props => {
       baseUrl={ROUTE_PATH}
       extraUrlArgs={extraArgs}
       showSvcOpsHeader={false}
+      navigate={navigate}
       {...props}
     />
   );
