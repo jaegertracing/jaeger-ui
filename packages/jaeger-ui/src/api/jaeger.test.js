@@ -30,7 +30,7 @@ import JaegerAPI, {
   getMessageFromError,
   DEFAULT_API_ROOT,
   DEFAULT_DEPENDENCY_LOOKBACK,
-  ANALYTICS_ROOT,
+  DEEP_DEPENDENCIES_ROOT,
 } from './jaeger';
 
 const defaultOptions = {
@@ -60,7 +60,7 @@ describe('fetchDeepDependencyGraph', () => {
     const query = { service: 'serviceName', start: 400, end: 800 };
     JaegerAPI.fetchDeepDependencyGraph(query);
     expect(fetchMock).toHaveBeenLastCalledWith(
-      `${ANALYTICS_ROOT}v1/dependencies?${queryString.stringify(query)}`,
+      `${DEEP_DEPENDENCIES_ROOT}?${queryString.stringify(query)}`,
       defaultOptions
     );
   });
