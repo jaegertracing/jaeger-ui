@@ -74,7 +74,36 @@ export const isServerSpan = spanHasTag.bind(null, 'span.kind', 'server');
 
 const isErrorBool = spanHasTag.bind(null, 'error', true);
 const isErrorStr = spanHasTag.bind(null, 'error', 'true');
-export const isErrorSpan = (span: Span) => isErrorBool(span) || isErrorStr(span);
+
+export interface IErrorSpanInfo {
+  isError: boolean; // true if this span OR its descendants have errors
+  selfError: boolean; // true if this span directly contains an error
+}
+
+export const isErrorSpan = (span: Span): IErrorSpanInfo => {
+  const selfError = isErrorBool(span) || isErrorStr(span);
+  return {
+    isError: selfError, // For now, same as selfError - will be enhanced when context is available
+    selfError,
+  };
+};
+
+/**
+ * Enhanced version of isErrorSpan that can determine if a span has errors including descendants.
+ * This requires the full spans array and span index for context.
+ */
+export const isErrorSpanWithContext = (spans: Span[], spanIndex: number): IErrorSpanInfo => {
+  const span = spans[spanIndex];
+  const selfError = isErrorBool(span) || isErrorStr(span);
+
+  // Check if any descendants have errors using the existing logic
+  const hasErrorDescendants = getDescendantErroredSpanIDs(spans, spanIndex).length > 0;
+
+  return {
+    isError: selfError || hasErrorDescendants,
+    selfError,
+  };
+};
 
 /**
  * Returns `true` if at least one of the descendants of the `parentSpanIndex`
@@ -91,11 +120,31 @@ export function spanContainsErredSpan(spans: Span[], parentSpanIndex: number) {
   const { depth } = spans[parentSpanIndex];
   let i = parentSpanIndex + 1;
   for (; i < spans.length && spans[i].depth > depth; i++) {
-    if (isErrorSpan(spans[i])) {
+    if (isErrorSpan(spans[i]).selfError) {
       return true;
     }
   }
   return false;
+}
+
+/**
+ * Collect the spanIDs of all descendant spans that contain an error tag.
+ * Descendants are spans after parentSpanIndex with strictly greater depth
+ * until depth drops back to parent's depth or less.
+ */
+export function getDescendantErroredSpanIDs(spans: Span[], parentSpanIndex: number): string[] {
+  const erroredIds: string[] = [];
+  if (!spans || !Array.isArray(spans) || parentSpanIndex < 0 || parentSpanIndex >= spans.length) {
+    return erroredIds;
+  }
+  const { depth } = spans[parentSpanIndex];
+  let i = parentSpanIndex + 1;
+  for (; i < spans.length && spans[i].depth > depth; i++) {
+    if (isErrorSpan(spans[i]).selfError) {
+      erroredIds.push(spans[i].spanID);
+    }
+  }
+  return erroredIds;
 }
 
 /**
