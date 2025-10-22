@@ -16,6 +16,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
+import { CompatRouter } from 'react-router-dom-v5-compat';
 
 import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
 
@@ -92,7 +93,9 @@ describe('<TopNav>', () => {
     beforeEach(() => {
       component = render(
         <BrowserRouter>
-          <TopNav {...defaultProps} />
+          <CompatRouter>
+            <TopNav {...defaultProps} />
+          </CompatRouter>
         </BrowserRouter>
       );
     });
@@ -132,7 +135,9 @@ describe('<TopNav>', () => {
     beforeEach(() => {
       component = render(
         <BrowserRouter>
-          <TopNav {...defaultProps} />
+          <CompatRouter>
+            <TopNav {...defaultProps} />
+          </CompatRouter>
         </BrowserRouter>
       );
     });
