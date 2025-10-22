@@ -14,7 +14,7 @@
 
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
-import { Route, Redirect, Switch, BrowserRouter } from 'react-router-dom';
+import { Route, Redirect, Switch } from 'react-router-dom';
 
 import { ConfigProvider } from 'antd';
 import { defaultTheme } from '@ant-design/compatible';
@@ -84,51 +84,48 @@ export default class JaegerUIApp extends Component {
   }
 
   render() {
-    const RouterComponent = this.props.Router || BrowserRouter;
     return (
       <ConfigProvider theme={jaegerTheme}>
         <Provider store={store}>
-          <RouterComponent {...(this.props.routerProps || {})}>
-            <Page>
-              <Switch>
-                <Route path={searchPath}>
-                  <SearchTracePage />
-                </Route>
-                <Route path={traceDiffPath}>
-                  <TraceDiff />
-                </Route>
-                <Route path={tracePath}>
-                  <TracePage />
-                </Route>
-                <Route path={dependenciesPath}>
-                  <DependencyGraph />
-                </Route>
-                <Route path={deepDependenciesPath}>
-                  <DeepDependencies />
-                </Route>
-                <Route path={qualityMetricsPath}>
-                  <QualityMetrics />
-                </Route>
-                <Route path={monitorATMPath}>
-                  <MonitorATMPage />
-                </Route>
+          <Page>
+            <Switch>
+              <Route path={searchPath}>
+                <SearchTracePage />
+              </Route>
+              <Route path={traceDiffPath}>
+                <TraceDiff />
+              </Route>
+              <Route path={tracePath}>
+                <TracePage />
+              </Route>
+              <Route path={dependenciesPath}>
+                <DependencyGraph />
+              </Route>
+              <Route path={deepDependenciesPath}>
+                <DeepDependencies />
+              </Route>
+              <Route path={qualityMetricsPath}>
+                <QualityMetrics />
+              </Route>
+              <Route path={monitorATMPath}>
+                <MonitorATMPage />
+              </Route>
 
-                <Route exact path="/">
-                  <Redirect to={searchPath} />
-                </Route>
-                <Route exact path={prefixUrl()}>
-                  <Redirect to={searchPath} />
-                </Route>
-                <Route exact path={prefixUrl('/')}>
-                  <Redirect to={searchPath} />
-                </Route>
+              <Route exact path="/">
+                <Redirect to={searchPath} />
+              </Route>
+              <Route exact path={prefixUrl()}>
+                <Redirect to={searchPath} />
+              </Route>
+              <Route exact path={prefixUrl('/')}>
+                <Redirect to={searchPath} />
+              </Route>
 
-                <Route>
-                  <NotFound />
-                </Route>
-              </Switch>
-            </Page>
-          </RouterComponent>
+              <Route>
+                <NotFound />
+              </Route>
+            </Switch>
+          </Page>
         </Provider>
       </ConfigProvider>
     );
