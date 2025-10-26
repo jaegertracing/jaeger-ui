@@ -172,7 +172,9 @@ function fetchOpsMetricsDone(
     payload.forEach((promiseResult, i) => {
       if (promiseResult.status === 'fulfilled') {
         const metric = promiseResult.value;
-        metric.metrics.forEach((metricDetails: MetricObject) => {
+        // Add defensive check to handle undefined/null metrics
+        if (metric.metrics && Array.isArray(metric.metrics)) {
+          metric.metrics.forEach((metricDetails: MetricObject) => {
           if (opsMetrics === null) {
             opsMetrics = {};
           }
@@ -239,6 +241,7 @@ function fetchOpsMetricsDone(
               count[metric.name] > 0 ? parseFloat((avg[metric.name] / count[metric.name]).toFixed(2)) : null;
           }
         });
+        }
       } else {
         switch (i) {
           case 0:
