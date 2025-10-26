@@ -175,72 +175,74 @@ function fetchOpsMetricsDone(
         // Add defensive check to handle undefined/null metrics
         if (metric.metrics && Array.isArray(metric.metrics)) {
           metric.metrics.forEach((metricDetails: MetricObject) => {
-          if (opsMetrics === null) {
-            opsMetrics = {};
-          }
-
-          let opsName: string | null = null;
-          const avg: {
-            service_operation_latencies: number;
-            service_operation_call_rate: number;
-            service_operation_error_rate: number;
-          } = {
-            service_operation_latencies: 0,
-            service_operation_call_rate: 0,
-            service_operation_error_rate: 0,
-          };
-          const count: {
-            service_operation_latencies: number;
-            service_operation_call_rate: number;
-            service_operation_error_rate: number;
-          } = {
-            service_operation_latencies: 0,
-            service_operation_call_rate: 0,
-            service_operation_error_rate: 0,
-          };
-          metricDetails.labels.forEach((label: { name: string; value: string }) => {
-            if (label.name === 'operation') {
-              opsName = label.value;
-            }
-          });
-
-          if (opsName) {
-            if (opsMetrics[opsName] === undefined) {
-              opsMetrics[opsName] = {
-                name: opsName,
-                metricPoints: {
-                  service_operation_latencies: [],
-                  service_operation_call_rate: [],
-                  service_operation_error_rate: [],
-                  avg: {
-                    service_operation_latencies: null,
-                    service_operation_call_rate: null,
-                    service_operation_error_rate: null,
-                  },
-                },
-              };
+            if (opsMetrics === null) {
+              opsMetrics = {};
             }
 
-            opsMetrics[opsName].metricPoints[metric.name] = metricDetails.metricPoints.map(p => {
-              let y;
-              try {
-                y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
-                avg[metric.name] += y;
-                count[metric.name] += 1; // Increment count for non-NaN values
-              } catch (e) {
-                y = null;
+            let opsName: string | null = null;
+            const avg: {
+              service_operation_latencies: number;
+              service_operation_call_rate: number;
+              service_operation_error_rate: number;
+            } = {
+              service_operation_latencies: 0,
+              service_operation_call_rate: 0,
+              service_operation_error_rate: 0,
+            };
+            const count: {
+              service_operation_latencies: number;
+              service_operation_call_rate: number;
+              service_operation_error_rate: number;
+            } = {
+              service_operation_latencies: 0,
+              service_operation_call_rate: 0,
+              service_operation_error_rate: 0,
+            };
+            metricDetails.labels.forEach((label: { name: string; value: string }) => {
+              if (label.name === 'operation') {
+                opsName = label.value;
               }
-
-              return {
-                x: new Date(p.timestamp).getTime(),
-                y,
-              };
             });
 
-            opsMetrics[opsName].metricPoints.avg[metric.name] =
-              count[metric.name] > 0 ? parseFloat((avg[metric.name] / count[metric.name]).toFixed(2)) : null;
-          }
-        });
+            if (opsName) {
+              if (opsMetrics[opsName] === undefined) {
+                opsMetrics[opsName] = {
+                  name: opsName,
+                  metricPoints: {
+                    service_operation_latencies: [],
+                    service_operation_call_rate: [],
+                    service_operation_error_rate: [],
+                    avg: {
+                      service_operation_latencies: null,
+                      service_operation_call_rate: null,
+                      service_operation_error_rate: null,
+                    },
+                  },
+                };
+              }
+
+              opsMetrics[opsName].metricPoints[metric.name] = metricDetails.metricPoints.map(p => {
+                let y;
+                try {
+                  y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
+                  avg[metric.name] += y;
+                  count[metric.name] += 1; // Increment count for non-NaN values
+                } catch (e) {
+                  y = null;
+                }
+
+                return {
+                  x: new Date(p.timestamp).getTime(),
+                  y,
+                };
+              });
+
+              opsMetrics[opsName].metricPoints.avg[metric.name] =
+                count[metric.name] > 0
+                  ? parseFloat((avg[metric.name] / count[metric.name]).toFixed(2))
+                  : null;
+            }
+          });
         }
       } else {
         switch (i) {
