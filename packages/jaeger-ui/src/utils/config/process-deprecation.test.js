@@ -115,4 +115,49 @@ describe('processDeprecation()', () => {
       });
     });
   });
+
+  describe('robustness against malformed inputs and unsafe paths', () => {
+    beforeEach(() => {
+      warnFn.mockClear();
+    });
+
+    it('does nothing and warns when config is null', () => {
+      processDeprecation(null, deprecation, true);
+      expect(warnFn).toHaveBeenCalled();
+      const msg = warnFn.mock.calls[0][0];
+      expect(msg).toMatch(/Skipping deprecated config processing/);
+    });
+
+    it('does nothing and warns when keys are invalid', () => {
+      const cfg = { former: { key: 1 } };
+      processDeprecation(cfg, { formerKey: '', currentKey: '' }, true);
+      expect(cfg.former.key).toBe(1);
+      expect(warnFn).toHaveBeenCalled();
+      const msg = warnFn.mock.calls[0][0];
+      expect(msg).toMatch(/formerKey must be a non-empty string/);
+      expect(msg).toMatch(/currentKey must be a non-empty string/);
+    });
+
+    it('skips dangerous path segments like __proto__ and warns', () => {
+      const cfg = { former: { key: 1 } };
+      processDeprecation(cfg, { formerKey: 'former.key', currentKey: '__proto__.polluted' }, true);
+      // Value isn't moved and former remains since operation is skipped before action
+      expect(cfg.former.key).toBe(1);
+      expect(warnFn).toHaveBeenCalled();
+      const msg = warnFn.mock.calls[0][0];
+      expect(msg).toMatch(/contains a dangerous path segment/);
+    });
+
+    it('does not overwrite non-object intermediates when creating nested paths', () => {
+      const cfg = { former: { key: 5 }, current: 'not-an-object' };
+      processDeprecation(cfg, deprecation, true);
+      // Should not mutate current nor delete former due to safety checks
+      expect(cfg.current).toBe('not-an-object');
+      expect(cfg.former.key).toBe(5);
+      expect(warnFn).toHaveBeenCalled();
+      const allMsgs = warnFn.mock.calls.map(c => c[0]).join('\n');
+      expect(allMsgs).toMatch(/cannot safely create nested path/);
+      expect(allMsgs).toMatch(/was left unchanged due to safety checks/);
+    });
+  });
 });
