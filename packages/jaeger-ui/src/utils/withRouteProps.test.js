@@ -16,33 +16,35 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { MemoryRouter, Route } from 'react-router-dom';
 import withRouteProps from './withRouteProps';
-import { useHistory, HistoryProvider } from './useHistory';
 
-jest.mock('./useHistory', () => ({
-  useHistory: jest.fn(),
-  HistoryProvider: ({ children }) => <div>{children}</div>,
+jest.mock('./configure-store', () => ({
+  history: {
+    push: jest.fn(),
+    replace: jest.fn(),
+    go: jest.fn(),
+    goBack: jest.fn(),
+    goForward: jest.fn(),
+    block: jest.fn(),
+    listen: jest.fn(),
+    createHref: jest.fn(),
+    action: 'POP',
+    length: 1,
+    location: { pathname: '/test', search: '?param=value' },
+  },
+  store: {},
 }));
 
 describe('withRouteProps', () => {
   test('passes route props to WrappedComponent', () => {
-    const mockHistory = {
-      push: jest.fn(),
-      replace: jest.fn(),
-      location: { pathname: '/test', search: '?param=value' },
-    };
-
-    useHistory.mockReturnValue(mockHistory);
-
+    const { history: mockHistory } = require('./configure-store');
     const WrappedComponent = jest.fn(() => null);
     const ComponentWithRouteProps = withRouteProps(WrappedComponent);
     render(
-      <HistoryProvider history={mockHistory}>
-        <MemoryRouter initialEntries={['/test?param=value']}>
-          <Route path="/test">
-            <ComponentWithRouteProps />
-          </Route>
-        </MemoryRouter>
-      </HistoryProvider>
+      <MemoryRouter initialEntries={['/test?param=value']}>
+        <Route path="/test">
+          <ComponentWithRouteProps />
+        </Route>
+      </MemoryRouter>
     );
 
     const [wrappedProps] = WrappedComponent.mock.calls[0];
@@ -51,8 +53,6 @@ describe('withRouteProps', () => {
         location: expect.objectContaining({
           pathname: '/test',
           search: '?param=value',
-          hash: '',
-          state: undefined,
         }),
         pathname: '/test',
         search: '?param=value',
