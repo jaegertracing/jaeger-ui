@@ -72,11 +72,6 @@ export default function withRouteProps(WrappedComponent: React.ElementType) {
     const { search } = location;
 
     /**
-     * The history object for navigation.
-     * @type {History}
-     */
-
-    /**
      * Renders the enhanced component with route-related props.
      * @returns {React.Component} The enhanced component with additional route-related props.
      */
