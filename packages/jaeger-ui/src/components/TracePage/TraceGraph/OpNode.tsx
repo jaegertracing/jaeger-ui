@@ -64,65 +64,73 @@ export function round2(percent: number) {
   return Math.round(percent * 100) / 100;
 }
 
-export default class OpNode extends React.PureComponent<Props> {
-  render() {
-    const { count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode } = this.props;
-
-    // Spans over 20 % time are full red - we have probably to reconsider better approach
-    let backgroundColor;
-    if (mode === MODE_TIME) {
-      const percentBoosted = Math.min(percent / 20, 1);
-      backgroundColor = [255, 0, 0, percentBoosted].join();
-    } else if (mode === MODE_SELFTIME) {
-      backgroundColor = [255, 0, 0, percentSelfTime / 100].join();
-    } else {
-      backgroundColor = colorGenerator.getRgbColorByKey(service).concat(0.8).join();
-    }
-
-    const table = (
-      <table className={`OpNode OpNode--mode-${mode}`} cellSpacing="0">
-        <tbody
-          className="OpNode--body"
-          style={{
-            background: `rgba(${backgroundColor})`,
-          }}
-        >
-          <tr>
-            <td className="OpNode--metricCell OpNode--count">
-              {count} / {errors}
-            </td>
-            <td className="OpNode--labelCell OpNode--service">
-              <strong>{service}</strong>
-              <CopyIcon
-                className="OpNode--copyIcon"
-                copyText={`${service} ${operation}`}
-                tooltipTitle="Copy label"
-                buttonText="Copy"
-              />
-            </td>
-            <td className="OpNode--metricCell OpNode--avg">{round2(time / 1000 / count)} ms</td>
-          </tr>
-          <tr>
-            <td className="OpNode--metricCell OpNode--time">
-              {time / 1000} ms ({round2(percent)} %)
-            </td>
-            <td className="OpNode--labelCell OpNode--op">{operation}</td>
-            <td className="OpNode--metricCell OpNode--selfTime">
-              {selfTime / 1000} ms ({round2(percentSelfTime)} %)
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    );
-    const popoverContent = <div className="OpNode--popoverContent">{table}</div>;
-
-    return (
-      <Popover classNames={{ root: 'OpNode--popover' }} mouseEnterDelay={0.25} content={popoverContent}>
-        {table}
-      </Popover>
-    );
+const OpNode: React.FC<Props> = ({
+  count,
+  errors,
+  time,
+  percent,
+  selfTime,
+  percentSelfTime,
+  operation,
+  service,
+  mode,
+}) => {
+  // Spans over 20 % time are full red - we have probably to reconsider better approach
+  let backgroundColor;
+  if (mode === MODE_TIME) {
+    const percentBoosted = Math.min(percent / 20, 1);
+    backgroundColor = [255, 0, 0, percentBoosted].join();
+  } else if (mode === MODE_SELFTIME) {
+    backgroundColor = [255, 0, 0, percentSelfTime / 100].join();
+  } else {
+    backgroundColor = colorGenerator.getRgbColorByKey(service).concat(0.8).join();
   }
-}
+
+  const table = (
+    <table className={`OpNode OpNode--mode-${mode}`} cellSpacing="0">
+      <tbody
+        className="OpNode--body"
+        style={{
+          background: `rgba(${backgroundColor})`,
+        }}
+      >
+        <tr>
+          <td className="OpNode--metricCell OpNode--count">
+            {count} / {errors}
+          </td>
+          <td className="OpNode--labelCell OpNode--service">
+            <strong>{service}</strong>
+            <CopyIcon
+              className="OpNode--copyIcon"
+              copyText={`${service} ${operation}`}
+              tooltipTitle="Copy label"
+              buttonText="Copy"
+            />
+          </td>
+          <td className="OpNode--metricCell OpNode--avg">{round2(time / 1000 / count)} ms</td>
+        </tr>
+        <tr>
+          <td className="OpNode--metricCell OpNode--time">
+            {time / 1000} ms ({round2(percent)} %)
+          </td>
+          <td className="OpNode--labelCell OpNode--op">{operation}</td>
+          <td className="OpNode--metricCell OpNode--selfTime">
+            {selfTime / 1000} ms ({round2(percentSelfTime)} %)
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  );
+  const popoverContent = <div className="OpNode--popoverContent">{table}</div>;
+
+  return (
+    <Popover classNames={{ root: 'OpNode--popover' }} mouseEnterDelay={0.25} content={popoverContent}>
+      {table}
+    </Popover>
+  );
+};
+
+export default OpNode;
 
 export function getNodeRenderer(mode: string) {
   return function drawNode(vertex: TDagPlexusVertex<TSumSpan & TDenseSpanMembers>) {
