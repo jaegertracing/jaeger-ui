@@ -39,7 +39,7 @@ type TProps = TDispatchProps & {
   showChildrenIcon?: boolean;
 };
 
-const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
+export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   childrenVisible = false,
   onClick = undefined,
   showChildrenIcon = true,
