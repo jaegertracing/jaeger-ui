@@ -23,6 +23,7 @@ import readJsonFile from '../../../utils/readJsonFile';
 import { getUrl } from '../url';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
+import DiffSelection from './DiffSelection';
 
 jest.mock('./AltViewOptions', () =>
   jest.fn(({ onDdgViewClicked }) => (
@@ -135,13 +136,18 @@ describe('<SearchResults>', () => {
   it('adds or removes trace from cohort based on flag', () => {
     const add = jest.fn();
     const remove = jest.fn();
-    const instance = new SearchResults({
-      ...baseProps,
-      cohortAddTrace: add,
-      cohortRemoveTrace: remove,
-    });
-    instance.toggleComparison('id-1');
-    instance.toggleComparison('id-2', true);
+    render(
+      <SearchResults
+        {...baseProps}
+        cohortAddTrace={add}
+        cohortRemoveTrace={remove}
+        diffCohort={[{ id: 'existing' }]}
+      />
+    );
+    const diffSelectionProps = DiffSelection.mock.calls[0][0];
+    const toggleComparison = diffSelectionProps.toggleComparison;
+    toggleComparison('id-1');
+    toggleComparison('id-2', true);
     expect(add).toHaveBeenCalledWith('id-1');
     expect(remove).toHaveBeenCalledWith('id-2');
   });
