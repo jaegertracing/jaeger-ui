@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import { createBlob, UnconnectedSearchResults as SearchResults, SelectSort } from '.';
@@ -52,6 +53,8 @@ jest.mock('./DownloadResults', () =>
 jest.mock('../../DeepDependencies/traces', () => jest.fn(() => <div data-testid="ddg" />));
 
 jest.mock('../../common/LoadingIndicator', () => jest.fn(() => <div data-testid="loading" />));
+
+jest.mock('../../common/NewWindowIcon', () => jest.fn(() => <span data-testid="new-window-icon" />));
 
 jest.mock('../../common/SearchableSelect', () => {
   const mockReact = jest.requireActual('react');
@@ -107,6 +110,12 @@ const baseProps = {
 describe('<SearchResults>', () => {
   it('shows the "no results" message when the search result is empty', () => {
     render(<SearchResults {...baseProps} traces={[]} />);
+    expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
+  });
+
+  it('uses default skipMessage value when not provided', () => {
+    const { skipMessage, ...propsWithoutSkipMessage } = baseProps;
+    render(<SearchResults {...propsWithoutSkipMessage} traces={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
   });
 
@@ -390,6 +399,29 @@ describe('<SearchResults>', () => {
         const { rerender } = render(<SelectSort sortBy={orderBy.MOST_RECENT} handleSortChange={() => {}} />);
         rerender(<SelectSort sortBy={orderBy.SHORTEST_FIRST} handleSortChange={() => {}} />);
         expect(screen.getByTestId('searchable-select')).toHaveValue(orderBy.SHORTEST_FIRST);
+      });
+    });
+
+    describe('showStandaloneLink', () => {
+      it('renders Link when showStandaloneLink is true', () => {
+        render(
+          <MemoryRouter>
+            <SearchResults {...baseProps} showStandaloneLink />
+          </MemoryRouter>
+        );
+        const link = screen.getByRole('link');
+        expect(link).toBeInTheDocument();
+        expect(screen.getByTestId('new-window-icon')).toBeInTheDocument();
+      });
+
+      it('does not render Link when showStandaloneLink is false', () => {
+        render(
+          <MemoryRouter>
+            <SearchResults {...baseProps} showStandaloneLink={false} />
+          </MemoryRouter>
+        );
+        expect(screen.queryByRole('link')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
       });
     });
   });
