@@ -17,6 +17,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import SpanBarRow from './SpanBarRow';
+import SpanBar from './SpanBar';
 
 jest.mock('./SpanTreeOffset', () => ({
   __esModule: true,
@@ -46,6 +47,11 @@ jest.mock('./SpanBar', () => ({
   default: jest.fn(() => <div data-testid="span-bar">SpanBar</div>),
 }));
 
+jest.mock('./utils', () => ({
+  formatDuration: jest.fn(d => `formatted-${d}`),
+  ViewedBoundsFunctionType: {},
+}));
+
 describe('<SpanBarRow>', () => {
   const spanID = 'some-id';
   const defaultProps = {
@@ -69,7 +75,7 @@ describe('<SpanBarRow>', () => {
     showErrorIcon: false,
     getViewedBounds: jest.fn().mockReturnValue({ start: 0.5, end: 0.6 }),
     span: {
-      duration: 'test-duration',
+      duration: 100,
       hasChildren: true,
       operationName: 'op-name',
       process: {
@@ -151,5 +157,80 @@ describe('<SpanBarRow>', () => {
     const btn = screen.getByTestId('references-button');
     expect(btn).toBeVisible();
     expect(btn).toHaveAttribute('data-tooltip', 'This span is referenced by multiple other spans');
+  });
+
+  it('renders with noInstrumentedServer', () => {
+    const props = {
+      ...defaultProps,
+      rpc: null,
+      noInstrumentedServer: {
+        color: 'color-c',
+        serviceName: 'no-instrumented-service',
+      },
+    };
+    render(<SpanBarRow {...props} />);
+    expect(screen.getByText('no-instrumented-service')).toBeVisible();
+  });
+
+  it('renders with error icon when showErrorIcon is true', () => {
+    const props = {
+      ...defaultProps,
+      showErrorIcon: true,
+    };
+    render(<SpanBarRow {...props} />);
+    expect(document.querySelector('.SpanBarRow--errorIcon')).toBeInTheDocument();
+  });
+
+  it('applies is-detail-expanded class when isDetailExpanded is true', () => {
+    const props = {
+      ...defaultProps,
+      isDetailExpanded: true,
+    };
+    render(<SpanBarRow {...props} />);
+    const link = screen.getByRole('switch');
+    expect(link).toHaveClass('span-name', 'is-detail-expanded');
+  });
+
+  it('applies is-matching-filter classes when isMatchingFilter is true', () => {
+    const props = {
+      ...defaultProps,
+      isMatchingFilter: true,
+    };
+    render(<SpanBarRow {...props} />);
+    const row = screen.getByTestId('span-bar').closest('.span-row');
+    expect(row).toHaveClass('is-matching-filter');
+    const wrapper = screen.getByTestId('span-tree-offset').parentElement;
+    expect(wrapper).toHaveClass('span-name-wrapper', 'is-matching-filter');
+  });
+
+  it('applies is-children-collapsed class when isParent is true and isChildrenExpanded is false', () => {
+    const props = {
+      ...defaultProps,
+      isChildrenExpanded: false,
+    };
+    render(<SpanBarRow {...props} />);
+    const svcName = screen.getByText('service-name').closest('.span-svc-name');
+    expect(svcName).toHaveClass('span-svc-name', 'is-children-collapsed');
+  });
+
+  it('sets longLabel and hintSide to right when viewStart <= 1 - viewEnd', () => {
+    const getViewedBounds = jest.fn().mockReturnValue({ start: 0.2, end: 0.3 });
+    const props = {
+      ...defaultProps,
+      getViewedBounds,
+      span: {
+        ...defaultProps.span,
+        startTime: 100,
+        duration: 50,
+      },
+    };
+    render(<SpanBarRow {...props} />);
+    expect(SpanBar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        longLabel: 'formatted-50 | service-name::op-name',
+        hintSide: 'right',
+      }),
+      undefined
+    );
   });
 });
