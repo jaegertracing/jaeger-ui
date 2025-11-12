@@ -147,7 +147,6 @@ export class SearchTracePageImpl extends Component {
               cohortRemoveTrace={cohortRemoveTrace}
               diffCohort={diffCohort}
               disableComparisons={embedded}
-              goToTrace={this.goToTrace}
               hideGraph={embedded && embedded.searchHideGraph}
               loading={loadingTraces}
               maxTraceDuration={maxTraceDuration}

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
+import { CompatRouter } from 'react-router-dom-v5-compat';
 
 jest.mock('store');
 
@@ -32,7 +33,9 @@ import { store as globalStore } from '../../utils/configure-store';
 const AllProvider = ({ children }) => (
   <BrowserRouter>
     <Provider store={globalStore}>
-      <MemoryRouter>{children}</MemoryRouter>
+      <MemoryRouter>
+        <CompatRouter>{children}</CompatRouter>
+      </MemoryRouter>
     </Provider>
   </BrowserRouter>
 );
@@ -89,9 +92,9 @@ describe('<SearchTracePage>', () => {
     const oldFn = store.get;
     store.get = jest.fn(() => ({ service: 'svc-b' }));
     wrapper = render(
-      <MemoryRouter>
+      <AllProvider>
         <SearchTracePage {...{ ...props, urlQueryParams: {} }} />
-      </MemoryRouter>
+      </AllProvider>
     );
     expect(props.fetchServices).toHaveBeenCalledTimes(1);
     expect(props.fetchServiceOperations).toHaveBeenCalledTimes(1);
@@ -105,9 +108,9 @@ describe('<SearchTracePage>', () => {
     const oldFn = store.get;
     store.get = jest.fn(() => ({ service: 'svc-b' }));
     wrapper = render(
-      <MemoryRouter>
+      <AllProvider>
         <SearchTracePage {...props} />
-      </MemoryRouter>
+      </AllProvider>
     );
     expect(props.fetchServices).toHaveBeenCalledTimes(1);
     expect(props.fetchServiceOperations).toHaveBeenCalledTimes(1);
