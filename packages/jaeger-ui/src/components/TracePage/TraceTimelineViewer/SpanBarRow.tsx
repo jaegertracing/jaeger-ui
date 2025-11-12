@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as React from 'react';
+import React, { useCallback } from 'react';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
@@ -88,13 +88,13 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   onDetailToggled,
   onChildrenToggled,
 }) => {
-  const _detailToggle = () => {
+  const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
-  };
+  }, [onDetailToggled, span.spanID]);
 
-  const _childrenToggle = () => {
+  const _childrenToggle = useCallback(() => {
     onChildrenToggled(span.spanID);
-  };
+  }, [onChildrenToggled, span.spanID]);
 
   const {
     duration,
@@ -215,4 +215,4 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   );
 };
 
-export default SpanBarRow;
+export default React.memo(SpanBarRow);
