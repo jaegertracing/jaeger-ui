@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import cx from 'classnames';
 import _get from 'lodash/get';
 import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
@@ -39,25 +39,23 @@ type TProps = TDispatchProps & {
   showChildrenIcon?: boolean;
 };
 
-export class UnconnectedSpanTreeOffset extends React.PureComponent<TProps> {
-  ancestorIds: string[];
-
-  static defaultProps = {
-    childrenVisible: false,
-    onClick: undefined,
-    showChildrenIcon: true,
-  };
-
-  constructor(props: TProps) {
-    super(props);
-
-    this.ancestorIds = spanAncestorIds(props.span);
+export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
+  childrenVisible = false,
+  onClick = undefined,
+  showChildrenIcon = true,
+  span,
+  hoverIndentGuideIds,
+  addHoverIndentGuideId,
+  removeHoverIndentGuideId,
+}) => {
+  const ancestorIds = useMemo(() => {
+    const ids = spanAncestorIds(span);
     // Some traces have multiple root-level spans, this connects them all under one guideline and adds the
     // necessary padding for the collapse icon on root-level spans.
-    this.ancestorIds.push('root');
-
-    this.ancestorIds.reverse();
-  }
+    ids.push('root');
+    ids.reverse();
+    return ids;
+  }, [span]);
 
   /**
    * If the mouse leaves to anywhere except another span with the same ancestor id, this span's ancestor id is
@@ -67,12 +65,12 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<TProps> {
    *     the element the user is now hovering.
    * @param {string} ancestorId - The span id that the user was hovering over.
    */
-  handleMouseLeave = (event: React.MouseEvent<HTMLSpanElement>, ancestorId: string) => {
+  const handleMouseLeave = (event: React.MouseEvent<HTMLSpanElement>, ancestorId: string) => {
     if (
       !(event.relatedTarget instanceof HTMLSpanElement) ||
       _get(event, 'relatedTarget.dataset.ancestorId') !== ancestorId
     ) {
-      this.props.removeHoverIndentGuideId(ancestorId);
+      removeHoverIndentGuideId(ancestorId);
     }
   };
 
@@ -84,49 +82,46 @@ export class UnconnectedSpanTreeOffset extends React.PureComponent<TProps> {
    *     the last element the user was hovering.
    * @param {string} ancestorId - The span id that the user is now hovering over.
    */
-  handleMouseEnter = (event: React.MouseEvent<HTMLSpanElement>, ancestorId: string) => {
+  const handleMouseEnter = (event: React.MouseEvent<HTMLSpanElement>, ancestorId: string) => {
     if (
       !(event.relatedTarget instanceof HTMLSpanElement) ||
       _get(event, 'relatedTarget.dataset.ancestorId') !== ancestorId
     ) {
-      this.props.addHoverIndentGuideId(ancestorId);
+      addHoverIndentGuideId(ancestorId);
     }
   };
 
-  render() {
-    const { childrenVisible, onClick, showChildrenIcon, span } = this.props;
-    const { hasChildren, spanID } = span;
-    const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
-    const icon =
-      showChildrenIcon && hasChildren && (childrenVisible ? <IoChevronDown /> : <IoChevronForward />);
-    return (
-      <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
-        {this.ancestorIds.map(ancestorId => (
-          <span
-            key={ancestorId}
-            className={cx('SpanTreeOffset--indentGuide', {
-              'is-active': this.props.hoverIndentGuideIds.has(ancestorId),
-            })}
-            data-ancestor-id={ancestorId}
-            data-testid={`indent-guide-${ancestorId}`}
-            onMouseEnter={event => this.handleMouseEnter(event, ancestorId)}
-            onMouseLeave={event => this.handleMouseLeave(event, ancestorId)}
-          />
-        ))}
-        {icon && (
-          <span
-            className="SpanTreeOffset--iconWrapper"
-            data-testid="icon-wrapper"
-            onMouseEnter={event => this.handleMouseEnter(event, spanID)}
-            onMouseLeave={event => this.handleMouseLeave(event, spanID)}
-          >
-            {icon}
-          </span>
-        )}
-      </span>
-    );
-  }
-}
+  const { hasChildren, spanID } = span;
+  const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
+  const icon =
+    showChildrenIcon && hasChildren && (childrenVisible ? <IoChevronDown /> : <IoChevronForward />);
+  return (
+    <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
+      {ancestorIds.map(ancestorId => (
+        <span
+          key={ancestorId}
+          className={cx('SpanTreeOffset--indentGuide', {
+            'is-active': hoverIndentGuideIds.has(ancestorId),
+          })}
+          data-ancestor-id={ancestorId}
+          data-testid={`indent-guide-${ancestorId}`}
+          onMouseEnter={event => handleMouseEnter(event, ancestorId)}
+          onMouseLeave={event => handleMouseLeave(event, ancestorId)}
+        />
+      ))}
+      {icon && (
+        <span
+          className="SpanTreeOffset--iconWrapper"
+          data-testid="icon-wrapper"
+          onMouseEnter={event => handleMouseEnter(event, spanID)}
+          onMouseLeave={event => handleMouseLeave(event, spanID)}
+        >
+          {icon}
+        </span>
+      )}
+    </span>
+  );
+};
 
 export function mapStateToProps(state: ReduxState): { hoverIndentGuideIds: Set<string> } {
   const { hoverIndentGuideIds } = state.traceTimeline;

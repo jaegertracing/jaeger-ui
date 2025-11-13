@@ -64,10 +64,8 @@ export function round2(percent: number) {
   return Math.round(percent * 100) / 100;
 }
 
-export default class OpNode extends React.PureComponent<Props> {
-  render() {
-    const { count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode } = this.props;
-
+const OpNode = React.memo<Props>(
+  ({ count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode }) => {
     // Spans over 20 % time are full red - we have probably to reconsider better approach
     let backgroundColor;
     if (mode === MODE_TIME) {
@@ -122,7 +120,9 @@ export default class OpNode extends React.PureComponent<Props> {
       </Popover>
     );
   }
-}
+);
+
+export default OpNode;
 
 export function getNodeRenderer(mode: string) {
   return function drawNode(vertex: TDagPlexusVertex<TSumSpan & TDenseSpanMembers>) {
