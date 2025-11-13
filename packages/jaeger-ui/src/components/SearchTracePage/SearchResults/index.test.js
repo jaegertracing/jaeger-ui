@@ -15,6 +15,7 @@
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { CompatRouter } from 'react-router-dom-v5-compat';
 import '@testing-library/jest-dom';
 
 import { createBlob, UnconnectedSearchResults as SearchResults, SelectSort } from '.';
@@ -25,6 +26,15 @@ import { getUrl } from '../url';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
 import DiffSelection from './DiffSelection';
+
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom-v5-compat', () => {
+  const actual = jest.requireActual('react-router-dom-v5-compat');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 jest.mock('./AltViewOptions', () =>
   jest.fn(({ onDdgViewClicked }) => (
@@ -91,9 +101,7 @@ const baseProps = {
   cohortRemoveTrace: jest.fn(),
   diffCohort: [],
   disableComparisons: false,
-  goToTrace: jest.fn(),
   hideGraph: false,
-  history: {},
   loading: false,
   location: { search: '' },
   maxTraceDuration: 1,
@@ -107,25 +115,37 @@ const baseProps = {
   handleSortChange: jest.fn(),
 };
 
+// to wrap component with Router context (for use in rerender)
+const withRouter = ui => (
+  <MemoryRouter>
+    <CompatRouter>{ui}</CompatRouter>
+  </MemoryRouter>
+);
+
+// function that automatically wraps with Router context
+const renderWithRouter = (ui, options = {}) => {
+  return render(withRouter(ui), options);
+};
+
 describe('<SearchResults>', () => {
   it('shows the "no results" message when the search result is empty', () => {
-    render(<SearchResults {...baseProps} traces={[]} />);
+    renderWithRouter(<SearchResults {...baseProps} traces={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
   });
 
   it('uses default skipMessage value when not provided', () => {
     const { skipMessage, ...propsWithoutSkipMessage } = baseProps;
-    render(<SearchResults {...propsWithoutSkipMessage} traces={[]} />);
+    renderWithRouter(<SearchResults {...propsWithoutSkipMessage} traces={[]} />);
     expect(screen.getByText(/No trace results\. Try another query\./i)).toBeInTheDocument();
   });
 
   it('shows a loading indicator if loading traces', () => {
-    render(<SearchResults {...baseProps} loading />);
+    renderWithRouter(<SearchResults {...baseProps} loading />);
     expect(screen.getByTestId('loading')).toBeInTheDocument();
   });
 
   it('hide scatter plot if queryparam hideGraph', () => {
-    const { rerender } = render(<SearchResults {...baseProps} hideGraph={false} />);
+    const { rerender } = renderWithRouter(<SearchResults {...baseProps} hideGraph={false} />);
     expect(screen.getByTestId('scatterplot')).toBeInTheDocument();
 
     rerender(<SearchResults {...baseProps} hideGraph />);
@@ -133,7 +153,7 @@ describe('<SearchResults>', () => {
   });
 
   it('hide DiffSelection when disableComparisons = true', () => {
-    const { rerender } = render(
+    const { rerender } = renderWithRouter(
       <SearchResults {...baseProps} disableComparisons={false} diffCohort={[{ id: 'a' }]} />
     );
     expect(screen.getByTestId('diffselection')).toBeInTheDocument();
@@ -145,7 +165,7 @@ describe('<SearchResults>', () => {
   it('adds or removes trace from cohort based on flag', () => {
     const add = jest.fn();
     const remove = jest.fn();
-    render(
+    renderWithRouter(
       <SearchResults
         {...baseProps}
         cohortAddTrace={add}
@@ -178,26 +198,27 @@ describe('<SearchResults>', () => {
         ],
       },
     ];
-    render(<SearchResults {...baseProps} traces={errorTrace} />);
+    renderWithRouter(<SearchResults {...baseProps} traces={errorTrace} />);
     const scatterProps = ScatterPlot.mock.calls[0][0];
     expect(scatterProps.data[0].color).toBe('red');
   });
 
   it('renders DiffSelection when diffCohort is provided', () => {
-    render(<SearchResults {...baseProps} diffCohort={[{ id: 'id-1' }]} />);
+    renderWithRouter(<SearchResults {...baseProps} diffCohort={[{ id: 'id-1' }]} />);
     expect(screen.getByTestId('diffselection')).toBeInTheDocument();
   });
 
-  it('calls goToTrace when a ScatterPlot point is clicked', () => {
-    const goTo = jest.fn();
-    render(<SearchResults {...baseProps} goToTrace={goTo} />);
+  it('calls navigate when a ScatterPlot point is clicked', () => {
+    renderWithRouter(<SearchResults {...baseProps} />);
     const scatterProps = ScatterPlot.mock.calls[0][0];
     scatterProps.onValueClick({ traceID: 'a' });
-    expect(goTo).toHaveBeenCalledWith('a');
+    expect(mockNavigate).toHaveBeenCalled();
+    const navigateCall = mockNavigate.mock.calls[0];
+    expect(navigateCall[0]).toContain('/trace/a');
   });
 
   it('handles trace with no spans', () => {
-    render(
+    renderWithRouter(
       <SearchResults
         {...baseProps}
         traces={[
@@ -218,7 +239,7 @@ describe('<SearchResults>', () => {
   });
 
   it('handles trace with no services property', () => {
-    render(
+    renderWithRouter(
       <SearchResults
         {...baseProps}
         traces={[
@@ -246,19 +267,18 @@ describe('<SearchResults>', () => {
 
   describe('search finished with results', () => {
     it('shows a scatter plot', () => {
-      render(<SearchResults {...baseProps} />);
+      renderWithRouter(<SearchResults {...baseProps} />);
       expect(screen.getByTestId('scatterplot')).toBeInTheDocument();
     });
 
     it('shows a result entry for each trace', () => {
-      render(<SearchResults {...baseProps} />);
+      renderWithRouter(<SearchResults {...baseProps} />);
       expect(ResultItem.mock.calls).toHaveLength(baseTraces.length);
     });
 
     it('deep links traces', () => {
-      const uiFind = 'ui-find';
       const spanLinks = { [baseTraces[0].traceID]: 'foobar' };
-      render(<SearchResults {...baseProps} spanLinks={spanLinks} />);
+      renderWithRouter(<SearchResults {...baseProps} spanLinks={spanLinks} />);
       const [first, second] = ResultItem.mock.calls;
       expect(first[0].linkTo.search).toBe('uiFind=foobar');
       expect(second[0].linkTo.search).toBeUndefined();
@@ -277,7 +297,7 @@ describe('<SearchResults>', () => {
         { traceID: traceID0, spans: [], processes: {} },
         { traceID: `000${traceID1}`, spans: [], processes: {} },
       ];
-      render(<SearchResults {...baseProps} traces={zeroIDTraces} spanLinks={spanLinks} />);
+      renderWithRouter(<SearchResults {...baseProps} traces={zeroIDTraces} spanLinks={spanLinks} />);
       const calls = ResultItem.mock.calls;
       expect(calls[0][0].linkTo.search).toBe(`uiFind=${uiFind0}`);
       expect(calls[1][0].linkTo.search).toBe(`uiFind=${uiFind1}`);
@@ -295,46 +315,48 @@ describe('<SearchResults>', () => {
       });
 
       it('updates url to view ddg and back and back again - and tracks changes', () => {
-        const push = jest.fn();
-        const { rerender } = render(
-          <SearchResults {...baseProps} history={{ push }} location={{ search: otherSearch }} />
+        const { rerender } = renderWithRouter(
+          <SearchResults {...baseProps} location={{ search: otherSearch }} />
         );
 
         fireEvent.click(screen.getByTestId('alt-toggle'));
-        expect(push).toHaveBeenLastCalledWith(getUrl({ [otherParam]: otherValue, [searchParam]: 'ddg' }));
+        expect(mockNavigate).toHaveBeenLastCalledWith(
+          getUrl({ [otherParam]: otherValue, [searchParam]: 'ddg' })
+        );
         expect(spy).toHaveBeenLastCalledWith('ddg');
 
         rerender(
-          <SearchResults
-            {...baseProps}
-            history={{ push }}
-            location={{ search: `${otherSearch}&${searchParam}=ddg` }}
-          />
+          withRouter(
+            <SearchResults {...baseProps} location={{ search: `${otherSearch}&${searchParam}=ddg` }} />
+          )
         );
         fireEvent.click(screen.getByTestId('alt-toggle'));
-        expect(push).toHaveBeenLastCalledWith(getUrl({ [otherParam]: otherValue, [searchParam]: 'traces' }));
+        expect(mockNavigate).toHaveBeenLastCalledWith(
+          getUrl({ [otherParam]: otherValue, [searchParam]: 'traces' })
+        );
         expect(spy).toHaveBeenLastCalledWith('traces');
 
+        mockNavigate.mockClear();
         rerender(
-          <SearchResults
-            {...baseProps}
-            history={{ push }}
-            location={{ search: `${otherSearch}&${searchParam}=traces` }}
-          />
+          withRouter(
+            <SearchResults {...baseProps} location={{ search: `${otherSearch}&${searchParam}=traces` }} />
+          )
         );
         fireEvent.click(screen.getByTestId('alt-toggle'));
-        expect(push).toHaveBeenLastCalledWith(getUrl({ [otherParam]: otherValue, [searchParam]: 'ddg' }));
+        expect(mockNavigate).toHaveBeenLastCalledWith(
+          getUrl({ [otherParam]: otherValue, [searchParam]: 'ddg' })
+        );
         expect(spy).toHaveBeenLastCalledWith('ddg');
       });
 
       it('shows ddg instead of scatterplot and results', () => {
-        const { rerender } = render(<SearchResults {...baseProps} />);
+        const { rerender } = renderWithRouter(<SearchResults {...baseProps} />);
         expect(screen.queryByTestId('ddg')).not.toBeInTheDocument();
         expect(ResultItem.mock.calls).toHaveLength(baseTraces.length);
         expect(screen.queryByTestId('scatterplot')).toBeInTheDocument();
 
         ResultItem.mockClear();
-        rerender(<SearchResults {...baseProps} location={{ search: '?view=ddg' }} />);
+        rerender(withRouter(<SearchResults {...baseProps} location={{ search: '?view=ddg' }} />));
         expect(screen.getByTestId('ddg')).toBeInTheDocument();
         expect(ResultItem).not.toHaveBeenCalled();
         expect(screen.queryByTestId('scatterplot')).not.toBeInTheDocument();
@@ -343,15 +365,17 @@ describe('<SearchResults>', () => {
 
     describe('DownloadResults', () => {
       it('shows DownloadResults when view is not ddg', () => {
-        render(<SearchResults {...baseProps} location={{ search: '?view=traces' }} />);
+        renderWithRouter(<SearchResults {...baseProps} location={{ search: '?view=traces' }} />);
         expect(screen.getByTestId('download')).toBeInTheDocument();
       });
 
       it('does not show DownloadResults when view is ddg', () => {
-        const { rerender } = render(<SearchResults {...baseProps} location={{ search: '?view=traces' }} />);
+        const { rerender } = renderWithRouter(
+          <SearchResults {...baseProps} location={{ search: '?view=traces' }} />
+        );
         expect(screen.getByTestId('download')).toBeInTheDocument();
 
-        rerender(<SearchResults {...baseProps} location={{ search: '?view=ddg' }} />);
+        rerender(withRouter(<SearchResults {...baseProps} location={{ search: '?view=ddg' }} />));
         expect(screen.queryByTestId('download')).not.toBeInTheDocument();
       });
 
@@ -366,7 +390,7 @@ describe('<SearchResults>', () => {
         URL.createObjectURL = jest.fn(() => 'blob://url');
         URL.revokeObjectURL = jest.fn();
 
-        render(<SearchResults {...baseProps} location={{ search: '?view=traces' }} />);
+        renderWithRouter(<SearchResults {...baseProps} location={{ search: '?view=traces' }} />);
         fireEvent.click(screen.getByTestId('download'));
 
         expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
@@ -404,22 +428,14 @@ describe('<SearchResults>', () => {
 
     describe('showStandaloneLink', () => {
       it('renders Link when showStandaloneLink is true', () => {
-        render(
-          <MemoryRouter>
-            <SearchResults {...baseProps} showStandaloneLink />
-          </MemoryRouter>
-        );
+        renderWithRouter(<SearchResults {...baseProps} showStandaloneLink />);
         const link = screen.getByRole('link');
         expect(link).toBeInTheDocument();
         expect(screen.getByTestId('new-window-icon')).toBeInTheDocument();
       });
 
       it('does not render Link when showStandaloneLink is false', () => {
-        render(
-          <MemoryRouter>
-            <SearchResults {...baseProps} showStandaloneLink={false} />
-          </MemoryRouter>
-        );
+        renderWithRouter(<SearchResults {...baseProps} showStandaloneLink={false} />);
         expect(screen.queryByRole('link')).not.toBeInTheDocument();
         expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
       });

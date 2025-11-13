@@ -17,8 +17,8 @@
 import * as React from 'react';
 import { useCallback } from 'react';
 import { Select } from 'antd';
-import { History as RouterHistory, Location } from 'history';
 import { Link } from 'react-router-dom';
+import { Location, useNavigate } from 'react-router-dom-v5-compat';
 import queryString from 'query-string';
 
 import AltViewOptions from './AltViewOptions';
@@ -52,9 +52,7 @@ type SearchResultsProps = {
   cohortRemoveTrace: (traceId: string) => void;
   diffCohort: FetchedTrace[];
   disableComparisons: boolean;
-  goToTrace: (traceId: string) => void;
   hideGraph: boolean;
-  history: RouterHistory;
   loading: boolean;
   location: Location;
   maxTraceDuration: number;
@@ -101,9 +99,7 @@ export function createBlob(rawTraces: TraceData[]) {
 export function UnconnectedSearchResults({
   diffCohort,
   disableComparisons,
-  goToTrace,
   hideGraph,
-  history,
   loading,
   location,
   maxTraceDuration,
@@ -118,6 +114,8 @@ export function UnconnectedSearchResults({
   cohortAddTrace,
   cohortRemoveTrace,
 }: SearchResultsProps) {
+  const navigate = useNavigate();
+
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
       if (remove) {
@@ -129,12 +127,23 @@ export function UnconnectedSearchResults({
     [cohortAddTrace, cohortRemoveTrace]
   );
 
+  const goToTrace = useCallback(
+    (traceID: string) => {
+      const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
+      const locationObj = getLocation(traceID, { fromSearch: searchUrl });
+      navigate(locationObj.pathname + (locationObj.search ? `?${locationObj.search}` : ''), {
+        state: locationObj.state,
+      });
+    },
+    [queryOfResults, navigate]
+  );
+
   const onDdgViewClicked = useCallback(() => {
     const urlState = queryString.parse(location.search);
     const view = urlState.view && urlState.view === 'ddg' ? EAltViewActions.Traces : EAltViewActions.Ddg;
     trackAltView(view);
-    history.push(getUrl({ ...urlState, view }));
-  }, [location, history]);
+    navigate(getUrl({ ...urlState, view }));
+  }, [location, navigate]);
 
   const onDownloadResultsClicked = useCallback(() => {
     const file = createBlob(rawTraces);
