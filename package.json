@@ -77,6 +77,7 @@
     ]
   },
   "dependencies": {
-    "@tanstack/react-virtual": "^3.13.12"
+    "@tanstack/react-virtual": "^3.13.12",
+    "react-side-effect": "^2.1.2"
   }
 }
