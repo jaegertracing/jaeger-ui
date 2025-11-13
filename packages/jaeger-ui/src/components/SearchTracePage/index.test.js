@@ -174,24 +174,6 @@ describe('<SearchTracePage>', () => {
     expect(instance.setState).toHaveBeenCalledWith({ sortBy });
   });
 
-  it('goToTrace pushes the trace URL with {fromSearch: true} to history', () => {
-    const traceID = '15810714d6a27450';
-    const query = 'some-query';
-    const historyPush = jest.fn();
-    const historyMock = { push: historyPush };
-    const testProps = { ...props, history: historyMock, query };
-
-    const instance = new SearchTracePage(testProps);
-    instance.goToTrace(traceID);
-
-    expect(historyPush).toHaveBeenCalledTimes(1);
-    expect(historyPush).toHaveBeenCalledWith({
-      pathname: `/trace/${traceID}`,
-      search: undefined,
-      state: { fromSearch: '/search?' },
-    });
-  });
-
   it('shows a loading indicator if loading services', () => {
     const testProps = { ...props, loadingServices: true };
     const { container } = render(

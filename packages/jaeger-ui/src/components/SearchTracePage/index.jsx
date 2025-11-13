@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { Col, Row, Tabs } from 'antd';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -22,17 +22,15 @@ import memoizeOne from 'memoize-one';
 
 import SearchForm from './SearchForm';
 import SearchResults from './SearchResults';
-import { isSameQuery, getUrl, getUrlState } from './url';
+import { isSameQuery, getUrlState } from './url';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import * as fileReaderActions from '../../actions/file-reader-api';
 import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
-import { getLocation as getTraceLocation } from '../TracePage/url';
 import { actions as traceDiffActions } from '../TraceDiff/duck';
 import { fetchedState } from '../../constants';
 import { sortTraces } from '../../model/search';
-import { stripEmbeddedState } from '../../utils/embedded-url';
 import FileLoader from './FileLoader';
 
 import './index.css';
@@ -77,12 +75,6 @@ export class SearchTracePageImpl extends Component {
   handleSortChange = sortBy => {
     this.setState({ sortBy });
     trackSortByChange(sortBy);
-  };
-
-  goToTrace = traceID => {
-    const { queryOfResults } = this.props;
-    const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
-    this.props.history.push(getTraceLocation(traceID, { fromSearch: searchUrl }));
   };
 
   render() {
