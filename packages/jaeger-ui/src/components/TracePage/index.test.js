@@ -71,7 +71,6 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import { createMemoryHistory } from 'history';
-import sinon from 'sinon';
 
 import {
   makeShortcutCallbacks,
@@ -383,16 +382,16 @@ describe('<TracePage>', () => {
   });
 
   it('fetches the trace if necessary', () => {
-    const fetchTrace = sinon.spy();
+    const fetchTrace = jest.fn();
     render(<TracePage {...defaultProps} trace={null} fetchTrace={fetchTrace} />);
-    expect(fetchTrace.called).toBeTruthy();
-    expect(fetchTrace.calledWith(trace.traceID)).toBe(true);
+    expect(fetchTrace).toHaveBeenCalled();
+    expect(fetchTrace).toHaveBeenCalledWith(trace.traceID);
   });
 
   it("doesn't fetch the trace if already present", () => {
-    const fetchTrace = sinon.spy();
+    const fetchTrace = jest.fn();
     render(<TracePage {...defaultProps} fetchTrace={fetchTrace} />);
-    expect(fetchTrace.called).toBeFalsy();
+    expect(fetchTrace).not.toHaveBeenCalled();
   });
 
   it('resets the view range when the trace changes', () => {

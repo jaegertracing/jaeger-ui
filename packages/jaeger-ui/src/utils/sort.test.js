@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import sinon from 'sinon';
-
 import * as sortUtils from './sort';
 
 it('localeStringComparator() provides a case-insensitive sort', () => {
@@ -82,7 +80,7 @@ it('createSortClickHandler() should return a function', () => {
   const column = { name: 'alpha' };
   const currentSortKey = 'alpha';
   const currentSortDir = 1;
-  const updateSort = sinon.spy();
+  const updateSort = jest.fn();
 
   expect(typeof sortUtils.createSortClickHandler(column, currentSortKey, currentSortDir, updateSort)).toBe(
     'function'
@@ -94,16 +92,12 @@ it('createSortClickHandler() should call updateSort with the new sort vals', () 
   const prevSort = { key: 'alpha', dir: 1 };
   const currentSortKey = prevSort.key;
   const currentSortDir = prevSort.dir;
-  const updateSort = sinon.spy();
+  const updateSort = jest.fn();
 
   const clickHandler = sortUtils.createSortClickHandler(column, currentSortKey, currentSortDir, updateSort);
 
   clickHandler();
 
-  expect(
-    updateSort.calledWith(
-      sortUtils.getNewSortForClick(prevSort, column).key,
-      sortUtils.getNewSortForClick(prevSort, column).dir
-    )
-  ).toBeTruthy();
+  const newSort = sortUtils.getNewSortForClick(prevSort, column);
+  expect(updateSort).toHaveBeenCalledWith(newSort.key, newSort.dir);
 });
