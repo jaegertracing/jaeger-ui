@@ -33,7 +33,6 @@
     "jest-environment-jsdom": "^30.0.0",
     "jest-junit": "^16.0.0",
     "less": "4.4.0",
-    "rollup-plugin-visualizer": "^6.0.0",
     "terser": "^5.31.0",
     "vite": "^7",
     "vite-plugin-imp": "^2.4.0"
