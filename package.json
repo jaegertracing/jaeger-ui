@@ -9,7 +9,7 @@
     "url": "https://github.com/jaegertracing/jaeger-ui.git"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "devDependencies": {
     "@babel/cli": "7.28.0",
