@@ -9,6 +9,23 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v1.75.0 (2025-11-18)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Fix: clicking dots and ddg button ([@Parship12](https://github.com/Parship12) in [#3149](https://github.com/jaegertracing/jaeger-ui/pull/3149))
+* Fix in-trace span search ([@Parship12](https://github.com/Parship12) in [#3132](https://github.com/jaegertracing/jaeger-ui/pull/3132))
+* Fix: trace id search input on the search page ([@Parship12](https://github.com/Parship12) in [#3124](https://github.com/jaegertracing/jaeger-ui/pull/3124))
+
+#### ⚙️ Refactoring
+
+* Convert tracepage {spanbarrow, spantreeoffset, opnode} to functional ([@JeevaRamanathan](https://github.com/JeevaRamanathan) in [#3136](https://github.com/jaegertracing/jaeger-ui/pull/3136))
+* Convert searchresults/index to functional component ([@Parship12](https://github.com/Parship12) in [#3138](https://github.com/jaegertracing/jaeger-ui/pull/3138))
+* Remove history from tracediff component ([@Parship12](https://github.com/Parship12) in [#3135](https://github.com/jaegertracing/jaeger-ui/pull/3135))
+* Remove history instances from traces.tsx ([@Parship12](https://github.com/Parship12) in [#3110](https://github.com/jaegertracing/jaeger-ui/pull/3110))
+* Convert tracepage {timelinecollapser} to functional component ([@JeevaRamanathan](https://github.com/JeevaRamanathan) in [#3108](https://github.com/jaegertracing/jaeger-ui/pull/3108))
+
+
 ## v1.74.0 (2025-10-01)
 
 #### 🐞 Bug fixes, Minor Improvements
