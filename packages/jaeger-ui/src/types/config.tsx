@@ -193,8 +193,10 @@ export type Config = {
 
   // The following features are experimental / undocumented.
 
-  deepDependencies?: {
-    menuEnabled?: boolean;
+  deepDependencies: {
+    menuEnabled: boolean;
+    menuLabel: string;
+    apiEndpoint: string;
   };
   pathAgnosticDecorations?: readonly TPathAgnosticDecorationSchema[];
   qualityMetrics?: {
