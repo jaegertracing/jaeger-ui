@@ -48,7 +48,19 @@ function getJSON(url, options = {}) {
 
   return fetch(`${url}${queryStr}`, init).then(response => {
     if (response.status < 400) {
-      return response.json();
+      return response.json().then(body => {
+        if (body && Array.isArray(body.errors) && body.errors.length > 0) {
+          const errorMessage = body.errors.map(err => getMessageFromError(err, response.status)).join('; ');
+          const error = new Error(`API Error: ${errorMessage}`);
+          error.httpStatus = response.status;
+          error.httpStatusText = response.statusText;
+          error.httpBody = JSON.stringify(body, null, 2);
+          error.httpUrl = url;
+          error.httpQuery = typeof query === 'string' ? query : queryString.stringify(query);
+          throw error;
+        }
+        return body;
+      });
     }
     return response.text().then(bodyText => {
       let data;
