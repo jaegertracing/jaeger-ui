@@ -50,7 +50,7 @@ jest.mock('./DiffSelection', () =>
 
 jest.mock('./ResultItem', () => jest.fn(({ trace }) => <div data-testid={`result-${trace.traceID}`} />));
 
-jest.mock('./ScatterPlot', () => jest.fn(props => <div data-testid="scatterplot" {...props} />));
+jest.mock('./ScatterPlot', () => jest.fn(() => <div data-testid="scatterplot" />));
 
 jest.mock('./DownloadResults', () =>
   jest.fn(({ onDownloadResultsClicked }) => (
@@ -90,6 +90,12 @@ jest.mock('../../common/SearchableSelect', () => {
 afterEach(() => {
   cleanup();
   jest.clearAllMocks();
+});
+
+const anchorClickMock = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+afterAll(() => {
+  anchorClickMock.mockRestore();
 });
 
 const baseTraces = [

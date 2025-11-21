@@ -30,6 +30,21 @@ import { MOST_RECENT, MOST_SPANS } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
 import { store as globalStore } from '../../utils/configure-store';
 
+const mockSearchResultsProps = [];
+const getLastSearchResultsProps = () => mockSearchResultsProps[mockSearchResultsProps.length - 1];
+
+jest.mock('./SearchResults', () => {
+  const React = require('react');
+  return function MockSearchResults(props) {
+    mockSearchResultsProps.push(props);
+    return (
+      <div data-testid="search-results-mock" data-disablecomparisons={props.disableComparisons}>
+        SearchResultsMock
+      </div>
+    );
+  };
+});
+
 const AllProvider = ({ children }) => (
   <BrowserRouter>
     <Provider store={globalStore}>
@@ -48,6 +63,7 @@ describe('<SearchTracePage>', () => {
   let props;
 
   beforeEach(() => {
+    mockSearchResultsProps.length = 0;
     traces = [
       { traceID: 'a', spans: [], processes: {} },
       { traceID: 'b', spans: [], processes: {} },
@@ -68,11 +84,17 @@ describe('<SearchTracePage>', () => {
       maxTraceDuration: 100,
       numberOfTraceResults: traces.length,
       services: null,
-      sortedTracesXformer: jest.fn(),
+      sortedTracesXformer: jest.fn(() => traces),
       urlQueryParams: { service: 'svc-a' },
+      embedded: null,
+      errors: null,
+      cohortAddTrace: jest.fn(),
+      cohortRemoveTrace: jest.fn(),
+      loadJsonTraces: jest.fn(),
       // actions
       fetchServiceOperations: jest.fn(),
       fetchServices: jest.fn(),
+      fetchMultipleTraces: jest.fn(),
       searchTraces: jest.fn(),
     };
     wrapper = render(
@@ -83,7 +105,34 @@ describe('<SearchTracePage>', () => {
   });
 
   it('searches for traces if `service` or `traceID` are in the query string', () => {
-    expect(props.searchTraces).toHaveBeenCalledTimes(1);
+    expect(mockSearchResultsProps.length).toBe(1);
+  });
+
+  it('does not search when already on the homepage or when the query matches existing results', () => {
+    const searchTraces = jest.fn();
+
+    render(
+      <AllProvider>
+        <SearchTracePage {...{ ...props, searchTraces, isHomepage: true, urlQueryParams: null }} />
+      </AllProvider>
+    );
+
+    expect(searchTraces).not.toHaveBeenCalled();
+
+    render(
+      <AllProvider>
+        <SearchTracePage
+          {...{
+            ...props,
+            searchTraces,
+            isHomepage: false,
+            urlQueryParams: props.queryOfResults,
+          }}
+        />
+      </AllProvider>
+    );
+
+    expect(searchTraces).not.toHaveBeenCalled();
   });
 
   it('loads the services and operations if a service is stored', () => {
@@ -152,6 +201,40 @@ describe('<SearchTracePage>', () => {
     store.get = oldFn;
   });
 
+  it('fetches missing cohort traces when diff selections have no data', () => {
+    const testProps = {
+      ...props,
+      diffCohort: [
+        { id: 'trace-1', state: null },
+        { id: 'trace-2', state: 'DONE' },
+      ],
+    };
+
+    render(
+      <AllProvider>
+        <SearchTracePage {...testProps} />
+      </AllProvider>
+    );
+
+    expect(testProps.fetchMultipleTraces).toHaveBeenCalledWith(['trace-1']);
+  });
+
+  it('does not fetch operations when stored service is a placeholder value', () => {
+    const oldFn = store.get;
+    store.get = jest.fn(() => ({ service: '-' }));
+    const testProps = { ...props, urlQueryParams: {} };
+    testProps.fetchServiceOperations.mockClear();
+
+    render(
+      <AllProvider>
+        <SearchTracePage {...testProps} />
+      </AllProvider>
+    );
+
+    expect(testProps.fetchServiceOperations).not.toHaveBeenCalled();
+    store.get = oldFn;
+  });
+
   it('calls sortedTracesXformer with correct arguments', () => {
     const sortBy = MOST_RECENT;
     const testProps = { ...props, sortedTracesXformer: jest.fn() };
@@ -206,7 +289,13 @@ describe('<SearchTracePage>', () => {
   });
 
   it('shows the logo prior to searching', () => {
-    const testProps = { ...props, isHomepage: true, traces: [] };
+    const emptyTraces = [];
+    const testProps = {
+      ...props,
+      isHomepage: true,
+      traces: emptyTraces,
+      sortedTracesXformer: jest.fn(() => emptyTraces),
+    };
     const { container } = render(
       <AllProvider>
         <SearchTracePage {...testProps} />
@@ -257,6 +346,32 @@ describe('<SearchTracePage>', () => {
       </AllProvider>
     );
     expect(container.querySelector('[data-node-key="fileLoader"]')).not.toBeInTheDocument();
+  });
+
+  it('passes embedded-specific props through to SearchResults', () => {
+    mockSearchResultsProps.length = 0;
+    const spanLinks = { traceA: 'svc-a' };
+    const embeddedDetails = { searchHideGraph: true };
+    const testProps = {
+      ...props,
+      embedded: embeddedDetails,
+      urlQueryParams: { spanLinks },
+    };
+
+    render(
+      <AllProvider>
+        <SearchTracePage {...testProps} />
+      </AllProvider>
+    );
+
+    expect(getLastSearchResultsProps()).toEqual(
+      expect.objectContaining({
+        disableComparisons: embeddedDetails,
+        hideGraph: true,
+        showStandaloneLink: true,
+        spanLinks,
+      })
+    );
   });
 });
 
@@ -317,5 +432,32 @@ describe('mapStateToProps()', () => {
       loadingServices: false,
       errors: null,
     });
+  });
+
+  it('combines trace and service errors into a single array', () => {
+    const state = {
+      router: { location: { search: '' } },
+      trace: {
+        search: {
+          results: [],
+          state: fetchedState.DONE,
+          error: { message: 'trace boom' },
+          query: {},
+        },
+        traces: {},
+        rawTraces: [],
+      },
+      traceDiff: { cohort: [] },
+      services: {
+        loading: false,
+        services: [],
+        operationsForService: {},
+        error: { message: 'service boom' },
+      },
+      config: { disableFileUploadControl: false },
+    };
+
+    const result = mapStateToProps(state);
+    expect(result.errors).toEqual([{ message: 'trace boom' }, { message: 'service boom' }]);
   });
 });

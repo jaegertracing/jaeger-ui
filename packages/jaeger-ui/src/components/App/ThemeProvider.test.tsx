@@ -37,12 +37,15 @@ function setupMatchMedia(matches = false) {
 }
 
 function ThemeConsumer() {
-  const { mode, toggleMode } = useThemeMode();
+  const { mode, toggleMode, setMode } = useThemeMode();
   return (
     <div>
       <span data-testid="theme-mode">{mode}</span>
       <button type="button" onClick={toggleMode}>
         toggle theme
+      </button>
+      <button type="button" onClick={() => setMode('light')}>
+        force light
       </button>
     </div>
   );
@@ -82,5 +85,60 @@ describe('AppThemeProvider', () => {
       expect(document.body.dataset.theme).toBe('dark');
       expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('dark');
     });
+  });
+
+  it('prefers system dark mode when no stored preference exists', () => {
+    setupMatchMedia(true);
+
+    render(
+      <AppThemeProvider>
+        <ThemeConsumer />
+      </AppThemeProvider>
+    );
+
+    expect(screen.getByTestId('theme-mode')).toHaveTextContent('dark');
+  });
+
+  it('recovers to light mode when setMode is invoked', async () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+
+    render(
+      <AppThemeProvider>
+        <ThemeConsumer />
+      </AppThemeProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /force light/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('theme-mode')).toHaveTextContent('light');
+      expect(document.body.dataset.theme).toBe('light');
+      expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('light');
+    });
+  });
+
+  it('swallows storage errors when persisting mode changes', async () => {
+    const originalSetItem = window.localStorage.setItem;
+    window.localStorage.setItem = jest.fn(() => {
+      throw new Error('quota exceeded');
+    });
+
+    try {
+      render(
+        <AppThemeProvider>
+          <ThemeConsumer />
+        </AppThemeProvider>
+      );
+
+      const toggleButton = screen.getByRole('button', { name: /toggle theme/i });
+      fireEvent.click(toggleButton);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('theme-mode')).toHaveTextContent('dark');
+        expect(document.body.dataset.theme).toBe('dark');
+      });
+    } finally {
+      window.localStorage.setItem = originalSetItem;
+    }
   });
 });

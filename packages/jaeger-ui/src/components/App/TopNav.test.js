@@ -31,10 +31,10 @@ jest.mock('../../utils/configure-store', () => ({
 jest.mock('antd', () => {
   const actual = jest.requireActual('antd');
 
-  const Menu = ({ items = [] }) => (
-    <nav data-testid="mock-menu">
+  const Menu = ({ items = [], selectedKeys = [] }) => (
+    <nav data-testid="mock-menu" data-selectedkeys={JSON.stringify(selectedKeys)}>
       {items.map(item => (
-        <div data-testid="mock-menu-item" key={item?.key || item?.label}>
+        <div data-testid="mock-menu-item" key={item?.key || item?.label} data-key={item?.key || item?.label}>
           {item?.label}
         </div>
       ))}
@@ -46,7 +46,9 @@ jest.mock('antd', () => {
       {children}
       <div data-testid="mock-dropdown-menu">
         {menu?.items?.map(entry => (
-          <div key={entry?.key || entry?.label}>{entry?.label}</div>
+          <div key={entry?.key || entry?.label} data-disabled={entry?.disabled ? 'true' : 'false'}>
+            {entry?.label}
+          </div>
         ))}
       </div>
     </div>
@@ -124,7 +126,7 @@ describe('<TopNav>', () => {
       ],
     },
     router: {
-      location: { location: { pathname: 'some-path' } },
+      location: { pathname: '/search' },
     },
     traceDiff: {},
   };
@@ -215,10 +217,9 @@ describe('<TopNav>', () => {
 
     describe('<CustomNavDropdown>', () => {
       it('renders sub-menu text', () => {
-        dropdownItems.slice(0, 0).forEach(itemConfig => {
-          const item = screen.getByText(itemConfig.label);
-          expect(item).toBeInTheDocument();
-          expect(item.disabled).toBe(true);
+        dropdownItems.slice(0, 1).forEach(itemConfig => {
+          const dropdownEntry = screen.getByText(itemConfig.label).closest('[data-disabled]');
+          expect(dropdownEntry).toHaveAttribute('data-disabled', 'true');
         });
       });
 
@@ -232,6 +233,19 @@ describe('<TopNav>', () => {
         });
       });
     });
+  });
+
+  it('highlights the nav item matching the current pathname', () => {
+    render(
+      <BrowserRouter>
+        <CompatRouter>
+          <TopNav {...defaultProps} />
+        </CompatRouter>
+      </BrowserRouter>
+    );
+
+    const navMenu = screen.getAllByTestId('mock-menu')[0];
+    expect(navMenu).toHaveAttribute('data-selectedkeys', JSON.stringify(['/search']));
   });
 });
 
