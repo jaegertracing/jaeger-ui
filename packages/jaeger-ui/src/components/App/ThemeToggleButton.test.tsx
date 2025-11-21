@@ -35,7 +35,7 @@ describe('ThemeToggleButton', () => {
     expect(screen.getByText('Light mode')).toBeInTheDocument();
     const button = screen.getByRole('button', { name: /toggle color mode/i });
     expect(button).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('theme-icon').className).toContain('IoSunny');
+    expect(screen.getByTestId('theme-icon')).toHaveAttribute('data-icon', 'sun');
   });
 
   it('toggles the theme when the button is clicked', () => {

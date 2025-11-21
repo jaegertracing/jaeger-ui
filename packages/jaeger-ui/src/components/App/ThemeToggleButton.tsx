@@ -22,6 +22,11 @@ export default function ThemeToggleButton() {
   const { mode, toggleMode } = useThemeMode();
   const isDark = mode === 'dark';
   const label = isDark ? 'Light' : 'Dark';
+  const iconProps = {
+    className: 'ThemeToggleButton--icon',
+    'data-testid': 'theme-icon',
+    'data-icon': isDark ? 'sun' : 'moon',
+  } as const;
 
   return (
     <Tooltip title={`Switch to ${label.toLowerCase()} mode`} placement="bottomRight">
@@ -32,11 +37,7 @@ export default function ThemeToggleButton() {
         onClick={toggleMode}
         type="text"
       >
-        {isDark ? (
-          <IoSunny className="ThemeToggleButton--icon" data-testid="theme-icon" />
-        ) : (
-          <IoMoon className="ThemeToggleButton--icon" data-testid="theme-icon" />
-        )}
+        {isDark ? <IoSunny {...iconProps} /> : <IoMoon {...iconProps} />}
         <span className="ThemeToggleButton--label">{label} mode</span>
       </Button>
     </Tooltip>
