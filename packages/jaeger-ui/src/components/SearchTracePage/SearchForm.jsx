@@ -312,7 +312,7 @@ export class SearchFormImpl extends React.PureComponent {
       validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
 
     return (
-      <Form layout="vertical" onSubmitCapture={this.handleSubmit}>
+      <Form className="SearchForm" layout="vertical" onSubmitCapture={this.handleSubmit}>
         <FormItem
           label={
             <span>

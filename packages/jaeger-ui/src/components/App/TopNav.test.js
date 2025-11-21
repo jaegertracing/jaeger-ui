@@ -28,6 +28,33 @@ jest.mock('../../utils/configure-store', () => ({
   store: {},
 }));
 
+jest.mock('antd', () => {
+  const actual = jest.requireActual('antd');
+
+  const Menu = ({ items = [] }) => (
+    <nav data-testid="mock-menu">
+      {items.map(item => (
+        <div data-testid="mock-menu-item" key={item?.key || item?.label}>
+          {item?.label}
+        </div>
+      ))}
+    </nav>
+  );
+
+  const Dropdown = ({ menu, children }) => (
+    <div data-testid="mock-dropdown">
+      {children}
+      <div data-testid="mock-dropdown-menu">
+        {menu?.items?.map(entry => (
+          <div key={entry?.key || entry?.label}>{entry?.label}</div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return { ...actual, Menu, Dropdown };
+});
+
 jest.mock('../../utils/config/get-config', () => {
   return {
     __esModule: true,
@@ -142,6 +169,11 @@ describe('<TopNav>', () => {
       const item = screen.getByRole('link', { name: 'Quality' });
       expect(item).toBeInTheDocument();
     });
+
+    it('renders the theme toggle button', () => {
+      const toggle = screen.getByRole('button', { name: /toggle color mode/i });
+      expect(toggle).toBeInTheDocument();
+    });
   });
 
   describe('renders the custom menu', () => {
@@ -192,7 +224,8 @@ describe('<TopNav>', () => {
 
       it('renders sub-menu links', () => {
         dropdownItems.slice(1, 2).forEach(itemConfig => {
-          const item = screen.getByRole('link', { name: itemConfig.label });
+          const matches = screen.getAllByRole('link', { name: itemConfig.label });
+          const item = matches[matches.length - 1];
           expect(item).toBeInTheDocument();
           expect(item.href).toBe(itemConfig.url);
           expect(item.target).toBe(itemConfig.anchorTarget || '_blank');

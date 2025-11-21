@@ -20,6 +20,15 @@ limitations under the License.
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.86), rgba(235, 245, 255, 0.95));
+  border-radius: 24px;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 24px 65px rgba(10, 28, 52, 0.18);
+}
+
+body[data-theme='dark'] .center-empty-state {
+  background: linear-gradient(140deg, rgba(7, 15, 32, 0.98), rgba(10, 24, 47, 0.9));
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7);
 }
 
 .main-title-empty-state {
@@ -39,11 +48,20 @@ limitations under the License.
   margin-bottom: 24px;
 }
 
+body[data-theme='dark'] .description-empty-state {
+  color: rgba(255, 255, 255, 0.78);
+}
+
 .button-empty-state {
   background-color: #11939a;
   color: white;
   float: right;
   margin-bottom: 24px;
+}
+
+body[data-theme='dark'] .button-empty-state {
+  background-color: #20c7d1;
+  color: #031422;
 }
 
 .monitor-preview-image-empty-state {

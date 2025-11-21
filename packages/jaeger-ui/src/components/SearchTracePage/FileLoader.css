@@ -14,8 +14,40 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+.FileLoader--dragger {
+  border: 2px dashed rgba(9, 28, 55, 0.25) !important;
+  border-radius: 20px !important;
+  background: linear-gradient(135deg, rgba(237, 246, 255, 0.94), rgba(223, 242, 255, 0.9)) !important;
+  padding: 2rem 1rem !important;
+  color: rgba(6, 25, 55, 0.85) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+body[data-theme='dark'] .FileLoader--dragger {
+  border-color: rgba(123, 220, 255, 0.35) !important;
+  background: linear-gradient(135deg, rgba(4, 10, 24, 0.98), rgba(8, 18, 36, 0.94)) !important;
+  color: rgba(231, 242, 255, 0.9) !important;
+  box-shadow: inset 0 0 0 1px rgba(123, 220, 255, 0.15);
+}
+
+.FileLoader--dragger .ant-upload-text,
+.FileLoader--dragger .ant-upload-hint {
+  color: inherit !important;
+}
+
+.FileLoader--dragger .ant-upload.ant-upload-drag:not(.ant-upload-disabled):hover {
+  border-color: #0b7ad1;
+}
+
+body[data-theme='dark'] .FileLoader--dragger .ant-upload.ant-upload-drag:not(.ant-upload-disabled):hover {
+  border-color: #7bdcff;
+}
+
 .Dragger--icon {
   font-size: 56px;
-  color: #2da6a2;
+  color: inherit;
   margin: 10px 0;
 }

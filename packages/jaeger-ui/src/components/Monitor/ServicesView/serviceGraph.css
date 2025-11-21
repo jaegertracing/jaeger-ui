@@ -48,6 +48,11 @@ limitations under the License.
   vertical-align: middle;
   text-align: center;
   display: table-cell;
+  color: rgba(9, 28, 55, 0.85);
+}
+
+body[data-theme='dark'] .center-placeholder {
+  color: rgba(240, 247, 255, 0.88);
 }
 
 .crosshair-value {

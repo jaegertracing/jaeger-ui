@@ -27,6 +27,7 @@ type FileLoaderProps = {
 export default function FileLoader(props: FileLoaderProps) {
   return (
     <Dragger
+      className="FileLoader--dragger"
       accept=".json,.jsonl"
       beforeUpload={(file, fileList) => {
         fileList.forEach(fileFromList => props.loadJsonTraces({ file: fileFromList }));
