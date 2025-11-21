@@ -33,9 +33,9 @@ export default function ThemeToggleButton() {
         type="text"
       >
         {isDark ? (
-          <IoSunny className="ThemeToggleButton--icon" />
+          <IoSunny className="ThemeToggleButton--icon" data-testid="theme-icon" />
         ) : (
-          <IoMoon className="ThemeToggleButton--icon" />
+          <IoMoon className="ThemeToggleButton--icon" data-testid="theme-icon" />
         )}
         <span className="ThemeToggleButton--label">{label} mode</span>
       </Button>

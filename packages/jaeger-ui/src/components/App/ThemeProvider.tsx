@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// @ts-nocheck
-/** @jsxRuntime classic */
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ThemeConfig } from 'antd';
 import { defaultTheme } from '@ant-design/compatible';
