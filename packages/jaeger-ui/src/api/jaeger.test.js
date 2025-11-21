@@ -273,12 +273,16 @@ describe('searchTraces', () => {
       })
     );
 
-    JaegerAPI.searchTraces({ traceID }).catch(err => {
-      expect(err.message).toMatch(msg);
-      expect(err.message).toMatch(traceID);
-      expect(err.httpStatus).toBe(status);
-      expect(err.httpStatusText).toBe(statusText);
-      done();
-    });
+    JaegerAPI.searchTraces({ traceID })
+      .then(() => {
+        done(new Error('Expected promise to reject but it resolved'));
+      })
+      .catch(err => {
+        expect(err.message).toMatch(msg);
+        expect(err.message).toMatch(traceID);
+        expect(err.httpStatus).toBe(status);
+        expect(err.httpStatusText).toBe(statusText);
+        done();
+      });
   });
 });
