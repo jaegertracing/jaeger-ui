@@ -247,6 +247,50 @@ describe('<TopNav>', () => {
     const navMenu = screen.getAllByTestId('mock-menu')[0];
     expect(navMenu).toHaveAttribute('data-selectedkeys', JSON.stringify(['/search']));
   });
+
+  it('builds the Compare link using the trace diff cohort state', () => {
+    render(
+      <BrowserRouter>
+        <CompatRouter>
+          <TopNav
+            {...{
+              ...defaultProps,
+              traceDiff: { cohort: ['trace-a', 'trace-b'] },
+            }}
+          />
+        </CompatRouter>
+      </BrowserRouter>
+    );
+
+    const compareLink = screen.getByRole('link', { name: 'Compare' });
+    expect(compareLink.href).toContain('/trace/trace-a...trace-b');
+    expect(compareLink.href).toContain('cohort=trace-a');
+    expect(compareLink.href).toContain('cohort=trace-b');
+  });
+
+  it('renders the Monitor navigation link when enabled', () => {
+    render(
+      <BrowserRouter>
+        <CompatRouter>
+          <TopNav {...defaultProps} />
+        </CompatRouter>
+      </BrowserRouter>
+    );
+
+    expect(screen.getByRole('link', { name: 'Monitor' })).toBeInTheDocument();
+  });
+
+  it('includes the Trace ID search control in the right-side menu', () => {
+    render(
+      <BrowserRouter>
+        <CompatRouter>
+          <TopNav {...defaultProps} />
+        </CompatRouter>
+      </BrowserRouter>
+    );
+
+    expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
+  });
 });
 
 describe('mapStateToProps', () => {

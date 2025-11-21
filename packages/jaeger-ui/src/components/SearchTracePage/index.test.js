@@ -18,7 +18,7 @@ import { CompatRouter } from 'react-router-dom-v5-compat';
 jest.mock('store');
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import store from 'store';
 
@@ -57,7 +57,6 @@ const AllProvider = ({ children }) => (
 
 describe('<SearchTracePage>', () => {
   const queryOfResults = {};
-  let wrapper;
   let traces;
   let traceResultsToDownload;
   let props;
@@ -97,15 +96,20 @@ describe('<SearchTracePage>', () => {
       fetchMultipleTraces: jest.fn(),
       searchTraces: jest.fn(),
     };
-    wrapper = render(
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('searches for traces if `service` or `traceID` are in the query string', () => {
+    render(
       <AllProvider>
         <SearchTracePage {...props} />
       </AllProvider>
     );
-  });
-
-  it('searches for traces if `service` or `traceID` are in the query string', () => {
-    expect(mockSearchResultsProps.length).toBe(1);
+    expect(props.searchTraces).toHaveBeenCalledTimes(1);
+    expect(props.searchTraces).toHaveBeenCalledWith(props.urlQueryParams);
   });
 
   it('does not search when already on the homepage or when the query matches existing results', () => {
@@ -140,7 +144,7 @@ describe('<SearchTracePage>', () => {
     props.fetchServiceOperations.mockClear();
     const oldFn = store.get;
     store.get = jest.fn(() => ({ service: 'svc-b' }));
-    wrapper = render(
+    render(
       <AllProvider>
         <SearchTracePage {...{ ...props, urlQueryParams: {} }} />
       </AllProvider>
@@ -156,7 +160,7 @@ describe('<SearchTracePage>', () => {
     props.fetchServiceOperations.mockClear();
     const oldFn = store.get;
     store.get = jest.fn(() => ({ service: 'svc-b' }));
-    wrapper = render(
+    render(
       <AllProvider>
         <SearchTracePage {...props} />
       </AllProvider>
@@ -280,12 +284,13 @@ describe('<SearchTracePage>', () => {
 
   it('shows an error message if there is an error message', () => {
     const testProps = { ...props, errors: [{ message: 'big-error' }] };
-    const { container } = render(
+    const { container, queryByTestId } = render(
       <AllProvider>
         <SearchTracePage {...testProps} />
       </AllProvider>
     );
     expect(container.querySelector('.js-test-error-message')).toBeInTheDocument();
+    expect(queryByTestId('search-results-mock')).not.toBeInTheDocument();
   });
 
   it('shows the logo prior to searching', () => {
@@ -302,6 +307,19 @@ describe('<SearchTracePage>', () => {
       </AllProvider>
     );
     expect(container.querySelector('.js-test-logo')).toBeInTheDocument();
+  });
+
+  it('passes skipMessage flag to SearchResults when on the homepage', () => {
+    mockSearchResultsProps.length = 0;
+    const testProps = { ...props, isHomepage: true };
+
+    render(
+      <AllProvider>
+        <SearchTracePage {...testProps} />
+      </AllProvider>
+    );
+
+    expect(getLastSearchResultsProps()).toEqual(expect.objectContaining({ skipMessage: true }));
   });
 
   it('hides SearchForm if is embed', () => {
