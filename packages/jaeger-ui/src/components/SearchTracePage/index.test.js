@@ -16,6 +16,21 @@ import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import { CompatRouter } from 'react-router-dom-v5-compat';
 
 jest.mock('store');
+jest.mock('../../actions/jaeger-api', () => ({
+  fetchMultipleTraces: jest.fn(params => ({ type: 'fetchMultipleTraces', params })),
+  fetchServiceOperations: jest.fn(service => ({ type: 'fetchServiceOperations', service })),
+  fetchServices: jest.fn(() => ({ type: 'fetchServices' })),
+  searchTraces: jest.fn(query => ({ type: 'searchTraces', query })),
+}));
+jest.mock('../../actions/file-reader-api', () => ({
+  loadJsonTraces: jest.fn(payload => ({ type: 'loadJsonTraces', payload })),
+}));
+jest.mock('../TraceDiff/duck', () => ({
+  actions: {
+    cohortAddTrace: jest.fn(trace => ({ type: 'cohortAddTrace', trace })),
+    cohortRemoveTrace: jest.fn(trace => ({ type: 'cohortRemoveTrace', trace })),
+  },
+}));
 
 import React from 'react';
 import { cleanup, render } from '@testing-library/react';
@@ -23,12 +38,16 @@ import '@testing-library/jest-dom';
 import store from 'store';
 
 import { Provider } from 'react-redux';
-import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
+import { SearchTracePageImpl as SearchTracePage, mapStateToProps, mapDispatchToProps } from './index';
 import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import { MOST_RECENT, MOST_SPANS } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
 import { store as globalStore } from '../../utils/configure-store';
+import * as searchModel from '../../model/search';
+import * as jaegerApiActions from '../../actions/jaeger-api';
+import * as fileReaderActions from '../../actions/file-reader-api';
+import { actions as traceDiffActions } from '../TraceDiff/duck';
 
 const mockSearchResultsProps = [];
 const getLastSearchResultsProps = () => mockSearchResultsProps[mockSearchResultsProps.length - 1];
@@ -477,5 +496,90 @@ describe('mapStateToProps()', () => {
 
     const result = mapStateToProps(state);
     expect(result.errors).toEqual([{ message: 'trace boom' }, { message: 'service boom' }]);
+  });
+
+  it('provides a sortedTracesXformer that clones before sorting', () => {
+    const traceA = transformTraceData(traceGenerator.trace({}));
+    const traceB = transformTraceData(traceGenerator.trace({}));
+    const state = {
+      router: { location: { search: '' } },
+      trace: {
+        search: {
+          results: [traceA.traceID, traceB.traceID],
+          state: fetchedState.DONE,
+          error: null,
+          query: {},
+        },
+        traces: {
+          [traceA.traceID]: { id: traceA.traceID, data: traceA },
+          [traceB.traceID]: { id: traceB.traceID, data: traceB },
+        },
+        rawTraces: [traceA, traceB],
+      },
+      traceDiff: { cohort: [] },
+      services: {
+        loading: false,
+        services: [],
+        operationsForService: {},
+        error: null,
+      },
+      config: { disableFileUploadControl: false },
+    };
+
+    const sortSpy = jest.spyOn(searchModel, 'sortTraces');
+    const { sortedTracesXformer } = mapStateToProps(state);
+    const original = [traceB, traceA];
+    const snapshot = [...original];
+
+    const sorted = sortedTracesXformer(original, MOST_RECENT);
+
+    expect(sortSpy).toHaveBeenCalledWith(expect.any(Array), MOST_RECENT);
+    expect(sortSpy.mock.calls[0][0]).not.toBe(original);
+    expect(original).toEqual(snapshot);
+    expect(sorted).toEqual(sortSpy.mock.calls[0][0]);
+
+    sortSpy.mockRestore();
+  });
+});
+
+describe('mapDispatchToProps()', () => {
+  let dispatch;
+
+  beforeEach(() => {
+    dispatch = jest.fn();
+    jest.clearAllMocks();
+  });
+
+  it('binds jaeger API action creators', () => {
+    const bound = mapDispatchToProps(dispatch);
+
+    bound.fetchMultipleTraces(['id-a']);
+    expect(jaegerApiActions.fetchMultipleTraces).toHaveBeenCalledWith(['id-a']);
+    expect(dispatch).toHaveBeenCalledWith({ type: 'fetchMultipleTraces', params: ['id-a'] });
+
+    bound.fetchServiceOperations('svc');
+    expect(dispatch).toHaveBeenCalledWith({ type: 'fetchServiceOperations', service: 'svc' });
+
+    bound.fetchServices();
+    expect(dispatch).toHaveBeenCalledWith({ type: 'fetchServices' });
+
+    bound.searchTraces({ service: 'svc' });
+    expect(dispatch).toHaveBeenCalledWith({ type: 'searchTraces', query: { service: 'svc' } });
+  });
+
+  it('binds file loader and trace diff actions', () => {
+    const bound = mapDispatchToProps(dispatch);
+
+    bound.loadJsonTraces('blob');
+    expect(fileReaderActions.loadJsonTraces).toHaveBeenCalledWith('blob');
+    expect(dispatch).toHaveBeenCalledWith({ type: 'loadJsonTraces', payload: 'blob' });
+
+    bound.cohortAddTrace('trace-1');
+    expect(traceDiffActions.cohortAddTrace).toHaveBeenCalledWith('trace-1');
+    expect(dispatch).toHaveBeenCalledWith({ type: 'cohortAddTrace', trace: 'trace-1' });
+
+    bound.cohortRemoveTrace('trace-2');
+    expect(traceDiffActions.cohortRemoveTrace).toHaveBeenCalledWith('trace-2');
+    expect(dispatch).toHaveBeenCalledWith({ type: 'cohortRemoveTrace', trace: 'trace-2' });
   });
 });

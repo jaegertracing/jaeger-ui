@@ -16,7 +16,7 @@ import React from 'react';
 import '@testing-library/jest-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
-import AppThemeProvider, { useThemeMode } from './ThemeProvider';
+import AppThemeProvider, { __themeTestInternals, useThemeMode } from './ThemeProvider';
 
 const THEME_STORAGE_KEY = 'jaeger-ui-theme';
 
@@ -171,5 +171,35 @@ describe('AppThemeProvider', () => {
     } finally {
       window.localStorage.getItem = originalGetItem;
     }
+  });
+
+  it('provides default context values when the hook is used without a provider', () => {
+    const observer = jest.fn();
+
+    function BareConsumer() {
+      const context = useThemeMode();
+      React.useEffect(() => {
+        observer(context);
+      }, [context]);
+      return null;
+    }
+
+    render(<BareConsumer />);
+
+    expect(observer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mode: 'light',
+        setMode: expect.any(Function),
+        toggleMode: expect.any(Function),
+      })
+    );
+    const context = observer.mock.calls[0][0];
+    expect(context.setMode('dark')).toBeUndefined();
+    expect(context.toggleMode()).toBeUndefined();
+  });
+
+  it('short-circuits storage helpers when no window is available', () => {
+    expect(__themeTestInternals.readStoredTheme(null)).toBeNull();
+    expect(() => __themeTestInternals.writeStoredTheme('dark', null)).not.toThrow();
   });
 });

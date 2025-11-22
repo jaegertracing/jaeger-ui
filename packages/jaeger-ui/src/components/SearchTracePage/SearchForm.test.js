@@ -45,6 +45,7 @@ import {
   mapDispatchToProps,
   mapStateToProps,
   optionsWithinMaxLookback,
+  searchFormLogfmt,
   submitForm,
   traceIDsToQuery,
   SearchFormImpl as SearchForm,
@@ -774,6 +775,24 @@ describe('mapStateToProps()', () => {
       };
 
       expect(mapStateToProps(state).initialValues).toEqual(errorExpected);
+    });
+
+    it('treats stringify failures as parse errors for legacy tag params', () => {
+      delete params.tags;
+      params.tag = ['error:true'];
+      const originalStringify = searchFormLogfmt.stringify;
+      searchFormLogfmt.stringify = jest.fn(() => {
+        throw new Error('explode');
+      });
+
+      try {
+        state.router.location.search = queryString.stringify(params);
+
+        const result = mapStateToProps(state).initialValues;
+        expect(result.tags).toBe('Parse Error');
+      } finally {
+        searchFormLogfmt.stringify = originalStringify;
+      }
     });
 
     it('handles traceIDParams as string', () => {

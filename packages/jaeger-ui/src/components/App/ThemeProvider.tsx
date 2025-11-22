@@ -129,13 +129,19 @@ const APP_THEMES: Record<ThemeMode, ThemeConfig> = {
   dark: darkTheme,
 };
 
-function readStoredTheme(): ThemeMode | null {
-  if (typeof window === 'undefined') {
+function readStoredTheme(targetWindow?: Window | null): ThemeMode | null {
+  const activeWindow =
+    targetWindow !== undefined
+      ? (targetWindow ?? undefined)
+      : typeof window !== 'undefined'
+        ? window
+        : undefined;
+  if (!activeWindow) {
     return null;
   }
 
   try {
-    const stored = window.localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode | null;
+    const stored = activeWindow.localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode | null;
     if (stored === 'light' || stored === 'dark') {
       return stored;
     }
@@ -146,13 +152,19 @@ function readStoredTheme(): ThemeMode | null {
   return null;
 }
 
-function writeStoredTheme(mode: ThemeMode) {
-  if (typeof window === 'undefined') {
+function writeStoredTheme(mode: ThemeMode, targetWindow?: Window | null) {
+  const activeWindow =
+    targetWindow !== undefined
+      ? (targetWindow ?? undefined)
+      : typeof window !== 'undefined'
+        ? window
+        : undefined;
+  if (!activeWindow) {
     return;
   }
 
   try {
-    window.localStorage.setItem(THEME_STORAGE_KEY, mode);
+    activeWindow.localStorage.setItem(THEME_STORAGE_KEY, mode);
   } catch (err) {
     // Ignore storage errors (e.g., Safari in private mode).
   }
@@ -174,6 +186,12 @@ function getInitialMode(): ThemeMode {
 
   return DEFAULT_MODE;
 }
+
+export const __themeTestInternals = {
+  readStoredTheme,
+  writeStoredTheme,
+  getInitialMode,
+};
 
 export default function AppThemeProvider({ children }: ThemeProviderProps) {
   const [mode, setModeState] = useState<ThemeMode>(() => getInitialMode());
