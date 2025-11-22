@@ -14,7 +14,7 @@
 
 import React from 'react';
 import '@testing-library/jest-dom';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 
 import AppThemeProvider, { __themeTestInternals, useThemeMode } from './ThemeProvider';
 
@@ -84,6 +84,24 @@ describe('AppThemeProvider', () => {
       expect(screen.getByTestId('theme-mode')).toHaveTextContent('dark');
       expect(document.body.dataset.theme).toBe('dark');
       expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('dark');
+    });
+  });
+
+  it('toggles from dark back to light', async () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+    render(
+      <AppThemeProvider>
+        <ThemeConsumer />
+      </AppThemeProvider>
+    );
+
+    const toggleButton = screen.getByRole('button', { name: /toggle theme/i });
+    fireEvent.click(toggleButton);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('theme-mode')).toHaveTextContent('light');
+      expect(document.body.dataset.theme).toBe('light');
+      expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('light');
     });
   });
 
@@ -220,6 +238,7 @@ describe('AppThemeProvider', () => {
   it('uses the global window when no override is provided', () => {
     window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
     expect(__themeTestInternals.readStoredTheme()).toBe('dark');
+    expect(__themeTestInternals.readStoredTheme(undefined)).toBe('dark');
 
     const setItem = jest.spyOn(Storage.prototype, 'setItem');
     try {
@@ -239,6 +258,22 @@ describe('AppThemeProvider', () => {
       expect(() => __themeTestInternals.writeStoredTheme('dark')).not.toThrow();
     } finally {
       (global as typeof global & { window?: Window }).window = originalWindow;
+    }
+  });
+
+  it('skips updating document body when document is undefined', () => {
+    const { result } = renderHook(() => useThemeMode(), { wrapper: AppThemeProvider });
+
+    const originalDocument = (global as any).document;
+    // @ts-ignore
+    delete (global as any).document;
+
+    try {
+      act(() => {
+        result.current.toggleMode();
+      });
+    } finally {
+      (global as any).document = originalDocument;
     }
   });
 });
