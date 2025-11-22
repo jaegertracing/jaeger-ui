@@ -16,6 +16,13 @@ limitations under the License.
 
 :root {
   --nav-height: 48px;
+  --simple-card-bg: var(--surface-light, #f5f5f5);
+  --simple-card-border: var(--surface-border-light, #e6e6e6);
+}
+
+body[data-theme='dark'] {
+  --simple-card-bg: var(--surface-dark, rgba(255, 255, 255, 0.06));
+  --simple-card-border: var(--surface-border-dark, rgba(255, 255, 255, 0.15));
 }
 
 .u-width-100 {
@@ -51,8 +58,8 @@ limitations under the License.
 }
 
 .u-simple-card {
-  background-color: #f5f5f5;
-  border: 1px solid #e6e6e6;
+  background-color: var(--simple-card-bg);
+  border: 1px solid var(--simple-card-border);
   padding: 1rem;
 }
 

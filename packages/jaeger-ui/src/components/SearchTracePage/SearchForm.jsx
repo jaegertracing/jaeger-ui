@@ -41,6 +41,10 @@ import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
 
+export const searchFormLogfmt = {
+  stringify: logfmtStringify,
+};
+
 const FormItem = Form.Item;
 const Option = Select.Option;
 
@@ -312,7 +316,7 @@ export class SearchFormImpl extends React.PureComponent {
       validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
 
     return (
-      <Form layout="vertical" onSubmitCapture={this.handleSubmit}>
+      <Form className="SearchForm" layout="vertical" onSubmitCapture={this.handleSubmit}>
         <FormItem
           label={
             <span>
@@ -679,7 +683,7 @@ export function mapStateToProps(state) {
     }
     if (data) {
       try {
-        tags = logfmtStringify(data);
+        tags = searchFormLogfmt.stringify(data);
       } catch (_) {
         tags = 'Parse Error';
       }
@@ -691,7 +695,7 @@ export function mapStateToProps(state) {
     let data;
     try {
       data = JSON.parse(logfmtTags);
-      tags = logfmtStringify(data);
+      tags = searchFormLogfmt.stringify(data);
     } catch (_) {
       tags = 'Parse Error';
     }

@@ -42,7 +42,15 @@ const TraceIDSearchInput: React.FC = () => {
       onSubmitCapture={goToTrace}
       className="TraceIDSearchInput--form"
     >
-      <Input data-testid="idInput" name="idInput" placeholder="Lookup by Trace ID..." prefix={<IoSearch />} />
+      <Input
+        className="TraceIDSearchInput--input"
+        data-testid="idInput"
+        name="idInput"
+        placeholder="Lookup by Trace ID..."
+        prefix={<IoSearch />}
+        size="large"
+        allowClear
+      />
     </Form>
   );
 };

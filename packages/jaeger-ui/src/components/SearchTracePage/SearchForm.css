@@ -14,21 +14,110 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+.SearchForm {
+  --search-field-border: var(--surface-border-light, #d7e0ee);
+  --search-field-bg: rgba(255, 255, 255, 0.92);
+  --search-field-text: var(--tx-color-body);
+  --search-field-label: var(--tx-color-title);
+  --search-field-muted: rgba(13, 30, 54, 0.52);
+  --search-field-accent: #0b7ad1;
+}
+
+body[data-theme='dark'] .SearchForm {
+  --search-field-border: var(--surface-border-dark, rgba(125, 153, 191, 0.4));
+  --search-field-bg: rgba(8, 16, 32, 0.9);
+  --search-field-text: rgba(244, 248, 255, 0.92);
+  --search-field-label: rgba(244, 248, 255, 0.96);
+  --search-field-muted: rgba(244, 248, 255, 0.65);
+  --search-field-accent: #7bdcff;
+}
+
+.SearchForm .ant-form-item-label > label {
+  color: var(--search-field-label);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.SearchForm .ant-input,
+.SearchForm .ant-input-affix-wrapper,
+.SearchForm .ant-picker,
+.SearchForm .ant-select .ant-select-selector,
+.SearchForm textarea {
+  background-color: var(--search-field-bg) !important;
+  border-color: var(--search-field-border) !important;
+  color: var(--search-field-text) !important;
+  box-shadow: 0 6px 16px rgba(7, 19, 38, 0.08);
+}
+
+body[data-theme='dark'] .SearchForm .ant-input,
+body[data-theme='dark'] .SearchForm .ant-input-affix-wrapper,
+body[data-theme='dark'] .SearchForm .ant-picker,
+body[data-theme='dark'] .SearchForm .ant-select .ant-select-selector,
+body[data-theme='dark'] .SearchForm textarea {
+  box-shadow: 0 10px 26px rgba(3, 10, 20, 0.55);
+}
+
+.SearchForm .ant-input::placeholder,
+.SearchForm textarea::placeholder {
+  color: var(--search-field-muted);
+}
+
+.SearchForm .ant-input-affix-wrapper .ant-input-prefix,
+.SearchForm .ant-input-affix-wrapper .ant-input-suffix,
+.SearchForm .ant-select-arrow,
+.SearchForm .ant-picker-suffix,
+.SearchForm .ant-picker-clear,
+.SearchForm .ant-input-clear-icon {
+  color: var(--search-field-muted) !important;
+}
+
+.SearchForm .ant-select .ant-select-selection-item,
+.SearchForm .ant-select .ant-select-selection-placeholder {
+  color: var(--search-field-text) !important;
+}
+
+.SearchForm .ant-input:focus,
+.SearchForm .ant-input-affix-wrapper-focused,
+.SearchForm .ant-picker-focused,
+.SearchForm .ant-select-focused .ant-select-selector,
+.SearchForm .ant-select-selector:focus,
+.SearchForm textarea:focus {
+  border-color: var(--search-field-accent) !important;
+  box-shadow: 0 0 0 2px rgba(11, 122, 209, 0.28) !important;
+}
+
+body[data-theme='dark'] .SearchForm .ant-input:focus,
+body[data-theme='dark'] .SearchForm .ant-input-affix-wrapper-focused,
+body[data-theme='dark'] .SearchForm .ant-picker-focused,
+body[data-theme='dark'] .SearchForm .ant-select-focused .ant-select-selector,
+body[data-theme='dark'] .SearchForm .ant-select-selector:focus,
+body[data-theme='dark'] .SearchForm textarea:focus {
+  box-shadow: 0 0 0 2px rgba(123, 220, 255, 0.35) !important;
+}
 .SearchForm--labelCount {
-  color: #999;
+  color: var(--search-field-muted);
 }
 
 .SearchForm--hintTrigger {
-  border: 1px solid #999;
+  border: 1px solid var(--search-field-border);
   border-radius: 100px;
-  color: #999;
+  color: var(--search-field-muted);
   cursor: pointer;
   padding: 1px;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
 }
 
 .SearchForm--hintTrigger:hover {
-  color: #000;
-  border-color: #000;
+  color: var(--search-field-accent);
+  border-color: var(--search-field-accent);
+  background: rgba(11, 122, 209, 0.08);
+}
+
+body[data-theme='dark'] .SearchForm--hintTrigger:hover {
+  background: rgba(123, 220, 255, 0.18);
 }
 
 .SearchForm--tagsHintTitle {
@@ -36,19 +125,27 @@ limitations under the License.
 }
 
 .SearchForm--submit {
-  background-color: #11939a;
-  color: white;
+  background: linear-gradient(120deg, #0d47a1, #1976d2 60%, #26c6da);
+  color: #fff;
   float: right;
+  border: none;
+  box-shadow: 0 8px 20px rgba(14, 71, 132, 0.35);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.SearchForm--submit:hover {
-  background-color: #fff;
-  float: right;
+.SearchForm--submit:hover,
+.SearchForm--submit:active,
+.SearchForm--submit:focus {
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(14, 71, 132, 0.4);
 }
 
-.SearchForm--submit:active {
-  background-color: #fff;
-  float: right;
+body[data-theme='dark'] .SearchForm--submit {
+  background: linear-gradient(120deg, #26c6da, #00b8d4 60%, #5e60ce);
+  box-shadow: 0 12px 30px rgba(3, 10, 21, 0.75);
 }
 
 .SearchForm--tagsHintInfo {
@@ -56,7 +153,11 @@ limitations under the License.
 }
 
 .SearchForm--tagsHintEg {
-  color: teal;
+  color: var(--search-field-accent);
+}
+
+body[data-theme='dark'] .SearchForm--tagsHintEg {
+  color: #7bdcff;
 }
 
 .ant-select-dropdown .rc-virtual-list-holder {

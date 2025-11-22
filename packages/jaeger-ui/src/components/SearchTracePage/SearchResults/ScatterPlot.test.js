@@ -53,6 +53,21 @@ beforeAll(() => {
   });
 });
 
+const originalWarn = console.warn;
+beforeAll(() => {
+  jest.spyOn(console, 'warn').mockImplementation((...args) => {
+    const message = args[0];
+    if (typeof message === 'string' && message.includes('width(-1) and height(-1)')) {
+      return;
+    }
+    originalWarn(...args);
+  });
+});
+
+afterAll(() => {
+  console.warn.mockRestore();
+});
+
 // Mock window resize event
 const mockResizeEvent = () => {
   const originalAddEventListener = window.addEventListener;

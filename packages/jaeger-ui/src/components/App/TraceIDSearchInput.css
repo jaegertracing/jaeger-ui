@@ -16,4 +16,55 @@ limitations under the License.
 
 .TraceIDSearchInput--form {
   line-height: inherit;
+  min-width: 260px;
+}
+
+.TraceIDSearchInput--input {
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  background-color: rgba(9, 16, 30, 0.45) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  padding-inline: 16px !important;
+}
+
+.TraceIDSearchInput--input::placeholder {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.TraceIDSearchInput--input .ant-input-prefix {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+body[data-theme='light'] .TraceIDSearchInput--input {
+  border-color: rgba(10, 53, 92, 0.35) !important;
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  color: #0c233f !important;
+  box-shadow: 0 4px 16px rgba(11, 61, 116, 0.12);
+}
+
+body[data-theme='light'] .TraceIDSearchInput--input::placeholder {
+  color: rgba(8, 36, 64, 0.55) !important;
+}
+
+body[data-theme='light'] .TraceIDSearchInput--input .ant-input-prefix {
+  color: rgba(8, 36, 64, 0.65);
+}
+
+.TraceIDSearchInput--input:focus,
+.TraceIDSearchInput--input:hover {
+  border-color: #7bdcff !important;
+}
+
+body[data-theme='light'] .TraceIDSearchInput--input:focus,
+body[data-theme='light'] .TraceIDSearchInput--input:hover {
+  border-color: #0b7ad1 !important;
+}
+
+.TraceIDSearchInput--input .ant-input-clear-icon {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+body[data-theme='light'] .TraceIDSearchInput--input .ant-input-clear-icon {
+  color: rgba(6, 30, 57, 0.55);
 }

@@ -35,9 +35,71 @@ limitations under the License.
 }
 
 .SearchTracePage--find {
-  background-color: #f5f5f5;
-  border: 1px solid #e6e6e6;
-  padding: 1rem;
+  --search-panel-accent: #0b7ad1;
+  --search-panel-muted: rgba(9, 28, 55, 0.58);
+  background: linear-gradient(140deg, #ffffff 0%, #edf6ff 45%, #dff2ff 100%);
+  border: 1px solid rgba(12, 41, 88, 0.12);
+  border-radius: 22px;
+  box-shadow: 0 32px 70px rgba(15, 38, 77, 0.16);
+  padding: 1.75rem 1.5rem 2rem;
+  position: relative;
+}
+
+body[data-theme='dark'] .SearchTracePage--find {
+  --search-panel-accent: #7bdcff;
+  --search-panel-muted: rgba(240, 247, 255, 0.6);
+  background: linear-gradient(
+    150deg,
+    rgba(5, 9, 21, 0.98) 0%,
+    rgba(6, 14, 32, 0.96) 55%,
+    rgba(3, 9, 25, 0.94) 100%
+  );
+  border-color: rgba(123, 220, 255, 0.3);
+  box-shadow: 0 30px 75px rgba(2, 6, 14, 0.82);
+}
+
+.SearchTracePage--find::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle at 15% 20%, rgba(38, 198, 218, 0.18), transparent 55%);
+}
+
+body[data-theme='dark'] .SearchTracePage--find::after {
+  background: radial-gradient(circle at 80% 10%, rgba(123, 220, 255, 0.18), transparent 60%);
+}
+
+.SearchTracePage--find .ant-tabs-nav::before {
+  border-color: rgba(9, 28, 55, 0.12);
+}
+
+body[data-theme='dark'] .SearchTracePage--find .ant-tabs-nav::before {
+  border-color: rgba(123, 220, 255, 0.25);
+}
+
+.SearchTracePage--find .ant-tabs-tab {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.SearchTracePage--find .ant-tabs-tab-btn {
+  color: var(--search-panel-muted);
+}
+
+.SearchTracePage--find .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--search-panel-accent);
+}
+
+.SearchTracePage--find .ant-tabs-ink-bar {
+  background: var(--search-panel-accent);
+}
+
+.SearchTracePage--find .ant-tabs-content-holder,
+.SearchTracePage--find .ant-tabs-content,
+.SearchTracePage--find .ant-tabs-tabpane {
+  background: transparent;
 }
 
 .SearchTracePage--logo {

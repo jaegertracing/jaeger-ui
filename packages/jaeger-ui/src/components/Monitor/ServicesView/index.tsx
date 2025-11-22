@@ -271,6 +271,7 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
     <>
       {_isEmpty(metrics && metrics.serviceMetrics && metrics.serviceMetrics.service_latencies) && (
         <Alert
+          className="monitor-alert"
           message={
             <>
               No data yet! Please see these

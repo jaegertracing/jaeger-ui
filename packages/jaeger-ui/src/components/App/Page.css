@@ -20,6 +20,20 @@ limitations under the License.
   position: fixed;
   width: 100%;
   z-index: 11;
+  background: var(--top-nav-bg);
+  background-size: 200% 200%;
+  box-shadow: 0 12px 30px rgba(4, 20, 41, 0.35);
+  transition:
+    background 0.4s ease,
+    box-shadow 0.4s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  backdrop-filter: saturate(160%) blur(18px);
+}
+
+body[data-theme='light'] .Page--topNav {
+  border-bottom-color: rgba(7, 55, 99, 0.25);
+  box-shadow: 0 8px 18px rgba(15, 71, 132, 0.25);
 }
 
 .Page--content {

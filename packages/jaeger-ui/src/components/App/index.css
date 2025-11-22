@@ -14,16 +14,50 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+:root {
+  --body-gradient-light: linear-gradient(180deg, #fefefe 0%, #e6edf7 100%);
+  --body-gradient-dark: linear-gradient(150deg, #0b1625 0%, #111f36 55%, #051429 100%);
+  --top-nav-gradient-light: linear-gradient(135deg, #0d47a1 0%, #1976d2 45%, #26c6da 100%);
+  --top-nav-gradient-dark: linear-gradient(135deg, #0f2027 0%, #1c2d40 45%, #283b51 100%);
+  --surface-light: #ffffff;
+  --surface-dark: #162338;
+  --surface-border-light: #d7e0ee;
+  --surface-border-dark: rgba(255, 255, 255, 0.18);
+  --body-gradient: var(--body-gradient-light);
+  --top-nav-bg: var(--top-nav-gradient-light);
+  --link-color: #0c6ca8;
+  --link-color-hover: #084c75;
+}
+
 /* Ant's default font-family, Helvetica Neue For Number, is inconcistent in thickness for a given weight */
 .font-reset,
 html > body {
   font-family: 'Helvetica Neue', Helvetica, 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
+body {
+  background: var(--body-gradient) fixed;
+  background-color: #f3f6fb;
+  color: var(--tx-color-body);
+  min-height: 100vh;
+  transition:
+    background 0.45s ease,
+    color 0.2s ease;
+}
+
+body[data-theme='dark'] {
+  --body-gradient: var(--body-gradient-dark);
+  --top-nav-bg: var(--top-nav-gradient-dark);
+  --link-color: #7bdcff;
+  --link-color-hover: #caf3ff;
+  color-scheme: dark;
+}
+
 a {
-  color: #11939a;
+  color: var(--link-color);
+  transition: color 0.2s ease;
 }
 
 a:hover {
-  color: #00474e;
+  color: var(--link-color-hover);
 }
