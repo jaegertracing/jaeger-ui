@@ -99,6 +99,18 @@ describe('AppThemeProvider', () => {
     expect(screen.getByTestId('theme-mode')).toHaveTextContent('dark');
   });
 
+  it('falls back to the default mode when the stored value is invalid', () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'sepia');
+
+    render(
+      <AppThemeProvider>
+        <ThemeConsumer />
+      </AppThemeProvider>
+    );
+
+    expect(screen.getByTestId('theme-mode')).toHaveTextContent('light');
+  });
+
   it('recovers to light mode when setMode is invoked', async () => {
     window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
 
@@ -139,6 +151,25 @@ describe('AppThemeProvider', () => {
       });
     } finally {
       window.localStorage.setItem = originalSetItem;
+    }
+  });
+
+  it('ignores errors when reading the stored preference', () => {
+    const originalGetItem = window.localStorage.getItem;
+    window.localStorage.getItem = jest.fn(() => {
+      throw new Error('blocked');
+    });
+
+    try {
+      render(
+        <AppThemeProvider>
+          <ThemeConsumer />
+        </AppThemeProvider>
+      );
+
+      expect(screen.getByTestId('theme-mode')).toHaveTextContent('light');
+    } finally {
+      window.localStorage.getItem = originalGetItem;
     }
   });
 });

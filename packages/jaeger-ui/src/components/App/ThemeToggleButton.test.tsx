@@ -38,6 +38,17 @@ describe('ThemeToggleButton', () => {
     expect(screen.getByTestId('theme-icon')).toHaveAttribute('data-icon', 'sun');
   });
 
+  it('shows light-mode label and moon icon when current mode is light', () => {
+    (useThemeMode as jest.Mock).mockReturnValue({ mode: 'light', toggleMode: mockToggle });
+
+    render(<ThemeToggleButton />);
+
+    expect(screen.getByText('Dark mode')).toBeInTheDocument();
+    const button = screen.getByRole('button', { name: /toggle color mode/i });
+    expect(button).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByTestId('theme-icon')).toHaveAttribute('data-icon', 'moon');
+  });
+
   it('toggles the theme when the button is clicked', () => {
     (useThemeMode as jest.Mock).mockReturnValue({ mode: 'light', toggleMode: mockToggle });
     render(<ThemeToggleButton />);
