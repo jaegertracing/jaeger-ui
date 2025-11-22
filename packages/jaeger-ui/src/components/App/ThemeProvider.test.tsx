@@ -217,6 +217,19 @@ describe('AppThemeProvider', () => {
     expect(setItem).toHaveBeenCalledWith('jaeger-ui-theme', 'light');
   });
 
+  it('uses the global window when no override is provided', () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+    expect(__themeTestInternals.readStoredTheme()).toBe('dark');
+
+    const setItem = jest.spyOn(Storage.prototype, 'setItem');
+    try {
+      __themeTestInternals.writeStoredTheme('light');
+      expect(setItem).toHaveBeenCalledWith(THEME_STORAGE_KEY, 'light');
+    } finally {
+      setItem.mockRestore();
+    }
+  });
+
   it('falls back gracefully when the global window is unavailable', () => {
     const originalWindow = window;
     (global as typeof global & { window?: Window }).window = undefined;

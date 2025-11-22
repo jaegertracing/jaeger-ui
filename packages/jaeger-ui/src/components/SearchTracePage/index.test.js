@@ -192,17 +192,16 @@ describe('<SearchTracePage>', () => {
 
   it('keeps services in loading state when selected service from localStorage has no operations loaded', () => {
     const { mapStateToProps } = require('./index');
-    const oldFn = store.get;
+    const originalStoreGet = store.get;
     store.get = jest.fn(() => ({ service: 'svc-a', operation: 'op-a' }));
 
-    // Create state where service exists but operations are not loaded yet
     const state = {
       embedded: null,
       router: { location: { search: '' } },
       services: {
         loading: false,
         services: ['svc-a', 'svc-b'],
-        operationsForService: {}, // No operations loaded yet for svc-a
+        operationsForService: {},
         error: null,
       },
       traceDiff: { cohort: [] },
@@ -218,10 +217,54 @@ describe('<SearchTracePage>', () => {
         rawTraces: [],
       },
     };
-    const result = mapStateToProps(state);
-    expect(result.loadingServices).toBe(true);
-    expect(result.services).toEqual(['svc-a', 'svc-b']);
-    store.get = oldFn;
+
+    try {
+      const result = mapStateToProps(state);
+      expect(result.loadingServices).toBe(true);
+      expect(result.services).toEqual(['svc-a', 'svc-b']);
+    } finally {
+      store.get = originalStoreGet;
+    }
+  });
+
+  it('does not force loading state when stored service already has operations', () => {
+    const { mapStateToProps } = require('./index');
+    const originalStoreGet = store.get;
+    store.get = jest.fn(() => ({ service: 'svc-b', operation: 'op-b' }));
+
+    const state = {
+      embedded: null,
+      router: { location: { search: '' } },
+      services: {
+        loading: false,
+        services: ['svc-a', 'svc-b'],
+        operationsForService: { 'svc-b': ['op-b'] },
+        error: null,
+      },
+      traceDiff: { cohort: [] },
+      config: { disableFileUploadControl: false },
+      trace: {
+        search: {
+          query: null,
+          results: [],
+          state: 'DONE',
+          error: null,
+        },
+        traces: {},
+        rawTraces: [],
+      },
+    };
+
+    try {
+      const result = mapStateToProps(state);
+      expect(result.loadingServices).toBe(false);
+      expect(result.services).toEqual([
+        { name: 'svc-a', operations: [] },
+        { name: 'svc-b', operations: ['op-b'] },
+      ]);
+    } finally {
+      store.get = originalStoreGet;
+    }
   });
 
   it('fetches missing cohort traces when diff selections have no data', () => {
