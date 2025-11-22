@@ -202,4 +202,30 @@ describe('AppThemeProvider', () => {
     expect(__themeTestInternals.readStoredTheme(null)).toBeNull();
     expect(() => __themeTestInternals.writeStoredTheme('dark', null)).not.toThrow();
   });
+
+  it('honors injected window overrides when reading and writing storage', () => {
+    const getItem = jest.fn(() => 'dark');
+    const setItem = jest.fn();
+    const fakeWindow = {
+      localStorage: { getItem, setItem },
+    } as unknown as Window;
+
+    expect(__themeTestInternals.readStoredTheme(fakeWindow)).toBe('dark');
+    __themeTestInternals.writeStoredTheme('light', fakeWindow);
+
+    expect(getItem).toHaveBeenCalledWith('jaeger-ui-theme');
+    expect(setItem).toHaveBeenCalledWith('jaeger-ui-theme', 'light');
+  });
+
+  it('falls back gracefully when the global window is unavailable', () => {
+    const originalWindow = window;
+    (global as typeof global & { window?: Window }).window = undefined;
+
+    try {
+      expect(__themeTestInternals.readStoredTheme()).toBeNull();
+      expect(() => __themeTestInternals.writeStoredTheme('dark')).not.toThrow();
+    } finally {
+      (global as typeof global & { window?: Window }).window = originalWindow;
+    }
+  });
 });

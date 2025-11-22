@@ -795,6 +795,22 @@ describe('mapStateToProps()', () => {
       }
     });
 
+    it('treats stringify failures as parse errors for logfmt tag JSON', () => {
+      const originalStringify = searchFormLogfmt.stringify;
+      searchFormLogfmt.stringify = jest.fn(() => {
+        throw new Error('boom');
+      });
+
+      try {
+        state.router.location.search = queryString.stringify(params);
+
+        const result = mapStateToProps(state).initialValues;
+        expect(result.tags).toBe('Parse Error');
+      } finally {
+        searchFormLogfmt.stringify = originalStringify;
+      }
+    });
+
     it('handles traceIDParams as string', () => {
       params.traceID = '123abc';
       state.router.location.search = queryString.stringify(params);
