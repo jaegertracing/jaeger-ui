@@ -15,13 +15,13 @@
 import * as React from 'react';
 import { Layout } from 'antd';
 import cx from 'classnames';
-import Helmet from 'react-helmet';
 import { connect } from 'react-redux';
 
 import TopNav from './TopNav';
 import { ReduxState } from '../../types';
 import { EmbeddedState } from '../../types/embedded';
 import { trackPageView } from '../../utils/tracking';
+import DocumentTitle from '../../utils/documentTitle';
 
 import './Page.css';
 import withRouteProps from '../../utils/withRouteProps';
@@ -45,7 +45,7 @@ export const PageImpl: React.FC<TProps> = ({ children, embedded, pathname, searc
 
   return (
     <div>
-      <Helmet title="Jaeger UI" />
+      <DocumentTitle title="Jaeger UI" />
       <Layout>
         {!embedded && (
           <Header className="Page--topNav">

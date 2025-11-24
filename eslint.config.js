@@ -20,6 +20,10 @@ import jsxA11y from 'eslint-plugin-jsx-a11y';
 import importPlugin from 'eslint-plugin-import';
 import prettierPlugin from 'eslint-plugin-prettier';
 import jestPlugin from 'eslint-plugin-jest';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Shared settings
 const commonGlobals = {
@@ -196,7 +200,7 @@ export default [
       parser: typescriptParser,
       parserOptions: {
         project: ['./packages/*/tsconfig.json'],
-        tsconfigRootDir: '.',
+        tsconfigRootDir: __dirname,
       },
       globals: commonGlobals,
     },

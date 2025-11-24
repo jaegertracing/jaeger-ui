@@ -15,28 +15,24 @@
 import * as React from 'react';
 import { Form, Input } from 'antd';
 import { IoSearch } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom-v5-compat';
 
-import { History } from 'history';
 import { getUrl } from '../TracePage/url';
 
 import './TraceIDSearchInput.css';
-import withRouteProps from '../../utils/withRouteProps';
 
-type Props = {
-  history: History;
-};
-
-const TraceIDSearchInput: React.FC<Props> = ({ history }) => {
+const TraceIDSearchInput: React.FC = () => {
+  const navigate = useNavigate();
   const goToTrace = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const form = event.currentTarget;
       const value = (form.elements.namedItem('idInput') as HTMLInputElement)?.value;
       if (value) {
-        history.push(getUrl(value));
+        navigate(getUrl(value));
       }
     },
-    [history]
+    [navigate]
   );
 
   return (
@@ -51,4 +47,4 @@ const TraceIDSearchInput: React.FC<Props> = ({ history }) => {
   );
 };
 
-export default withRouteProps(React.memo(TraceIDSearchInput));
+export default React.memo(TraceIDSearchInput);

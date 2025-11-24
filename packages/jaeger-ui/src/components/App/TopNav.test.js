@@ -16,11 +16,26 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
+import { CompatRouter } from 'react-router-dom-v5-compat';
 
 import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
 
+jest.mock('../../utils/configure-store', () => ({
+  history: {
+    push: jest.fn(),
+    replace: jest.fn(),
+  },
+  store: {},
+}));
+
 jest.mock('../../utils/config/get-config', () => {
   return {
+    __esModule: true,
+    default: jest.fn(() => ({
+      qualityMetrics: {
+        apiEndpoint: '/quality-metrics',
+      },
+    })),
     getConfigValue: jest.fn(key => {
       switch (key) {
         case 'dependencies.menuEnabled':
@@ -92,7 +107,9 @@ describe('<TopNav>', () => {
     beforeEach(() => {
       component = render(
         <BrowserRouter>
-          <TopNav {...defaultProps} />
+          <CompatRouter>
+            <TopNav {...defaultProps} />
+          </CompatRouter>
         </BrowserRouter>
       );
     });
@@ -132,7 +149,9 @@ describe('<TopNav>', () => {
     beforeEach(() => {
       component = render(
         <BrowserRouter>
-          <TopNav {...defaultProps} />
+          <CompatRouter>
+            <TopNav {...defaultProps} />
+          </CompatRouter>
         </BrowserRouter>
       );
     });

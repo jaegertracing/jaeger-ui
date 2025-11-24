@@ -605,4 +605,53 @@ describe('<VirtualizedTraceViewImpl>', () => {
       ]);
     });
   });
+
+  describe('event handlers', () => {
+    it('handles list resize events when listView exists', () => {
+      const component = new VirtualizedTraceViewImpl(mockProps);
+      const mockListView = { forceUpdate: jest.fn() };
+      component.listView = mockListView;
+
+      component._handleListResize();
+
+      expect(mockListView.forceUpdate).toHaveBeenCalled();
+    });
+
+    it('handles list resize events when listView is null', () => {
+      const component = new VirtualizedTraceViewImpl(mockProps);
+      component.listView = null;
+
+      expect(() => component._handleListResize()).not.toThrow();
+    });
+
+    it('handles detail measure events with spanID', () => {
+      const component = new VirtualizedTraceViewImpl(mockProps);
+      const mockListView = { forceUpdate: jest.fn() };
+      component.listView = mockListView;
+
+      const event = { detail: { spanID: 'test-span-123' } };
+      component._handleDetailMeasure(event);
+
+      expect(mockListView.forceUpdate).toHaveBeenCalled();
+    });
+
+    it('handles detail measure events without spanID', () => {
+      const component = new VirtualizedTraceViewImpl(mockProps);
+      const mockListView = { forceUpdate: jest.fn() };
+      component.listView = mockListView;
+
+      const event = { detail: {} };
+      component._handleDetailMeasure(event);
+
+      expect(mockListView.forceUpdate).toHaveBeenCalled();
+    });
+
+    it('handles detail measure events when listView is null', () => {
+      const component = new VirtualizedTraceViewImpl(mockProps);
+      component.listView = null;
+
+      const event = { detail: { spanID: 'test-span-123' } };
+      expect(() => component._handleDetailMeasure(event)).not.toThrow();
+    });
+  });
 });

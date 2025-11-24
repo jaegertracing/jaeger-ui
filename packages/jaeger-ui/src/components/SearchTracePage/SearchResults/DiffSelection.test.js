@@ -79,4 +79,24 @@ describe('DiffSelection', () => {
     );
     expect(screen.getByText('Compare traces by selecting result items')).toBeInTheDocument();
   });
+
+  it('disables Compare Traces button when cohort length is less than 2', () => {
+    render(
+      <MemoryRouter>
+        <DiffSelection traces={[traces[0]]} toggleComparison={toggleComparison} />
+      </MemoryRouter>
+    );
+    const button = screen.getByRole('button', { name: /Compare Traces/i });
+    expect(button).toBeDisabled();
+  });
+
+  it('enables Compare Traces button when cohort length is 2 or more', () => {
+    render(
+      <MemoryRouter>
+        <DiffSelection traces={traces} toggleComparison={toggleComparison} />
+      </MemoryRouter>
+    );
+    const button = screen.getByRole('button', { name: /Compare Traces/i });
+    expect(button).toBeEnabled();
+  });
 });

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// @ts-nocheck
 import React from 'react';
 import dayjs from 'dayjs';
 
@@ -26,7 +25,7 @@ type Props = {
 
 // TODO typescript doesn't understand text or null as react nodes
 // https://github.com/Microsoft/TypeScript/issues/21699
-export default function RelativeDate(props: Props): JSX.Element {
+export default function RelativeDate(props: Props): React.JSX.Element {
   const { value, includeTime, fullMonthName } = props;
   const m = dayjs.isDayjs(value) ? value : dayjs(value);
   const dateStr = formatRelativeDate(m, Boolean(fullMonthName));

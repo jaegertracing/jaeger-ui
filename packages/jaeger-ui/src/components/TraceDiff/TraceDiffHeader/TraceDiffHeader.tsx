@@ -31,122 +31,108 @@ type Props = {
   diffSetB: (traceId: string) => void;
 };
 
-type State = {
-  tableVisible: ('a' | 'b') | null;
-};
+const TraceDiffHeader: React.FC<Props> = ({ a, b, cohort, diffSetA, diffSetB }) => {
+  const [tableVisible, setTableVisible] = React.useState<('a' | 'b') | null>(null);
 
-export default class TraceDiffHeader extends React.PureComponent<Props, State> {
-  _toggleTableA: (showTable: boolean) => void;
-  _toggleTableB: (showTable: boolean) => void;
-  _diffSetA: (traceID: string) => void;
-  _diffSetB: (traceID: string) => void;
-
-  state = {
-    tableVisible: null,
+  const toggleTable = (which: 'a' | 'b', visible: boolean) => {
+    setTableVisible(visible ? which : null);
   };
 
-  constructor(props: Props) {
-    super(props);
-    this._toggleTableA = this._toggleTable.bind(this, 'a');
-    this._toggleTableB = this._toggleTable.bind(this, 'b');
-    this._diffSetA = this._diffSetTrace.bind(this, 'a');
-    this._diffSetB = this._diffSetTrace.bind(this, 'b');
-  }
-
-  _toggleTable(which: 'a' | 'b', visible: boolean) {
-    const tableVisible = visible ? which : null;
-    this.setState({ tableVisible });
-  }
-
-  _diffSetTrace(which: 'a' | 'b', id: string) {
+  const diffSetTrace = (which: 'a' | 'b', id: string) => {
     if (which === 'a') {
-      this.props.diffSetA(id);
+      diffSetA(id);
     } else {
-      this.props.diffSetB(id);
+      diffSetB(id);
     }
-    this.setState({ tableVisible: null });
-  }
+    setTableVisible(null);
+  };
 
-  render() {
-    const { a, b, cohort } = this.props;
-    const { tableVisible } = this.state;
-    const {
-      data: aData = undefined,
-      id: aId = undefined,
-      state: aState = undefined,
-      error: aError = undefined,
-    } = a || {};
-    const {
-      data: bData = undefined,
-      id: bId = undefined,
-      state: bState = undefined,
-      error: bError = undefined,
-    } = b || {};
-    const selection: Record<string, { label: 'A' | 'B' }> = {};
-    if (aId) selection[aId] = { label: 'A' };
-    if (bId) selection[bId] = { label: 'B' };
-    const cohortTableA = (
-      <CohortTable cohort={cohort} current={aId} selectTrace={this._diffSetA} selection={selection} />
-    );
-    const cohortTableB = (
-      <CohortTable cohort={cohort} current={bId} selectTrace={this._diffSetB} selection={selection} />
-    );
-    return (
-      <header className="TraceDiffHeader">
-        <div className="TraceDiffHeader--labelItem">
-          <h1 className="TraceDiffHeader--label">A</h1>
+  const toggleTableA = (visible: boolean) => toggleTable('a', visible);
+  const toggleTableB = (visible: boolean) => toggleTable('b', visible);
+  const boundDiffSetA = (id: string) => diffSetTrace('a', id);
+  const boundDiffSetB = (id: string) => diffSetTrace('b', id);
+
+  const {
+    data: aData = undefined,
+    id: aId = undefined,
+    state: aState = undefined,
+    error: aError = undefined,
+  } = a || {};
+  const {
+    data: bData = undefined,
+    id: bId = undefined,
+    state: bState = undefined,
+    error: bError = undefined,
+  } = b || {};
+
+  const selection: Record<string, { label: 'A' | 'B' }> = {};
+  if (aId) selection[aId] = { label: 'A' };
+  if (bId) selection[bId] = { label: 'B' };
+
+  const cohortTableA = (
+    <CohortTable cohort={cohort} current={aId} selectTrace={boundDiffSetA} selection={selection} />
+  );
+  const cohortTableB = (
+    <CohortTable cohort={cohort} current={bId} selectTrace={boundDiffSetB} selection={selection} />
+  );
+
+  return (
+    <header className="TraceDiffHeader">
+      <div className="TraceDiffHeader--labelItem">
+        <h1 className="TraceDiffHeader--label">A</h1>
+      </div>
+      <Popover
+        classNames={{ root: 'TraceDiffHeader--popover' }}
+        trigger="click"
+        placement="bottomLeft"
+        title={<TraceIdInput selectTrace={boundDiffSetA} />}
+        content={cohortTableA}
+        open={tableVisible === 'a'}
+        onOpenChange={toggleTableA}
+      >
+        <div className="TraceDiffHeader--traceSection">
+          <TraceHeader
+            duration={aData?.duration}
+            error={aError}
+            startTime={aData?.startTime}
+            state={aState}
+            totalSpans={aData?.spans?.length}
+            traceID={aId}
+            traceName={aData?.traceName}
+          />
         </div>
-        <Popover
-          classNames={{ root: 'TraceDiffHeader--popover' }}
-          trigger="click"
-          placement="bottomLeft"
-          title={<TraceIdInput selectTrace={this._diffSetA} />}
-          content={cohortTableA}
-          open={tableVisible === 'a'}
-          onOpenChange={this._toggleTableA}
-        >
-          <div className="TraceDiffHeader--traceSection">
-            <TraceHeader
-              duration={aData && aData.duration}
-              error={aError}
-              startTime={aData && aData.startTime}
-              state={aState}
-              totalSpans={aData && aData.spans && aData.spans.length}
-              traceID={aId}
-              traceName={aData && aData.traceName}
-            />
-          </div>
-        </Popover>
-        <div className="TraceDiffHeader--divider">
-          <div className="TraceDiffHeader--vsContainer" data-testid="vs-separator">
-            <span className="TraceDiffHeader--vsLabel">VS</span>
-          </div>
+      </Popover>
+      <div className="TraceDiffHeader--divider">
+        <div className="TraceDiffHeader--vsContainer" data-testid="vs-separator">
+          <span className="TraceDiffHeader--vsLabel">VS</span>
         </div>
-        <div className="TraceDiffHeader--labelItem">
-          <h1 className="TraceDiffHeader--label">B</h1>
+      </div>
+      <div className="TraceDiffHeader--labelItem">
+        <h1 className="TraceDiffHeader--label">B</h1>
+      </div>
+      <Popover
+        classNames={{ root: 'TraceDiffHeader--popover' }}
+        trigger="click"
+        placement="bottomLeft"
+        title={<TraceIdInput selectTrace={boundDiffSetB} />}
+        content={cohortTableB}
+        open={tableVisible === 'b'}
+        onOpenChange={toggleTableB}
+      >
+        <div className="TraceDiffHeader--traceSection">
+          <TraceHeader
+            duration={bData?.duration}
+            error={bError}
+            startTime={bData?.startTime}
+            state={bState}
+            totalSpans={bData?.spans?.length}
+            traceID={bId}
+            traceName={bData?.traceName}
+          />
         </div>
-        <Popover
-          classNames={{ root: 'TraceDiffHeader--popover' }}
-          trigger="click"
-          placement="bottomLeft"
-          title={<TraceIdInput selectTrace={this._diffSetB} />}
-          content={cohortTableB}
-          open={tableVisible === 'b'}
-          onOpenChange={this._toggleTableB}
-        >
-          <div className="TraceDiffHeader--traceSection">
-            <TraceHeader
-              duration={bData && bData.duration}
-              error={bError}
-              startTime={bData && bData.startTime}
-              state={bState}
-              totalSpans={bData && bData.spans && bData.spans.length}
-              traceID={bId}
-              traceName={bData && bData.traceName}
-            />
-          </div>
-        </Popover>
-      </header>
-    );
-  }
-}
+      </Popover>
+    </header>
+  );
+};
+
+export default React.memo(TraceDiffHeader);

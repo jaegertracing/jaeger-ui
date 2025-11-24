@@ -144,4 +144,85 @@ describe('<AccordianLogs>', () => {
       expect(childProps.onToggle).toBeInstanceOf(Function);
     });
   });
+
+  it('dispatches events and handles show more/less functionality', () => {
+    jest.useFakeTimers();
+    const originalDispatchEvent = window.dispatchEvent;
+    const mockDispatchEvent = jest.fn();
+    window.dispatchEvent = mockDispatchEvent;
+
+    const manyLogs = Array.from({ length: 5 }, (_, i) => ({
+      timestamp: 10 + i,
+      fields: [{ key: 'message', value: `log ${i}` }],
+    }));
+
+    const propsWithManyLogs = {
+      ...defaultProps,
+      logs: manyLogs,
+      currentViewRangeTime: [0.0, 1.0],
+      initialVisibleCount: 3,
+      spanID: 'test-span-123',
+    };
+
+    const { unmount } = render(<AccordianLogs {...propsWithManyLogs} isOpen />);
+    const showMoreButton = screen.getByRole('button', { name: /show more.../i });
+    fireEvent.click(showMoreButton);
+    jest.runAllTimers();
+
+    expect(mockDispatchEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'jaeger:detail-measure',
+        detail: { spanID: 'test-span-123' },
+      })
+    );
+
+    const showLessButton = screen.getByRole('button', { name: /show less/i });
+    fireEvent.click(showLessButton);
+
+    unmount();
+
+    mockDispatchEvent.mockClear();
+    const propsWithoutSpanID = { ...propsWithManyLogs, spanID: undefined };
+    render(<AccordianLogs {...propsWithoutSpanID} isOpen />);
+    const showMoreButton2 = screen.getByRole('button', { name: /show more.../i });
+    fireEvent.click(showMoreButton2);
+
+    jest.runAllTimers();
+
+    expect(mockDispatchEvent).toHaveBeenCalledWith(expect.objectContaining({ type: 'jaeger:list-resize' }));
+
+    window.dispatchEvent = originalDispatchEvent;
+    jest.useRealTimers();
+  });
+
+  it('handles observer cleanup and errors', () => {
+    const originalResizeObserver = window.ResizeObserver;
+    const originalMutationObserver = window.MutationObserver;
+    const mockResizeObserver = {
+      observe: jest.fn(),
+      disconnect: jest.fn(() => {
+        throw new Error('disconnect error');
+      }),
+    };
+    window.ResizeObserver = jest.fn(() => mockResizeObserver);
+
+    const { unmount: unmount1 } = render(<AccordianLogs {...defaultProps} isOpen />);
+    expect(mockResizeObserver.observe).toHaveBeenCalled();
+    expect(() => unmount1()).not.toThrow();
+
+    window.ResizeObserver = undefined;
+    const mockMutationObserver = {
+      observe: jest.fn(),
+      disconnect: jest.fn(() => {
+        throw new Error('mutation disconnect error');
+      }),
+    };
+    window.MutationObserver = jest.fn(() => mockMutationObserver);
+
+    const { unmount: unmount2 } = render(<AccordianLogs {...defaultProps} isOpen />);
+    expect(() => unmount2()).not.toThrow();
+
+    window.ResizeObserver = originalResizeObserver;
+    window.MutationObserver = originalMutationObserver;
+  });
 });

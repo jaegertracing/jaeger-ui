@@ -17,6 +17,10 @@ import { render } from '@testing-library/react';
 import queryString from 'query-string';
 import '@testing-library/jest-dom';
 
+jest.mock('react-router-dom-v5-compat', () => ({
+  useNavigate: () => jest.fn(),
+}));
+
 import { DeepDependencyGraphPageImpl } from '.';
 import { TracesDdgImpl, mapStateToProps } from './traces';
 import * as url from './url';
@@ -42,7 +46,8 @@ describe('TracesDdgImpl', () => {
       <TracesDdgImpl location={location} propName0="propValue0" propName1="propValue1" />
     );
 
-    expect(DeepDependencyGraphPageImpl).toHaveBeenCalledWith(
+    const [firstArg] = DeepDependencyGraphPageImpl.mock.calls[0];
+    expect(firstArg).toEqual(
       expect.objectContaining({
         propName0: 'propValue0',
         propName1: 'propValue1',
@@ -50,8 +55,7 @@ describe('TracesDdgImpl', () => {
         baseUrl: ROUTE_PATH,
         extraUrlArgs,
         showSvcOpsHeader: false,
-      }),
-      undefined
+      })
     );
     expect(getByTestId('ddg-impl')).toBeInTheDocument();
   });

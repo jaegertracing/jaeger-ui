@@ -15,7 +15,7 @@
 import React from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { History, Location } from 'history';
-import { useHistory } from './useHistory';
+import { history } from './configure-store';
 
 /**
  * Interface representing route-related props passed to the enhanced component.
@@ -70,12 +70,6 @@ export default function withRouteProps(WrappedComponent: React.ElementType) {
      * @type {string}
      */
     const { search } = location;
-
-    /**
-     * The history object for navigation.
-     * @type {History}
-     */
-    const history = useHistory();
 
     /**
      * Renders the enhanced component with route-related props.

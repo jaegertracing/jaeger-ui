@@ -17,7 +17,6 @@ import { PluginOption, defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
 import vitePluginImp from 'vite-plugin-imp';
-import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
 
 const proxyConfig = {
@@ -57,8 +56,6 @@ export default defineConfig({
       // but logs warnings in attempting to do so, so disable it.
       exclude: ['lodash'],
     }),
-    // Generate a bundle size breakdown.
-    visualizer() as PluginOption,
   ],
   css: {
     preprocessorOptions: {

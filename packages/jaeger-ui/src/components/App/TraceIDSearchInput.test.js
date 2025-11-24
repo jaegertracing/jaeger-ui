@@ -20,7 +20,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Router } from 'react-router-dom';
 import TraceIDSearchInput from './TraceIDSearchInput';
-import { HistoryProvider } from '../../utils/useHistory';
+import { CompatRouter } from 'react-router-dom-v5-compat';
 
 describe('<TraceIDSearchInput />', () => {
   let history;
@@ -28,11 +28,11 @@ describe('<TraceIDSearchInput />', () => {
   beforeEach(() => {
     history = createMemoryHistory();
     render(
-      <HistoryProvider history={history}>
-        <Router history={history}>
+      <Router history={history}>
+        <CompatRouter>
           <TraceIDSearchInput />
-        </Router>
-      </HistoryProvider>
+        </CompatRouter>
+      </Router>
     );
   });
 

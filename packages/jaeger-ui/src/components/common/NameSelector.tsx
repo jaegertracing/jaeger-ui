@@ -19,7 +19,7 @@ import cx from 'classnames';
 import { IoChevronDown, IoClose } from 'react-icons/io5';
 
 import BreakableText from './BreakableText';
-import FilteredList from './FilteredList';
+import FilteredList, { IFilteredListRef } from './FilteredList';
 
 import './NameSelector.css';
 
@@ -52,7 +52,7 @@ const NameSelector: React.FC<TProps> = props => {
   }
 
   const [popoverVisible, setPopoverVisible] = useState(false);
-  const listRef = useRef<FilteredList>(null);
+  const listRef = useRef<IFilteredListRef>(null);
 
   // Focus input when popover opens
   useEffect(() => {

@@ -137,29 +137,38 @@ export function TopNavImpl(props: Props) {
   ];
 
   return (
-    <div>
-      <Menu
-        theme="dark"
-        mode="horizontal"
-        selectable={false}
-        className="ub-right Menu--item"
-        disabledOverflow
-        selectedKeys={[pathname]}
-        items={itemsGlobalRight}
-      />
+    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
       <Menu
         theme="dark"
         items={itemsGlobalLeft?.concat(
           NAV_LINKS.map(({ matches, to, text }) => {
             const url = typeof to === 'string' ? to : to(props);
             const key = matches(pathname) ? pathname : url;
-            return { key, label: <Link to={url}>{text}</Link> };
+            return {
+              key,
+              label: (
+                <Link style={{ outline: 'revert' }} to={url}>
+                  {text}
+                </Link>
+              ),
+            };
           })
         )}
         className="Menu--item"
         mode="horizontal"
         selectable={false}
         selectedKeys={[pathname]}
+        style={{ flex: '1 1 0', minWidth: 0 }}
+      />
+      <Menu
+        theme="dark"
+        items={itemsGlobalRight}
+        className="Menu--item"
+        mode="horizontal"
+        selectable={false}
+        disabledOverflow
+        selectedKeys={[pathname]}
+        style={{ flex: '0 1 auto', minWidth: 0 }}
       />
     </div>
   );

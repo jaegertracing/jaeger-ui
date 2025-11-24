@@ -344,6 +344,8 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
       <div
         ref={this.nodeRef}
         className="DdgNodeContent"
+        role="button"
+        tabIndex={0}
         onMouseOver={this.onMouseUx}
         onMouseOut={this.onMouseUx}
       >

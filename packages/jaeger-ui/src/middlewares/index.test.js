@@ -39,6 +39,13 @@ it('loadOperationsForServiceMiddleware fetches operations for services', () => {
     payload: 'yo',
   };
   loadOperationsForServiceMiddleware({ dispatch })(next)(action);
-  expect(dispatch).toHaveBeenCalledWith(fetchServiceOperations('yo'));
+
+  // Check that dispatch was called with the correct action structure
+  expect(dispatch).toHaveBeenCalledTimes(1);
+  const dispatchedAction = dispatch.mock.calls[0][0];
+  expect(dispatchedAction.type).toBe('@JAEGER_API/FETCH_SERVICE_OPERATIONS');
+  expect(dispatchedAction.meta).toEqual({ serviceName: 'yo' });
+  expect(dispatchedAction.payload).toBeInstanceOf(Promise);
+
   expect(next).toHaveBeenCalledWith(action);
 });
