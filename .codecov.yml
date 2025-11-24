@@ -1,34 +1,41 @@
-# Everything is the default except coverage.status.patch.default.only_pulls
+codecov:
+  notify:
+    require_ci_to_pass: yes
+    wait_for_ci: yes
+  strict_yaml_branch: main  # only use the latest copy on the main branch
+
 coverage:
+  precision: 2
+  round: down
+  range: "95...100"
   status:
     project:
       default:
-        # basic
-        target: auto
-        threshold: null
-        base: auto
-        # advanced
-        branches: null
+        # ABSOLUTE FLOOR: The status will fail if overall coverage is below 95%.
+        # This is enforced *after* the relative check passes.
+        target: 95%
+
+        # RELATIVE PROTECTION: This is the maximum allowed drop *below* the base commit's coverage.
+        # Setting this to 0% means the project coverage cannot drop at all,
+        # protecting against a negative delta from the base.
+        # Note: If the base coverage is 94%, setting target: 95% will still fail the PR.
+        threshold: 0%
+
         if_no_uploads: error
         if_not_found: success
         if_ci_failed: error
         only_pulls: false
-        flags: null
-        paths: null
     patch:
       default:
-        # basic
-        target: auto
-        threshold: null
-        base: auto
-        # advanced
-        branches: null
+        only_pulls: true
+
+        # PR-LEVEL COVERAGE: Setting this to 'informational: true'
+        # means the patch coverage is calculated and displayed, but does not block the PR.
+        informational: true
+
         if_no_uploads: error
         if_not_found: success
         if_ci_failed: error
-        # the main change:
-        only_pulls: true
-        flags: null
-        paths: null
+
 ignore:
   - "packages/jaeger-ui/src/utils/helpers/ReactShallowRenderer.js"
