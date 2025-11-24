@@ -24,11 +24,35 @@ limitations under the License.
   border-color: #d8d8d8;
 }
 
+body[data-theme='dark'] .ResultItem {
+  background: rgba(12, 20, 36, 0.92);
+  border: 1px solid rgba(123, 220, 255, 0.2);
+  box-shadow: 0 14px 28px rgba(3, 9, 19, 0.8);
+  color: rgba(244, 248, 255, 0.92);
+}
+
+body[data-theme='dark'] .ResultItem:hover {
+  background: rgba(24, 40, 66, 0.92);
+  border-color: rgba(123, 220, 255, 0.45);
+}
+
 .ResultItem--serviceTag {
   border-left-width: 15px;
   margin: 0;
   display: flex;
   align-items: center;
+}
+
+body[data-theme='dark'] .ResultItem--serviceTag {
+  background: rgba(18, 31, 54, 0.85);
+  border-color: rgba(123, 220, 255, 0.25);
+  color: rgba(244, 248, 255, 0.92);
+}
+
+body[data-theme='dark'] .ResultItem .ant-tag {
+  background: rgba(14, 26, 46, 0.9);
+  border-color: rgba(123, 220, 255, 0.25);
+  color: rgba(244, 248, 255, 0.9);
 }
 
 .ResultItem--errorIcon {

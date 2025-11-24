@@ -15,7 +15,30 @@ limitations under the License.
 */
 
 .TraceTimelineViewer {
-  border-bottom: 1px solid #bbb;
+  background: var(--trace-surface-secondary, #f8f8f8);
+  border-bottom: 1px solid var(--trace-border-strong, #bbb);
+  color: var(--trace-text-primary, #000);
+}
+
+.TraceTimelineViewer .TimelineHeaderRow,
+.TraceTimelineViewer .Ticks,
+.TraceTimelineViewer .flex-row,
+.TraceTimelineViewer .VirtualizedTraceView--spans,
+.TraceTimelineViewer .VirtualizedTraceView--rowsWrapper,
+.TraceTimelineViewer .VirtualizedTraceView--row {
+  background: var(--trace-surface-secondary, #f8f8f8);
+  color: inherit;
+}
+
+body[data-theme='dark'] .TraceTimelineViewer,
+body[data-theme='dark'] .TraceTimelineViewer .TimelineHeaderRow,
+body[data-theme='dark'] .TraceTimelineViewer .Ticks,
+body[data-theme='dark'] .TraceTimelineViewer .flex-row,
+body[data-theme='dark'] .TraceTimelineViewer .VirtualizedTraceView--spans,
+body[data-theme='dark'] .TraceTimelineViewer .VirtualizedTraceView--rowsWrapper,
+body[data-theme='dark'] .TraceTimelineViewer .VirtualizedTraceView--row {
+  background: rgba(7, 12, 24, 0.92);
+  color: rgba(244, 248, 255, 0.92);
 }
 
 .json-markup {
@@ -27,6 +50,7 @@ limitations under the License.
 
   word-break: break-all;
   word-wrap: break-word;
+  color: var(--trace-text-primary, #000);
 }
 
 .json-markup-key {
@@ -61,7 +85,7 @@ limitations under the License.
 
 .json-markup-icon-expand::after {
   content: '\25B6';
-  color: black;
+  color: var(--trace-text-primary, #000);
   font-size: 12px;
 }
 
@@ -71,13 +95,13 @@ limitations under the License.
 
 .json-markup-icon-collapse::after {
   content: '\25BC';
-  color: black;
+  color: var(--trace-text-primary, #000);
   font-size: 12px;
 }
 
 .json-markup-collapse-content::after {
   content: '\2026';
-  color: black;
+  color: var(--trace-text-primary, #000);
   font-size: 18px;
   margin-right: 4px;
 }

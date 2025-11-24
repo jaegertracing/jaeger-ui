@@ -15,15 +15,18 @@ limitations under the License.
 */
 
 .VirtualizedTraceView--spans {
+  background: var(--trace-surface-secondary, #f8f8f8);
   padding-top: 38px;
   /* position: relative;
   z-index: 1; */
 }
 
 .VirtualizedTraceView--rowsWrapper {
+  background: inherit;
   width: 100%;
 }
 
 .VirtualizedTraceView--row {
+  background: inherit;
   width: 100%;
 }

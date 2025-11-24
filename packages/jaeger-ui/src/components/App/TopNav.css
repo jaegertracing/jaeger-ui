@@ -78,3 +78,34 @@ body[data-theme='light'] .ThemeToggleButton {
   text-shadow: none;
   box-shadow: 0 3px 9px rgba(14, 79, 136, 0.18);
 }
+
+body[data-theme='dark'] .ant-dropdown-menu {
+  background: var(--trace-surface-contrast, rgba(9, 18, 34, 0.96));
+  border: 1px solid var(--trace-border-soft, rgba(255, 255, 255, 0.15));
+  box-shadow:
+    0 18px 40px var(--trace-overlay-ghost-strong, rgba(0, 0, 0, 0.7)),
+    0 0 0 1px rgba(0, 0, 0, 0.45);
+  color: var(--trace-text-primary, rgba(255, 255, 255, 0.95));
+  backdrop-filter: blur(8px);
+}
+
+body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-item,
+body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-submenu-title {
+  color: var(--trace-text-primary, rgba(255, 255, 255, 0.92));
+}
+
+body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-item:hover,
+body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-submenu-title:hover {
+  background: var(--trace-surface-muted, rgba(33, 51, 78, 0.8));
+  color: var(--trace-text-primary, #fff);
+}
+
+body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-item-disabled,
+body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-item-disabled .ant-dropdown-menu-title-content {
+  color: var(--trace-text-muted, rgba(255, 255, 255, 0.6)) !important;
+  opacity: 1;
+}
+
+body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-item-divider {
+  background-color: var(--trace-border-soft, rgba(255, 255, 255, 0.12));
+}

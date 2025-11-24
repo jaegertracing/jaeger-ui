@@ -95,6 +95,7 @@ const darkTheme: ThemeConfig = {
     colorBorderSecondary: 'rgba(125, 153, 191, 0.25)',
     colorLink: '#7bdcff',
     colorLinkHover: '#caf3ff',
+    colorBgElevated: '#162338',
   },
   components: {
     ...defaultTheme.components,

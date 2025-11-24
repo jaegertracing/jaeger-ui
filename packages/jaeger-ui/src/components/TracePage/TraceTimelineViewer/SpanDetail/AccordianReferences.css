@@ -19,11 +19,11 @@ limitations under the License.
   list-style: none;
   padding: 0;
   margin: 0;
-  background: #fff;
+  background: var(--trace-surface-primary, #fff);
 }
 .ReferencesList {
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--trace-surface-primary, #fff);
+  border: 1px solid var(--trace-border-soft, #ddd);
   margin-bottom: 0.7em;
   max-height: 450px;
   overflow: auto;
@@ -42,7 +42,7 @@ limitations under the License.
 }
 
 .ReferencesList--Item:nth-child(2n) {
-  background: #f5f5f5;
+  background: var(--trace-surface-tertiary, #f5f5f5);
 }
 
 .SpanReference--debugInfo {
@@ -51,7 +51,7 @@ limitations under the License.
 }
 
 .SpanReference--debugLabel::before {
-  color: #bbb;
+  color: var(--trace-debug-label, #bbb);
   content: attr(data-label);
 }
 

@@ -94,6 +94,31 @@ body[data-theme='dark'] .SearchForm .ant-select-selector:focus,
 body[data-theme='dark'] .SearchForm textarea:focus {
   box-shadow: 0 0 0 2px rgba(123, 220, 255, 0.35) !important;
 }
+
+body[data-theme='dark'] .ant-select-dropdown {
+  background-color: rgba(13, 24, 43, 0.98) !important;
+  border: 1px solid rgba(123, 220, 255, 0.25) !important;
+  box-shadow: 0 18px 40px rgba(3, 10, 21, 0.85) !important;
+  color: rgba(244, 248, 255, 0.92) !important;
+}
+
+body[data-theme='dark'] .ant-select-dropdown .ant-select-item {
+  color: rgba(244, 248, 255, 0.88) !important;
+}
+
+body[data-theme='dark']
+  .ant-select-dropdown
+  .ant-select-item-option-selected:not(.ant-select-item-option-disabled),
+body[data-theme='dark']
+  .ant-select-dropdown
+  .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: rgba(123, 220, 255, 0.16) !important;
+  color: rgba(244, 248, 255, 0.98) !important;
+}
+
+body[data-theme='dark'] .ant-select-dropdown .ant-select-item-option-disabled {
+  color: rgba(244, 248, 255, 0.4) !important;
+}
 .SearchForm--labelCount {
   color: var(--search-field-muted);
 }

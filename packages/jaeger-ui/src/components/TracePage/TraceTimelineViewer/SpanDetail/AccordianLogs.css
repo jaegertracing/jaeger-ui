@@ -15,20 +15,20 @@ limitations under the License.
 */
 
 .AccordianLogs {
-  border: 1px solid #d8d8d8;
+  border: 1px solid var(--trace-border-soft, #d8d8d8);
   position: relative;
   margin-bottom: 0.25rem;
 }
 
 .AccordianLogs--header {
-  background: #e4e4e4;
+  background: var(--trace-surface-muted, #e4e4e4);
   color: inherit;
   display: block;
   padding: 0.25rem 0.5rem;
 }
 
 .AccordianLogs--header:hover {
-  background: #dadada;
+  background: var(--trace-surface-contrast, #dadada);
 }
 
 .AccordianLogs--toggle {
@@ -40,11 +40,11 @@ limitations under the License.
 }
 
 .AccordianLogs--content {
-  background: #f0f0f0;
-  border-top: 1px solid #d8d8d8;
+  background: var(--trace-surface-contrast, #f0f0f0);
+  border-top: 1px solid var(--trace-border-soft, #d8d8d8);
   padding: 0.5rem 0.5rem 0.25rem 0.5rem;
 }
 
 .AccordianLogs--footer {
-  color: #999;
+  color: var(--trace-text-muted, #999);
 }

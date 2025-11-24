@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 .SpanDetail--divider {
-  background: #ddd;
+  background: var(--trace-border-soft, #ddd);
 }
 
 .SpanDetail--debugInfo {
@@ -26,38 +26,38 @@ limitations under the License.
 }
 
 .SpanDetail--debugLabel::before {
-  color: #bbb;
+  color: var(--trace-debug-label, #bbb);
   content: attr(data-label);
 }
 
 .SpanDetail--debugValue {
   background-color: inherit;
   border: none;
-  color: #888;
+  color: var(--trace-debug-value, #888);
   cursor: pointer;
 }
 
 .SpanDetail--debugValue:hover {
-  color: #333;
+  color: var(--trace-debug-value-hover, #333);
 }
 .AccordianWarnings {
-  background: #fafafa;
-  border: 1px solid #e4e4e4;
+  background: var(--trace-panel-bg, #fafafa);
+  border: 1px solid var(--trace-border-soft, #e4e4e4);
   margin-bottom: 0.25rem;
 }
 .AccordianWarnings--header {
-  background: #fff7e6;
+  background: var(--trace-panel-strong-bg, #fff7e6);
   padding: 0.25rem 0.5rem;
 }
 
 .AccordianWarnings--header:hover {
-  background: #ffe7ba;
+  background: var(--trace-panel-strong-hover, #ffe7ba);
 }
 
 .AccordianWarnings--header.is-open {
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid var(--trace-surface-muted, #e8e8e8);
 }
 
 .AccordianWarnings--label {
-  color: #d36c08;
+  color: var(--trace-warning-accent, #d36c08);
 }

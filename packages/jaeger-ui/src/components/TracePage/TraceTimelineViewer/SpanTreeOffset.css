@@ -15,12 +15,12 @@ limitations under the License.
 */
 
 .SpanTreeOffset {
-  color: #000;
+  color: var(--trace-text-primary, #000);
   position: relative;
 }
 
 .SpanTreeOffset.is-parent:hover {
-  background-color: #e8e8e8;
+  background-color: var(--trace-surface-muted, #e8e8e8);
   cursor: pointer;
 }
 
@@ -35,15 +35,15 @@ limitations under the License.
 .SpanTreeOffset--indentGuide:before {
   content: '';
   padding-left: 1px;
-  background-color: lightgrey;
+  background-color: var(--trace-border-soft, lightgrey);
 }
 
 .SpanTreeOffset--indentGuide.is-active {
-  border-left-color: darkgrey;
+  border-left-color: var(--trace-border-strong, darkgrey);
 }
 
 .SpanTreeOffset--indentGuide.is-active:before {
-  background-color: darkgrey;
+  background-color: var(--trace-border-strong, darkgrey);
 }
 
 .SpanTreeOffset--iconWrapper {

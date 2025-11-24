@@ -13,7 +13,9 @@
  limitations under the License. */
 
 .DAG {
-  border: 1px solid #bbb;
+  border: 1px solid var(--trace-border-strong, #bbb);
+  background: var(--trace-surface-secondary, #f8f8f8);
+  color: var(--trace-text-primary, #000);
   cursor: move;
   overflow: hidden;
   height: 100%;
@@ -22,15 +24,37 @@
 }
 
 .DAG--dag {
-  background: #fafafa;
-  stroke-width: 0.7;
-  stroke: #444;
+  background: var(--trace-surface-primary, #fff);
+  stroke-width: 1.1;
+  stroke: var(--trace-accent-primary, #119999);
 }
 
 .DAG--dag marker {
-  stroke-width: 0.7;
-  stroke: #444;
-  fill: #444;
+  stroke-width: 1.1;
+  stroke: var(--trace-accent-primary, #119999);
+  fill: var(--trace-accent-primary, #119999);
+}
+
+.DAG--dag path,
+.DAG--dag polyline {
+  stroke: var(--trace-accent-primary, #119999);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.DAG--dag marker path,
+.DAG--dag marker polygon {
+  fill: var(--trace-accent-primary, #119999);
+  stroke: var(--trace-accent-primary, #119999);
+}
+
+.DAG--dag text,
+.DAG--dag tspan {
+  fill: var(--trace-text-primary, #000);
+  stroke: var(--trace-surface-primary, #fff);
+  stroke-width: 0.7px;
+  paint-order: stroke fill;
 }
 
 .DAG--node {
@@ -41,13 +65,13 @@
 }
 
 .DAG--nodeCircle {
-  background-color: #dddddd;
+  background-color: var(--trace-surface-tertiary, #f5f5f5);
   border-radius: 50%;
   height: 3rem;
   width: 3rem;
   margin-bottom: 1.75rem;
-  border: 1px solid #bbb;
-  box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--trace-border-soft, #ddd);
+  box-shadow: 0 1px 2px 1px var(--trace-overlay-ghost, rgba(0, 0, 0, 0.15));
 }
 
 .DAG--nodeCircle.is-focalNode {
@@ -70,12 +94,15 @@
   text-align: center;
   font-weight: bold;
   font-size: 1.25rem;
-  color: #7f7f7f;
-  background-color: #fafafa;
+  color: var(--trace-text-muted, #7f7f7f);
+  background-color: var(--trace-surface-primary, #fff);
+  padding: 0 0.25rem;
+  border-radius: 4px;
 }
 
 .DAG--error {
   margin: 10px;
+  color: var(--trace-text-primary, #000);
 }
 
 .DAG .NodeContent--actionsItemIconWrapper > * {
@@ -85,6 +112,7 @@
 .DAG > div:last-child {
   position: fixed;
   z-index: 1000;
-  background: #fafafa;
-  border: 1px solid #d0d0d0;
+  background: var(--trace-surface-primary, #fff);
+  border: 1px solid var(--trace-border-soft, #ddd);
+  box-shadow: 0 2px 6px var(--trace-overlay-ghost, rgba(0, 0, 0, 0.2));
 }

@@ -17,7 +17,7 @@ limitations under the License.
 .Scrubber--handleExpansion {
   cursor: col-resize;
   fill-opacity: 0;
-  fill: #44f;
+  fill: var(--trace-overlay-ghost-strong, rgba(0, 0, 0, 0.18));
 }
 
 .Scrubber.isDragging .Scrubber--handleExpansion,
@@ -27,20 +27,20 @@ limitations under the License.
 
 .Scrubber--handle {
   cursor: col-resize;
-  fill: #555;
+  fill: var(--trace-handle-default, rgba(0, 0, 0, 0.65));
 }
 
 .Scrubber.isDragging .Scrubber--handle,
 .Scrubber--handles:hover > .Scrubber--handle {
-  fill: #44f;
+  fill: var(--trace-handle-active, #1976d2);
 }
 
 .Scrubber--line {
   pointer-events: none;
-  stroke: #555;
+  stroke: var(--trace-handle-default, rgba(0, 0, 0, 0.65));
 }
 
 .Scrubber.isDragging > .Scrubber--line,
 .Scrubber--handles:hover + .Scrubber--line {
-  stroke: #44f;
+  stroke: var(--trace-handle-active, #1976d2);
 }

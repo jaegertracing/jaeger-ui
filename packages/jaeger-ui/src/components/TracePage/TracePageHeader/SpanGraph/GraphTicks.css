@@ -15,6 +15,6 @@ limitations under the License.
 */
 
 .GraphTick {
-  stroke: #aaa;
+  stroke: var(--trace-gridline);
   stroke-width: 1px;
 }

@@ -15,11 +15,12 @@ limitations under the License.
 */
 
 .DiffNode {
-  background: #bbb;
-  border: 1px solid #777;
+  background: var(--trace-surface-secondary, #f8f8f8);
+  border: 1px solid var(--trace-border-strong, #bbb);
   box-shadow: 0 0px 3px 1px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   white-space: nowrap;
+  color: var(--trace-text-primary, #000);
 }
 
 .DiffNode.is-changed {
@@ -54,7 +55,7 @@ limitations under the License.
 
 .DiffNode--metricCell {
   padding: 0.3rem 0.5rem;
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--trace-overlay-ghost, rgba(255, 255, 255, 0.3));
 }
 
 .DiffNode--metricCell.is-changed {
@@ -63,7 +64,7 @@ limitations under the License.
 
 .DiffNode--metricCell.is-added,
 .DiffNode--metricCell.is-removed {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--trace-overlay-ghost-strong, rgba(0, 0, 0, 0.2));
 }
 
 .DiffNode--metricSymbol {
@@ -90,7 +91,7 @@ limitations under the License.
 }
 
 .DiffNode--popover.is-same .ant-popover-arrow {
-  background: #777;
+  background: var(--trace-border-strong, #bbb);
 }
 
 .DiffNode--popover.is-more .ant-popover-arrow,

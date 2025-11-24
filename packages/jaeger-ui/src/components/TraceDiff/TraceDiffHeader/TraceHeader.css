@@ -16,8 +16,8 @@ limitations under the License.
 
 .TraceDiffHeader--traceHeader {
   align-items: stretch;
-  background: #fafafa;
-  border-right: 1px solid #d8d8d8;
+  background: var(--trace-surface-secondary, #f8f8f8);
+  border-right: 1px solid var(--trace-border-soft, #ddd);
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -35,6 +35,7 @@ limitations under the License.
   padding: 0.25rem 2.5rem 0.25rem 1.25rem;
   position: relative;
   min-height: 2.5em;
+  color: var(--trace-text-primary, #000);
 }
 
 .TraceDiffHeader--traceTitle span {
@@ -49,11 +50,11 @@ limitations under the License.
 }
 
 .TraceDiffHeader--traceTitle.is-error {
-  color: #c00;
+  color: var(--trace-warning-accent, #d36c08);
 }
 
 .TraceDiffHeader--traceTitleChevron {
-  color: #199;
+  color: var(--trace-accent-primary, #119999);
   font-size: 0.75em;
   position: absolute;
   right: 15px;
@@ -71,8 +72,8 @@ limitations under the License.
   list-style: none;
   margin: 0;
   padding: 8px 15px;
-  background: #fafafa;
-  border-top: 1px solid #f0f0f0;
+  background: var(--trace-surface-secondary, #f8f8f8);
+  border-top: 1px solid var(--trace-border-soft, #ddd);
 }
 
 .TraceDiffHeader--traceAttr {

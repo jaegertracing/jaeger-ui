@@ -112,8 +112,9 @@ body[data-theme='dark'] {
 }
 
 .u-miniMap > .plexus-MiniMap--item {
-  background: #999;
-  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+  background: var(--trace-surface-tertiary, #999);
+  border: 1px solid var(--trace-border-strong, #777);
+  box-shadow: 0 0 5px var(--trace-overlay-ghost, rgba(0, 0, 0, 0.3));
   margin-right: 1rem;
   position: relative;
 }
@@ -126,7 +127,7 @@ body[data-theme='dark'] {
   left: 0;
   right: 0;
   bottom: 0;
-  outline: 1px solid #777;
+  outline: 1px solid var(--trace-border-strong, #777);
 }
 
 .u-miniMap > .plexus-MiniMap--map {
@@ -137,19 +138,26 @@ body[data-theme='dark'] {
 
 .u-miniMap .plexus-MiniMap--mapActive {
   /* dynamic: width, height, transform */
-  background: #ccc;
+  background: var(--trace-overlay-ghost-strong, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--trace-accent-primary, #119999);
+  box-shadow: 0 0 0 1px var(--trace-accent-primary, #119999);
   position: absolute;
 }
 
 .u-miniMap > .plexus-MiniMap--button {
-  background: #ccc;
-  color: #444;
+  background: var(--trace-surface-tertiary, #ccc);
+  border: 1px solid var(--trace-border-soft, #999);
+  color: var(--trace-text-primary, #444);
   cursor: pointer;
   font-size: 1.6em;
   line-height: 0;
   padding: 0.1rem;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .u-miniMap > .plexus-MiniMap--button:hover {
-  background: #ddd;
+  background: var(--trace-surface-muted, #ddd);
+  color: var(--trace-text-primary, #000);
 }

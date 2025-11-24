@@ -29,7 +29,7 @@ limitations under the License.
   bottom: 0;
   left: 0;
   width: 1px;
-  background-color: red;
+  background-color: var(--trace-warning-accent, #d36c08);
 }
 
 .TimelineViewingLayer--dragged {
@@ -47,13 +47,13 @@ limitations under the License.
 }
 
 .TimelineViewingLayer--dragged.isShiftDrag {
-  background-color: rgba(68, 68, 255, 0.2);
-  border-color: #44f;
+  background-color: var(--trace-highlight-soft, rgba(255, 193, 71, 0.22));
+  border-color: var(--trace-highlight-intense, rgba(255, 193, 71, 0.38));
 }
 
 .TimelineViewingLayer--dragged.isReframeDrag {
-  background-color: rgba(255, 68, 68, 0.2);
-  border-color: #f44;
+  background-color: rgba(211, 108, 8, 0.25);
+  border-color: var(--trace-warning-accent, #d36c08);
 }
 
 .TimelineViewingLayer--fullOverlay {

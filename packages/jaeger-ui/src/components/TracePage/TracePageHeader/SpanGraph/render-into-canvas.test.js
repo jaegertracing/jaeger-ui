@@ -15,7 +15,7 @@
 import _range from 'lodash/range';
 
 import renderIntoCanvas, {
-  BG_COLOR,
+  DEFAULT_BG_COLOR,
   ITEM_ALPHA,
   MIN_ITEM_HEIGHT,
   MAX_TOTAL_HEIGHT,
@@ -25,8 +25,8 @@ import renderIntoCanvas, {
 } from './render-into-canvas';
 
 const getCanvasWidth = () => window.innerWidth * 2;
-const getBgFillRect = items => ({
-  fillStyle: BG_COLOR,
+const getBgFillRect = (items, color = DEFAULT_BG_COLOR) => ({
+  fillStyle: color,
   height:
     !items || items.length < MIN_TOTAL_HEIGHT ? MIN_TOTAL_HEIGHT : Math.min(MAX_TOTAL_HEIGHT, items.length),
   width: getCanvasWidth(),
@@ -111,6 +111,13 @@ describe('renderIntoCanvas()', () => {
       expect(canvas.getContext.mock.calls).toEqual([['2d', { alpha: false }]]);
       expect(canvas.contexts.length).toBe(1);
       expect(canvas.contexts[0].fillRectAccumulator).toEqual(expectedDrawing);
+    });
+
+    it('allows overriding the background color', () => {
+      const customColor = '#123456';
+      const canvas = new Canvas();
+      renderIntoCanvas(canvas, [basicItem], 150, getColorFactory(), customColor);
+      expect(canvas.contexts[0].fillRectAccumulator[0]).toEqual(getBgFillRect(undefined, customColor));
     });
 
     it('draws the map', () => {

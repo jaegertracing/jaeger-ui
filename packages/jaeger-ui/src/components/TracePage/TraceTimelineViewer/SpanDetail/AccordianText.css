@@ -23,5 +23,5 @@ limitations under the License.
 }
 
 .AccordianText--header:hover {
-  background: #e8e8e8;
+  background: var(--trace-surface-muted, #e8e8e8);
 }

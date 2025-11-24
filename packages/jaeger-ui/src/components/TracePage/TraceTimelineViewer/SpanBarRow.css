@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 .span-row.is-matching-filter {
-  background-color: #fffce4;
+  background-color: var(--trace-highlight-soft, #fffce4);
 }
 
 .span-name-column {
@@ -39,43 +39,42 @@ limitations under the License.
 }
 
 .span-name-wrapper {
-  background: #f8f8f8;
+  background: var(--trace-surface-secondary, #f8f8f8);
   line-height: 27px;
   overflow: hidden;
   display: flex;
 }
 
 .span-name-wrapper.is-matching-filter {
-  background-color: #fffce4;
+  background-color: var(--trace-highlight-soft, #fffce4);
 }
 
 .span-name-wrapper:hover {
-  border-right: 1px solid #bbb;
+  border-right: 1px solid var(--trace-border-strong, #bbb);
   float: left;
   min-width: calc(100% + 1px);
   overflow: visible;
 }
 
 .span-row:hover .span-name-wrapper {
-  background: #f8f8f8;
-  background: linear-gradient(90deg, #fafafa, #f8f8f8 75%, #eee);
+  background: var(--trace-surface-tertiary, #f5f5f5);
 }
 
 .span-row.is-matching-filter:hover .span-name-wrapper {
-  background: linear-gradient(90deg, #fff5e1, #fff5e1 75%, #ffe6c9);
+  background: var(--trace-highlight-strong, #fff5e1);
 }
 
 .span-row.is-expanded .span-name-wrapper {
-  background: #f0f0f0;
-  box-shadow: 0 1px 0 #ddd;
+  background: var(--trace-surface-contrast, #f0f0f0);
+  box-shadow: 0 1px 0 var(--trace-border-soft, #ddd);
 }
 
 .span-row.is-expanded .span-name-wrapper.is-matching-filter {
-  background: #fff3d7;
+  background: var(--trace-highlight-strong, #fff3d7);
 }
 
 .span-name {
-  color: #000;
+  color: var(--trace-text-primary, #000);
   cursor: pointer;
   flex: 1 1 auto;
   outline: none;
@@ -116,11 +115,11 @@ limitations under the License.
 }
 
 .endpoint-name {
-  color: #808080;
+  color: var(--trace-text-muted, #808080);
 }
 
 .span-name:hover > .endpoint-name {
-  color: #000;
+  color: var(--trace-text-primary, #000);
 }
 
 .span-svc-name {
@@ -135,34 +134,39 @@ limitations under the License.
 
 .span-view {
   position: relative;
+  background: var(--trace-surface-primary, #fff);
+}
+
+body[data-theme='dark'] .span-view {
+  background: var(--trace-surface-primary);
 }
 
 .span-row:hover .span-view {
-  background-color: #f5f5f5;
-  outline: 1px solid #ddd;
+  background-color: var(--trace-surface-tertiary, #f5f5f5);
+  outline: 1px solid var(--trace-border-soft, #ddd);
 }
 
 .span-row.is-matching-filter:hover .span-view {
-  background-color: #fff3d7;
-  outline: 1px solid #ddd;
+  background-color: var(--trace-highlight-strong, #fff3d7);
+  outline: 1px solid var(--trace-border-soft, #ddd);
 }
 
 .span-row.is-expanded .span-view {
-  background: #f8f8f8;
-  outline: 1px solid #ddd;
+  background: var(--trace-surface-secondary, #f8f8f8);
+  outline: 1px solid var(--trace-border-soft, #ddd);
 }
 
 .span-row.is-expanded.is-matching-filter .span-view {
-  background: #fff3d7;
-  outline: 1px solid #ddd;
+  background: var(--trace-highlight-strong, #fff3d7);
+  outline: 1px solid var(--trace-border-soft, #ddd);
 }
 
 .span-row.is-expanded:hover .span-view {
-  background: #eee;
+  background: var(--trace-surface-muted, #e8e8e8);
 }
 
 .span-row.is-expanded.is-matching-filter:hover .span-view {
-  background: #ffeccf;
+  background: var(--trace-highlight-intense, #ffeccf);
 }
 
 .span-row.clipping-right .span-view::before {
@@ -178,7 +182,7 @@ limitations under the License.
 .SpanBarRow--errorIcon {
   background: #db2828;
   border-radius: 6.5px;
-  color: #fff;
+  color: var(--trace-text-contrast, #fff);
   font-size: 0.85em;
   margin-right: 0.25rem;
   padding: 1px;

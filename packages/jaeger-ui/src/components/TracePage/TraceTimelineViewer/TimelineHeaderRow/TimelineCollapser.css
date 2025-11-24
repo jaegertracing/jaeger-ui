@@ -28,7 +28,7 @@ limitations under the License.
 
 .TimelineCollapser--btn,
 .TimelineCollapser--btn-expand {
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--trace-text-muted, rgba(0, 0, 0, 0.5));
   cursor: pointer;
   margin-right: 0.2rem;
   padding: 0.1rem;
@@ -36,7 +36,7 @@ limitations under the License.
 
 .TimelineCollapser--btn:hover,
 .TimelineCollapser--btn-expand:hover {
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--trace-text-primary, rgba(0, 0, 0, 0.85));
 }
 
 .TimelineCollapser--btn-size {

@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 .DependencyGraph--graphWrapper {
+  background: var(--trace-surface-secondary, #f8f8f8);
+  color: var(--trace-text-primary, #000);
   bottom: 1rem;
   left: 1rem;
   overflow: hidden;
@@ -24,11 +26,13 @@ limitations under the License.
 }
 
 .rv-force__node {
-  fill: #11939a;
+  fill: var(--trace-accent-primary, #11939a);
   cursor: pointer;
 }
 
 .rv-force__label {
+  fill: var(--trace-text-primary, #000);
+  stroke: var(--trace-surface-secondary, transparent);
   user-select: none;
   pointer-events: none;
 }

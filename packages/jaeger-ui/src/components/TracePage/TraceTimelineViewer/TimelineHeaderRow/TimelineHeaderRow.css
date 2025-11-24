@@ -15,13 +15,20 @@ limitations under the License.
 */
 
 .TimelineHeaderRow {
-  background: #ececec;
-  border-bottom: 1px solid #ccc;
+  background: var(--trace-surface-contrast, #f0f0f0);
+  border-bottom: 1px solid var(--trace-border-strong, #ccc);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  color: var(--trace-text-primary, #000);
   height: 38px;
   line-height: 38px;
   position: fixed;
   width: 100%;
   z-index: 4;
+}
+
+.TimelineHeaderRow .ub-relative {
+  background: var(--trace-surface-contrast, #f0f0f0);
+  color: inherit;
 }
 
 .TimelineHeaderRow--title {
@@ -30,4 +37,5 @@ limitations under the License.
   margin: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--trace-text-primary, #000);
 }

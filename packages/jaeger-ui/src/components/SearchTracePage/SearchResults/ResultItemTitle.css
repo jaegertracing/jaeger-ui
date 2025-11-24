@@ -20,6 +20,11 @@ limitations under the License.
   display: flex;
 }
 
+body[data-theme='dark'] .ResultItemTitle {
+  background: rgba(19, 32, 54, 0.95);
+  border-bottom: 1px solid rgba(123, 220, 255, 0.2);
+}
+
 .ResultItemTitle--item {
   color: inherit;
   padding: 0.5rem;
@@ -33,6 +38,19 @@ limitations under the License.
 .ResultItemTitle--item:hover {
   background: #e4e4e4;
   border-color: #ccc;
+}
+
+body[data-theme='dark'] .ResultItemTitle--item {
+  color: rgba(244, 248, 255, 0.92);
+}
+
+body[data-theme='dark'] .ResultItemTitle--item:first-child {
+  border-right: 1px solid rgba(123, 220, 255, 0.2);
+}
+
+body[data-theme='dark'] .ResultItemTitle--item:hover {
+  background: rgba(33, 52, 80, 0.95);
+  border-color: rgba(123, 220, 255, 0.3);
 }
 
 .ResultItemTitle--title {
@@ -50,6 +68,10 @@ limitations under the License.
   padding-left: 0.5rem;
 }
 
+body[data-theme='dark'] .ResultItemTitle--idExcerpt {
+  color: rgba(244, 248, 255, 0.65);
+}
+
 .ResultItemTitle--durationBar {
   background: #d7e7ea;
   bottom: 0;
@@ -60,4 +82,12 @@ limitations under the License.
 
 .ResultItemTitle--item:hover > .ResultItemTitle--durationBar {
   background: #c5dde0;
+}
+
+body[data-theme='dark'] .ResultItemTitle--durationBar {
+  background: rgba(123, 220, 255, 0.2);
+}
+
+body[data-theme='dark'] .ResultItemTitle--item:hover > .ResultItemTitle--durationBar {
+  background: rgba(123, 220, 255, 0.35);
 }

@@ -28,7 +28,18 @@ limitations under the License.
   padding: 1rem;
 }
 
+body[data-theme='dark'] .DiffSelection--message {
+  background: rgba(8, 18, 32, 0.95);
+  border: 1px solid rgba(123, 220, 255, 0.35);
+  color: rgba(244, 248, 255, 0.92);
+  box-shadow: 0 18px 34px rgba(3, 9, 19, 0.7);
+}
+
 .DiffSelection--selectedItems {
   border: 1px solid #ccc;
   border-bottom: none;
+}
+
+body[data-theme='dark'] .DiffSelection--selectedItems {
+  border: 1px solid rgba(123, 220, 255, 0.3);
 }

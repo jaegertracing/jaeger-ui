@@ -15,7 +15,9 @@ limitations under the License.
 */
 
 .Tracepage--headerSection {
-  background: #fff;
+  background: var(--trace-surface-primary, #fff);
+  border-bottom: 1px solid var(--trace-border-strong, #bbb);
+  color: var(--trace-text-primary, #000);
   position: fixed;
   width: 100%;
   z-index: 3;

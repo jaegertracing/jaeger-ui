@@ -12,14 +12,11 @@
  See the License for the specific language governing permissions and
  limitations under the License. */
 
-.service-selector-header {
-  font-size: 15px;
-  font-weight: 500;
-}
-
+.service-selector-header,
 .layout-selector-header {
   font-size: 15px;
   font-weight: 500;
+  color: var(--trace-text-primary, rgba(0, 0, 0, 0.85));
 }
 
 .dag-options {
@@ -49,7 +46,7 @@
 
 .selector-label {
   font-size: 14px;
-  color: #666;
+  color: var(--trace-text-muted, #666);
   white-space: nowrap;
 }
 
@@ -57,13 +54,14 @@
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 8px;
+  color: var(--trace-text-primary, rgba(0, 0, 0, 0.85));
 }
 
 .hint-info {
   margin: 0;
   padding-left: 16px;
   font-size: 12px;
-  color: #666;
+  color: var(--trace-text-muted, #666);
 }
 
 .hint-info li {
@@ -81,16 +79,16 @@
 }
 
 .hint-trigger {
-  border: 1px solid #999;
+  border: 1px solid var(--trace-text-label, #aaa);
   border-radius: 100px;
-  color: #999;
+  color: var(--trace-text-label, #aaa);
   cursor: pointer;
   padding: 1px;
 }
 
 .hint-trigger:hover {
-  color: #000;
-  border-color: #000;
+  color: var(--trace-text-primary, #000);
+  border-color: var(--trace-text-primary, #000);
 }
 
 .reset-container {
@@ -101,14 +99,14 @@
 }
 
 .reset-icon {
-  color: #999;
+  color: var(--trace-text-label, #aaa);
   cursor: pointer;
   font-size: 20px;
   transition: color 0.3s ease;
 }
 
 .reset-icon:hover {
-  color: #000;
+  color: var(--trace-text-primary, #000);
 }
 
 .search-input-container {
@@ -127,11 +125,11 @@
 
 .search-match-count {
   font-size: 12px;
-  color: #666;
+  color: var(--trace-text-primary, #555);
   white-space: nowrap;
   padding: 2px 4px;
   border-radius: 4px;
-  background-color: #fffb8f;
+  background-color: var(--trace-highlight-soft, #fffb8f);
 }
 
 .data-selector {
@@ -144,16 +142,16 @@
   margin-left: 8px;
   margin-right: 30px;
   height: 32px;
-  background-color: #f5f5f5;
-  border: 1px solid #d9d9d9;
+  background-color: var(--trace-surface-tertiary, #f5f5f5);
+  border: 1px solid var(--trace-border-soft, #d9d9d9);
   border-radius: 4px;
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--trace-text-primary, rgba(0, 0, 0, 0.85));
   font-size: 14px;
   transition: all 0.3s;
 }
 
 .reset-button:hover {
-  background-color: #e6e6e6;
-  border-color: #d9d9d9;
-  color: rgba(0, 0, 0, 0.85);
+  background-color: var(--trace-surface-muted, #e6e6e6);
+  border-color: var(--trace-border-soft, #d9d9d9);
+  color: var(--trace-text-primary, rgba(0, 0, 0, 0.85));
 }

@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 .Ticks {
+  background: inherit;
   pointer-events: none;
 }
 
@@ -22,7 +23,7 @@ limitations under the License.
   position: absolute;
   height: 100%;
   width: 1px;
-  background: #d8d8d8;
+  background: var(--trace-gridline, #d8d8d8);
 }
 
 .Ticks--tick:last-child {
@@ -33,6 +34,7 @@ limitations under the License.
   left: 0.25rem;
   position: absolute;
   white-space: nowrap;
+  color: var(--trace-text-label, #aaa);
 }
 
 .Ticks--tickLabel.isEndAnchor {

@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 .CanvasSpanGraph {
-  background: #fafafa;
+  background: var(--trace-surface-secondary, #f8f8f8);
   height: 60px;
   position: absolute;
   width: 100%;

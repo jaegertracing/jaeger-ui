@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 .KeyValueTable {
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--trace-surface-primary, #fff);
+  border: 1px solid var(--trace-border-soft, #ddd);
   margin-bottom: 0.7em;
   max-height: 450px;
   overflow: auto;
@@ -31,11 +31,11 @@ limitations under the License.
 }
 
 .KeyValueTable--row:nth-child(2n) > td {
-  background: #f5f5f5;
+  background: var(--trace-surface-tertiary, #f5f5f5);
 }
 
 .KeyValueTable--keyColumn {
-  color: #888;
+  color: var(--trace-text-muted, #888);
   white-space: pre;
   width: 125px;
 }

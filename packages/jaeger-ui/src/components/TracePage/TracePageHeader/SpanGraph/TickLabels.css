@@ -20,7 +20,7 @@ limitations under the License.
 }
 
 .TickLabels--label {
-  color: #717171;
+  color: var(--trace-text-label, #717171);
   font-size: 0.7rem;
   position: absolute;
   user-select: none;

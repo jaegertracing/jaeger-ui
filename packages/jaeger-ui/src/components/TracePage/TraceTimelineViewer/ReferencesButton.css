@@ -16,7 +16,7 @@ limitations under the License.
 
 .ReferencesButton-MultiParent {
   padding: 0 5px;
-  color: #000;
+  color: var(--trace-text-primary, #000);
 }
 .ReferencesButton-MultiParent ~ .ReferencesButton-MultiParent {
   margin-left: 5px;

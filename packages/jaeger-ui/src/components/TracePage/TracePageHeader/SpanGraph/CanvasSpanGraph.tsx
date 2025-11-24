@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 
 import renderIntoCanvas from './render-into-canvas';
 import colorGenerator from '../../../../utils/color-generator';
+import { useThemeMode } from '../../../App/ThemeProvider';
 
 import './CanvasSpanGraph.css';
 
@@ -26,14 +27,28 @@ type CanvasSpanGraphProps = {
 
 export const getColor = (hex: string) => colorGenerator.getRgbColorByKey(hex);
 
+const CANVAS_BG_FALLBACK = '#f8f8f8';
+
+function resolveCanvasBackground(): string {
+  if (typeof window === 'undefined') {
+    return CANVAS_BG_FALLBACK;
+  }
+  const target = document.body || document.documentElement;
+  const style = window.getComputedStyle(target);
+  const value = style.getPropertyValue('--trace-surface-secondary');
+  return value && value.trim().length ? value.trim() : CANVAS_BG_FALLBACK;
+}
+
 const CanvasSpanGraph: React.FC<CanvasSpanGraphProps> = ({ items, valueWidth }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { mode } = useThemeMode();
+  const canvasBackground = useMemo(resolveCanvasBackground, [mode]);
 
   useEffect(() => {
     if (canvasRef.current) {
-      renderIntoCanvas(canvasRef.current, items, valueWidth, getColor);
+      renderIntoCanvas(canvasRef.current, items, valueWidth, getColor, canvasBackground);
     }
-  }, [items, valueWidth]);
+  }, [items, valueWidth, canvasBackground]);
 
   return <canvas className="CanvasSpanGraph" ref={canvasRef} />;
 };

@@ -14,7 +14,7 @@ limitations under the License.
 */
 
 .AltViewOptions {
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--trace-border-soft);
   border-radius: 4px;
   height: 32px;
   line-height: 30px;

@@ -11,21 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FlamegraphRenderer, convertJaegerTraceToProfile } from '@pyroscope/flamegraph';
 import _cloneDeep from 'lodash/cloneDeep';
 
 import '@pyroscope/flamegraph/dist/index.css';
 import './index.css';
+import { useThemeMode } from '../../App/ThemeProvider';
 
 const TraceFlamegraph = ({ trace }: any) => {
   // Cloned b/c convertJaegerTraceToProfile or FlamegraphRenderer can possibly mutate the trace
   // https://github.com/jaegertracing/jaeger-ui/issues/2483
   const convertedProfile = trace && trace.data ? convertJaegerTraceToProfile(_cloneDeep(trace.data)) : null;
 
+  const { mode } = useThemeMode();
+  const colorMode = useMemo(() => (mode === 'dark' ? 'dark' : 'light'), [mode]);
+
   return (
     <div className="Flamegraph-wrapper" data-testid="flamegraph-wrapper">
-      <FlamegraphRenderer colorMode="light" profile={convertedProfile} />
+      <FlamegraphRenderer colorMode={colorMode} profile={convertedProfile} />
     </div>
   );
 };

@@ -69,3 +69,35 @@ body[data-theme='dark'] .button-empty-state {
   height: auto;
   margin-top: calc(100vh / 10);
 }
+
+.center-empty-state .ant-alert {
+  background: var(--trace-surface-primary, rgba(255, 255, 255, 0.95));
+  border: 1px solid var(--trace-border-strong, rgba(17, 147, 154, 0.35));
+  color: var(--trace-text-primary, rgba(0, 0, 0, 0.85));
+  width: 100%;
+  margin-top: 1rem;
+  box-shadow: 0 10px 30px var(--trace-overlay-ghost, rgba(0, 0, 0, 0.08));
+}
+
+.center-empty-state .ant-alert .ant-alert-icon {
+  color: var(--trace-accent-primary, #119999);
+}
+
+.center-empty-state .ant-alert .ant-alert-message {
+  color: var(--trace-text-primary, rgba(0, 0, 0, 0.85));
+}
+
+body[data-theme='dark'] .center-empty-state .ant-alert {
+  background: var(--trace-surface-contrast, rgba(7, 15, 32, 0.92));
+  border-color: var(--trace-border-soft, rgba(123, 220, 255, 0.45));
+  color: var(--trace-text-primary, rgba(255, 255, 255, 0.92));
+  box-shadow: 0 15px 40px var(--trace-overlay-ghost-strong, rgba(0, 0, 0, 0.6));
+}
+
+body[data-theme='dark'] .center-empty-state .ant-alert .ant-alert-icon {
+  color: var(--trace-accent-primary, #7bdcff);
+}
+
+body[data-theme='dark'] .center-empty-state .ant-alert .ant-alert-message {
+  color: var(--trace-text-primary, rgba(255, 255, 255, 0.92));
+}

@@ -49,8 +49,8 @@ limitations under the License.
 }
 
 .detail-info-wrapper {
-  background: #f5f5f5;
-  border: 1px solid #d3d3d3;
+  background: var(--trace-surface-tertiary, #f5f5f5);
+  border: 1px solid var(--trace-border-soft, #d3d3d3);
   border-top: 3px solid;
   padding: 0.75rem;
 }

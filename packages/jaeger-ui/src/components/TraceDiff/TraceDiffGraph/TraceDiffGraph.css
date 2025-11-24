@@ -25,7 +25,8 @@ limitations under the License.
 }
 
 .TraceDiffGraph--errorsWrapper {
-  background: #eee;
+  background: var(--trace-surface-primary, #fff);
+  color: var(--trace-text-primary, #000);
   bottom: 0;
   left: 0;
   overflow: auto;
@@ -46,7 +47,7 @@ limitations under the License.
 }
 
 .TraceDiffGraph--dag.is-uiFind-mode {
-  background: #ddd;
+  background: var(--trace-surface-tertiary, #f5f5f5);
 }
 
 /* Find within diff */
@@ -59,9 +60,9 @@ limitations under the License.
 }
 
 .TraceDiffGraph--uiFind > .ant-input {
-  border: 1px solid #aaa;
+  border: 1px solid var(--trace-border-soft, #ddd);
   border-radius: 0;
-  box-shadow: 0 0 2px 2px #ccc;
+  box-shadow: 0 0 2px 2px var(--trace-overlay-ghost, rgba(0, 0, 0, 0.08));
 }
 
 .TraceDiffGraph--emptyState {
@@ -76,9 +77,9 @@ limitations under the License.
   max-width: 500px;
   text-align: center;
   padding: 2rem;
-  background-color: #f5f5f5;
+  background-color: var(--trace-surface-primary, #fff);
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--trace-overlay-ghost-strong, rgba(0, 0, 0, 0.15));
 }
 
 .TraceDiffGraph--emptyStateHeader {
@@ -97,7 +98,7 @@ limitations under the License.
 .TraceDiffGraph--traceB {
   font-size: 32px;
   font-weight: bold;
-  color: rgb(0, 0, 0);
+  color: var(--trace-text-primary, #000);
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -120,14 +121,14 @@ limitations under the License.
   top: 15px;
   width: 3px;
   height: 30px;
-  background-color: #199;
+  background-color: var(--trace-accent-primary, #119999);
   transform: translateX(-50%);
 }
 
 .TraceDiffGraph--emptyStateTitle {
-  margin-top: 0.5 rem;
+  margin-top: 0.5rem;
   margin-bottom: 0.75rem;
-  color: #aaa;
+  color: var(--trace-text-label, #aaa);
   text-align: center;
   font-weight: 600;
 }
@@ -140,8 +141,8 @@ limitations under the License.
 }
 
 .TraceDiffGraph--emptyStateButton {
-  background-color: #199;
-  color: white;
+  background-color: var(--trace-accent-primary, #119999);
+  color: var(--trace-accent-contrast, #fff);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
@@ -152,17 +153,23 @@ limitations under the License.
 }
 
 .TraceDiffGraph--emptyStateButton:hover {
-  background-color: rgb(28, 138, 138);
-  color: white;
+  background-color: var(--trace-accent-primary-hover, #0d6f6f);
+  color: var(--trace-accent-contrast, #fff);
   text-decoration: none;
 }
 
 .TraceDiffGraph--helpButton {
   background-color: transparent;
-  border: 1px solid #199;
-  color: #199;
+  border: 1px solid var(--trace-accent-primary, #119999);
+  color: var(--trace-accent-primary, #119999);
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
   font-weight: 500;
+}
+
+.TraceDiffGraph--helpButton:hover {
+  background-color: var(--trace-accent-primary-hover, #0d6f6f);
+  border-color: var(--trace-accent-primary-hover, #0d6f6f);
+  color: var(--trace-accent-contrast, #fff);
 }

@@ -15,7 +15,8 @@ limitations under the License.
 */
 
 .TraceDiff--graphWrapper {
-  background: #f0f0f0;
+  background: var(--trace-surface-secondary, #f8f8f8);
+  color: var(--trace-text-primary, #000);
   bottom: 0;
   left: 0;
   position: fixed;

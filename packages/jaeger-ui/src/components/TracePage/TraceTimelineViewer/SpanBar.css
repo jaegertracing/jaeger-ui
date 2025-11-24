@@ -59,8 +59,8 @@ limitations under the License.
   width: 10%;
   height: 100%;
   visibility: hidden;
-  background-color: white;
-  border: 1px solid white;
+  background-color: var(--trace-text-contrast, #fff);
+  border: 1px solid var(--trace-text-contrast, #fff);
 }
 
 .SpanBar--criticalPath:hover::before {
@@ -78,7 +78,7 @@ limitations under the License.
 }
 
 .SpanBar--label {
-  color: #aaa;
+  color: var(--trace-text-label, #aaa);
   font-size: 12px;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   line-height: 1em;
@@ -97,11 +97,11 @@ limitations under the License.
 
 .span-row.is-expanded .SpanBar--label,
 .span-row:hover .SpanBar--label {
-  color: #000;
+  color: var(--trace-text-primary, #000);
 }
 
 .SpanBar--logMarker {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--trace-log-marker, rgba(0, 0, 0, 0.5));
   cursor: pointer;
   height: 60%;
   min-width: 1px;
@@ -110,7 +110,7 @@ limitations under the License.
 }
 
 .SpanBar--logMarker:hover {
-  background-color: #000;
+  background-color: var(--trace-log-marker-hover, #000);
   transform: scale(1.2);
   transition: transform 0.3s ease;
 }
