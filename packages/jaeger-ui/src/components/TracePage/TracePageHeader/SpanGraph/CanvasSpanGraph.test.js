@@ -62,7 +62,13 @@ describe('<CanvasSpanGraph />', () => {
 
     // Check if renderIntoCanvas was called again on update
     expect(renderUtils.default).toHaveBeenCalledTimes(2);
-    expect(renderUtils.default).toHaveBeenCalledWith(canvas, items, props.valueWidth, expect.any(Function));
+    expect(renderUtils.default).toHaveBeenLastCalledWith(
+      canvas,
+      items,
+      props.valueWidth,
+      expect.any(Function),
+      '#f8f8f8'
+    );
   });
 
   it('calls colorGenerator.getRgbColorByKey with correct hex', () => {
