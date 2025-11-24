@@ -172,6 +172,10 @@ function fetchOpsMetricsDone(
     payload.forEach((promiseResult, i) => {
       if (promiseResult.status === 'fulfilled') {
         const metric = promiseResult.value;
+        if (!metric.metrics || !Array.isArray(metric.metrics)) {
+          console.warn(`Invalid metrics response for ${metric.name}`);
+          return;
+        }
         metric.metrics.forEach((metricDetails: MetricObject) => {
           if (opsMetrics === null) {
             opsMetrics = {};
