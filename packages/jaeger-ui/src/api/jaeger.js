@@ -48,19 +48,7 @@ function getJSON(url, options = {}) {
 
   return fetch(`${url}${queryStr}`, init).then(response => {
     if (response.status < 400) {
-      return response.json().then(body => {
-        if (body && Array.isArray(body.errors) && body.errors.length > 0) {
-          const errorMessage = body.errors.map(err => getMessageFromError(err, response.status)).join('; ');
-          const error = new Error(`API Error: ${errorMessage}`);
-          error.httpStatus = response.status;
-          error.httpStatusText = response.statusText;
-          error.httpBody = JSON.stringify(body, null, 2);
-          error.httpUrl = url;
-          error.httpQuery = typeof query === 'string' ? query : queryString.stringify(query);
-          throw error;
-        }
-        return body;
-      });
+      return response.json();
     }
     return response.text().then(bodyText => {
       let data;
@@ -135,7 +123,16 @@ const JaegerAPI = {
     return getJSON(`${this.apiRoot}traces/${id}`);
   },
   searchTraces(query) {
-    return getJSON(`${this.apiRoot}traces`, { query });
+    return getJSON(`${this.apiRoot}traces`, { query }).then(body => {
+      if (body && Array.isArray(body.errors) && body.errors.length > 0) {
+        const errorMessage = body.errors.map(err => getMessageFromError(err, 200)).join('; ');
+        const error = new Error(`API Error: ${errorMessage}`);
+        error.httpStatus = 200;
+        error.httpBody = JSON.stringify(body, null, 2);
+        throw error;
+      }
+      return body;
+    });
   },
   fetchMetrics(metricType, serviceNameList, query) {
     const servicesName = serviceNameList.map(serviceName => `service=${serviceName}`).join(',');
