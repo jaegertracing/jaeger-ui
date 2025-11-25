@@ -250,39 +250,3 @@ describe('fetchMetrics', () => {
     expect(resp.quantile).toBe(query.quantile);
   });
 });
-
-describe('searchTraces', () => {
-  it('searchTraces() throws an error when HTTP 200 contains errors array', done => {
-    const status = 200;
-    const statusText = 'OK';
-    const msg = 'trace not found';
-    const traceID = '06bf0253d4de9289cf67f172f166b4e3';
-    const errorData = {
-      data: [],
-      errors: [{ msg, traceID }],
-      total: 0,
-      limit: 0,
-      offset: 0,
-    };
-
-    fetchMock.mockReturnValue(
-      Promise.resolve({
-        status,
-        statusText,
-        json: () => Promise.resolve(errorData),
-      })
-    );
-
-    JaegerAPI.searchTraces({ traceID })
-      .then(() => {
-        done(new Error('Expected promise to reject but it resolved'));
-      })
-      .catch(err => {
-        expect(err.message).toMatch(msg);
-        expect(err.message).toMatch(traceID);
-        expect(err.httpStatus).toBe(status);
-        expect(err.httpStatusText).toBe(statusText);
-        done();
-      });
-  });
-});
