@@ -1,19 +1,29 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-export function localeStringComparator(itemA, itemB) {
+export function localeStringComparator(itemA: string, itemB: string): number {
   return itemA.localeCompare(itemB);
 }
 
-export function numberSortComparator(itemA, itemB) {
+export function numberSortComparator(itemA: number, itemB: number): number {
   return itemA - itemB;
 }
 
-export function classNameForSortDir(dir) {
+export function classNameForSortDir(dir: number): string {
   return `sorted ${dir === 1 ? 'ascending' : 'descending'}`;
 }
 
-export function getNewSortForClick(prevSort, column) {
+type SortColumn = {
+  name: string;
+  defaultDir?: number;
+};
+
+type SortState = {
+  key: string;
+  dir: number;
+};
+
+export function getNewSortForClick(prevSort: SortState, column: SortColumn): SortState {
   const { defaultDir = 1 } = column;
 
   return {
@@ -22,7 +32,12 @@ export function getNewSortForClick(prevSort, column) {
   };
 }
 
-export function createSortClickHandler(column, currentSortKey, currentSortDir, updateSort) {
+export function createSortClickHandler(
+  column: SortColumn,
+  currentSortKey: string,
+  currentSortDir: number,
+  updateSort: (key: string, dir: number) => void
+): () => void {
   return function onClickSortingElement() {
     const { key, dir } = getNewSortForClick({ key: currentSortKey, dir: currentSortDir }, column);
     updateSort(key, dir);
