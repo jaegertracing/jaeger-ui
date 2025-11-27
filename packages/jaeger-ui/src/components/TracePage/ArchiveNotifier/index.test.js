@@ -44,7 +44,6 @@ describe('<ArchiveNotifier>', () => {
     expect(notification.success).toHaveBeenCalledWith(
       expect.objectContaining({
         key: 'ENotifiedState.Outcome',
-        duration: false,
         icon: <IoTimeOutline className="ArchiveNotifier--doneIcon" />,
         title: 'This trace has been archived.',
         onClose: defaultProps.acknowledge,

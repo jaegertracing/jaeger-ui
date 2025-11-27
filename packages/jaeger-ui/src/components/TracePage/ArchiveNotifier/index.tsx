@@ -65,7 +65,6 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
     } else if (archivedState && 'isArchived' in archivedState && archivedState.isArchived) {
       notification.success({
         key: ENotifiedState.Outcome,
-        duration: false,
         icon: <IoTimeOutline className="ArchiveNotifier--doneIcon" />,
         title: 'This trace has been archived.',
         onClose: acknowledge,
