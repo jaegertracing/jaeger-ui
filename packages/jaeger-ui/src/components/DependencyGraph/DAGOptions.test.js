@@ -176,7 +176,10 @@ describe('DAGOptions', () => {
     const selectElement = within(layoutSelect).getByRole('combobox');
     fireEvent.mouseDown(selectElement);
 
-    const hierarchicalOption = screen.getByTestId('layout-option-dot');
+    const hierarchicalOptions = screen.getAllByTestId('layout-option-dot');
+    const hierarchicalOption = hierarchicalOptions.find(option =>
+      option.classList.contains('ant-select-item-option-disabled')
+    );
     expect(hierarchicalOption).toHaveClass('ant-select-item-option-disabled');
     const optionContent = hierarchicalOption.querySelector('.ant-select-item-option-content');
     expect(optionContent).toHaveTextContent('Hierarchical Layout');

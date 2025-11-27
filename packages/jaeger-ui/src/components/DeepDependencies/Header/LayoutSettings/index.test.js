@@ -8,11 +8,16 @@ import LayoutSettings, { densityOptions } from '.';
 import * as track from '../../index.track';
 import { EDdgDensity } from '../../../../model/ddg/types';
 
+const mockPopover = jest.fn();
+
 jest.mock('antd', () => {
   const antd = jest.requireActual('antd');
   return {
     ...antd,
-    Popover: ({ content }) => <div data-testid="popover-content">{content}</div>,
+    Popover: props => {
+      mockPopover(props);
+      return <div data-testid="popover-content">{props.content}</div>;
+    },
   };
 });
 
@@ -136,5 +141,17 @@ describe('LayoutSettings', () => {
 
     expect(props.toggleShowOperations).toHaveBeenCalledWith(checked);
     expect(trackToggleShowOpSpy).toHaveBeenCalledWith(checked);
+  });
+
+  it('renders Popover with arrow prop pointing at center', () => {
+    mockPopover.mockClear();
+
+    render(<LayoutSettings {...props} />);
+
+    expect(mockPopover).toHaveBeenCalled();
+    const popoverProps = mockPopover.mock.calls[0][0];
+    expect(popoverProps.arrow).toEqual({ pointAtCenter: true });
+    expect(popoverProps.placement).toBe('bottomLeft');
+    expect(popoverProps.title).toBe('Layout settings');
   });
 });

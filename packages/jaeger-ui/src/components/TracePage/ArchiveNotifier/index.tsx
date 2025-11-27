@@ -43,10 +43,9 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
   if (nextState === ENotifiedState.Progress) {
     notification.info({
       key: ENotifiedState.Progress,
-      description: null,
       duration: 0,
       icon: <LoadingIndicator />,
-      message: 'Archiving trace...',
+      title: 'Archiving trace...',
     });
     return;
   }
@@ -57,19 +56,18 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
       notification.warning({
         key: ENotifiedState.Outcome,
         className: 'ArchiveNotifier--errorNotification',
-        message: <Message error={error} wrap />,
+        title: <Message error={error} wrap />,
         description: <Details error={error} wrap />,
-        duration: null,
+        duration: false,
         icon: <IoTimeOutline className="ArchiveNotifier--errorIcon" />,
         onClose: acknowledge,
       });
     } else if (archivedState && 'isArchived' in archivedState && archivedState.isArchived) {
       notification.success({
         key: ENotifiedState.Outcome,
-        description: null,
-        duration: null,
+        duration: false,
         icon: <IoTimeOutline className="ArchiveNotifier--doneIcon" />,
-        message: 'This trace has been archived.',
+        title: 'This trace has been archived.',
         onClose: acknowledge,
       });
     } else {

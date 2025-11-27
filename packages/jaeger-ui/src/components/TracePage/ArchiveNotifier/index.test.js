@@ -44,10 +44,9 @@ describe('<ArchiveNotifier>', () => {
     expect(notification.success).toHaveBeenCalledWith(
       expect.objectContaining({
         key: 'ENotifiedState.Outcome',
-        description: null,
-        duration: null,
+        duration: false,
         icon: <IoTimeOutline className="ArchiveNotifier--doneIcon" />,
-        message: 'This trace has been archived.',
+        title: 'This trace has been archived.',
         onClose: defaultProps.acknowledge,
       })
     );
@@ -100,10 +99,9 @@ describe('<ArchiveNotifier>', () => {
     expect(notification.info).toHaveBeenCalledWith(
       expect.objectContaining({
         key: 'ENotifiedState.Progress',
-        description: null,
         duration: 0,
         icon: <LoadingIndicator />,
-        message: 'Archiving trace...',
+        title: 'Archiving trace...',
       })
     );
   });
@@ -117,9 +115,9 @@ describe('<ArchiveNotifier>', () => {
         key: 'ENotifiedState.Outcome',
         className: 'ArchiveNotifier--errorNotification',
         description: <Details error={error} wrap />,
-        duration: null,
+        duration: false,
         icon: <IoTimeOutline className="ArchiveNotifier--errorIcon" />,
-        message: <Message error={error} wrap />,
+        title: <Message error={error} wrap />,
         onClose: props.acknowledge,
       })
     );
