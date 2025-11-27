@@ -4,7 +4,6 @@
 import promiseMiddleware from 'redux-promise-middleware';
 import { replace } from 'redux-first-history';
 import { Middleware } from 'redux';
-import { Action } from 'redux-actions';
 
 import { searchTraces, fetchServiceOperations } from '../actions/jaeger-api';
 import { getUrl as getSearchUrl } from '../components/SearchTracePage/url';
@@ -17,9 +16,9 @@ export { default as trackMiddleware } from './track';
  * Middleware to load "operations" for a particular service.
  */
 export const loadOperationsForServiceMiddleware: Middleware<{}, ReduxState> =
-  store => next => (action: Action<string>) => {
+  store => next => (action: any) => {
     if (action.type === CHANGE_SERVICE_ACTION_TYPE && action.payload !== '-') {
-      store.dispatch(fetchServiceOperations(action.payload));
+      store.dispatch(fetchServiceOperations(action.payload) as any);
     }
     return next(action);
   };
