@@ -11,8 +11,23 @@ import prefixUrl from '../utils/prefix-url';
 
 dayjs.extend(_duration);
 
+interface IApiError extends Error {
+  httpStatus?: number;
+  httpStatusText?: string;
+  httpBody?: string;
+  httpUrl?: string;
+  httpQuery?: string;
+}
+
+type FetchOptions = {
+  query?: string | Record<string, any> | null;
+  method?: string;
+  body?: string;
+  credentials?: RequestCredentials;
+};
+
 // export for tests
-export function getMessageFromError(errData, status) {
+export function getMessageFromError(errData: any, status: number): string {
   if (errData.code != null && errData.msg != null) {
     if (errData.code === status) {
       return errData.msg;
@@ -26,23 +41,23 @@ export function getMessageFromError(errData, status) {
   }
 }
 
-function getJSON(url, options = {}) {
+function getJSON(url: string, options: FetchOptions = {}): Promise<any> {
   const { query = null, ...init } = options;
-  init.credentials = 'same-origin';
+  (init as any).credentials = 'same-origin';
   let queryStr = '';
 
   if (query) {
     queryStr = `?${typeof query === 'string' ? query : queryString.stringify(query)}`;
   }
 
-  return fetch(`${url}${queryStr}`, init).then(response => {
+  return fetch(`${url}${queryStr}`, init as RequestInit).then((response: Response) => {
     if (response.status < 400) {
       return response.json();
     }
-    return response.text().then(bodyText => {
-      let data;
-      let bodyTextFmt;
-      let errorMessage;
+    return response.text().then((bodyText: string) => {
+      let data: any;
+      let bodyTextFmt: string | null;
+      let errorMessage: string;
       try {
         data = JSON.parse(bodyText);
         bodyTextFmt = JSON.stringify(data, null, 2);
@@ -51,19 +66,19 @@ function getJSON(url, options = {}) {
         bodyTextFmt = null;
       }
       if (data && Array.isArray(data.errors) && data.errors.length) {
-        errorMessage = data.errors.map(err => getMessageFromError(err, response.status)).join('; ');
+        errorMessage = data.errors.map((err: any) => getMessageFromError(err, response.status)).join('; ');
       } else {
         errorMessage = bodyText || `${response.status} - ${response.statusText}`;
       }
       if (typeof errorMessage === 'string') {
         errorMessage = errorMessage.trim();
       }
-      const error = new Error(`HTTP Error: ${errorMessage}`);
+      const error: IApiError = new Error(`HTTP Error: ${errorMessage}`);
       error.httpStatus = response.status;
       error.httpStatusText = response.statusText;
       error.httpBody = bodyTextFmt || bodyText;
       error.httpUrl = url;
-      error.httpQuery = typeof query === 'string' ? query : queryString.stringify(query);
+      error.httpQuery = typeof query === 'string' ? query : queryString.stringify(query || {});
       throw error;
     });
   });
@@ -71,33 +86,33 @@ function getJSON(url, options = {}) {
 
 export const DEFAULT_API_ROOT = prefixUrl('/api/');
 export const ANALYTICS_ROOT = prefixUrl('/analytics/');
-export const QUALITY_METRICS_ROOT = prefixUrl(getConfig().qualityMetrics.apiEndpoint);
+export const QUALITY_METRICS_ROOT = prefixUrl(getConfig().qualityMetrics?.apiEndpoint || '');
 export const DEFAULT_DEPENDENCY_LOOKBACK = dayjs.duration(1, 'weeks').asMilliseconds();
 
 const JaegerAPI = {
   apiRoot: DEFAULT_API_ROOT,
-  archiveTrace(id) {
+  archiveTrace(id: string): Promise<any> {
     return getJSON(`${this.apiRoot}archive/${id}`, { method: 'POST' });
   },
-  fetchDecoration(url) {
+  fetchDecoration(url: string): Promise<any> {
     return getJSON(url);
   },
-  fetchDeepDependencyGraph(query) {
+  fetchDeepDependencyGraph(query: Record<string, any>): Promise<any> {
     return getJSON(`${ANALYTICS_ROOT}v1/dependencies`, { query });
   },
-  fetchDependencies(endTs = new Date().getTime(), lookback = DEFAULT_DEPENDENCY_LOOKBACK) {
+  fetchDependencies(endTs = new Date().getTime(), lookback = DEFAULT_DEPENDENCY_LOOKBACK): Promise<any> {
     return getJSON(`${this.apiRoot}dependencies`, { query: { endTs, lookback } });
   },
-  fetchQualityMetrics(service, hours) {
+  fetchQualityMetrics(service: string, hours: number): Promise<any> {
     return getJSON(QUALITY_METRICS_ROOT, { query: { hours, service } });
   },
-  fetchServiceOperations(serviceName) {
+  fetchServiceOperations(serviceName: string): Promise<any> {
     return getJSON(`${this.apiRoot}services/${encodeURIComponent(serviceName)}/operations`);
   },
-  transformOTLP(traces) {
+  transformOTLP(traces: any): Promise<any> {
     return getJSON(`${this.apiRoot}transform`, { method: 'POST', body: JSON.stringify(traces) });
   },
-  fetchServiceServerOps(service) {
+  fetchServiceServerOps(service: string): Promise<any> {
     return getJSON(`${this.apiRoot}operations`, {
       query: {
         service,
@@ -105,21 +120,21 @@ const JaegerAPI = {
       },
     });
   },
-  fetchServices() {
+  fetchServices(): Promise<any> {
     return getJSON(`${this.apiRoot}services`);
   },
-  fetchTrace(id) {
+  fetchTrace(id: string): Promise<any> {
     return getJSON(`${this.apiRoot}traces/${id}`);
   },
-  searchTraces(query) {
+  searchTraces(query: Record<string, any>): Promise<any> {
     return getJSON(`${this.apiRoot}traces`, { query });
   },
-  fetchMetrics(metricType, serviceNameList, query) {
-    const servicesName = serviceNameList.map(serviceName => `service=${serviceName}`).join(',');
+  fetchMetrics(metricType: string, serviceNameList: string[], query: Record<string, any>): Promise<any> {
+    const servicesName = serviceNameList.map((serviceName: string) => `service=${serviceName}`).join(',');
 
     return getJSON(`${this.apiRoot}metrics/${metricType}`, {
       query: `${servicesName}&${queryString.stringify(query)}`,
-    }).then(d => ({ ...d, quantile: query.quantile }));
+    }).then((d: any) => ({ ...d, quantile: query.quantile }));
   },
 };
 

@@ -30,6 +30,8 @@ declare module 'combokeys' {
 
 declare module 'json-markup';
 declare module 'tween-functions';
+declare module 'chance';
+declare module 'isomorphic-fetch';
 declare module '*.png' {
   export default '' as string;
 }

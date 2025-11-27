@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
+import { createStore, combineReducers, applyMiddleware, compose, Store, StoreEnhancer } from 'redux';
 import { createReduxHistoryContext } from 'redux-first-history';
 import { createBrowserHistory } from 'history';
 
@@ -11,12 +11,33 @@ import traceTimeline from '../components/TracePage/TraceTimelineViewer/duck';
 import jaegerReducers from '../reducers';
 import * as jaegerMiddlewares from '../middlewares';
 import { getAppEnvironment } from './constants';
+import { ReduxState } from '../types';
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  interface Window {
+    __REDUX_DEVTOOLS_EXTENSION__?: () => StoreEnhancer;
+  }
+}
 
 const { createReduxHistory, routerMiddleware, routerReducer } = createReduxHistoryContext({
   history: createBrowserHistory(),
 });
 
-export default function configureStore() {
+export default function configureStore(): Store<any> {
+  const middlewares = [
+    ...Object.keys(jaegerMiddlewares)
+      .map(key => (jaegerMiddlewares as any)[key])
+      .filter(Boolean),
+    routerMiddleware,
+  ];
+
+  let enhancer: StoreEnhancer = applyMiddleware(...middlewares);
+
+  if (getAppEnvironment() !== 'production' && window && window.__REDUX_DEVTOOLS_EXTENSION__) {
+    enhancer = compose(enhancer, window.__REDUX_DEVTOOLS_EXTENSION__());
+  }
+
   return createStore(
     combineReducers({
       ...jaegerReducers,
@@ -24,18 +45,8 @@ export default function configureStore() {
       traceDiff,
       traceTimeline,
       router: routerReducer,
-    }),
-    compose(
-      applyMiddleware(
-        ...Object.keys(jaegerMiddlewares)
-          .map(key => jaegerMiddlewares[key])
-          .filter(Boolean),
-        routerMiddleware
-      ),
-      getAppEnvironment() !== 'production' && window && window.__REDUX_DEVTOOLS_EXTENSION__
-        ? window.__REDUX_DEVTOOLS_EXTENSION__()
-        : noop => noop
-    )
+    }) as any,
+    enhancer
   );
 }
 

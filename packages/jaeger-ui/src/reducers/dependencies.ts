@@ -5,21 +5,27 @@ import { handleActions } from 'redux-actions';
 
 import { fetchDependencies } from '../actions/jaeger-api';
 
-const initialState = {
+type DependenciesState = {
+  dependencies: any[];
+  loading: boolean;
+  error: any;
+};
+
+const initialState: DependenciesState = {
   dependencies: [],
   loading: false,
   error: null,
 };
 
-function fetchStarted(state) {
+function fetchStarted(state: DependenciesState): DependenciesState {
   return { ...state, loading: true };
 }
 
-function fetchDepsDone(state, { payload }) {
+function fetchDepsDone(state: DependenciesState, { payload }: any): DependenciesState {
   return { ...state, dependencies: payload.data, loading: false };
 }
 
-function fetchDepsErred(state, { payload: error }) {
+function fetchDepsErred(state: DependenciesState, { payload: error }: any): DependenciesState {
   return { ...state, error, dependencies: [], loading: false };
 }
 

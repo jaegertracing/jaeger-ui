@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import { Reducer } from 'redux';
 import config from './config';
 import dependencies from './dependencies';
 import ddg from './ddg';
@@ -10,7 +11,7 @@ import services from './services';
 import metrics from './metrics';
 import trace from './trace';
 
-export default {
+const reducers: Record<string, Reducer<any, any>> = {
   config,
   dependencies,
   ddg,
@@ -20,3 +21,5 @@ export default {
   metrics,
   trace,
 };
+
+export default reducers;

@@ -278,6 +278,7 @@ describe('load json traces', () => {
     });
     const outcome = {
       error,
+      query: null,
       results: [],
       state: fetchedState.ERROR,
     };
