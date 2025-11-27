@@ -36,10 +36,13 @@ import {
   trackSelectService,
   trackSelectSpanKind,
   trackSelectTimeframe,
+  trackSelectTags,
   trackViewAllTraces,
 } from './index.track';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
+// @ts-ignore
+import MultiTagSelector from '../MultiTagSelector/MultiTagSelector.jsx';
 
 type TReduxProps = {
   services: string[];
@@ -145,6 +148,9 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(
     store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds
   );
+  const [selectedTags, setSelectedTags] = useState<string | undefined>(
+    store.get('lastAtmSearchTags') || undefined
+  );
 
   const calcGraphXDomain = useCallback(() => {
     const currentTime = Date.now();
@@ -178,7 +184,10 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
     const { label } = timeFrameOptions.find(option => option.value === value)!;
     trackSelectTimeframe(label);
   }, []);
-
+  const handleTagsChange = useCallback((value: string | undefined) => {
+    setSelectedTags(value);
+    trackSelectTags(value || 'None');
+  }, []);
   const fetchMetrics = useCallback(() => {
     const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, services } = props;
     const currentService = selectedService || services[0];
@@ -189,14 +198,16 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
       store.set('lastAtmSearchService', currentService);
+      store.set('lastAtmSearchTags', selectedTags);
 
-      const metricQueryPayload = {
+      const metricQueryPayload: MetricsAPIQueryParams = {
         quantile: 0.95,
         endTs: newEndTime,
         lookback: selectedTimeFrame,
         step: 60 * 1000,
         ratePer: 10 * 60 * 1000,
         spanKind: selectedSpanKind,
+        ...(selectedTags && { tags: selectedTags }),
       };
 
       fetchAllServiceMetrics(currentService, metricQueryPayload);
@@ -208,10 +219,10 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   }, [
     props.fetchAllServiceMetrics,
     props.fetchAggregatedServiceMetrics,
-    props.services,
     selectedService,
     selectedSpanKind,
     selectedTimeFrame,
+    selectedTags,
   ]);
 
   // componentDidMount equivalent
@@ -241,7 +252,7 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
 
   useEffect(() => {
     fetchMetrics();
-  }, [selectedService, selectedSpanKind, selectedTimeFrame]);
+  }, [fetchMetrics]);
 
   const { services, metrics, servicesLoading } = props;
   const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
@@ -308,6 +319,14 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
                 </Option>
               ))}
             </SearchableSelect>
+          </Col>
+          <Col span={10}>
+            <MultiTagSelector
+              service={getSelectedService()}
+              onChange={handleTagsChange}
+              disabled={metrics.operationMetricsLoading}
+              value={selectedTags}
+            />
           </Col>
         </Row>
         <Row align="middle">

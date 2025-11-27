@@ -84,7 +84,13 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
       return [];
     }
 
-    const data = Array.isArray(metricsData) ? metricsData : [metricsData];
+    // Filter out objects with no metric points or empty metric points arrays
+    const data = Array.isArray(metricsData)
+      ? metricsData.filter(m => m && m.metricPoints && m.metricPoints.length > 0)
+      : metricsData && metricsData.metricPoints && metricsData.metricPoints.length > 0
+        ? [metricsData]
+        : [];
+
     return data.sort((a, b) => b.quantile - a.quantile);
   }
 
@@ -241,14 +247,30 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
         </Placeholder>
       );
 
-    if (metricsData === null)
+    const data = this.getMetricsData();
+
+    // Check for null data or empty data or data with no valid y values
+    let hasValidData = false;
+    if (data.length > 0) {
+      // Check if any data point has a valid y value
+      for (const point of data) {
+        for (const [key, value] of Object.entries(point)) {
+          if (key !== 'x' && value !== null && value !== undefined && !isNaN(Number(value))) {
+            hasValidData = true;
+            break;
+          }
+        }
+        if (hasValidData) break;
+      }
+    }
+
+    if (metricsData === null || !hasValidData)
       return (
         <Placeholder name={name} marginClassName={marginClassName} width={width} height={this.height}>
-          No Data
+          No data available
         </Placeholder>
       );
 
-    const data = this.getMetricsData();
     const effectiveYDomain = yDomain || this.calculateYDomain(data);
 
     const legendFormatter = (value: string): React.JSX.Element => {

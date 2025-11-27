@@ -20,6 +20,7 @@ export type MetricsAPIQueryParams = {
   step: number;
   ratePer: number;
   spanKind: spanKinds;
+  tags?: string;
 };
 
 export type LableObject = {
