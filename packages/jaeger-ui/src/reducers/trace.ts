@@ -66,10 +66,8 @@ function fetchMultipleTracesStarted(state: TraceState, { meta }: any): TraceStat
 function fetchMultipleTracesDone(state: TraceState, { payload }: any): TraceState {
   const traces = { ...state.traces };
   payload.data.forEach((raw: any) => {
-    const data = transformTraceData(raw);
-    if (data) {
-      traces[data.traceID] = { data, id: data.traceID, state: fetchedState.DONE };
-    }
+    const data = transformTraceData(raw)!;
+    traces[data.traceID] = { data, id: data.traceID, state: fetchedState.DONE };
   });
   if (payload.errors) {
     payload.errors.forEach((err: any) => {
