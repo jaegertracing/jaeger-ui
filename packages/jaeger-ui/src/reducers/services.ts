@@ -10,11 +10,25 @@ import {
 } from '../actions/jaeger-api';
 import { localeStringComparator } from '../utils/sort';
 
+/**
+ * State for managing services and their operations.
+ *
+ * Loading strategy:
+ * - `services`: Loaded once when the page loads (null indicates not yet loaded)
+ * - `operationsForService`: Cached incrementally as users select services
+ * - `serverOpsForService`: Cached incrementally as users select services
+ *
+ * Operations are fetched on-demand when a service is selected and cached in the state.
+ * Once loaded, they remain available until the page is refreshed or state is reset.
+ */
 type ServicesState = {
   error: any;
   loading: boolean;
+  /** Cache of operations per service, keyed by service name */
   operationsForService: Record<string, string[]>;
+  /** Cache of server operations per service, keyed by service name */
   serverOpsForService: Record<string, string[]>;
+  /** List of all services (null = not yet loaded) */
   services: string[] | null;
 };
 
