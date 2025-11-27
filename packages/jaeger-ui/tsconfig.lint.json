@@ -18,22 +18,11 @@
     "outFile": "index.d.ts"
   },
   "files": [
-    "src/actions/jaeger-api.js",
-    "src/api/jaeger.js",
     "src/components/App/index.jsx",
     "src/components/DependencyGraph/index.tsx",
     "src/components/SearchTracePage/index.jsx",
     "src/components/SearchTracePage/SearchForm.jsx",
-    "src/components/SearchTracePage/SearchForm.markers.js",
     "src/components/SearchTracePage/SearchResults/ScatterPlot.jsx",
-    "src/middlewares/index.js",
-    "src/reducers/config.js",
-    "src/reducers/dependencies.js",
-    "src/reducers/index.js",
-    "src/reducers/services.js",
-    "src/reducers/trace.js",
-    "src/utils/configure-store.js",
-    "src/utils/sort.js",
     "src/components/DependencyGraph/sample_data/large.json",
     "src/components/DependencyGraph/sample_data/small.json",
     "package.json"
