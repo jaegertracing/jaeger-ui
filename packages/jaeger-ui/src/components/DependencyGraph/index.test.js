@@ -270,6 +270,7 @@ describe('<DependencyGraph>', () => {
     });
 
     it('debounces depth changes', async () => {
+      jest.useFakeTimers();
       const depth = 3;
       act(() => {
         componentInstance.handleDepthChange(depth);
@@ -277,12 +278,12 @@ describe('<DependencyGraph>', () => {
       expect(componentInstance.state.selectedDepth).toBe(depth);
       expect(componentInstance.state.debouncedDepth).toBe(5);
 
-      await waitFor(
-        () => {
-          expect(componentInstance.state.debouncedDepth).toBe(depth);
-        },
-        { timeout: 1500 }
-      );
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+
+      expect(componentInstance.state.debouncedDepth).toBe(depth);
+      jest.useRealTimers();
     });
 
     it('handles sample dataset type change', async () => {

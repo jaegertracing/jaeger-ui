@@ -19,7 +19,7 @@ export default function LabeledList(props: LabeledListProps) {
       {items.map(({ key, label, value }, i) => {
         const divider = i < items.length - 1 && (
           <li className="LabeledList--item" key={`${key}--divider`}>
-            <Divider className={dividerClassName} type="vertical" />
+            <Divider className={dividerClassName} vertical />
           </li>
         );
         return (
