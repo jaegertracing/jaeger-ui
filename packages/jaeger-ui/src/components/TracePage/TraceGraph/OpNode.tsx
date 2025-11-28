@@ -1,16 +1,5 @@
 // Copyright (c) 2018 The Jaeger Authors.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
 import { Popover } from 'antd';
@@ -64,10 +53,8 @@ export function round2(percent: number) {
   return Math.round(percent * 100) / 100;
 }
 
-export default class OpNode extends React.PureComponent<Props> {
-  render() {
-    const { count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode } = this.props;
-
+const OpNode = React.memo<Props>(
+  ({ count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode }) => {
     // Spans over 20 % time are full red - we have probably to reconsider better approach
     let backgroundColor;
     if (mode === MODE_TIME) {
@@ -122,7 +109,9 @@ export default class OpNode extends React.PureComponent<Props> {
       </Popover>
     );
   }
-}
+);
+
+export default OpNode;
 
 export function getNodeRenderer(mode: string) {
   return function drawNode(vertex: TDagPlexusVertex<TSumSpan & TDenseSpanMembers>) {

@@ -9,7 +9,7 @@
     "url": "https://github.com/jaegertracing/jaeger-ui.git"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "devDependencies": {
     "@babel/cli": "7.28.0",
@@ -75,5 +75,9 @@
     "*.{json,css}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "@tanstack/react-virtual": "^3.13.12",
+    "react-side-effect": "^2.1.2"
   }
 }

@@ -1,18 +1,5 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-import sinon from 'sinon';
+// SPDX-License-Identifier: Apache-2.0
 
 import * as sortUtils from './sort';
 
@@ -82,7 +69,7 @@ it('createSortClickHandler() should return a function', () => {
   const column = { name: 'alpha' };
   const currentSortKey = 'alpha';
   const currentSortDir = 1;
-  const updateSort = sinon.spy();
+  const updateSort = jest.fn();
 
   expect(typeof sortUtils.createSortClickHandler(column, currentSortKey, currentSortDir, updateSort)).toBe(
     'function'
@@ -94,16 +81,12 @@ it('createSortClickHandler() should call updateSort with the new sort vals', () 
   const prevSort = { key: 'alpha', dir: 1 };
   const currentSortKey = prevSort.key;
   const currentSortDir = prevSort.dir;
-  const updateSort = sinon.spy();
+  const updateSort = jest.fn();
 
   const clickHandler = sortUtils.createSortClickHandler(column, currentSortKey, currentSortDir, updateSort);
 
   clickHandler();
 
-  expect(
-    updateSort.calledWith(
-      sortUtils.getNewSortForClick(prevSort, column).key,
-      sortUtils.getNewSortForClick(prevSort, column).dir
-    )
-  ).toBeTruthy();
+  const newSort = sortUtils.getNewSortForClick(prevSort, column);
+  expect(updateSort).toHaveBeenCalledWith(newSort.key, newSort.dir);
 });

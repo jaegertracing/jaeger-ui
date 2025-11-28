@@ -1,19 +1,8 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { History as RouterHistory, Location } from 'history';
+import { Location, useNavigate } from 'react-router-dom-v5-compat';
 import _get from 'lodash/get';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
@@ -61,7 +50,6 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 }
 
 type TOwnProps = {
-  history: RouterHistory;
   location: Location;
 };
 
@@ -70,6 +58,7 @@ type TracesDdgImplProps = TOwnProps & TReduxProps;
 // export for tests
 export const TracesDdgImpl: React.FC<TracesDdgImplProps> = React.memo(props => {
   const { location } = props;
+  const navigate = useNavigate();
   const urlArgs = queryString.parse(location.search);
   const { end, start, limit, lookback, maxDuration, minDuration, view } = urlArgs;
   const extraArgs = { end, start, limit, lookback, maxDuration, minDuration, view };
@@ -79,6 +68,7 @@ export const TracesDdgImpl: React.FC<TracesDdgImplProps> = React.memo(props => {
       baseUrl={ROUTE_PATH}
       extraUrlArgs={extraArgs}
       showSvcOpsHeader={false}
+      navigate={navigate}
       {...props}
     />
   );

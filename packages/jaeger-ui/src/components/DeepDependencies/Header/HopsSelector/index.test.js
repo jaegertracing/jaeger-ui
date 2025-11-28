@@ -1,16 +1,5 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
 import { render, screen, within, waitFor } from '@testing-library/react';
@@ -60,7 +49,7 @@ describe('HopsSelector', () => {
 
       // Open upstream popover
       await user.click(upstreamTrigger);
-      const upstreamPopover = await screen.findByRole('tooltip');
+      const upstreamPopover = await screen.findByTestId('popover-content-up');
 
       // Check buttons appear inside upstream popover (using -popover suffix)
       expect(within(upstreamPopover).getByTestId('hop-up-0-popover')).toBeInTheDocument();
@@ -86,9 +75,7 @@ describe('HopsSelector', () => {
 
       // Open downstream popover
       await user.click(downstreamTrigger);
-      const downstreamTitle = await screen.findByText('Visible downstream hops');
-      const downstreamPopover = downstreamTitle.closest('.ant-popover-inner');
-      expect(downstreamPopover).toBeInTheDocument();
+      const downstreamPopover = await screen.findByTestId('popover-content-down');
 
       // Check buttons appear inside downstream popover (using -popover suffix)
       expect(within(downstreamPopover).getByTestId('hop-down-0-popover')).toBeInTheDocument();
@@ -163,11 +150,7 @@ describe('HopsSelector', () => {
 
       // Click hop -3 (upstream) (using -popover suffix)
       await user.click(upstreamTrigger);
-      const reopenedUpstreamTitle = await screen.findByText('Visible upstream hops');
-      const reopenedUpstreamPopover = reopenedUpstreamTitle.closest('.ant-popover-inner');
-      expect(reopenedUpstreamPopover).toBeInTheDocument();
-      const outerUpstreamPopover = reopenedUpstreamPopover.closest('.ant-popover');
-      await waitFor(() => expect(outerUpstreamPopover).not.toHaveStyle('pointer-events: none'));
+      const reopenedUpstreamPopover = await screen.findByTestId('popover-content-up');
       const hopUp3Button = within(reopenedUpstreamPopover).getByTestId('hop-up-3-popover');
       await user.click(hopUp3Button);
       expect(mockHandleClick).toHaveBeenCalledTimes(1);
@@ -175,11 +158,7 @@ describe('HopsSelector', () => {
 
       // Click hop +4 (downstream) (using -popover suffix)
       await user.click(downstreamTrigger);
-      const reopenedDownstreamTitle = await screen.findByText('Visible downstream hops');
-      const reopenedDownstreamPopover = reopenedDownstreamTitle.closest('.ant-popover-inner');
-      expect(reopenedDownstreamPopover).toBeInTheDocument();
-      const outerDownstreamPopover = reopenedDownstreamPopover.closest('.ant-popover');
-      await waitFor(() => expect(outerDownstreamPopover).not.toHaveStyle('pointer-events: none'));
+      const reopenedDownstreamPopover = await screen.findByTestId('popover-content-down');
       const hopDown4Button = within(reopenedDownstreamPopover).getByTestId('hop-down-4-popover');
       await user.click(hopDown4Button);
       expect(mockHandleClick).toHaveBeenCalledTimes(2);

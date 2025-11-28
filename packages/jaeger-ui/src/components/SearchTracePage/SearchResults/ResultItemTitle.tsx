@@ -1,16 +1,5 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
 import { Checkbox } from 'antd';
@@ -64,18 +53,7 @@ export default function ResultItemTitle({
   }, [toggleComparison, traceID, isInDiffCohort]);
 
   // Use a div when the ResultItemTitle doesn't link to anything
-  let WrapperComponent: string | typeof Link = 'div';
-  const wrapperProps: Record<string, any> = {
-    className: 'ResultItemTitle--item ub-flex-auto',
-  };
-  if (linkTo) {
-    WrapperComponent = Link;
-    wrapperProps.to = linkTo;
-    if (targetBlank) {
-      wrapperProps.target = getTargetEmptyOrBlank();
-      wrapperProps.rel = 'noopener noreferrer';
-    }
-  }
+  const wrapperClassName = 'ResultItemTitle--item ub-flex-auto';
 
   const isErred = state === fetchedState.ERROR;
   // Separate propagation management and toggle manegement due to ant-design#16400
@@ -87,18 +65,32 @@ export default function ResultItemTitle({
     onClick: stopCheckboxPropagation,
   };
 
+  const content = (
+    <>
+      <span className="ResultItemTitle--durationBar" style={{ width: `${durationPercent}%` }} />
+      {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
+      <h3 className="ResultItemTitle--title">
+        <TraceName error={error} state={state} traceName={traceName} />
+        <TraceId traceId={traceID} className="ResultItemTitle--idExcerpt" />
+      </h3>
+    </>
+  );
+
   return (
     <div className="ResultItemTitle">
       {!disableComparision && <Checkbox {...checkboxProps} />}
-      {/* TODO: Shouldn't need cast */}
-      <WrapperComponent {...(wrapperProps as any)}>
-        <span className="ResultItemTitle--durationBar" style={{ width: `${durationPercent}%` }} />
-        {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
-        <h3 className="ResultItemTitle--title">
-          <TraceName error={error} state={state} traceName={traceName} />
-          <TraceId traceId={traceID} className="ResultItemTitle--idExcerpt" />
-        </h3>
-      </WrapperComponent>
+      {linkTo ? (
+        <Link
+          to={linkTo}
+          className={wrapperClassName}
+          target={targetBlank ? getTargetEmptyOrBlank() : undefined}
+          rel={targetBlank ? 'noopener noreferrer' : undefined}
+        >
+          {content}
+        </Link>
+      ) : (
+        <div className={wrapperClassName}>{content}</div>
+      )}
     </div>
   );
 }

@@ -1,20 +1,9 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
-import { Route, Redirect, Switch, Router } from 'react-router-dom';
+import { Route, Redirect, Switch } from 'react-router-dom';
 
 import { ConfigProvider } from 'antd';
 import { defaultTheme } from '@ant-design/compatible';
@@ -42,8 +31,7 @@ import '../common/vars.css';
 import '../common/utils.css';
 import 'antd/dist/reset.css';
 import './index.css';
-import { history, store } from '../../utils/configure-store';
-import { HistoryProvider } from '../../utils/useHistory';
+import { store } from '../../utils/configure-store';
 
 const jaegerTheme = {
   token: {
@@ -88,49 +76,45 @@ export default class JaegerUIApp extends Component {
     return (
       <ConfigProvider theme={jaegerTheme}>
         <Provider store={store}>
-          <HistoryProvider history={history}>
-            <Router history={history}>
-              <Page>
-                <Switch>
-                  <Route path={searchPath}>
-                    <SearchTracePage />
-                  </Route>
-                  <Route path={traceDiffPath}>
-                    <TraceDiff />
-                  </Route>
-                  <Route path={tracePath}>
-                    <TracePage />
-                  </Route>
-                  <Route path={dependenciesPath}>
-                    <DependencyGraph />
-                  </Route>
-                  <Route path={deepDependenciesPath}>
-                    <DeepDependencies />
-                  </Route>
-                  <Route path={qualityMetricsPath}>
-                    <QualityMetrics />
-                  </Route>
-                  <Route path={monitorATMPath}>
-                    <MonitorATMPage />
-                  </Route>
+          <Page>
+            <Switch>
+              <Route path={searchPath}>
+                <SearchTracePage />
+              </Route>
+              <Route path={traceDiffPath}>
+                <TraceDiff />
+              </Route>
+              <Route path={tracePath}>
+                <TracePage />
+              </Route>
+              <Route path={dependenciesPath}>
+                <DependencyGraph />
+              </Route>
+              <Route path={deepDependenciesPath}>
+                <DeepDependencies />
+              </Route>
+              <Route path={qualityMetricsPath}>
+                <QualityMetrics />
+              </Route>
+              <Route path={monitorATMPath}>
+                <MonitorATMPage />
+              </Route>
 
-                  <Route exact path="/">
-                    <Redirect to={searchPath} />
-                  </Route>
-                  <Route exact path={prefixUrl()}>
-                    <Redirect to={searchPath} />
-                  </Route>
-                  <Route exact path={prefixUrl('/')}>
-                    <Redirect to={searchPath} />
-                  </Route>
+              <Route exact path="/">
+                <Redirect to={searchPath} />
+              </Route>
+              <Route exact path={prefixUrl()}>
+                <Redirect to={searchPath} />
+              </Route>
+              <Route exact path={prefixUrl('/')}>
+                <Redirect to={searchPath} />
+              </Route>
 
-                  <Route>
-                    <NotFound />
-                  </Route>
-                </Switch>
-              </Page>
-            </Router>
-          </HistoryProvider>
+              <Route>
+                <NotFound />
+              </Route>
+            </Switch>
+          </Page>
         </Provider>
       </ConfigProvider>
     );

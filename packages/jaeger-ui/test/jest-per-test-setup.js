@@ -1,16 +1,5 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import { TextEncoder } from 'util';
 import { polyfill as rafPolyfill } from '../src/utils/test/requestAnimationFrame';
@@ -20,6 +9,36 @@ import '@testing-library/jest-dom';
 rafPolyfill();
 // Jest 28+ makes use of the TextEncoder API, which is not provided by JSDOM
 global.TextEncoder = TextEncoder;
+
+// Ant Design v6 uses ResizeObserver which is not available in jsdom
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
+
+// Ant Design v6 uses MessageChannel which is not available in jsdom
+global.MessageChannel = jest.fn().mockImplementation(() => {
+  const port1 = {
+    onmessage: null,
+    postMessage: jest.fn(data => {
+      if (port2.onmessage) {
+        setTimeout(() => port2.onmessage({ data }), 0);
+      }
+    }),
+    close: jest.fn(),
+  };
+  const port2 = {
+    onmessage: null,
+    postMessage: jest.fn(data => {
+      if (port1.onmessage) {
+        setTimeout(() => port1.onmessage({ data }), 0);
+      }
+    }),
+    close: jest.fn(),
+  };
+  return { port1, port2 };
+});
 
 // Calls to get-config.tsx and get-version.tsx warn if these globals are not functions.
 // This file is executed before each test file, so they may be overridden safely.

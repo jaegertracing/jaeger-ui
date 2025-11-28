@@ -1,16 +1,5 @@
 // Copyright (c) 2023 The Jaeger Authors.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 const babelJest = require('babel-jest').default;
 
@@ -21,7 +10,7 @@ const babelJest = require('babel-jest').default;
 // Solution: Transform import.meta to process during Jest transformation.
 // This allows ESM-only packages to work in Jest's CommonJS test environment.
 // Production code is unaffected, this only runs during testing.
-const importMetaTransform = function() {
+const importMetaTransform = function () {
   return {
     visitor: {
       MetaProperty(path) {
@@ -30,26 +19,29 @@ const importMetaTransform = function() {
         if (path.node.meta.name === 'import' && path.node.property.name === 'meta') {
           path.replaceWithSourceString('process');
         }
-      }
-    }
+      },
+    },
   };
 };
 
 const babelConfiguration = {
   presets: [
-    ['@babel/preset-env', {
-      targets: { node: 'current' },
-      modules: 'commonjs'
-    }],
-    ['@babel/preset-react', { development: !process.env.CI }],
+    [
+      '@babel/preset-env',
+      {
+        targets: { node: 'current' },
+        modules: 'commonjs',
+      },
+    ],
+    ['@babel/preset-react', { development: !process.env.CI, runtime: 'automatic' }],
     '@babel/preset-typescript',
   ],
   plugins: [
     'babel-plugin-inline-react-svg',
     ['@babel/plugin-transform-modules-commonjs', { allowTopLevelThis: true }],
-    importMetaTransform
+    importMetaTransform,
   ],
-}
+};
 
 // Export configuration for depcheck (without the function)
 const babelConfigurationForDepcheck = {
@@ -59,7 +51,7 @@ const babelConfigurationForDepcheck = {
     ['@babel/plugin-transform-modules-commonjs', { allowTopLevelThis: true }],
     // Note: custom function plugins are excluded for depcheck compatibility
   ],
-}
+};
 
 module.exports = babelJest.createTransformer(babelConfiguration);
 module.exports.babelConfiguration = babelConfiguration;

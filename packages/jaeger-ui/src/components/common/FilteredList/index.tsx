@@ -1,23 +1,13 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { Checkbox, Tooltip } from 'antd';
 import _debounce from 'lodash/debounce';
 import { matchSorter } from 'match-sorter';
 import { IoSearch } from 'react-icons/io5';
-import { FixedSizeList as VList, ListOnItemsRenderedProps, ListOnScrollProps } from 'react-window';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Key as EKey } from 'ts-key-enum';
 
 import ListItem from './ListItem';
@@ -37,148 +27,161 @@ type TProps = {
   value: Set<string> | string | null;
 };
 
-type TState = {
-  filterText: string;
-  visibleStartIndex: number;
-  visibleStopIndex: number;
-  focusedIndex: number | null;
-};
+export interface IFilteredListRef {
+  focusInput: () => void;
+}
 
-export default class FilteredList extends React.PureComponent<TProps, TState> {
-  inputRef = React.createRef<HTMLInputElement>();
-  vlistRef = React.createRef<VList>();
-  wrapperRef = React.createRef<HTMLDivElement>();
-  state: TState = {
-    filterText: '',
-    focusedIndex: null,
-    visibleStartIndex: 0,
-    visibleStopIndex: 0,
-  };
+const FilteredList = forwardRef<IFilteredListRef, TProps>(
+  ({ addValues, cancel, multi, options, removeValues, setValue, value }, ref) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    const listRef = useRef<HTMLDivElement>(null);
 
-  componentDidUpdate() {
-    this.focusInput();
-  }
+    const [filterText, setFilterText] = useState('');
+    const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
-  focusInput = () => {
-    const { current } = this.inputRef;
-    if (current) {
-      current.focus();
-    }
-  };
+    useImperativeHandle(ref, () => ({
+      focusInput: () => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      },
+    }));
 
-  isMouseWithin() {
-    /* istanbul ignore next */
-    const { current } = this.wrapperRef;
-    /* istanbul ignore next */
-    return current != null && current.matches(':hover');
-  }
-
-  private getFilteredCheckbox(filtered: string[]) {
-    const { addValues, removeValues, options, value } = this.props;
-    if (!addValues || !removeValues) return null;
-
-    const valueSet = typeof value === 'string' || !value ? new Set([value]) : value;
-    let checkedCount = 0;
-    let indeterminate = false;
-    for (let i = 0; i < filtered.length; i++) {
-      const match = valueSet.has(filtered[i]);
-      if (match) checkedCount++;
-      if (checkedCount && checkedCount <= i) {
-        indeterminate = true;
-        break;
+    const hasMountedRef = useRef(false);
+    useEffect(() => {
+      if (hasMountedRef.current && inputRef.current) {
+        inputRef.current.focus();
       }
-    }
-    const checked = Boolean(checkedCount) && checkedCount === filtered.length;
-    const title = `Click to ${checked ? 'unselect' : 'select'} all ${
-      filtered.length < options.length ? 'filtered ' : ''
-    }options`;
+      hasMountedRef.current = true;
+    });
 
-    return (
-      <Tooltip title={title}>
-        <Checkbox
-          className="FilteredList--filterCheckbox"
-          checked={checked}
-          disabled={!filtered.length}
-          onChange={({ target: { checked: newCheckedState } }) => {
-            if (newCheckedState) addValues(filtered.filter(f => !valueSet.has(f)));
-            else removeValues(filtered);
-          }}
-          indeterminate={indeterminate}
-        />
-      </Tooltip>
+    const filteredOptions = useMemo(() => {
+      return filterText ? matchSorter(options, filterText) : options;
+    }, [options, filterText]);
+
+    const virtualizer = useVirtualizer({
+      count: filteredOptions.length,
+      getScrollElement: () => listRef.current,
+      estimateSize: () => ITEM_HEIGHT,
+      overscan: 25,
+    });
+
+    const visibleItems = virtualizer.getVirtualItems();
+    const [visibleStartIndex, visibleStopIndex] = useMemo(() => {
+      if (visibleItems.length === 0) return [0, 0];
+      return [visibleItems[0].index, visibleItems[visibleItems.length - 1].index];
+    }, [visibleItems]);
+
+    const getFilteredCheckbox = useCallback(
+      (filtered: string[]) => {
+        if (!addValues || !removeValues) return null;
+
+        const valueSet = typeof value === 'string' || !value ? new Set([value]) : value;
+        let checkedCount = 0;
+        let indeterminate = false;
+        for (let i = 0; i < filtered.length; i++) {
+          const match = valueSet.has(filtered[i]);
+          if (match) checkedCount++;
+          if (checkedCount && checkedCount <= i) {
+            indeterminate = true;
+            break;
+          }
+        }
+        const checked = Boolean(checkedCount) && checkedCount === filtered.length;
+        const title = `Click to ${checked ? 'unselect' : 'select'} all ${
+          filtered.length < options.length ? 'filtered ' : ''
+        }options`;
+
+        return (
+          <Tooltip title={title}>
+            <Checkbox
+              className="FilteredList--filterCheckbox"
+              checked={checked}
+              disabled={!filtered.length}
+              onChange={({ target: { checked: newCheckedState } }) => {
+                if (newCheckedState) addValues(filtered.filter(f => !valueSet.has(f)));
+                else removeValues(filtered);
+              }}
+              indeterminate={indeterminate}
+            />
+          </Tooltip>
+        );
+      },
+      [addValues, removeValues, value, options.length]
     );
-  }
 
-  private getFilteredOptions = () => {
-    const { options } = this.props;
-    const { filterText } = this.state;
-    return filterText ? matchSorter(options, filterText) : options;
-  };
+    const handleSetValue = useCallback(
+      (newValue: string) => {
+        setValue(newValue);
+        setFilterText('');
+        setFocusedIndex(null);
+      },
+      [setValue]
+    );
 
-  private setValue = (value: string) => {
-    this.props.setValue(value);
-    this.setState({ filterText: '', focusedIndex: null });
-  };
-
-  private onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    const { focusedIndex: stFocused } = this.state;
-    switch (event.key) {
-      case EKey.Escape: {
-        const { cancel } = this.props;
-        this.setState({ filterText: '', focusedIndex: null });
-        if (cancel) cancel();
-        break;
-      }
-      case EKey.ArrowUp:
-      case EKey.ArrowDown: {
-        const { visibleStartIndex, visibleStopIndex } = this.state;
-        let focusedIndex: number | void;
-        if (stFocused == null) {
-          focusedIndex = event.key === EKey.ArrowDown ? visibleStartIndex : visibleStopIndex;
-          this.setState({ focusedIndex });
-        } else {
-          const offset = event.key === EKey.ArrowDown ? 1 : -1;
-          const filteredOptions = this.getFilteredOptions();
-          const i = stFocused + offset;
-          focusedIndex = i > -1 ? i % filteredOptions.length : filteredOptions.length + i;
-          this.setState({ focusedIndex });
+    const onKeyDown = useCallback(
+      (event: React.KeyboardEvent<HTMLInputElement>) => {
+        switch (event.key) {
+          case EKey.Escape: {
+            setFilterText('');
+            setFocusedIndex(null);
+            if (cancel) cancel();
+            break;
+          }
+          case EKey.ArrowUp:
+          case EKey.ArrowDown: {
+            let newFocusedIndex: number | null;
+            if (focusedIndex == null) {
+              newFocusedIndex = event.key === EKey.ArrowDown ? visibleStartIndex : visibleStopIndex;
+              setFocusedIndex(newFocusedIndex);
+            } else {
+              const offset = event.key === EKey.ArrowDown ? 1 : -1;
+              const i = focusedIndex + offset;
+              newFocusedIndex = i > -1 ? i % filteredOptions.length : filteredOptions.length + i;
+              setFocusedIndex(newFocusedIndex);
+            }
+            if (
+              newFocusedIndex !== null &&
+              (newFocusedIndex < visibleStartIndex + 1 || newFocusedIndex > visibleStopIndex - 1)
+            ) {
+              virtualizer.scrollToIndex(newFocusedIndex);
+            }
+            break;
+          }
+          case EKey.Enter: {
+            if (focusedIndex !== null) handleSetValue(filteredOptions[focusedIndex]);
+            else if (filteredOptions.length === 1) handleSetValue(filteredOptions[0]);
+            break;
+          }
+          default: // no-op
         }
-        const listInstance = this.vlistRef.current;
-        if (listInstance && (focusedIndex < visibleStartIndex + 1 || focusedIndex > visibleStopIndex - 1)) {
-          listInstance.scrollToItem(focusedIndex);
-        }
-        break;
-      }
-      case EKey.Enter: {
-        const filteredOptions = this.getFilteredOptions();
-        if (stFocused !== null) this.setValue(filteredOptions[stFocused]);
-        else if (filteredOptions.length === 1) this.setValue(filteredOptions[0]);
-        break;
-      }
-      default: // no-op
-    }
-  };
+      },
+      [
+        focusedIndex,
+        visibleStartIndex,
+        visibleStopIndex,
+        filteredOptions,
+        cancel,
+        handleSetValue,
+        virtualizer,
+      ]
+    );
 
-  private onListScrolled = _debounce((scrollInfo: ListOnScrollProps) => {
-    if (!scrollInfo.scrollUpdateWasRequested) {
-      this.setState({ focusedIndex: null });
-    }
-  }, 80);
+    const onListScrolled = useMemo(
+      () =>
+        _debounce(() => {
+          setFocusedIndex(null);
+        }, 80),
+      []
+    );
 
-  private onListItemsRendered = _debounce((viewInfo: ListOnItemsRenderedProps) => {
-    const { visibleStartIndex, visibleStopIndex } = viewInfo;
-    this.setState({ visibleStartIndex, visibleStopIndex });
-  }, 80);
+    const onFilterChanged = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+      setFilterText(event.target.value);
+      setFocusedIndex(null);
+    }, []);
 
-  private onFilterChanged = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ filterText: event.target.value, focusedIndex: null });
-  };
-
-  render() {
-    const { addValues, multi, options, removeValues, value } = this.props;
-    const { filterText, focusedIndex } = this.state;
-    const filteredOptions = this.getFilteredOptions();
-    const filteredCheckbox = multi && this.getFilteredCheckbox(filteredOptions);
+    const filteredCheckbox = multi && getFilteredCheckbox(filteredOptions);
     const data = {
       addValues,
       focusedIndex,
@@ -187,10 +190,10 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
       options: filteredOptions,
       removeValues,
       selectedValue: value,
-      setValue: this.setValue,
+      setValue: handleSetValue,
     };
     return (
-      <div ref={this.wrapperRef}>
+      <div ref={wrapperRef}>
         <div className="FilteredList--filterWrapper">
           {filteredCheckbox}
           <label className="FilteredList--inputWrapper">
@@ -198,30 +201,58 @@ export default class FilteredList extends React.PureComponent<TProps, TState> {
             <input
               className="FilteredList--filterInput"
               placeholder="Filter..."
-              onChange={this.onFilterChanged}
-              onKeyDown={this.onKeyDown}
-              ref={this.inputRef}
+              onChange={onFilterChanged}
+              onKeyDown={onKeyDown}
+              ref={inputRef}
               type="text"
               value={filterText}
             />
           </label>
         </div>
-        <VList
-          key={filterText}
+        <div
+          ref={listRef}
           className="FilteredList--list u-simple-scrollbars"
-          height={Math.min(options.length * ITEM_HEIGHT, MAX_HEIGHT)}
-          itemCount={filteredOptions.length}
-          itemData={data}
-          itemSize={ITEM_HEIGHT}
-          width={650}
-          overscanCount={25}
-          onItemsRendered={this.onListItemsRendered}
-          onScroll={this.onListScrolled}
-          ref={this.vlistRef}
+          style={{
+            height: Math.min(options.length * ITEM_HEIGHT, MAX_HEIGHT),
+            width: 650,
+            overflow: 'auto',
+          }}
+          onScroll={onListScrolled}
         >
-          {ListItem}
-        </VList>
+          <div
+            style={{
+              height: virtualizer.getTotalSize(),
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {visibleItems.map(virtualItem => (
+              <div
+                key={virtualItem.key}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: virtualItem.size,
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                <ListItem
+                  index={virtualItem.index}
+                  data={data}
+                  style={{
+                    height: virtualItem.size,
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
-}
+);
+
+FilteredList.displayName = 'FilteredList';
+export default FilteredList;

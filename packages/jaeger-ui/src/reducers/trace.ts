@@ -1,16 +1,5 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import _isEqual from 'lodash/isEqual';
 import { handleActions } from 'redux-actions';
@@ -20,7 +9,18 @@ import { loadJsonTraces } from '../actions/file-reader-api';
 import { fetchedState } from '../constants';
 import transformTraceData from '../model/transform-trace-data';
 
-const initialState = {
+type TraceState = {
+  traces: Record<string, any>;
+  search: {
+    query: any;
+    results: string[];
+    state?: string;
+    error?: any;
+  };
+  rawTraces?: any[];
+};
+
+const initialState: TraceState = {
   traces: {},
   search: {
     query: null,
@@ -28,16 +28,16 @@ const initialState = {
   },
 };
 
-function fetchTraceStarted(state, { meta }) {
+function fetchTraceStarted(state: TraceState, { meta }: any): TraceState {
   const { id } = meta;
   const traces = { ...state.traces, [id]: { id, state: fetchedState.LOADING } };
   return { ...state, traces };
 }
 
-function fetchTraceDone(state, { meta, payload }) {
+function fetchTraceDone(state: TraceState, { meta, payload }: any): TraceState {
   const { id } = meta;
   const data = transformTraceData(payload.data[0]);
-  let trace;
+  let trace: any;
   if (!data) {
     trace = { id, state: fetchedState.ERROR, error: new Error('Invalid trace data recieved.') };
   } else {
@@ -47,30 +47,30 @@ function fetchTraceDone(state, { meta, payload }) {
   return { ...state, traces };
 }
 
-function fetchTraceErred(state, { meta, payload }) {
+function fetchTraceErred(state: TraceState, { meta, payload }: any): TraceState {
   const { id } = meta;
   const trace = { id, error: payload, state: fetchedState.ERROR };
   const traces = { ...state.traces, [id]: trace };
   return { ...state, traces };
 }
 
-function fetchMultipleTracesStarted(state, { meta }) {
+function fetchMultipleTracesStarted(state: TraceState, { meta }: any): TraceState {
   const { ids } = meta;
   const traces = { ...state.traces };
-  ids.forEach(id => {
+  ids.forEach((id: string) => {
     traces[id] = { id, state: fetchedState.LOADING };
   });
   return { ...state, traces };
 }
 
-function fetchMultipleTracesDone(state, { payload }) {
+function fetchMultipleTracesDone(state: TraceState, { payload }: any): TraceState {
   const traces = { ...state.traces };
-  payload.data.forEach(raw => {
-    const data = transformTraceData(raw);
+  payload.data.forEach((raw: any) => {
+    const data = transformTraceData(raw)!;
     traces[data.traceID] = { data, id: data.traceID, state: fetchedState.DONE };
   });
   if (payload.errors) {
-    payload.errors.forEach(err => {
+    payload.errors.forEach((err: any) => {
       const { msg, traceID } = err;
       const error = new Error(`Error: ${msg} - ${traceID}`);
       traces[traceID] = { error, id: traceID, state: fetchedState.ERROR };
@@ -79,17 +79,17 @@ function fetchMultipleTracesDone(state, { payload }) {
   return { ...state, traces };
 }
 
-function fetchMultipleTracesErred(state, { meta, payload }) {
+function fetchMultipleTracesErred(state: TraceState, { meta, payload }: any): TraceState {
   const { ids } = meta;
   const traces = { ...state.traces };
   const error = payload;
-  ids.forEach(id => {
+  ids.forEach((id: string) => {
     traces[id] = { error, id, state: fetchedState.ERROR };
   });
   return { ...state, traces };
 }
 
-function fetchSearchStarted(state, { meta }) {
+function fetchSearchStarted(state: TraceState, { meta }: any): TraceState {
   const { query } = meta;
   const search = {
     query,
@@ -99,14 +99,14 @@ function fetchSearchStarted(state, { meta }) {
   return { ...state, search };
 }
 
-function searchDone(state, { meta, payload }) {
+function searchDone(state: TraceState, { meta, payload }: any): TraceState {
   if (!_isEqual(state.search.query, meta.query)) {
     return state;
   }
   const payloadData = payload.data;
   const processed = payloadData.map(transformTraceData);
-  const resultTraces = {};
-  const results = [];
+  const resultTraces: Record<string, any> = {};
+  const results: string[] = [];
   for (let i = 0; i < processed.length; i++) {
     const data = processed[i];
     const id = data.traceID;
@@ -118,7 +118,7 @@ function searchDone(state, { meta, payload }) {
   return { ...state, search, traces, rawTraces: payloadData };
 }
 
-function searchErred(state, { meta, payload }) {
+function searchErred(state: TraceState, { meta, payload }: any): TraceState {
   if (!_isEqual(state.search.query, meta.query)) {
     return state;
   }
@@ -126,15 +126,15 @@ function searchErred(state, { meta, payload }) {
   return { ...state, search };
 }
 
-function loadJsonStarted(state) {
+function loadJsonStarted(state: TraceState): TraceState {
   const { search } = state;
   return { ...state, search: { ...search, state: fetchedState.LOADING } };
 }
 
-function loadJsonDone(state, { payload }) {
+function loadJsonDone(state: TraceState, { payload }: any): TraceState {
   try {
     const processed = payload.data.map(transformTraceData);
-    const resultTraces = {};
+    const resultTraces: Record<string, any> = {};
     const results = new Set(state.search.results);
     for (let i = 0; i < processed.length; i++) {
       const data = processed[i];
@@ -146,13 +146,13 @@ function loadJsonDone(state, { payload }) {
     const search = { ...state.search, results: Array.from(results), state: fetchedState.DONE };
     return { ...state, search, traces };
   } catch (error) {
-    const search = { error, results: [], state: fetchedState.ERROR };
+    const search = { ...state.search, error, results: [], state: fetchedState.ERROR };
     return { ...state, search };
   }
 }
 
-function loadJsonErred(state, { payload }) {
-  const search = { error: payload, results: [], state: fetchedState.ERROR };
+function loadJsonErred(state: TraceState, { payload }: any): TraceState {
+  const search = { ...state.search, error: payload, results: [], state: fetchedState.ERROR };
   return { ...state, search };
 }
 

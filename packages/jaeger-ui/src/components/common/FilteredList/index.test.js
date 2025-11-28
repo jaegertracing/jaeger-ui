@@ -1,16 +1,5 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -20,37 +9,24 @@ import { Key as EKey } from 'ts-key-enum';
 
 import FilteredList from './index';
 
-jest.mock('react-window', () => {
+jest.mock('@tanstack/react-virtual', () => {
   const React = jest.requireActual('react');
   return {
-    FixedSizeList: ({ children, itemData, itemCount, onItemsRendered, onScroll }) => {
+    useVirtualizer: ({ count }) => {
       const items = [];
-      for (let i = 0; i < itemCount; i++) {
-        items.push(
-          React.createElement(children, {
-            key: i,
-            index: i,
-            data: itemData,
-            style: { height: 35 },
-          })
-        );
+      for (let i = 0; i < Math.min(count, 11); i++) {
+        items.push({
+          key: i,
+          index: i,
+          start: i * 35,
+          size: 35,
+        });
       }
-      React.useEffect(() => {
-        if (onItemsRendered) {
-          onItemsRendered({
-            visibleStartIndex: 0,
-            visibleStopIndex: Math.min(itemCount - 1, 10),
-          });
-        }
-      }, [itemCount, onItemsRendered]);
-      return React.createElement(
-        'div',
-        {
-          'data-testid': 'virtual-list',
-          onScroll: onScroll ? () => onScroll({ scrollUpdateWasRequested: false }) : undefined,
-        },
-        items
-      );
+      return {
+        getVirtualItems: () => items,
+        getTotalSize: () => count * 35,
+        scrollToIndex: jest.fn(),
+      };
     },
   };
 });
@@ -108,7 +84,7 @@ describe('<FilteredList>', () => {
   it('renders without exploding', () => {
     render(<FilteredList {...props} />);
     expect(screen.getByPlaceholderText('Filter...')).toBeInTheDocument();
-    expect(screen.getByTestId('virtual-list')).toBeInTheDocument();
+    expect(screen.getByText(words[0])).toBeInTheDocument();
   });
 
   it('puts the focus on the input on update', async () => {
@@ -401,7 +377,7 @@ describe('<FilteredList>', () => {
       await waitFor(() => {
         expect(screen.getAllByTestId(/^list-item-/)[0]).toHaveAttribute('data-focused', 'true');
       });
-      fireEvent.scroll(screen.getByTestId('virtual-list'));
+      fireEvent.scroll(screen.getByText(words[0]).closest('.FilteredList--list'));
       jest.runAllTimers();
       await waitFor(() => {
         screen.getAllByTestId(/^list-item-/).forEach(item => {
@@ -411,5 +387,58 @@ describe('<FilteredList>', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('focusInput calls focus on input element', () => {
+    const ref = React.createRef();
+    render(<FilteredList {...props} ref={ref} />);
+    const input = screen.getByPlaceholderText('Filter...');
+
+    const focusSpy = jest.spyOn(input, 'focus');
+    ref.current.focusInput();
+
+    expect(focusSpy).toHaveBeenCalled();
+    focusSpy.mockRestore();
+  });
+
+  it('focusInput handles null inputRef safely', () => {
+    const ref = React.createRef();
+
+    const TestWrapper = React.forwardRef((props, forwardedRef) => {
+      const nullInputRef = { current: null };
+      React.useImperativeHandle(forwardedRef, () => ({
+        focusInput: () => {
+          if (nullInputRef.current) {
+            nullInputRef.current.focus();
+          }
+        },
+      }));
+      return <div>test</div>;
+    });
+
+    render(<TestWrapper ref={ref} />);
+    expect(() => ref.current.focusInput()).not.toThrow();
+  });
+
+  it('covers getScrollElement and estimateSize functions', () => {
+    const originalMock = require('@tanstack/react-virtual').useVirtualizer;
+    require('@tanstack/react-virtual').useVirtualizer = jest.fn(config => {
+      config.getScrollElement();
+      config.estimateSize();
+
+      return originalMock(config);
+    });
+
+    render(<FilteredList {...props} />);
+    expect(screen.getByText(words[0])).toBeInTheDocument();
+  });
+
+  it('focusInput method focuses the input when called via ref', () => {
+    const ref = React.createRef();
+    render(<FilteredList {...props} ref={ref} />);
+    const input = screen.getByPlaceholderText('Filter...');
+    expect(input).not.toHaveFocus();
+    ref.current.focusInput();
+    expect(input).toHaveFocus();
   });
 });

@@ -1,21 +1,10 @@
 // Copyright (c) 2021 The Jaeger Authors.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import React, { useState, useMemo, useCallback } from 'react';
 import isEqual from 'lodash/isEqual';
 import isArray from 'lodash/isArray';
-import { Table, Progress, Button, Tooltip, Col, TableProps } from 'antd';
+import { Table, Progress, Button, Tooltip, Col, TablePaginationConfig } from 'antd';
 import { IoInformationCircleOutline } from 'react-icons/io5';
 import REDGraph from './opsGraph';
 import LoadingIndicator from '../../../common/LoadingIndicator';
@@ -88,8 +77,8 @@ const OperationTableDetails: React.FC<TProps> = ({
     setHoveredRowKey(-1);
   }, []);
 
-  const handleTableChange: TableProps<ServiceOpsMetrics>['onChange'] = useCallback(
-    (_pagination: any, _filters: any, sorter: any) => {
+  const handleTableChange = useCallback(
+    (_pagination: TablePaginationConfig, _filters: Record<string, unknown>, sorter: unknown) => {
       const activeSorters = isArray(sorter) ? sorter : [sorter];
       if (!isEqual(activeSorters, tableSorting)) {
         const lastColumn = activeSorters[activeSorters.length - 1] ?? tableSorting[tableSorting.length - 1];

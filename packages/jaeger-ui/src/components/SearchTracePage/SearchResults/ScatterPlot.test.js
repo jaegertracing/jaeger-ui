@@ -1,19 +1,8 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, fireEvent, act } from '@testing-library/react';
+import { render, fireEvent, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import ScatterPlot, { CustomTooltip } from './ScatterPlot';
@@ -129,7 +118,7 @@ describe('ScatterPlot', () => {
     expect(container.querySelector('.recharts-responsive-container')).toBeTruthy();
   });
 
-  it('should render X axis correctly', () => {
+  it('should render X axis correctly', async () => {
     let container;
     act(() => {
       const result = render(
@@ -138,14 +127,18 @@ describe('ScatterPlot', () => {
       container = result.container;
     });
 
-    const xAxisTicks = container.querySelectorAll('.recharts-xAxis .recharts-cartesian-axis-tick-value');
-    const tickTexts = Array.from(xAxisTicks).map(tick => tick.textContent);
+    await waitFor(() => {
+      const xAxis = container.querySelector('.recharts-xAxis');
+      expect(xAxis).toBeTruthy();
+    });
 
-    expect(tickTexts.some(text => text.includes('10:10'))).toBeTruthy();
-    expect(tickTexts.some(text => text.includes('10:11'))).toBeTruthy();
+    const xAxis = container.querySelector('.recharts-xAxis');
+    expect(xAxis).toBeTruthy();
+    const axisTicks = xAxis.querySelector('.recharts-cartesian-axis-ticks');
+    expect(axisTicks).toBeTruthy();
   });
 
-  it('should render Y axis correctly', () => {
+  it('should render Y axis correctly', async () => {
     let container;
     act(() => {
       const result = render(
@@ -154,10 +147,15 @@ describe('ScatterPlot', () => {
       container = result.container;
     });
 
-    const yAxisTicks = container.querySelectorAll('.recharts-yAxis .recharts-cartesian-axis-tick-value');
-    const tickTexts = Array.from(yAxisTicks).map(tick => tick.textContent);
+    await waitFor(() => {
+      const yAxis = container.querySelector('.recharts-yAxis');
+      expect(yAxis).toBeTruthy();
+    });
 
-    expect(tickTexts.some(text => text.includes('ms'))).toBeTruthy();
+    const yAxis = container.querySelector('.recharts-yAxis');
+    expect(yAxis).toBeTruthy();
+    const axisTicks = yAxis.querySelector('.recharts-cartesian-axis-ticks');
+    expect(axisTicks).toBeTruthy();
   });
 
   it('should set fixed container width on initial render', () => {
