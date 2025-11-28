@@ -174,7 +174,7 @@ Full details in `./0001/phase-0-2-css-variables-findings.md`.
 
 **Component Inventory by Business Priority:**
 
-### Tier 1: Critical Path - Trace Search (Landing Page)
+##### Tier 1: Critical Path - Trace Search (Landing Page)
 
 **SearchTracePage** and all dependencies:
 
@@ -197,7 +197,7 @@ Full details in `./0001/phase-0-2-css-variables-findings.md`.
 - `App/Page.css` - Page layout
 - `App/index.css` - Global styles
 
-### Tier 2: Critical Path - Trace Viewing
+##### Tier 2: Critical Path - Trace Viewing
 
 **TracePage/TraceTimeline** and all dependencies:
 
@@ -247,7 +247,7 @@ Full details in `./0001/phase-0-2-css-variables-findings.md`.
 - `common/VerticalResizer.css` - Resizable panels
 - `common/FilteredList/` - Filtering UI
 
-### Tier 3: Foundation Components
+##### Tier 3: Foundation Components
 
 These must be done first as they're used everywhere:
 
@@ -259,7 +259,7 @@ These must be done first as they're used everywhere:
 | App/TopNav.css | `App/TopNav.css` | ~10 | Navigation |
 | App/Page.css | `App/Page.css` | ~6 | Page layout |
 
-### Tier 4: Secondary Features
+##### Tier 4: Secondary Features
 
 Lower priority features (defer until Tier 1-3 complete):
 
@@ -280,7 +280,7 @@ Lower priority features (defer until Tier 1-3 complete):
 3. **Dependency Management:** By identifying dependencies explicitly, we ensure shared components are themed consistently.
 4. **Incremental Value:** Users see theming in their primary workflows first, even if secondary features aren't themed yet.
 
-**✅ ACTUAL COLOR COUNTS:** See `0001/phase-0-audit-findings.md` for detailed audit data.
+**✅ ACTUAL COLOR COUNTS:** See `0001/phase-0-1-udit-findings.md` for detailed audit data.
 
 #### 0.4 Derive Token Taxonomy from Real Data
 
@@ -293,81 +293,24 @@ Create `0001/phase-0-4-color-consolidation-analysis.md` (✅ COMPLETED):
 
 ## Methodology
 
-This taxonomy was derived from analyzing the actual Jaeger UI codebase:
+This taxonomy is derived from analyzing the actual Jaeger UI codebase:
 - Analyzed X CSS files
 - Found Y unique color values
 - Identified Z common patterns
 
 ## Token Categories
 
-> **⚠️ NOTE:** The examples below are ILLUSTRATIVE to show the process.
-> **ACTUAL audit results** are in `0001/phase-0-audit-findings.md` (528 colors found, 150 unique values).
-> **Proposed taxonomy** based on real data is in `0001/color-consolidation-analysis.md`.
-
-### Surface Tokens (Backgrounds)
-
-Based on analysis of `background`, `background-color` properties:
-
-**Finding (EXAMPLE):** Most common background colors are:
-1. `#ffffff` (120 occurrences) → white backgrounds
-2. `#f5f5f5` (45 occurrences) → light gray backgrounds
-3. `#fafafa` (30 occurrences) → very light gray
-4. `rgba(0, 0, 0, 0.5)` (15 occurrences) → modal overlays
-
-**Proposed tokens (EXAMPLE):**
-- `--surface-primary`: #ffffff → Replaces: #fff, #ffffff, white
-- `--surface-secondary`: #f5f5f5 → Replaces: #f5f5f5, rgb(245, 245, 245)
-- `--surface-tertiary`: #fafafa → Replaces: #fafafa
-- `--surface-overlay`: rgba(0, 0, 0, 0.5) → Replaces: rgba(0,0,0,0.5), rgba(0,0,0,0.45)
-
-### Text Tokens
-
-Based on analysis of `color` property:
-
-**Finding (EXAMPLE):** Most common text colors are:
-1. `rgba(0, 0, 0, 0.85)` (80 occurrences) → primary text (already has --tx-color-title)
-2. `rgba(0, 0, 0, 0.65)` (60 occurrences) → body text (already has --tx-color-body)
-3. `#11939a` (25 occurrences) → link color
-4. `#999` (20 occurrences) → muted text (already has --tx-color-muted)
-5. `white` (40 occurrences) → text on dark backgrounds
-
-**Proposed tokens (EXAMPLE):**
-- `--text-primary`: rgba(0, 0, 0, 0.85) → Keep existing --tx-color-title or rename
-- `--text-secondary`: rgba(0, 0, 0, 0.65) → Keep existing --tx-color-body or rename
-- `--text-muted`: #aaa → Keep existing --tx-color-muted
-- `--text-link`: #11939a → NEW (currently hardcoded everywhere)
-- `--text-link-hover`: #00474e → NEW (link hover state)
-- `--text-inverse`: #ffffff → NEW (text on dark backgrounds)
-
-### Border Tokens
-
-Based on analysis of `border`, `border-color` properties:
-
-**Finding (EXAMPLE):** Most common border colors are:
-1. `#e6e6e6` (90 occurrences) → default borders
-2. `#d3d3d3` (30 occurrences) → slightly darker borders
-3. `rgba(0, 0, 0, 0.15)` (25 occurrences) → subtle borders
-
-**Proposed tokens (EXAMPLE):**
-- `--border-default`: #e6e6e6
-- `--border-strong`: #d3d3d3
-- `--border-subtle`: rgba(0, 0, 0, 0.15)
-
-[... continue for all categories based on ACTUAL findings ...]
-
----
-
 **✅ ACTUAL AUDIT COMPLETED (Phase 0.1):**
-- See `0001/phase-0-audit-findings.md` for complete audit results
+- See `0001/phase-0-1-audit-findings.md` for complete audit results
 - 528 hardcoded colors found across 85 files
 - 150 unique color values identified
 - Top colors: `white` (40), `#dddddd` (31), `#999999` (22), `#ffffff` (18)
-- See `0001/color-consolidation-analysis.md` for data-driven token taxonomy
+- See `0001/phase-0-4-color-consolidation-analysis.md` for data-driven token taxonomy
 ```
 
 #### 0.5 Create Migration Mapping
 
-Create `0001/migration-mapping.md` - a lookup table for developers:
+Create `0001/phase-0-5-migration-mapping.md` - a lookup table for developers:
 
 > **⚠️ NOTE:** The examples below show the FORMAT. Actual values will come from Phase 0.1 audit data.
 
@@ -402,7 +345,7 @@ Create `0001/migration-mapping.md` - a lookup table for developers:
 - ✅ `0001/phase-0-2-audit-css-variables.cjs` - CSS variables audit script
 - ✅ `0001/phase-0-2-css-variables-detailed.json` - CSS variables data (14KB)
 - ✅ `0001/phase-0-2-css-variables-findings.md` - CSS variables analysis
-- ⏳ `0001/migration-mapping.md` - Old color → New token mapping (Phase 0.5 - pending)
+- ⏳ `0001/phase-0-5-migration-mapping.md` - Old color → New token mapping (Phase 0.5 - pending)
 
 ---
 
@@ -414,7 +357,7 @@ This is a pure refactoring step - no visual changes, no new features, just conso
 
 #### 1.1 Create Centralized Color Variables
 
-Create `packages/jaeger-ui/src/styles/color-variables.css` based on Phase 0 findings:
+Use `packages/jaeger-ui/src/components/common/vars.css` for variables based on Phase 0 findings:
 
 > **⚠️ IMPORTANT:** The CSS below contains EXAMPLE/PLACEHOLDER values to illustrate structure.
 > **ACTUAL token values** must come from:
@@ -527,7 +470,7 @@ Create `packages/jaeger-ui/src/styles/color-variables.css` based on Phase 0 find
 
 ```javascript
 // MUST be imported before any component CSS
-import '../../styles/color-variables.css';
+import '../../components/common/vars.css';
 ```
 
 #### 1.2 Incremental Component Migration
@@ -732,7 +675,7 @@ diff docs/adr/0001/phase-0-audit-findings-detailed.json phase-1-audit-after.txt
 - [ ] All tests pass
 
 **Deliverables from Phase 1:**
-- ✅ `color-variables.css` - Single source of truth for current colors
+- ✅ `vars.css` - Single source of truth for current colors
 - ✅ All components migrated to use variables
 - ✅ Zero (or near-zero) hardcoded colors remaining
 - ✅ Visual regression tests passing
@@ -775,7 +718,7 @@ Create `0001/dark-theme-palette.md` (optional documentation):
 
 #### 2.2 Add Dark Theme Variables
 
-Update `color-variables.css` to add dark theme overrides:
+Update `packages/jaeger-ui/src/components/common/vars.css` to add dark theme overrides:
 
 ```css
 /* ... existing :root { } with light theme ... */
