@@ -6,7 +6,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { Select } from 'antd';
-import SearchableSelect, { filterOptionsByLabel } from './SearchableSelect';
+import SearchableSelect, { filterOptionsByLabel, filterOptionsFuzzy } from './SearchableSelect';
 
 describe('SearchableSelect', () => {
   const options = [
@@ -55,6 +55,24 @@ describe('SearchableSelect', () => {
     expect(screen.getByText('Banana')).toBeInTheDocument();
     expect(screen.queryByText('Apple')).not.toBeInTheDocument();
   });
+
+  it('uses fuzzy matching when fuzzy prop is true', async () => {
+    render(
+      <SearchableSelect fuzzy>
+        <Select.Option value="my-service">my-service</Select.Option>
+        <Select.Option value="other">other</Select.Option>
+      </SearchableSelect>
+    );
+
+    const select = screen.getByRole('combobox');
+    await userEvent.click(select);
+    // "mysvc" should fuzzy match "my-service"
+    await userEvent.type(select, 'mysvc');
+
+    // Multiple elements with the same text may exist in the DOM (Ant Design creates duplicates)
+    expect(screen.getAllByText('my-service').length).toBeGreaterThan(0);
+    expect(screen.queryByText('other')).not.toBeInTheDocument();
+  });
 });
 
 describe('filterOptionsByLabel', () => {
@@ -82,5 +100,38 @@ describe('filterOptionsByLabel', () => {
 
   it('should return false when passed null option', () => {
     expect(filterOptionsByLabel('jaeger', null)).toBe(false);
+  });
+});
+
+describe('filterOptionsFuzzy', () => {
+  const option = {
+    children: 'my-service-name',
+    label: 'my-service-name',
+    value: 'my-service-name',
+  };
+
+  it('should return true when passed empty input', () => {
+    expect(filterOptionsFuzzy('', option)).toBe(true);
+  });
+
+  it('should return true when passed exact match', () => {
+    expect(filterOptionsFuzzy('my-service-name', option)).toBe(true);
+  });
+
+  it('should return true when passed partial match', () => {
+    expect(filterOptionsFuzzy('service', option)).toBe(true);
+  });
+
+  it('should return true when passed fuzzy match', () => {
+    // match-sorter handles fuzzy matching well
+    expect(filterOptionsFuzzy('mysvc', option)).toBe(true);
+  });
+
+  it('should return false when passed non-matching', () => {
+    expect(filterOptionsFuzzy('xyz123', option)).toBe(false);
+  });
+
+  it('should return false when passed null option', () => {
+    expect(filterOptionsFuzzy('test', null)).toBe(false);
   });
 });
