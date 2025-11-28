@@ -203,6 +203,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
             value={this.state.valueNameSelector1}
             onChange={this.setValueNameSelector1}
             popupMatchSelectWidth={false}
+            fuzzy
           >
             {optionsNameSelector1.map(opt => (
               <Select.Option key={opt} value={opt}>
@@ -221,6 +222,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
             onClear={this.clearValue}
             placeholder="No item selected"
             popupMatchSelectWidth={false}
+            fuzzy
           >
             {optionsNameSelector2.map(opt => (
               <Select.Option key={opt} value={opt}>
@@ -237,6 +239,7 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
               value={this.state.valueNameSelector3}
               onChange={this.setValueNameSelector3}
               popupMatchSelectWidth={false}
+              fuzzy
             >
               {Array.from(optionsNameSelector3.keys()).map(opt => (
                 <Select.Option key={opt} value={opt}>
