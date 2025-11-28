@@ -35,6 +35,23 @@ SPDX-License-Identifier: Apache-2.0
   position: relative;
 }
 
+.DdgHeader--label {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 1em;
+  font-size: 1.5em;
+}
+
+.DdgHeader--labelText {
+  margin-right: 0.5em;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.DdgHeader--select {
+  min-width: 150px;
+}
+
 .DdgHeader--findWrapper {
   display: flex;
   flex: 1 1 auto;
