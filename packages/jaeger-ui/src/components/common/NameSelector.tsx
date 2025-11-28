@@ -32,6 +32,23 @@ type TProps = {
 
 export const DEFAULT_PLACEHOLDER = 'Select a value…';
 
+/**
+ * NameSelector is a custom header-style dropdown component that provides
+ * advanced features for selecting from a list of options.
+ *
+ * **Note**: Consider using SearchableSelect instead, which now supports:
+ * - Fuzzy matching via the `fuzzy` prop
+ * - Virtualization via Ant Design's built-in `virtual` prop
+ * - Standard Ant Design styling that integrates better with the design system
+ *
+ * NameSelector-specific features that would require CSS customization:
+ * - Header-style display with label prefix, chevron icon, and clear button
+ * - Custom h2 element styling
+ *
+ * @see SearchableSelect - Preferred component with fuzzy matching and virtualization support
+ * @see FilteredList - The underlying filterable list component used by NameSelector
+ * @deprecated Consider migrating to SearchableSelect with appropriate styling
+ */
 const NameSelector: React.FC<TProps> = props => {
   const { label, options, placeholder = false, required = false, value, setValue, clearValue } = props;
 

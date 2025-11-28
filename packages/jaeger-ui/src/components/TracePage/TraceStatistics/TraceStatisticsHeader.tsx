@@ -1,13 +1,13 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkbox } from 'antd';
+import { Checkbox, Select } from 'antd';
 import React, { Component } from 'react';
 import { Trace } from '../../../types/trace';
 import { ITableSpan } from './types';
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
-import NameSelector from '../../common/NameSelector';
+import SearchableSelect from '../../common/SearchableSelect';
 import generateColor from './generateColor';
 import './TraceStatisticsHeader.css';
 
@@ -196,32 +196,58 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
 
     return (
       <div className="TraceStatisticsHeader">
-        <NameSelector
-          label="Group By"
-          placeholder={false}
-          options={optionsNameSelector1}
-          value={this.state.valueNameSelector1}
-          setValue={this.setValueNameSelector1}
-          required
-        />
-        <NameSelector
-          label="Sub-Group"
-          placeholder="No item selected"
-          options={optionsNameSelector2}
-          value={this.state.valueNameSelector2}
-          setValue={this.setValueNameSelector2}
-          clearValue={this.clearValue}
-          required={false}
-        />
+        <label className="TraceStatisticsHeader--label">
+          <span className="TraceStatisticsHeader--labelText">Group By:</span>
+          <SearchableSelect
+            className="TraceStatisticsHeader--select"
+            value={this.state.valueNameSelector1}
+            onChange={this.setValueNameSelector1}
+            popupMatchSelectWidth={false}
+            fuzzy
+          >
+            {optionsNameSelector1.map(opt => (
+              <Select.Option key={opt} value={opt}>
+                {opt}
+              </Select.Option>
+            ))}
+          </SearchableSelect>
+        </label>
+        <label className="TraceStatisticsHeader--label">
+          <span className="TraceStatisticsHeader--labelText">Sub-Group:</span>
+          <SearchableSelect
+            className="TraceStatisticsHeader--select"
+            value={this.state.valueNameSelector2}
+            onChange={this.setValueNameSelector2}
+            allowClear
+            onClear={this.clearValue}
+            placeholder="No item selected"
+            popupMatchSelectWidth={false}
+            fuzzy
+          >
+            {optionsNameSelector2.map(opt => (
+              <Select.Option key={opt} value={opt}>
+                {opt}
+              </Select.Option>
+            ))}
+          </SearchableSelect>
+        </label>
         <div className="colorDropdown--TraceStatisticsHeader">
-          <NameSelector
-            label="Color by"
-            placeholder={false}
-            options={Array.from(optionsNameSelector3.keys())}
-            value={this.state.valueNameSelector3}
-            setValue={this.setValueNameSelector3}
-            required
-          />
+          <label className="TraceStatisticsHeader--label">
+            <span className="TraceStatisticsHeader--labelText">Color by:</span>
+            <SearchableSelect
+              className="TraceStatisticsHeader--select"
+              value={this.state.valueNameSelector3}
+              onChange={this.setValueNameSelector3}
+              popupMatchSelectWidth={false}
+              fuzzy
+            >
+              {Array.from(optionsNameSelector3.keys()).map(opt => (
+                <Select.Option key={opt} value={opt}>
+                  {opt}
+                </Select.Option>
+              ))}
+            </SearchableSelect>
+          </label>
         </div>
         <div className="checkbox--TraceStatisticsHeader">
           <Checkbox onChange={this.checkboxButton} />
