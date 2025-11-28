@@ -28,6 +28,18 @@ SPDX-License-Identifier: Apache-2.0
   padding-right: 40px;
 }
 
-.TraceStatisticsHeader .NameSelector {
+.TraceStatisticsHeader--label {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 1em;
   font-size: 1em;
+}
+
+.TraceStatisticsHeader--labelText {
+  margin-right: 0.5em;
+  color: var(--text-muted);
+}
+
+.TraceStatisticsHeader--select {
+  min-width: 120px;
 }
