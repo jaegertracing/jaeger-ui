@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .Dropdown--icon-container {
   display: flex;
-  color: white;
+  color: var(--text-inverse);
   margin-right: 30px;
   flex-direction: row;
   align-items: center;
@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .Dropdown--icon-container:hover {
-  color: white;
+  color: var(--text-inverse);
 }
 
 .Dropdown--icon-container .Dropdown--icon {
@@ -21,5 +21,5 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .Menu--item .ant-menu-title-content {
-  color: white;
+  color: var(--text-inverse);
 }

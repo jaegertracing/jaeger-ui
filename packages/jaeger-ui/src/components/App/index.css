@@ -10,9 +10,9 @@ html > body {
 }
 
 a {
-  color: #11939a;
+  color: var(--text-link);
 }
 
 a:hover {
-  color: #00474e;
+  color: var(--text-link-hover);
 }
