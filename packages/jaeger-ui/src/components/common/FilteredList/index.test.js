@@ -5,7 +5,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import { Key as EKey } from 'ts-key-enum';
+import { KeyboardKey as EKey } from '../../../constants/keyboard-keys';
 
 import FilteredList from './index';
 

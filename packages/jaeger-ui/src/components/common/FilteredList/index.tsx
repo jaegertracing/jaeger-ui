@@ -8,7 +8,7 @@ import _debounce from 'lodash/debounce';
 import { matchSorter } from 'match-sorter';
 import { IoSearch } from 'react-icons/io5';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Key as EKey } from 'ts-key-enum';
+import { KeyboardKey as EKey } from '../../../constants/keyboard-keys';
 
 import ListItem from './ListItem';
 
