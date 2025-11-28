@@ -28,3 +28,20 @@ SPDX-License-Identifier: Apache-2.0
   margin: 0 0 0 0.6em;
   outline: 4px solid transparent;
 }
+
+.QualityMetrics--Header--ServiceLabel {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 1em;
+  font-size: 1.5em;
+}
+
+.QualityMetrics--Header--ServiceLabelText {
+  margin-right: 0.5em;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.QualityMetrics--Header--ServiceSelect {
+  min-width: 150px;
+}

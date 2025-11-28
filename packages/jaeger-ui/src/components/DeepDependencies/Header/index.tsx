@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useRef, useCallback, useMemo } from 'react';
-import { InputRef, Tooltip } from 'antd';
+import { InputRef, Select, Tooltip } from 'antd';
 import { IoSearch, IoEye, IoEyeOff } from 'react-icons/io5';
 
 import HopsSelector from './HopsSelector';
-import NameSelector from '../../common/NameSelector';
+import SearchableSelect from '../../common/SearchableSelect';
 import LayoutSettings from './LayoutSettings';
 import { trackFilter, trackHeaderSetOperation, trackShowMatches } from '../index.track';
 import UiFindInput from '../../common/UiFindInput';
@@ -117,23 +117,44 @@ const Header: React.FC<TProps> = ({
     <header className="DdgHeader">
       {showParameters && (
         <div className="DdgHeader--paramsHeader">
-          <NameSelector
-            label="Service"
-            placeholder="Select a service…"
-            value={service || null}
-            setValue={setService}
-            required
-            options={services || []}
-          />
+          <label className="DdgHeader--label">
+            <span className="DdgHeader--labelText">Service:</span>
+            <SearchableSelect
+              className="DdgHeader--select"
+              value={service || null}
+              onChange={setService}
+              placeholder="Select a service…"
+              popupMatchSelectWidth={false}
+              fuzzy
+              status={!service ? 'error' : undefined}
+            >
+              {(services || []).map(opt => (
+                <Select.Option key={opt} value={opt}>
+                  {opt}
+                </Select.Option>
+              ))}
+            </SearchableSelect>
+          </label>
           {service && (
-            <NameSelector
-              clearValue={clearOperation}
-              label="Operation"
-              placeholder="Filter by operation…"
-              value={operation || null}
-              setValue={handleSetOperation}
-              options={operations || []}
-            />
+            <label className="DdgHeader--label">
+              <span className="DdgHeader--labelText">Operation:</span>
+              <SearchableSelect
+                className="DdgHeader--select"
+                value={operation || null}
+                onChange={handleSetOperation}
+                allowClear
+                onClear={clearOperation}
+                placeholder="Filter by operation…"
+                popupMatchSelectWidth={false}
+                fuzzy
+              >
+                {(operations || []).map(opt => (
+                  <Select.Option key={opt} value={opt}>
+                    {opt}
+                  </Select.Option>
+                ))}
+              </SearchableSelect>
+            </label>
           )}
         </div>
       )}
