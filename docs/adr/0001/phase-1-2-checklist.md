@@ -63,12 +63,12 @@ Critical path for trace analysis:
 - [ ] `TracePage/TraceTimelineViewer/SpanDetail/TextList.css` - Text list (~5 colors)
 
 **Batch 3 Dependencies (common components):**
-- [ ] `common/BreakableText.css` - Text wrapping
-- [ ] `common/CopyIcon.css` - Copy functionality
-- [ ] `common/LabeledList.css` - Key-value displays
-- [ ] `common/TraceId.css` - Trace ID display
-- [ ] `common/TraceName.css` - Trace name display
-- [ ] `common/VerticalResizer.css` - Resizable panels
+- [x] `common/BreakableText.css` - Text wrapping
+- [x] `common/CopyIcon.css` - Copy functionality
+- [x] `common/LabeledList.css` - Key-value displays
+- [x] `common/TraceId.css` - Trace ID display
+- [x] `common/TraceName.css` - Trace name display
+- [x] `common/VerticalResizer.css` - Resizable panels
 - [ ] `common/FilteredList/ListItem.css` - Filtering UI (13 colors)
 - [ ] `common/FilteredList/index.css` - Filtering container
 
