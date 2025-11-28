@@ -24,12 +24,12 @@ SPDX-License-Identifier: Apache-2.0
     rgba(135, 232, 222, 0.2) 70%,
     rgba(135, 232, 222, 0)
   );
-  color: var(--tx-color-title);
+  color: var(--text-primary);
 }
 
 .FilteredList--ListItem.is-selected {
   background: linear-gradient(to right, #87e8de, #87e8deaa 70%, #87e8de00);
-  color: var(--tx-color-title);
+  color: var(--text-primary);
 }
 
 .FilteredList--ListItem.is-striped.is-focused,
@@ -40,7 +40,7 @@ SPDX-License-Identifier: Apache-2.0
     rgba(17, 153, 153, 0.2) 70%,
     rgba(17, 153, 153, 0)
   );
-  color: var(--tx-color-title);
+  color: var(--text-primary);
 }
 
 .FilteredList--ListItem mark {

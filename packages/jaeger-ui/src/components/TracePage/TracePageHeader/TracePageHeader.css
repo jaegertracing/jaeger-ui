@@ -44,7 +44,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .TracePageHeader--titleLink {
   align-items: center;
-  color: var(--tx-color-title);
+  color: var(--text-primary);
   display: flex;
   flex: 1;
 }

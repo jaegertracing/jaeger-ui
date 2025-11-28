@@ -86,7 +86,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .DdgHeader--uiFindInfo--hidden {
-  border-left: dashed var(--tx-color-muted) 1px;
+  border-left: dashed var(--text-muted) 1px;
   margin-left: 0.3em;
   padding-left: 0.3em;
 }

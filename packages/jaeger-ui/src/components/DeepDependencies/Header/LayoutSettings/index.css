@@ -6,6 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 .Ddg--LayoutSettings {
   margin-right: 3em;
 }
+
 .Ddg--LayoutSettings--optionsTable > tbody > tr {
   vertical-align: top;
 }
@@ -29,7 +30,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .Ddg--LayoutSettings--optionNote {
-  color: var(--tx-color-title);
+  color: var(--text-primary);
 }
 
 .Ddg--LayoutSettings--optionDescription {
