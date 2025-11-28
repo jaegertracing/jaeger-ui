@@ -19,7 +19,7 @@ SPDX-License-Identifier: Apache-2.0
   align-items: center;
   position: absolute;
   right: 0;
-  padding-right: 1.25rem;
+  padding-right: 40px;
 }
 
 .TraceStatisticsHeader--checkbox {
