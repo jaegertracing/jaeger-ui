@@ -227,13 +227,14 @@ function main() {
     allFindings,
   };
 
+  const filePath = 'docs/adr/0001/phase-0-1-audit-findings-detailed.json';
   fs.writeFileSync(
-    'color-audit-detailed.json',
+    filePath,
     JSON.stringify(jsonOutput, null, 2)
   );
 
   console.log('='.repeat(80));
-  console.log(`Detailed JSON report saved to: color-audit-detailed.json`);
+  console.log(`Detailed JSON report saved to: ${filePath}`);
   console.log('='.repeat(80));
   console.log('');
   console.log('Next steps:');
