@@ -110,11 +110,9 @@ Start with REALITY (what exists), not THEORY (what we think we need).
 
 This phase was missing from the original plan but is ESSENTIAL for success.
 
-#### 0.1 Comprehensive Color Audit
+#### 0.1 Comprehensive Color Audit ✅ COMPLETE
 
-Create and run `docs/adr/0001/phase-0-audit-colors.cjs` to find ALL hardcoded colors in the codebase.
-
-See full script in Appendix A (end of document) or at `docs/adr/0001/phase-0-audit-colors.cjs`.
+Find ALL hardcoded colors in the codebase using script in `./0001/phase-0-audit-colors.cjs`.
 
 **Run the audit:**
 ```bash
@@ -123,7 +121,7 @@ node docs/adr/0001/phase-0-audit-colors.cjs
 ```
 
 **Output files:**
-- `docs/adr/0001/phase-0-audit-findings-detailed.json` - Complete machine-readable data (550KB)
+- `./0001/phase-0-audit-findings-detailed.json` - Complete machine-readable data (550KB)
 - Console output with summary statistics and top colors
 
 **Expected output:**
@@ -131,6 +129,11 @@ node docs/adr/0001/phase-0-audit-colors.cjs
 - Top 20 most-used color values
 - Colors grouped by CSS property (background, color, border, etc.)
 - Detailed JSON export for migration tool
+
+**Actual output:**
+- Findings summary: `./0001/phase-0-1-audit-findings.md`
+- Detailed findings: `./0001/phase-0-1-audit-findings-detailed.json`
+
 
 #### 0.2 Analyze Existing CSS Variables ✅ COMPLETE
 
@@ -141,7 +144,7 @@ Audit what CSS variables already exist using the automated script:
 node docs/adr/0001/phase-0-2-audit-css-variables.cjs
 ```
 
-**✅ ACTUAL FINDINGS** (see `0001/phase-0-2-css-variables-findings.md`):
+**✅ ACTUAL FINDINGS**:
 
 **Summary:**
 - **4 CSS variables** defined (3 color, 1 layout)
@@ -149,14 +152,15 @@ node docs/adr/0001/phase-0-2-audit-css-variables.cjs
 - **100% consistency** - all defined variables are used
 - **2 naming patterns:** `--tx-color-*` and `--nav-*`
 
+Full details in `./0001/phase-0-2-css-variables-findings.md`.
+
 **Existing variables:**
 - `--tx-color-title: rgba(0, 0, 0, 0.85)` - 9 usages in 7 files
 - `--tx-color-body: rgba(0, 0, 0, 0.65)` - 2 usages in 1 file
 - `--tx-color-muted: #aaa` - 7 usages in 5 files
 - `--nav-height: 48px` - 4 usages in 3 files
 
-**Decision: KEEP and MIGRATE**
-- Keep existing variables as aliases during migration
+**Decision: MIGRATE**
 - Migrate to new naming convention: `--tx-color-title` → `--text-primary`
 - See detailed migration strategy in findings document
 
@@ -282,7 +286,7 @@ Lower priority features (defer until Tier 1-3 complete):
 
 **This is the KEY deliverable** - create the token system based on what actually exists, not generic best practices.
 
-Create `0001/color-consolidation-analysis.md` (✅ COMPLETED):
+Create `0001/phase-0-4-color-consolidation-analysis.md` (✅ COMPLETED):
 
 ```markdown
 # Design Token Taxonomy
@@ -391,10 +395,10 @@ Create `0001/migration-mapping.md` - a lookup table for developers:
 ```
 
 **Deliverables from Phase 0:**
-- ✅ `0001/phase-0-audit-colors.cjs` - Color audit script
-- ✅ `0001/phase-0-audit-findings-detailed.json` - Color audit data (550KB)
-- ✅ `0001/phase-0-audit-findings.md` - Color audit summary
-- ✅ `0001/color-consolidation-analysis.md` - Derived token system (THE KEY DOCUMENT)
+- ✅ `0001/phase-0-1-audit-colors.cjs` - Color audit script
+- ✅ `0001/phase-0-1-audit-findings-detailed.json` - Color audit data (550KB)
+- ✅ `0001/phase-0-1-audit-findings.md` - Color audit summary
+- ✅ `0001/phase-0-1-color-consolidation-analysis.md` - Derived token system (THE KEY DOCUMENT)
 - ✅ `0001/phase-0-2-audit-css-variables.cjs` - CSS variables audit script
 - ✅ `0001/phase-0-2-css-variables-detailed.json` - CSS variables data (14KB)
 - ✅ `0001/phase-0-2-css-variables-findings.md` - CSS variables analysis
@@ -414,10 +418,9 @@ Create `packages/jaeger-ui/src/styles/color-variables.css` based on Phase 0 find
 
 > **⚠️ IMPORTANT:** The CSS below contains EXAMPLE/PLACEHOLDER values to illustrate structure.
 > **ACTUAL token values** must come from:
-> - `0001/color-consolidation-analysis.md` (recommended initial tokens)
-> - `0001/phase-0-audit-findings-detailed.json` (complete audit data)
->
-> Phase 0.1 audit found: 528 colors → can consolidate to ~20 tokens covering 52% of uses.
+> - `0001/phase-0-1-color-consolidation-analysis.md` (recommended initial tokens)
+> - `0001/phase-0-1-audit-findings-detailed.json` (complete audit data)
+> - `0001/phase-0-1-audit-findings.md` (complete audit summary)
 
 ```css
 /*
