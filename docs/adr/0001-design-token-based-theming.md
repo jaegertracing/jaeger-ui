@@ -164,7 +164,7 @@ Full details in `./0001/phase-0-2-css-variables-findings.md`.
 - Migrate to new naming convention: `--tx-color-title` → `--text-primary`
 - See detailed migration strategy in findings document
 
-#### 0.3 Component Categorization
+#### 0.3 Component Categorization ✅ COMPLETE
 
 **Prioritization Strategy:** Components are prioritized based on **business functions** rather than CSS complexity. The most critical user workflows should be themed first.
 
@@ -282,7 +282,7 @@ Lower priority features (defer until Tier 1-3 complete):
 
 **✅ ACTUAL COLOR COUNTS:** See `0001/phase-0-1-udit-findings.md` for detailed audit data.
 
-#### 0.4 Derive Token Taxonomy from Real Data
+#### 0.4 Derive Token Taxonomy from Real Data ✅ COMPLETED
 
 **This is the KEY deliverable** - create the token system based on what actually exists, not generic best practices.
 
@@ -308,7 +308,7 @@ This taxonomy is derived from analyzing the actual Jaeger UI codebase:
 - See `0001/phase-0-4-color-consolidation-analysis.md` for data-driven token taxonomy
 ```
 
-#### 0.5 Create Migration Mapping
+#### 0.5 Create Migration Mapping ✅ COMPLETED
 
 Create `0001/phase-0-5-migration-mapping.md` - a lookup table for developers:
 
@@ -345,7 +345,7 @@ Create `0001/phase-0-5-migration-mapping.md` - a lookup table for developers:
 - ✅ `0001/phase-0-2-audit-css-variables.cjs` - CSS variables audit script
 - ✅ `0001/phase-0-2-css-variables-detailed.json` - CSS variables data (14KB)
 - ✅ `0001/phase-0-2-css-variables-findings.md` - CSS variables analysis
-- ⏳ `0001/phase-0-5-migration-mapping.md` - Old color → New token mapping (Phase 0.5 - pending)
+- ✅ `0001/phase-0-5-migration-mapping.md` - Old color → New token mapping (Phase 0.5 - pending)
 
 ---
 
