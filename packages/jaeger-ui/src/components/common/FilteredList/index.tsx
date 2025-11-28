@@ -8,7 +8,13 @@ import _debounce from 'lodash/debounce';
 import { matchSorter } from 'match-sorter';
 import { IoSearch } from 'react-icons/io5';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Key as EKey } from 'ts-key-enum';
+// Keyboard key constants (previously from ts-key-enum, but v3 uses const enum which doesn't work with Vite/esbuild)
+const EKey = {
+  Escape: 'Escape',
+  ArrowUp: 'ArrowUp',
+  ArrowDown: 'ArrowDown',
+  Enter: 'Enter',
+} as const;
 
 import ListItem from './ListItem';
 
