@@ -24,8 +24,8 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SearchTracePage--find {
-  background-color: #f5f5f5;
-  border: 1px solid #e6e6e6;
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-default);
   padding: 1rem;
 }
 

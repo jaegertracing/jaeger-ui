@@ -4,20 +4,20 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .SearchForm--labelCount {
-  color: #999;
+  color: var(--text-muted);
 }
 
 .SearchForm--hintTrigger {
-  border: 1px solid #999;
+  border: 1px solid var(--text-muted);
   border-radius: 100px;
-  color: #999;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 1px;
 }
 
 .SearchForm--hintTrigger:hover {
-  color: #000;
-  border-color: #000;
+  color: var(--text-primary);
+  border-color: var(--text-primary);
 }
 
 .SearchForm--tagsHintTitle {
@@ -25,18 +25,18 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SearchForm--submit {
-  background-color: #11939a;
-  color: white;
+  background-color: var(--interactive-primary);
+  color: var(--text-inverse);
   float: right;
 }
 
 .SearchForm--submit:hover {
-  background-color: #fff;
+  background-color: var(--surface-primary);
   float: right;
 }
 
 .SearchForm--submit:active {
-  background-color: #fff;
+  background-color: var(--surface-primary);
   float: right;
 }
 
@@ -45,7 +45,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SearchForm--tagsHintEg {
-  color: teal;
+  color: var(--text-link);
 }
 
 .ant-select-dropdown .rc-virtual-list-holder {
@@ -57,12 +57,12 @@ SPDX-License-Identifier: Apache-2.0
 .ant-select-dropdown .rc-virtual-list::-webkit-scrollbar,
 .ant-select-dropdown .rc-virtual-list-holder::-webkit-scrollbar {
   width: 8px;
-  background-color: #f1f1f1;
+  background-color: var(--surface-secondary);
 }
 
 .ant-select-dropdown::-webkit-scrollbar-thumb,
 .ant-select-dropdown .rc-virtual-list::-webkit-scrollbar-thumb,
 .ant-select-dropdown .rc-virtual-list-holder::-webkit-scrollbar-thumb {
-  background-color: #292929;
+  background-color: var(--text-secondary);
   border-radius: 4px;
 }

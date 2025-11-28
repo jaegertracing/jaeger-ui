@@ -5,6 +5,6 @@ SPDX-License-Identifier: Apache-2.0
 
 .Dragger--icon {
   font-size: 56px;
-  color: #2da6a2;
+  color: var(--interactive-secondary);
   margin: 10px 0;
 }

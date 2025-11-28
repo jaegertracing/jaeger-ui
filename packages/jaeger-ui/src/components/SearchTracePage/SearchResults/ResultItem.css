@@ -4,13 +4,13 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .ResultItem {
-  border: 1px solid #e6e6e6;
-  background: #fbfbfb;
+  border: 1px solid var(--border-default);
+  background: var(--surface-tertiary);
 }
 
 .ResultItem:hover {
-  background: #f5f5f5;
-  border-color: #d8d8d8;
+  background: var(--surface-secondary);
+  border-color: var(--border-strong);
 }
 
 .ResultItem--serviceTag {
@@ -21,9 +21,9 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .ResultItem--errorIcon {
-  background: #db2828;
+  background: var(--feedback-error);
   border-radius: 6.5px;
-  color: #fff;
+  color: var(--text-inverse);
   font-size: 0.85em;
   margin-right: 0.25rem;
   padding: 1px;
