@@ -5,13 +5,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-// Keyboard key constants (previously from ts-key-enum, but v3 uses const enum which doesn't work with Vite/esbuild)
-const EKey = {
-  Escape: 'Escape',
-  ArrowUp: 'ArrowUp',
-  ArrowDown: 'ArrowDown',
-  Enter: 'Enter',
-};
+import { KeyboardKey as EKey } from '../../../constants/keyboard-keys';
 
 import FilteredList from './index';
 
