@@ -4,15 +4,11 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 @keyframes LoadingIndicator--colorAnim {
-  /*
-  rgb(0, 128, 128) == teal
-  rgba(0, 128, 128, 0.3) == #bedfdf
-  */
   from {
-    color: #bedfdf;
+    color: var(--interactive-primary-light);
   }
   to {
-    color: teal;
+    color: var(--interactive-primary);
   }
 }
 
@@ -28,10 +24,10 @@ SPDX-License-Identifier: Apache-2.0
     LoadingIndicator--spin 1.2s infinite linear;
   /* outline / stroke the loading indicator */
   text-shadow:
-    -0.5px 0 rgba(0, 128, 128, 0.6),
-    0 0.5px rgba(0, 128, 128, 0.6),
-    0.5px 0 rgba(0, 128, 128, 0.6),
-    0 -0.5px rgba(0, 128, 128, 0.6);
+    -0.5px 0 var(--interactive-primary-opaque),
+    0 0.5px var(--interactive-primary-opaque),
+    0.5px 0 var(--interactive-primary-opaque),
+    0 -0.5px var(--interactive-primary-opaque);
 
   width: 42px;
   height: 42px;
