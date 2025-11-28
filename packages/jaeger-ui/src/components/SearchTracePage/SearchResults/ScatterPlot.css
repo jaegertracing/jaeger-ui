@@ -4,9 +4,9 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .scatter-plot-hint {
-  color: #444;
-  background: #f8f8f8;
-  border: 1px solid #ddd;
+  color: var(--text-primary);
+  background: var(--surface-tertiary);
+  border: 1px solid var(--border-default);
   border-radius: 3px;
   padding: 0.5em;
   margin: 0.5em;
