@@ -359,11 +359,12 @@ This is a pure refactoring step - no visual changes, no new features, just conso
 
 Use `packages/jaeger-ui/src/components/common/vars.css` for variables based on Phase 0 findings:
 
-> **⚠️ IMPORTANT:** The CSS below contains EXAMPLE/PLACEHOLDER values to illustrate structure.
 > **ACTUAL token values** must come from:
-> - `0001/phase-0-1-color-consolidation-analysis.md` (recommended initial tokens)
+> - `0001/phase-0-4-color-consolidation-analysis.md` (recommended initial tokens)
 > - `0001/phase-0-1-audit-findings-detailed.json` (complete audit data)
 > - `0001/phase-0-1-audit-findings.md` (complete audit summary)
+
+> **⚠️ IMPORTANT:** The CSS below contains EXAMPLE/PLACEHOLDER values to illustrate structure.
 
 ```css
 /*
