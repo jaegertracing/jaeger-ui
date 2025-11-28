@@ -12,7 +12,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .DiffNode.is-changed {
-  color: var(--tx-color-title);
+  color: var(--text-primary);
 }
 
 .DiffNode.is-more {

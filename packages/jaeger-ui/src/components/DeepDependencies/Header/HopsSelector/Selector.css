@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .HopsSelector--Selector {
-  color: var(--tx-color-muted);
+  color: var(--text-muted);
   margin: 0 0.5em;
   padding: 0px 3px;
 }

@@ -3,10 +3,6 @@ Copyright (c) 2017 Uber Technologies, Inc.
 SPDX-License-Identifier: Apache-2.0
 */
 
-:root {
-  --nav-height: 48px;
-}
-
 .u-width-100 {
   width: 100%;
 }
@@ -24,7 +20,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .u-tx-muted {
-  color: var(--tx-color-muted);
+  color: var(--text-muted);
 }
 
 .u-tx-inherit {

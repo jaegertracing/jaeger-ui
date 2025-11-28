@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .CohortTable--traceName {
-  color: var(--tx-color-title);
+  color: var(--text-primary);
 }
 
 .CohortTable--needMoreMsg {

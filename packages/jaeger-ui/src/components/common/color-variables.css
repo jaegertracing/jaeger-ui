@@ -19,4 +19,12 @@ SPDX-License-Identifier: Apache-2.0
 
   /* ===== Layout Variables ===== */
   --nav-height: 48px;
+
+  /* ===== Backward Compatibility Aliases ===== */
+  /* @deprecated Use --text-primary instead */
+  --tx-color-title: var(--text-primary);
+  /* @deprecated Use --text-secondary instead */
+  --tx-color-body: var(--text-secondary);
+  /* @deprecated Use --text-muted instead */
+  --tx-color-muted: var(--text-muted);
 }

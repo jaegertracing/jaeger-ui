@@ -11,7 +11,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .SearchResults--header {
   border: 1px solid #e6e6e6;
-  color: var(--tx-color-title);
+  color: var(--text-primary);
   margin-bottom: 1.25rem;
 }
 
