@@ -4,5 +4,5 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .TraceName.is-error {
-  color: #c00;
+  color: var(--feedback-error);
 }

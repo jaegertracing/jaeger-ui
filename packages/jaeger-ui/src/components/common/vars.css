@@ -87,4 +87,12 @@ SPDX-License-Identifier: Apache-2.0
   --trace-color-3: #e31a1c;
   --trace-color-4: #ff7f00;
   --trace-color-5: #6a3d9a;
+
+  /* ============================================
+    HELPER & SMALL-SCOPE TOKENS
+    Tokens used by common components for subtle states
+    ============================================ */
+
+  /* Background used when dragging resizers (very subtle tint of interactive color) */
+  --resizer-drag-bg: rgba(var(--interactive-primary-rgb), 0.05);
 }
