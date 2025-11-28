@@ -355,7 +355,7 @@ Create `0001/phase-0-5-migration-mapping.md` - a lookup table for developers:
 
 This is a pure refactoring step - no visual changes, no new features, just consolidation.
 
-#### 1.1 Create Centralized Color Variables
+#### 1.1 Create Centralized Color Variables ✅ COMPLETED
 
 Use `packages/jaeger-ui/src/components/common/vars.css` for variables based on Phase 0 findings:
 
@@ -363,109 +363,6 @@ Use `packages/jaeger-ui/src/components/common/vars.css` for variables based on P
 > - `0001/phase-0-4-color-consolidation-analysis.md` (recommended initial tokens)
 > - `0001/phase-0-1-audit-findings-detailed.json` (complete audit data)
 > - `0001/phase-0-1-audit-findings.md` (complete audit summary)
-
-> **⚠️ IMPORTANT:** The CSS below contains EXAMPLE/PLACEHOLDER values to illustrate structure.
-
-```css
-/*
- * Centralized Color Variables
- *
- * IMPORTANT: These values are derived from the actual codebase audit (Phase 0).
- * DO NOT change these values without updating the token-taxonomy.md document.
- *
- * This file contains ONLY the current light theme colors.
- * Dark theme will be added in Phase 2.
- */
-
-:root {
-  /* ============================================
-     SURFACE TOKENS (Backgrounds)
-     Based on audit of background/background-color properties
-     ============================================ */
-
-  /* Example - REPLACE WITH ACTUAL AUDIT FINDINGS:
-   * --surface-primary was found as:
-   *   - #ffffff (120 occurrences)
-   *   - #fff (45 occurrences)
-   *   - white (15 occurrences)
-   * Total: 180 occurrences across 45 files
-   */
-  --surface-primary: #ffffff;
-  --surface-secondary: #f5f5f5;  /* Audit: 45 occurrences */
-  --surface-tertiary: #fafafa;   /* Audit: 30 occurrences */
-  --surface-overlay: rgba(0, 0, 0, 0.5);  /* Audit: 15 occurrences in modals */
-
-  /* ============================================
-     TEXT TOKENS
-     Based on audit of color property
-     ============================================ */
-
-  /* Existing variables to keep/rename:
-   * --tx-color-title: rgba(0, 0, 0, 0.85) → rename to --text-primary
-   * --tx-color-body: rgba(0, 0, 0, 0.65) → rename to --text-secondary
-   * --tx-color-muted: #aaa → rename to --text-muted
-   */
-  --text-primary: rgba(0, 0, 0, 0.85);    /* Audit: 80 occurrences */
-  --text-secondary: rgba(0, 0, 0, 0.65);  /* Audit: 60 occurrences */
-  --text-muted: #999;                     /* Audit: 35 occurrences */
-  --text-link: #11939a;                   /* Audit: 25 occurrences - PRIMARY BRAND COLOR */
-  --text-link-hover: #00474e;             /* Audit: 20 occurrences */
-  --text-inverse: #ffffff;                /* Audit: 40 occurrences (text on dark backgrounds) */
-
-  /* ============================================
-     BORDER TOKENS
-     Based on audit of border/border-color properties
-     ============================================ */
-
-  --border-default: #e6e6e6;              /* Audit: 90 occurrences - MOST COMMON */
-  --border-subtle: rgba(0, 0, 0, 0.15);   /* Audit: 25 occurrences */
-  --border-strong: #d3d3d3;               /* Audit: 30 occurrences */
-
-  /* ============================================
-     INTERACTIVE TOKENS (Buttons, Links, Form Controls)
-     Based on audit of interactive elements
-     ============================================ */
-
-  --interactive-primary: #11939a;         /* Audit: Primary action color (submit buttons, etc.) */
-  --interactive-primary-hover: #0d7a80;   /* Audit: Hover state */
-  --interactive-secondary: #2da6a2;       /* Audit: Secondary actions */
-
-  /* ============================================
-     FEEDBACK TOKENS (Alerts, Notifications)
-     Based on audit of alert/notification components
-     ============================================ */
-
-  /* NOTE: If no feedback colors found in audit, these can be added later */
-  --feedback-error: #db2828;              /* Audit: TBD - may not exist yet */
-  --feedback-warning: #f2711c;            /* Audit: TBD */
-  --feedback-success: #21ba45;            /* Audit: TBD */
-  --feedback-info: #2185d0;               /* Audit: TBD */
-
-  /* ============================================
-     SHADOW TOKENS
-     Based on audit of box-shadow property
-     ============================================ */
-
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);      /* Audit: Most common shadow */
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);     /* Audit: Medium shadow */
-  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.14);    /* Audit: Large shadow */
-
-  /* ============================================
-     SPECIAL PURPOSE TOKENS
-     Based on unique component needs
-     ============================================ */
-
-  /* Keep existing --nav-height from utils.css */
-  --nav-height: 48px;
-
-  /* Trace visualization colors - from color-generator.tsx
-   * These are programmatically generated, may not need tokens
-   * Review in Phase 0.4 */
-  
-}
-```
-
-**IMPORTANT:** The values shown above are EXAMPLES. The actual values MUST come from Phase 0 audit results.
 
 **Import this file FIRST** in `packages/jaeger-ui/src/components/App/index.jsx`:
 
@@ -480,7 +377,7 @@ import '../../components/common/vars.css';
 
 **Process for each component:**
 
-1. **Check migration mapping** (`docs/theming/migration-mapping.md`)
+1. **Check migration mapping** (`./0001/phase-0-5-migration-mapping.md`) and the prioritized components `./0001/phase-0-3-component-categorization-findings.md`
 2. **Replace colors** using find-and-replace
 3. **Test visually** - should look IDENTICAL
 4. **Commit** with message: `refactor(ComponentName): migrate to centralized color variables`
@@ -515,13 +412,11 @@ import '../../components/common/vars.css';
 
 **Migration order** (based on business-function prioritization from Phase 0.3):
 
-**Batch 1: Foundation (Tier 3)**
+**Batch 1: Foundation (Tier 3)** ✅ COMPLETED
 These are used everywhere and must be migrated first:
-- [ ] `common/vars.css` - Migrate existing CSS variables to new naming
-- [ ] `common/utils.css` - Foundation utilities (15 colors)
-- [ ] `App/index.css` - Global styles (~8 colors)
-- [ ] `App/TopNav.css` - Navigation visible on every page (~10 colors)
-- [ ] `App/Page.css` - Page layout (~6 colors)
+- [x] `App/index.css` - Global styles (~8 colors)
+- [x] `App/TopNav.css` - Navigation visible on every page (~10 colors)
+- [x] `App/Page.css` - Page layout (~6 colors)
 
 **Batch 2: Trace Search - Landing Page (Tier 1)**
 Critical path for all users:
