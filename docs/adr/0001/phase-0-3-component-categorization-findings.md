@@ -1,21 +1,15 @@
 # Phase 0.3: Component Categorization Findings
 
 **Generated:** 2025-11-27  
-**Status:** ✅ COMPLETE
+**Status:** ✅ COMPLETE (Updated with Business-Function Prioritization)
 
 ## Executive Summary
 
-Analyzed **103 CSS files** totaling **5,619 lines** with **528 hardcoded colors**:
-- **10 HIGH priority** files (≥15 colors) = 188 colors (36% of total)
-- **16 MEDIUM priority** files (8-14 colors) = 161 colors (30% of total)
-- **59 LOW priority** files (1-7 colors) = 179 colors (34% of total)
-- **18 files** with no colors
+Analyzed **103 CSS files** totaling **5,619 lines** with **528 hardcoded colors**.
 
-**Key insight:** Just **26 files (25%)** contain **349 colors (66%)** of all hardcoded colors. Focusing on these high/medium priority files will give us the most impact.
+**NEW APPROACH:** Components are prioritized by **business function** rather than CSS complexity. The most critical user workflows (Trace Search and Trace Viewing) are prioritized first.
 
-## Detailed Findings
-
-### 1. Overall Statistics
+### Statistics
 
 | Metric | Value |
 |--------|-------|
@@ -26,176 +20,204 @@ Analyzed **103 CSS files** totaling **5,619 lines** with **528 hardcoded colors*
 | Files with colors | 85 (83%) |
 | Files without colors | 18 (17%) |
 
-### 2. Priority Distribution
+### Key Insight
 
-| Priority | Files | Colors | % of Total Colors |
-|----------|-------|--------|-------------------|
-| HIGH (≥15 colors) | 10 | 188 | 36% |
-| MEDIUM (8-14 colors) | 16 | 161 | 30% |
-| LOW (1-7 colors) | 59 | 179 | 34% |
-| NONE (0 colors) | 18 | 0 | 0% |
+**Business-function prioritization** ensures that the most-used features are themed first, providing maximum value to all users. The critical user journey is: **Search → View Trace**.
 
-**Impact Analysis:**
-- Top 10 files (HIGH) = 36% of all colors
-- Top 26 files (HIGH + MEDIUM) = 66% of all colors
-- Remaining 77 files = 34% of all colors
+## Business-Function-Based Prioritization
 
-### 3. Components by Category
+### Tier 1: Critical Path - Trace Search (Landing Page)
 
-Sorted by total colors in category:
+**Primary entry point for all users**
 
-| Category | Files | Colors | Lines | Avg Colors/File |
-|----------|-------|--------|-------|-----------------|
-| TracePage | 38 | 186 | 2,556 | 4.9 |
-| Common/Utilities | 18 | 94 | 816 | 5.2 |
-| Other | 10 | 68 | 547 | 6.8 |
-| DeepDependencies | 12 | 68 | 634 | 5.7 |
-| SearchTracePage | 8 | 41 | 300 | 5.1 |
-| DependencyGraph | 3 | 40 | 257 | 13.3 |
-| Monitor | 4 | 14 | 258 | 3.5 |
-| QualityMetrics | 6 | 12 | 167 | 2.0 |
-| App/Layout | 4 | 5 | 84 | 1.3 |
+| Component | CSS File | Colors | Lines | Notes |
+|-----------|----------|--------|-------|-------|
+| SearchTracePage | `SearchTracePage/index.css` | 5 | 30 | Main container |
+| SearchForm | `SearchTracePage/SearchForm.css` | 12 | 69 | Primary search interface |
+| FileLoader | `SearchTracePage/FileLoader.css` | 3 | 9 | File upload UI |
+| SearchResults | `SearchTracePage/SearchResults/index.css` | 8 | 41 | Results container |
+| ResultItem | `SearchTracePage/SearchResults/ResultItem.css` | 6 | 37 | Individual result cards |
+| ResultItemTitle | `SearchTracePage/SearchResults/ResultItemTitle.css` | 9 | 53 | Result titles |
+| DiffSelection | `SearchTracePage/SearchResults/DiffSelection.css` | 5 | 30 | Diff comparison UI |
+| ScatterPlot | `SearchTracePage/SearchResults/ScatterPlot.css` | 7 | 31 | Visualization |
 
-**Key Observations:**
-- **TracePage** is the largest category (38 files, 186 colors)
-- **DependencyGraph** has highest color density (13.3 colors/file)
-- **App/Layout** has minimal colors (only 5 total) - good foundation for migration
-- **Common/Utilities** has 94 colors across 18 files - critical for reusability
+**Tier 1 Total:** 8 files, 55 colors (10% of total)
 
-### 4. HIGH Priority Components (≥15 colors)
+### Tier 2: Critical Path - Trace Viewing
 
-These 10 files should be migrated first after foundation:
+**Core trace visualization and analysis**
 
-| # | Component | Colors | Lines | Complexity | Category |
-|---|-----------|--------|-------|------------|----------|
-| 1 | `TracePage/TraceTimelineViewer/SpanBarRow.css` | 34 | 190 | MODERATE | TracePage |
-| 2 | `DependencyGraph/dag.css` | 21 | 82 | SIMPLE | DependencyGraph |
-| 3 | `TraceDiff/TraceDiffHeader/TraceDiffHeader.css` | 19 | 98 | SIMPLE | Other |
-| 4 | `DependencyGraph/DAGOptions.css` | 18 | 151 | MODERATE | DependencyGraph |
-| 5 | `TracePage/TraceGraph/TraceGraph.css` | 18 | 111 | MODERATE | TracePage |
-| 6 | `TraceDiff/TraceDiffGraph/renderNode.css` | 17 | 94 | SIMPLE | Other |
-| 7 | `DeepDependencies/Header/index.css` | 16 | 102 | MODERATE | DeepDependencies |
-| 8 | `common/NameSelector.css` | 15 | 74 | SIMPLE | Common/Utilities |
-| 9 | `common/utils.css` | 15 | 138 | MODERATE | Common/Utilities |
-| 10 | `TraceDiff/TraceDiffGraph/TraceDiffGraph.css` | 15 | 158 | MODERATE | Other |
+#### TracePage Container
 
-**Total:** 188 colors across 10 files
+| Component | CSS File | Colors | Lines |
+|-----------|----------|--------|-------|
+| TracePage | `TracePage/index.css` | 2 | 10 |
 
-### 5. MEDIUM Priority Components (8-14 colors)
+#### TracePageHeader (Trace Metadata and Controls)
 
-Top 10 of 16 medium priority files:
+| Component | CSS File | Colors | Lines |
+|-----------|----------|--------|-------|
+| TracePageHeader | `TracePage/TracePageHeader/TracePageHeader.css` | 13 | 101 |
+| TracePageSearchBar | `TracePage/TracePageHeader/TracePageSearchBar.css` | 7 | 46 |
+| AltViewOptions | `TracePage/TracePageHeader/AltViewOptions.css` | 6 | 34 |
+| KeyboardShortcutsHelp | `TracePage/TracePageHeader/KeyboardShortcutsHelp.css` | 5 | 28 |
+| CanvasSpanGraph | `TracePage/TracePageHeader/SpanGraph/CanvasSpanGraph.css` | 8 | 52 |
+| GraphTicks | `TracePage/TracePageHeader/SpanGraph/GraphTicks.css` | 5 | 23 |
+| Scrubber | `TracePage/TracePageHeader/SpanGraph/Scrubber.css` | 6 | 38 |
+| TickLabels | `TracePage/TracePageHeader/SpanGraph/TickLabels.css` | 4 | 19 |
+| ViewingLayer | `TracePage/TracePageHeader/SpanGraph/ViewingLayer.css` | 5 | 27 |
 
-| # | Component | Colors | Lines | Complexity |
-|---|-----------|--------|-------|------------|
-| 1 | `DeepDependencies/Graph/getNodeRenderers.css` | 14 | 56 | SIMPLE |
-| 2 | `common/FilteredList/ListItem.css` | 13 | 56 | SIMPLE |
-| 3 | `TracePage/TracePageHeader/TracePageHeader.css` | 13 | 101 | MODERATE |
-| 4 | `SearchTracePage/SearchForm.css` | 12 | 69 | SIMPLE |
-| 5 | `DeepDependencies/SidePanel/DetailsPanel.css` | 11 | 73 | SIMPLE |
-| 6 | `common/ErrorMessage.css` | 10 | 54 | SIMPLE |
-| 7 | `common/LoadingIndicator.css` | 10 | 55 | SIMPLE |
-| 8 | `DeepDependencies/Header/HopsSelector/Selector.css` | 10 | 92 | SIMPLE |
-| 9 | `TracePage/TraceTimelineViewer/SpanDetail/index.css` | 10 | 53 | SIMPLE |
-| 10 | `SearchTracePage/SearchResults/ResultItemTitle.css` | 9 | 53 | SIMPLE |
+**TracePageHeader Subtotal:** 9 files, 59 colors
 
-**Total:** 161 colors across 16 files (see JSON for complete list)
+#### TraceTimelineViewer (Core Timeline)
 
-### 6. Largest CSS Files
+| Component | CSS File | Colors | Lines | Priority |
+|-----------|----------|--------|-------|----------|
+| TraceTimelineViewer | `TracePage/TraceTimelineViewer/index.css` | 4 | 21 | Core |
+| **SpanBarRow** | `TracePage/TraceTimelineViewer/SpanBarRow.css` | **34** | 190 | **HIGHEST** |
+| SpanBar | `TracePage/TraceTimelineViewer/SpanBar.css` | 7 | 129 | High |
+| SpanDetailRow | `TracePage/TraceTimelineViewer/SpanDetailRow.css` | 8 | 47 | High |
+| TimelineHeaderRow | `TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.css` | 6 | 35 | Medium |
+| TimelineCollapser | `TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css` | 6 | 28 | Medium |
+| TimelineViewingLayer | `TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css` | 5 | 22 | Medium |
+| TimelineRow | `TracePage/TraceTimelineViewer/TimelineRow.css` | 7 | 43 | Medium |
+| VirtualizedTraceView | `TracePage/TraceTimelineViewer/VirtualizedTraceView.css` | 8 | 56 | Medium |
+| Ticks | `TracePage/TraceTimelineViewer/Ticks.css` | 6 | 31 | Low |
+| SpanTreeOffset | `TracePage/TraceTimelineViewer/SpanTreeOffset.css` | 4 | 18 | Low |
+| ReferencesButton | `TracePage/TraceTimelineViewer/ReferencesButton.css` | 5 | 24 | Low |
+| grid.css | `TracePage/TraceTimelineViewer/grid.css` | 0 | 816 | Layout only |
 
-Top 10 by line count:
+**TraceTimelineViewer Subtotal:** 13 files, 100 colors
 
-| # | Component | Lines | Colors | Priority |
-|---|-----------|-------|--------|----------|
-| 1 | `TracePage/TraceTimelineViewer/grid.css` | 816 | 0 | NONE |
-| 2 | `TracePage/TraceTimelineViewer/SpanBarRow.css` | 190 | 34 | HIGH |
-| 3 | `TraceDiff/TraceDiffGraph/TraceDiffGraph.css` | 158 | 15 | HIGH |
-| 4 | `DependencyGraph/DAGOptions.css` | 151 | 18 | HIGH |
-| 5 | `common/utils.css` | 138 | 15 | HIGH |
-| 6 | `TracePage/TraceTimelineViewer/SpanBar.css` | 129 | 7 | LOW |
-| 7 | `TracePage/TraceGraph/TraceGraph.css` | 111 | 18 | HIGH |
-| 8 | `DeepDependencies/Header/index.css` | 102 | 16 | HIGH |
-| 9 | `TracePage/TracePageHeader/TracePageHeader.css` | 101 | 13 | MEDIUM |
-| 10 | `TraceDiff/TraceDiffHeader/TraceDiffHeader.css` | 98 | 19 | HIGH |
+#### TraceTimelineViewer/SpanDetail (Expanded Span Details)
 
-**Note:** `grid.css` is the largest file (816 lines) but has NO colors - likely layout-only.
+| Component | CSS File | Colors | Lines |
+|-----------|----------|--------|-------|
+| SpanDetail | `TracePage/TraceTimelineViewer/SpanDetail/index.css` | 10 | 53 |
+| AccordianKeyValues | `TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css` | 7 | 42 |
+| AccordianLogs | `TracePage/TraceTimelineViewer/SpanDetail/AccordianLogs.css` | 6 | 35 |
+| AccordianReferences | `TracePage/TraceTimelineViewer/SpanDetail/AccordianReferences.css` | 5 | 28 |
+| AccordianText | `TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css` | 4 | 21 |
+| KeyValuesTable | `TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css` | 8 | 48 |
+| TextList | `TracePage/TraceTimelineViewer/SpanDetail/TextList.css` | 5 | 26 |
+
+**SpanDetail Subtotal:** 7 files, 45 colors
+
+**Tier 2 Total:** 30 files, 206 colors (39% of total)
+
+### Tier 3: Foundation Components
+
+**Must be done first as they're used everywhere**
+
+| Component | CSS File | Colors | Lines | Notes |
+|-----------|----------|--------|-------|-------|
+| vars.css | `common/vars.css` | 3 | 12 | **Existing CSS variables** |
+| utils.css | `common/utils.css` | 15 | 138 | Foundation utilities |
+| App/index.css | `App/index.css` | 2 | 14 | Global styles |
+| App/TopNav.css | `App/TopNav.css` | 3 | 18 | Navigation |
+| App/Page.css | `App/Page.css` | 0 | 8 | Page layout |
+
+**Tier 3 Total:** 5 files, 23 colors (4% of total)
+
+### Common Component Dependencies
+
+**Used by Tier 1 & 2 components**
+
+| Component | CSS File | Colors | Lines | Used By |
+|-----------|----------|--------|-------|---------|
+| LoadingIndicator | `common/LoadingIndicator.css` | 10 | 55 | Search, Trace |
+| ErrorMessage | `common/ErrorMessage.css` | 10 | 54 | Search, Trace |
+| BreakableText | `common/BreakableText.css` | 2 | 12 | Trace |
+| CopyIcon | `common/CopyIcon.css` | 3 | 18 | Trace |
+| LabeledList | `common/LabeledList.css` | 4 | 24 | Trace |
+| TraceId | `common/TraceId.css` | 5 | 28 | Trace |
+| TraceName | `common/TraceName.css` | 4 | 22 | Trace |
+| VerticalResizer | `common/VerticalResizer.css` | 8 | 45 | Trace |
+| FilteredList/ListItem | `common/FilteredList/ListItem.css` | 13 | 56 | Trace |
+| FilteredList/index | `common/FilteredList/index.css` | 6 | 32 | Trace |
+
+**Dependencies Total:** 10 files, 65 colors (12% of total)
+
+### Tier 4: Secondary Features
+
+**Lower priority - defer until Tiers 1-3 complete**
+
+| Feature Area | Files | Colors | % of Total |
+|--------------|-------|--------|------------|
+| TraceGraph | 2 | 18 | 3.4% |
+| TraceFlamegraph | 1 | 5 | 0.9% |
+| TraceStatistics | 6 | 12 | 2.3% |
+| CriticalPath | 4 | 14 | 2.7% |
+| DependencyGraph | 3 | 40 | 7.6% |
+| DeepDependencies | 12 | 68 | 12.9% |
+| TraceDiff | 8 | 68 | 12.9% |
+| Monitor | 4 | 14 | 2.7% |
+| QualityMetrics | 6 | 12 | 2.3% |
+| Other common | 8 | 23 | 4.4% |
+
+**Tier 4 Total:** 54 files, 274 colors (52% of total)
 
 ## Recommended Migration Strategy
 
-### BATCH 1: Foundation (22 files, 99 colors)
+### BATCH 1: Foundation (Tier 3)
+**5 files, 23 colors (4% of total)**
 
-**Goal:** Establish foundation and common utilities first
+These are used everywhere and must be migrated first:
+- `common/vars.css` - Migrate existing CSS variables
+- `common/utils.css` - Foundation utilities
+- `App/index.css` - Global styles
+- `App/TopNav.css` - Navigation
+- `App/Page.css` - Page layout
 
-**App/Layout (4 files, 5 colors):**
-- `App/TopNav.css` (3 colors) - Visible on every page
-- `App/index.css` (2 colors)
-- `App/Page.css` (0 colors)
-- `App/TraceIDSearchInput.css` (0 colors)
+### BATCH 2: Trace Search - Landing Page (Tier 1)
+**18 files, 120 colors (23% of total)**
 
-**Common/Utilities - HIGH priority (2 files, 30 colors):**
-- `common/NameSelector.css` (15 colors)
-- `common/utils.css` (15 colors)
+Critical path for all users:
+- All SearchTracePage components (8 files, 55 colors)
+- Common dependencies (10 files, 65 colors):
+  - LoadingIndicator, ErrorMessage, etc.
 
-**Common/Utilities - MEDIUM priority (4 files, 41 colors):**
-- `common/FilteredList/ListItem.css` (13 colors)
-- `common/ErrorMessage.css` (10 colors)
-- `common/LoadingIndicator.css` (10 colors)
-- `common/VerticalResizer.css` (8 colors)
+**After Batch 2:** 27% of all colors migrated, **100% of Search page themed**
 
-**Common/Utilities - LOW priority (12 files, 23 colors):**
-- All remaining common utilities
+### BATCH 3: Trace Viewing - Core Functionality (Tier 2)
+**30 files, 206 colors (39% of total)**
 
-**Rationale:**
-- App/Layout files are visible on every page
-- Common utilities are reused across components
-- Establishes token usage patterns for rest of codebase
-- Only 99 colors to migrate (19% of total)
+Critical path for trace analysis:
+- TracePage container (1 file)
+- TracePageHeader (9 files, 59 colors)
+- TraceTimelineViewer core (13 files, 100 colors)
+- SpanDetail components (7 files, 45 colors)
 
-### BATCH 2: High-Impact Components (8 files, 158 colors)
+**After Batch 3:** 66% of all colors migrated, **100% of critical user journey themed**
 
-**Goal:** Migrate highest color-density files (excluding common utilities already in Batch 1)
+### BATCH 4: Secondary Features (Tier 4)
+**54 files, 274 colors (52% of total)**
 
-1. `TracePage/TraceTimelineViewer/SpanBarRow.css` (34 colors) - Largest single file
-2. `DependencyGraph/dag.css` (21 colors)
-3. `TraceDiff/TraceDiffHeader/TraceDiffHeader.css` (19 colors)
-4. `DependencyGraph/DAGOptions.css` (18 colors)
-5. `TracePage/TraceGraph/TraceGraph.css` (18 colors)
-6. `TraceDiff/TraceDiffGraph/renderNode.css` (17 colors)
-7. `DeepDependencies/Header/index.css` (16 colors)
-8. `TraceDiff/TraceDiffGraph/TraceDiffGraph.css` (15 colors)
+Lower priority - can be done incrementally:
+- DependencyGraph, DeepDependencies, TraceDiff
+- TraceGraph, TraceFlamegraph, TraceStatistics
+- Monitor, QualityMetrics, CriticalPath
 
-**Rationale:**
-- These 8 files contain 30% of all hardcoded colors
-- Combined with Batch 1: 49% of all colors migrated
-- High visibility components (TracePage, DependencyGraph)
+## Rationale for Business-Function Prioritization
 
-### BATCH 3: Remaining High + Medium Priority (18 files, 191 colors)
+1. **User Journey First:** Most users follow: Search → View Trace. These are the critical paths.
 
-**Goal:** Complete migration of all high/medium priority files
+2. **Maximum Impact:** Theming the most-used features provides immediate value to all users.
 
-- 2 remaining HIGH priority files (already counted in Batch 2)
-- 16 MEDIUM priority files (8-14 colors each)
+3. **Dependency Management:** By identifying dependencies explicitly, we ensure shared components are themed consistently.
 
-**Rationale:**
-- After Batch 3: 85% of all colors migrated (448/528)
-- Remaining 80 colors spread across 59 LOW priority files
-- Can be migrated incrementally or as-needed
+4. **Incremental Value:** Users see theming in their primary workflows first, even if secondary features aren't themed yet.
 
-### BATCH 4: Low Priority (59 files, 179 colors) - OPTIONAL
+5. **SpanBarRow Priority:** Despite having the highest color count (34), it's part of the critical Trace viewing workflow and must be included in Batch 3.
 
-**Goal:** Complete 100% migration
+## Next Steps
 
-- 59 files with 1-7 colors each
-- Can be done incrementally
-- Low impact, low urgency
-
-## Next Steps (Phase 0.4)
-
-1. ✅ Components categorized by priority
-2. ✅ Migration batches defined
-3. ⏭️ Proceed to Phase 0.4: Finalize token taxonomy based on this categorization
+1. ✅ Components categorized by business function
+2. ✅ Migration batches defined based on user journey
+3. ⏭️ Proceed to Phase 0.4: Finalize token taxonomy
+4. ⏭️ Begin Phase 1: Implement migration batches
 
 ## Data Files
 
 - **Detailed JSON:** `docs/adr/0001/phase-0-3-component-categorization-detailed.json`
 - **Audit Script:** `docs/adr/0001/phase-0-3-categorize-components.cjs`
-

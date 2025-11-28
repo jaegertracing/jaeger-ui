@@ -162,31 +162,121 @@ node docs/adr/0001/phase-0-2-audit-css-variables.cjs
 
 #### 0.3 Component Categorization
 
-Categorize components by styling complexity:
+**Prioritization Strategy:** Components are prioritized based on **business functions** rather than CSS complexity. The most critical user workflows should be themed first.
 
-```bash
-# Count CSS lines per component
-find packages/jaeger-ui/src/components -name "*.css" -exec wc -l {} \; | sort -rn > css-complexity.txt
+**Critical Business Functions:**
+1. **Trace Search** - Landing page and primary entry point for users
+2. **Trace Viewing** - Core trace visualization and analysis (TracePage/TraceTimeline)
 
-# Count total CSS files
-find packages/jaeger-ui/src/components -name "*.css" | wc -l
-```
+**Component Inventory by Business Priority:**
 
-**Create component inventory** (included in `0001/phase-0-audit-findings.md`):
+### Tier 1: Critical Path - Trace Search (Landing Page)
 
-| Component | CSS Lines | Hardcoded Colors | Priority | Notes |
-|-----------|-----------|------------------|----------|-------|
-| SearchForm | 150 | 25 | HIGH | High-traffic page |
-| TracePage | 200 | 30 | HIGH | Core functionality |
-| TopNav | 80 | 15 | HIGH | Visible on every page |
-| ... | ... | ... | ... | ... |
+**SearchTracePage** and all dependencies:
 
-**Prioritization criteria:**
-1. **High priority:** High-traffic pages, visible on every page, >15 hardcoded colors
-2. **Medium priority:** Secondary pages, 10-15 hardcoded colors
-3. **Low priority:** Rarely used pages, <10 hardcoded colors
+| Component | CSS File | Hardcoded Colors | Notes |
+|-----------|----------|------------------|-------|
+| SearchTracePage | `SearchTracePage/index.css` | ~5 | Main container |
+| SearchForm | `SearchTracePage/SearchForm.css` | 12 | Primary search interface |
+| FileLoader | `SearchTracePage/FileLoader.css` | ~3 | File upload UI |
+| SearchResults | `SearchTracePage/SearchResults/index.css` | ~8 | Results container |
+| ResultItem | `SearchTracePage/SearchResults/ResultItem.css` | ~6 | Individual result cards |
+| ResultItemTitle | `SearchTracePage/SearchResults/ResultItemTitle.css` | ~4 | Result titles |
+| DiffSelection | `SearchTracePage/SearchResults/DiffSelection.css` | ~5 | Diff comparison UI |
+| ScatterPlot | `SearchTracePage/SearchResults/ScatterPlot.css` | ~7 | Visualization |
 
-**✅ ACTUAL INVENTORY:** See "Files Requiring Most Attention" section in `0001/phase-0-audit-findings.md`
+**Dependencies (common components used by SearchTracePage):**
+- `common/utils.css` (15 colors) - Foundation utilities
+- `common/LoadingIndicator.css` (10 colors) - Loading states
+- `common/ErrorMessage.css` (10 colors) - Error handling
+- `App/TopNav.css` - Navigation (visible on every page)
+- `App/Page.css` - Page layout
+- `App/index.css` - Global styles
+
+### Tier 2: Critical Path - Trace Viewing
+
+**TracePage/TraceTimeline** and all dependencies:
+
+| Component | CSS File | Hardcoded Colors | Notes |
+|-----------|----------|------------------|-------|
+| TracePage | `TracePage/index.css` | ~5 | Main trace page container |
+| **TraceTimelineViewer** | `TracePage/TraceTimelineViewer/index.css` | ~12 | Core timeline component |
+| SpanBarRow | `TracePage/TraceTimelineViewer/SpanBarRow.css` | 34 | **HIGHEST COLOR COUNT** |
+| SpanBar | `TracePage/TraceTimelineViewer/SpanBar.css` | ~10 | Individual span bars |
+| SpanDetailRow | `TracePage/TraceTimelineViewer/SpanDetailRow.css` | ~8 | Span details |
+| TimelineHeaderRow | `TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.css` | ~9 | Timeline header |
+| TimelineCollapser | `TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css` | ~6 | Collapse controls |
+| TimelineViewingLayer | `TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css` | ~5 | Viewing layer |
+| TimelineRow | `TracePage/TraceTimelineViewer/TimelineRow.css` | ~7 | Timeline rows |
+| VirtualizedTraceView | `TracePage/TraceTimelineViewer/VirtualizedTraceView.css` | ~8 | Virtualized list |
+| Ticks | `TracePage/TraceTimelineViewer/Ticks.css` | ~6 | Timeline ticks |
+| SpanTreeOffset | `TracePage/TraceTimelineViewer/SpanTreeOffset.css` | ~4 | Tree indentation |
+| ReferencesButton | `TracePage/TraceTimelineViewer/ReferencesButton.css` | ~5 | Reference links |
+| grid.css | `TracePage/TraceTimelineViewer/grid.css` | ~8 | Grid layout |
+
+**TraceTimelineViewer/SpanDetail** (expanded span details):
+- `SpanDetail/index.css` (~9 colors)
+- `SpanDetail/AccordianKeyValues.css` (~7 colors)
+- `SpanDetail/AccordianLogs.css` (~6 colors)
+- `SpanDetail/AccordianReferences.css` (~5 colors)
+- `SpanDetail/AccordianText.css` (~4 colors)
+- `SpanDetail/KeyValuesTable.css` (~8 colors)
+- `SpanDetail/TextList.css` (~5 colors)
+
+**TracePageHeader** (trace metadata and controls):
+- `TracePageHeader/TracePageHeader.css` (13 colors)
+- `TracePageHeader/TracePageSearchBar.css` (~7 colors)
+- `TracePageHeader/AltViewOptions.css` (~6 colors)
+- `TracePageHeader/KeyboardShortcutsHelp.css` (~5 colors)
+- `TracePageHeader/SpanGraph/CanvasSpanGraph.css` (~8 colors)
+- `TracePageHeader/SpanGraph/GraphTicks.css` (~5 colors)
+- `TracePageHeader/SpanGraph/Scrubber.css` (~6 colors)
+- `TracePageHeader/SpanGraph/TickLabels.css` (~4 colors)
+- `TracePageHeader/SpanGraph/ViewingLayer.css` (~5 colors)
+
+**Dependencies (common components used by TracePage):**
+- `common/BreakableText.css` - Text wrapping
+- `common/CopyIcon.css` - Copy functionality
+- `common/LabeledList.css` - Key-value displays
+- `common/TraceId.css` - Trace ID display
+- `common/TraceName.css` - Trace name display
+- `common/VerticalResizer.css` - Resizable panels
+- `common/FilteredList/` - Filtering UI
+
+### Tier 3: Foundation Components
+
+These must be done first as they're used everywhere:
+
+| Component | CSS File | Hardcoded Colors | Notes |
+|-----------|----------|------------------|-------|
+| vars.css | `common/vars.css` | 3 | **EXISTING CSS VARIABLES** |
+| utils.css | `common/utils.css` | 15 | Foundation utilities |
+| App/index.css | `App/index.css` | ~8 | Global styles |
+| App/TopNav.css | `App/TopNav.css` | ~10 | Navigation |
+| App/Page.css | `App/Page.css` | ~6 | Page layout |
+
+### Tier 4: Secondary Features
+
+Lower priority features (defer until Tier 1-3 complete):
+
+- **TraceGraph** - Alternative trace visualization
+- **TraceFlamegraph** - Flamegraph view
+- **TraceStatistics** - Statistics panel
+- **CriticalPath** - Critical path analysis
+- **DependencyGraph** - Service dependency graph
+- **DeepDependencies** - Deep dependency analysis
+- **TraceDiff** - Trace comparison
+- **Monitor** - Monitoring features
+- **QualityMetrics** - Quality metrics
+
+**Rationale for Business-Function Prioritization:**
+
+1. **User Journey First:** Most users land on Search → view a Trace. These are the critical paths.
+2. **Maximum Impact:** Theming the most-used features provides immediate value to all users.
+3. **Dependency Management:** By identifying dependencies explicitly, we ensure shared components are themed consistently.
+4. **Incremental Value:** Users see theming in their primary workflows first, even if secondary features aren't themed yet.
+
+**✅ ACTUAL COLOR COUNTS:** See `0001/phase-0-audit-findings.md` for detailed audit data.
 
 #### 0.4 Derive Token Taxonomy from Real Data
 
@@ -476,25 +566,101 @@ import '../../styles/color-variables.css';
 }
 ```
 
-**Migration order** (from Phase 0 component inventory):
+**Migration order** (based on business-function prioritization from Phase 0.3):
 
-**First batch (foundation):**
-- ✅ `common/vars.css` - Migrate existing variables
-- ✅ `common/utils.css` - Foundation utilities
-- ✅ `App/index.css` - Global styles
-- ✅ `App/TopNav.css` - Visible on every page
-- ✅ `App/Page.css` - Page layout
+**Batch 1: Foundation (Tier 3)**
+These are used everywhere and must be migrated first:
+- [ ] `common/vars.css` - Migrate existing CSS variables to new naming
+- [ ] `common/utils.css` - Foundation utilities (15 colors)
+- [ ] `App/index.css` - Global styles (~8 colors)
+- [ ] `App/TopNav.css` - Navigation visible on every page (~10 colors)
+- [ ] `App/Page.css` - Page layout (~6 colors)
 
-**Second batch (high-traffic):**
-- ✅ `SearchTracePage/SearchForm.css` - High-traffic
-- ✅ `SearchTracePage/SearchResults/index.css`
-- ✅ `SearchTracePage/FileLoader.css`
-- ✅ `TracePage/index.css` - Core functionality
+**Batch 2: Trace Search - Landing Page (Tier 1)**
+Critical path for all users:
+- [ ] `SearchTracePage/index.css` - Main container (~5 colors)
+- [ ] `SearchTracePage/SearchForm.css` - Primary search interface (12 colors)
+- [ ] `SearchTracePage/FileLoader.css` - File upload UI (~3 colors)
+- [ ] `SearchTracePage/SearchResults/index.css` - Results container (~8 colors)
+- [ ] `SearchTracePage/SearchResults/ResultItem.css` - Result cards (~6 colors)
+- [ ] `SearchTracePage/SearchResults/ResultItemTitle.css` - Result titles (~4 colors)
+- [ ] `SearchTracePage/SearchResults/DiffSelection.css` - Diff comparison (~5 colors)
+- [ ] `SearchTracePage/SearchResults/ScatterPlot.css` - Visualization (~7 colors)
 
-**Third batch (remaining):**
-- ✅ Remaining high-priority components (from inventory)
-- ✅ Medium-priority components
-- ✅ Low-priority components
+**Batch 2 Dependencies (common components):**
+- [ ] `common/LoadingIndicator.css` - Loading states (10 colors)
+- [ ] `common/ErrorMessage.css` - Error handling (10 colors)
+
+**Batch 3: Trace Viewing - Core Functionality (Tier 2)**
+Critical path for trace analysis:
+
+*TracePage container:*
+- [ ] `TracePage/index.css` - Main trace page container (~5 colors)
+
+*TracePageHeader (trace metadata and controls):*
+- [ ] `TracePage/TracePageHeader/TracePageHeader.css` - Header (13 colors)
+- [ ] `TracePage/TracePageHeader/TracePageSearchBar.css` - Search bar (~7 colors)
+- [ ] `TracePage/TracePageHeader/AltViewOptions.css` - View options (~6 colors)
+- [ ] `TracePage/TracePageHeader/KeyboardShortcutsHelp.css` - Shortcuts help (~5 colors)
+- [ ] `TracePage/TracePageHeader/SpanGraph/CanvasSpanGraph.css` - Mini span graph (~8 colors)
+- [ ] `TracePage/TracePageHeader/SpanGraph/GraphTicks.css` - Graph ticks (~5 colors)
+- [ ] `TracePage/TracePageHeader/SpanGraph/Scrubber.css` - Scrubber control (~6 colors)
+- [ ] `TracePage/TracePageHeader/SpanGraph/TickLabels.css` - Tick labels (~4 colors)
+- [ ] `TracePage/TracePageHeader/SpanGraph/ViewingLayer.css` - Viewing layer (~5 colors)
+
+*TraceTimelineViewer (core timeline):*
+- [ ] `TracePage/TraceTimelineViewer/index.css` - Timeline container (~12 colors)
+- [ ] `TracePage/TraceTimelineViewer/SpanBarRow.css` - **HIGHEST PRIORITY** (34 colors)
+- [ ] `TracePage/TraceTimelineViewer/SpanBar.css` - Individual span bars (~10 colors)
+- [ ] `TracePage/TraceTimelineViewer/SpanDetailRow.css` - Span details (~8 colors)
+- [ ] `TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.css` - Header (~9 colors)
+- [ ] `TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css` - Collapse controls (~6 colors)
+- [ ] `TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css` - Viewing layer (~5 colors)
+- [ ] `TracePage/TraceTimelineViewer/TimelineRow.css` - Timeline rows (~7 colors)
+- [ ] `TracePage/TraceTimelineViewer/VirtualizedTraceView.css` - Virtualized list (~8 colors)
+- [ ] `TracePage/TraceTimelineViewer/Ticks.css` - Timeline ticks (~6 colors)
+- [ ] `TracePage/TraceTimelineViewer/SpanTreeOffset.css` - Tree indentation (~4 colors)
+- [ ] `TracePage/TraceTimelineViewer/ReferencesButton.css` - Reference links (~5 colors)
+- [ ] `TracePage/TraceTimelineViewer/grid.css` - Grid layout (~8 colors)
+
+*TraceTimelineViewer/SpanDetail (expanded span details):*
+- [ ] `TracePage/TraceTimelineViewer/SpanDetail/index.css` - Span detail container (~9 colors)
+- [ ] `TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css` - Key-value accordion (~7 colors)
+- [ ] `TracePage/TraceTimelineViewer/SpanDetail/AccordianLogs.css` - Logs accordion (~6 colors)
+- [ ] `TracePage/TraceTimelineViewer/SpanDetail/AccordianReferences.css` - References accordion (~5 colors)
+- [ ] `TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css` - Text accordion (~4 colors)
+- [ ] `TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css` - Key-value table (~8 colors)
+- [ ] `TracePage/TraceTimelineViewer/SpanDetail/TextList.css` - Text list (~5 colors)
+
+**Batch 3 Dependencies (common components):**
+- [ ] `common/BreakableText.css` - Text wrapping
+- [ ] `common/CopyIcon.css` - Copy functionality
+- [ ] `common/LabeledList.css` - Key-value displays
+- [ ] `common/TraceId.css` - Trace ID display
+- [ ] `common/TraceName.css` - Trace name display
+- [ ] `common/VerticalResizer.css` - Resizable panels
+- [ ] `common/FilteredList/ListItem.css` - Filtering UI (13 colors)
+- [ ] `common/FilteredList/index.css` - Filtering container
+
+**Batch 4: Secondary Features (Tier 4)**
+Lower priority - defer until Batches 1-3 complete:
+- [ ] TraceGraph components (alternative trace visualization)
+- [ ] TraceFlamegraph components (flamegraph view)
+- [ ] TraceStatistics components (statistics panel)
+- [ ] CriticalPath components (critical path analysis)
+- [ ] DependencyGraph components (service dependency graph)
+- [ ] DeepDependencies components (deep dependency analysis)
+- [ ] TraceDiff components (trace comparison)
+- [ ] Monitor components (monitoring features)
+- [ ] QualityMetrics components (quality metrics)
+- [ ] Remaining common components
+
+**Migration Strategy:**
+1. Complete Batch 1 (Foundation) first - these are dependencies for everything
+2. Complete Batch 2 (Trace Search) - immediate user-facing value
+3. Complete Batch 3 (Trace Viewing) - completes the critical user journey
+4. Batch 4 can be done incrementally or deferred to future releases
+
 
 #### 1.3 Handle Existing CSS Variables
 
