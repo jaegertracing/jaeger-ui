@@ -21,9 +21,9 @@ import { getConfigValue } from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
 
 import './TopNav.css';
-import withRouteProps from '../../utils/withRouteProps';
+import withRouteProps, { IWithRouteProps } from '../../utils/withRouteProps';
 
-type Props = ReduxState;
+type Props = ReduxState & IWithRouteProps;
 
 const NAV_LINKS = [
   {
@@ -108,8 +108,7 @@ const itemsGlobalLeft: MenuProps['items'] = [
 ];
 
 export function TopNavImpl(props: Props) {
-  const { config, router } = props;
-  const { pathname } = router.location;
+  const { config, pathname } = props;
   const menuItems = Array.isArray(config.menu) ? config.menu : [];
 
   const itemsGlobalRight: MenuProps['items'] = [
