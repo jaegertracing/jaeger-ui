@@ -120,9 +120,9 @@ This confirms that CSS variables are barely used in the current codebase.
 
 ## Recommendations
 
-### 1. Keep Existing Variables
+### 1. Replace Existing Variables
 
-**Decision: KEEP and MIGRATE to new naming convention**
+**Decision: REPLACE with new naming convention**
 
 The existing variables should be:
 1. Kept as aliases during migration
@@ -179,6 +179,6 @@ Current 3.4% coverage should expand to ~100% through Phase 1 migration.
 
 ## Data Files
 
-- **Detailed JSON:** `docs/adr/0001/phase-0-2-css-variables-detailed.json`
-- **Audit Script:** `docs/adr/0001/phase-0-2-audit-css-variables.cjs`
+- **Detailed JSON:** `./phase-0-2-css-variables-detailed.json`
+- **Audit Script:** `./phase-0-2-audit-css-variables.cjs`
 
