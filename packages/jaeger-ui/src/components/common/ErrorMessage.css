@@ -10,14 +10,14 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .ErrorMessage--msg {
-  color: #c00;
+  color: var(--feedback-error);
   margin: 0;
   padding-bottom: 1rem;
 }
 
 .ErrorMessage--details {
-  background: #f5f5f5;
-  border: 1px solid #e6e6e6;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-default);
   overflow: auto;
 }
 
@@ -27,9 +27,9 @@ SPDX-License-Identifier: Apache-2.0
 
 .ErrorMessage--detailItem:nth-child(2n) > .ErrorMessage--attr,
 .ErrorMessage--detailItem:nth-child(2n) > .ErrorMessage--value {
-  background-color: #f0f0f0;
-  border-bottom: 1px solid #e8e8e8;
-  border-top: 1px solid #e8e8e8;
+  background-color: var(--surface-tertiary);
+  border-bottom: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-subtle);
 }
 
 /* dont have extra borders on the bottom row */
@@ -39,14 +39,14 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .ErrorMessage--attr {
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--text-muted);
   padding: 0.5em;
   vertical-align: top;
   white-space: nowrap;
 }
 
 .ErrorMessage--value {
-  color: rgba(0, 0, 0, 0.8);
+  color: var(--text-primary);
   font-family: monospace;
   padding: 0.5em;
   white-space: pre;

@@ -50,6 +50,10 @@ SPDX-License-Identifier: Apache-2.0
   --interactive-primary: #11939a;
   --interactive-primary-hover: #0d7a80;
   --interactive-secondary: #2da6a2;
+  /* Lighter and RGB variants used by animations and shadow opacity */
+  --interactive-primary-light: #bedfdf;
+  --interactive-primary-rgb: 17, 147, 154;
+  --interactive-primary-opaque: rgba(var(--interactive-primary-rgb), 0.6);
 
   /* ============================================
     FEEDBACK TOKENS (Alerts, Notifications)
