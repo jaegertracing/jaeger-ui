@@ -32,6 +32,29 @@ type TProps = {
 
 export const DEFAULT_PLACEHOLDER = 'Select a value…';
 
+/**
+ * NameSelector is a custom header-style dropdown component that provides
+ * advanced features for selecting from a list of options.
+ *
+ * Features:
+ * - Header-style display with label, value, chevron icon, and optional clear button
+ * - Virtualized list rendering (via @tanstack/react-virtual) for large lists
+ * - Fuzzy matching search using match-sorter library
+ * - Full keyboard navigation (Arrow keys, Enter, Escape)
+ * - Support for required/optional modes with clear value functionality
+ *
+ * Use this component for:
+ * - Page headers and navigation selectors
+ * - Cases with large option lists that benefit from virtualization
+ * - When fuzzy matching search is preferred over exact label matching
+ * - When custom header-style appearance is needed
+ *
+ * For standard form dropdowns with simpler filtering needs, consider using
+ * SearchableSelect instead.
+ *
+ * @see SearchableSelect - For lightweight form dropdowns
+ * @see FilteredList - The underlying filterable list component
+ */
 const NameSelector: React.FC<TProps> = props => {
   const { label, options, placeholder = false, required = false, value, setValue, clearValue } = props;
 
