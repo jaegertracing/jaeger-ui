@@ -12,16 +12,16 @@ This phase was missing from the original plan but is ESSENTIAL for success.
 
 #### 0.1 Comprehensive Color Audit ✅ COMPLETE
 
-Find ALL hardcoded colors in the codebase using script in `./0001/phase-0-audit-colors.cjs`.
+Find ALL hardcoded colors in the codebase using script in `./0001/phase-0-1-audit-colors.cjs`.
 
 **Run the audit:**
 ```bash
 cd /path/to/jaeger-ui
-node docs/adr/0001/phase-0-audit-colors.cjs
+node docs/adr/0001/phase-0-1-audit-colors.cjs
 ```
 
 **Output files:**
-- `./0001/phase-0-audit-findings-detailed.json` - Complete machine-readable data (550KB)
+- `./0001/phase-0-1-audit-findings-detailed.json` - Complete machine-readable data (550KB)
 - Console output with summary statistics and top colors
 
 **Expected output:**
