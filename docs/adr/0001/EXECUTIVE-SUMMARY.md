@@ -47,50 +47,7 @@ body[data-theme='dark'] {
 
 ## Implementation Plan
 
-**Key Principle:** Start with REALITY (analyze what exists), not THEORY (generic best practices).
-
-### Phase 0: Discovery & Analysis ⭐ CRITICAL
-- **Audit ALL colors** in the codebase (automated script)
-- **Analyze existing patterns** and CSS variables
-- **Categorize components** by complexity
-- **Derive token taxonomy** from ACTUAL usage
-- **Create migration mapping** (old colors → new tokens)
-
-**Why this matters:** Generic token systems fail because they don't match reality. We must understand what actually exists first.
-
-### Phase 1: Centralize Colors
-- Create `color-variables.css` based on audit findings
-- Migrate components to use variables (NO theming yet)
-- Pure refactoring - zero visual changes
-- Validate with visual regression tests
-
-**Why this matters:** This step alone provides value (DRY principle) even without theming.
-
-### Phase 2: Add Dark Theme
-- Design dark theme palette
-- Add `body[data-theme='dark']` overrides to `color-variables.css`
-- Build ThemeProvider component
-- Add theme toggle button
-- Test in both themes
-
-**Why this matters:** Because colors are centralized, adding dark theme only requires updating ONE file.
-
-### Phase 3: Integration
-- Sync with Ant Design theme system
-- Polish edge cases
-- Handle special components (charts, graphs)
-
-### Phase 4: Documentation & Governance
-- Developer guides
-- Visual regression tests
-- ESLint rules to prevent hardcoded colors
-- Team training
-
-### Phase 5: Rollout
-- Internal testing
-- Beta release
-- General availability
-- Monitor and iterate
+See [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md)
 
 ## Resource Requirements
 
