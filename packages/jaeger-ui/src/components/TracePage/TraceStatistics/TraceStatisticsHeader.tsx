@@ -231,7 +231,8 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
             ))}
           </SearchableSelect>
         </label>
-        <div className="colorDropdown--TraceStatisticsHeader">
+        <div className="TraceStatisticsHeader--colorByWrapper">
+          <Checkbox className="TraceStatisticsHeader--checkbox" onChange={this.checkboxButton} />
           <label className="TraceStatisticsHeader--label">
             <span className="TraceStatisticsHeader--labelText">Color by:</span>
             <SearchableSelect
@@ -248,9 +249,6 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
               ))}
             </SearchableSelect>
           </label>
-        </div>
-        <div className="checkbox--TraceStatisticsHeader">
-          <Checkbox onChange={this.checkboxButton} />
         </div>
       </div>
     );

@@ -14,18 +14,16 @@ SPDX-License-Identifier: Apache-2.0
   position: relative;
 }
 
-.colorDropdown--TraceStatisticsHeader {
-  display: inline-block;
+.TraceStatisticsHeader--colorByWrapper {
+  display: inline-flex;
+  align-items: center;
   position: absolute;
   right: 0;
-  padding-right: 40px;
+  padding-right: 1.25rem;
 }
 
-.checkbox--TraceStatisticsHeader {
-  display: inline-block;
-  position: absolute;
-  right: 0;
-  padding-right: 40px;
+.TraceStatisticsHeader--checkbox {
+  margin-right: 0.5em;
 }
 
 .TraceStatisticsHeader--label {
