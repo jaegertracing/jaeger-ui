@@ -422,6 +422,7 @@ export class SearchFormImpl extends React.PureComponent {
             disabled={submitting}
             placeholder="http.status_code=200 error=true"
             onChange={e => this.handleChange({ tags: e.target.value })}
+            allowClear
           />
         </FormItem>
 

@@ -5,8 +5,7 @@ import React, { Component } from 'react';
 import { Provider } from 'react-redux';
 import { Route, Redirect, Switch } from 'react-router-dom';
 
-import { ConfigProvider } from 'antd';
-import { defaultTheme } from '@ant-design/compatible';
+import { ConfigProvider, theme } from 'antd';
 import NotFound from './NotFound';
 import Page from './Page';
 import DependencyGraph from '../DependencyGraph';
@@ -33,15 +32,16 @@ import 'antd/dist/reset.css';
 import './index.css';
 import { store } from '../../utils/configure-store';
 
+const { defaultAlgorithm, defaultSeed } = theme;
+const mapToken = defaultAlgorithm(defaultSeed); // Generate the base MapToken (the internal raw tokens)
+
 const jaegerTheme = {
   token: {
-    ...defaultTheme.token,
+    ...mapToken,
     colorPrimary: '#199',
   },
   components: {
-    ...defaultTheme.components,
     Layout: {
-      ...defaultTheme.components.Layout,
       bodyBg: '#fff',
       headerBg: '#404040',
       footerBg: '#fff',
@@ -55,11 +55,9 @@ const jaegerTheme = {
       zeroTriggerHeight: 42,
     },
     Menu: {
-      ...defaultTheme.components.Menu,
       darkItemBg: '#151515',
     },
     Table: {
-      ...defaultTheme.components.Table,
       rowHoverBg: '#e5f2f2',
     },
   },

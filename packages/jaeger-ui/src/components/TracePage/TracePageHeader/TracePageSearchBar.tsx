@@ -120,15 +120,6 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
             </Button>
           </>
         )}
-        <Button
-          className={cx(btnClass, 'TracePageSearchBar--ButtonClose')}
-          disabled={!textFilter}
-          htmlType="button"
-          data-testid="CloseOutlined"
-          onClick={clearSearch}
-        >
-          <IoClose />
-        </Button>
       </Input.Group>
     </div>
   );
