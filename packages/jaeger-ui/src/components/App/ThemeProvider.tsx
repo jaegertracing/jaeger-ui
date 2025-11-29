@@ -3,8 +3,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ThemeConfig } from 'antd';
-import { defaultTheme } from '@ant-design/compatible';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, theme } from 'antd';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -31,15 +30,16 @@ export function useThemeMode() {
   return useContext(ThemeModeContext);
 }
 
+const { defaultAlgorithm, defaultSeed } = theme;
+const mapToken = defaultAlgorithm(defaultSeed);
+
 const lightTheme: ThemeConfig = {
   token: {
-    ...defaultTheme.token,
+    ...mapToken,
     colorPrimary: '#199',
   },
   components: {
-    ...defaultTheme.components,
     Layout: {
-      ...defaultTheme.components.Layout,
       bodyBg: '#fff',
       headerBg: '#404040',
       footerBg: '#fff',
@@ -53,11 +53,9 @@ const lightTheme: ThemeConfig = {
       zeroTriggerHeight: 42,
     },
     Menu: {
-      ...defaultTheme.components.Menu,
       darkItemBg: '#151515',
     },
     Table: {
-      ...defaultTheme.components.Table,
       rowHoverBg: '#e5f2f2',
     },
   },
@@ -65,7 +63,7 @@ const lightTheme: ThemeConfig = {
 
 const darkTheme: ThemeConfig = {
   token: {
-    ...defaultTheme.token,
+    ...mapToken,
     colorPrimary: '#4dd0e1',
     colorBgLayout: '#0b1625',
     colorBgContainer: '#162338',
@@ -78,9 +76,7 @@ const darkTheme: ThemeConfig = {
     colorBgElevated: '#162338',
   },
   components: {
-    ...defaultTheme.components,
     Layout: {
-      ...defaultTheme.components?.Layout,
       bodyBg: '#0b1625',
       headerBg: 'transparent',
       footerBg: '#0b1625',
@@ -94,11 +90,9 @@ const darkTheme: ThemeConfig = {
       zeroTriggerHeight: 42,
     },
     Menu: {
-      ...defaultTheme.components?.Menu,
       darkItemBg: 'transparent',
     },
     Table: {
-      ...defaultTheme.components?.Table,
       rowHoverBg: 'rgba(100, 217, 255, 0.12)',
       headerColor: 'rgba(244, 248, 255, 0.75)',
     },
