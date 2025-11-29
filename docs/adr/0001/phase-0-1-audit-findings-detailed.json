@@ -1,21 +1,13 @@
 {
   "metadata": {
-    "generatedAt": "2025-11-28T18:18:53.597Z",
-    "totalFindings": 452,
-    "uniqueColors": 132,
-    "filesScanned": 103,
-    "filesWithColors": 70
+    "generatedAt": "2025-11-29T01:21:18.156Z",
+    "totalFindings": 397,
+    "uniqueColors": 125,
+    "filesScanned": 102,
+    "filesWithColors": 66
   },
   "byColor": {
     "white": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/BreakableText.css",
-        "line": 8,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre;",
-        "property": "white-space"
-      },
       {
         "file": "packages/jaeger-ui/src/components/common/DetailsCard/DetailTableDropdown.css",
         "line": 7,
@@ -23,30 +15,6 @@
         "value": "white",
         "context": "background: white;",
         "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/DetailsCard/DetailTableDropdown.css",
-        "line": 48,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/ErrorMessage.css",
-        "line": 45,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/ErrorMessage.css",
-        "line": 52,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre;",
-        "property": "white-space"
       },
       {
         "file": "packages/jaeger-ui/src/components/common/FilteredList/index.css",
@@ -65,68 +33,12 @@
         "property": "background"
       },
       {
-        "file": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
-        "line": 11,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 85,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 100,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/index.css",
-        "line": 38,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: normal;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-        "line": 44,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-        "line": 122,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
         "file": "packages/jaeger-ui/src/components/Monitor/EmptyState/index.css",
         "line": 33,
         "type": "named",
         "value": "white",
         "context": "color: white;",
         "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
-        "line": 11,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
       },
       {
         "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/TraceDiffGraph.css",
@@ -153,30 +65,6 @@
         "property": "color"
       },
       {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
-        "line": 33,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: normal;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
-        "line": 37,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
-        "line": 10,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
         "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
         "line": 108,
         "type": "named",
@@ -186,27 +74,11 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/TracePage/TraceSpanView/index.css",
-        "line": 21,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceSpanView/index.css",
         "line": 32,
         "type": "named",
         "value": "white",
         "context": "background-color: white;",
         "property": "background-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/index.css",
-        "line": 15,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre-wrap;",
-        "property": "white-space"
       },
       {
         "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBar.css",
@@ -223,78 +95,6 @@
         "value": "white",
         "context": "border: 1px solid white;",
         "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBar.css",
-        "line": 74,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
-        "line": 12,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
-        "line": 11,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css",
-        "line": 11,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
-        "line": 28,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
-        "line": 39,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/Ticks.css",
-        "line": 24,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css",
-        "line": 15,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.css",
-        "line": 21,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
       }
     ],
     "#cccccc": [
@@ -305,38 +105,6 @@
         "value": "#cccccc",
         "context": "border: 1px solid #ccc;",
         "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 29,
-        "type": "hex",
-        "value": "#cccccc",
-        "context": "border-color: #ccc;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 71,
-        "type": "hex",
-        "value": "#cccccc",
-        "context": "border: 1px solid #ccc;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 118,
-        "type": "hex",
-        "value": "#cccccc",
-        "context": "background: #ccc;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 123,
-        "type": "hex",
-        "value": "#cccccc",
-        "context": "background: #ccc;",
-        "property": "background"
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
@@ -411,30 +179,6 @@
         "value": "#dddddd",
         "context": "border-bottom: solid 1px #ddd;",
         "property": "border-bottom"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 35,
-        "type": "hex",
-        "value": "#dddddd",
-        "context": "background: #ddd;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 38,
-        "type": "hex",
-        "value": "#dddddd",
-        "context": "outline-color: #ddd;",
-        "property": "outline-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 132,
-        "type": "hex",
-        "value": "#dddddd",
-        "context": "background: #ddd;",
-        "property": "background"
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
@@ -682,14 +426,6 @@
         "type": "rgb",
         "value": "rgba(0, 0, 0, 0.3)",
         "context": "box-shadow: 0 0 3px 1px rgba(0, 0, 0, 0.3);",
-        "property": "box-shadow"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 94,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.3)",
-        "context": "box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);",
         "property": "box-shadow"
       },
       {
@@ -1165,670 +901,6 @@
         "property": "background-image"
       }
     ],
-    "#fff2e888": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 16,
-        "type": "hex",
-        "value": "#fff2e888",
-        "context": "background: #fff2e888;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 18,
-        "type": "hex",
-        "value": "#fff2e888",
-        "context": "outline-color: #fff2e888;",
-        "property": "outline-color"
-      }
-    ],
-    "#ffbb96": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 17,
-        "type": "hex",
-        "value": "#ffbb96",
-        "context": "border-color: #ffbb96;",
-        "property": "border-color"
-      }
-    ],
-    "#fff2e8": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 22,
-        "type": "hex",
-        "value": "#fff2e8",
-        "context": "background: #fff2e8;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 24,
-        "type": "hex",
-        "value": "#fff2e8",
-        "context": "outline-color: #fff2e8;",
-        "property": "outline-color"
-      }
-    ],
-    "#ff9c6e": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 23,
-        "type": "hex",
-        "value": "#ff9c6e",
-        "context": "border-color: #ff9c6e;",
-        "property": "border-color"
-      }
-    ],
-    "#f4f4f4": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 28,
-        "type": "hex",
-        "value": "#f4f4f4",
-        "context": "background: #f4f4f4;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 31,
-        "type": "hex",
-        "value": "#f4f4f4",
-        "context": "outline-color: #f4f4f4;",
-        "property": "outline-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
-        "line": 14,
-        "type": "hex",
-        "value": "#f4f4f4",
-        "context": "background-color: #f4f4f4;",
-        "property": "background-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
-        "line": 31,
-        "type": "hex",
-        "value": "#f4f4f4",
-        "context": "background: #f4f4f4;",
-        "property": "background"
-      }
-    ],
-    "#bbbbbb": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 36,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "border-color: #bbb;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 67,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "background: #bbb;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/getNodeRenderers.css",
-        "line": 8,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "stroke: #bbb;",
-        "property": "stroke"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
-        "line": 32,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "color: #bbb;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 49,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "color: #bbb;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/DetailsPanel.css",
-        "line": 30,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "border-bottom: solid 1px #bbb;",
-        "property": "border-bottom"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
-        "line": 7,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "border: 1px solid #bbb;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
-        "line": 40,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "border: 1px solid #bbb;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
-        "line": 7,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "background: #bbb;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
-        "line": 15,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "border: 1px solid #bbb;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/KeyboardShortcutsHelp.css",
-        "line": 23,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "border-bottom: 1px solid #bbb;",
-        "property": "border-bottom"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/index.css",
-        "line": 7,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "border-bottom: 1px solid #bbb;",
-        "property": "border-bottom"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
-        "line": 42,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "border-right: 1px solid #bbb;",
-        "property": "border-right"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
-        "line": 54,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "color: #bbb;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianReferences.css",
-        "line": 43,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "color: #bbb;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/index.css",
-        "line": 18,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "color: #bbb;",
-        "property": "color"
-      }
-    ],
-    "#999999": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 65,
-        "type": "hex",
-        "value": "#999999",
-        "context": "border: 1px solid #999;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 93,
-        "type": "hex",
-        "value": "#999999",
-        "context": "background: #999;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/ChevronDown.css",
-        "line": 7,
-        "type": "hex",
-        "value": "#999999",
-        "context": "color: #999;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
-        "line": 59,
-        "type": "hex",
-        "value": "#999999",
-        "context": "color: #999;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
-        "line": 64,
-        "type": "hex",
-        "value": "#999999",
-        "context": "color: #999;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
-        "line": 76,
-        "type": "hex",
-        "value": "#999999",
-        "context": "color: #999;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
-        "line": 83,
-        "type": "hex",
-        "value": "#999999",
-        "context": "color: #999;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/index.css",
-        "line": 23,
-        "type": "hex",
-        "value": "#999999",
-        "context": "color: #999;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-        "line": 75,
-        "type": "hex",
-        "value": "#999999",
-        "context": "border: 1px solid #999;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-        "line": 77,
-        "type": "hex",
-        "value": "#999999",
-        "context": "color: #999;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-        "line": 95,
-        "type": "hex",
-        "value": "#999999",
-        "context": "color: #999;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
-        "line": 75,
-        "type": "hex",
-        "value": "#999999",
-        "context": "background: #999;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/ViewingLayer.css",
-        "line": 13,
-        "type": "hex",
-        "value": "#999999",
-        "context": "border: 1px solid #999;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageSearchBar.css",
-        "line": 43,
-        "type": "hex",
-        "value": "#999999",
-        "context": "border: 1px solid #999;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageSearchBar.css",
-        "line": 45,
-        "type": "hex",
-        "value": "#999999",
-        "context": "color: #999;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianLogs.css",
-        "line": 38,
-        "type": "hex",
-        "value": "#999999",
-        "context": "color: #999;",
-        "property": "color"
-      }
-    ],
-    "#f5f5f5": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 39,
-        "type": "hex",
-        "value": "#f5f5f5",
-        "context": "background-color: #f5f5f5;",
-        "property": "background-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-        "line": 138,
-        "type": "hex",
-        "value": "#f5f5f5",
-        "context": "background-color: #f5f5f5;",
-        "property": "background-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/TraceDiffGraph.css",
-        "line": 68,
-        "type": "hex",
-        "value": "#f5f5f5",
-        "context": "background-color: #f5f5f5;",
-        "property": "background-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
-        "line": 22,
-        "type": "hex",
-        "value": "#f5f5f5",
-        "context": "background: #f5f5f5;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
-        "line": 50,
-        "type": "hex",
-        "value": "#f5f5f5",
-        "context": "background: #f5f5f5;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
-        "line": 130,
-        "type": "hex",
-        "value": "#f5f5f5",
-        "context": "background-color: #f5f5f5;",
-        "property": "background-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianReferences.css",
-        "line": 34,
-        "type": "hex",
-        "value": "#f5f5f5",
-        "context": "background: #f5f5f5;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
-        "line": 23,
-        "type": "hex",
-        "value": "#f5f5f5",
-        "context": "background: #f5f5f5;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/TextList.css",
-        "line": 19,
-        "type": "hex",
-        "value": "#f5f5f5",
-        "context": "background: #f5f5f5;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetailRow.css",
-        "line": 41,
-        "type": "hex",
-        "value": "#f5f5f5",
-        "context": "background: #f5f5f5;",
-        "property": "background"
-      }
-    ],
-    "#e6e6e6": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 40,
-        "type": "hex",
-        "value": "#e6e6e6",
-        "context": "border: 1px solid #e6e6e6;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-        "line": 147,
-        "type": "hex",
-        "value": "#e6e6e6",
-        "context": "background-color: #e6e6e6;",
-        "property": "background-color"
-      }
-    ],
-    "rgba(0, 0, 0, 0.03)": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 52,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.03)",
-        "context": "background: rgba(0, 0, 0, 0.03);",
-        "property": "background"
-      }
-    ],
-    "rgba(0, 0, 0, 0.13)": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 56,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.13)",
-        "context": "border-left: 1px solid rgba(0, 0, 0, 0.13);",
-        "property": "border-left"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 60,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.13)",
-        "context": "border-top: 1px solid rgba(0, 0, 0, 0.13);",
-        "property": "border-top"
-      }
-    ],
-    "rgba(0, 0, 0, 0.2)": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 64,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.2)",
-        "context": "background: rgba(0, 0, 0, 0.2);",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
-        "line": 9,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.2)",
-        "context": "box-shadow: 0 0px 3px 1px rgba(0, 0, 0, 0.2);",
-        "property": "box-shadow"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
-        "line": 55,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.2)",
-        "context": "background: rgba(0, 0, 0, 0.2);",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
-        "line": 71,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.2)",
-        "context": "box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);",
-        "property": "box-shadow"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
-        "line": 79,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.2)",
-        "context": "text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);",
-        "property": "text-shadow"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
-        "line": 51,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.2)",
-        "context": "box-shadow: -1px 0 rgba(0, 0, 0, 0.2);",
-        "property": "box-shadow"
-      }
-    ],
-    "rgba(0, 0, 0, 0.35)": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 68,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.35)",
-        "context": "background: rgba(0, 0, 0, 0.35);",
-        "property": "background"
-      }
-    ],
-    "rgba(0, 0, 0, 0.15)": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 72,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.15)",
-        "context": "background: rgba(0, 0, 0, 0.15);",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/DdgNodeContent/index.css",
-        "line": 25,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.15)",
-        "context": "box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.15);",
-        "property": "box-shadow"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
-        "line": 41,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.15)",
-        "context": "box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.15);",
-        "property": "box-shadow"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
-        "line": 63,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.15)",
-        "context": "box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);",
-        "property": "box-shadow"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceSpanView/index.css",
-        "line": 34,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.15)",
-        "context": "border: 1px solid rgba(0, 0, 0, 0.15);",
-        "property": "border"
-      }
-    ],
-    "#777777": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 107,
-        "type": "hex",
-        "value": "#777777",
-        "context": "outline: 1px solid #777;",
-        "property": "outline"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
-        "line": 8,
-        "type": "hex",
-        "value": "#777777",
-        "context": "border: 1px solid #777;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
-        "line": 82,
-        "type": "hex",
-        "value": "#777777",
-        "context": "background: #777;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
-        "line": 74,
-        "type": "hex",
-        "value": "#777777",
-        "context": "border: 1px solid #777;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
-        "line": 50,
-        "type": "hex",
-        "value": "#777777",
-        "context": "color: #777;",
-        "property": "color"
-      }
-    ],
-    "#444444": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 124,
-        "type": "hex",
-        "value": "#444444",
-        "context": "color: #444;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/index.css",
-        "line": 7,
-        "type": "hex",
-        "value": "#444444",
-        "context": "stroke: #444;",
-        "property": "stroke"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
-        "line": 18,
-        "type": "hex",
-        "value": "#444444",
-        "context": "stroke: #444;",
-        "property": "stroke"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
-        "line": 23,
-        "type": "hex",
-        "value": "#444444",
-        "context": "stroke: #444;",
-        "property": "stroke"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
-        "line": 24,
-        "type": "hex",
-        "value": "#444444",
-        "context": "fill: #444;",
-        "property": "fill"
-      }
-    ],
     "#eeeeee": [
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/DdgNodeContent/index.css",
@@ -1848,7 +920,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 47,
+        "line": 64,
         "type": "hex",
         "value": "#eeeeee",
         "context": "border-left: 1px solid #eee;",
@@ -1856,7 +928,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 48,
+        "line": 65,
         "type": "hex",
         "value": "#eeeeee",
         "context": "border-right: 1px solid #eee;",
@@ -1901,6 +973,40 @@
         "value": "#eeeeee",
         "context": "background: #eee;",
         "property": "background"
+      }
+    ],
+    "rgba(0, 0, 0, 0.15)": [
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/DdgNodeContent/index.css",
+        "line": 25,
+        "type": "rgb",
+        "value": "rgba(0, 0, 0, 0.15)",
+        "context": "box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.15);",
+        "property": "box-shadow"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
+        "line": 41,
+        "type": "rgb",
+        "value": "rgba(0, 0, 0, 0.15)",
+        "context": "box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.15);",
+        "property": "box-shadow"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
+        "line": 63,
+        "type": "rgb",
+        "value": "rgba(0, 0, 0, 0.15)",
+        "context": "box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);",
+        "property": "box-shadow"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceSpanView/index.css",
+        "line": 34,
+        "type": "rgb",
+        "value": "rgba(0, 0, 0, 0.15)",
+        "context": "border: 1px solid rgba(0, 0, 0, 0.15);",
+        "property": "border"
       }
     ],
     "#e58c33": [
@@ -1948,7 +1054,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 46,
+        "line": 63,
         "type": "hex",
         "value": "#ffffff",
         "context": "background-color: #fff;",
@@ -2133,6 +1239,120 @@
         "property": "box-shadow"
       }
     ],
+    "#bbbbbb": [
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/getNodeRenderers.css",
+        "line": 8,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "stroke: #bbb;",
+        "property": "stroke"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
+        "line": 32,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "color: #bbb;",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
+        "line": 66,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "color: #bbb;",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/DetailsPanel.css",
+        "line": 30,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "border-bottom: solid 1px #bbb;",
+        "property": "border-bottom"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
+        "line": 7,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "border: 1px solid #bbb;",
+        "property": "border"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
+        "line": 40,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "border: 1px solid #bbb;",
+        "property": "border"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
+        "line": 7,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "background: #bbb;",
+        "property": "background"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
+        "line": 15,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "border: 1px solid #bbb;",
+        "property": "border"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/KeyboardShortcutsHelp.css",
+        "line": 23,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "border-bottom: 1px solid #bbb;",
+        "property": "border-bottom"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/index.css",
+        "line": 7,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "border-bottom: 1px solid #bbb;",
+        "property": "border-bottom"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
+        "line": 42,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "border-right: 1px solid #bbb;",
+        "property": "border-right"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
+        "line": 54,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "color: #bbb;",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianReferences.css",
+        "line": 43,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "color: #bbb;",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/index.css",
+        "line": 18,
+        "type": "hex",
+        "value": "#bbbbbb",
+        "context": "color: #bbb;",
+        "property": "color"
+      }
+    ],
     "#fadb14": [
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/getNodeRenderers.css",
@@ -2144,7 +1364,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 75,
+        "line": 92,
         "type": "hex",
         "value": "#fadb14",
         "context": "border: 1px dashed #fadb14;",
@@ -2271,6 +1491,172 @@
         "property": "stroke"
       }
     ],
+    "#444444": [
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/index.css",
+        "line": 7,
+        "type": "hex",
+        "value": "#444444",
+        "context": "stroke: #444;",
+        "property": "stroke"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
+        "line": 18,
+        "type": "hex",
+        "value": "#444444",
+        "context": "stroke: #444;",
+        "property": "stroke"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
+        "line": 23,
+        "type": "hex",
+        "value": "#444444",
+        "context": "stroke: #444;",
+        "property": "stroke"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
+        "line": 24,
+        "type": "hex",
+        "value": "#444444",
+        "context": "fill: #444;",
+        "property": "fill"
+      }
+    ],
+    "#999999": [
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/ChevronDown.css",
+        "line": 7,
+        "type": "hex",
+        "value": "#999999",
+        "context": "color: #999;",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
+        "line": 59,
+        "type": "hex",
+        "value": "#999999",
+        "context": "color: #999;",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
+        "line": 64,
+        "type": "hex",
+        "value": "#999999",
+        "context": "color: #999;",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
+        "line": 76,
+        "type": "hex",
+        "value": "#999999",
+        "context": "color: #999;",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
+        "line": 83,
+        "type": "hex",
+        "value": "#999999",
+        "context": "color: #999;",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/index.css",
+        "line": 23,
+        "type": "hex",
+        "value": "#999999",
+        "context": "color: #999;",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
+        "line": 75,
+        "type": "hex",
+        "value": "#999999",
+        "context": "border: 1px solid #999;",
+        "property": "border"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
+        "line": 77,
+        "type": "hex",
+        "value": "#999999",
+        "context": "color: #999;",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
+        "line": 95,
+        "type": "hex",
+        "value": "#999999",
+        "context": "color: #999;",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
+        "line": 75,
+        "type": "hex",
+        "value": "#999999",
+        "context": "background: #999;",
+        "property": "background"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/ViewingLayer.css",
+        "line": 13,
+        "type": "hex",
+        "value": "#999999",
+        "context": "border: 1px solid #999;",
+        "property": "border"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageSearchBar.css",
+        "line": 43,
+        "type": "hex",
+        "value": "#999999",
+        "context": "border: 1px solid #999;",
+        "property": "border"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageSearchBar.css",
+        "line": 45,
+        "type": "hex",
+        "value": "#999999",
+        "context": "color: #999;",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianLogs.css",
+        "line": 38,
+        "type": "hex",
+        "value": "#999999",
+        "context": "color: #999;",
+        "property": "color"
+      }
+    ],
+    "#f4f4f4": [
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
+        "line": 14,
+        "type": "hex",
+        "value": "#f4f4f4",
+        "context": "background-color: #f4f4f4;",
+        "property": "background-color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
+        "line": 31,
+        "type": "hex",
+        "value": "#f4f4f4",
+        "context": "background: #f4f4f4;",
+        "property": "background"
+      }
+    ],
     "#096dd9": [
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
@@ -2386,7 +1772,7 @@
     "#ffffb8": [
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 74,
+        "line": 91,
         "type": "hex",
         "value": "#ffffb8",
         "context": "background: #ffffb8;",
@@ -2396,7 +1782,7 @@
     "#ad8b00": [
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 77,
+        "line": 94,
         "type": "hex",
         "value": "#ad8b00",
         "context": "color: #ad8b00;",
@@ -2406,7 +1792,7 @@
     "#666666": [
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 81,
+        "line": 98,
         "type": "hex",
         "value": "#666666",
         "context": "stroke: #666;",
@@ -2583,6 +1969,80 @@
         "property": "color"
       }
     ],
+    "#f5f5f5": [
+      {
+        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
+        "line": 138,
+        "type": "hex",
+        "value": "#f5f5f5",
+        "context": "background-color: #f5f5f5;",
+        "property": "background-color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/TraceDiffGraph.css",
+        "line": 68,
+        "type": "hex",
+        "value": "#f5f5f5",
+        "context": "background-color: #f5f5f5;",
+        "property": "background-color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
+        "line": 22,
+        "type": "hex",
+        "value": "#f5f5f5",
+        "context": "background: #f5f5f5;",
+        "property": "background"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
+        "line": 50,
+        "type": "hex",
+        "value": "#f5f5f5",
+        "context": "background: #f5f5f5;",
+        "property": "background"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
+        "line": 130,
+        "type": "hex",
+        "value": "#f5f5f5",
+        "context": "background-color: #f5f5f5;",
+        "property": "background-color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianReferences.css",
+        "line": 34,
+        "type": "hex",
+        "value": "#f5f5f5",
+        "context": "background: #f5f5f5;",
+        "property": "background"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
+        "line": 23,
+        "type": "hex",
+        "value": "#f5f5f5",
+        "context": "background: #f5f5f5;",
+        "property": "background"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/TextList.css",
+        "line": 19,
+        "type": "hex",
+        "value": "#f5f5f5",
+        "context": "background: #f5f5f5;",
+        "property": "background"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetailRow.css",
+        "line": 41,
+        "type": "hex",
+        "value": "#f5f5f5",
+        "context": "background: #f5f5f5;",
+        "property": "background"
+      }
+    ],
     "#d9d9d9": [
       {
         "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
@@ -2641,6 +2101,16 @@
         "value": "rgba(0, 0, 0, 0.85)",
         "context": "color: rgba(0, 0, 0, 0.85);",
         "property": "color"
+      }
+    ],
+    "#e6e6e6": [
+      {
+        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
+        "line": 147,
+        "type": "hex",
+        "value": "#e6e6e6",
+        "context": "background-color: #e6e6e6;",
+        "property": "background-color"
       }
     ],
     "#11939a": [
@@ -2865,6 +2335,82 @@
         "value": "#f0f0f0",
         "context": "background: #f0f0f0;",
         "property": "background"
+      }
+    ],
+    "#777777": [
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
+        "line": 8,
+        "type": "hex",
+        "value": "#777777",
+        "context": "border: 1px solid #777;",
+        "property": "border"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
+        "line": 82,
+        "type": "hex",
+        "value": "#777777",
+        "context": "background: #777;",
+        "property": "background"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
+        "line": 74,
+        "type": "hex",
+        "value": "#777777",
+        "context": "border: 1px solid #777;",
+        "property": "border"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
+        "line": 50,
+        "type": "hex",
+        "value": "#777777",
+        "context": "color: #777;",
+        "property": "color"
+      }
+    ],
+    "rgba(0, 0, 0, 0.2)": [
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
+        "line": 9,
+        "type": "rgb",
+        "value": "rgba(0, 0, 0, 0.2)",
+        "context": "box-shadow: 0 0px 3px 1px rgba(0, 0, 0, 0.2);",
+        "property": "box-shadow"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
+        "line": 55,
+        "type": "rgb",
+        "value": "rgba(0, 0, 0, 0.2)",
+        "context": "background: rgba(0, 0, 0, 0.2);",
+        "property": "background"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
+        "line": 71,
+        "type": "rgb",
+        "value": "rgba(0, 0, 0, 0.2)",
+        "context": "box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);",
+        "property": "box-shadow"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
+        "line": 79,
+        "type": "rgb",
+        "value": "rgba(0, 0, 0, 0.2)",
+        "context": "text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);",
+        "property": "text-shadow"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
+        "line": 51,
+        "type": "rgb",
+        "value": "rgba(0, 0, 0, 0.2)",
+        "context": "box-shadow: -1px 0 rgba(0, 0, 0, 0.2);",
+        "property": "box-shadow"
       }
     ],
     "#78d539": [
@@ -3889,208 +3435,6 @@
     ]
   },
   "byProperty": {
-    "white-space": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/BreakableText.css",
-        "line": 8,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/DetailsCard/DetailTableDropdown.css",
-        "line": 48,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/ErrorMessage.css",
-        "line": 45,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/ErrorMessage.css",
-        "line": 52,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
-        "line": 11,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 85,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 100,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/index.css",
-        "line": 38,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: normal;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-        "line": 44,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-        "line": 122,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
-        "line": 11,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
-        "line": 33,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: normal;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
-        "line": 37,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
-        "line": 10,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceSpanView/index.css",
-        "line": 21,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/index.css",
-        "line": 15,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre-wrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBar.css",
-        "line": 74,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
-        "line": 12,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
-        "line": 11,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css",
-        "line": 11,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
-        "line": 28,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
-        "line": 39,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/Ticks.css",
-        "line": 24,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css",
-        "line": 15,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.css",
-        "line": 21,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      }
-    ],
     "background": [
       {
         "file": "packages/jaeger-ui/src/components/common/DetailsCard/DetailTableDropdown.css",
@@ -4189,110 +3533,6 @@
         "property": "background"
       },
       {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 16,
-        "type": "hex",
-        "value": "#fff2e888",
-        "context": "background: #fff2e888;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 22,
-        "type": "hex",
-        "value": "#fff2e8",
-        "context": "background: #fff2e8;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 28,
-        "type": "hex",
-        "value": "#f4f4f4",
-        "context": "background: #f4f4f4;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 35,
-        "type": "hex",
-        "value": "#dddddd",
-        "context": "background: #ddd;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 67,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "background: #bbb;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 52,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.03)",
-        "context": "background: rgba(0, 0, 0, 0.03);",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 64,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.2)",
-        "context": "background: rgba(0, 0, 0, 0.2);",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 68,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.35)",
-        "context": "background: rgba(0, 0, 0, 0.35);",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 72,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.15)",
-        "context": "background: rgba(0, 0, 0, 0.15);",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 93,
-        "type": "hex",
-        "value": "#999999",
-        "context": "background: #999;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 118,
-        "type": "hex",
-        "value": "#cccccc",
-        "context": "background: #ccc;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 123,
-        "type": "hex",
-        "value": "#cccccc",
-        "context": "background: #ccc;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 132,
-        "type": "hex",
-        "value": "#dddddd",
-        "context": "background: #ddd;",
-        "property": "background"
-      },
-      {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/DdgNodeContent/index.css",
         "line": 23,
         "type": "hex",
@@ -4326,7 +3566,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 74,
+        "line": 91,
         "type": "hex",
         "value": "#ffffb8",
         "context": "background: #ffffb8;",
@@ -4999,30 +4239,6 @@
         "property": "border"
       },
       {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 65,
-        "type": "hex",
-        "value": "#999999",
-        "context": "border: 1px solid #999;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 71,
-        "type": "hex",
-        "value": "#cccccc",
-        "context": "border: 1px solid #ccc;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 40,
-        "type": "hex",
-        "value": "#e6e6e6",
-        "context": "border: 1px solid #e6e6e6;",
-        "property": "border"
-      },
-      {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/getNodeRenderers.css",
         "line": 40,
         "type": "rgb",
@@ -5040,7 +4256,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 75,
+        "line": 92,
         "type": "hex",
         "value": "#fadb14",
         "context": "border: 1px dashed #fadb14;",
@@ -5297,14 +4513,6 @@
         "property": "color"
       },
       {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 124,
-        "type": "hex",
-        "value": "#444444",
-        "context": "color: #444;",
-        "property": "color"
-      },
-      {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/ChevronDown.css",
         "line": 7,
         "type": "hex",
@@ -5386,7 +4594,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 49,
+        "line": 66,
         "type": "hex",
         "value": "#bbbbbb",
         "context": "color: #bbb;",
@@ -5394,7 +4602,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 77,
+        "line": 94,
         "type": "hex",
         "value": "#ad8b00",
         "context": "color: #ad8b00;",
@@ -6141,14 +5349,6 @@
         "property": "box-shadow"
       },
       {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 94,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.3)",
-        "context": "box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);",
-        "property": "box-shadow"
-      },
-      {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/DdgNodeContent/index.css",
         "line": 25,
         "type": "rgb",
@@ -6400,7 +5600,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 81,
+        "line": 98,
         "type": "hex",
         "value": "#666666",
         "context": "stroke: #666;",
@@ -6478,14 +5678,6 @@
         "type": "hex",
         "value": "#119999",
         "context": "outline: 1px solid #199;",
-        "property": "outline"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 107,
-        "type": "hex",
-        "value": "#777777",
-        "context": "outline: 1px solid #777;",
         "property": "outline"
       },
       {
@@ -6619,163 +5811,7 @@
         "property": "unknown"
       }
     ],
-    "border-color": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 17,
-        "type": "hex",
-        "value": "#ffbb96",
-        "context": "border-color: #ffbb96;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 23,
-        "type": "hex",
-        "value": "#ff9c6e",
-        "context": "border-color: #ff9c6e;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 29,
-        "type": "hex",
-        "value": "#cccccc",
-        "context": "border-color: #ccc;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 36,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "border-color: #bbb;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-        "line": 84,
-        "type": "hex",
-        "value": "#000000",
-        "context": "border-color: #000;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-        "line": 148,
-        "type": "hex",
-        "value": "#d9d9d9",
-        "context": "border-color: #d9d9d9;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
-        "line": 20,
-        "type": "hex",
-        "value": "#2a8f04",
-        "context": "border-color: #2a8f04;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
-        "line": 30,
-        "type": "hex",
-        "value": "#cc1616",
-        "context": "border-color: #cc1616;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
-        "line": 109,
-        "type": "hex",
-        "value": "#1890ff",
-        "context": "border-color: #1890ff;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageHeader.css",
-        "line": 42,
-        "type": "hex",
-        "value": "#cccccc",
-        "context": "border-color: #ccc;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css",
-        "line": 40,
-        "type": "hex",
-        "value": "#4444ff",
-        "context": "border-color: #44f;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css",
-        "line": 45,
-        "type": "hex",
-        "value": "#ff4444",
-        "context": "border-color: #f44;",
-        "property": "border-color"
-      }
-    ],
-    "outline-color": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 18,
-        "type": "hex",
-        "value": "#fff2e888",
-        "context": "outline-color: #fff2e888;",
-        "property": "outline-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 24,
-        "type": "hex",
-        "value": "#fff2e8",
-        "context": "outline-color: #fff2e8;",
-        "property": "outline-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 31,
-        "type": "hex",
-        "value": "#f4f4f4",
-        "context": "outline-color: #f4f4f4;",
-        "property": "outline-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 38,
-        "type": "hex",
-        "value": "#dddddd",
-        "context": "outline-color: #ddd;",
-        "property": "outline-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
-        "line": 31,
-        "type": "hex",
-        "value": "#fff3d7",
-        "context": "outline-color: #fff3d7;",
-        "property": "outline-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceStatistics/PopupSql.css",
-        "line": 47,
-        "type": "rgb",
-        "value": "rgb(0, 128, 128)",
-        "context": "outline-color: rgb(0, 128, 128);",
-        "property": "outline-color"
-      }
-    ],
     "background-color": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 39,
-        "type": "hex",
-        "value": "#f5f5f5",
-        "context": "background-color: #f5f5f5;",
-        "property": "background-color"
-      },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/DdgNodeContent/index.css",
         "line": 35,
@@ -6802,7 +5838,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 46,
+        "line": 63,
         "type": "hex",
         "value": "#ffffff",
         "context": "background-color: #fff;",
@@ -7097,122 +6133,6 @@
         "property": "background-color"
       }
     ],
-    "border-left": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 56,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.13)",
-        "context": "border-left: 1px solid rgba(0, 0, 0, 0.13);",
-        "property": "border-left"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 47,
-        "type": "hex",
-        "value": "#eeeeee",
-        "context": "border-left: 1px solid #eee;",
-        "property": "border-left"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/DetailsPanel.css",
-        "line": 8,
-        "type": "hex",
-        "value": "#dddddd",
-        "context": "border-left: solid 1px #ddd;",
-        "property": "border-left"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/index.css",
-        "line": 8,
-        "type": "hex",
-        "value": "#dddddd",
-        "context": "border-left: solid 1px #ddd;",
-        "property": "border-left"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/Monitor/ServicesView/operationDetailsTable/index.css",
-        "line": 8,
-        "type": "rgb",
-        "value": "rgba(216, 216, 216, 1)",
-        "context": "border-left: 1px solid rgba(216, 216, 216, 1);",
-        "property": "border-left"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/QualityMetrics/MetricCard.css",
-        "line": 14,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.3)",
-        "context": "border-left: solid 1px rgba(0, 0, 0, 0.3);",
-        "property": "border-left"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
-        "line": 52,
-        "type": "hex",
-        "value": "#e8e8e8",
-        "context": "border-left: 1px solid #e8e8e8;",
-        "property": "border-left"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
-        "line": 37,
-        "type": "hex",
-        "value": "#e4e4e4",
-        "context": "border-left: 1px solid #e4e4e4;",
-        "property": "border-left"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageSearchBar.css",
-        "line": 24,
-        "type": "hex",
-        "value": "#d9d9d9",
-        "context": "border-left: 1px solid #d9d9d9;",
-        "property": "border-left"
-      }
-    ],
-    "border-top": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 60,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.13)",
-        "context": "border-top: 1px solid rgba(0, 0, 0, 0.13);",
-        "property": "border-top"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/Monitor/ServicesView/operationDetailsTable/index.css",
-        "line": 9,
-        "type": "rgb",
-        "value": "rgba(216, 216, 216, 1)",
-        "context": "border-top: 1px solid rgba(216, 216, 216, 1);",
-        "property": "border-top"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
-        "line": 64,
-        "type": "hex",
-        "value": "#f0f0f0",
-        "context": "border-top: 1px solid #f0f0f0;",
-        "property": "border-top"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceStatistics/index.css",
-        "line": 22,
-        "type": "rgb",
-        "value": "rgb(255, 255, 255)",
-        "context": "border-top: 1px solid rgb(255, 255, 255);",
-        "property": "border-top"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianLogs.css",
-        "line": 33,
-        "type": "hex",
-        "value": "#d8d8d8",
-        "context": "border-top: 1px solid #d8d8d8;",
-        "property": "border-top"
-      }
-    ],
     "fill": [
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/getNodeRenderers.css",
@@ -7433,10 +6353,76 @@
         "property": "background-image"
       }
     ],
+    "border-left": [
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
+        "line": 64,
+        "type": "hex",
+        "value": "#eeeeee",
+        "context": "border-left: 1px solid #eee;",
+        "property": "border-left"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/DetailsPanel.css",
+        "line": 8,
+        "type": "hex",
+        "value": "#dddddd",
+        "context": "border-left: solid 1px #ddd;",
+        "property": "border-left"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/index.css",
+        "line": 8,
+        "type": "hex",
+        "value": "#dddddd",
+        "context": "border-left: solid 1px #ddd;",
+        "property": "border-left"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/Monitor/ServicesView/operationDetailsTable/index.css",
+        "line": 8,
+        "type": "rgb",
+        "value": "rgba(216, 216, 216, 1)",
+        "context": "border-left: 1px solid rgba(216, 216, 216, 1);",
+        "property": "border-left"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/QualityMetrics/MetricCard.css",
+        "line": 14,
+        "type": "rgb",
+        "value": "rgba(0, 0, 0, 0.3)",
+        "context": "border-left: solid 1px rgba(0, 0, 0, 0.3);",
+        "property": "border-left"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
+        "line": 52,
+        "type": "hex",
+        "value": "#e8e8e8",
+        "context": "border-left: 1px solid #e8e8e8;",
+        "property": "border-left"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
+        "line": 37,
+        "type": "hex",
+        "value": "#e4e4e4",
+        "context": "border-left: 1px solid #e4e4e4;",
+        "property": "border-left"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageSearchBar.css",
+        "line": 24,
+        "type": "hex",
+        "value": "#d9d9d9",
+        "context": "border-left: 1px solid #d9d9d9;",
+        "property": "border-left"
+      }
+    ],
     "border-right": [
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 48,
+        "line": 65,
         "type": "hex",
         "value": "#eeeeee",
         "context": "border-right: 1px solid #eee;",
@@ -7517,6 +6503,106 @@
         "property": "filter"
       }
     ],
+    "border-color": [
+      {
+        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
+        "line": 84,
+        "type": "hex",
+        "value": "#000000",
+        "context": "border-color: #000;",
+        "property": "border-color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
+        "line": 148,
+        "type": "hex",
+        "value": "#d9d9d9",
+        "context": "border-color: #d9d9d9;",
+        "property": "border-color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
+        "line": 20,
+        "type": "hex",
+        "value": "#2a8f04",
+        "context": "border-color: #2a8f04;",
+        "property": "border-color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
+        "line": 30,
+        "type": "hex",
+        "value": "#cc1616",
+        "context": "border-color: #cc1616;",
+        "property": "border-color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
+        "line": 109,
+        "type": "hex",
+        "value": "#1890ff",
+        "context": "border-color: #1890ff;",
+        "property": "border-color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageHeader.css",
+        "line": 42,
+        "type": "hex",
+        "value": "#cccccc",
+        "context": "border-color: #ccc;",
+        "property": "border-color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css",
+        "line": 40,
+        "type": "hex",
+        "value": "#4444ff",
+        "context": "border-color: #44f;",
+        "property": "border-color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css",
+        "line": 45,
+        "type": "hex",
+        "value": "#ff4444",
+        "context": "border-color: #f44;",
+        "property": "border-color"
+      }
+    ],
+    "border-top": [
+      {
+        "file": "packages/jaeger-ui/src/components/Monitor/ServicesView/operationDetailsTable/index.css",
+        "line": 9,
+        "type": "rgb",
+        "value": "rgba(216, 216, 216, 1)",
+        "context": "border-top: 1px solid rgba(216, 216, 216, 1);",
+        "property": "border-top"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
+        "line": 64,
+        "type": "hex",
+        "value": "#f0f0f0",
+        "context": "border-top: 1px solid #f0f0f0;",
+        "property": "border-top"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceStatistics/index.css",
+        "line": 22,
+        "type": "rgb",
+        "value": "rgb(255, 255, 255)",
+        "context": "border-top: 1px solid rgb(255, 255, 255);",
+        "property": "border-top"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianLogs.css",
+        "line": 33,
+        "type": "hex",
+        "value": "#d8d8d8",
+        "context": "border-top: 1px solid #d8d8d8;",
+        "property": "border-top"
+      }
+    ],
     "text-shadow": [
       {
         "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
@@ -7525,6 +6611,24 @@
         "value": "rgba(0, 0, 0, 0.2)",
         "context": "text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);",
         "property": "text-shadow"
+      }
+    ],
+    "outline-color": [
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
+        "line": 31,
+        "type": "hex",
+        "value": "#fff3d7",
+        "context": "outline-color: #fff3d7;",
+        "property": "outline-color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TraceStatistics/PopupSql.css",
+        "line": 47,
+        "type": "rgb",
+        "value": "rgb(0, 128, 128)",
+        "context": "outline-color: rgb(0, 128, 128);",
+        "property": "outline-color"
       }
     ],
     "border-top-color": [
@@ -7549,16 +6653,6 @@
     ]
   },
   "byFile": {
-    "packages/jaeger-ui/src/components/common/BreakableText.css": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/BreakableText.css",
-        "line": 8,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre;",
-        "property": "white-space"
-      }
-    ],
     "packages/jaeger-ui/src/components/common/DetailsCard/DetailTableDropdown.css": [
       {
         "file": "packages/jaeger-ui/src/components/common/DetailsCard/DetailTableDropdown.css",
@@ -7607,14 +6701,6 @@
         "value": "#ff2626",
         "context": "background: #ff2626;",
         "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/DetailsCard/DetailTableDropdown.css",
-        "line": 48,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
       }
     ],
     "packages/jaeger-ui/src/components/common/DetailsCard/index.css": [
@@ -7651,24 +6737,6 @@
         "value": "rgba(0, 0, 0, 0.07)",
         "context": "stroke: rgba(0, 0, 0, 0.07);",
         "property": "stroke"
-      }
-    ],
-    "packages/jaeger-ui/src/components/common/ErrorMessage.css": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/ErrorMessage.css",
-        "line": 45,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/ErrorMessage.css",
-        "line": 52,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre;",
-        "property": "white-space"
       }
     ],
     "packages/jaeger-ui/src/components/common/FilteredList/index.css": [
@@ -7730,14 +6798,6 @@
       }
     ],
     "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
-        "line": 11,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
       {
         "file": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
         "line": 16,
@@ -7833,250 +6893,6 @@
         "value": "#eb2f96",
         "context": "color: #eb2f96;",
         "property": "color"
-      }
-    ],
-    "packages/jaeger-ui/src/components/common/NameSelector.css": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 16,
-        "type": "hex",
-        "value": "#fff2e888",
-        "context": "background: #fff2e888;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 17,
-        "type": "hex",
-        "value": "#ffbb96",
-        "context": "border-color: #ffbb96;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 18,
-        "type": "hex",
-        "value": "#fff2e888",
-        "context": "outline-color: #fff2e888;",
-        "property": "outline-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 22,
-        "type": "hex",
-        "value": "#fff2e8",
-        "context": "background: #fff2e8;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 23,
-        "type": "hex",
-        "value": "#ff9c6e",
-        "context": "border-color: #ff9c6e;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 24,
-        "type": "hex",
-        "value": "#fff2e8",
-        "context": "outline-color: #fff2e8;",
-        "property": "outline-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 28,
-        "type": "hex",
-        "value": "#f4f4f4",
-        "context": "background: #f4f4f4;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 29,
-        "type": "hex",
-        "value": "#cccccc",
-        "context": "border-color: #ccc;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 31,
-        "type": "hex",
-        "value": "#f4f4f4",
-        "context": "outline-color: #f4f4f4;",
-        "property": "outline-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 35,
-        "type": "hex",
-        "value": "#dddddd",
-        "context": "background: #ddd;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 36,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "border-color: #bbb;",
-        "property": "border-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 38,
-        "type": "hex",
-        "value": "#dddddd",
-        "context": "outline-color: #ddd;",
-        "property": "outline-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 65,
-        "type": "hex",
-        "value": "#999999",
-        "context": "border: 1px solid #999;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 67,
-        "type": "hex",
-        "value": "#bbbbbb",
-        "context": "background: #bbb;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-        "line": 71,
-        "type": "hex",
-        "value": "#cccccc",
-        "context": "border: 1px solid #ccc;",
-        "property": "border"
-      }
-    ],
-    "packages/jaeger-ui/src/components/common/utils.css": [
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 39,
-        "type": "hex",
-        "value": "#f5f5f5",
-        "context": "background-color: #f5f5f5;",
-        "property": "background-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 40,
-        "type": "hex",
-        "value": "#e6e6e6",
-        "context": "border: 1px solid #e6e6e6;",
-        "property": "border"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 52,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.03)",
-        "context": "background: rgba(0, 0, 0, 0.03);",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 56,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.13)",
-        "context": "border-left: 1px solid rgba(0, 0, 0, 0.13);",
-        "property": "border-left"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 60,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.13)",
-        "context": "border-top: 1px solid rgba(0, 0, 0, 0.13);",
-        "property": "border-top"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 64,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.2)",
-        "context": "background: rgba(0, 0, 0, 0.2);",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 68,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.35)",
-        "context": "background: rgba(0, 0, 0, 0.35);",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 72,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.15)",
-        "context": "background: rgba(0, 0, 0, 0.15);",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 93,
-        "type": "hex",
-        "value": "#999999",
-        "context": "background: #999;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 94,
-        "type": "rgb",
-        "value": "rgba(0, 0, 0, 0.3)",
-        "context": "box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);",
-        "property": "box-shadow"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 107,
-        "type": "hex",
-        "value": "#777777",
-        "context": "outline: 1px solid #777;",
-        "property": "outline"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 118,
-        "type": "hex",
-        "value": "#cccccc",
-        "context": "background: #ccc;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 123,
-        "type": "hex",
-        "value": "#cccccc",
-        "context": "background: #ccc;",
-        "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 124,
-        "type": "hex",
-        "value": "#444444",
-        "context": "color: #444;",
-        "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/common/utils.css",
-        "line": 132,
-        "type": "hex",
-        "value": "#dddddd",
-        "context": "background: #ddd;",
-        "property": "background"
       }
     ],
     "packages/jaeger-ui/src/components/DeepDependencies/Graph/DdgNodeContent/index.css": [
@@ -8388,7 +7204,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 46,
+        "line": 63,
         "type": "hex",
         "value": "#ffffff",
         "context": "background-color: #fff;",
@@ -8396,7 +7212,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 47,
+        "line": 64,
         "type": "hex",
         "value": "#eeeeee",
         "context": "border-left: 1px solid #eee;",
@@ -8404,7 +7220,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 48,
+        "line": 65,
         "type": "hex",
         "value": "#eeeeee",
         "context": "border-right: 1px solid #eee;",
@@ -8412,7 +7228,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 49,
+        "line": 66,
         "type": "hex",
         "value": "#bbbbbb",
         "context": "color: #bbb;",
@@ -8420,7 +7236,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 74,
+        "line": 91,
         "type": "hex",
         "value": "#ffffb8",
         "context": "background: #ffffb8;",
@@ -8428,7 +7244,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 75,
+        "line": 92,
         "type": "hex",
         "value": "#fadb14",
         "context": "border: 1px dashed #fadb14;",
@@ -8436,7 +7252,7 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 77,
+        "line": 94,
         "type": "hex",
         "value": "#ad8b00",
         "context": "color: #ad8b00;",
@@ -8444,27 +7260,11 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 81,
+        "line": 98,
         "type": "hex",
         "value": "#666666",
         "context": "stroke: #666;",
         "property": "stroke"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 85,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-        "line": 100,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
       }
     ],
     "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/index.css": [
@@ -8475,14 +7275,6 @@
         "value": "#999999",
         "context": "color: #999;",
         "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/index.css",
-        "line": 38,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: normal;",
-        "property": "white-space"
       }
     ],
     "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/DetailsPanel.css": [
@@ -8822,14 +7614,6 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-        "line": 44,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
         "line": 57,
         "type": "hex",
         "value": "#666666",
@@ -8891,14 +7675,6 @@
         "value": "#666666",
         "context": "color: #666;",
         "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-        "line": 122,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
       },
       {
         "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
@@ -9223,14 +7999,6 @@
         "value": "rgba(0, 0, 0, 0.2)",
         "context": "box-shadow: 0 0px 3px 1px rgba(0, 0, 0, 0.2);",
         "property": "box-shadow"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
-        "line": 11,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
       },
       {
         "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
@@ -9632,22 +8400,6 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
-        "line": 33,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: normal;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
-        "line": 37,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
         "line": 41,
         "type": "hex",
         "value": "#cc0000",
@@ -9715,14 +8467,6 @@
         "value": "#ffffff",
         "context": "background: #fff;",
         "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
-        "line": 10,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
       },
       {
         "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
@@ -10268,14 +9012,6 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/TracePage/TraceSpanView/index.css",
-        "line": 21,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceSpanView/index.css",
         "line": 32,
         "type": "named",
         "value": "white",
@@ -10378,14 +9114,6 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/index.css",
-        "line": 15,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre-wrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/index.css",
         "line": 31,
         "type": "named",
         "value": "teal",
@@ -10470,14 +9198,6 @@
       },
       {
         "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBar.css",
-        "line": 74,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBar.css",
         "line": 89,
         "type": "hex",
         "value": "#000000",
@@ -10509,14 +9229,6 @@
         "value": "#fffce4",
         "context": "background-color: #fffce4;",
         "property": "background-color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
-        "line": 12,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
       },
       {
         "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
@@ -10778,14 +9490,6 @@
     "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css": [
       {
         "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
-        "line": 11,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
         "line": 15,
         "type": "hex",
         "value": "#e8e8e8",
@@ -10928,14 +9632,6 @@
     "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css": [
       {
         "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css",
-        "line": 11,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css",
         "line": 15,
         "type": "hex",
         "value": "#e8e8e8",
@@ -11057,22 +9753,6 @@
         "value": "#888888",
         "context": "color: #888;",
         "property": "color"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
-        "line": 28,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre;",
-        "property": "white-space"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
-        "line": 39,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
       }
     ],
     "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/TextList.css": [
@@ -11129,25 +9809,9 @@
         "value": "#d8d8d8",
         "context": "background: #d8d8d8;",
         "property": "background"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/Ticks.css",
-        "line": 24,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
       }
     ],
     "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css": [
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css",
-        "line": 15,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: pre;",
-        "property": "white-space"
-      },
       {
         "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css",
         "line": 20,
@@ -11181,14 +9845,6 @@
         "value": "#cccccc",
         "context": "border-bottom: 1px solid #ccc;",
         "property": "border-bottom"
-      },
-      {
-        "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.css",
-        "line": 21,
-        "type": "named",
-        "value": "white",
-        "context": "white-space: nowrap;",
-        "property": "white-space"
       }
     ],
     "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css": [
@@ -11308,14 +9964,6 @@
   },
   "allFindings": [
     {
-      "file": "packages/jaeger-ui/src/components/common/BreakableText.css",
-      "line": 8,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: pre;",
-      "property": "white-space"
-    },
-    {
       "file": "packages/jaeger-ui/src/components/common/DetailsCard/DetailTableDropdown.css",
       "line": 7,
       "type": "named",
@@ -11364,14 +10012,6 @@
       "property": "background"
     },
     {
-      "file": "packages/jaeger-ui/src/components/common/DetailsCard/DetailTableDropdown.css",
-      "line": 48,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
-    },
-    {
       "file": "packages/jaeger-ui/src/components/common/DetailsCard/index.css",
       "line": 38,
       "type": "hex",
@@ -11402,22 +10042,6 @@
       "value": "rgba(0, 0, 0, 0.07)",
       "context": "stroke: rgba(0, 0, 0, 0.07);",
       "property": "stroke"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/ErrorMessage.css",
-      "line": 45,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/ErrorMessage.css",
-      "line": 52,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: pre;",
-      "property": "white-space"
     },
     {
       "file": "packages/jaeger-ui/src/components/common/FilteredList/index.css",
@@ -11474,14 +10098,6 @@
       "value": "#119999",
       "context": "outline: 1px solid #199;",
       "property": "outline"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
-      "line": 11,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
     },
     {
       "file": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
@@ -11578,246 +10194,6 @@
       "value": "#eb2f96",
       "context": "color: #eb2f96;",
       "property": "color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 16,
-      "type": "hex",
-      "value": "#fff2e888",
-      "context": "background: #fff2e888;",
-      "property": "background"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 17,
-      "type": "hex",
-      "value": "#ffbb96",
-      "context": "border-color: #ffbb96;",
-      "property": "border-color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 18,
-      "type": "hex",
-      "value": "#fff2e888",
-      "context": "outline-color: #fff2e888;",
-      "property": "outline-color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 22,
-      "type": "hex",
-      "value": "#fff2e8",
-      "context": "background: #fff2e8;",
-      "property": "background"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 23,
-      "type": "hex",
-      "value": "#ff9c6e",
-      "context": "border-color: #ff9c6e;",
-      "property": "border-color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 24,
-      "type": "hex",
-      "value": "#fff2e8",
-      "context": "outline-color: #fff2e8;",
-      "property": "outline-color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 28,
-      "type": "hex",
-      "value": "#f4f4f4",
-      "context": "background: #f4f4f4;",
-      "property": "background"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 29,
-      "type": "hex",
-      "value": "#cccccc",
-      "context": "border-color: #ccc;",
-      "property": "border-color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 31,
-      "type": "hex",
-      "value": "#f4f4f4",
-      "context": "outline-color: #f4f4f4;",
-      "property": "outline-color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 35,
-      "type": "hex",
-      "value": "#dddddd",
-      "context": "background: #ddd;",
-      "property": "background"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 36,
-      "type": "hex",
-      "value": "#bbbbbb",
-      "context": "border-color: #bbb;",
-      "property": "border-color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 38,
-      "type": "hex",
-      "value": "#dddddd",
-      "context": "outline-color: #ddd;",
-      "property": "outline-color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 65,
-      "type": "hex",
-      "value": "#999999",
-      "context": "border: 1px solid #999;",
-      "property": "border"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 67,
-      "type": "hex",
-      "value": "#bbbbbb",
-      "context": "background: #bbb;",
-      "property": "background"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
-      "line": 71,
-      "type": "hex",
-      "value": "#cccccc",
-      "context": "border: 1px solid #ccc;",
-      "property": "border"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 39,
-      "type": "hex",
-      "value": "#f5f5f5",
-      "context": "background-color: #f5f5f5;",
-      "property": "background-color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 40,
-      "type": "hex",
-      "value": "#e6e6e6",
-      "context": "border: 1px solid #e6e6e6;",
-      "property": "border"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 52,
-      "type": "rgb",
-      "value": "rgba(0, 0, 0, 0.03)",
-      "context": "background: rgba(0, 0, 0, 0.03);",
-      "property": "background"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 56,
-      "type": "rgb",
-      "value": "rgba(0, 0, 0, 0.13)",
-      "context": "border-left: 1px solid rgba(0, 0, 0, 0.13);",
-      "property": "border-left"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 60,
-      "type": "rgb",
-      "value": "rgba(0, 0, 0, 0.13)",
-      "context": "border-top: 1px solid rgba(0, 0, 0, 0.13);",
-      "property": "border-top"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 64,
-      "type": "rgb",
-      "value": "rgba(0, 0, 0, 0.2)",
-      "context": "background: rgba(0, 0, 0, 0.2);",
-      "property": "background"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 68,
-      "type": "rgb",
-      "value": "rgba(0, 0, 0, 0.35)",
-      "context": "background: rgba(0, 0, 0, 0.35);",
-      "property": "background"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 72,
-      "type": "rgb",
-      "value": "rgba(0, 0, 0, 0.15)",
-      "context": "background: rgba(0, 0, 0, 0.15);",
-      "property": "background"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 93,
-      "type": "hex",
-      "value": "#999999",
-      "context": "background: #999;",
-      "property": "background"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 94,
-      "type": "rgb",
-      "value": "rgba(0, 0, 0, 0.3)",
-      "context": "box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);",
-      "property": "box-shadow"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 107,
-      "type": "hex",
-      "value": "#777777",
-      "context": "outline: 1px solid #777;",
-      "property": "outline"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 118,
-      "type": "hex",
-      "value": "#cccccc",
-      "context": "background: #ccc;",
-      "property": "background"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 123,
-      "type": "hex",
-      "value": "#cccccc",
-      "context": "background: #ccc;",
-      "property": "background"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 124,
-      "type": "hex",
-      "value": "#444444",
-      "context": "color: #444;",
-      "property": "color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/common/utils.css",
-      "line": 132,
-      "type": "hex",
-      "value": "#dddddd",
-      "context": "background: #ddd;",
-      "property": "background"
     },
     {
       "file": "packages/jaeger-ui/src/components/DeepDependencies/Graph/DdgNodeContent/index.css",
@@ -12117,7 +10493,7 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-      "line": 46,
+      "line": 63,
       "type": "hex",
       "value": "#ffffff",
       "context": "background-color: #fff;",
@@ -12125,7 +10501,7 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-      "line": 47,
+      "line": 64,
       "type": "hex",
       "value": "#eeeeee",
       "context": "border-left: 1px solid #eee;",
@@ -12133,7 +10509,7 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-      "line": 48,
+      "line": 65,
       "type": "hex",
       "value": "#eeeeee",
       "context": "border-right: 1px solid #eee;",
@@ -12141,7 +10517,7 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-      "line": 49,
+      "line": 66,
       "type": "hex",
       "value": "#bbbbbb",
       "context": "color: #bbb;",
@@ -12149,7 +10525,7 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-      "line": 74,
+      "line": 91,
       "type": "hex",
       "value": "#ffffb8",
       "context": "background: #ffffb8;",
@@ -12157,7 +10533,7 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-      "line": 75,
+      "line": 92,
       "type": "hex",
       "value": "#fadb14",
       "context": "border: 1px dashed #fadb14;",
@@ -12165,7 +10541,7 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-      "line": 77,
+      "line": 94,
       "type": "hex",
       "value": "#ad8b00",
       "context": "color: #ad8b00;",
@@ -12173,27 +10549,11 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-      "line": 81,
+      "line": 98,
       "type": "hex",
       "value": "#666666",
       "context": "stroke: #666;",
       "property": "stroke"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-      "line": 85,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
-      "line": 100,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
     },
     {
       "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/index.css",
@@ -12202,14 +10562,6 @@
       "value": "#999999",
       "context": "color: #999;",
       "property": "color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/index.css",
-      "line": 38,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: normal;",
-      "property": "white-space"
     },
     {
       "file": "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/DetailsPanel.css",
@@ -12541,14 +10893,6 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-      "line": 44,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
       "line": 57,
       "type": "hex",
       "value": "#666666",
@@ -12610,14 +10954,6 @@
       "value": "#666666",
       "context": "color: #666;",
       "property": "color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
-      "line": 122,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
     },
     {
       "file": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
@@ -12922,14 +11258,6 @@
       "value": "rgba(0, 0, 0, 0.2)",
       "context": "box-shadow: 0 0px 3px 1px rgba(0, 0, 0, 0.2);",
       "property": "box-shadow"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
-      "line": 11,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
     },
     {
       "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
@@ -13325,22 +11653,6 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
-      "line": 33,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: normal;",
-      "property": "white-space"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
-      "line": 37,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
       "line": 41,
       "type": "hex",
       "value": "#cc0000",
@@ -13402,14 +11714,6 @@
       "value": "#ffffff",
       "context": "background: #fff;",
       "property": "background"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
-      "line": 10,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
     },
     {
       "file": "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
@@ -13933,14 +12237,6 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/TracePage/TraceSpanView/index.css",
-      "line": 21,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/TracePage/TraceSpanView/index.css",
       "line": 32,
       "type": "named",
       "value": "white",
@@ -14037,14 +12333,6 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/index.css",
-      "line": 15,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: pre-wrap;",
-      "property": "white-space"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/index.css",
       "line": 31,
       "type": "named",
       "value": "teal",
@@ -14125,14 +12413,6 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBar.css",
-      "line": 74,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBar.css",
       "line": 89,
       "type": "hex",
       "value": "#000000",
@@ -14162,14 +12442,6 @@
       "value": "#fffce4",
       "context": "background-color: #fffce4;",
       "property": "background-color"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
-      "line": 12,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
     },
     {
       "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
@@ -14429,14 +12701,6 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
-      "line": 11,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
       "line": 15,
       "type": "hex",
       "value": "#e8e8e8",
@@ -14573,14 +12837,6 @@
     },
     {
       "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css",
-      "line": 11,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css",
       "line": 15,
       "type": "hex",
       "value": "#e8e8e8",
@@ -14700,22 +12956,6 @@
       "property": "color"
     },
     {
-      "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
-      "line": 28,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: pre;",
-      "property": "white-space"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
-      "line": 39,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
-    },
-    {
       "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/TextList.css",
       "line": 19,
       "type": "hex",
@@ -14764,22 +13004,6 @@
       "property": "background"
     },
     {
-      "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/Ticks.css",
-      "line": 24,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css",
-      "line": 15,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: pre;",
-      "property": "white-space"
-    },
-    {
       "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css",
       "line": 20,
       "type": "rgb",
@@ -14810,14 +13034,6 @@
       "value": "#cccccc",
       "context": "border-bottom: 1px solid #ccc;",
       "property": "border-bottom"
-    },
-    {
-      "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.css",
-      "line": 21,
-      "type": "named",
-      "value": "white",
-      "context": "white-space: nowrap;",
-      "property": "white-space"
     },
     {
       "file": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css",
