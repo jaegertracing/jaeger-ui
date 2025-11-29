@@ -17,6 +17,35 @@ jest.mock('../../utils/configure-store', () => ({
   store: {},
 }));
 
+jest.mock('antd', () => {
+  const actual = jest.requireActual('antd');
+
+  const Menu = ({ items = [], selectedKeys = [] }) => (
+    <nav data-testid="mock-menu" data-selectedkeys={JSON.stringify(selectedKeys)}>
+      {items.map(item => (
+        <div data-testid="mock-menu-item" key={item?.key || item?.label} data-key={item?.key || item?.label}>
+          {item?.label}
+        </div>
+      ))}
+    </nav>
+  );
+
+  const Dropdown = ({ menu, children }) => (
+    <div data-testid="mock-dropdown">
+      {children}
+      <div data-testid="mock-dropdown-menu">
+        {menu?.items?.map(entry => (
+          <div key={entry?.key || entry?.label} data-disabled={entry?.disabled ? 'true' : 'false'}>
+            {entry?.label}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return { ...actual, Menu, Dropdown };
+});
+
 jest.mock('../../utils/config/get-config', () => {
   return {
     __esModule: true,
@@ -86,7 +115,7 @@ describe('<TopNav>', () => {
       ],
     },
     router: {
-      location: { location: { pathname: 'some-path' } },
+      location: { pathname: '/search' },
     },
     traceDiff: {},
   };
@@ -131,6 +160,11 @@ describe('<TopNav>', () => {
       const item = screen.getByRole('link', { name: 'Quality' });
       expect(item).toBeInTheDocument();
     });
+
+    it('renders the theme toggle button', () => {
+      const toggle = screen.getByRole('button', { name: /toggle color mode/i });
+      expect(toggle).toBeInTheDocument();
+    });
   });
 
   describe('renders the custom menu', () => {
@@ -172,22 +206,79 @@ describe('<TopNav>', () => {
 
     describe('<CustomNavDropdown>', () => {
       it('renders sub-menu text', () => {
-        dropdownItems.slice(0, 0).forEach(itemConfig => {
-          const item = screen.getByText(itemConfig.label);
-          expect(item).toBeInTheDocument();
-          expect(item.disabled).toBe(true);
+        dropdownItems.slice(0, 1).forEach(itemConfig => {
+          const dropdownEntry = screen.getByText(itemConfig.label).closest('[data-disabled]');
+          expect(dropdownEntry).toHaveAttribute('data-disabled', 'true');
         });
       });
 
       it('renders sub-menu links', () => {
         dropdownItems.slice(1, 2).forEach(itemConfig => {
-          const item = screen.getByRole('link', { name: itemConfig.label });
+          const matches = screen.getAllByRole('link', { name: itemConfig.label });
+          const item = matches[matches.length - 1];
           expect(item).toBeInTheDocument();
           expect(item.href).toBe(itemConfig.url);
           expect(item.target).toBe(itemConfig.anchorTarget || '_blank');
         });
       });
     });
+  });
+
+  it('highlights the nav item matching the current pathname', () => {
+    render(
+      <BrowserRouter>
+        <CompatRouter>
+          <TopNav {...defaultProps} />
+        </CompatRouter>
+      </BrowserRouter>
+    );
+
+    const navMenu = screen.getAllByTestId('mock-menu')[0];
+    expect(navMenu).toHaveAttribute('data-selectedkeys', JSON.stringify(['/search']));
+  });
+
+  it('builds the Compare link using the trace diff cohort state', () => {
+    render(
+      <BrowserRouter>
+        <CompatRouter>
+          <TopNav
+            {...{
+              ...defaultProps,
+              traceDiff: { cohort: ['trace-a', 'trace-b'] },
+            }}
+          />
+        </CompatRouter>
+      </BrowserRouter>
+    );
+
+    const compareLink = screen.getByRole('link', { name: 'Compare' });
+    expect(compareLink.href).toContain('/trace/trace-a...trace-b');
+    expect(compareLink.href).toContain('cohort=trace-a');
+    expect(compareLink.href).toContain('cohort=trace-b');
+  });
+
+  it('renders the Monitor navigation link when enabled', () => {
+    render(
+      <BrowserRouter>
+        <CompatRouter>
+          <TopNav {...defaultProps} />
+        </CompatRouter>
+      </BrowserRouter>
+    );
+
+    expect(screen.getByRole('link', { name: 'Monitor' })).toBeInTheDocument();
+  });
+
+  it('includes the Trace ID search control in the right-side menu', () => {
+    render(
+      <BrowserRouter>
+        <CompatRouter>
+          <TopNav {...defaultProps} />
+        </CompatRouter>
+      </BrowserRouter>
+    );
+
+    expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
   });
 });
 

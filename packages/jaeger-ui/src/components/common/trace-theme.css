@@ -1,0 +1,87 @@
+/*
+Copyright (c) 2025 The Jaeger Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/* Shared trace-specific CSS variables to ensure availability in all bundles */
+
+:root {
+  --trace-surface-primary: #ffffff;
+  --trace-surface-secondary: #f8f8f8;
+  --trace-surface-tertiary: #f5f5f5;
+  --trace-surface-contrast: #f0f0f0;
+  --trace-surface-muted: #e8e8e8;
+  --trace-surface-divider: #ececec;
+  --trace-panel-bg: #fafafa;
+  --trace-panel-strong-bg: #fff7e6;
+  --trace-panel-strong-hover: #ffe7ba;
+  --trace-highlight-soft: #fffce4;
+  --trace-highlight-strong: #fff3d7;
+  --trace-highlight-intense: #ffeccf;
+  --trace-border-soft: #ddd;
+  --trace-border-strong: #bbb;
+  --trace-gridline: #d8d8d8;
+  --trace-debug-label: #bbb;
+  --trace-debug-value: #888;
+  --trace-debug-value-hover: #333;
+  --trace-text-primary: rgba(0, 0, 0, 0.85);
+  --trace-text-muted: rgba(0, 0, 0, 0.65);
+  --trace-text-label: #aaa;
+  --trace-text-contrast: #000;
+  --trace-log-marker: rgba(0, 0, 0, 0.5);
+  --trace-log-marker-hover: #000;
+  --trace-warning-accent: #d36c08;
+  --trace-overlay-ghost: rgba(0, 0, 0, 0.08);
+  --trace-overlay-ghost-strong: rgba(0, 0, 0, 0.18);
+  --trace-handle-default: rgba(0, 0, 0, 0.65);
+  --trace-handle-active: #1976d2;
+  --trace-accent-primary: #119999;
+  --trace-accent-primary-hover: #0d6f6f;
+  --trace-accent-contrast: #ffffff;
+}
+
+body[data-theme='dark'] {
+  --trace-surface-primary: rgba(7, 12, 24, 0.92);
+  --trace-surface-secondary: rgba(12, 20, 36, 0.92);
+  --trace-surface-tertiary: rgba(19, 30, 52, 0.95);
+  --trace-surface-contrast: rgba(27, 42, 67, 0.95);
+  --trace-surface-muted: rgba(33, 51, 78, 0.95);
+  --trace-surface-divider: rgba(5, 11, 22, 0.95);
+  --trace-panel-bg: rgba(12, 20, 36, 0.95);
+  --trace-panel-strong-bg: rgba(255, 188, 92, 0.16);
+  --trace-panel-strong-hover: rgba(255, 188, 92, 0.25);
+  --trace-highlight-soft: rgba(255, 193, 71, 0.22);
+  --trace-highlight-strong: rgba(255, 193, 71, 0.3);
+  --trace-highlight-intense: rgba(255, 193, 71, 0.38);
+  --trace-border-soft: rgba(255, 255, 255, 0.08);
+  --trace-border-strong: rgba(255, 255, 255, 0.18);
+  --trace-gridline: rgba(255, 255, 255, 0.12);
+  --trace-debug-label: rgba(255, 255, 255, 0.5);
+  --trace-debug-value: rgba(255, 255, 255, 0.75);
+  --trace-debug-value-hover: rgba(255, 255, 255, 0.95);
+  --trace-text-primary: rgba(255, 255, 255, 0.95);
+  --trace-text-muted: rgba(255, 255, 255, 0.7);
+  --trace-text-label: rgba(255, 255, 255, 0.65);
+  --trace-text-contrast: rgba(255, 255, 255, 0.98);
+  --trace-log-marker: rgba(255, 255, 255, 0.65);
+  --trace-log-marker-hover: rgba(255, 255, 255, 0.95);
+  --trace-warning-accent: #ffb76b;
+  --trace-overlay-ghost: rgba(255, 255, 255, 0.15);
+  --trace-overlay-ghost-strong: rgba(255, 255, 255, 0.3);
+  --trace-handle-default: rgba(255, 255, 255, 0.85);
+  --trace-handle-active: #4dd0e1;
+  --trace-accent-primary: #4dd0e1;
+  --trace-accent-primary-hover: #7bdcff;
+  --trace-accent-contrast: rgba(7, 12, 24, 0.92);
+}

@@ -5,7 +5,6 @@ import React, { Component } from 'react';
 import { Provider } from 'react-redux';
 import { Route, Redirect, Switch } from 'react-router-dom';
 
-import { ConfigProvider, theme } from 'antd';
 import NotFound from './NotFound';
 import Page from './Page';
 import DependencyGraph from '../DependencyGraph';
@@ -27,41 +26,12 @@ import processScripts from '../../utils/config/process-scripts';
 import prefixUrl from '../../utils/prefix-url';
 
 import '../common/vars.css';
+import '../common/trace-theme.css';
 import '../common/utils.css';
 import 'antd/dist/reset.css';
 import './index.css';
 import { store } from '../../utils/configure-store';
-
-const { defaultAlgorithm, defaultSeed } = theme;
-const mapToken = defaultAlgorithm(defaultSeed); // Generate the base MapToken (the internal raw tokens)
-
-const jaegerTheme = {
-  token: {
-    ...mapToken,
-    colorPrimary: '#199',
-  },
-  components: {
-    Layout: {
-      bodyBg: '#fff',
-      headerBg: '#404040',
-      footerBg: '#fff',
-      headerHeight: 48,
-      headerPadding: '0 50',
-      footerPadding: '24 50',
-      siderBg: '#404040',
-      triggerHeight: 48,
-      triggerBg: 'tint(#fff, 20%)',
-      zeroTriggerWidth: 36,
-      zeroTriggerHeight: 42,
-    },
-    Menu: {
-      darkItemBg: '#151515',
-    },
-    Table: {
-      rowHoverBg: '#e5f2f2',
-    },
-  },
-};
+import AppThemeProvider from './ThemeProvider';
 
 export default class JaegerUIApp extends Component {
   constructor(props) {
@@ -72,7 +42,7 @@ export default class JaegerUIApp extends Component {
 
   render() {
     return (
-      <ConfigProvider theme={jaegerTheme}>
+      <AppThemeProvider>
         <Provider store={store}>
           <Page>
             <Switch>
@@ -114,7 +84,7 @@ export default class JaegerUIApp extends Component {
             </Switch>
           </Page>
         </Provider>
-      </ConfigProvider>
+      </AppThemeProvider>
     );
   }
 }
