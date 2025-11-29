@@ -1,34 +1,23 @@
 /*
 Copyright (c) 2017 Uber Technologies, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+SPDX-License-Identifier: Apache-2.0
 */
 
 .AccordianLogs {
-  border: 1px solid var(--trace-border-soft, #d8d8d8);
+  border: 1px solid #d8d8d8;
   position: relative;
   margin-bottom: 0.25rem;
 }
 
 .AccordianLogs--header {
-  background: var(--trace-surface-muted, #e4e4e4);
+  background: #e4e4e4;
   color: inherit;
   display: block;
   padding: 0.25rem 0.5rem;
 }
 
 .AccordianLogs--header:hover {
-  background: var(--trace-surface-contrast, #dadada);
+  background: #dadada;
 }
 
 .AccordianLogs--toggle {
@@ -40,11 +29,11 @@ limitations under the License.
 }
 
 .AccordianLogs--content {
-  background: var(--trace-surface-contrast, #f0f0f0);
-  border-top: 1px solid var(--trace-border-soft, #d8d8d8);
+  background: #f0f0f0;
+  border-top: 1px solid #d8d8d8;
   padding: 0.5rem 0.5rem 0.25rem 0.5rem;
 }
 
 .AccordianLogs--footer {
-  color: var(--trace-text-muted, #999);
+  color: #999;
 }

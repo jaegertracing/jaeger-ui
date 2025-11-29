@@ -1,16 +1,5 @@
 // Copyright (c) 2025 The Jaeger Authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
@@ -187,7 +176,10 @@ describe('DAGOptions', () => {
     const selectElement = within(layoutSelect).getByRole('combobox');
     fireEvent.mouseDown(selectElement);
 
-    const hierarchicalOption = screen.getByTestId('layout-option-dot');
+    const hierarchicalOptions = screen.getAllByTestId('layout-option-dot');
+    const hierarchicalOption = hierarchicalOptions.find(option =>
+      option.classList.contains('ant-select-item-option-disabled')
+    );
     expect(hierarchicalOption).toHaveClass('ant-select-item-option-disabled');
     const optionContent = hierarchicalOption.querySelector('.ant-select-item-option-content');
     expect(optionContent).toHaveTextContent('Hierarchical Layout');

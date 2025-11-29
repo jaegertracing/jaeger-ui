@@ -1,53 +1,10 @@
 /*
 Copyright (c) 2017 Uber Technologies, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+SPDX-License-Identifier: Apache-2.0
 */
-
-.FileLoader--dragger {
-  border: 2px dashed rgba(9, 28, 55, 0.25) !important;
-  border-radius: 20px !important;
-  background: linear-gradient(135deg, rgba(237, 246, 255, 0.94), rgba(223, 242, 255, 0.9)) !important;
-  padding: 2rem 1rem !important;
-  color: rgba(6, 25, 55, 0.85) !important;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease;
-}
-
-body[data-theme='dark'] .FileLoader--dragger {
-  border-color: rgba(123, 220, 255, 0.35) !important;
-  background: linear-gradient(135deg, rgba(4, 10, 24, 0.98), rgba(8, 18, 36, 0.94)) !important;
-  color: rgba(231, 242, 255, 0.9) !important;
-  box-shadow: inset 0 0 0 1px rgba(123, 220, 255, 0.15);
-}
-
-.FileLoader--dragger .ant-upload-text,
-.FileLoader--dragger .ant-upload-hint {
-  color: inherit !important;
-}
-
-.FileLoader--dragger .ant-upload.ant-upload-drag:not(.ant-upload-disabled):hover {
-  border-color: #0b7ad1;
-}
-
-body[data-theme='dark'] .FileLoader--dragger .ant-upload.ant-upload-drag:not(.ant-upload-disabled):hover {
-  border-color: #7bdcff;
-}
 
 .Dragger--icon {
   font-size: 56px;
-  color: inherit;
+  color: var(--interactive-secondary);
   margin: 10px 0;
 }

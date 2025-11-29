@@ -1,21 +1,10 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import _range from 'lodash/range';
 
 import renderIntoCanvas, {
-  DEFAULT_BG_COLOR,
+  BG_COLOR,
   ITEM_ALPHA,
   MIN_ITEM_HEIGHT,
   MAX_TOTAL_HEIGHT,
@@ -25,8 +14,8 @@ import renderIntoCanvas, {
 } from './render-into-canvas';
 
 const getCanvasWidth = () => window.innerWidth * 2;
-const getBgFillRect = (items, color = DEFAULT_BG_COLOR) => ({
-  fillStyle: color,
+const getBgFillRect = items => ({
+  fillStyle: BG_COLOR,
   height:
     !items || items.length < MIN_TOTAL_HEIGHT ? MIN_TOTAL_HEIGHT : Math.min(MAX_TOTAL_HEIGHT, items.length),
   width: getCanvasWidth(),
@@ -111,13 +100,6 @@ describe('renderIntoCanvas()', () => {
       expect(canvas.getContext.mock.calls).toEqual([['2d', { alpha: false }]]);
       expect(canvas.contexts.length).toBe(1);
       expect(canvas.contexts[0].fillRectAccumulator).toEqual(expectedDrawing);
-    });
-
-    it('allows overriding the background color', () => {
-      const customColor = '#123456';
-      const canvas = new Canvas();
-      renderIntoCanvas(canvas, [basicItem], 150, getColorFactory(), customColor);
-      expect(canvas.contexts[0].fillRectAccumulator[0]).toEqual(getBgFillRect(undefined, customColor));
     });
 
     it('draws the map', () => {

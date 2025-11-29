@@ -1,27 +1,115 @@
 /*
-Copyright (c) 2018 Uber Technologies, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Copyright (c) 2025 Jaeger Authors
+SPDX-License-Identifier: Apache-2.0
 */
 
-:root {
-  --tx-color-title: rgba(0, 0, 0, 0.85);
-  --tx-color-body: rgba(0, 0, 0, 0.65);
-  --tx-color-muted: #aaa;
-}
+/**
+ * Centralized CSS Variables for Theming
+ * 
+ * This file contains all color and layout variables used throughout the application.
+ * New naming scheme follows semantic conventions for better maintainability.
+ */
 
-body[data-theme='dark'] {
-  --tx-color-title: rgba(255, 255, 255, 0.95);
-  --tx-color-body: rgba(255, 255, 255, 0.82);
-  --tx-color-muted: rgba(255, 255, 255, 0.55);
+:root {
+  /* ============================================
+    SURFACE TOKENS (Backgrounds)
+    Based on audit of background/background-color properties
+    ============================================ */
+
+  --surface-primary: #ffffff;
+  --surface-secondary: #f5f5f5;
+  --surface-tertiary: #fafafa;
+  --surface-overlay: rgba(0, 0, 0, 0.5);
+
+  /* dedicated, specific UI element (like the Minimap, a Modal, or a complex panel) */
+  --surface-component-item-background: #999;
+  --surface-component-background: #cccccc;
+  --surface-component-background-hover: #dddddd;
+
+  /* ============================================
+    TEXT TOKENS
+    Based on audit of color property
+    ============================================ */
+
+  --text-primary: rgba(0, 0, 0, 0.85);
+  --text-secondary: rgba(0, 0, 0, 0.65);
+  --text-muted: #999;
+  --text-link: #11939a;
+  --text-link-hover: #00474e;
+  --text-inverse: #ffffff;
+
+  /* ============================================
+    BORDER TOKENS
+    Based on audit of border/border-color properties
+    ============================================ */
+
+  --border-default: #e6e6e6;
+  --border-subtle: rgba(0, 0, 0, 0.15);
+  --border-strong: #d3d3d3;
+  --border-strongest: #777;
+  --border-component-subtle: rgba(0, 0, 0, 0.07);
+
+  /* ============================================
+    INTERACTIVE TOKENS (Buttons, Links, Form Controls)
+    Based on audit of interactive elements
+    ============================================ */
+
+  --interactive-primary: #11939a;
+  --interactive-primary-hover: #0d7a80;
+  --interactive-secondary: #2da6a2;
+  /* Lighter and RGB variants used by animations and shadow opacity */
+  --interactive-primary-light: #bedfdf;
+  --interactive-primary-rgb: 17, 147, 154;
+  --interactive-primary-opaque: rgba(var(--interactive-primary-rgb), 0.6);
+
+  /* ============================================
+    FEEDBACK TOKENS (Alerts, Notifications)
+    ============================================ */
+
+  --feedback-error: #db2828;
+  --feedback-warning: #f2711c;
+  --feedback-success: #21ba45;
+  --feedback-info: #2185d0;
+
+  /* ============================================
+    SHADOW TOKENS
+    Based on audit of box-shadow property
+    ============================================ */
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.14);
+  /* centered, strong glow effect on components */
+  --shadow-component-focus: 0px 0px 5px rgba(0, 0, 0, 0.3);
+
+  /* ============================================
+    SPECIAL PURPOSE TOKENS
+    Based on unique component needs
+    ============================================ */
+
+  /* Layout Variables */
+  --nav-height: 48px;
+
+  /* Trace visualization colors (programmatic - review in Phase 0.4) */
+  --trace-color-1: #2b8cbe;
+  --trace-color-2: #33a02c;
+  --trace-color-3: #e31a1c;
+  --trace-color-4: #ff7f00;
+  --trace-color-5: #6a3d9a;
+
+  /* ============================================
+    HELPER & SMALL-SCOPE TOKENS
+    Tokens used by common components for subtle states
+    ============================================ */
+
+  /* Background used when dragging resizers (very subtle tint of interactive color) */
+  --resizer-drag-bg: rgba(var(--interactive-primary-rgb), 0.05);
+
+  /* Scrollbar Thumb Tokens (Subtle/Utility Control) */
+  --control-subtle-default: rgba(0, 0, 0, 0.2);
+  --control-subtle-hover: rgba(0, 0, 0, 0.35);
+  --control-subtle-muted: rgba(0, 0, 0, 0.15);
+
+  /* Trace Graph */
+  --trace-emphasis-highlight: #fff3d7;
 }

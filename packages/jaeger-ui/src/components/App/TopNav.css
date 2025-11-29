@@ -1,31 +1,19 @@
 /*
 Copyright (c) 2017 Uber Technologies, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+SPDX-License-Identifier: Apache-2.0
 */
 
 .Dropdown--icon-container {
   display: flex;
-  color: white;
+  color: var(--text-inverse);
   margin-right: 30px;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 .Dropdown--icon-container:hover {
-  color: white;
+  color: var(--text-inverse);
 }
 
 .Dropdown--icon-container .Dropdown--icon {
@@ -33,8 +21,7 @@ limitations under the License.
 }
 
 .Menu--item .ant-menu-title-content {
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: var(--text-inverse);
 }
 
 .Menu--item {
@@ -69,43 +56,4 @@ limitations under the License.
 
 .ThemeToggleButton--label {
   font-size: 11px;
-}
-
-body[data-theme='light'] .ThemeToggleButton {
-  color: #06345c !important;
-  border-color: rgba(5, 52, 92, 0.3) !important;
-  background: rgba(255, 255, 255, 0.9) !important;
-  text-shadow: none;
-  box-shadow: 0 3px 9px rgba(14, 79, 136, 0.18);
-}
-
-body[data-theme='dark'] .ant-dropdown-menu {
-  background: var(--trace-surface-contrast, rgba(9, 18, 34, 0.96));
-  border: 1px solid var(--trace-border-soft, rgba(255, 255, 255, 0.15));
-  box-shadow:
-    0 18px 40px var(--trace-overlay-ghost-strong, rgba(0, 0, 0, 0.7)),
-    0 0 0 1px rgba(0, 0, 0, 0.45);
-  color: var(--trace-text-primary, rgba(255, 255, 255, 0.95));
-  backdrop-filter: blur(8px);
-}
-
-body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-item,
-body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-submenu-title {
-  color: var(--trace-text-primary, rgba(255, 255, 255, 0.92));
-}
-
-body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-item:hover,
-body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-submenu-title:hover {
-  background: var(--trace-surface-muted, rgba(33, 51, 78, 0.8));
-  color: var(--trace-text-primary, #fff);
-}
-
-body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-item-disabled,
-body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-item-disabled .ant-dropdown-menu-title-content {
-  color: var(--trace-text-muted, rgba(255, 255, 255, 0.6)) !important;
-  opacity: 1;
-}
-
-body[data-theme='dark'] .ant-dropdown-menu .ant-dropdown-menu-item-divider {
-  background-color: var(--trace-border-soft, rgba(255, 255, 255, 0.12));
 }
