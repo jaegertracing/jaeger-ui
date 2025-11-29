@@ -23,16 +23,8 @@ type TracePageSearchBarProps = {
 };
 
 export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwardedRef: React.Ref<InputRef> }) {
-  const {
-    clearSearch,
-    focusUiFindMatches,
-    forwardedRef,
-    navigable,
-    nextResult,
-    prevResult,
-    resultCount,
-    textFilter,
-  } = props;
+  const { focusUiFindMatches, forwardedRef, navigable, nextResult, prevResult, resultCount, textFilter } =
+    props;
 
   const count = textFilter ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
 
@@ -120,15 +112,6 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
             </Button>
           </>
         )}
-        <Button
-          className={cx(btnClass, 'TracePageSearchBar--ButtonClose')}
-          disabled={!textFilter}
-          htmlType="button"
-          data-testid="CloseOutlined"
-          onClick={clearSearch}
-        >
-          <IoClose />
-        </Button>
       </Input.Group>
     </div>
   );
