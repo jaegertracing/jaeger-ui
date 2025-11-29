@@ -123,10 +123,14 @@ export function TopNavImpl(props: Props) {
       }
       return { label: <CustomNavDropdown key={m.label} {...m} />, key: m.label };
     }),
-    {
-      label: <ThemeToggleButton />,
-      key: 'ThemeToggleButton',
-    },
+    ...(getConfigValue('themes.enabled')
+      ? [
+          {
+            label: <ThemeToggleButton />,
+            key: 'ThemeToggleButton',
+          },
+        ]
+      : []),
   ];
 
   return (
