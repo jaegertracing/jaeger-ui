@@ -9,6 +9,7 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
+import ThemeToggleButton from './ThemeToggleButton';
 import * as dependencyGraph from '../DependencyGraph/url';
 import * as deepDependencies from '../DeepDependencies/url';
 import * as qualityMetrics from '../QualityMetrics/url';
@@ -122,6 +123,14 @@ export function TopNavImpl(props: Props) {
       }
       return { label: <CustomNavDropdown key={m.label} {...m} />, key: m.label };
     }),
+    ...(getConfigValue('themes.enabled')
+      ? [
+          {
+            label: <ThemeToggleButton />,
+            key: 'ThemeToggleButton',
+          },
+        ]
+      : []),
   ];
 
   return (

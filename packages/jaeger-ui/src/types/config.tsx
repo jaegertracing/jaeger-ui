@@ -194,4 +194,7 @@ export type Config = {
   traceDiff?: {
     helpLink: string;
   };
+  themes: {
+    enabled: boolean;
+  };
 };

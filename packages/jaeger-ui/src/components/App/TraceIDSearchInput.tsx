@@ -32,6 +32,7 @@ const TraceIDSearchInput: React.FC = () => {
       className="TraceIDSearchInput--form"
     >
       <Input
+        className="TraceIDSearchInput--input"
         data-testid="idInput"
         name="idInput"
         placeholder="Lookup by Trace ID..."
