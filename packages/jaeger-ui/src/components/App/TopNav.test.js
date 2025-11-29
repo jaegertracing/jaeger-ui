@@ -117,6 +117,7 @@ describe('<TopNav>', () => {
     router: {
       location: { pathname: '/search' },
     },
+    pathname: '/search',
     traceDiff: {},
   };
 
