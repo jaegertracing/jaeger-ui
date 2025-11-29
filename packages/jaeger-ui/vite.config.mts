@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /* eslint-disable import/no-extraneous-dependencies */
-import { PluginOption, defineConfig } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
-import vitePluginImp from 'vite-plugin-imp';
 import path from 'path';
 
 const proxyConfig = {
@@ -31,19 +30,6 @@ export default defineConfig({
     }),
     legacy({
       targets: ['>0.5%', 'not dead', 'not ie <= 11', 'not op_mini all'],
-    }),
-    // Use vite-plugin-imp to automatically import corresponding styles
-    // each time an AntD component is used.
-    vitePluginImp({
-      libList: [
-        {
-          libName: 'antd',
-          style: name => `antd/es/${name}/style`,
-        },
-      ],
-      // vite-plugin-imp by default tries to optimize all lodash imports as well,
-      // but logs warnings in attempting to do so, so disable it.
-      exclude: ['lodash'],
     }),
   ],
   css: {

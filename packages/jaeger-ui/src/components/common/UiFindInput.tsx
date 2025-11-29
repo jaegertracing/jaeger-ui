@@ -106,6 +106,7 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
       ref={ref}
       suffix={suffix}
       value={inputValue}
+      allowClear
     />
   );
 });

@@ -68,7 +68,7 @@ describe('<TracePageSearchBar>', () => {
 
     it('renders buttons', () => {
       const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(4);
+      expect(buttons).toHaveLength(3);
 
       buttons.forEach(button => {
         expect(button).toHaveClass('TracePageSearchBar--btn');
@@ -78,27 +78,20 @@ describe('<TracePageSearchBar>', () => {
 
       const upButton = screen.getByTestId('UpOutlined');
       const downButton = screen.getByTestId('DownOutlined');
-      const closeButton = screen.getByTestId('CloseOutlined');
 
       fireEvent.click(upButton);
       expect(defaultProps.prevResult).toHaveBeenCalled();
 
       fireEvent.click(downButton);
       expect(defaultProps.nextResult).toHaveBeenCalled();
-
-      fireEvent.click(closeButton);
-      expect(defaultProps.clearSearch).toHaveBeenCalled();
     });
 
     it('hides navigation buttons when not navigable', () => {
       cleanup();
       render(<TracePageSearchBar {...defaultProps} navigable={false} />);
 
-      const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(1);
-
-      const closeButton = screen.getByTestId('CloseOutlined');
-      expect(closeButton).toBeInTheDocument();
+      const buttons = screen.queryAllByRole('button');
+      expect(buttons).toHaveLength(0);
     });
   });
 
@@ -117,7 +110,7 @@ describe('<TracePageSearchBar>', () => {
 
     it('renders buttons', () => {
       const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(4);
+      expect(buttons).toHaveLength(3);
 
       buttons.forEach(button => {
         expect(button).toHaveClass('TracePageSearchBar--btn');
