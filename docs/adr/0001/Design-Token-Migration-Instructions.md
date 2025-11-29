@@ -10,6 +10,8 @@ Here is a comprehensive set of instructions designed to guide the AI in migratin
 
 The primary goal is to replace hardcoded hexadecimal (`#fff`), RGB/A, and HSL color values with the most **semantically appropriate** CSS variable (design token) from the existing theme. **Tokenization must be based on the intended function of the style property, not just the numerical color value.**
 
+> 🛑 **CRITICAL RULE:** Do NOT replace existing CSS variables (e.g., `var(--color-name)`), even if they are used inside `rgba()`. These are already parameterized and should be preserved.
+
 ### I. Prioritize Semantic Intent over Color Value
 
 The AI must analyze the **CSS property** being set before choosing a token.
@@ -72,6 +74,8 @@ When migrating color changes for pseudo-classes (`:hover`, `:active`), a set of 
 #### B. `rgba()` and Transparency
 
 Tokens should be defined with the exact color value needed. If the original style uses `rgba(R, G, B, A)`, the token should also contain the full `rgba()` value, unless an existing RGB variable is available (e.g., `rgba(var(--interactive-primary-rgb), 0.5)`). **Do not map a transparent `rgba()` value to an opaque hex token.**
+
+> **IMPORTANT:** If the `rgba()` value is already using a CSS variable (e.g., `rgba(var(--interactive-primary-rgb), 0.5)`), **DO NOT CHANGE IT**. It is already using a token and does not need migration.
 
 ***
 
