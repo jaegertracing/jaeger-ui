@@ -1,16 +1,5 @@
 // Copyright (c) 2025 The Jaeger Authors.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ThemeConfig } from 'antd';
@@ -45,40 +34,31 @@ export function useThemeMode() {
 const lightTheme: ThemeConfig = {
   token: {
     ...defaultTheme.token,
-    colorPrimary: '#1976d2',
-    colorBgLayout: '#f5f7fb',
-    colorBgContainer: '#ffffff',
-    colorText: 'rgba(13, 30, 54, 0.9)',
-    colorTextSecondary: 'rgba(13, 30, 54, 0.68)',
-    colorBorder: '#d3ddeb',
-    colorBorderSecondary: '#e4ecf7',
-    colorLink: '#0c6ca8',
-    colorLinkHover: '#084c75',
+    colorPrimary: '#199',
   },
   components: {
     ...defaultTheme.components,
     Layout: {
-      ...defaultTheme.components?.Layout,
-      bodyBg: '#f5f7fb',
-      headerBg: 'transparent',
-      footerBg: '#f5f7fb',
+      ...defaultTheme.components.Layout,
+      bodyBg: '#fff',
+      headerBg: '#404040',
+      footerBg: '#fff',
       headerHeight: 48,
-      headerPadding: '0 40',
-      footerPadding: '24 40',
-      siderBg: '#ffffff',
+      headerPadding: '0 50',
+      footerPadding: '24 50',
+      siderBg: '#404040',
       triggerHeight: 48,
-      triggerBg: '#e4ecf7',
+      triggerBg: 'tint(#fff, 20%)',
       zeroTriggerWidth: 36,
       zeroTriggerHeight: 42,
     },
     Menu: {
-      ...defaultTheme.components?.Menu,
-      darkItemBg: 'transparent',
+      ...defaultTheme.components.Menu,
+      darkItemBg: '#151515',
     },
     Table: {
-      ...defaultTheme.components?.Table,
-      rowHoverBg: '#e6f1ff',
-      headerColor: 'rgba(13, 30, 54, 0.65)',
+      ...defaultTheme.components.Table,
+      rowHoverBg: '#e5f2f2',
     },
   },
 };
