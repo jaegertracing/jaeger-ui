@@ -47,6 +47,7 @@ SPDX-License-Identifier: Apache-2.0
   --border-subtle: rgba(0, 0, 0, 0.15);
   --border-strong: #d3d3d3;
   --border-strongest: #777;
+  --border-component-subtle: rgba(0, 0, 0, 0.07);
 
   /* ============================================
     INTERACTIVE TOKENS (Buttons, Links, Form Controls)
@@ -108,4 +109,7 @@ SPDX-License-Identifier: Apache-2.0
   --control-subtle-default: rgba(0, 0, 0, 0.2);
   --control-subtle-hover: rgba(0, 0, 0, 0.35);
   --control-subtle-muted: rgba(0, 0, 0, 0.15);
+
+  /* Trace Graph */
+  --trace-emphasis-highlight: #fff3d7;
 }

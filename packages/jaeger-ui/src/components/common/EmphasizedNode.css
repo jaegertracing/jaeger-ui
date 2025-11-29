@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .EmphasizedNode {
-  stroke: #fff3d7;
+  stroke: var(--trace-emphasis-highlight);
 }
 
 .EmphasizedNode.is-non-scaling {
@@ -16,7 +16,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .EmphasizedNode--contrast {
-  stroke: rgba(0, 0, 0, 0.07);
+  stroke: var(--border-component-subtle);
 }
 
 .EmphasizedNode--contrast.is-non-scaling {
