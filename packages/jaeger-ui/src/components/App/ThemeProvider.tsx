@@ -33,24 +33,39 @@ export function useThemeMode() {
 const { defaultAlgorithm, defaultSeed } = theme;
 const mapToken = defaultAlgorithm(defaultSeed);
 
-const lightTheme: ThemeConfig = {
-  token: {
-    ...mapToken,
-    colorPrimary: '#199',
-  },
+// The base theme customizes some dimensional properties.
+const baseThemeConfig: ThemeConfig = {
+  cssVar: {},
   components: {
     Layout: {
-      bodyBg: '#fff',
-      headerBg: '#404040',
-      footerBg: '#fff',
       headerHeight: 48,
       headerPadding: '0 50',
       footerPadding: '24 50',
-      siderBg: '#404040',
       triggerHeight: 48,
-      triggerBg: 'tint(#fff, 20%)',
       zeroTriggerWidth: 36,
       zeroTriggerHeight: 42,
+    },
+  },
+};
+
+const lightTheme: ThemeConfig = {
+  ...baseThemeConfig,
+  algorithm: theme.defaultAlgorithm,
+  token: {
+    // --- Color Palette Seeds ---
+    colorPrimary: '#199', // Your brand's single primary color
+    // --- Neutral Seeds (Optional but recommended) ---
+    colorTextBase: '#000000',
+    colorBgBase: '#ffffff',
+  },
+  components: {
+    Layout: {
+      ...baseThemeConfig.components?.Layout,
+      bodyBg: '#fff',
+      headerBg: '#404040',
+      footerBg: '#fff',
+      siderBg: '#404040',
+      triggerBg: 'tint(#fff, 20%)',
     },
     Menu: {
       darkItemBg: '#151515',
@@ -62,6 +77,8 @@ const lightTheme: ThemeConfig = {
 };
 
 const darkTheme: ThemeConfig = {
+  ...baseThemeConfig,
+  algorithm: theme.darkAlgorithm,
   token: {
     ...mapToken,
     colorPrimary: '#4dd0e1',
@@ -77,17 +94,12 @@ const darkTheme: ThemeConfig = {
   },
   components: {
     Layout: {
+      ...baseThemeConfig.components?.Layout,
       bodyBg: '#0b1625',
       headerBg: 'transparent',
       footerBg: '#0b1625',
-      headerHeight: 48,
-      headerPadding: '0 40',
-      footerPadding: '24 40',
       siderBg: '#0f1c30',
-      triggerHeight: 48,
       triggerBg: 'rgba(255, 255, 255, 0.06)',
-      zeroTriggerWidth: 36,
-      zeroTriggerHeight: 42,
     },
     Menu: {
       darkItemBg: 'transparent',
@@ -97,11 +109,6 @@ const darkTheme: ThemeConfig = {
       headerColor: 'rgba(244, 248, 255, 0.75)',
     },
   },
-};
-
-const APP_THEMES: Record<ThemeMode, ThemeConfig> = {
-  light: lightTheme,
-  dark: darkTheme,
 };
 
 function readStoredTheme(targetWindow?: Window | null): ThemeMode | null {
@@ -196,7 +203,7 @@ export default function AppThemeProvider({ children }: ThemeProviderProps) {
     [mode, setMode, toggleMode]
   );
 
-  const themeConfig: ThemeConfig = mode === 'dark' ? APP_THEMES.dark : APP_THEMES.light;
+  const themeConfig: ThemeConfig = mode === 'dark' ? darkTheme : lightTheme;
 
   return (
     <ThemeModeContext.Provider value={value}>
