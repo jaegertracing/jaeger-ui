@@ -48,6 +48,9 @@ function auditFile(filePath) {
       const matches = line.match(pattern);
       if (matches) {
         matches.forEach(value => {
+          const prop = extractProperty(line);
+          // Skip some props
+          if (prop === 'white-space') return;
           // Skip common non-color values
           if (value === 'white-space' || value === 'content') return;
 
@@ -57,7 +60,7 @@ function auditFile(filePath) {
             type,
             value: normalizeColor(value),
             context: line.trim(),
-            property: extractProperty(line),
+            property: prop,
           });
         });
       }
