@@ -23,7 +23,3 @@ SPDX-License-Identifier: Apache-2.0
 .Menu--item .ant-menu-title-content {
   color: var(--text-inverse);
 }
-
-.Menu--item {
-  background: transparent !important;
-}
