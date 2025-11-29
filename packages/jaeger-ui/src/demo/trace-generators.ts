@@ -1,23 +1,71 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import Chance from 'chance';
 
+type GeneratedSpan = {
+  spanID: string;
+  traceID: string;
+  processID: string;
+  operationName: string;
+  startTime: number;
+  duration: number;
+  flags: number;
+  tags: any[];
+  logs: any[];
+  references?: any[];
+};
+
+type GeneratedProcess = {
+  processID: string;
+  serviceName: string;
+  tags: any[];
+};
+
+type GeneratedTrace = {
+  traceID: string;
+  spans: GeneratedSpan[];
+  processes: Record<string, GeneratedProcess>;
+};
+
+type TraceOptions = {
+  numberOfSpans?: number;
+  numberOfProcesses?: number;
+  maxDepth?: number;
+  spansPerLevel?: number | null;
+};
+
+type SpanOptions = {
+  traceID?: string;
+  processes?: Record<string, GeneratedProcess>;
+  traceStartTime?: number;
+  traceEndTime?: number;
+  operations?: string[];
+};
+
+type ProcessOptions = {
+  services?: string[];
+};
+
+type TracesOptions = {
+  numberOfTraces?: number;
+};
+
+type ProcessesOptions = {
+  numberOfProcesses?: number;
+};
+
 const chance = new Chance();
 
-export const SERVICE_LIST = ['serviceA', 'serviceB', 'serviceC', 'serviceD', 'serviceE', 'serviceF'];
-export const OPERATIONS_LIST = [
+export const SERVICE_LIST: string[] = [
+  'serviceA',
+  'serviceB',
+  'serviceC',
+  'serviceD',
+  'serviceE',
+  'serviceF',
+];
+export const OPERATIONS_LIST: string[] = [
   'GET',
   'PUT',
   'POST',
@@ -28,12 +76,12 @@ export const OPERATIONS_LIST = [
   'MongoDB::update',
 ];
 
-function setupParentSpan(spans, parentSpanValues) {
+function setupParentSpan(spans: GeneratedSpan[], parentSpanValues: Partial<GeneratedSpan>): GeneratedSpan[] {
   Object.assign(spans[0], parentSpanValues);
   return spans;
 }
 
-function getParentSpanId(span, levels) {
+function getParentSpanId(span: GeneratedSpan, levels: string[][]): string | null {
   let nestingLevel = chance.integer({ min: 1, max: levels.length });
 
   // pick the correct nesting level if allocated by the levels calculation
@@ -47,21 +95,27 @@ function getParentSpanId(span, levels) {
 }
 
 /* this simulates the hierarchy created by CHILD_OF tags */
-function attachReferences(spans, depth, spansPerLevel) {
+function attachReferences(
+  spans: GeneratedSpan[],
+  depth: number,
+  spansPerLevel: number | null
+): GeneratedSpan[] {
   if (spans.length === 0) {
     return spans;
   }
-  let levels = [[spans[0].spanID]];
+  let levels: string[][] = [[spans[0].spanID]];
 
-  const duplicateLevelFilter = currentLevels => span =>
-    !currentLevels.find(level => level.indexOf(span.spanID) >= 0);
+  const duplicateLevelFilter =
+    (currentLevels: string[][]) =>
+    (span: GeneratedSpan): boolean =>
+      !currentLevels.find(level => level.indexOf(span.spanID) >= 0);
 
   while (levels.length < depth) {
     const remainingSpans = spans.filter(duplicateLevelFilter(levels));
     if (remainingSpans.length <= 0) break;
     const newLevel = chance
       .pickset(remainingSpans, spansPerLevel || chance.integer({ min: 4, max: 8 }))
-      .map(span => span.spanID);
+      .map((span: GeneratedSpan) => span.spanID);
     levels.push(newLevel);
   }
 
@@ -101,13 +155,16 @@ export default chance.mixin({
     numberOfProcesses = chance.integer({ min: 1, max: 10 }),
     maxDepth = chance.integer({ min: 1, max: 10 }),
     spansPerLevel = null,
-  }) {
+  }: TraceOptions = {}): GeneratedTrace {
     const traceID = chance.guid();
     const duration = chance.integer({ min: 10000, max: 5000000 });
     const timestamp = (new Date().getTime() - chance.integer({ min: 0, max: 1000 }) * 1000) * 1000;
 
     const processArray = chance.processes({ numberOfProcesses });
-    const processes = processArray.reduce((pMap, p) => ({ ...pMap, [p.processID]: p }), {});
+    const processes = processArray.reduce(
+      (pMap: Record<string, GeneratedProcess>, p: GeneratedProcess) => ({ ...pMap, [p.processID]: p }),
+      {}
+    );
 
     let spans = chance.n(chance.span, numberOfSpans, {
       traceID,
@@ -126,7 +183,7 @@ export default chance.mixin({
       processes,
     };
   },
-  tag() {
+  tag(): any {
     return {
       key: 'http.url',
       type: 'String',
@@ -139,7 +196,7 @@ export default chance.mixin({
     traceStartTime = chance.timestamp() * 1000 * 1000,
     traceEndTime = traceStartTime + 100000,
     operations = OPERATIONS_LIST,
-  }) {
+  }: SpanOptions = {}): GeneratedSpan {
     const startTime = chance.integer({
       min: traceStartTime,
       max: traceEndTime - 1,
@@ -158,20 +215,22 @@ export default chance.mixin({
       logs: [],
     };
   },
-  process({ services = SERVICE_LIST }) {
+  process({ services = SERVICE_LIST }: ProcessOptions = {}): GeneratedProcess {
     return {
       processID: chance.guid(),
       serviceName: chance.pickone(services),
       tags: chance.tags(),
     };
   },
-  traces({ numberOfTraces = chance.integer({ min: 5, max: 15 }) }) {
+  traces({ numberOfTraces = chance.integer({ min: 5, max: 15 }) }: TracesOptions = {}): GeneratedTrace[] {
     return chance.n(chance.trace, numberOfTraces, {});
   },
-  tags() {
+  tags(): any[] {
     return chance.n(chance.tag, chance.integer({ min: 1, max: 10 }), {});
   },
-  processes({ numberOfProcesses = chance.integer({ min: 1, max: 25 }) }) {
+  processes({
+    numberOfProcesses = chance.integer({ min: 1, max: 25 }),
+  }: ProcessesOptions = {}): GeneratedProcess[] {
     return chance.n(chance.process, numberOfProcesses, {});
   },
 });
