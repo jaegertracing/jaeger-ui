@@ -106,7 +106,7 @@ function main() {
   console.log('');
 
   // Scan all CSS files
-  const cssFiles = glob.sync('packages/jaeger-ui/src/**/*.css');
+  const cssFiles = glob.sync('packages/*/src/**/*.css');
   console.log(`Scanning ${cssFiles.length} CSS files...\n`);
 
   const allFindings = cssFiles.flatMap(auditFile);
