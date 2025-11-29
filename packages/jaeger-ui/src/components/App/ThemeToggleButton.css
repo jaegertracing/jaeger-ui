@@ -15,6 +15,7 @@ SPDX-License-Identifier: Apache-2.0
   border: 1px solid var(--border-default) !important;
   color: var(--text-inverse) !important;
   /*background: rgba(7, 14, 26, 0.3) !important;*/
+  height: 30px;
 }
 
 .ThemeToggleButton:hover {
