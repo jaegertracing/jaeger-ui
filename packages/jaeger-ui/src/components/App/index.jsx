@@ -26,7 +26,6 @@ import processScripts from '../../utils/config/process-scripts';
 import prefixUrl from '../../utils/prefix-url';
 
 import '../common/vars.css';
-import '../common/trace-theme.css';
 import '../common/utils.css';
 import 'antd/dist/reset.css';
 import './index.css';
