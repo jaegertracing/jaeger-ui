@@ -10,8 +10,11 @@
 // See the comment on `getVersion(..)` function below for details.
 // See also packages/jaeger-ui/src/utils/tracking/README.md
 
-const spawnSync = require('child_process').spawnSync;
+import { spawnSync } from 'child_process';
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
 
+const require = createRequire(import.meta.url);
 const version = require('../package.json').version;
 
 function cleanRemoteUrl(url) {
@@ -124,9 +127,9 @@ function getVersion(cwd) {
   return rv;
 }
 
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const vsn = getVersion(process.argv[2] || '.');
   process.stdout.write(JSON.stringify(vsn));
-} else {
-  module.exports = getVersion;
 }
+
+export default getVersion;
