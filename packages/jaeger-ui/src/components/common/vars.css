@@ -46,6 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   --border-default: #e6e6e6;
   --border-subtle: rgba(0, 0, 0, 0.15);
   --border-strong: #d3d3d3;
+  --border-strongest: #777;
 
   /* ============================================
     INTERACTIVE TOKENS (Buttons, Links, Form Controls)
