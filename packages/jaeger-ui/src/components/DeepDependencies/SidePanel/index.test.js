@@ -119,6 +119,7 @@ describe('<SidePanel>', () => {
 
       const detailsPanel = container.querySelector('.Ddg--SidePanel--Details');
       expect(detailsPanel.children.length).toBe(0);
+      expect(detailsPanel).not.toHaveClass('is-expanded');
     });
 
     it('renders sidePanel and closeBtn when vertex and decoration are both selected', () => {
@@ -126,6 +127,9 @@ describe('<SidePanel>', () => {
 
       const closeButton = container.querySelector('.Ddg--SidePanel--closeBtn');
       expect(closeButton).not.toHaveClass('is-hidden');
+
+      const detailsPanel = container.querySelector('.Ddg--SidePanel--Details');
+      expect(detailsPanel).toHaveClass('is-expanded');
 
       expect(screen.getByTestId('details-panel')).toBeInTheDocument();
       const [detailsPanelProps] = DetailsPanel.mock.calls[0];

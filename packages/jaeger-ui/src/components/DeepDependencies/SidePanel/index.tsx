@@ -116,7 +116,7 @@ const SidePanel: React.FC<TProps> = props => {
           <IoInformationCircleOutline />
         </button>
       </div>
-      <div className={`Ddg--SidePanel--Details ${selectedVertex && selectedSchema ? '.is-expanded' : ''}`}>
+      <div className={`Ddg--SidePanel--Details ${selectedVertex && selectedSchema ? 'is-expanded' : ''}`}>
         {selectedVertex && selectedSchema && (
           <DetailsPanel
             decorationSchema={selectedSchema}
