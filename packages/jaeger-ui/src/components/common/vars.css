@@ -21,6 +21,11 @@ SPDX-License-Identifier: Apache-2.0
   --surface-tertiary: #fafafa;
   --surface-overlay: rgba(0, 0, 0, 0.5);
 
+  /* dedicated, specific UI element (like the Minimap, a Modal, or a complex panel) */
+  --surface-component-item-background: #999;
+  --surface-component-background: #cccccc;
+  --surface-component-background-hover: #dddddd;
+
   /* ============================================
     TEXT TOKENS
     Based on audit of color property
@@ -72,6 +77,8 @@ SPDX-License-Identifier: Apache-2.0
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.14);
+  /* centered, strong glow effect on components */
+  --shadow-component-focus: 0px 0px 5px rgba(0, 0, 0, 0.3);
 
   /* ============================================
     SPECIAL PURPOSE TOKENS
@@ -95,4 +102,9 @@ SPDX-License-Identifier: Apache-2.0
 
   /* Background used when dragging resizers (very subtle tint of interactive color) */
   --resizer-drag-bg: rgba(var(--interactive-primary-rgb), 0.05);
+
+  /* Scrollbar Thumb Tokens (Subtle/Utility Control) */
+  --control-subtle-default: rgba(0, 0, 0, 0.2);
+  --control-subtle-hover: rgba(0, 0, 0, 0.35);
+  --control-subtle-muted: rgba(0, 0, 0, 0.15);
 }
