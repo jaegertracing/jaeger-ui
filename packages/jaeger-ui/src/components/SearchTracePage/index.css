@@ -27,6 +27,7 @@ SPDX-License-Identifier: Apache-2.0
   background-color: var(--surface-secondary);
   border: 1px solid var(--border-default);
   padding: 1rem;
+  padding-top: 0px;
 }
 
 .SearchTracePage--logo {
