@@ -104,7 +104,7 @@ SPDX-License-Identifier: Apache-2.0
   left: 0;
   right: 0;
   bottom: 0;
-  outline: 1px solid var(--border-subtle);
+  outline: 1px solid var(--border-strongest);
 }
 
 .u-miniMap > .plexus-MiniMap--map {
