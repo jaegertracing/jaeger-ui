@@ -37,7 +37,6 @@ const TraceIDSearchInput: React.FC = () => {
         name="idInput"
         placeholder="Lookup by Trace ID..."
         prefix={<IoSearch />}
-        size="large"
         allowClear
       />
     </Form>

@@ -4,6 +4,7 @@
 import React from 'react';
 import { Button, Tooltip } from 'antd';
 import { IoMoon, IoSunny } from 'react-icons/io5';
+import './ThemeToggleButton.css';
 
 import { useThemeMode } from './ThemeProvider';
 
@@ -27,7 +28,7 @@ export default function ThemeToggleButton() {
         type="text"
       >
         {isDark ? <IoSunny {...iconProps} /> : <IoMoon {...iconProps} />}
-        <span className="ThemeToggleButton--label">{label} mode</span>
+        {/* <span className="ThemeToggleButton--label">{label} mode</span> */}
       </Button>
     </Tooltip>
   );

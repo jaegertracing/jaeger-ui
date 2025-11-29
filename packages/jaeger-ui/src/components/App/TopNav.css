@@ -27,33 +27,3 @@ SPDX-License-Identifier: Apache-2.0
 .Menu--item {
   background: transparent !important;
 }
-
-.ThemeToggleButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding-inline: 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  color: #fff !important;
-  background: rgba(7, 14, 26, 0.3) !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-  height: 30px;
-}
-
-.ThemeToggleButton:focus,
-.ThemeToggleButton:hover {
-  color: #fff !important;
-  background: rgba(255, 255, 255, 0.12) !important;
-}
-
-.ThemeToggleButton--icon {
-  font-size: 16px;
-}
-
-.ThemeToggleButton--label {
-  font-size: 11px;
-}
