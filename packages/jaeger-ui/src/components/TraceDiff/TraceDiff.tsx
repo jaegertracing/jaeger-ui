@@ -44,6 +44,7 @@ type TStateProps = {
 
 type TDispatchProps = {
   fetchMultipleTraces: (ids: string[]) => void;
+  setTraceValidationError: (payload: { id: string; validationError: ValidateError }) => void;
   forceState: (state: TTraceDiffState) => void;
 };
 
