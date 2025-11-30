@@ -4,12 +4,23 @@
 # in their copyright header.
 #
 # Usage: ./scripts/check-copyright-year.sh [baseline_ref]
-# If no baseline_ref is provided, defaults to origin/main
+# If no baseline_ref is provided:
+#   - In GitHub CI (pull_request), uses GITHUB_BASE_REF (e.g., 'main')
+#   - Otherwise, defaults to origin/main
 
 set -e
 
 CURRENT_YEAR=$(date +%Y)
-BASELINE_REF="${1:-origin/main}"
+
+# Determine baseline reference
+if [ -n "$1" ]; then
+    BASELINE_REF="$1"
+elif [ -n "$GITHUB_BASE_REF" ]; then
+    # In GitHub Actions pull_request event, GITHUB_BASE_REF contains the base branch name
+    BASELINE_REF="origin/$GITHUB_BASE_REF"
+else
+    BASELINE_REF="origin/main"
+fi
 
 # File patterns to check (matching check-license.sh patterns)
 FILE_PATTERNS=(
