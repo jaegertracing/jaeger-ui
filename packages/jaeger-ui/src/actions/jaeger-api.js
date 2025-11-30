@@ -33,6 +33,12 @@ export const fetchMultipleTraces = createAction(
   ids => ({ ids })
 );
 
+export const setTraceValidationError = createAction(
+  '@JAEGER_API/SET_TRACE_VALIDATION_ERROR',
+  ({ id, validationError }) => ({ id, validationError }),
+  ({ id }) => ({ id })
+);
+
 export const archiveTrace = createAction(
   '@JAEGER_API/ARCHIVE_TRACE',
   id => JaegerAPI.archiveTrace(id),
