@@ -27,7 +27,6 @@ import { FetchedTrace, TNil, ReduxState } from '../../types';
 import TTraceDiffState from '../../types/TTraceDiffState';
 import pluckTruthy from '../../utils/ts/pluckTruthy';
 
-import './TraceDiff.css';
 import parseQuery from '../../utils/parseQuery';
 import { validateTraceId } from '../../utils/trace-id-validation';
 import withRouteProps from '../../utils/withRouteProps';
