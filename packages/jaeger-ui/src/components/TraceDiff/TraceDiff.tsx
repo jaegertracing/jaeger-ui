@@ -29,7 +29,10 @@ import pluckTruthy from '../../utils/ts/pluckTruthy';
 
 import './TraceDiff.css';
 import parseQuery from '../../utils/parseQuery';
+import { validateTraceId } from '../../utils/trace-id-validation';
 import withRouteProps from '../../utils/withRouteProps';
+import './TraceDiff.css';
+import { ValidateError } from '../../types/validate-error';
 
 type TStateProps = {
   a: string | undefined;
@@ -78,6 +81,7 @@ export function TraceDiffImpl({
   tracesData,
   traceDiffState,
   fetchMultipleTraces,
+  setTraceValidationError,
   forceState,
 }: TStateProps & TDispatchProps & TOwnProps) {
   const navigate = useNavigate();
@@ -102,10 +106,21 @@ export function TraceDiffImpl({
     syncStates({ a, b, cohort }, traceDiffState, forceState);
     const cohortData = cohort.map(id => tracesData.get(id) || { id, state: null });
     const needForDiffs = cohortData.filter(ft => ft.state == null).map(ft => ft.id);
-    if (needForDiffs.length) {
-      fetchMultipleTraces(needForDiffs);
+
+    const validIds: string[] = [];
+    needForDiffs.forEach(id => {
+      const validationError = validateTraceId(id);
+      if (validationError) {
+        setTraceValidationError({ id, validationError });
+      } else {
+        validIds.push(id);
+      }
+    });
+
+    if (validIds.length) {
+      fetchMultipleTraces(validIds);
     }
-  }, [a, b, cohort, traceDiffState, forceState, tracesData, fetchMultipleTraces]);
+  }, [a, b, cohort, traceDiffState, forceState, tracesData, fetchMultipleTraces, setTraceValidationError]);
 
   const diffSetUrl = React.useCallback(
     (change: { newA?: string | TNil; newB?: string | TNil }) => {

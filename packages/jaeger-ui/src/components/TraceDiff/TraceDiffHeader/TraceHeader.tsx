@@ -25,6 +25,7 @@ import { FetchedState, TNil } from '../../../types';
 import { ApiError } from '../../../types/api-error';
 import TraceId from '../../common/TraceId';
 
+import { ValidateError } from '../../../types/validate-error';
 import './TraceHeader.css';
 
 // exported for tests
@@ -75,6 +76,7 @@ export default function TraceHeader({
   traceID,
   totalSpans,
   traceName,
+  validationError,
 }: {
   duration: number | TNil;
   error?: ApiError;
@@ -83,8 +85,10 @@ export default function TraceHeader({
   traceID: string | TNil;
   traceName: string | TNil;
   totalSpans: number | TNil;
+  validationError: ValidateError | TNil;
 }) {
   const AttrsComponent = state === fetchedState.DONE ? Attrs : EmptyAttrs;
+  const displayError = validationError ? `${validationError.title}: ${validationError.content}` : error;
 
   return (
     <div className="TraceDiffHeader--traceHeader" data-testid="TraceDiffHeader--traceHeader">
@@ -92,7 +96,7 @@ export default function TraceHeader({
         <span>
           {traceID ? (
             <React.Fragment>
-              <TraceName key="name" traceName={traceName} error={error} state={state} />{' '}
+              <TraceName key="name" traceName={traceName} error={displayError} state={state} />{' '}
               <TraceId key="id" traceId={traceID} className="ub-pr2" />
               <TraceTimelineLink traceID={traceID} />
             </React.Fragment>

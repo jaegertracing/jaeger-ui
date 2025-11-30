@@ -99,6 +99,7 @@ const TraceDiffHeader: React.FC<Props> = ({ a, b, cohort, diffSetA, diffSetB }) 
             totalSpans={aData?.spans?.length}
             traceID={aId}
             traceName={aData?.traceName}
+            validationError={a?.validationError}
           />
         </div>
       </Popover>
@@ -128,6 +129,7 @@ const TraceDiffHeader: React.FC<Props> = ({ a, b, cohort, diffSetA, diffSetB }) 
             totalSpans={bData?.spans?.length}
             traceID={bId}
             traceName={bData?.traceName}
+            validationError={b?.validationError}
           />
         </div>
       </Popover>

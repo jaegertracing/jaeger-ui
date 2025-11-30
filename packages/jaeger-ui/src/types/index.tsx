@@ -19,6 +19,7 @@ import { ApiError } from './api-error';
 import { TracesArchive } from './archive';
 import { Config } from './config';
 import { EmbeddedState } from './embedded';
+import { MetricsReduxState } from './metrics';
 import { SearchQuery } from './search';
 import TDdgState from './TDdgState';
 import tNil from './TNil';
@@ -26,7 +27,7 @@ import iWebAnalytics from './tracking';
 import { Trace } from './trace';
 import TTraceDiffState from './TTraceDiffState';
 import TTraceTimeline from './TTraceTimeline';
-import { MetricsReduxState } from './metrics';
+import { ValidateError } from './validate-error';
 
 export type TNil = tNil;
 export type IWebAnalytics = iWebAnalytics;
@@ -38,6 +39,7 @@ export type FetchedTrace = {
   error?: ApiError;
   id: string;
   state?: FetchedState;
+  validationError?: ValidateError;
 };
 
 export type LocationState = {

@@ -89,6 +89,14 @@ function fetchMultipleTracesErred(state, { meta, payload }) {
   return { ...state, traces };
 }
 
+function setValidationError(state, { payload, meta }) {
+  const { id } = meta;
+  const { validationError } = payload;
+  const trace = { id, validationError, state: fetchedState.ERROR };
+  const traces = { ...state.traces, [id]: trace };
+  return { ...state, traces };
+}
+
 function fetchSearchStarted(state, { meta }) {
   const { query } = meta;
   const search = {
@@ -173,6 +181,8 @@ export default handleActions(
     [`${loadJsonTraces}_PENDING`]: loadJsonStarted,
     [`${loadJsonTraces}_FULFILLED`]: loadJsonDone,
     [`${loadJsonTraces}_REJECTED`]: loadJsonErred,
+
+    [`${setTraceValidationError}`]: setValidationError,
   },
   initialState
 );
