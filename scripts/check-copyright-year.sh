@@ -18,6 +18,9 @@ if [ -n "$1" ]; then
 elif [ -n "$GITHUB_BASE_REF" ]; then
     # In GitHub Actions pull_request event, GITHUB_BASE_REF contains the base branch name
     BASELINE_REF="origin/$GITHUB_BASE_REF"
+    # Fetch the base branch since actions/checkout does a shallow clone by default
+    echo "Fetching base branch '$GITHUB_BASE_REF' for comparison..."
+    git fetch --depth=1 origin "$GITHUB_BASE_REF" 2>/dev/null || true
 else
     BASELINE_REF="origin/main"
 fi
