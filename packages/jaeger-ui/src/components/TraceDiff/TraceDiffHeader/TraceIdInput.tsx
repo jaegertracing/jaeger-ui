@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Input } from 'antd';
 import * as React from 'react';
-
-import { normalizeTraceId } from '../../../utils/normalize';
+import { Input } from 'antd';
 
 type Props = {
   selectTrace: (traceID: string) => void;
@@ -25,11 +23,5 @@ const { Search } = Input;
 
 export default function TraceIdInput(props: Props) {
   const { selectTrace } = props;
-  const handleSearch = React.useCallback(
-    (value: string) => {
-      selectTrace(normalizeTraceId(value));
-    },
-    [selectTrace]
-  );
-  return <Search addonBefore="Select by Trace ID" enterButton onSearch={handleSearch} />;
+  return <Search addonBefore="Select by Trace ID" enterButton onSearch={selectTrace} />;
 }
