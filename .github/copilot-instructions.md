@@ -90,14 +90,14 @@ Run from `packages/jaeger-ui/`:
 - Use functional components with hooks for new code
 - Component files use `.tsx` extension
 - Test files are co-located with components (e.g., `Component.tsx` and `Component.test.js`)
-- Use snapshot testing for React components
+- Use React Testing Library for testing React components
 
 ### File Headers
 
-All new files must include this copyright header:
+All new files must include this copyright header with the current year:
 
 ```typescript
-// Copyright (c) 2017 The Jaeger Authors.
+// Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 ```
 
@@ -107,7 +107,7 @@ All new files must include this copyright header:
 - React Testing Library for component testing
 - Tests are co-located with source files (`*.test.js` or `*.test.tsx`)
 - Run individual tests: `npm test -- --testPathPattern=<pattern>`
-- Update snapshots: `npm run update-snapshots` (from repository root)
+- Update snapshots: `npm run update-snapshots` (from repository root), but do not use snapshots for any new tests, only existing legacy tests
 
 ### Test Coverage
 
@@ -141,6 +141,7 @@ ComponentName/
 ### Styling
 
 - Uses CSS modules and Less
+- Color-related styles must use design tokens from `packages/jaeger-ui/src/components/common/vars.css`
 - Base CSS utilities from u-basscss
 - Ant Design (antd v6) for UI components
 
