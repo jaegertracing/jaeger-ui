@@ -1,4 +1,4 @@
-# Copilot Instructions for Jaeger UI
+# AI Agent Instructions for Jaeger UI
 
 ## Project Overview
 
