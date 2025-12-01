@@ -178,6 +178,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           )}
         </div>
       </TimelineRow.Cell>
+      <div className="trace-timeline__status-column">ok</div>
       <TimelineRow.Cell
         className="span-view"
         style={{ cursor: 'pointer' }}

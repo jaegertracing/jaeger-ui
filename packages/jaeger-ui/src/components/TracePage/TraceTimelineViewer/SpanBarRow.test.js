@@ -222,4 +222,11 @@ describe('<SpanBarRow>', () => {
       undefined
     );
   });
+
+  it('renders the status column with static "ok" text', () => {
+    render(<SpanBarRow {...defaultProps} />);
+    const statusColumn = document.querySelector('.trace-timeline__status-column');
+    expect(statusColumn).toBeInTheDocument();
+    expect(statusColumn).toHaveTextContent('ok');
+  });
 });

@@ -187,3 +187,13 @@ SPDX-License-Identifier: Apache-2.0
 .SpanBarRow--arrowForwardIcon {
   vertical-align: middle;
 }
+
+.trace-timeline__status-column {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5em;
+  background: #f8f8f8;
+  border-right: 1px solid #ddd;
+  font-size: 0.85em;
+  color: #808080;
+}
