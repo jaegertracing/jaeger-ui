@@ -107,7 +107,7 @@ All new files must include this copyright header:
 - React Testing Library for component testing
 - Tests are co-located with source files (`*.test.js` or `*.test.tsx`)
 - Run individual tests: `npm test -- --testPathPattern=<pattern>`
-- Update snapshots: `npm run update-snapshots`
+- Update snapshots: `npm run update-snapshots` (from repository root)
 
 ### Test Coverage
 
@@ -156,7 +156,7 @@ ComponentName/
 ## Commits
 
 - Sign all commits with DCO (`git commit -s`)
-- Follow [conventional commit](https://chris.beams.io/posts/git-commit/) guidelines
+- Follow [good commit message](https://chris.beams.io/posts/git-commit/) guidelines
 - Keep subject line under 50 characters
 - Use imperative mood in subject line
 
