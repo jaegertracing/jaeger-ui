@@ -1,0 +1,450 @@
+{
+  "metadata": {
+    "generatedAt": "2025-11-27T22:09:45.485Z",
+    "totalDefinitions": 4,
+    "uniqueVariablesDefined": 4,
+    "totalUsages": 22,
+    "uniqueVariablesUsed": 4,
+    "filesScanned": 103,
+    "filesWithDefinitions": 2
+  },
+  "definitions": {
+    "--nav-height": [
+      {
+        "file": "packages/jaeger-ui/src/components/common/utils.css",
+        "line": 7,
+        "variable": "--nav-height",
+        "value": "48px",
+        "context": "--nav-height: 48px;"
+      }
+    ],
+    "--tx-color-title": [
+      {
+        "file": "packages/jaeger-ui/src/components/common/vars.css",
+        "line": 7,
+        "variable": "--tx-color-title",
+        "value": "rgba(0, 0, 0, 0.85)",
+        "context": "--tx-color-title: rgba(0, 0, 0, 0.85);"
+      }
+    ],
+    "--tx-color-body": [
+      {
+        "file": "packages/jaeger-ui/src/components/common/vars.css",
+        "line": 8,
+        "variable": "--tx-color-body",
+        "value": "rgba(0, 0, 0, 0.65)",
+        "context": "--tx-color-body: rgba(0, 0, 0, 0.65);"
+      }
+    ],
+    "--tx-color-muted": [
+      {
+        "file": "packages/jaeger-ui/src/components/common/vars.css",
+        "line": 9,
+        "variable": "--tx-color-muted",
+        "value": "#aaa",
+        "context": "--tx-color-muted: #aaa;"
+      }
+    ]
+  },
+  "usages": {
+    "--nav-height": [
+      {
+        "file": "packages/jaeger-ui/src/components/App/Page.css",
+        "line": 18,
+        "variable": "--nav-height",
+        "fallback": null,
+        "context": "min-height: calc(100% - var(--nav-height));",
+        "property": "min-height"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/App/Page.css",
+        "line": 24,
+        "variable": "--nav-height",
+        "fallback": null,
+        "context": "top: var(--nav-height);",
+        "property": "top"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/common/VerticalResizer.css",
+        "line": 26,
+        "variable": "--nav-height",
+        "fallback": null,
+        "context": "height: calc(100vh - var(--nav-height));",
+        "property": "height"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/QualityMetrics/index.css",
+        "line": 9,
+        "variable": "--nav-height",
+        "fallback": null,
+        "context": "height: calc(100vh - var(--nav-height));",
+        "property": "height"
+      }
+    ],
+    "--tx-color-title": [
+      {
+        "file": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
+        "line": 27,
+        "variable": "--tx-color-title",
+        "fallback": null,
+        "context": "color: var(--tx-color-title);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
+        "line": 32,
+        "variable": "--tx-color-title",
+        "fallback": null,
+        "context": "color: var(--tx-color-title);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
+        "line": 43,
+        "variable": "--tx-color-title",
+        "fallback": null,
+        "context": "color: var(--tx-color-title);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
+        "line": 47,
+        "variable": "--tx-color-title",
+        "fallback": null,
+        "context": "color: var(--tx-color-title);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/index.css",
+        "line": 32,
+        "variable": "--tx-color-title",
+        "fallback": null,
+        "context": "color: var(--tx-color-title);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/index.css",
+        "line": 14,
+        "variable": "--tx-color-title",
+        "fallback": null,
+        "context": "color: var(--tx-color-title);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
+        "line": 15,
+        "variable": "--tx-color-title",
+        "fallback": null,
+        "context": "color: var(--tx-color-title);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/CohortTable.css",
+        "line": 7,
+        "variable": "--tx-color-title",
+        "fallback": null,
+        "context": "color: var(--tx-color-title);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageHeader.css",
+        "line": 47,
+        "variable": "--tx-color-title",
+        "fallback": null,
+        "context": "color: var(--tx-color-title);",
+        "property": "color"
+      }
+    ],
+    "--tx-color-muted": [
+      {
+        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
+        "line": 8,
+        "variable": "--tx-color-muted",
+        "fallback": null,
+        "context": "color: var(--tx-color-muted);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
+        "line": 61,
+        "variable": "--tx-color-muted",
+        "fallback": null,
+        "context": "color: var(--tx-color-muted);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/common/utils.css",
+        "line": 27,
+        "variable": "--tx-color-muted",
+        "fallback": null,
+        "context": "color: var(--tx-color-muted);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
+        "line": 7,
+        "variable": "--tx-color-muted",
+        "fallback": null,
+        "context": "color: var(--tx-color-muted);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
+        "line": 89,
+        "variable": "--tx-color-muted",
+        "fallback": null,
+        "context": "border-left: dashed var(--tx-color-muted) 1px;",
+        "property": "border-left"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/QualityMetrics/Header.css",
+        "line": 19,
+        "variable": "--tx-color-muted",
+        "fallback": null,
+        "context": "color: var(--tx-color-muted);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/QualityMetrics/Header.css",
+        "line": 27,
+        "variable": "--tx-color-muted",
+        "fallback": null,
+        "context": "color: var(--tx-color-muted);",
+        "property": "color"
+      }
+    ],
+    "--tx-color-body": [
+      {
+        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
+        "line": 30,
+        "variable": "--tx-color-body",
+        "fallback": null,
+        "context": "color: var(--tx-color-body);",
+        "property": "color"
+      },
+      {
+        "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
+        "line": 37,
+        "variable": "--tx-color-body",
+        "fallback": null,
+        "context": "color: var(--tx-color-body);",
+        "property": "color"
+      }
+    ]
+  },
+  "unusedVariables": [],
+  "undefinedVariables": [],
+  "namingPatterns": {
+    "tx-color-*": ["--tx-color-title", "--tx-color-body", "--tx-color-muted"],
+    "nav-*": ["--nav-height"],
+    "other": []
+  },
+  "allDefinitions": [
+    {
+      "file": "packages/jaeger-ui/src/components/common/utils.css",
+      "line": 7,
+      "variable": "--nav-height",
+      "value": "48px",
+      "context": "--nav-height: 48px;"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/common/vars.css",
+      "line": 7,
+      "variable": "--tx-color-title",
+      "value": "rgba(0, 0, 0, 0.85)",
+      "context": "--tx-color-title: rgba(0, 0, 0, 0.85);"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/common/vars.css",
+      "line": 8,
+      "variable": "--tx-color-body",
+      "value": "rgba(0, 0, 0, 0.65)",
+      "context": "--tx-color-body: rgba(0, 0, 0, 0.65);"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/common/vars.css",
+      "line": 9,
+      "variable": "--tx-color-muted",
+      "value": "#aaa",
+      "context": "--tx-color-muted: #aaa;"
+    }
+  ],
+  "allUsages": [
+    {
+      "file": "packages/jaeger-ui/src/components/App/Page.css",
+      "line": 18,
+      "variable": "--nav-height",
+      "fallback": null,
+      "context": "min-height: calc(100% - var(--nav-height));",
+      "property": "min-height"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/App/Page.css",
+      "line": 24,
+      "variable": "--nav-height",
+      "fallback": null,
+      "context": "top: var(--nav-height);",
+      "property": "top"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
+      "line": 27,
+      "variable": "--tx-color-title",
+      "fallback": null,
+      "context": "color: var(--tx-color-title);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
+      "line": 32,
+      "variable": "--tx-color-title",
+      "fallback": null,
+      "context": "color: var(--tx-color-title);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
+      "line": 43,
+      "variable": "--tx-color-title",
+      "fallback": null,
+      "context": "color: var(--tx-color-title);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
+      "line": 8,
+      "variable": "--tx-color-muted",
+      "fallback": null,
+      "context": "color: var(--tx-color-muted);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
+      "line": 30,
+      "variable": "--tx-color-body",
+      "fallback": null,
+      "context": "color: var(--tx-color-body);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
+      "line": 37,
+      "variable": "--tx-color-body",
+      "fallback": null,
+      "context": "color: var(--tx-color-body);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
+      "line": 47,
+      "variable": "--tx-color-title",
+      "fallback": null,
+      "context": "color: var(--tx-color-title);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/common/NameSelector.css",
+      "line": 61,
+      "variable": "--tx-color-muted",
+      "fallback": null,
+      "context": "color: var(--tx-color-muted);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/common/utils.css",
+      "line": 27,
+      "variable": "--tx-color-muted",
+      "fallback": null,
+      "context": "color: var(--tx-color-muted);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/common/VerticalResizer.css",
+      "line": 26,
+      "variable": "--nav-height",
+      "fallback": null,
+      "context": "height: calc(100vh - var(--nav-height));",
+      "property": "height"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
+      "line": 7,
+      "variable": "--tx-color-muted",
+      "fallback": null,
+      "context": "color: var(--tx-color-muted);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
+      "line": 89,
+      "variable": "--tx-color-muted",
+      "fallback": null,
+      "context": "border-left: dashed var(--tx-color-muted) 1px;",
+      "property": "border-left"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/index.css",
+      "line": 32,
+      "variable": "--tx-color-title",
+      "fallback": null,
+      "context": "color: var(--tx-color-title);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/QualityMetrics/Header.css",
+      "line": 19,
+      "variable": "--tx-color-muted",
+      "fallback": null,
+      "context": "color: var(--tx-color-muted);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/QualityMetrics/Header.css",
+      "line": 27,
+      "variable": "--tx-color-muted",
+      "fallback": null,
+      "context": "color: var(--tx-color-muted);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/QualityMetrics/index.css",
+      "line": 9,
+      "variable": "--nav-height",
+      "fallback": null,
+      "context": "height: calc(100vh - var(--nav-height));",
+      "property": "height"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/index.css",
+      "line": 14,
+      "variable": "--tx-color-title",
+      "fallback": null,
+      "context": "color: var(--tx-color-title);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
+      "line": 15,
+      "variable": "--tx-color-title",
+      "fallback": null,
+      "context": "color: var(--tx-color-title);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/CohortTable.css",
+      "line": 7,
+      "variable": "--tx-color-title",
+      "fallback": null,
+      "context": "color: var(--tx-color-title);",
+      "property": "color"
+    },
+    {
+      "file": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageHeader.css",
+      "line": 47,
+      "variable": "--tx-color-title",
+      "fallback": null,
+      "context": "color: var(--tx-color-title);",
+      "property": "color"
+    }
+  ]
+}
