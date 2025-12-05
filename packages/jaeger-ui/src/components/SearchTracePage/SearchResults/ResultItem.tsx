@@ -85,11 +85,11 @@ export default function ResultItem({
       <Link to={linkTo}>
         <Row>
           <Col span={4} className="ub-p2">
-            <Tag className="ub-m1" data-testid={markers.NUM_SPANS}>
+            <Tag className="ub-m1" data-testid={markers.NUM_SPANS} variant="outlined">
               {numSpans} Span{numSpans > 1 && 's'}
             </Tag>
             {Boolean(numErredSpans) && (
-              <Tag className="ub-m1" color="red">
+              <Tag className="ub-m1" color="red" variant="outlined">
                 {numErredSpans} Error{numErredSpans > 1 && 's'}
               </Tag>
             )}
@@ -103,6 +103,7 @@ export default function ResultItem({
                     <Tag
                       className="ResultItem--serviceTag"
                       style={{ borderLeftColor: colorGenerator.getColorByKey(name) }}
+                      variant="outlined"
                     >
                       {erroredServices.has(name) && <IoAlert className="ResultItem--errorIcon" />}
                       {name} ({count})
