@@ -9,13 +9,10 @@ import AppThemeProvider, { __themeTestInternals, useThemeMode } from './ThemePro
 
 const THEME_STORAGE_KEY = 'jaeger-ui-theme';
 
+import { getConfigValue } from '../../utils/config/get-config';
+
 jest.mock('../../utils/config/get-config', () => ({
-  getConfigValue: jest.fn((key: string) => {
-    if (key === 'themes.enabled') {
-      return true;
-    }
-    return undefined;
-  }),
+  getConfigValue: jest.fn(),
 }));
 
 function setupMatchMedia(matches = false) {
@@ -54,6 +51,12 @@ describe('AppThemeProvider', () => {
     window.localStorage.clear();
     delete document.body.dataset.theme;
     setupMatchMedia(false);
+    (getConfigValue as jest.Mock).mockImplementation(key => {
+      if (key === 'themes.enabled') {
+        return true;
+      }
+      return undefined;
+    });
   });
 
   it('initializes using the stored preference when present', () => {
@@ -117,6 +120,19 @@ describe('AppThemeProvider', () => {
 
   it('falls back to the default mode when the stored value is invalid', () => {
     window.localStorage.setItem(THEME_STORAGE_KEY, 'sepia');
+
+    render(
+      <AppThemeProvider>
+        <ThemeConsumer />
+      </AppThemeProvider>
+    );
+
+    expect(screen.getByTestId('theme-mode')).toHaveTextContent('light');
+  });
+
+  it('ignores stored preference when themes are disabled', () => {
+    (getConfigValue as jest.Mock).mockReturnValue(false);
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
 
     render(
       <AppThemeProvider>
