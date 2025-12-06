@@ -9,6 +9,15 @@ import AppThemeProvider, { __themeTestInternals, useThemeMode } from './ThemePro
 
 const THEME_STORAGE_KEY = 'jaeger-ui-theme';
 
+jest.mock('../../utils/config/get-config', () => ({
+  getConfigValue: jest.fn((key: string) => {
+    if (key === 'themes.enabled') {
+      return true;
+    }
+    return undefined;
+  }),
+}));
+
 function setupMatchMedia(matches = false) {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
