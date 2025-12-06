@@ -4,6 +4,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ThemeConfig } from 'antd';
 import { ConfigProvider, theme } from 'antd';
+import { getConfigValue } from '../../utils/config/get-config';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -153,6 +154,9 @@ function writeStoredTheme(mode: ThemeMode, targetWindow?: Window | null) {
 }
 
 function getInitialMode(): ThemeMode {
+  if (!getConfigValue('themes.enabled')) {
+    return DEFAULT_MODE;
+  }
   const stored = readStoredTheme();
   if (stored) {
     return stored;
