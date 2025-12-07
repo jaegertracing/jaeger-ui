@@ -8,7 +8,7 @@ Here is a comprehensive set of instructions designed to guide the AI in migratin
 
 ### 🎯 Core Objective
 
-The primary goal is to replace hardcoded hexadecimal (`#fff`), RGB/A, and HSL color values with the most **semantically appropriate** CSS variable (design token) from the existing theme. **Tokenization must be based on the intended function of the style property, not just the numerical color value.**
+The primary goal is to replace non-parameterized, hardcoded hexadecimal (`#fff`), RGB/A, and HSL color values with the most **semantically appropriate** CSS variable (design token) from the existing theme. **Tokenization must be based on the intended function of the style property, not just the numerical color value.**
 
 > 🛑 **CRITICAL RULE:** Do NOT replace existing CSS variables (e.g., `var(--color-name)`), even if they are used inside `rgba()`. These are already parameterized and should be preserved.
 
