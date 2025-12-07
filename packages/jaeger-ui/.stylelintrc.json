@@ -1,0 +1,21 @@
+{
+  "extends": "stylelint-config-recommended",
+  "plugins": ["stylelint-value-no-unknown-custom-properties"],
+  "rules": {
+    "csstools/value-no-unknown-custom-properties": [
+      true,
+      {
+        "importFrom": ["src/components/common/vars.css"]
+      }
+    ],
+    "no-descending-specificity": null,
+    "font-family-no-missing-generic-family-keyword": null,
+    "property-no-deprecated": null,
+    "declaration-block-no-duplicate-properties": null,
+    "declaration-property-value-no-unknown": null,
+    "no-duplicate-selectors": null,
+    "shorthand-property-no-redundant-values": null,
+    "declaration-block-no-redundant-longhand-properties": null,
+    "declaration-property-value-keyword-no-deprecated": null
+  }
+}

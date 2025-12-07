@@ -1,16 +1,5 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 jest.mock('./TraceTimelineViewer', () => {
   return function MockTraceTimelineViewer() {
@@ -71,7 +60,6 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import { createMemoryHistory } from 'history';
-import sinon from 'sinon';
 
 import {
   makeShortcutCallbacks,
@@ -383,16 +371,16 @@ describe('<TracePage>', () => {
   });
 
   it('fetches the trace if necessary', () => {
-    const fetchTrace = sinon.spy();
+    const fetchTrace = jest.fn();
     render(<TracePage {...defaultProps} trace={null} fetchTrace={fetchTrace} />);
-    expect(fetchTrace.called).toBeTruthy();
-    expect(fetchTrace.calledWith(trace.traceID)).toBe(true);
+    expect(fetchTrace).toHaveBeenCalled();
+    expect(fetchTrace).toHaveBeenCalledWith(trace.traceID);
   });
 
   it("doesn't fetch the trace if already present", () => {
-    const fetchTrace = sinon.spy();
+    const fetchTrace = jest.fn();
     render(<TracePage {...defaultProps} fetchTrace={fetchTrace} />);
-    expect(fetchTrace.called).toBeFalsy();
+    expect(fetchTrace).not.toHaveBeenCalled();
   });
 
   it('resets the view range when the trace changes', () => {
