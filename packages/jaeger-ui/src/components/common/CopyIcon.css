@@ -6,17 +6,11 @@ SPDX-License-Identifier: Apache-2.0
 .CopyIcon,
 .CopyIcon:hover {
   background-color: transparent;
-  border: 1px solid inherit;
+  border: none;
   color: inherit;
   height: 100%;
   overflow: hidden;
   padding: 1px;
   font-size: 13px;
   margin-left: 5px;
-  box-shadow: var(--shadow-sm);
-}
-
-.CopyIcon:focus {
-  background-color: var(--surface-primary);
-  color: inherit;
 }
