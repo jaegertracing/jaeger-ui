@@ -141,7 +141,7 @@ const lookbackOptions = [
   },
 ];
 
-export const optionsWithinMaxLookback = memoizeOne(maxLookback => {
+export const optionsWithinMaxLookback = memoizeOne((maxLookback, adjustTime) => {
   const now = new Date();
   const minTimestamp = lookbackToTimestamp(maxLookback.value, now);
   const lookbackToTimestampMap = new Map();
@@ -159,9 +159,10 @@ export const optionsWithinMaxLookback = memoizeOne(maxLookback => {
       options.splice(lastInRangeIndex, 1, maxLookback);
     }
   }
+  const adjustSuffix = adjustTime ? ` (-${adjustTime})` : '';
   return options.map(({ label, value }) => (
     <Option key={value} value={value}>
-      {`Last ${label}`}
+      {`Last ${label}${adjustSuffix}`}
     </Option>
   ));
 });
@@ -208,7 +209,17 @@ export function convertQueryParamsToFormDates({ start, end }) {
   };
 }
 
-export function submitForm(fields, searchTraces) {
+// Applies time adjustment to shift end time back by the specified duration
+// This helps avoid incomplete traces that may still be receiving spans
+export function applyAdjustTime(endTimestamp, adjustTime) {
+  if (!adjustTime) {
+    return endTimestamp;
+  }
+  const adjustedEnd = lookbackToTimestamp(adjustTime, endTimestamp / 1000);
+  return adjustedEnd;
+}
+
+export function submitForm(fields, searchTraces, adjustTime) {
   const {
     resultsLimit,
     service,
@@ -241,6 +252,9 @@ export function submitForm(fields, searchTraces) {
     start = times.start;
     end = times.end;
   }
+
+  // Apply time adjustment to exclude very recent traces that may be incomplete
+  end = applyAdjustTime(end, adjustTime);
 
   trackFormInput(resultsLimit, operation, tags, minDuration, maxDuration, lookback, service);
 
@@ -301,7 +315,7 @@ export class SearchFormImpl extends React.PureComponent {
   };
 
   render() {
-    const { invalid, searchMaxLookback, services, submitting } = this.props;
+    const { invalid, searchMaxLookback, searchAdjustTime, services, submitting } = this.props;
     const { formData } = this.state;
     const { service: selectedService, lookback: selectedLookback } = formData;
     const selectedServicePayload = services.find(s => s.name === selectedService);
@@ -444,7 +458,7 @@ export class SearchFormImpl extends React.PureComponent {
             defaultValue={DEFAULT_LOOKBACK}
             onChange={value => this.handleChange({ lookback: value })}
           >
-            {optionsWithinMaxLookback(searchMaxLookback)}
+            {optionsWithinMaxLookback(searchMaxLookback, searchAdjustTime)}
             <Option value="custom">Custom Time Range</Option>
           </SearchableSelect>
         </FormItem>
@@ -718,10 +732,11 @@ export function mapStateToProps(state) {
       traceIDs: traceIDs || null,
     },
     searchMaxLookback: _get(state, 'config.search.maxLookback'),
+    searchAdjustTime: _get(state, 'config.search.adjustTime'),
   };
 }
 
-export function mapDispatchToProps(dispatch) {
+export function mapDispatchToProps(dispatch, ownProps) {
   const { searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
   return {
     changeServiceHandler: service =>
@@ -729,8 +744,18 @@ export function mapDispatchToProps(dispatch) {
         type: CHANGE_SERVICE_ACTION_TYPE,
         payload: service,
       }),
-    submitFormHandler: fields => submitForm(fields, searchTraces),
+    submitFormHandler: fields => submitForm(fields, searchTraces, ownProps.searchAdjustTime),
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SearchFormImpl);
+function mergeProps(stateProps, dispatchProps, ownProps) {
+  const { searchTraces } = bindActionCreators(jaegerApiActions, dispatchProps.dispatch);
+  return {
+    ...ownProps,
+    ...stateProps,
+    ...dispatchProps,
+    submitFormHandler: fields => submitForm(fields, searchTraces, stateProps.searchAdjustTime),
+  };
+}
+
+export default connect(mapStateToProps, null, mergeProps)(SearchFormImpl);

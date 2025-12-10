@@ -84,6 +84,10 @@ export type Trace = TraceData & {
   tracePageTitle: string;
   traceEmoji: string;
   services: { name: string; numberOfSpans: number }[];
+  // Indicates the trace has spans referencing parent spans that don't exist in the trace
+  hasOrphanSpans?: boolean;
+  // Number of orphan spans in the trace
+  orphanSpanCount?: number;
 };
 
 // It is a section of span that lies on critical path

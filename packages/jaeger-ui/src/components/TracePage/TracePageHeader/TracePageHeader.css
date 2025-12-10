@@ -109,3 +109,14 @@ limitations under the License.
   font-size: 1.78em;
   margin-right: 0.15em;
 }
+
+.TracePageHeader--warning {
+  margin: 0;
+}
+
+.TracePageHeader--warningIcon {
+  color: #f2711c;
+  font-size: 1.1em;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}

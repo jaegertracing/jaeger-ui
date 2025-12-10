@@ -13,11 +13,11 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Button, InputRef } from 'antd';
+import { Alert, Button, InputRef } from 'antd';
 import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
-import { IoArrowBack, IoFileTrayFull, IoChevronForward } from 'react-icons/io5';
+import { IoArrowBack, IoFileTrayFull, IoChevronForward, IoWarning } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 
 import DocumentTitle from '../../../utils/documentTitle';
@@ -217,6 +217,22 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           </Link>
         )}
       </div>
+      {trace.hasOrphanSpans && (
+        <Alert
+          className="TracePageHeader--warning"
+          message={
+            <span>
+              <IoWarning className="TracePageHeader--warningIcon" />
+              This trace may be incomplete. {trace.orphanSpanCount} span
+              {trace.orphanSpanCount !== 1 ? 's' : ''} {trace.orphanSpanCount !== 1 ? 'have' : 'has'} missing
+              parent span(s).
+            </span>
+          }
+          type="warning"
+          showIcon={false}
+          banner
+        />
+      )}
       {summaryItems && <LabeledList className="TracePageHeader--overviewItems" items={summaryItems} />}
       {!hideMap && !slimView && (
         <SpanGraph

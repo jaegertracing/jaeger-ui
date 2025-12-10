@@ -39,3 +39,10 @@ limitations under the License.
   margin-right: 0.25rem;
   padding: 1px;
 }
+
+.ResultItem--warningIcon {
+  color: #f2711c;
+  font-size: 0.95em;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
