@@ -48,6 +48,34 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-link);
 }
 
+.SearchForm--lookbackHint {
+  max-width: 250px;
+}
+
+.SearchForm--lookbackRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.SearchForm--lookbackLabel {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.SearchForm--adjustTime {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.SearchForm--adjustTimeLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
 /* Reduce the default Ant Design Form.Item margin to make the form more compact */
 .SearchTracePage--find .ant-form-item {
   margin-bottom: 12px;

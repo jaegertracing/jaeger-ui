@@ -140,6 +140,69 @@ function attachReferences(
 }
 
 export default chance.mixin({
+  // Generate a trace with orphan spans (spans referencing non-existent parents)
+  // Useful for testing incomplete trace warnings
+  traceWithOrphans({ numberOfSpans = 10, numberOfOrphans = 2, numberOfProcesses = 3 }) {
+    const traceID = chance.guid();
+    const duration = chance.integer({ min: 10000, max: 5000000 });
+    const timestamp = (new Date().getTime() - chance.integer({ min: 0, max: 1000 }) * 1000) * 1000;
+
+    const processArray = chance.processes({ numberOfProcesses });
+    const processes = processArray.reduce((pMap, p) => ({ ...pMap, [p.processID]: p }), {});
+
+    // Create normal spans first
+    let spans = chance.n(chance.span, numberOfSpans - numberOfOrphans, {
+      traceID,
+      processes,
+      traceStartTime: timestamp,
+      traceEndTime: timestamp + duration,
+    });
+
+    // Setup root span
+    if (spans.length > 0) {
+      spans[0] = { ...spans[0], startTime: timestamp, duration, references: [] };
+    }
+
+    // Add references to existing spans for non-orphan spans
+    spans = spans.map((span, idx) => {
+      if (idx === 0) return span; // root span has no parent
+      return {
+        ...span,
+        references: [
+          {
+            refType: 'CHILD_OF',
+            traceID,
+            spanID: spans[0].spanID, // reference the root span
+          },
+        ],
+      };
+    });
+
+    // Create orphan spans with references to non-existent parent spans
+    for (let i = 0; i < numberOfOrphans; i++) {
+      const orphanSpan = chance.span({
+        traceID,
+        processes,
+        traceStartTime: timestamp,
+        traceEndTime: timestamp + duration,
+      });
+      orphanSpan.references = [
+        {
+          refType: 'CHILD_OF',
+          traceID,
+          spanID: `non-existent-parent-${i}`, // This parent doesn't exist!
+        },
+      ];
+      orphanSpan.operationName = `orphan-operation-${i}`;
+      spans.push(orphanSpan);
+    }
+
+    return {
+      traceID,
+      spans,
+      processes,
+    };
+  },
   trace({
     // long trace
     // very short trace

@@ -28,3 +28,10 @@ SPDX-License-Identifier: Apache-2.0
   margin-right: 0.25rem;
   padding: 1px;
 }
+
+.ResultItem--warningIcon {
+  color: var(--feedback-warning);
+  font-size: 0.95em;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}

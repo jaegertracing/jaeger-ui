@@ -10,7 +10,7 @@ import _sortBy from 'lodash/sortBy';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
-import { IoAlert } from 'react-icons/io5';
+import { IoAlert, IoWarning } from 'react-icons/io5';
 
 import { trackConversions, EAltViewActions } from './index.track';
 import * as markers from './ResultItem.markers';
@@ -45,7 +45,7 @@ export default function ResultItem({
   trace,
   disableComparision,
 }: Props) {
-  const { duration, services = [], startTime, traceName, traceID, spans = [] } = trace;
+  const { duration, services = [], startTime, traceName, traceID, spans = [], orphanSpanCount = 0 } = trace;
 
   // Initialize state values
   const [erroredServices, setErroredServices] = React.useState<Set<string>>(new Set());
@@ -91,6 +91,16 @@ export default function ResultItem({
             {Boolean(numErredSpans) && (
               <Tag className="ub-m1" color="red" variant="outlined">
                 {numErredSpans} Error{numErredSpans > 1 && 's'}
+              </Tag>
+            )}
+            {orphanSpanCount > 0 && (
+              <Tag
+                className="ub-m1"
+                color="orange"
+                title={`This trace has ${orphanSpanCount} span(s) with missing parent spans. The trace may be incomplete.`}
+              >
+                <IoWarning className="ResultItem--warningIcon" />
+                Incomplete
               </Tag>
             )}
           </Col>
