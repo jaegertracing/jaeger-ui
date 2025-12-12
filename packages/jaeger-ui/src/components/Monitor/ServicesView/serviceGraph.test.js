@@ -5,7 +5,19 @@ import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Legend, Tooltip } from 'recharts';
-import ServiceGraph, { ServiceGraphImpl, tickFormat, Placeholder } from './serviceGraph';
+import ServiceGraph, {
+  ServiceGraphImpl,
+  tickFormat,
+  Placeholder,
+  formatYAxisTick,
+  getData,
+  getMetricsData,
+  calculateYDomain,
+  calculateYAxisTicks,
+  calculateNumericTicks,
+  renderLines,
+  COLORS,
+} from './serviceGraph';
 import { serviceMetrics } from '../../../reducers/metrics.mock';
 
 // Mock data with correct structure
@@ -216,14 +228,8 @@ describe('<ServiceGraph>', () => {
       { value: 500, expected: '500' },
     ];
 
-    const component = new ServiceGraphImpl({
-      ...defaultProps,
-      loading: false,
-      metricsData: serviceMetrics.service_call_rate,
-    });
-
     testCases.forEach(({ value, expected }) => {
-      expect(component.formatYAxisTick(value)).toBe(expected);
+      expect(formatYAxisTick(value, 'Test Graph')).toBe(expected);
     });
   });
 
@@ -273,29 +279,33 @@ describe('<ServiceGraph>', () => {
     const graph = container.querySelector('[data-testid="service-graph"]');
     expect(graph).toBeInTheDocument();
 
-    const component = new ServiceGraphImpl({
+    const rendered = ServiceGraphImpl({
+      ...defaultProps,
+      loading: false,
+      metricsData: serviceMetrics.service_call_rate,
+      showLegend: false,
+    });
+
+    // Test tooltip formatter without legend
+    const tooltipProps = rendered.props.children.props.children.props.children.find(
+      child => child.type === Tooltip
+    ).props;
+
+    expect(tooltipProps.formatter(5.123, '0.95')).toEqual([formatYAxisTick(5.123, 'Hello Graph')]);
+
+    // Test tooltip formatter with legend
+    const renderedWithLegend = ServiceGraphImpl({
       ...defaultProps,
       loading: false,
       metricsData: serviceMetrics.service_call_rate,
       showLegend: true,
     });
-
-    // Test tooltip formatter without legend
-    component.props.showLegend = false;
-    const tooltipProps = component
-      .render()
-      .props.children.props.children.props.children.find(child => child.type === Tooltip).props;
-
-    expect(tooltipProps.formatter(5.123, '0.95')).toEqual([component.formatYAxisTick(5.123)]);
-
-    // Test tooltip formatter with legend
-    component.props.showLegend = true;
-    const tooltipPropsWithLegend = component
-      .render()
-      .props.children.props.children.props.children.find(child => child.type === Tooltip).props;
+    const tooltipPropsWithLegend = renderedWithLegend.props.children.props.children.props.children.find(
+      child => child.type === Tooltip
+    ).props;
 
     expect(tooltipPropsWithLegend.formatter(5.123, '0.95')).toEqual([
-      component.formatYAxisTick(5.123),
+      formatYAxisTick(5.123, 'Hello Graph'),
       'P95',
     ]);
 
@@ -318,16 +328,16 @@ describe('<ServiceGraph>', () => {
     const graph = container.querySelector('[data-testid="service-graph"]');
     expect(graph).toBeInTheDocument();
 
-    const component = new ServiceGraphImpl({
+    const rendered = ServiceGraphImpl({
       ...defaultProps,
       loading: false,
       metricsData: serviceMetrics.service_call_rate,
       showLegend: true,
     });
 
-    const legendProps = component
-      .render()
-      .props.children.props.children.props.children.find(child => child.type === Legend).props;
+    const legendProps = rendered.props.children.props.children.props.children.find(
+      child => child.type === Legend
+    ).props;
 
     // Test legend formatter with valid quantile
     const legendElement = legendProps.formatter('0.95');
@@ -346,34 +356,34 @@ describe('<ServiceGraph>', () => {
 
   describe('tooltip and legend formatting', () => {
     it('formats tooltip values correctly', () => {
-      const component = new ServiceGraphImpl({
+      const testProps = {
         width: 100,
-        height: 100,
         name: 'Test Graph',
         metricsData: mockMetricsData,
         loading: false,
         error: null,
         xDomain: [0, 100],
         showLegend: true,
-      });
+      };
 
       // Test with showLegend=true
-      const tooltipProps = component
-        .render()
-        .props.children.props.children.props.children.find(child => child.type === Tooltip).props;
+      const rendered = ServiceGraphImpl(testProps);
+      const tooltipProps = rendered.props.children.props.children.props.children.find(
+        child => child.type === Tooltip
+      ).props;
 
       const [value, label] = tooltipProps.formatter(1000, '0.95');
-      expect(value).toBe(component.formatYAxisTick(1000));
+      expect(value).toBe(formatYAxisTick(1000, 'Test Graph'));
       expect(label).toBe('P95');
 
       // Test with showLegend=false
-      component.props.showLegend = false;
-      const tooltipPropsNoLegend = component
-        .render()
-        .props.children.props.children.props.children.find(child => child.type === Tooltip).props;
+      const renderedNoLegend = ServiceGraphImpl({ ...testProps, showLegend: false });
+      const tooltipPropsNoLegend = renderedNoLegend.props.children.props.children.props.children.find(
+        child => child.type === Tooltip
+      ).props;
 
       const [valueOnly] = tooltipPropsNoLegend.formatter(1000, '0.95');
-      expect(valueOnly).toBe(component.formatYAxisTick(1000));
+      expect(valueOnly).toBe(formatYAxisTick(1000, 'Test Graph'));
 
       // Test label formatter
       const timestamp = 1631271783806;
@@ -382,9 +392,8 @@ describe('<ServiceGraph>', () => {
     });
 
     it('formats legend values correctly', () => {
-      const component = new ServiceGraphImpl({
+      const rendered = ServiceGraphImpl({
         width: 100,
-        height: 100,
         name: 'Test Graph',
         metricsData: mockMetricsData,
         loading: false,
@@ -393,9 +402,9 @@ describe('<ServiceGraph>', () => {
         showLegend: true,
       });
 
-      const legendProps = component
-        .render()
-        .props.children.props.children.props.children.find(child => child.type === Legend).props;
+      const legendProps = rendered.props.children.props.children.props.children.find(
+        child => child.type === Legend
+      ).props;
 
       // Test valid quantile
       const validResult = legendProps.formatter('0.95');
@@ -413,21 +422,17 @@ describe('<ServiceGraph>', () => {
     });
 
     it('generates placeholder correctly', () => {
-      const component = new ServiceGraphImpl({
-        width: 100,
-        height: 242,
-        name: 'Test Graph',
-        metricsData: mockMetricsData,
-        loading: false,
-        error: null,
-        xDomain: [0, 100],
-      });
-
-      const placeholder = component.generatePlaceholder(<div>Test</div>);
-      expect(placeholder.props.className).toBe('center-placeholder');
-      expect(placeholder.props.style.width).toBe(100);
-      expect(placeholder.props.style.height).toBe(168); // 242 - 74
-      expect(placeholder.props.children).toEqual(<div>Test</div>);
+      // The Placeholder component is used by the functional component
+      // Test it via direct render instead
+      const { container } = render(
+        <Placeholder name="Test Graph" width={100} height={242}>
+          <div>Test</div>
+        </Placeholder>
+      );
+      const placeholderDiv = container.querySelector('.center-placeholder');
+      expect(placeholderDiv).toHaveTextContent('Test');
+      // Check that the height calculation is correct (242 - 74 = 168)
+      expect(placeholderDiv.style.height).toBe('168px');
     });
   });
 });
@@ -467,21 +472,10 @@ describe('Placeholder component', () => {
   });
 });
 
-describe('ServiceGraphImpl methods', () => {
-  let component;
-
-  beforeEach(() => {
-    component = new ServiceGraphImpl({
-      ...defaultProps,
-      loading: false,
-      metricsData: serviceMetrics.service_call_rate,
-    });
-  });
-
+describe('ServiceGraphImpl helper functions', () => {
   describe('getData', () => {
     it('handles null metrics data', () => {
-      component = new ServiceGraphImpl({ ...defaultProps, metricsData: null });
-      expect(component.getData()).toEqual([]);
+      expect(getData(null)).toEqual([]);
     });
 
     it('handles array metrics data', () => {
@@ -489,8 +483,7 @@ describe('ServiceGraphImpl methods', () => {
         { ...serviceMetrics.service_call_rate, quantile: 0.5 },
         { ...serviceMetrics.service_call_rate, quantile: 0.95 },
       ];
-      component = new ServiceGraphImpl({ ...defaultProps, metricsData: metricsArray });
-      const result = component.getData();
+      const result = getData(metricsArray);
       expect(result).toHaveLength(2);
       expect(result[0].quantile).toBe(0.95);
       expect(result[1].quantile).toBe(0.5);
@@ -499,20 +492,15 @@ describe('ServiceGraphImpl methods', () => {
 
   describe('getMetricsData', () => {
     it('handles empty metrics data', () => {
-      component = new ServiceGraphImpl({ ...defaultProps, metricsData: [] });
-      expect(component.getMetricsData()).toEqual([]);
+      expect(getMetricsData([])).toEqual([]);
     });
 
     it('handles metrics data without metricPoints', () => {
-      component = new ServiceGraphImpl({
-        ...defaultProps,
-        metricsData: { ...serviceMetrics.service_call_rate, metricPoints: undefined },
-      });
-      expect(component.getMetricsData()).toEqual([]);
+      expect(getMetricsData({ ...serviceMetrics.service_call_rate, metricPoints: undefined })).toEqual([]);
     });
 
     it('processes metrics data correctly', () => {
-      const result = component.getMetricsData();
+      const result = getMetricsData(serviceMetrics.service_call_rate);
       expect(result).toHaveLength(serviceMetrics.service_call_rate.metricPoints.length);
       expect(result[0]).toHaveProperty('x');
       expect(result[0]['0.95']).toBeDefined();
@@ -521,11 +509,11 @@ describe('ServiceGraphImpl methods', () => {
 
   describe('calculateYDomain', () => {
     it('handles empty data', () => {
-      expect(component.calculateYDomain([])).toEqual([0, 1]);
+      expect(calculateYDomain([])).toEqual([0, 1]);
     });
 
     it('handles data with only null values', () => {
-      expect(component.calculateYDomain([{ x: 1, y: null }])).toEqual([0, 1]);
+      expect(calculateYDomain([{ x: 1, y: null }])).toEqual([0, 1]);
     });
 
     it('calculates domain with padding', () => {
@@ -533,7 +521,7 @@ describe('ServiceGraphImpl methods', () => {
         { x: 1, y: 10 },
         { x: 2, y: 20 },
       ];
-      const [min, max] = component.calculateYDomain(data);
+      const [min, max] = calculateYDomain(data);
       expect(min).toBeLessThan(10);
       expect(max).toBeGreaterThan(20);
     });
@@ -541,12 +529,12 @@ describe('ServiceGraphImpl methods', () => {
 
   describe('calculateYAxisTicks', () => {
     it('generates correct number of ticks', () => {
-      const ticks = component.calculateYAxisTicks([0, 100]);
+      const ticks = calculateYAxisTicks([0, 100]);
       expect(ticks).toHaveLength(5);
     });
 
     it('generates evenly spaced ticks', () => {
-      const ticks = component.calculateYAxisTicks([0, 100]);
+      const ticks = calculateYAxisTicks([0, 100]);
       const step = ticks[1] - ticks[0];
       for (let i = 1; i < ticks.length; i++) {
         expect(ticks[i] - ticks[i - 1]).toBeCloseTo(step);
@@ -556,16 +544,11 @@ describe('ServiceGraphImpl methods', () => {
 
   describe('formatYAxisTick', () => {
     it('handles error rate values', () => {
-      component = new ServiceGraphImpl({ ...defaultProps, name: 'Error rate' });
-      expect(component.formatYAxisTick(1.23)).toBe('1');
+      expect(formatYAxisTick(1.23, 'Error rate')).toBe('1');
     });
 
     it('handles custom formatter', () => {
-      component = new ServiceGraphImpl({
-        ...defaultProps,
-        yAxisTickFormat: v => Math.round(v * 100),
-      });
-      expect(component.formatYAxisTick(0.123)).toBe('12');
+      expect(formatYAxisTick(0.123, 'Test', v => Math.round(v * 100))).toBe('12');
     });
 
     it('formats different value ranges correctly', () => {
@@ -580,19 +563,19 @@ describe('ServiceGraphImpl methods', () => {
       ];
 
       testCases.forEach(({ value, expected }) => {
-        expect(component.formatYAxisTick(value)).toBe(expected);
+        expect(formatYAxisTick(value, 'Test')).toBe(expected);
       });
     });
   });
 
   describe('calculateNumericTicks', () => {
     it('generates correct number of ticks', () => {
-      const ticks = component.calculateNumericTicks([0, 100]);
+      const ticks = calculateNumericTicks([0, 100]);
       expect(ticks).toHaveLength(7);
     });
 
     it('generates evenly spaced ticks', () => {
-      const ticks = component.calculateNumericTicks([0, 100]);
+      const ticks = calculateNumericTicks([0, 100]);
       const step = ticks[1] - ticks[0];
       for (let i = 1; i < ticks.length; i++) {
         expect(ticks[i] - ticks[i - 1]).toBeCloseTo(step);
@@ -602,17 +585,11 @@ describe('ServiceGraphImpl methods', () => {
 
   describe('renderLines', () => {
     it('returns empty array for null metrics data', () => {
-      component = new ServiceGraphImpl({ ...defaultProps, metricsData: null });
-      expect(component.renderLines()).toHaveLength(0);
+      expect(renderLines(null)).toHaveLength(0);
     });
 
     it('renders lines with custom color', () => {
-      component = new ServiceGraphImpl({
-        ...defaultProps,
-        metricsData: serviceMetrics.service_call_rate,
-        color: '#FF0000',
-      });
-      const lines = component.renderLines();
+      const lines = renderLines(serviceMetrics.service_call_rate, '#FF0000');
       expect(lines[0].props.stroke).toBe('#FF0000');
     });
 
@@ -621,11 +598,10 @@ describe('ServiceGraphImpl methods', () => {
         { ...serviceMetrics.service_call_rate, quantile: 0.5 },
         { ...serviceMetrics.service_call_rate, quantile: 0.95 },
       ];
-      component = new ServiceGraphImpl({ ...defaultProps, metricsData: metricsArray });
-      const lines = component.renderLines();
+      const lines = renderLines(metricsArray);
       expect(lines).toHaveLength(2);
-      expect(lines[0].props.stroke).toBe(component.colors[0]);
-      expect(lines[1].props.stroke).toBe(component.colors[1]);
+      expect(lines[0].props.stroke).toBe(COLORS[0]);
+      expect(lines[1].props.stroke).toBe(COLORS[1]);
     });
   });
 });
