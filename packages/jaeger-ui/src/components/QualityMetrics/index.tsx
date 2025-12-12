@@ -40,147 +40,120 @@ type TReduxProps = {
 
 export type TProps = TDispatchProps & TReduxProps & TOwnProps;
 
-type TState = {
-  qualityMetrics?: TQualityMetrics;
-  error?: Error;
-  loading?: boolean;
-};
+export function UnconnectedQualityMetrics({ fetchServices, history, lookback, service, services }: TProps) {
+  const [qualityMetrics, setQualityMetrics] = React.useState<TQualityMetrics | undefined>();
+  const [error, setError] = React.useState<Error | undefined>();
+  const [loading, setLoading] = React.useState<boolean>(false);
 
-export class UnconnectedQualityMetrics extends React.PureComponent<TProps, TState> {
-  state: TState = {};
-
-  constructor(props: TProps) {
-    super(props);
-
-    const { fetchServices, services } = props;
+  React.useEffect(() => {
     if (!services) {
       fetchServices();
     }
-  }
+  }, [fetchServices, services]);
 
-  componentDidMount() {
-    this.fetchQualityMetrics();
-  }
-
-  componentDidUpdate(prevProps: TProps) {
-    if (prevProps.service !== this.props.service || prevProps.lookback !== this.props.lookback) {
-      this.setState({
-        qualityMetrics: undefined,
-        error: undefined,
-        loading: false,
-      });
-      this.fetchQualityMetrics();
-    }
-  }
-
-  fetchQualityMetrics() {
-    const { lookback, service } = this.props;
+  React.useEffect(() => {
     if (!service) return;
 
-    this.setState({ loading: true });
+    setLoading(true);
 
     JaegerAPI.fetchQualityMetrics(service, lookback)
-      .then((qualityMetrics: TQualityMetrics) => {
-        this.setState({ qualityMetrics, loading: false });
+      .then((metrics: TQualityMetrics) => {
+        setQualityMetrics(metrics);
+        setLoading(false);
       })
-      .catch((error: Error) => {
-        this.setState({
-          error,
-          loading: false,
-        });
+      .catch((err: Error) => {
+        setError(err);
+        setLoading(false);
       });
-  }
+  }, [service, lookback]);
 
-  setLookback = (lookback: number | null) => {
-    if (!lookback) return;
-    if (lookback < 1 || lookback !== Math.floor(lookback)) return;
+  const setLookback = React.useCallback(
+    (newLookback: number | null) => {
+      if (!newLookback) return;
+      if (newLookback < 1 || newLookback !== Math.floor(newLookback)) return;
 
-    const { history, service = '' } = this.props;
-    history.push(getUrl({ lookback, service }));
-  };
+      history.push(getUrl({ lookback: newLookback, service: service || '' }));
+    },
+    [history, service]
+  );
 
-  setService = (service: string) => {
-    const { history, lookback } = this.props;
-    history.push(getUrl({ lookback, service }));
-  };
+  const setService = React.useCallback(
+    (newService: string) => {
+      history.push(getUrl({ lookback, service: newService }));
+    },
+    [history, lookback]
+  );
 
-  render() {
-    const { lookback, service, services } = this.props;
-    const { qualityMetrics, error, loading } = this.state;
-    return (
-      <div className="QualityMetrics">
-        <Header
-          lookback={lookback}
-          service={service}
-          services={services}
-          setService={this.setService}
-          setLookback={this.setLookback}
-        />
-        {qualityMetrics && (
-          <>
-            <BannerText bannerText={qualityMetrics.bannerText} />
-            <div className="QualityMetrics--Body">
-              <div className="QualityMetrics--ScoreCards">
-                {qualityMetrics.scores.map(score => (
-                  <ScoreCard
-                    key={score.key}
-                    score={score}
-                    link={qualityMetrics.traceQualityDocumentationLink}
-                  />
-                ))}
-              </div>
-              <div className="QualityMetrics--MetricCards">
-                {qualityMetrics.metrics.map(metric => (
-                  <MetricCard key={metric.name} metric={metric} />
-                ))}
-              </div>
-              {qualityMetrics.clients && (
-                <DetailsCard
-                  className="QualityMetrics--ClientVersions"
-                  columnDefs={[
-                    {
-                      key: 'version',
-                      label: 'Version',
-                    },
-                    {
-                      key: 'minVersion',
-                      label: 'Minimum Version',
-                    },
-                    {
-                      key: 'count',
-                      label: 'Count',
-                    },
-                    {
-                      key: 'examples',
-                      label: 'Examples',
-                      preventSort: true,
-                    },
-                  ]}
-                  details={
-                    qualityMetrics.clients &&
-                    qualityMetrics.clients.map(clientRow => ({
-                      ...clientRow,
-                      examples: {
-                        value: (
-                          <ExamplesLink
-                            examples={clientRow.examples}
-                            key={`${clientRow.version}--examples`}
-                          />
-                        ),
-                      },
-                    }))
-                  }
-                  header="Client Versions"
+  return (
+    <div className="QualityMetrics">
+      <Header
+        lookback={lookback}
+        service={service}
+        services={services}
+        setService={setService}
+        setLookback={setLookback}
+      />
+      {qualityMetrics && (
+        <>
+          <BannerText bannerText={qualityMetrics.bannerText} />
+          <div className="QualityMetrics--Body">
+            <div className="QualityMetrics--ScoreCards">
+              {qualityMetrics.scores.map(score => (
+                <ScoreCard
+                  key={score.key}
+                  score={score}
+                  link={qualityMetrics.traceQualityDocumentationLink}
                 />
-              )}
+              ))}
             </div>
-          </>
-        )}
-        {loading && <LoadingIndicator centered />}
-        {error && <div className="QualityMetrics--Error">{error.message}</div>}
-      </div>
-    );
-  }
+            <div className="QualityMetrics--MetricCards">
+              {qualityMetrics.metrics.map(metric => (
+                <MetricCard key={metric.name} metric={metric} />
+              ))}
+            </div>
+            {qualityMetrics.clients && (
+              <DetailsCard
+                className="QualityMetrics--ClientVersions"
+                columnDefs={[
+                  {
+                    key: 'version',
+                    label: 'Version',
+                  },
+                  {
+                    key: 'minVersion',
+                    label: 'Minimum Version',
+                  },
+                  {
+                    key: 'count',
+                    label: 'Count',
+                  },
+                  {
+                    key: 'examples',
+                    label: 'Examples',
+                    preventSort: true,
+                  },
+                ]}
+                details={
+                  qualityMetrics.clients &&
+                  qualityMetrics.clients.map(clientRow => ({
+                    ...clientRow,
+                    examples: {
+                      value: (
+                        <ExamplesLink examples={clientRow.examples} key={`${clientRow.version}--examples`} />
+                      ),
+                    },
+                  }))
+                }
+                header="Client Versions"
+              />
+            )}
+          </div>
+        </>
+      )}
+      {loading && <LoadingIndicator centered />}
+      {error && <div className="QualityMetrics--Error">{error.message}</div>}
+    </div>
+  );
 }
 
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
