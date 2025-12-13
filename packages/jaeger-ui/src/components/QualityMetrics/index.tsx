@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { History as RouterHistory, Location } from 'history';
+import { useNavigate } from 'react-router-dom-v5-compat';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -21,12 +21,6 @@ import { ReduxState } from '../../types';
 import { TQualityMetrics } from './types';
 
 import './index.css';
-import withRouteProps from '../../utils/withRouteProps';
-
-type TOwnProps = {
-  history: RouterHistory;
-  location: Location;
-};
 
 type TDispatchProps = {
   fetchServices: () => void;
@@ -38,9 +32,10 @@ type TReduxProps = {
   services?: string[] | null;
 };
 
-export type TProps = TDispatchProps & TReduxProps & TOwnProps;
+export type TProps = TDispatchProps & TReduxProps;
 
-export function UnconnectedQualityMetrics({ fetchServices, history, lookback, service, services }: TProps) {
+export function UnconnectedQualityMetrics({ fetchServices, lookback, service, services }: TProps) {
+  const navigate = useNavigate();
   const [qualityMetrics, setQualityMetrics] = React.useState<TQualityMetrics | undefined>();
   const [error, setError] = React.useState<Error | undefined>();
   const [loading, setLoading] = React.useState<boolean>(false);
@@ -72,16 +67,16 @@ export function UnconnectedQualityMetrics({ fetchServices, history, lookback, se
       if (!newLookback) return;
       if (newLookback < 1 || newLookback !== Math.floor(newLookback)) return;
 
-      history.push(getUrl({ lookback: newLookback, service: service || '' }));
+      navigate(getUrl({ lookback: newLookback, service: service || '' }));
     },
-    [history, service]
+    [navigate, service]
   );
 
   const setService = React.useCallback(
     (newService: string) => {
-      history.push(getUrl({ lookback, service: newService }));
+      navigate(getUrl({ lookback, service: newService }));
     },
-    [history, lookback]
+    [navigate, lookback]
   );
 
   return (
@@ -156,12 +151,13 @@ export function UnconnectedQualityMetrics({ fetchServices, history, lookback, se
   );
 }
 
-export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
+export function mapStateToProps(state: ReduxState): TReduxProps {
   const {
     services: { services },
+    router: { location },
   } = state;
   return {
-    ...getUrlState(ownProps.location.search),
+    ...getUrlState(location.search),
     services,
   };
 }
@@ -174,4 +170,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(UnconnectedQualityMetrics));
+export default connect(mapStateToProps, mapDispatchToProps)(UnconnectedQualityMetrics);
