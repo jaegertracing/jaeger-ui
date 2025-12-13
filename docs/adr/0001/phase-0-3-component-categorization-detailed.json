@@ -1,0 +1,3009 @@
+{
+  "metadata": {
+    "generatedAt": "2025-11-27T22:25:30.781Z",
+    "totalFiles": 103,
+    "totalCssLines": 5619,
+    "totalColors": 528,
+    "averageColorsPerFile": 5.1,
+    "priorityDistribution": {
+      "high": 10,
+      "medium": 16,
+      "low": 59,
+      "none": 18
+    }
+  },
+  "components": [
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanBarRow.css",
+      "category": "TracePage",
+      "cssLines": 190,
+      "colorCount": 34,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
+      "name": "components/DependencyGraph/dag.css",
+      "category": "DependencyGraph",
+      "cssLines": 82,
+      "colorCount": 21,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
+      "name": "components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
+      "category": "Other",
+      "cssLines": 98,
+      "colorCount": 19,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
+      "name": "components/DependencyGraph/DAGOptions.css",
+      "category": "DependencyGraph",
+      "cssLines": 151,
+      "colorCount": 18,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
+      "name": "components/TracePage/TraceGraph/TraceGraph.css",
+      "category": "TracePage",
+      "cssLines": 111,
+      "colorCount": 18,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
+      "name": "components/TraceDiff/TraceDiffGraph/renderNode.css",
+      "category": "Other",
+      "cssLines": 94,
+      "colorCount": 17,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
+      "name": "components/DeepDependencies/Header/index.css",
+      "category": "DeepDependencies",
+      "cssLines": 102,
+      "colorCount": 16,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/NameSelector.css",
+      "name": "components/common/NameSelector.css",
+      "category": "Common/Utilities",
+      "cssLines": 74,
+      "colorCount": 15,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/utils.css",
+      "name": "components/common/utils.css",
+      "category": "Common/Utilities",
+      "cssLines": 138,
+      "colorCount": 15,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/TraceDiffGraph.css",
+      "name": "components/TraceDiff/TraceDiffGraph/TraceDiffGraph.css",
+      "category": "Other",
+      "cssLines": 158,
+      "colorCount": 15,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Graph/getNodeRenderers.css",
+      "name": "components/DeepDependencies/Graph/getNodeRenderers.css",
+      "category": "DeepDependencies",
+      "cssLines": 56,
+      "colorCount": 14,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
+      "name": "components/common/FilteredList/ListItem.css",
+      "category": "Common/Utilities",
+      "cssLines": 56,
+      "colorCount": 13,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageHeader.css",
+      "name": "components/TracePage/TracePageHeader/TracePageHeader.css",
+      "category": "TracePage",
+      "cssLines": 101,
+      "colorCount": 13,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchForm.css",
+      "name": "components/SearchTracePage/SearchForm.css",
+      "category": "SearchTracePage",
+      "cssLines": 69,
+      "colorCount": 12,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/DetailsPanel.css",
+      "name": "components/DeepDependencies/SidePanel/DetailsPanel.css",
+      "category": "DeepDependencies",
+      "cssLines": 73,
+      "colorCount": 11,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/ErrorMessage.css",
+      "name": "components/common/ErrorMessage.css",
+      "category": "Common/Utilities",
+      "cssLines": 54,
+      "colorCount": 10,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/LoadingIndicator.css",
+      "name": "components/common/LoadingIndicator.css",
+      "category": "Common/Utilities",
+      "cssLines": 55,
+      "colorCount": 10,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
+      "name": "components/DeepDependencies/Header/HopsSelector/Selector.css",
+      "category": "DeepDependencies",
+      "cssLines": 92,
+      "colorCount": 10,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/index.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/index.css",
+      "category": "TracePage",
+      "cssLines": 53,
+      "colorCount": 10,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/ResultItemTitle.css",
+      "name": "components/SearchTracePage/SearchResults/ResultItemTitle.css",
+      "category": "SearchTracePage",
+      "cssLines": 53,
+      "colorCount": 9,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
+      "name": "components/TracePage/TraceGraph/OpNode.css",
+      "category": "TracePage",
+      "cssLines": 73,
+      "colorCount": 9,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/VerticalResizer.css",
+      "name": "components/common/VerticalResizer.css",
+      "category": "Common/Utilities",
+      "cssLines": 94,
+      "colorCount": 8,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/index.css",
+      "name": "components/DeepDependencies/SidePanel/index.css",
+      "category": "DeepDependencies",
+      "cssLines": 83,
+      "colorCount": 8,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/Monitor/ServicesView/operationDetailsTable/index.css",
+      "name": "components/Monitor/ServicesView/operationDetailsTable/index.css",
+      "category": "Monitor",
+      "cssLines": 80,
+      "colorCount": 8,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
+      "name": "components/TraceDiff/TraceDiffHeader/TraceHeader.css",
+      "category": "Other",
+      "cssLines": 76,
+      "colorCount": 8,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/index.css",
+      "name": "components/TracePage/TraceTimelineViewer/index.css",
+      "category": "TracePage",
+      "cssLines": 83,
+      "colorCount": 8,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/DetailsCard/DetailTableDropdown.css",
+      "name": "components/common/DetailsCard/DetailTableDropdown.css",
+      "category": "Common/Utilities",
+      "cssLines": 55,
+      "colorCount": 7,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/FilteredList/index.css",
+      "name": "components/common/FilteredList/index.css",
+      "category": "Common/Utilities",
+      "cssLines": 55,
+      "colorCount": 7,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBar.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanBar.css",
+      "category": "TracePage",
+      "cssLines": 129,
+      "colorCount": 7,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
+      "category": "TracePage",
+      "cssLines": 57,
+      "colorCount": 7,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/ResultItem.css",
+      "name": "components/SearchTracePage/SearchResults/ResultItem.css",
+      "category": "SearchTracePage",
+      "cssLines": 31,
+      "colorCount": 6,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/KeyboardShortcutsHelp.css",
+      "name": "components/TracePage/TracePageHeader/KeyboardShortcutsHelp.css",
+      "category": "TracePage",
+      "cssLines": 30,
+      "colorCount": 6,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianLogs.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/AccordianLogs.css",
+      "category": "TracePage",
+      "cssLines": 40,
+      "colorCount": 6,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
+      "category": "TracePage",
+      "cssLines": 55,
+      "colorCount": 6,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Graph/DdgNodeContent/index.css",
+      "name": "components/DeepDependencies/Graph/DdgNodeContent/index.css",
+      "category": "DeepDependencies",
+      "cssLines": 93,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/QualityMetrics/MetricCard.css",
+      "name": "components/QualityMetrics/MetricCard.css",
+      "category": "QualityMetrics",
+      "cssLines": 49,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/Scrubber.css",
+      "name": "components/TracePage/TracePageHeader/SpanGraph/Scrubber.css",
+      "category": "TracePage",
+      "cssLines": 36,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/ViewingLayer.css",
+      "name": "components/TracePage/TracePageHeader/SpanGraph/ViewingLayer.css",
+      "category": "TracePage",
+      "cssLines": 65,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageSearchBar.css",
+      "name": "components/TracePage/TracePageHeader/TracePageSearchBar.css",
+      "category": "TracePage",
+      "cssLines": 66,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceSpanView/index.css",
+      "name": "components/TracePage/TraceSpanView/index.css",
+      "category": "TracePage",
+      "cssLines": 36,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceStatistics/index.css",
+      "name": "components/TracePage/TraceStatistics/index.css",
+      "category": "TracePage",
+      "cssLines": 29,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianReferences.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/AccordianReferences.css",
+      "category": "TracePage",
+      "cssLines": 50,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css",
+      "name": "components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css",
+      "category": "TracePage",
+      "cssLines": 57,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/DiffSelection.css",
+      "name": "components/SearchTracePage/SearchResults/DiffSelection.css",
+      "category": "SearchTracePage",
+      "cssLines": 24,
+      "colorCount": 4,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/index.css",
+      "name": "components/SearchTracePage/SearchResults/index.css",
+      "category": "SearchTracePage",
+      "cssLines": 42,
+      "colorCount": 4,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceStatistics/PopupSql.css",
+      "name": "components/TracePage/TraceStatistics/PopupSql.css",
+      "category": "TracePage",
+      "cssLines": 58,
+      "colorCount": 4,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/App/TopNav.css",
+      "name": "components/App/TopNav.css",
+      "category": "App/Layout",
+      "cssLines": 26,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/Monitor/EmptyState/index.css",
+      "name": "components/Monitor/EmptyState/index.css",
+      "category": "Monitor",
+      "cssLines": 43,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/Monitor/ServicesView/serviceGraph.css",
+      "name": "components/Monitor/ServicesView/serviceGraph.css",
+      "category": "Monitor",
+      "cssLines": 63,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/QualityMetrics/Header.css",
+      "name": "components/QualityMetrics/Header.css",
+      "category": "QualityMetrics",
+      "cssLines": 31,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/ScatterPlot.css",
+      "name": "components/SearchTracePage/SearchResults/ScatterPlot.css",
+      "category": "SearchTracePage",
+      "cssLines": 34,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css",
+      "name": "components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css",
+      "category": "TracePage",
+      "cssLines": 43,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.css",
+      "name": "components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.css",
+      "category": "TracePage",
+      "cssLines": 23,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/App/index.css",
+      "name": "components/App/index.css",
+      "category": "App/Layout",
+      "cssLines": 19,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/CopyIcon.css",
+      "name": "components/common/CopyIcon.css",
+      "category": "Common/Utilities",
+      "cssLines": 23,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/DetailsCard/index.css",
+      "name": "components/common/DetailsCard/index.css",
+      "category": "Common/Utilities",
+      "cssLines": 63,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/EmphasizedNode.css",
+      "name": "components/common/EmphasizedNode.css",
+      "category": "Common/Utilities",
+      "cssLines": 29,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/index.css",
+      "name": "components/DeepDependencies/Header/LayoutSettings/index.css",
+      "category": "DeepDependencies",
+      "cssLines": 39,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/QualityMetrics/CountCard.css",
+      "name": "components/QualityMetrics/CountCard.css",
+      "category": "QualityMetrics",
+      "cssLines": 25,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/QualityMetrics/ScoreCard.css",
+      "name": "components/QualityMetrics/ScoreCard.css",
+      "category": "QualityMetrics",
+      "cssLines": 22,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/index.css",
+      "name": "components/SearchTracePage/index.css",
+      "category": "SearchTracePage",
+      "cssLines": 36,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/ArchiveNotifier/index.css",
+      "name": "components/TracePage/ArchiveNotifier/index.css",
+      "category": "TracePage",
+      "cssLines": 24,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css",
+      "category": "TracePage",
+      "cssLines": 17,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetailRow.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetailRow.css",
+      "category": "TracePage",
+      "cssLines": 46,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanTreeOffset.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanTreeOffset.css",
+      "category": "TracePage",
+      "cssLines": 42,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/Ticks.css",
+      "name": "components/TracePage/TraceTimelineViewer/Ticks.css",
+      "category": "TracePage",
+      "cssLines": 31,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/utils/DraggableManager/demo/DividerDemo.css",
+      "name": "utils/DraggableManager/demo/DividerDemo.css",
+      "category": "Other",
+      "cssLines": 34,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/utils/DraggableManager/demo/DraggableManagerDemo.css",
+      "name": "utils/DraggableManager/demo/DraggableManagerDemo.css",
+      "category": "Other",
+      "cssLines": 21,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/utils/DraggableManager/demo/RegionDemo.css",
+      "name": "utils/DraggableManager/demo/RegionDemo.css",
+      "category": "Other",
+      "cssLines": 28,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/utils/ValidatedFormField.css",
+      "name": "utils/ValidatedFormField.css",
+      "category": "Other",
+      "cssLines": 10,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/BreakableText.css",
+      "name": "components/common/BreakableText.css",
+      "category": "Common/Utilities",
+      "cssLines": 10,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/LabeledList.css",
+      "name": "components/common/LabeledList.css",
+      "category": "Common/Utilities",
+      "cssLines": 20,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/TraceName.css",
+      "name": "components/common/TraceName.css",
+      "category": "Common/Utilities",
+      "cssLines": 9,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Graph/index.css",
+      "name": "components/DeepDependencies/Graph/index.css",
+      "category": "DeepDependencies",
+      "cssLines": 27,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/ChevronDown.css",
+      "name": "components/DeepDependencies/Header/ChevronDown.css",
+      "category": "DeepDependencies",
+      "cssLines": 12,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DependencyGraph/index.css",
+      "name": "components/DependencyGraph/index.css",
+      "category": "DependencyGraph",
+      "cssLines": 24,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/FileLoader.css",
+      "name": "components/SearchTracePage/FileLoader.css",
+      "category": "SearchTracePage",
+      "cssLines": 11,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiff.css",
+      "name": "components/TraceDiff/TraceDiff.css",
+      "category": "Other",
+      "cssLines": 14,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/index.css",
+      "name": "components/TracePage/index.css",
+      "category": "TracePage",
+      "cssLines": 12,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/AltViewOptions.css",
+      "name": "components/TracePage/TracePageHeader/AltViewOptions.css",
+      "category": "TracePage",
+      "cssLines": 20,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/CanvasSpanGraph.css",
+      "name": "components/TracePage/TracePageHeader/SpanGraph/CanvasSpanGraph.css",
+      "category": "TracePage",
+      "cssLines": 12,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/GraphTicks.css",
+      "name": "components/TracePage/TracePageHeader/SpanGraph/GraphTicks.css",
+      "category": "TracePage",
+      "cssLines": 10,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/TickLabels.css",
+      "name": "components/TracePage/TracePageHeader/SpanGraph/TickLabels.css",
+      "category": "TracePage",
+      "cssLines": 17,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/ReferencesButton.css",
+      "name": "components/TracePage/TraceTimelineViewer/ReferencesButton.css",
+      "category": "TracePage",
+      "cssLines": 26,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/TextList.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/TextList.css",
+      "category": "TracePage",
+      "cssLines": 26,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/App/Page.css",
+      "name": "components/App/Page.css",
+      "category": "App/Layout",
+      "cssLines": 30,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/App/TraceIDSearchInput.css",
+      "name": "components/App/TraceIDSearchInput.css",
+      "category": "App/Layout",
+      "cssLines": 9,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/ActionMenu/ActionsMenu.css",
+      "name": "components/common/ActionMenu/ActionsMenu.css",
+      "category": "Common/Utilities",
+      "cssLines": 38,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/NewWindowIcon.css",
+      "name": "components/common/NewWindowIcon.css",
+      "category": "Common/Utilities",
+      "cssLines": 14,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/TraceId.css",
+      "name": "components/common/TraceId.css",
+      "category": "Common/Utilities",
+      "cssLines": 18,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/vars.css",
+      "name": "components/common/vars.css",
+      "category": "Common/Utilities",
+      "cssLines": 11,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Graph/DdgNodeContent/node-icons.css",
+      "name": "components/DeepDependencies/Graph/DdgNodeContent/node-icons.css",
+      "category": "DeepDependencies",
+      "cssLines": 13,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/settingsIcon.css",
+      "name": "components/DeepDependencies/Header/LayoutSettings/settingsIcon.css",
+      "category": "DeepDependencies",
+      "cssLines": 13,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/index.css",
+      "name": "components/DeepDependencies/index.css",
+      "category": "DeepDependencies",
+      "cssLines": 31,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/Monitor/ServicesView/index.css",
+      "name": "components/Monitor/ServicesView/index.css",
+      "category": "Monitor",
+      "cssLines": 72,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/QualityMetrics/BannerText.css",
+      "name": "components/QualityMetrics/BannerText.css",
+      "category": "QualityMetrics",
+      "cssLines": 12,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/QualityMetrics/index.css",
+      "name": "components/QualityMetrics/index.css",
+      "category": "QualityMetrics",
+      "cssLines": 28,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/CohortTable.css",
+      "name": "components/TraceDiff/TraceDiffHeader/CohortTable.css",
+      "category": "Other",
+      "cssLines": 14,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceFlamegraph/index.css",
+      "name": "components/TracePage/TraceFlamegraph/index.css",
+      "category": "TracePage",
+      "cssLines": 8,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceStatistics/TraceStatisticsHeader.css",
+      "name": "components/TracePage/TraceStatistics/TraceStatisticsHeader.css",
+      "category": "TracePage",
+      "cssLines": 34,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/grid.css",
+      "name": "components/TracePage/TraceTimelineViewer/grid.css",
+      "category": "TracePage",
+      "cssLines": 816,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "COMPLEX"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineRow.css",
+      "name": "components/TracePage/TraceTimelineViewer/TimelineRow.css",
+      "category": "TracePage",
+      "cssLines": 11,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/VirtualizedTraceView.css",
+      "name": "components/TracePage/TraceTimelineViewer/VirtualizedTraceView.css",
+      "category": "TracePage",
+      "cssLines": 19,
+      "colorCount": 0,
+      "priority": "NONE",
+      "priorityScore": 0,
+      "complexity": "SIMPLE"
+    }
+  ],
+  "byCategory": {
+    "TracePage": [
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
+        "name": "components/TracePage/TraceTimelineViewer/SpanBarRow.css",
+        "category": "TracePage",
+        "cssLines": 190,
+        "colorCount": 34,
+        "priority": "HIGH",
+        "priorityScore": 3,
+        "complexity": "MODERATE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
+        "name": "components/TracePage/TraceGraph/TraceGraph.css",
+        "category": "TracePage",
+        "cssLines": 111,
+        "colorCount": 18,
+        "priority": "HIGH",
+        "priorityScore": 3,
+        "complexity": "MODERATE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageHeader.css",
+        "name": "components/TracePage/TracePageHeader/TracePageHeader.css",
+        "category": "TracePage",
+        "cssLines": 101,
+        "colorCount": 13,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "MODERATE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/index.css",
+        "name": "components/TracePage/TraceTimelineViewer/SpanDetail/index.css",
+        "category": "TracePage",
+        "cssLines": 53,
+        "colorCount": 10,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
+        "name": "components/TracePage/TraceGraph/OpNode.css",
+        "category": "TracePage",
+        "cssLines": 73,
+        "colorCount": 9,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/index.css",
+        "name": "components/TracePage/TraceTimelineViewer/index.css",
+        "category": "TracePage",
+        "cssLines": 83,
+        "colorCount": 8,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBar.css",
+        "name": "components/TracePage/TraceTimelineViewer/SpanBar.css",
+        "category": "TracePage",
+        "cssLines": 129,
+        "colorCount": 7,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "MODERATE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
+        "name": "components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
+        "category": "TracePage",
+        "cssLines": 57,
+        "colorCount": 7,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/KeyboardShortcutsHelp.css",
+        "name": "components/TracePage/TracePageHeader/KeyboardShortcutsHelp.css",
+        "category": "TracePage",
+        "cssLines": 30,
+        "colorCount": 6,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianLogs.css",
+        "name": "components/TracePage/TraceTimelineViewer/SpanDetail/AccordianLogs.css",
+        "category": "TracePage",
+        "cssLines": 40,
+        "colorCount": 6,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
+        "name": "components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
+        "category": "TracePage",
+        "cssLines": 55,
+        "colorCount": 6,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/Scrubber.css",
+        "name": "components/TracePage/TracePageHeader/SpanGraph/Scrubber.css",
+        "category": "TracePage",
+        "cssLines": 36,
+        "colorCount": 5,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/ViewingLayer.css",
+        "name": "components/TracePage/TracePageHeader/SpanGraph/ViewingLayer.css",
+        "category": "TracePage",
+        "cssLines": 65,
+        "colorCount": 5,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageSearchBar.css",
+        "name": "components/TracePage/TracePageHeader/TracePageSearchBar.css",
+        "category": "TracePage",
+        "cssLines": 66,
+        "colorCount": 5,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceSpanView/index.css",
+        "name": "components/TracePage/TraceSpanView/index.css",
+        "category": "TracePage",
+        "cssLines": 36,
+        "colorCount": 5,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceStatistics/index.css",
+        "name": "components/TracePage/TraceStatistics/index.css",
+        "category": "TracePage",
+        "cssLines": 29,
+        "colorCount": 5,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianReferences.css",
+        "name": "components/TracePage/TraceTimelineViewer/SpanDetail/AccordianReferences.css",
+        "category": "TracePage",
+        "cssLines": 50,
+        "colorCount": 5,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css",
+        "name": "components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css",
+        "category": "TracePage",
+        "cssLines": 57,
+        "colorCount": 5,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceStatistics/PopupSql.css",
+        "name": "components/TracePage/TraceStatistics/PopupSql.css",
+        "category": "TracePage",
+        "cssLines": 58,
+        "colorCount": 4,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css",
+        "name": "components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css",
+        "category": "TracePage",
+        "cssLines": 43,
+        "colorCount": 3,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.css",
+        "name": "components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.css",
+        "category": "TracePage",
+        "cssLines": 23,
+        "colorCount": 3,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/ArchiveNotifier/index.css",
+        "name": "components/TracePage/ArchiveNotifier/index.css",
+        "category": "TracePage",
+        "cssLines": 24,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css",
+        "name": "components/TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css",
+        "category": "TracePage",
+        "cssLines": 17,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetailRow.css",
+        "name": "components/TracePage/TraceTimelineViewer/SpanDetailRow.css",
+        "category": "TracePage",
+        "cssLines": 46,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanTreeOffset.css",
+        "name": "components/TracePage/TraceTimelineViewer/SpanTreeOffset.css",
+        "category": "TracePage",
+        "cssLines": 42,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/Ticks.css",
+        "name": "components/TracePage/TraceTimelineViewer/Ticks.css",
+        "category": "TracePage",
+        "cssLines": 31,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/index.css",
+        "name": "components/TracePage/index.css",
+        "category": "TracePage",
+        "cssLines": 12,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/AltViewOptions.css",
+        "name": "components/TracePage/TracePageHeader/AltViewOptions.css",
+        "category": "TracePage",
+        "cssLines": 20,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/CanvasSpanGraph.css",
+        "name": "components/TracePage/TracePageHeader/SpanGraph/CanvasSpanGraph.css",
+        "category": "TracePage",
+        "cssLines": 12,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/GraphTicks.css",
+        "name": "components/TracePage/TracePageHeader/SpanGraph/GraphTicks.css",
+        "category": "TracePage",
+        "cssLines": 10,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/TickLabels.css",
+        "name": "components/TracePage/TracePageHeader/SpanGraph/TickLabels.css",
+        "category": "TracePage",
+        "cssLines": 17,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/ReferencesButton.css",
+        "name": "components/TracePage/TraceTimelineViewer/ReferencesButton.css",
+        "category": "TracePage",
+        "cssLines": 26,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/TextList.css",
+        "name": "components/TracePage/TraceTimelineViewer/SpanDetail/TextList.css",
+        "category": "TracePage",
+        "cssLines": 26,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceFlamegraph/index.css",
+        "name": "components/TracePage/TraceFlamegraph/index.css",
+        "category": "TracePage",
+        "cssLines": 8,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceStatistics/TraceStatisticsHeader.css",
+        "name": "components/TracePage/TraceStatistics/TraceStatisticsHeader.css",
+        "category": "TracePage",
+        "cssLines": 34,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/grid.css",
+        "name": "components/TracePage/TraceTimelineViewer/grid.css",
+        "category": "TracePage",
+        "cssLines": 816,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "COMPLEX"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineRow.css",
+        "name": "components/TracePage/TraceTimelineViewer/TimelineRow.css",
+        "category": "TracePage",
+        "cssLines": 11,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/VirtualizedTraceView.css",
+        "name": "components/TracePage/TraceTimelineViewer/VirtualizedTraceView.css",
+        "category": "TracePage",
+        "cssLines": 19,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      }
+    ],
+    "DependencyGraph": [
+      {
+        "filePath": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
+        "name": "components/DependencyGraph/dag.css",
+        "category": "DependencyGraph",
+        "cssLines": 82,
+        "colorCount": 21,
+        "priority": "HIGH",
+        "priorityScore": 3,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
+        "name": "components/DependencyGraph/DAGOptions.css",
+        "category": "DependencyGraph",
+        "cssLines": 151,
+        "colorCount": 18,
+        "priority": "HIGH",
+        "priorityScore": 3,
+        "complexity": "MODERATE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/DependencyGraph/index.css",
+        "name": "components/DependencyGraph/index.css",
+        "category": "DependencyGraph",
+        "cssLines": 24,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      }
+    ],
+    "Other": [
+      {
+        "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
+        "name": "components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
+        "category": "Other",
+        "cssLines": 98,
+        "colorCount": 19,
+        "priority": "HIGH",
+        "priorityScore": 3,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
+        "name": "components/TraceDiff/TraceDiffGraph/renderNode.css",
+        "category": "Other",
+        "cssLines": 94,
+        "colorCount": 17,
+        "priority": "HIGH",
+        "priorityScore": 3,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/TraceDiffGraph.css",
+        "name": "components/TraceDiff/TraceDiffGraph/TraceDiffGraph.css",
+        "category": "Other",
+        "cssLines": 158,
+        "colorCount": 15,
+        "priority": "HIGH",
+        "priorityScore": 3,
+        "complexity": "MODERATE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
+        "name": "components/TraceDiff/TraceDiffHeader/TraceHeader.css",
+        "category": "Other",
+        "cssLines": 76,
+        "colorCount": 8,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/utils/DraggableManager/demo/DividerDemo.css",
+        "name": "utils/DraggableManager/demo/DividerDemo.css",
+        "category": "Other",
+        "cssLines": 34,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/utils/DraggableManager/demo/DraggableManagerDemo.css",
+        "name": "utils/DraggableManager/demo/DraggableManagerDemo.css",
+        "category": "Other",
+        "cssLines": 21,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/utils/DraggableManager/demo/RegionDemo.css",
+        "name": "utils/DraggableManager/demo/RegionDemo.css",
+        "category": "Other",
+        "cssLines": 28,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/utils/ValidatedFormField.css",
+        "name": "utils/ValidatedFormField.css",
+        "category": "Other",
+        "cssLines": 10,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiff.css",
+        "name": "components/TraceDiff/TraceDiff.css",
+        "category": "Other",
+        "cssLines": 14,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/CohortTable.css",
+        "name": "components/TraceDiff/TraceDiffHeader/CohortTable.css",
+        "category": "Other",
+        "cssLines": 14,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      }
+    ],
+    "DeepDependencies": [
+      {
+        "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
+        "name": "components/DeepDependencies/Header/index.css",
+        "category": "DeepDependencies",
+        "cssLines": 102,
+        "colorCount": 16,
+        "priority": "HIGH",
+        "priorityScore": 3,
+        "complexity": "MODERATE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Graph/getNodeRenderers.css",
+        "name": "components/DeepDependencies/Graph/getNodeRenderers.css",
+        "category": "DeepDependencies",
+        "cssLines": 56,
+        "colorCount": 14,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/DetailsPanel.css",
+        "name": "components/DeepDependencies/SidePanel/DetailsPanel.css",
+        "category": "DeepDependencies",
+        "cssLines": 73,
+        "colorCount": 11,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
+        "name": "components/DeepDependencies/Header/HopsSelector/Selector.css",
+        "category": "DeepDependencies",
+        "cssLines": 92,
+        "colorCount": 10,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/index.css",
+        "name": "components/DeepDependencies/SidePanel/index.css",
+        "category": "DeepDependencies",
+        "cssLines": 83,
+        "colorCount": 8,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Graph/DdgNodeContent/index.css",
+        "name": "components/DeepDependencies/Graph/DdgNodeContent/index.css",
+        "category": "DeepDependencies",
+        "cssLines": 93,
+        "colorCount": 5,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/index.css",
+        "name": "components/DeepDependencies/Header/LayoutSettings/index.css",
+        "category": "DeepDependencies",
+        "cssLines": 39,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Graph/index.css",
+        "name": "components/DeepDependencies/Graph/index.css",
+        "category": "DeepDependencies",
+        "cssLines": 27,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/ChevronDown.css",
+        "name": "components/DeepDependencies/Header/ChevronDown.css",
+        "category": "DeepDependencies",
+        "cssLines": 12,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Graph/DdgNodeContent/node-icons.css",
+        "name": "components/DeepDependencies/Graph/DdgNodeContent/node-icons.css",
+        "category": "DeepDependencies",
+        "cssLines": 13,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/settingsIcon.css",
+        "name": "components/DeepDependencies/Header/LayoutSettings/settingsIcon.css",
+        "category": "DeepDependencies",
+        "cssLines": 13,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/DeepDependencies/index.css",
+        "name": "components/DeepDependencies/index.css",
+        "category": "DeepDependencies",
+        "cssLines": 31,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      }
+    ],
+    "Common/Utilities": [
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/NameSelector.css",
+        "name": "components/common/NameSelector.css",
+        "category": "Common/Utilities",
+        "cssLines": 74,
+        "colorCount": 15,
+        "priority": "HIGH",
+        "priorityScore": 3,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/utils.css",
+        "name": "components/common/utils.css",
+        "category": "Common/Utilities",
+        "cssLines": 138,
+        "colorCount": 15,
+        "priority": "HIGH",
+        "priorityScore": 3,
+        "complexity": "MODERATE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
+        "name": "components/common/FilteredList/ListItem.css",
+        "category": "Common/Utilities",
+        "cssLines": 56,
+        "colorCount": 13,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/ErrorMessage.css",
+        "name": "components/common/ErrorMessage.css",
+        "category": "Common/Utilities",
+        "cssLines": 54,
+        "colorCount": 10,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/LoadingIndicator.css",
+        "name": "components/common/LoadingIndicator.css",
+        "category": "Common/Utilities",
+        "cssLines": 55,
+        "colorCount": 10,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/VerticalResizer.css",
+        "name": "components/common/VerticalResizer.css",
+        "category": "Common/Utilities",
+        "cssLines": 94,
+        "colorCount": 8,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/DetailsCard/DetailTableDropdown.css",
+        "name": "components/common/DetailsCard/DetailTableDropdown.css",
+        "category": "Common/Utilities",
+        "cssLines": 55,
+        "colorCount": 7,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/FilteredList/index.css",
+        "name": "components/common/FilteredList/index.css",
+        "category": "Common/Utilities",
+        "cssLines": 55,
+        "colorCount": 7,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/CopyIcon.css",
+        "name": "components/common/CopyIcon.css",
+        "category": "Common/Utilities",
+        "cssLines": 23,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/DetailsCard/index.css",
+        "name": "components/common/DetailsCard/index.css",
+        "category": "Common/Utilities",
+        "cssLines": 63,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/EmphasizedNode.css",
+        "name": "components/common/EmphasizedNode.css",
+        "category": "Common/Utilities",
+        "cssLines": 29,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/BreakableText.css",
+        "name": "components/common/BreakableText.css",
+        "category": "Common/Utilities",
+        "cssLines": 10,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/LabeledList.css",
+        "name": "components/common/LabeledList.css",
+        "category": "Common/Utilities",
+        "cssLines": 20,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/TraceName.css",
+        "name": "components/common/TraceName.css",
+        "category": "Common/Utilities",
+        "cssLines": 9,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/ActionMenu/ActionsMenu.css",
+        "name": "components/common/ActionMenu/ActionsMenu.css",
+        "category": "Common/Utilities",
+        "cssLines": 38,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/NewWindowIcon.css",
+        "name": "components/common/NewWindowIcon.css",
+        "category": "Common/Utilities",
+        "cssLines": 14,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/TraceId.css",
+        "name": "components/common/TraceId.css",
+        "category": "Common/Utilities",
+        "cssLines": 18,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/common/vars.css",
+        "name": "components/common/vars.css",
+        "category": "Common/Utilities",
+        "cssLines": 11,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      }
+    ],
+    "SearchTracePage": [
+      {
+        "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchForm.css",
+        "name": "components/SearchTracePage/SearchForm.css",
+        "category": "SearchTracePage",
+        "cssLines": 69,
+        "colorCount": 12,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/ResultItemTitle.css",
+        "name": "components/SearchTracePage/SearchResults/ResultItemTitle.css",
+        "category": "SearchTracePage",
+        "cssLines": 53,
+        "colorCount": 9,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/ResultItem.css",
+        "name": "components/SearchTracePage/SearchResults/ResultItem.css",
+        "category": "SearchTracePage",
+        "cssLines": 31,
+        "colorCount": 6,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/DiffSelection.css",
+        "name": "components/SearchTracePage/SearchResults/DiffSelection.css",
+        "category": "SearchTracePage",
+        "cssLines": 24,
+        "colorCount": 4,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/index.css",
+        "name": "components/SearchTracePage/SearchResults/index.css",
+        "category": "SearchTracePage",
+        "cssLines": 42,
+        "colorCount": 4,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/ScatterPlot.css",
+        "name": "components/SearchTracePage/SearchResults/ScatterPlot.css",
+        "category": "SearchTracePage",
+        "cssLines": 34,
+        "colorCount": 3,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/SearchTracePage/index.css",
+        "name": "components/SearchTracePage/index.css",
+        "category": "SearchTracePage",
+        "cssLines": 36,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/SearchTracePage/FileLoader.css",
+        "name": "components/SearchTracePage/FileLoader.css",
+        "category": "SearchTracePage",
+        "cssLines": 11,
+        "colorCount": 1,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      }
+    ],
+    "Monitor": [
+      {
+        "filePath": "packages/jaeger-ui/src/components/Monitor/ServicesView/operationDetailsTable/index.css",
+        "name": "components/Monitor/ServicesView/operationDetailsTable/index.css",
+        "category": "Monitor",
+        "cssLines": 80,
+        "colorCount": 8,
+        "priority": "MEDIUM",
+        "priorityScore": 2,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/Monitor/EmptyState/index.css",
+        "name": "components/Monitor/EmptyState/index.css",
+        "category": "Monitor",
+        "cssLines": 43,
+        "colorCount": 3,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/Monitor/ServicesView/serviceGraph.css",
+        "name": "components/Monitor/ServicesView/serviceGraph.css",
+        "category": "Monitor",
+        "cssLines": 63,
+        "colorCount": 3,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/Monitor/ServicesView/index.css",
+        "name": "components/Monitor/ServicesView/index.css",
+        "category": "Monitor",
+        "cssLines": 72,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      }
+    ],
+    "QualityMetrics": [
+      {
+        "filePath": "packages/jaeger-ui/src/components/QualityMetrics/MetricCard.css",
+        "name": "components/QualityMetrics/MetricCard.css",
+        "category": "QualityMetrics",
+        "cssLines": 49,
+        "colorCount": 5,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/QualityMetrics/Header.css",
+        "name": "components/QualityMetrics/Header.css",
+        "category": "QualityMetrics",
+        "cssLines": 31,
+        "colorCount": 3,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/QualityMetrics/CountCard.css",
+        "name": "components/QualityMetrics/CountCard.css",
+        "category": "QualityMetrics",
+        "cssLines": 25,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/QualityMetrics/ScoreCard.css",
+        "name": "components/QualityMetrics/ScoreCard.css",
+        "category": "QualityMetrics",
+        "cssLines": 22,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/QualityMetrics/BannerText.css",
+        "name": "components/QualityMetrics/BannerText.css",
+        "category": "QualityMetrics",
+        "cssLines": 12,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/QualityMetrics/index.css",
+        "name": "components/QualityMetrics/index.css",
+        "category": "QualityMetrics",
+        "cssLines": 28,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      }
+    ],
+    "App/Layout": [
+      {
+        "filePath": "packages/jaeger-ui/src/components/App/TopNav.css",
+        "name": "components/App/TopNav.css",
+        "category": "App/Layout",
+        "cssLines": 26,
+        "colorCount": 3,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/App/index.css",
+        "name": "components/App/index.css",
+        "category": "App/Layout",
+        "cssLines": 19,
+        "colorCount": 2,
+        "priority": "LOW",
+        "priorityScore": 1,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/App/Page.css",
+        "name": "components/App/Page.css",
+        "category": "App/Layout",
+        "cssLines": 30,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      },
+      {
+        "filePath": "packages/jaeger-ui/src/components/App/TraceIDSearchInput.css",
+        "name": "components/App/TraceIDSearchInput.css",
+        "category": "App/Layout",
+        "cssLines": 9,
+        "colorCount": 0,
+        "priority": "NONE",
+        "priorityScore": 0,
+        "complexity": "SIMPLE"
+      }
+    ]
+  },
+  "highPriority": [
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanBarRow.css",
+      "category": "TracePage",
+      "cssLines": 190,
+      "colorCount": 34,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
+      "name": "components/DependencyGraph/dag.css",
+      "category": "DependencyGraph",
+      "cssLines": 82,
+      "colorCount": 21,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
+      "name": "components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
+      "category": "Other",
+      "cssLines": 98,
+      "colorCount": 19,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
+      "name": "components/DependencyGraph/DAGOptions.css",
+      "category": "DependencyGraph",
+      "cssLines": 151,
+      "colorCount": 18,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
+      "name": "components/TracePage/TraceGraph/TraceGraph.css",
+      "category": "TracePage",
+      "cssLines": 111,
+      "colorCount": 18,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
+      "name": "components/TraceDiff/TraceDiffGraph/renderNode.css",
+      "category": "Other",
+      "cssLines": 94,
+      "colorCount": 17,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
+      "name": "components/DeepDependencies/Header/index.css",
+      "category": "DeepDependencies",
+      "cssLines": 102,
+      "colorCount": 16,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/NameSelector.css",
+      "name": "components/common/NameSelector.css",
+      "category": "Common/Utilities",
+      "cssLines": 74,
+      "colorCount": 15,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/utils.css",
+      "name": "components/common/utils.css",
+      "category": "Common/Utilities",
+      "cssLines": 138,
+      "colorCount": 15,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/TraceDiffGraph.css",
+      "name": "components/TraceDiff/TraceDiffGraph/TraceDiffGraph.css",
+      "category": "Other",
+      "cssLines": 158,
+      "colorCount": 15,
+      "priority": "HIGH",
+      "priorityScore": 3,
+      "complexity": "MODERATE"
+    }
+  ],
+  "mediumPriority": [
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Graph/getNodeRenderers.css",
+      "name": "components/DeepDependencies/Graph/getNodeRenderers.css",
+      "category": "DeepDependencies",
+      "cssLines": 56,
+      "colorCount": 14,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
+      "name": "components/common/FilteredList/ListItem.css",
+      "category": "Common/Utilities",
+      "cssLines": 56,
+      "colorCount": 13,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageHeader.css",
+      "name": "components/TracePage/TracePageHeader/TracePageHeader.css",
+      "category": "TracePage",
+      "cssLines": 101,
+      "colorCount": 13,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchForm.css",
+      "name": "components/SearchTracePage/SearchForm.css",
+      "category": "SearchTracePage",
+      "cssLines": 69,
+      "colorCount": 12,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/DetailsPanel.css",
+      "name": "components/DeepDependencies/SidePanel/DetailsPanel.css",
+      "category": "DeepDependencies",
+      "cssLines": 73,
+      "colorCount": 11,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/ErrorMessage.css",
+      "name": "components/common/ErrorMessage.css",
+      "category": "Common/Utilities",
+      "cssLines": 54,
+      "colorCount": 10,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/LoadingIndicator.css",
+      "name": "components/common/LoadingIndicator.css",
+      "category": "Common/Utilities",
+      "cssLines": 55,
+      "colorCount": 10,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
+      "name": "components/DeepDependencies/Header/HopsSelector/Selector.css",
+      "category": "DeepDependencies",
+      "cssLines": 92,
+      "colorCount": 10,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/index.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/index.css",
+      "category": "TracePage",
+      "cssLines": 53,
+      "colorCount": 10,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/ResultItemTitle.css",
+      "name": "components/SearchTracePage/SearchResults/ResultItemTitle.css",
+      "category": "SearchTracePage",
+      "cssLines": 53,
+      "colorCount": 9,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
+      "name": "components/TracePage/TraceGraph/OpNode.css",
+      "category": "TracePage",
+      "cssLines": 73,
+      "colorCount": 9,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/VerticalResizer.css",
+      "name": "components/common/VerticalResizer.css",
+      "category": "Common/Utilities",
+      "cssLines": 94,
+      "colorCount": 8,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/index.css",
+      "name": "components/DeepDependencies/SidePanel/index.css",
+      "category": "DeepDependencies",
+      "cssLines": 83,
+      "colorCount": 8,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/Monitor/ServicesView/operationDetailsTable/index.css",
+      "name": "components/Monitor/ServicesView/operationDetailsTable/index.css",
+      "category": "Monitor",
+      "cssLines": 80,
+      "colorCount": 8,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
+      "name": "components/TraceDiff/TraceDiffHeader/TraceHeader.css",
+      "category": "Other",
+      "cssLines": 76,
+      "colorCount": 8,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/index.css",
+      "name": "components/TracePage/TraceTimelineViewer/index.css",
+      "category": "TracePage",
+      "cssLines": 83,
+      "colorCount": 8,
+      "priority": "MEDIUM",
+      "priorityScore": 2,
+      "complexity": "SIMPLE"
+    }
+  ],
+  "lowPriority": [
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/DetailsCard/DetailTableDropdown.css",
+      "name": "components/common/DetailsCard/DetailTableDropdown.css",
+      "category": "Common/Utilities",
+      "cssLines": 55,
+      "colorCount": 7,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/FilteredList/index.css",
+      "name": "components/common/FilteredList/index.css",
+      "category": "Common/Utilities",
+      "cssLines": 55,
+      "colorCount": 7,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBar.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanBar.css",
+      "category": "TracePage",
+      "cssLines": 129,
+      "colorCount": 7,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "MODERATE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/AccordianKeyValues.css",
+      "category": "TracePage",
+      "cssLines": 57,
+      "colorCount": 7,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/ResultItem.css",
+      "name": "components/SearchTracePage/SearchResults/ResultItem.css",
+      "category": "SearchTracePage",
+      "cssLines": 31,
+      "colorCount": 6,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/KeyboardShortcutsHelp.css",
+      "name": "components/TracePage/TracePageHeader/KeyboardShortcutsHelp.css",
+      "category": "TracePage",
+      "cssLines": 30,
+      "colorCount": 6,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianLogs.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/AccordianLogs.css",
+      "category": "TracePage",
+      "cssLines": 40,
+      "colorCount": 6,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/KeyValuesTable.css",
+      "category": "TracePage",
+      "cssLines": 55,
+      "colorCount": 6,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Graph/DdgNodeContent/index.css",
+      "name": "components/DeepDependencies/Graph/DdgNodeContent/index.css",
+      "category": "DeepDependencies",
+      "cssLines": 93,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/QualityMetrics/MetricCard.css",
+      "name": "components/QualityMetrics/MetricCard.css",
+      "category": "QualityMetrics",
+      "cssLines": 49,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/Scrubber.css",
+      "name": "components/TracePage/TracePageHeader/SpanGraph/Scrubber.css",
+      "category": "TracePage",
+      "cssLines": 36,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/ViewingLayer.css",
+      "name": "components/TracePage/TracePageHeader/SpanGraph/ViewingLayer.css",
+      "category": "TracePage",
+      "cssLines": 65,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageSearchBar.css",
+      "name": "components/TracePage/TracePageHeader/TracePageSearchBar.css",
+      "category": "TracePage",
+      "cssLines": 66,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceSpanView/index.css",
+      "name": "components/TracePage/TraceSpanView/index.css",
+      "category": "TracePage",
+      "cssLines": 36,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceStatistics/index.css",
+      "name": "components/TracePage/TraceStatistics/index.css",
+      "category": "TracePage",
+      "cssLines": 29,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianReferences.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/AccordianReferences.css",
+      "category": "TracePage",
+      "cssLines": 50,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css",
+      "name": "components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineViewingLayer.css",
+      "category": "TracePage",
+      "cssLines": 57,
+      "colorCount": 5,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/DiffSelection.css",
+      "name": "components/SearchTracePage/SearchResults/DiffSelection.css",
+      "category": "SearchTracePage",
+      "cssLines": 24,
+      "colorCount": 4,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/index.css",
+      "name": "components/SearchTracePage/SearchResults/index.css",
+      "category": "SearchTracePage",
+      "cssLines": 42,
+      "colorCount": 4,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceStatistics/PopupSql.css",
+      "name": "components/TracePage/TraceStatistics/PopupSql.css",
+      "category": "TracePage",
+      "cssLines": 58,
+      "colorCount": 4,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/App/TopNav.css",
+      "name": "components/App/TopNav.css",
+      "category": "App/Layout",
+      "cssLines": 26,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/Monitor/EmptyState/index.css",
+      "name": "components/Monitor/EmptyState/index.css",
+      "category": "Monitor",
+      "cssLines": 43,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/Monitor/ServicesView/serviceGraph.css",
+      "name": "components/Monitor/ServicesView/serviceGraph.css",
+      "category": "Monitor",
+      "cssLines": 63,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/QualityMetrics/Header.css",
+      "name": "components/QualityMetrics/Header.css",
+      "category": "QualityMetrics",
+      "cssLines": 31,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/ScatterPlot.css",
+      "name": "components/SearchTracePage/SearchResults/ScatterPlot.css",
+      "category": "SearchTracePage",
+      "cssLines": 34,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css",
+      "name": "components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineCollapser.css",
+      "category": "TracePage",
+      "cssLines": 43,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.css",
+      "name": "components/TracePage/TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.css",
+      "category": "TracePage",
+      "cssLines": 23,
+      "colorCount": 3,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/App/index.css",
+      "name": "components/App/index.css",
+      "category": "App/Layout",
+      "cssLines": 19,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/CopyIcon.css",
+      "name": "components/common/CopyIcon.css",
+      "category": "Common/Utilities",
+      "cssLines": 23,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/DetailsCard/index.css",
+      "name": "components/common/DetailsCard/index.css",
+      "category": "Common/Utilities",
+      "cssLines": 63,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/EmphasizedNode.css",
+      "name": "components/common/EmphasizedNode.css",
+      "category": "Common/Utilities",
+      "cssLines": 29,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/LayoutSettings/index.css",
+      "name": "components/DeepDependencies/Header/LayoutSettings/index.css",
+      "category": "DeepDependencies",
+      "cssLines": 39,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/QualityMetrics/CountCard.css",
+      "name": "components/QualityMetrics/CountCard.css",
+      "category": "QualityMetrics",
+      "cssLines": 25,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/QualityMetrics/ScoreCard.css",
+      "name": "components/QualityMetrics/ScoreCard.css",
+      "category": "QualityMetrics",
+      "cssLines": 22,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/index.css",
+      "name": "components/SearchTracePage/index.css",
+      "category": "SearchTracePage",
+      "cssLines": 36,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/ArchiveNotifier/index.css",
+      "name": "components/TracePage/ArchiveNotifier/index.css",
+      "category": "TracePage",
+      "cssLines": 24,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/AccordianText.css",
+      "category": "TracePage",
+      "cssLines": 17,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetailRow.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetailRow.css",
+      "category": "TracePage",
+      "cssLines": 46,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanTreeOffset.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanTreeOffset.css",
+      "category": "TracePage",
+      "cssLines": 42,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/Ticks.css",
+      "name": "components/TracePage/TraceTimelineViewer/Ticks.css",
+      "category": "TracePage",
+      "cssLines": 31,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/utils/DraggableManager/demo/DividerDemo.css",
+      "name": "utils/DraggableManager/demo/DividerDemo.css",
+      "category": "Other",
+      "cssLines": 34,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/utils/DraggableManager/demo/DraggableManagerDemo.css",
+      "name": "utils/DraggableManager/demo/DraggableManagerDemo.css",
+      "category": "Other",
+      "cssLines": 21,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/utils/DraggableManager/demo/RegionDemo.css",
+      "name": "utils/DraggableManager/demo/RegionDemo.css",
+      "category": "Other",
+      "cssLines": 28,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/utils/ValidatedFormField.css",
+      "name": "utils/ValidatedFormField.css",
+      "category": "Other",
+      "cssLines": 10,
+      "colorCount": 2,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/BreakableText.css",
+      "name": "components/common/BreakableText.css",
+      "category": "Common/Utilities",
+      "cssLines": 10,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/LabeledList.css",
+      "name": "components/common/LabeledList.css",
+      "category": "Common/Utilities",
+      "cssLines": 20,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/common/TraceName.css",
+      "name": "components/common/TraceName.css",
+      "category": "Common/Utilities",
+      "cssLines": 9,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Graph/index.css",
+      "name": "components/DeepDependencies/Graph/index.css",
+      "category": "DeepDependencies",
+      "cssLines": 27,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DeepDependencies/Header/ChevronDown.css",
+      "name": "components/DeepDependencies/Header/ChevronDown.css",
+      "category": "DeepDependencies",
+      "cssLines": 12,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/DependencyGraph/index.css",
+      "name": "components/DependencyGraph/index.css",
+      "category": "DependencyGraph",
+      "cssLines": 24,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/SearchTracePage/FileLoader.css",
+      "name": "components/SearchTracePage/FileLoader.css",
+      "category": "SearchTracePage",
+      "cssLines": 11,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TraceDiff/TraceDiff.css",
+      "name": "components/TraceDiff/TraceDiff.css",
+      "category": "Other",
+      "cssLines": 14,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/index.css",
+      "name": "components/TracePage/index.css",
+      "category": "TracePage",
+      "cssLines": 12,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/AltViewOptions.css",
+      "name": "components/TracePage/TracePageHeader/AltViewOptions.css",
+      "category": "TracePage",
+      "cssLines": 20,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/CanvasSpanGraph.css",
+      "name": "components/TracePage/TracePageHeader/SpanGraph/CanvasSpanGraph.css",
+      "category": "TracePage",
+      "cssLines": 12,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/GraphTicks.css",
+      "name": "components/TracePage/TracePageHeader/SpanGraph/GraphTicks.css",
+      "category": "TracePage",
+      "cssLines": 10,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TracePageHeader/SpanGraph/TickLabels.css",
+      "name": "components/TracePage/TracePageHeader/SpanGraph/TickLabels.css",
+      "category": "TracePage",
+      "cssLines": 17,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/ReferencesButton.css",
+      "name": "components/TracePage/TraceTimelineViewer/ReferencesButton.css",
+      "category": "TracePage",
+      "cssLines": 26,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    },
+    {
+      "filePath": "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/TextList.css",
+      "name": "components/TracePage/TraceTimelineViewer/SpanDetail/TextList.css",
+      "category": "TracePage",
+      "cssLines": 26,
+      "colorCount": 1,
+      "priority": "LOW",
+      "priorityScore": 1,
+      "complexity": "SIMPLE"
+    }
+  ],
+  "migrationBatches": {
+    "batch1": [
+      "packages/jaeger-ui/src/components/common/NameSelector.css",
+      "packages/jaeger-ui/src/components/common/utils.css",
+      "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
+      "packages/jaeger-ui/src/components/common/ErrorMessage.css",
+      "packages/jaeger-ui/src/components/common/LoadingIndicator.css",
+      "packages/jaeger-ui/src/components/common/VerticalResizer.css",
+      "packages/jaeger-ui/src/components/common/DetailsCard/DetailTableDropdown.css",
+      "packages/jaeger-ui/src/components/common/FilteredList/index.css",
+      "packages/jaeger-ui/src/components/App/TopNav.css",
+      "packages/jaeger-ui/src/components/App/index.css",
+      "packages/jaeger-ui/src/components/common/CopyIcon.css",
+      "packages/jaeger-ui/src/components/common/DetailsCard/index.css",
+      "packages/jaeger-ui/src/components/common/EmphasizedNode.css",
+      "packages/jaeger-ui/src/components/common/BreakableText.css",
+      "packages/jaeger-ui/src/components/common/LabeledList.css",
+      "packages/jaeger-ui/src/components/common/TraceName.css",
+      "packages/jaeger-ui/src/components/App/Page.css",
+      "packages/jaeger-ui/src/components/App/TraceIDSearchInput.css",
+      "packages/jaeger-ui/src/components/common/ActionMenu/ActionsMenu.css",
+      "packages/jaeger-ui/src/components/common/NewWindowIcon.css",
+      "packages/jaeger-ui/src/components/common/TraceId.css",
+      "packages/jaeger-ui/src/components/common/vars.css"
+    ],
+    "batch2": [
+      "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanBarRow.css",
+      "packages/jaeger-ui/src/components/DependencyGraph/dag.css",
+      "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceDiffHeader.css",
+      "packages/jaeger-ui/src/components/DependencyGraph/DAGOptions.css",
+      "packages/jaeger-ui/src/components/TracePage/TraceGraph/TraceGraph.css",
+      "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/renderNode.css",
+      "packages/jaeger-ui/src/components/DeepDependencies/Header/index.css",
+      "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/TraceDiffGraph.css"
+    ],
+    "batch3": [
+      "packages/jaeger-ui/src/components/common/utils.css",
+      "packages/jaeger-ui/src/components/TraceDiff/TraceDiffGraph/TraceDiffGraph.css",
+      "packages/jaeger-ui/src/components/DeepDependencies/Graph/getNodeRenderers.css",
+      "packages/jaeger-ui/src/components/common/FilteredList/ListItem.css",
+      "packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageHeader.css",
+      "packages/jaeger-ui/src/components/SearchTracePage/SearchForm.css",
+      "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/DetailsPanel.css",
+      "packages/jaeger-ui/src/components/common/ErrorMessage.css",
+      "packages/jaeger-ui/src/components/common/LoadingIndicator.css",
+      "packages/jaeger-ui/src/components/DeepDependencies/Header/HopsSelector/Selector.css",
+      "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/index.css",
+      "packages/jaeger-ui/src/components/SearchTracePage/SearchResults/ResultItemTitle.css",
+      "packages/jaeger-ui/src/components/TracePage/TraceGraph/OpNode.css",
+      "packages/jaeger-ui/src/components/common/VerticalResizer.css",
+      "packages/jaeger-ui/src/components/DeepDependencies/SidePanel/index.css",
+      "packages/jaeger-ui/src/components/Monitor/ServicesView/operationDetailsTable/index.css",
+      "packages/jaeger-ui/src/components/TraceDiff/TraceDiffHeader/TraceHeader.css",
+      "packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/index.css"
+    ]
+  }
+}
