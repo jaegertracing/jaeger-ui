@@ -9,6 +9,12 @@ import JaegerAPI from '../../api/jaeger';
 import * as getUrl from './url';
 import { UnconnectedQualityMetrics, mapDispatchToProps, mapStateToProps } from '.';
 
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom-v5-compat', () => ({
+  ...jest.requireActual('react-router-dom-v5-compat'),
+  useNavigate: () => mockNavigate,
+}));
+
 const headerMock = {
   props: null,
   setService: null,
@@ -70,15 +76,9 @@ describe('QualityMetrics', () => {
   describe('UnconnectedQualityMetrics', () => {
     const props = {
       fetchServices: jest.fn(),
-      history: {
-        push: jest.fn(),
-      },
       lookback: 48,
       service: 'test-service',
       services: ['foo', 'bar', 'baz'],
-      location: {
-        search: '',
-      },
     };
 
     const { service: _s, ...propsWithoutService } = props;
@@ -98,7 +98,7 @@ describe('QualityMetrics', () => {
     });
 
     beforeEach(() => {
-      props.history.push.mockClear();
+      mockNavigate.mockClear();
       props.fetchServices.mockClear();
       fetchQualityMetricsSpy.mockClear();
       headerMock.props = null;
@@ -222,7 +222,7 @@ describe('QualityMetrics', () => {
           lookback: props.lookback,
           service: testService,
         });
-        expect(props.history.push).toHaveBeenLastCalledWith(latestUrl);
+        expect(mockNavigate).toHaveBeenLastCalledWith(latestUrl);
       });
 
       it('sets lookback', () => {
@@ -234,7 +234,7 @@ describe('QualityMetrics', () => {
           lookback: testLookback,
           service: props.service,
         });
-        expect(props.history.push).toHaveBeenLastCalledWith(latestUrl);
+        expect(mockNavigate).toHaveBeenLastCalledWith(latestUrl);
       });
 
       it('sets lookback without service', () => {
@@ -246,7 +246,7 @@ describe('QualityMetrics', () => {
           lookback: testLookback,
           service: '',
         });
-        expect(props.history.push).toHaveBeenLastCalledWith(latestUrl);
+        expect(mockNavigate).toHaveBeenLastCalledWith(latestUrl);
       });
 
       it('ignores falsy lookback', () => {
@@ -254,7 +254,7 @@ describe('QualityMetrics', () => {
 
         headerMock.setLookback(null);
 
-        expect(props.history.push).not.toHaveBeenCalled();
+        expect(mockNavigate).not.toHaveBeenCalled();
       });
 
       it('ignores string lookback', () => {
@@ -262,7 +262,7 @@ describe('QualityMetrics', () => {
 
         headerMock.setLookback(props.service);
 
-        expect(props.history.push).not.toHaveBeenCalled();
+        expect(mockNavigate).not.toHaveBeenCalled();
       });
 
       it('ignores less than one lookback', () => {
@@ -270,7 +270,7 @@ describe('QualityMetrics', () => {
 
         headerMock.setLookback(-1);
 
-        expect(props.history.push).not.toHaveBeenCalled();
+        expect(mockNavigate).not.toHaveBeenCalled();
       });
 
       it('ignores fractional lookback', () => {
@@ -278,7 +278,7 @@ describe('QualityMetrics', () => {
 
         headerMock.setLookback(2.5);
 
-        expect(props.history.push).not.toHaveBeenCalled();
+        expect(mockNavigate).not.toHaveBeenCalled();
       });
     });
 
@@ -402,12 +402,16 @@ describe('QualityMetrics', () => {
 
     it('gets services from redux state', () => {
       const services = [urlState.service, 'foo', 'bar'];
-      expect(mapStateToProps({ services: { services } }, { location: {} })).toEqual({ services });
+      const search = 'test search';
+      expect(mapStateToProps({ services: { services }, router: { location: { search } } })).toEqual({
+        ...urlState,
+        services,
+      });
     });
 
     it('gets current service and lookback from url', () => {
       const search = 'test search';
-      expect(mapStateToProps({ services: {} }, { location: { search } })).toEqual(urlState);
+      expect(mapStateToProps({ services: {}, router: { location: { search } } })).toEqual(urlState);
       expect(getUrlStateSpy).toHaveBeenLastCalledWith(search);
     });
   });
