@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom-v5-compat';
+import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -27,15 +27,15 @@ type TDispatchProps = {
 };
 
 type TReduxProps = {
-  lookback: number;
-  service?: string;
   services?: string[] | null;
 };
 
 export type TProps = TDispatchProps & TReduxProps;
 
-export function UnconnectedQualityMetrics({ fetchServices, lookback, service, services }: TProps) {
+export function UnconnectedQualityMetrics({ fetchServices, services }: TProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { lookback, service } = React.useMemo(() => getUrlState(location.search), [location.search]);
   const [qualityMetrics, setQualityMetrics] = React.useState<TQualityMetrics | undefined>();
   const [error, setError] = React.useState<Error | undefined>();
   const [loading, setLoading] = React.useState<boolean>(false);
@@ -154,10 +154,8 @@ export function UnconnectedQualityMetrics({ fetchServices, lookback, service, se
 export function mapStateToProps(state: ReduxState): TReduxProps {
   const {
     services: { services },
-    router: { location },
   } = state;
   return {
-    ...getUrlState(location.search),
     services,
   };
 }
