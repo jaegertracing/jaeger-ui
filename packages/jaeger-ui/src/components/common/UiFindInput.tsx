@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Input, InputRef } from 'antd';
 import { IoClose } from 'react-icons/io5';
-import { History as RouterHistory, Location } from 'history';
+import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
 import _debounce from 'lodash/debounce';
 import _isString from 'lodash/isString';
 import { connect } from 'react-redux';
@@ -12,14 +12,10 @@ import { connect } from 'react-redux';
 import updateUiFind from '../../utils/update-ui-find';
 import { TNil, ReduxState } from '../../types/index';
 import parseQuery from '../../utils/parseQuery';
-import withRouteProps from '../../utils/withRouteProps';
 
 type TOwnProps = {
   allowClear?: boolean;
   inputProps?: Record<string, any>;
-  history: RouterHistory;
-  location: Location;
-  match: any;
   trackFindFunction?: (str: string | TNil) => void;
 };
 
@@ -37,8 +33,6 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
   const {
     allowClear,
     inputProps,
-    history,
-    location,
     uiFind: prevUiFind,
     trackFindFunction,
   } = {
@@ -46,6 +40,8 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
     ...props,
   };
 
+  const navigate = useNavigate();
+  const location = useLocation();
   const [ownInputValue, setOwnInputValue] = useState<string | undefined>(undefined);
 
   const updateUiFindQueryParam = useMemo(
@@ -54,12 +50,12 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
         if (uiFind === prevUiFind || (!prevUiFind && !uiFind)) return;
         updateUiFind({
           location,
-          history,
+          navigate,
           trackFindFunction,
           uiFind,
         });
       }, 250),
-    [history, location, prevUiFind, trackFindFunction]
+    [navigate, location, prevUiFind, trackFindFunction]
   );
 
   useEffect(() => {
@@ -119,4 +115,4 @@ export function extractUiFindFromState(state: ReduxState): TExtractUiFindFromSta
   return { uiFind };
 }
 
-export default connect(extractUiFindFromState)(withRouteProps(UnconnectedUiFindInput)) as any;
+export default connect(extractUiFindFromState)(UnconnectedUiFindInput) as any;
