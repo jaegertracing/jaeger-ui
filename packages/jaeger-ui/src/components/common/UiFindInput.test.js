@@ -15,6 +15,15 @@ jest.mock('lodash/debounce');
 
 jest.mock('../../utils/update-ui-find');
 
+const mockNavigate = jest.fn();
+const mockLocation = { search: '', pathname: '/test' };
+
+jest.mock('react-router-dom-v5-compat', () => ({
+  ...jest.requireActual('react-router-dom-v5-compat'),
+  useNavigate: () => mockNavigate,
+  useLocation: () => mockLocation,
+}));
+
 describe('UiFind', () => {
   const flushMock = jest.fn();
   const cancelMock = jest.fn();
@@ -24,12 +33,6 @@ describe('UiFind', () => {
   const ownInputValue = 'ownInputValue';
   const props = {
     uiFind: undefined,
-    history: {
-      replace: () => {},
-    },
-    location: {
-      search: null,
-    },
     inputProps: {},
   };
 
@@ -47,6 +50,7 @@ describe('UiFind', () => {
   beforeEach(() => {
     flushMock.mockReset();
     updateUiFindSpy.mockReset();
+    mockNavigate.mockReset();
   });
 
   describe('rendering', () => {
@@ -84,8 +88,8 @@ describe('UiFind', () => {
 
       // Verify updateUiFind was called with the new value
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
-        history: props.history,
-        location: props.location,
+        navigate: mockNavigate,
+        location: mockLocation,
         trackFindFunction: undefined,
         uiFind: ownInputValue,
       });
@@ -115,8 +119,8 @@ describe('UiFind', () => {
       await userEvent.clear(screen.getByPlaceholderText('Find...'));
       await userEvent.type(screen.getByPlaceholderText('Find...'), newValue);
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
-        history: props.history,
-        location: props.location,
+        navigate: mockNavigate,
+        location: mockLocation,
         trackFindFunction: undefined,
         uiFind: newValue,
       });
@@ -126,8 +130,8 @@ describe('UiFind', () => {
       render(<UnconnectedUiFindInput {...props} trackFindFunction={trackFindFunction} />);
       await userEvent.type(screen.getByPlaceholderText('Find...'), newValue);
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
-        history: props.history,
-        location: props.location,
+        navigate: mockNavigate,
+        location: mockLocation,
         trackFindFunction,
         uiFind: newValue,
       });
@@ -179,8 +183,8 @@ describe('UiFind', () => {
 
       // Verify the URL update was triggered
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
-        history: props.history,
-        location: props.location,
+        navigate: mockNavigate,
+        location: mockLocation,
         uiFind: undefined,
       });
       expect(flushMock).toHaveBeenCalledTimes(1);
@@ -231,8 +235,8 @@ describe('UiFind', () => {
 
       // Verify the URL update was triggered
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
-        history: props.history,
-        location: props.location,
+        navigate: mockNavigate,
+        location: mockLocation,
         uiFind: undefined,
       });
       expect(flushMock).toHaveBeenCalledTimes(1);
