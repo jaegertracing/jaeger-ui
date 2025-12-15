@@ -142,6 +142,51 @@ export function generateRowStatesFromTrace(
   return trace ? generateRowStates(trace.spans, childrenHiddenIDs, detailStates) : [];
 }
 
+export const testableHelpers = {
+  mapRowIndexToSpanIndex: (rowStates: RowState[], index: number) => rowStates[index].spanIndex,
+
+  mapSpanIndexToRowIndex: (rowStates: RowState[], index: number) => {
+    const max = rowStates.length;
+    for (let i = 0; i < max; i++) {
+      const { spanIndex } = rowStates[i];
+      if (spanIndex === index) {
+        return i;
+      }
+    }
+    throw new Error(`unable to find row for span index: ${index}`);
+  },
+
+  getKeyFromIndex: (rowStates: RowState[], index: number) => {
+    const { isDetail, span } = rowStates[index];
+    return `${span.spanID}--${isDetail ? 'detail' : 'bar'}`;
+  },
+
+  getIndexFromKey: (rowStates: RowState[], key: string) => {
+    const parts = key.split('--');
+    const _spanID = parts[0];
+    const _isDetail = parts[1] === 'detail';
+    const max = rowStates.length;
+    for (let i = 0; i < max; i++) {
+      const { span, isDetail } = rowStates[i];
+      if (span.spanID === _spanID && isDetail === _isDetail) {
+        return i;
+      }
+    }
+    return -1;
+  },
+
+  getRowHeight: (rowStates: RowState[], index: number) => {
+    const { span, isDetail } = rowStates[index];
+    if (!isDetail) {
+      return DEFAULT_HEIGHTS.bar;
+    }
+    if (Array.isArray(span.logs) && span.logs.length) {
+      return DEFAULT_HEIGHTS.detailWithLogs;
+    }
+    return DEFAULT_HEIGHTS.detail;
+  },
+};
+
 function getCssClasses(currentViewRange: [number, number]) {
   const [zoomStart, zoomEnd] = currentViewRange;
   return cx({
@@ -300,18 +345,14 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = pro
   const getViewRange = useCallback(() => currentViewRangeTime, [currentViewRangeTime]);
   const getSearchedSpanIDs = useCallback(() => findMatchesIDs, [findMatchesIDs]);
   const getCollapsedChildren = useCallback(() => childrenHiddenIDs, [childrenHiddenIDs]);
-  const mapRowIndexToSpanIndex = useCallback((index: number) => rowStates[index].spanIndex, [rowStates]);
+
+  const mapRowIndexToSpanIndex = useCallback(
+    (index: number) => testableHelpers.mapRowIndexToSpanIndex(rowStates, index),
+    [rowStates]
+  );
+
   const mapSpanIndexToRowIndex = useCallback(
-    (index: number) => {
-      const max = rowStates.length;
-      for (let i = 0; i < max; i++) {
-        const { spanIndex } = rowStates[i];
-        if (spanIndex === index) {
-          return i;
-        }
-      }
-      throw new Error(`unable to find row for span index: ${index}`);
-    },
+    (index: number) => testableHelpers.mapSpanIndexToRowIndex(rowStates, index),
     [rowStates]
   );
 
@@ -359,41 +400,17 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = pro
   // use long form syntax to avert flow error
   // https://github.com/facebook/flow/issues/3076#issuecomment-290944051
   const getKeyFromIndex = useCallback(
-    (index: number) => {
-      const { isDetail, span } = rowStates[index];
-      return `${span.spanID}--${isDetail ? 'detail' : 'bar'}`;
-    },
+    (index: number) => testableHelpers.getKeyFromIndex(rowStates, index),
     [rowStates]
   );
 
   const getIndexFromKey = useCallback(
-    (key: string) => {
-      const parts = key.split('--');
-      const _spanID = parts[0];
-      const _isDetail = parts[1] === 'detail';
-      const max = rowStates.length;
-      for (let i = 0; i < max; i++) {
-        const { span, isDetail } = rowStates[i];
-        if (span.spanID === _spanID && isDetail === _isDetail) {
-          return i;
-        }
-      }
-      return -1;
-    },
+    (key: string) => testableHelpers.getIndexFromKey(rowStates, key),
     [rowStates]
   );
 
   const getRowHeight = useCallback(
-    (index: number) => {
-      const { span, isDetail } = rowStates[index];
-      if (!isDetail) {
-        return DEFAULT_HEIGHTS.bar;
-      }
-      if (Array.isArray(span.logs) && span.logs.length) {
-        return DEFAULT_HEIGHTS.detailWithLogs;
-      }
-      return DEFAULT_HEIGHTS.detail;
-    },
+    (index: number) => testableHelpers.getRowHeight(rowStates, index),
     [rowStates]
   );
 

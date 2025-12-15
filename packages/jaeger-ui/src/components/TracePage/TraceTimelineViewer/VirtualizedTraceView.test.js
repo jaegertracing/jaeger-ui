@@ -11,6 +11,7 @@ import {
   DEFAULT_HEIGHTS,
   VirtualizedTraceViewImpl,
   generateRowStatesFromTrace,
+  testableHelpers,
 } from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -108,53 +109,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
   }
 
   function createTestInstance(props) {
-    // Create helper functions that mimic the component's internal logic
-    const getRowStates = () =>
-      generateRowStatesFromTrace(props.trace, props.childrenHiddenIDs, props.detailStates);
-    const mapRowIndexToSpanIndex = index => getRowStates()[index].spanIndex;
-
-    const mapSpanIndexToRowIndex = index => {
-      const rowStates = getRowStates();
-      const max = rowStates.length;
-      for (let i = 0; i < max; i++) {
-        const { spanIndex } = rowStates[i];
-        if (spanIndex === index) {
-          return i;
-        }
-      }
-      throw new Error(`unable to find row for span index: ${index}`);
-    };
-
-    const getKeyFromIndex = index => {
-      const { isDetail, span } = getRowStates()[index];
-      return `${span.spanID}--${isDetail ? 'detail' : 'bar'}`;
-    };
-
-    const getIndexFromKey = key => {
-      const parts = key.split('--');
-      const _spanID = parts[0];
-      const _isDetail = parts[1] === 'detail';
-      const rowStates = getRowStates();
-      const max = rowStates.length;
-      for (let i = 0; i < max; i++) {
-        const { span, isDetail } = rowStates[i];
-        if (span.spanID === _spanID && isDetail === _isDetail) {
-          return i;
-        }
-      }
-      return -1;
-    };
-
-    const getRowHeight = index => {
-      const { span, isDetail } = getRowStates()[index];
-      if (!isDetail) {
-        return DEFAULT_HEIGHTS.bar;
-      }
-      if (Array.isArray(span.logs) && span.logs.length) {
-        return DEFAULT_HEIGHTS.detailWithLogs;
-      }
-      return DEFAULT_HEIGHTS.detail;
-    };
+    const rowStates = generateRowStatesFromTrace(props.trace, props.childrenHiddenIDs, props.detailStates);
 
     const focusSpan = uiFind => {
       if (props.trace) {
@@ -175,13 +130,13 @@ describe('<VirtualizedTraceViewImpl>', () => {
       getViewRange: () => props.currentViewRangeTime,
       getSearchedSpanIDs: () => props.findMatchesIDs,
       getCollapsedChildren: () => props.childrenHiddenIDs,
-      mapRowIndexToSpanIndex,
-      mapSpanIndexToRowIndex,
-      getKeyFromIndex,
-      getIndexFromKey,
-      getRowHeight,
+      mapRowIndexToSpanIndex: index => testableHelpers.mapRowIndexToSpanIndex(rowStates, index),
+      mapSpanIndexToRowIndex: index => testableHelpers.mapSpanIndexToRowIndex(rowStates, index),
+      getKeyFromIndex: index => testableHelpers.getKeyFromIndex(rowStates, index),
+      getIndexFromKey: key => testableHelpers.getIndexFromKey(rowStates, key),
+      getRowHeight: index => testableHelpers.getRowHeight(rowStates, index),
       renderRow: null,
-      getRowStates,
+      getRowStates: () => rowStates,
       focusSpan,
       linksGetter,
       shouldComponentUpdate: null,
