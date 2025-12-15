@@ -134,15 +134,15 @@ function generateRowStates(
 }
 
 // export for tests
-export function generateRowStatesFromTrace(
-  trace: Trace | TNil,
-  childrenHiddenIDs: Set<string>,
-  detailStates: Map<string, DetailState | TNil>
-): RowState[] {
-  return trace ? generateRowStates(trace.spans, childrenHiddenIDs, detailStates) : [];
-}
-
 export const testableHelpers = {
+  generateRowStatesFromTrace: (
+    trace: Trace | TNil,
+    childrenHiddenIDs: Set<string>,
+    detailStates: Map<string, DetailState | TNil>
+  ): RowState[] => {
+    return trace ? generateRowStates(trace.spans, childrenHiddenIDs, detailStates) : [];
+  },
+
   mapRowIndexToSpanIndex: (rowStates: RowState[], index: number) => rowStates[index].spanIndex,
 
   mapSpanIndexToRowIndex: (rowStates: RowState[], index: number) => {
@@ -235,7 +235,7 @@ function mergeChildrenCriticalPath(
   return criticalPathSections;
 }
 
-const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
+const memoizedGenerateRowStates = memoizeOne(testableHelpers.generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
 const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: criticalPathSection[]) =>

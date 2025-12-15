@@ -7,18 +7,14 @@ import '@testing-library/jest-dom';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
-import {
-  DEFAULT_HEIGHTS,
-  VirtualizedTraceViewImpl,
-  generateRowStatesFromTrace,
-  testableHelpers,
-} from './VirtualizedTraceView';
+import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl, testableHelpers } from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import updateUiFindSpy from '../../../utils/update-ui-find';
+import getLinks from '../../../model/link-patterns';
 import * as linkPatterns from '../../../model/link-patterns';
 import memoizedTraceCriticalPath from '../CriticalPath/index';
-
+import ListView from './ListView';
 import criticalPathTest from '../CriticalPath/testCases/test2';
 
 jest.mock('./SpanTreeOffset');
@@ -37,7 +33,6 @@ describe('<VirtualizedTraceViewImpl>', () => {
   let instance;
 
   beforeEach(() => {
-    const ListView = require('./ListView');
     ListView.mockClear();
     ListView.mockImplementation(props => <div data-testid="list-view" />);
 
@@ -109,7 +104,11 @@ describe('<VirtualizedTraceViewImpl>', () => {
   }
 
   function createTestInstance(props) {
-    const rowStates = generateRowStatesFromTrace(props.trace, props.childrenHiddenIDs, props.detailStates);
+    const rowStates = testableHelpers.generateRowStatesFromTrace(
+      props.trace,
+      props.childrenHiddenIDs,
+      props.detailStates
+    );
 
     const focusSpan = uiFind => {
       if (props.trace) {
@@ -123,7 +122,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     };
 
     const linksGetter = (span, items, itemIndex) => {
-      return require('../../../model/link-patterns').default(span, items, itemIndex, props.trace);
+      return getLinks(span, items, itemIndex, props.trace);
     };
 
     return {
@@ -173,7 +172,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
   describe('props.registerAccessors', () => {
     it('invokes when the listView is set', () => {
       let listViewRef = null;
-      require('./ListView').mockImplementationOnce(props => {
+      ListView.mockImplementationOnce(props => {
         if (props.ref) {
           listViewRef = {
             getViewHeight: jest.fn(),
@@ -201,7 +200,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const newRegisterAccessors = jest.fn();
 
       let listViewRef = null;
-      require('./ListView').mockImplementation(props => {
+      ListView.mockImplementation(props => {
         if (props.ref) {
           listViewRef = {
             getViewHeight: jest.fn(),
@@ -554,7 +553,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     it('handles list resize events when listView exists', () => {
       const mockListView = { forceUpdate: jest.fn() };
 
-      require('./ListView').mockImplementationOnce(props => {
+      ListView.mockImplementationOnce(props => {
         if (props.ref) {
           props.ref(mockListView);
         }
@@ -580,7 +579,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     it('handles detail measure events with spanID', () => {
       const mockListView = { forceUpdate: jest.fn() };
 
-      require('./ListView').mockImplementationOnce(props => {
+      ListView.mockImplementationOnce(props => {
         if (props.ref) {
           props.ref(mockListView);
         }
@@ -598,7 +597,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     it('handles detail measure events without spanID', () => {
       const mockListView = { forceUpdate: jest.fn() };
 
-      require('./ListView').mockImplementationOnce(props => {
+      ListView.mockImplementationOnce(props => {
         if (props.ref) {
           props.ref(mockListView);
         }
