@@ -19,7 +19,19 @@ jest.mock('./SpanTreeOffset');
 jest.mock('../../../utils/update-ui-find');
 
 jest.mock('./ListView', () => {
-  const mockFn = jest.fn(props => <div data-testid="list-view" />);
+  const mockFn = jest.fn(props => {
+    const { dataLength, itemRenderer, getKeyFromIndex } = props;
+    return (
+      <div data-testid="list-view">
+        {Array.from({ length: dataLength }, (_, index) => {
+          const key = getKeyFromIndex ? getKeyFromIndex(index) : `item-${index}`;
+          const style = {};
+          const attrs = {};
+          return itemRenderer(key, style, index, attrs);
+        })}
+      </div>
+    );
+  });
   return mockFn;
 });
 
@@ -32,7 +44,19 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   beforeEach(() => {
     ListView.mockClear();
-    ListView.mockImplementation(props => <div data-testid="list-view" />);
+    ListView.mockImplementation(props => {
+      const { dataLength, itemRenderer, getKeyFromIndex } = props;
+      return (
+        <div data-testid="list-view">
+          {Array.from({ length: dataLength }, (_, index) => {
+            const key = getKeyFromIndex ? getKeyFromIndex(index) : `item-${index}`;
+            const style = {};
+            const attrs = {};
+            return itemRenderer(key, style, index, attrs);
+          })}
+        </div>
+      );
+    });
 
     trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
     criticalPath = memoizedTraceCriticalPath(trace);
@@ -382,14 +406,20 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   describe('renderRow()', () => {
     it('renders a SpanBarRow when it is not a detail', () => {
-      render(<VirtualizedTraceViewImpl {...mockProps} />);
+      const { container } = render(<VirtualizedTraceViewImpl {...mockProps} />);
       expect(screen.getByTestId('list-view')).toBeInTheDocument();
+      // Checking that SpanBarRow component rendered (one per span)
+      const rows = container.querySelectorAll('.VirtualizedTraceView--row');
+      expect(rows.length).toBe(trace.spans.length);
     });
 
     it('renders a SpanDetailRow when it is a detail', () => {
       const { props } = expandRow(1);
-      render(<VirtualizedTraceViewImpl {...props} />);
+      const { container } = render(<VirtualizedTraceViewImpl {...props} />);
       expect(screen.getByTestId('list-view')).toBeInTheDocument();
+      // When a span is expand, we get bar rows + one detail row
+      const rows = container.querySelectorAll('.VirtualizedTraceView--row');
+      expect(rows.length).toBe(trace.spans.length + 1);
     });
 
     it('renders a SpanBarRow with a RPC span if the row is collapsed and a client span', () => {
@@ -399,10 +429,12 @@ describe('<VirtualizedTraceViewImpl>', () => {
       altTrace = updateSpan(altTrace, 1, { tags: serverTags });
       const childrenHiddenIDs = new Set([altTrace.spans[0].spanID]);
 
-      render(
+      const { container } = render(
         <VirtualizedTraceViewImpl {...mockProps} childrenHiddenIDs={childrenHiddenIDs} trace={altTrace} />
       );
       expect(screen.getByTestId('list-view')).toBeInTheDocument();
+      const rows = container.querySelectorAll('.VirtualizedTraceView--row');
+      expect(rows.length).toBeGreaterThan(0);
     });
 
     it('renders a SpanBarRow with a client or producer span and no instrumented server span', () => {
@@ -428,17 +460,25 @@ describe('<VirtualizedTraceViewImpl>', () => {
         const altTrace = updateSpan(trace, leafSpanIndex, { tags: tag });
         const { container } = render(<VirtualizedTraceViewImpl {...mockProps} trace={altTrace} />);
         expect(container.querySelector('.VirtualizedTraceView--spans')).toBeInTheDocument();
+        const rows = container.querySelectorAll('.VirtualizedTraceView--row');
+        expect(rows.length).toBe(trace.spans.length);
       });
     });
 
     it('renderSpanBarRow returns null if trace is falsy', () => {
       const { container } = render(<VirtualizedTraceViewImpl {...mockProps} trace={null} />);
       expect(container.querySelector('.VirtualizedTraceView--spans')).toBeInTheDocument();
+      // Should render empty list view when trace is null
+      const rows = container.querySelectorAll('.VirtualizedTraceView--row');
+      expect(rows.length).toBe(0);
     });
 
     it('renderSpanDetailRow returns null if detailState is missing', () => {
       const { container } = render(<VirtualizedTraceViewImpl {...mockProps} />);
       expect(container.querySelector('.VirtualizedTraceView--spans')).toBeInTheDocument();
+      // should only render bar rows, no detail rows
+      const rows = container.querySelectorAll('.VirtualizedTraceView--row');
+      expect(rows.length).toBe(trace.spans.length);
     });
   });
 
