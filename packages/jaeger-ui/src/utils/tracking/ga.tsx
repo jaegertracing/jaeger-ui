@@ -3,7 +3,7 @@
 
 import _get from 'lodash/get';
 import {
-  IEvent,
+  IGAErrorData,
   BrowserClient,
   breadcrumbsIntegration,
   captureException,
@@ -11,7 +11,6 @@ import {
   trackNavigation,
 } from './error-capture';
 
-import convSentryToGa from './conv-sentry-to-ga';
 import { TNil } from '../../types';
 import { Config } from '../../types/config';
 import { IWebAnalyticsFunc } from '../../types/tracking';
@@ -24,13 +23,6 @@ import parseQuery from '../parseQuery';
 // eslint-disable-next-line @typescript-eslint/naming-convention
 interface WindowWithGATracking extends Window {
   dataLayer: (string | object)[][] | undefined;
-}
-
-function convertEventToTransportOptions(event: IEvent): { url: string; data: any } {
-  return {
-    url: event.request?.url || '',
-    data: event,
-  };
 }
 
 declare let window: WindowWithGATracking;
@@ -121,10 +113,9 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
     });
   };
 
-  const trackSentryError = (sentryData: { url: string; data: any }) => {
-    const { message, category, action, label, value } = convSentryToGa(sentryData);
-    trackError(message);
-    trackEvent(category, action, label, value);
+  const trackErrorData = (gaData: IGAErrorData) => {
+    trackError(gaData.message);
+    trackEvent(gaData.category, gaData.action, gaData.label, gaData.value);
   };
 
   const init = () => {
@@ -174,11 +165,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
             dom: true,
           }),
         ],
-        beforeSend(event) {
-          const transportOptions = convertEventToTransportOptions(event);
-          trackSentryError(transportOptions);
-          return event;
-        },
+        onError: trackErrorData,
         ...(versionShort &&
           versionShort !== 'unknown' && {
             tags: {

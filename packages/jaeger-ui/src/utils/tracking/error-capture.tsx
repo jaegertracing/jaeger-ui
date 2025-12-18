@@ -1,27 +1,15 @@
 // Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Minimal error capture implementation for tracking errors to Google Analytics
+// Minimal error capture that formats errors for Google Analytics
 
-import { IException, IBreadcrumb } from './conv-sentry-to-ga';
-
-// Event structure that gets passed to beforeSend callback
-export interface IEvent {
-  exception?: {
-    values?: IException[];
-  };
-  breadcrumbs?: {
-    values?: IBreadcrumb[];
-  };
-  request?: {
-    url?: string;
-  };
-  tags?: {
-    [key: string]: string;
-  };
-  extra?: {
-    [key: string]: any;
-  };
+// GA-formatted error data
+export interface IGAErrorData {
+  message: string;
+  category: string;
+  action: string;
+  label: string;
+  value: number;
 }
 
 // Configuration options
@@ -29,7 +17,7 @@ interface IInitOptions {
   dsn?: string; // Ignored, kept for API compatibility
   environment?: string;
   tags?: { [key: string]: string };
-  beforeSend?: (event: IEvent) => IEvent | null;
+  onError?: (gaData: IGAErrorData) => void;
   integrations?: any[];
 }
 
@@ -40,13 +28,112 @@ interface IBreadcrumbConfig {
   fetch?: boolean;
 }
 
+// Internal breadcrumb structure
+interface IBreadcrumb {
+  type?: string;
+  category?: string;
+  message?: string;
+  data?: { [key: string]: any };
+  timestamp?: number;
+}
+
+interface IStackFrame {
+  filename?: string;
+  function?: string;
+  lineno?: number;
+  colno?: number;
+}
+
 // Internal state
 let breadcrumbsList: IBreadcrumb[] = [];
-let beforeSendCallback: ((event: IEvent) => IEvent | null) | null = null;
+let onErrorCallback: ((gaData: IGAErrorData) => void) | null = null;
 let sessionStartTime = Date.now();
 let errorTags: { [key: string]: string } = {};
 
 const MAX_BREADCRUMBS = 100;
+
+// Lazy initialize origin to avoid importing prefixUrl at module load time
+let origin: string | null = null;
+function getOrigin(): string {
+  if (origin === null && typeof window !== 'undefined') {
+    const prefixUrl = require('../prefix-url').default;
+    origin = window.location.origin + prefixUrl('');
+  }
+  return origin || '';
+}
+
+const warn = console.warn.bind(console);
+
+const UNKNOWN_SYM = { sym: '??', word: '??' };
+
+const NAV_SYMBOLS = [
+  { sym: 'dp', word: 'dependencies', rx: /^\/dep/i },
+  { sym: 'tr', word: 'trace', rx: /^\/trace/i },
+  { sym: 'sd', word: 'search', rx: /^\/search\?./i },
+  { sym: 'sr', word: 'search', rx: /^\/search/i },
+  { sym: 'rt', word: 'home', rx: /^\/$/ },
+];
+
+const FETCH_SYMBOLS = [
+  { sym: 'svc', word: '', rx: /^\/api\/services$/i },
+  { sym: 'op', word: '', rx: /^\/api\/.*?operations$/i },
+  { sym: 'sr', word: '', rx: /^\/api\/traces\?/i },
+  { sym: 'tr', word: '', rx: /^\/api\/traces\/./i },
+  { sym: 'dp', word: '', rx: /^\/api\/dep/i },
+  { sym: '__IGNORE__', word: '', rx: /\.js(\.map)?$/i },
+];
+
+// Utility functions
+
+function truncate(str: string, len: number, front = false) {
+  if (str.length > len) {
+    if (!front) {
+      return `${str.slice(0, len - 1)}~`;
+    }
+    return `~${str.slice(1 - len)}`;
+  }
+  return str;
+}
+
+function collapseWhitespace(value: string) {
+  return value.trim().replace(/\n/g, '|').replace(/\s\s+/g, ' ').trim();
+}
+
+function getSym(syms: typeof NAV_SYMBOLS | typeof FETCH_SYMBOLS, str: string) {
+  for (let i = 0; i < syms.length; i++) {
+    const { rx } = syms[i];
+    if (rx.test(str)) {
+      return syms[i];
+    }
+  }
+  warn(`Unable to find symbol for: "${str}"`);
+  return UNKNOWN_SYM;
+}
+
+function convErrorMessage(message: string, maxLen = 0) {
+  let msg = collapseWhitespace(message);
+  const parts = ['! '];
+  const j = msg.indexOf(':');
+  if (j > -1) {
+    const start = msg.slice(0, j).replace(/error/i, '').trim();
+    if (start) {
+      parts.push(start, '! ');
+    }
+    msg = msg.slice(j + 1);
+  }
+  parts.push(msg.trim());
+  const rv = parts.join('');
+  return maxLen ? truncate(rv, maxLen) : parts.join('');
+}
+
+function compressCssSelector(selector: string) {
+  return selector
+    .replace(/\.(?=\s|$)/g, '')
+    .replace(/\.ub-[^. [:]+/g, '')
+    .replace(/^(\w+ > )+/, '')
+    .replace(/(^| )\w+?(?=\.)/g, '$1')
+    .replace(/ > /g, ' >');
+}
 
 // Add a breadcrumb to the list
 function addBreadcrumb(breadcrumb: IBreadcrumb) {
@@ -60,18 +147,18 @@ function addBreadcrumb(breadcrumb: IBreadcrumb) {
 }
 
 // Parse error stack trace
-function parseStackTrace(error: Error): IException['stacktrace'] {
+function parseStackTrace(error: Error): IStackFrame[] {
   if (!error.stack) {
-    return undefined;
+    return [];
   }
 
-  const frames: Array<{ filename?: string; function?: string; lineno?: number; colno?: number }> = [];
+  const frames: IStackFrame[] = [];
   const stackLines = error.stack.split('\n');
 
   for (const line of stackLines) {
     if (line.includes(error.message)) continue;
 
-    // Chrome/Edge format: "    at functionName (filename:line:col)"
+    // Chrome/Edge format
     const chromeMatch = line.match(/^\s*at\s+(?:(.+?)\s+\()?(.+?):(\d+):(\d+)\)?$/);
     if (chromeMatch) {
       const [, functionName, filename, lineno, colno] = chromeMatch;
@@ -84,7 +171,7 @@ function parseStackTrace(error: Error): IException['stacktrace'] {
       continue;
     }
 
-    // Firefox format: "functionName@filename:line:col"
+    // Firefox format
     const firefoxMatch = line.match(/^(.+?)@(.+?):(\d+):(\d+)$/);
     if (firefoxMatch) {
       const [, functionName, filename, lineno, colno] = firefoxMatch;
@@ -97,31 +184,169 @@ function parseStackTrace(error: Error): IException['stacktrace'] {
     }
   }
 
-  return frames.length > 0 ? { frames } : undefined;
+  return frames;
 }
 
-// Create event from error
-function createErrorEvent(error: Error): IEvent {
-  const exception: IException = {
-    type: error.name || 'Error',
-    value: error.message || 'Unknown error',
-    stacktrace: parseStackTrace(error),
-  };
+// Convert stack frames to compact string
+function formatStack(frames: IStackFrame[]): string {
+  const formatted = frames.map(fr => {
+    const filename = (fr.filename ?? '').replace(getOrigin(), '').replace(/^\/static\/js\//i, '');
+    const fn = collapseWhitespace(fr.function || '??');
+    return { filename, fn };
+  });
+
+  const joiner = [];
+  let lastFile = '';
+  for (let i = formatted.length - 1; i >= 0; i--) {
+    const { filename, fn } = formatted[i];
+    if (lastFile !== filename) {
+      joiner.push(`> ${filename}`);
+      lastFile = filename;
+    }
+    joiner.push(fn);
+  }
+  return joiner.join('\n');
+}
+
+// Convert breadcrumbs to compact string
+function formatBreadcrumbs(crumbs: IBreadcrumb[]): string {
+  if (!Array.isArray(crumbs) || !crumbs.length) {
+    return '';
+  }
+
+  let iLastUi = -1;
+  for (let i = crumbs.length - 1; i >= 0; i--) {
+    if (crumbs[i]?.category?.slice(0, 2) === 'ui') {
+      iLastUi = i;
+      break;
+    }
+  }
+
+  let joiner: string[] = [];
+  let onNewLine = true;
+
+  for (let i = 0; i < crumbs.length; i++) {
+    const c = crumbs[i];
+    const cStart = c.category?.split('.')[0];
+
+    switch (cStart) {
+      case 'fetch': {
+        if (c.data) {
+          const { url, status_code } = c.data;
+          const statusStr = status_code === 200 ? '' : `|${status_code}`;
+          const sym = getSym(FETCH_SYMBOLS, url);
+          if (sym.sym !== '__IGNORE__') {
+            joiner.push(`[${sym.sym}${statusStr}]`);
+            onNewLine = false;
+          }
+        }
+        break;
+      }
+
+      case 'navigation': {
+        if (c.data?.to) {
+          const sym = getSym(NAV_SYMBOLS, c.data.to);
+          joiner.push(`${onNewLine ? '' : '\n'}\n${sym.sym}\n`);
+          onNewLine = true;
+        }
+        break;
+      }
+
+      case 'ui': {
+        if (c.category && i === iLastUi) {
+          const selector = c.message ? compressCssSelector(c.message) : null;
+          joiner.push(`${c.category[3]}{${selector}}`);
+        } else if (c.category) {
+          joiner.push(c.category[3]);
+        }
+        onNewLine = false;
+        break;
+      }
+
+      case 'sentry': {
+        const msg = c.message ? convErrorMessage(c.message, 58) : null;
+        joiner.push(`${onNewLine ? '' : '\n'}${msg}\n`);
+        onNewLine = true;
+        break;
+      }
+
+      default:
+      // skip
+    }
+  }
+
+  joiner = joiner.filter(Boolean);
+
+  // Compact repeating UI chars
+  let c = '';
+  let ci = -1;
+  const compacted = joiner.reduce((accum: string[], value: string, j: number): string[] => {
+    if (value === c) {
+      return accum;
+    }
+    if (c) {
+      if (j - ci > 1) {
+        accum.push(String(j - ci));
+      }
+      c = '';
+      ci = -1;
+    }
+    accum.push(value);
+    if (value.length === 1) {
+      c = value;
+      ci = j;
+    }
+    return accum;
+  }, []);
+
+  if (c && ci !== joiner.length - 1) {
+    compacted.push(String(joiner.length - ci));
+  }
+
+  return compacted
+    .join('')
+    .trim()
+    .replace(/\n\n\n/g, '\n');
+}
+
+// Format error for Google Analytics
+function formatErrorForGA(error: Error): IGAErrorData {
+  const errorType = error.name || 'Error';
+  const errorValue = error.message || 'Unknown error';
+  const frames = parseStackTrace(error);
+
+  // Format message
+  const message = convErrorMessage(`${errorType}: ${errorValue}`, 149);
+
+  // Format stack
+  const stack = formatStack(frames);
+
+  // Get page info
+  const url = typeof window !== 'undefined' ? truncate(window.location.pathname, 50) : '';
+  const { word: page } = getSym(NAV_SYMBOLS, url);
+
+  // Calculate duration
+  const duration = Date.now() - sessionStartTime;
+  const value = Math.round(duration / 1000);
+
+  // Build category
+  const category = `jaeger/${page}/error`;
+
+  // Build action (message + tags + url + stack)
+  let action = [message, errorTags.git, url, '', stack].filter(v => v != null).join('\n');
+  action = truncate(action, 499);
+
+  // Build label (message + page + duration + git + breadcrumbs)
+  const header = [message, page, value, errorTags.git, ''].filter(v => v != null).join('\n');
+  const crumbs = formatBreadcrumbs(breadcrumbsList);
+  const label = `${header}\n${truncate(crumbs, 498 - header.length, true)}`;
 
   return {
-    exception: {
-      values: [exception],
-    },
-    breadcrumbs: {
-      values: [...breadcrumbsList],
-    },
-    request: {
-      url: typeof window !== 'undefined' ? window.location.href : '',
-    },
-    tags: errorTags,
-    extra: {
-      'session:duration': Date.now() - sessionStartTime,
-    },
+    message,
+    category,
+    action,
+    label,
+    value,
   };
 }
 
@@ -244,7 +469,6 @@ function setupBreadcrumbs(config: IBreadcrumbConfig) {
 
 export function captureException(error: any) {
   const errorObj = error instanceof Error ? error : new Error(String(error));
-  const event = createErrorEvent(errorObj);
 
   // Add error as breadcrumb
   addBreadcrumb({
@@ -252,15 +476,17 @@ export function captureException(error: any) {
     message: `${errorObj.name}: ${errorObj.message}`,
   });
 
-  if (beforeSendCallback) {
-    beforeSendCallback(event);
+  // Format for GA and call callback
+  if (onErrorCallback) {
+    const gaData = formatErrorForGA(errorObj);
+    onErrorCallback(gaData);
   }
 }
 
 export function init(options: IInitOptions = {}) {
-  const { beforeSend, integrations = [], tags = {} } = options;
+  const { onError, integrations = [], tags = {} } = options;
 
-  beforeSendCallback = beforeSend || null;
+  onErrorCallback = onError || null;
   errorTags = tags;
 
   // Extract breadcrumb config from integrations

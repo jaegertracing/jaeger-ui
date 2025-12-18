@@ -4,12 +4,6 @@
 import * as GA from './ga';
 import { getAppEnvironment } from '../constants';
 
-jest.mock('./conv-sentry-to-ga', () => () => ({
-  category: 'jaeger/a',
-  action: 'some-action',
-  message: 'jaeger/a',
-}));
-
 jest.mock('../constants');
 
 let longStr = '---';
@@ -161,7 +155,15 @@ describe('google analytics tracking', () => {
     });
     expect(window.dataLayer).toEqual([
       ['event', 'exception', { description: expect.any(String), fatal: false }],
-      ['event', expect.any(String), { event_category: expect.any(String) }],
+      [
+        'event',
+        expect.any(String),
+        {
+          event_category: expect.any(String),
+          event_label: expect.any(String),
+          event_value: expect.any(Number),
+        },
+      ],
     ]);
   });
 
