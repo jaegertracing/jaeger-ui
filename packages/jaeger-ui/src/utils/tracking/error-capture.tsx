@@ -37,13 +37,6 @@ interface IBreadcrumb {
   timestamp?: number;
 }
 
-interface IStackFrame {
-  filename?: string;
-  function?: string;
-  lineno?: number;
-  colno?: number;
-}
-
 // Internal state
 let breadcrumbsList: IBreadcrumb[] = [];
 let onErrorCallback: ((gaData: IGAErrorData) => void) | null = null;
@@ -146,66 +139,35 @@ function addBreadcrumb(breadcrumb: IBreadcrumb) {
   }
 }
 
-// Parse error stack trace
-function parseStackTrace(error: Error): IStackFrame[] {
+// Format error stack trace for GA
+function formatStack(error: Error): string {
   if (!error.stack) {
-    return [];
+    return '';
   }
 
-  const frames: IStackFrame[] = [];
+  const origin = getOrigin();
+  const lines: string[] = [];
   const stackLines = error.stack.split('\n');
 
   for (const line of stackLines) {
+    // Skip the error message line
     if (line.includes(error.message)) continue;
 
-    // Chrome/Edge format
-    const chromeMatch = line.match(/^\s*at\s+(?:(.+?)\s+\()?(.+?):(\d+):(\d+)\)?$/);
-    if (chromeMatch) {
-      const [, functionName, filename, lineno, colno] = chromeMatch;
-      frames.push({
-        function: functionName || '??',
-        filename: filename || '',
-        lineno: parseInt(lineno, 10),
-        colno: parseInt(colno, 10),
-      });
-      continue;
-    }
+    // Clean up the line - remove origin, static/js prefix, and collapse whitespace
+    let cleaned = line
+      .replace(origin, '')
+      .replace(/\/static\/js\//gi, '')
+      .trim();
 
-    // Firefox format
-    const firefoxMatch = line.match(/^(.+?)@(.+?):(\d+):(\d+)$/);
-    if (firefoxMatch) {
-      const [, functionName, filename, lineno, colno] = firefoxMatch;
-      frames.push({
-        function: functionName || '??',
-        filename: filename || '',
-        lineno: parseInt(lineno, 10),
-        colno: parseInt(colno, 10),
-      });
+    // Collapse whitespace
+    cleaned = cleaned.replace(/\s\s+/g, ' ');
+
+    if (cleaned) {
+      lines.push(cleaned);
     }
   }
 
-  return frames;
-}
-
-// Convert stack frames to compact string
-function formatStack(frames: IStackFrame[]): string {
-  const formatted = frames.map(fr => {
-    const filename = (fr.filename ?? '').replace(getOrigin(), '').replace(/^\/static\/js\//i, '');
-    const fn = collapseWhitespace(fr.function || '??');
-    return { filename, fn };
-  });
-
-  const joiner = [];
-  let lastFile = '';
-  for (let i = formatted.length - 1; i >= 0; i--) {
-    const { filename, fn } = formatted[i];
-    if (lastFile !== filename) {
-      joiner.push(`> ${filename}`);
-      lastFile = filename;
-    }
-    joiner.push(fn);
-  }
-  return joiner.join('\n');
+  return lines.join('\n');
 }
 
 // Convert breadcrumbs to compact string
@@ -313,13 +275,12 @@ function formatBreadcrumbs(crumbs: IBreadcrumb[]): string {
 function formatErrorForGA(error: Error): IGAErrorData {
   const errorType = error.name || 'Error';
   const errorValue = error.message || 'Unknown error';
-  const frames = parseStackTrace(error);
 
   // Format message
   const message = convErrorMessage(`${errorType}: ${errorValue}`, 149);
 
-  // Format stack
-  const stack = formatStack(frames);
+  // Format stack trace directly from error
+  const stack = formatStack(error);
 
   // Get page info
   const url = typeof window !== 'undefined' ? truncate(window.location.pathname, 50) : '';
