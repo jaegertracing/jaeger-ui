@@ -1,9 +1,35 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { IException, IBreadcrumb } from './error-capture';
-
 import prefixUrl from '../prefix-url';
+
+// Types for error data structure
+export interface IStackFrame {
+  filename?: string;
+  function?: string;
+  lineno?: number;
+  colno?: number;
+}
+
+export interface IStacktrace {
+  frames?: IStackFrame[];
+}
+
+export interface IException {
+  type: string;
+  value: string;
+  stacktrace?: IStacktrace;
+}
+
+export interface IBreadcrumb {
+  type?: string;
+  category?: string;
+  message?: string;
+  data?: {
+    [key: string]: any;
+  };
+  timestamp?: number;
+}
 
 const UNKNOWN_SYM = { sym: '??', word: '??' };
 

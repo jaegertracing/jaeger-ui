@@ -7,7 +7,7 @@ import {
   BrowserClient,
   breadcrumbsIntegration,
   captureException,
-  init as SentryInit,
+  init as ErrorCaptureInit,
   trackNavigation,
 } from './error-capture';
 
@@ -164,7 +164,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       );
     }
     if (isErrorsEnabled) {
-      SentryInit({
+      ErrorCaptureInit({
         dsn: 'https://fakedsn@omg.com/1',
         environment: getAppEnvironment() || 'unknown',
         integrations: [
