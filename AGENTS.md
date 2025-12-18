@@ -46,16 +46,17 @@ npm ci         # Install dependencies (use 'ci' for clean install)
 
 ### Root Level Commands (run from repository root)
 
-| Command                 | Description                                                    |
-| ----------------------- | -------------------------------------------------------------- |
-| `npm start`             | Start development server with hot reload (runs jaeger-ui)      |
-| `npm run build`         | Build all packages for production                              |
-| `npm run lint`          | Run all linters (prettier, typescript, eslint, license checks) |
-| `npm run eslint`        | Run ESLint on all packages                                     |
-| `npm run prettier`      | Format code with Prettier                                      |
-| `npm run prettier-lint` | Check formatting without making changes                        |
-| `npm run tsc-lint`      | Run TypeScript type checking                                   |
-| `npm test`              | Run all tests across packages                                  |
+| Command                 | Description                                                          |
+| ----------------------- | -------------------------------------------------------------------- |
+| `npm start`             | Start development server with hot reload (runs jaeger-ui)            |
+| `npm run build`         | Build all packages for production                                    |
+| `npm run lint`          | Run all linters (prettier, typescript, eslint, knip, license checks) |
+| `npm run eslint`        | Run ESLint on all packages                                           |
+| `npm run knip`          | Run Knip to detect dead code and unused dependencies                 |
+| `npm run prettier`      | Format code with Prettier                                            |
+| `npm run prettier-lint` | Check formatting without making changes                              |
+| `npm run tsc-lint`      | Run TypeScript type checking                                         |
+| `npm test`              | Run all tests across packages                                        |
 
 ### Package-Specific Commands
 

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "webpack": true,
+  "babel": true,
+  "vite": true,
+  "eslint": true,
+  "jest": true,
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/**/*.js"],
+      "project": ["scripts/**/*.js"]
+    },
+    "packages/jaeger-ui": {
+      "entry": ["index.html", "vite.config.mts", "test/**/*.js"],
+      "project": ["src/**/*.{js,jsx,ts,tsx}", "test/**/*.js"]
+    },
+    "packages/plexus": {
+      "entry": ["src/index.tsx", "webpack.*.config.js"],
+      "project": ["src/**/*.{js,jsx,ts,tsx}"],
+      "webpack": {
+        "config": ["webpack.dev.config.js", "webpack.umd.config.js", "webpack.layout-worker.config.js"]
+      }
+    }
+  },
+  "ignore": ["packages/jaeger-ui/src/utils/DraggableManager/demo/**", "packages/plexus/demo/**"],
+  "ignoreDependencies": ["@tanstack/react-virtual", "react-side-effect"],
+  "ignoreExportsUsedInFile": true
+}
