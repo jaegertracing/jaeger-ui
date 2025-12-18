@@ -1,7 +1,7 @@
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { BrowserClient } from '@sentry/browser';
+import { BrowserClient } from '../utils/tracking/error-capture';
 import { TNil } from '.';
 import { Config } from './config';
 

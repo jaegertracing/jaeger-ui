@@ -3,12 +3,13 @@
 
 import _get from 'lodash/get';
 import {
-  Event,
+  IEvent,
   BrowserClient,
   breadcrumbsIntegration,
   captureException,
   init as SentryInit,
-} from '@sentry/browser';
+  trackNavigation,
+} from './error-capture';
 
 import convSentryToGa from './conv-sentry-to-ga';
 import { TNil } from '../../types';
@@ -25,7 +26,7 @@ interface WindowWithGATracking extends Window {
   dataLayer: (string | object)[][] | undefined;
 }
 
-function convertEventToTransportOptions(event: Event): { url: string; data: any } {
+function convertEventToTransportOptions(event: IEvent): { url: string; data: any } {
   return {
     url: event.request?.url || '',
     data: event,
@@ -194,6 +195,7 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
 
   const trackPageView = (pathname: string, search: string | TNil) => {
     const pagePath = search ? `${pathname}${search}` : pathname;
+    trackNavigation(pagePath);
     gtag('event', 'page_view', {
       page_path: pagePath,
     });

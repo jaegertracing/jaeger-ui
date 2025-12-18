@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Exception, Breadcrumb } from '@sentry/browser';
+import { IException, IBreadcrumb } from './error-capture';
 
 import prefixUrl from '../prefix-url';
 
@@ -104,7 +104,7 @@ function convErrorMessage(message: string, maxLen = 0) {
 //      dFn
 //
 
-function convException(errValue: Exception) {
+function convException(errValue: IException) {
   const message = convErrorMessage(`${errValue.type}: ${errValue.value}`, 149);
   const frames = (errValue.stacktrace?.frames ?? []).map(fr => {
     const filename = (fr.filename ?? '').replace(origin, '').replace(/^\/static\/js\//i, '');
@@ -223,7 +223,7 @@ function compressCssSelector(selector: string) {
 // The chronological ordering of the breadcrumbs is older events precede newer
 // events. This ordering was kept because it's easier to see which page events
 // occurred on.
-function convBreadcrumbs(crumbs: Breadcrumb[]) {
+function convBreadcrumbs(crumbs: IBreadcrumb[]) {
   if (!Array.isArray(crumbs) || !crumbs.length) {
     return '';
   }
@@ -313,7 +313,7 @@ function convBreadcrumbs(crumbs: Breadcrumb[]) {
 
 // Create the GA label value from the message, page, duration, git info, and
 // breadcrumbs. See <./README.md> for details.
-function getLabel(message: string, page: string, duration: number, git: string, breadcrumbs: Breadcrumb[]) {
+function getLabel(message: string, page: string, duration: number, git: string, breadcrumbs: IBreadcrumb[]) {
   const header = [message, page, duration, git, ''].filter(v => v != null).join('\n');
   const crumbs = convBreadcrumbs(breadcrumbs);
   return `${header}\n${truncate(crumbs, 498 - header.length, true)}`;
@@ -337,7 +337,7 @@ export default function convSentryToGa({ data }: { url: string; data: any }) {
     page,
     value,
     (tags && tags.git) as string,
-    (breadcrumbs && Array.isArray(breadcrumbs.values) ? breadcrumbs.values : []) as Breadcrumb[]
+    (breadcrumbs && Array.isArray(breadcrumbs.values) ? breadcrumbs.values : []) as IBreadcrumb[]
   );
   return {
     message,
