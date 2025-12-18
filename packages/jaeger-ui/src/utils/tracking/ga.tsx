@@ -5,7 +5,6 @@ import _get from 'lodash/get';
 import {
   IGAErrorData,
   BrowserClient,
-  breadcrumbsIntegration,
   captureException,
   init as ErrorCaptureInit,
   trackNavigation,
@@ -158,13 +157,11 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       ErrorCaptureInit({
         dsn: 'https://fakedsn@omg.com/1',
         environment: getAppEnvironment() || 'unknown',
-        integrations: [
-          breadcrumbsIntegration({
-            xhr: true,
-            console: false,
-            dom: true,
-          }),
-        ],
+        breadcrumbs: {
+          xhr: true,
+          console: false,
+          dom: true,
+        },
         onError: trackErrorData,
         ...(versionShort &&
           versionShort !== 'unknown' && {

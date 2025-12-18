@@ -18,7 +18,7 @@ interface IInitOptions {
   environment?: string;
   tags?: { [key: string]: string };
   onError?: (gaData: IGAErrorData) => void;
-  integrations?: any[];
+  breadcrumbs?: IBreadcrumbConfig;
 }
 
 interface IBreadcrumbConfig {
@@ -484,14 +484,13 @@ export function captureException(error: any) {
 }
 
 export function init(options: IInitOptions = {}) {
-  const { onError, integrations = [], tags = {} } = options;
+  const { onError, breadcrumbs = {}, tags = {} } = options;
 
   onErrorCallback = onError || null;
   errorTags = tags;
 
-  // Extract breadcrumb config from integrations
-  const breadcrumbConfig = integrations.find(i => i && typeof i === 'object') || {};
-  setupBreadcrumbs(breadcrumbConfig);
+  // Setup breadcrumb tracking
+  setupBreadcrumbs(breadcrumbs);
 
   // Setup global error handlers
   if (typeof window !== 'undefined') {
@@ -505,10 +504,6 @@ export function init(options: IInitOptions = {}) {
       captureException(error);
     });
   }
-}
-
-export function breadcrumbsIntegration(config: IBreadcrumbConfig) {
-  return config;
 }
 
 export function trackNavigation(to: string) {
