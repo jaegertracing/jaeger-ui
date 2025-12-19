@@ -13,6 +13,21 @@
  * - Tracks user interactions as breadcrumbs (navigation, fetch requests, DOM events)
  * - Provides error context including stack trace, breadcrumbs, and session duration
  *
+ * Breadcrumbs are a chronological log of user actions and events that occurred before
+ * an error. They provide context for debugging by showing what the user was doing
+ * leading up to the error. Examples:
+ * - Navigation: User navigated from /search to /trace/abc123
+ * - Fetch: API call to /api/traces returned 404
+ * - UI: User clicked on button.submit-btn
+ * - UI: User typed into input#search-field
+ *
+ * Each breadcrumb contains:
+ * - type: The type of event (e.g., 'http', 'ui', 'navigation')
+ * - category: More specific categorization (e.g., 'fetch', 'ui.click')
+ * - message: Human-readable description (e.g., CSS selector for UI events)
+ * - data: Additional structured data (e.g., HTTP status code, URL)
+ * - timestamp: When the event occurred
+ *
  * Example usage:
  * ```typescript
  * import { init, captureException } from './error-capture';
@@ -23,6 +38,12 @@
  *     console.log('Error:', error.message);
  *     console.log('Stack:', error.stack);
  *     console.log('Breadcrumbs:', context.breadcrumbs);
+ *     // breadcrumbs will be an array like:
+ *     // [
+ *     //   { category: 'navigation', data: { to: '/search' }, timestamp: 1234567890 },
+ *     //   { category: 'fetch', data: { url: '/api/traces', status_code: 200 }, timestamp: 1234567891 },
+ *     //   { category: 'ui.click', message: 'button.search-btn', timestamp: 1234567892 }
+ *     // ]
  *   },
  *   tags: { version: '1.0.0' }
  * });
@@ -69,6 +90,59 @@ let sessionStartTime = Date.now();
 let errorTags: { [key: string]: string } = {};
 
 const MAX_BREADCRUMBS = 100;
+
+// Utility functions for formatting
+
+/**
+ * Collapse whitespace in a string - replaces newlines with "|" and multiple spaces with single space
+ */
+function collapseWhitespace(value: string): string {
+  return value.trim().replace(/\n/g, '|').replace(/\s\s+/g, ' ').trim();
+}
+
+/**
+ * Format an error message by removing "Error:" prefix and cleaning up
+ * Example: "TypeError: Cannot read property 'x'" -> "! Type! Cannot read property 'x'"
+ */
+export function formatErrorMessage(message: string): string {
+  let msg = collapseWhitespace(message);
+  const parts = ['! '];
+  const j = msg.indexOf(':');
+  if (j > -1) {
+    const start = msg.slice(0, j).replace(/error/i, '').trim();
+    if (start) {
+      parts.push(start, '! ');
+    }
+    msg = msg.slice(j + 1);
+  }
+  parts.push(msg.trim());
+  return parts.join('');
+}
+
+/**
+ * Clean up a stack trace string by removing noise
+ * - Removes error message line
+ * - Collapses whitespace
+ */
+export function formatStackTrace(stack: string | undefined): string {
+  if (!stack) {
+    return '';
+  }
+
+  const lines: string[] = [];
+  const stackLines = stack.split('\n');
+
+  for (const line of stackLines) {
+    // Collapse whitespace and trim
+    const cleaned = line.replace(/\s\s+/g, ' ').trim();
+
+    if (cleaned) {
+      lines.push(cleaned);
+    }
+  }
+
+  return lines.join('\n');
+}
 
 // Add a breadcrumb to the list
 function addBreadcrumb(breadcrumb: IBreadcrumb) {

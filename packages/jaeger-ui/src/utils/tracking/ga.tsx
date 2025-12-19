@@ -9,6 +9,8 @@ import {
   captureException,
   init as ErrorCaptureInit,
   trackNavigation,
+  formatErrorMessage,
+  formatStackTrace,
 } from './error-capture';
 
 import { TNil } from '../../types';
@@ -58,10 +60,6 @@ function truncate(str: string, len: number, front = false) {
   return str;
 }
 
-function collapseWhitespace(value: string) {
-  return value.trim().replace(/\n/g, '|').replace(/\s\s+/g, ' ').trim();
-}
-
 function getSym(syms: typeof NAV_SYMBOLS | typeof FETCH_SYMBOLS, str: string) {
   for (let i = 0; i < syms.length; i++) {
     const { rx } = syms[i];
@@ -73,22 +71,6 @@ function getSym(syms: typeof NAV_SYMBOLS | typeof FETCH_SYMBOLS, str: string) {
   return UNKNOWN_SYM;
 }
 
-function convErrorMessage(message: string, maxLen = 0) {
-  let msg = collapseWhitespace(message);
-  const parts = ['! '];
-  const j = msg.indexOf(':');
-  if (j > -1) {
-    const start = msg.slice(0, j).replace(/error/i, '').trim();
-    if (start) {
-      parts.push(start, '! ');
-    }
-    msg = msg.slice(j + 1);
-  }
-  parts.push(msg.trim());
-  const rv = parts.join('');
-  return maxLen ? truncate(rv, maxLen) : parts.join('');
-}
-
 function compressCssSelector(selector: string) {
   return selector
     .replace(/\.(?=\s|$)/g, '')
@@ -98,7 +80,8 @@ function compressCssSelector(selector: string) {
     .replace(/ > /g, ' >');
 }
 
-function formatStack(stack: string | undefined): string {
+// GA-specific stack formatting that removes Jaeger-specific paths
+function formatStackForGA(stack: string | undefined): string {
   if (!stack) {
     return '';
   }
@@ -179,7 +162,7 @@ function formatBreadcrumbs(crumbs: IBreadcrumb[]): string {
       }
 
       case 'sentry': {
-        const msg = c.message ? convErrorMessage(c.message, 58) : null;
+        const msg = c.message ? truncate(formatErrorMessage(c.message), 58) : null;
         joiner.push(`${onNewLine ? '' : '\n'}${msg}\n`);
         onNewLine = true;
         break;
@@ -238,10 +221,10 @@ function formatErrorForGA(
   const errorValue = error.message || 'Unknown error';
 
   // Format message
-  const message = convErrorMessage(`${errorType}: ${errorValue}`, 149);
+  const message = truncate(formatErrorMessage(`${errorType}: ${errorValue}`), 149);
 
   // Format stack trace
-  const stack = formatStack(error.stack);
+  const stack = formatStackForGA(error.stack);
 
   // Get page info
   const url = truncate(context.url.replace(getOrigin(), ''), 50);
