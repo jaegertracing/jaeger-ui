@@ -1,35 +1,54 @@
 // Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Minimal error capture that formats errors for Google Analytics
+/**
+ * Error Capture Module
+ *
+ * Provides error capturing and breadcrumb tracking functionality for analytics.
+ * This module is tracking-implementation agnostic - it captures errors and user
+ * interactions, allowing the consumer to format the data as needed.
+ *
+ * Key features:
+ * - Captures JavaScript errors (window.onerror, unhandledrejection)
+ * - Tracks user interactions as breadcrumbs (navigation, fetch requests, DOM events)
+ * - Provides error context including stack trace, breadcrumbs, and session duration
+ *
+ * Example usage:
+ * ```typescript
+ * import { init, captureException } from './error-capture';
+ *
+ * init({
+ *   onError: (error, context) => {
+ *     // Format and send error data to your analytics service
+ *     console.log('Error:', error.message);
+ *     console.log('Stack:', error.stack);
+ *     console.log('Breadcrumbs:', context.breadcrumbs);
+ *   },
+ *   tags: { version: '1.0.0' }
+ * });
+ *
+ * // Manually capture an error
+ * captureException(new Error('Something went wrong'));
+ * ```
+ */
 
-// GA-formatted error data
-export interface IGAErrorData {
+// Error data structure
+export interface IErrorData {
+  name: string;
   message: string;
-  category: string;
-  action: string;
-  label: string;
-  value: number;
+  stack?: string;
 }
 
-// Configuration options
-interface IInitOptions {
-  dsn?: string; // Ignored, kept for API compatibility
-  environment?: string;
-  tags?: { [key: string]: string };
-  onError?: (gaData: IGAErrorData) => void;
-  breadcrumbs?: IBreadcrumbConfig;
+// Context data provided with errors
+export interface IErrorContext {
+  breadcrumbs: IBreadcrumb[];
+  tags: { [key: string]: string };
+  sessionDuration: number;
+  url: string;
 }
 
-interface IBreadcrumbConfig {
-  xhr?: boolean;
-  console?: boolean;
-  dom?: boolean;
-  fetch?: boolean;
-}
-
-// Internal breadcrumb structure
-interface IBreadcrumb {
+// Breadcrumb structure
+export interface IBreadcrumb {
   type?: string;
   category?: string;
   message?: string;
@@ -37,96 +56,19 @@ interface IBreadcrumb {
   timestamp?: number;
 }
 
+// Configuration options
+interface IInitOptions {
+  onError?: (error: IErrorData, context: IErrorContext) => void;
+  tags?: { [key: string]: string };
+}
+
 // Internal state
 let breadcrumbsList: IBreadcrumb[] = [];
-let onErrorCallback: ((gaData: IGAErrorData) => void) | null = null;
+let onErrorCallback: ((error: IErrorData, context: IErrorContext) => void) | null = null;
 let sessionStartTime = Date.now();
 let errorTags: { [key: string]: string } = {};
 
 const MAX_BREADCRUMBS = 100;
-
-// Lazy initialize origin to avoid importing prefixUrl at module load time
-let origin: string | null = null;
-function getOrigin(): string {
-  if (origin === null && typeof window !== 'undefined') {
-    const prefixUrl = require('../prefix-url').default;
-    origin = window.location.origin + prefixUrl('');
-  }
-  return origin || '';
-}
-
-const warn = console.warn.bind(console);
-
-const UNKNOWN_SYM = { sym: '??', word: '??' };
-
-const NAV_SYMBOLS = [
-  { sym: 'dp', word: 'dependencies', rx: /^\/dep/i },
-  { sym: 'tr', word: 'trace', rx: /^\/trace/i },
-  { sym: 'sd', word: 'search', rx: /^\/search\?./i },
-  { sym: 'sr', word: 'search', rx: /^\/search/i },
-  { sym: 'rt', word: 'home', rx: /^\/$/ },
-];
-
-const FETCH_SYMBOLS = [
-  { sym: 'svc', word: '', rx: /^\/api\/services$/i },
-  { sym: 'op', word: '', rx: /^\/api\/.*?operations$/i },
-  { sym: 'sr', word: '', rx: /^\/api\/traces\?/i },
-  { sym: 'tr', word: '', rx: /^\/api\/traces\/./i },
-  { sym: 'dp', word: '', rx: /^\/api\/dep/i },
-  { sym: '__IGNORE__', word: '', rx: /\.js(\.map)?$/i },
-];
-
-// Utility functions
-
-function truncate(str: string, len: number, front = false) {
-  if (str.length > len) {
-    if (!front) {
-      return `${str.slice(0, len - 1)}~`;
-    }
-    return `~${str.slice(1 - len)}`;
-  }
-  return str;
-}
-
-function collapseWhitespace(value: string) {
-  return value.trim().replace(/\n/g, '|').replace(/\s\s+/g, ' ').trim();
-}
-
-function getSym(syms: typeof NAV_SYMBOLS | typeof FETCH_SYMBOLS, str: string) {
-  for (let i = 0; i < syms.length; i++) {
-    const { rx } = syms[i];
-    if (rx.test(str)) {
-      return syms[i];
-    }
-  }
-  warn(`Unable to find symbol for: "${str}"`);
-  return UNKNOWN_SYM;
-}
-
-function convErrorMessage(message: string, maxLen = 0) {
-  let msg = collapseWhitespace(message);
-  const parts = ['! '];
-  const j = msg.indexOf(':');
-  if (j > -1) {
-    const start = msg.slice(0, j).replace(/error/i, '').trim();
-    if (start) {
-      parts.push(start, '! ');
-    }
-    msg = msg.slice(j + 1);
-  }
-  parts.push(msg.trim());
-  const rv = parts.join('');
-  return maxLen ? truncate(rv, maxLen) : parts.join('');
-}
-
-function compressCssSelector(selector: string) {
-  return selector
-    .replace(/\.(?=\s|$)/g, '')
-    .replace(/\.ub-[^. [:]+/g, '')
-    .replace(/^(\w+ > )+/, '')
-    .replace(/(^| )\w+?(?=\.)/g, '$1')
-    .replace(/ > /g, ' >');
-}
 
 // Add a breadcrumb to the list
 function addBreadcrumb(breadcrumb: IBreadcrumb) {
@@ -137,178 +79,6 @@ function addBreadcrumb(breadcrumb: IBreadcrumb) {
   if (breadcrumbsList.length > MAX_BREADCRUMBS) {
     breadcrumbsList = breadcrumbsList.slice(-MAX_BREADCRUMBS);
   }
-}
-
-// Format error stack trace for GA
-function formatStack(error: Error): string {
-  if (!error.stack) {
-    return '';
-  }
-
-  const origin = getOrigin();
-  const lines: string[] = [];
-  const stackLines = error.stack.split('\n');
-
-  for (const line of stackLines) {
-    // Skip the error message line
-    if (line.includes(error.message)) continue;
-
-    // Clean up the line - remove origin, static/js prefix, and collapse whitespace
-    let cleaned = line
-      .replace(origin, '')
-      .replace(/\/static\/js\//gi, '')
-      .trim();
-
-    // Collapse whitespace
-    cleaned = cleaned.replace(/\s\s+/g, ' ');
-
-    if (cleaned) {
-      lines.push(cleaned);
-    }
-  }
-
-  return lines.join('\n');
-}
-
-// Convert breadcrumbs to compact string
-function formatBreadcrumbs(crumbs: IBreadcrumb[]): string {
-  if (!Array.isArray(crumbs) || !crumbs.length) {
-    return '';
-  }
-
-  let iLastUi = -1;
-  for (let i = crumbs.length - 1; i >= 0; i--) {
-    if (crumbs[i]?.category?.slice(0, 2) === 'ui') {
-      iLastUi = i;
-      break;
-    }
-  }
-
-  let joiner: string[] = [];
-  let onNewLine = true;
-
-  for (let i = 0; i < crumbs.length; i++) {
-    const c = crumbs[i];
-    const cStart = c.category?.split('.')[0];
-
-    switch (cStart) {
-      case 'fetch': {
-        if (c.data) {
-          const { url, status_code } = c.data;
-          const statusStr = status_code === 200 ? '' : `|${status_code}`;
-          const sym = getSym(FETCH_SYMBOLS, url);
-          if (sym.sym !== '__IGNORE__') {
-            joiner.push(`[${sym.sym}${statusStr}]`);
-            onNewLine = false;
-          }
-        }
-        break;
-      }
-
-      case 'navigation': {
-        if (c.data?.to) {
-          const sym = getSym(NAV_SYMBOLS, c.data.to);
-          joiner.push(`${onNewLine ? '' : '\n'}\n${sym.sym}\n`);
-          onNewLine = true;
-        }
-        break;
-      }
-
-      case 'ui': {
-        if (c.category && i === iLastUi) {
-          const selector = c.message ? compressCssSelector(c.message) : null;
-          joiner.push(`${c.category[3]}{${selector}}`);
-        } else if (c.category) {
-          joiner.push(c.category[3]);
-        }
-        onNewLine = false;
-        break;
-      }
-
-      case 'sentry': {
-        const msg = c.message ? convErrorMessage(c.message, 58) : null;
-        joiner.push(`${onNewLine ? '' : '\n'}${msg}\n`);
-        onNewLine = true;
-        break;
-      }
-
-      default:
-      // skip
-    }
-  }
-
-  joiner = joiner.filter(Boolean);
-
-  // Compact repeating UI chars
-  let c = '';
-  let ci = -1;
-  const compacted = joiner.reduce((accum: string[], value: string, j: number): string[] => {
-    if (value === c) {
-      return accum;
-    }
-    if (c) {
-      if (j - ci > 1) {
-        accum.push(String(j - ci));
-      }
-      c = '';
-      ci = -1;
-    }
-    accum.push(value);
-    if (value.length === 1) {
-      c = value;
-      ci = j;
-    }
-    return accum;
-  }, []);
-
-  if (c && ci !== joiner.length - 1) {
-    compacted.push(String(joiner.length - ci));
-  }
-
-  return compacted
-    .join('')
-    .trim()
-    .replace(/\n\n\n/g, '\n');
-}
-
-// Format error for Google Analytics
-function formatErrorForGA(error: Error): IGAErrorData {
-  const errorType = error.name || 'Error';
-  const errorValue = error.message || 'Unknown error';
-
-  // Format message
-  const message = convErrorMessage(`${errorType}: ${errorValue}`, 149);
-
-  // Format stack trace directly from error
-  const stack = formatStack(error);
-
-  // Get page info
-  const url = typeof window !== 'undefined' ? truncate(window.location.pathname, 50) : '';
-  const { word: page } = getSym(NAV_SYMBOLS, url);
-
-  // Calculate duration
-  const duration = Date.now() - sessionStartTime;
-  const value = Math.round(duration / 1000);
-
-  // Build category
-  const category = `jaeger/${page}/error`;
-
-  // Build action (message + tags + url + stack)
-  let action = [message, errorTags.git, url, '', stack].filter(v => v != null).join('\n');
-  action = truncate(action, 499);
-
-  // Build label (message + page + duration + git + breadcrumbs)
-  const header = [message, page, value, errorTags.git, ''].filter(v => v != null).join('\n');
-  const crumbs = formatBreadcrumbs(breadcrumbsList);
-  const label = `${header}\n${truncate(crumbs, 498 - header.length, true)}`;
-
-  return {
-    message,
-    category,
-    action,
-    label,
-    value,
-  };
 }
 
 // Helper to get CSS path for DOM elements
@@ -354,50 +124,46 @@ function getCSSPath(element: HTMLElement): string {
   return path.join(' > ');
 }
 
-// Setup breadcrumb tracking
-function setupBreadcrumbs(config: IBreadcrumbConfig) {
-  const { dom = true, fetch: trackFetch = true } = config;
-
+// Setup breadcrumb tracking with hardcoded settings
+function setupBreadcrumbs() {
   if (typeof window === 'undefined') return;
 
   // Track fetch requests
-  if (trackFetch) {
-    const originalFetch = window.fetch;
-    window.fetch = function (...args: Parameters<typeof fetch>) {
-      const url =
-        typeof args[0] === 'string' ? args[0] : args[0] instanceof Request ? args[0].url : args[0].toString();
+  const originalFetch = window.fetch;
+  window.fetch = function (...args: Parameters<typeof fetch>) {
+    const url =
+      typeof args[0] === 'string' ? args[0] : args[0] instanceof Request ? args[0].url : args[0].toString();
 
-      return originalFetch.apply(this, args).then(
-        response => {
-          addBreadcrumb({
-            type: 'http',
-            category: 'fetch',
-            data: {
-              url,
-              status_code: response.status,
-              method: args[1]?.method || 'GET',
-            },
-          });
-          return response;
-        },
-        error => {
-          addBreadcrumb({
-            type: 'http',
-            category: 'fetch',
-            data: {
-              url,
-              status_code: 0,
-              error: error.message,
-            },
-          });
-          throw error;
-        }
-      );
-    };
-  }
+    return originalFetch.apply(this, args).then(
+      response => {
+        addBreadcrumb({
+          type: 'http',
+          category: 'fetch',
+          data: {
+            url,
+            status_code: response.status,
+            method: args[1]?.method || 'GET',
+          },
+        });
+        return response;
+      },
+      error => {
+        addBreadcrumb({
+          type: 'http',
+          category: 'fetch',
+          data: {
+            url,
+            status_code: 0,
+            error: error.message,
+          },
+        });
+        throw error;
+      }
+    );
+  };
 
-  // Track DOM events
-  if (dom && typeof document !== 'undefined') {
+  // Track DOM events (click and input)
+  if (typeof document !== 'undefined') {
     document.addEventListener(
       'click',
       event => {
@@ -428,6 +194,9 @@ function setupBreadcrumbs(config: IBreadcrumbConfig) {
 
 // Public API
 
+/**
+ * Capture an error and trigger the error callback with context
+ */
 export function captureException(error: any) {
   const errorObj = error instanceof Error ? error : new Error(String(error));
 
@@ -437,21 +206,36 @@ export function captureException(error: any) {
     message: `${errorObj.name}: ${errorObj.message}`,
   });
 
-  // Format for GA and call callback
+  // Call callback with error and context
   if (onErrorCallback) {
-    const gaData = formatErrorForGA(errorObj);
-    onErrorCallback(gaData);
+    const context: IErrorContext = {
+      breadcrumbs: [...breadcrumbsList],
+      tags: errorTags,
+      sessionDuration: Date.now() - sessionStartTime,
+      url: typeof window !== 'undefined' ? window.location.href : '',
+    };
+
+    const errorData: IErrorData = {
+      name: errorObj.name || 'Error',
+      message: errorObj.message || 'Unknown error',
+      stack: errorObj.stack,
+    };
+
+    onErrorCallback(errorData, context);
   }
 }
 
+/**
+ * Initialize error capture with callback and configuration
+ */
 export function init(options: IInitOptions = {}) {
-  const { onError, breadcrumbs = {}, tags = {} } = options;
+  const { onError, tags = {} } = options;
 
   onErrorCallback = onError || null;
   errorTags = tags;
 
   // Setup breadcrumb tracking
-  setupBreadcrumbs(breadcrumbs);
+  setupBreadcrumbs();
 
   // Setup global error handlers
   if (typeof window !== 'undefined') {
@@ -467,16 +251,12 @@ export function init(options: IInitOptions = {}) {
   }
 }
 
+/**
+ * Track a navigation event as a breadcrumb
+ */
 export function trackNavigation(to: string) {
   addBreadcrumb({
     category: 'navigation',
     data: { to },
   });
-}
-
-// Mock BrowserClient for type compatibility
-export class BrowserClient {
-  static context(callback: () => void) {
-    callback();
-  }
 }
