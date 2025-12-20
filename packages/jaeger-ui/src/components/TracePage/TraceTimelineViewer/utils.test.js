@@ -58,6 +58,7 @@ describe('TraceTimelineViewer/utils', () => {
       { fn: isServerSpan, name: 'isServerSpan', key: 'span.kind', value: 'server' },
       { fn: isErrorSpan, name: 'isErrorSpan', key: 'error', value: true },
       { fn: isErrorSpan, name: 'isErrorSpan', key: 'error', value: 'true' },
+      { fn: isErrorSpan, name: 'isErrorSpan', key: 'otel.status_code', value: 'ERROR' },
     ];
 
     spanTypeTestCases.forEach(testCase => {

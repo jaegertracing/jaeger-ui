@@ -63,7 +63,9 @@ export const isServerSpan = spanHasTag.bind(null, 'span.kind', 'server');
 
 const isErrorBool = spanHasTag.bind(null, 'error', true);
 const isErrorStr = spanHasTag.bind(null, 'error', 'true');
-export const isErrorSpan = (span: Span) => isErrorBool(span) || isErrorStr(span);
+const isOtelError = (span: Span) =>
+  span.tags?.some(({ key, value }) => key === 'otel.status_code' && String(value).toUpperCase() === 'ERROR');
+export const isErrorSpan = (span: Span) => isErrorBool(span) || isErrorStr(span) || isOtelError(span);
 
 /**
  * Returns `true` if at least one of the descendants of the `parentSpanIndex`
