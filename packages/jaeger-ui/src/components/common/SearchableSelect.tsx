@@ -5,6 +5,7 @@ import React, { FunctionComponent } from 'react';
 import { Select, SelectProps } from 'antd';
 import { DefaultOptionType } from 'antd/es/select';
 import { matchSorter } from 'match-sorter';
+import { DownOutlined } from '@ant-design/icons';
 
 /**
  * Case-insensitive substring filter for Select options.
@@ -34,6 +35,20 @@ export type SearchableSelectProps = SelectProps & {
 };
 
 /**
+ * Custom suffix icon that prevents mouseDown event propagation.
+ * This fixes the issue where clicking the dropdown arrow causes the dropdown
+ * to open and immediately close due to event bubbling.
+ */
+const SuffixIcon: FunctionComponent = () => {
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  return <DownOutlined onMouseDown={handleMouseDown} />;
+};
+
+/**
  * SearchableSelect is a wrapper around Ant Design's Select component
  * that adds search/filter functionality.
  *
@@ -42,6 +57,7 @@ export type SearchableSelectProps = SelectProps & {
  * - Optional fuzzy matching via `fuzzy` prop (uses match-sorter)
  * - Supports virtualization via Ant Design's `virtual` prop for large lists
  * - All standard Ant Design Select props are supported
+ * - Fixes dropdown arrow click behavior (prevents immediate close after open)
  *
  * Use this component for:
  * - Standard form dropdowns that need search/filter capability
@@ -56,9 +72,10 @@ export type SearchableSelectProps = SelectProps & {
  * // With fuzzy matching and virtualization
  * <SearchableSelect options={services} fuzzy virtual />
  */
-const SearchableSelect: FunctionComponent<SearchableSelectProps> = ({ fuzzy, ...props }) => {
+const SearchableSelect: FunctionComponent<SearchableSelectProps> = ({ fuzzy, suffixIcon, ...props }) => {
   const filterOption = fuzzy ? filterOptionsFuzzy : filterOptionsByLabel;
-  return <Select showSearch filterOption={filterOption} {...props} />;
+  const defaultSuffixIcon = suffixIcon ?? <SuffixIcon />;
+  return <Select showSearch filterOption={filterOption} suffixIcon={defaultSuffixIcon} {...props} />;
 };
 
 export default SearchableSelect;
