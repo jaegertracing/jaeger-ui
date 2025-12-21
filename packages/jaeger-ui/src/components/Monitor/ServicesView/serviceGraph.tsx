@@ -250,7 +250,10 @@ export function ServiceGraphImpl({
 
   const formatYAxisTickWrapper = (value: number): string => formatYAxisTick(value, name, yAxisTickFormat);
 
-  const tooltipFormatter = (value: number, uname: string) => {
+  const tooltipFormatter = (value: number | undefined, uname: string | undefined) => {
+    if (value === undefined) {
+      return ['N/A'];
+    }
     if (!showLegend) {
       return [formatYAxisTickWrapper(value)];
     }
