@@ -14,8 +14,6 @@ This document provides Jaeger UI-specific guidance to complement the general gui
 - [Node.JS](https://nodejs.org/en)
 - npm package manager
 
-The app was built with [create-react-app](https://github.com/facebookincubator/create-react-app).
-
 ### Installation
 
 Fork and/or clone the `jaeger-ui` repo and change directory into it.
@@ -39,7 +37,7 @@ npm ci
 
 ## Running the application
 
-Make sure you have the Jaeger Query service running on http://localhost:16686. For example, you can run Jaeger all-in-one Docker image as described in the [documentation][aio-docs].
+Make sure you have Jaeger running on http://localhost:16686. For example, you can run Jaeger all-in-one Docker image as described in [getting started documentation](https://www.jaegertracing.io/docs/latest/getting-started/).
 
 If you don't have it running locally, then tunnel to the correct host and port:
 
@@ -47,7 +45,7 @@ If you don't have it running locally, then tunnel to the correct host and port:
 ssh -fN -L 16686:$BACKEND_HOST:$BACKEND_PORT $BACKEND_HOST
 ```
 
-If you are using the [UI Base Path](https://www.jaegertracing.io/docs/1.7/deployment/#ui-base-path) feature, you need to append the base path into `jaeger-ui/jaeger-ui/vite.config.js` in `proxyConfig` object. For example, if the base path is `"/jaeger"`, then the `target` should be `"http://localhost:16686/jaeger"` and your `proxyConfig` object would be:
+If you are using the [UI Base Path](https://www.jaegertracing.io/docs/latest/deployment/configuration/#ui-base-path) feature, you need to append the base path into `jaeger-ui/jaeger-ui/vite.config.js` in `proxyConfig` object. For example, if the base path is `"/jaeger"`, then the `target` should be `"http://localhost:16686/jaeger"` and your `proxyConfig` object would be:
 
 ```js
 const proxyConfig = {
@@ -159,5 +157,3 @@ If you are adding a new file it should have a header like below.
 ## Cutting a Jaeger UI release
 
 Please see [RELEASE.md](./RELEASE.md).
-
-[aio-docs]: https://www.jaegertracing.io/docs/latest/getting-started/
