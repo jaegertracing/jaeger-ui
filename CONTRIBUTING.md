@@ -115,23 +115,19 @@ Use the following `launch.json` configuration:
 
 ```json
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Jest: current file",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}/node_modules/.bin/jest",
-            "args": [
-                "${file}"
-            ],
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}/packages/jaeger-ui",
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Jest: current file",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/node_modules/.bin/jest",
+      "args": ["${file}"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/packages/jaeger-ui"
+    }
+  ]
 }
 ```
 
