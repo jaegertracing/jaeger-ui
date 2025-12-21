@@ -68,7 +68,7 @@
     "react-router-dom": "5.3.4",
     "react-router-dom-v5-compat": "6.30.0",
     "@tanstack/react-virtual": "3.13.12",
-    "recharts": "3.5.1",
+    "recharts": "3.6.0",
     "redux": "5.0.1",
     "redux-actions": "3.0.3",
     "redux-first-history": "5.2.0",
