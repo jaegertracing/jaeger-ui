@@ -1,103 +1,137 @@
-# How to contribute to Jaeger UI
+# How to Contribute to Jaeger UI
 
 We'd love your help!
 
-Jaeger is [Apache 2.0 licensed](LICENSE) and accepts contributions via GitHub pull requests. This document outlines some of the conventions on development workflow, commit message formatting, contact points and other resources to make it easier to get your contribution accepted.
+General contributing guidelines are described in [Contributing Guidelines](https://github.com/jaegertracing/jaeger/blob/main/CONTRIBUTING_GUIDELINES.md).
 
-We gratefully welcome improvements to documentation as well as to code.
+This document provides Jaeger UI-specific guidance to complement the general guidelines.
 
-# Certificate of origin
+## Setup
 
-By contributing to this project you agree to the [Developer Certificate of Origin](https://developercertificate.org/) (DCO). This document was created by the Linux Kernel community and is a simple statement that you, as a contributor, have the legal right to make the contribution. See the [DCO](DCO) file for details.
+### Prerequisites
 
-## Making a change
+- [nvm (Node Version Manager)](https://github.com/nvm-sh/nvm)
+- [Node.JS](https://nodejs.org/en)
+- npm package manager
 
-_Before making any significant changes, please [open an issue](https://github.com/jaegertracing/jaeger-ui/issues)._ Discussing your proposed changes ahead of time will make the contribution process smooth for everyone.
+### Installation
 
-Once we've discussed your changes and you've got your code ready, make sure that tests are passing and open your pull request. Your PR is most likely to be accepted if it:
+Fork and/or clone the `jaeger-ui` repo and change directory into it.
 
-- Includes tests for new functionality.
-- References the original issue in description, e.g. "Resolves #123".
-- Has a [good commit message](https://chris.beams.io/posts/git-commit/):
-  - Separate subject from body with a blank line
-  - Limit the subject line to 50 characters
-  - Capitalize the subject line
-  - Do not end the subject line with a period
-  - Use the imperative mood in the subject line
-  - Wrap the body at 72 characters
-  - Use the body to explain _what_ and _why_ instead of _how_
-- Each commit must be signed by the author ([see below](#sign-your-work)).
-
-## License
-
-By contributing your code, you agree to license your contribution under the terms of the [Apache License](LICENSE).
-
-If you are adding a new file it should have a header like below.
-
-```
-// Copyright (c) 2017 The Jaeger Authors.
-// SPDX-License-Identifier: Apache-2.0
+```bash
+git clone https://github.com/jaegertracing/jaeger-ui.git
+cd jaeger-ui
 ```
 
-## Sign your work
+Use the recommended Node versions: (defined in [.nvmrc](./.nvmrc) file):
 
-The sign-off is a simple line at the end of the explanation for the patch, which certifies that you wrote it or otherwise have the right to pass it on as an open-source patch. The rules are pretty simple: if you can certify the below (from [developercertificate.org](http://developercertificate.org/)):
-
-```
-Developer Certificate of Origin
-Version 1.1
-
-Copyright (C) 2004, 2006 The Linux Foundation and its contributors.
-660 York Street, Suite 102,
-San Francisco, CA 94110 USA
-
-Everyone is permitted to copy and distribute verbatim copies of this
-license document, but changing it is not allowed.
-
-
-Developer's Certificate of Origin 1.1
-
-By making a contribution to this project, I certify that:
-
-(a) The contribution was created in whole or in part by me and I
-    have the right to submit it under the open source license
-    indicated in the file; or
-
-(b) The contribution is based upon previous work that, to the best
-    of my knowledge, is covered under an appropriate open source
-    license and I have the right under that license to submit that
-    work with modifications, whether created in whole or in part
-    by me, under the same open source license (unless I am
-    permitted to submit under a different license), as indicated
-    in the file; or
-
-(c) The contribution was provided directly to me by some other
-    person who certified (a), (b) or (c) and I have not modified
-    it.
-
-(d) I understand and agree that this project and the contribution
-    are public and that a record of the contribution (including all
-    personal information I submit with it, including my sign-off) is
-    maintained indefinitely and may be redistributed consistent with
-    this project or the open source license(s) involved.
+```bash
+nvm use
 ```
 
-then you just add a line to every git commit message:
+Install dependencies via `npm`:
 
-    Signed-off-by: Joe Smith <joe@gmail.com>
-
-using your real name (sorry, no pseudonyms or anonymous contributions.)
-
-You can add the sign off when creating the git commit via `git commit -s`.
-
-If you want this to be automatic you can set up some aliases:
-
-```
-git config --add alias.amend "commit -s --amend"
-git config --add alias.c "commit -s"
+```bash
+npm ci
 ```
 
-# Style guide
+## Running the application
+
+Make sure you have Jaeger running on http://localhost:16686. For example, you can run Jaeger all-in-one Docker image as described in [getting started documentation](https://www.jaegertracing.io/docs/latest/getting-started/).
+
+If you don't have it running locally, then tunnel to the correct host and port:
+
+```bash
+ssh -fN -L 16686:$BACKEND_HOST:$BACKEND_PORT $BACKEND_HOST
+```
+
+If you are using the [UI Base Path](https://www.jaegertracing.io/docs/latest/deployment/configuration/#ui-base-path) feature, you need to append the base path into `jaeger-ui/jaeger-ui/vite.config.js` in `proxyConfig` object. For example, if the base path is `"/jaeger"`, then the `target` should be `"http://localhost:16686/jaeger"` and your `proxyConfig` object would be:
+
+```js
+const proxyConfig = {
+  target: 'http://localhost:16686/jaeger',
+  secure: false,
+  changeOrigin: true,
+  ws: true,
+  xfwd: true,
+};
+```
+
+Start the development server with hot loading:
+
+```bash
+npm start
+```
+
+The above command will run a web server on `http://localhost:5173` that will serve the UI assets, with hot reloading support, and it will proxy all API requests to `http://localhost:16686` where Jaeger query should be running.
+
+## Development Commands
+
+| Command          | Description                                                           |
+| ---------------- | --------------------------------------------------------------------- |
+| `npm start`      | Starts development server with hot reloading and api proxy.           |
+| `npm test`       | Run all the tests                                                     |
+| `npm test $file` | Run tests for a specific file, e.g. `npm test src/api/jaeger.test.js` |
+| `npm run lint`   | Lint the project (eslint, prettier, typescript)                       |
+| `npm run fmt`    | Apply Prettier source code formatting                                 |
+| `npm run build`  | Runs production build. Outputs files to `packages/jaeger-ui/build`.   |
+
+## Code Coverage
+
+This project uses Jest for testing with high coverage standards and Codecov integration for tracking.
+
+| Command | Description |
+| --- | --- |
+| `npm test -- --coverage` | Run all tests with coverage report |
+| `npm test -- --coverage --collectCoverageFrom="src/path/to/file.tsx"` | Coverage for specific files |
+| `npm test -- --testPathPattern=Component --coverage` | Coverage for specific test patterns |
+| `npm test -- --coverage --coverageReporters=text-lcov --coverageReporters=html` | Generate detailed coverage reports |
+
+**Coverage Metrics:**
+
+- **Statements**: % of executable statements covered by tests
+- **Branches**: % of conditional branches (if/else, switch cases) covered
+- **Functions**: % of functions called during tests
+- **Lines**: % of lines executed during tests
+
+**Example**: `npm test -- --testPathPattern=DdgNodeContent --coverage --collectCoverageFrom="src/components/DeepDependencies/Graph/DdgNodeContent/index.tsx"`
+
+## Running on Windows OS
+
+While we don't natively support Windows OS for running the Jaeger UI Dev Environment, you can use Windows Subsystem for Linux (WSL) to run it.
+
+Here are some steps to follow:
+
+1. Install WSL: https://learn.microsoft.com/en-us/windows/wsl/install
+2. Install Node.JS: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl
+3. Connect WSL Environment with VSCode: https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl#install-visual-studio-code
+4. Use the WSL Terminal inside VSCode and [follow the Jaeger UI installation steps](#installation)
+
+## Debugging
+
+### Debug unit tests from VSCode
+
+Use the following `launch.json` configuration:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Jest: current file",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/node_modules/.bin/jest",
+      "args": ["${file}"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/packages/jaeger-ui"
+    }
+  ]
+}
+```
+
+## Style Guide
 
 Use [typescript](https://www.typescriptlang.org/) for new code. Check types via `npm run tsc-lint`.
 
@@ -107,6 +141,15 @@ Then, most issues will be caught by the linter, which can be applied via `npm ru
 
 Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as noted in our `.eslintrc`.
 
-# Cutting a Jaeger UI release
+## File Headers
+
+If you are adding a new file it should have a header like below.
+
+```
+// Copyright (c) 2025 The Jaeger Authors.
+// SPDX-License-Identifier: Apache-2.0
+```
+
+## Cutting a Jaeger UI release
 
 Please see [RELEASE.md](./RELEASE.md).
