@@ -40,7 +40,7 @@
     "@jaegertracing/plexus": "0.2.0",
     "@pyroscope/flamegraph": "0.21.4",
     "@sentry/browser": "10.32.0",
-    "antd": "6.0.0",
+    "antd": "6.1.1",
     "chance": "1.1.13",
     "classnames": "2.5.1",
     "combokeys": "3.0.1",
