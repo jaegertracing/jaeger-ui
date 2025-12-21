@@ -257,7 +257,7 @@ export function ServiceGraphImpl({
     if (!showLegend) {
       return [formatYAxisTickWrapper(value)];
     }
-    const formattedName = Number(uname) * 100;
+    const formattedName = uname !== undefined ? Number(uname) * 100 : 0;
     return [formatYAxisTickWrapper(value), `P${formattedName}`];
   };
 
