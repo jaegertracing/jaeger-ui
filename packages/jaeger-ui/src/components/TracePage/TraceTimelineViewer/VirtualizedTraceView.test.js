@@ -484,7 +484,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   describe('Critical Path rendering', () => {
     it('renders Critical Path segments when row is not collapsed', () => {
-      render(
+      const { container } = render(
         <VirtualizedTraceViewImpl
           {...mockProps}
           trace={criticalPathTest.trace}
@@ -492,13 +492,18 @@ describe('<VirtualizedTraceViewImpl>', () => {
         />
       );
 
-      const localInstance = document.querySelector('.VirtualizedTraceView--spans');
+      //verify component renders
+      const localInstance = container.querySelector('.VirtualizedTraceView--spans');
       expect(localInstance).toBeInTheDocument();
+
+      // Verify critical path segments render
+      const criticalPathSegments = container.querySelectorAll('[data-testid="SpanBar--criticalPath"]');
+      expect(criticalPathSegments.length).toBeGreaterThan(0);
     });
 
     it('renders Critical Path segments merged if consecutive when row is collapsed', () => {
       const childrenHiddenIDs = new Set([criticalPathTest.trace.spans[0].spanID]);
-      render(
+      const { container } = render(
         <VirtualizedTraceViewImpl
           {...mockProps}
           childrenHiddenIDs={childrenHiddenIDs}
@@ -507,15 +512,27 @@ describe('<VirtualizedTraceViewImpl>', () => {
         />
       );
 
-      const localInstance = document.querySelector('.VirtualizedTraceView--spans');
+      //verify component renders
+      const localInstance = container.querySelector('.VirtualizedTraceView--spans');
       expect(localInstance).toBeInTheDocument();
+
+      // Verify critical path segments render when rows collapsed
+      const criticalPathSegments = container.querySelectorAll('[data-testid="SpanBar--criticalPath"]');
+      expect(criticalPathSegments.length).toBeGreaterThan(0);
     });
 
-    it('returns [] from mergeChildrenCriticalPath when criticalPath is falsy', () => {
-      render(<VirtualizedTraceViewImpl {...mockProps} trace={trace} criticalPath={undefined} />);
+    it('handles undefined criticalPath gracefully', () => {
+      const { container } = render(
+        <VirtualizedTraceViewImpl {...mockProps} trace={trace} criticalPath={undefined} />
+      );
 
-      const localInstance = document.querySelector('.VirtualizedTraceView--spans');
+      //verify component renders
+      const localInstance = container.querySelector('.VirtualizedTraceView--spans');
       expect(localInstance).toBeInTheDocument();
+
+      // Verify no critical path segments are rendered when criticalPath is undefined
+      const criticalPathSegments = container.querySelectorAll('[data-testid="SpanBar--criticalPath"]');
+      expect(criticalPathSegments.length).toBe(0);
     });
   });
 
