@@ -44,19 +44,6 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   beforeEach(() => {
     ListView.mockClear();
-    ListView.mockImplementation(props => {
-      const { dataLength, itemRenderer, getKeyFromIndex } = props;
-      return (
-        <div data-testid="list-view">
-          {Array.from({ length: dataLength }, (_, index) => {
-            const key = getKeyFromIndex ? getKeyFromIndex(index) : `item-${index}`;
-            const style = {};
-            const attrs = {};
-            return itemRenderer(key, style, index, attrs);
-          })}
-        </div>
-      );
-    });
 
     trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
     criticalPath = memoizedTraceCriticalPath(trace);
