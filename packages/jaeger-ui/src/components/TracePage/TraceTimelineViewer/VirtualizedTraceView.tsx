@@ -570,7 +570,21 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = pro
         </div>
       );
     },
-    [props, linksGetter, focusSpan]
+    [
+      props.detailLogItemToggle,
+      props.detailLogsToggle,
+      props.detailProcessToggle,
+      props.detailReferencesToggle,
+      props.detailWarningsToggle,
+      props.detailStates,
+      props.detailTagsToggle,
+      props.detailToggle,
+      props.spanNameColumnWidth,
+      props.trace,
+      props.currentViewRangeTime,
+      linksGetter,
+      focusSpan,
+    ]
   );
 
   const renderRow = useCallback(
