@@ -263,10 +263,6 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = pro
 
   const listViewRef = useRef<ListView | null>(null);
 
-  useEffect(() => {
-    setTrace(trace, uiFind);
-  }, []);
-
   const handleListResize = useCallback(() => {
     if (listViewRef.current) {
       listViewRef.current.forceUpdate();
@@ -379,12 +375,6 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = pro
     mapRowIndexToSpanIndex,
     mapSpanIndexToRowIndex,
   ]);
-
-  useEffect(() => {
-    if (listViewRef.current) {
-      registerAccessors(getAccessors());
-    }
-  }, [registerAccessors, getAccessors]);
 
   const setListView = useCallback(
     (listView: ListView | null) => {

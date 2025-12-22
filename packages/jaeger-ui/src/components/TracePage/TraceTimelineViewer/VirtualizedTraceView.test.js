@@ -18,22 +18,7 @@ import criticalPathTest from '../CriticalPath/testCases/test2';
 jest.mock('./SpanTreeOffset');
 jest.mock('../../../utils/update-ui-find');
 
-jest.mock('./ListView', () => {
-  const mockFn = jest.fn(props => {
-    const { dataLength, itemRenderer, getKeyFromIndex } = props;
-    return (
-      <div data-testid="list-view">
-        {Array.from({ length: dataLength }, (_, index) => {
-          const key = getKeyFromIndex ? getKeyFromIndex(index) : `item-${index}`;
-          const style = {};
-          const attrs = {};
-          return itemRenderer(key, style, index, attrs);
-        })}
-      </div>
-    );
-  });
-  return mockFn;
-});
+jest.mock('./ListView', () => jest.fn());
 
 describe('<VirtualizedTraceViewImpl>', () => {
   let focusUiFindMatchesMock;
@@ -45,6 +30,19 @@ describe('<VirtualizedTraceViewImpl>', () => {
   beforeEach(() => {
     ListView.mockClear();
 
+    ListView.mockImplementation(props => {
+      const { dataLength, itemRenderer, getKeyFromIndex } = props;
+      return (
+        <div data-testid="list-view">
+          {Array.from({ length: dataLength }, (_, index) => {
+            const key = getKeyFromIndex ? getKeyFromIndex(index) : `item-${index}`;
+            const style = {};
+            const attrs = {};
+            return itemRenderer(key, style, index, attrs);
+          })}
+        </div>
+      );
+    });
     trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
     criticalPath = memoizedTraceCriticalPath(trace);
     focusUiFindMatchesMock = jest.fn();
