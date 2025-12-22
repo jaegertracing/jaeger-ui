@@ -509,7 +509,20 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = pro
         </div>
       );
     },
-    [props, getCriticalPathSections, getViewedBounds, getClippingCssClasses, focusSpan]
+    [
+      props.childrenHiddenIDs,
+      props.childrenToggle,
+      props.detailStates,
+      props.detailToggle,
+      props.findMatchesIDs,
+      props.spanNameColumnWidth,
+      props.trace,
+      props.criticalPath,
+      getCriticalPathSections,
+      getViewedBounds,
+      getClippingCssClasses,
+      focusSpan,
+    ]
   );
 
   const renderSpanDetailRow = useCallback(
