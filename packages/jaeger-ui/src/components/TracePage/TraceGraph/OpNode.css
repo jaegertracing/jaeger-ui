@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .OpNode {
   width: 100%;
-  background: #fff;
+  background: var(--surface-primary);
   cursor: pointer;
   white-space: nowrap;
   border-collapse: separate;

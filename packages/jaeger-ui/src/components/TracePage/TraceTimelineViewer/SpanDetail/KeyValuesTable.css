@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .KeyValueTable {
-  background: #fff;
+  background: var(--surface-primary);
   border: 1px solid #ddd;
   margin-bottom: 0.7em;
   max-height: 450px;

@@ -20,7 +20,7 @@ SPDX-License-Identifier: Apache-2.0
 /* boost the specificity for cases with only one row -- bg should be white */
 .TracePageHeader > .TracePageHeader--titleRow {
   align-items: center;
-  background-color: #fff;
+  background-color: var(--surface-primary);
   display: flex;
 }
 

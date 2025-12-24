@@ -20,9 +20,9 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .DdgNodeContent--core {
-  background: #eee;
+  background: var(--surface-secondary);
   border-radius: 100%;
-  box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-sm);
   cursor: default;
   display: flex;
 }
@@ -58,12 +58,12 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .DdgNodeContent--actionsWrapper {
-  background: #fff;
+  background: var(--surface-primary);
   border-radius: 3px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   bottom: 100%;
-  box-shadow: 0 0px 4px 1px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   left: 1em;
   opacity: 0;
   pointer-events: none;

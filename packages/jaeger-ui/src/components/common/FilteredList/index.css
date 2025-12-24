@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .FilteredList--list {
-  background: #fafafa;
+  background: var(--surface-tertiary);
 }
 
 .FilteredList--filterCheckbox {
@@ -13,8 +13,8 @@ SPDX-License-Identifier: Apache-2.0
 
 .FilteredList--filterWrapper {
   align-items: center;
-  background: white;
-  box-shadow: 0 0 3px 1px rgba(0, 0, 0, 0.3);
+  background: var(--surface-primary);
+  box-shadow: var(--shadow-sm);
   display: flex;
   position: relative;
   z-index: 10;
@@ -22,8 +22,8 @@ SPDX-License-Identifier: Apache-2.0
 
 .FilteredList--inputWrapper {
   align-items: center;
-  background: white;
-  box-shadow: 0 0 3px 1px rgba(0, 0, 0, 0.3);
+  background: var(--surface-primary);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-grow: 1;
   position: relative;

@@ -4,8 +4,8 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .Ddg--DetailsPanel {
-  background-color: #fafafa;
-  border-left: solid 1px #ddd;
+  background-color: var(--surface-tertiary);
+  border-left: solid 1px var(--border-default);
   box-shadow: -3px 0 3px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .Ddg--DetailsPanel--SvcOpHeader {
-  border-bottom: solid 1px #ddd;
+  border-bottom: solid 1px var(--border-default);
   box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.1);
   font-size: 1.5em;
   text-align: right;
@@ -40,8 +40,8 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .Ddg--DetailsPanel--DetailsCard {
-  background-color: #ffffff;
-  border: solid 2px rgba(0, 0, 0, 0.3);
+  background-color: var(--surface-primary);
+  border: solid 2px var(--border-subtle);
   margin: 0.5em;
   overflow: hidden;
 }
