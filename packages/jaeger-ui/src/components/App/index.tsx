@@ -32,17 +32,18 @@ import './index.css';
 import { store } from '../../utils/configure-store';
 import AppThemeProvider from './ThemeProvider';
 
-export default class JaegerUIApp extends Component {
-  constructor(props) {
+export default class JaegerUIApp extends Component<{}> {
+  constructor(props: {}) {
     super(props);
-    JaegerAPI.apiRoot = DEFAULT_API_ROOT;
+    (JaegerAPI as any).apiRoot = DEFAULT_API_ROOT;
     processScripts();
   }
 
   render() {
     return (
       <AppThemeProvider>
-        <Provider store={store}>
+        <Provider store={store as any}>
+          {/* @ts-ignore */}
           <Page>
             <Switch>
               <Route path={searchPath}>
@@ -78,7 +79,7 @@ export default class JaegerUIApp extends Component {
               </Route>
 
               <Route>
-                <NotFound />
+                <NotFound error="Page not found" />
               </Route>
             </Switch>
           </Page>

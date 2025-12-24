@@ -24,11 +24,15 @@ import 'u-basscss/css/position.css';
 import 'u-basscss/css/typography.css';
 
 const UI_ROOT_ID = 'jaeger-ui-root';
+const rootElement = document.getElementById(UI_ROOT_ID);
+if (!rootElement) {
+  throw new Error(`Element with id ${UI_ROOT_ID} not found`);
+}
 
-const root = createRoot(document.getElementById(UI_ROOT_ID));
+const root = createRoot(rootElement);
 
 if (typeof trackingContext === 'object' && trackingContext !== null) {
-  trackingContext.context(() => {
+  (trackingContext as any).context(() => {
     root.render(
       <BrowserRouter>
         <CompatRouter>
