@@ -43,6 +43,12 @@ export default class JaegerUIApp extends Component<{}> {
     return (
       <AppThemeProvider>
         <Provider store={store as any}>
+          {
+            // the Page component is a connected component (wrapped by Redux's connect HOC)
+            // that is also wrapped by a custom withRouteProps HOC.
+            // The @ts-ignore was added because of a specific TypeScript error that occurs
+            // when mixing Redux 5/9, React 19, and complex HOCs.
+          }
           {/* @ts-ignore */}
           <Page>
             <Switch>
