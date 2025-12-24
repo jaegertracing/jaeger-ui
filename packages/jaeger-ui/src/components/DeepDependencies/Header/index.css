@@ -5,9 +5,9 @@ SPDX-License-Identifier: Apache-2.0
 
 .DdgHeader {
   align-items: stretch;
-  background: #fafafa;
-  border-bottom: 1px solid #ddd;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  background: var(--surface-tertiary);
+  border-bottom: 1px solid var(--border-default);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -16,7 +16,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .DdgHeader--controlHeader {
   align-items: center;
-  background-color: #f6f6f6;
+  background-color: var(--surface-secondary);
   display: flex;
   justify-content: space-between;
   padding-left: 1.25rem;
@@ -24,8 +24,8 @@ SPDX-License-Identifier: Apache-2.0
 
 .DdgHeader--paramsHeader {
   align-items: center;
-  background: #fafafa;
-  border-bottom: 1px solid #eee;
+  background: var(--surface-tertiary);
+  border-bottom: 1px solid var(--border-default);
   display: flex;
   flex: 1;
   flex-wrap: wrap;
@@ -60,10 +60,10 @@ SPDX-License-Identifier: Apache-2.0
 
 .DdgHeader--uiFind {
   align-items: center;
-  background-color: #fff;
-  border-left: 1px solid #eee;
-  border-right: 1px solid #eee;
-  color: #bbb;
+  background-color: var(--surface-primary);
+  border-left: 1px solid var(--border-default);
+  border-right: 1px solid var(--border-default);
+  color: var(--text-muted);
   display: flex;
   flex-grow: 1;
   max-width: 400px;

@@ -67,7 +67,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SpanBar--label {
-  color: #aaa;
+  color: var(--text-muted);
   font-size: 12px;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   line-height: 1em;
@@ -86,7 +86,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .span-row.is-expanded .SpanBar--label,
 .span-row:hover .SpanBar--label {
-  color: #000;
+  color: var(--text-primary);
 }
 
 .SpanBar--logMarker {

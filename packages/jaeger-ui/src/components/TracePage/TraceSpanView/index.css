@@ -29,7 +29,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .search-box {
   padding: 8px;
-  background-color: white;
+  background-color: var(--surface-primary);
   width: 80%;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-subtle);
 }

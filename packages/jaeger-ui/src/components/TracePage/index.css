@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .Tracepage--headerSection {
-  background: #fff;
+  background: var(--surface-primary);
   position: fixed;
   width: 100%;
   z-index: 3;

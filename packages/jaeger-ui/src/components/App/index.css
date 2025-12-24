@@ -7,6 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 .font-reset,
 html > body {
   font-family: 'Helvetica Neue', Helvetica, 'Segoe UI', Roboto, Arial, sans-serif;
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
 }
 
 a {
