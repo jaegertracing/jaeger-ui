@@ -30,6 +30,68 @@ SPDX-License-Identifier: Apache-2.0
   padding-top: 0px;
 }
 
+/* Ant Design Tabs text color for dark mode */
+.SearchTracePage--find .ant-tabs-tab {
+  color: var(--text-secondary);
+}
+
+.SearchTracePage--find .ant-tabs-tab:hover {
+  color: var(--text-primary);
+}
+
+.SearchTracePage--find .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--interactive-primary);
+}
+
+/* Ant Design Form labels for dark mode */
+.SearchTracePage--find .ant-form-item-label > label {
+  color: var(--text-primary);
+}
+
+/* Ant Design Select for dark mode */
+.SearchTracePage--find .ant-select-selector {
+  background-color: var(--surface-tertiary) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-primary) !important;
+}
+
+.SearchTracePage--find .ant-select-selection-placeholder {
+  color: var(--text-muted) !important;
+}
+
+.SearchTracePage--find .ant-select-selection-item {
+  color: var(--text-primary) !important;
+}
+
+.SearchTracePage--find .ant-select-arrow {
+  color: var(--text-muted);
+}
+
+/* Ant Design Input for dark mode */
+.SearchTracePage--find .ant-input {
+  background-color: var(--surface-tertiary);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.SearchTracePage--find .ant-input::placeholder {
+  color: var(--text-muted);
+}
+
+.SearchTracePage--find .ant-input-number {
+  background-color: var(--surface-tertiary);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.SearchTracePage--find .ant-input-number-input {
+  color: var(--text-primary);
+}
+
+.SearchTracePage--find .ant-input-number-input::placeholder {
+  color: var(--text-muted);
+}
+
 .SearchTracePage--logo {
   display: block;
   margin: 13rem auto 0 auto;
