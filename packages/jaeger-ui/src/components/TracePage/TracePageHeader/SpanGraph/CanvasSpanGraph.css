@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .CanvasSpanGraph {
-  background: #fafafa;
+  background: var(--surface-tertiary);
   height: 60px;
   position: absolute;
   width: 100%;

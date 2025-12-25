@@ -4,8 +4,8 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .TimelineHeaderRow {
-  background: #ececec;
-  border-bottom: 1px solid #ccc;
+  background: var(--surface-secondary);
+  border-bottom: 1px solid var(--border-strong);
   height: 38px;
   line-height: 38px;
   position: fixed;
@@ -19,4 +19,5 @@ SPDX-License-Identifier: Apache-2.0
   margin: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--text-primary);
 }
