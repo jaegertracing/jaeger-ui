@@ -21,7 +21,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TracePageSearchBar--btn {
-  border-left: 1px solid #d9d9d9;
+  border-left: 1px solid var(--border-default);
   transition: 0.2s;
 }
 
@@ -33,16 +33,16 @@ SPDX-License-Identifier: Apache-2.0
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid gainsboro;
+  border: 1px solid var(--border-default);
 }
 .help-btn-container:hover {
-  border-top-color: rgb(23, 184, 190);
-  border-bottom-color: rgb(23, 184, 190);
+  border-top-color: var(--interactive-primary);
+  border-bottom-color: var(--interactive-primary);
 }
 .help-button {
-  border: 1px solid #999;
+  border: 1px solid var(--text-muted);
   border-radius: 100px;
-  color: #999;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 1px;
   margin: 0 10px;
@@ -62,4 +62,21 @@ SPDX-License-Identifier: Apache-2.0
 .ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonDown svg,
 .ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonClose svg {
   font-size: 18px;
+  color: var(--text-secondary);
+}
+
+.ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonClose:hover svg {
+  color: var(--text-primary);
+}
+
+/* Clear icon (x) in the search input */
+.TracePageSearchBar .ant-input-suffix svg,
+.TracePageSearchBar [data-testid='clear-icon'] {
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.TracePageSearchBar .ant-input-suffix svg:hover,
+.TracePageSearchBar [data-testid='clear-icon']:hover {
+  color: var(--text-primary);
 }

@@ -4,13 +4,18 @@
 import { TNil } from '../../../../types';
 
 // exported for tests
-export const BG_COLOR = '#fff';
 export const ITEM_ALPHA = 0.8;
 export const MIN_ITEM_HEIGHT = 2;
 export const MAX_TOTAL_HEIGHT = 200;
 export const MIN_ITEM_WIDTH = 10;
 export const MIN_TOTAL_HEIGHT = 60;
 export const MAX_ITEM_HEIGHT = 6;
+
+// Get background color based on theme
+function getBgColor(): string {
+  const isDarkMode = document.body.getAttribute('data-theme') === 'dark';
+  return isDarkMode ? '#2a2a2a' : '#fafafa';
+}
 
 export default function renderIntoCanvas(
   canvas: HTMLCanvasElement,
@@ -30,7 +35,7 @@ export default function renderIntoCanvas(
   const itemYChange = cHeight / items.length;
 
   const ctx = canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
-  ctx.fillStyle = BG_COLOR;
+  ctx.fillStyle = getBgColor();
   ctx.fillRect(0, 0, cWidth, cHeight);
   for (let i = 0; i < items.length; i++) {
     const { valueWidth, valueOffset, serviceName } = items[i];

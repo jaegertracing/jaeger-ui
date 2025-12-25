@@ -18,3 +18,84 @@ a {
 a:hover {
   color: var(--text-link-hover);
 }
+
+/* ============================================
+   Global Ant Design Overrides for Dark Mode
+   ============================================ */
+
+/* Input fields */
+.ant-input {
+  background-color: var(--surface-tertiary);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.ant-input::placeholder {
+  color: var(--text-muted);
+}
+
+.ant-input:hover,
+.ant-input:focus {
+  border-color: var(--interactive-primary);
+}
+
+/* Input wrapper (for inputs with suffix/prefix) */
+.ant-input-affix-wrapper {
+  background-color: var(--surface-tertiary);
+  border-color: var(--border-default);
+}
+
+.ant-input-affix-wrapper:hover,
+.ant-input-affix-wrapper-focused {
+  border-color: var(--interactive-primary);
+}
+
+.ant-input-affix-wrapper .ant-input {
+  background-color: transparent;
+}
+
+/* Input suffix (clear icon, etc.) */
+.ant-input-suffix {
+  color: var(--text-muted);
+}
+
+.ant-input-suffix svg {
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.ant-input-suffix svg:hover {
+  color: var(--text-primary);
+}
+
+/* Clear icon specifically */
+.ant-input-clear-icon {
+  color: var(--text-muted);
+}
+
+.ant-input-clear-icon:hover {
+  color: var(--text-primary);
+}
+
+/* Buttons */
+.ant-btn {
+  background-color: var(--surface-tertiary);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.ant-btn:hover {
+  border-color: var(--interactive-primary);
+  color: var(--interactive-primary);
+}
+
+.ant-btn-primary {
+  background-color: var(--interactive-primary);
+  border-color: var(--interactive-primary);
+  color: var(--text-inverse);
+}
+
+.ant-btn-primary:hover {
+  background-color: var(--interactive-primary-hover);
+  border-color: var(--interactive-primary-hover);
+}

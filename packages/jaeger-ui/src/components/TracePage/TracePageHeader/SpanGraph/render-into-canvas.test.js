@@ -4,7 +4,6 @@
 import _range from 'lodash/range';
 
 import renderIntoCanvas, {
-  BG_COLOR,
   ITEM_ALPHA,
   MIN_ITEM_HEIGHT,
   MAX_TOTAL_HEIGHT,
@@ -12,6 +11,9 @@ import renderIntoCanvas, {
   MIN_TOTAL_HEIGHT,
   MAX_ITEM_HEIGHT,
 } from './render-into-canvas';
+
+// Default light mode background color
+const BG_COLOR = '#fafafa';
 
 const getCanvasWidth = () => window.innerWidth * 2;
 const getBgFillRect = items => ({

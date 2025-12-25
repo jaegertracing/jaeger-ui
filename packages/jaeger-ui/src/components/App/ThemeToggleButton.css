@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
   padding-inline: 12px;
   border-radius: 999px;
   border: 1px solid var(--border-default) !important;
-  color: var(--text-inverse) !important;
+  color: var(--text-primary) !important;
   /*background: rgba(7, 14, 26, 0.3) !important;*/
   height: 30px;
 }
@@ -24,6 +24,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .ThemeToggleButton--icon {
   font-size: 16px;
+  color: var(--text-primary);
 }
 
 .ThemeToggleButton--label {

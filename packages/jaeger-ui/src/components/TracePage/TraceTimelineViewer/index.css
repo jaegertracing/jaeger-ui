@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .TraceTimelineViewer {
-  border-bottom: 1px solid #bbb;
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .json-markup {
@@ -24,24 +24,24 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .json-markup-bool {
-  color: firebrick;
+  color: var(--feedback-error);
 }
 
 .json-markup-string {
-  color: teal;
+  color: var(--interactive-primary);
 }
 
 .json-markup-null,
 .json-markup-undefined {
-  color: gray;
+  color: var(--text-muted);
 }
 
 .json-markup-number {
-  color: blue;
+  color: var(--feedback-info);
 }
 
 .json-markup-other {
-  color: lightgrey;
+  color: var(--text-muted);
 }
 
 .json-markup-icon-expand {
@@ -50,7 +50,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .json-markup-icon-expand::after {
   content: '\25B6';
-  color: black;
+  color: var(--text-primary);
   font-size: 12px;
 }
 
@@ -60,13 +60,13 @@ SPDX-License-Identifier: Apache-2.0
 
 .json-markup-icon-collapse::after {
   content: '\25BC';
-  color: black;
+  color: var(--text-primary);
   font-size: 12px;
 }
 
 .json-markup-collapse-content::after {
   content: '\2026';
-  color: black;
+  color: var(--text-primary);
   font-size: 18px;
   margin-right: 4px;
 }

@@ -10,6 +10,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .ViewingLayer--graph {
+  background-color: transparent;
   border: 1px solid var(--border-strongest);
   /* need !important here to overcome something from semantic UI */
   overflow: visible !important;

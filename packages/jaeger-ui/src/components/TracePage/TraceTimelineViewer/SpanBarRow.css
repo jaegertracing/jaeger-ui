@@ -39,7 +39,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .span-name-wrapper:hover {
-  border-right: 1px solid #bbb;
+  border-right: 1px solid var(--border-strong);
   float: left;
   min-width: calc(100% + 1px);
   overflow: visible;
@@ -56,7 +56,12 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .span-row.is-matching-filter:hover .span-name-wrapper {
-  background: linear-gradient(90deg, #fff5e1, #fff5e1 75%, #ffe6c9);
+  background: linear-gradient(
+    90deg,
+    var(--trace-emphasis-highlight),
+    var(--trace-emphasis-highlight) 75%,
+    var(--trace-emphasis-highlight)
+  );
 }
 
 .span-row.is-expanded .span-name-wrapper {
@@ -170,9 +175,9 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SpanBarRow--errorIcon {
-  background: #db2828;
+  background: var(--feedback-error);
   border-radius: 6.5px;
-  color: #fff;
+  color: var(--text-inverse);
   font-size: 0.85em;
   margin-right: 0.25rem;
   padding: 1px;
