@@ -57,3 +57,66 @@ When running the UI in development mode via `npm start`, you can provide custom 
 An example JSON config file is provided at [jaeger-ui.config.example.json](./jaeger-ui.config.example.json). You can copy it to `jaeger-ui.config.json` and modify it as needed.
 
 These local config files are ignored by git (see `.gitignore`).
+
+### Common Configuration Options
+
+#### Themes (Dark Mode)
+
+Enable the theme toggle button in the navigation bar to allow users to switch between light and dark modes:
+
+```json
+{
+  "themes": {
+    "enabled": true
+  }
+}
+```
+
+When enabled, users can toggle between light and dark themes using a button in the top navigation. The selected theme is persisted in the browser's local storage. If no theme is stored, the UI respects the user's system preference (`prefers-color-scheme`).
+
+#### Dependencies (System Architecture)
+
+Control the System Architecture tab visibility:
+
+```json
+{
+  "dependencies": {
+    "menuEnabled": true,
+    "dagMaxNumServices": 100
+  }
+}
+```
+
+- `menuEnabled`: Show or hide the System Architecture tab
+- `dagMaxNumServices`: Maximum number of services before the DAG view is disabled (for performance)
+
+#### Monitor (Service Performance Monitoring)
+
+Control the Monitor tab visibility:
+
+```json
+{
+  "monitor": {
+    "menuEnabled": true
+  }
+}
+```
+
+#### Link Patterns
+
+Add custom links to traces and tags:
+
+```json
+{
+  "linkPatterns": [
+    {
+      "type": "process",
+      "key": "jaeger.version",
+      "url": "https://github.com/jaegertracing/jaeger-client-java/releases/tag/#{jaeger.version}",
+      "text": "Information about Jaeger SDK release #{jaeger.version}"
+    }
+  ]
+}
+```
+
+See [src/types/config.tsx](./src/types/config.tsx) for the full list of configuration options.
