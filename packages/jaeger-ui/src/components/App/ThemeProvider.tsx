@@ -58,6 +58,7 @@ const lightTheme: ThemeConfig = {
     // --- Neutral Seeds (Optional but recommended) ---
     colorTextBase: '#000000',
     colorBgBase: '#ffffff',
+    colorLink: '#199',
   },
   components: {
     Layout: {

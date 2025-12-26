@@ -41,7 +41,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .Ddg--DetailsPanel--DetailsCard {
   background-color: var(--surface-primary);
-  border: solid 2px var(--border-subtle);
+  border: solid 2px var(--border-default);
   margin: 0.5em;
   overflow: hidden;
 }

@@ -53,11 +53,11 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .u-simple-scrollbars::-webkit-scrollbar-track:vertical {
-  border-left: 1px solid var(--border-subtle);
+  border-left: 1px solid var(--border-component-subtle);
 }
 
 .u-simple-scrollbars::-webkit-scrollbar-track:horizontal {
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-component-subtle);
 }
 
 .u-simple-scrollbars::-webkit-scrollbar-thumb {
