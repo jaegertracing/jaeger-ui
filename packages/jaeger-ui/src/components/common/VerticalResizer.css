@@ -31,7 +31,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .VerticalResizer--dragger:hover {
-  border-left: 2px solid var(--border-subtle);
+  border-left: 2px solid var(--border-strongest);
 }
 
 .VerticalResizer.isDraggingLeft > .VerticalResizer--dragger,

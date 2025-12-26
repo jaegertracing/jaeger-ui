@@ -28,8 +28,8 @@ SPDX-License-Identifier: Apache-2.0
 .ErrorMessage--detailItem:nth-child(2n) > .ErrorMessage--attr,
 .ErrorMessage--detailItem:nth-child(2n) > .ErrorMessage--value {
   background-color: var(--surface-tertiary);
-  border-bottom: 1px solid var(--border-subtle);
-  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-default);
+  border-top: 1px solid var(--border-default);
 }
 
 /* dont have extra borders on the bottom row */

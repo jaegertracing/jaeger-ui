@@ -26,10 +26,3 @@ SPDX-License-Identifier: Apache-2.0
   width: 20%;
   z-index: 1;
 }
-
-.search-box {
-  padding: 8px;
-  background-color: var(--surface-primary);
-  width: 80%;
-  border: 1px solid var(--border-subtle);
-}
