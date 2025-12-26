@@ -12,6 +12,11 @@ import colorGenerator from '../../../../utils/color-generator';
 // Mock the renderIntoCanvas function
 jest.mock('./render-into-canvas');
 
+// Mock the ThemeProvider
+jest.mock('../../../App/ThemeProvider', () => ({
+  useThemeMode: () => ({ mode: 'light', setMode: jest.fn(), toggleMode: jest.fn() }),
+}));
+
 describe('<CanvasSpanGraph />', () => {
   const items = [{ valueWidth: 1, valueOffset: 1, serviceName: 'service-name-0' }];
   const props = {

@@ -4,6 +4,6 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .GraphTick {
-  stroke: #aaa;
+  stroke: var(--graph-tick-stroke);
   stroke-width: 1px;
 }

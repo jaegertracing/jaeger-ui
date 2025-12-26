@@ -12,18 +12,20 @@ SPDX-License-Identifier: Apache-2.0
   letter-spacing: 0.05em;
   padding-inline: 12px;
   border-radius: 999px;
-  border: 1px solid var(--border-default) !important;
-  color: var(--text-inverse) !important;
-  /*background: rgba(7, 14, 26, 0.3) !important;*/
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  background: transparent !important;
   height: 30px;
 }
 
 .ThemeToggleButton:hover {
-  background: var(--surface-component-background-hover) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 .ThemeToggleButton--icon {
   font-size: 16px;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .ThemeToggleButton--label {

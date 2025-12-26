@@ -8,18 +8,25 @@ SPDX-License-Identifier: Apache-2.0
  * 
  * This file contains all color and layout variables used throughout the application.
  * New naming scheme follows semantic conventions for better maintainability.
+ * 
+ * Variables are defined on both body and .ant-layout to ensure they're available
+ * for fixed-position elements and components rendered outside the Layout.
+ * 
+ * Light mode uses fallback values since --ant-* variables may not be available
+ * on body element. Dark mode provides explicit overrides.
  */
 
+body,
 .ant-layout {
   /* ============================================
     SURFACE TOKENS (Backgrounds)
     Based on audit of background/background-color properties
     ============================================ */
 
-  --surface-primary: var(--ant-color-bg-container);
-  --surface-secondary: var(--ant-color-bg-layout);
-  --surface-tertiary: var(--ant-color-fill-alter);
-  --surface-overlay: var(--ant-color-bg-mask);
+  --surface-primary: var(--ant-color-bg-container, #ffffff);
+  --surface-secondary: var(--ant-color-bg-layout, #f5f5f5);
+  --surface-tertiary: var(--ant-color-fill-alter, #fafafa);
+  --surface-overlay: var(--ant-color-bg-mask, rgba(0, 0, 0, 0.45));
 
   /* dedicated, specific UI element (like the Minimap, a Modal, or a complex panel) */
   --surface-component-item-background: #999;
@@ -31,33 +38,33 @@ SPDX-License-Identifier: Apache-2.0
     Based on audit of color property
     ============================================ */
 
-  --text-primary: var(--ant-color-text);
-  --text-secondary: var(--ant-color-text-secondary);
-  --text-muted: var(--ant-color-text-description);
-  --text-link: var(--ant-color-link);
-  --text-link-hover: var(--ant-color-link-hover);
-  --text-inverse: var(--ant-color-white);
+  --text-primary: var(--ant-color-text, rgba(0, 0, 0, 0.88));
+  --text-secondary: var(--ant-color-text-secondary, rgba(0, 0, 0, 0.65));
+  --text-muted: var(--ant-color-text-description, rgba(0, 0, 0, 0.45));
+  --text-link: var(--ant-color-link, #199);
+  --text-link-hover: var(--ant-color-link-hover, #40a9ff);
+  --text-inverse: var(--ant-color-white, #ffffff);
 
   /* ============================================
     BORDER TOKENS
     Based on audit of border/border-color properties
     ============================================ */
 
-  --border-default: var(--ant-color-border-secondary);
-  --border-strong: var(--ant-color-border);
-  --border-strongest: var(--ant-color-text-tertiary);
-  --border-component-subtle: var(--ant-color-split);
+  --border-default: var(--ant-color-border-secondary, #f0f0f0);
+  --border-strong: var(--ant-color-border, #d9d9d9);
+  --border-strongest: var(--ant-color-text-tertiary, rgba(0, 0, 0, 0.45));
+  --border-component-subtle: var(--ant-color-split, rgba(5, 5, 5, 0.06));
 
   /* ============================================
     INTERACTIVE TOKENS (Buttons, Links, Form Controls)
     Based on audit of interactive elements
     ============================================ */
 
-  --interactive-primary: var(--ant-color-primary);
-  --interactive-primary-hover: var(--ant-color-primary-hover);
+  --interactive-primary: var(--ant-color-primary, #199);
+  --interactive-primary-hover: var(--ant-color-primary-hover, #40a9ff);
   --interactive-secondary: #2da6a2;
   /* Lighter and RGB variants used by animations and shadow opacity */
-  --interactive-primary-light: var(--ant-color-primary-bg);
+  --interactive-primary-light: var(--ant-color-primary-bg, #e6fffb);
   --interactive-primary-rgb: 17, 147, 154;
   --interactive-primary-opaque: rgba(var(--interactive-primary-rgb), 0.6);
 
@@ -65,10 +72,10 @@ SPDX-License-Identifier: Apache-2.0
     FEEDBACK TOKENS (Alerts, Notifications)
     ============================================ */
 
-  --feedback-error: var(--ant-color-error);
-  --feedback-warning: var(--ant-color-warning);
-  --feedback-success: var(--ant-color-success);
-  --feedback-info: var(--ant-color-info);
+  --feedback-error: var(--ant-color-error, #ff4d4f);
+  --feedback-warning: var(--ant-color-warning, #faad14);
+  --feedback-success: var(--ant-color-success, #52c41a);
+  --feedback-info: var(--ant-color-info, #1677ff);
 
   /* ============================================
     SHADOW TOKENS
@@ -111,12 +118,50 @@ SPDX-License-Identifier: Apache-2.0
 
   /* Trace Graph */
   --trace-emphasis-highlight: #fff3d7;
+
+  /* ============================================
+    TRACE TIMELINE TOKENS
+    Used by TracePageHeader, TimelineViewer, SpanGraph components
+    ============================================ */
+
+  /* Timeline header and controls */
+  --timeline-header-bg: var(--ant-color-fill-quaternary, rgba(0, 0, 0, 0.02));
+  --timeline-tick-color: var(--ant-color-border, #d9d9d9);
+  --timeline-tick-label-color: var(--ant-color-text-tertiary, rgba(0, 0, 0, 0.45));
+
+  /* Span tree expand/collapse icons */
+  --span-tree-icon-color: var(--ant-color-text, rgba(0, 0, 0, 0.88));
+  --span-tree-hover-bg: var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.06));
+  --span-tree-indent-guide: var(--ant-color-border-secondary, #f0f0f0);
+  --span-tree-indent-guide-active: var(--ant-color-text-tertiary, rgba(0, 0, 0, 0.45));
+
+  /* Timeline collapser buttons */
+  --timeline-collapser-color: var(--ant-color-text-tertiary, rgba(0, 0, 0, 0.45));
+  --timeline-collapser-hover: var(--ant-color-text-secondary, rgba(0, 0, 0, 0.65));
+
+  /* Minimap / SpanGraph */
+  --span-graph-bg: var(--ant-color-fill-quaternary, rgba(0, 0, 0, 0.02));
+  --span-graph-border: var(--ant-color-border, #d9d9d9);
+  --span-graph-inactive: rgba(128, 128, 128, 0.3);
+
+  /* Scrubber handles */
+  --scrubber-handle-color: var(--ant-color-text-tertiary, rgba(0, 0, 0, 0.45));
+  --scrubber-active-color: var(--ant-color-primary, #199);
+
+  /* Graph ticks */
+  --graph-tick-stroke: var(--ant-color-border, #d9d9d9);
 }
 
+body[data-theme='dark'],
 [data-theme='dark'] .ant-layout {
   /* ============================================
-    SURFACE TOKENS (Backgrounds)
+    SURFACE TOKENS (Backgrounds) - Dark Mode
     ============================================ */
+
+  --surface-primary: #162338;
+  --surface-secondary: #0b1625;
+  --surface-tertiary: rgba(255, 255, 255, 0.04);
+  --surface-overlay: rgba(0, 0, 0, 0.65);
 
   /* dedicated, specific UI element (like the Minimap, a Modal, or a complex panel) */
   --surface-component-item-background: #555;
@@ -124,23 +169,48 @@ SPDX-License-Identifier: Apache-2.0
   --surface-component-background-hover: #444444;
 
   /* ============================================
-    TEXT TOKENS
+    TEXT TOKENS - Dark Mode
     ============================================ */
 
-  --text-muted: #888;
+  --text-primary: rgba(244, 248, 255, 0.92);
+  --text-secondary: rgba(244, 248, 255, 0.7);
+  --text-muted: rgba(244, 248, 255, 0.45);
+  --text-link: #7bdcff;
+  --text-link-hover: #caf3ff;
   --text-inverse: #000000;
 
   /* ============================================
-    INTERACTIVE TOKENS (Buttons, Links, Form Controls)
+    BORDER TOKENS - Dark Mode
     ============================================ */
 
+  --border-default: rgba(125, 153, 191, 0.25);
+  --border-strong: rgba(125, 153, 191, 0.4);
+  --border-strongest: rgba(244, 248, 255, 0.45);
+  --border-component-subtle: rgba(253, 253, 253, 0.12);
+
+  /* ============================================
+    INTERACTIVE TOKENS - Dark Mode
+    ============================================ */
+
+  --interactive-primary: #4dd0e1;
+  --interactive-primary-hover: #80deea;
   --interactive-secondary: #5ec9c5;
   /* RGB variant used by animations and shadow opacity */
   --interactive-primary-rgb: 77, 184, 196;
   --interactive-primary-opaque: rgba(var(--interactive-primary-rgb), 0.6);
+  --interactive-primary-light: rgba(77, 208, 225, 0.15);
 
   /* ============================================
-    SHADOW TOKENS
+    FEEDBACK TOKENS - Dark Mode
+    ============================================ */
+
+  --feedback-error: #ff6b6b;
+  --feedback-warning: #ffc53d;
+  --feedback-success: #73d13d;
+  --feedback-info: #69b1ff;
+
+  /* ============================================
+    SHADOW TOKENS - Dark Mode
     ============================================ */
 
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -150,7 +220,7 @@ SPDX-License-Identifier: Apache-2.0
   --shadow-component-focus: 0px 0px 5px rgba(255, 255, 255, 0.3);
 
   /* ============================================
-    SPECIAL PURPOSE TOKENS
+    SPECIAL PURPOSE TOKENS - Dark Mode
     ============================================ */
 
   /* Trace visualization colors (programmatic - review in Phase 0.4) */
@@ -161,7 +231,7 @@ SPDX-License-Identifier: Apache-2.0
   --trace-color-5: #9775fa;
 
   /* ============================================
-    HELPER & SMALL-SCOPE TOKENS
+    HELPER & SMALL-SCOPE TOKENS - Dark Mode
     ============================================ */
 
   /* Background used when dragging resizers (very subtle tint of interactive color) */
@@ -174,4 +244,37 @@ SPDX-License-Identifier: Apache-2.0
 
   /* Trace Graph */
   --trace-emphasis-highlight: #3d3520;
+
+  /* ============================================
+    TRACE TIMELINE TOKENS - Dark Mode
+    ============================================ */
+
+  /* Timeline header - needs more contrast in dark mode */
+  --timeline-header-bg: rgba(255, 255, 255, 0.08);
+
+  /* Tick labels need to be more visible on dark backgrounds */
+  --timeline-tick-color: rgba(255, 255, 255, 0.2);
+  --timeline-tick-label-color: rgba(255, 255, 255, 0.7);
+
+  /* Span tree expand/collapse icons */
+  --span-tree-icon-color: rgba(244, 248, 255, 0.92);
+  --span-tree-hover-bg: rgba(255, 255, 255, 0.08);
+  --span-tree-indent-guide: rgba(125, 153, 191, 0.25);
+  --span-tree-indent-guide-active: rgba(244, 248, 255, 0.45);
+
+  /* Timeline collapser buttons - more visible in dark mode */
+  --timeline-collapser-color: rgba(255, 255, 255, 0.6);
+  --timeline-collapser-hover: rgba(255, 255, 255, 0.85);
+
+  /* Minimap / SpanGraph - dark mode needs visible inactive region */
+  --span-graph-bg: rgba(255, 255, 255, 0.04);
+  --span-graph-border: rgba(125, 153, 191, 0.4);
+  --span-graph-inactive: rgba(200, 200, 200, 0.25);
+
+  /* Scrubber handles - more visible in dark mode */
+  --scrubber-handle-color: rgba(255, 255, 255, 0.6);
+  --scrubber-active-color: #4dd0e1;
+
+  /* Graph ticks - more visible in dark mode */
+  --graph-tick-stroke: rgba(255, 255, 255, 0.3);
 }

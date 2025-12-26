@@ -4,7 +4,7 @@
 import _range from 'lodash/range';
 
 import renderIntoCanvas, {
-  BG_COLOR,
+  BG_COLOR_LIGHT,
   ITEM_ALPHA,
   MIN_ITEM_HEIGHT,
   MAX_TOTAL_HEIGHT,
@@ -15,7 +15,7 @@ import renderIntoCanvas, {
 
 const getCanvasWidth = () => window.innerWidth * 2;
 const getBgFillRect = items => ({
-  fillStyle: BG_COLOR,
+  fillStyle: BG_COLOR_LIGHT,
   height:
     !items || items.length < MIN_TOTAL_HEIGHT ? MIN_TOTAL_HEIGHT : Math.min(MAX_TOTAL_HEIGHT, items.length),
   width: getCanvasWidth(),
