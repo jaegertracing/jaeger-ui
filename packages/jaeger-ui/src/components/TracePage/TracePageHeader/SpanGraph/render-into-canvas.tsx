@@ -17,8 +17,12 @@ export const MAX_ITEM_HEIGHT = 6;
  * Get the current theme background color based on data-theme attribute
  */
 function getBackgroundColor(): string {
-  const isDark = document.body.getAttribute('data-theme') === 'dark';
-  return isDark ? BG_COLOR_DARK : BG_COLOR_LIGHT;
+  if (typeof document !== 'undefined' && document.body) {
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    return isDark ? BG_COLOR_DARK : BG_COLOR_LIGHT;
+  }
+  // Default to light background when document or document.body is unavailable (SSR, tests)
+  return BG_COLOR_LIGHT;
 }
 
 export default function renderIntoCanvas(
