@@ -60,7 +60,7 @@ Adopt a design token-based theming system implemented with CSS custom properties
 ### Core Principles
 
 1. Semantic tokens over hardcoded values: Colors, spacing, shadows, etc. are accessed via tokens.
-2. Single source of truth: Token definitions live centrally (e.g., `vars.css` / token JSON files).
+2. Single source of truth: Token definitions live centrally in `components/common/vars.css`.
 3. Component/theme decoupling: Components read tokens and do not include theme logic.
 4. Progressive enhancement: Migrate incrementally; no large breaking change.
 
