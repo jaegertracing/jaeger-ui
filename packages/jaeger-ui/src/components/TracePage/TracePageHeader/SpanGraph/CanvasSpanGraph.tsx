@@ -22,7 +22,7 @@ const CanvasSpanGraph: React.FC<CanvasSpanGraphProps> = ({ items, valueWidth }) 
 
   useEffect(() => {
     if (canvasRef.current) {
-      renderIntoCanvas(canvasRef.current, items, valueWidth, getColor);
+      renderIntoCanvas(canvasRef.current, items, valueWidth, getColor, mode === 'dark');
     }
   }, [items, valueWidth, mode]);
 

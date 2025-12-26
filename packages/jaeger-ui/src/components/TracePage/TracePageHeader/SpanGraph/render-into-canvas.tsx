@@ -14,22 +14,19 @@ export const MIN_TOTAL_HEIGHT = 60;
 export const MAX_ITEM_HEIGHT = 6;
 
 /**
- * Get the current theme background color based on data-theme attribute
+ * Get the background color based on theme mode.
+ * Exported for testing.
  */
-function getBackgroundColor(): string {
-  if (typeof document !== 'undefined' && document.body) {
-    const isDark = document.body.getAttribute('data-theme') === 'dark';
-    return isDark ? BG_COLOR_DARK : BG_COLOR_LIGHT;
-  }
-  // Default to light background when document or document.body is unavailable (SSR, tests)
-  return BG_COLOR_LIGHT;
+export function getBackgroundColor(isDark: boolean): string {
+  return isDark ? BG_COLOR_DARK : BG_COLOR_LIGHT;
 }
 
 export default function renderIntoCanvas(
   canvas: HTMLCanvasElement,
   items: { valueWidth: number; valueOffset: number; serviceName: string }[],
   totalValueWidth: number,
-  getFillColor: (serviceName: string) => [number, number, number]
+  getFillColor: (serviceName: string) => [number, number, number],
+  isDark: boolean = false
 ) {
   const fillCache: Map<string, string | TNil> = new Map();
   const cHeight =
@@ -43,7 +40,7 @@ export default function renderIntoCanvas(
   const itemYChange = cHeight / items.length;
 
   const ctx = canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
-  ctx.fillStyle = getBackgroundColor();
+  ctx.fillStyle = getBackgroundColor(isDark);
   ctx.fillRect(0, 0, cWidth, cHeight);
   for (let i = 0; i < items.length; i++) {
     const { valueWidth, valueOffset, serviceName } = items[i];

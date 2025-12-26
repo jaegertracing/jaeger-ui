@@ -5,22 +5,34 @@ import _range from 'lodash/range';
 
 import renderIntoCanvas, {
   BG_COLOR_LIGHT,
+  BG_COLOR_DARK,
   ITEM_ALPHA,
   MIN_ITEM_HEIGHT,
   MAX_TOTAL_HEIGHT,
   MIN_ITEM_WIDTH,
   MIN_TOTAL_HEIGHT,
   MAX_ITEM_HEIGHT,
+  getBackgroundColor,
 } from './render-into-canvas';
 
 const getCanvasWidth = () => window.innerWidth * 2;
-const getBgFillRect = items => ({
-  fillStyle: BG_COLOR_LIGHT,
+const getBgFillRect = (items, isDark = false) => ({
+  fillStyle: isDark ? BG_COLOR_DARK : BG_COLOR_LIGHT,
   height:
     !items || items.length < MIN_TOTAL_HEIGHT ? MIN_TOTAL_HEIGHT : Math.min(MAX_TOTAL_HEIGHT, items.length),
   width: getCanvasWidth(),
   x: 0,
   y: 0,
+});
+
+describe('getBackgroundColor()', () => {
+  it('returns light background color when isDark is false', () => {
+    expect(getBackgroundColor(false)).toBe(BG_COLOR_LIGHT);
+  });
+
+  it('returns dark background color when isDark is true', () => {
+    expect(getBackgroundColor(true)).toBe(BG_COLOR_DARK);
+  });
 });
 
 describe('renderIntoCanvas()', () => {
@@ -97,6 +109,18 @@ describe('renderIntoCanvas()', () => {
       const totalValueWidth = 4000;
       const getFillColor = getColorFactory();
       renderIntoCanvas(canvas, items, totalValueWidth, getFillColor);
+      expect(canvas.getContext.mock.calls).toEqual([['2d', { alpha: false }]]);
+      expect(canvas.contexts.length).toBe(1);
+      expect(canvas.contexts[0].fillRectAccumulator).toEqual(expectedDrawing);
+    });
+
+    it('draws the background with dark theme', () => {
+      const expectedDrawing = [getBgFillRect([], true)];
+      const canvas = new Canvas();
+      const items = [];
+      const totalValueWidth = 4000;
+      const getFillColor = getColorFactory();
+      renderIntoCanvas(canvas, items, totalValueWidth, getFillColor, true);
       expect(canvas.getContext.mock.calls).toEqual([['2d', { alpha: false }]]);
       expect(canvas.contexts.length).toBe(1);
       expect(canvas.contexts[0].fillRectAccumulator).toEqual(expectedDrawing);
