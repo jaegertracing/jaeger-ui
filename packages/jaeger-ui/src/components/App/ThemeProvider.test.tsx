@@ -5,10 +5,8 @@ import React from 'react';
 import '@testing-library/jest-dom';
 import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 
-import AppThemeProvider, { __themeTestInternals, useThemeMode } from './ThemeProvider';
-
-const THEME_STORAGE_KEY = 'jaeger-ui-theme';
-
+import AppThemeProvider, { useThemeMode } from './ThemeProvider';
+import { THEME_STORAGE_KEY } from './ThemeStorage';
 import { getConfigValue } from '../../utils/config/get-config';
 
 jest.mock('../../utils/config/get-config', () => ({
@@ -228,51 +226,6 @@ describe('AppThemeProvider', () => {
     const context = observer.mock.calls[0][0];
     expect(context.setMode('dark')).toBeUndefined();
     expect(context.toggleMode()).toBeUndefined();
-  });
-
-  it('short-circuits storage helpers when no window is available', () => {
-    expect(__themeTestInternals.readStoredTheme(null)).toBeNull();
-    expect(() => __themeTestInternals.writeStoredTheme('dark', null)).not.toThrow();
-  });
-
-  it('honors injected window overrides when reading and writing storage', () => {
-    const getItem = jest.fn(() => 'dark');
-    const setItem = jest.fn();
-    const fakeWindow = {
-      localStorage: { getItem, setItem },
-    } as unknown as Window;
-
-    expect(__themeTestInternals.readStoredTheme(fakeWindow)).toBe('dark');
-    __themeTestInternals.writeStoredTheme('light', fakeWindow);
-
-    expect(getItem).toHaveBeenCalledWith('jaeger-ui-theme');
-    expect(setItem).toHaveBeenCalledWith('jaeger-ui-theme', 'light');
-  });
-
-  it('uses the global window when no override is provided', () => {
-    window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
-    expect(__themeTestInternals.readStoredTheme()).toBe('dark');
-    expect(__themeTestInternals.readStoredTheme(undefined)).toBe('dark');
-
-    const setItem = jest.spyOn(Storage.prototype, 'setItem');
-    try {
-      __themeTestInternals.writeStoredTheme('light');
-      expect(setItem).toHaveBeenCalledWith(THEME_STORAGE_KEY, 'light');
-    } finally {
-      setItem.mockRestore();
-    }
-  });
-
-  it('falls back gracefully when the global window is unavailable', () => {
-    const originalWindow = window;
-    (global as typeof global & { window?: Window }).window = undefined;
-
-    try {
-      expect(__themeTestInternals.readStoredTheme()).toBeNull();
-      expect(() => __themeTestInternals.writeStoredTheme('dark')).not.toThrow();
-    } finally {
-      (global as typeof global & { window?: Window }).window = originalWindow;
-    }
   });
 
   it('skips updating document body when document is undefined', () => {

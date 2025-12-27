@@ -8,16 +8,9 @@ SPDX-License-Identifier: Apache-2.0
  * 
  * This file contains all color and layout variables used throughout the application.
  * New naming scheme follows semantic conventions for better maintainability.
- * 
- * Variables are defined on both body and .ant-layout to ensure they're available
- * for fixed-position elements and components rendered outside the Layout.
- * 
- * Light mode uses fallback values since --ant-* variables may not be available
- * on body element. Dark mode provides explicit overrides.
  */
 
-body,
-.ant-layout {
+:root {
   /* ============================================
     SURFACE TOKENS (Backgrounds)
     Based on audit of background/background-color properties
@@ -152,8 +145,7 @@ body,
   --graph-tick-stroke: var(--ant-color-border, #d9d9d9);
 }
 
-body[data-theme='dark'],
-[data-theme='dark'] .ant-layout {
+:root[data-theme='dark'] {
   /* ============================================
     SURFACE TOKENS (Backgrounds) - Dark Mode
     ============================================ */

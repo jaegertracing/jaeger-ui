@@ -30,7 +30,7 @@ import '../common/utils.css';
 import 'antd/dist/reset.css';
 import './index.css';
 import { store } from '../../utils/configure-store';
-import AppThemeProvider from './ThemeProvider';
+import ThemeProvider from './ThemeProvider';
 
 export default class JaegerUIApp extends Component<{}> {
   constructor(props: {}) {
@@ -41,7 +41,7 @@ export default class JaegerUIApp extends Component<{}> {
 
   render() {
     return (
-      <AppThemeProvider>
+      <ThemeProvider>
         <Provider store={store as any}>
           {
             // the Page component is a connected component (wrapped by Redux's connect HOC)
@@ -90,7 +90,7 @@ export default class JaegerUIApp extends Component<{}> {
             </Switch>
           </Page>
         </Provider>
-      </AppThemeProvider>
+      </ThemeProvider>
     );
   }
 }
