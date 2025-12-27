@@ -27,7 +27,7 @@ SPDX-License-Identifier: Apache-2.0
 .TracePageHeader--back {
   align-items: center;
   align-self: stretch;
-  background-color: #fafafa;
+  background-color: var(--surface-secondary);
   border-bottom: 1px solid #ddd;
   border-right: 1px solid #ddd;
   color: inherit;

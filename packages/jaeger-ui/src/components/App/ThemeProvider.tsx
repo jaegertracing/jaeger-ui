@@ -4,18 +4,15 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ThemeConfig } from 'antd';
 import { ConfigProvider, theme } from 'antd';
-import { getConfigValue } from '../../utils/config/get-config';
 
-export type ThemeMode = 'light' | 'dark';
+import { DEFAULT_MODE, ThemeMode, getInitialTheme, writeStoredTheme } from './ThemeStorage';
+import { ThemeTokenSync } from './ThemeTokenSync';
 
 type ThemeContextValue = {
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
   toggleMode: () => void;
 };
-
-const THEME_STORAGE_KEY = 'jaeger-ui-theme';
-const DEFAULT_MODE: ThemeMode = 'light';
 
 type ThemeProviderProps = {
   children: React.ReactNode;
@@ -113,75 +110,8 @@ const darkTheme: ThemeConfig = {
   },
 };
 
-function readStoredTheme(targetWindow?: Window | null): ThemeMode | null {
-  const activeWindow =
-    targetWindow !== undefined
-      ? (targetWindow ?? undefined)
-      : typeof window !== 'undefined'
-        ? window
-        : undefined;
-  if (!activeWindow) {
-    return null;
-  }
-
-  try {
-    const stored = activeWindow.localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode | null;
-    if (stored === 'light' || stored === 'dark') {
-      return stored;
-    }
-  } catch (err) {
-    // Local storage may be blocked; ignore and fallback below.
-  }
-
-  return null;
-}
-
-function writeStoredTheme(mode: ThemeMode, targetWindow?: Window | null) {
-  const activeWindow =
-    targetWindow !== undefined
-      ? (targetWindow ?? undefined)
-      : typeof window !== 'undefined'
-        ? window
-        : undefined;
-  if (!activeWindow) {
-    return;
-  }
-
-  try {
-    activeWindow.localStorage.setItem(THEME_STORAGE_KEY, mode);
-  } catch (err) {
-    // Ignore storage errors (e.g., Safari in private mode).
-  }
-}
-
-function getInitialMode(): ThemeMode {
-  if (!getConfigValue('themes.enabled')) {
-    return DEFAULT_MODE;
-  }
-  const stored = readStoredTheme();
-  if (stored) {
-    return stored;
-  }
-
-  if (
-    typeof window !== 'undefined' &&
-    window.matchMedia &&
-    window.matchMedia('(prefers-color-scheme: dark)').matches
-  ) {
-    return 'dark';
-  }
-
-  return DEFAULT_MODE;
-}
-
-export const __themeTestInternals = {
-  readStoredTheme,
-  writeStoredTheme,
-  getInitialMode,
-};
-
 export default function AppThemeProvider({ children }: ThemeProviderProps) {
-  const [mode, setModeState] = useState<ThemeMode>(() => getInitialMode());
+  const [mode, setModeState] = useState<ThemeMode>(() => getInitialTheme());
 
   const setMode = useCallback((value: ThemeMode) => {
     setModeState(value);
@@ -212,7 +142,11 @@ export default function AppThemeProvider({ children }: ThemeProviderProps) {
 
   return (
     <ThemeModeContext.Provider value={value}>
-      <ConfigProvider theme={themeConfig}>{children}</ConfigProvider>
+      <ConfigProvider theme={themeConfig}>
+        {/* Sync is inside ConfigProvider to access the theme context */}
+        <ThemeTokenSync />
+        {children}
+      </ConfigProvider>
     </ThemeModeContext.Provider>
   );
 }
