@@ -148,7 +148,10 @@ export default chance.mixin({
     const timestamp = (new Date().getTime() - chance.integer({ min: 0, max: 1000 }) * 1000) * 1000;
 
     const processArray = chance.processes({ numberOfProcesses });
-    const processes = processArray.reduce((pMap, p) => ({ ...pMap, [p.processID]: p }), {});
+    const processes = processArray.reduce(
+      (pMap: Record<string, GeneratedProcess>, p: GeneratedProcess) => ({ ...pMap, [p.processID]: p }),
+      {}
+    );
 
     // Create normal spans first
     let spans = chance.n(chance.span, numberOfSpans - numberOfOrphans, {
@@ -164,7 +167,7 @@ export default chance.mixin({
     }
 
     // Add references to existing spans for non-orphan spans
-    spans = spans.map((span, idx) => {
+    spans = spans.map((span: GeneratedSpan, idx: number) => {
       if (idx === 0) return span; // root span has no parent
       return {
         ...span,
