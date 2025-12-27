@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@jaegertracing/plexus": "0.2.0",
-    "@pyroscope/flamegraph": "0.21.4",
+    "@pyroscope/flamegraph": "0.35.6",
     "@sentry/browser": "10.32.0",
     "antd": "6.1.1",
     "chance": "1.1.13",
