@@ -5,6 +5,9 @@
   "monitor": {
     "menuEnabled": true
   },
+  "themes": {
+    "enabled": true
+  },
   "linkPatterns": [
     {
       "type": "process",
