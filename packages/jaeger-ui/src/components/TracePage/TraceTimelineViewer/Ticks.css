@@ -11,7 +11,7 @@ SPDX-License-Identifier: Apache-2.0
   position: absolute;
   height: 100%;
   width: 1px;
-  background: #d8d8d8;
+  background: var(--timeline-tick-color);
 }
 
 .Ticks--tick:last-child {
@@ -22,6 +22,7 @@ SPDX-License-Identifier: Apache-2.0
   left: 0.25rem;
   position: absolute;
   white-space: nowrap;
+  color: var(--timeline-tick-label-color);
 }
 
 .Ticks--tickLabel.isEndAnchor {

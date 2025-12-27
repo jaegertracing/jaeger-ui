@@ -12,6 +12,11 @@ import colorGenerator from '../../../../utils/color-generator';
 // Mock the renderIntoCanvas function
 jest.mock('./render-into-canvas');
 
+// Mock the ThemeProvider
+jest.mock('../../../App/ThemeProvider', () => ({
+  useThemeMode: () => ({ mode: 'light', setMode: jest.fn(), toggleMode: jest.fn() }),
+}));
+
 describe('<CanvasSpanGraph />', () => {
   const items = [{ valueWidth: 1, valueOffset: 1, serviceName: 'service-name-0' }];
   const props = {
@@ -51,7 +56,13 @@ describe('<CanvasSpanGraph />', () => {
 
     // Check if renderIntoCanvas was called again on update
     expect(renderUtils.default).toHaveBeenCalledTimes(2);
-    expect(renderUtils.default).toHaveBeenCalledWith(canvas, items, props.valueWidth, expect.any(Function));
+    expect(renderUtils.default).toHaveBeenCalledWith(
+      canvas,
+      items,
+      props.valueWidth,
+      expect.any(Function),
+      false // isDark = false in light mode
+    );
   });
 
   it('calls colorGenerator.getRgbColorByKey with correct hex', () => {

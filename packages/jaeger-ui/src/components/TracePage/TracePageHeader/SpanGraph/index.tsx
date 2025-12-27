@@ -10,6 +10,8 @@ import ViewingLayer from './ViewingLayer';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../../types';
 import { Span, Trace } from '../../../../types/trace';
 
+import './SpanGraph.css';
+
 const DEFAULT_HEIGHT = 60;
 const TIMELINE_TICK_INTERVAL = 4;
 
@@ -54,9 +56,9 @@ export default class SpanGraph extends React.PureComponent<SpanGraphProps> {
 
     const items = memoizedGetItems(trace);
     return (
-      <div className="ub-pb2 ub-px2">
+      <div className="SpanGraph ub-pb2 ub-px2">
         <TickLabels numTicks={TIMELINE_TICK_INTERVAL} duration={trace.duration} />
-        <div className="ub-relative">
+        <div className="SpanGraph--graphContainer">
           <CanvasSpanGraph valueWidth={trace.duration} items={items} />
           <ViewingLayer
             viewRange={viewRange}

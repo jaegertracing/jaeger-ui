@@ -9,21 +9,21 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .KeyboardShortcutsHelp--table {
-  background-color: #fafafa;
+  background-color: var(--surface-secondary);
   max-height: 500px;
   overflow: auto;
 }
 
 .KeyboardShortcutsHelp--oddRow {
-  background-color: #f6f6f6;
+  background-color: var(--surface-tertiary);
 }
 
 .KeyboardShortcutsHelp--table kbd {
-  background: #f0f0f0;
-  border-bottom: 1px solid #bbb;
+  background: var(--surface-tertiary);
+  border-bottom: 1px solid var(--border-strong);
   border-radius: 3px;
-  border: 1px solid #d4d4d4;
-  color: #000;
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
   font-family: monospace;
   padding: 0.25em 0.3em;
 }
