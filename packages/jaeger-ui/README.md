@@ -6,7 +6,6 @@ The UI supports customization via custom configuration as either JSON or Javascr
 
 The configuration is loaded into a `Config` object (see [src/types/config.tsx](./src/types/config.tsx) for the complete schema). This object is returned by the top-level function `getJaegerUiConfig` defined in [index.html](./index.html). By default this function just returns null, but its source is manipulated by the Jaeger backend such that the values are injected dynamically via search-replace. The returned value is then merged with [defaults](./src/utils/config/get-config.tsx) into the redux `state.config`.
 
-
 ### Configuration as JSON
 
 When the config file has `.json` extension, Jaeger looks for the statement `JAEGER_CONFIG = DEFAULT_CONFIG` and replaces the right-hand side with the content of the loaded config file, which must contain a valid JSON.
