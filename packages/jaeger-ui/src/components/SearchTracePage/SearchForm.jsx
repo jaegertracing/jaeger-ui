@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Input, Button, Popover, Select, Row, Col, Form } from 'antd';
+import { Input, Button, Popover, Select, Row, Col, Form, Switch } from 'antd';
 import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
@@ -32,6 +32,8 @@ import ValidatedFormField from '../../utils/ValidatedFormField';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
+
+const ADJUST_TIME_ENABLED_KEY = 'jaeger-ui/search-adjust-time-enabled';
 
 export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
   const start = `${startDate} ${startDateTime}`;
@@ -197,7 +199,17 @@ export function convertQueryParamsToFormDates({ start, end }) {
   };
 }
 
-export function submitForm(fields, searchTraces) {
+// Applies time adjustment to shift end time back by the specified duration
+// This helps avoid incomplete traces that may still be receiving spans
+export function applyAdjustTime(endTimestamp, adjustTime) {
+  if (!adjustTime) {
+    return endTimestamp;
+  }
+  const adjustedEnd = lookbackToTimestamp(adjustTime, endTimestamp / 1000);
+  return adjustedEnd;
+}
+
+export function submitForm(fields, searchTraces, adjustTime, adjustTimeEnabled) {
   const {
     resultsLimit,
     service,
@@ -231,6 +243,11 @@ export function submitForm(fields, searchTraces) {
     end = times.end;
   }
 
+  // Apply time adjustment to exclude very recent traces that may be incomplete
+  if (adjustTimeEnabled) {
+    end = applyAdjustTime(end, adjustTime);
+  }
+
   trackFormInput(resultsLimit, operation, tags, minDuration, maxDuration, lookback, service);
 
   searchTraces({
@@ -249,6 +266,11 @@ export function submitForm(fields, searchTraces) {
 export class SearchFormImpl extends React.PureComponent {
   constructor(props) {
     super(props);
+    // Initialize adjustTimeEnabled from local storage, defaulting to true if config has adjustEndTime
+    const storedAdjustTimeEnabled = store.get(ADJUST_TIME_ENABLED_KEY);
+    const adjustTimeEnabled =
+      storedAdjustTimeEnabled !== undefined ? storedAdjustTimeEnabled : Boolean(props.searchAdjustEndTime);
+
     this.state = {
       formData: {
         service: this.props.initialValues?.service,
@@ -263,6 +285,7 @@ export class SearchFormImpl extends React.PureComponent {
         maxDuration: this.props.initialValues?.maxDuration,
         resultsLimit: this.props.initialValues?.resultsLimit,
       },
+      adjustTimeEnabled,
     };
   }
 
@@ -284,13 +307,22 @@ export class SearchFormImpl extends React.PureComponent {
     }
   };
 
+  handleAdjustTimeToggle = checked => {
+    this.setState({ adjustTimeEnabled: checked });
+    store.set(ADJUST_TIME_ENABLED_KEY, checked);
+  };
+
   handleSubmit = e => {
     e.preventDefault();
-    this.props.submitFormHandler(this.state.formData);
+    this.props.submitFormHandler(
+      this.state.formData,
+      this.props.searchAdjustEndTime,
+      this.state.adjustTimeEnabled
+    );
   };
 
   render() {
-    const { invalid, searchMaxLookback, services, submitting } = this.props;
+    const { invalid, searchMaxLookback, searchAdjustEndTime, services, submitting } = this.props;
     const { formData } = this.state;
     const { service: selectedService, lookback: selectedLookback } = formData;
     const selectedServicePayload = services.find(s => s.name === selectedService);
@@ -426,7 +458,33 @@ export class SearchFormImpl extends React.PureComponent {
           />
         </FormItem>
 
-        <FormItem label="Lookback">
+        <div className="SearchForm--lookbackRow">
+          <span className="SearchForm--lookbackLabel">Lookback</span>
+          {searchAdjustEndTime && (
+            <div className="SearchForm--adjustTime">
+              <span className="SearchForm--adjustTimeLabel">Adjusted -{searchAdjustEndTime}</span>
+              <Switch
+                size="small"
+                checked={this.state.adjustTimeEnabled}
+                onChange={this.handleAdjustTimeToggle}
+                disabled={submitting}
+              />
+              <Popover
+                placement="topLeft"
+                trigger="click"
+                content={
+                  <div className="SearchForm--lookbackHint">
+                    When enabled, search end time is adjusted back by {searchAdjustEndTime} to exclude very
+                    recent traces that may still be receiving spans.
+                  </div>
+                }
+              >
+                <IoHelp className="SearchForm--hintTrigger" />
+              </Popover>
+            </div>
+          )}
+        </div>
+        <FormItem>
           <SearchableSelect
             name="lookback"
             value={this.state.formData.lookback}
@@ -708,18 +766,21 @@ export function mapStateToProps(state) {
       traceIDs: traceIDs || null,
     },
     searchMaxLookback: _get(state, 'config.search.maxLookback'),
+    searchAdjustEndTime: _get(state, 'config.search.adjustEndTime'),
   };
 }
 
 export function mapDispatchToProps(dispatch) {
   const { searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
   return {
+    searchTraces,
     changeServiceHandler: service =>
       dispatch({
         type: CHANGE_SERVICE_ACTION_TYPE,
         payload: service,
       }),
-    submitFormHandler: fields => submitForm(fields, searchTraces),
+    submitFormHandler: (fields, adjustEndTime, adjustTimeEnabled) =>
+      submitForm(fields, searchTraces, adjustEndTime, adjustTimeEnabled),
   };
 }
 

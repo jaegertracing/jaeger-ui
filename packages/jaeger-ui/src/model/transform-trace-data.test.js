@@ -149,4 +149,82 @@ describe('transformTraceData()', () => {
 
     expect(transformTraceData(traceData).traceName).toEqual(`${serviceName}: ${rootOperationName}`);
   });
+
+  it('should detect orphan spans when parent span is missing', () => {
+    const traceData = {
+      traceID,
+      processes,
+      spans: [...spans, rootSpanWithMissingRef],
+    };
+
+    const result = transformTraceData(traceData);
+    // rootSpanWithMissingRef references 'missingSpanId' which doesn't exist,
+    // and the two other spans reference rootSpanID which exists
+    expect(result.orphanSpanCount).toBe(1);
+  });
+
+  it('should detect multiple orphan spans', () => {
+    const orphanSpan1 = {
+      traceID,
+      spanID: 'orphan1',
+      operationName: 'orphanOp1',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: 'nonexistent1' }],
+      startTime,
+      duration,
+      tags: [],
+      processID: 'p1',
+    };
+    const orphanSpan2 = {
+      traceID,
+      spanID: 'orphan2',
+      operationName: 'orphanOp2',
+      references: [{ refType: 'CHILD_OF', traceID, spanID: 'nonexistent2' }],
+      startTime: startTime + 200,
+      duration,
+      tags: [],
+      processID: 'p1',
+    };
+
+    const traceData = {
+      traceID,
+      processes,
+      spans: [...spans, rootSpanWithoutRefs, orphanSpan1, orphanSpan2],
+    };
+
+    const result = transformTraceData(traceData);
+    expect(result.orphanSpanCount).toBe(2);
+  });
+
+  it('should not flag orphan spans when all parents exist', () => {
+    const traceData = {
+      traceID,
+      processes,
+      spans: [...spans, rootSpanWithoutRefs],
+    };
+
+    const result = transformTraceData(traceData);
+    expect(result.orphanSpanCount).toBe(0);
+  });
+
+  it('should handle FOLLOWS_FROM references for orphan detection', () => {
+    const followsFromOrphan = {
+      traceID,
+      spanID: 'followsOrphan',
+      operationName: 'followsOrphanOp',
+      references: [{ refType: 'FOLLOWS_FROM', traceID, spanID: 'nonexistent' }],
+      startTime,
+      duration,
+      tags: [],
+      processID: 'p1',
+    };
+
+    const traceData = {
+      traceID,
+      processes,
+      spans: [rootSpanWithoutRefs, followsFromOrphan],
+    };
+
+    const result = transformTraceData(traceData);
+    expect(result.orphanSpanCount).toBe(1);
+  });
 });

@@ -159,6 +159,18 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const tracePageTitle = getTracePageTitle(spans);
   const traceEmoji = getTraceEmoji(spans);
   const services = Object.keys(svcCounts).map(name => ({ name, numberOfSpans: svcCounts[name] }));
+
+  // Detect orphan spans - spans that reference a parent span ID that doesn't exist in the trace
+  let orphanSpanCount = 0;
+  spans.forEach(span => {
+    if (Array.isArray(span.references) && span.references.length > 0) {
+      const parentRef = span.references[0];
+      if (!spanMap.has(parentRef.spanID)) {
+        orphanSpanCount++;
+      }
+    }
+  });
+
   return {
     services,
     spans,
@@ -175,5 +187,6 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     duration: traceEndTime - traceStartTime,
     startTime: traceStartTime,
     endTime: traceEndTime,
+    orphanSpanCount,
   };
 }
