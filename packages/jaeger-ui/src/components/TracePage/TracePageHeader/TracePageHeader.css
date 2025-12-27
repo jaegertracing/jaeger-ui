@@ -98,3 +98,17 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 1.78em;
   margin-right: 0.15em;
 }
+
+.TracePageHeader--incompleteTag {
+  color: var(--feedback-warning);
+  cursor: help;
+  font-size: 0.85em;
+  font-weight: 500;
+  margin-left: 0.5em;
+}
+
+.TracePageHeader--incompleteIcon {
+  font-size: 1.1em;
+  margin-right: 0.25em;
+  vertical-align: middle;
+}

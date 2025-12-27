@@ -73,6 +73,8 @@ export type Trace = TraceData & {
   tracePageTitle: string;
   traceEmoji: string;
   services: { name: string; numberOfSpans: number }[];
+  // Number of orphan spans (spans referencing parent spans that don't exist in the trace)
+  orphanSpanCount?: number;
 };
 
 // It is a section of span that lies on critical path

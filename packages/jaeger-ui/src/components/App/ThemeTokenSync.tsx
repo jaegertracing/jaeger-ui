@@ -23,10 +23,10 @@ import { useEffect } from 'react';
  *    to custom CSS variables like `--surface-primary: var(--ant-color-bg-container)`.
  *
  * @example
- * <ConfigProvider theme={...}>
- *   <ThemeTokenSync />
- *   <App />
- * </ConfigProvider>
+ *   <ConfigProvider theme={...}>
+ *     <ThemeTokenSync />
+ *     <App />
+ *   </ConfigProvider>
  */
 export function ThemeTokenSync(): null {
   const { token } = theme.useToken();
