@@ -66,11 +66,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
     <div className="TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
       <Input.Group className="ub-justify-end" compact style={{ display: 'flex' }}>
-        <UiFindInput
-          inputProps={uiFindInputInputProps}
-          forwardedRef={forwardedRef}
-          trackFindFunction={trackFilter}
-        />
+        <UiFindInput inputProps={uiFindInputInputProps} ref={forwardedRef} trackFindFunction={trackFilter} />
         <Tooltip
           arrow={{ pointAtCenter: true }}
           placement="bottomLeft"
