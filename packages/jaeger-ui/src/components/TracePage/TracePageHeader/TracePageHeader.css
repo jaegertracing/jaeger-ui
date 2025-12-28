@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .TracePageHeader > :nth-child(2) {
   background-color: var(--surface-tertiary);
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .TracePageHeader > :last-child {

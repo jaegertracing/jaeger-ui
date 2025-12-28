@@ -18,7 +18,7 @@ SPDX-License-Identifier: Apache-2.0
 
   --surface-primary: var(--ant-color-bg-container, #ffffff);
   --surface-secondary: var(--ant-color-bg-layout, #f5f5f5);
-  --surface-tertiary: var(--ant-color-fill-alter, #fafafa);
+  --surface-tertiary: #eeeeee;
   --surface-overlay: var(--ant-color-bg-mask, rgba(0, 0, 0, 0.45));
 
   /* dedicated, specific UI element (like the Minimap, a Modal, or a complex panel) */
