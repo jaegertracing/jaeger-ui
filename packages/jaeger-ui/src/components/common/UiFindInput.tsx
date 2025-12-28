@@ -44,18 +44,30 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
   const location = useLocation();
   const [ownInputValue, setOwnInputValue] = useState<string | undefined>(undefined);
 
+  // Use refs to access latest values without recreating the debounced function
+  const locationRef = React.useRef(location);
+  const prevUiFindRef = React.useRef(prevUiFind);
+  const trackFindFunctionRef = React.useRef(trackFindFunction);
+
+  // Update refs when values change
+  React.useEffect(() => {
+    locationRef.current = location;
+    prevUiFindRef.current = prevUiFind;
+    trackFindFunctionRef.current = trackFindFunction;
+  }, [location, prevUiFind, trackFindFunction]);
+
   const updateUiFindQueryParam = useMemo(
     () =>
       _debounce((uiFind?: string) => {
-        if (uiFind === prevUiFind || (!prevUiFind && !uiFind)) return;
+        if (uiFind === prevUiFindRef.current || (!prevUiFindRef.current && !uiFind)) return;
         updateUiFind({
-          location,
+          location: locationRef.current,
           navigate,
-          trackFindFunction,
+          trackFindFunction: trackFindFunctionRef.current,
           uiFind,
         });
       }, 250),
-    [navigate, location, prevUiFind, trackFindFunction]
+    [navigate]
   );
 
   useEffect(() => {
