@@ -73,7 +73,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .VerticalResizer--gripIcon::before,
 .VerticalResizer--gripIcon::after {
-  border-right: 1px solid var(--border-default);
+  border-right: 1px solid var(--border-strong);
   content: ' ';
   height: 9px;
   position: absolute;
@@ -83,6 +83,11 @@ SPDX-License-Identifier: Apache-2.0
 
 .VerticalResizer--gripIcon::after {
   right: 5px;
+}
+
+.VerticalResizer:hover .VerticalResizer--gripIcon::before,
+.VerticalResizer:hover .VerticalResizer--gripIcon::after {
+  border-right-color: var(--border-strongest);
 }
 
 .VerticalResizer.isDraggingLeft > .VerticalResizer--gripIcon::before,

@@ -18,13 +18,16 @@ SPDX-License-Identifier: Apache-2.0
 
   --surface-primary: var(--ant-color-bg-container);
   --surface-secondary: var(--ant-color-bg-layout);
-  --surface-tertiary: var(--ant-color-fill-alter);
-  --surface-overlay: var(--ant-color-bg-mask);
+  /*
+   * We want tertiary to be slightly darker than secondary, around #eeeeee.
+   * This works too, but requires color-mix support:
+   *   --surface-tertiary: color-mix(in srgb, var(--ant-color-text-base) 7%, transparent);
+   */
+  --surface-tertiary: var(--ant-color-border-secondary);
 
   /* dedicated, specific UI element (like the Minimap, a Modal, or a complex panel) */
-  --surface-component-item-background: #999;
-  --surface-component-background: #cccccc;
-  --surface-component-background-hover: #dddddd;
+  --surface-component-background: var(--ant-color-fill-secondary);
+  --surface-component-background-hover: var(--ant-color-fill-content-hover);
 
   /* ============================================
     TEXT TOKENS
@@ -33,7 +36,7 @@ SPDX-License-Identifier: Apache-2.0
 
   --text-primary: var(--ant-color-text);
   --text-secondary: var(--ant-color-text-secondary);
-  --text-muted: var(--ant-color-text-description);
+  --text-muted: color-mix(in srgb, var(--ant-color-text) 50%, transparent);
   --text-link: var(--ant-color-link);
   --text-link-hover: var(--ant-color-link-hover);
   --text-inverse: var(--ant-color-white);
@@ -55,7 +58,6 @@ SPDX-License-Identifier: Apache-2.0
 
   --interactive-primary: var(--ant-color-primary);
   --interactive-primary-hover: var(--ant-color-primary-hover);
-  --interactive-secondary: #2da6a2;
   /* Lighter and RGB variants used by animations and shadow opacity */
   --interactive-primary-light: var(--ant-color-primary-bg);
   --interactive-primary-rgb: 17, 147, 154;
@@ -102,6 +104,7 @@ SPDX-License-Identifier: Apache-2.0
     ============================================ */
 
   /* Background used when dragging resizers (very subtle tint of interactive color) */
+  /* TODO: this should be used in Scrubber, etc. */
   --resizer-drag-bg: rgba(var(--interactive-primary-rgb), 0.05);
 
   /* Scrollbar Thumb Tokens (Subtle/Utility Control) */
@@ -111,36 +114,31 @@ SPDX-License-Identifier: Apache-2.0
 
   /* Trace Graph */
   --trace-emphasis-highlight: #fff3d7;
+
+  /* ============================================
+    TRACE TIMELINE TOKENS
+    Used by TracePageHeader, TimelineViewer, SpanGraph components
+    ============================================ */
+
+  /* Minimap / SpanGraph */
+  --span-graph-inactive: rgba(216, 216, 216, 0.5);
 }
 
 :root[data-theme='dark'] {
   /* ============================================
-    SURFACE TOKENS (Backgrounds)
+    TEXT TOKENS - Dark Mode
     ============================================ */
 
-  /* dedicated, specific UI element (like the Minimap, a Modal, or a complex panel) */
-  --surface-component-item-background: #555;
-  --surface-component-background: #333333;
-  --surface-component-background-hover: #444444;
+  --text-inverse: var(--ant-color-black);
 
   /* ============================================
-    TEXT TOKENS
+    INTERACTIVE TOKENS - Dark Mode
     ============================================ */
 
-  --text-muted: #888;
-  --text-inverse: #000000;
-
-  /* ============================================
-    INTERACTIVE TOKENS (Buttons, Links, Form Controls)
-    ============================================ */
-
-  --interactive-secondary: #5ec9c5;
-  /* RGB variant used by animations and shadow opacity */
   --interactive-primary-rgb: 77, 184, 196;
-  --interactive-primary-opaque: rgba(var(--interactive-primary-rgb), 0.6);
 
   /* ============================================
-    SHADOW TOKENS
+    SHADOW TOKENS - Dark Mode
     ============================================ */
 
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -150,7 +148,7 @@ SPDX-License-Identifier: Apache-2.0
   --shadow-component-focus: 0px 0px 5px rgba(255, 255, 255, 0.3);
 
   /* ============================================
-    SPECIAL PURPOSE TOKENS
+    SPECIAL PURPOSE TOKENS - Dark Mode
     ============================================ */
 
   /* Trace visualization colors (programmatic - review in Phase 0.4) */
@@ -161,17 +159,16 @@ SPDX-License-Identifier: Apache-2.0
   --trace-color-5: #9775fa;
 
   /* ============================================
-    HELPER & SMALL-SCOPE TOKENS
+    HELPER & SMALL-SCOPE TOKENS - Dark Mode
     ============================================ */
-
-  /* Background used when dragging resizers (very subtle tint of interactive color) */
-  --resizer-drag-bg: rgba(var(--interactive-primary-rgb), 0.05);
-
-  /* Scrollbar Thumb Tokens (Subtle/Utility Control) */
-  --control-subtle-default: rgba(255, 255, 255, 0.2);
-  --control-subtle-hover: rgba(255, 255, 255, 0.35);
-  --control-subtle-muted: rgba(255, 255, 255, 0.15);
 
   /* Trace Graph */
   --trace-emphasis-highlight: #3d3520;
+
+  /* ============================================
+    TRACE TIMELINE TOKENS - Dark Mode
+    ============================================ */
+
+  /* Minimap / SpanGraph - dark mode needs visible inactive region */
+  --span-graph-inactive: rgba(200, 200, 200, 0.25);
 }

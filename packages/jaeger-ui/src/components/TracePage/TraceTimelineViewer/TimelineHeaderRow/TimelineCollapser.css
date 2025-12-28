@@ -17,7 +17,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .TimelineCollapser--btn,
 .TimelineCollapser--btn-expand {
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--text-secondary);
   cursor: pointer;
   margin-right: 0.2rem;
   padding: 0.1rem;
@@ -25,7 +25,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .TimelineCollapser--btn:hover,
 .TimelineCollapser--btn-expand:hover {
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--interactive-primary-hover);
 }
 
 .TimelineCollapser--btn-size {
