@@ -18,18 +18,23 @@ SPDX-License-Identifier: Apache-2.0
 
   --surface-primary: var(--ant-color-bg-container, #ffffff);
   --surface-secondary: var(--ant-color-bg-layout, #f5f5f5);
-  --surface-tertiary: #eeeeee;
-  --surface-overlay: var(--ant-color-bg-mask, rgba(0, 0, 0, 0.45));
+  /*
+   * We want tertiary to be slightly darker than secondary, around #eeeeee.
+   * This works too, but requires color-mix support:
+   *   --surface-tertiary: color-mix(in srgb, var(--ant-color-text-base) 7%, transparent);
+   */
+  --surface-tertiary: var(--ant-color-border-secondary);
 
   /* dedicated, specific UI element (like the Minimap, a Modal, or a complex panel) */
-  --surface-component-item-background: #999;
-  --surface-component-background: #cccccc;
-  --surface-component-background-hover: #dddddd;
+  --surface-component-background: var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.06));
+  --surface-component-background-hover: var(--ant-color-fill-content-hover, rgba(0, 0, 0, 0.15));
 
   /* ============================================
     TEXT TOKENS
     Based on audit of color property
     ============================================ */
+  /* Span tree expand/collapse icons */
+  --span-tree-hover-bg: var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.06));
 
   --text-primary: var(--ant-color-text, rgba(0, 0, 0, 0.88));
   --text-secondary: var(--ant-color-text-secondary, rgba(0, 0, 0, 0.65));
@@ -116,12 +121,6 @@ SPDX-License-Identifier: Apache-2.0
     TRACE TIMELINE TOKENS
     Used by TracePageHeader, TimelineViewer, SpanGraph components
     ============================================ */
-
-  /* Span tree expand/collapse icons */
-  --span-tree-icon-color: var(--ant-color-text, rgba(0, 0, 0, 0.88));
-  --span-tree-hover-bg: var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.06));
-  --span-tree-indent-guide: var(--ant-color-border-secondary, #f0f0f0);
-  --span-tree-indent-guide-active: var(--ant-color-text-tertiary, rgba(0, 0, 0, 0.45));
 
   /* Minimap / SpanGraph */
   --span-graph-inactive: rgba(216, 216, 216, 0.5);
@@ -222,12 +221,6 @@ SPDX-License-Identifier: Apache-2.0
   /* ============================================
     TRACE TIMELINE TOKENS - Dark Mode
     ============================================ */
-
-  /* Span tree expand/collapse icons */
-  --span-tree-icon-color: rgba(244, 248, 255, 0.92);
-  --span-tree-hover-bg: rgba(255, 255, 255, 0.08);
-  --span-tree-indent-guide: rgba(125, 153, 191, 0.25);
-  --span-tree-indent-guide-active: rgba(244, 248, 255, 0.45);
 
   /* Minimap / SpanGraph - dark mode needs visible inactive region */
   --span-graph-inactive: rgba(200, 200, 200, 0.25);

@@ -90,7 +90,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .u-miniMap > .plexus-MiniMap--item {
-  background: var(--surface-component-item-background);
+  background: var(--surface-component-background);
   box-shadow: var(--shadow-component-focus);
   margin-right: 1rem;
   position: relative;
@@ -115,7 +115,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .u-miniMap .plexus-MiniMap--mapActive {
   /* dynamic: width, height, transform */
-  background: var(--surface-component-background);
+  background: var(--surface-component-background-hover);
   position: absolute;
 }
 
