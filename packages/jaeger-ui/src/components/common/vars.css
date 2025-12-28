@@ -123,10 +123,6 @@ SPDX-License-Identifier: Apache-2.0
   --span-tree-indent-guide: var(--ant-color-border-secondary, #f0f0f0);
   --span-tree-indent-guide-active: var(--ant-color-text-tertiary, rgba(0, 0, 0, 0.45));
 
-  /* Timeline collapser buttons */
-  --timeline-collapser-color: var(--ant-color-text-tertiary, rgba(0, 0, 0, 0.45));
-  --timeline-collapser-hover: var(--ant-color-text-secondary, rgba(0, 0, 0, 0.65));
-
   /* Minimap / SpanGraph */
   --span-graph-inactive: rgba(216, 216, 216, 0.5);
 }
@@ -227,18 +223,11 @@ SPDX-License-Identifier: Apache-2.0
     TRACE TIMELINE TOKENS - Dark Mode
     ============================================ */
 
-  /* Timeline header - needs more contrast in dark mode */
-  --timeline-header-bg: rgba(255, 255, 255, 0.08);
-
   /* Span tree expand/collapse icons */
   --span-tree-icon-color: rgba(244, 248, 255, 0.92);
   --span-tree-hover-bg: rgba(255, 255, 255, 0.08);
   --span-tree-indent-guide: rgba(125, 153, 191, 0.25);
   --span-tree-indent-guide-active: rgba(244, 248, 255, 0.45);
-
-  /* Timeline collapser buttons - more visible in dark mode */
-  --timeline-collapser-color: rgba(255, 255, 255, 0.6);
-  --timeline-collapser-hover: rgba(255, 255, 255, 0.85);
 
   /* Minimap / SpanGraph - dark mode needs visible inactive region */
   --span-graph-inactive: rgba(200, 200, 200, 0.25);
