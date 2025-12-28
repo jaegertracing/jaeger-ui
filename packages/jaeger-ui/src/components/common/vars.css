@@ -129,10 +129,6 @@ SPDX-License-Identifier: Apache-2.0
 
   /* Minimap / SpanGraph */
   --span-graph-inactive: rgba(216, 216, 216, 0.5);
-
-  /* Scrubber handles */
-  --scrubber-handle-color: var(--ant-color-text-tertiary, rgba(0, 0, 0, 0.45));
-  --scrubber-active-color: var(--ant-color-primary, #199);
 }
 
 :root[data-theme='dark'] {
@@ -142,7 +138,7 @@ SPDX-License-Identifier: Apache-2.0
 
   --surface-primary: #162338;
   --surface-secondary: #0b1625;
-  --surface-tertiary: rgba(255, 255, 255, 0.04);
+  --surface-tertiary: #0b1625;
   --surface-overlay: rgba(0, 0, 0, 0.65);
 
   /* dedicated, specific UI element (like the Minimap, a Modal, or a complex panel) */
@@ -246,8 +242,4 @@ SPDX-License-Identifier: Apache-2.0
 
   /* Minimap / SpanGraph - dark mode needs visible inactive region */
   --span-graph-inactive: rgba(200, 200, 200, 0.25);
-
-  /* Scrubber handles - more visible in dark mode */
-  --scrubber-handle-color: rgba(255, 255, 255, 0.6);
-  --scrubber-active-color: #4dd0e1;
 }
