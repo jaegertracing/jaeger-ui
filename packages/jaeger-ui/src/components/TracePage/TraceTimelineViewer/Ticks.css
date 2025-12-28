@@ -11,7 +11,7 @@ SPDX-License-Identifier: Apache-2.0
   position: absolute;
   height: 100%;
   width: 1px;
-  background: var(--surface-primary);
+  background: var(--border-strong);
 }
 
 .Ticks--tick:last-child {
