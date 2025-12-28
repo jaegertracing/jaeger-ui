@@ -73,7 +73,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .VerticalResizer--gripIcon::before,
 .VerticalResizer--gripIcon::after {
-  border-right: 1px solid var(--border-default);
+  border-right: 1px solid var(--border-strongest);
   content: ' ';
   height: 9px;
   position: absolute;
