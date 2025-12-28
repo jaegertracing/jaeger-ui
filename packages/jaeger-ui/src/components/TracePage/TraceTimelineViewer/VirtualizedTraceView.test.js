@@ -13,12 +13,18 @@ import getLinks from '../../../model/link-patterns';
 import * as linkPatterns from '../../../model/link-patterns';
 import memoizedTraceCriticalPath from '../CriticalPath/index';
 import ListView from './ListView';
+import SpanBarRow from './SpanBarRow';
 import criticalPathTest from '../CriticalPath/testCases/test2';
 
 jest.mock('./SpanTreeOffset');
 jest.mock('../../../utils/update-ui-find');
 
 jest.mock('./ListView', () => jest.fn());
+
+jest.mock('./SpanBarRow', () => {
+  const ActualSpanBarRow = jest.requireActual('./SpanBarRow').default;
+  return jest.fn(props => <ActualSpanBarRow {...props} />);
+});
 
 describe('<VirtualizedTraceViewImpl>', () => {
   let focusUiFindMatchesMock;
@@ -29,6 +35,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   beforeEach(() => {
     ListView.mockClear();
+    SpanBarRow.mockClear();
 
     ListView.mockImplementation(props => {
       const { dataLength, itemRenderer, getKeyFromIndex } = props;
@@ -418,8 +425,11 @@ describe('<VirtualizedTraceViewImpl>', () => {
         <VirtualizedTraceViewImpl {...mockProps} childrenHiddenIDs={childrenHiddenIDs} trace={altTrace} />
       );
       expect(screen.getByTestId('list-view')).toBeInTheDocument();
-      const rows = container.querySelectorAll('.VirtualizedTraceView--row');
-      expect(rows.length).toBeGreaterThan(0);
+      // verify VirtualizedTraceView detected the RPC span and passed rpc prop to SpanBarRow
+      const callsWithRpc = SpanBarRow.mock.calls.filter(
+        call => call[0].rpc !== undefined && call[0].rpc !== null
+      );
+      expect(callsWithRpc.length).toBeGreaterThan(0);
     });
 
     it('renders a SpanBarRow with a client or producer span and no instrumented server span', () => {
@@ -445,8 +455,13 @@ describe('<VirtualizedTraceViewImpl>', () => {
         const altTrace = updateSpan(trace, leafSpanIndex, { tags: tag });
         const { container } = render(<VirtualizedTraceViewImpl {...mockProps} trace={altTrace} />);
         expect(container.querySelector('.VirtualizedTraceView--spans')).toBeInTheDocument();
-        const rows = container.querySelectorAll('.VirtualizedTraceView--row');
-        expect(rows.length).toBe(trace.spans.length);
+
+        // Verify VirtualizedTraceView detected the external uninstrumented service
+        // and passed noInstrumentedServer prop to SpanBarRow
+        const callsWithNoInstrumentedServer = SpanBarRow.mock.calls.filter(
+          call => call[0].noInstrumentedServer !== undefined && call[0].noInstrumentedServer !== null
+        );
+        expect(callsWithNoInstrumentedServer.length).toBeGreaterThan(0);
       });
     });
 
@@ -459,9 +474,14 @@ describe('<VirtualizedTraceViewImpl>', () => {
     });
 
     it('renderSpanDetailRow returns null if detailState is missing', () => {
+      // Simulated by: mockProps.detailStates is initialized as an empty Map() in beforeEach.
+      // This means no spans have an entry in detailStates, so all spans are "not expanded for details".
+      // Expected: Only bar rows (one per span) should be rendered, with no detail rows.
+      // This tests that VirtualizedTraceView correctly skips rendering detail rows when
+      // a span doesn't have a detailState entry.
       const { container } = render(<VirtualizedTraceViewImpl {...mockProps} />);
       expect(container.querySelector('.VirtualizedTraceView--spans')).toBeInTheDocument();
-      // should only render bar rows, no detail rows
+      // Verify only bar rows are rendered (one per span), no detail rows
       const rows = container.querySelectorAll('.VirtualizedTraceView--row');
       expect(rows.length).toBe(trace.spans.length);
     });
@@ -469,6 +489,11 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   describe('Critical Path rendering', () => {
     it('renders Critical Path segments when row is not collapsed', () => {
+      // childrenHiddenIDs is NOT provided, so it uses the default empty Set from mockProps.
+      // This means all spans are in their normal expanded/uncollapsed state (no rows are collapsed).
+      // Expected: When spans are not collapsed, critical path segments are distributed across
+      // individual spans - each span displays its own portion of the critical path.
+      // This tests VirtualizedTraceView's responsibility to pass critical path data to SpanBarRow.
       const { container } = render(
         <VirtualizedTraceViewImpl
           {...mockProps}
@@ -501,7 +526,10 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const localInstance = container.querySelector('.VirtualizedTraceView--spans');
       expect(localInstance).toBeInTheDocument();
 
-      // Verify critical path segments render when rows collapsed
+      // Verify critical path segments render when rows collapsed.
+      // When a span is expanded and has children, its critical path indicator gets broken up
+      // and parts of it are pushed down to the children. When the span is collapsed, we show
+      // the critical path as belonging to this span alone (i.e. pulled up from children).
       const criticalPathSegments = container.querySelectorAll('[data-testid="SpanBar--criticalPath"]');
       expect(criticalPathSegments.length).toBeGreaterThan(0);
     });
@@ -608,12 +636,16 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(mockListView.forceUpdate).toHaveBeenCalled();
     });
 
-    it('handles list resize events when listView is null', () => {
+    it('does not crash when list resize event fires before listView is set', () => {
+      // Using the default ListView mock (from beforeEach) which doesn't call
+      // the ref callback, so listViewRef.current remains null.
+      // Expected: handleListResize checks if listViewRef.current exists before calling forceUpdate,
+      // so the component should handle this gracefully without crashing.
       render(<VirtualizedTraceViewImpl {...mockProps} />);
 
       const event = new Event('jaeger:list-resize');
-      window.dispatchEvent(event);
-      expect(true).toBe(true);
+      // should not throw - the handler checks for null and return early
+      expect(() => window.dispatchEvent(event)).not.toThrow();
     });
 
     it('handles detail measure events with spanID', () => {
@@ -651,12 +683,17 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(mockListView.forceUpdate).toHaveBeenCalled();
     });
 
-    it('handles detail measure events when listView is null', () => {
+    it('does not crash when detail measure event fires before listView is set', () => {
+      // Using the default ListView mock (from beforeEach) which doesn't call
+      // the ref callback, so listViewRef.current remains null.
+      // Expected: handleDetailMeasure checks if listViewRef.current exists. When null,
+      // it calls handleListResize which also checks for null and returns early.
+      // The component should handle this gracefully without crashing.
       render(<VirtualizedTraceViewImpl {...mockProps} />);
 
       const event = new CustomEvent('jaeger:detail-measure', { detail: { spanID: 'test-span-123' } });
-      window.dispatchEvent(event);
-      expect(true).toBe(true);
+      // Should not throw - the handler falls back to handleListResize which checks for null
+      expect(() => window.dispatchEvent(event)).not.toThrow();
     });
   });
 });
