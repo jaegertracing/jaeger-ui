@@ -11,7 +11,6 @@ import renderIntoCanvas, {
   MIN_ITEM_WIDTH,
   MIN_TOTAL_HEIGHT,
   MAX_ITEM_HEIGHT,
-  getBackgroundColor,
 } from './render-into-canvas';
 
 const getCanvasWidth = () => window.innerWidth * 2;
@@ -22,16 +21,6 @@ const getBgFillRect = (items, backgroundColor = DEFAULT_BG_COLOR) => ({
   width: getCanvasWidth(),
   x: 0,
   y: 0,
-});
-
-describe('getBackgroundColor()', () => {
-  it('returns light background color when isDark is false', () => {
-    expect(getBackgroundColor(false)).toBe(BG_COLOR_LIGHT);
-  });
-
-  it('returns dark background color when isDark is true', () => {
-    expect(getBackgroundColor(true)).toBe(BG_COLOR_DARK);
-  });
 });
 
 describe('renderIntoCanvas()', () => {
@@ -108,18 +97,6 @@ describe('renderIntoCanvas()', () => {
       const totalValueWidth = 4000;
       const getFillColor = getColorFactory();
       renderIntoCanvas(canvas, items, totalValueWidth, getFillColor);
-      expect(canvas.getContext.mock.calls).toEqual([['2d', { alpha: false }]]);
-      expect(canvas.contexts.length).toBe(1);
-      expect(canvas.contexts[0].fillRectAccumulator).toEqual(expectedDrawing);
-    });
-
-    it('draws the background with dark theme', () => {
-      const expectedDrawing = [getBgFillRect([], true)];
-      const canvas = new Canvas();
-      const items = [];
-      const totalValueWidth = 4000;
-      const getFillColor = getColorFactory();
-      renderIntoCanvas(canvas, items, totalValueWidth, getFillColor, true);
       expect(canvas.getContext.mock.calls).toEqual([['2d', { alpha: false }]]);
       expect(canvas.contexts.length).toBe(1);
       expect(canvas.contexts[0].fillRectAccumulator).toEqual(expectedDrawing);
