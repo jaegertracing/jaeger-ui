@@ -4,8 +4,7 @@
 import { TNil } from '../../../../types';
 
 // exported for tests
-export const BG_COLOR_LIGHT = '#fff';
-export const BG_COLOR_DARK = '#0b1625';
+export const DEFAULT_BG_COLOR = '#fff';
 export const ITEM_ALPHA = 0.8;
 export const MIN_ITEM_HEIGHT = 2;
 export const MAX_TOTAL_HEIGHT = 200;
@@ -13,20 +12,12 @@ export const MIN_ITEM_WIDTH = 10;
 export const MIN_TOTAL_HEIGHT = 60;
 export const MAX_ITEM_HEIGHT = 6;
 
-/**
- * Get the background color based on theme mode.
- * Exported for testing.
- */
-export function getBackgroundColor(isDark: boolean): string {
-  return isDark ? BG_COLOR_DARK : BG_COLOR_LIGHT;
-}
-
 export default function renderIntoCanvas(
   canvas: HTMLCanvasElement,
   items: { valueWidth: number; valueOffset: number; serviceName: string }[],
   totalValueWidth: number,
   getFillColor: (serviceName: string) => [number, number, number],
-  isDark: boolean = false
+  backgroundColor: string = DEFAULT_BG_COLOR
 ) {
   const fillCache: Map<string, string | TNil> = new Map();
   const cHeight =
@@ -40,7 +31,7 @@ export default function renderIntoCanvas(
   const itemYChange = cHeight / items.length;
 
   const ctx = canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
-  ctx.fillStyle = getBackgroundColor(isDark);
+  ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, cWidth, cHeight);
   for (let i = 0; i < items.length; i++) {
     const { valueWidth, valueOffset, serviceName } = items[i];

@@ -41,9 +41,15 @@ describe('<CanvasSpanGraph />', () => {
   afterEach(() => {
     // Restore the original prototype after each test
     HTMLCanvasElement.prototype.getContext = originalGetContext;
+    jest.restoreAllMocks();
   });
 
   it('renders without exploding', () => {
+    // Mock getComputedStyle
+    window.getComputedStyle = jest.fn().mockReturnValue({
+      getPropertyValue: jest.fn().mockReturnValue('#fff'),
+    });
+
     const { container, rerender } = render(<CanvasSpanGraph {...props} />);
     const canvas = container.querySelector('.CanvasSpanGraph');
 
@@ -56,12 +62,12 @@ describe('<CanvasSpanGraph />', () => {
 
     // Check if renderIntoCanvas was called again on update
     expect(renderUtils.default).toHaveBeenCalledTimes(2);
-    expect(renderUtils.default).toHaveBeenCalledWith(
+    expect(renderUtils.default).toHaveBeenLastCalledWith(
       canvas,
       items,
       props.valueWidth,
       expect.any(Function),
-      false // isDark = false in light mode
+      '#fff'
     );
   });
 

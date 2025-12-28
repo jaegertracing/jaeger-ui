@@ -4,8 +4,7 @@
 import _range from 'lodash/range';
 
 import renderIntoCanvas, {
-  BG_COLOR_LIGHT,
-  BG_COLOR_DARK,
+  DEFAULT_BG_COLOR,
   ITEM_ALPHA,
   MIN_ITEM_HEIGHT,
   MAX_TOTAL_HEIGHT,
@@ -16,8 +15,8 @@ import renderIntoCanvas, {
 } from './render-into-canvas';
 
 const getCanvasWidth = () => window.innerWidth * 2;
-const getBgFillRect = (items, isDark = false) => ({
-  fillStyle: isDark ? BG_COLOR_DARK : BG_COLOR_LIGHT,
+const getBgFillRect = (items, backgroundColor = DEFAULT_BG_COLOR) => ({
+  fillStyle: backgroundColor,
   height:
     !items || items.length < MIN_TOTAL_HEIGHT ? MIN_TOTAL_HEIGHT : Math.min(MAX_TOTAL_HEIGHT, items.length),
   width: getCanvasWidth(),
@@ -161,6 +160,17 @@ describe('renderIntoCanvas()', () => {
       expect(canvas.getContext.mock.calls).toEqual([['2d', { alpha: false }]]);
       expect(canvas.contexts.length).toBe(1);
       expect(canvas.contexts[0].fillRectAccumulator).toEqual(expectedDrawings);
+    });
+
+    it('draws the background with a custom color', () => {
+      const customBg = '#000';
+      const expectedDrawing = [getBgFillRect([], customBg)];
+      const canvas = new Canvas();
+      const items = [];
+      const totalValueWidth = 4000;
+      const getFillColor = getColorFactory();
+      renderIntoCanvas(canvas, items, totalValueWidth, getFillColor, customBg);
+      expect(canvas.contexts[0].fillRectAccumulator).toEqual(expectedDrawing);
     });
   });
 
