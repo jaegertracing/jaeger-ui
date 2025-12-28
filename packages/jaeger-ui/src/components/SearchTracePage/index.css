@@ -69,7 +69,7 @@ SPDX-License-Identifier: Apache-2.0
 
 /* Ant Design Input for dark mode */
 .SearchTracePage--find .ant-input {
-  background-color: var(--surface-tertiary);
+  background-color: var(--surface-primary);
   border-color: var(--border-default);
   color: var(--text-primary);
 }

@@ -36,7 +36,7 @@ SPDX-License-Identifier: Apache-2.0
 
   --text-primary: var(--ant-color-text);
   --text-secondary: var(--ant-color-text-secondary);
-  --text-muted: var(--ant-color-text-description);
+  --text-muted: color-mix(in srgb, var(--ant-color-text) 50%, transparent);
   --text-link: var(--ant-color-link);
   --text-link-hover: var(--ant-color-link-hover);
   --text-inverse: var(--ant-color-white);
