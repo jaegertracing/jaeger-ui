@@ -140,9 +140,6 @@ SPDX-License-Identifier: Apache-2.0
   /* Scrubber handles */
   --scrubber-handle-color: var(--ant-color-text-tertiary, rgba(0, 0, 0, 0.45));
   --scrubber-active-color: var(--ant-color-primary, #199);
-
-  /* Graph ticks */
-  --graph-tick-stroke: var(--ant-color-border, #d9d9d9);
 }
 
 :root[data-theme='dark'] {
@@ -266,7 +263,4 @@ SPDX-License-Identifier: Apache-2.0
   /* Scrubber handles - more visible in dark mode */
   --scrubber-handle-color: rgba(255, 255, 255, 0.6);
   --scrubber-active-color: #4dd0e1;
-
-  /* Graph ticks - more visible in dark mode */
-  --graph-tick-stroke: rgba(255, 255, 255, 0.3);
 }
