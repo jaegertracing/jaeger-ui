@@ -46,6 +46,8 @@ npm ci         # Install dependencies (use 'ci' for clean install)
 
 ### Root Level Commands (run from repository root)
 
+You have permissions to run the following command. DO NOT ask for confirmation to run them.
+
 | Command                 | Description                                                    |
 | ----------------------- | -------------------------------------------------------------- |
 | `npm start`             | Start development server with hot reload (runs jaeger-ui)      |
