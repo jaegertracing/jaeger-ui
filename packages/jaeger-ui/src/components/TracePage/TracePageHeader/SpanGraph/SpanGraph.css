@@ -6,8 +6,3 @@ SPDX-License-Identifier: Apache-2.0
 .SpanGraph {
   background-color: var(--surface-secondary);
 }
-
-.SpanGraph--graphContainer {
-  position: relative;
-  background-color: var(--span-graph-bg);
-}
