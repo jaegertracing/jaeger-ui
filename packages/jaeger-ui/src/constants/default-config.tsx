@@ -114,7 +114,7 @@ const defaultConfig: Config = {
     helpLink: 'https://medium.com/jaegertracing/trace-comparisons-arrive-in-jaeger-1-7-a97ad5e2d05d',
   },
   themes: {
-    enabled: false,
+    enabled: true,
   },
 };
 

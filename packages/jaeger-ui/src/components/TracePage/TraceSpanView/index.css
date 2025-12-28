@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
   padding-top: 0.3%;
   padding-bottom: 0.3%;
   padding-left: 0.4%;
-  background: rgb(236, 236, 236);
+  background: var(--surface-tertiary);
   margin-bottom: 0%;
 }
 
