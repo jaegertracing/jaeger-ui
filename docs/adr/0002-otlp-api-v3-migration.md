@@ -122,9 +122,9 @@ interface OtelSpan {
   kind: SpanKind;               // was: derived from tags['span.kind']
   
   // Timing (microseconds initially, nanoseconds later)
-  startTimeUnixMicro: number;   // was: startTime
-  endTimeUnixMicro: number;     // was: startTime + duration
-  duration: number;             // keep for convenience
+  startTimeUnixMicro: number;   // was: startTime (microseconds)
+  endTimeUnixMicro: number;     // was: startTime + duration (microseconds)
+  duration: number;             // duration in microseconds - keep for convenience
   
   // Core Data (OTEL terminology)
   attributes: Attribute[];      // was: tags: KeyValuePair[]
@@ -134,14 +134,14 @@ interface OtelSpan {
   
   // Context
   resource: Resource;           // was: process
-  instrumentationScope?: Scope; // new OTEL concept
+  instrumentationScope: Scope;  // new OTEL concept (required in OTEL)
   
   // UI-specific (derived properties - keep these)
   depth: number;
   hasChildren: boolean;
-  relativeStartTime: number;
+  relativeStartTime: number;    // microseconds since trace start
   childSpanIds: string[];
-  subsidiarilyReferencedBy: Link[];
+  subsidiarilyReferencedBy: Link[];  // spans that reference this span via links (not parent)
 }
 
 // OTEL Resource (was Process)
@@ -275,7 +275,7 @@ interface Status {
 
 ## Implementation Plan
 
-### Phase 1: Build OTEL Facade (3-4 weeks)
+### Phase 1: Build OTEL Facade
 
 **Goal**: Create facade layer that presents OTEL interface over legacy data.
 
@@ -368,7 +368,7 @@ interface Status {
 - [ ] Test with real trace data
 - [ ] Performance benchmarks (facade overhead should be minimal)
 
-### Phase 2: Component Migration (8-12 weeks)
+### Phase 2: Component Migration
 
 **Goal**: Migrate components incrementally to use OTEL facade.
 
@@ -427,35 +427,35 @@ interface Status {
 
 #### Detailed Component Breakdown
 
-**Week 1-2: Pilot Migration**
+**Pilot Migration**
 - [ ] `TraceTimelineViewer/SpanDetail/KeyValuesTable` - Tags → Attributes
 - [ ] `TraceTimelineViewer/SpanDetail/AccordianLogs` - Logs → Events
 
-**Week 3-4: Core Display Components**
+**Core Display Components**
 - [ ] `TraceTimelineViewer/VirtualizedTraceView` - Main trace view
 - [ ] `TraceTimelineViewer/SpanBarRow` - Span bars
 - [ ] `TraceTimelineViewer/SpanDetailRow` - Span details
 - [ ] `TraceTimelineViewer/utils` - Utility functions (isErrorSpan, etc.)
 
-**Week 5-6: Statistics & Analysis**
+**Statistics & Analysis**
 - [ ] `TraceStatistics/tableValues` - Heavy tag user
 - [ ] `TraceStatistics/PopupSql` - Tag extraction
 - [ ] `TraceStatistics/index` - Statistics display
 
-**Week 7-8: Search & Results**
+**Search & Results**
 - [ ] `SearchResults/ResultItem` - Service name display
 - [ ] `SearchTracePage` - Trace list
 
-**Week 9-10: Supporting Components**
+**Supporting Components**
 - [ ] `TracePageHeader` - Header info
 - [ ] `TraceFlamegraph` - Flamegraph view
 - [ ] `TraceSpanView` - Span table view
 
-**Week 11-12: Remaining Components**
+**Remaining Components**
 - [ ] All remaining Category B and C components
 - [ ] Verification and final testing
 
-### Phase 3: Backend API Switch (2-3 weeks)
+### Phase 3: Backend API Switch
 
 **Goal**: Switch from `/api/` to `/api/v3/` OTLP endpoints.
 
@@ -494,7 +494,7 @@ interface Status {
 - [ ] Add feature flag for gradual rollout
 - [ ] Testing and validation
 
-### Phase 4: Cleanup & Optimization (2-3 weeks)
+### Phase 4: Cleanup & Optimization
 
 **Goal**: Remove facade layer and legacy code.
 
@@ -619,25 +619,13 @@ Changes needed:
 
 ---
 
-## Timeline Summary
-
-| Phase               | Duration     | Deliverable                       |
-| ------------------- | ------------ | --------------------------------- |
-| Phase 1: Facade     | 3-4 weeks    | OTEL facade layer, selectors      |
-| Phase 2: Components | 8-12 weeks   | All components use OTEL           |
-| Phase 3: Backend    | 2-3 weeks    | Switch to /api/v3/ OTLP           |
-| Phase 4: Cleanup    | 2-3 weeks    | Remove facade, optimize           |
-| **Total**           | **15-22 weeks** | **OTEL-native Jaeger UI**      |
-
----
-
 ## Next Steps
 
 1. **Review & Approval** - Present ADR to team and stakeholders
 2. **Backend Coordination** - Confirm `/api/v3/` timeline with backend team
 3. **Phase 1 Kickoff** - Create facade layer structure
 4. **Pilot Migration** - Migrate 1-2 pilot components to validate approach
-5. **Component Migration** - Follow schedule with weekly reviews
+5. **Component Migration** - Follow incremental migration schedule
 6. **Backend Switch** - Coordinate switch to `/api/v3/`
 7. **Cleanup** - Remove facade and legacy code
 
