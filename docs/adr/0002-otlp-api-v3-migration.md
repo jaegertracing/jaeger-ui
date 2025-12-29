@@ -85,15 +85,6 @@ process.serviceName               // ~20 usages
 3. Future-proofing for OTEL-specific features
 4. Reduced cognitive load for users familiar with OTEL
 
-### Why Not Just Adapter Pattern?
-
-Initial approach (OTLP → legacy adapter) would be wrong:
-- ❌ UI still operates on legacy model internally
-- ❌ UI still displays legacy terminology
-- ❌ Components still use `span.tags`, `span.process`, `span.logs`
-- ❌ Doesn't achieve "OTEL-native" goal
-- ❌ Just changes backend without changing UI conceptually
-
 ### What We Need: Facade Pattern
 
 Build a **facade/wrapper over legacy data** that presents OTEL interface:
@@ -122,9 +113,9 @@ interface OtelSpan {
   kind: SpanKind;               // was: derived from tags['span.kind']
   
   // Timing (microseconds initially, nanoseconds later)
-  startTimeUnixMicro: number;   // was: startTime (microseconds)
-  endTimeUnixMicro: number;     // was: startTime + duration (microseconds)
-  duration: number;             // duration in microseconds - keep for convenience
+  startTimeUnixMicros: number;  // was: startTime
+  endTimeUnixMicros: number;    // was: startTime + duration
+  durationMicros: number;       // keep for convenience
   
   // Core Data (OTEL terminology)
   attributes: Attribute[];      // was: tags: KeyValuePair[]
@@ -139,7 +130,7 @@ interface OtelSpan {
   // UI-specific (derived properties - keep these)
   depth: number;
   hasChildren: boolean;
-  relativeStartTime: number;    // microseconds since trace start
+  relativeStartTimeMicros: number;    // microseconds since trace start
   childSpanIds: string[];
   subsidiarilyReferencedBy: Link[];  // spans that reference this span via links (not parent)
 }
@@ -484,7 +475,7 @@ interface Status {
   export function parseOtlpTrace(otlpData: any): OtelTrace {
     // Direct OTLP → OtelSpan (no legacy conversion)
     // Still add UI-specific derived fields:
-    // - depth, hasChildren, relativeStartTime, childSpanIds
+    // - depth, hasChildren, relativeStartTimeMicros, childSpanIds
   }
   ```
 
