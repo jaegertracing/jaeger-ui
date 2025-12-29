@@ -1,8 +1,8 @@
 # ADR 0002: Making Jaeger UI OpenTelemetry-Native
 
-**Status**: Proposed  
+**Status**: Accepted  
 **Last Updated**: 2025-12-29  
-**Next Review**: TBD
+**Reviewed**: 2025-12-29
 
 ---
 
@@ -632,6 +632,6 @@ Changes needed:
 
 ---
 
-**Status**: Awaiting Review  
-**Reviewers**: @yurishkuro, [TBD]  
-**Next Review Date**: [TBD]
+**Status**: Accepted  
+**Reviewed By**: @yurishkuro  
+**Review Date**: 2025-12-29
