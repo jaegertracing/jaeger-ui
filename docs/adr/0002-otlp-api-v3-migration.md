@@ -1,4 +1,4 @@
-# ADR 0002: Migration from Legacy Jaeger Data Model to OTLP via API v3
+# ADR 0002: Making Jaeger UI OpenTelemetry-Native
 
 **Status**: Proposed  
 **Last Updated**: 2025-12-29  
@@ -8,9 +8,11 @@
 
 ## TL;DR
 
-This ADR presents a comprehensive plan to migrate Jaeger UI from the legacy Jaeger data model (served via REST `/api/` endpoints with JSON) to the OpenTelemetry Protocol (OTLP) data model served via gRPC-Web or JSON from `/api/v3/` endpoints. This migration aligns Jaeger with the OpenTelemetry ecosystem, enables interoperability with other observability tools, and positions Jaeger UI to leverage future OTLP enhancements.
+This ADR presents a plan to make Jaeger UI "OpenTelemetry-native" by migrating the UI to use OpenTelemetry (OTEL) nomenclature and concepts throughout. We will build a facade over the existing internal data model that presents an OTEL-centric interface, migrate components incrementally to use OTEL terminology (attributes instead of tags, resource instead of process, events instead of logs), and finally switch to consuming OTLP data directly from `/api/v3/` endpoints.
 
-**Recommendation**: Adopt a phased, backward-compatible migration approach using an adapter pattern to transform OTLP data to the internal data model, minimizing disruption while enabling a gradual transition.
+**Key Insight**: Most components don't deeply depend on the exact trace data model - they only access small bits of it. This allows piecemeal migration.
+
+**Recommendation**: Adopt a facade pattern over the legacy internal data model, enabling incremental component migration to OTEL nomenclature before switching backend APIs.
 
 ---
 
@@ -18,816 +20,584 @@ This ADR presents a comprehensive plan to migrate Jaeger UI from the legacy Jaeg
 
 ### Current State
 
-Jaeger UI currently consumes trace data through a REST API (`/api/`) that returns trace data in the legacy Jaeger JSON format. The data flows through the following architecture:
+Jaeger UI currently uses legacy Jaeger terminology throughout:
+- **tags** (not OTEL "attributes")
+- **process** (not OTEL "resource")
+- **logs** (not OTEL "events")
+- **serviceName** (not OTEL "resource.attributes['service.name']")
+- **KeyValuePair** (not OTEL "Attribute" with typed values)
+
+### The Data Flow
 
 ```
-┌────────────────────────────────────────────────────────────────────┐
-│ Current Architecture (Legacy Jaeger Model)                        │
-├────────────────────────────────────────────────────────────────────┤
-│                                                                    │
-│  Backend (Jaeger Query)                                           │
-│  └─ REST API (/api/)                                              │
-│     ├─ GET /api/traces/:id        → Returns Trace JSON           │
-│     ├─ GET /api/traces             → Search traces                │
-│     ├─ GET /api/services           → List services                │
-│     ├─ GET /api/services/:svc/operations → List operations        │
-│     ├─ GET /api/operations         → Get operations by kind       │
-│     ├─ GET /api/dependencies       → Dependency graph             │
-│     ├─ GET /api/metrics/:type      → Metrics (latencies, etc)     │
-│     └─ POST /api/transform         → Transform OTLP → Jaeger      │
-│          ▲                                                         │
-│          │ (Currently used only for file uploads)                 │
-│          │                                                         │
-│  ┌───────▼────────────────────────────────────────────────┐       │
-│  │ API Layer (packages/jaeger-ui/src/api/jaeger.ts)      │       │
-│  │ - fetchTrace(), searchTraces(), fetchServices(), etc.  │       │
-│  │ - All methods call REST /api/ endpoints               │       │
-│  └────────────────────────────────────────────────────────┘       │
-│          │                                                         │
-│          ▼                                                         │
-│  ┌───────────────────────────────────────────────────────┐        │
-│  │ Actions (packages/jaeger-ui/src/actions/jaeger-api.ts)│        │
-│  │ - Redux action creators using redux-actions            │        │
-│  │ - Wraps API calls with action types                   │        │
-│  └────────────────────────────────────────────────────────┘        │
-│          │                                                         │
-│          ▼                                                         │
-│  ┌────────────────────────────────────────────────────────┐       │
-│  │ Reducers (packages/jaeger-ui/src/reducers/trace.ts)   │       │
-│  │ - Calls transformTraceData() on received data          │       │
-│  │ - Manages Redux state for traces, search, services    │       │
-│  └────────────────────────────────────────────────────────┘       │
-│          │                                                         │
-│          ▼                                                         │
-│  ┌─────────────────────────────────────────────────────────────┐  │
-│  │ Transform Layer (src/model/transform-trace-data.tsx)       │  │
-│  │ - Enriches trace data with derived properties               │  │
-│  │ - Deduplicates and orders tags                              │  │
-│  │ - Builds span tree structure                                │  │
-│  │ - Calculates trace duration, service counts                 │  │
-│  │ - Detects orphan spans                                      │  │
-│  └─────────────────────────────────────────────────────────────┘  │
-│          │                                                         │
-│          ▼                                                         │
-│  ┌────────────────────────────────────────────────────────┐       │
-│  │ Components (React)                                      │       │
-│  │ - TracePage, SearchTracePage, DeepDependencies, etc.   │       │
-│  │ - Consume enriched trace data from Redux store         │       │
-│  └────────────────────────────────────────────────────────┘       │
-│                                                                    │
-└────────────────────────────────────────────────────────────────────┘
+Backend (/api/) 
+  → API Layer (jaeger.ts)
+    → Actions (jaeger-api.ts)
+      → Reducers (trace.ts) + Transform (transform-trace-data.tsx)
+        → Redux Store (legacy Jaeger model)
+          → Components (100+)
 ```
 
 ### Legacy Jaeger Data Model
 
-The current data model is defined in `packages/jaeger-ui/src/types/trace.tsx`:
-
 ```typescript
-// Core types
+// Current internal types (src/types/trace.tsx)
 KeyValuePair { key: string, value: any }
 Process { serviceName: string, tags: KeyValuePair[] }
 Log { timestamp: number, fields: KeyValuePair[] }
-SpanReference { refType: 'CHILD_OF' | 'FOLLOWS_FROM', spanID, traceID, span? }
-SpanData { spanID, traceID, processID, operationName, startTime, duration,
-           logs, tags?, references?, warnings?, childSpanIds? }
-Span extends SpanData { depth, hasChildren, process, relativeStartTime,
-                        subsidiarilyReferencedBy, ... }
-Trace { traceID, processes: Record<string, Process>, spans: Span[],
-        duration, startTime, endTime, services, traceName, ... }
+Span {
+  spanID, traceID, processID,
+  operationName,
+  startTime, duration,
+  tags: KeyValuePair[],
+  logs: Log[],
+  process: Process,
+  references: SpanReference[],
+  ...
+}
 ```
 
-### Key Dependencies
+### Component Usage Patterns
 
-The legacy data model is deeply integrated into:
+Analysis of 100+ components shows most access data through **simple properties**:
 
-1. **Type Definitions** (`src/types/trace.tsx`): ~85 LOC defining core types
-2. **API Layer** (`src/api/jaeger.ts`): ~141 LOC with 12+ API methods
-3. **Transform Layer** (`src/model/transform-trace-data.tsx`): ~192 LOC of enrichment logic
-4. **Selectors** (`src/selectors/trace.tsx`): Tree building and span selection
-5. **Components**: 100+ components consuming trace data
-6. **Reducers**: State management for traces, search, services
-7. **Tests**: ~205 test files validating behavior
+```typescript
+// Common patterns in components:
+span.process.serviceName          // ~30 usages
+span.tags.find(t => t.key === X)  // ~25 usages
+span.logs                         // ~15 usages
+span.operationName                // ~40 usages
+process.serviceName               // ~20 usages
+```
+
+**Key Observation**: Components don't deeply couple to data structure - they use simple accessor patterns.
 
 ### Problem Statement
 
-1. **Legacy Format**: The Jaeger-specific JSON format is not compatible with the OpenTelemetry ecosystem
-2. **Limited Interoperability**: Cannot easily consume OTLP data from other sources (e.g., OTEL Collector, vendor backends)
-3. **Manual Transformation**: Currently relies on backend `/api/transform` endpoint to convert OTLP → Jaeger (only for file uploads)
-4. **Future-Proofing**: OTLP is the industry standard; staying on legacy format limits future enhancements
-5. **Maintenance Burden**: Maintaining a legacy format alongside OTLP creates technical debt
+**Goal**: Make Jaeger UI "OpenTelemetry-native"
+- UI should use OTEL nomenclature everywhere
+- Information architecture should match OTEL concepts
+- Users should see OTEL terminology (attributes, resource, events)
 
-### OTLP Data Model (API v3)
+**Why This Matters**:
+1. Alignment with industry standard (OpenTelemetry)
+2. Consistency with OTEL ecosystem and documentation
+3. Future-proofing for OTEL-specific features
+4. Reduced cognitive load for users familiar with OTEL
 
-The new API v3 is based on [jaeger-idl/proto/api_v3](https://github.com/jaegertracing/jaeger-idl/tree/main/proto/api_v3) which uses OTLP (OpenTelemetry Protocol) as defined in the [OpenTelemetry specification](https://opentelemetry.io/docs/specs/otel/protocol/).
+### Why Not Just Adapter Pattern?
 
-Key OTLP structures:
+Initial approach (OTLP → legacy adapter) would be wrong:
+- ❌ UI still operates on legacy model internally
+- ❌ UI still displays legacy terminology
+- ❌ Components still use `span.tags`, `span.process`, `span.logs`
+- ❌ Doesn't achieve "OTEL-native" goal
+- ❌ Just changes backend without changing UI conceptually
 
-```
-ResourceSpans {
-  resource: Resource { attributes: KeyValue[] }
-  scopeSpans: ScopeSpans[] {
-    scope: InstrumentationScope { name, version, attributes }
-    spans: Span[] {
-      traceId: bytes
-      spanId: bytes
-      parentSpanId: bytes
-      name: string
-      kind: SpanKind (INTERNAL, SERVER, CLIENT, PRODUCER, CONSUMER)
-      startTimeUnixNano: fixed64
-      endTimeUnixNano: fixed64
-      attributes: KeyValue[]
-      events: Event[] { timeUnixNano, name, attributes }
-      links: Link[] { traceId, spanId, attributes }
-      status: Status { code, message }
-    }
-  }
+### What We Need: Facade Pattern
+
+Build a **facade/wrapper over legacy data** that presents OTEL interface:
+1. Legacy data stays in Redux store (initially)
+2. Facade layer presents OTEL view: `.attributes`, `.resource`, `.events`
+3. Components migrate to use facade (OTEL nomenclature)
+4. Once all components migrated, swap to real OTLP from `/api/v3/`
+5. Remove facade layer
+
+---
+
+## OTEL Data Model (Target State)
+
+### OTEL Span Interface
+
+```typescript
+// Target: OTEL-centric interface
+interface OtelSpan {
+  // Identity
+  traceId: string;              // was: traceID
+  spanId: string;               // was: spanID
+  parentSpanId?: string;        // was: references[0].spanID
+  
+  // Naming & Classification
+  name: string;                 // was: operationName
+  kind: SpanKind;               // was: derived from tags['span.kind']
+  
+  // Timing (microseconds initially, nanoseconds later)
+  startTimeUnixMicro: number;   // was: startTime
+  endTimeUnixMicro: number;     // was: startTime + duration
+  duration: number;             // keep for convenience
+  
+  // Core Data (OTEL terminology)
+  attributes: Attribute[];      // was: tags: KeyValuePair[]
+  events: Event[];              // was: logs: Log[]
+  links: Link[];                // was: references (except parent)
+  status: Status;               // was: derived from tags['error'], etc.
+  
+  // Context
+  resource: Resource;           // was: process
+  instrumentationScope?: Scope; // new OTEL concept
+  
+  // UI-specific (derived properties - keep these)
+  depth: number;
+  hasChildren: boolean;
+  relativeStartTime: number;
+  childSpanIds: string[];
+  subsidiarilyReferencedBy: Link[];
 }
 
-KeyValue {
-  key: string
-  value: AnyValue { stringValue | intValue | doubleValue | boolValue |
-                     arrayValue | kvlistValue | bytesValue }
+// OTEL Resource (was Process)
+interface Resource {
+  attributes: Attribute[];      // includes service.name, etc.
+  serviceName: string;          // convenience: attributes['service.name']
+}
+
+// OTEL Attribute (was KeyValuePair)
+interface Attribute {
+  key: string;
+  value: AttributeValue;        // string | number | boolean | array | object
+}
+
+// OTEL Event (was Log)
+interface Event {
+  timeUnixMicro: number;        // was: timestamp
+  name: string;                 // new: event type/name
+  attributes: Attribute[];      // was: fields: KeyValuePair[]
+}
+
+// OTEL Link (was SpanReference for non-parent refs)
+interface Link {
+  traceId: string;
+  spanId: string;
+  attributes: Attribute[];
+}
+
+// OTEL Status
+interface Status {
+  code: StatusCode;             // ERROR, OK, UNSET
+  message?: string;
 }
 ```
 
-### Key Differences
+### Nomenclature Mapping
 
-| Aspect           | Legacy Jaeger                  | OTLP (API v3)                       |
-| ---------------- | ------------------------------ | ----------------------------------- |
-| **Format**       | Jaeger-specific JSON           | OTLP (protobuf or JSON)             |
-| **Span ID**      | String (hex)                   | bytes (16 bytes)                    |
-| **Trace ID**     | String (hex, 16 or 32 chars)   | bytes (16 bytes, 128-bit)           |
-| **Time Units**   | Microseconds                   | Nanoseconds                         |
-| **Tags**         | KeyValuePair[]                 | attributes: KeyValue[] (typed)      |
-| **Logs**         | Log { fields: KeyValuePair[] } | events: Event[]                     |
-| **References**   | references: SpanReference[]    | parentSpanId + links: Link[]        |
-| **Process**      | Top-level processes map        | resource.attributes (service.name)  |
-| **Service Name** | process.serviceName            | resource.attributes["service.name"] |
-| **Transport**    | REST/JSON                      | gRPC-Web or JSON (HTTP/2)           |
+| Legacy Jaeger         | OpenTelemetry           | Notes                     |
+| --------------------- | ----------------------- | ------------------------- |
+| `tags`                | `attributes`            | Core terminology change   |
+| `process`             | `resource`              | Context terminology       |
+| `process.serviceName` | `resource.serviceName`  | Convenience accessor      |
+| `logs`                | `events`                | Semantic events not logs  |
+| `operationName`       | `name`                  | Simpler, standard name    |
+| `KeyValuePair`        | `Attribute`             | Typed values in OTEL      |
+| `references`          | `parentSpanId + links`  | Split parent vs other refs|
+| `spanID, traceID`     | `spanId, traceId`       | CamelCase consistency     |
 
 ---
 
 ## Decision
 
-**Adopt a phased, backward-compatible migration approach** using the following strategy:
+**Adopt a facade pattern approach with incremental component migration:**
 
-1. **Adapter Pattern**: Create an OTLP-to-Internal adapter that transforms OTLP data into the current internal data model
-2. **Dual API Support**: Support both `/api/` (legacy) and `/api/v3/` (OTLP) simultaneously
-3. **Feature Flag**: Use configuration to toggle between legacy and OTLP APIs
-4. **Progressive Migration**: Migrate API endpoints one at a time, starting with read-only trace fetching
-5. **No Breaking Changes**: Maintain existing component interfaces during migration
-6. **Future Flexibility**: Position for eventual removal of adapter and direct OTLP consumption
+1. **Phase 1**: Build OTEL facade over legacy internal data model
+2. **Phase 2**: Migrate components to use facade (OTEL nomenclature)
+3. **Phase 3**: Switch backend to `/api/v3/` OTLP data
+4. **Phase 4**: Remove facade, use OTLP data directly
 
 ### Architecture Overview
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│ Proposed Architecture (Dual Support → OTLP Native)                    │
-├────────────────────────────────────────────────────────────────────────┤
-│                                                                        │
-│  Backend (Jaeger Query v2)                                            │
-│  ├─ REST API (/api/) - LEGACY                                         │
-│  └─ gRPC-Web/JSON API (/api/v3/) - NEW ✨                             │
-│     ├─ GetTrace(traceId) → TracesData (OTLP)                          │
-│     ├─ FindTraces(query) → TracesData (OTLP)                          │
-│     ├─ GetServices() → GetServicesResponse                            │
-│     ├─ GetOperations(service) → GetOperationsResponse                 │
-│     └─ GetDependencies() → GetDependenciesResponse                    │
-│                                                                        │
-│  ┌──────────────────────────────────────────────────────────┐         │
-│  │ NEW: API Client Abstraction                              │         │
-│  │ (packages/jaeger-ui/src/api/)                            │         │
-│  │                                                           │         │
-│  │  ┌────────────────┐         ┌─────────────────┐          │         │
-│  │  │ api/client.ts  │◄────────┤ Feature Flag    │          │         │
-│  │  │ (Facade)       │         │ useApiV3: bool  │          │         │
-│  │  └────────┬───────┘         └─────────────────┘          │         │
-│  │           │                                               │         │
-│  │           ├──► Legacy Path                                │         │
-│  │           │    └─ jaeger.ts (existing REST /api/)        │         │
-│  │           │                                               │         │
-│  │           └──► OTLP Path                                  │         │
-│  │                ├─ api/v3/client.ts (gRPC-Web or fetch)   │         │
-│  │                └─ api/v3/adapter.ts (OTLP → Internal)    │         │
-│  │                                                           │         │
-│  └───────────────────────────────────────────────────────────┘         │
-│          │                                                             │
-│          ▼                                                             │
-│  ┌────────────────────────────────────────────────────────┐           │
-│  │ Actions (no changes required)                          │           │
-│  │ - Same action creators, different data source          │           │
-│  └────────────────────────────────────────────────────────┘           │
-│          │                                                             │
-│          ▼                                                             │
-│  ┌────────────────────────────────────────────────────────┐           │
-│  │ Reducers (minimal changes)                             │           │
-│  │ - transformTraceData() continues to work               │           │
-│  │ - Data already in internal format from adapter         │           │
-│  └────────────────────────────────────────────────────────┘           │
-│          │                                                             │
-│          ▼                                                             │
-│  ┌────────────────────────────────────────────────────────┐           │
-│  │ Components (no changes)                                │           │
-│  │ - Continue using existing interfaces                   │           │
-│  └────────────────────────────────────────────────────────┘           │
-│                                                                        │
-└────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│ Phase 1-2: Facade Pattern (OTEL view of legacy data)            │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Backend (/api/ - legacy Jaeger JSON)                           │
+│    ↓                                                             │
+│  API Layer + Actions + Reducers (unchanged)                     │
+│    ↓                                                             │
+│  Redux Store: Legacy Jaeger Model                               │
+│    {                                                             │
+│      spans: Span[]  // legacy structure                         │
+│      // spanID, operationName, tags, logs, process, etc.        │
+│    }                                                             │
+│    ↓                                                             │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ OTEL FACADE LAYER (NEW)                                  │   │
+│  │ src/model/otel-facade/                                   │   │
+│  │                                                           │   │
+│  │  - OtelSpanFacade wraps Span                             │   │
+│  │    • .attributes → maps span.tags                        │   │
+│  │    • .resource → maps span.process                       │   │
+│  │    • .events → maps span.logs                            │   │
+│  │    • .name → maps span.operationName                     │   │
+│  │    • .spanId → maps span.spanID                          │   │
+│  │                                                           │   │
+│  │  - OtelTraceFacade wraps Trace                           │   │
+│  │    • .spans → returns OtelSpanFacade[]                   │   │
+│  │                                                           │   │
+│  │  - Selectors: useOtelSpan(), useOtelTrace()             │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│    ↓                                                             │
+│  Components (GRADUALLY MIGRATED)                                │
+│  - Use otelSpan.attributes instead of span.tags                 │
+│  - Use otelSpan.resource instead of span.process                │
+│  - Use otelSpan.events instead of span.logs                     │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Phase 3-4: Native OTLP (remove facade)                          │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Backend (/api/v3/ - OTLP JSON/protobuf)                        │
+│    ↓                                                             │
+│  API Layer: OTLP Client (NEW)                                   │
+│    ↓                                                             │
+│  Redux Store: OTLP Model (DIRECTLY)                             │
+│    {                                                             │
+│      spans: OtelSpan[]  // native OTLP structure                │
+│      // spanId, name, attributes, events, resource, etc.        │
+│    }                                                             │
+│    ↓                                                             │
+│  Components (ALREADY MIGRATED - no changes needed)              │
+│  - Already using .attributes, .resource, .events                │
+│  - Facade removed, using native OTLP directly                   │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ### Core Principles
 
-1. **Backward Compatibility**: No breaking changes to components or existing functionality
-2. **Incremental Migration**: Each API endpoint can be migrated independently
-3. **Feature-Flag Controlled**: Easy rollback if issues are discovered
-4. **Testable**: Both paths can be tested in parallel
-5. **Future-Ready**: Clear path to remove adapter and consume OTLP directly
+1. **OTEL-Native UI**: All components use OTEL terminology
+2. **Incremental Migration**: Migrate components one-by-one
+3. **Testable**: Each component migration is independently testable
+4. **Backwards Compatible**: Old and new components coexist during migration
+5. **Backend Switch Last**: Change backend API only after UI is ready
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Foundation (2-3 weeks)
+### Phase 1: Build OTEL Facade (3-4 weeks)
 
-**Goal**: Set up infrastructure for dual API support without breaking existing functionality.
+**Goal**: Create facade layer that presents OTEL interface over legacy data.
 
-#### 1.1 Project Setup
+#### 1.1 Create Facade Types
 
-- [ ] Create new directory structure:
-
-  ```
-  packages/jaeger-ui/src/api/
-  ├── jaeger.ts              (existing - legacy REST API)
-  ├── client.ts              (NEW - API client facade)
-  ├── v3/
-  │   ├── client.ts          (NEW - OTLP API client)
-  │   ├── adapter.ts         (NEW - OTLP → Internal adapter)
-  │   ├── types.ts           (NEW - OTLP type definitions)
-  │   └── utils.ts           (NEW - Conversion utilities)
-  └── __tests__/
-      ├── v3-adapter.test.ts (NEW - Adapter tests)
-      └── v3-client.test.ts  (NEW - Client tests)
-  ```
-
-- [ ] Add feature flag to `src/types/config.tsx`:
-
+- [ ] Create `src/types/otel.tsx` with OTEL interfaces:
   ```typescript
-  export type Config = {
-    // ... existing fields
-    apiV3: {
-      enabled: boolean;
-      endpoint?: string; // e.g., '/api/v3'
-      format?: 'json' | 'protobuf';
-    };
+  export interface OtelSpan { ... }
+  export interface OtelTrace { ... }
+  export interface Resource { ... }
+  export interface Attribute { ... }
+  export interface Event { ... }
+  export interface Link { ... }
+  export interface Status { ... }
+  export enum SpanKind { ... }
+  export enum StatusCode { ... }
+  ```
+
+#### 1.2 Implement Facade Classes
+
+- [ ] Create `src/model/otel-facade/OtelSpanFacade.tsx`:
+  ```typescript
+  export class OtelSpanFacade implements OtelSpan {
+    constructor(private legacySpan: Span) {}
+    
+    // Map legacy → OTEL
+    get spanId(): string { return this.legacySpan.spanID; }
+    get name(): string { return this.legacySpan.operationName; }
+    get attributes(): Attribute[] { 
+      return this.legacySpan.tags.map(kv => ({
+        key: kv.key,
+        value: kv.value
+      }));
+    }
+    get resource(): Resource {
+      return {
+        attributes: this.legacySpan.process.tags,
+        serviceName: this.legacySpan.process.serviceName
+      };
+    }
+    get events(): Event[] {
+      return this.legacySpan.logs.map(log => ({
+        timeUnixMicro: log.timestamp,
+        name: log.fields.find(f => f.key === 'event')?.value || 'log',
+        attributes: log.fields
+      }));
+    }
+    // ... all other mappings
+  }
+  ```
+
+- [ ] Create `src/model/otel-facade/OtelTraceFacade.tsx`
+- [ ] Create `src/model/otel-facade/index.tsx` (exports)
+
+#### 1.3 Create Facade Selectors
+
+- [ ] Create `src/selectors/otel.tsx`:
+  ```typescript
+  // Redux selectors that return facade wrappers
+  export const selectOtelTrace = (state, traceId) => {
+    const legacyTrace = selectTrace(state, traceId);
+    return legacyTrace ? new OtelTraceFacade(legacyTrace) : null;
+  };
+  
+  export const selectOtelSpans = (state, traceId) => {
+    const legacyTrace = selectTrace(state, traceId);
+    return legacyTrace?.spans.map(s => new OtelSpanFacade(s)) || [];
   };
   ```
 
-- [ ] Update `src/constants/default-config.tsx`:
+#### 1.4 Create React Hooks
+
+- [ ] Create `src/hooks/useOtelTrace.tsx`:
   ```typescript
-  apiV3: {
-    enabled: false,  // Start disabled
-    endpoint: '/api/v3',
-    format: 'json',
-  },
+  export const useOtelTrace = (traceId: string): OtelTrace | null => {
+    const trace = useSelector(state => selectOtelTrace(state, traceId));
+    return trace;
+  };
+  
+  export const useOtelSpan = (traceId: string, spanId: string): OtelSpan | null => {
+    const spans = useSelector(state => selectOtelSpans(state, traceId));
+    return spans.find(s => s.spanId === spanId) || null;
+  };
   ```
 
-#### 1.2 OTLP Type Definitions
+#### 1.5 Testing
 
-- [ ] Create `src/api/v3/types.ts` with OTLP type definitions:
+- [ ] Unit tests for each facade class
+- [ ] Test all property mappings
+- [ ] Test with real trace data
+- [ ] Performance benchmarks (facade overhead should be minimal)
 
-  ```typescript
-  // Based on OpenTelemetry proto definitions
-  export interface IOtlpKeyValue {
-    key: string;
-    value: IOtlpAnyValue;
-  }
+### Phase 2: Component Migration (8-12 weeks)
 
-  export interface IOtlpAnyValue {
-    stringValue?: string;
-    intValue?: number;
-    doubleValue?: number;
-    boolValue?: boolean;
-    arrayValue?: IOtlpArrayValue;
-    kvlistValue?: IOtlpKeyValueList;
-    bytesValue?: Uint8Array;
-  }
+**Goal**: Migrate components incrementally to use OTEL facade.
 
-  export interface IOtlpSpan {
-    traceId: Uint8Array;
-    spanId: Uint8Array;
-    parentSpanId?: Uint8Array;
-    name: string;
-    kind: SpanKind;
-    startTimeUnixNano: number;
-    endTimeUnixNano: number;
-    attributes: IOtlpKeyValue[];
-    events: IOtlpEvent[];
-    links: IOtlpLink[];
-    status?: IOtlpStatus;
-  }
+#### Component Categories
 
-  export interface IOtlpResourceSpans {
-    resource: IOtlpResource;
-    scopeSpans: IOtlpScopeSpans[];
-  }
+**Category A: High Priority - Heavy Tag/Process/Log Users** (~20 components)
+- TraceTimelineViewer components (SpanDetail, VirtualizedTraceView, etc.)
+- TraceStatistics components
+- SearchResults components
 
-  // ... additional types
-  ```
+**Category B: Medium Priority - Moderate Users** (~30 components)
+- TracePage header components
+- TraceSpanView components
+- Flamegraph components
 
-#### 1.3 Utility Functions
+**Category C: Low Priority - Light or No Direct Usage** (~50 components)
+- Layout/container components
+- Utility components
 
-- [ ] Create `src/api/v3/utils.ts`:
+#### Per-Component Migration
 
-  ```typescript
-  // Convert bytes to hex string
-  export function bytesToHex(bytes: Uint8Array): string;
+**For each component:**
 
-  // Convert hex string to bytes
-  export function hexToBytes(hex: string): Uint8Array;
+1. **Identify legacy property usage:**
+   - `span.tags` → `otelSpan.attributes`
+   - `span.process` → `otelSpan.resource`
+   - `span.logs` → `otelSpan.events`
+   - `span.operationName` → `otelSpan.name`
+   - `span.spanID` → `otelSpan.spanId`
+   - `process.serviceName` → `resource.serviceName`
 
-  // Convert nanoseconds to microseconds
-  export function nanoToMicro(nano: number): number;
+2. **Update to use facade:**
+   ```typescript
+   // Before:
+   const span = useSelector(state => selectSpan(state, spanId));
+   const tags = span.tags;
+   const serviceName = span.process.serviceName;
+   
+   // After:
+   const otelSpan = useOtelSpan(traceId, spanId);
+   const attributes = otelSpan.attributes;
+   const serviceName = otelSpan.resource.serviceName;
+   ```
 
-  // Convert microseconds to nanoseconds
-  export function microToNano(micro: number): number;
+3. **Update UI labels:**
+   - "Tags" → "Attributes"
+   - "Process" → "Resource"
+   - "Logs" → "Events"
 
-  // Extract service name from OTLP resource
-  export function extractServiceName(resource: IOtlpResource): string;
+4. **Update tests:**
+   - Mock OtelSpan instead of Span
+   - Test with facade wrapped data
 
-  // Convert OTLP AnyValue to simple value
-  export function otlpValueToSimple(value: IOtlpAnyValue): any;
-  ```
+5. **Visual regression test**
+6. **Code review and merge**
 
-#### 1.4 Comprehensive Tests
+#### Detailed Component Breakdown
 
-- [ ] Unit tests for utility functions
-- [ ] Unit tests for type conversions
-- [ ] Integration tests with mock OTLP data
+**Week 1-2: Pilot Migration**
+- [ ] `TraceTimelineViewer/SpanDetail/KeyValuesTable` - Tags → Attributes
+- [ ] `TraceTimelineViewer/SpanDetail/AccordianLogs` - Logs → Events
 
-### Phase 2: OTLP Adapter (3-4 weeks)
+**Week 3-4: Core Display Components**
+- [ ] `TraceTimelineViewer/VirtualizedTraceView` - Main trace view
+- [ ] `TraceTimelineViewer/SpanBarRow` - Span bars
+- [ ] `TraceTimelineViewer/SpanDetailRow` - Span details
+- [ ] `TraceTimelineViewer/utils` - Utility functions (isErrorSpan, etc.)
 
-**Goal**: Create adapter to transform OTLP data to internal Jaeger format.
+**Week 5-6: Statistics & Analysis**
+- [ ] `TraceStatistics/tableValues` - Heavy tag user
+- [ ] `TraceStatistics/PopupSql` - Tag extraction
+- [ ] `TraceStatistics/index` - Statistics display
 
-#### 2.1 Core Adapter Implementation
+**Week 7-8: Search & Results**
+- [ ] `SearchResults/ResultItem` - Service name display
+- [ ] `SearchTracePage` - Trace list
 
-- [ ] Create `src/api/v3/adapter.ts`:
+**Week 9-10: Supporting Components**
+- [ ] `TracePageHeader` - Header info
+- [ ] `TraceFlamegraph` - Flamegraph view
+- [ ] `TraceSpanView` - Span table view
 
-  ```typescript
-  import { IOtlpResourceSpans } from './types';
-  import { TraceData, SpanData, Process } from '../../types/trace';
+**Week 11-12: Remaining Components**
+- [ ] All remaining Category B and C components
+- [ ] Verification and final testing
 
-  export class OtlpAdapter {
-    /**
-     * Convert OTLP TracesData to internal TraceData format
-     */
-    static convertTrace(otlpData: IOtlpResourceSpans[]): TraceData;
+### Phase 3: Backend API Switch (2-3 weeks)
 
-    /**
-     * Convert OTLP Span to internal SpanData
-     */
-    static convertSpan(otlpSpan: IOtlpSpan, resource: IOtlpResource, processId: string): SpanData;
+**Goal**: Switch from `/api/` to `/api/v3/` OTLP endpoints.
 
-    /**
-     * Convert OTLP Resource to internal Process
-     */
-    static convertResource(resource: IOtlpResource): Process;
-
-    /**
-     * Convert OTLP attributes to KeyValuePair[]
-     */
-    static convertAttributes(attrs: IOtlpKeyValue[]): KeyValuePair[];
-
-    /**
-     * Convert OTLP events to logs
-     */
-    static convertEvents(events: IOtlpEvent[]): Log[];
-
-    /**
-     * Convert OTLP links + parentSpanId to references
-     */
-    static convertReferences(
-      parentSpanId: Uint8Array | undefined,
-      links: IOtlpLink[],
-      traceId: string
-    ): SpanReference[];
-  }
-  ```
-
-#### 2.2 Adapter Features
-
-- [ ] Handle OTLP span links → Jaeger references mapping
-- [ ] Convert parent span relationship to CHILD_OF reference
-- [ ] Convert OTLP links to FOLLOWS_FROM references
-- [ ] Map OTLP resource attributes to Process.serviceName and tags
-- [ ] Convert nanosecond timestamps to microseconds
-- [ ] Convert byte arrays (trace/span IDs) to hex strings
-- [ ] Handle OTLP AnyValue types → simple JavaScript values
-- [ ] Preserve all OTLP metadata that doesn't have Jaeger equivalent (in tags)
-- [ ] Handle missing or malformed data gracefully
-
-#### 2.3 Edge Cases & Validation
-
-- [ ] Handle traces with multiple services (multiple ResourceSpans)
-- [ ] Handle missing service.name in resource attributes
-- [ ] Handle empty or missing parent span IDs
-- [ ] Validate trace ID and span ID formats
-- [ ] Handle timestamp edge cases (zero, very large values)
-- [ ] Preserve OTLP span status → convert to tags
-- [ ] Preserve OTLP span kind → convert to tags
-
-#### 2.4 Adapter Tests
-
-- [ ] Unit tests for each conversion function
-- [ ] Integration tests with realistic OTLP data
-- [ ] Round-trip tests (if possible)
-- [ ] Performance benchmarks (ensure no significant overhead)
-- [ ] Tests with edge cases and malformed data
-
-### Phase 3: OTLP API Client (2-3 weeks)
-
-**Goal**: Implement API client for `/api/v3/` endpoints.
-
-#### 3.1 API Client Implementation
+#### 3.1 OTLP API Client
 
 - [ ] Create `src/api/v3/client.ts`:
   ```typescript
   export class OtlpApiClient {
-    constructor(
-      private baseUrl: string,
-      private format: 'json' | 'protobuf'
-    );
-
-    /**
-     * Fetch a single trace by ID
-     */
-    async getTrace(traceId: string): Promise<TraceData>;
-
-    /**
-     * Search for traces
-     */
-    async findTraces(query: SearchQuery): Promise<TraceData[]>;
-
-    /**
-     * Get list of services
-     */
-    async getServices(): Promise<string[]>;
-
-    /**
-     * Get operations for a service
-     */
-    async getOperations(service: string): Promise<string[]>;
-
-    /**
-     * Get dependencies
-     */
-    async getDependencies(
-      endTime: number,
-      lookback: number
-    ): Promise<DependencyData>;
-
-    /**
-     * Get metrics (if supported by v3)
-     */
-    async getMetrics(
-      metricType: string,
-      services: string[],
-      query: Record<string, any>
-    ): Promise<MetricData>;
+    async getTrace(traceId: string): Promise<OtelTrace> {
+      const response = await fetch(`/api/v3/traces/${traceId}`);
+      const otlpData = await response.json();
+      return parseOtlpTrace(otlpData);
+    }
+    
+    async findTraces(query: SearchQuery): Promise<OtelTrace[]> {
+      // ... implement with OTLP query params
+    }
   }
   ```
 
-#### 3.2 Client Features
+#### 3.2 OTLP Parser
 
-- [ ] Support both JSON and protobuf formats (start with JSON)
-- [ ] Handle gRPC-Web transport (if backend uses gRPC)
-- [ ] Handle HTTP/JSON transport (if backend exposes JSON API)
-- [ ] Error handling and retry logic
-- [ ] Request/response logging for debugging
-- [ ] Timeout handling
-- [ ] Use existing `getJSON` helper or create v3-specific helper
-
-#### 3.3 Client Tests
-
-- [ ] Mock API responses for each endpoint
-- [ ] Test error scenarios (404, 500, timeout)
-- [ ] Test with different response formats
-- [ ] Integration tests with mock backend
-
-### Phase 4: API Facade & Integration (2-3 weeks)
-
-**Goal**: Create unified API interface and integrate with existing codebase.
-
-#### 4.1 API Facade
-
-- [ ] Create `src/api/client.ts`:
-
+- [ ] Create `src/api/v3/parser.ts`:
   ```typescript
-  import JaegerAPI from './jaeger';
-  import { OtlpApiClient } from './v3/client';
-  import getConfig from '../utils/config/get-config';
-
-  class ApiClient {
-    private legacyClient = JaegerAPI;
-    private v3Client?: OtlpApiClient;
-
-    constructor() {
-      const config = getConfig();
-      if (config.apiV3?.enabled) {
-        this.v3Client = new OtlpApiClient(config.apiV3.endpoint || '/api/v3', config.apiV3.format || 'json');
-      }
-    }
-
-    get useV3(): boolean {
-      return getConfig().apiV3?.enabled && this.v3Client != null;
-    }
-
-    async fetchTrace(id: string): Promise<any> {
-      return this.useV3 ? this.v3Client!.getTrace(id) : this.legacyClient.fetchTrace(id);
-    }
-
-    // ... similar methods for all API operations
+  // Parse OTLP JSON/protobuf → OtelSpan/OtelTrace
+  export function parseOtlpTrace(otlpData: any): OtelTrace {
+    // Direct OTLP → OtelSpan (no legacy conversion)
+    // Still add UI-specific derived fields:
+    // - depth, hasChildren, relativeStartTime, childSpanIds
   }
-
-  export default new ApiClient();
   ```
 
-#### 4.2 Action Integration
+#### 3.3 Redux Integration
 
-- [ ] Update `src/actions/jaeger-api.ts` to use new `ApiClient` facade:
+- [ ] Update `src/reducers/trace.ts` to use OTLP parser
+- [ ] Add feature flag for gradual rollout
+- [ ] Testing and validation
 
-  ```typescript
-  import ApiClient from '../api/client'; // Instead of JaegerAPI
+### Phase 4: Cleanup & Optimization (2-3 weeks)
 
-  export const fetchTrace = createAction(
-    '@JAEGER_API/FETCH_TRACE',
-    (id: string) => ApiClient.fetchTrace(id),
-    (id: string) => ({ id })
-  );
+**Goal**: Remove facade layer and legacy code.
 
-  // ... update all actions similarly
-  ```
-
-#### 4.3 Testing & Validation
-
-- [ ] Test with feature flag disabled (legacy path)
-- [ ] Test with feature flag enabled (OTLP path)
-- [ ] Verify no regressions in existing functionality
-- [ ] Test switching between modes at runtime
-- [ ] Visual regression tests for UI components
-
-### Phase 5: Incremental Endpoint Migration (4-6 weeks)
-
-**Goal**: Migrate each API endpoint one at a time, validating thoroughly.
-
-#### 5.1 Migration Order (Recommended)
-
-1. **Read-only, low-risk endpoints first:**
-   - [ ] `GET /api/v3/services` (getServices)
-   - [ ] `GET /api/v3/operations` (getOperations)
-
-2. **Core trace retrieval:**
-   - [ ] `GET /api/v3/traces/:id` (getTrace)
-   - [ ] Test extensively with production-like data
-
-3. **Search functionality:**
-   - [ ] `POST /api/v3/traces` or query endpoint (findTraces)
-   - [ ] Map search parameters from legacy to OTLP format
-
-4. **Supporting features:**
-   - [ ] `GET /api/v3/dependencies` (getDependencies)
-   - [ ] Metrics endpoints (if available in v3)
-
-5. **Advanced features:**
-   - [ ] Deep Dependency Graph (if v3 supports it)
-   - [ ] Quality metrics integration
-
-#### 5.2 Per-Endpoint Checklist
-
-For each endpoint migration:
-
-- [ ] Implement OTLP client method
-- [ ] Implement adapter transformation
-- [ ] Add unit tests
-- [ ] Add integration tests
-- [ ] Deploy to staging with feature flag enabled
-- [ ] Test with real data
-- [ ] Monitor for errors and performance
-- [ ] Validate with users (beta testing)
-- [ ] Document any differences from legacy behavior
-
-#### 5.3 Testing Strategy
-
-- [ ] Unit tests: 100% coverage for adapter and client
-- [ ] Integration tests: Test with mock backend
-- [ ] E2E tests: Test with real backend (staging)
-- [ ] Performance tests: Ensure no degradation
-- [ ] Load tests: Verify scalability
-- [ ] Visual regression tests: Screenshots of key pages
-- [ ] Browser compatibility tests
-
-### Phase 6: Production Rollout (2-3 weeks)
-
-**Goal**: Gradually enable API v3 in production with monitoring.
-
-#### 6.1 Rollout Strategy
-
-- [ ] **Week 1**: Deploy with feature flag disabled (dry run)
-- [ ] **Week 2**: Enable for internal users (10%)
-- [ ] **Week 3**: Gradual rollout to users (25% → 50% → 100%)
-- [ ] Monitor error rates, latency, user feedback at each stage
-
-#### 6.2 Monitoring & Observability
-
-- [ ] Add metrics for API v3 usage:
-  - Request count per endpoint
-  - Latency (p50, p95, p99)
-  - Error rate
-  - Adapter conversion time
-- [ ] Add logging for debugging:
-  - Log all API v3 requests/responses (debug level)
-  - Log adapter conversion errors
-  - Log feature flag state changes
-
-- [ ] Set up alerts:
-  - Error rate > threshold
-  - Latency > threshold
-  - Conversion failures
-
-#### 6.3 Rollback Plan
-
-- [ ] Document rollback procedure:
-  1. Set `apiV3.enabled = false` in config
-  2. Redeploy (or hot-reload config if supported)
-  3. Verify traffic returns to legacy API
-- [ ] Test rollback procedure in staging
-- [ ] Ensure legacy API remains fully functional
-
-### Phase 7: Optimization & Cleanup (3-4 weeks)
-
-**Goal**: Optimize performance and remove legacy code.
-
-#### 7.1 Performance Optimization
-
-- [ ] Profile adapter conversion performance
-- [ ] Optimize hot paths in adapter
-- [ ] Consider caching for repeated conversions
-- [ ] Benchmark against legacy implementation
-- [ ] Optimize protobuf parsing (if using protobuf format)
-
-#### 7.2 Code Cleanup
-
-- [ ] Remove legacy API code (once v3 is stable):
-  - [ ] Remove `src/api/jaeger.ts`
-  - [ ] Remove `ApiClient` facade (make `OtlpApiClient` the default)
-  - [ ] Remove feature flag checks
-- [ ] Update documentation
-- [ ] Remove dead code and unused imports
-
-#### 7.3 Consider Native OTLP Consumption (Future)
-
-Once API v3 is stable, consider migrating components to consume OTLP data directly:
-
-- [ ] Update internal types to match OTLP (breaking change)
-- [ ] Update components to work with OTLP data structures
-- [ ] Remove adapter layer entirely
-- [ ] Update all tests
-
-**Note**: This is a major breaking change and should only be done if there's clear benefit.
+- [ ] Remove `OtelSpanFacade`, `OtelTraceFacade` classes
+- [ ] Update selectors to return OtelSpan directly
+- [ ] Remove legacy types (mark as deprecated first)
+- [ ] Remove `src/api/jaeger.ts` (old REST API)
+- [ ] Remove `transformTraceData` (old transformer)
+- [ ] Documentation updates
 
 ---
 
-## API Endpoint Mapping
+## Component Migration Details
 
-### Legacy (`/api/`) → API v3 (`/api/v3/`)
+### High Priority Components
 
-| Legacy Endpoint                     | API v3 Endpoint                    | Notes                     |
-| ----------------------------------- | ---------------------------------- | ------------------------- |
-| `GET /api/traces/:id`               | `GetTrace(traceId)`                | Returns OTLP TracesData   |
-| `GET /api/traces?traceID=...`       | `FindTraces(query)`                | Search by trace IDs       |
-| `GET /api/traces?service=...`       | `FindTraces(query)`                | Search with filters       |
-| `GET /api/services`                 | `GetServices()`                    | List of service names     |
-| `GET /api/services/:svc/operations` | `GetOperations(service)`           | Operations for service    |
-| `GET /api/operations?service=...`   | `GetOperations(service, spanKind)` | Filter by span kind       |
-| `GET /api/dependencies`             | `GetDependencies(start, end)`      | Dependency graph          |
-| `GET /api/metrics/:type`            | TBD                                | May not be in v3 spec yet |
-| `POST /api/transform`               | N/A (adapter)                      | OTLP → Jaeger (remove)    |
-| `POST /api/archive/:id`             | TBD                                | Archive functionality     |
+**1. TraceTimelineViewer/SpanDetail/**
+Files: `index.tsx`, `KeyValuesTable.tsx`, `AccordianKeyValues.tsx`, `AccordianLogs.tsx`, `AccordianReferences.tsx`
 
-### Query Parameter Mapping
+Changes needed:
+- `process.serviceName` → `resource.serviceName`
+- `tags` → `attributes` (heavy usage)
+- `logs` → `events` (with event.name handling)
+- UI labels: "Tags" → "Attributes", "Logs" → "Events", "Process" → "Resource"
 
-Legacy search parameters need to be mapped to OTLP query format:
+**2. TraceTimelineViewer/VirtualizedTraceView.tsx**
+Heavy user of `span.tags.find(...)` for `peer.service`, `span.kind`
 
-| Legacy Param  | OTLP Equivalent   | Transformation             |
-| ------------- | ----------------- | -------------------------- |
-| `service`     | `service_name`    | Direct mapping             |
-| `operation`   | `operation_name`  | Direct mapping             |
-| `tags`        | `span_attributes` | JSON → key-value pairs     |
-| `start`       | `start_time_min`  | Microseconds → nanoseconds |
-| `end`         | `start_time_max`  | Microseconds → nanoseconds |
-| `minDuration` | `duration_min`    | Microseconds → nanoseconds |
-| `maxDuration` | `duration_max`    | Microseconds → nanoseconds |
-| `limit`       | `max_traces`      | Direct mapping             |
+Changes needed:
+- Multiple `span.tags.find(...)` → `span.attributes.find(...)`
+- `span.process.serviceName` → `span.resource.serviceName` (multiple times)
+
+**3. TraceTimelineViewer/utils.tsx**
+Utility functions: `isErrorSpan`, `isKindClient`, etc.
+
+Changes needed:
+- `span.tags.some(...)` → `span.attributes.some(...)`
+
+**4. TraceStatistics/tableValues.tsx**
+Heavy tag iteration and filtering
+
+Changes needed:
+- `span.tags.length`, `span.tags[tagIndex]` → attributes equivalents
+- `span.process.serviceName` → `span.resource.serviceName`
+
+**5. TraceSpanView/index.tsx**
+Service name operations map
+
+Changes needed:
+- `span.process.serviceName` → `span.resource.serviceName`
+- Filter key names update
+
+**6. SearchResults/ResultItem.tsx**
+Error checking with service name
+
+Changes needed:
+- `sp.process.serviceName` → `sp.resource.serviceName`
 
 ---
 
 ## Risks & Mitigation
 
-### Risk 1: Data Loss or Corruption During Conversion
+### Risk 1: Facade Performance Overhead
 
-**Description**: OTLP adapter might lose data or incorrectly transform values.
-
-**Impact**: High - Could result in incorrect trace visualization or missing information.
+**Impact**: Medium - Could slow down large trace rendering
 
 **Mitigation**:
+- Performance benchmarks before/after
+- Memoization for facade wrappers
+- Profile hot paths
+- Facade is temporary (removed in Phase 4)
 
-- Comprehensive unit and integration tests for adapter
-- Round-trip testing (if possible)
-- Gradual rollout with extensive validation
-- Keep legacy API available during migration
-- Add logging to track conversion issues
+### Risk 2: Incomplete Component Migration
 
-### Risk 2: Performance Degradation
-
-**Description**: Adapter introduces overhead in data processing.
-
-**Impact**: Medium - Could slow down trace loading and search.
+**Impact**: High - Components break when facade is removed
 
 **Mitigation**:
+- Comprehensive search for all usages
+- TypeScript strict mode catches issues
+- Gradual migration with coexistence
+- Code review for each component
+- Create linter rule to detect legacy property access
 
-- Performance benchmarks comparing legacy vs. OTLP paths
-- Profile adapter code and optimize hot paths
-- Consider caching frequently accessed traces
-- Monitor latency metrics during rollout
-- Optimize conversion algorithms
+### Risk 3: UI/UX Regressions
 
-### Risk 3: Backend API v3 Not Ready
-
-**Description**: Backend `/api/v3/` endpoints may not be fully implemented or stable.
-
-**Impact**: High - Blocks entire migration.
+**Impact**: Medium - User experience degrades
 
 **Mitigation**:
+- Visual regression testing
+- Manual testing for each component
+- Beta testing with internal users
+- Gradual rollout
+- Easy rollback per component
 
+### Risk 4: Backend API Not Ready
+
+**Impact**: High - Blocks Phase 3
+
+**Mitigation**:
 - Coordinate with backend team early
-- Define clear API contract and test it
-- Use mock backend for development
-- Incremental endpoint migration allows partial deployment
-- Maintain legacy API support indefinitely if needed
-
-### Risk 4: Incompatible Data Models
-
-**Description**: Some legacy Jaeger features may not map cleanly to OTLP.
-
-**Impact**: Medium - May lose some features or require workarounds.
-
-**Mitigation**:
-
-- Document all incompatibilities upfront
-- Use OTLP attributes to preserve legacy metadata
-- Extend OTLP with custom attributes if necessary
-- Communicate feature changes to users
-- Provide migration guide for affected features
-
-### Risk 5: Breaking Changes for Embedders
-
-**Description**: External applications embedding Jaeger UI may break.
-
-**Impact**: Medium - Could affect downstream users.
-
-**Mitigation**:
-
-- Maintain backward compatibility during migration
-- Document all API changes
-- Provide migration guide for embedders
-- Version the API clearly
-- Communicate changes in release notes
-
-### Risk 6: User Experience Disruption
-
-**Description**: UI might behave differently with OTLP data.
-
-**Impact**: Medium - Could confuse users or break workflows.
-
-**Mitigation**:
-
-- Extensive visual regression testing
-- Beta testing with real users
-- Gather user feedback early
-- Document any behavior changes
-- Provide rollback mechanism
-
-### Risk 7: Increased Maintenance Complexity (Short-term)
-
-**Description**: Maintaining both legacy and OTLP paths adds complexity.
-
-**Impact**: Low-Medium - Temporary technical debt.
-
-**Mitigation**:
-
-- Use feature flags to manage dual support
-- Clear documentation of both paths
-- Aggressive timeline for removing legacy code
-- Code reviews to ensure quality
-- Automated testing for both paths
+- Phase 1-2 can proceed independently
+- Mock OTLP data for testing
+- Feature flag allows using legacy API
 
 ---
 
@@ -835,266 +605,54 @@ Legacy search parameters need to be mapped to OTLP query format:
 
 ### Technical Metrics
 
-- [ ] **API Coverage**: 100% of legacy API endpoints migrated to v3
-- [ ] **Test Coverage**: >90% coverage for adapter and client code
-- [ ] **Performance**: No more than 5% latency increase vs. legacy
-- [ ] **Error Rate**: <0.1% conversion errors
-- [ ] **Backward Compatibility**: 0 breaking changes to component interfaces
+- [ ] **Component Migration**: 100% of components use OTEL nomenclature
+- [ ] **Test Coverage**: Maintain or exceed current coverage (>80%)
+- [ ] **Performance**: No regression in trace loading (±5%)
+- [ ] **Type Safety**: TypeScript strict mode passes
 
 ### User Metrics
 
-- [ ] **User Satisfaction**: >80% positive feedback on new implementation
-- [ ] **Adoption**: 100% of production traffic on API v3 within 3 months
-- [ ] **Bug Reports**: <5 critical bugs related to migration
-- [ ] **Zero Data Loss**: No reports of missing or incorrect trace data
-
-### Project Metrics
-
-- [ ] **Timeline**: Complete migration within 6 months
-- [ ] **Documentation**: All changes documented with migration guides
-- [ ] **Rollback**: Zero production rollbacks required
-- [ ] **Team Velocity**: No significant slowdown in feature development
-
----
-
-## Alternatives Considered
-
-### Alternative 1: Big Bang Migration
-
-**Approach**: Replace all legacy API calls with OTLP in one release.
-
-**Pros**:
-
-- Faster completion (in theory)
-- No dual-path maintenance
-- Clean cut from legacy
-
-**Cons**:
-
-- High risk - one mistake affects everything
-- No gradual validation
-- Difficult to rollback
-- High testing burden
-
-**Verdict**: ❌ **Rejected** - Too risky for production system.
-
-### Alternative 2: Backend-Only Transformation
-
-**Approach**: Keep UI unchanged, transform OTLP → Jaeger in backend.
-
-**Pros**:
-
-- Zero UI changes required
-- Backend controls transformation
-- UI remains simple
-
-**Cons**:
-
-- Maintains legacy format dependency
-- Doesn't achieve goal of native OTLP support
-- Increases backend complexity
-- Doesn't enable OTLP interoperability in UI
-
-**Verdict**: ❌ **Rejected** - Doesn't meet long-term goals.
-
-### Alternative 3: New UI from Scratch
-
-**Approach**: Build entirely new UI for OTLP data model.
-
-**Pros**:
-
-- No legacy constraints
-- Clean architecture
-- Could leverage modern frameworks
-
-**Cons**:
-
-- Massive effort (6-12 months+)
-- High risk
-- Feature parity challenging
-- User disruption
-
-**Verdict**: ❌ **Rejected** - Not feasible with available resources.
-
-### Alternative 4: Gradual Internal Model Migration
-
-**Approach**: Migrate internal data model to OTLP, then update all components.
-
-**Pros**:
-
-- Eventually native OTLP consumption
-- Clean final architecture
-
-**Cons**:
-
-- Requires updating 100+ components
-- High risk of regressions
-- Long timeline
-- Large breaking change
-
-**Verdict**: ⚠️ **Deferred** - Consider after adapter-based migration is stable.
-
-### Alternative 5: Client-Side Protobuf Parsing
-
-**Approach**: Parse protobuf-encoded OTLP data directly in browser.
-
-**Pros**:
-
-- More efficient than JSON
-- Smaller payload size
-- Direct binary parsing
-
-**Cons**:
-
-- Requires protobuf library in UI
-- Increases bundle size
-- More complex debugging
-- Browser compatibility concerns
-
-**Verdict**: ⚠️ **Future Consideration** - Start with JSON, migrate to protobuf later if needed.
-
----
-
-## Dependencies & Prerequisites
-
-### Backend Requirements
-
-- [ ] Jaeger backend supports `/api/v3/` endpoints (gRPC or JSON)
-- [ ] API v3 implements all required query operations
-- [ ] Backend provides OTLP-formatted responses
-- [ ] API v3 is stable and production-ready
-
-### Frontend Requirements
-
-- [ ] Node.js >=24 (already required)
-- [ ] TypeScript support (already in place)
-- [ ] Testing infrastructure (Jest, React Testing Library)
-
-### External Dependencies
-
-- [ ] OTLP type definitions (generate from proto or hand-write)
-- [ ] Potentially gRPC-Web library (if using protobuf)
-- [ ] Potentially protobuf parsing library
-
----
-
-## Documentation Requirements
-
-### Developer Documentation
-
-- [ ] **Architecture Overview**: Document new API architecture
-- [ ] **Adapter Guide**: Explain OTLP → Internal transformation
-- [ ] **Migration Guide**: How to extend or modify the adapter
-- [ ] **Testing Guide**: How to test both API paths
-- [ ] **Debugging Guide**: How to troubleshoot conversion issues
-
-### User Documentation
-
-- [ ] **Feature Comparison**: Legacy vs. OTLP behavior differences
-- [ ] **Configuration Guide**: How to enable API v3
-- [ ] **Troubleshooting**: Common issues and solutions
-- [ ] **Release Notes**: Document changes in each release
-
-### API Documentation
-
-- [ ] **Endpoint Reference**: Document all API v3 endpoints
-- [ ] **Query Format**: Document OTLP query parameters
-- [ ] **Response Format**: Document OTLP response structure
-- [ ] **Error Codes**: Document error handling
-
----
-
-## Open Questions
-
-1. **What is the status of the backend `/api/v3/` implementation?**
-   - Which endpoints are available?
-   - What is the response format (gRPC-Web, JSON, protobuf)?
-   - Is it production-ready?
-
-2. **Are there any OTLP features not supported by legacy Jaeger?**
-   - How should we handle OTLP-specific features like span links with multiple traces?
-   - Should we extend the UI to support new OTLP features?
-
-3. **Should we generate TypeScript types from proto files or write them manually?**
-   - Code generation ensures accuracy but adds build complexity
-   - Manual types are simpler but may drift from spec
-
-4. **What is the long-term plan for the legacy API?**
-   - Will it be deprecated and removed?
-   - What is the timeline?
-
-5. **Should we support both JSON and protobuf in the initial implementation?**
-   - JSON is easier to debug but larger
-   - Protobuf is more efficient but harder to work with
-
-6. **How should we handle the `/api/transform` endpoint currently used for file uploads?**
-   - Should file uploads directly use the adapter?
-   - Should we remove the backend transform endpoint dependency?
-
----
-
-## Decision Points
-
-### Go / No-Go Criteria
-
-**Go** if:
-
-- ✅ Backend API v3 is available and stable
-- ✅ Team has capacity for 6-month project
-- ✅ Stakeholders support the migration
-- ✅ Performance benchmarks show acceptable overhead (<5% latency)
-
-**No-Go** if:
-
-- ❌ Backend API v3 is not production-ready
-- ❌ Unacceptable performance degradation (>10% latency)
-- ❌ Critical features lost in OTLP migration
-- ❌ Insufficient testing infrastructure
-
-### Checkpoint Reviews
-
-- **After Phase 2**: Review adapter quality and performance
-- **After Phase 4**: Review integration and validate no regressions
-- **After Phase 5**: Review each endpoint migration before moving to next
-- **After Phase 6**: Review production metrics before full rollout
+- [ ] **Visual Parity**: No visual regressions
+- [ ] **User Feedback**: >80% positive on OTEL terminology
+- [ ] **Error Rate**: No increase in client errors
+- [ ] **Adoption**: Users understand OTEL terminology
 
 ---
 
 ## Timeline Summary
 
-| Phase                 | Duration        | Key Deliverables                              |
-| --------------------- | --------------- | --------------------------------------------- |
-| 1. Foundation         | 2-3 weeks       | Project structure, types, utils, feature flag |
-| 2. OTLP Adapter       | 3-4 weeks       | Adapter implementation, comprehensive tests   |
-| 3. OTLP API Client    | 2-3 weeks       | API client, error handling, tests             |
-| 4. API Facade         | 2-3 weeks       | Unified interface, action integration         |
-| 5. Endpoint Migration | 4-6 weeks       | Migrate endpoints incrementally               |
-| 6. Production Rollout | 2-3 weeks       | Gradual rollout, monitoring                   |
-| 7. Optimization       | 3-4 weeks       | Performance tuning, cleanup                   |
-| **Total**             | **18-26 weeks** | **4.5-6.5 months**                            |
+| Phase               | Duration     | Deliverable                       |
+| ------------------- | ------------ | --------------------------------- |
+| Phase 1: Facade     | 3-4 weeks    | OTEL facade layer, selectors      |
+| Phase 2: Components | 8-12 weeks   | All components use OTEL           |
+| Phase 3: Backend    | 2-3 weeks    | Switch to /api/v3/ OTLP           |
+| Phase 4: Cleanup    | 2-3 weeks    | Remove facade, optimize           |
+| **Total**           | **15-22 weeks** | **OTEL-native Jaeger UI**      |
 
 ---
 
 ## Next Steps
 
-1. **Stakeholder Review**: Present this ADR to engineering leadership and backend team
-2. **Backend Coordination**: Confirm API v3 availability and format
-3. **Resource Allocation**: Assign team members to the project
-4. **Kick-off Meeting**: Align on timeline, milestones, and responsibilities
-5. **Proof of Concept**: Build a minimal adapter for one endpoint to validate approach
-6. **Begin Phase 1**: Create project structure and foundation
+1. **Review & Approval** - Present ADR to team and stakeholders
+2. **Backend Coordination** - Confirm `/api/v3/` timeline with backend team
+3. **Phase 1 Kickoff** - Create facade layer structure
+4. **Pilot Migration** - Migrate 1-2 pilot components to validate approach
+5. **Component Migration** - Follow schedule with weekly reviews
+6. **Backend Switch** - Coordinate switch to `/api/v3/`
+7. **Cleanup** - Remove facade and legacy code
 
 ---
 
 ## References
 
-- [OpenTelemetry Protocol Specification](https://opentelemetry.io/docs/specs/otel/protocol/)
+- [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/otel/)
+- [OpenTelemetry Tracing Spec](https://opentelemetry.io/docs/specs/otel/trace/)
+- [OTLP Specification](https://opentelemetry.io/docs/specs/otlp/)
 - [Jaeger IDL API v3 Proto Files](https://github.com/jaegertracing/jaeger-idl/tree/main/proto/api_v3)
-- [Jaeger UI Architecture Documentation](../../../CONTRIBUTING.md)
-- [ADR 0001: Design Token-Based Theming](./0001-design-token-based-theming.md)
+- [Jaeger UI Architecture](../../CONTRIBUTING.md)
 
 ---
 
 **Status**: Awaiting Review  
-**Reviewers**: [TBD]  
+**Reviewers**: @yurishkuro, [TBD]  
 **Next Review Date**: [TBD]
