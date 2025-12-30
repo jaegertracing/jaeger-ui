@@ -13,20 +13,32 @@ const findLastFinishingChildSpan = (
   currentSpan: Span,
   returningChildStartTime?: number
 ): Span | undefined => {
-  let lastFinishingChildSpanId: string | undefined;
-  if (returningChildStartTime) {
-    lastFinishingChildSpanId = currentSpan.childSpanIds.find(
-      each =>
-        // Look up the span using the map
-        spanMap.has(each) &&
-        spanMap.get(each)!.startTime + spanMap.get(each)!.duration < returningChildStartTime
-    );
-  } else {
-    // If `returningChildStartTime` is not provided, select the first child span.
-    // As they are sorted based on endTime
-    lastFinishingChildSpanId = currentSpan.childSpanIds[0];
+  let lastFinishingChildSpan: Span | undefined;
+  let latestEndTime = -1;
+
+  // Iterate through children (now sorted by start time) to find the one that finishes last
+  for (const childId of currentSpan.childSpanIds) {
+    const childSpan = spanMap.get(childId);
+    if (!childSpan) continue;
+
+    const childEndTime = childSpan.startTime + childSpan.duration;
+
+    if (returningChildStartTime) {
+      // Find child that finishes just before returningChildStartTime
+      if (childEndTime < returningChildStartTime && childEndTime > latestEndTime) {
+        latestEndTime = childEndTime;
+        lastFinishingChildSpan = childSpan;
+      }
+    } else {
+      // Find child that finishes last overall
+      if (childEndTime > latestEndTime) {
+        latestEndTime = childEndTime;
+        lastFinishingChildSpan = childSpan;
+      }
+    }
   }
-  return lastFinishingChildSpanId ? spanMap.get(lastFinishingChildSpanId) : undefined;
+
+  return lastFinishingChildSpan;
 };
 
 export default findLastFinishingChildSpan;

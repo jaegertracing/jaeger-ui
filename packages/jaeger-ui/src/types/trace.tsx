@@ -83,6 +83,7 @@ export type Trace = TraceData & {
   // Optional to support test scenarios where traces may be mocked
   spanMap?: Map<string, Span>;
   tree?: TreeNode<string>;
+  nodesBySpanId?: Map<string, TreeNode<string>>;
 
   // OTEL facade - lazy-initialized and memoized
   _otelFacade?: IOtelTrace;

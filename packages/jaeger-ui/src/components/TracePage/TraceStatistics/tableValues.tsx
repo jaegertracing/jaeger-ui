@@ -1,7 +1,6 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import memoizeOne from 'memoize-one';
 import { Trace, Span } from '../../../types/trace';
 import { ITableSpan } from './types';
 import colorGenerator from '../../../utils/color-generator';
@@ -9,34 +8,16 @@ import colorGenerator from '../../../utils/color-generator';
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
 
-function parentChildOfMap(allSpans: Span[]): Record<string, Span[]> {
-  const parentChildOfMap: Record<string, Span[]> = {};
-  allSpans.forEach(s => {
-    if (s.references) {
-      // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM (prod-cons)
-      const parentIDs = s.references.filter(r => r.refType === 'CHILD_OF').map(r => r.spanID);
-      parentIDs.forEach((pID: string) => {
-        parentChildOfMap[pID] = parentChildOfMap[pID] || [];
-        parentChildOfMap[pID].push(s);
-      });
-    }
-  });
-  return parentChildOfMap;
-}
-
-const memoizedParentChildOfMap = memoizeOne(parentChildOfMap);
-
-function getChildOfSpans(parentID: string, allSpans: Span[]): Span[] {
-  return memoizedParentChildOfMap(allSpans)[parentID] || [];
-}
-
-function computeSelfTime(parentSpan: Span, allSpans: Span[]): number {
+function computeSelfTime(parentSpan: Span, allSpans: Span[], spanMap: Map<string, Span>): number {
   if (!parentSpan.hasChildren) return parentSpan.duration;
 
   let parentSpanSelfTime = parentSpan.duration;
   let previousChildEndTime = parentSpan.startTime;
 
-  const children = getChildOfSpans(parentSpan.spanID, allSpans).sort((a, b) => a.startTime - b.startTime);
+  // Use childSpanIds from the span (already sorted by startTime from the tree)
+  const children = parentSpan.childSpanIds
+    .map(id => spanMap.get(id))
+    .filter((child): child is Span => child !== undefined);
 
   const parentSpanEndTime = parentSpan.startTime + parentSpan.duration;
 
@@ -79,7 +60,13 @@ function computeSelfTime(parentSpan: Span, allSpans: Span[]): number {
   return parentSpanSelfTime;
 }
 
-function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultValue: StatsPerTag) {
+function computeColumnValues(
+  trace: Trace,
+  span: Span,
+  allSpans: Span[],
+  spanMap: Map<string, Span>,
+  resultValue: StatsPerTag
+) {
   const resultValueChange = resultValue;
   resultValueChange.count += 1;
   resultValueChange.total += span.duration;
@@ -90,7 +77,7 @@ function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultV
     resultValueChange.max = span.duration;
   }
 
-  const tempSelf = computeSelfTime(span, allSpans);
+  const tempSelf = computeSelfTime(span, allSpans, spanMap);
   if (resultValueChange.selfMin > tempSelf) {
     resultValueChange.selfMin = tempSelf;
   }
@@ -178,6 +165,8 @@ function getTagValueFromSpan(tagKey: string, span: Span) {
  */
 function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   const allSpans = trace.spans;
+  // Use the pre-built spanMap or create one if not available (e.g., in tests)
+  const spanMap = trace.spanMap || new Map(allSpans.map(s => [s.spanID, s]));
 
   // used to build the table
   const allTableValues = [];
@@ -199,6 +188,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
       trace,
       allSpans[i],
       allSpans,
+      spanMap,
       statsPerTagValue[tagValue] ?? getDefaultStatsValue(trace)
     );
 
@@ -251,7 +241,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
     // Others is calculated
     let resultValue = getDefaultStatsValue(trace);
     for (let i = 0; i < spanWithNoSelectedTag.length; i++) {
-      resultValue = computeColumnValues(trace, spanWithNoSelectedTag[i], allSpans, resultValue);
+      resultValue = computeColumnValues(trace, spanWithNoSelectedTag[i], allSpans, spanMap, resultValue);
     }
     if (resultValue.count !== 0) {
       // Others is build
@@ -290,6 +280,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
 function buildDetail(
   tempArray: Span[],
   allSpans: Span[],
+  spanMap: Map<string, Span>,
   selectedTagKeySecond: string,
   parentName: string,
   trace: Trace
@@ -310,6 +301,7 @@ function buildDetail(
       trace,
       tempArray[i],
       allSpans,
+      spanMap,
       statsPerTagValue[tagValue] ?? getDefaultStatsValue(trace)
     );
 
@@ -355,7 +347,12 @@ function buildDetail(
 /**
  * Used to generate detail rest.
  */
-function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond: string, trace: Trace) {
+function generateDetailRest(
+  allColumnValues: ITableSpan[],
+  selectedTagKeySecond: string,
+  trace: Trace,
+  spanMap: Map<string, Span>
+) {
   const allSpans = trace.spans;
   const newTable = [];
   for (let i = 0; i < allColumnValues.length; i++) {
@@ -386,7 +383,7 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
             }
           }
           if (rest) {
-            resultValue = computeColumnValues(trace, allSpans[j], allSpans, resultValue);
+            resultValue = computeColumnValues(trace, allSpans[j], allSpans, spanMap, resultValue);
           }
         }
       }
@@ -432,6 +429,8 @@ function valueSecondDropdown(
 ) {
   const allSpans = trace.spans;
   const allTableValues = [];
+  // Use the pre-built spanMap or create one if not available (e.g., in tests)
+  const spanMap = trace.spanMap || new Map(allSpans.map(s => [s.spanID, s]));
 
   const isSecondDropdownTag = selectedTagKeySecond !== serviceName && selectedTagKeySecond !== operationName;
 
@@ -468,6 +467,7 @@ function valueSecondDropdown(
     const newColumnValues = buildDetail(
       spansWithSecondTag,
       allSpans,
+      spanMap,
       selectedTagKeySecond,
       actualTableValues[i].name,
       trace
@@ -484,7 +484,7 @@ function valueSecondDropdown(
 
   // if second dropdown is a tag a rest must be created
   if (isSecondDropdownTag) {
-    return generateDetailRest(allTableValues, selectedTagKeySecond, trace);
+    return generateDetailRest(allTableValues, selectedTagKeySecond, trace, spanMap);
     // if no tag is selected the values can be returned
   }
   return allTableValues;

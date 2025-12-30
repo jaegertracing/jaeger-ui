@@ -22,7 +22,7 @@ function transformTracesToPaths(
       // Use the pre-built spanMap and tree from the trace object if available,
       // otherwise build them on demand (e.g., in tests)
       const spanMap = data.spanMap || null;
-      const tree = data.tree || getTraceSpanIdsAsTree(data, spanMap);
+      const tree = data.tree || getTraceSpanIdsAsTree(data, spanMap).root;
       const { traceID } = data;
       // Ensure we have a spanMap for looking up spans
       const effectiveSpanMap = spanMap || new Map(data.spans.map(span => [span.spanID, span]));

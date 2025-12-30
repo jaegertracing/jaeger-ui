@@ -11,7 +11,7 @@ describe('getTraceSpanIdsAsTree()', () => {
   const getTraceSpansAsMap = trace =>
     trace.spans.reduce((map, span) => map.set(span.spanID, span), new Map());
   it('builds the tree properly', () => {
-    const tree = traceSelectors.getTraceSpanIdsAsTree(generatedTrace);
+    const { root: tree, nodesBySpanId } = traceSelectors.getTraceSpanIdsAsTree(generatedTrace);
     const spanMap = getTraceSpansAsMap(generatedTrace);
 
     tree.walk((value, node) => {
@@ -21,6 +21,12 @@ describe('getTraceSpanIdsAsTree()', () => {
         const parentId = span.references.find(ref => ref.refType === 'CHILD_OF')?.spanID ?? null;
         expect(parentId).toBe(expectedParentValue);
       });
+    });
+
+    // Verify nodesBySpanId contains all spans
+    expect(nodesBySpanId.size).toBe(generatedTrace.spans.length);
+    generatedTrace.spans.forEach(span => {
+      expect(nodesBySpanId.has(span.spanID)).toBe(true);
     });
   });
 

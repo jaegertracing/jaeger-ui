@@ -18,8 +18,7 @@ export const TREE_ROOT_ID = '__root__';
  *
  * @param  {Trace}             trace The trace to build the tree of spanIDs.
  * @param  {Map<string, Span>} spanMap map from span IDs to Spans
- * @return {TreeNode}          A tree of spanIDs derived from the relationships
- *                             between spans in the trace.
+ * @return {{ root: TreeNode, nodesBySpanId: Map }}  The tree root and a map of spanID to TreeNode
  */
 export function getTraceSpanIdsAsTree(
   trace: { spans: SpanData[] },
@@ -60,5 +59,5 @@ export function getTraceSpanIdsAsTree(
     }
   });
   root.children.sort(comparator);
-  return root;
+  return { root, nodesBySpanId: nodesById };
 }

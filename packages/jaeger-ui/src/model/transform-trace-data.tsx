@@ -105,7 +105,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   }
   // tree is necessary to sort the spans, so children follow parents, and
   // siblings are sorted by start time
-  const tree = getTraceSpanIdsAsTree(data, spanMap);
+  const { root: tree, nodesBySpanId } = getTraceSpanIdsAsTree(data, spanMap);
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
 
@@ -122,16 +122,8 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
-    // Get the childSpanIds sorted based on endTime without changing tree structure
-    // TODO move this enrichment into Critical Path computation
-    span.childSpanIds = node.children
-      .slice()
-      .sort((a, b) => {
-        const spanA = spanMap.get(a.value)!;
-        const spanB = spanMap.get(b.value)!;
-        return spanB.startTime + spanB.duration - (spanA.startTime + spanA.duration);
-      })
-      .map(each => each.value);
+    // Get the childSpanIds sorted by startTime (as they are in the tree)
+    span.childSpanIds = node.children.map(each => each.value);
     span.warnings = span.warnings || [];
     span.tags = span.tags || [];
     span.references = span.references || [];
@@ -182,6 +174,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     // Optimized data structures - created once during trace transformation
     spanMap,
     tree,
+    nodesBySpanId,
     // Can't use spread operator for intersection types
     // repl: https://goo.gl/4Z23MJ
     // issue: https://github.com/facebook/flow/issues/1511
