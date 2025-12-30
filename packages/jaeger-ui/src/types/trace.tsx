@@ -80,8 +80,9 @@ export type Trace = TraceData & {
   orphanSpanCount?: number;
 
   // Optimized data structures - created once during trace transformation
-  spanMap: Map<string, Span>;
-  tree: TreeNode<string>;
+  // Optional to support test scenarios where traces may be mocked
+  spanMap?: Map<string, Span>;
+  tree?: TreeNode<string>;
 
   // OTEL facade - lazy-initialized and memoized
   _otelFacade?: IOtelTrace;

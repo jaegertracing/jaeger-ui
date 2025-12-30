@@ -78,8 +78,8 @@ function criticalPathForTrace(trace: Trace) {
   const rootSpanId = trace.spans[0].spanID;
   // If there is root span then algorithm implements
   if (rootSpanId) {
-    // Use the pre-built spanMap from the trace object
-    const spanMap = trace.spanMap;
+    // Use the pre-built spanMap from the trace object, or build it if not available (e.g., in tests)
+    const spanMap = trace.spanMap || new Map(trace.spans.map(s => [s.spanID, s]));
     try {
       const refinedSpanMap = getChildOfSpans(spanMap);
       const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
