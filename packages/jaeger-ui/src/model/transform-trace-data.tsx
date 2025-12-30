@@ -8,6 +8,7 @@ import { getConfigValue } from '../utils/config/get-config';
 import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-viewer';
 import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
+import OtelTraceFacade from './OtelTraceFacade';
 
 // exported for tests
 export function deduplicateTags(spanTags: KeyValuePair[]) {
@@ -188,5 +189,13 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     startTime: traceStartTime,
     endTime: traceEndTime,
     orphanSpanCount,
+
+    // Lazy-initialized OTEL facade getter
+    asOtelTrace() {
+      if (!this._otelFacade) {
+        this._otelFacade = new OtelTraceFacade(this);
+      }
+      return this._otelFacade!;
+    },
   };
 }

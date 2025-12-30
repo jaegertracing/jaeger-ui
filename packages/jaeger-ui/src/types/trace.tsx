@@ -5,6 +5,8 @@
  * All timestamps are in microseconds
  */
 
+import { IOtelTrace } from './otel';
+
 export type KeyValuePair<ValueType = string> = {
   key: string;
   value: ValueType;
@@ -75,6 +77,10 @@ export type Trace = TraceData & {
   services: { name: string; numberOfSpans: number }[];
   // Number of orphan spans (spans referencing parent spans that don't exist in the trace)
   orphanSpanCount?: number;
+
+  // OTEL facade - lazy-initialized and memoized
+  _otelFacade?: IOtelTrace;
+  asOtelTrace(): IOtelTrace;
 };
 
 // It is a section of span that lies on critical path

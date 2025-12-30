@@ -37,6 +37,9 @@ describe('OtelFacade Benchmarks', () => {
       warnings: [],
       subsidiarilyReferencedBy: [],
     })),
+    asOtelTrace() {
+      throw new Error('Not implemented');
+    },
   };
 
   it('benchmark: facade creation and access', () => {

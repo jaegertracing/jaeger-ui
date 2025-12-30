@@ -61,9 +61,10 @@ export default class OtelSpanFacade implements IOtelSpan {
     this._status =
       errorTag && errorTag.value ? { code: StatusCode.ERROR, message: 'error' } : { code: StatusCode.OK };
 
+    const process = this.legacySpan.process;
     this._resource = {
-      attributes: OtelSpanFacade.toOtelAttributes(this.legacySpan.process.tags),
-      serviceName: this.legacySpan.process.serviceName,
+      attributes: process ? OtelSpanFacade.toOtelAttributes(process.tags) : [],
+      serviceName: process ? process.serviceName : 'unknown-service',
     };
   }
 
