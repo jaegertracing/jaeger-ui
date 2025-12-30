@@ -40,6 +40,9 @@ describe('OtelTraceFacade', () => {
     tracePageTitle: 'test-trace-title',
     traceEmoji: '😀',
     services: [{ name: 'test-service', numberOfSpans: 1 }],
+    asOtelTrace() {
+      throw new Error('Not implemented');
+    },
   };
 
   let facade: OtelTraceFacade;

@@ -405,9 +405,13 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
    ```
 
 3. **Update UI labels:**
+  Use `config.useOpenTelemetryTerms` to control which labels to display:
+   - Legacy → OpenTelemetry
    - "Tags" → "Attributes"
    - "Process" → "Resource"
    - "Logs" → "Events"
+   - "references" → "Links"
+   - "operationName" → "spanName"
 
 4. **Update tests:**
    - Mock OtelSpan instead of Span

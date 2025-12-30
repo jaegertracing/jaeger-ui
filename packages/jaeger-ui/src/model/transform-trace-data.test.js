@@ -66,6 +66,7 @@ describe('transformTraceData()', () => {
       startTime,
       duration,
       tags: [],
+      logs: [],
       processID: 'p1',
     },
     {
@@ -82,6 +83,7 @@ describe('transformTraceData()', () => {
       startTime: startTime + 100,
       duration,
       tags: [],
+      logs: [],
       processID: 'p1',
     },
   ];
@@ -100,6 +102,7 @@ describe('transformTraceData()', () => {
     startTime: startTime + 50,
     duration,
     tags: [],
+    logs: [],
     processID: 'p1',
   };
 
@@ -110,6 +113,7 @@ describe('transformTraceData()', () => {
     startTime: startTime + 50,
     duration,
     tags: [],
+    logs: [],
     processID: 'p1',
   };
 
@@ -226,5 +230,30 @@ describe('transformTraceData()', () => {
 
     const result = transformTraceData(traceData);
     expect(result.orphanSpanCount).toBe(1);
+  });
+
+  describe('asOtelTrace()', () => {
+    it('should implement IOtelTrace interface and memoize the instance', () => {
+      const traceData = {
+        traceID,
+        processes,
+        spans: [...spans, rootSpanWithoutRefs],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // Check if asOtelTrace exists
+      expect(typeof result.asOtelTrace).toBe('function');
+
+      // First call - should create instance
+      const otelTrace1 = result.asOtelTrace();
+      expect(otelTrace1).toBeDefined();
+      expect(otelTrace1.traceId).toBe(traceID);
+      expect(otelTrace1.spans.length).toBe(3);
+
+      // Second call - should return same instance (memoization)
+      const otelTrace2 = result.asOtelTrace();
+      expect(otelTrace2).toBe(otelTrace1);
+    });
   });
 });
