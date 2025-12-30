@@ -2,23 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import memoizeOne from 'memoize-one';
-import { Trace, Span } from '../../../types/trace';
+import { IOtelTrace, IOtelSpan } from '../../../types/otel';
 import { ITableSpan } from './types';
 import colorGenerator from '../../../utils/color-generator';
 
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
 
-function parentChildOfMap(allSpans: Span[]): Record<string, Span[]> {
-  const parentChildOfMap: Record<string, Span[]> = {};
+function parentChildOfMap(allSpans: IOtelSpan[]): Record<string, IOtelSpan[]> {
+  const parentChildOfMap: Record<string, IOtelSpan[]> = {};
   allSpans.forEach(s => {
-    if (s.references) {
-      // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM (prod-cons)
-      const parentIDs = s.references.filter(r => r.refType === 'CHILD_OF').map(r => r.spanID);
-      parentIDs.forEach((pID: string) => {
-        parentChildOfMap[pID] = parentChildOfMap[pID] || [];
-        parentChildOfMap[pID].push(s);
-      });
+    if (s.parentSpanId) {
+      parentChildOfMap[s.parentSpanId] = parentChildOfMap[s.parentSpanId] || [];
+      parentChildOfMap[s.parentSpanId].push(s);
     }
   });
   return parentChildOfMap;
@@ -26,25 +22,27 @@ function parentChildOfMap(allSpans: Span[]): Record<string, Span[]> {
 
 const memoizedParentChildOfMap = memoizeOne(parentChildOfMap);
 
-function getChildOfSpans(parentID: string, allSpans: Span[]): Span[] {
+function getChildOfSpans(parentID: string, allSpans: IOtelSpan[]): IOtelSpan[] {
   return memoizedParentChildOfMap(allSpans)[parentID] || [];
 }
 
-function computeSelfTime(parentSpan: Span, allSpans: Span[]): number {
-  if (!parentSpan.hasChildren) return parentSpan.duration;
+function computeSelfTime(parentSpan: IOtelSpan, allSpans: IOtelSpan[]): number {
+  if (!parentSpan.hasChildren) return parentSpan.durationMicros;
 
-  let parentSpanSelfTime = parentSpan.duration;
-  let previousChildEndTime = parentSpan.startTime;
+  let parentSpanSelfTime = parentSpan.durationMicros;
+  let previousChildEndTime = parentSpan.startTimeUnixMicros;
 
-  const children = getChildOfSpans(parentSpan.spanID, allSpans).sort((a, b) => a.startTime - b.startTime);
+  const children = getChildOfSpans(parentSpan.spanId, allSpans).sort(
+    (a, b) => a.startTimeUnixMicros - b.startTimeUnixMicros
+  );
 
-  const parentSpanEndTime = parentSpan.startTime + parentSpan.duration;
+  const parentSpanEndTime = parentSpan.startTimeUnixMicros + parentSpan.durationMicros;
 
   for (let index = 0; index < children.length; index++) {
     const child = children[index];
 
-    const childEndTime = child.startTime + child.duration;
-    const childStartsAfterParentEnded = child.startTime > parentSpanEndTime;
+    const childEndTime = child.startTimeUnixMicros + child.durationMicros;
+    const childStartsAfterParentEnded = child.startTimeUnixMicros > parentSpanEndTime;
     const childEndsBeforePreviousChild = childEndTime < previousChildEndTime;
 
     // parent |..................|
@@ -59,14 +57,14 @@ function computeSelfTime(parentSpan: Span, allSpans: Span[]): number {
     // child    |.......|                    - previousChild
     // child        |.....|                  - nonOverlappingStartTime is previousChildEndTime
     // child                |.....|          - nonOverlappingStartTime is child.startTime
-    const nonOverlappingStartTime = Math.max(previousChildEndTime, child.startTime);
+    const nonOverlappingStartTime = Math.max(previousChildEndTime, child.startTimeUnixMicros);
     const childEndTimeOrParentEndTime = Math.min(parentSpanEndTime, childEndTime);
 
     const nonOverlappingDuration = childEndTimeOrParentEndTime - nonOverlappingStartTime;
     parentSpanSelfTime -= nonOverlappingDuration;
 
     // last span which can be included in self time calculation, because it ends after parent span ends
-    // parent |......................|
+    // parent |.......................|
     // child                      |.....|        - last span included in self time calculation
     // child                       |.........|   - skipped
     if (childEndTimeOrParentEndTime === parentSpanEndTime) {
@@ -79,15 +77,20 @@ function computeSelfTime(parentSpan: Span, allSpans: Span[]): number {
   return parentSpanSelfTime;
 }
 
-function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultValue: StatsPerTag) {
+function computeColumnValues(
+  trace: IOtelTrace,
+  span: IOtelSpan,
+  allSpans: IOtelSpan[],
+  resultValue: StatsPerTag
+) {
   const resultValueChange = resultValue;
   resultValueChange.count += 1;
-  resultValueChange.total += span.duration;
-  if (resultValueChange.min > span.duration) {
-    resultValueChange.min = span.duration;
+  resultValueChange.total += span.durationMicros;
+  if (resultValueChange.min > span.durationMicros) {
+    resultValueChange.min = span.durationMicros;
   }
-  if (resultValueChange.max < span.duration) {
-    resultValueChange.max = span.duration;
+  if (resultValueChange.max < span.durationMicros) {
+    resultValueChange.max = span.durationMicros;
   }
 
   const tempSelf = computeSelfTime(span, allSpans);
@@ -99,14 +102,14 @@ function computeColumnValues(trace: Trace, span: Span, allSpans: Span[], resultV
   }
   resultValueChange.selfTotal += tempSelf;
 
-  const onePercent = 100 / trace.duration;
+  const onePercent = 100 / trace.durationMicros;
   resultValueChange.percent = resultValueChange.selfTotal * onePercent;
 
   return resultValueChange;
 }
 
 /**
- * Builds an obeject which represents a column.
+ * Builds an object which represents a column.
  */
 function buildOneColumn(oneColumn: ITableSpan) {
   const oneColumnChange = oneColumn;
@@ -136,89 +139,83 @@ type StatsPerTag = {
   percent: number;
 };
 
-function getDefaultStatsValue(trace: Trace) {
+function getDefaultStatsValue(trace: IOtelTrace) {
   return {
     selfTotal: 0,
-    selfMin: trace.duration,
+    selfMin: trace.durationMicros,
     selfMax: 0,
     selfAvg: 0,
     total: 0,
     avg: 0,
-    min: trace.duration,
+    min: trace.durationMicros,
     max: 0,
     count: 0,
     percent: 0,
   };
 }
 
-function getTagValueFromSpan(tagKey: string, span: Span) {
-  let tagValue = null as null | string;
-  if (tagKey === operationName) {
-    tagValue = span.operationName;
-  } else if (tagKey === serviceName) {
-    tagValue = span.process.serviceName;
+function getAttributeValueFromSpan(attributeKey: string, span: IOtelSpan) {
+  let attributeValue = null as null | string;
+  if (attributeKey === operationName) {
+    attributeValue = span.name;
+  } else if (attributeKey === serviceName) {
+    attributeValue = span.resource.serviceName;
   } else {
-    for (let tagIndex = 0; tagIndex < span.tags.length; tagIndex++) {
-      const tag = span.tags[tagIndex];
-
-      if (tag.key !== tagKey) {
-        continue;
-      }
-
-      tagValue = tag.value;
-      break;
+    const attr = span.attributes.find(a => a.key === attributeKey);
+    if (attr) {
+      attributeValue = String(attr.value);
     }
   }
 
-  return tagValue;
+  return attributeValue;
 }
 
 /**
  * Is used if only one dropdown is selected.
  */
-function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
+function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
   const allSpans = trace.spans;
 
   // used to build the table
   const allTableValues = [];
-  const spanWithNoSelectedTag = []; // is only needed when there are Others
+  const spanWithNoSelectedAttribute = []; // is only needed when there are Others
 
-  const uniqueValuesForSelectedTag = new Set<string>();
+  const uniqueValuesForSelectedAttribute = new Set<string>();
 
-  const statsPerTagValue = {} as Record<string, StatsPerTag>;
-  const spanIdsWithSelectedTag = new Set<string>();
+  const statsPerAttributeValue = {} as Record<string, StatsPerTag>;
+  const spanIdsWithSelectedAttribute = new Set<string>();
 
   for (let i = 0; i < allSpans.length; i++) {
-    const tagValue = getTagValueFromSpan(selectedTagKey, allSpans[i]);
+    const attributeValue = getAttributeValueFromSpan(selectedAttributeKey, allSpans[i]);
 
-    if (!tagValue) {
+    if (!attributeValue) {
       continue;
     }
 
-    statsPerTagValue[tagValue] = computeColumnValues(
+    statsPerAttributeValue[attributeValue] = computeColumnValues(
       trace,
       allSpans[i],
       allSpans,
-      statsPerTagValue[tagValue] ?? getDefaultStatsValue(trace)
+      statsPerAttributeValue[attributeValue] ?? getDefaultStatsValue(trace)
     );
 
-    spanIdsWithSelectedTag.add(allSpans[i].spanID);
-    uniqueValuesForSelectedTag.add(tagValue);
+    spanIdsWithSelectedAttribute.add(allSpans[i].spanId);
+    uniqueValuesForSelectedAttribute.add(attributeValue);
   }
 
-  for (const tagValue of uniqueValuesForSelectedTag) {
-    const resultValue = statsPerTagValue[tagValue];
+  for (const attributeValue of uniqueValuesForSelectedAttribute) {
+    const resultValue = statsPerAttributeValue[attributeValue];
 
     let color = '';
-    if (selectedTagKey === serviceName) {
-      color = colorGenerator.getColorByKey(tagValue);
+    if (selectedAttributeKey === serviceName) {
+      color = colorGenerator.getColorByKey(attributeValue);
     }
 
     resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
     resultValue.avg = resultValue.total / resultValue.count;
     let tableSpan = {
       hasSubgroupValue: true,
-      name: tagValue,
+      name: attributeValue,
       count: resultValue.count,
       total: resultValue.total,
       avg: resultValue.avg,
@@ -240,18 +237,18 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
     allTableValues.push(tableSpan);
   }
   // checks if there is OTHERS
-  if (selectedTagKey !== serviceName && selectedTagKey !== operationName) {
+  if (selectedAttributeKey !== serviceName && selectedAttributeKey !== operationName) {
     for (let i = 0; i < allSpans.length; i++) {
-      const spanHasSelectedTag = spanIdsWithSelectedTag.has(allSpans[i].spanID);
+      const spanHasSelectedAttribute = spanIdsWithSelectedAttribute.has(allSpans[i].spanId);
 
-      if (!spanHasSelectedTag) {
-        spanWithNoSelectedTag.push(allSpans[i]);
+      if (!spanHasSelectedAttribute) {
+        spanWithNoSelectedAttribute.push(allSpans[i]);
       }
     }
     // Others is calculated
     let resultValue = getDefaultStatsValue(trace);
-    for (let i = 0; i < spanWithNoSelectedTag.length; i++) {
-      resultValue = computeColumnValues(trace, spanWithNoSelectedTag[i], allSpans, resultValue);
+    for (let i = 0; i < spanWithNoSelectedAttribute.length; i++) {
+      resultValue = computeColumnValues(trace, spanWithNoSelectedAttribute[i], allSpans, resultValue);
     }
     if (resultValue.count !== 0) {
       // Others is build
@@ -259,7 +256,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
       resultValue.avg = resultValue.total / resultValue.count;
       let tableSpanOTHERS = {
         hasSubgroupValue: false,
-        name: `Without Tag: ${selectedTagKey}`,
+        name: `Without Attribute: ${selectedAttributeKey}`,
         count: resultValue.count,
         total: resultValue.total,
         avg: resultValue.avg,
@@ -288,47 +285,47 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
  * Creates columns for the children.
  */
 function buildDetail(
-  tempArray: Span[],
-  allSpans: Span[],
-  selectedTagKeySecond: string,
+  tempArray: IOtelSpan[],
+  allSpans: IOtelSpan[],
+  selectedAttributeKeySecond: string,
   parentName: string,
-  trace: Trace
+  trace: IOtelTrace
 ) {
   const newColumnValues = [];
 
-  const statsPerTagValue = {} as Record<string, StatsPerTag>;
-  const uniqueValuesForSelectedTag = new Set<string>();
+  const statsPerAttributeValue = {} as Record<string, StatsPerTag>;
+  const uniqueValuesForSelectedAttribute = new Set<string>();
 
   for (let i = 0; i < tempArray.length; i++) {
-    const tagValue = getTagValueFromSpan(selectedTagKeySecond, tempArray[i]);
+    const attributeValue = getAttributeValueFromSpan(selectedAttributeKeySecond, tempArray[i]);
 
-    if (!tagValue) {
+    if (!attributeValue) {
       continue;
     }
 
-    statsPerTagValue[tagValue] = computeColumnValues(
+    statsPerAttributeValue[attributeValue] = computeColumnValues(
       trace,
       tempArray[i],
       allSpans,
-      statsPerTagValue[tagValue] ?? getDefaultStatsValue(trace)
+      statsPerAttributeValue[attributeValue] ?? getDefaultStatsValue(trace)
     );
 
-    uniqueValuesForSelectedTag.add(tagValue);
+    uniqueValuesForSelectedAttribute.add(attributeValue);
   }
 
-  for (const tagValue of uniqueValuesForSelectedTag) {
-    const resultValue = statsPerTagValue[tagValue];
+  for (const attributeValue of uniqueValuesForSelectedAttribute) {
+    const resultValue = statsPerAttributeValue[attributeValue];
 
     let color = '';
-    if (selectedTagKeySecond === serviceName) {
-      color = colorGenerator.getColorByKey(tagValue);
+    if (selectedAttributeKeySecond === serviceName) {
+      color = colorGenerator.getColorByKey(attributeValue);
     }
 
     resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
     resultValue.avg = resultValue.total / resultValue.count;
     let buildOneColumnValue = {
       hasSubgroupValue: true,
-      name: tagValue,
+      name: attributeValue,
       count: resultValue.count,
       total: resultValue.total,
       avg: resultValue.avg,
@@ -355,7 +352,11 @@ function buildDetail(
 /**
  * Used to generate detail rest.
  */
-function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond: string, trace: Trace) {
+function generateDetailRest(
+  allColumnValues: ITableSpan[],
+  selectedAttributeKeySecond: string,
+  trace: IOtelTrace
+) {
   const allSpans = trace.spans;
   const newTable = [];
   for (let i = 0; i < allColumnValues.length; i++) {
@@ -364,23 +365,23 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
       let resultValue = {
         selfTotal: 0,
         selfAvg: 0,
-        selfMin: trace.duration,
+        selfMin: trace.durationMicros,
         selfMax: 0,
         total: 0,
         avg: 0,
-        min: trace.duration,
+        min: trace.durationMicros,
         max: 0,
         count: 0,
         percent: 0,
       };
       for (let j = 0; j < allSpans.length; j++) {
         if (
-          allColumnValues[i].name === allSpans[j].process.serviceName ||
-          allColumnValues[i].name === allSpans[j].operationName
+          allColumnValues[i].name === allSpans[j].resource.serviceName ||
+          allColumnValues[i].name === allSpans[j].name
         ) {
           let rest = true;
-          for (let l = 0; l < allSpans[j].tags.length; l++) {
-            if (allSpans[j].tags[l].key === selectedTagKeySecond) {
+          for (let l = 0; l < allSpans[j].attributes.length; l++) {
+            if (allSpans[j].attributes[l].key === selectedAttributeKeySecond) {
               rest = false;
               break;
             }
@@ -395,7 +396,7 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
       if (resultValue.count !== 0) {
         let buildOneColumnValue = {
           hasSubgroupValue: false,
-          name: `Without Tag: ${selectedTagKeySecond}`,
+          name: `Without Attribute: ${selectedAttributeKeySecond}`,
           count: resultValue.count,
           total: resultValue.total,
           avg: resultValue.avg,
@@ -426,27 +427,28 @@ function generateDetailRest(allColumnValues: ITableSpan[], selectedTagKeySecond:
  */
 function valueSecondDropdown(
   actualTableValues: ITableSpan[],
-  selectedTagKey: string,
-  selectedTagKeySecond: string,
-  trace: Trace
+  selectedAttributeKey: string,
+  selectedAttributeKeySecond: string,
+  trace: IOtelTrace
 ) {
   const allSpans = trace.spans;
   const allTableValues = [];
 
-  const isSecondDropdownTag = selectedTagKeySecond !== serviceName && selectedTagKeySecond !== operationName;
+  const isSecondDropdownAttribute =
+    selectedAttributeKeySecond !== serviceName && selectedAttributeKeySecond !== operationName;
 
-  const spansMatchingTagValueFromFirstDropdown = {} as Record<string, Span[]>;
+  const spansMatchingAttributeValueFromFirstDropdown = {} as Record<string, IOtelSpan[]>;
   for (let i = 0; i < allSpans.length; i++) {
-    const tagValue = getTagValueFromSpan(selectedTagKey, allSpans[i]);
+    const attributeValue = getAttributeValueFromSpan(selectedAttributeKey, allSpans[i]);
 
-    if (!tagValue) {
+    if (!attributeValue) {
       continue;
     }
 
-    if (tagValue in spansMatchingTagValueFromFirstDropdown) {
-      spansMatchingTagValueFromFirstDropdown[tagValue].push(allSpans[i]);
+    if (attributeValue in spansMatchingAttributeValueFromFirstDropdown) {
+      spansMatchingAttributeValueFromFirstDropdown[attributeValue].push(allSpans[i]);
     } else {
-      spansMatchingTagValueFromFirstDropdown[tagValue] = [allSpans[i]];
+      spansMatchingAttributeValueFromFirstDropdown[attributeValue] = [allSpans[i]];
     }
   }
 
@@ -456,19 +458,19 @@ function valueSecondDropdown(
       continue;
     }
 
-    const spansWithSecondTag = spansMatchingTagValueFromFirstDropdown[actualTableValues[i].name];
+    const spansWithSecondAttribute = spansMatchingAttributeValueFromFirstDropdown[actualTableValues[i].name];
 
-    // true for row with name Without Tag: ${selectedTagKey}
-    const isTableValueWithoutTag = spansWithSecondTag === undefined;
-    if (isTableValueWithoutTag) {
+    // true for row with name Without Attribute: ${selectedAttributeKey}
+    const isTableValueWithoutAttribute = spansWithSecondAttribute === undefined;
+    if (isTableValueWithoutAttribute) {
       allTableValues.push(actualTableValues[i]);
       continue;
     }
 
     const newColumnValues = buildDetail(
-      spansWithSecondTag,
+      spansWithSecondAttribute,
       allSpans,
-      selectedTagKeySecond,
+      selectedAttributeKeySecond,
       actualTableValues[i].name,
       trace
     );
@@ -482,37 +484,37 @@ function valueSecondDropdown(
     }
   }
 
-  // if second dropdown is a tag a rest must be created
-  if (isSecondDropdownTag) {
-    return generateDetailRest(allTableValues, selectedTagKeySecond, trace);
-    // if no tag is selected the values can be returned
+  // if second dropdown is an attribute a rest must be created
+  if (isSecondDropdownAttribute) {
+    return generateDetailRest(allTableValues, selectedAttributeKeySecond, trace);
+    // if no attribute is selected the values can be returned
   }
   return allTableValues;
 }
 
 /**
  * Returns the values of the table shown after the selection of the first dropdown.
- * @param selectedTagKey the key which was selected
+ * @param selectedAttributeKey the key which was selected
  */
-export function getColumnValues(selectedTagKey: string, trace: Trace) {
-  return valueFirstDropdown(selectedTagKey, trace);
+export function getColumnValues(selectedAttributeKey: string, trace: IOtelTrace) {
+  return valueFirstDropdown(selectedAttributeKey, trace);
 }
 
 /**
  * Returns the values of the table shown after the selection of the second dropdown.
  * @param actualTableValues actual values of the table
- * @param selectedTagKey first key which is selected
- * @param selectedTagKeySecond second key which is selected
+ * @param selectedAttributeKey first key which is selected
+ * @param selectedAttributeKeySecond second key which is selected
  * @param trace whole information about the trace
  */
 export function getColumnValuesSecondDropdown(
   actualTableValues: ITableSpan[],
-  selectedTagKey: string,
-  selectedTagKeySecond: string,
-  trace: Trace
+  selectedAttributeKey: string,
+  selectedAttributeKeySecond: string,
+  trace: IOtelTrace
 ) {
-  if (selectedTagKeySecond !== 'Reset') {
-    return valueSecondDropdown(actualTableValues, selectedTagKey, selectedTagKeySecond, trace);
+  if (selectedAttributeKeySecond !== 'Reset') {
+    return valueSecondDropdown(actualTableValues, selectedAttributeKey, selectedAttributeKeySecond, trace);
   }
-  return getColumnValues(selectedTagKey, trace);
+  return getColumnValues(selectedAttributeKey, trace);
 }

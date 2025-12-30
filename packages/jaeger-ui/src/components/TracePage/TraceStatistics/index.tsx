@@ -5,14 +5,14 @@ import React, { Component } from 'react';
 import './index.css';
 import { Table } from 'antd';
 import { ColumnProps } from 'antd/es/table';
-import { Trace } from '../../../types/trace';
+import { IOtelTrace } from '../../../types/otel';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
 import { ITableSpan } from './types';
 import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
 
 type Props = {
-  trace: Trace;
+  trace: IOtelTrace;
   uiFindVertexKeys: Set<string> | TNil;
   uiFind: string | null | undefined;
 };
@@ -102,7 +102,7 @@ const columnsArray: {
 ];
 
 /**
- * Trace Tag Overview Component
+ * Trace Statistics Component
  */
 export default class TraceStatistics extends Component<Props, State> {
   constructor(props: Props) {
@@ -207,7 +207,7 @@ export default class TraceStatistics extends Component<Props, State> {
     }
     if (typeof uiFindVertexKeys !== 'undefined') {
       uiFindVertexKeys!.forEach(function calc(value) {
-        const uiFindVertexKeysSplit = value.split('');
+        const uiFindVertexKeysSplit = value.split('\u000b');
 
         for (let i = 0; i < allTableSpansChange.length; i++) {
           if (
