@@ -204,4 +204,8 @@ export type Config = {
   themes: {
     enabled: boolean;
   };
+  // useOpenTelemetryTerms determines whether the UI uses legacy Jaeger terminology
+  // (tags, logs, process, operation name) or OpenTelemetry terminology
+  // (attributes, events, resource, name).
+  useOpenTelemetryTerms: boolean;
 };
