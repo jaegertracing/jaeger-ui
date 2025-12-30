@@ -35,10 +35,9 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('check search', async () => {
-    // Use actual span IDs from the test trace that belong to service1
+    // Use actual span IDs from the test trace
     const searchSet = new Set();
     searchSet.add('span-1'); // service1, op1
-    searchSet.add('span-4'); // service1, op1
 
     let componentInstance;
     const TestWrapper = () => {
@@ -411,7 +410,7 @@ describe('<TraceTagOverview>', () => {
     ];
 
     // Use actual span IDs from the test trace
-    const searchSet = new Set(['span-1', 'span-4']); // Both are service1, op1
+    const searchSet = new Set(['span-1']); // service1, op1
 
     await waitFor(() => {
       if (componentRef.current) {

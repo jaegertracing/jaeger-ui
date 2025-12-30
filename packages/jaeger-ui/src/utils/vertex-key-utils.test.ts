@@ -88,7 +88,7 @@ describe('vertex-key-utils', () => {
       });
     });
 
-    it('should return null for empty string', () => {
+    it('should handle empty string', () => {
       const result = getLeafPart('');
 
       expect(result).toEqual({
