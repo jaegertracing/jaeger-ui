@@ -211,7 +211,7 @@ interface Status {
 │    ↓                                                             │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │ OTEL FACADE LAYER (NEW)                                  │   │
-│  │ src/model/otel-facade/                                   │   │
+│  │ src/model/                                                │   │
 │  │                                                           │   │
 │  │  - OtelSpanFacade wraps Span                             │   │
 │  │    • .attributes → maps span.tags                        │   │
@@ -266,13 +266,11 @@ interface Status {
 
 ## Implementation Plan
 
-### Phase 1: Build OTEL Facade
+### Phase 1: Build OTEL Facade ✅
 
 **Goal**: Create facade layer that presents OTEL interface over legacy data.
 
-#### 1.1 Create Facade Types
-
-- [ ] Create `src/types/otel.tsx` with OTEL interfaces:
+#### 1.1 Create Facade Types ✅
   ```typescript
   export interface OtelSpan { ... }
   export interface OtelTrace { ... }
@@ -285,9 +283,7 @@ interface Status {
   export enum StatusCode { ... }
   ```
 
-#### 1.2 Implement Facade Classes
-
-- [ ] Create `src/model/otel-facade/OtelSpanFacade.tsx`:
+#### 1.2 Implement Facade Classes ✅
   ```typescript
   export class OtelSpanFacade implements OtelSpan {
     constructor(private legacySpan: Span) {}
@@ -318,12 +314,10 @@ interface Status {
   }
   ```
 
-- [ ] Create `src/model/otel-facade/OtelTraceFacade.tsx`
-- [ ] Create `src/model/otel-facade/index.tsx` (exports)
+- ✅ Create `src/model/OtelTraceFacade.tsx`
+- ✅ Create `src/model/OtelSpanFacade.tsx`
 
-#### 1.3 Create Facade Selectors
-
-- [ ] Create `src/selectors/otel.tsx`:
+#### 1.3 Create Facade Selectors ✅
   ```typescript
   // Redux selectors that return facade wrappers
   export const selectOtelTrace = (state, traceId) => {
@@ -337,9 +331,7 @@ interface Status {
   };
   ```
 
-#### 1.4 Create React Hooks
-
-- [ ] Create `src/hooks/useOtelTrace.tsx`:
+#### 1.4 Create React Hooks ✅
   ```typescript
   export const useOtelTrace = (traceId: string): OtelTrace | null => {
     const trace = useSelector(state => selectOtelTrace(state, traceId));
@@ -352,12 +344,10 @@ interface Status {
   };
   ```
 
-#### 1.5 Testing
-
-- [ ] Unit tests for each facade class
-- [ ] Test all property mappings
-- [ ] Test with real trace data
-- [ ] Performance benchmarks (facade overhead should be minimal)
+#### 1.5 Testing ✅
+- ✅ Test all property mappings
+- ✅ Test with real trace data
+- ✅ Performance benchmarks (facade overhead should be minimal)
 
 ### Phase 2: Component Migration
 
