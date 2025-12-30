@@ -159,10 +159,9 @@ function mergeChildrenCriticalPath(
   // Define an array to store the IDs of the span and its descendants (if the span is collapsed)
   const allRequiredSpanIds = new Set<string>([spanID]);
 
-  // Use spanMap if available, otherwise build it on demand (e.g., in tests)
-  const spanMap = trace.spanMap || new Map(trace.spans.map(s => [s.spanID, s]));
-  // Use nodesBySpanId if available, otherwise create empty map (e.g., in tests)
-  const nodesBySpanId = trace.nodesBySpanId || new Map();
+  // Use pre-built spanMap and nodesBySpanId
+  const spanMap = trace.spanMap;
+  const nodesBySpanId = trace.nodesBySpanId;
 
   // If the span is collapsed, recursively find all of its descendants.
   const findAllDescendants = (currentChildSpanIds: Set<string>) => {

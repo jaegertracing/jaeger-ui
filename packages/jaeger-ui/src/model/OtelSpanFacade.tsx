@@ -150,10 +150,6 @@ export default class OtelSpanFacade implements IOtelSpan {
     return this.legacySpan.relativeStartTime;
   }
 
-  get childSpanIds(): string[] {
-    return this.legacySpan.childSpanIds || [];
-  }
-
   get subsidiarilyReferencedBy(): ILink[] {
     return this.legacySpan.subsidiarilyReferencedBy.map(ref => ({
       traceId: ref.traceID,

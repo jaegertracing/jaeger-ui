@@ -175,10 +175,10 @@ function getTagValueFromSpan(tagKey: string, span: Span) {
  */
 function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   const allSpans = trace.spans;
-  // Use the pre-built spanMap or create one if not available (e.g., in tests)
-  const spanMap = trace.spanMap || new Map(allSpans.map(s => [s.spanID, s]));
-  // Use the pre-built nodesBySpanId or create empty map if not available (e.g., in tests)
-  const nodesBySpanId = trace.nodesBySpanId || new Map<string, TreeNode<string>>();
+  // Use the pre-built spanMap and nodesBySpanId
+  const spanMap = trace.spanMap;
+  // Use the pre-built nodesBySpanId
+  const nodesBySpanId = trace.nodesBySpanId;
 
   // used to build the table
   const allTableValues = [];
@@ -459,10 +459,9 @@ function valueSecondDropdown(
 ) {
   const allSpans = trace.spans;
   const allTableValues = [];
-  // Use the pre-built spanMap or create one if not available (e.g., in tests)
-  const spanMap = trace.spanMap || new Map(allSpans.map(s => [s.spanID, s]));
-  // Use the pre-built nodesBySpanId or create empty map if not available (e.g., in tests)
-  const nodesBySpanId = trace.nodesBySpanId || new Map<string, TreeNode<string>>();
+  // Use the pre-built spanMap and nodesBySpanId
+  const spanMap = trace.spanMap;
+  const nodesBySpanId = trace.nodesBySpanId;
 
   const isSecondDropdownTag = selectedTagKeySecond !== serviceName && selectedTagKeySecond !== operationName;
 

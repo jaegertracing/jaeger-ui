@@ -85,7 +85,6 @@ export interface IOtelSpan {
   depth: number;
   hasChildren: boolean;
   relativeStartTimeMicros: number; // microseconds since trace start
-  childSpanIds: string[];
   subsidiarilyReferencedBy: ILink[]; // spans that reference this span via links (not
 }
 
