@@ -3,6 +3,7 @@
 
 import OtelTraceFacade from './OtelTraceFacade';
 import { Trace, Span, Process } from '../types/trace';
+import TreeNode from '../utils/TreeNode';
 
 describe('OtelTraceFacade', () => {
   const mockProcess: Process = {
@@ -40,6 +41,8 @@ describe('OtelTraceFacade', () => {
     tracePageTitle: 'test-trace-title',
     traceEmoji: '😀',
     services: [{ name: 'test-service', numberOfSpans: 1 }],
+    spanMap: new Map([['span-1', mockSpan]]),
+    tree: new TreeNode('__root__'),
     asOtelTrace() {
       throw new Error('Not implemented');
     },

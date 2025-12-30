@@ -19,10 +19,11 @@ function transformTracesToPaths(
   const dependenciesMap = new Map<string, TDdgPayloadPath>();
   Object.values(traces).forEach(({ data }) => {
     if (data) {
-      const spanMap: Map<string, Span> = new Map();
+      // Use the pre-built spanMap and tree from the trace object if available,
+      // otherwise build them on demand (e.g., in tests)
+      const spanMap = data.spanMap || new Map(data.spans.map(span => [span.spanID, span]));
+      const tree = data.tree || getTraceSpanIdsAsTree(data, spanMap);
       const { traceID } = data;
-      data.spans.forEach(span => spanMap.set(span.spanID, span));
-      const tree = getTraceSpanIdsAsTree(data);
       tree.paths((pathIds: string[]) => {
         const paths = pathIds.reduce((reducedSpans: Span[], id: string): Span[] => {
           if (id === TREE_ROOT_ID) {

@@ -179,8 +179,9 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     traceName,
     tracePageTitle,
     traceEmoji,
-    // TODO why not store `tree` here for easier access to tree structure?
-    // ...
+    // Optimized data structures - created once during trace transformation
+    spanMap,
+    tree,
     // Can't use spread operator for intersection types
     // repl: https://goo.gl/4Z23MJ
     // issue: https://github.com/facebook/flow/issues/1511

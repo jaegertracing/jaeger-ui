@@ -144,9 +144,9 @@ export default class ScrollManager {
     const findMatches = xrs.getSearchedSpanIDs();
     const _collapsed = xrs.getCollapsedChildren();
     const childrenAreHidden = _collapsed ? new Set(_collapsed) : null;
-    // use empty Map as fallback to make flow happy
+    // use the pre-built spanMap from the trace object, or build it if not available (e.g., in tests)
     const spansMap: Map<string, Span> = childrenAreHidden
-      ? new Map(spans.map(s => [s.spanID, s] as [string, Span]))
+      ? this._trace.spanMap || new Map(spans.map(s => [s.spanID, s] as [string, Span]))
       : new Map();
     const boundary = direction < 0 ? -1 : spans.length;
     let nextSpanIndex: number | undefined;

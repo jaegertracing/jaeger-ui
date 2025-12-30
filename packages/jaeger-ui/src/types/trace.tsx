@@ -5,6 +5,7 @@
  * All timestamps are in microseconds
  */
 
+import TreeNode from '../utils/TreeNode';
 import { IOtelTrace } from './otel';
 
 export type KeyValuePair<ValueType = string> = {
@@ -77,6 +78,10 @@ export type Trace = TraceData & {
   services: { name: string; numberOfSpans: number }[];
   // Number of orphan spans (spans referencing parent spans that don't exist in the trace)
   orphanSpanCount?: number;
+
+  // Optimized data structures - created once during trace transformation
+  spanMap: Map<string, Span>;
+  tree: TreeNode<string>;
 
   // OTEL facade - lazy-initialized and memoized
   _otelFacade?: IOtelTrace;
