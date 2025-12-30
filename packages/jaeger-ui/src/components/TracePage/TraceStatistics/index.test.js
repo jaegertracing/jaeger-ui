@@ -10,7 +10,7 @@ import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
 import testTrace from './tableValuesTestTrace/testTrace.json';
 
-const transformedTrace = transformTraceData(testTrace);
+const transformedTrace = transformTraceData(testTrace).asOtelTrace();
 
 describe('<TraceTagOverview>', () => {
   const defaultProps = {

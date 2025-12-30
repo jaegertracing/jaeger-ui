@@ -7,7 +7,7 @@ import { getColumnValuesSecondDropdown, getColumnValues } from './tableValues';
 
 import testTrace from './tableValuesTestTrace/testTrace.json';
 
-const transformedTrace = transformTraceData(testTrace);
+const transformedTrace = transformTraceData(testTrace).asOtelTrace();
 
 describe('generateColor', () => {
   it('check generateColor to count, one NameSelector is selected', () => {
