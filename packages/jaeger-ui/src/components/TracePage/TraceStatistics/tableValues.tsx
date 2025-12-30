@@ -159,7 +159,7 @@ function getAttributeValueFromSpan(attributeKey: string, span: IOtelSpan) {
   if (attributeKey === operationName) {
     attributeValue = span.name;
   } else if (attributeKey === serviceName) {
-    attributeValue = span.resource?.serviceName || 'unknown';
+    attributeValue = span.resource.serviceName;
   } else {
     const attr = span.attributes.find(a => a.key === attributeKey);
     if (attr) {
