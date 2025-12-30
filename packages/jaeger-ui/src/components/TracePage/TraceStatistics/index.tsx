@@ -185,7 +185,7 @@ export default class TraceStatistics extends Component<Props, State> {
 
   /**
    * Colors found entries in the table.
-   * @param uiFindVertexKeys Set of found spans
+   * @param uiFindVertexKeys Set of span IDs that matched the search
    * @param allTableSpans entries that are shown
    */
   searchInTable = (
@@ -196,6 +196,8 @@ export default class TraceStatistics extends Component<Props, State> {
     const allTableSpansChange = allTableSpans;
     const yellowSearchCollor = 'rgb(255,243,215)';
     const defaultGrayCollor = 'rgb(248,248,248)';
+
+    // Reset all colors to default
     for (let i = 0; i < allTableSpansChange.length; i++) {
       if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
         allTableSpansChange[i].searchColor = 'transparent';
@@ -205,28 +207,72 @@ export default class TraceStatistics extends Component<Props, State> {
         allTableSpansChange[i].searchColor = defaultGrayCollor;
       }
     }
-    if (typeof uiFindVertexKeys !== 'undefined') {
-      uiFindVertexKeys!.forEach(function calc(value) {
-        const uiFindVertexKeysSplit = value.split('');
 
-        for (let i = 0; i < allTableSpansChange.length; i++) {
-          if (
-            uiFindVertexKeysSplit[uiFindVertexKeysSplit.length - 1].indexOf(allTableSpansChange[i].name) !==
-            -1
-          ) {
-            if (allTableSpansChange[i].parentElement === 'none') {
-              allTableSpansChange[i].searchColor = yellowSearchCollor;
-            } else if (
-              uiFindVertexKeysSplit[uiFindVertexKeysSplit.length - 1].indexOf(
-                allTableSpansChange[i].parentElement
-              ) !== -1
-            ) {
-              allTableSpansChange[i].searchColor = yellowSearchCollor;
+    // Highlight table rows based on matched span IDs
+    if (typeof uiFindVertexKeys !== 'undefined' && uiFindVertexKeys.size > 0) {
+      // Build a set of table row names that contain matched spans
+      const matchedRowNames = new Set<string>();
+      const matchedParentElements = new Set<string>();
+
+      // Iterate through all spans in the trace
+      const { spans } = this.props.trace;
+      for (let spanIndex = 0; spanIndex < spans.length; spanIndex++) {
+        const span = spans[spanIndex];
+
+        // Check if this span is in the matched set
+        if (uiFindVertexKeys.has(span.spanID)) {
+          // Determine which table rows this span belongs to based on current grouping
+          const { valueNameSelector1, valueNameSelector2 } = this.state;
+
+          // First level grouping
+          if (valueNameSelector1 === 'Service Name') {
+            matchedRowNames.add(span.process.serviceName);
+            if (valueNameSelector2 === 'Operation Name') {
+              matchedRowNames.add(span.operationName);
+              matchedParentElements.add(span.process.serviceName);
+            }
+          } else if (valueNameSelector1 === 'Operation Name') {
+            matchedRowNames.add(span.operationName);
+            if (valueNameSelector2 === 'Service Name') {
+              matchedRowNames.add(span.process.serviceName);
+              matchedParentElements.add(span.operationName);
+            }
+          } else {
+            // Custom tag grouping
+            for (let tagIndex = 0; tagIndex < span.tags.length; tagIndex++) {
+              const tag = span.tags[tagIndex];
+              if (tag.key === valueNameSelector1) {
+                matchedRowNames.add(tag.value.toString());
+              }
+              if (valueNameSelector2 && tag.key === valueNameSelector2) {
+                matchedRowNames.add(tag.value.toString());
+                // Find parent for this detail row
+                for (let parentTagIndex = 0; parentTagIndex < span.tags.length; parentTagIndex++) {
+                  const parentTag = span.tags[parentTagIndex];
+                  if (parentTag.key === valueNameSelector1) {
+                    matchedParentElements.add(parentTag.value.toString());
+                  }
+                }
+              }
             }
           }
         }
-      });
+      }
+
+      // Apply highlighting to matching table rows
+      for (let i = 0; i < allTableSpansChange.length; i++) {
+        const rowName = allTableSpansChange[i].name;
+        const parentElement = allTableSpansChange[i].parentElement;
+
+        if (matchedRowNames.has(rowName)) {
+          if (parentElement === 'none' || matchedParentElements.has(parentElement)) {
+            allTableSpansChange[i].searchColor = yellowSearchCollor;
+          }
+        }
+      }
     }
+
+    // Handle text-based search (uiFind) - independent of span ID matching
     if (uiFind) {
       for (let i = 0; i < allTableSpansChange.length; i++) {
         if (allTableSpansChange[i].name.indexOf(uiFind!) !== -1) {

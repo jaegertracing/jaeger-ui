@@ -35,8 +35,10 @@ describe('<TraceTagOverview>', () => {
   });
 
   it('check search', async () => {
+    // Use actual span IDs from the test trace that belong to service1
     const searchSet = new Set();
-    searchSet.add('service1	op1	__LEAF__');
+    searchSet.add('span-1'); // service1, op1
+    searchSet.add('span-4'); // service1, op1
 
     let componentInstance;
     const TestWrapper = () => {
@@ -370,9 +372,20 @@ describe('<TraceTagOverview>', () => {
 
     render(<TestWrapper />);
 
+    await waitFor(() => {
+      if (componentRef.current) {
+        // Set up the component state to match the mock table data
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          valueNameSelector1: 'Service Name',
+          valueNameSelector2: 'Operation Name',
+        });
+      }
+    });
+
     const mockTableData = [
       {
-        name: 'parent1',
+        name: 'service1',
         isDetail: false,
         hasSubgroupValue: true,
         parentElement: 'none',
@@ -380,30 +393,40 @@ describe('<TraceTagOverview>', () => {
         key: '0',
       },
       {
-        name: 'detail1',
+        name: 'op1',
         isDetail: true,
-        hasSubgroupValue: false,
-        parentElement: 'parent1',
+        hasSubgroupValue: true,
+        parentElement: 'service1',
         searchColor: 'rgb(248,248,248)',
         key: '1',
       },
       {
-        name: 'detail2',
+        name: 'op2',
         isDetail: true,
         hasSubgroupValue: false,
-        parentElement: 'parent2',
+        parentElement: 'service1',
         searchColor: 'rgb(248,248,248)',
         key: '2',
       },
     ];
 
-    const searchSet = new Set(['parent1detail1']);
+    // Use actual span IDs from the test trace
+    const searchSet = new Set(['span-1', 'span-4']); // Both are service1, op1
 
     await waitFor(() => {
       if (componentRef.current) {
         const result = componentRef.current.searchInTable(searchSet, mockTableData, null);
         expect(result).toBeDefined();
         expect(result.length).toBe(3);
+        // Verify that service1 and op1 rows are highlighted
+        const service1Row = result.find(r => r.name === 'service1');
+        const op1Row = result.find(r => r.name === 'op1');
+        expect(service1Row).toBeDefined();
+        expect(op1Row).toBeDefined();
+        if (service1Row && op1Row) {
+          expect(service1Row.searchColor).toBe('rgb(255,243,215)');
+          expect(op1Row.searchColor).toBe('rgb(255,243,215)');
+        }
       }
     });
   });
