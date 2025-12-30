@@ -38,8 +38,17 @@ export default class OtelSpanFacade implements IOtelSpan {
       }
     }
 
-    const parentRef = this.legacySpan.references.find(ref => ref.refType === 'CHILD_OF');
-    this._parentSpanId = parentRef ? parentRef.spanID : undefined;
+    // Find parent span ID according to the following priority:
+    // 1. Earliest CHILD_OF reference with the same traceID
+    // 2. Otherwise, earliest FOLLOWS_FROM reference with the same traceID
+    // 3. If no reference with same traceID exists, parent is undefined
+    const childOfRef = this.legacySpan.references.find(
+      ref => ref.refType === 'CHILD_OF' && ref.traceID === this.legacySpan.traceID
+    );
+    const followsFromRef = this.legacySpan.references.find(
+      ref => ref.refType === 'FOLLOWS_FROM' && ref.traceID === this.legacySpan.traceID
+    );
+    this._parentSpanId = childOfRef ? childOfRef.spanID : followsFromRef ? followsFromRef.spanID : undefined;
 
     this._attributes = OtelSpanFacade.toOtelAttributes(this.legacySpan.tags);
 
