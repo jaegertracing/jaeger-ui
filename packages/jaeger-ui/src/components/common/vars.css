@@ -172,3 +172,14 @@ SPDX-License-Identifier: Apache-2.0
   /* Minimap / SpanGraph - dark mode needs visible inactive region */
   --span-graph-inactive: rgba(200, 200, 200, 0.25);
 }
+/* ============================================
+  MISSING DARK MODE TOKENS (#3204)
+  ============================================ */
+
+:root[data-theme='dark'] {
+  --surface-primary: #141414;
+  --text-primary: #e5e5e5;
+  --border-default: #333333;
+  --primary-button-bg: #4f46e5;
+  --link-hover-color: #60a5fa;
+}
