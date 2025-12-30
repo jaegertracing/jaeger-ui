@@ -47,7 +47,6 @@ export type SpanData = {
   tags?: Array<KeyValuePair>;
   references?: Array<SpanReference>;
   warnings?: Array<string> | null;
-  childSpanIds?: Array<string>;
 };
 
 export type Span = SpanData & {
@@ -59,6 +58,7 @@ export type Span = SpanData & {
   references: NonNullable<SpanData['references']>;
   warnings: NonNullable<SpanData['warnings']>;
   subsidiarilyReferencedBy: Array<SpanReference>;
+  childSpans: Array<Span>;
 };
 
 export type TraceData = {
@@ -80,8 +80,7 @@ export type Trace = TraceData & {
 
   // Optimized data structures - created once during trace transformation
   spanMap: Map<string, Span>;
-  tree: TreeNode<string>;
-  nodesBySpanId: Map<string, TreeNode<string>>;
+  rootSpans: Array<Span>;
 
   // OTEL facade - lazy-initialized and memoized
   _otelFacade?: IOtelTrace;

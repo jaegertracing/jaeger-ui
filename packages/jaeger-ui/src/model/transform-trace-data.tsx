@@ -108,6 +108,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   const { root: tree, nodesBySpanId } = getTraceSpanIdsAsTree(data, spanMap);
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
+  const rootSpans: Span[] = [];
 
   tree.walk((spanID: string, node: TreeNode<string>, depth = 0) => {
     if (spanID === TREE_ROOT_ID) {
@@ -122,6 +123,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
+    span.childSpans = []; // Will be populated in second pass
     span.warnings = span.warnings || [];
     span.tags = span.tags || [];
     span.references = span.references || [];
@@ -146,6 +148,24 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     });
     spans.push(span);
   });
+
+  // Second pass: populate childSpans based on parent-child relationships
+  spans.forEach(span => {
+    const parentRef = span.references.find(ref => ref.refType === 'CHILD_OF');
+    if (parentRef) {
+      const parentSpan = spanMap.get(parentRef.spanID);
+      if (parentSpan) {
+        parentSpan.childSpans.push(span);
+      } else {
+        // Orphan span - add to rootSpans
+        rootSpans.push(span);
+      }
+    } else {
+      // No parent reference - this is a root span
+      rootSpans.push(span);
+    }
+  });
+
   const traceName = getTraceName(spans);
   const tracePageTitle = getTracePageTitle(spans);
   const traceEmoji = getTraceEmoji(spans);
@@ -171,8 +191,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     traceEmoji,
     // Optimized data structures - created once during trace transformation
     spanMap,
-    tree,
-    nodesBySpanId,
+    rootSpans,
     // Can't use spread operator for intersection types
     // repl: https://goo.gl/4Z23MJ
     // issue: https://github.com/facebook/flow/issues/1511
