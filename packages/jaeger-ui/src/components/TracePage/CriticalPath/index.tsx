@@ -80,8 +80,19 @@ function criticalPathForTrace(trace: Trace) {
   if (rootSpanId) {
     // Use the pre-built spanMap from the trace object, or build it if not available (e.g., in tests)
     const spanMap = trace.spanMap || new Map(trace.spans.map(s => [s.spanID, s]));
+    // Use the pre-built nodesBySpanId, or build it if not available (e.g., in tests)
+    const nodesBySpanId = trace.nodesBySpanId || new Map();
+
+    // Populate childSpanIds from nodesBySpanId for critical path computation
+    const spanMapWithChildren = new Map<string, Span>();
+    spanMap.forEach((span, spanId) => {
+      const node = nodesBySpanId.get(spanId);
+      const childSpanIds = node ? node.children.map(child => child.value) : [];
+      spanMapWithChildren.set(spanId, { ...span, childSpanIds });
+    });
+
     try {
-      const refinedSpanMap = getChildOfSpans(spanMap);
+      const refinedSpanMap = getChildOfSpans(spanMapWithChildren);
       const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
       criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, criticalPath);
     } catch (error) {

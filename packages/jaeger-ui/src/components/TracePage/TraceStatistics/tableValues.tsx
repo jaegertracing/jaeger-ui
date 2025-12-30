@@ -4,20 +4,29 @@
 import { Trace, Span } from '../../../types/trace';
 import { ITableSpan } from './types';
 import colorGenerator from '../../../utils/color-generator';
+import TreeNode from '../../../utils/TreeNode';
 
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
 
-function computeSelfTime(parentSpan: Span, allSpans: Span[], spanMap: Map<string, Span>): number {
+function computeSelfTime(
+  parentSpan: Span,
+  allSpans: Span[],
+  spanMap: Map<string, Span>,
+  nodesBySpanId: Map<string, TreeNode<string>>
+): number {
   if (!parentSpan.hasChildren) return parentSpan.duration;
 
   let parentSpanSelfTime = parentSpan.duration;
   let previousChildEndTime = parentSpan.startTime;
 
-  // Use childSpanIds from the span (already sorted by startTime from the tree)
-  const children = parentSpan.childSpanIds
-    .map(id => spanMap.get(id))
-    .filter((child): child is Span => child !== undefined);
+  // Get children from nodesBySpanId (already sorted by startTime from the tree)
+  const node = nodesBySpanId.get(parentSpan.spanID);
+  const children = node
+    ? node.children
+        .map(childNode => spanMap.get(childNode.value))
+        .filter((child): child is Span => child !== undefined)
+    : [];
 
   const parentSpanEndTime = parentSpan.startTime + parentSpan.duration;
 
@@ -65,6 +74,7 @@ function computeColumnValues(
   span: Span,
   allSpans: Span[],
   spanMap: Map<string, Span>,
+  nodesBySpanId: Map<string, TreeNode<string>>,
   resultValue: StatsPerTag
 ) {
   const resultValueChange = resultValue;
@@ -77,7 +87,7 @@ function computeColumnValues(
     resultValueChange.max = span.duration;
   }
 
-  const tempSelf = computeSelfTime(span, allSpans, spanMap);
+  const tempSelf = computeSelfTime(span, allSpans, spanMap, nodesBySpanId);
   if (resultValueChange.selfMin > tempSelf) {
     resultValueChange.selfMin = tempSelf;
   }
@@ -167,6 +177,8 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
   const allSpans = trace.spans;
   // Use the pre-built spanMap or create one if not available (e.g., in tests)
   const spanMap = trace.spanMap || new Map(allSpans.map(s => [s.spanID, s]));
+  // Use the pre-built nodesBySpanId or create empty map if not available (e.g., in tests)
+  const nodesBySpanId = trace.nodesBySpanId || new Map<string, TreeNode<string>>();
 
   // used to build the table
   const allTableValues = [];
@@ -189,6 +201,7 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
       allSpans[i],
       allSpans,
       spanMap,
+      nodesBySpanId,
       statsPerTagValue[tagValue] ?? getDefaultStatsValue(trace)
     );
 
@@ -241,7 +254,14 @@ function valueFirstDropdown(selectedTagKey: string, trace: Trace) {
     // Others is calculated
     let resultValue = getDefaultStatsValue(trace);
     for (let i = 0; i < spanWithNoSelectedTag.length; i++) {
-      resultValue = computeColumnValues(trace, spanWithNoSelectedTag[i], allSpans, spanMap, resultValue);
+      resultValue = computeColumnValues(
+        trace,
+        spanWithNoSelectedTag[i],
+        allSpans,
+        spanMap,
+        nodesBySpanId,
+        resultValue
+      );
     }
     if (resultValue.count !== 0) {
       // Others is build
@@ -281,6 +301,7 @@ function buildDetail(
   tempArray: Span[],
   allSpans: Span[],
   spanMap: Map<string, Span>,
+  nodesBySpanId: Map<string, TreeNode<string>>,
   selectedTagKeySecond: string,
   parentName: string,
   trace: Trace
@@ -302,6 +323,7 @@ function buildDetail(
       tempArray[i],
       allSpans,
       spanMap,
+      nodesBySpanId,
       statsPerTagValue[tagValue] ?? getDefaultStatsValue(trace)
     );
 
@@ -351,7 +373,8 @@ function generateDetailRest(
   allColumnValues: ITableSpan[],
   selectedTagKeySecond: string,
   trace: Trace,
-  spanMap: Map<string, Span>
+  spanMap: Map<string, Span>,
+  nodesBySpanId: Map<string, TreeNode<string>>
 ) {
   const allSpans = trace.spans;
   const newTable = [];
@@ -383,7 +406,14 @@ function generateDetailRest(
             }
           }
           if (rest) {
-            resultValue = computeColumnValues(trace, allSpans[j], allSpans, spanMap, resultValue);
+            resultValue = computeColumnValues(
+              trace,
+              allSpans[j],
+              allSpans,
+              spanMap,
+              nodesBySpanId,
+              resultValue
+            );
           }
         }
       }
@@ -431,6 +461,8 @@ function valueSecondDropdown(
   const allTableValues = [];
   // Use the pre-built spanMap or create one if not available (e.g., in tests)
   const spanMap = trace.spanMap || new Map(allSpans.map(s => [s.spanID, s]));
+  // Use the pre-built nodesBySpanId or create empty map if not available (e.g., in tests)
+  const nodesBySpanId = trace.nodesBySpanId || new Map<string, TreeNode<string>>();
 
   const isSecondDropdownTag = selectedTagKeySecond !== serviceName && selectedTagKeySecond !== operationName;
 
@@ -468,6 +500,7 @@ function valueSecondDropdown(
       spansWithSecondTag,
       allSpans,
       spanMap,
+      nodesBySpanId,
       selectedTagKeySecond,
       actualTableValues[i].name,
       trace
@@ -484,7 +517,7 @@ function valueSecondDropdown(
 
   // if second dropdown is a tag a rest must be created
   if (isSecondDropdownTag) {
-    return generateDetailRest(allTableValues, selectedTagKeySecond, trace, spanMap);
+    return generateDetailRest(allTableValues, selectedTagKeySecond, trace, spanMap, nodesBySpanId);
     // if no tag is selected the values can be returned
   }
   return allTableValues;

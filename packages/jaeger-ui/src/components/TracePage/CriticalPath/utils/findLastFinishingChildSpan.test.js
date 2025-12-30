@@ -9,12 +9,17 @@ import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
 describe('findLastFinishingChildSpanId', () => {
   it('Should find lfc of a span correctly', () => {
-    const refinedSpanData = getChildOfSpans(test1.trace.spans);
-    const spanMap = refinedSpanData.reduce((map, span) => {
-      map.set(span.spanID, span);
-      return map;
-    }, new Map());
-    const sanitizedSpanMap = sanitizeOverFlowingChildren(spanMap);
+    const trace = test1.trace;
+    // Populate childSpanIds from nodesBySpanId for testing
+    const spanMap = new Map();
+    trace.spans.forEach(span => {
+      const node = trace.nodesBySpanId?.get(span.spanID);
+      const childSpanIds = node ? node.children.map(child => child.value) : [];
+      spanMap.set(span.spanID, { ...span, childSpanIds });
+    });
+
+    const refinedSpanMap = getChildOfSpans(spanMap);
+    const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
 
     const currentSpan = sanitizedSpanMap.get('span-C');
     let lastFinishingChildSpan = findLastFinishingChildSpanId(sanitizedSpanMap, currentSpan);
@@ -26,12 +31,17 @@ describe('findLastFinishingChildSpanId', () => {
   });
 
   it('Should find lfc of a span correctly with test2', () => {
-    const refinedSpanData = getChildOfSpans(test2.trace.spans);
-    const spanMap = refinedSpanData.reduce((map, span) => {
-      map.set(span.spanID, span);
-      return map;
-    }, new Map());
-    const sanitizedSpanMap = sanitizeOverFlowingChildren(spanMap);
+    const trace = test2.trace;
+    // Populate childSpanIds from nodesBySpanId for testing
+    const spanMap = new Map();
+    trace.spans.forEach(span => {
+      const node = trace.nodesBySpanId?.get(span.spanID);
+      const childSpanIds = node ? node.children.map(child => child.value) : [];
+      spanMap.set(span.spanID, { ...span, childSpanIds });
+    });
+
+    const refinedSpanMap = getChildOfSpans(spanMap);
+    const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
 
     const currentSpan = sanitizedSpanMap.get('span-X');
     let lastFinishingChildSpanId = findLastFinishingChildSpanId(sanitizedSpanMap, currentSpan);

@@ -151,7 +151,7 @@ export default class OtelSpanFacade implements IOtelSpan {
   }
 
   get childSpanIds(): string[] {
-    return this.legacySpan.childSpanIds;
+    return this.legacySpan.childSpanIds || [];
   }
 
   get subsidiarilyReferencedBy(): ILink[] {
