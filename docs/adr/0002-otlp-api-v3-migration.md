@@ -344,7 +344,17 @@ interface Status {
   };
   ```
 
-#### 1.5 Testing ✅
+#### 1.6 Terminology Toggle Feature Flag
+Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to `false`) to control the display terminology.
+
+- When `false`: Use legacy terminology (Tags, Logs, Processes, References, Operation Name).
+- When `true`: Use OpenTelemetry terminology (Attributes, Events, Resources, Links, Span Name).
+
+**Implementation Guidelines**:
+- Components MUST check this flag before rendering labels or choosing which properties of the facade to display.
+- Prefer using the `OtelSpanFacade` even when the flag is `false`, as the facade provides a unified interface, but use the flag to decide which terminology to present to the user.
+
+#### 1.7 Testing ✅
 - ✅ Test all property mappings
 - ✅ Test with real trace data
 - ✅ Performance benchmarks (facade overhead should be minimal)

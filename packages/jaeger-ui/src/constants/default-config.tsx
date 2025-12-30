@@ -116,6 +116,7 @@ const defaultConfig: Config = {
   themes: {
     enabled: true,
   },
+  useOpenTelemetryTerms: false,
 };
 
 // Fields that should be merged with user-supplied config values rather than overwritten.
