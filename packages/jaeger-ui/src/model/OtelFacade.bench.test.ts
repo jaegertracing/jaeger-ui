@@ -2,32 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import OtelTraceFacade from './OtelTraceFacade';
-import { Trace, Span } from '../types/trace';
-import TreeNode from '../utils/TreeNode';
+import { Trace } from '../types/trace';
 
 describe('OtelFacade Benchmarks', () => {
   const numSpans = 10000;
-  const spans: Span[] = Array.from({ length: numSpans }, (_, i) => ({
-    spanID: `span-${i}`,
-    traceID: 'test-trace',
-    processID: 'p1',
-    operationName: `op-${i}`,
-    startTime: i,
-    duration: 10,
-    logs: [],
-    tags: [{ key: 'span.kind', value: 'server' }],
-    references:
-      i > 0
-        ? [{ refType: 'CHILD_OF' as const, spanID: `span-${i - 1}`, traceID: 'test-trace', span: null }]
-        : [],
-    depth: i,
-    hasChildren: true,
-    process: { serviceName: 'test-service', tags: [] },
-    relativeStartTime: i,
-    childSpanIds: [],
-    warnings: [],
-    subsidiarilyReferencedBy: [],
-  }));
   const mockTrace: Trace = {
     traceID: 'test-trace',
     traceName: 'test-trace',
@@ -40,9 +18,25 @@ describe('OtelFacade Benchmarks', () => {
     processes: {
       p1: { serviceName: 'test-service', tags: [] },
     },
-    spans,
-    spanMap: new Map(spans.map(s => [s.spanID, s])),
-    tree: new TreeNode('__root__'),
+    spans: Array.from({ length: numSpans }, (_, i) => ({
+      spanID: `span-${i}`,
+      traceID: 'test-trace',
+      processID: 'p1',
+      operationName: `op-${i}`,
+      startTime: i,
+      duration: 10,
+      logs: [],
+      tags: [{ key: 'span.kind', value: 'server' }],
+      references:
+        i > 0 ? [{ refType: 'CHILD_OF', spanID: `span-${i - 1}`, traceID: 'test-trace', span: null }] : [],
+      depth: i,
+      hasChildren: true,
+      process: { serviceName: 'test-service', tags: [] },
+      relativeStartTime: i,
+      childSpanIds: [],
+      warnings: [],
+      subsidiarilyReferencedBy: [],
+    })),
     asOtelTrace() {
       throw new Error('Not implemented');
     },
