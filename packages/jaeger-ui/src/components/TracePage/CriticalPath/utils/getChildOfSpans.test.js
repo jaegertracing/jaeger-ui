@@ -31,4 +31,23 @@ describe('getChildOfSpans', () => {
     expect(refinedSpanMap.size).toBe(1);
     expect(refinedSpanMap).toStrictEqual(expectedRefinedSpanMap);
   });
+
+  it('Should not modify the original trace spans', () => {
+    // Store the original childSpanIds reference and value
+    const originalParentSpan = test5.trace.spans[0];
+    const originalChildSpanIdsRef = originalParentSpan.childSpanIds;
+    const originalChildSpanIdsValue = [...originalParentSpan.childSpanIds];
+
+    const spanMap = test5.trace.spans.reduce((map, span) => {
+      map.set(span.spanID, span);
+      return map;
+    }, new Map());
+
+    // Run the function
+    getChildOfSpans(spanMap);
+
+    // Verify the original span was not modified
+    expect(originalParentSpan.childSpanIds).toBe(originalChildSpanIdsRef); // Same reference
+    expect(originalParentSpan.childSpanIds).toEqual(originalChildSpanIdsValue); // Same values
+  });
 });
