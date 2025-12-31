@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import transformTracesToPaths from './transformTracesToPaths';
+import transformTraceData from '../transform-trace-data';
 
 describe('transform traces to ddg paths', () => {
   const makeExpectedPath = (pathSpans, trace) => ({
@@ -20,14 +21,17 @@ describe('transform traces to ddg paths', () => {
   };
 
   const makeSpan = (spanName, parent, kind, operationName, processID) => ({
-    hasChildren: true,
+    traceID: 'test-trace-id', // Required by transformTraceData
+    spanID: `${spanName} spanID`,
     operationName: operationName || `${spanName} operation`,
     processID: processID || `${spanName} processID`,
+    startTime: Date.now() * 1000, // Required by transformTraceData (in microseconds)
+    duration: 1000, // Required by transformTraceData
     references: parent
       ? [
           {
             refType: 'CHILD_OF',
-            span: parent,
+            traceID: 'test-trace-id',
             spanID: parent.spanID,
           },
         ]
@@ -41,52 +45,32 @@ describe('transform traces to ddg paths', () => {
               value: kind === undefined ? 'server' : kind,
             },
           ],
-    spanID: `${spanName} spanID`,
+    logs: [], // Required by transformTraceData
   });
+
   const makeTrace = (spans, traceID) => {
-    const spanMap = new Map();
-    const rootSpans = [];
-
-    // Build spanMap and initialize childSpans arrays
-    spans.forEach(span => {
-      // Create a copy of the span with a fresh childSpans array
-      const spanCopy = { ...span, childSpans: [] };
-      spanMap.set(span.spanID, spanCopy);
-    });
-
-    // Build parent-child relationships and identify root spans
-    for (const span of spanMap.values()) {
-      const parentRef = span.references && span.references.find(ref => ref.refType === 'CHILD_OF');
-      if (parentRef) {
-        const parentSpan = spanMap.get(parentRef.spanID);
-        if (parentSpan) {
-          parentSpan.childSpans.push(span);
-        } else {
-          // Orphan span - parent not found
-          rootSpans.push(span);
-        }
-      } else {
-        // No parent reference - this is a root span
-        rootSpans.push(span);
+    // Build processes map from spans
+    const processes = spans.reduce((result, span) => {
+      if (!result[span.processID]) {
+        result[span.processID] = {
+          serviceName: `${span.processID}-name`,
+          tags: [],
+        };
       }
-    }
+      return result;
+    }, {});
+
+    // Use transformTraceData to build the trace with spanMap, rootSpans, and childSpans
+    const traceData = {
+      traceID,
+      processes,
+      spans: spans.map(span => ({ ...span, traceID })),
+    };
+
+    const transformedTrace = transformTraceData(traceData);
 
     return {
-      data: {
-        processes: Array.from(spanMap.values()).reduce(
-          (result, span) => ({
-            ...result,
-            [span.processID]: {
-              serviceName: `${span.processID}-name`,
-            },
-          }),
-          {}
-        ),
-        spans: Array.from(spanMap.values()),
-        traceID,
-        spanMap,
-        rootSpans,
-      },
+      data: transformedTrace,
     };
   };
   const makeTraces = (...traces) =>
