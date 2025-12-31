@@ -101,13 +101,15 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
       spanIdCounts.set(spanID, 1);
     }
     span.process = data.processes[processID];
+    span.childSpans = []; // Initialize to empty array, will be populated during tree walk
     spanMap.set(spanID, span);
   }
   // tree is necessary to sort the spans, so children follow parents, and
   // siblings are sorted by start time
-  const tree = getTraceSpanIdsAsTree(data, spanMap);
+  const { root: tree, nodesBySpanId } = getTraceSpanIdsAsTree(data, spanMap);
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
+  const rootSpans: Span[] = [];
 
   tree.walk((spanID: string, node: TreeNode<string>, depth = 0) => {
     if (spanID === TREE_ROOT_ID) {
@@ -122,16 +124,8 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
-    // Get the childSpanIds sorted based on endTime without changing tree structure
-    // TODO move this enrichment into Critical Path computation
-    span.childSpanIds = node.children
-      .slice()
-      .sort((a, b) => {
-        const spanA = spanMap.get(a.value)!;
-        const spanB = spanMap.get(b.value)!;
-        return spanB.startTime + spanB.duration - (spanA.startTime + spanA.duration);
-      })
-      .map(each => each.value);
+    // Use children from tree node instead of rebuilding
+    span.childSpans = node.children.map(childNode => spanMap.get(childNode.value)!).filter(Boolean);
     span.warnings = span.warnings || [];
     span.tags = span.tags || [];
     span.references = span.references || [];
@@ -156,6 +150,15 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     });
     spans.push(span);
   });
+
+  // Identify root spans from tree structure (direct children of tree root)
+  tree.children.forEach(childNode => {
+    const rootSpan = spanMap.get(childNode.value);
+    if (rootSpan) {
+      rootSpans.push(rootSpan);
+    }
+  });
+
   const traceName = getTraceName(spans);
   const tracePageTitle = getTracePageTitle(spans);
   const traceEmoji = getTraceEmoji(spans);
@@ -179,8 +182,9 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     traceName,
     tracePageTitle,
     traceEmoji,
-    // TODO why not store `tree` here for easier access to tree structure?
-    // ...
+    // Optimized data structures - created once during trace transformation
+    spanMap,
+    rootSpans,
     // Can't use spread operator for intersection types
     // repl: https://goo.gl/4Z23MJ
     // issue: https://github.com/facebook/flow/issues/1511

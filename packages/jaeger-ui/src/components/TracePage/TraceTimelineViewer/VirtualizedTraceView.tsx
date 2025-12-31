@@ -148,8 +148,6 @@ function getCssClasses(currentViewRange: [number, number]) {
   });
 }
 
-const memoizedSpanByID = memoizeOne((spans: Span[]) => new Map(spans.map(x => [x.spanID, x])));
-
 function mergeChildrenCriticalPath(
   trace: Trace,
   spanID: string,
@@ -161,17 +159,24 @@ function mergeChildrenCriticalPath(
   // Define an array to store the IDs of the span and its descendants (if the span is collapsed)
   const allRequiredSpanIds = new Set<string>([spanID]);
 
+  // Use pre-built spanMap
+  const spanMap = trace.spanMap;
+
   // If the span is collapsed, recursively find all of its descendants.
-  const findAllDescendants = (currentChildSpanIds: Set<string>) => {
-    currentChildSpanIds.forEach(eachId => {
-      const currentChildSpan = memoizedSpanByID(trace.spans).get(eachId)!;
-      if (currentChildSpan.hasChildren) {
-        currentChildSpan.childSpanIds.forEach(x => allRequiredSpanIds.add(x));
-        findAllDescendants(new Set<string>(currentChildSpan.childSpanIds));
-      }
-    });
+  const findAllDescendants = (span: Span) => {
+    if (span.hasChildren && span.childSpans.length > 0) {
+      span.childSpans.forEach(child => {
+        allRequiredSpanIds.add(child.spanID);
+        findAllDescendants(child);
+      });
+    }
   };
-  findAllDescendants(allRequiredSpanIds);
+
+  // Start from the initially selected span
+  const startingSpan = spanMap.get(spanID);
+  if (startingSpan) {
+    findAllDescendants(startingSpan);
+  }
 
   const criticalPathSections: criticalPathSection[] = [];
   criticalPath.forEach(each => {

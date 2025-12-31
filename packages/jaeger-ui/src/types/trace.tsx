@@ -35,15 +35,6 @@ export type SpanReference = {
   traceID: string;
 };
 
-// Reference type used in CPSpan for critical path computation
-export type CPSpanReference = {
-  refType: 'CHILD_OF' | 'FOLLOWS_FROM';
-
-  span?: CPSpan | null | undefined;
-  spanID: string;
-  traceID?: string;
-};
-
 export type SpanData = {
   spanID: string;
   traceID: string;
@@ -55,7 +46,6 @@ export type SpanData = {
   tags?: Array<KeyValuePair>;
   references?: Array<SpanReference>;
   warnings?: Array<string> | null;
-  childSpanIds?: Array<string>;
 };
 
 export type Span = SpanData & {
@@ -66,8 +56,8 @@ export type Span = SpanData & {
   tags: NonNullable<SpanData['tags']>;
   references: NonNullable<SpanData['references']>;
   warnings: NonNullable<SpanData['warnings']>;
-  childSpanIds: NonNullable<SpanData['childSpanIds']>;
   subsidiarilyReferencedBy: Array<SpanReference>;
+  childSpans: Array<Span>;
 };
 
 export type TraceData = {
@@ -87,6 +77,10 @@ export type Trace = TraceData & {
   // Number of orphan spans (spans referencing parent spans that don't exist in the trace)
   orphanSpanCount?: number;
 
+  // Optimized data structures - created once during trace transformation
+  spanMap: Map<string, Span>;
+  rootSpans: Array<Span>;
+
   // OTEL facade - lazy-initialized and memoized
   _otelFacade?: IOtelTrace;
   asOtelTrace(): IOtelTrace;
@@ -97,6 +91,15 @@ export type criticalPathSection = {
   spanId: string;
   section_start: number;
   section_end: number;
+};
+
+// Reference type used in CPSpan for critical path computation
+export type CPSpanReference = {
+  refType: 'CHILD_OF' | 'FOLLOWS_FROM';
+
+  span?: CPSpan | null | undefined;
+  spanID: string;
+  traceID?: string;
 };
 
 // Critical Path Span - a minimal span type used for critical path computation

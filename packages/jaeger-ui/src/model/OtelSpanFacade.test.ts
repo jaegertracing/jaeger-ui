@@ -41,7 +41,7 @@ describe('OtelSpanFacade', () => {
     depth: 1,
     hasChildren: true,
     relativeStartTime: 100,
-    childSpanIds: ['child-1'],
+    childSpans: [],
     warnings: [],
     subsidiarilyReferencedBy: [
       { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'sub-ref-1', span: null },
@@ -219,7 +219,6 @@ describe('OtelSpanFacade', () => {
     expect(facade.depth).toBe(1);
     expect(facade.hasChildren).toBe(true);
     expect(facade.relativeStartTimeMicros).toBe(100);
-    expect(facade.childSpanIds).toEqual(['child-1']);
     expect(facade.subsidiarilyReferencedBy[0].spanId).toBe('sub-ref-1');
   });
 });

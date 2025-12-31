@@ -26,10 +26,10 @@ describe('getChildOfSpans', () => {
   });
 
   it('Should not modify the original trace spans', () => {
-    // Store the original childSpanIds reference and value
+    // Store the original childSpans reference and value
     const originalParentSpan = test5.trace.spans[0];
-    const originalChildSpanIdsRef = originalParentSpan.childSpanIds;
-    const originalChildSpanIdsValue = [...originalParentSpan.childSpanIds];
+    const originalChildSpansRef = originalParentSpan.childSpans;
+    const originalChildSpansValue = [...originalParentSpan.childSpans];
 
     // Create CPSpan objects (copies) from the original spans
     const spanMap = createCPSpanMap(test5.trace.spans);
@@ -38,7 +38,7 @@ describe('getChildOfSpans', () => {
     getChildOfSpans(spanMap);
 
     // Verify the original span was not modified
-    expect(originalParentSpan.childSpanIds).toBe(originalChildSpanIdsRef); // Same reference
-    expect(originalParentSpan.childSpanIds).toEqual(originalChildSpanIdsValue); // Same values
+    expect(originalParentSpan.childSpans).toBe(originalChildSpansRef); // Same reference
+    expect(originalParentSpan.childSpans).toEqual(originalChildSpansValue); // Same values
   });
 });

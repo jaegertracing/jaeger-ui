@@ -24,7 +24,7 @@ describe('OtelTraceFacade', () => {
     depth: 0,
     hasChildren: false,
     relativeStartTime: 0,
-    childSpanIds: [],
+    childSpans: [],
     warnings: [],
     subsidiarilyReferencedBy: [],
   };
@@ -40,6 +40,8 @@ describe('OtelTraceFacade', () => {
     tracePageTitle: 'test-trace-title',
     traceEmoji: '😀',
     services: [{ name: 'test-service', numberOfSpans: 1 }],
+    spanMap: new Map([[mockSpan.spanID, mockSpan]]),
+    rootSpans: [mockSpan],
     asOtelTrace() {
       throw new Error('Not implemented');
     },

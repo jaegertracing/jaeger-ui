@@ -256,4 +256,127 @@ describe('transformTraceData()', () => {
       expect(otelTrace2).toBe(otelTrace1);
     });
   });
+
+  describe('spanMap, rootSpans, and childSpans collections', () => {
+    it('should build spanMap with all spans', () => {
+      const traceData = {
+        traceID,
+        processes,
+        spans: [...spans, rootSpanWithoutRefs],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // spanMap should contain all spans
+      expect(result.spanMap).toBeInstanceOf(Map);
+      expect(result.spanMap.size).toBe(3);
+      expect(result.spanMap.get(rootSpanID)).toBeDefined();
+      expect(result.spanMap.get(spans[0].spanID)).toBeDefined();
+      expect(result.spanMap.get(spans[1].spanID)).toBeDefined();
+    });
+
+    it('should identify root spans correctly', () => {
+      const traceData = {
+        traceID,
+        processes,
+        spans: [...spans, rootSpanWithoutRefs],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // Should have one root span (rootSpanWithoutRefs)
+      expect(result.rootSpans).toBeInstanceOf(Array);
+      expect(result.rootSpans.length).toBe(1);
+      expect(result.rootSpans[0].spanID).toBe(rootSpanID);
+      expect(result.rootSpans[0].operationName).toBe(rootOperationName);
+    });
+
+    it('should build childSpans arrays correctly', () => {
+      const traceData = {
+        traceID,
+        processes,
+        spans: [...spans, rootSpanWithoutRefs],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // Root span should have two children
+      const rootSpan = result.spanMap.get(rootSpanID);
+      expect(rootSpan.childSpans).toBeInstanceOf(Array);
+      expect(rootSpan.childSpans.length).toBe(2);
+
+      // Children should be sorted by start time
+      expect(rootSpan.childSpans[0].spanID).toBe(spans[0].spanID);
+      expect(rootSpan.childSpans[1].spanID).toBe(spans[1].spanID);
+
+      // Child spans should have no children
+      const childSpan1 = result.spanMap.get(spans[0].spanID);
+      const childSpan2 = result.spanMap.get(spans[1].spanID);
+      expect(childSpan1.childSpans).toEqual([]);
+      expect(childSpan2.childSpans).toEqual([]);
+    });
+
+    it('should handle orphan spans as root spans', () => {
+      const traceData = {
+        traceID,
+        processes,
+        spans: [...spans, rootSpanWithMissingRef],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // rootSpanWithMissingRef references a missing parent, so it should be a root span
+      expect(result.rootSpans.length).toBe(1);
+      expect(result.rootSpans[0].spanID).toBe(rootSpanID);
+
+      // The root span should still have its two children
+      const rootSpan = result.spanMap.get(rootSpanID);
+      expect(rootSpan.childSpans.length).toBe(2);
+    });
+
+    it('should handle multiple root spans', () => {
+      const secondRoot = {
+        traceID,
+        spanID: 'secondRoot',
+        operationName: 'secondRootOp',
+        startTime: startTime + 100,
+        duration,
+        tags: [],
+        logs: [],
+        processID: 'p1',
+      };
+
+      const traceData = {
+        traceID,
+        processes,
+        spans: [rootSpanWithoutRefs, secondRoot],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // Should have two root spans
+      expect(result.rootSpans.length).toBe(2);
+      expect(result.rootSpans[0].spanID).toBe(rootSpanID);
+      expect(result.rootSpans[1].spanID).toBe(secondRoot.spanID);
+    });
+
+    it('should maintain span references in childSpans array', () => {
+      const traceData = {
+        traceID,
+        processes,
+        spans: [...spans, rootSpanWithoutRefs],
+      };
+
+      const result = transformTraceData(traceData);
+
+      const rootSpan = result.spanMap.get(rootSpanID);
+
+      // childSpans should contain actual span objects, not IDs
+      rootSpan.childSpans.forEach(child => {
+        expect(child.spanID).toBeDefined();
+        expect(child.operationName).toBeDefined();
+        expect(child).toBe(result.spanMap.get(child.spanID));
+      });
+    });
+  });
 });

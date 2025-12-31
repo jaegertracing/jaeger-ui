@@ -85,7 +85,6 @@ export interface IOtelSpan {
   depth: number;
   hasChildren: boolean;
   relativeStartTimeMicros: number; // microseconds since trace start
-  childSpanIds: string[];
   subsidiarilyReferencedBy: ILink[]; // spans that reference this span via links (not
 }
 
@@ -98,4 +97,8 @@ export interface IOtelTrace {
   endTimeUnixMicros: number;
   traceName: string;
   services: { name: string; numberOfSpans: number }[];
+
+  // Optimized data structures - created once during trace transformation
+  spanMap: Map<string, IOtelSpan>;
+  rootSpans: Array<IOtelSpan>;
 }

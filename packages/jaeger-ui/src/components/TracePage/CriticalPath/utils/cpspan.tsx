@@ -23,7 +23,7 @@ export function createCPSpan(span: Span): CPSpan {
         span: undefined,
       })
     ),
-    childSpanIds: [...span.childSpanIds],
+    childSpanIds: span.childSpans.map(s => s.spanID),
   };
 }
 
