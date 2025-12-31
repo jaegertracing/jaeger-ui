@@ -55,7 +55,7 @@ describe('transform traces to ddg paths', () => {
     });
 
     // Build parent-child relationships and identify root spans
-    spanMap.forEach(span => {
+    for (const span of spanMap.values()) {
       const parentRef = span.references && span.references.find(ref => ref.refType === 'CHILD_OF');
       if (parentRef) {
         const parentSpan = spanMap.get(parentRef.spanID);
@@ -69,7 +69,7 @@ describe('transform traces to ddg paths', () => {
         // No parent reference - this is a root span
         rootSpans.push(span);
       }
-    });
+    }
 
     return {
       data: {
