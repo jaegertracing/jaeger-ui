@@ -1,7 +1,7 @@
 // Copyright (c) 2023 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import { Span } from '../../../../types/trace';
+import { CPSpan } from '../../../../types/trace';
 
 /**
  * @returns - Returns the span that finished last among the remaining child spans.
@@ -9,10 +9,10 @@ import { Span } from '../../../../types/trace';
  * just before the specified `returningChildStartTime`.
  */
 const findLastFinishingChildSpan = (
-  spanMap: Map<string, Span>,
-  currentSpan: Span,
+  spanMap: Map<string, CPSpan>,
+  currentSpan: CPSpan,
   returningChildStartTime?: number
-): Span | undefined => {
+): CPSpan | undefined => {
   let lastFinishingChildSpanId: string | undefined;
   if (returningChildStartTime) {
     lastFinishingChildSpanId = currentSpan.childSpanIds.find(

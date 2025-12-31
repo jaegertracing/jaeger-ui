@@ -6,15 +6,13 @@ import test2 from '../testCases/test2';
 import getChildOfSpans from './getChildOfSpans';
 import findLastFinishingChildSpanId from './findLastFinishingChildSpan';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
+import { createCPSpanMap } from './cpspan';
 
 describe('findLastFinishingChildSpanId', () => {
   it('Should find lfc of a span correctly', () => {
-    const refinedSpanData = getChildOfSpans(test1.trace.spans);
-    const spanMap = refinedSpanData.reduce((map, span) => {
-      map.set(span.spanID, span);
-      return map;
-    }, new Map());
-    const sanitizedSpanMap = sanitizeOverFlowingChildren(spanMap);
+    const spanMap = createCPSpanMap(test1.trace.spans);
+    const refinedSpanMap = getChildOfSpans(spanMap);
+    const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
 
     const currentSpan = sanitizedSpanMap.get('span-C');
     let lastFinishingChildSpan = findLastFinishingChildSpanId(sanitizedSpanMap, currentSpan);
@@ -26,12 +24,9 @@ describe('findLastFinishingChildSpanId', () => {
   });
 
   it('Should find lfc of a span correctly with test2', () => {
-    const refinedSpanData = getChildOfSpans(test2.trace.spans);
-    const spanMap = refinedSpanData.reduce((map, span) => {
-      map.set(span.spanID, span);
-      return map;
-    }, new Map());
-    const sanitizedSpanMap = sanitizeOverFlowingChildren(spanMap);
+    const spanMap = createCPSpanMap(test2.trace.spans);
+    const refinedSpanMap = getChildOfSpans(spanMap);
+    const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
 
     const currentSpan = sanitizedSpanMap.get('span-X');
     let lastFinishingChildSpanId = findLastFinishingChildSpanId(sanitizedSpanMap, currentSpan);
