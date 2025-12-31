@@ -1,7 +1,7 @@
 // Copyright (c) 2023 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import { Span } from '../../../../types/trace';
+import { CPSpan } from '../../../../types/trace';
 
 /**
  * @returns - Returns the span that finished last among the remaining child spans.
@@ -9,33 +9,24 @@ import { Span } from '../../../../types/trace';
  * just before the specified `returningChildStartTime`.
  */
 const findLastFinishingChildSpan = (
-  spanMap: Map<string, Span>,
-  currentSpan: Span,
+  spanMap: Map<string, CPSpan>,
+  currentSpan: CPSpan,
   returningChildStartTime?: number
-): Span | undefined => {
-  let lastFinishingChildSpan: Span | undefined;
-  let latestEndTime = -1;
-
-  // Iterate through children directly from childSpans array
-  for (const childSpan of currentSpan.childSpans) {
-    const childEndTime = childSpan.startTime + childSpan.duration;
-
-    if (returningChildStartTime) {
-      // Find child that finishes just before returningChildStartTime
-      if (childEndTime < returningChildStartTime && childEndTime > latestEndTime) {
-        latestEndTime = childEndTime;
-        lastFinishingChildSpan = childSpan;
-      }
-    } else {
-      // Find child that finishes last overall
-      if (childEndTime > latestEndTime) {
-        latestEndTime = childEndTime;
-        lastFinishingChildSpan = childSpan;
-      }
-    }
+): CPSpan | undefined => {
+  let lastFinishingChildSpanId: string | undefined;
+  if (returningChildStartTime) {
+    lastFinishingChildSpanId = currentSpan.childSpanIds.find(
+      each =>
+        // Look up the span using the map
+        spanMap.has(each) &&
+        spanMap.get(each)!.startTime + spanMap.get(each)!.duration < returningChildStartTime
+    );
+  } else {
+    // If `returningChildStartTime` is not provided, select the first child span.
+    // As they are sorted based on endTime
+    lastFinishingChildSpanId = currentSpan.childSpanIds[0];
   }
-
-  return lastFinishingChildSpan;
+  return lastFinishingChildSpanId ? spanMap.get(lastFinishingChildSpanId) : undefined;
 };
 
 export default findLastFinishingChildSpan;

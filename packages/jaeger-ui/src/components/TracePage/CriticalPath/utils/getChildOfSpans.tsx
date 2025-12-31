@@ -1,42 +1,42 @@
 // Copyright (c) 2023 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import { Span } from '../../../../types/trace';
+import { CPSpan } from '../../../../types/trace';
 /**
  * Removes child spans whose refType is FOLLOWS_FROM and their descendants.
- * Creates a new map without modifying the original.
- * Walks the tree from rootSpans recursively to build the filtered map.
  * @param spanMap - The map containing spans.
- * @param rootSpans - The root spans of the trace.
  * @returns - A map with spans whose refType is CHILD_OF.
  */
-const getChildOfSpans = (spanMap: Map<string, Span>, rootSpans: Span[]): Map<string, Span> => {
-  const newSpanMap = new Map<string, Span>();
+const getChildOfSpans = (spanMap: Map<string, CPSpan>): Map<string, CPSpan> => {
+  const followFromSpanIds: string[] = [];
+  const followFromSpansDescendantIds: string[] = [];
 
-  // Recursively walk tree, skipping FOLLOWS_FROM children
-  const walkTree = (span: Span) => {
-    const filteredChildren: Span[] = [];
-
-    // Process children, skipping those whose FIRST reference is FOLLOWS_FROM
-    span.childSpans.forEach(child => {
-      // Check if the child's first reference is FOLLOWS_FROM (matching original logic)
-      if (child.references[0]?.refType !== 'FOLLOWS_FROM') {
-        filteredChildren.push(child);
-        walkTree(child);
-      }
-      // Note: FOLLOWS_FROM children and their descendants are skipped
-    });
-
-    // Add span with filtered children
-    newSpanMap.set(span.spanID, { ...span, childSpans: filteredChildren });
-  };
-
-  // Start from each root span (spans without parents)
-  // Root spans themselves should not have FOLLOWS_FROM as first reference since they have no parent
-  rootSpans.forEach(rootSpan => {
-    walkTree(rootSpan);
+  // First find all FOLLOWS_FROM refType spans
+  spanMap.forEach(each => {
+    if (each.references[0]?.refType === 'FOLLOWS_FROM') {
+      followFromSpanIds.push(each.spanID);
+      // Remove the spanId from childSpanIds array of its parentSpan
+      const parentSpan = spanMap.get(each.references[0].spanID)!;
+      parentSpan.childSpanIds = parentSpan.childSpanIds.filter(a => a !== each.spanID);
+      spanMap.set(parentSpan.spanID, { ...parentSpan });
+    }
   });
 
-  return newSpanMap;
+  // Recursively find all Descendants of FOLLOWS_FROM spans
+  const findDescendantSpans = (spanIds: string[]) => {
+    spanIds.forEach(spanId => {
+      const span = spanMap.get(spanId)!;
+      if (span.childSpanIds.length > 0) {
+        followFromSpansDescendantIds.push(...span.childSpanIds);
+        findDescendantSpans(span.childSpanIds);
+      }
+    });
+  };
+  findDescendantSpans(followFromSpanIds);
+  // Delete all FOLLOWS_FROM spans and its descendants
+  const idsToBeDeleted = [...followFromSpanIds, ...followFromSpansDescendantIds];
+  idsToBeDeleted.forEach(id => spanMap.delete(id));
+
+  return spanMap;
 };
 export default getChildOfSpans;
