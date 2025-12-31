@@ -86,29 +86,45 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Sp
     }
   });
 
-  // Second pass: filter out dropped children from childSpans arrays
+  // Second pass: update childSpans to reference sanitized versions and filter dropped spans
   const finalSpanMap = new Map<string, Span>();
-  newSpanMap.forEach((span, spanId) => {
-    const filteredChildSpans = span.childSpans.filter(child => !droppedSpanIds.has(child.spanID));
 
-    // Update child span references with sanitized parent
-    let updatedReferences = span.references;
-    if (span.references.length) {
-      const parentSpan = newSpanMap.get(span.references[0].spanID);
-      if (parentSpan) {
-        updatedReferences = span.references.map(ref =>
-          ref.spanID === span.references[0].spanID ? { ...ref, span: parentSpan } : ref
-        );
-      }
-    }
+  // First, create all spans with updated childSpans arrays (but still old child objects)
+  newSpanMap.forEach((span, spanId) => {
+    const filteredChildSpans = span.childSpans
+      .filter(child => !droppedSpanIds.has(child.spanID))
+      .map(child => {
+        // Get the sanitized version from newSpanMap, or use original if not sanitized
+        const sanitizedChild = newSpanMap.get(child.spanID);
+        return sanitizedChild || child;
+      });
 
     finalSpanMap.set(spanId, {
       ...span,
       childSpans: filteredChildSpans,
+    });
+  });
+
+  // Third pass: update parent references in span.references to point to sanitized parents
+  const result = new Map<string, Span>();
+  finalSpanMap.forEach((span, spanId) => {
+    let updatedReferences = span.references;
+    if (span.references.length) {
+      const parentSpanId = span.references[0].spanID;
+      const parentSpan = finalSpanMap.get(parentSpanId);
+      if (parentSpan) {
+        updatedReferences = span.references.map(ref =>
+          ref.spanID === parentSpanId ? { ...ref, span: parentSpan } : ref
+        );
+      }
+    }
+
+    result.set(spanId, {
+      ...span,
       references: updatedReferences,
     });
   });
 
-  return finalSpanMap;
+  return result;
 };
 export default sanitizeOverFlowingChildren;
