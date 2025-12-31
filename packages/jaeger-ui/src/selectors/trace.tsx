@@ -23,7 +23,7 @@ export const TREE_ROOT_ID = '__root__';
 export function getTraceSpanIdsAsTree(
   trace: { spans: SpanData[] },
   spanMap: Map<string, Span> | null = null
-) {
+): { root: TreeNode<string>; nodesBySpanId: Map<string, TreeNode<string>> } {
   const nodesById = new Map(trace.spans.map(span => [span.spanID, new TreeNode<string>(span.spanID)]));
   const spansById = spanMap ?? new Map(trace.spans.map(span => [span.spanID, span]));
   const root = new TreeNode<string>(TREE_ROOT_ID);

@@ -5,7 +5,6 @@
  * All timestamps are in microseconds
  */
 
-import TreeNode from '../utils/TreeNode';
 import { IOtelTrace } from './otel';
 
 export type KeyValuePair<ValueType = string> = {
