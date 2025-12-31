@@ -4,39 +4,46 @@
 import { Span } from '../../../../types/trace';
 /**
  * Removes child spans whose refType is FOLLOWS_FROM and their descendants.
+ * Creates a new map without modifying the original.
  * @param spanMap - The map containing spans.
  * @returns - A map with spans whose refType is CHILD_OF.
  */
 const getChildOfSpans = (spanMap: Map<string, Span>): Map<string, Span> => {
   const followFromSpanIds: string[] = [];
   const followFromSpansDescendantIds: string[] = [];
+  const newSpanMap = new Map<string, Span>();
 
   // First find all FOLLOWS_FROM refType spans
   spanMap.forEach(each => {
     if (each.references[0]?.refType === 'FOLLOWS_FROM') {
       followFromSpanIds.push(each.spanID);
-      // Remove the spanId from childSpanIds array of its parentSpan
-      const parentSpan = spanMap.get(each.references[0].spanID)!;
-      parentSpan.childSpanIds = parentSpan.childSpanIds!.filter((a: string) => a !== each.spanID);
-      spanMap.set(parentSpan.spanID, { ...parentSpan });
     }
   });
 
-  // Recursively find all Descendants of FOLLOWS_FROM spans
-  const findDescendantSpans = (spanIds: string[]) => {
-    spanIds.forEach(spanId => {
-      const span = spanMap.get(spanId)!;
-      if (span.hasChildren) {
-        followFromSpansDescendantIds.push(...span.childSpanIds!);
-        findDescendantSpans(span.childSpanIds!);
+  // Recursively find all descendants of FOLLOWS_FROM spans
+  const findDescendantSpans = (spans: Span[]) => {
+    spans.forEach(span => {
+      if (span.hasChildren && span.childSpans.length > 0) {
+        span.childSpans.forEach(child => followFromSpansDescendantIds.push(child.spanID));
+        findDescendantSpans(span.childSpans);
       }
     });
   };
-  findDescendantSpans(followFromSpanIds);
-  // Delete all FOLLOWS_FROM spans and its descendants
-  const idsToBeDeleted = [...followFromSpanIds, ...followFromSpansDescendantIds];
-  idsToBeDeleted.forEach(id => spanMap.delete(id));
+  
+  const followFromSpans = followFromSpanIds.map(id => spanMap.get(id)!).filter(s => s);
+  findDescendantSpans(followFromSpans);
+  
+  // Build new map excluding FOLLOWS_FROM spans and their descendants
+  const idsToBeExcluded = new Set([...followFromSpanIds, ...followFromSpansDescendantIds]);
+  
+  spanMap.forEach((span, spanId) => {
+    if (!idsToBeExcluded.has(spanId)) {
+      // Filter out FOLLOWS_FROM children from childSpans
+      const filteredChildSpans = span.childSpans.filter(child => !idsToBeExcluded.has(child.spanID));
+      newSpanMap.set(spanId, { ...span, childSpans: filteredChildSpans });
+    }
+  });
 
-  return spanMap;
+  return newSpanMap;
 };
 export default getChildOfSpans;

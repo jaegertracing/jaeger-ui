@@ -175,8 +175,6 @@ function getAttributeValueFromSpan(attributeKey: string, span: IOtelSpan) {
  */
 function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
   const allSpans = trace.spans;
-  // Use the pre-built spanMap
-  const spanMap = trace.spanMap;
 
   // used to build the table
   const allTableValues = [];

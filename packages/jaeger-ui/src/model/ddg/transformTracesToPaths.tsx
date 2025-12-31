@@ -23,9 +23,9 @@ function transformTracesToPaths(
       const rootSpans = data.rootSpans;
       const { traceID } = data;
 
-      // Helper function to walk all paths through the tree
-      const walkPaths = (span: Span, currentPath: string[]) => {
-        const pathWithCurrent = [...currentPath, span.spanID];
+      // Helper function to walk all paths through the tree, building Span[] paths directly
+      const walkPaths = (span: Span, currentPath: Span[]) => {
+        const pathWithCurrent = [...currentPath, span];
 
         if (span.childSpans.length === 0) {
           // Leaf node - process the complete path
@@ -38,10 +38,10 @@ function transformTracesToPaths(
         }
       };
 
-      const processPath = (pathIds: string[]) => {
-        const paths = pathIds.reduce((reducedSpans: Span[], id: string): Span[] => {
-          const span = spanMap.get(id);
-          if (!span) throw new Error(`Ancestor spanID ${id} not found in trace ${traceID}`);
+      const processPath = (pathSpans: Span[]) => {
+        if (pathSpans.length === 0) return;
+
+        const paths = pathSpans.reduce((reducedSpans: Span[], span: Span): Span[] => {
           if (reducedSpans.length === 0) {
             reducedSpans.push(span);
           } else if (

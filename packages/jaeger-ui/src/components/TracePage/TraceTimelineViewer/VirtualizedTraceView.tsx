@@ -163,17 +163,22 @@ function mergeChildrenCriticalPath(
   const spanMap = trace.spanMap;
 
   // If the span is collapsed, recursively find all of its descendants.
-  const findAllDescendants = (currentChildSpanIds: Set<string>) => {
-    currentChildSpanIds.forEach(eachId => {
-      const currentChildSpan = spanMap.get(eachId);
-      if (currentChildSpan && currentChildSpan.hasChildren) {
-        const childIds = currentChildSpan.childSpans.map(child => child.spanID);
-        childIds.forEach(x => allRequiredSpanIds.add(x));
-        findAllDescendants(new Set<string>(childIds));
-      }
-    });
+  const findAllDescendants = (span: Span) => {
+    if (span.hasChildren && span.childSpans.length > 0) {
+      span.childSpans.forEach(child => {
+        allRequiredSpanIds.add(child.spanID);
+        findAllDescendants(child);
+      });
+    }
   };
-  findAllDescendants(allRequiredSpanIds);
+  
+  // Start from the initially selected spans
+  allRequiredSpanIds.forEach(spanId => {
+    const span = spanMap.get(spanId);
+    if (span) {
+      findAllDescendants(span);
+    }
+  });
 
   const criticalPathSections: criticalPathSection[] = [];
   criticalPath.forEach(each => {
