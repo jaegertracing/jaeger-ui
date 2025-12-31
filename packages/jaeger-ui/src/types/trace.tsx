@@ -35,6 +35,15 @@ export type SpanReference = {
   traceID: string;
 };
 
+// Reference type used in CPSpan for critical path computation
+export type CPSpanReference = {
+  refType: 'CHILD_OF' | 'FOLLOWS_FROM';
+
+  span?: CPSpan | null | undefined;
+  spanID: string;
+  traceID?: string;
+};
+
 export type SpanData = {
   spanID: string;
   traceID: string;
@@ -97,7 +106,7 @@ export type CPSpan = {
   spanID: string;
   startTime: number;
   duration: number;
-  references: Array<SpanReference>;
+  references: Array<CPSpanReference>;
   childSpanIds: Array<string>;
   hasChildren: boolean;
 };

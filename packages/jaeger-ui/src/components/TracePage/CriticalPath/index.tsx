@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import memoizeOne from 'memoize-one';
-import { Span, Trace, criticalPathSection, CPSpan } from '../../../types/trace';
+import { Span, Trace, criticalPathSection, CPSpan, CPSpanReference } from '../../../types/trace';
 import getChildOfSpans from './utils/getChildOfSpans';
 import findLastFinishingChildSpan from './utils/findLastFinishingChildSpan';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
@@ -85,7 +85,15 @@ function criticalPathForTrace(trace: Trace) {
         startTime: span.startTime,
         duration: span.duration,
         // Create a shallow copy of references array to avoid modifying original
-        references: span.references.map(ref => ({ ...ref })),
+        // and convert to CPSpanReference
+        references: span.references.map(
+          (ref): CPSpanReference => ({
+            refType: ref.refType,
+            spanID: ref.spanID,
+            traceID: ref.traceID,
+            span: undefined, // Will be set later if needed
+          })
+        ),
         // Create a shallow copy of childSpanIds array to avoid modifying original
         childSpanIds: [...span.childSpanIds],
         hasChildren: span.hasChildren,

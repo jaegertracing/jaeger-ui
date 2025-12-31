@@ -10,18 +10,27 @@ import test9 from '../testCases/test9';
 import getChildOfSpans from './getChildOfSpans';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
+// Helper function to create CPSpan objects from Span objects
+function createCPSpan(span) {
+  return {
+    spanID: span.spanID,
+    startTime: span.startTime,
+    duration: span.duration,
+    references: span.references.map(ref => ({
+      refType: ref.refType,
+      spanID: ref.spanID,
+      traceID: ref.traceID,
+      span: undefined,
+    })),
+    childSpanIds: [...span.childSpanIds],
+    hasChildren: span.hasChildren,
+  };
+}
+
 // Helper function to create CPSpan map from trace spans
 function createCPSpanMap(spans) {
   return spans.reduce((map, span) => {
-    const cpSpan = {
-      spanID: span.spanID,
-      startTime: span.startTime,
-      duration: span.duration,
-      references: span.references.map(ref => ({ ...ref })),
-      childSpanIds: [...span.childSpanIds],
-      hasChildren: span.hasChildren,
-    };
-    map.set(span.spanID, cpSpan);
+    map.set(span.spanID, createCPSpan(span));
     return map;
   }, new Map());
 }
@@ -47,14 +56,7 @@ function getExpectedSanitizedData(spans, test) {
   const spanMap = new Map();
 
   spans.forEach(span => {
-    const cpSpan = {
-      spanID: span.spanID,
-      startTime: span.startTime,
-      duration: span.duration,
-      references: span.references.map(ref => ({ ...ref })),
-      childSpanIds: [...span.childSpanIds],
-      hasChildren: span.hasChildren,
-    };
+    const cpSpan = createCPSpan(span);
 
     // Apply modifications if they exist for this span
     if (mods && mods[span.spanID]) {
@@ -71,23 +73,15 @@ describe.each([
   [
     test3,
     new Map().set(test3.trace.spans[0].spanID, {
-      spanID: test3.trace.spans[0].spanID,
-      startTime: test3.trace.spans[0].startTime,
-      duration: test3.trace.spans[0].duration,
-      references: [],
+      ...createCPSpan(test3.trace.spans[0]),
       childSpanIds: [],
-      hasChildren: test3.trace.spans[0].hasChildren,
     }),
   ],
   [
     test4,
     new Map().set(test4.trace.spans[0].spanID, {
-      spanID: test4.trace.spans[0].spanID,
-      startTime: test4.trace.spans[0].startTime,
-      duration: test4.trace.spans[0].duration,
-      references: [],
+      ...createCPSpan(test4.trace.spans[0]),
       childSpanIds: [],
-      hasChildren: test4.trace.spans[0].hasChildren,
     }),
   ],
   [test6, getExpectedSanitizedData(test6.trace.spans, 'test6')],
@@ -96,12 +90,8 @@ describe.each([
   [
     test9,
     new Map().set(test9.trace.spans[0].spanID, {
-      spanID: test9.trace.spans[0].spanID,
-      startTime: test9.trace.spans[0].startTime,
-      duration: test9.trace.spans[0].duration,
-      references: [],
+      ...createCPSpan(test9.trace.spans[0]),
       childSpanIds: [],
-      hasChildren: test9.trace.spans[0].hasChildren,
     }),
   ],
 ])('sanitizeOverFlowingChildren', (testProps, expectedSanitizedData) => {

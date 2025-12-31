@@ -5,19 +5,28 @@ import test2 from '../testCases/test2';
 import test5 from '../testCases/test5';
 import getChildOfSpans from './getChildOfSpans';
 
+// Helper function to create CPSpan objects from Span objects
+function createCPSpan(span) {
+  return {
+    spanID: span.spanID,
+    startTime: span.startTime,
+    duration: span.duration,
+    references: span.references.map(ref => ({
+      refType: ref.refType,
+      spanID: ref.spanID,
+      traceID: ref.traceID,
+      span: undefined,
+    })),
+    childSpanIds: [...span.childSpanIds],
+    hasChildren: span.hasChildren,
+  };
+}
+
 describe('getChildOfSpans', () => {
   it('Should not remove CHILD_OF child spans if there are any', () => {
     // Create CPSpan objects from the original spans
     const spanMap = test2.trace.spans.reduce((map, span) => {
-      const cpSpan = {
-        spanID: span.spanID,
-        startTime: span.startTime,
-        duration: span.duration,
-        references: span.references.map(ref => ({ ...ref })),
-        childSpanIds: [...span.childSpanIds],
-        hasChildren: span.hasChildren,
-      };
-      map.set(span.spanID, cpSpan);
+      map.set(span.spanID, createCPSpan(span));
       return map;
     }, new Map());
     const refinedSpanMap = getChildOfSpans(spanMap);
@@ -27,15 +36,7 @@ describe('getChildOfSpans', () => {
   it('Should remove FOLLOWS_FROM child spans if there are any', () => {
     // Create CPSpan objects from the original spans
     const spanMap = test5.trace.spans.reduce((map, span) => {
-      const cpSpan = {
-        spanID: span.spanID,
-        startTime: span.startTime,
-        duration: span.duration,
-        references: span.references.map(ref => ({ ...ref })),
-        childSpanIds: [...span.childSpanIds],
-        hasChildren: span.hasChildren,
-      };
-      map.set(span.spanID, cpSpan);
+      map.set(span.spanID, createCPSpan(span));
       return map;
     }, new Map());
     const refinedSpanMap = getChildOfSpans(spanMap);
@@ -54,15 +55,7 @@ describe('getChildOfSpans', () => {
 
     // Create CPSpan objects (copies) from the original spans
     const spanMap = test5.trace.spans.reduce((map, span) => {
-      const cpSpan = {
-        spanID: span.spanID,
-        startTime: span.startTime,
-        duration: span.duration,
-        references: span.references.map(ref => ({ ...ref })),
-        childSpanIds: [...span.childSpanIds],
-        hasChildren: span.hasChildren,
-      };
-      map.set(span.spanID, cpSpan);
+      map.set(span.spanID, createCPSpan(span));
       return map;
     }, new Map());
 
