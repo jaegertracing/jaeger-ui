@@ -16,6 +16,8 @@ import './KeyValuesTable.css';
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
 function tryParseJson(value: string) {
+  // if the value is a string representing actual json object or array, then use json-markup
+  // otherwise just return as is
   try {
     return jsonObjectOrArrayStartRegex.test(value) ? JSON.parse(value) : value;
   } catch (_) {
@@ -119,6 +121,8 @@ type KeyValuesTableProps = {
   linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
 };
 
+// KeyValuesTable is displayed as a menu at span level.
+// Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/b518cad9-cb37-4775-a3d6-b667a1235f89
 export default function KeyValuesTable(props: KeyValuesTableProps) {
   const { data, linksGetter } = props;
 
@@ -155,7 +159,6 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             } else {
               valueMarkup = jsonTable;
             }
-
             const isOtel = row.key.startsWith('otel.');
             const keyMarkup = isOtel ? (
               <span style={{ color: '#666', fontStyle: 'italic' }} className="is-otel-key">
@@ -171,6 +174,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             );
 
             return (
+              // `i` is necessary in the key because row.key can repeat
               <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
                 <td className="KeyValueTable--keyColumn">{keyMarkup}</td>
                 <td className="KeyValueTable--valueColumn">
