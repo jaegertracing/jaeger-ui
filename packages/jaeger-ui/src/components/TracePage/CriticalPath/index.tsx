@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import memoizeOne from 'memoize-one';
-import { Span, Trace, criticalPathSection } from '../../../types/trace';
+import { Span, Trace, criticalPathSection, CPSpan } from '../../../types/trace';
 import getChildOfSpans from './utils/getChildOfSpans';
 import findLastFinishingChildSpan from './utils/findLastFinishingChildSpan';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
@@ -28,12 +28,12 @@ import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
  * immediately before the LFC's start.
  */
 const computeCriticalPath = (
-  spanMap: Map<string, Span>,
+  spanMap: Map<string, CPSpan>,
   spanId: string,
   criticalPath: criticalPathSection[],
   returningChildStartTime?: number
 ): criticalPathSection[] => {
-  const currentSpan: Span = spanMap.get(spanId)!;
+  const currentSpan: CPSpan = spanMap.get(spanId)!;
 
   const lastFinishingChildSpan = findLastFinishingChildSpan(spanMap, currentSpan, returningChildStartTime);
   let spanCriticalSection: criticalPathSection;
@@ -78,10 +78,21 @@ function criticalPathForTrace(trace: Trace) {
   const rootSpanId = trace.spans[0].spanID;
   // If there is root span then algorithm implements
   if (rootSpanId) {
+    // Create a map of CPSpan objects to avoid modifying the original trace
     const spanMap = trace.spans.reduce((map, span) => {
-      map.set(span.spanID, span);
+      const cpSpan: CPSpan = {
+        spanID: span.spanID,
+        startTime: span.startTime,
+        duration: span.duration,
+        // Create a shallow copy of references array to avoid modifying original
+        references: span.references.map(ref => ({ ...ref })),
+        // Create a shallow copy of childSpanIds array to avoid modifying original
+        childSpanIds: [...span.childSpanIds],
+        hasChildren: span.hasChildren,
+      };
+      map.set(span.spanID, cpSpan);
       return map;
-    }, new Map<string, Span>());
+    }, new Map<string, CPSpan>());
     try {
       const refinedSpanMap = getChildOfSpans(spanMap);
       const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);

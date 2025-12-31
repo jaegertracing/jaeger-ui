@@ -89,3 +89,15 @@ export type criticalPathSection = {
   section_start: number;
   section_end: number;
 };
+
+// Critical Path Span - a minimal span type used for critical path computation
+// This type contains only the fields needed for critical path algorithms
+// and ensures the original trace spans are not modified during computation
+export type CPSpan = {
+  spanID: string;
+  startTime: number;
+  duration: number;
+  references: Array<SpanReference>;
+  childSpanIds: Array<string>;
+  hasChildren: boolean;
+};
