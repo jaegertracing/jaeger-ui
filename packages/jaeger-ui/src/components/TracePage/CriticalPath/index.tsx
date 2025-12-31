@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import memoizeOne from 'memoize-one';
-import { Span, Trace, criticalPathSection, CPSpan, CPSpanReference } from '../../../types/trace';
+import { Trace, criticalPathSection, CPSpan } from '../../../types/trace';
 import getChildOfSpans from './utils/getChildOfSpans';
 import findLastFinishingChildSpan from './utils/findLastFinishingChildSpan';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
+import { createCPSpanMap } from './utils/cpspan';
 
 /**
  * Computes the critical path sections of a Jaeger trace.
@@ -79,28 +80,7 @@ function criticalPathForTrace(trace: Trace) {
   // If there is root span then algorithm implements
   if (rootSpanId) {
     // Create a map of CPSpan objects to avoid modifying the original trace
-    const spanMap = trace.spans.reduce((map, span) => {
-      const cpSpan: CPSpan = {
-        spanID: span.spanID,
-        startTime: span.startTime,
-        duration: span.duration,
-        // Create a shallow copy of references array to avoid modifying original
-        // and convert to CPSpanReference
-        references: span.references.map(
-          (ref): CPSpanReference => ({
-            refType: ref.refType,
-            spanID: ref.spanID,
-            traceID: ref.traceID,
-            span: undefined, // Will be set later if needed
-          })
-        ),
-        // Create a shallow copy of childSpanIds array to avoid modifying original
-        childSpanIds: [...span.childSpanIds],
-        hasChildren: span.hasChildren,
-      };
-      map.set(span.spanID, cpSpan);
-      return map;
-    }, new Map<string, CPSpan>());
+    const spanMap = createCPSpanMap(trace.spans);
     try {
       const refinedSpanMap = getChildOfSpans(spanMap);
       const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);

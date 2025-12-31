@@ -9,33 +9,9 @@ import test8 from '../testCases/test8';
 import test9 from '../testCases/test9';
 import getChildOfSpans from './getChildOfSpans';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
+import { createCPSpan, createCPSpanMap } from './cpspan';
 
-// Helper function to create CPSpan objects from Span objects
-function createCPSpan(span) {
-  return {
-    spanID: span.spanID,
-    startTime: span.startTime,
-    duration: span.duration,
-    references: span.references.map(ref => ({
-      refType: ref.refType,
-      spanID: ref.spanID,
-      traceID: ref.traceID,
-      span: undefined,
-    })),
-    childSpanIds: [...span.childSpanIds],
-    hasChildren: span.hasChildren,
-  };
-}
-
-// Helper function to create CPSpan map from trace spans
-function createCPSpanMap(spans) {
-  return spans.reduce((map, span) => {
-    map.set(span.spanID, createCPSpan(span));
-    return map;
-  }, new Map());
-}
-
-// Function to make expected data for test6 and test7
+// Function to make expected data for test6, test7, and test8
 function getExpectedSanitizedData(spans, test) {
   // Define what the expected modifications are for each test
   const modifications = {
@@ -71,6 +47,7 @@ function getExpectedSanitizedData(spans, test) {
 
 describe.each([
   [
+    'child starts after parent ends - child dropped',
     test3,
     new Map().set(test3.trace.spans[0].spanID, {
       ...createCPSpan(test3.trace.spans[0]),
@@ -78,24 +55,38 @@ describe.each([
     }),
   ],
   [
+    'child and grandchild start after parent ends - both dropped',
     test4,
     new Map().set(test4.trace.spans[0].spanID, {
       ...createCPSpan(test4.trace.spans[0]),
       childSpanIds: [],
     }),
   ],
-  [test6, getExpectedSanitizedData(test6.trace.spans, 'test6')],
-  [test7, getExpectedSanitizedData(test7.trace.spans, 'test7')],
-  [test8, getExpectedSanitizedData(test8.trace.spans, 'test8')],
   [
+    'child starts before parent and ends after - both truncated',
+    test6,
+    getExpectedSanitizedData(test6.trace.spans, 'test6'),
+  ],
+  [
+    'child starts before parent - child start truncated',
+    test7,
+    getExpectedSanitizedData(test7.trace.spans, 'test7'),
+  ],
+  [
+    'child starts before parent - child start adjusted',
+    test8,
+    getExpectedSanitizedData(test8.trace.spans, 'test8'),
+  ],
+  [
+    'child ends before parent starts - child dropped',
     test9,
     new Map().set(test9.trace.spans[0].spanID, {
       ...createCPSpan(test9.trace.spans[0]),
       childSpanIds: [],
     }),
   ],
-])('sanitizeOverFlowingChildren', (testProps, expectedSanitizedData) => {
-  it('Should sanitize the data(overflowing spans) correctly', () => {
+])('sanitizeOverFlowingChildren - %s', (description, testProps, expectedSanitizedData) => {
+  it(`should sanitize correctly: ${description}`, () => {
     const spanMap = createCPSpanMap(testProps.trace.spans);
     const refinedSpanMap = getChildOfSpans(spanMap);
     const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
@@ -110,7 +101,6 @@ describe.each([
       expect(span.spanID).toBe(expectedSpan.spanID);
       expect(span.startTime).toBe(expectedSpan.startTime);
       expect(span.duration).toBe(expectedSpan.duration);
-      expect(span.hasChildren).toBe(expectedSpan.hasChildren);
       expect(span.childSpanIds).toEqual(expectedSpan.childSpanIds);
       expect(span.references.length).toBe(expectedSpan.references.length);
       // Compare reference properties except the nested span object

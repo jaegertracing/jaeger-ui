@@ -26,7 +26,7 @@ const getChildOfSpans = (spanMap: Map<string, CPSpan>): Map<string, CPSpan> => {
   const findDescendantSpans = (spanIds: string[]) => {
     spanIds.forEach(spanId => {
       const span = spanMap.get(spanId)!;
-      if (span.hasChildren) {
+      if (span.childSpanIds.length > 0) {
         followFromSpansDescendantIds.push(...span.childSpanIds);
         findDescendantSpans(span.childSpanIds);
       }

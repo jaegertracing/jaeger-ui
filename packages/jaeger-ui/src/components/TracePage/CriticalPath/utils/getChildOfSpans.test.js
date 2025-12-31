@@ -4,41 +4,19 @@
 import test2 from '../testCases/test2';
 import test5 from '../testCases/test5';
 import getChildOfSpans from './getChildOfSpans';
-
-// Helper function to create CPSpan objects from Span objects
-function createCPSpan(span) {
-  return {
-    spanID: span.spanID,
-    startTime: span.startTime,
-    duration: span.duration,
-    references: span.references.map(ref => ({
-      refType: ref.refType,
-      spanID: ref.spanID,
-      traceID: ref.traceID,
-      span: undefined,
-    })),
-    childSpanIds: [...span.childSpanIds],
-    hasChildren: span.hasChildren,
-  };
-}
+import { createCPSpan, createCPSpanMap } from './cpspan';
 
 describe('getChildOfSpans', () => {
   it('Should not remove CHILD_OF child spans if there are any', () => {
     // Create CPSpan objects from the original spans
-    const spanMap = test2.trace.spans.reduce((map, span) => {
-      map.set(span.spanID, createCPSpan(span));
-      return map;
-    }, new Map());
+    const spanMap = createCPSpanMap(test2.trace.spans);
     const refinedSpanMap = getChildOfSpans(spanMap);
 
     expect(refinedSpanMap.size).toBe(3);
   });
   it('Should remove FOLLOWS_FROM child spans if there are any', () => {
     // Create CPSpan objects from the original spans
-    const spanMap = test5.trace.spans.reduce((map, span) => {
-      map.set(span.spanID, createCPSpan(span));
-      return map;
-    }, new Map());
+    const spanMap = createCPSpanMap(test5.trace.spans);
     const refinedSpanMap = getChildOfSpans(spanMap);
 
     expect(refinedSpanMap.size).toBe(1);
@@ -54,10 +32,7 @@ describe('getChildOfSpans', () => {
     const originalChildSpanIdsValue = [...originalParentSpan.childSpanIds];
 
     // Create CPSpan objects (copies) from the original spans
-    const spanMap = test5.trace.spans.reduce((map, span) => {
-      map.set(span.spanID, createCPSpan(span));
-      return map;
-    }, new Map());
+    const spanMap = createCPSpanMap(test5.trace.spans);
 
     // Run the function on CPSpan copies
     getChildOfSpans(spanMap);

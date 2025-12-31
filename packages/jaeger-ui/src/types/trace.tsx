@@ -108,5 +108,4 @@ export type CPSpan = {
   duration: number;
   references: Array<CPSpanReference>;
   childSpanIds: Array<string>;
-  hasChildren: boolean;
 };

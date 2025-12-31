@@ -6,31 +6,7 @@ import test2 from '../testCases/test2';
 import getChildOfSpans from './getChildOfSpans';
 import findLastFinishingChildSpanId from './findLastFinishingChildSpan';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
-
-// Helper function to create CPSpan objects from Span objects
-function createCPSpan(span) {
-  return {
-    spanID: span.spanID,
-    startTime: span.startTime,
-    duration: span.duration,
-    references: span.references.map(ref => ({
-      refType: ref.refType,
-      spanID: ref.spanID,
-      traceID: ref.traceID,
-      span: undefined,
-    })),
-    childSpanIds: [...span.childSpanIds],
-    hasChildren: span.hasChildren,
-  };
-}
-
-// Helper function to create CPSpan map from trace spans
-function createCPSpanMap(spans) {
-  return spans.reduce((map, span) => {
-    map.set(span.spanID, createCPSpan(span));
-    return map;
-  }, new Map());
-}
+import { createCPSpanMap } from './cpspan';
 
 describe('findLastFinishingChildSpanId', () => {
   it('Should find lfc of a span correctly', () => {
