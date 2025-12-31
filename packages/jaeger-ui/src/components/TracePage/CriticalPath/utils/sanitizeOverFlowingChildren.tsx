@@ -22,7 +22,7 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Sp
       newSpanMap.set(spanId, span);
       return;
     }
-    
+
     // parentSpan will be undefined when its parentSpan is dropped previously
     const parentSpan = spanMap.get(span.references[0].spanID);
 
@@ -31,10 +31,10 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Sp
       droppedSpanIds.add(span.spanID);
       return;
     }
-    
+
     const childEndTime = span.startTime + span.duration;
     const parentEndTime = parentSpan.startTime + parentSpan.duration;
-    
+
     if (span.startTime >= parentSpan.startTime) {
       if (span.startTime >= parentEndTime) {
         // child outside of parent range => drop the child span
@@ -59,7 +59,7 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Sp
       newSpanMap.set(spanId, span);
       return;
     }
-    
+
     if (childEndTime <= parentSpan.startTime) {
       // child outside of parent range => drop the child span
       //                      |----parent----|
@@ -90,22 +90,22 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Sp
   const finalSpanMap = new Map<string, Span>();
   newSpanMap.forEach((span, spanId) => {
     const filteredChildSpans = span.childSpans.filter(child => !droppedSpanIds.has(child.spanID));
-    
+
     // Update child span references with sanitized parent
     let updatedReferences = span.references;
     if (span.references.length) {
       const parentSpan = newSpanMap.get(span.references[0].spanID);
       if (parentSpan) {
-        updatedReferences = span.references.map(ref => 
+        updatedReferences = span.references.map(ref =>
           ref.spanID === span.references[0].spanID ? { ...ref, span: parentSpan } : ref
         );
       }
     }
-    
-    finalSpanMap.set(spanId, { 
-      ...span, 
+
+    finalSpanMap.set(spanId, {
+      ...span,
       childSpans: filteredChildSpans,
-      references: updatedReferences
+      references: updatedReferences,
     });
   });
 

@@ -171,7 +171,7 @@ function mergeChildrenCriticalPath(
       });
     }
   };
-  
+
   // Start from the initially selected span
   const startingSpan = spanMap.get(spanID);
   if (startingSpan) {
