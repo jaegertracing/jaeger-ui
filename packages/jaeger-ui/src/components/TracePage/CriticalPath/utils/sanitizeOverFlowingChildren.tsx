@@ -89,7 +89,7 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Sp
   // Second pass: filter out dropped children from childSpans arrays
   const finalSpanMap = new Map<string, Span>();
   newSpanMap.forEach((span, spanId) => {
-    const filteredChildSpans = (span.childSpans || []).filter(child => !droppedSpanIds.has(child.spanID));
+    const filteredChildSpans = span.childSpans.filter(child => !droppedSpanIds.has(child.spanID));
 
     // Update child span references with sanitized parent
     let updatedReferences = span.references;

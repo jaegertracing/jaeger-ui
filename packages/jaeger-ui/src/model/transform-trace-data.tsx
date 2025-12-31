@@ -101,6 +101,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
       spanIdCounts.set(spanID, 1);
     }
     span.process = data.processes[processID];
+    span.childSpans = []; // Initialize to empty array, will be populated during tree walk
     spanMap.set(spanID, span);
   }
   // tree is necessary to sort the spans, so children follow parents, and
