@@ -10,13 +10,18 @@ const SPAN_HEIGHT = 2;
 
 function getTrace() {
   const spans = [];
+  const spanMap = new Map();
   const trace = {
     spans,
     duration: 2000,
     startTime: 1000,
+    spanMap,
+    rootSpans: [],
   };
   for (let i = 0; i < 10; i++) {
-    spans.push({ duration: 1, startTime: 1000, spanID: i + 1 });
+    const span = { duration: 1, startTime: 1000, spanID: i + 1 };
+    spans.push(span);
+    spanMap.set(i + 1, span);
   }
   return trace;
 }

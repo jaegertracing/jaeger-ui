@@ -43,21 +43,52 @@ describe('transform traces to ddg paths', () => {
           ],
     spanID: `${spanName} spanID`,
   });
-  const makeTrace = (spans, traceID) => ({
-    data: {
-      processes: spans.reduce(
-        (result, span) => ({
-          ...result,
-          [span.processID]: {
-            serviceName: `${span.processID}-name`,
-          },
-        }),
-        {}
-      ),
-      spans,
-      traceID,
-    },
-  });
+  const makeTrace = (spans, traceID) => {
+    const spanMap = new Map();
+    const rootSpans = [];
+
+    // Build spanMap and initialize childSpans arrays
+    spans.forEach(span => {
+      // Create a copy of the span with a fresh childSpans array
+      const spanCopy = { ...span, childSpans: [] };
+      spanMap.set(span.spanID, spanCopy);
+    });
+
+    // Build parent-child relationships and identify root spans
+    spanMap.forEach(span => {
+      const parentRef = span.references && span.references.find(ref => ref.refType === 'CHILD_OF');
+      if (parentRef) {
+        const parentSpan = spanMap.get(parentRef.spanID);
+        if (parentSpan) {
+          parentSpan.childSpans.push(span);
+        } else {
+          // Orphan span - parent not found
+          rootSpans.push(span);
+        }
+      } else {
+        // No parent reference - this is a root span
+        rootSpans.push(span);
+      }
+    });
+
+    return {
+      data: {
+        processes: Array.from(spanMap.values()).reduce(
+          (result, span) => ({
+            ...result,
+            [span.processID]: {
+              serviceName: `${span.processID}-name`,
+            },
+          }),
+          {}
+        ),
+        spans: Array.from(spanMap.values()),
+        traceID,
+        spanMap,
+        rootSpans,
+      },
+    };
+  };
   const makeTraces = (...traces) =>
     traces.reduce((res, trace) => ({ ...res, [trace.data.traceID]: trace }), {});
 

@@ -8,11 +8,10 @@ import getChildOfSpans from './getChildOfSpans';
 describe('getChildOfSpans', () => {
   it('Should not remove CHILD_OF child spans if there are any', () => {
     const trace = test2.trace;
-    // Populate childSpanIds from nodesBySpanId for testing
+    // Create spanMap with childSpanIds populated from childSpans
     const spanMap = new Map();
     trace.spans.forEach(span => {
-      const node = trace.nodesBySpanId?.get(span.spanID);
-      const childSpanIds = node ? node.children.map(child => child.value) : [];
+      const childSpanIds = span.childSpans ? span.childSpans.map(child => child.spanID) : [];
       spanMap.set(span.spanID, { ...span, childSpanIds });
     });
 
@@ -24,11 +23,10 @@ describe('getChildOfSpans', () => {
   });
   it('Should remove FOLLOWS_FROM child spans if there are any', () => {
     const trace = test5.trace;
-    // Populate childSpanIds from nodesBySpanId for testing
+    // Create spanMap with childSpanIds populated from childSpans
     const spanMap = new Map();
     trace.spans.forEach(span => {
-      const node = trace.nodesBySpanId?.get(span.spanID);
-      const childSpanIds = node ? node.children.map(child => child.value) : [];
+      const childSpanIds = span.childSpans ? span.childSpans.map(child => child.spanID) : [];
       spanMap.set(span.spanID, { ...span, childSpanIds });
     });
 

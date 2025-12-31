@@ -93,7 +93,7 @@ function computeColumnValues(
     resultValueChange.max = span.durationMicros;
   }
 
-  const tempSelf = computeSelfTime(span, allSpans, spanMap);
+  const tempSelf = computeSelfTime(span, allSpans);
   if (resultValueChange.selfMin > tempSelf) {
     resultValueChange.selfMin = tempSelf;
   }

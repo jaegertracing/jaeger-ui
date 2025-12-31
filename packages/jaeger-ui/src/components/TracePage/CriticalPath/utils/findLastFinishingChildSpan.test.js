@@ -10,11 +10,10 @@ import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 describe('findLastFinishingChildSpanId', () => {
   it('Should find lfc of a span correctly', () => {
     const trace = test1.trace;
-    // Populate childSpanIds from nodesBySpanId for testing
+    // Create spanMap with childSpanIds populated from childSpans
     const spanMap = new Map();
     trace.spans.forEach(span => {
-      const node = trace.nodesBySpanId?.get(span.spanID);
-      const childSpanIds = node ? node.children.map(child => child.value) : [];
+      const childSpanIds = span.childSpans ? span.childSpans.map(child => child.spanID) : [];
       spanMap.set(span.spanID, { ...span, childSpanIds });
     });
 
@@ -32,11 +31,10 @@ describe('findLastFinishingChildSpanId', () => {
 
   it('Should find lfc of a span correctly with test2', () => {
     const trace = test2.trace;
-    // Populate childSpanIds from nodesBySpanId for testing
+    // Create spanMap with childSpanIds populated from childSpans
     const spanMap = new Map();
     trace.spans.forEach(span => {
-      const node = trace.nodesBySpanId?.get(span.spanID);
-      const childSpanIds = node ? node.children.map(child => child.value) : [];
+      const childSpanIds = span.childSpans ? span.childSpans.map(child => child.spanID) : [];
       spanMap.set(span.spanID, { ...span, childSpanIds });
     });
 
