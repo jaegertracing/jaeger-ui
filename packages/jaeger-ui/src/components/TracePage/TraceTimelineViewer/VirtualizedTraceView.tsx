@@ -90,7 +90,7 @@ export const DEFAULT_HEIGHTS = {
 const NUM_TICKS = 5;
 
 function generateRowStates(
-  spans: Span[] | TNil,
+  spans: ReadonlyArray<Span> | TNil,
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>
 ): RowState[] {

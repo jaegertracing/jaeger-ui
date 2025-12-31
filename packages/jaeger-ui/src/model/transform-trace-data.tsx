@@ -6,12 +6,12 @@ import _isEqual from 'lodash/isEqual';
 import { getTraceSpanIdsAsTree, TREE_ROOT_ID } from '../selectors/trace';
 import { getConfigValue } from '../utils/config/get-config';
 import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-viewer';
-import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
+import { KeyValuePair, Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
 import OtelTraceFacade from './OtelTraceFacade';
 
 // exported for tests
-export function deduplicateTags(spanTags: KeyValuePair[]) {
+export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
   const warningsHash: Map<string, string> = new Map<string, string>();
   const tags: KeyValuePair[] = spanTags.reduce<KeyValuePair[]>((uniqueTags, tag) => {
     if (!uniqueTags.some(t => t.key === tag.key && t.value === tag.value)) {
@@ -26,7 +26,7 @@ export function deduplicateTags(spanTags: KeyValuePair[]) {
 }
 
 // exported for tests
-export function orderTags(spanTags: KeyValuePair[], topPrefixes?: string[]) {
+export function orderTags(spanTags: ReadonlyArray<KeyValuePair>, topPrefixes?: string[]) {
   const orderedTags: KeyValuePair[] = spanTags.slice();
   const tp = (topPrefixes || []).map((p: string) => p.toLowerCase());
 
@@ -77,8 +77,8 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
 
   const numSpans = data.spans.length;
   for (let i = 0; i < numSpans; i++) {
-    const span: Span = data.spans[i] as Span;
-    const { startTime, duration, processID } = span;
+    const spanData = data.spans[i];
+    const { startTime, duration, processID } = spanData;
     // update trace's start / end time
     if (startTime < traceStartTime) {
       traceStartTime = startTime;
@@ -87,22 +87,24 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
       traceEndTime = startTime + duration;
     }
     // make sure span IDs are unique
-    let spanID = span.spanID;
+    let spanID = spanData.spanID;
     const idCount = spanIdCounts.get(spanID);
     if (idCount != null) {
-      console.warn(`Dupe spanID, ${idCount + 1} x ${spanID}`, span, spanMap.get(spanID));
-      if (_isEqual(span, spanMap.get(spanID))) {
+      console.warn(`Dupe spanID, ${idCount + 1} x ${spanID}`, spanData, spanMap.get(spanID));
+      if (_isEqual(spanData, spanMap.get(spanID))) {
         console.warn('\t two spans with same ID have `isEqual(...) === true`');
       }
       spanIdCounts.set(spanID, idCount + 1);
       spanID = `${spanID}_${idCount}`;
-      span.spanID = spanID;
+      spanData.spanID = spanID;
     } else {
       spanIdCounts.set(spanID, 1);
     }
-    span.process = data.processes[processID];
-    span.childSpans = []; // Initialize to empty array, will be populated during tree walk
-    spanMap.set(spanID, span);
+    // Mutate SpanData to progressively build Span
+    // These mutations are safe as we own the data
+    (spanData as any).process = data.processes[processID];
+    (spanData as any).childSpans = []; // Initialize to empty array, will be populated during tree walk
+    spanMap.set(spanID, spanData as Span);
   }
   // tree is necessary to sort the spans, so children follow parents, and
   // siblings are sorted by start time
@@ -139,7 +141,8 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
         if (index > 0) {
           // Don't take into account the parent, just other references.
           refSpan.subsidiarilyReferencedBy = refSpan.subsidiarilyReferencedBy || [];
-          refSpan.subsidiarilyReferencedBy.push({
+          // Cast to mutable array during construction phase
+          (refSpan.subsidiarilyReferencedBy as SpanReference[]).push({
             spanID,
             traceID,
             span,

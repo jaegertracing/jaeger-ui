@@ -119,8 +119,8 @@ const linkValueList = (links: Link[]) => {
 };
 
 type KeyValuesTableProps = {
-  data: KeyValuePair[];
-  linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
+  data: ReadonlyArray<KeyValuePair>;
+  linksGetter: ((pairs: ReadonlyArray<KeyValuePair>, index: number) => Link[]) | TNil;
 };
 
 // KeyValuesTable is displayed as a menu at span level.

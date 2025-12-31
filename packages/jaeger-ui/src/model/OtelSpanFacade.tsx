@@ -75,7 +75,7 @@ export default class OtelSpanFacade implements IOtelSpan {
     };
   }
 
-  private static toOtelAttributes(tags: { key: string; value: any }[]): IAttribute[] {
+  private static toOtelAttributes(tags: ReadonlyArray<{ key: string; value: any }>): IAttribute[] {
     return tags
       .filter(kv => kv.value !== null && kv.value !== undefined)
       .map(kv => ({

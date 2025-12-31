@@ -31,7 +31,7 @@ export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
   const isTextInFilters = (filters: Array<string>, text: string) =>
     filters.some(filter => text.toLowerCase().includes(filter));
 
-  const isTextInKeyValues = (kvs: Array<KeyValuePair>) =>
+  const isTextInKeyValues = (kvs: ReadonlyArray<KeyValuePair>) =>
     kvs
       ? kvs.some(kv => {
           // ignore checking key and value for a match if key is in excludeKeys

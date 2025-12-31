@@ -19,12 +19,12 @@ export type Link = {
 
 export type Log = {
   timestamp: number;
-  fields: Array<KeyValuePair>;
+  fields: ReadonlyArray<KeyValuePair>;
 };
 
 export type Process = {
   serviceName: string;
-  tags: Array<KeyValuePair>;
+  tags: ReadonlyArray<KeyValuePair>;
 };
 
 export type SpanReference = {
@@ -42,10 +42,10 @@ export type SpanData = {
   operationName: string;
   startTime: number;
   duration: number;
-  logs: Array<Log>;
-  tags?: Array<KeyValuePair>;
-  references?: Array<SpanReference>;
-  warnings?: Array<string> | null;
+  logs: ReadonlyArray<Log>;
+  tags?: ReadonlyArray<KeyValuePair>;
+  references?: ReadonlyArray<SpanReference>;
+  warnings?: ReadonlyArray<string> | null;
 };
 
 export type Span = SpanData & {
@@ -56,8 +56,8 @@ export type Span = SpanData & {
   tags: NonNullable<SpanData['tags']>;
   references: NonNullable<SpanData['references']>;
   warnings: NonNullable<SpanData['warnings']>;
-  subsidiarilyReferencedBy: Array<SpanReference>;
-  childSpans: Array<Span>;
+  subsidiarilyReferencedBy: ReadonlyArray<SpanReference>;
+  childSpans: ReadonlyArray<Span>;
 };
 
 export type TraceData = {
@@ -68,18 +68,18 @@ export type TraceData = {
 export type Trace = TraceData & {
   duration: number;
   endTime: number;
-  spans: Span[];
+  spans: ReadonlyArray<Span>;
   startTime: number;
   traceName: string;
   tracePageTitle: string;
   traceEmoji: string;
-  services: { name: string; numberOfSpans: number }[];
+  services: ReadonlyArray<{ name: string; numberOfSpans: number }>;
   // Number of orphan spans (spans referencing parent spans that don't exist in the trace)
   orphanSpanCount?: number;
 
   // Optimized data structures - created once during trace transformation
-  spanMap: Map<string, Span>;
-  rootSpans: Array<Span>;
+  spanMap: ReadonlyMap<string, Span>;
+  rootSpans: ReadonlyArray<Span>;
 
   // OTEL facade - lazy-initialized and memoized
   _otelFacade?: IOtelTrace;
@@ -109,6 +109,6 @@ export type CPSpan = {
   spanID: string;
   startTime: number;
   duration: number;
-  references: Array<CPSpanReference>;
-  childSpanIds: Array<string>;
+  references: ReadonlyArray<CPSpanReference>;
+  childSpanIds: ReadonlyArray<string>;
 };

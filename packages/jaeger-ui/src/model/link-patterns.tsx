@@ -82,7 +82,7 @@ export function processLinkPattern(pattern: any): ProcessedLinkPattern | TNil {
   }
 }
 
-export function getParameterInArray(name: string, array: KeyValuePair[]) {
+export function getParameterInArray(name: string, array: ReadonlyArray<KeyValuePair>) {
   if (array) {
     return array.find(entry => entry.key === name);
   }
@@ -167,7 +167,7 @@ export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: Tr
 export function computeLinks(
   linkPatterns: ProcessedLinkPattern[],
   span: Span,
-  items: KeyValuePair[],
+  items: ReadonlyArray<KeyValuePair>,
   itemIndex: number,
   trace: Trace | undefined
 ) {
@@ -223,7 +223,7 @@ export function computeLinks(
 }
 
 export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: WeakMap<KeyValuePair, Link[]>) {
-  return (span: Span, items: KeyValuePair[], itemIndex: number, trace: Trace | undefined) => {
+  return (span: Span, items: ReadonlyArray<KeyValuePair>, itemIndex: number, trace: Trace | undefined) => {
     if (linkPatterns.length === 0) {
       return [];
     }
