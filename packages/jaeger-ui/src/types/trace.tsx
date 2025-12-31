@@ -58,8 +58,6 @@ export type Span = SpanData & {
   warnings: NonNullable<SpanData['warnings']>;
   subsidiarilyReferencedBy: Array<SpanReference>;
   childSpans: Array<Span>;
-  // Temporary property used by critical path utilities
-  childSpanIds?: string[];
 };
 
 export type TraceData = {

@@ -123,7 +123,8 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.relativeStartTime = span.startTime - traceStartTime;
     span.depth = depth - 1;
     span.hasChildren = node.children.length > 0;
-    span.childSpans = []; // Will be populated in second pass
+    // Use children from tree node instead of rebuilding
+    span.childSpans = node.children.map(childNode => spanMap.get(childNode.value)!).filter(Boolean);
     span.warnings = span.warnings || [];
     span.tags = span.tags || [];
     span.references = span.references || [];
@@ -149,20 +150,11 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     spans.push(span);
   });
 
-  // Second pass: populate childSpans based on parent-child relationships
-  spans.forEach(span => {
-    const parentRef = span.references.find(ref => ref.refType === 'CHILD_OF');
-    if (parentRef) {
-      const parentSpan = spanMap.get(parentRef.spanID);
-      if (parentSpan) {
-        parentSpan.childSpans.push(span);
-      } else {
-        // Orphan span - add to rootSpans
-        rootSpans.push(span);
-      }
-    } else {
-      // No parent reference - this is a root span
-      rootSpans.push(span);
+  // Identify root spans from tree structure (direct children of tree root)
+  tree.children.forEach(childNode => {
+    const rootSpan = spanMap.get(childNode.value);
+    if (rootSpan) {
+      rootSpans.push(rootSpan);
     }
   });
 

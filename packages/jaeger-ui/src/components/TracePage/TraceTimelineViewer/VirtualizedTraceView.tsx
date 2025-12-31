@@ -172,13 +172,11 @@ function mergeChildrenCriticalPath(
     }
   };
   
-  // Start from the initially selected spans
-  allRequiredSpanIds.forEach(spanId => {
-    const span = spanMap.get(spanId);
-    if (span) {
-      findAllDescendants(span);
-    }
-  });
+  // Start from the initially selected span
+  const startingSpan = spanMap.get(spanID);
+  if (startingSpan) {
+    findAllDescendants(startingSpan);
+  }
 
   const criticalPathSections: criticalPathSection[] = [];
   criticalPath.forEach(each => {

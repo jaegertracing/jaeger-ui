@@ -9,11 +9,7 @@ import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 
 describe('findLastFinishingChildSpanId', () => {
   it('Should find lfc of a span correctly', () => {
-    const trace = test1.trace;
-    // Use spanMap directly from trace
-    const spanMap = trace.spanMap;
-
-    const refinedSpanMap = getChildOfSpans(spanMap);
+    const refinedSpanMap = getChildOfSpans(test1.trace.spanMap, test1.trace.rootSpans);
     const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
 
     const currentSpan = sanitizedSpanMap.get('span-C');
@@ -26,11 +22,7 @@ describe('findLastFinishingChildSpanId', () => {
   });
 
   it('Should find lfc of a span correctly with test2', () => {
-    const trace = test2.trace;
-    // Use spanMap directly from trace
-    const spanMap = trace.spanMap;
-
-    const refinedSpanMap = getChildOfSpans(spanMap);
+    const refinedSpanMap = getChildOfSpans(test2.trace.spanMap, test2.trace.rootSpans);
     const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
 
     const currentSpan = sanitizedSpanMap.get('span-X');

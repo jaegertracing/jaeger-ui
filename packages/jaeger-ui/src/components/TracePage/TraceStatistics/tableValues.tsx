@@ -433,8 +433,6 @@ function valueSecondDropdown(
 ) {
   const allSpans = trace.spans;
   const allTableValues = [];
-  // Use the pre-built spanMap
-  const spanMap = trace.spanMap;
 
   const isSecondDropdownAttribute =
     selectedAttributeKeySecond !== serviceName && selectedAttributeKeySecond !== operationName;
