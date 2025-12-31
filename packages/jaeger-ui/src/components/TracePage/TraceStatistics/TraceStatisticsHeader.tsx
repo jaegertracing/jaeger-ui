@@ -3,7 +3,7 @@
 
 import { Checkbox, Select } from 'antd';
 import React, { Component } from 'react';
-import { Trace } from '../../../types/trace';
+import { IOtelTrace } from '../../../types/otel';
 import { ITableSpan } from './types';
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
@@ -12,7 +12,7 @@ import generateColor from './generateColor';
 import './TraceStatisticsHeader.css';
 
 type Props = {
-  trace: Trace;
+  trace: IOtelTrace;
   tableValue: ITableSpan[];
   wholeTable: ITableSpan[];
   handler: (

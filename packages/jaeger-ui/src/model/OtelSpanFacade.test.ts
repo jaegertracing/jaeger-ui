@@ -64,6 +64,113 @@ describe('OtelSpanFacade', () => {
     expect(facade.parentSpanId).toBe('parent-1');
   });
 
+  describe('parentSpanId calculation', () => {
+    it('uses CHILD_OF reference with same traceID', () => {
+      const span: Span = {
+        ...mockLegacySpan,
+        traceID: 'trace-1',
+        references: [{ refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'parent-1', span: null }],
+      };
+      const spanFacade = new OtelSpanFacade(span);
+      expect(spanFacade.parentSpanId).toBe('parent-1');
+    });
+
+    it('ignores CHILD_OF reference with different traceID', () => {
+      const span: Span = {
+        ...mockLegacySpan,
+        traceID: 'trace-1',
+        references: [{ refType: 'CHILD_OF', traceID: 'trace-2', spanID: 'parent-1', span: null }],
+      };
+      const spanFacade = new OtelSpanFacade(span);
+      expect(spanFacade.parentSpanId).toBeUndefined();
+    });
+
+    it('uses earliest CHILD_OF reference when multiple exist with same traceID', () => {
+      const span: Span = {
+        ...mockLegacySpan,
+        traceID: 'trace-1',
+        references: [
+          { refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'parent-1', span: null },
+          { refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'parent-2', span: null },
+        ],
+      };
+      const spanFacade = new OtelSpanFacade(span);
+      expect(spanFacade.parentSpanId).toBe('parent-1');
+    });
+
+    it('uses FOLLOWS_FROM reference with same traceID when no CHILD_OF exists', () => {
+      const span: Span = {
+        ...mockLegacySpan,
+        traceID: 'trace-1',
+        references: [{ refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'link-1', span: null }],
+      };
+      const spanFacade = new OtelSpanFacade(span);
+      expect(spanFacade.parentSpanId).toBe('link-1');
+    });
+
+    it('uses earliest FOLLOWS_FROM reference when multiple exist with same traceID and no CHILD_OF', () => {
+      const span: Span = {
+        ...mockLegacySpan,
+        traceID: 'trace-1',
+        references: [
+          { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'link-1', span: null },
+          { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'link-2', span: null },
+        ],
+      };
+      const spanFacade = new OtelSpanFacade(span);
+      expect(spanFacade.parentSpanId).toBe('link-1');
+    });
+
+    it('prefers CHILD_OF with same traceID over FOLLOWS_FROM', () => {
+      const span: Span = {
+        ...mockLegacySpan,
+        traceID: 'trace-1',
+        references: [
+          { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'link-1', span: null },
+          { refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'parent-1', span: null },
+        ],
+      };
+      const spanFacade = new OtelSpanFacade(span);
+      expect(spanFacade.parentSpanId).toBe('parent-1');
+    });
+
+    it('returns undefined when no references have same traceID', () => {
+      const span: Span = {
+        ...mockLegacySpan,
+        traceID: 'trace-1',
+        references: [
+          { refType: 'CHILD_OF', traceID: 'trace-2', spanID: 'parent-1', span: null },
+          { refType: 'FOLLOWS_FROM', traceID: 'trace-3', spanID: 'link-1', span: null },
+        ],
+      };
+      const spanFacade = new OtelSpanFacade(span);
+      expect(spanFacade.parentSpanId).toBeUndefined();
+    });
+
+    it('returns undefined when no references exist', () => {
+      const span: Span = {
+        ...mockLegacySpan,
+        traceID: 'trace-1',
+        references: [],
+      };
+      const spanFacade = new OtelSpanFacade(span);
+      expect(spanFacade.parentSpanId).toBeUndefined();
+    });
+
+    it('ignores CHILD_OF with different traceID but uses FOLLOWS_FROM with same traceID', () => {
+      const span: Span = {
+        ...mockLegacySpan,
+        traceID: 'trace-1',
+        references: [
+          { refType: 'CHILD_OF', traceID: 'trace-2', spanID: 'parent-1', span: null },
+          { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'link-1', span: null },
+        ],
+      };
+      const spanFacade = new OtelSpanFacade(span);
+      expect(spanFacade.parentSpanId).toBe('link-1');
+    });
+  });
+
   it('maps span kind from tags', () => {
     expect(facade.kind).toBe(SpanKind.SERVER);
   });
