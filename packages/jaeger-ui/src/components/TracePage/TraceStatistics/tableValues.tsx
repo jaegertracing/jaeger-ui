@@ -389,7 +389,7 @@ function generateDetailRest(
             }
           }
           if (rest) {
-            resultValue = computeColumnValues(trace, allSpans[j], allSpans, spanMap, resultValue);
+            resultValue = computeColumnValues(trace, allSpans[j], allSpans, resultValue);
           }
         }
       }
