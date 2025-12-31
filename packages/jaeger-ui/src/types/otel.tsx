@@ -97,4 +97,8 @@ export interface IOtelTrace {
   endTimeUnixMicros: number;
   traceName: string;
   services: { name: string; numberOfSpans: number }[];
+
+  // Optimized data structures - created once during trace transformation
+  spanMap: Map<string, IOtelSpan>;
+  rootSpans: Array<IOtelSpan>;
 }

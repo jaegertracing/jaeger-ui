@@ -41,7 +41,7 @@ describe('OtelSpanFacade', () => {
     depth: 1,
     hasChildren: true,
     relativeStartTime: 100,
-    childSpanIds: ['child-1'],
+    childSpans: [],
     warnings: [],
     subsidiarilyReferencedBy: [
       { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'sub-ref-1', span: null },

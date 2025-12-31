@@ -17,7 +17,7 @@ const getChildOfSpans = (spanMap: Map<string, Span>): Map<string, Span> => {
       followFromSpanIds.push(each.spanID);
       // Remove the spanId from childSpanIds array of its parentSpan
       const parentSpan = spanMap.get(each.references[0].spanID)!;
-      parentSpan.childSpanIds = parentSpan.childSpanIds.filter(a => a !== each.spanID);
+      parentSpan.childSpanIds = parentSpan.childSpanIds!.filter((a: string) => a !== each.spanID);
       spanMap.set(parentSpan.spanID, { ...parentSpan });
     }
   });
@@ -27,8 +27,8 @@ const getChildOfSpans = (spanMap: Map<string, Span>): Map<string, Span> => {
     spanIds.forEach(spanId => {
       const span = spanMap.get(spanId)!;
       if (span.hasChildren) {
-        followFromSpansDescendantIds.push(...span.childSpanIds);
-        findDescendantSpans(span.childSpanIds);
+        followFromSpansDescendantIds.push(...span.childSpanIds!);
+        findDescendantSpans(span.childSpanIds!);
       }
     });
   };

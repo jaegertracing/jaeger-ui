@@ -17,7 +17,7 @@ const findLastFinishingChildSpan = (
   let latestEndTime = -1;
 
   // Iterate through children (now sorted by start time) to find the one that finishes last
-  for (const childId of currentSpan.childSpanIds) {
+  for (const childId of currentSpan.childSpanIds!) {
     const childSpan = spanMap.get(childId);
     if (!childSpan) continue;
 

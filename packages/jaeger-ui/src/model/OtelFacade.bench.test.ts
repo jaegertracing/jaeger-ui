@@ -33,10 +33,12 @@ describe('OtelFacade Benchmarks', () => {
       hasChildren: true,
       process: { serviceName: 'test-service', tags: [] },
       relativeStartTime: i,
-      childSpanIds: [],
+      childSpans: [],
       warnings: [],
       subsidiarilyReferencedBy: [],
     })),
+    spanMap: new Map(),
+    rootSpans: [],
     asOtelTrace() {
       throw new Error('Not implemented');
     },
