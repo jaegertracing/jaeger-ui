@@ -10,6 +10,7 @@ import CopyIcon from '../../../common/CopyIcon';
 
 import { TNil } from '../../../../types';
 import { KeyValuePair, Link } from '../../../../types/trace';
+import { IAttribute } from '../../../../types/otel';
 
 import './KeyValuesTable.css';
 
@@ -117,8 +118,10 @@ const linkValueList = (links: Link[]) => {
 };
 
 type KeyValuesTableProps = {
-  data: ReadonlyArray<KeyValuePair>;
-  linksGetter: ((pairs: ReadonlyArray<KeyValuePair>, index: number) => Link[]) | TNil;
+  data: ReadonlyArray<KeyValuePair> | ReadonlyArray<IAttribute>;
+  linksGetter:
+    | ((pairs: ReadonlyArray<KeyValuePair> | ReadonlyArray<IAttribute>, index: number) => Link[])
+    | TNil;
 };
 
 // KeyValuesTable is displayed as a menu at span level.

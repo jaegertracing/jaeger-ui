@@ -16,13 +16,15 @@ import LabeledList from '../../../common/LabeledList';
 
 import { TNil } from '../../../../types';
 import { KeyValuePair, Link, Log, Span } from '../../../../types/trace';
+import { IOtelSpan, IAttribute, IEvent } from '../../../../types/otel';
+import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 
 import './index.css';
 
 type SpanDetailProps = {
   detailState: DetailState;
-  linksGetter: ((links: ReadonlyArray<KeyValuePair>, index: number) => Link[]) | TNil;
-  logItemToggle: (spanID: string, log: Log) => void;
+  linksGetter: ((links: ReadonlyArray<KeyValuePair | IAttribute>, index: number) => Link[]) | TNil;
+  logItemToggle: (spanID: string, log: Log | IEvent) => void;
   logsToggle: (spanID: string) => void;
   processToggle: (spanID: string) => void;
   span: Span;
@@ -33,6 +35,7 @@ type SpanDetailProps = {
   focusSpan: (uiFind: string) => void;
   currentViewRangeTime: [number, number];
   traceDuration: number;
+  useOtelTerms?: boolean;
 };
 
 export default function SpanDetail(props: SpanDetailProps) {
@@ -50,33 +53,44 @@ export default function SpanDetail(props: SpanDetailProps) {
     focusSpan,
     currentViewRangeTime,
     traceDuration,
+    useOtelTerms = false,
   } = props;
+
+  // Create OTEL facade wrapper
+  const otelSpan: IOtelSpan = React.useMemo(() => new OtelSpanFacade(span), [span]);
+
   const { isTagsOpen, isProcessOpen, logs: logsState, isWarningsOpen, isReferencesOpen } = detailState;
   const { operationName, process, duration, relativeStartTime, spanID, logs, tags, warnings, references } =
     span;
+
+  // Use OTEL terminology when flag is enabled
+  const tagsLabel = useOtelTerms ? 'Attributes' : 'Tags';
+  const processLabel = useOtelTerms ? 'Resource' : 'Process';
+  const logsLabel = useOtelTerms ? 'Events' : 'Logs';
+
   const overviewItems = [
     {
       key: 'svc',
       label: 'Service:',
-      value: process.serviceName,
+      value: otelSpan.resource.serviceName,
     },
     {
       key: 'duration',
       label: 'Duration:',
-      value: formatDuration(duration),
+      value: formatDuration(otelSpan.durationMicros),
     },
     {
       key: 'start',
       label: 'Start Time:',
-      value: formatDuration(relativeStartTime),
+      value: formatDuration(otelSpan.relativeStartTimeMicros),
     },
   ];
-  const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${spanID}`;
+  const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${otelSpan.spanId}`;
 
   return (
     <div>
       <div className="ub-flex ub-items-center">
-        <h2 className="ub-flex-auto ub-m0">{operationName}</h2>
+        <h2 className="ub-flex-auto ub-m0">{otelSpan.name}</h2>
         <LabeledList
           className="ub-tx-right-align"
           dividerClassName="SpanDetail--divider"
@@ -87,35 +101,37 @@ export default function SpanDetail(props: SpanDetailProps) {
       <div>
         <div>
           <AccordianKeyValues
-            data={tags}
-            label="Tags"
+            data={useOtelTerms ? otelSpan.attributes : tags}
+            label={tagsLabel}
             linksGetter={linksGetter}
             isOpen={isTagsOpen}
-            onToggle={() => tagsToggle(spanID)}
+            onToggle={() => tagsToggle(otelSpan.spanId)}
           />
-          {process.tags && (
+          {(useOtelTerms ? otelSpan.resource.attributes : process.tags) && (
             <AccordianKeyValues
               className="ub-mb1"
-              data={process.tags}
-              label="Process"
+              data={useOtelTerms ? otelSpan.resource.attributes : process.tags}
+              label={processLabel}
               linksGetter={linksGetter}
               isOpen={isProcessOpen}
-              onToggle={() => processToggle(spanID)}
+              onToggle={() => processToggle(otelSpan.spanId)}
             />
           )}
         </div>
-        {logs && logs.length > 0 && (
+        {(useOtelTerms ? otelSpan.events : logs) && (useOtelTerms ? otelSpan.events : logs).length > 0 && (
           <AccordianLogs
             linksGetter={linksGetter}
-            logs={logs}
+            logs={useOtelTerms ? otelSpan.events : logs}
             isOpen={logsState.isOpen}
             openedItems={logsState.openedItems}
-            onToggle={() => logsToggle(spanID)}
-            onItemToggle={logItem => logItemToggle(spanID, logItem)}
+            onToggle={() => logsToggle(otelSpan.spanId)}
+            onItemToggle={logItem => logItemToggle(otelSpan.spanId, logItem)}
             timestamp={traceStartTime}
             currentViewRangeTime={currentViewRangeTime}
             traceDuration={traceDuration}
-            spanID={spanID}
+            spanID={otelSpan.spanId}
+            useOtelTerms={useOtelTerms}
+            label={logsLabel}
           />
         )}
         {warnings && warnings.length > 0 && (
@@ -125,7 +141,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             label={<span className="AccordianWarnings--label">Warnings</span>}
             data={warnings}
             isOpen={isWarningsOpen}
-            onToggle={() => warningsToggle(spanID)}
+            onToggle={() => warningsToggle(otelSpan.spanId)}
           />
         )}
         {references &&
@@ -134,12 +150,12 @@ export default function SpanDetail(props: SpanDetailProps) {
             <AccordianReferences
               data={references}
               isOpen={isReferencesOpen}
-              onToggle={() => referencesToggle(spanID)}
+              onToggle={() => referencesToggle(otelSpan.spanId)}
               focusSpan={focusSpan}
             />
           )}
         <small className="SpanDetail--debugInfo">
-          <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {spanID}
+          <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {otelSpan.spanId}
           <CopyIcon
             copyText={deepLinkCopyText}
             icon={<IoLinkOutline />}

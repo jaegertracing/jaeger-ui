@@ -9,11 +9,16 @@ import * as markers from './AccordianKeyValues.markers';
 import KeyValuesTable from './KeyValuesTable';
 import { TNil } from '../../../../types';
 import { KeyValuePair, Link } from '../../../../types/trace';
+import { IAttribute } from '../../../../types/otel';
 
 import './AccordianKeyValues.css';
 
 // export for tests
-export function KeyValuesSummary({ data }: { data: ReadonlyArray<KeyValuePair> }) {
+export function KeyValuesSummary({
+  data,
+}: {
+  data: ReadonlyArray<KeyValuePair> | ReadonlyArray<IAttribute>;
+}) {
   if (!Array.isArray(data) || !data.length) {
     return null;
   }
@@ -43,12 +48,14 @@ export default function AccordianKeyValues({
   onToggle = null,
 }: {
   className?: string | TNil;
-  data: ReadonlyArray<KeyValuePair>;
+  data: ReadonlyArray<KeyValuePair> | ReadonlyArray<IAttribute>;
   highContrast?: boolean;
   interactive?: boolean;
   isOpen: boolean;
   label: string;
-  linksGetter: ((pairs: ReadonlyArray<KeyValuePair>, index: number) => Link[]) | TNil;
+  linksGetter:
+    | ((pairs: ReadonlyArray<KeyValuePair> | ReadonlyArray<IAttribute>, index: number) => Link[])
+    | TNil;
   onToggle?: null | (() => void);
 }) {
   const isEmpty = !Array.isArray(data) || !data.length;

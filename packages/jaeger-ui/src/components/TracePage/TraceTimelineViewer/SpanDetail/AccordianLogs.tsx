@@ -10,22 +10,27 @@ import AccordianKeyValues from './AccordianKeyValues';
 import { formatDuration } from '../utils';
 import { TNil } from '../../../../types';
 import { Log, KeyValuePair, Link } from '../../../../types/trace';
+import { IEvent, IAttribute } from '../../../../types/otel';
 
 import './AccordianLogs.css';
 
 type AccordianLogsProps = {
   interactive?: boolean;
   isOpen: boolean;
-  linksGetter?: ((pairs: ReadonlyArray<KeyValuePair>, index: number) => Link[]) | TNil;
-  logs: ReadonlyArray<Log>;
-  onItemToggle?: (log: Log) => void;
+  linksGetter?:
+    | ((pairs: ReadonlyArray<KeyValuePair> | ReadonlyArray<IAttribute>, index: number) => Link[])
+    | TNil;
+  logs: ReadonlyArray<Log> | ReadonlyArray<IEvent>;
+  onItemToggle?: (log: Log | IEvent) => void;
   onToggle?: () => void;
-  openedItems?: Set<Log>;
+  openedItems?: Set<Log | IEvent>;
   timestamp: number;
   currentViewRangeTime: [number, number];
   traceDuration: number;
   initialVisibleCount?: number;
   spanID?: string;
+  useOtelTerms?: boolean;
+  label?: string;
 };
 
 export default function AccordianLogs({
@@ -41,6 +46,8 @@ export default function AccordianLogs({
   traceDuration,
   initialVisibleCount = 3,
   spanID,
+  useOtelTerms = false,
+  label = 'Logs',
 }: AccordianLogsProps) {
   let arrow: React.ReactNode | null = null;
   let HeaderComponent: 'span' | 'a' = 'span';
@@ -105,10 +112,23 @@ export default function AccordianLogs({
     };
   }, [interactive, isOpen, notifyListReflow]);
 
+  // Helper function to get timestamp from log or event
+  const getLogTimestamp = (log: Log | IEvent): number => {
+    return 'timestamp' in log ? log.timestamp : log.timeUnixMicro;
+  };
+
+  // Helper function to get fields/attributes from log or event
+  const getLogFields = (log: Log | IEvent): ReadonlyArray<KeyValuePair | IAttribute> => {
+    return 'fields' in log ? log.fields : log.attributes;
+  };
+
   const inRangeLogs = React.useMemo(() => {
     const viewStartAbsolute = timestamp + currentViewRangeTime[0] * traceDuration;
     const viewEndAbsolute = timestamp + currentViewRangeTime[1] * traceDuration;
-    return logs.filter(log => log.timestamp >= viewStartAbsolute && log.timestamp <= viewEndAbsolute);
+    return logs.filter(log => {
+      const logTime = getLogTimestamp(log);
+      return logTime >= viewStartAbsolute && logTime <= viewEndAbsolute;
+    });
   }, [logs, timestamp, currentViewRangeTime, traceDuration]);
 
   const logsToDisplay = showOutOfRangeLogs ? logs : inRangeLogs;
@@ -116,11 +136,11 @@ export default function AccordianLogs({
   const inRangeCount = inRangeLogs.length;
   const totalCount = logs.length;
 
-  let title = `Logs (${displayedCount})`;
+  let title = `${label} (${displayedCount})`;
   let toggleLink: React.ReactNode = null;
 
   if (!showOutOfRangeLogs && inRangeCount < totalCount) {
-    title = `Logs (${inRangeCount} of ${totalCount})`;
+    title = `${label} (${inRangeCount} of ${totalCount})`;
     toggleLink = (
       <button
         type="button"
@@ -134,7 +154,7 @@ export default function AccordianLogs({
       </button>
     );
   } else if (showOutOfRangeLogs && inRangeCount < totalCount) {
-    title = `Logs (${totalCount})`;
+    title = `${label} (${totalCount})`;
     toggleLink = (
       <button
         type="button"
@@ -171,7 +191,7 @@ export default function AccordianLogs({
       {isOpen && (
         <div className="AccordianLogs--content" ref={contentRef}>
           {(() => {
-            const sortedLogs = _sortBy(logsToDisplay, 'timestamp');
+            const sortedLogs = _sortBy(logsToDisplay, log => getLogTimestamp(log));
             const visibleLogs =
               interactive && !showAllLogs && sortedLogs.length > initialVisibleCount
                 ? sortedLogs.slice(0, initialVisibleCount)
@@ -180,45 +200,46 @@ export default function AccordianLogs({
               <AccordianKeyValues
                 // `i` is necessary in the key because timestamps can repeat
 
-                key={`${log.timestamp}-${i}`}
+                key={`${getLogTimestamp(log)}-${i}`}
                 className={i < visibleLogs.length - 1 ? 'ub-mb1' : null}
-                data={log.fields || []}
+                data={getLogFields(log)}
                 highContrast
                 interactive={interactive}
                 isOpen={openedItems ? openedItems.has(log) : false}
-                label={`${formatDuration(log.timestamp - timestamp)}`}
+                label={`${formatDuration(getLogTimestamp(log) - timestamp)}`}
                 linksGetter={linksGetter}
                 onToggle={interactive && onItemToggle ? () => onItemToggle(log) : null}
               />
             ));
           })()}
-          {interactive && _sortBy(logsToDisplay, 'timestamp').length > initialVisibleCount && (
-            <div>
-              {!showAllLogs ? (
-                <button
-                  type="button"
-                  className="AccordianLogs--toggle"
-                  onClick={() => {
-                    setShowAllLogs(true);
-                    notifyListReflow();
-                  }}
-                >
-                  show more...
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="AccordianLogs--toggle"
-                  onClick={() => {
-                    setShowAllLogs(false);
-                    notifyListReflow();
-                  }}
-                >
-                  show less
-                </button>
-              )}
-            </div>
-          )}
+          {interactive &&
+            _sortBy(logsToDisplay, log => getLogTimestamp(log)).length > initialVisibleCount && (
+              <div>
+                {!showAllLogs ? (
+                  <button
+                    type="button"
+                    className="AccordianLogs--toggle"
+                    onClick={() => {
+                      setShowAllLogs(true);
+                      notifyListReflow();
+                    }}
+                  >
+                    show more...
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="AccordianLogs--toggle"
+                    onClick={() => {
+                      setShowAllLogs(false);
+                      notifyListReflow();
+                    }}
+                  >
+                    show less
+                  </button>
+                )}
+              </div>
+            )}
           <small className="AccordianLogs--footer">
             Log timestamps are relative to the start time of the full trace.
           </small>
