@@ -9,7 +9,7 @@ import { SpanReference } from '../../../../types/trace';
 import ReferenceLink from '../../url/ReferenceLink';
 
 type AccordianReferencesProps = {
-  data: SpanReference[];
+  data: ReadonlyArray<SpanReference>;
   highContrast?: boolean;
   interactive?: boolean;
   isOpen: boolean;
@@ -18,7 +18,7 @@ type AccordianReferencesProps = {
 };
 
 type ReferenceItemProps = {
-  data: SpanReference[];
+  data: ReadonlyArray<SpanReference>;
   focusSpan: (uiFind: string) => void;
 };
 

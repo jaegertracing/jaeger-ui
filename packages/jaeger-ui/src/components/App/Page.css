@@ -18,6 +18,7 @@ SPDX-License-Identifier: Apache-2.0
   min-height: calc(100% - var(--nav-height));
   position: absolute;
   right: 0;
+  background-color: var(--surface-primary);
 }
 
 .Page--content--no-embedded {

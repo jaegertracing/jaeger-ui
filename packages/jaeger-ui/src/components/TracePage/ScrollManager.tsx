@@ -43,9 +43,13 @@ interface IScroller {
  * @param {Map<string, Span | TNil} spansMap Mapping from spanID to Span.
  * @returns {{ isHidden: boolean, parentIds: Set<string> }}
  */
-function isSpanHidden(span: Span, childrenAreHidden: Set<string>, spansMap: Map<string, Span | TNil>) {
+function isSpanHidden(
+  span: Span,
+  childrenAreHidden: Set<string>,
+  spansMap: ReadonlyMap<string, Span | TNil>
+) {
   const parentIDs = new Set<string>();
-  let { references }: { references: SpanReference[] | TNil } = span;
+  let { references }: { references: ReadonlyArray<SpanReference> | TNil } = span;
   let parentID: undefined | string;
   const checkRef = (ref: SpanReference) => {
     if (ref.refType === 'CHILD_OF' || ref.refType === 'FOLLOWS_FROM') {
@@ -144,10 +148,8 @@ export default class ScrollManager {
     const findMatches = xrs.getSearchedSpanIDs();
     const _collapsed = xrs.getCollapsedChildren();
     const childrenAreHidden = _collapsed ? new Set(_collapsed) : null;
-    // use empty Map as fallback to make flow happy
-    const spansMap: Map<string, Span> = childrenAreHidden
-      ? new Map(spans.map(s => [s.spanID, s] as [string, Span]))
-      : new Map();
+    // use the pre-built spanMap from the trace object
+    const spansMap: ReadonlyMap<string, Span> = childrenAreHidden ? this._trace.spanMap : new Map();
     const boundary = direction < 0 ? -1 : spans.length;
     let nextSpanIndex: number | undefined;
     for (let i = fullViewSpanIndex + direction; i !== boundary; i += direction) {

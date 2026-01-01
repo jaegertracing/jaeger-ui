@@ -4,32 +4,32 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .TracePageHeader > :first-child {
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .TracePageHeader > :nth-child(2) {
-  background-color: #eee;
-  border-bottom: 1px solid #e4e4e4;
+  background-color: var(--surface-tertiary);
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .TracePageHeader > :last-child {
-  background-color: #f8f8f8;
-  border-bottom: 1px solid #ccc;
+  background-color: var(--surface-secondary);
+  border-bottom: 1px solid var(--border-strong);
 }
 
 /* boost the specificity for cases with only one row -- bg should be white */
 .TracePageHeader > .TracePageHeader--titleRow {
   align-items: center;
-  background-color: #fff;
+  background-color: var(--surface-primary);
   display: flex;
 }
 
 .TracePageHeader--back {
   align-items: center;
   align-self: stretch;
-  background-color: #fafafa;
-  border-bottom: 1px solid #ddd;
-  border-right: 1px solid #ddd;
+  background-color: var(--surface-secondary);
+  border-bottom: 1px solid var(--border-default);
+  border-right: 1px solid var(--border-default);
   color: inherit;
   display: flex;
   font-size: 1.4rem;
@@ -38,8 +38,8 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TracePageHeader--back:hover {
-  background-color: #f0f0f0;
-  border-color: #ccc;
+  background-color: var(--surface-tertiary);
+  border-color: var(--border-strong);
 }
 
 .TracePageHeader--titleLink {
@@ -82,12 +82,12 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TracePageHeader--overviewItems {
-  border-bottom: 1px solid #e4e4e4;
+  border-bottom: 1px solid var(--border-default);
   padding: 0.25rem 0.5rem;
 }
 
 .TracePageHeader--overviewItem--valueDetail {
-  color: #aaa;
+  color: var(--text-muted);
 }
 
 .TracePageHeader--overviewItem--value:hover > .TracePageHeader--overviewItem--valueDetail {
@@ -97,4 +97,18 @@ SPDX-License-Identifier: Apache-2.0
 .TracePageHeader--archiveIcon {
   font-size: 1.78em;
   margin-right: 0.15em;
+}
+
+.TracePageHeader--incompleteTag {
+  color: var(--feedback-warning);
+  cursor: help;
+  font-size: 0.85em;
+  font-weight: 500;
+  margin-left: 0.5em;
+}
+
+.TracePageHeader--incompleteIcon {
+  font-size: 1.1em;
+  margin-right: 0.25em;
+  vertical-align: middle;
 }

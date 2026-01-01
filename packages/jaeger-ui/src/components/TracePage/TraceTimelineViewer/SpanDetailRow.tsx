@@ -17,7 +17,7 @@ type SpanDetailRowProps = {
   columnDivision: number;
   detailState: DetailState;
   onDetailToggled: (spanID: string) => void;
-  linksGetter: (span: Span, links: KeyValuePair[], index: number) => Link[];
+  linksGetter: (span: Span, links: ReadonlyArray<KeyValuePair>, index: number) => Link[];
   logItemToggle: (spanID: string, log: Log) => void;
   logsToggle: (spanID: string) => void;
   processToggle: (spanID: string) => void;
@@ -36,7 +36,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     props.onDetailToggled(props.span.spanID);
   };
 
-  const _linksGetter = (items: KeyValuePair[], itemIndex: number) => {
+  const _linksGetter = (items: ReadonlyArray<KeyValuePair>, itemIndex: number) => {
     const { linksGetter, span } = props;
     return linksGetter(span, items, itemIndex);
   };

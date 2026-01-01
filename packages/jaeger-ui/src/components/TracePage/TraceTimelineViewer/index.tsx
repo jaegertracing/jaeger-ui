@@ -18,10 +18,10 @@ import './index.css';
 
 type TDispatchProps = {
   setSpanNameColumnWidth: (width: number) => void;
-  collapseAll: (spans: Span[]) => void;
-  collapseOne: (spans: Span[]) => void;
+  collapseAll: (spans: ReadonlyArray<Span>) => void;
+  collapseOne: (spans: ReadonlyArray<Span>) => void;
   expandAll: () => void;
-  expandOne: (spans: Span[]) => void;
+  expandOne: (spans: ReadonlyArray<Span>) => void;
 };
 
 type TProps = TDispatchProps & {

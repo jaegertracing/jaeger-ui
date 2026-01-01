@@ -30,19 +30,26 @@ import '../common/utils.css';
 import 'antd/dist/reset.css';
 import './index.css';
 import { store } from '../../utils/configure-store';
-import AppThemeProvider from './ThemeProvider';
+import ThemeProvider from './ThemeProvider';
 
-export default class JaegerUIApp extends Component {
-  constructor(props) {
+export default class JaegerUIApp extends Component<{}> {
+  constructor(props: {}) {
     super(props);
-    JaegerAPI.apiRoot = DEFAULT_API_ROOT;
+    (JaegerAPI as any).apiRoot = DEFAULT_API_ROOT;
     processScripts();
   }
 
   render() {
     return (
-      <AppThemeProvider>
-        <Provider store={store}>
+      <ThemeProvider>
+        <Provider store={store as any}>
+          {
+            // the Page component is a connected component (wrapped by Redux's connect HOC)
+            // that is also wrapped by a custom withRouteProps HOC.
+            // The @ts-ignore was added because of a specific TypeScript error that occurs
+            // when mixing Redux 5/9, React 19, and complex HOCs.
+          }
+          {/* @ts-ignore */}
           <Page>
             <Switch>
               <Route path={searchPath}>
@@ -78,12 +85,12 @@ export default class JaegerUIApp extends Component {
               </Route>
 
               <Route>
-                <NotFound />
+                <NotFound error="Page not found" />
               </Route>
             </Switch>
           </Page>
         </Provider>
-      </AppThemeProvider>
+      </ThemeProvider>
     );
   }
 }

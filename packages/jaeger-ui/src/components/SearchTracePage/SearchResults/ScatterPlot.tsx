@@ -3,7 +3,6 @@
 
 import React, { useRef, useState, useLayoutEffect } from 'react';
 import dayjs from 'dayjs';
-import PropTypes from 'prop-types';
 import {
   ScatterChart,
   Scatter,
@@ -21,7 +20,35 @@ import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
 
 import './ScatterPlot.css';
 
-export const CustomTooltip = ({ active, payload }) => {
+export type TScatterPlotPoint = {
+  x: number;
+  y: number;
+  traceID: string;
+  size: number;
+  name?: string;
+  services?: ReadonlyArray<{
+    name: string;
+    numberOfSpans: number;
+  }>;
+  rootSpanName?: string;
+  color?: string;
+};
+
+type TScatterPlotProps = {
+  data: TScatterPlotPoint[];
+  onValueClick: (value: any) => void;
+  // JSDOM does not, as of 2023, have a layout engine,
+  // so allow tests to supply a mock width as a workaround
+  calculateContainerWidth?: (container: HTMLElement) => number;
+};
+
+export const CustomTooltip = ({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: { payload: TScatterPlotPoint }[];
+}) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const numServices = data.services ? data.services.length : 0;
@@ -46,8 +73,18 @@ export const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-export const RenderDot = ({ cx, cy, fill, size }) => {
-  const maxSize = Math.min(300, size);
+export const RenderDot = ({
+  cx,
+  cy,
+  fill,
+  size,
+}: {
+  cx?: number;
+  cy?: number;
+  fill?: string;
+  size?: number;
+}) => {
+  const maxSize = Math.min(300, size || 0);
   return (
     <Dot cx={cx} cy={cy} fill={fill} fillOpacity={0.5} r={maxSize * 0.035} style={{ cursor: 'pointer' }} />
   );
@@ -56,11 +93,9 @@ export const RenderDot = ({ cx, cy, fill, size }) => {
 export default function ScatterPlot({
   data,
   onValueClick,
-  // JSDOM does not, as of 2023, have a layout engine,
-  // so allow tests to supply a mock width as a workaround
-  calculateContainerWidth = container => container.clientWidth,
-}) {
-  const containerRef = useRef(null);
+  calculateContainerWidth = (container: HTMLElement) => container.clientWidth,
+}: TScatterPlotProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
   useLayoutEffect(() => {
@@ -86,7 +121,7 @@ export default function ScatterPlot({
   It ensures that the ticks are unique by checking if the label for a given tick value has already been used.
   If it has, the tick is not added to the list of ticks.
   */
-  const generateUniqueTicks = (min, max, count) => {
+  const generateUniqueTicks = (min: number, max: number, count: number) => {
     const step = (max - min) / (count - 1);
     const ticks = [];
     const seenLabels = new Set();
@@ -178,24 +213,3 @@ export default function ScatterPlot({
     </div>
   );
 }
-
-const valueShape = PropTypes.shape({
-  x: PropTypes.number,
-  y: PropTypes.number,
-  traceID: PropTypes.string,
-  size: PropTypes.number,
-  name: PropTypes.string,
-  services: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string,
-      numberOfSpans: PropTypes.number,
-    })
-  ),
-  rootSpanName: PropTypes.string,
-});
-
-ScatterPlot.propTypes = {
-  data: PropTypes.arrayOf(valueShape).isRequired,
-  onValueClick: PropTypes.func.isRequired,
-  calculateContainerWidth: PropTypes.func,
-};

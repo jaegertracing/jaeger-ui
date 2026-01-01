@@ -1,13 +1,13 @@
 // Copyright (c) 2023 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import { Span } from '../../../../types/trace';
+import { CPSpan } from '../../../../types/trace';
 /**
  * Removes child spans whose refType is FOLLOWS_FROM and their descendants.
  * @param spanMap - The map containing spans.
  * @returns - A map with spans whose refType is CHILD_OF.
  */
-const getChildOfSpans = (spanMap: Map<string, Span>): Map<string, Span> => {
+const getChildOfSpans = (spanMap: Map<string, CPSpan>): Map<string, CPSpan> => {
   const followFromSpanIds: string[] = [];
   const followFromSpansDescendantIds: string[] = [];
 
@@ -23,10 +23,10 @@ const getChildOfSpans = (spanMap: Map<string, Span>): Map<string, Span> => {
   });
 
   // Recursively find all Descendants of FOLLOWS_FROM spans
-  const findDescendantSpans = (spanIds: string[]) => {
+  const findDescendantSpans = (spanIds: ReadonlyArray<string>) => {
     spanIds.forEach(spanId => {
       const span = spanMap.get(spanId)!;
-      if (span.hasChildren) {
+      if (span.childSpanIds.length > 0) {
         followFromSpansDescendantIds.push(...span.childSpanIds);
         findDescendantSpans(span.childSpanIds);
       }

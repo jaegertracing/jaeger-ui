@@ -118,6 +118,13 @@ export type Config = {
     // maxLimit configures the "search depth" parameter.
     // The interpretation of search depth varies between different backends.
     maxLimit: number;
+
+    // adjustEndTime shifts the search end time back by the specified duration.
+    // This helps avoid incomplete traces that may still be receiving spans.
+    // When set, the UI will show "(adjusted)" next to the lookback dropdown.
+    // Examples: "1m" for 1 minute, "30s" for 30 seconds.
+    // Default is undefined (no adjustment).
+    adjustEndTime?: string;
   };
 
   // scripts is an array of URLs of additional JavaScript files to be loaded.
@@ -197,4 +204,8 @@ export type Config = {
   themes: {
     enabled: boolean;
   };
+  // useOpenTelemetryTerms determines whether the UI uses legacy Jaeger terminology
+  // (tags, logs, process, operation name) or OpenTelemetry terminology
+  // (attributes, events, resource, name).
+  useOpenTelemetryTerms: boolean;
 };

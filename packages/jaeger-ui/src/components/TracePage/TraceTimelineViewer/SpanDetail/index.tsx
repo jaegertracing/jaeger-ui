@@ -21,7 +21,7 @@ import './index.css';
 
 type SpanDetailProps = {
   detailState: DetailState;
-  linksGetter: ((links: KeyValuePair[], index: number) => Link[]) | TNil;
+  linksGetter: ((links: ReadonlyArray<KeyValuePair>, index: number) => Link[]) | TNil;
   logItemToggle: (spanID: string, log: Log) => void;
   logsToggle: (spanID: string) => void;
   processToggle: (spanID: string) => void;

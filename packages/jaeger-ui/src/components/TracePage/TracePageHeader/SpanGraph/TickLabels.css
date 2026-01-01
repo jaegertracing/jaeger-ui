@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TickLabels--label {
-  color: #717171;
+  color: var(--text-secondary);
   font-size: 0.7rem;
   position: absolute;
   user-select: none;

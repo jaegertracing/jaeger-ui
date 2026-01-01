@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export interface ITableSpan {
-  hasSubgroupValue: boolean; // True when the entry has the subgroup tag in it.
+  hasSubgroupValue: boolean; // True when the entry has the subgroup attribute in it.
   name: string;
   count: number;
   total: number;

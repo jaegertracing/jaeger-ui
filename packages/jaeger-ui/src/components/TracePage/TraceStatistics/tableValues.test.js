@@ -17,29 +17,35 @@ import traceWithThreeShortChildren from './tableValuesTestTrace/traceWithThreeSh
 import traceWithTwoChildrenStartedAtTraceStart from './tableValuesTestTrace/traceWithTwoChildrenStartedAtTraceStart.json';
 import traceWithMultipleSpansWithTheSameValueInDifferentTags from './tableValuesTestTrace/traceWithMultipleSpansWithTheSameValueInDifferentTags.json';
 
-const transformedTrace = transformTraceData(testTraceNormal);
-const transformedTraceSpanAmongEachOthe = transformTraceData(traceSpanAmongEachOther);
-const transformedTraceSpanAmongEachOtheGrouped = transformTraceData(traceSpanAmongEachOtherGrouped);
+const transformedTrace = transformTraceData(testTraceNormal).asOtelTrace();
+const transformedTraceSpanAmongEachOthe = transformTraceData(traceSpanAmongEachOther).asOtelTrace();
+const transformedTraceSpanAmongEachOtheGrouped = transformTraceData(
+  traceSpanAmongEachOtherGrouped
+).asOtelTrace();
 const transformedTraceSpanAmongEachOtheGroupedAndSpans = transformTraceData(
   traceSpanAmongEachOtherGroupedAndSpans
-);
-const transformedTraceSpanLongerAsParent = transformTraceData(traceSpanLongerAsParent);
+).asOtelTrace();
+const transformedTraceSpanLongerAsParent = transformTraceData(traceSpanLongerAsParent).asOtelTrace();
 const transformedTraceWithOverlappingChildrenLongerThanParent = transformTraceData(
   traceWithOverlappingChildrenLongerThanParent
-);
-const transformedTraceWithTwoNonOverlappingChildren = transformTraceData(traceWithTwoNonOverlappingChildren);
-const transformedTraceWithOverlappingChildren = transformTraceData(traceWithOverlappingChildren);
+).asOtelTrace();
+const transformedTraceWithTwoNonOverlappingChildren = transformTraceData(
+  traceWithTwoNonOverlappingChildren
+).asOtelTrace();
+const transformedTraceWithOverlappingChildren = transformTraceData(
+  traceWithOverlappingChildren
+).asOtelTrace();
 const transformedtraceWithSingleChildLongerThanParentAndStartsAfterParent = transformTraceData(
   traceWithSingleChildLongerThanParentAndStartsAfterParent
-);
-const transformedTraceWithThreeShortChildren = transformTraceData(traceWithThreeShortChildren);
+).asOtelTrace();
+const transformedTraceWithThreeShortChildren = transformTraceData(traceWithThreeShortChildren).asOtelTrace();
 const transformedTraceWithTwoChildrenStartedAtTraceStart = transformTraceData(
   traceWithTwoChildrenStartedAtTraceStart
-);
+).asOtelTrace();
 
 const transformedTraceWithMultipleSpansWithTheSameValueInDifferentTags = transformTraceData(
   traceWithMultipleSpansWithTheSameValueInDifferentTags
-);
+).asOtelTrace();
 
 describe('tableValues', () => {
   it("getColumnValuesSecondDropdown doesn't return duplicated data when input contains details", () => {

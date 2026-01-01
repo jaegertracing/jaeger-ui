@@ -11,7 +11,7 @@ import './ReferencesButton.css';
 import ReferenceLink from '../url/ReferenceLink';
 
 type TReferencesButtonProps = {
-  references: SpanReference[];
+  references: ReadonlyArray<SpanReference>;
   children: React.ReactNode;
   tooltipText: string;
   focusSpan: (spanID: string) => void;
@@ -20,7 +20,7 @@ type TReferencesButtonProps = {
 // ReferencesButton is displayed as a menu at the span level.
 // Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/2b29921a-2225-4a01-9018-1a1952f186ef
 export default class ReferencesButton extends React.PureComponent<TReferencesButtonProps> {
-  referencesList = (references: SpanReference[]) => {
+  referencesList = (references: ReadonlyArray<SpanReference>) => {
     const dropdownItems = references.map(ref => {
       const { span, spanID } = ref;
       return {

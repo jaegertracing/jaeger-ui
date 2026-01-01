@@ -23,3 +23,16 @@ SPDX-License-Identifier: Apache-2.0
 .Menu--item .ant-menu-title-content {
   color: var(--text-inverse);
 }
+
+/* Ensure nav links are always visible on dark nav */
+.Menu--item .ant-menu-title-content a {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.Menu--item .ant-menu-title-content a:hover {
+  color: #fff;
+}
+
+.Menu--item.ant-menu-item-selected .ant-menu-title-content a {
+  color: #fff;
+}

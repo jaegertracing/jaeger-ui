@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Button, InputRef } from 'antd';
+import { Button, InputRef, Tooltip } from 'antd';
 import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
 import _values from 'lodash/values';
-import { IoArrowBack, IoFileTrayFull, IoChevronForward } from 'react-icons/io5';
+import { IoArrowBack, IoFileTrayFull, IoChevronForward, IoWarning } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 
 import DocumentTitle from '../../../utils/documentTitle';
@@ -91,7 +91,26 @@ export const HEADER_ITEMS = [
   {
     key: 'span-count',
     label: 'Total Spans',
-    renderer: (trace: Trace) => trace.spans.length,
+    renderer: (trace: Trace) => {
+      const orphanCount = trace.orphanSpanCount ?? 0;
+      const tooltipText = `This trace may be incomplete. ${orphanCount} span${orphanCount !== 1 ? 's' : ''} ${orphanCount !== 1 ? 'have' : 'has'} missing parent span(s).`;
+      return (
+        <span>
+          {trace.spans.length}
+          {orphanCount > 0 && (
+            <>
+              {' '}
+              <Tooltip title={tooltipText}>
+                <span className="TracePageHeader--incompleteTag">
+                  <IoWarning className="TracePageHeader--incompleteIcon" />
+                  Incomplete
+                </span>
+              </Tooltip>
+            </>
+          )}
+        </span>
+      );
+    },
   },
 ];
 

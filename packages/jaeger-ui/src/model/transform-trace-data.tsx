@@ -3,14 +3,14 @@
 
 import _isEqual from 'lodash/isEqual';
 
-import { getTraceSpanIdsAsTree, TREE_ROOT_ID } from '../selectors/trace';
 import { getConfigValue } from '../utils/config/get-config';
 import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-viewer';
-import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
-import TreeNode from '../utils/TreeNode';
+import { KeyValuePair, Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
+
+import OtelTraceFacade from './OtelTraceFacade';
 
 // exported for tests
-export function deduplicateTags(spanTags: KeyValuePair[]) {
+export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
   const warningsHash: Map<string, string> = new Map<string, string>();
   const tags: KeyValuePair[] = spanTags.reduce<KeyValuePair[]>((uniqueTags, tag) => {
     if (!uniqueTags.some(t => t.key === tag.key && t.value === tag.value)) {
@@ -70,23 +70,18 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   let traceStartTime = Number.MAX_SAFE_INTEGER;
   const spanIdCounts = new Map<string, number>();
   const spanMap = new Map<string, Span>();
-  // filter out spans with empty start times
 
+  // Filter out spans with empty start times
   data.spans = data.spans.filter(span => Boolean(span.startTime));
 
   const numSpans = data.spans.length;
   for (let i = 0; i < numSpans; i++) {
+    // Unsafe cast to avoid memory allocations.
+    // We populate/fix all properties below.
     const span: Span = data.spans[i] as Span;
     const { startTime, duration, processID } = span;
-    // update trace's start / end time
-    if (startTime < traceStartTime) {
-      traceStartTime = startTime;
-    }
-    if (startTime + duration > traceEndTime) {
-      traceEndTime = startTime + duration;
-    }
-    // make sure span IDs are unique
     let spanID = span.spanID;
+    // make sure span IDs are unique
     const idCount = spanIdCounts.get(spanID);
     if (idCount != null) {
       console.warn(`Dupe spanID, ${idCount + 1} x ${spanID}`, span, spanMap.get(spanID));
@@ -100,52 +95,81 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
       spanIdCounts.set(spanID, 1);
     }
     span.process = data.processes[processID];
+    span.tags = span.tags || [];
+    span.logs = span.logs || [];
+    span.references = span.references || [];
+    span.childSpans = [];
+    span.subsidiarilyReferencedBy = [];
+
+    const tagsInfo = deduplicateTags(span.tags);
+    span.tags = orderTags(tagsInfo.tags, getConfigValue('topTagPrefixes'));
+    span.warnings = span.warnings || [];
+    if (tagsInfo.warnings && tagsInfo.warnings.length > 0) {
+      (span.warnings as string[]).push(...tagsInfo.warnings);
+    }
+
     spanMap.set(spanID, span);
+
+    // update trace's start / end time
+    if (startTime < traceStartTime) {
+      traceStartTime = startTime;
+    }
+    if (startTime + duration > traceEndTime) {
+      traceEndTime = startTime + duration;
+    }
   }
-  // tree is necessary to sort the spans, so children follow parents, and
-  // siblings are sorted by start time
-  const tree = getTraceSpanIdsAsTree(data, spanMap);
+
+  const rootSpans: Span[] = [];
+  let orphanSpanCount = 0;
+
+  // Second pass: link parents/children and identify roots
+  for (const span of spanMap.values()) {
+    let parent: Span | undefined;
+    if (Array.isArray(span.references) && span.references.length > 0) {
+      // Find the first CHILD_OF or FOLLOWS_FROM reference that exists in the spanMap
+      for (const ref of span.references) {
+        if (ref.refType === 'CHILD_OF' || ref.refType === 'FOLLOWS_FROM') {
+          parent = spanMap.get(ref.spanID);
+          if (parent) {
+            break;
+          }
+        }
+      }
+      if (!parent) {
+        orphanSpanCount++;
+      }
+    }
+
+    if (parent) {
+      // It's a child
+      (parent.childSpans as Span[]).push(span);
+    } else {
+      // It's a root
+      rootSpans.push(span);
+    }
+  }
+
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
 
-  tree.walk((spanID: string, node: TreeNode<string>, depth = 0) => {
-    if (spanID === TREE_ROOT_ID) {
-      return;
-    }
-    const span = spanMap.get(spanID) as Span;
-    if (!span) {
-      return;
-    }
+  // Depth-first traversal to order spans and populate flat array
+  const processSpan = (span: Span, depth: number) => {
+    span.depth = depth;
+    span.hasChildren = span.childSpans.length > 0;
+    span.relativeStartTime = span.startTime - traceStartTime;
+
     const { serviceName } = span.process;
     svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
-    span.relativeStartTime = span.startTime - traceStartTime;
-    span.depth = depth - 1;
-    span.hasChildren = node.children.length > 0;
-    // Get the childSpanIds sorted based on endTime without changing tree structure
-    // TODO move this enrichment into Critical Path computation
-    span.childSpanIds = node.children
-      .slice()
-      .sort((a, b) => {
-        const spanA = spanMap.get(a.value)!;
-        const spanB = spanMap.get(b.value)!;
-        return spanB.startTime + spanB.duration - (spanA.startTime + spanA.duration);
-      })
-      .map(each => each.value);
-    span.warnings = span.warnings || [];
-    span.tags = span.tags || [];
-    span.references = span.references || [];
-    const tagsInfo = deduplicateTags(span.tags);
-    span.tags = orderTags(tagsInfo.tags, getConfigValue('topTagPrefixes'));
-    span.warnings = span.warnings.concat(tagsInfo.warnings);
+
     span.references.forEach((ref, index) => {
-      const refSpan = spanMap.get(ref.spanID) as Span;
+      const refSpan = spanMap.get(ref.spanID);
       if (refSpan) {
         ref.span = refSpan;
         if (index > 0) {
           // Don't take into account the parent, just other references.
           refSpan.subsidiarilyReferencedBy = refSpan.subsidiarilyReferencedBy || [];
-          refSpan.subsidiarilyReferencedBy.push({
-            spanID,
+          (refSpan.subsidiarilyReferencedBy as SpanReference[]).push({
+            spanID: span.spanID,
             traceID,
             span,
             refType: ref.refType,
@@ -153,12 +177,22 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
         }
       }
     });
+
     spans.push(span);
-  });
+
+    // Sort children by startTime before processing them
+    (span.childSpans as Span[]).sort((a, b) => a.startTime - b.startTime);
+    span.childSpans.forEach(child => processSpan(child, depth + 1));
+  };
+
+  rootSpans.sort((a, b) => a.startTime - b.startTime);
+  rootSpans.forEach(root => processSpan(root, 0));
+
   const traceName = getTraceName(spans);
   const tracePageTitle = getTracePageTitle(spans);
   const traceEmoji = getTraceEmoji(spans);
   const services = Object.keys(svcCounts).map(name => ({ name, numberOfSpans: svcCounts[name] }));
+
   return {
     services,
     spans,
@@ -166,14 +200,19 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     traceName,
     tracePageTitle,
     traceEmoji,
-    // TODO why not store `tree` here for easier access to tree structure?
-    // ...
-    // Can't use spread operator for intersection types
-    // repl: https://goo.gl/4Z23MJ
-    // issue: https://github.com/facebook/flow/issues/1511
+    spanMap,
+    rootSpans,
     processes: data.processes,
     duration: traceEndTime - traceStartTime,
     startTime: traceStartTime,
     endTime: traceEndTime,
+    orphanSpanCount,
+
+    asOtelTrace() {
+      if (!this._otelFacade) {
+        this._otelFacade = new OtelTraceFacade(this);
+      }
+      return this._otelFacade!;
+    },
   };
 }

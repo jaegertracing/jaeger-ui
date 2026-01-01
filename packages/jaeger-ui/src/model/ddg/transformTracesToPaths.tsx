@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import memoizeOne from 'memoize-one';
-import { getTraceSpanIdsAsTree, TREE_ROOT_ID } from '../../selectors/trace';
 
 import { TDdgPayloadEntry, TDdgPayloadPath, TDdgPayload } from './types';
 import { FetchedTrace } from '../../types';
@@ -19,17 +18,30 @@ function transformTracesToPaths(
   const dependenciesMap = new Map<string, TDdgPayloadPath>();
   Object.values(traces).forEach(({ data }) => {
     if (data) {
-      const spanMap: Map<string, Span> = new Map();
+      // Use the pre-built spanMap and rootSpans from the trace object
+      const spanMap = data.spanMap;
+      const rootSpans = data.rootSpans;
       const { traceID } = data;
-      data.spans.forEach(span => spanMap.set(span.spanID, span));
-      const tree = getTraceSpanIdsAsTree(data);
-      tree.paths((pathIds: string[]) => {
-        const paths = pathIds.reduce((reducedSpans: Span[], id: string): Span[] => {
-          if (id === TREE_ROOT_ID) {
-            return reducedSpans;
-          }
-          const span = spanMap.get(id);
-          if (!span) throw new Error(`Ancestor spanID ${id} not found in trace ${traceID}`);
+
+      // Helper function to walk all paths through the tree, building Span[] paths directly
+      const walkPaths = (span: Span, currentPath: Span[]) => {
+        const pathWithCurrent = [...currentPath, span];
+
+        if (span.childSpans.length === 0) {
+          // Leaf node - process the complete path
+          processPath(pathWithCurrent);
+        } else {
+          // Continue walking through children
+          span.childSpans.forEach(child => {
+            walkPaths(child, pathWithCurrent);
+          });
+        }
+      };
+
+      const processPath = (pathSpans: Span[]) => {
+        if (pathSpans.length === 0) return;
+
+        const paths = pathSpans.reduce((reducedSpans: Span[], span: Span): Span[] => {
           if (reducedSpans.length === 0) {
             reducedSpans.push(span);
           } else if (
@@ -69,6 +81,11 @@ function transformTracesToPaths(
             });
           }
         }
+      };
+
+      // Start walking from all root spans
+      rootSpans.forEach(rootSpan => {
+        walkPaths(rootSpan, []);
       });
     }
   });

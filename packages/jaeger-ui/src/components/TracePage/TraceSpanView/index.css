@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
   padding-top: 0.3%;
   padding-bottom: 0.3%;
   padding-left: 0.4%;
-  background: rgb(236, 236, 236);
+  background: var(--surface-tertiary);
   margin-bottom: 0%;
 }
 
@@ -25,11 +25,4 @@ SPDX-License-Identifier: Apache-2.0
 .span-table .ant-dropdown {
   width: 20%;
   z-index: 1;
-}
-
-.search-box {
-  padding: 8px;
-  background-color: white;
-  width: 80%;
-  border: 1px solid rgba(0, 0, 0, 0.15);
 }

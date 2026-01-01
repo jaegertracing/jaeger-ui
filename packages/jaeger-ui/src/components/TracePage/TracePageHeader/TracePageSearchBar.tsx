@@ -72,7 +72,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
           trackFindFunction={trackFilter}
         />
         <Tooltip
-          arrowPointAtCenter
+          arrow={{ pointAtCenter: true }}
           placement="bottomLeft"
           trigger="hover"
           overlayStyle={{ maxWidth: '600px' }} // This is a large tooltip and the default is too narrow.

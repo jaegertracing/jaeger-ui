@@ -1,7 +1,7 @@
 // Copyright (c) 2023 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import { Span } from '../../../../types/trace';
+import { CPSpan } from '../../../../types/trace';
 
 /**
  * This function resolves overflowing child spans for each span.
@@ -11,7 +11,7 @@ import { Span } from '../../../../types/trace';
  * @param spanMap - A Map where span IDs are keys and the corresponding spans are values.
  * @returns - A sanitized span Map.
  */
-const sanitizeOverFlowingChildren = (spanMap: Map<string, Span>): Map<string, Span> => {
+const sanitizeOverFlowingChildren = (spanMap: Map<string, CPSpan>): Map<string, CPSpan> => {
   let spanIds: string[] = [...spanMap.keys()];
 
   spanIds.forEach(spanId => {

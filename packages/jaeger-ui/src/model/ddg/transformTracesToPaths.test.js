@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import transformTracesToPaths from './transformTracesToPaths';
+import transformTraceData from '../transform-trace-data';
 
 describe('transform traces to ddg paths', () => {
   const makeExpectedPath = (pathSpans, trace) => ({
@@ -20,14 +21,17 @@ describe('transform traces to ddg paths', () => {
   };
 
   const makeSpan = (spanName, parent, kind, operationName, processID) => ({
-    hasChildren: true,
+    traceID: 'test-trace-id', // Required by transformTraceData
+    spanID: `${spanName} spanID`,
     operationName: operationName || `${spanName} operation`,
     processID: processID || `${spanName} processID`,
+    startTime: Date.now() * 1000, // Required by transformTraceData (in microseconds)
+    duration: 1000, // Required by transformTraceData
     references: parent
       ? [
           {
             refType: 'CHILD_OF',
-            span: parent,
+            traceID: 'test-trace-id',
             spanID: parent.spanID,
           },
         ]
@@ -41,23 +45,34 @@ describe('transform traces to ddg paths', () => {
               value: kind === undefined ? 'server' : kind,
             },
           ],
-    spanID: `${spanName} spanID`,
+    logs: [], // Required by transformTraceData
   });
-  const makeTrace = (spans, traceID) => ({
-    data: {
-      processes: spans.reduce(
-        (result, span) => ({
-          ...result,
-          [span.processID]: {
-            serviceName: `${span.processID}-name`,
-          },
-        }),
-        {}
-      ),
-      spans,
+
+  const makeTrace = (spans, traceID) => {
+    // Build processes map from spans
+    const processes = spans.reduce((result, span) => {
+      if (!result[span.processID]) {
+        result[span.processID] = {
+          serviceName: `${span.processID}-name`,
+          tags: [],
+        };
+      }
+      return result;
+    }, {});
+
+    // Use transformTraceData to build the trace with spanMap, rootSpans, and childSpans
+    const traceData = {
       traceID,
-    },
-  });
+      processes,
+      spans: spans.map(span => ({ ...span, traceID })),
+    };
+
+    const transformedTrace = transformTraceData(traceData);
+
+    return {
+      data: transformedTrace,
+    };
+  };
   const makeTraces = (...traces) =>
     traces.reduce((res, trace) => ({ ...res, [trace.data.traceID]: trace }), {});
 

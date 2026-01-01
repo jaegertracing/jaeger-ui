@@ -7,12 +7,13 @@
 import './site-prefix';
 
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { Router } from 'react-router-dom';
 import { CompatRouter } from 'react-router-dom-v5-compat';
 import { createRoot } from 'react-dom/client';
 
 import JaegerUIApp from './components/App';
 import { context as trackingContext } from './utils/tracking';
+import { history } from './utils/configure-store';
 
 // these need to go after the App import
 
@@ -24,25 +25,29 @@ import 'u-basscss/css/position.css';
 import 'u-basscss/css/typography.css';
 
 const UI_ROOT_ID = 'jaeger-ui-root';
+const rootElement = document.getElementById(UI_ROOT_ID);
+if (!rootElement) {
+  throw new Error(`Element with id ${UI_ROOT_ID} not found`);
+}
 
-const root = createRoot(document.getElementById(UI_ROOT_ID));
+const root = createRoot(rootElement);
 
 if (typeof trackingContext === 'object' && trackingContext !== null) {
-  trackingContext.context(() => {
+  (trackingContext as any).context(() => {
     root.render(
-      <BrowserRouter>
+      <Router history={history}>
         <CompatRouter>
           <JaegerUIApp />
         </CompatRouter>
-      </BrowserRouter>
+      </Router>
     );
   });
 } else {
   root.render(
-    <BrowserRouter>
+    <Router history={history}>
       <CompatRouter>
         <JaegerUIApp />
       </CompatRouter>
-    </BrowserRouter>
+    </Router>
   );
 }

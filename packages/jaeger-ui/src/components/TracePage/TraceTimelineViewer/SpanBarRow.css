@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .span-row.is-matching-filter {
-  background-color: #fffce4;
+  background-color: var(--trace-emphasis-highlight);
 }
 
 .span-name-column {
@@ -28,14 +28,14 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .span-name-wrapper {
-  background: #f8f8f8;
+  background: var(--surface-secondary);
   line-height: 27px;
   overflow: hidden;
   display: flex;
 }
 
 .span-name-wrapper.is-matching-filter {
-  background-color: #fffce4;
+  background-color: var(--trace-emphasis-highlight);
 }
 
 .span-name-wrapper:hover {
@@ -46,8 +46,13 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .span-row:hover .span-name-wrapper {
-  background: #f8f8f8;
-  background: linear-gradient(90deg, #fafafa, #f8f8f8 75%, #eee);
+  background: var(--surface-secondary);
+  background: linear-gradient(
+    90deg,
+    var(--surface-tertiary),
+    var(--surface-secondary) 75%,
+    var(--surface-secondary)
+  );
 }
 
 .span-row.is-matching-filter:hover .span-name-wrapper {
@@ -55,16 +60,16 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .span-row.is-expanded .span-name-wrapper {
-  background: #f0f0f0;
-  box-shadow: 0 1px 0 #ddd;
+  background: var(--surface-secondary);
+  box-shadow: 0 1px 0 var(--border-default);
 }
 
 .span-row.is-expanded .span-name-wrapper.is-matching-filter {
-  background: #fff3d7;
+  background: var(--trace-emphasis-highlight);
 }
 
 .span-name {
-  color: #000;
+  color: var(--text-primary);
   cursor: pointer;
   flex: 1 1 auto;
   outline: none;
@@ -105,11 +110,11 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .endpoint-name {
-  color: #808080;
+  color: var(--text-secondary);
 }
 
 .span-name:hover > .endpoint-name {
-  color: #000;
+  color: var(--text-primary);
 }
 
 .span-svc-name {
@@ -127,31 +132,31 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .span-row:hover .span-view {
-  background-color: #f5f5f5;
-  outline: 1px solid #ddd;
+  background-color: var(--surface-secondary);
+  outline: 1px solid var(--border-default);
 }
 
 .span-row.is-matching-filter:hover .span-view {
-  background-color: #fff3d7;
-  outline: 1px solid #ddd;
+  background-color: var(--trace-emphasis-highlight);
+  outline: 1px solid var(--border-default);
 }
 
 .span-row.is-expanded .span-view {
-  background: #f8f8f8;
-  outline: 1px solid #ddd;
+  background: var(--surface-secondary);
+  outline: 1px solid var(--border-default);
 }
 
 .span-row.is-expanded.is-matching-filter .span-view {
-  background: #fff3d7;
-  outline: 1px solid #ddd;
+  background: var(--trace-emphasis-highlight);
+  outline: 1px solid var(--border-default);
 }
 
 .span-row.is-expanded:hover .span-view {
-  background: #eee;
+  background: var(--surface-secondary);
 }
 
 .span-row.is-expanded.is-matching-filter:hover .span-view {
-  background: #ffeccf;
+  background: var(--trace-emphasis-highlight);
 }
 
 .span-row.clipping-right .span-view::before {

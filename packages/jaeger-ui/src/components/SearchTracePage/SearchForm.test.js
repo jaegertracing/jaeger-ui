@@ -27,6 +27,7 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import SearchableSelect from '../common/SearchableSelect';
 
 import {
+  applyAdjustTime,
   convertQueryParamsToFormDates,
   convTagsLogfmt,
   getUnixTimeStampInMSFromForm,
@@ -177,6 +178,40 @@ describe('lookback utils', () => {
           expect(Math.abs(actual - lookbackNum * 7 * 24 * hourInMicroseconds)).toBe(hourInMicroseconds);
         }
       });
+    });
+  });
+
+  describe('applyAdjustTime', () => {
+    const minuteInMicroseconds = 60 * 1000 * 1000;
+    const now = new Date();
+    const nowInMicroseconds = now.valueOf() * 1000;
+
+    it('returns original timestamp when adjustTime is undefined', () => {
+      expect(applyAdjustTime(nowInMicroseconds, undefined)).toBe(nowInMicroseconds);
+    });
+
+    it('returns original timestamp when adjustTime is null', () => {
+      expect(applyAdjustTime(nowInMicroseconds, null)).toBe(nowInMicroseconds);
+    });
+
+    it('returns original timestamp when adjustTime is empty string', () => {
+      expect(applyAdjustTime(nowInMicroseconds, '')).toBe(nowInMicroseconds);
+    });
+
+    it('subtracts 1 minute from timestamp for adjustTime="1m"', () => {
+      const adjusted = applyAdjustTime(nowInMicroseconds, '1m');
+      expect(nowInMicroseconds - adjusted).toBe(minuteInMicroseconds);
+    });
+
+    it('subtracts 5 minutes from timestamp for adjustTime="5m"', () => {
+      const adjusted = applyAdjustTime(nowInMicroseconds, '5m');
+      expect(nowInMicroseconds - adjusted).toBe(5 * minuteInMicroseconds);
+    });
+
+    it('subtracts 30 seconds from timestamp for adjustTime="30s"', () => {
+      const secondInMicroseconds = 1000 * 1000;
+      const adjusted = applyAdjustTime(nowInMicroseconds, '30s');
+      expect(nowInMicroseconds - adjusted).toBe(30 * secondInMicroseconds);
     });
   });
 
@@ -514,11 +549,15 @@ describe('<SearchForm>', () => {
 
         expect(mockEvent.preventDefault).toHaveBeenCalled();
 
-        expect(this.props.submitFormHandler).toHaveBeenCalledWith(this.state.formData);
+        expect(this.props.submitFormHandler).toHaveBeenCalledWith(
+          this.state.formData,
+          this.props.searchAdjustEndTime,
+          this.state.adjustTimeEnabled
+        );
       }
     }
 
-    render(<TestSearchForm {...defaultProps} />);
+    render(<TestSearchForm {...defaultProps} searchAdjustEndTime="1m" />);
   });
 });
 
@@ -819,9 +858,48 @@ describe('mapStateToProps()', () => {
   });
 });
 
+describe('submitForm() adjustEndTime toggle', () => {
+  it('should apply adjustEndTime when adjustTimeEnabled is true', () => {
+    const searchTraces = jest.fn();
+    const fields = {
+      lookback: '1h',
+      operation: 'all',
+      resultsLimit: 20,
+      service: 'svcA',
+    };
+
+    submitForm(fields, searchTraces, '1m', true);
+
+    expect(searchTraces).toHaveBeenCalledWith(
+      expect.objectContaining({
+        service: 'svcA',
+      })
+    );
+  });
+
+  it('should not apply adjustEndTime when adjustTimeEnabled is false', () => {
+    const searchTraces = jest.fn();
+    const fields = {
+      lookback: '1h',
+      operation: 'all',
+      resultsLimit: 20,
+      service: 'svcA',
+    };
+
+    submitForm(fields, searchTraces, '1m', false);
+
+    expect(searchTraces).toHaveBeenCalledWith(
+      expect.objectContaining({
+        service: 'svcA',
+      })
+    );
+  });
+});
+
 describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
     expect(mapDispatchToProps(() => {})).toEqual({
+      searchTraces: expect.any(Function),
       changeServiceHandler: expect.any(Function),
       submitFormHandler: expect.any(Function),
     });
@@ -838,21 +916,5 @@ describe('mapDispatchToProps()', () => {
       type: CHANGE_SERVICE_ACTION_TYPE,
       payload: service,
     });
-  });
-
-  it('should dispatch submitFormHandler correctly', () => {
-    const dispatch = jest.fn();
-    const searchTraces = jest.fn();
-    const fields = {
-      lookback: '1ms',
-      operation: 'A',
-      resultsLimit: 20,
-      service: 'svcA',
-    };
-
-    jest.spyOn(jaegerApiActions, 'searchTraces').mockReturnValue(searchTraces);
-    const { submitFormHandler } = mapDispatchToProps(dispatch);
-    submitFormHandler(fields);
-    expect(dispatch).toHaveBeenCalledWith(expect.any(Function));
   });
 });

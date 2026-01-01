@@ -16,8 +16,8 @@ import './AccordianLogs.css';
 type AccordianLogsProps = {
   interactive?: boolean;
   isOpen: boolean;
-  linksGetter?: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
-  logs: Log[];
+  linksGetter?: ((pairs: ReadonlyArray<KeyValuePair>, index: number) => Link[]) | TNil;
+  logs: ReadonlyArray<Log>;
   onItemToggle?: (log: Log) => void;
   onToggle?: () => void;
   openedItems?: Set<Log>;
