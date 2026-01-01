@@ -57,7 +57,7 @@ export function orderTags(spanTags: ReadonlyArray<KeyValuePair>, topPrefixes?: s
 }
 
 /**
- * NOTE: Mutates `data` - Transform the HTTP response data into the form the app
+ * NOTE: Does not mutate `data` - Transform the HTTP response data into the form the app
  * generally requires.
  */
 export default function transformTraceData(data: TraceData & { spans: SpanData[] }): Trace | null {
@@ -70,14 +70,15 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
   let traceEndTime = 0;
   let traceStartTime = Number.MAX_SAFE_INTEGER;
   const spanIdCounts = new Map<string, number>();
-  const spanMap = new Map<string, Span>();
+  const spanDataMap = new Map<string, SpanData>();
   // filter out spans with empty start times
 
-  data.spans = data.spans.filter(span => Boolean(span.startTime));
+  const filteredSpans = data.spans.filter(span => Boolean(span.startTime));
 
-  const numSpans = data.spans.length;
-  for (let i = 0; i < numSpans; i++) {
-    const spanData = data.spans[i];
+  // First pass: process spanData, calculate trace times, handle duplicate IDs
+  const processedSpanData: SpanData[] = [];
+  for (let i = 0; i < filteredSpans.length; i++) {
+    const spanData = filteredSpans[i];
     const { startTime, duration, processID } = spanData;
     // update trace's start / end time
     if (startTime < traceStartTime) {
@@ -90,73 +91,101 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     let spanID = spanData.spanID;
     const idCount = spanIdCounts.get(spanID);
     if (idCount != null) {
-      console.warn(`Dupe spanID, ${idCount + 1} x ${spanID}`, spanData, spanMap.get(spanID));
-      if (_isEqual(spanData, spanMap.get(spanID))) {
+      console.warn(`Dupe spanID, ${idCount + 1} x ${spanID}`, spanData, spanDataMap.get(spanID));
+      if (_isEqual(spanData, spanDataMap.get(spanID))) {
         console.warn('\t two spans with same ID have `isEqual(...) === true`');
       }
       spanIdCounts.set(spanID, idCount + 1);
       spanID = `${spanID}_${idCount}`;
-      spanData.spanID = spanID;
+      // Create a new spanData object with updated spanID to avoid mutation
+      const updatedSpanData = { ...spanData, spanID };
+      processedSpanData.push(updatedSpanData);
+      spanDataMap.set(spanID, updatedSpanData);
     } else {
       spanIdCounts.set(spanID, 1);
+      processedSpanData.push(spanData);
+      spanDataMap.set(spanID, spanData);
     }
-    // NOTE: We mutate SpanData objects in place to progressively build Span objects.
-    // This is safe because we own the data structure (it comes from the API response).
-    // Cast to mutable object to add required Span fields.
-    const partialSpan = spanData as SpanData & { process?: Process; childSpans?: Span[] };
-    partialSpan.process = data.processes[processID];
-    partialSpan.childSpans = []; // Initialize to empty array, will be populated during tree walk
-    // At this point, the span has some but not all required Span fields.
-    // The remaining fields (depth, hasChildren, relativeStartTime, etc.) will be added
-    // during the tree walk phase below. We cast to Span for the map, acknowledging this.
-    spanMap.set(spanID, partialSpan as unknown as Span);
   }
+
+  // Build a temporary map with basic span info for tree building
+  const tempSpanMap = new Map<
+    string,
+    { spanID: string; processID: string; startTime: number; references?: ReadonlyArray<SpanReference> }
+  >();
+  processedSpanData.forEach(spanData => {
+    tempSpanMap.set(spanData.spanID, {
+      spanID: spanData.spanID,
+      processID: spanData.processID,
+      startTime: spanData.startTime,
+      references: spanData.references,
+    });
+  });
+
   // tree is necessary to sort the spans, so children follow parents, and
   // siblings are sorted by start time
-  const { root: tree, nodesBySpanId } = getTraceSpanIdsAsTree(data, spanMap);
+  const { root: tree, nodesBySpanId } = getTraceSpanIdsAsTree(
+    { ...data, spans: processedSpanData },
+    tempSpanMap as any
+  );
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
   const rootSpans: Span[] = [];
+  const spanMap = new Map<string, Span>();
 
+  // Second pass: construct complete Span objects during tree walk
   tree.walk((spanID: string, node: TreeNode<string>, depth = 0) => {
     if (spanID === TREE_ROOT_ID) {
       return;
     }
-    const span = spanMap.get(spanID) as Span;
+    const spanData = spanDataMap.get(spanID);
+    if (!spanData) {
+      return;
+    }
+
+    const process = data.processes[spanData.processID];
+    const { serviceName } = process;
+    svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
+
+    // Process tags
+    const warnings = spanData.warnings || [];
+    const tags = spanData.tags || [];
+    const references = spanData.references || [];
+    const tagsInfo = deduplicateTags(tags);
+    const orderedTags = orderTags(tagsInfo.tags, getConfigValue('topTagPrefixes'));
+    const allWarnings = [...warnings, ...tagsInfo.warnings];
+
+    // Create the complete Span object without mutation
+    // Note: childSpans will be populated in a later pass after all spans are created
+    const span: Span = {
+      ...spanData,
+      depth: depth - 1,
+      hasChildren: node.children.length > 0,
+      process,
+      relativeStartTime: spanData.startTime - traceStartTime,
+      tags: orderedTags,
+      references,
+      warnings: allWarnings,
+      subsidiarilyReferencedBy: [],
+      childSpans: [], // Will be populated in the next pass
+    };
+
+    spanMap.set(spanID, span);
+    spans.push(span);
+  });
+
+  // Third pass: populate childSpans arrays now that all spans are created
+  tree.walk((spanID: string, node: TreeNode<string>) => {
+    if (spanID === TREE_ROOT_ID) {
+      return;
+    }
+    const span = spanMap.get(spanID);
     if (!span) {
       return;
     }
-    const { serviceName } = span.process;
-    svcCounts[serviceName] = (svcCounts[serviceName] || 0) + 1;
-    span.relativeStartTime = span.startTime - traceStartTime;
-    span.depth = depth - 1;
-    span.hasChildren = node.children.length > 0;
-    // Use children from tree node instead of rebuilding
-    span.childSpans = node.children.map(childNode => spanMap.get(childNode.value)!).filter(Boolean);
-    span.warnings = span.warnings || [];
-    span.tags = span.tags || [];
-    span.references = span.references || [];
-    const tagsInfo = deduplicateTags(span.tags);
-    span.tags = orderTags(tagsInfo.tags, getConfigValue('topTagPrefixes'));
-    span.warnings = span.warnings.concat(tagsInfo.warnings);
-    span.references.forEach((ref, index) => {
-      const refSpan = spanMap.get(ref.spanID) as Span;
-      if (refSpan) {
-        ref.span = refSpan;
-        if (index > 0) {
-          // Don't take into account the parent, just other references.
-          refSpan.subsidiarilyReferencedBy = refSpan.subsidiarilyReferencedBy || [];
-          // Cast to mutable array during construction phase
-          (refSpan.subsidiarilyReferencedBy as SpanReference[]).push({
-            spanID,
-            traceID,
-            span,
-            refType: ref.refType,
-          });
-        }
-      }
-    });
-    spans.push(span);
+    // Build child spans array from tree structure
+    const childSpans = node.children.map(childNode => spanMap.get(childNode.value)!).filter(Boolean);
+    (span.childSpans as Span[]).push(...childSpans);
   });
 
   // Identify root spans from tree structure (direct children of tree root)
@@ -165,6 +194,29 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     if (rootSpan) {
       rootSpans.push(rootSpan);
     }
+  });
+
+  // Fourth pass: set up span references and subsidiarilyReferencedBy
+  // We do this after all spans are created to avoid mutation issues
+  spans.forEach(span => {
+    span.references.forEach((ref, index) => {
+      const refSpan = spanMap.get(ref.spanID);
+      if (refSpan) {
+        // Update the reference to point to the actual span
+        (ref as any).span = refSpan;
+        if (index > 0) {
+          // Don't take into account the parent, just other references.
+          // Add to subsidiarilyReferencedBy array
+          const newRef: SpanReference = {
+            spanID: span.spanID,
+            traceID,
+            span,
+            refType: ref.refType,
+          };
+          (refSpan.subsidiarilyReferencedBy as SpanReference[]).push(newRef);
+        }
+      }
+    });
   });
 
   const traceName = getTraceName(spans);
