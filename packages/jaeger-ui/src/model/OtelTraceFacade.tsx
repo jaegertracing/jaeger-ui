@@ -63,7 +63,7 @@ export default class OtelTraceFacade implements IOtelTrace {
     return this.legacyTrace.traceName;
   }
 
-  get services(): { name: string; numberOfSpans: number }[] {
+  get services(): ReadonlyArray<{ name: string; numberOfSpans: number }> {
     return this.legacyTrace.services;
   }
 }

@@ -11,7 +11,7 @@ import './AccordianText.css';
 
 type AccordianTextProps = {
   className?: string | TNil;
-  data: string[];
+  data: ReadonlyArray<string>;
   headerClassName?: string | TNil;
   highContrast?: boolean;
   interactive?: boolean;

@@ -10,7 +10,7 @@ export const selectOtelTrace = (state: ReduxState, traceId: string): IOtelTrace 
   return trace && trace.data ? new OtelTraceFacade(trace.data) : null;
 };
 
-export const selectOtelSpans = (state: ReduxState, traceId: string): IOtelSpan[] => {
+export const selectOtelSpans = (state: ReduxState, traceId: string): ReadonlyArray<IOtelSpan> => {
   const trace = selectOtelTrace(state, traceId);
   return trace ? trace.spans : [];
 };

@@ -6,12 +6,12 @@ import _isEqual from 'lodash/isEqual';
 import { getTraceSpanIdsAsTree, TREE_ROOT_ID } from '../selectors/trace';
 import { getConfigValue } from '../utils/config/get-config';
 import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-viewer';
-import { KeyValuePair, Span, SpanData, Trace, TraceData } from '../types/trace';
+import { KeyValuePair, Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
 import OtelTraceFacade from './OtelTraceFacade';
 
 // exported for tests
-export function deduplicateTags(spanTags: KeyValuePair[]) {
+export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
   const warningsHash: Map<string, string> = new Map<string, string>();
   const tags: KeyValuePair[] = spanTags.reduce<KeyValuePair[]>((uniqueTags, tag) => {
     if (!uniqueTags.some(t => t.key === tag.key && t.value === tag.value)) {
@@ -139,7 +139,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
         if (index > 0) {
           // Don't take into account the parent, just other references.
           refSpan.subsidiarilyReferencedBy = refSpan.subsidiarilyReferencedBy || [];
-          refSpan.subsidiarilyReferencedBy.push({
+          (refSpan.subsidiarilyReferencedBy as SpanReference[]).push({
             spanID,
             traceID,
             span,

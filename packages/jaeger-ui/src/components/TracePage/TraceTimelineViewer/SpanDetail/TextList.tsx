@@ -6,7 +6,7 @@ import * as React from 'react';
 import './TextList.css';
 
 type TextListProps = {
-  data: string[];
+  data: ReadonlyArray<string>;
 };
 
 export default function TextList(props: TextListProps) {

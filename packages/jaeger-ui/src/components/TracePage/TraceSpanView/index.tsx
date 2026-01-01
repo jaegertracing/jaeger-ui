@@ -30,14 +30,14 @@ type Props = {
 type State = {
   searchText: string;
   searchedColumn: string;
-  data: Span[];
+  data: ReadonlyArray<Span>;
   serviceNamesList: string[];
   operationNamesList: string[];
   serviceNameOperationsMap: Map<string, string[]>;
   filtered: Record<string, string[]>;
   selectedServiceName: string[];
   selectedOperationName: string[];
-  filteredData: Span[];
+  filteredData: ReadonlyArray<Span>;
 };
 
 export default class TraceSpanView extends Component<Props, State> {

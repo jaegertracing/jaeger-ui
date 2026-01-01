@@ -33,7 +33,7 @@ export function createCPSpan(span: Span): CPSpan {
  * @param spans - Array of Span objects from the trace
  * @returns A Map with spanID as key and CPSpan as value
  */
-export function createCPSpanMap(spans: Span[]): Map<string, CPSpan> {
+export function createCPSpanMap(spans: ReadonlyArray<Span>): Map<string, CPSpan> {
   return spans.reduce((map, span) => {
     map.set(span.spanID, createCPSpan(span));
     return map;

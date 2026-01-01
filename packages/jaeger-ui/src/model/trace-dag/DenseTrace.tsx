@@ -5,7 +5,7 @@ import denseTransforms from './denseTransforms';
 import { TDenseSpan } from './types';
 import { Span, Trace } from '../../types/trace';
 
-function convSpans(spans: Span[]) {
+function convSpans(spans: ReadonlyArray<Span>) {
   const map: Map<string, TDenseSpan> = new Map();
   const roots: Set<string> = new Set();
   const ids: string[] = [];

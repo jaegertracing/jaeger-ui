@@ -90,15 +90,15 @@ export interface IOtelSpan {
 
 export interface IOtelTrace {
   traceId: string;
-  spans: IOtelSpan[];
+  spans: ReadonlyArray<IOtelSpan>;
   // Include some trace-level convenience properties if needed by components
   durationMicros: number;
   startTimeUnixMicros: number;
   endTimeUnixMicros: number;
   traceName: string;
-  services: { name: string; numberOfSpans: number }[];
+  services: ReadonlyArray<{ name: string; numberOfSpans: number }>;
 
   // Optimized data structures - created once during trace transformation
-  spanMap: Map<string, IOtelSpan>;
-  rootSpans: Array<IOtelSpan>;
+  spanMap: ReadonlyMap<string, IOtelSpan>;
+  rootSpans: ReadonlyArray<IOtelSpan>;
 }

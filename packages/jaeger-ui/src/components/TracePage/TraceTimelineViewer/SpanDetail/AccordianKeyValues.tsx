@@ -13,7 +13,7 @@ import { KeyValuePair, Link } from '../../../../types/trace';
 import './AccordianKeyValues.css';
 
 // export for tests
-export function KeyValuesSummary({ data }: { data: KeyValuePair[] }) {
+export function KeyValuesSummary({ data }: { data: ReadonlyArray<KeyValuePair> }) {
   if (!Array.isArray(data) || !data.length) {
     return null;
   }
@@ -43,12 +43,12 @@ export default function AccordianKeyValues({
   onToggle = null,
 }: {
   className?: string | TNil;
-  data: KeyValuePair[];
+  data: ReadonlyArray<KeyValuePair>;
   highContrast?: boolean;
   interactive?: boolean;
   isOpen: boolean;
   label: string;
-  linksGetter: ((pairs: KeyValuePair[], index: number) => Link[]) | TNil;
+  linksGetter: ((pairs: ReadonlyArray<KeyValuePair>, index: number) => Link[]) | TNil;
   onToggle?: null | (() => void);
 }) {
   const isEmpty = !Array.isArray(data) || !data.length;

@@ -9,7 +9,7 @@ import colorGenerator from '../../../utils/color-generator';
 const serviceName = 'Service Name';
 const operationName = 'Operation Name';
 
-function parentChildOfMap(allSpans: IOtelSpan[]): Record<string, IOtelSpan[]> {
+function parentChildOfMap(allSpans: ReadonlyArray<IOtelSpan>): Record<string, IOtelSpan[]> {
   const parentChildOfMap: Record<string, IOtelSpan[]> = {};
   allSpans.forEach(s => {
     if (s.parentSpanId) {
@@ -22,11 +22,11 @@ function parentChildOfMap(allSpans: IOtelSpan[]): Record<string, IOtelSpan[]> {
 
 const memoizedParentChildOfMap = memoizeOne(parentChildOfMap);
 
-function getChildOfSpans(parentID: string, allSpans: IOtelSpan[]): IOtelSpan[] {
+function getChildOfSpans(parentID: string, allSpans: ReadonlyArray<IOtelSpan>): IOtelSpan[] {
   return memoizedParentChildOfMap(allSpans)[parentID] || [];
 }
 
-function computeSelfTime(parentSpan: IOtelSpan, allSpans: IOtelSpan[]): number {
+function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpan>): number {
   if (!parentSpan.hasChildren) return parentSpan.durationMicros;
 
   let parentSpanSelfTime = parentSpan.durationMicros;
@@ -80,7 +80,7 @@ function computeSelfTime(parentSpan: IOtelSpan, allSpans: IOtelSpan[]): number {
 function computeColumnValues(
   trace: IOtelTrace,
   span: IOtelSpan,
-  allSpans: IOtelSpan[],
+  allSpans: ReadonlyArray<IOtelSpan>,
   resultValue: StatsPerTag
 ) {
   const resultValueChange = resultValue;
@@ -285,8 +285,8 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
  * Creates columns for the children.
  */
 function buildDetail(
-  tempArray: IOtelSpan[],
-  allSpans: IOtelSpan[],
+  tempArray: ReadonlyArray<IOtelSpan>,
+  allSpans: ReadonlyArray<IOtelSpan>,
   selectedAttributeKeySecond: string,
   parentName: string,
   trace: IOtelTrace

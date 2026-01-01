@@ -94,7 +94,7 @@ const fullActions = createActions<TActionTypes>({
 
 export const actions = (fullActions as any).jaegerUi.traceTimelineViewer as TTimelineViewerActions;
 
-function calculateFocusedFindRowStates(uiFind: string, spans: Span[], allowHide = true) {
+function calculateFocusedFindRowStates(uiFind: string, spans: ReadonlyArray<Span>, allowHide = true) {
   const spansMap = new Map();
   const childrenHiddenIDs: Set<string> = new Set();
   const detailStates: Map<string, DetailState> = new Map();
