@@ -42,22 +42,25 @@ export type SpanData = {
   operationName: string;
   startTime: number;
   duration: number;
-  logs: ReadonlyArray<Log>;
   tags?: ReadonlyArray<KeyValuePair>;
+  logs?: ReadonlyArray<Log>;
   references?: ReadonlyArray<SpanReference>;
   warnings?: ReadonlyArray<string> | null;
 };
 
 export type Span = SpanData & {
-  depth: number;
-  hasChildren: boolean;
-  process: Process;
-  relativeStartTime: number;
   tags: NonNullable<SpanData['tags']>;
+  logs: NonNullable<SpanData['logs']>;
   references: NonNullable<SpanData['references']>;
   warnings: NonNullable<SpanData['warnings']>;
-  subsidiarilyReferencedBy: ReadonlyArray<SpanReference>;
+
+  depth: number;
+  relativeStartTime: number;
+  process: Process;
+
+  hasChildren: boolean;
   childSpans: ReadonlyArray<Span>;
+  subsidiarilyReferencedBy: ReadonlyArray<SpanReference>;
 };
 
 export type TraceData = {

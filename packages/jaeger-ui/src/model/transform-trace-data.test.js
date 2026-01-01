@@ -378,5 +378,78 @@ describe('transformTraceData()', () => {
         expect(child).toBe(result.spanMap.get(child.spanID));
       });
     });
+
+    it('should calculate depth and sort spans in DFS order', () => {
+      // Create a linear trace: Root -> Child -> GrandChild
+      const grandChildSpan = {
+        traceID,
+        spanID: 'grandChild',
+        operationName: 'grandChildOp',
+        references: [{ refType: 'CHILD_OF', traceID, spanID: spans[0].spanID }],
+        startTime: startTime + 200,
+        duration: 10,
+        tags: [],
+        processID: 'p1',
+      };
+
+      // spans[0] is 'someOperationName', referencing rootSpanID
+      // rootSpanWithoutRefs is the root (start + 50)
+      // spans[0] starts at startTime (0 relative to trace start? No, trace start is startTime).
+
+      // Let's use a fresh set of spans to be clear about order
+      const tStart = 1000;
+      const root = { ...rootSpanWithoutRefs, spanID: 'root', startTime: tStart, references: [] };
+      const child1 = {
+        ...spans[0],
+        spanID: 'child1',
+        startTime: tStart + 10,
+        references: [{ refType: 'CHILD_OF', traceID, spanID: 'root' }],
+      };
+      const child2 = {
+        ...spans[1],
+        spanID: 'child2',
+        startTime: tStart + 20,
+        references: [{ refType: 'CHILD_OF', traceID, spanID: 'root' }],
+      };
+      const grandChild1 = {
+        ...spans[0],
+        spanID: 'grandChild1',
+        startTime: tStart + 15,
+        references: [{ refType: 'CHILD_OF', traceID, spanID: 'child1' }],
+      };
+
+      // Tree structure:
+      // root (0)
+      //   -> child1 (10)
+      //      -> grandChild1 (15)
+      //   -> child2 (20)
+
+      // Expected DFS order: root, child1, grandChild1, child2
+
+      const traceData = {
+        traceID,
+        processes,
+        spans: [root, child1, child2, grandChild1],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // Check depth
+      const map = result.spanMap;
+      expect(map.get('root').depth).toBe(0);
+      expect(map.get('child1').depth).toBe(1);
+      expect(map.get('grandChild1').depth).toBe(2);
+      expect(map.get('child2').depth).toBe(1);
+
+      // Check hasChildren
+      expect(map.get('root').hasChildren).toBe(true);
+      expect(map.get('child1').hasChildren).toBe(true);
+      expect(map.get('grandChild1').hasChildren).toBe(false);
+      expect(map.get('child2').hasChildren).toBe(false);
+
+      // Check flat spans order (DFS)
+      const ids = result.spans.map(s => s.spanID);
+      expect(ids).toEqual(['root', 'child1', 'grandChild1', 'child2']);
+    });
   });
 });
