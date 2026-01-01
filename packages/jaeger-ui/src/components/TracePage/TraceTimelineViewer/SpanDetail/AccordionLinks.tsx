@@ -4,11 +4,11 @@
 import * as React from 'react';
 import cx from 'classnames';
 import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
-import './AccordianReferences.css';
+import './AccordionLinks.css';
 import { SpanReference } from '../../../../types/trace';
 import ReferenceLink from '../../url/ReferenceLink';
 
-type AccordianReferencesProps = {
+type AccordionLinksProps = {
   data: ReadonlyArray<SpanReference>;
   highContrast?: boolean;
   interactive?: boolean;
@@ -60,7 +60,7 @@ export function References(props: ReferenceItemProps) {
   );
 }
 
-export default class AccordianReferences extends React.PureComponent<AccordianReferencesProps> {
+export default class AccordionLinks extends React.PureComponent<AccordionLinksProps> {
   static defaultProps = {
     highContrast: false,
     interactive: true,
@@ -82,9 +82,9 @@ export default class AccordianReferences extends React.PureComponent<AccordianRe
       };
     }
     return (
-      <div className="AccordianReferences">
+      <div className="AccordionLinks">
         <div
-          className={cx('AccordianReferences--header', 'AccordianReferences--header', {
+          className={cx('AccordionLinks--header', 'AccordionLinks--header', {
             'is-empty': isEmpty,
             'is-high-contrast': highContrast,
             'is-open': isOpen,
@@ -93,7 +93,7 @@ export default class AccordianReferences extends React.PureComponent<AccordianRe
         >
           {arrow}
           <strong>
-            <span className="AccordianReferences--label">References</span>
+            <span className="AccordionLinks--label">References</span>
           </strong>{' '}
           ({data.length})
         </div>

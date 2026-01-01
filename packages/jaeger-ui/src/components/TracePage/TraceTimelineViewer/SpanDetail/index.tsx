@@ -5,9 +5,9 @@ import React from 'react';
 import { Divider } from 'antd';
 
 import { IoLinkOutline } from 'react-icons/io5';
-import AccordianKeyValues from './AccordianKeyValues';
-import AccordianLogs from './AccordianLogs';
-import AccordianReferences from './AccordianReferences';
+import AccordionAttributes from './AccordionAttributes';
+import AccordionEvents from './AccordionEvents';
+import AccordionLinks from './AccordionLinks';
 import AccordianText from './AccordianText';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
@@ -59,9 +59,8 @@ export default function SpanDetail(props: SpanDetailProps) {
   const { isAttributesOpen, isResourceOpen, events: eventsState, isWarningsOpen, isLinksOpen } = detailState;
   const warnings = span.warnings;
 
-  // Get legacy references from the facade for display in AccordianReferences
-  // This is a temporary bridge until AccordianReferences is migrated to use OTEL links
-  const legacyReferences = span instanceof OtelSpanFacade ? span.legacyReferences : [];
+  // Get references from the facade for display in AccordionLinks
+  const links = span instanceof OtelSpanFacade ? span.legacyReferences : [];
 
   // Display labels based on terminology flag
   const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
@@ -100,7 +99,7 @@ export default function SpanDetail(props: SpanDetailProps) {
       <Divider className="SpanDetail--divider ub-my1" />
       <div>
         <div>
-          <AccordianKeyValues
+          <AccordionAttributes
             data={span.attributes}
             label={attributesLabel}
             linksGetter={linksGetter}
@@ -108,7 +107,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => attributesToggle(span.spanId)}
           />
           {span.resource.attributes && span.resource.attributes.length > 0 && (
-            <AccordianKeyValues
+            <AccordionAttributes
               className="ub-mb1"
               data={span.resource.attributes}
               label={resourceLabel}
@@ -119,9 +118,9 @@ export default function SpanDetail(props: SpanDetailProps) {
           )}
         </div>
         {span.events && span.events.length > 0 && (
-          <AccordianLogs
+          <AccordionEvents
             linksGetter={linksGetter}
-            logs={span.events}
+            events={span.events}
             isOpen={eventsState.isOpen}
             openedItems={eventsState.openedItems}
             onToggle={() => eventsToggle(span.spanId)}
@@ -143,16 +142,14 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => warningsToggle(span.spanId)}
           />
         )}
-        {legacyReferences &&
-          legacyReferences.length > 0 &&
-          (legacyReferences.length > 1 || legacyReferences[0].refType !== 'CHILD_OF') && (
-            <AccordianReferences
-              data={legacyReferences}
-              isOpen={isLinksOpen}
-              onToggle={() => linksToggle(span.spanId)}
-              focusSpan={focusSpan}
-            />
-          )}
+        {links && links.length > 0 && (links.length > 1 || links[0].refType !== 'CHILD_OF') && (
+          <AccordionLinks
+            data={links}
+            isOpen={isLinksOpen}
+            onToggle={() => linksToggle(span.spanId)}
+            focusSpan={focusSpan}
+          />
+        )}
         <small className="SpanDetail--debugInfo">
           <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {span.spanId}
           <CopyIcon

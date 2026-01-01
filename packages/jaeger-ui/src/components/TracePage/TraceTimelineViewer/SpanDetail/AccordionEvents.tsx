@@ -6,20 +6,20 @@ import cx from 'classnames';
 import _sortBy from 'lodash/sortBy';
 import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 
-import AccordianKeyValues from './AccordianKeyValues';
+import AccordionAttributes from './AccordionAttributes';
 import { formatDuration } from '../utils';
 import { TNil } from '../../../../types';
 import { Link } from '../../../../types/trace';
 import { IEvent, IAttribute } from '../../../../types/otel';
 
-import './AccordianLogs.css';
+import './AccordionEvents.css';
 
-type AccordianLogsProps = {
+type AccordionEventsProps = {
   interactive?: boolean;
   isOpen: boolean;
   linksGetter?: ((pairs: ReadonlyArray<IAttribute>, index: number) => Link[]) | TNil;
-  logs: ReadonlyArray<IEvent>;
-  onItemToggle?: (log: IEvent) => void;
+  events: ReadonlyArray<IEvent>;
+  onItemToggle?: (event: IEvent) => void;
   onToggle?: () => void;
   openedItems?: Set<IEvent>;
   timestamp: number;
@@ -30,11 +30,11 @@ type AccordianLogsProps = {
   useOtelTerms?: boolean;
 };
 
-export default function AccordianLogs({
+export default function AccordionEvents({
   interactive = true,
   isOpen,
   linksGetter,
-  logs,
+  events,
   openedItems,
   onItemToggle,
   onToggle,
@@ -44,13 +44,12 @@ export default function AccordianLogs({
   initialVisibleCount = 3,
   spanID,
   useOtelTerms = false,
-}: AccordianLogsProps) {
-  const label = useOtelTerms ? 'Events' : 'Logs';
+}: AccordionEventsProps) {
   let arrow: React.ReactNode | null = null;
   let HeaderComponent: 'span' | 'a' = 'span';
   let headerProps: object | null = null;
-  const [showOutOfRangeLogs, setShowOutOfRangeLogs] = React.useState(false);
-  const [showAllEvents, setShowAllLogs] = React.useState(false);
+  const [showOutOfRangeEvents, setShowOutOfRangeEvents] = React.useState(false);
+  const [showAllEvents, setShowAllEvents] = React.useState(false);
   const contentRef = React.useRef<HTMLDivElement | null>(null);
 
   const notifyListReflow = React.useCallback(() => {
@@ -112,41 +111,42 @@ export default function AccordianLogs({
   const inRangeLogs = React.useMemo(() => {
     const viewStartAbsolute = timestamp + currentViewRangeTime[0] * traceDuration;
     const viewEndAbsolute = timestamp + currentViewRangeTime[1] * traceDuration;
-    return logs.filter(log => {
-      return log.timeUnixMicro >= viewStartAbsolute && log.timeUnixMicro <= viewEndAbsolute;
+    return events.filter(event => {
+      return event.timeUnixMicro >= viewStartAbsolute && event.timeUnixMicro <= viewEndAbsolute;
     });
-  }, [logs, timestamp, currentViewRangeTime, traceDuration]);
+  }, [events, timestamp, currentViewRangeTime, traceDuration]);
 
-  const logsToDisplay = showOutOfRangeLogs ? logs : inRangeLogs;
+  const logsToDisplay = showOutOfRangeEvents ? events : inRangeLogs;
   const displayedCount = logsToDisplay.length;
   const inRangeCount = inRangeLogs.length;
-  const totalCount = logs.length;
+  const totalCount = events.length;
 
+  const label = useOtelTerms ? 'Events' : 'Logs';
   let title = `${label} (${displayedCount})`;
   let toggleLink: React.ReactNode = null;
 
-  if (!showOutOfRangeLogs && inRangeCount < totalCount) {
+  if (!showOutOfRangeEvents && inRangeCount < totalCount) {
     title = `${label} (${inRangeCount} of ${totalCount})`;
     toggleLink = (
       <button
         type="button"
-        className="AccordianLogs--toggle"
+        className="AccordionEvents--toggle"
         onClick={() => {
-          setShowOutOfRangeLogs(true);
+          setShowOutOfRangeEvents(true);
           notifyListReflow();
         }}
       >
         show all
       </button>
     );
-  } else if (showOutOfRangeLogs && inRangeCount < totalCount) {
+  } else if (showOutOfRangeEvents && inRangeCount < totalCount) {
     title = `${label} (${totalCount})`;
     toggleLink = (
       <button
         type="button"
-        className="AccordianLogs--toggle"
+        className="AccordionEvents--toggle"
         onClick={() => {
-          setShowOutOfRangeLogs(false);
+          setShowOutOfRangeEvents(false);
           notifyListReflow();
         }}
       >
@@ -170,62 +170,63 @@ export default function AccordianLogs({
   }
 
   return (
-    <div className="AccordianLogs">
-      <HeaderComponent className={cx('AccordianLogs--header', { 'is-open': isOpen })} {...headerProps}>
+    <div className="AccordionEvents">
+      <HeaderComponent className={cx('AccordionEvents--header', { 'is-open': isOpen })} {...headerProps}>
         {arrow} <strong>{title}</strong> {toggleLink}
       </HeaderComponent>
       {isOpen && (
-        <div className="AccordianLogs--content" ref={contentRef}>
+        <div className="AccordionEvents--content" ref={contentRef}>
           {(() => {
-            const sortedLogs = _sortBy(logsToDisplay, log => log.timeUnixMicro);
+            const sortedLogs = _sortBy(logsToDisplay, event => event.timeUnixMicro);
             const visibleLogs =
               interactive && !showAllEvents && sortedLogs.length > initialVisibleCount
                 ? sortedLogs.slice(0, initialVisibleCount)
                 : sortedLogs;
-            return visibleLogs.map((log, i) => (
-              <AccordianKeyValues
+            return visibleLogs.map((event, i) => (
+              <AccordionAttributes
                 // `i` is necessary in the key because timestamps can repeat
 
-                key={`${log.timeUnixMicro}-${i}`}
+                key={`${event.timeUnixMicro}-${i}`}
                 className={i < visibleLogs.length - 1 ? 'ub-mb1' : null}
-                data={log.attributes}
+                data={event.attributes}
                 highContrast
                 interactive={interactive}
-                isOpen={openedItems ? openedItems.has(log) : false}
-                label={`${formatDuration(log.timeUnixMicro - timestamp)}`}
+                isOpen={openedItems ? openedItems.has(event) : false}
+                label={`${formatDuration(event.timeUnixMicro - timestamp)}`}
                 linksGetter={linksGetter}
-                onToggle={interactive && onItemToggle ? () => onItemToggle(log) : null}
+                onToggle={interactive && onItemToggle ? () => onItemToggle(event) : null}
               />
             ));
           })()}
-          {interactive && _sortBy(logsToDisplay, log => log.timeUnixMicro).length > initialVisibleCount && (
-            <div>
-              {!showAllEvents ? (
-                <button
-                  type="button"
-                  className="AccordianLogs--toggle"
-                  onClick={() => {
-                    setShowAllLogs(true);
-                    notifyListReflow();
-                  }}
-                >
-                  show more...
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="AccordianLogs--toggle"
-                  onClick={() => {
-                    setShowAllLogs(false);
-                    notifyListReflow();
-                  }}
-                >
-                  show less
-                </button>
-              )}
-            </div>
-          )}
-          <small className="AccordianLogs--footer">
+          {interactive &&
+            _sortBy(logsToDisplay, event => event.timeUnixMicro).length > initialVisibleCount && (
+              <div>
+                {!showAllEvents ? (
+                  <button
+                    type="button"
+                    className="AccordionEvents--toggle"
+                    onClick={() => {
+                      setShowAllEvents(true);
+                      notifyListReflow();
+                    }}
+                  >
+                    show more...
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="AccordionEvents--toggle"
+                    onClick={() => {
+                      setShowAllEvents(false);
+                      notifyListReflow();
+                    }}
+                  >
+                    show less
+                  </button>
+                )}
+              </div>
+            )}
+          <small className="AccordionEvents--footer">
             {useOtelTerms ? 'Event' : 'Log'} timestamps are relative to the start time of the full trace.
           </small>
         </div>

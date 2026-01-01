@@ -14,8 +14,8 @@ import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 
-jest.mock('./AccordianKeyValues', () => {
-  return function MockAccordianKeyValues({ label, onToggle }) {
+jest.mock('./AccordionAttributes', () => {
+  return function MockAccordionAttributes({ label, onToggle }) {
     return (
       <div data-testid={`accordian-keyvalues-${label.toLowerCase()}`}>
         <button type="button" onClick={onToggle} data-testid={`toggle-${label.toLowerCase()}`}>
@@ -26,8 +26,8 @@ jest.mock('./AccordianKeyValues', () => {
   };
 });
 
-jest.mock('./AccordianLogs', () => {
-  return function MockAccordianLogs({ onToggle, onItemToggle }) {
+jest.mock('./AccordionEvents', () => {
+  return function MockAccordionEvents({ onToggle, onItemToggle }) {
     return (
       <div data-testid="accordian-logs">
         <button type="button" onClick={onToggle} data-testid="toggle-logs">
@@ -41,12 +41,12 @@ jest.mock('./AccordianLogs', () => {
   };
 });
 
-jest.mock('./AccordianReferences', () => {
-  return function MockAccordianReferences({ onToggle }) {
+jest.mock('./AccordionLinks', () => {
+  return function MockAccordionLinks({ onToggle }) {
     return (
-      <div data-testid="accordian-references">
-        <button type="button" onClick={onToggle} data-testid="toggle-references">
-          Toggle References
+      <div data-testid="accordion-links">
+        <button type="button" onClick={onToggle} data-testid="toggle-links">
+          Toggle Links
         </button>
       </div>
     );
@@ -267,10 +267,10 @@ describe('<SpanDetail>', () => {
   it('renders references accordian and triggers toggle callback with span ID', () => {
     render(<SpanDetail {...props} />);
 
-    const referencesAccordian = screen.getByTestId('accordian-references');
+    const referencesAccordian = screen.getByTestId('accordion-links');
     expect(referencesAccordian).toBeInTheDocument();
 
-    const toggleButton = screen.getByTestId('toggle-references');
+    const toggleButton = screen.getByTestId('toggle-links');
     fireEvent.click(toggleButton);
 
     expect(props.linksToggle).toHaveBeenCalledWith(span.spanId);

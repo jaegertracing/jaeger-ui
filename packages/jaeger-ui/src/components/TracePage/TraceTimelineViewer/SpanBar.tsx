@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Popover, Tooltip } from 'antd';
 import _groupBy from 'lodash/groupBy';
 
-import AccordianLogs from './SpanDetail/AccordianLogs';
+import AccordionEvents from './SpanDetail/AccordionEvents';
 
 import { ViewedBoundsFunctionType } from './utils';
 import { TNil } from '../../../types';
@@ -148,10 +148,10 @@ function SpanBar(props: TCommonProps) {
             classNames={{ root: 'SpanBar--logHint' }}
             placement="topLeft"
             content={
-              <AccordianLogs
+              <AccordionEvents
                 interactive={false}
                 isOpen
-                logs={logGroups[positionKey]}
+                events={logGroups[positionKey]}
                 timestamp={traceStartTime}
                 currentViewRangeTime={[0, 1]}
                 traceDuration={traceDuration}
