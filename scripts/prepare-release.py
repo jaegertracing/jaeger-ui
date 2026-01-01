@@ -138,11 +138,11 @@ def git_commit_and_pr(version, branch_name):
     run_command(f"git commit -m '{commit_msg}'")
     
     print("Pushing branch...")
-    run_command(f"git push origin {branch_name}")
+    run_command(f"git push -u origin {branch_name}")
     
     print("Creating Pull Request...")
     pr_body = f"Prepare release {version}.\n\nAutomated release preparation."
-    run_command(f"gh pr create --title '{commit_msg}' --body '{pr_body}' --label 'changelog:skip'")
+    run_command(f"gh pr create --title '{commit_msg}' --body '{pr_body}' --label 'changelog:skip' --head {branch_name}")
 
 def main():
     parser = argparse.ArgumentParser(description="Prepare Jaeger UI release")
