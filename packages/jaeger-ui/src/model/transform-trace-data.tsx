@@ -100,11 +100,16 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     } else {
       spanIdCounts.set(spanID, 1);
     }
-    // Mutate SpanData to progressively build Span
-    // These mutations are safe as we own the data
-    (spanData as any).process = data.processes[processID];
-    (spanData as any).childSpans = []; // Initialize to empty array, will be populated during tree walk
-    spanMap.set(spanID, spanData as Span);
+    // NOTE: We mutate SpanData objects in place to progressively build Span objects.
+    // This is safe because we own the data structure (it comes from the API response).
+    // Cast to mutable object to add required Span fields.
+    const partialSpan = spanData as SpanData & { process?: Process; childSpans?: Span[] };
+    partialSpan.process = data.processes[processID];
+    partialSpan.childSpans = []; // Initialize to empty array, will be populated during tree walk
+    // At this point, the span has some but not all required Span fields.
+    // The remaining fields (depth, hasChildren, relativeStartTime, etc.) will be added
+    // during the tree walk phase below. We cast to Span for the map, acknowledging this.
+    spanMap.set(spanID, partialSpan as Span);
   }
   // tree is necessary to sort the spans, so children follow parents, and
   // siblings are sorted by start time

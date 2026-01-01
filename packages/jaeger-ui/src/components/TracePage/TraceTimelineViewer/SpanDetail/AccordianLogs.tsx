@@ -182,7 +182,7 @@ export default function AccordianLogs({
 
                 key={`${log.timestamp}-${i}`}
                 className={i < visibleLogs.length - 1 ? 'ub-mb1' : null}
-                data={(log.fields || []) as ReadonlyArray<KeyValuePair>}
+                data={log.fields || []}
                 highContrast
                 interactive={interactive}
                 isOpen={openedItems ? openedItems.has(log) : false}
