@@ -58,11 +58,11 @@ export default class TraceSpanView extends Component<Props, State> {
     this.state = {
       searchText: '',
       searchedColumn: '',
-      data: this.props.trace.spans,
+      data: this.props.trace.spans as Span[],
       serviceNamesList: [...serviceNamesList],
       operationNamesList: [...operationNamesList],
       serviceNameOperationsMap,
-      filteredData: this.props.trace.spans,
+      filteredData: this.props.trace.spans as Span[],
       filtered: {},
       selectedServiceName: [],
       selectedOperationName: [],

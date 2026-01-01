@@ -10,7 +10,7 @@ export type TracePageHeaderParts = {
   operationName: string;
 };
 
-export function _getTracePageHeaderPartsImpl(spans: Span[]): TracePageHeaderParts | null {
+export function _getTracePageHeaderPartsImpl(spans: ReadonlyArray<Span>): TracePageHeaderParts | null {
   // Use a span with no references to another span in given array
   // prefering the span with the fewest references
   // using start time as a tie breaker
@@ -49,24 +49,27 @@ export function _getTracePageHeaderPartsImpl(spans: Span[]): TracePageHeaderPart
   };
 }
 
-export const getTracePageHeaderParts = _memoize(_getTracePageHeaderPartsImpl, (spans: Span[]) => {
-  if (!spans.length) return 0;
-  return spans[0].traceID;
-});
+export const getTracePageHeaderParts = _memoize(
+  _getTracePageHeaderPartsImpl,
+  (spans: ReadonlyArray<Span>) => {
+    if (!spans.length) return 0;
+    return spans[0].traceID;
+  }
+);
 
-export function getTraceName(spans: Span[]): string {
+export function getTraceName(spans: ReadonlyArray<Span>): string {
   const parts = getTracePageHeaderParts(spans);
 
   return parts ? `${parts.serviceName}: ${parts.operationName}` : '';
 }
 
-export function getTracePageTitle(spans: Span[]): string {
+export function getTracePageTitle(spans: ReadonlyArray<Span>): string {
   const parts = getTracePageHeaderParts(spans);
 
   return parts ? `${parts.operationName} (${parts.serviceName})` : '';
 }
 
-export function getTraceEmoji(spans: Span[]): string {
+export function getTraceEmoji(spans: ReadonlyArray<Span>): string {
   if (!spans.length) return '';
 
   // prettier-ignore

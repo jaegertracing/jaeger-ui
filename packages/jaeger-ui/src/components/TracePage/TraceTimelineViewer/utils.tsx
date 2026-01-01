@@ -76,7 +76,7 @@ export const isErrorSpan = (span: Span) => isErrorBool(span) || isErrorStr(span)
  *                                         the parent span will be checked.
  * @return     {boolean}  Returns `true` if a descendant contains an error tag.
  */
-export function spanContainsErredSpan(spans: Span[], parentSpanIndex: number) {
+export function spanContainsErredSpan(spans: ReadonlyArray<Span>, parentSpanIndex: number) {
   const { depth } = spans[parentSpanIndex];
   let i = parentSpanIndex + 1;
   for (; i < spans.length && spans[i].depth > depth; i++) {
@@ -90,7 +90,7 @@ export function spanContainsErredSpan(spans: Span[], parentSpanIndex: number) {
 /**
  * Expects the first span to be the parent span.
  */
-export function findServerChildSpan(spans: Span[]) {
+export function findServerChildSpan(spans: ReadonlyArray<Span>) {
   if (spans.length <= 1 || !isClientSpan(spans[0])) {
     return false;
   }

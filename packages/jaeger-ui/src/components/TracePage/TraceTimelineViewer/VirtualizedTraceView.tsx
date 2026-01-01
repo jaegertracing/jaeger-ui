@@ -389,7 +389,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     return DEFAULT_HEIGHTS.detail;
   };
 
-  linksGetter = (span: Span, items: KeyValuePair[], itemIndex: number) => {
+  linksGetter = (span: Span, items: ReadonlyArray<KeyValuePair>, itemIndex: number) => {
     const { trace } = this.props;
     return getLinks(span, items, itemIndex, trace);
   };

@@ -6,7 +6,7 @@ import _isEqual from 'lodash/isEqual';
 import { getTraceSpanIdsAsTree, TREE_ROOT_ID } from '../selectors/trace';
 import { getConfigValue } from '../utils/config/get-config';
 import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-viewer';
-import { KeyValuePair, Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
+import { KeyValuePair, Process, Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
 import TreeNode from '../utils/TreeNode';
 import OtelTraceFacade from './OtelTraceFacade';
 
@@ -109,7 +109,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     // At this point, the span has some but not all required Span fields.
     // The remaining fields (depth, hasChildren, relativeStartTime, etc.) will be added
     // during the tree walk phase below. We cast to Span for the map, acknowledging this.
-    spanMap.set(spanID, partialSpan as Span);
+    spanMap.set(spanID, partialSpan as unknown as Span);
   }
   // tree is necessary to sort the spans, so children follow parents, and
   // siblings are sorted by start time

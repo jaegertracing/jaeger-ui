@@ -43,7 +43,11 @@ interface IScroller {
  * @param {Map<string, Span | TNil} spansMap Mapping from spanID to Span.
  * @returns {{ isHidden: boolean, parentIds: Set<string> }}
  */
-function isSpanHidden(span: Span, childrenAreHidden: Set<string>, spansMap: ReadonlyMap<string, Span | TNil>) {
+function isSpanHidden(
+  span: Span,
+  childrenAreHidden: Set<string>,
+  spansMap: ReadonlyMap<string, Span | TNil>
+) {
   const parentIDs = new Set<string>();
   let { references }: { references: ReadonlyArray<SpanReference> | TNil } = span;
   let parentID: undefined | string;
