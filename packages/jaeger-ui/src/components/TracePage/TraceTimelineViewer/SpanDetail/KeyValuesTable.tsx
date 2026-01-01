@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Dropdown } from 'antd';
-import { IoOpenOutline, IoList, IoCopyOutline } from 'react-icons/io5';
+import { Dropdown, Tooltip } from 'antd';
+import { IoOpenOutline, IoList, IoCopyOutline, IoInformationCircleOutline } from 'react-icons/io5';
 import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-json-view-lite';
 
 import CopyIcon from '../../../common/CopyIcon';
@@ -74,7 +74,6 @@ function formatValue(key: string, value: any) {
     content = stringListMarkup(parsed);
   } else if (typeof parsed === 'object') {
     const shouldJsonTreeExpand = Object.keys(parsed).length <= 10;
-
     content = (
       <JsonView
         data={parsed}
@@ -111,11 +110,10 @@ export const LinkValue = (props: { href: string; title?: string; children: React
 );
 
 const linkValueList = (links: Link[]) => {
-  const dropdownItems = links.map(({ text, url }, index) => ({
+  return links.map(({ text, url }, index) => ({
     label: <LinkValue href={url}>{text}</LinkValue>,
     key: `${url}-${index}`,
   }));
-  return dropdownItems;
 };
 
 type KeyValuesTableProps = {
@@ -161,11 +159,24 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
             } else {
               valueMarkup = jsonTable;
             }
+            const isOtel = row.key.startsWith('otel.');
+            const keyMarkup = isOtel ? (
+              <span style={{ color: '#666', fontStyle: 'italic' }} className="is-otel-key">
+                {row.key}
+                <Tooltip title="Synthetic Attribute: This tag was generated to map OpenTelemetry semantics to the Jaeger data model. It may not be searchable in the storage directly.">
+                  <IoInformationCircleOutline
+                    style={{ marginLeft: '5px', verticalAlign: 'text-bottom', cursor: 'help' }}
+                  />
+                </Tooltip>
+              </span>
+            ) : (
+              row.key
+            );
+
             return (
               // `i` is necessary in the key because row.key can repeat
-
               <tr className="KeyValueTable--row" key={`${row.key}-${i}`}>
-                <td className="KeyValueTable--keyColumn">{row.key}</td>
+                <td className="KeyValueTable--keyColumn">{keyMarkup}</td>
                 <td className="KeyValueTable--valueColumn">
                   <div className="KeyValueTable--copyContainer">
                     <CopyIcon
