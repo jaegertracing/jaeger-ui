@@ -59,28 +59,10 @@ def create_branch(version):
     run_command(f"git checkout -b {branch_name}")
     return branch_name
 
-def generate_release_notes(token):
-    print("Generating release notes...")
-    # Ensure release-notes.py exists (download logic from Makefile)
-    script_path = "./scripts/release-notes.py"
-    if not os.path.exists(script_path):
-        print("Downloading release-notes.py...")
-        run_command("wget https://raw.githubusercontent.com/jaegertracing/jaeger/main/scripts/release/notes.py -O ./scripts/release-notes.py -q")
-        run_command("chmod 755 ./scripts/release-notes.py")
-
-    # Create a temp token file as release-notes.py expects a file
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as token_file:
-        token_file.write(token)
-        token_file_path = token_file.name
-
-    try:
-        # Run release-notes.py
-        # Using --exclude-dependabot --repo jaeger-ui as per Makefile
-        # We capture stdout
-        output = run_command(f"./scripts/release-notes.py --exclude-dependabot --repo jaeger-ui --token-file {token_file_path}")
-        return output
-    finally:
-        os.remove(token_file_path)
+def generate_release_notes():
+    print("Generating release notes via 'make changelog'...")
+    # Run make -s (silent) to suppress echoing commands, capturing only the script output
+    return run_command("make -s changelog")
 
 def update_changelog(version, notes):
     print("Updating CHANGELOG.md...")
@@ -157,7 +139,7 @@ def main():
     
     branch_name = create_branch(version)
     
-    notes = generate_release_notes(token)
+    notes = generate_release_notes()
     update_changelog(version, notes)
     update_package_json(version)
     
