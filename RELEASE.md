@@ -3,7 +3,7 @@
 <!-- BEGIN_CHECKLIST -->
 
 1. Prepare the release.
-   - Run `make release VERSION=vX.Y.Z` (replace `vX.Y.Z` with the actual version).
+   - Run `make prepare-release VERSION=vX.Y.Z` (replace `vX.Y.Z` with the actual version).
    - This command will:
      - Verify the version format.
      - Create a branch `release-vX.Y.Z`.
