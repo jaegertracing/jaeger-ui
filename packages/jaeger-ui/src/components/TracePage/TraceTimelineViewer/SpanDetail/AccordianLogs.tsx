@@ -9,7 +9,7 @@ import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import AccordianKeyValues from './AccordianKeyValues';
 import { formatDuration } from '../utils';
 import { TNil } from '../../../../types';
-import { Log, KeyValuePair, Link } from '../../../../types/trace';
+import { Link } from '../../../../types/trace';
 import { IEvent, IAttribute } from '../../../../types/otel';
 
 import './AccordianLogs.css';
@@ -17,13 +17,11 @@ import './AccordianLogs.css';
 type AccordianLogsProps = {
   interactive?: boolean;
   isOpen: boolean;
-  linksGetter?:
-    | ((pairs: ReadonlyArray<KeyValuePair> | ReadonlyArray<IAttribute>, index: number) => Link[])
-    | TNil;
-  logs: ReadonlyArray<Log> | ReadonlyArray<IEvent>;
-  onItemToggle?: (log: Log | IEvent) => void;
+  linksGetter?: ((pairs: ReadonlyArray<IAttribute>, index: number) => Link[]) | TNil;
+  logs: ReadonlyArray<IEvent>;
+  onItemToggle?: (log: IEvent) => void;
   onToggle?: () => void;
-  openedItems?: Set<Log | IEvent>;
+  openedItems?: Set<IEvent>;
   timestamp: number;
   currentViewRangeTime: [number, number];
   traceDuration: number;
@@ -112,22 +110,11 @@ export default function AccordianLogs({
     };
   }, [interactive, isOpen, notifyListReflow]);
 
-  // Helper function to get timestamp from log or event
-  const getLogTimestamp = (log: Log | IEvent): number => {
-    return 'timestamp' in log ? log.timestamp : log.timeUnixMicro;
-  };
-
-  // Helper function to get fields/attributes from log or event
-  const getLogFields = (log: Log | IEvent): ReadonlyArray<KeyValuePair | IAttribute> => {
-    return 'fields' in log ? log.fields : log.attributes;
-  };
-
   const inRangeLogs = React.useMemo(() => {
     const viewStartAbsolute = timestamp + currentViewRangeTime[0] * traceDuration;
     const viewEndAbsolute = timestamp + currentViewRangeTime[1] * traceDuration;
     return logs.filter(log => {
-      const logTime = getLogTimestamp(log);
-      return logTime >= viewStartAbsolute && logTime <= viewEndAbsolute;
+      return log.timeUnixMicro >= viewStartAbsolute && log.timeUnixMicro <= viewEndAbsolute;
     });
   }, [logs, timestamp, currentViewRangeTime, traceDuration]);
 
@@ -191,7 +178,7 @@ export default function AccordianLogs({
       {isOpen && (
         <div className="AccordianLogs--content" ref={contentRef}>
           {(() => {
-            const sortedLogs = _sortBy(logsToDisplay, log => getLogTimestamp(log));
+            const sortedLogs = _sortBy(logsToDisplay, log => log.timeUnixMicro);
             const visibleLogs =
               interactive && !showAllLogs && sortedLogs.length > initialVisibleCount
                 ? sortedLogs.slice(0, initialVisibleCount)
@@ -200,46 +187,45 @@ export default function AccordianLogs({
               <AccordianKeyValues
                 // `i` is necessary in the key because timestamps can repeat
 
-                key={`${getLogTimestamp(log)}-${i}`}
+                key={`${log.timeUnixMicro}-${i}`}
                 className={i < visibleLogs.length - 1 ? 'ub-mb1' : null}
-                data={getLogFields(log)}
+                data={log.attributes}
                 highContrast
                 interactive={interactive}
                 isOpen={openedItems ? openedItems.has(log) : false}
-                label={`${formatDuration(getLogTimestamp(log) - timestamp)}`}
+                label={`${formatDuration(log.timeUnixMicro - timestamp)}`}
                 linksGetter={linksGetter}
                 onToggle={interactive && onItemToggle ? () => onItemToggle(log) : null}
               />
             ));
           })()}
-          {interactive &&
-            _sortBy(logsToDisplay, log => getLogTimestamp(log)).length > initialVisibleCount && (
-              <div>
-                {!showAllLogs ? (
-                  <button
-                    type="button"
-                    className="AccordianLogs--toggle"
-                    onClick={() => {
-                      setShowAllLogs(true);
-                      notifyListReflow();
-                    }}
-                  >
-                    show more...
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="AccordianLogs--toggle"
-                    onClick={() => {
-                      setShowAllLogs(false);
-                      notifyListReflow();
-                    }}
-                  >
-                    show less
-                  </button>
-                )}
-              </div>
-            )}
+          {interactive && _sortBy(logsToDisplay, log => log.timeUnixMicro).length > initialVisibleCount && (
+            <div>
+              {!showAllLogs ? (
+                <button
+                  type="button"
+                  className="AccordianLogs--toggle"
+                  onClick={() => {
+                    setShowAllLogs(true);
+                    notifyListReflow();
+                  }}
+                >
+                  show more...
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="AccordianLogs--toggle"
+                  onClick={() => {
+                    setShowAllLogs(false);
+                    notifyListReflow();
+                  }}
+                >
+                  show less
+                </button>
+              )}
+            </div>
+          )}
           <small className="AccordianLogs--footer">
             {useOtelTerms ? 'Event' : 'Log'} timestamps are relative to the start time of the full trace.
           </small>

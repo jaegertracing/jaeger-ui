@@ -105,12 +105,13 @@ describe('<SpanDetailRow>', () => {
     expect(MockSpanDetail).toHaveBeenCalled();
     const receivedProps = MockSpanDetail.mock.calls[0][0];
     const linksGetter = receivedProps.linksGetter;
-    const tags = [{ key: 'myKey', value: 'myValue' }];
+    const attributes = [{ key: 'myKey', value: 'myValue' }];
     const linksGetterResponse = {};
     props.linksGetter.mockReturnValueOnce(linksGetterResponse);
-    const result = linksGetter(tags, 0);
+    const result = linksGetter(attributes, 0);
     expect(result).toBe(linksGetterResponse);
     expect(props.linksGetter).toHaveBeenCalledTimes(1);
-    expect(props.linksGetter).toHaveBeenCalledWith(props.span, tags, 0);
+    // linksGetter adapts IAttribute to KeyValuePair format
+    expect(props.linksGetter).toHaveBeenCalledWith(props.span, [{ key: 'myKey', value: 'myValue' }], 0);
   });
 });

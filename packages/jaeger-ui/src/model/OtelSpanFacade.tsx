@@ -29,7 +29,7 @@ export default class OtelSpanFacade implements IOtelSpan {
     this.legacySpan = legacySpan;
 
     // Pre-compute expensive fields
-    const kindTag = this.legacySpan.tags.find(t => t.key === 'span.kind');
+    const kindTag = this.legacySpan.tags?.find(t => t.key === 'span.kind');
     this._kind = SpanKind.INTERNAL;
     if (kindTag) {
       const val = String(kindTag.value).toUpperCase();
@@ -44,19 +44,19 @@ export default class OtelSpanFacade implements IOtelSpan {
     // 3. If no reference with same traceID exists, parent is undefined
     const { references, traceID } = this.legacySpan;
     this._parentSpanId = (
-      references.find(r => r.traceID === traceID && r.refType === 'CHILD_OF') ??
-      references.find(r => r.traceID === traceID && r.refType === 'FOLLOWS_FROM')
+      references?.find(r => r.traceID === traceID && r.refType === 'CHILD_OF') ??
+      references?.find(r => r.traceID === traceID && r.refType === 'FOLLOWS_FROM')
     )?.spanID;
 
-    this._attributes = OtelSpanFacade.toOtelAttributes(this.legacySpan.tags);
+    this._attributes = OtelSpanFacade.toOtelAttributes(this.legacySpan.tags || []);
 
-    this._events = this.legacySpan.logs.map(log => ({
+    this._events = (this.legacySpan.logs || []).map(log => ({
       timeUnixMicro: log.timestamp,
       name: (log.fields.find(f => f.key === 'event')?.value as string) || 'log',
       attributes: OtelSpanFacade.toOtelAttributes(log.fields),
     }));
 
-    this._links = this.legacySpan.references
+    this._links = (this.legacySpan.references || [])
       .filter(ref => ref.refType !== 'CHILD_OF')
       .map(ref => ({
         traceId: ref.traceID,
@@ -64,14 +64,14 @@ export default class OtelSpanFacade implements IOtelSpan {
         attributes: [], // Legacy references don't have attributes
       }));
 
-    const errorTag = this.legacySpan.tags.find(t => t.key === 'error');
+    const errorTag = this.legacySpan.tags?.find(t => t.key === 'error');
     this._status =
       errorTag && errorTag.value ? { code: StatusCode.ERROR, message: 'error' } : { code: StatusCode.OK };
 
     const process = this.legacySpan.process;
     this._resource = {
-      attributes: process ? OtelSpanFacade.toOtelAttributes(process.tags) : [],
-      serviceName: process ? process.serviceName : 'unknown-service',
+      attributes: process?.tags ? OtelSpanFacade.toOtelAttributes(process.tags) : [],
+      serviceName: process?.serviceName || 'unknown-service',
     };
   }
 
@@ -140,8 +140,8 @@ export default class OtelSpanFacade implements IOtelSpan {
     // Legacy Jaeger doesn't have explicit instrumentation scope,
     // but we can look for it in tags if it was mapped there by exporters.
     const name =
-      (this.legacySpan.tags.find(t => t.key === 'otel.library.name')?.value as string) || 'unknown';
-    const version = this.legacySpan.tags.find(t => t.key === 'otel.library.version')?.value as string;
+      (this.legacySpan.tags?.find(t => t.key === 'otel.library.name')?.value as string) || 'unknown';
+    const version = this.legacySpan.tags?.find(t => t.key === 'otel.library.version')?.value as string;
     return { name, version };
   }
 
@@ -158,7 +158,7 @@ export default class OtelSpanFacade implements IOtelSpan {
   }
 
   get subsidiarilyReferencedBy(): ILink[] {
-    return this.legacySpan.subsidiarilyReferencedBy.map(ref => ({
+    return (this.legacySpan.subsidiarilyReferencedBy || []).map(ref => ({
       traceId: ref.traceID,
       spanId: ref.spanID,
       attributes: [],

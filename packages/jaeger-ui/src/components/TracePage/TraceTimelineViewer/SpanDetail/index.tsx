@@ -15,7 +15,7 @@ import CopyIcon from '../../../common/CopyIcon';
 import LabeledList from '../../../common/LabeledList';
 
 import { TNil } from '../../../../types';
-import { KeyValuePair, Link, Log, Span } from '../../../../types/trace';
+import { Link, Span, SpanReference } from '../../../../types/trace';
 import { IOtelSpan, IAttribute, IEvent } from '../../../../types/otel';
 import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 
@@ -23,8 +23,8 @@ import './index.css';
 
 type SpanDetailProps = {
   detailState: DetailState;
-  linksGetter: ((links: ReadonlyArray<KeyValuePair | IAttribute>, index: number) => Link[]) | TNil;
-  logItemToggle: (spanID: string, log: Log | IEvent) => void;
+  linksGetter: ((links: ReadonlyArray<IAttribute>, index: number) => Link[]) | TNil;
+  logItemToggle: (spanID: string, log: IEvent) => void;
   logsToggle: (spanID: string) => void;
   processToggle: (spanID: string) => void;
   span: Span;
@@ -56,17 +56,19 @@ export default function SpanDetail(props: SpanDetailProps) {
     useOtelTerms = false,
   } = props;
 
-  // Create OTEL facade wrapper
+  // Create OTEL facade wrapper - always use OTEL types internally
   const otelSpan: IOtelSpan = React.useMemo(() => new OtelSpanFacade(span), [span]);
 
   const { isTagsOpen, isProcessOpen, logs: logsState, isWarningsOpen, isReferencesOpen } = detailState;
-  const { operationName, process, duration, relativeStartTime, spanID, logs, tags, warnings, references } =
-    span;
+  const { warnings } = span;
 
-  // Use OTEL terminology when flag is enabled
-  const tagsLabel = useOtelTerms ? 'Attributes' : 'Tags';
-  const processLabel = useOtelTerms ? 'Resource' : 'Process';
-  const logsLabel = useOtelTerms ? 'Events' : 'Logs';
+  // Map legacy references to OTEL links for display
+  const legacyReferences = span.references;
+
+  // Display labels based on terminology flag
+  const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
+  const resourceLabel = useOtelTerms ? 'Resource' : 'Process';
+  const eventsLabel = useOtelTerms ? 'Events' : 'Logs';
 
   const overviewItems = [
     {
@@ -101,27 +103,27 @@ export default function SpanDetail(props: SpanDetailProps) {
       <div>
         <div>
           <AccordianKeyValues
-            data={useOtelTerms ? otelSpan.attributes : tags}
-            label={tagsLabel}
+            data={otelSpan.attributes}
+            label={attributesLabel}
             linksGetter={linksGetter}
             isOpen={isTagsOpen}
             onToggle={() => tagsToggle(otelSpan.spanId)}
           />
-          {(useOtelTerms ? otelSpan.resource.attributes : process.tags) && (
+          {otelSpan.resource.attributes && otelSpan.resource.attributes.length > 0 && (
             <AccordianKeyValues
               className="ub-mb1"
-              data={useOtelTerms ? otelSpan.resource.attributes : process.tags}
-              label={processLabel}
+              data={otelSpan.resource.attributes}
+              label={resourceLabel}
               linksGetter={linksGetter}
               isOpen={isProcessOpen}
               onToggle={() => processToggle(otelSpan.spanId)}
             />
           )}
         </div>
-        {(useOtelTerms ? otelSpan.events : logs) && (useOtelTerms ? otelSpan.events : logs).length > 0 && (
+        {otelSpan.events && otelSpan.events.length > 0 && (
           <AccordianLogs
             linksGetter={linksGetter}
-            logs={useOtelTerms ? otelSpan.events : logs}
+            logs={otelSpan.events}
             isOpen={logsState.isOpen}
             openedItems={logsState.openedItems}
             onToggle={() => logsToggle(otelSpan.spanId)}
@@ -131,7 +133,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             traceDuration={traceDuration}
             spanID={otelSpan.spanId}
             useOtelTerms={useOtelTerms}
-            label={logsLabel}
+            label={eventsLabel}
           />
         )}
         {warnings && warnings.length > 0 && (
@@ -144,11 +146,11 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => warningsToggle(otelSpan.spanId)}
           />
         )}
-        {references &&
-          references.length > 0 &&
-          (references.length > 1 || references[0].refType !== 'CHILD_OF') && (
+        {legacyReferences &&
+          legacyReferences.length > 0 &&
+          (legacyReferences.length > 1 || legacyReferences[0].refType !== 'CHILD_OF') && (
             <AccordianReferences
-              data={references}
+              data={legacyReferences}
               isOpen={isReferencesOpen}
               onToggle={() => referencesToggle(otelSpan.spanId)}
               focusSpan={focusSpan}

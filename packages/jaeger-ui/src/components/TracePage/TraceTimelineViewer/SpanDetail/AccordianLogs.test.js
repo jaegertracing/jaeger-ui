@@ -20,15 +20,17 @@ jest.mock('./AccordianKeyValues', () => props => {
 describe('<AccordianLogs>', () => {
   const logs = [
     {
-      timestamp: 10,
-      fields: [
+      timeUnixMicro: 10,
+      name: 'log',
+      attributes: [
         { key: 'message', value: 'oh the log message' },
         { key: 'something', value: 'else' },
       ],
     },
     {
-      timestamp: 20,
-      fields: [
+      timeUnixMicro: 20,
+      name: 'log',
+      attributes: [
         { key: 'message', value: 'oh the next log message' },
         { key: 'more', value: 'stuff' },
       ],
@@ -141,8 +143,9 @@ describe('<AccordianLogs>', () => {
     window.dispatchEvent = mockDispatchEvent;
 
     const manyLogs = Array.from({ length: 5 }, (_, i) => ({
-      timestamp: 10 + i,
-      fields: [{ key: 'message', value: `log ${i}` }],
+      timeUnixMicro: 10 + i,
+      name: 'log',
+      attributes: [{ key: 'message', value: `log ${i}` }],
     }));
 
     const propsWithManyLogs = {

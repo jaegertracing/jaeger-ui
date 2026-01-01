@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Log } from '../../../../types/trace';
+import { IEvent } from '../../../../types/otel';
 
 /**
  * Which items of a {@link SpanDetail} component are expanded.
@@ -9,7 +9,7 @@ import { Log } from '../../../../types/trace';
 export default class DetailState {
   isTagsOpen: boolean;
   isProcessOpen: boolean;
-  logs: { isOpen: boolean; openedItems: Set<Log> };
+  logs: { isOpen: boolean; openedItems: Set<IEvent> };
   isWarningsOpen: boolean;
   isReferencesOpen: boolean;
 
@@ -61,7 +61,7 @@ export default class DetailState {
     return next;
   }
 
-  toggleLogItem(logItem: Log) {
+  toggleLogItem(logItem: IEvent) {
     const next = new DetailState(this);
     if (next.logs.openedItems.has(logItem)) {
       next.logs.openedItems.delete(logItem);

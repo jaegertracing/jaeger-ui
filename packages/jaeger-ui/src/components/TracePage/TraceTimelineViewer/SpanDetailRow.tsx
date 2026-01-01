@@ -8,7 +8,7 @@ import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
 
-import { Log, Span, KeyValuePair, Link } from '../../../types/trace';
+import { Span, Link, KeyValuePair, Log } from '../../../types/trace';
 import { IAttribute, IEvent } from '../../../types/otel';
 
 import './SpanDetailRow.css';
@@ -37,14 +37,29 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     props.onDetailToggled(props.span.spanID);
   };
 
-  const _linksGetter = (items: ReadonlyArray<KeyValuePair | IAttribute>, itemIndex: number) => {
+  // Adapter function that converts IAttribute[] to KeyValuePair[] format for legacy linksGetter
+  const _linksGetter = (items: ReadonlyArray<IAttribute>, itemIndex: number) => {
     const { linksGetter, span } = props;
-    return linksGetter(span, items as ReadonlyArray<KeyValuePair>, itemIndex);
+    // Convert IAttribute to KeyValuePair for legacy link patterns
+    const legacyItems: KeyValuePair<any>[] = items.map(attr => ({
+      key: attr.key,
+      value: attr.value as any,
+    }));
+    return linksGetter(span, legacyItems, itemIndex);
   };
 
-  const _logItemToggle = (spanID: string, log: Log | IEvent) => {
+  // Adapter function that converts IEvent back to Log for legacy callback
+  const _logItemToggle = (spanID: string, event: IEvent) => {
     const { logItemToggle } = props;
-    logItemToggle(spanID, log as Log);
+    // Convert IEvent back to Log format for legacy callback
+    const legacyLog: Log = {
+      timestamp: event.timeUnixMicro,
+      fields: event.attributes.map(attr => ({
+        key: attr.key,
+        value: attr.value as any,
+      })),
+    };
+    logItemToggle(spanID, legacyLog);
   };
 
   const {

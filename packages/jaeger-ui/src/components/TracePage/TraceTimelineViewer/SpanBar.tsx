@@ -10,6 +10,8 @@ import AccordianLogs from './SpanDetail/AccordianLogs';
 import { ViewedBoundsFunctionType } from './utils';
 import { TNil } from '../../../types';
 import { Span, criticalPathSection } from '../../../types/trace';
+import OtelSpanFacade from '../../../model/OtelSpanFacade';
+import { IEvent } from '../../../types/otel';
 
 import './SpanBar.css';
 
@@ -98,9 +100,13 @@ function SpanBar(props: TCommonProps) {
     longLabel,
     traceDuration,
   } = props;
-  // group logs based on timestamps
-  const logGroups = _groupBy(span.logs, log => {
-    const posPercent = getViewedBounds(log.timestamp, log.timestamp).start;
+
+  // Use OTEL facade to get events
+  const otelSpan = React.useMemo(() => new OtelSpanFacade(span), [span]);
+
+  // group events based on timestamps
+  const logGroups = _groupBy(otelSpan.events, (event: IEvent) => {
+    const posPercent = getViewedBounds(event.timeUnixMicro, event.timeUnixMicro).start;
     // round to the nearest 0.2%
     return toPercent(Math.round(posPercent * 500) / 500);
   });
