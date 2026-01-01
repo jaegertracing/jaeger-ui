@@ -84,7 +84,7 @@ export default class AccordionLinks extends React.PureComponent<AccordionLinksPr
     return (
       <div className="AccordionLinks">
         <div
-          className={cx('AccordionLinks--header', 'AccordionLinks--header', {
+          className={cx('AccordionLinks--header', {
             'is-empty': isEmpty,
             'is-high-contrast': highContrast,
             'is-open': isOpen,

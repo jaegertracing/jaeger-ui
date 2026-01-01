@@ -7,9 +7,9 @@ import '@testing-library/jest-dom';
 import AccordionLinks, { References } from './AccordionLinks';
 
 jest.mock('../../url/ReferenceLink', () => {
-  return function MockReferenceLink({ children, link }) {
+  return function MockReferenceLink({ children, reference }) {
     return (
-      <div data-testid="link-link" data-span-id={link.spanID}>
+      <div data-testid="link-link" data-span-id={reference.spanID}>
         {children}
       </div>
     );
