@@ -103,7 +103,10 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
 
     const tagsInfo = deduplicateTags(span.tags);
     span.tags = orderTags(tagsInfo.tags, getConfigValue('topTagPrefixes'));
-    span.warnings = (span.warnings || []).concat(tagsInfo.warnings);
+    span.warnings = span.warnings || [];
+    if (tagsInfo.warnings && tagsInfo.warnings.length > 0) {
+      (span.warnings as string[]).push(...tagsInfo.warnings);
+    }
 
     spanMap.set(spanID, span);
 
@@ -146,7 +149,6 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     }
   }
 
-  rootSpans.sort((a, b) => a.startTime - b.startTime);
   const spans: Span[] = [];
   const svcCounts: Record<string, number> = {};
 
@@ -183,6 +185,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.childSpans.forEach(child => processSpan(child, depth + 1));
   };
 
+  rootSpans.sort((a, b) => a.startTime - b.startTime);
   rootSpans.forEach(root => processSpan(root, 0));
 
   const traceName = getTraceName(spans);
