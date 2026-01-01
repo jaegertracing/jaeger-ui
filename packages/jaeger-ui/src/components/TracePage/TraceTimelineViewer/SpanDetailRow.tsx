@@ -7,9 +7,10 @@ import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
+import OtelSpanFacade from '../../../model/OtelSpanFacade';
 
 import { Span, Link, KeyValuePair, Log } from '../../../types/trace';
-import { IAttribute, IEvent } from '../../../types/otel';
+import { IAttribute, IEvent, IOtelSpan } from '../../../types/otel';
 
 import './SpanDetailRow.css';
 
@@ -37,21 +38,22 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     props.onDetailToggled(props.span.spanID);
   };
 
-  // Adapter function that converts IAttribute[] to KeyValuePair[] format for legacy linksGetter
+  // Convert legacy Span to IOtelSpan for SpanDetail
+  const otelSpan: IOtelSpan = React.useMemo(() => new OtelSpanFacade(props.span), [props.span]);
+
+  // Adapter for linksGetter - accepts OTEL types, calls legacy function
   const _linksGetter = (items: ReadonlyArray<IAttribute>, itemIndex: number) => {
     const { linksGetter, span } = props;
-    // Convert IAttribute to KeyValuePair for legacy link patterns
-    const legacyItems: KeyValuePair<any>[] = items.map(attr => ({
+    const legacyItems: KeyValuePair[] = items.map(attr => ({
       key: attr.key,
       value: attr.value as any,
     }));
     return linksGetter(span, legacyItems, itemIndex);
   };
 
-  // Adapter function that converts IEvent back to Log for legacy callback
+  // Adapter for logItemToggle - accepts OTEL types, calls legacy function
   const _logItemToggle = (spanID: string, event: IEvent) => {
     const { logItemToggle } = props;
-    // Convert IEvent back to Log format for legacy callback
     const legacyLog: Log = {
       timestamp: event.timeUnixMicro,
       fields: event.attributes.map(attr => ({
@@ -101,7 +103,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
             processToggle={processToggle}
             referencesToggle={referencesToggle}
             warningsToggle={warningsToggle}
-            span={span}
+            span={otelSpan}
             tagsToggle={tagsToggle}
             traceStartTime={traceStartTime}
             focusSpan={focusSpan}

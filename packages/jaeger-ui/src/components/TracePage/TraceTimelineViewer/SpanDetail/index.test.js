@@ -12,6 +12,7 @@ import SpanDetail from './index';
 import { formatDuration } from '../utils';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
+import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 
 jest.mock('./AccordianKeyValues', () => {
   return function MockAccordianKeyValues({ label, onToggle }) {
@@ -90,6 +91,7 @@ jest.mock('../../../common/CopyIcon', () => {
 
 describe('<SpanDetail>', () => {
   let props;
+  let legacySpan;
   let span;
   let detailState;
 
@@ -97,27 +99,9 @@ describe('<SpanDetail>', () => {
     formatDuration.mockReset();
     formatDuration.mockImplementation(duration => `${duration}ms`);
 
-    span = transformTraceData(traceGenerator.trace({ numberOfSpans: 1 })).spans[0];
-    detailState = new DetailState().toggleLogs().toggleProcess().toggleReferences().toggleTags();
-    const traceStartTime = 5;
+    legacySpan = transformTraceData(traceGenerator.trace({ numberOfSpans: 1 })).spans[0];
 
-    props = {
-      detailState,
-      span,
-      traceStartTime,
-      currentViewRangeTime: [0, 100],
-      traceDuration: 1000,
-      logItemToggle: jest.fn(),
-      logsToggle: jest.fn(),
-      processToggle: jest.fn(),
-      tagsToggle: jest.fn(),
-      warningsToggle: jest.fn(),
-      referencesToggle: jest.fn(),
-      focusSpan: jest.fn(),
-      linksGetter: jest.fn(),
-    };
-
-    span.logs = [
+    legacySpan.logs = [
       {
         timestamp: 10,
         fields: [
@@ -134,9 +118,9 @@ describe('<SpanDetail>', () => {
       },
     ];
 
-    span.warnings = ['Warning 1', 'Warning 2'];
+    legacySpan.warnings = ['Warning 1', 'Warning 2'];
 
-    span.references = [
+    legacySpan.references = [
       {
         refType: 'CHILD_OF',
         span: {
@@ -177,6 +161,28 @@ describe('<SpanDetail>', () => {
         traceID: 'trace2',
       },
     ];
+
+    // Convert legacy span to OTEL span for the component
+    span = new OtelSpanFacade(legacySpan);
+
+    detailState = new DetailState().toggleLogs().toggleProcess().toggleReferences().toggleTags();
+    const traceStartTime = 5;
+
+    props = {
+      detailState,
+      span,
+      traceStartTime,
+      currentViewRangeTime: [0, 100],
+      traceDuration: 1000,
+      logItemToggle: jest.fn(),
+      logsToggle: jest.fn(),
+      processToggle: jest.fn(),
+      tagsToggle: jest.fn(),
+      warningsToggle: jest.fn(),
+      referencesToggle: jest.fn(),
+      focusSpan: jest.fn(),
+      linksGetter: jest.fn(),
+    };
   });
 
   it('renders the component successfully without errors', () => {
@@ -187,7 +193,7 @@ describe('<SpanDetail>', () => {
   it('displays the span operation name as the main heading', () => {
     render(<SpanDetail {...props} />);
     const heading = screen.getByRole('heading', { level: 2 });
-    expect(heading).toHaveTextContent(span.operationName);
+    expect(heading).toHaveTextContent(span.name);
   });
 
   it('renders overview items with service name, duration and start time labels', () => {
@@ -214,7 +220,7 @@ describe('<SpanDetail>', () => {
     const toggleButton = screen.getByTestId('toggle-tags');
     fireEvent.click(toggleButton);
 
-    expect(props.tagsToggle).toHaveBeenCalledWith(span.spanID);
+    expect(props.tagsToggle).toHaveBeenCalledWith(span.spanId);
   });
 
   it('renders process tags accordian and triggers toggle callback with span ID', () => {
@@ -226,7 +232,7 @@ describe('<SpanDetail>', () => {
     const toggleButton = screen.getByTestId('toggle-process');
     fireEvent.click(toggleButton);
 
-    expect(props.processToggle).toHaveBeenCalledWith(span.spanID);
+    expect(props.processToggle).toHaveBeenCalledWith(span.spanId);
   });
 
   it('renders logs accordian and triggers both main toggle and item toggle callbacks', () => {
@@ -237,11 +243,11 @@ describe('<SpanDetail>', () => {
 
     const toggleButton = screen.getByTestId('toggle-logs');
     fireEvent.click(toggleButton);
-    expect(props.logsToggle).toHaveBeenCalledWith(span.spanID);
+    expect(props.logsToggle).toHaveBeenCalledWith(span.spanId);
 
     const logItemButton = screen.getByTestId('toggle-log-item');
     fireEvent.click(logItemButton);
-    expect(props.logItemToggle).toHaveBeenCalledWith(span.spanID, 'test-log');
+    expect(props.logItemToggle).toHaveBeenCalledWith(span.spanId, 'test-log');
   });
 
   it('renders warnings accordian and triggers toggle callback with span ID', () => {
@@ -253,7 +259,7 @@ describe('<SpanDetail>', () => {
     const toggleButton = screen.getByTestId('toggle-warnings');
     fireEvent.click(toggleButton);
 
-    expect(props.warningsToggle).toHaveBeenCalledWith(span.spanID);
+    expect(props.warningsToggle).toHaveBeenCalledWith(span.spanId);
   });
 
   it('renders references accordian and triggers toggle callback with span ID', () => {
@@ -265,7 +271,7 @@ describe('<SpanDetail>', () => {
     const toggleButton = screen.getByTestId('toggle-references');
     fireEvent.click(toggleButton);
 
-    expect(props.referencesToggle).toHaveBeenCalledWith(span.spanID);
+    expect(props.referencesToggle).toHaveBeenCalledWith(span.spanId);
   });
 
   it('renders copy icon with deep link URL containing the span ID parameter', () => {
@@ -275,6 +281,6 @@ describe('<SpanDetail>', () => {
     const copyText = copyIcon.getAttribute('data-copy-text');
 
     expect(copyIcon).toBeInTheDocument();
-    expect(copyText).toContain(`?uiFind=${props.span.spanID}`);
+    expect(copyText).toContain(`?uiFind=${props.span.spanId}`);
   });
 });

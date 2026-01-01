@@ -35,6 +35,23 @@ describe('<SpanBar>', () => {
     },
     tracestartTime: 0,
     span: {
+      spanID: 'test-span',
+      traceID: 'test-trace',
+      processID: 'p1',
+      operationName: 'test-op',
+      startTime: 0,
+      duration: 100,
+      depth: 1,
+      hasChildren: false,
+      relativeStartTime: 0,
+      tags: [],
+      references: [],
+      warnings: null,
+      subsidiarilyReferencedBy: [],
+      process: {
+        serviceName: 'test-service',
+        tags: [],
+      },
       logs: [
         {
           timestamp: 10,

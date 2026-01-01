@@ -15,9 +15,8 @@ import CopyIcon from '../../../common/CopyIcon';
 import LabeledList from '../../../common/LabeledList';
 
 import { TNil } from '../../../../types';
-import { Link, Span, SpanReference } from '../../../../types/trace';
+import { Link } from '../../../../types/trace';
 import { IOtelSpan, IAttribute, IEvent } from '../../../../types/otel';
-import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 
 import './index.css';
 
@@ -27,7 +26,7 @@ type SpanDetailProps = {
   logItemToggle: (spanID: string, log: IEvent) => void;
   logsToggle: (spanID: string) => void;
   processToggle: (spanID: string) => void;
-  span: Span;
+  span: IOtelSpan;
   tagsToggle: (spanID: string) => void;
   traceStartTime: number;
   warningsToggle: (spanID: string) => void;
@@ -56,14 +55,13 @@ export default function SpanDetail(props: SpanDetailProps) {
     useOtelTerms = false,
   } = props;
 
-  // Create OTEL facade wrapper - always use OTEL types internally
-  const otelSpan: IOtelSpan = React.useMemo(() => new OtelSpanFacade(span), [span]);
+  const otelSpan: IOtelSpan = span;
 
   const { isTagsOpen, isProcessOpen, logs: logsState, isWarningsOpen, isReferencesOpen } = detailState;
-  const { warnings } = span;
+  const warnings = otelSpan.warnings;
 
-  // Map legacy references to OTEL links for display
-  const legacyReferences = span.references;
+  // Map legacy references for display
+  const legacyReferences = otelSpan.legacyReferences;
 
   // Display labels based on terminology flag
   const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';

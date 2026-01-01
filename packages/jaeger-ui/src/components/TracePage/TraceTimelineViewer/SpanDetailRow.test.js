@@ -34,7 +34,26 @@ describe('<SpanDetailRow>', () => {
     logItemToggle: jest.fn(),
     logsToggle: jest.fn(),
     processToggle: jest.fn(),
-    span: { spanID, depth: 3 },
+    span: {
+      spanID,
+      traceID: 'trace-id',
+      processID: 'p1',
+      operationName: 'op-name',
+      startTime: 1000,
+      duration: 100,
+      depth: 3,
+      relativeStartTime: 0,
+      hasChildren: false,
+      tags: [],
+      logs: [],
+      references: [],
+      warnings: null,
+      subsidiarilyReferencedBy: [],
+      process: {
+        serviceName: 'service',
+        tags: [],
+      },
+    },
     tagsToggle: jest.fn(),
     traceStartTime: 1000,
   };
@@ -95,7 +114,9 @@ describe('<SpanDetailRow>', () => {
     expect(receivedProps.logItemToggle).toEqual(expect.any(Function));
     expect(receivedProps.logsToggle).toBe(props.logsToggle);
     expect(receivedProps.processToggle).toBe(props.processToggle);
-    expect(receivedProps.span).toBe(props.span);
+    // span is now converted to IOtelSpan via OtelSpanFacade
+    expect(receivedProps.span).toHaveProperty('spanId', props.span.spanID);
+    expect(receivedProps.span).toHaveProperty('name', props.span.operationName);
     expect(receivedProps.tagsToggle).toBe(props.tagsToggle);
     expect(receivedProps.traceStartTime).toBe(props.traceStartTime);
   });
