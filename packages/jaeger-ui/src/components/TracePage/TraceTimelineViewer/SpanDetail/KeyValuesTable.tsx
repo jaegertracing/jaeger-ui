@@ -184,7 +184,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                   <div className="KeyValueTable--copyContainer">
                     <CopyIcon
                       className="KeyValueTable--copyIcon"
-                      copyText={row.value}
+                      copyText={String(row.value)}
                       tooltipTitle="Copy value"
                       buttonText="Copy"
                     />

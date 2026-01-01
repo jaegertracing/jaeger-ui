@@ -9,6 +9,7 @@ import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
 
 import { Log, Span, KeyValuePair, Link } from '../../../types/trace';
+import { IAttribute, IEvent } from '../../../types/otel';
 
 import './SpanDetailRow.css';
 
@@ -36,16 +37,20 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     props.onDetailToggled(props.span.spanID);
   };
 
-  const _linksGetter = (items: ReadonlyArray<KeyValuePair>, itemIndex: number) => {
+  const _linksGetter = (items: ReadonlyArray<KeyValuePair | IAttribute>, itemIndex: number) => {
     const { linksGetter, span } = props;
-    return linksGetter(span, items, itemIndex);
+    return linksGetter(span, items as ReadonlyArray<KeyValuePair>, itemIndex);
+  };
+
+  const _logItemToggle = (spanID: string, log: Log | IEvent) => {
+    const { logItemToggle } = props;
+    logItemToggle(spanID, log as Log);
   };
 
   const {
     color,
     columnDivision,
     detailState,
-    logItemToggle,
     logsToggle,
     processToggle,
     referencesToggle,
@@ -76,7 +81,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
           <SpanDetail
             detailState={detailState}
             linksGetter={_linksGetter}
-            logItemToggle={logItemToggle}
+            logItemToggle={_logItemToggle}
             logsToggle={logsToggle}
             processToggle={processToggle}
             referencesToggle={referencesToggle}

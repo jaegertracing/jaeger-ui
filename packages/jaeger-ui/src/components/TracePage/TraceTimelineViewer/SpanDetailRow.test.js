@@ -92,7 +92,7 @@ describe('<SpanDetailRow>', () => {
 
     expect(receivedProps.detailState).toBe(props.detailState);
     expect(receivedProps.linksGetter).toEqual(expect.any(Function));
-    expect(receivedProps.logItemToggle).toBe(props.logItemToggle);
+    expect(receivedProps.logItemToggle).toEqual(expect.any(Function));
     expect(receivedProps.logsToggle).toBe(props.logsToggle);
     expect(receivedProps.processToggle).toBe(props.processToggle);
     expect(receivedProps.span).toBe(props.span);
