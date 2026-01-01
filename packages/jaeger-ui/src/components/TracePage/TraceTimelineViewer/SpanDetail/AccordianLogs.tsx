@@ -241,7 +241,7 @@ export default function AccordianLogs({
               </div>
             )}
           <small className="AccordianLogs--footer">
-            Log timestamps are relative to the start time of the full trace.
+            {useOtelTerms ? 'Event' : 'Log'} timestamps are relative to the start time of the full trace.
           </small>
         </div>
       )}
