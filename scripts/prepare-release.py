@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 from datetime import date
 
 def run_command(command, cwd=None, capture_stdout=True, capture_stderr=True):
@@ -55,7 +56,7 @@ def check_git_status():
         sys.exit(1)
 
 def create_branch(version, dry_run=False):
-    branch_name = f"release-{version}"
+    branch_name = f"release-{version}-{int(time.time())}"
     if dry_run:
         print(f"[Dry Run] Would create branch {branch_name}")
     else:
@@ -157,8 +158,6 @@ def main():
     validate_version(version)
     token = get_gh_token()
     
-    branch_name = create_branch(version, dry_run=args.dry_run)
-    
     notes = generate_release_notes()
     update_changelog(version, notes, dry_run=args.dry_run)
     update_package_json(version, dry_run=args.dry_run)
@@ -167,6 +166,7 @@ def main():
     if args.dry_run:
         print("Dry run finished. No changes were made.")
     else:
+        branch_name = create_branch(version, dry_run=args.dry_run)
         git_commit_and_pr(version, branch_name)
 
 if __name__ == "__main__":
