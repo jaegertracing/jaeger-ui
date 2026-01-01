@@ -23,7 +23,7 @@ const getChildOfSpans = (spanMap: Map<string, CPSpan>): Map<string, CPSpan> => {
   });
 
   // Recursively find all Descendants of FOLLOWS_FROM spans
-  const findDescendantSpans = (spanIds: string[]) => {
+  const findDescendantSpans = (spanIds: ReadonlyArray<string>) => {
     spanIds.forEach(spanId => {
       const span = spanMap.get(spanId)!;
       if (span.childSpanIds.length > 0) {

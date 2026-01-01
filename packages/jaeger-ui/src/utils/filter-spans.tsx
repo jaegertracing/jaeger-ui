@@ -4,7 +4,7 @@
 import { KeyValuePair, Span } from '../types/trace';
 import { TNil } from '../types';
 
-export default function filterSpans(textFilter: string, spans: Span[] | TNil) {
+export default function filterSpans(textFilter: string, spans: ReadonlyArray<Span> | TNil) {
   if (!spans) {
     return null;
   }

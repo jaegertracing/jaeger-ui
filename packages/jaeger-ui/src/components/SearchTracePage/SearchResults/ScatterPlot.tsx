@@ -26,10 +26,10 @@ export type TScatterPlotPoint = {
   traceID: string;
   size: number;
   name?: string;
-  services?: {
+  services?: ReadonlyArray<{
     name: string;
     numberOfSpans: number;
-  }[];
+  }>;
   rootSpanName?: string;
   color?: string;
 };

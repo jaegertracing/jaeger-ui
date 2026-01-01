@@ -13,7 +13,7 @@ import { TSumSpan, TEv } from './types';
 
 let parentChildOfMap: Record<string, Span[]>;
 
-export function isError(tags: Array<KeyValuePair>) {
+export function isError(tags: ReadonlyArray<KeyValuePair>) {
   if (tags) {
     const errorTag = tags.find(t => t.key === 'error');
     if (errorTag) {
