@@ -136,14 +136,14 @@ def git_commit_and_pr(version, branch_name):
     print("Committing changes...")
     run_command("git add CHANGELOG.md packages/jaeger-ui/package.json")
     commit_msg = f"Prepare release {version}"
-    run_command(f"git commit -m '{commit_msg}'")
+    run_command(f"git commit -s -m '{commit_msg}'")
     
     print("Pushing branch...")
     run_command(f"git push -u origin {branch_name}")
     
     print("Creating Pull Request...")
     pr_body = f"Prepare release {version}.\n\nAutomated release preparation."
-    run_command(f"gh pr create --title '{commit_msg}' --body '{pr_body}' --label 'changelog:skip' --head {branch_name}")
+    run_command(f"gh pr create --title '{commit_msg}' --body '{pr_body}' --label 'changelog:skip' --head {branch_name}", capture_stdout=False, capture_stderr=False)
 
 def main():
     parser = argparse.ArgumentParser(description="Prepare Jaeger UI release")
