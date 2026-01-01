@@ -28,7 +28,6 @@ type AccordianLogsProps = {
   initialVisibleCount?: number;
   spanID?: string;
   useOtelTerms?: boolean;
-  label?: string;
 };
 
 export default function AccordianLogs({
@@ -45,13 +44,13 @@ export default function AccordianLogs({
   initialVisibleCount = 3,
   spanID,
   useOtelTerms = false,
-  label = 'Logs',
 }: AccordianLogsProps) {
+  const label = useOtelTerms ? 'Events' : 'Logs';
   let arrow: React.ReactNode | null = null;
   let HeaderComponent: 'span' | 'a' = 'span';
   let headerProps: object | null = null;
   const [showOutOfRangeLogs, setShowOutOfRangeLogs] = React.useState(false);
-  const [showAllLogs, setShowAllLogs] = React.useState(false);
+  const [showAllEvents, setShowAllLogs] = React.useState(false);
   const contentRef = React.useRef<HTMLDivElement | null>(null);
 
   const notifyListReflow = React.useCallback(() => {
@@ -180,7 +179,7 @@ export default function AccordianLogs({
           {(() => {
             const sortedLogs = _sortBy(logsToDisplay, log => log.timeUnixMicro);
             const visibleLogs =
-              interactive && !showAllLogs && sortedLogs.length > initialVisibleCount
+              interactive && !showAllEvents && sortedLogs.length > initialVisibleCount
                 ? sortedLogs.slice(0, initialVisibleCount)
                 : sortedLogs;
             return visibleLogs.map((log, i) => (
@@ -201,7 +200,7 @@ export default function AccordianLogs({
           })()}
           {interactive && _sortBy(logsToDisplay, log => log.timeUnixMicro).length > initialVisibleCount && (
             <div>
-              {!showAllLogs ? (
+              {!showAllEvents ? (
                 <button
                   type="button"
                   className="AccordianLogs--toggle"

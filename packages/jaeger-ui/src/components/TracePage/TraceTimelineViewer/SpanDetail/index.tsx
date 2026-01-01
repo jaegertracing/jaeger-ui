@@ -17,20 +17,21 @@ import LabeledList from '../../../common/LabeledList';
 import { TNil } from '../../../../types';
 import { Link } from '../../../../types/trace';
 import { IOtelSpan, IAttribute, IEvent } from '../../../../types/otel';
+import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 
 import './index.css';
 
 type SpanDetailProps = {
   detailState: DetailState;
   linksGetter: ((links: ReadonlyArray<IAttribute>, index: number) => Link[]) | TNil;
-  logItemToggle: (spanID: string, log: IEvent) => void;
-  logsToggle: (spanID: string) => void;
-  processToggle: (spanID: string) => void;
+  eventItemToggle: (spanID: string, event: IEvent) => void;
+  eventsToggle: (spanID: string) => void;
+  resourceToggle: (spanID: string) => void;
   span: IOtelSpan;
-  tagsToggle: (spanID: string) => void;
+  attributesToggle: (spanID: string) => void;
   traceStartTime: number;
   warningsToggle: (spanID: string) => void;
-  referencesToggle: (spanID: string) => void;
+  linksToggle: (spanID: string) => void;
   focusSpan: (uiFind: string) => void;
   currentViewRangeTime: [number, number];
   traceDuration: number;
@@ -41,27 +42,26 @@ export default function SpanDetail(props: SpanDetailProps) {
   const {
     detailState,
     linksGetter,
-    logItemToggle,
-    logsToggle,
-    processToggle,
+    eventItemToggle,
+    eventsToggle,
+    resourceToggle,
     span,
-    tagsToggle,
+    attributesToggle,
     traceStartTime,
     warningsToggle,
-    referencesToggle,
+    linksToggle,
     focusSpan,
     currentViewRangeTime,
     traceDuration,
     useOtelTerms = false,
   } = props;
 
-  const otelSpan: IOtelSpan = span;
+  const { isAttributesOpen, isResourceOpen, events: eventsState, isWarningsOpen, isLinksOpen } = detailState;
+  const warnings = span.warnings;
 
-  const { isTagsOpen, isProcessOpen, logs: logsState, isWarningsOpen, isReferencesOpen } = detailState;
-  const warnings = otelSpan.warnings;
-
-  // Map legacy references for display
-  const legacyReferences = otelSpan.legacyReferences;
+  // Get legacy references from the facade for display in AccordianReferences
+  // This is a temporary bridge until AccordianReferences is migrated to use OTEL links
+  const legacyReferences = span instanceof OtelSpanFacade ? span.legacyReferences : [];
 
   // Display labels based on terminology flag
   const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
@@ -72,25 +72,25 @@ export default function SpanDetail(props: SpanDetailProps) {
     {
       key: 'svc',
       label: 'Service:',
-      value: otelSpan.resource.serviceName,
+      value: span.resource.serviceName,
     },
     {
       key: 'duration',
       label: 'Duration:',
-      value: formatDuration(otelSpan.durationMicros),
+      value: formatDuration(span.durationMicros),
     },
     {
       key: 'start',
       label: 'Start Time:',
-      value: formatDuration(otelSpan.relativeStartTimeMicros),
+      value: formatDuration(span.relativeStartTimeMicros),
     },
   ];
-  const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${otelSpan.spanId}`;
+  const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanId}`;
 
   return (
     <div>
       <div className="ub-flex ub-items-center">
-        <h2 className="ub-flex-auto ub-m0">{otelSpan.name}</h2>
+        <h2 className="ub-flex-auto ub-m0">{span.name}</h2>
         <LabeledList
           className="ub-tx-right-align"
           dividerClassName="SpanDetail--divider"
@@ -101,37 +101,36 @@ export default function SpanDetail(props: SpanDetailProps) {
       <div>
         <div>
           <AccordianKeyValues
-            data={otelSpan.attributes}
+            data={span.attributes}
             label={attributesLabel}
             linksGetter={linksGetter}
-            isOpen={isTagsOpen}
-            onToggle={() => tagsToggle(otelSpan.spanId)}
+            isOpen={isAttributesOpen}
+            onToggle={() => attributesToggle(span.spanId)}
           />
-          {otelSpan.resource.attributes && otelSpan.resource.attributes.length > 0 && (
+          {span.resource.attributes && span.resource.attributes.length > 0 && (
             <AccordianKeyValues
               className="ub-mb1"
-              data={otelSpan.resource.attributes}
+              data={span.resource.attributes}
               label={resourceLabel}
               linksGetter={linksGetter}
-              isOpen={isProcessOpen}
-              onToggle={() => processToggle(otelSpan.spanId)}
+              isOpen={isResourceOpen}
+              onToggle={() => resourceToggle(span.spanId)}
             />
           )}
         </div>
-        {otelSpan.events && otelSpan.events.length > 0 && (
+        {span.events && span.events.length > 0 && (
           <AccordianLogs
             linksGetter={linksGetter}
-            logs={otelSpan.events}
-            isOpen={logsState.isOpen}
-            openedItems={logsState.openedItems}
-            onToggle={() => logsToggle(otelSpan.spanId)}
-            onItemToggle={logItem => logItemToggle(otelSpan.spanId, logItem)}
+            logs={span.events}
+            isOpen={eventsState.isOpen}
+            openedItems={eventsState.openedItems}
+            onToggle={() => eventsToggle(span.spanId)}
+            onItemToggle={eventItem => eventItemToggle(span.spanId, eventItem)}
             timestamp={traceStartTime}
             currentViewRangeTime={currentViewRangeTime}
             traceDuration={traceDuration}
-            spanID={otelSpan.spanId}
+            spanID={span.spanId}
             useOtelTerms={useOtelTerms}
-            label={eventsLabel}
           />
         )}
         {warnings && warnings.length > 0 && (
@@ -141,7 +140,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             label={<span className="AccordianWarnings--label">Warnings</span>}
             data={warnings}
             isOpen={isWarningsOpen}
-            onToggle={() => warningsToggle(otelSpan.spanId)}
+            onToggle={() => warningsToggle(span.spanId)}
           />
         )}
         {legacyReferences &&
@@ -149,13 +148,13 @@ export default function SpanDetail(props: SpanDetailProps) {
           (legacyReferences.length > 1 || legacyReferences[0].refType !== 'CHILD_OF') && (
             <AccordianReferences
               data={legacyReferences}
-              isOpen={isReferencesOpen}
-              onToggle={() => referencesToggle(otelSpan.spanId)}
+              isOpen={isLinksOpen}
+              onToggle={() => linksToggle(span.spanId)}
               focusSpan={focusSpan}
             />
           )}
         <small className="SpanDetail--debugInfo">
-          <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {otelSpan.spanId}
+          <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {span.spanId}
           <CopyIcon
             copyText={deepLinkCopyText}
             icon={<IoLinkOutline />}

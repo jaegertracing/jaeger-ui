@@ -111,13 +111,13 @@ describe('<SpanDetailRow>', () => {
 
     expect(receivedProps.detailState).toBe(props.detailState);
     expect(receivedProps.linksGetter).toEqual(expect.any(Function));
-    expect(receivedProps.logItemToggle).toEqual(expect.any(Function));
-    expect(receivedProps.logsToggle).toBe(props.logsToggle);
-    expect(receivedProps.processToggle).toBe(props.processToggle);
+    expect(receivedProps.eventItemToggle).toEqual(expect.any(Function));
+    expect(receivedProps.eventsToggle).toBe(props.logsToggle);
+    expect(receivedProps.resourceToggle).toBe(props.processToggle);
     // span is now converted to IOtelSpan via OtelSpanFacade
     expect(receivedProps.span).toHaveProperty('spanId', props.span.spanID);
     expect(receivedProps.span).toHaveProperty('name', props.span.operationName);
-    expect(receivedProps.tagsToggle).toBe(props.tagsToggle);
+    expect(receivedProps.attributesToggle).toBe(props.tagsToggle);
     expect(receivedProps.traceStartTime).toBe(props.traceStartTime);
   });
 

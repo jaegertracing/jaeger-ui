@@ -98,13 +98,13 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
           <SpanDetail
             detailState={detailState}
             linksGetter={_linksGetter}
-            logItemToggle={_logItemToggle}
-            logsToggle={logsToggle}
-            processToggle={processToggle}
-            referencesToggle={referencesToggle}
+            eventItemToggle={_logItemToggle}
+            eventsToggle={logsToggle}
+            resourceToggle={processToggle}
+            linksToggle={referencesToggle}
             warningsToggle={warningsToggle}
             span={otelSpan}
-            tagsToggle={tagsToggle}
+            attributesToggle={tagsToggle}
             traceStartTime={traceStartTime}
             focusSpan={focusSpan}
             currentViewRangeTime={currentViewRangeTime}

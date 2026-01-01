@@ -89,7 +89,6 @@ export interface IOtelSpan {
 
   // Legacy Jaeger-specific properties (for backward compatibility during migration)
   warnings: ReadonlyArray<string> | null;
-  legacyReferences: ReadonlyArray<any>; // SpanReference[] - keeping as any to avoid importing legacy types
 }
 
 export interface IOtelTrace {
