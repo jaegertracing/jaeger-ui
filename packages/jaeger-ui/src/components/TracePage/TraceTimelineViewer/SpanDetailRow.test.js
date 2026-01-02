@@ -24,47 +24,70 @@ jest.mock('./SpanTreeOffset', () => ({
 
 describe('<SpanDetailRow>', () => {
   const spanID = 'some-id';
+  const legacySpan = {
+    spanID,
+    traceID: 'trace-id',
+    processID: 'p1',
+    operationName: 'op-name',
+    startTime: 1000,
+    duration: 100,
+    depth: 3,
+    relativeStartTime: 0,
+    hasChildren: false,
+    tags: [],
+    logs: [],
+    references: [],
+    warnings: null,
+    subsidiarilyReferencedBy: [],
+    process: {
+      serviceName: 'service',
+      tags: [],
+    },
+  };
+  const span = {
+    spanId: spanID,
+    traceId: 'trace-id',
+    name: 'op-name',
+    startTimeUnixMicro: 1000n,
+    durationMicros: 100n,
+    attributes: [],
+    events: [],
+    resource: {
+      serviceName: 'service',
+      attributes: [],
+    },
+    warnings: null,
+  };
   const props = {
     color: 'some-color',
     columnDivision: 0.5,
     detailState: new DetailState(),
     onDetailToggled: jest.fn(),
     linksGetter: jest.fn(),
-    isFilteredOut: false,
-    logItemToggle: jest.fn(),
-    logsToggle: jest.fn(),
-    processToggle: jest.fn(),
-    span: {
-      spanID,
-      traceID: 'trace-id',
-      processID: 'p1',
-      operationName: 'op-name',
-      startTime: 1000,
-      duration: 100,
-      depth: 3,
-      relativeStartTime: 0,
-      hasChildren: false,
-      tags: [],
-      logs: [],
-      references: [],
-      warnings: null,
-      subsidiarilyReferencedBy: [],
-      process: {
-        serviceName: 'service',
-        tags: [],
-      },
-    },
-    tagsToggle: jest.fn(),
+    eventItemToggle: jest.fn(),
+    eventsToggle: jest.fn(),
+    resourceToggle: jest.fn(),
+    linksToggle: jest.fn(),
+    warningsToggle: jest.fn(),
+    span,
+    legacySpan,
+    attributesToggle: jest.fn(),
     traceStartTime: 1000,
+    focusSpan: jest.fn(),
+    currentViewRangeTime: [0, 100],
+    traceDuration: 1000,
   };
 
   beforeEach(() => {
     props.onDetailToggled.mockReset();
     props.linksGetter.mockReset();
-    props.logItemToggle.mockReset();
-    props.logsToggle.mockReset();
-    props.processToggle.mockReset();
-    props.tagsToggle.mockReset();
+    props.eventItemToggle.mockReset();
+    props.eventsToggle.mockReset();
+    props.resourceToggle.mockReset();
+    props.linksToggle.mockReset();
+    props.warningsToggle.mockReset();
+    props.attributesToggle.mockReset();
+    props.focusSpan.mockReset();
     MockSpanDetail.mockClear();
     MockSpanTreeOffset.mockClear();
   });

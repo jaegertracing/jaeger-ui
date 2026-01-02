@@ -165,7 +165,7 @@ describe('<SpanDetail>', () => {
 
     // Transform the span data and then convert to OTEL span
     const transformedTrace = transformTraceData({ ...rawTrace, spans: [spanData] });
-    span = new OtelSpanFacade(transformedTrace.spans[0]);
+    span = transformedTrace.asOtelTrace().spans[0];
 
     detailState = new DetailState().toggleEvents().toggleResource().toggleLinks().toggleAttributes();
     const traceStartTime = 5;
