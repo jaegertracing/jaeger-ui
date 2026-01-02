@@ -9,6 +9,13 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v2.14.1 (2026-01-02)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Dark theme fixes ([@yurishkuro](https://github.com/yurishkuro) in [#3285](https://github.com/jaegertracing/jaeger-ui/pull/3285))
+* Fix span detail panel in dark theme ([@yurishkuro](https://github.com/yurishkuro) in [#3283](https://github.com/jaegertracing/jaeger-ui/pull/3283))
+
 ## v2.14.0 (2026-01-01)
 
 #### ✨ New Features
