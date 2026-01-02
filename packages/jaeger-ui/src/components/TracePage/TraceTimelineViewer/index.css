@@ -24,20 +24,20 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .json-markup-bool {
-  color: firebrick;
+  color: var(--syntax-bool);
 }
 
 .json-markup-string {
-  color: teal;
+  color: var(--syntax-string);
 }
 
 .json-markup-null,
 .json-markup-undefined {
-  color: gray;
+  color: var(--syntax-null);
 }
 
 .json-markup-number {
-  color: blue;
+  color: var(--syntax-number);
 }
 
 .json-markup-other {
@@ -50,7 +50,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .json-markup-icon-expand::after {
   content: '\25B6';
-  color: black;
+  color: var(--text-primary);
   font-size: 12px;
 }
 
@@ -60,13 +60,13 @@ SPDX-License-Identifier: Apache-2.0
 
 .json-markup-icon-collapse::after {
   content: '\25BC';
-  color: black;
+  color: var(--text-primary);
   font-size: 12px;
 }
 
 .json-markup-collapse-content::after {
   content: '\2026';
-  color: black;
+  color: var(--text-primary);
   font-size: 18px;
   margin-right: 4px;
 }

@@ -29,24 +29,26 @@ SPDX-License-Identifier: Apache-2.0
 .SpanDetail--debugValue:hover {
   color: var(--text-primary);
 }
+
 .AccordianWarnings {
   background: var(--surface-tertiary);
   border: 1px solid var(--border-default);
   margin-bottom: 0.25rem;
 }
+
 .AccordianWarnings--header {
-  background: #fff7e6;
+  background: var(--ant-color-warning-bg);
   padding: 0.25rem 0.5rem;
 }
 
 .AccordianWarnings--header:hover {
-  background: #ffe7ba;
+  background: var(--ant-color-warning-bg-hover);
 }
 
 .AccordianWarnings--header.is-open {
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .AccordianWarnings--label {
-  color: #d36c08;
+  color: var(--feedback-warning);
 }

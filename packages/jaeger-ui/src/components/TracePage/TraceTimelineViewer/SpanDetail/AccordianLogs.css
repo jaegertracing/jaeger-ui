@@ -4,20 +4,20 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .AccordianLogs {
-  border: 1px solid #d8d8d8;
+  border: 1px solid var(--border-default);
   position: relative;
   margin-bottom: 0.25rem;
 }
 
 .AccordianLogs--header {
-  background: #e4e4e4;
+  background: var(--surface-secondary);
   color: inherit;
   display: block;
   padding: 0.25rem 0.5rem;
 }
 
 .AccordianLogs--header:hover {
-  background: #dadada;
+  background: var(--surface-tertiary);
 }
 
 .AccordianLogs--toggle {
@@ -29,11 +29,11 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .AccordianLogs--content {
-  background: #f0f0f0;
-  border-top: 1px solid #d8d8d8;
+  background: var(--surface-primary);
+  border-top: 1px solid var(--border-default);
   padding: 0.5rem 0.5rem 0.25rem 0.5rem;
 }
 
 .AccordianLogs--footer {
-  color: #999;
+  color: var(--text-secondary);
 }
