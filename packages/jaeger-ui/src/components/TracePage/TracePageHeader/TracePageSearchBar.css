@@ -72,6 +72,8 @@ SPDX-License-Identifier: Apache-2.0
 .ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonClose {
   display: flex;
   align-items: center;
+  color: var(--text-secondary);
+  border-color: var(--border-default);
 }
 
 .ant-input-group.ant-input-group-compact .TracePageSearchBar--locateBtn svg,

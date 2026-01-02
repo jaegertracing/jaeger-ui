@@ -12,7 +12,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .AccordianKeyValues--header:hover {
-  background: #e8e8e8;
+  background: var(--surface-tertiary);
 }
 
 .AccordianKeyValues--header.is-empty {
@@ -21,7 +21,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .AccordianKeyValues--header.is-high-contrast:not(.is-empty):hover {
-  background: #ddd;
+  background: var(--surface-tertiary);
 }
 
 .AccordianKeyValues--emptyIcon {
@@ -38,7 +38,7 @@ SPDX-License-Identifier: Apache-2.0
   display: inline;
   margin-left: 0.7em;
   padding-right: 0.5rem;
-  border-right: 1px solid #ddd;
+  border-right: 1px solid var(--border-strong);
 }
 
 .AccordianKeyValues--summaryItem:last-child {
@@ -47,10 +47,10 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .AccordianKeyValues--summaryLabel {
-  color: #777;
+  color: var(--text-secondary);
 }
 
 .AccordianKeyValues--summaryDelim {
-  color: #bbb;
+  color: var(--text-muted);
   padding: 0 0.2em;
 }

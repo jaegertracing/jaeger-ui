@@ -38,7 +38,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .detail-info-wrapper {
-  background: #f5f5f5;
+  background: var(--surface-primary);
   border: 1px solid #d3d3d3;
   border-top: 3px solid;
   padding: 0.75rem;
