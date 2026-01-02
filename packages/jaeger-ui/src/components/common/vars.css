@@ -18,12 +18,7 @@ SPDX-License-Identifier: Apache-2.0
 
   --surface-primary: var(--ant-color-bg-container);
   --surface-secondary: var(--ant-color-bg-layout);
-  /*
-   * We want tertiary to be slightly darker than secondary, around #eeeeee.
-   * This works too, but requires color-mix support:
-   *   --surface-tertiary: color-mix(in srgb, var(--ant-color-text-base) 7%, transparent);
-   */
-  --surface-tertiary: var(--ant-color-border-secondary);
+  --surface-tertiary: color-mix(in srgb, var(--ant-color-text-base) 6%, var(--ant-color-bg-container));
 
   /* dedicated, specific UI element (like the Minimap, a Modal, or a complex panel) */
   --surface-component-background: var(--ant-color-fill-secondary);

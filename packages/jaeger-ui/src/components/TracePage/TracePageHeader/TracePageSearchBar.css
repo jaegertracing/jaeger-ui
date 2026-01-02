@@ -32,18 +32,38 @@ SPDX-License-Identifier: Apache-2.0
   border-color: var(--border-strong);
 }
 
+.TracePageSearchBar--bar .ant-input-clear-icon {
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.TracePageSearchBar--bar .ant-input-clear-icon:hover {
+  color: var(--text-primary);
+}
+
 .TracePageSearchBar--count {
   opacity: 0.6;
   color: var(--text-secondary);
 }
 
 .TracePageSearchBar--btn {
+  background-color: var(--surface-primary);
   border-left: 1px solid var(--border-default);
+  color: var(--text-secondary);
   transition: 0.2s;
 }
 
-.TracePageSearchBar--btn.is-disabled {
+.TracePageSearchBar--btn:hover:not(:disabled) {
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.TracePageSearchBar--btn.is-disabled,
+.TracePageSearchBar--btn:disabled {
   opacity: 0.5;
+  background-color: var(--surface-primary) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-strong) !important;
 }
 
 .ant-input-group.ant-input-group-compact .help-btn-container {
@@ -53,9 +73,11 @@ SPDX-License-Identifier: Apache-2.0
   border: 1px solid var(--border-default);
   background-color: var(--surface-primary);
 }
+
 .help-btn-container:hover {
   border-color: var(--interactive-primary);
 }
+
 .help-button {
   border: 1px solid var(--border-strong);
   border-radius: 100px;
@@ -78,5 +100,6 @@ SPDX-License-Identifier: Apache-2.0
 .ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonUp svg,
 .ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonDown svg,
 .ant-input-group.ant-input-group-compact .TracePageSearchBar--ButtonClose svg {
+  color: inherit;
   font-size: 18px;
 }
