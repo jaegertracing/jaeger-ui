@@ -32,6 +32,15 @@ SPDX-License-Identifier: Apache-2.0
   border-color: var(--border-strong);
 }
 
+.TracePageSearchBar--bar .ant-input-clear-icon {
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.TracePageSearchBar--bar .ant-input-clear-icon:hover {
+  color: var(--text-primary);
+}
+
 .TracePageSearchBar--count {
   opacity: 0.6;
   color: var(--text-secondary);
