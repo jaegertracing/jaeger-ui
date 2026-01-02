@@ -122,6 +122,15 @@ SPDX-License-Identifier: Apache-2.0
 
   /* Minimap / SpanGraph */
   --span-graph-inactive: rgba(216, 216, 216, 0.5);
+
+  /* ============================================
+    SYNTAX HIGHLIGHTING TOKENS
+    Used for JSON/KeyValue displays
+    ============================================ */
+  --syntax-string: #22863a;
+  --syntax-number: #005cc5;
+  --syntax-bool: #d73a49;
+  --syntax-null: #6a737d;
 }
 
 :root[data-theme='dark'] {
@@ -171,4 +180,12 @@ SPDX-License-Identifier: Apache-2.0
 
   /* Minimap / SpanGraph - dark mode needs visible inactive region */
   --span-graph-inactive: rgba(200, 200, 200, 0.25);
+
+  /* ============================================
+    SYNTAX HIGHLIGHTING TOKENS - Dark Mode
+    ============================================ */
+  --syntax-string: #79c0ff;
+  --syntax-number: #d2a8ff;
+  --syntax-bool: #ff7b72;
+  --syntax-null: #8b949e;
 }
