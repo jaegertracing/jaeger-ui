@@ -108,7 +108,7 @@ export default function AccordionEvents({
     };
   }, [interactive, isOpen, notifyListReflow]);
 
-  const inRangeLogs = React.useMemo(() => {
+  const inRangeEvents = React.useMemo(() => {
     const viewStartAbsolute = timestamp + currentViewRangeTime[0] * traceDuration;
     const viewEndAbsolute = timestamp + currentViewRangeTime[1] * traceDuration;
     return events.filter(event => {
@@ -116,9 +116,9 @@ export default function AccordionEvents({
     });
   }, [events, timestamp, currentViewRangeTime, traceDuration]);
 
-  const logsToDisplay = showOutOfRangeEvents ? events : inRangeLogs;
-  const displayedCount = logsToDisplay.length;
-  const inRangeCount = inRangeLogs.length;
+  const eventsToDisplay = showOutOfRangeEvents ? events : inRangeEvents;
+  const displayedCount = eventsToDisplay.length;
+  const inRangeCount = inRangeEvents.length;
   const totalCount = events.length;
 
   const label = useOtelTerms ? 'Events' : 'Logs';
@@ -177,11 +177,11 @@ export default function AccordionEvents({
       {isOpen && (
         <div className="AccordionEvents--content" ref={contentRef}>
           {(() => {
-            const sortedLogs = _sortBy(logsToDisplay, event => event.timeUnixMicro);
+            const sortedEvents = _sortBy(eventsToDisplay, event => event.timeUnixMicro);
             const visibleLogs =
-              interactive && !showAllEvents && sortedLogs.length > initialVisibleCount
-                ? sortedLogs.slice(0, initialVisibleCount)
-                : sortedLogs;
+              interactive && !showAllEvents && sortedEvents.length > initialVisibleCount
+                ? sortedEvents.slice(0, initialVisibleCount)
+                : sortedEvents;
             return visibleLogs.map((event, i) => (
               <AccordionAttributes
                 // `i` is necessary in the key because timestamps can repeat
@@ -199,7 +199,7 @@ export default function AccordionEvents({
             ));
           })()}
           {interactive &&
-            _sortBy(logsToDisplay, event => event.timeUnixMicro).length > initialVisibleCount && (
+            _sortBy(eventsToDisplay, event => event.timeUnixMicro).length > initialVisibleCount && (
               <div>
                 {!showAllEvents ? (
                   <button

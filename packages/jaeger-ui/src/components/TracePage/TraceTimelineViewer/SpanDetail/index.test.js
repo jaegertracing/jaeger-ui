@@ -53,8 +53,8 @@ jest.mock('./AccordionLinks', () => {
   };
 });
 
-jest.mock('./AccordianText', () => {
-  return function MockAccordianText({ onToggle }) {
+jest.mock('./AccordionText', () => {
+  return function MockAccordionText({ onToggle }) {
     return (
       <div data-testid="accordian-warnings">
         <button type="button" onClick={onToggle} data-testid="toggle-warnings">
