@@ -199,6 +199,7 @@ const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
 const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: criticalPathSection[]) =>
   _groupBy(criticalPath, x => x.spanId)
 );
+const memoizedGetOtelTrace = memoizeOne((trace: Trace) => trace.asOtelTrace());
 
 // export from tests
 export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
@@ -432,6 +433,15 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     if (!trace) {
       return null;
     }
+    
+    // Get OTEL trace and find corresponding span
+    const otelTrace = memoizedGetOtelTrace(trace);
+    const otelSpan = otelTrace.spans.find(s => s.spanId === spanID);
+    if (!otelSpan) {
+      console.error(`Could not find OTEL span for spanID: ${spanID}`);
+      return null;
+    }
+    
     const color = colorGenerator.getColorByKey(serviceName);
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
@@ -483,6 +493,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           getViewedBounds={this.getViewedBounds()}
           traceStartTime={trace.startTime}
           span={span}
+          otelSpan={otelSpan}
           focusSpan={this.focusSpan}
           traceDuration={trace.duration}
         />
@@ -510,6 +521,15 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     if (!trace || !detailState) {
       return null;
     }
+    
+    // Get OTEL trace and find corresponding span
+    const otelTrace = memoizedGetOtelTrace(trace);
+    const otelSpan = otelTrace.spans.find(s => s.spanId === spanID);
+    if (!otelSpan) {
+      console.error(`Could not find OTEL span for spanID: ${spanID}`);
+      return null;
+    }
+    
     const color = colorGenerator.getColorByKey(serviceName);
     return (
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
@@ -519,13 +539,14 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           onDetailToggled={detailToggle}
           detailState={detailState}
           linksGetter={this.linksGetter}
-          logItemToggle={detailLogItemToggle}
-          logsToggle={detailLogsToggle}
-          processToggle={detailProcessToggle}
-          referencesToggle={detailReferencesToggle}
+          eventItemToggle={detailLogItemToggle}
+          eventsToggle={detailLogsToggle}
+          resourceToggle={detailProcessToggle}
+          linksToggle={detailReferencesToggle}
           warningsToggle={detailWarningsToggle}
-          span={span}
-          tagsToggle={detailTagsToggle}
+          span={otelSpan}
+          legacySpan={span}
+          attributesToggle={detailTagsToggle}
           traceStartTime={trace.startTime}
           focusSpan={this.focusSpan}
           currentViewRangeTime={currentViewRangeTime}

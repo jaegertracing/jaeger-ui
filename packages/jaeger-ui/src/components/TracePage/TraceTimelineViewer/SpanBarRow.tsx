@@ -11,8 +11,8 @@ import SpanBar from './SpanBar';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
-import { criticalPathSection, Span, Trace } from '../../../types/trace';
-import OtelSpanFacade from '../../../model/OtelSpanFacade';
+import { criticalPathSection, Span } from '../../../types/trace';
+import { IOtelSpan } from '../../../types/otel';
 
 import './SpanBarRow.css';
 
@@ -45,10 +45,10 @@ type SpanBarRowProps = {
   showErrorIcon: boolean;
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
-  span: Span;
+  span: Span; // Legacy span for SpanTreeOffset and other legacy components
+  otelSpan: IOtelSpan; // OTEL span for SpanBar
   focusSpan: (spanID: string) => void;
   traceDuration: number;
-  otelTrace?: ReturnType<Trace['asOtelTrace']>; // Optional OTEL trace for finding spans
 };
 
 /**
@@ -74,11 +74,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   getViewedBounds,
   traceStartTime,
   span,
+  otelSpan,
   focusSpan,
   traceDuration,
   onDetailToggled,
   onChildrenToggled,
-  otelTrace,
 }) => {
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
@@ -87,17 +87,6 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   const _childrenToggle = useCallback(() => {
     onChildrenToggled(span.spanID);
   }, [onChildrenToggled, span.spanID]);
-
-  // Convert to OTEL span for SpanBar component
-  const otelSpan = React.useMemo(() => {
-    // If otelTrace is provided, try to find the span in it
-    if (otelTrace) {
-      const foundSpan = otelTrace.spans.find(s => s.spanId === span.spanID);
-      if (foundSpan) return foundSpan;
-    }
-    // Fallback to creating OtelSpanFacade
-    return new OtelSpanFacade(span);
-  }, [span, otelTrace]);
 
   const {
     duration,
