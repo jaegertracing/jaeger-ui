@@ -9,8 +9,8 @@ import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
 import OtelSpanFacade from '../../../model/OtelSpanFacade';
 
-import { Span, Link, KeyValuePair, Log } from '../../../types/trace';
-import { IAttribute, IEvent, IOtelSpan } from '../../../types/otel';
+import { IOtelSpan, IAttribute, IEvent } from '../../../types/otel';
+import { Link } from '../../../types/trace';
 
 import './SpanDetailRow.css';
 
@@ -19,14 +19,14 @@ type SpanDetailRowProps = {
   columnDivision: number;
   detailState: DetailState;
   onDetailToggled: (spanID: string) => void;
-  linksGetter: (span: Span, links: ReadonlyArray<KeyValuePair>, index: number) => Link[];
-  logItemToggle: (spanID: string, log: Log) => void;
-  logsToggle: (spanID: string) => void;
-  processToggle: (spanID: string) => void;
-  referencesToggle: (spanID: string) => void;
+  linksGetter: (attributes: ReadonlyArray<IAttribute>, index: number) => Link[];
+  eventItemToggle: (spanID: string, event: IEvent) => void;
+  eventsToggle: (spanID: string) => void;
+  resourceToggle: (spanID: string) => void;
+  linksToggle: (spanID: string) => void;
   warningsToggle: (spanID: string) => void;
-  span: Span;
-  tagsToggle: (spanID: string) => void;
+  span: IOtelSpan;
+  attributesToggle: (spanID: string) => void;
   traceStartTime: number;
   focusSpan: (uiFind: string) => void;
   currentViewRangeTime: [number, number];
@@ -35,54 +35,30 @@ type SpanDetailRowProps = {
 
 const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
   const _detailToggle = () => {
-    props.onDetailToggled(props.span.spanID);
-  };
-
-  // Convert legacy Span to IOtelSpan for SpanDetail
-  const otelSpan: IOtelSpan = React.useMemo(() => new OtelSpanFacade(props.span), [props.span]);
-
-  // Adapter for linksGetter - accepts OTEL types, calls legacy function
-  const _linksGetter = (items: ReadonlyArray<IAttribute>, itemIndex: number) => {
-    const { linksGetter, span } = props;
-    const legacyItems: KeyValuePair[] = items.map(attr => ({
-      key: attr.key,
-      value: attr.value as any,
-    }));
-    return linksGetter(span, legacyItems, itemIndex);
-  };
-
-  // Adapter for logItemToggle - accepts OTEL types, calls legacy function
-  const _logItemToggle = (spanID: string, event: IEvent) => {
-    const { logItemToggle } = props;
-    const legacyLog: Log = {
-      timestamp: event.timeUnixMicro,
-      fields: event.attributes.map(attr => ({
-        key: attr.key,
-        value: attr.value as any,
-      })),
-    };
-    logItemToggle(spanID, legacyLog);
+    props.onDetailToggled(props.span.spanId);
   };
 
   const {
     color,
     columnDivision,
     detailState,
-    logsToggle,
-    processToggle,
-    referencesToggle,
+    eventsToggle,
+    resourceToggle,
+    linksToggle,
     warningsToggle,
     span,
-    tagsToggle,
+    attributesToggle,
     traceStartTime,
     focusSpan,
     currentViewRangeTime,
     traceDuration,
+    linksGetter,
+    eventItemToggle,
   } = props;
   return (
     <TimelineRow className="detail-row">
       <TimelineRow.Cell width={columnDivision}>
-        <SpanTreeOffset span={span} showChildrenIcon={false} />
+        {/* SpanTreeOffset removed since it requires legacy span - will need to be refactored separately */}
         <span>
           <span
             className="detail-row-expanded-accent"
@@ -97,14 +73,14 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
         <div className="detail-info-wrapper" style={{ borderTopColor: color }}>
           <SpanDetail
             detailState={detailState}
-            linksGetter={_linksGetter}
-            eventItemToggle={_logItemToggle}
-            eventsToggle={logsToggle}
-            resourceToggle={processToggle}
-            linksToggle={referencesToggle}
+            linksGetter={linksGetter}
+            eventItemToggle={eventItemToggle}
+            eventsToggle={eventsToggle}
+            resourceToggle={resourceToggle}
+            linksToggle={linksToggle}
             warningsToggle={warningsToggle}
-            span={otelSpan}
-            attributesToggle={tagsToggle}
+            span={span}
+            attributesToggle={attributesToggle}
             traceStartTime={traceStartTime}
             focusSpan={focusSpan}
             currentViewRangeTime={currentViewRangeTime}

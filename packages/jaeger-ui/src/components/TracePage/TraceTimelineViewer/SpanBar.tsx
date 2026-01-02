@@ -9,9 +9,8 @@ import AccordionEvents from './SpanDetail/AccordionEvents';
 
 import { ViewedBoundsFunctionType } from './utils';
 import { TNil } from '../../../types';
-import { Span, criticalPathSection } from '../../../types/trace';
-import OtelSpanFacade from '../../../model/OtelSpanFacade';
-import { IEvent } from '../../../types/otel';
+import { criticalPathSection } from '../../../types/trace';
+import { IEvent, IOtelSpan } from '../../../types/otel';
 
 import './SpanBar.css';
 
@@ -32,7 +31,7 @@ type TCommonProps = {
       }
     | TNil;
   traceStartTime: number;
-  span: Span;
+  span: IOtelSpan;
   longLabel: string;
   shortLabel: string;
   traceDuration: number;
@@ -101,11 +100,8 @@ function SpanBar(props: TCommonProps) {
     traceDuration,
   } = props;
 
-  // Use OTEL facade to get events
-  const otelSpan = React.useMemo(() => new OtelSpanFacade(span), [span]);
-
   // group events based on timestamps
-  const logGroups = _groupBy(otelSpan.events, (event: IEvent) => {
+  const eventGroups = _groupBy(span.events, (event: IEvent) => {
     const posPercent = getViewedBounds(event.timeUnixMicro, event.timeUnixMicro).start;
     // round to the nearest 0.2%
     return toPercent(Math.round(posPercent * 500) / 500);
@@ -141,7 +137,7 @@ function SpanBar(props: TCommonProps) {
         <div className={`SpanBar--label is-${hintSide}`}>{label}</div>
       </div>
       <div>
-        {Object.keys(logGroups).map(positionKey => (
+        {Object.keys(eventGroups).map(positionKey => (
           <Popover
             key={positionKey}
             arrow={{ pointAtCenter: true }}
@@ -151,7 +147,7 @@ function SpanBar(props: TCommonProps) {
               <AccordionEvents
                 interactive={false}
                 isOpen
-                events={logGroups[positionKey]}
+                events={eventGroups[positionKey]}
                 timestamp={traceStartTime}
                 currentViewRangeTime={[0, 1]}
                 traceDuration={traceDuration}
