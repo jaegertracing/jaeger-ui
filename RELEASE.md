@@ -18,9 +18,13 @@
      - Merge the PR once approved.
 
 2. Create a GitHub release.
-   - Automated (requires [gh](https://cli.github.com/manual/installation)):
-     - `make draft-release`
-     
+   - Run `make draft-release` (requires [gh](https://cli.github.com/manual/installation))
+     - It will create a draft release with the release notes.
+     - Open the printed URL and hit the Edit button on the draft release.
+     - Review the release notes and edit them if needed.
+     - Publish the release.
+     - Wait for the [Publish release](https://github.com/jaegertracing/jaeger-ui/actions/workflows/release.yml) workflow to finish. It will generate release artifacts whi will be used by the main repository for the new UI.
+
 <!-- END_CHECKLIST -->
 
 ## Manual release
