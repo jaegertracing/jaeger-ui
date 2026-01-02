@@ -3,7 +3,9 @@
 <!-- BEGIN_CHECKLIST -->
 
 1. Prepare the release.
-   - Run `make prepare-release VERSION=vX.Y.Z` (replace `vX.Y.Z` with the actual version).
+   - Go to `jaeger-ui` repository root directory, `main` branch.
+   - Run `git status && git pull` to ensure the working directory is clean.
+   - Run `make prepare-release VERSION=vX.Y.Z`.
    - This command will:
      - Verify the version format.
      - Create a branch `release-vX.Y.Z`.
