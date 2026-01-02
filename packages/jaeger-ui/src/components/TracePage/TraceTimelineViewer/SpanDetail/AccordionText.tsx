@@ -7,9 +7,9 @@ import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import TextList from './TextList';
 import { TNil } from '../../../../types';
 
-import './AccordianText.css';
+import './AccordionText.css';
 
-type AccordianTextProps = {
+type AccordionTextProps = {
   className?: string | TNil;
   data: ReadonlyArray<string>;
   headerClassName?: string | TNil;
@@ -20,7 +20,7 @@ type AccordianTextProps = {
   onToggle?: null | (() => void);
 };
 
-export default function AccordianText({
+export default function AccordionText({
   className = null,
   data,
   headerClassName,
@@ -29,7 +29,7 @@ export default function AccordianText({
   isOpen,
   label,
   onToggle = null,
-}: AccordianTextProps) {
+}: AccordionTextProps) {
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordionAttributes--emptyIcon': isEmpty });
 
@@ -48,7 +48,7 @@ export default function AccordianText({
   return (
     <div className={className || ''}>
       <div
-        className={cx('AccordianText--header', headerClassName, {
+        className={cx('AccordionText--header', headerClassName, {
           'is-empty': isEmpty,
           'is-high-contrast': highContrast,
           'is-open': isOpen,

@@ -105,16 +105,16 @@ export default function AccordianLogs({
     };
   }, [interactive, isOpen, notifyListReflow]);
 
-  const inRangeLogs = React.useMemo(() => {
+  const inRangeEvents = React.useMemo(() => {
     const viewStartAbsolute = timestamp + currentViewRangeTime[0] * traceDuration;
     const viewEndAbsolute = timestamp + currentViewRangeTime[1] * traceDuration;
     return logs.filter(log => log.timestamp >= viewStartAbsolute && log.timestamp <= viewEndAbsolute);
   }, [logs, timestamp, currentViewRangeTime, traceDuration]);
 
-  const logsToDisplay = showOutOfRangeLogs ? logs : inRangeLogs;
-  const displayedCount = logsToDisplay.length;
-  const inRangeCount = inRangeLogs.length;
-  const totalCount = logs.length;
+  const eventsToDisplay = showOutOfRangeEvents ? events : inRangeEvents;
+  const displayedCount = eventsToDisplay.length;
+  const inRangeCount = inRangeEvents.length;
+  const totalCount = events.length;
 
   let title = `Logs (${displayedCount})`;
   let toggleLink: React.ReactNode = null;
@@ -171,13 +171,13 @@ export default function AccordianLogs({
       {isOpen && (
         <div className="AccordianLogs--content" ref={contentRef}>
           {(() => {
-            const sortedLogs = _sortBy(logsToDisplay, 'timestamp');
+            const sortedEvents = _sortBy(eventsToDisplay, event => event.timeUnixMicro);
             const visibleLogs =
-              interactive && !showAllLogs && sortedLogs.length > initialVisibleCount
-                ? sortedLogs.slice(0, initialVisibleCount)
-                : sortedLogs;
-            return visibleLogs.map((log, i) => (
-              <AccordianKeyValues
+              interactive && !showAllEvents && sortedEvents.length > initialVisibleCount
+                ? sortedEvents.slice(0, initialVisibleCount)
+                : sortedEvents;
+            return visibleLogs.map((event, i) => (
+              <AccordionAttributes
                 // `i` is necessary in the key because timestamps can repeat
 
                 key={`${log.timestamp}-${i}`}
@@ -192,35 +192,36 @@ export default function AccordianLogs({
               />
             ));
           })()}
-          {interactive && _sortBy(logsToDisplay, 'timestamp').length > initialVisibleCount && (
-            <div>
-              {!showAllLogs ? (
-                <button
-                  type="button"
-                  className="AccordianLogs--toggle"
-                  onClick={() => {
-                    setShowAllLogs(true);
-                    notifyListReflow();
-                  }}
-                >
-                  show more...
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="AccordianLogs--toggle"
-                  onClick={() => {
-                    setShowAllLogs(false);
-                    notifyListReflow();
-                  }}
-                >
-                  show less
-                </button>
-              )}
-            </div>
-          )}
-          <small className="AccordianLogs--footer">
-            Log timestamps are relative to the start time of the full trace.
+          {interactive &&
+            _sortBy(eventsToDisplay, event => event.timeUnixMicro).length > initialVisibleCount && (
+              <div>
+                {!showAllEvents ? (
+                  <button
+                    type="button"
+                    className="AccordionEvents--toggle"
+                    onClick={() => {
+                      setShowAllEvents(true);
+                      notifyListReflow();
+                    }}
+                  >
+                    show more...
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="AccordionEvents--toggle"
+                    onClick={() => {
+                      setShowAllEvents(false);
+                      notifyListReflow();
+                    }}
+                  >
+                    show less
+                  </button>
+                )}
+              </div>
+            )}
+          <small className="AccordionEvents--footer">
+            {useOtelTerms ? 'Event' : 'Log'} timestamps are relative to the start time of the full trace.
           </small>
         </div>
       )}

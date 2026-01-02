@@ -3,7 +3,7 @@ Copyright (c) 2019 Uber Technologies, Inc.
 SPDX-License-Identifier: Apache-2.0
 */
 
-.AccordianText--header {
+.AccordionText--header {
   cursor: pointer;
   overflow: hidden;
   padding: 0.25em 0.1em;
@@ -11,6 +11,6 @@ SPDX-License-Identifier: Apache-2.0
   white-space: nowrap;
 }
 
-.AccordianText--header:hover {
+.AccordionText--header:hover {
   background: #e8e8e8;
 }

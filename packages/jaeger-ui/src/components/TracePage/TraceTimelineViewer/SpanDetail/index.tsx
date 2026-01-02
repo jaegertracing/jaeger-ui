@@ -8,7 +8,7 @@ import { IoLinkOutline } from 'react-icons/io5';
 import AccordionAttributes from './AccordionAttributes';
 import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
-import AccordianText from './AccordianText';
+import AccordionText from './AccordionText';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
@@ -133,7 +133,7 @@ export default function SpanDetail(props: SpanDetailProps) {
           />
         )}
         {warnings && warnings.length > 0 && (
-          <AccordianText
+          <AccordionText
             className="AccordianWarnings"
             headerClassName="AccordianWarnings--header"
             label={<span className="AccordianWarnings--label">Warnings</span>}
