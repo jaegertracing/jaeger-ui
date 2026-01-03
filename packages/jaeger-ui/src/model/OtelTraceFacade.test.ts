@@ -54,7 +54,7 @@ describe('OtelTraceFacade', () => {
   });
 
   it('maps basic trace fields', () => {
-    expect(facade.traceId).toBe('trace-1');
+    expect(facade.traceID).toBe('trace-1');
     expect(facade.traceName).toBe('test-trace');
     expect(facade.durationMicros).toBe(500);
     expect(facade.startTimeUnixMicros).toBe(1000);
@@ -63,7 +63,7 @@ describe('OtelTraceFacade', () => {
 
   it('maps spans to OtelSpanFacade instances', () => {
     expect(facade.spans).toHaveLength(1);
-    expect(facade.spans[0].spanId).toBe('span-1');
+    expect(facade.spans[0].spanID).toBe('span-1');
     expect(facade.spans[0].name).toBe('test-op');
   });
 
@@ -103,7 +103,7 @@ describe('OtelTraceFacade', () => {
       const parentFacade = complexFacade.spanMap.get('parent')!;
       const childFacade = complexFacade.spanMap.get('child')!;
 
-      expect(childFacade.parentSpanId).toBe('parent');
+      expect(childFacade.parentSpanID).toBe('parent');
       expect(childFacade.parentSpan).toBe(parentFacade);
       expect(parentFacade.childSpans).toContain(childFacade);
       expect(parentFacade.hasChildren).toBe(true);
@@ -117,7 +117,7 @@ describe('OtelTraceFacade', () => {
       // Check links (not explicitly set in this mock, but let's test the mechanism)
       // Actually, my populator uses inboundLinks which I set
       expect(childFacade.inboundLinks).toHaveLength(1);
-      expect(childFacade.inboundLinks[0].spanId).toBe('link');
+      expect(childFacade.inboundLinks[0].spanID).toBe('link');
       expect(childFacade.inboundLinks[0].span).toBe(linkFacade);
     });
   });
