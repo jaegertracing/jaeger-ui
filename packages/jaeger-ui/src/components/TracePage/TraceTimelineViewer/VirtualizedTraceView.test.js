@@ -356,7 +356,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       const spanBarRow = rowResult.props.children;
       expect(spanBarRow.type).toBe(SpanBarRow);
-      expect(spanBarRow.props.span).toBe(trace.spans[1]);
+      // span is now an IOtelSpan from trace.asOtelTrace()
+      expect(spanBarRow.props.span.spanId).toBe(trace.spans[1].spanID);
       expect(spanBarRow.props.isChildrenExpanded).toBe(true);
       expect(spanBarRow.props.isDetailExpanded).toBe(false);
     });
@@ -372,7 +373,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       const spanDetailRow = rowResult.props.children;
       expect(spanDetailRow.type).toBe(SpanDetailRow);
-      expect(spanDetailRow.props.span).toBe(trace.spans[1]);
+      // span is now an IOtelSpan from trace.asOtelTrace()
+      expect(spanDetailRow.props.span.spanId).toBe(trace.spans[1].spanID);
       expect(spanDetailRow.props.detailState).toBe(detailState);
     });
 
