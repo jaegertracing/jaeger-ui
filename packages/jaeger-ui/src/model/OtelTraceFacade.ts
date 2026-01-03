@@ -29,6 +29,32 @@ export default class OtelTraceFacade implements IOtelTrace {
       if (!otelSpan) throw new Error(`Root span ${s.spanID} not found in spanMap`);
       return otelSpan;
     });
+
+    // Wire up parentSpan, childSpans, and link span references
+    this._spans.forEach(span => {
+      const facade = span as OtelSpanFacade;
+      if (facade.parentSpanId) {
+        facade.parentSpan = this._spanMap.get(facade.parentSpanId);
+      }
+
+      // Populate childSpans using legacySpan.childSpans
+      const legacySpan = (facade as any).legacySpan;
+      if (legacySpan && legacySpan.childSpans) {
+        facade.childSpans = legacySpan.childSpans
+          .map((s: any) => this._spanMap.get(s.spanID))
+          .filter(Boolean);
+      }
+
+      // Wire up links
+      facade.links.forEach(link => {
+        link.span = this._spanMap.get(link.spanId);
+      });
+
+      // Wire up subsidiarilyReferencedBy
+      facade.subsidiarilyReferencedBy.forEach(link => {
+        link.span = this._spanMap.get(link.spanId);
+      });
+    });
   }
 
   get traceId(): string {

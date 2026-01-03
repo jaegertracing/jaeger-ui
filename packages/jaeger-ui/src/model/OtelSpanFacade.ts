@@ -24,6 +24,8 @@ export default class OtelSpanFacade implements IOtelSpan {
   private _links: ILink[];
   private _status: IStatus;
   private _resource: IResource;
+  private _childSpans: ReadonlyArray<IOtelSpan> = [];
+  private _parentSpan?: IOtelSpan;
 
   constructor(legacySpan: Span) {
     this.legacySpan = legacySpan;
@@ -136,6 +138,14 @@ export default class OtelSpanFacade implements IOtelSpan {
     return this._resource;
   }
 
+  get parentSpan(): IOtelSpan | undefined {
+    return this._parentSpan;
+  }
+
+  set parentSpan(value: IOtelSpan | undefined) {
+    this._parentSpan = value;
+  }
+
   get instrumentationScope(): IScope {
     // Legacy Jaeger doesn't have explicit instrumentation scope,
     // but we can look for it in tags if it was mapped there by exporters.
@@ -150,7 +160,15 @@ export default class OtelSpanFacade implements IOtelSpan {
   }
 
   get hasChildren(): boolean {
-    return this.legacySpan.hasChildren;
+    return this._childSpans.length > 0;
+  }
+
+  get childSpans(): ReadonlyArray<IOtelSpan> {
+    return this._childSpans;
+  }
+
+  set childSpans(value: ReadonlyArray<IOtelSpan>) {
+    this._childSpans = value;
   }
 
   get relativeStartTimeMicros(): number {
