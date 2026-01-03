@@ -13,6 +13,9 @@
     <!-- NOTE: The document MUST have a <base> element. package.json#homepage is set to "." as part of resolving https://github.com/jaegertracing/jaeger-ui/issues/42 and therefore static assets are linked via relative URLs. This will break on many document URLs, e.g. /trace/abc, unless a valid base URL is provided. The base href defaults to "/" but the query-service can inject an override. -->
     <base href="/" data-inject-target="BASE_URL" />
     <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pontano+Sans:wght@300..700&display=swap" rel="stylesheet">
     <title>Jaeger UI</title>
     <script>
       // Jaeger UI config data is embedded by the query-service via search-replace.

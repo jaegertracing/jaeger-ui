@@ -138,8 +138,8 @@ describe('<TopNav>', () => {
       component.unmount();
     });
 
-    it('renders the "JAEGER UI" link', () => {
-      const items = screen.getByRole('link', { name: 'JAEGER UI' });
+    it('renders the "Jaeger" link', () => {
+      const items = screen.getByRole('link', { name: /jaeger logo jaeger/i });
       expect(items).toBeInTheDocument();
     });
 
