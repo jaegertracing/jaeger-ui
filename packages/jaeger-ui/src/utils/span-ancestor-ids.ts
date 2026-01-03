@@ -15,7 +15,7 @@ export default function spanAncestorIds(span: IOtelSpan | TNil): string[] {
 
   let currentParent = span.parentSpan;
   while (currentParent) {
-    ancestorIDs.push(currentParent.spanId);
+    ancestorIDs.push(currentParent.spanID);
     currentParent = currentParent.parentSpan;
   }
   return ancestorIDs;

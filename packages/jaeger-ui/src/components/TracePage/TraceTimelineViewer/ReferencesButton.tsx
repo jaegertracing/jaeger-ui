@@ -26,7 +26,7 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
       const isSameTrace = span !== undefined;
 
       return {
-        key: `${link.spanId}`,
+        key: `${link.spanID}`,
         label: (
           <ReferenceLink
             link={link}
@@ -34,8 +34,8 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
             className="ReferencesButton--TraceRefLink"
           >
             {isSameTrace
-              ? `${span.resource.serviceName}:${span.name} - ${link.spanId}`
-              : `(another trace) - ${link.spanId}`}
+              ? `${span.resource.serviceName}:${span.name} - ${link.spanID}`
+              : `(another trace) - ${link.spanID}`}
           </ReferenceLink>
         ),
       };

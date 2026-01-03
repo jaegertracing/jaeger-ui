@@ -23,14 +23,14 @@ export default function ReferenceLink(props: ReferenceLinkProps) {
   if (link) {
     if (link.span) {
       return (
-        <a role="button" onClick={() => focusSpan(link.spanId)} className={className} {...otherProps}>
+        <a role="button" onClick={() => focusSpan(link.spanID)} className={className} {...otherProps}>
           {children}
         </a>
       );
     }
     return (
       <a
-        href={getUrl(link.traceId, link.spanId)}
+        href={getUrl(link.traceID, link.spanID)}
         target="_blank"
         rel="noopener noreferrer"
         className={className}

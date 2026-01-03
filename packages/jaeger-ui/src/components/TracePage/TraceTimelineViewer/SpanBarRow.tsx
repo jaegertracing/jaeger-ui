@@ -81,12 +81,12 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   useOtelTerms,
 }) => {
   const _detailToggle = useCallback(() => {
-    onDetailToggled(span.spanId);
-  }, [onDetailToggled, span.spanId]);
+    onDetailToggled(span.spanID);
+  }, [onDetailToggled, span.spanID]);
 
   const _childrenToggle = useCallback(() => {
-    onChildrenToggled(span.spanId);
-  }, [onChildrenToggled, span.spanId]);
+    onChildrenToggled(span.spanID);
+  }, [onChildrenToggled, span.spanID]);
 
   const {
     durationMicros: duration,

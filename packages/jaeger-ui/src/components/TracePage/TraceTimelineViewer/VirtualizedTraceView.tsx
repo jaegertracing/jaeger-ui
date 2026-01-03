@@ -103,7 +103,7 @@ function generateRowStates(
   const rowStates = [];
   for (let i = 0; i < spans.length; i++) {
     const span = spans[i];
-    const { spanId, depth } = span;
+    const { spanID, depth } = span;
     let hidden = false;
     if (collapseDepth != null) {
       if (depth >= collapseDepth) {
@@ -115,7 +115,7 @@ function generateRowStates(
     if (hidden) {
       continue;
     }
-    if (childrenHiddenIDs.has(spanId)) {
+    if (childrenHiddenIDs.has(spanID)) {
       collapseDepth = depth + 1;
     }
     rowStates.push({
@@ -123,7 +123,7 @@ function generateRowStates(
       isDetail: false,
       spanIndex: i,
     });
-    if (detailStates.has(spanId)) {
+    if (detailStates.has(spanID)) {
       rowStates.push({
         span,
         isDetail: true,
@@ -449,7 +449,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     style: React.CSSProperties,
     attrs: object
   ) {
-    const { spanId } = span;
+    const { spanID } = span;
     const { serviceName } = span.resource;
     const {
       childrenHiddenIDs,
@@ -470,11 +470,11 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const spans = trace.asOtelTrace().spans;
 
     const color = colorGenerator.getColorByKey(serviceName);
-    const isCollapsed = childrenHiddenIDs.has(spanId);
-    const isDetailExpanded = detailStates.has(spanId);
-    const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanId) : false;
+    const isCollapsed = childrenHiddenIDs.has(spanID);
+    const isDetailExpanded = detailStates.has(spanID);
+    const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
     const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(spans, spanIndex));
-    const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanId, criticalPath);
+    const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
@@ -532,7 +532,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   }
 
   renderSpanDetailRow(span: IOtelSpan, key: string, style: React.CSSProperties, attrs: object) {
-    const { spanId } = span;
+    const { spanID } = span;
     const { serviceName } = span.resource;
     const {
       detailLogItemToggle,
@@ -548,7 +548,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       currentViewRangeTime,
       useOtelTerms,
     } = this.props;
-    const detailState = detailStates.get(spanId);
+    const detailState = detailStates.get(spanID);
     if (!trace || !detailState) {
       return null;
     }

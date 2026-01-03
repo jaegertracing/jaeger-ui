@@ -80,7 +80,7 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
     }
   };
 
-  const { hasChildren, spanId } = span;
+  const { hasChildren, spanID } = span;
   const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
   const icon =
     showChildrenIcon && hasChildren && (childrenVisible ? <IoChevronDown /> : <IoChevronForward />);
@@ -102,8 +102,8 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
         <span
           className="SpanTreeOffset--iconWrapper"
           data-testid="icon-wrapper"
-          onMouseEnter={event => handleMouseEnter(event, spanId)}
-          onMouseLeave={event => handleMouseLeave(event, spanId)}
+          onMouseEnter={event => handleMouseEnter(event, spanID)}
+          onMouseLeave={event => handleMouseLeave(event, spanID)}
         >
           {icon}
         </span>
