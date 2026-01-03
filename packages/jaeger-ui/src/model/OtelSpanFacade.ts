@@ -24,7 +24,7 @@ export default class OtelSpanFacade implements IOtelSpan {
   private _links: ILink[];
   private _status: IStatus;
   private _resource: IResource;
-  private _subsidiarilyReferencedBy: ILink[];
+  private _inboundLinks: ILink[];
   private _childSpans: ReadonlyArray<IOtelSpan> = [];
   private _parentSpan?: IOtelSpan;
 
@@ -77,7 +77,7 @@ export default class OtelSpanFacade implements IOtelSpan {
       serviceName: process ? process.serviceName : 'unknown-service',
     };
 
-    this._subsidiarilyReferencedBy = this.legacySpan.subsidiarilyReferencedBy.map(ref => ({
+    this._inboundLinks = this.legacySpan.subsidiarilyReferencedBy.map(ref => ({
       traceId: ref.traceID,
       spanId: ref.spanID,
       attributes: [],
@@ -182,8 +182,8 @@ export default class OtelSpanFacade implements IOtelSpan {
     return this.legacySpan.relativeStartTime;
   }
 
-  get subsidiarilyReferencedBy(): ILink[] {
-    return this._subsidiarilyReferencedBy;
+  get inboundLinks(): ILink[] {
+    return this._inboundLinks;
   }
 
   // Legacy Jaeger-specific properties for UI compatibility

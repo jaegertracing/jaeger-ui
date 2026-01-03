@@ -220,6 +220,6 @@ describe('OtelSpanFacade', () => {
     expect(facade.hasChildren).toBe(false);
     expect(facade.childSpans).toEqual([]);
     expect(facade.relativeStartTimeMicros).toBe(100);
-    expect(facade.subsidiarilyReferencedBy[0].spanId).toBe('sub-ref-1');
+    expect(facade.inboundLinks[0].spanId).toBe('sub-ref-1');
   });
 });

@@ -88,7 +88,9 @@ export interface IOtelSpan {
   hasChildren: boolean;
   childSpans: ReadonlyArray<IOtelSpan>;
   relativeStartTimeMicros: number; // microseconds since trace start
-  subsidiarilyReferencedBy: ILink[]; // spans that reference this span via links (not parent-child)
+
+  // Inverse links to spans that reference this span via their outbound Links
+  inboundLinks: ILink[];
 
   warnings: ReadonlyArray<string> | null;
 }

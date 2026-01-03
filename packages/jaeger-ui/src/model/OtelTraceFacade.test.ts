@@ -115,10 +115,10 @@ describe('OtelTraceFacade', () => {
       const linkFacade = complexFacade.spanMap.get('link')!;
 
       // Check links (not explicitly set in this mock, but let's test the mechanism)
-      // Actually, my populator uses subsidiarilyReferencedBy which I set
-      expect(childFacade.subsidiarilyReferencedBy).toHaveLength(1);
-      expect(childFacade.subsidiarilyReferencedBy[0].spanId).toBe('link');
-      expect(childFacade.subsidiarilyReferencedBy[0].span).toBe(linkFacade);
+      // Actually, my populator uses inboundLinks which I set
+      expect(childFacade.inboundLinks).toHaveLength(1);
+      expect(childFacade.inboundLinks[0].spanId).toBe('link');
+      expect(childFacade.inboundLinks[0].span).toBe(linkFacade);
     });
   });
 });

@@ -50,8 +50,8 @@ export default class OtelTraceFacade implements IOtelTrace {
         link.span = this._spanMap.get(link.spanId);
       });
 
-      // Wire up subsidiarilyReferencedBy
-      facade.subsidiarilyReferencedBy.forEach(link => {
+      // Wire up inboundLinks
+      facade.inboundLinks.forEach(link => {
         link.span = this._spanMap.get(link.spanId);
       });
     });
