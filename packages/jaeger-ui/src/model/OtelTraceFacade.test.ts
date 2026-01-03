@@ -70,4 +70,55 @@ describe('OtelTraceFacade', () => {
   it('maps services summary', () => {
     expect(facade.services).toEqual([{ name: 'test-service', numberOfSpans: 1 }]);
   });
+
+  describe('span wiring', () => {
+    const parentSpan: Span = { ...mockSpan, spanID: 'parent', hasChildren: true };
+    const childSpan: Span = {
+      ...mockSpan,
+      spanID: 'child',
+      references: [{ refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'parent', span: parentSpan }],
+    };
+    const linkSpan: Span = { ...mockSpan, spanID: 'link' };
+
+    // Set up child reference on parent
+    (parentSpan as any).childSpans = [childSpan];
+    // Set up link reference on child
+    (childSpan as any).subsidiarilyReferencedBy = [
+      { refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'link', span: linkSpan },
+    ];
+
+    const complexTrace: Trace = {
+      ...mockLegacyTrace,
+      spans: [parentSpan, childSpan, linkSpan],
+      spanMap: new Map([
+        ['parent', parentSpan],
+        ['child', childSpan],
+        ['link', linkSpan],
+      ]),
+      rootSpans: [parentSpan],
+    };
+
+    it('wires up parentSpan and childSpans correctly', () => {
+      const complexFacade = new OtelTraceFacade(complexTrace);
+      const parentFacade = complexFacade.spanMap.get('parent')!;
+      const childFacade = complexFacade.spanMap.get('child')!;
+
+      expect(childFacade.parentSpanId).toBe('parent');
+      expect(childFacade.parentSpan).toBe(parentFacade);
+      expect(parentFacade.childSpans).toContain(childFacade);
+      expect(parentFacade.hasChildren).toBe(true);
+    });
+
+    it('wires up link span references correctly', () => {
+      const complexFacade = new OtelTraceFacade(complexTrace);
+      const childFacade = complexFacade.spanMap.get('child')!;
+      const linkFacade = complexFacade.spanMap.get('link')!;
+
+      // Check links (not explicitly set in this mock, but let's test the mechanism)
+      // Actually, my populator uses subsidiarilyReferencedBy which I set
+      expect(childFacade.subsidiarilyReferencedBy).toHaveLength(1);
+      expect(childFacade.subsidiarilyReferencedBy[0].spanId).toBe('link');
+      expect(childFacade.subsidiarilyReferencedBy[0].span).toBe(linkFacade);
+    });
+  });
 });
