@@ -3,7 +3,7 @@ Copyright (c) 2017 Uber Technologies, Inc.
 SPDX-License-Identifier: Apache-2.0
 */
 
-.AccordianKeyValues--header {
+.AccordionAttributes--header {
   cursor: pointer;
   overflow: hidden;
   padding: 0.25em 0.1em;
@@ -11,46 +11,46 @@ SPDX-License-Identifier: Apache-2.0
   white-space: nowrap;
 }
 
-.AccordianKeyValues--header:hover {
+.AccordionAttributes--header:hover {
   background: var(--surface-tertiary);
 }
 
-.AccordianKeyValues--header.is-empty {
+.AccordionAttributes--header.is-empty {
   background: none;
   cursor: initial;
 }
 
-.AccordianKeyValues--header.is-high-contrast:not(.is-empty):hover {
+.AccordionAttributes--header.is-high-contrast:not(.is-empty):hover {
   background: var(--surface-tertiary);
 }
 
-.AccordianKeyValues--emptyIcon {
+.AccordionAttributes--emptyIcon {
   color: var(--text-muted);
 }
 
-.AccordianKeyValues--summary {
+.AccordionAttributes--summary {
   display: inline;
   list-style: none;
   padding: 0;
 }
 
-.AccordianKeyValues--summaryItem {
+.AccordionAttributes--summaryItem {
   display: inline;
   margin-left: 0.7em;
   padding-right: 0.5rem;
   border-right: 1px solid var(--border-default);
 }
 
-.AccordianKeyValues--summaryItem:last-child {
+.AccordionAttributes--summaryItem:last-child {
   padding-right: 0;
   border-right: none;
 }
 
-.AccordianKeyValues--summaryLabel {
+.AccordionAttributes--summaryLabel {
   color: var(--text-secondary);
 }
 
-.AccordianKeyValues--summaryDelim {
+.AccordionAttributes--summaryDelim {
   color: var(--text-muted);
   padding: 0 0.2em;
 }

@@ -3,24 +3,24 @@ Copyright (c) 2017 Uber Technologies, Inc.
 SPDX-License-Identifier: Apache-2.0
 */
 
-.AccordianLogs {
+.AccordionEvents {
   border: 1px solid var(--border-default);
   position: relative;
   margin-bottom: 0.25rem;
 }
 
-.AccordianLogs--header {
+.AccordionEvents--header {
   background: var(--surface-secondary);
   color: inherit;
   display: block;
   padding: 0.25rem 0.5rem;
 }
 
-.AccordianLogs--header:hover {
+.AccordionEvents--header:hover {
   background: var(--surface-tertiary);
 }
 
-.AccordianLogs--toggle {
+.AccordionEvents--toggle {
   border: none;
   background: transparent;
   cursor: pointer;
@@ -28,12 +28,12 @@ SPDX-License-Identifier: Apache-2.0
   text-decoration: underline;
 }
 
-.AccordianLogs--content {
+.AccordionEvents--content {
   background: var(--surface-primary);
   border-top: 1px solid var(--border-default);
   padding: 0.5rem 0.5rem 0.25rem 0.5rem;
 }
 
-.AccordianLogs--footer {
+.AccordionEvents--footer {
   color: var(--text-secondary);
 }

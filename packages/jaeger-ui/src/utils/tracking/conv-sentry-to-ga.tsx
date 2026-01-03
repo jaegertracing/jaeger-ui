@@ -176,8 +176,8 @@ function convFetch(data: TCrumbData) {
 //    span.SpanTreeOffset.is-parent > span.SpanTreeOffset--iconWrapper
 //      => .SpanTreeOffset.is-parent >.SpanTreeOffset--iconWrapper
 //
-//    div > div > div.AccordianLogs > a.AccordianLogs--header.
-//      => .AccordianLogs >.AccordianLogs--header
+//    div > div > div.AccordionEvents > a.AccordionEvents--header.
+//      => .AccordionEvents >.AccordionEvents--header
 //
 //    body > div > div > div.ant-modal-wrap.
 //      => .ant-modal-wrap

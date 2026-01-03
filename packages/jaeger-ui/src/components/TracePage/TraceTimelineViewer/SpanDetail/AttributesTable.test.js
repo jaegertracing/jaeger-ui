@@ -5,7 +5,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import KeyValuesTable, { LinkValue } from './KeyValuesTable';
+import AttributesTable, { LinkValue } from './AttributesTable';
 
 jest.mock('../../../common/CopyIcon', () => {
   return function CopyIcon({ copyText, tooltipTitle, buttonText, icon, className }) {
@@ -55,7 +55,7 @@ describe('LinkValue', () => {
   });
 });
 
-describe('<KeyValuesTable>', () => {
+describe('<AttributesTable>', () => {
   const jsonValue = {
     hello: 'world',
     '<xss>': 'safe',
@@ -107,7 +107,7 @@ describe('<KeyValuesTable>', () => {
   ];
 
   it('renders KeyValueTable container with correct structure', () => {
-    render(<KeyValuesTable data={data} />);
+    render(<AttributesTable data={data} />);
 
     const container = document.querySelector('.KeyValueTable.u-simple-scrollbars');
     expect(container).toBeInTheDocument();
@@ -117,7 +117,7 @@ describe('<KeyValuesTable>', () => {
   });
 
   it('renders table row for each data element with correct key columns', () => {
-    render(<KeyValuesTable data={data} />);
+    render(<AttributesTable data={data} />);
 
     const rows = screen.getAllByRole('row');
     expect(rows).toHaveLength(data.length);
@@ -129,7 +129,7 @@ describe('<KeyValuesTable>', () => {
   });
 
   it('renders expected text content for each span value', () => {
-    render(<KeyValuesTable data={data} />);
+    render(<AttributesTable data={data} />);
 
     const valueElements = document.querySelectorAll('.ub-inline-block');
     expect(valueElements).toHaveLength(data.length);
@@ -144,7 +144,7 @@ describe('<KeyValuesTable>', () => {
 
   it('renders single link with correct href and title when linksGetter returns one link', () => {
     render(
-      <KeyValuesTable
+      <AttributesTable
         data={data}
         linksGetter={(array, i) =>
           array[i].key === 'span.kind'
@@ -170,7 +170,7 @@ describe('<KeyValuesTable>', () => {
 
   it('renders dropdown with multiple links when linksGetter returns multiple links', () => {
     const { container } = render(
-      <KeyValuesTable
+      <AttributesTable
         data={data}
         linksGetter={(array, i) =>
           array[i].key === 'span.kind'
@@ -196,14 +196,14 @@ describe('<KeyValuesTable>', () => {
 
   it('handles invalid JSON strings gracefully and returns raw value', () => {
     const brokenData = [{ key: 'brokenJSON', value: '{"complete": "test"' }];
-    render(<KeyValuesTable data={brokenData} />);
+    render(<AttributesTable data={brokenData} />);
 
     const valueCell = screen.getByText('{"complete": "test"');
     expect(valueCell).toBeInTheDocument();
   });
 
   it('renders CopyIcon components with correct copyText properties for each data element', () => {
-    render(<KeyValuesTable data={data} />);
+    render(<AttributesTable data={data} />);
 
     const copyIcons = screen.getAllByTestId('copy-icon');
     expect(copyIcons).toHaveLength(2 * data.length);

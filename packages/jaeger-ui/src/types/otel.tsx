@@ -87,7 +87,6 @@ export interface IOtelSpan {
   relativeStartTimeMicros: number; // microseconds since trace start
   subsidiarilyReferencedBy: ILink[]; // spans that reference this span via links (not parent-child)
 
-  // Legacy Jaeger-specific properties (for backward compatibility during migration)
   warnings: ReadonlyArray<string> | null;
 }
 

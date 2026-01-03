@@ -31,7 +31,7 @@ export default function AccordianText({
   onToggle = null,
 }: AccordianTextProps) {
   const isEmpty = !Array.isArray(data) || !data.length;
-  const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
+  const iconCls = cx('u-align-icon', { 'AccordionAttributes--emptyIcon': isEmpty });
 
   let arrow: React.ReactNode | null = null;
   let headerProps: object | null = null;
