@@ -46,7 +46,6 @@ type SpanBarRowProps = {
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
   span: IOtelSpan; // OTEL span
-  spanMap: ReadonlyMap<string, IOtelSpan>; // For SpanTreeOffset ancestor lookup
   focusSpan: (spanID: string) => void;
   traceDuration: number;
   useOtelTerms: boolean;
@@ -75,7 +74,6 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   getViewedBounds,
   traceStartTime,
   span,
-  spanMap,
   focusSpan,
   traceDuration,
   onDetailToggled,
@@ -117,8 +115,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
 
   // Check if span has multiple links (similar to multiple references)
   const hasMultipleLinks = span.links && span.links.length > 1;
-  const hasSubsidiarilyReferencedBy =
-    span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0;
+  const hasInboundLinks = span.inboundLinks && span.inboundLinks.length > 0;
 
   return (
     <TimelineRow
@@ -134,7 +131,6 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
             otelSpan={span}
-            spanMap={spanMap}
             onClick={isParent ? _childrenToggle : undefined}
           />
           <a
@@ -173,19 +169,17 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           {hasMultipleLinks && (
             <ReferencesButton
               links={span.links}
-              spanMap={spanMap}
               tooltipText="Contains multiple references"
               focusSpan={focusSpan}
             >
               <IoGitNetwork />
             </ReferencesButton>
           )}
-          {hasSubsidiarilyReferencedBy && (
+          {hasInboundLinks && (
             <ReferencesButton
-              links={span.subsidiarilyReferencedBy}
-              spanMap={spanMap}
+              links={span.inboundLinks}
               tooltipText={`This span is referenced by ${
-                span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
+                span.inboundLinks.length === 1 ? 'another span' : 'multiple other spans'
               }`}
               focusSpan={focusSpan}
             >

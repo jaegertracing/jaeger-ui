@@ -38,7 +38,6 @@ describe('<SpanDetailRow>', () => {
     },
     warnings: null,
   };
-  const spanMap = new Map([[spanID, span]]);
   const props = {
     color: 'some-color',
     columnDivision: 0.5,
@@ -51,7 +50,6 @@ describe('<SpanDetailRow>', () => {
     linksToggle: jest.fn(),
     warningsToggle: jest.fn(),
     span,
-    spanMap,
     attributesToggle: jest.fn(),
     traceStartTime: 1000,
     focusSpan: jest.fn(),
@@ -95,7 +93,6 @@ describe('<SpanDetailRow>', () => {
     expect(MockSpanTreeOffset).toHaveBeenCalledWith(
       expect.objectContaining({
         otelSpan: props.span,
-        spanMap: props.spanMap,
       })
     );
   });

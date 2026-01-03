@@ -527,7 +527,6 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           getViewedBounds={this.getViewedBounds()}
           traceStartTime={trace.startTime}
           span={span}
-          spanMap={otelTrace.spanMap}
           focusSpan={this.focusSpan}
           traceDuration={trace.duration}
           useOtelTerms={useOtelTerms}
@@ -574,7 +573,6 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           linksToggle={detailReferencesToggle}
           warningsToggle={detailWarningsToggle}
           span={span}
-          spanMap={otelTrace.spanMap}
           attributesToggle={detailTagsToggle}
           traceStartTime={trace.startTime}
           focusSpan={this.focusSpan}

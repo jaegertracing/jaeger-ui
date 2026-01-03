@@ -25,7 +25,6 @@ type SpanDetailRowProps = {
   linksToggle: (spanID: string) => void;
   warningsToggle: (spanID: string) => void;
   span: IOtelSpan;
-  spanMap: ReadonlyMap<string, IOtelSpan>; // For SpanTreeOffset ancestor lookup
   attributesToggle: (spanID: string) => void;
   traceStartTime: number;
   focusSpan: (uiFind: string) => void;
@@ -48,7 +47,6 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     linksToggle,
     warningsToggle,
     span,
-    spanMap,
     attributesToggle,
     traceStartTime,
     focusSpan,
@@ -61,7 +59,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
   return (
     <TimelineRow className="detail-row">
       <TimelineRow.Cell width={columnDivision}>
-        <SpanTreeOffset otelSpan={span} spanMap={spanMap} />
+        <SpanTreeOffset otelSpan={span} />
         <span>
           <span
             className="detail-row-expanded-accent"

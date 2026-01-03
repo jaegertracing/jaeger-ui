@@ -93,63 +93,50 @@ describe('otelSpanAncestorIds', () => {
   const rootSpan = {
     spanId: rootSpanId,
     parentSpanId: undefined,
+    parentSpan: undefined,
   };
 
   const grandparentSpan = {
     spanId: grandparentSpanId,
     parentSpanId: rootSpanId,
+    parentSpan: rootSpan,
   };
 
   const parentSpan = {
     spanId: parentSpanId,
     parentSpanId: grandparentSpanId,
+    parentSpan: grandparentSpan,
   };
 
   const childSpan = {
     spanId: childSpanId,
     parentSpanId: parentSpanId,
+    parentSpan: parentSpan,
   };
 
   it('returns an empty array if given falsy span', () => {
-    const spanMap = new Map();
-    expect(otelSpanAncestorIds(null, spanMap)).toEqual([]);
+    expect(otelSpanAncestorIds(null)).toEqual([]);
   });
 
-  it('returns an empty array if span has no parentSpanId', () => {
-    const spanMap = new Map();
-    expect(otelSpanAncestorIds(rootSpan, spanMap)).toEqual([]);
+  it('returns an empty array if span has no parentSpan', () => {
+    expect(otelSpanAncestorIds(rootSpan)).toEqual([]);
   });
 
   it('returns all ancestor span IDs from parent to root', () => {
-    const spanMap = new Map([
-      [rootSpanId, rootSpan],
-      [grandparentSpanId, grandparentSpan],
-      [parentSpanId, parentSpan],
-      [childSpanId, childSpan],
-    ]);
-
-    expect(otelSpanAncestorIds(childSpan, spanMap)).toEqual([parentSpanId, grandparentSpanId, rootSpanId]);
+    expect(otelSpanAncestorIds(childSpan)).toEqual([parentSpanId, grandparentSpanId, rootSpanId]);
   });
 
-  it('stops traversal when parent span is not found in spanMap', () => {
-    const spanMap = new Map([
-      [parentSpanId, parentSpan],
-      [childSpanId, childSpan],
-    ]);
+  it('stops traversal when parent span is not available', () => {
+    const isolatedChild = {
+      spanId: childSpanId,
+      parentSpanId: parentSpanId,
+      parentSpan: undefined, // No parent span available
+    };
 
-    // grandparentSpan and rootSpan are missing from spanMap
-    expect(otelSpanAncestorIds(childSpan, spanMap)).toEqual([
-      parentSpanId,
-      grandparentSpanId, // This is added but traversal stops here since we can't find it in spanMap
-    ]);
+    expect(otelSpanAncestorIds(isolatedChild)).toEqual([]);
   });
 
   it('handles single-level parent relationship', () => {
-    const spanMap = new Map([
-      [rootSpanId, rootSpan],
-      [grandparentSpanId, grandparentSpan],
-    ]);
-
-    expect(otelSpanAncestorIds(grandparentSpan, spanMap)).toEqual([rootSpanId]);
+    expect(otelSpanAncestorIds(grandparentSpan)).toEqual([rootSpanId]);
   });
 });

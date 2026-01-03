@@ -34,24 +34,18 @@ export default function spanAncestorIds(span: Span | TNil): string[] {
 }
 
 /**
- * Returns an array of ancestor span IDs for an OTEL span, using parentSpanId and spanMap.
+ * Returns an array of ancestor span IDs for an OTEL span, using parentSpan.
  * @param span - The IOtelSpan to get ancestors for
- * @param spanMap - Map of spanId to IOtelSpan for looking up parent spans
  * @returns Array of ancestor span IDs, from immediate parent to root
  */
-export function otelSpanAncestorIds(
-  span: IOtelSpan | TNil,
-  spanMap: ReadonlyMap<string, IOtelSpan>
-): string[] {
+export function otelSpanAncestorIds(span: IOtelSpan | TNil): string[] {
   const ancestorIDs: string[] = [];
   if (!span) return ancestorIDs;
 
-  let currentParentId = span.parentSpanId;
-  while (currentParentId) {
-    ancestorIDs.push(currentParentId);
-    const parentSpan = spanMap.get(currentParentId);
-    if (!parentSpan) break;
-    currentParentId = parentSpan.parentSpanId;
+  let currentParent = span.parentSpan;
+  while (currentParent) {
+    ancestorIDs.push(currentParent.spanId);
+    currentParent = currentParent.parentSpan;
   }
   return ancestorIDs;
 }

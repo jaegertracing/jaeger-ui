@@ -10,9 +10,8 @@ import { bindActionCreators, Dispatch } from 'redux';
 
 import { actions } from './duck';
 import { ReduxState } from '../../../types';
-import { Span } from '../../../types/trace';
 import { IOtelSpan } from '../../../types/otel';
-import spanAncestorIds, { otelSpanAncestorIds } from '../../../utils/span-ancestor-ids';
+import { otelSpanAncestorIds } from '../../../utils/span-ancestor-ids';
 
 import './SpanTreeOffset.css';
 
@@ -25,9 +24,7 @@ type TProps = TDispatchProps & {
   childrenVisible?: boolean;
   hoverIndentGuideIds: Set<string>;
   onClick?: () => void;
-  span?: Span; // Legacy span (deprecated, for backward compatibility)
-  otelSpan?: IOtelSpan; // OTEL span (preferred)
-  spanMap?: ReadonlyMap<string, IOtelSpan>; // Required when using otelSpan
+  otelSpan: IOtelSpan;
   showChildrenIcon?: boolean;
 };
 
@@ -35,28 +32,19 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   childrenVisible = false,
   onClick = undefined,
   showChildrenIcon = true,
-  span,
   otelSpan,
-  spanMap,
   hoverIndentGuideIds,
   addHoverIndentGuideId,
   removeHoverIndentGuideId,
 }) => {
   const ancestorIds = useMemo(() => {
-    let ids: string[];
-    if (otelSpan && spanMap) {
-      ids = otelSpanAncestorIds(otelSpan, spanMap);
-    } else if (span) {
-      ids = spanAncestorIds(span);
-    } else {
-      ids = [];
-    }
+    const ids = otelSpanAncestorIds(otelSpan);
     // Some traces have multiple root-level spans, this connects them all under one guideline and adds the
     // necessary padding for the collapse icon on root-level spans.
     ids.push('root');
     ids.reverse();
     return ids;
-  }, [span, otelSpan, spanMap]);
+  }, [otelSpan]);
 
   /**
    * If the mouse leaves to anywhere except another span with the same ancestor id, this span's ancestor id is
@@ -92,8 +80,7 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
     }
   };
 
-  const hasChildren = otelSpan ? otelSpan.hasChildren : (span?.hasChildren ?? false);
-  const spanID = otelSpan ? otelSpan.spanId : (span?.spanID ?? '');
+  const { hasChildren, spanId } = otelSpan;
   const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
   const icon =
     showChildrenIcon && hasChildren && (childrenVisible ? <IoChevronDown /> : <IoChevronForward />);
@@ -115,8 +102,8 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
         <span
           className="SpanTreeOffset--iconWrapper"
           data-testid="icon-wrapper"
-          onMouseEnter={event => handleMouseEnter(event, spanID)}
-          onMouseLeave={event => handleMouseLeave(event, spanID)}
+          onMouseEnter={event => handleMouseEnter(event, spanId)}
+          onMouseLeave={event => handleMouseLeave(event, spanId)}
         >
           {icon}
         </span>

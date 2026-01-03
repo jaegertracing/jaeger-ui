@@ -10,9 +10,8 @@ import SpanBar from './SpanBar';
 
 jest.mock('./SpanTreeOffset', () => ({
   __esModule: true,
-  default: jest.fn(({ span, otelSpan, childrenVisible, onClick }) => {
-    const displaySpan = otelSpan || span;
-    const displaySpanId = displaySpan ? displaySpan.spanId || displaySpan.spanID : 'unknown';
+  default: jest.fn(({ otelSpan, childrenVisible, onClick }) => {
+    const displaySpanId = otelSpan ? otelSpan.spanId : 'unknown';
     return (
       <div data-testid="span-tree-offset" onClick={onClick}>
         SpanTreeOffset: {displaySpanId} - {childrenVisible ? 'expanded' : 'collapsed'}
@@ -23,12 +22,12 @@ jest.mock('./SpanTreeOffset', () => ({
 
 jest.mock('./ReferencesButton', () => ({
   __esModule: true,
-  default: jest.fn(({ tooltipText, references, links, children }) => (
+  default: jest.fn(({ tooltipText, links, children }) => (
     <button
       type="button"
       data-testid="references-button"
       data-tooltip={tooltipText}
-      data-references={JSON.stringify(references || links)}
+      data-references={JSON.stringify(links)}
     >
       {children}
     </button>
@@ -84,10 +83,9 @@ describe('<SpanBarRow>', () => {
       depth: 0,
       hasChildren: true,
       relativeStartTimeMicros: 100,
-      subsidiarilyReferencedBy: [],
+      inboundLinks: [],
       warnings: null,
     },
-    spanMap: new Map(),
     traceStartTime: 0,
     traceDuration: 1000,
     focusSpan: jest.fn(),
@@ -139,7 +137,7 @@ describe('<SpanBarRow>', () => {
   it('shows tooltip for a single downstream reference', () => {
     const span = {
       ...defaultProps.span,
-      subsidiarilyReferencedBy: [{ traceId: 't1', spanId: 's1', attributes: [] }],
+      inboundLinks: [{ traceId: 't1', spanId: 's1', attributes: [] }],
     };
     render(<SpanBarRow {...defaultProps} span={span} />);
     const btn = screen.getByTestId('references-button');
@@ -150,7 +148,7 @@ describe('<SpanBarRow>', () => {
   it('shows tooltip for multiple downstream references', () => {
     const span = {
       ...defaultProps.span,
-      subsidiarilyReferencedBy: [
+      inboundLinks: [
         { traceId: 't1', spanId: 's1', attributes: [] },
         { traceId: 't2', spanId: 's2', attributes: [] },
       ],
