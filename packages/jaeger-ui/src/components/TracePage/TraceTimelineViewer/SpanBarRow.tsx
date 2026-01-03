@@ -45,8 +45,8 @@ type SpanBarRowProps = {
   showErrorIcon: boolean;
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
-  legacySpan: Span; // Legacy span for SpanTreeOffset and other legacy components
-  span: IOtelSpan; // OTEL span for SpanBar
+  span: IOtelSpan; // OTEL span
+  spanMap: ReadonlyMap<string, IOtelSpan>; // For SpanTreeOffset ancestor lookup
   focusSpan: (spanID: string) => void;
   traceDuration: number;
   useOtelTerms: boolean;
@@ -74,8 +74,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   showErrorIcon,
   getViewedBounds,
   traceStartTime,
-  legacySpan,
   span,
+  spanMap,
   focusSpan,
   traceDuration,
   onDetailToggled,
@@ -83,21 +83,24 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   useOtelTerms,
 }) => {
   const _detailToggle = useCallback(() => {
-    onDetailToggled(legacySpan.spanID);
-  }, [onDetailToggled, legacySpan.spanID]);
+    onDetailToggled(span.spanId);
+  }, [onDetailToggled, span.spanId]);
 
   const _childrenToggle = useCallback(() => {
-    onChildrenToggled(legacySpan.spanID);
-  }, [onChildrenToggled, legacySpan.spanID]);
+    onChildrenToggled(span.spanId);
+  }, [onChildrenToggled, span.spanId]);
 
   const {
-    duration,
+    durationMicros: duration,
     hasChildren: isParent,
-    operationName,
-    process: { serviceName },
-  } = legacySpan;
+    name: operationName,
+    resource: { serviceName },
+  } = span;
   const label = formatDuration(duration);
-  const viewBounds = getViewedBounds(legacySpan.startTime, legacySpan.startTime + legacySpan.duration);
+  const viewBounds = getViewedBounds(
+    span.startTimeUnixMicros,
+    span.startTimeUnixMicros + span.durationMicros
+  );
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
 
@@ -112,6 +115,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     hintSide = 'right';
   }
 
+  // Check if span has multiple links (similar to multiple references)
+  const hasMultipleLinks = span.links && span.links.length > 1;
+  const hasSubsidiarilyReferencedBy =
+    span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0;
+
   return (
     <TimelineRow
       className={`
@@ -125,7 +133,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
         <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
-            span={legacySpan}
+            otelSpan={span}
+            spanMap={spanMap}
             onClick={isParent ? _childrenToggle : undefined}
           />
           <a
@@ -161,20 +170,22 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
           </a>
-          {legacySpan.references && legacySpan.references.length > 1 && (
+          {hasMultipleLinks && (
             <ReferencesButton
-              references={legacySpan.references}
+              links={span.links}
+              spanMap={spanMap}
               tooltipText="Contains multiple references"
               focusSpan={focusSpan}
             >
               <IoGitNetwork />
             </ReferencesButton>
           )}
-          {legacySpan.subsidiarilyReferencedBy && legacySpan.subsidiarilyReferencedBy.length > 0 && (
+          {hasSubsidiarilyReferencedBy && (
             <ReferencesButton
-              references={legacySpan.subsidiarilyReferencedBy}
+              links={span.subsidiarilyReferencedBy}
+              spanMap={spanMap}
               tooltipText={`This span is referenced by ${
-                legacySpan.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
+                span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
               }`}
               focusSpan={focusSpan}
             >

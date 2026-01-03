@@ -6,6 +6,7 @@ import _get from 'lodash/get';
 
 import { TNil } from '../types';
 import { Span } from '../types/trace';
+import { IOtelSpan } from '../types/otel';
 
 function getFirstAncestor(span: Span): Span | TNil {
   return _get(
@@ -28,6 +29,29 @@ export default function spanAncestorIds(span: Span | TNil): string[] {
   while (ref) {
     ancestorIDs.push(ref.spanID);
     ref = getFirstAncestor(ref);
+  }
+  return ancestorIDs;
+}
+
+/**
+ * Returns an array of ancestor span IDs for an OTEL span, using parentSpanId and spanMap.
+ * @param span - The IOtelSpan to get ancestors for
+ * @param spanMap - Map of spanId to IOtelSpan for looking up parent spans
+ * @returns Array of ancestor span IDs, from immediate parent to root
+ */
+export function otelSpanAncestorIds(
+  span: IOtelSpan | TNil,
+  spanMap: ReadonlyMap<string, IOtelSpan>
+): string[] {
+  const ancestorIDs: string[] = [];
+  if (!span) return ancestorIDs;
+
+  let currentParentId = span.parentSpanId;
+  while (currentParentId) {
+    ancestorIDs.push(currentParentId);
+    const parentSpan = spanMap.get(currentParentId);
+    if (!parentSpan) break;
+    currentParentId = parentSpan.parentSpanId;
   }
   return ancestorIDs;
 }

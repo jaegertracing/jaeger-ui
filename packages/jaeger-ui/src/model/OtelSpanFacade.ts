@@ -194,4 +194,9 @@ export default class OtelSpanFacade implements IOtelSpan {
   get legacyReferences(): ReadonlyArray<any> {
     return this.legacySpan.references;
   }
+
+  // For internal use by components that still need legacy span structure (e.g., link-patterns)
+  getLegacySpan(): Span {
+    return this.legacySpan;
+  }
 }

@@ -6,12 +6,17 @@ import { Dropdown, Tooltip } from 'antd';
 import { TooltipPlacement } from 'antd/es/tooltip';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import { SpanReference } from '../../../types/trace';
+import { ILink, IOtelSpan } from '../../../types/otel';
 
 import './ReferencesButton.css';
 import ReferenceLink from '../url/ReferenceLink';
 
 type TReferencesButtonProps = {
-  references: ReadonlyArray<SpanReference>;
+  // Legacy support
+  references?: ReadonlyArray<SpanReference>;
+  // OTEL support
+  links?: ReadonlyArray<ILink>;
+  spanMap?: ReadonlyMap<string, IOtelSpan>;
   children: React.ReactNode;
   tooltipText: string;
   focusSpan: (spanID: string) => void;
@@ -42,8 +47,32 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
     return dropdownItems;
   };
 
+  linksList = (links: ReadonlyArray<ILink>, spanMap: ReadonlyMap<string, IOtelSpan>) => {
+    const dropdownItems = links.map(link => {
+      const span = spanMap.get(link.spanId);
+      const isSameTrace = span !== undefined;
+      return {
+        key: `${link.spanId}`,
+        label: (
+          <a
+            onClick={() => this.props.focusSpan(link.spanId)}
+            className="ReferencesButton--TraceRefLink"
+            role="button"
+            tabIndex={0}
+          >
+            {isSameTrace
+              ? `${span.resource.serviceName}:${span.name} - ${link.spanId}`
+              : `(another trace) - ${link.spanId}`}
+            {!isSameTrace && <NewWindowIcon />}
+          </a>
+        ),
+      };
+    });
+    return dropdownItems;
+  };
+
   render() {
-    const { references, children, tooltipText, focusSpan } = this.props;
+    const { references, links, spanMap, children, tooltipText, focusSpan } = this.props;
 
     const tooltipProps = {
       arrowPointAtCenter: true,
@@ -53,26 +82,61 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
       classNames: { root: 'ReferencesButton--tooltip' },
     };
 
-    if (references.length > 1) {
+    // Handle legacy references
+    if (references && references.length > 0) {
+      if (references.length > 1) {
+        return (
+          <Tooltip {...tooltipProps}>
+            <Dropdown
+              menu={{ items: this.referencesList(references) }}
+              placement="bottomRight"
+              trigger={['click']}
+            >
+              <a className="ReferencesButton-MultiParent">{children}</a>
+            </Dropdown>
+          </Tooltip>
+        );
+      }
+      const ref = references[0];
       return (
         <Tooltip {...tooltipProps}>
-          <Dropdown
-            menu={{ items: this.referencesList(references) }}
-            placement="bottomRight"
-            trigger={['click']}
-          >
-            <a className="ReferencesButton-MultiParent">{children}</a>
-          </Dropdown>
+          <ReferenceLink reference={ref} focusSpan={focusSpan} className="ReferencesButton-MultiParent">
+            {children}
+          </ReferenceLink>
         </Tooltip>
       );
     }
-    const ref = references[0];
-    return (
-      <Tooltip {...tooltipProps}>
-        <ReferenceLink reference={ref} focusSpan={focusSpan} className="ReferencesButton-MultiParent">
-          {children}
-        </ReferenceLink>
-      </Tooltip>
-    );
+
+    // Handle OTEL links
+    if (links && links.length > 0 && spanMap) {
+      if (links.length > 1) {
+        return (
+          <Tooltip {...tooltipProps}>
+            <Dropdown
+              menu={{ items: this.linksList(links, spanMap) }}
+              placement="bottomRight"
+              trigger={['click']}
+            >
+              <a className="ReferencesButton-MultiParent">{children}</a>
+            </Dropdown>
+          </Tooltip>
+        );
+      }
+      const link = links[0];
+      return (
+        <Tooltip {...tooltipProps}>
+          <a
+            onClick={() => focusSpan(link.spanId)}
+            className="ReferencesButton-MultiParent"
+            role="button"
+            tabIndex={0}
+          >
+            {children}
+          </a>
+        </Tooltip>
+      );
+    }
+
+    return null;
   }
 }

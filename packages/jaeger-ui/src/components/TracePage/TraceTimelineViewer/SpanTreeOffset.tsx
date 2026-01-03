@@ -11,7 +11,8 @@ import { bindActionCreators, Dispatch } from 'redux';
 import { actions } from './duck';
 import { ReduxState } from '../../../types';
 import { Span } from '../../../types/trace';
-import spanAncestorIds from '../../../utils/span-ancestor-ids';
+import { IOtelSpan } from '../../../types/otel';
+import spanAncestorIds, { otelSpanAncestorIds } from '../../../utils/span-ancestor-ids';
 
 import './SpanTreeOffset.css';
 
@@ -24,7 +25,9 @@ type TProps = TDispatchProps & {
   childrenVisible?: boolean;
   hoverIndentGuideIds: Set<string>;
   onClick?: () => void;
-  span: Span;
+  span?: Span; // Legacy span (deprecated, for backward compatibility)
+  otelSpan?: IOtelSpan; // OTEL span (preferred)
+  spanMap?: ReadonlyMap<string, IOtelSpan>; // Required when using otelSpan
   showChildrenIcon?: boolean;
 };
 
@@ -33,18 +36,27 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   onClick = undefined,
   showChildrenIcon = true,
   span,
+  otelSpan,
+  spanMap,
   hoverIndentGuideIds,
   addHoverIndentGuideId,
   removeHoverIndentGuideId,
 }) => {
   const ancestorIds = useMemo(() => {
-    const ids = spanAncestorIds(span);
+    let ids: string[];
+    if (otelSpan && spanMap) {
+      ids = otelSpanAncestorIds(otelSpan, spanMap);
+    } else if (span) {
+      ids = spanAncestorIds(span);
+    } else {
+      ids = [];
+    }
     // Some traces have multiple root-level spans, this connects them all under one guideline and adds the
     // necessary padding for the collapse icon on root-level spans.
     ids.push('root');
     ids.reverse();
     return ids;
-  }, [span]);
+  }, [span, otelSpan, spanMap]);
 
   /**
    * If the mouse leaves to anywhere except another span with the same ancestor id, this span's ancestor id is
@@ -80,7 +92,8 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
     }
   };
 
-  const { hasChildren, spanID } = span;
+  const hasChildren = otelSpan ? otelSpan.hasChildren : (span?.hasChildren ?? false);
+  const spanID = otelSpan ? otelSpan.spanId : (span?.spanID ?? '');
   const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
   const icon =
     showChildrenIcon && hasChildren && (childrenVisible ? <IoChevronDown /> : <IoChevronForward />);
