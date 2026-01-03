@@ -19,11 +19,6 @@ import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 import {
   createViewedBoundsFunc,
-  findServerChildSpan,
-  isErrorSpan,
-  isKindClient,
-  isKindProducer,
-  spanContainsErredSpan,
   ViewedBoundsFunctionType,
   findServerChildOtelSpan,
   isErrorOtelSpan,
