@@ -20,7 +20,7 @@ export default class OtelTraceFacade implements IOtelTrace {
     // Build spanMap
     this._spanMap = new Map();
     this._spans.forEach(span => {
-      this._spanMap.set(span.spanId, span);
+      this._spanMap.set(span.spanID, span);
     });
 
     // Build rootSpans from legacy trace rootSpans
@@ -33,8 +33,8 @@ export default class OtelTraceFacade implements IOtelTrace {
     // Wire up parentSpan, childSpans, and link span references
     this._spans.forEach(span => {
       const facade = span as OtelSpanFacade;
-      if (facade.parentSpanId) {
-        facade.parentSpan = this._spanMap.get(facade.parentSpanId);
+      if (facade.parentSpanID) {
+        facade.parentSpan = this._spanMap.get(facade.parentSpanID);
       }
 
       // Populate childSpans using legacySpan.childSpans
@@ -47,17 +47,17 @@ export default class OtelTraceFacade implements IOtelTrace {
 
       // Wire up links
       facade.links.forEach(link => {
-        link.span = this._spanMap.get(link.spanId);
+        link.span = this._spanMap.get(link.spanID);
       });
 
       // Wire up inboundLinks
       facade.inboundLinks.forEach(link => {
-        link.span = this._spanMap.get(link.spanId);
+        link.span = this._spanMap.get(link.spanID);
       });
     });
   }
 
-  get traceId(): string {
+  get traceID(): string {
     return this.legacyTrace.traceID;
   }
 

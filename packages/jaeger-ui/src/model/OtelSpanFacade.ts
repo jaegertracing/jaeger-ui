@@ -18,7 +18,7 @@ import {
 export default class OtelSpanFacade implements IOtelSpan {
   private legacySpan: Span;
   private _kind: SpanKind;
-  private _parentSpanId: string | undefined;
+  private _parentSpanID: string | undefined;
   private _attributes: IAttribute[];
   private _events: IEvent[];
   private _links: ILink[];
@@ -46,7 +46,7 @@ export default class OtelSpanFacade implements IOtelSpan {
     // 2. Otherwise, earliest FOLLOWS_FROM reference with the same traceID
     // 3. If no reference with same traceID exists, parent is undefined
     const { references, traceID } = this.legacySpan;
-    this._parentSpanId = (
+    this._parentSpanID = (
       references.find(r => r.traceID === traceID && r.refType === 'CHILD_OF') ??
       references.find(r => r.traceID === traceID && r.refType === 'FOLLOWS_FROM')
     )?.spanID;
@@ -62,8 +62,8 @@ export default class OtelSpanFacade implements IOtelSpan {
     this._links = this.legacySpan.references
       .filter(ref => ref.refType !== 'CHILD_OF')
       .map(ref => ({
-        traceId: ref.traceID,
-        spanId: ref.spanID,
+        traceID: ref.traceID,
+        spanID: ref.spanID,
         attributes: [], // Legacy references don't have attributes
       }));
 
@@ -78,8 +78,8 @@ export default class OtelSpanFacade implements IOtelSpan {
     };
 
     this._inboundLinks = this.legacySpan.subsidiarilyReferencedBy.map(ref => ({
-      traceId: ref.traceID,
-      spanId: ref.spanID,
+      traceID: ref.traceID,
+      spanID: ref.spanID,
       attributes: [],
     }));
   }
@@ -93,16 +93,16 @@ export default class OtelSpanFacade implements IOtelSpan {
       }));
   }
 
-  get traceId(): string {
+  get traceID(): string {
     return this.legacySpan.traceID;
   }
 
-  get spanId(): string {
+  get spanID(): string {
     return this.legacySpan.spanID;
   }
 
-  get parentSpanId(): string | undefined {
-    return this._parentSpanId;
+  get parentSpanID(): string | undefined {
+    return this._parentSpanID;
   }
 
   get name(): string {
