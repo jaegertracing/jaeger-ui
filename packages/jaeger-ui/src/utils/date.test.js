@@ -14,7 +14,7 @@ import {
   formatDatetime,
   formatMillisecondTime,
   formatSecondTime,
-} from './date.tsx';
+} from './date';
 
 const ONE_SECOND = 1000 * ONE_MILLISECOND;
 const ONE_MINUTE = 60 * ONE_SECOND;

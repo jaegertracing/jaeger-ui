@@ -47,6 +47,7 @@
     "build": "npm run --workspaces build",
     "check-copyright-year": "./scripts/check-copyright-year.sh",
     "check-license": "./scripts/check-license.sh",
+    "check-tsx-naming": "./scripts/check-tsx-naming.sh",
     "coverage": "npm run --workspaces coverage",
     "depcheck": "./scripts/run-depcheck.sh",
     "eslint": "eslint --cache 'scripts/*.{js,jsx,ts,tsx}' 'packages/*/src/**/*.{js,jsx,ts,tsx}' 'packages/*/*.{js,jsx,ts,tsx,mts}'",

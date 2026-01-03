@@ -9,9 +9,9 @@ const nodeExternals = require('webpack-node-externals');
 const babelConfigPath = require.resolve('./babel.config');
 
 // Note: Do not allow *.ts files
-const extensions = ['.js', '.json', '.tsx'];
-const extensionsRx = /\.(js|json|tsx)$/;
-const extensionsWorkerRx = /\.worker\.(js|json|tsx)$/;
+const extensions = ['.js', '.json', '.tsx', '.ts'];
+const extensionsRx = /\.(js|json|tsx|ts)$/;
+const extensionsWorkerRx = /\.worker\.(js|json|tsx|ts)$/;
 
 // Base Webpack configuration shared across all modes
 function makeBaseConfig() {
@@ -174,7 +174,7 @@ function makeWorkerConfig() {
       libraryTarget: 'module',
     },
     entry: {
-      'layout.worker': join(layoutDir, 'layout.worker.tsx'),
+      'layout.worker': join(layoutDir, 'layout.worker.ts'),
     },
   };
   const rules = [
