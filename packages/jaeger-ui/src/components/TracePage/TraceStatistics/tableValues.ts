@@ -12,9 +12,9 @@ const operationName = 'Operation Name';
 function parentChildOfMap(allSpans: ReadonlyArray<IOtelSpan>): Record<string, IOtelSpan[]> {
   const parentChildOfMap: Record<string, IOtelSpan[]> = {};
   allSpans.forEach(s => {
-    if (s.parentSpanId) {
-      parentChildOfMap[s.parentSpanId] = parentChildOfMap[s.parentSpanId] || [];
-      parentChildOfMap[s.parentSpanId].push(s);
+    if (s.parentSpanID) {
+      parentChildOfMap[s.parentSpanID] = parentChildOfMap[s.parentSpanID] || [];
+      parentChildOfMap[s.parentSpanID].push(s);
     }
   });
   return parentChildOfMap;
@@ -32,7 +32,7 @@ function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpa
   let parentSpanSelfTime = parentSpan.durationMicros;
   let previousChildEndTime = parentSpan.startTimeUnixMicros;
 
-  const children = getChildOfSpans(parentSpan.spanId, allSpans).sort(
+  const children = getChildOfSpans(parentSpan.spanID, allSpans).sort(
     (a, b) => a.startTimeUnixMicros - b.startTimeUnixMicros
   );
 
@@ -199,7 +199,7 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
       statsPerAttributeValue[attributeValue] ?? getDefaultStatsValue(trace)
     );
 
-    spanIdsWithSelectedAttribute.add(allSpans[i].spanId);
+    spanIdsWithSelectedAttribute.add(allSpans[i].spanID);
     uniqueValuesForSelectedAttribute.add(attributeValue);
   }
 
@@ -239,7 +239,7 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
   // checks if there is OTHERS
   if (selectedAttributeKey !== serviceName && selectedAttributeKey !== operationName) {
     for (let i = 0; i < allSpans.length; i++) {
-      const spanHasSelectedAttribute = spanIdsWithSelectedAttribute.has(allSpans[i].spanId);
+      const spanHasSelectedAttribute = spanIdsWithSelectedAttribute.has(allSpans[i].spanID);
 
       if (!spanHasSelectedAttribute) {
         spanWithNoSelectedAttribute.push(allSpans[i]);

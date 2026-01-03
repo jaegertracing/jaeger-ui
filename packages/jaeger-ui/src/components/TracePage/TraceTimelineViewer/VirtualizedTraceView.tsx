@@ -372,7 +372,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   // https://github.com/facebook/flow/issues/3076#issuecomment-290944051
   getKeyFromIndex = (index: number) => {
     const { isDetail, span } = this.getRowStates()[index];
-    return `${span.spanId}--${isDetail ? 'detail' : 'bar'}`;
+    return `${span.spanID}--${isDetail ? 'detail' : 'bar'}`;
   };
 
   getIndexFromKey = (key: string) => {
@@ -382,7 +382,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const max = this.getRowStates().length;
     for (let i = 0; i < max; i++) {
       const { span, isDetail } = this.getRowStates()[i];
-      if (span.spanId === _spanID && isDetail === _isDetail) {
+      if (span.spanID === _spanID && isDetail === _isDetail) {
         return i;
       }
     }

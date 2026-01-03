@@ -8,5 +8,5 @@ import { selectOtelSpans } from '../selectors/otel';
 
 export const useOtelSpan = (traceId: string, spanId: string): IOtelSpan | null => {
   const spans = useSelector((state: ReduxState) => selectOtelSpans(state, traceId));
-  return spans.find(s => s.spanId === spanId) || null;
+  return spans.find(s => s.spanID === spanId) || null;
 };
