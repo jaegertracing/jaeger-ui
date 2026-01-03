@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Span } from '../../../types/trace';
+import { IOtelSpan, SpanKind, StatusCode } from '../../../types/otel';
 
 export type ViewedBoundsFunctionType = (start: number, end: number) => { start: number; end: number };
 /**
@@ -111,5 +112,71 @@ export const isKindClient = (span: Span): boolean =>
 
 export const isKindProducer = (span: Span): boolean =>
   span.tags.some(({ key, value }) => key === 'span.kind' && value === 'producer');
+
+// ============================================================================
+// OTEL-based utility functions
+// ============================================================================
+
+/**
+ * Returns `true` if the OTEL span has an error status.
+ *
+ * @param  {IOtelSpan} span  The OTEL span to check.
+ * @return {boolean}         True if the span has an error status.
+ */
+export function isErrorOtelSpan(span: IOtelSpan): boolean {
+  return span.status.code === StatusCode.ERROR;
+}
+
+/**
+ * Returns `true` if at least one of the descendants of the `parentSpanIndex`
+ * span contains an error status.
+ *
+ * @param      {IOtelSpan[]}  spans            The OTEL spans for a trace - should be
+ *                                             sorted with children following parents.
+ * @param      {number}       parentSpanIndex  The index of the parent span - only
+ *                                             subsequent spans with depth less than
+ *                                             the parent span will be checked.
+ * @return     {boolean}      Returns `true` if a descendant contains an error status.
+ */
+export function otelSpanContainsErredSpan(spans: ReadonlyArray<IOtelSpan>, parentSpanIndex: number): boolean {
+  const { depth } = spans[parentSpanIndex];
+  let i = parentSpanIndex + 1;
+  for (; i < spans.length && spans[i].depth > depth; i++) {
+    if (isErrorOtelSpan(spans[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Expects the first span to be the parent span.
+ * Returns the first direct child span that is a SERVER span.
+ */
+export function findServerChildOtelSpan(spans: ReadonlyArray<IOtelSpan>): IOtelSpan | null | false {
+  if (spans.length <= 1 || spans[0].kind !== SpanKind.CLIENT) {
+    return false;
+  }
+  const span = spans[0];
+  const spanChildDepth = span.depth + 1;
+  let i = 1;
+  while (i < spans.length && spans[i].depth === spanChildDepth) {
+    if (spans[i].kind === SpanKind.SERVER) {
+      return spans[i];
+    }
+    i++;
+  }
+  return null;
+}
+
+/**
+ * Returns `true` if the OTEL span kind is CLIENT.
+ */
+export const isOtelKindClient = (span: IOtelSpan): boolean => span.kind === SpanKind.CLIENT;
+
+/**
+ * Returns `true` if the OTEL span kind is PRODUCER.
+ */
+export const isOtelKindProducer = (span: IOtelSpan): boolean => span.kind === SpanKind.PRODUCER;
 
 export { formatDuration } from '../../../utils/date';

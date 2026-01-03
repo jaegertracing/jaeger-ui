@@ -25,6 +25,11 @@ import {
   isKindProducer,
   spanContainsErredSpan,
   ViewedBoundsFunctionType,
+  findServerChildOtelSpan,
+  isErrorOtelSpan,
+  isOtelKindClient,
+  isOtelKindProducer,
+  otelSpanContainsErredSpan,
 } from './utils';
 import { Accessors } from '../ScrollManager';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
@@ -470,40 +475,42 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       return null;
     }
 
+    const otelTrace = trace.asOtelTrace();
+    const otelSpans = otelTrace.spans;
+
     const color = colorGenerator.getColorByKey(serviceName);
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
     const showErrorIcon =
-      isErrorSpan(legacySpan) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
+      isErrorOtelSpan(span) || (isCollapsed && otelSpanContainsErredSpan(otelSpans, spanIndex));
     const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
-      const rpcSpan = findServerChildSpan(trace.spans.slice(spanIndex));
+      const rpcSpan = findServerChildOtelSpan(otelSpans.slice(spanIndex));
       if (rpcSpan) {
-        const rpcViewBounds = this.getViewedBounds()(rpcSpan.startTime, rpcSpan.startTime + rpcSpan.duration);
+        const rpcViewBounds = this.getViewedBounds()(
+          rpcSpan.startTimeUnixMicros,
+          rpcSpan.startTimeUnixMicros + rpcSpan.durationMicros
+        );
         rpc = {
-          color: colorGenerator.getColorByKey(rpcSpan.process.serviceName),
-          operationName: rpcSpan.operationName,
-          serviceName: rpcSpan.process.serviceName,
+          color: colorGenerator.getColorByKey(rpcSpan.resource.serviceName),
+          operationName: rpcSpan.name,
+          serviceName: rpcSpan.resource.serviceName,
           viewEnd: rpcViewBounds.end,
           viewStart: rpcViewBounds.start,
         };
       }
     }
-    const peerServiceKV = legacySpan.tags.find(kv => kv.key === PEER_SERVICE);
+    const peerServiceAttr = span.attributes.find(attr => attr.key === PEER_SERVICE);
     // Leaf, kind == client and has peer.service tag, is likely a client span that does a request
     // to an uninstrumented/external service
     let noInstrumentedServer = null;
-    if (
-      !legacySpan.hasChildren &&
-      peerServiceKV &&
-      (isKindClient(legacySpan) || isKindProducer(legacySpan))
-    ) {
+    if (!span.hasChildren && peerServiceAttr && (isOtelKindClient(span) || isOtelKindProducer(span))) {
       noInstrumentedServer = {
-        serviceName: peerServiceKV.value,
-        color: colorGenerator.getColorByKey(peerServiceKV.value),
+        serviceName: String(peerServiceAttr.value),
+        color: colorGenerator.getColorByKey(String(peerServiceAttr.value)),
       };
     }
 

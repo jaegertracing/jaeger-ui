@@ -9,9 +9,15 @@ import {
   isServerSpan,
   spanContainsErredSpan,
   spanHasTag,
+  isErrorOtelSpan,
+  otelSpanContainsErredSpan,
+  findServerChildOtelSpan,
+  isOtelKindClient,
+  isOtelKindProducer,
 } from './utils';
 
 import traceGenerator from '../../../demo/trace-generators';
+import { SpanKind, StatusCode } from '../../../types/otel';
 
 describe('TraceTimelineViewer/utils', () => {
   describe('getViewedBounds()', () => {
@@ -141,6 +147,125 @@ describe('TraceTimelineViewer/utils', () => {
       expect(findServerChildSpan(spans)).toBeFalsy();
       spans[1].depth = spans[0].depth;
       expect(findServerChildSpan(spans)).toBeFalsy();
+    });
+  });
+
+  // OTEL-based utility function tests
+  describe('OTEL utility functions', () => {
+    describe('isErrorOtelSpan()', () => {
+      it('returns true when span has ERROR status code', () => {
+        const span = {
+          status: { code: StatusCode.ERROR },
+        };
+        expect(isErrorOtelSpan(span)).toBe(true);
+      });
+
+      it('returns false when span has OK status code', () => {
+        const span = {
+          status: { code: StatusCode.OK },
+        };
+        expect(isErrorOtelSpan(span)).toBe(false);
+      });
+
+      it('returns false when span has UNSET status code', () => {
+        const span = {
+          status: { code: StatusCode.UNSET },
+        };
+        expect(isErrorOtelSpan(span)).toBe(false);
+      });
+    });
+
+    describe('otelSpanContainsErredSpan()', () => {
+      it('returns true only when a descendant has an error status', () => {
+        // Using a string to generate the test spans. Each line results in a span. The
+        // left number indicates whether or not the generated span has a descendant
+        // with an error status (the expectation). The length of the line indicates the
+        // depth of the span (i.e. further right is higher depth). The right number
+        // indicates whether or not the span has an error status.
+        const config = `
+          1   0
+          1     0
+          0       1
+          0     0
+          1     0
+          1       1
+          0         1
+          0           0
+          1         0
+          0           1
+          0   0
+        `
+          .trim()
+          .split('\n')
+          .map(s => s.trim());
+        // Get the expectation, str -> number -> bool
+        const expectations = config.map(s => Boolean(Number(s[0])));
+        const spans = config.map(line => ({
+          depth: line.length,
+          status: { code: +line.slice(-1) ? StatusCode.ERROR : StatusCode.OK },
+        }));
+
+        expectations.forEach((target, i) => {
+          // include the index in the expect condition to know which span failed
+          // (if there is a failure, that is)
+          const result = [i, otelSpanContainsErredSpan(spans, i)];
+          expect(result).toEqual([i, target]);
+        });
+      });
+    });
+
+    describe('findServerChildOtelSpan()', () => {
+      let spans;
+
+      beforeEach(() => {
+        spans = [
+          { depth: 0, kind: SpanKind.CLIENT },
+          { depth: 1, kind: SpanKind.INTERNAL },
+          { depth: 1, kind: SpanKind.SERVER },
+          { depth: 1, kind: SpanKind.PRODUCER },
+          { depth: 1, kind: SpanKind.SERVER },
+        ];
+      });
+
+      it('returns falsy if the first span is not a client', () => {
+        expect(findServerChildOtelSpan(spans.slice(1))).toBeFalsy();
+      });
+
+      it('returns the first server span', () => {
+        const span = findServerChildOtelSpan(spans);
+        expect(span).toBe(spans[2]);
+      });
+
+      it('bails when a non-child-depth span is encountered', () => {
+        spans[1].depth++;
+        expect(findServerChildOtelSpan(spans)).toBeFalsy();
+        spans[1].depth = spans[0].depth;
+        expect(findServerChildOtelSpan(spans)).toBeFalsy();
+      });
+    });
+
+    describe('isOtelKindClient()', () => {
+      it('returns true when span kind is CLIENT', () => {
+        const span = { kind: SpanKind.CLIENT };
+        expect(isOtelKindClient(span)).toBe(true);
+      });
+
+      it('returns false when span kind is not CLIENT', () => {
+        const span = { kind: SpanKind.SERVER };
+        expect(isOtelKindClient(span)).toBe(false);
+      });
+    });
+
+    describe('isOtelKindProducer()', () => {
+      it('returns true when span kind is PRODUCER', () => {
+        const span = { kind: SpanKind.PRODUCER };
+        expect(isOtelKindProducer(span)).toBe(true);
+      });
+
+      it('returns false when span kind is not PRODUCER', () => {
+        const span = { kind: SpanKind.CLIENT };
+        expect(isOtelKindProducer(span)).toBe(false);
+      });
     });
   });
 });
