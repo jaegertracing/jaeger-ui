@@ -222,7 +222,7 @@ describe('<SpanDetail>', () => {
     const toggleButton = screen.getByTestId('toggle-tags');
     fireEvent.click(toggleButton);
 
-    expect(props.attributesToggle).toHaveBeenCalledWith(span.spanId);
+    expect(props.attributesToggle).toHaveBeenCalledWith(span.spanID);
   });
 
   it('renders process tags accordian and triggers toggle callback with span ID', () => {
@@ -234,7 +234,7 @@ describe('<SpanDetail>', () => {
     const toggleButton = screen.getByTestId('toggle-process');
     fireEvent.click(toggleButton);
 
-    expect(props.resourceToggle).toHaveBeenCalledWith(span.spanId);
+    expect(props.resourceToggle).toHaveBeenCalledWith(span.spanID);
   });
 
   it('renders logs accordian and triggers both main toggle and item toggle callbacks', () => {
@@ -245,11 +245,11 @@ describe('<SpanDetail>', () => {
 
     const toggleButton = screen.getByTestId('toggle-logs');
     fireEvent.click(toggleButton);
-    expect(props.eventsToggle).toHaveBeenCalledWith(span.spanId);
+    expect(props.eventsToggle).toHaveBeenCalledWith(span.spanID);
 
     const logItemButton = screen.getByTestId('toggle-log-item');
     fireEvent.click(logItemButton);
-    expect(props.eventItemToggle).toHaveBeenCalledWith(span.spanId, 'test-log');
+    expect(props.eventItemToggle).toHaveBeenCalledWith(span.spanID, 'test-log');
   });
 
   it('renders warnings accordian and triggers toggle callback with span ID', () => {
@@ -261,7 +261,7 @@ describe('<SpanDetail>', () => {
     const toggleButton = screen.getByTestId('toggle-warnings');
     fireEvent.click(toggleButton);
 
-    expect(props.warningsToggle).toHaveBeenCalledWith(span.spanId);
+    expect(props.warningsToggle).toHaveBeenCalledWith(span.spanID);
   });
 
   it('renders references accordian and triggers toggle callback with span ID', () => {
@@ -273,7 +273,7 @@ describe('<SpanDetail>', () => {
     const toggleButton = screen.getByTestId('toggle-links');
     fireEvent.click(toggleButton);
 
-    expect(props.linksToggle).toHaveBeenCalledWith(span.spanId);
+    expect(props.linksToggle).toHaveBeenCalledWith(span.spanID);
   });
 
   it('renders copy icon with deep link URL containing the span ID parameter', () => {
@@ -283,6 +283,6 @@ describe('<SpanDetail>', () => {
     const copyText = copyIcon.getAttribute('data-copy-text');
 
     expect(copyIcon).toBeInTheDocument();
-    expect(copyText).toContain(`?uiFind=${props.span.spanId}`);
+    expect(copyText).toContain(`?uiFind=${props.span.spanID}`);
   });
 });
