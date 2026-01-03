@@ -31,8 +31,12 @@ done
 
 # Perform batch AST check for candidates
 if [ ${#CANDIDATES[@]} -gt 0 ]; then
-    # Use Node 24's experimental TS support
-    RESULTS=$(node --experimental-strip-types scripts/find-jsx.ts "${CANDIDATES[@]}" 2>/dev/null)
+    # Use Node 22.6.0+'s experimental TS support
+    if ! RESULTS=$(node --experimental-strip-types scripts/find-jsx.ts "${CANDIDATES[@]}" 2>&1); then
+        echo "$RESULTS" >&2
+        echo "Error: Failed to run AST check. Node.js 22.6.0+ with experimental TS support required." >&2
+        exit 1
+    fi
     while IFS=: read -r file has_jsx; do
         if [ "$has_jsx" = "false" ]; then
             MISNAMED_FILES+=("$file")
