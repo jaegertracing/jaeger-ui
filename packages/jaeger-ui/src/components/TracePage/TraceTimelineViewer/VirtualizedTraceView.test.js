@@ -81,11 +81,35 @@ describe('<VirtualizedTraceViewImpl>', () => {
     const childrenHiddenIDs = new Set([newSpanID]);
     const spans = [
       trace.spans[0],
-      // this span is condidered to have collapsed children
-      { spanID: newSpanID, depth: 1 },
+      // this span is considered to have collapsed children
+      {
+        ...trace.spans[0],
+        spanID: newSpanID,
+        depth: 1,
+        childSpans: [],
+        tags: [],
+        process: trace.spans[0].process,
+        references: [],
+      },
       // these two "spans" are children and should be hidden
-      { depth: 2 },
-      { depth: 3 },
+      {
+        ...trace.spans[0],
+        spanID: 'child-1',
+        depth: 2,
+        childSpans: [],
+        tags: [],
+        process: trace.spans[0].process,
+        references: [],
+      },
+      {
+        ...trace.spans[0],
+        spanID: 'child-2',
+        depth: 3,
+        childSpans: [],
+        tags: [],
+        process: trace.spans[0].process,
+        references: [],
+      },
       ...trace.spans.slice(1),
     ];
     const _trace = { ...trace, spans };
@@ -124,7 +148,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 
   it('renders when a trace is not set', () => {
-    const { container } = render(<VirtualizedTraceViewImpl {...mockProps} trace={[]} />);
+    const { container } = render(<VirtualizedTraceViewImpl {...mockProps} trace={null} />);
     expect(container).toBeTruthy();
   });
 
