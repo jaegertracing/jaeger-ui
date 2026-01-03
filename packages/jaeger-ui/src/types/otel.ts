@@ -46,8 +46,8 @@ export interface IEvent {
 }
 
 export interface ILink {
-  traceId: string;
-  spanId: string;
+  traceID: string;
+  spanID: string;
   attributes: IAttribute[];
   span?: IOtelSpan;
 }
@@ -59,9 +59,9 @@ export interface IStatus {
 
 export interface IOtelSpan {
   // Identity
-  traceId: string;
-  spanId: string;
-  parentSpanId?: string;
+  traceID: string;
+  spanID: string;
+  parentSpanID?: string;
   parentSpan?: IOtelSpan;
 
   // Naming & Classification
@@ -96,7 +96,7 @@ export interface IOtelSpan {
 }
 
 export interface IOtelTrace {
-  traceId: string;
+  traceID: string;
   spans: ReadonlyArray<IOtelSpan>;
 
   // Some trace-level convenience properties
