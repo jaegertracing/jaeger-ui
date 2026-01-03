@@ -25,26 +25,11 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
       // Link within the trace should have link.span defined
       const isSameTrace = span !== undefined;
 
-      // Convert ILink to SpanReference format for ReferenceLink
-      const referenceForLink = {
-        traceID: link.traceId,
-        spanID: link.spanId,
-        span: span
-          ? {
-              spanID: span.spanId,
-              operationName: span.name,
-              process: {
-                serviceName: span.resource.serviceName,
-              },
-            }
-          : undefined,
-      };
-
       return {
         key: `${link.spanId}`,
         label: (
           <ReferenceLink
-            reference={referenceForLink as any}
+            link={link}
             focusSpan={this.props.focusSpan}
             className="ReferencesButton--TraceRefLink"
           >
@@ -80,28 +65,10 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
     }
 
     const link = links[0];
-    const { span } = link;
-    const referenceForLink = {
-      traceID: link.traceId,
-      spanID: link.spanId,
-      span: span
-        ? {
-            spanID: span.spanId,
-            operationName: span.name,
-            process: {
-              serviceName: span.resource.serviceName,
-            },
-          }
-        : undefined,
-    };
 
     return (
       <Tooltip {...tooltipProps}>
-        <ReferenceLink
-          reference={referenceForLink as any}
-          focusSpan={focusSpan}
-          className="ReferencesButton-MultiParent"
-        >
+        <ReferenceLink link={link} focusSpan={focusSpan} className="ReferencesButton-MultiParent">
           {children}
         </ReferenceLink>
       </Tooltip>

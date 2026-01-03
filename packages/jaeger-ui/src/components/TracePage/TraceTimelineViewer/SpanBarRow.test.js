@@ -10,14 +10,11 @@ import SpanBar from './SpanBar';
 
 jest.mock('./SpanTreeOffset', () => ({
   __esModule: true,
-  default: jest.fn(({ otelSpan, childrenVisible, onClick }) => {
-    const displaySpanId = otelSpan ? otelSpan.spanId : 'unknown';
-    return (
-      <div data-testid="span-tree-offset" onClick={onClick}>
-        SpanTreeOffset: {displaySpanId} - {childrenVisible ? 'expanded' : 'collapsed'}
-      </div>
-    );
-  }),
+  default: jest.fn(({ span, childrenVisible, onClick }) => (
+    <div data-testid="span-tree-offset" onClick={onClick}>
+      SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
+    </div>
+  )),
 }));
 
 jest.mock('./ReferencesButton', () => ({
