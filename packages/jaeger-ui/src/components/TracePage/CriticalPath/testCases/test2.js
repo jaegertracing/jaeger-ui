@@ -30,6 +30,8 @@ const happyTrace = {
       duration: 100,
       references: [],
       processID: 'p1',
+      tags: [],
+      logs: [],
     },
     {
       spanID: 'span-A',
@@ -43,6 +45,8 @@ const happyTrace = {
         },
       ],
       processID: 'p1',
+      tags: [],
+      logs: [],
     },
     {
       spanID: 'span-C',
@@ -56,11 +60,14 @@ const happyTrace = {
         },
       ],
       processID: 'p1',
+      tags: [],
+      logs: [],
     },
   ],
   processes: {
     p1: {
       serviceName: 'service1',
+      tags: [],
     },
   },
 };
