@@ -92,17 +92,17 @@ export const DEFAULT_HEIGHTS = {
 const NUM_TICKS = 5;
 
 function generateRowStates(
-  otelSpans: ReadonlyArray<IOtelSpan> | TNil,
+  spans: ReadonlyArray<IOtelSpan> | TNil,
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>
 ): RowState[] {
-  if (!otelSpans) {
+  if (!spans) {
     return [];
   }
   let collapseDepth = null;
   const rowStates = [];
-  for (let i = 0; i < otelSpans.length; i++) {
-    const span = otelSpans[i];
+  for (let i = 0; i < spans.length; i++) {
+    const span = spans[i];
     const { spanId, depth } = span;
     let hidden = false;
     if (collapseDepth != null) {
@@ -142,8 +142,7 @@ function generateRowStatesFromTrace(
   if (!trace) {
     return [];
   }
-  const otelTrace = trace.asOtelTrace();
-  return generateRowStates(otelTrace.spans, childrenHiddenIDs, detailStates);
+  return generateRowStates(trace.asOtelTrace().spans, childrenHiddenIDs, detailStates);
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -401,20 +400,19 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   };
 
   // Adapter for OTEL components that need links from attributes
-  linksGetterFromAttributes =
-    (otelSpan: IOtelSpan) => (attributes: ReadonlyArray<IAttribute>, index: number) => {
-      // Convert IAttribute[] to KeyValuePair[] for legacy getLinks function
-      const keyValuePairs: KeyValuePair[] = attributes.map(attr => ({
-        key: attr.key,
-        value: String(attr.value), // Convert AttributeValue to string
-      }));
-      // Get legacy span from OtelSpanFacade for link generation
-      const legacySpan = (otelSpan as any).getLegacySpan ? (otelSpan as any).getLegacySpan() : null;
-      if (!legacySpan) {
-        return [];
-      }
-      return this.linksGetter(legacySpan, keyValuePairs, index);
-    };
+  linksGetterFromAttributes = (span: IOtelSpan) => (attributes: ReadonlyArray<IAttribute>, index: number) => {
+    // Convert IAttribute[] to KeyValuePair[] for legacy getLinks function
+    const keyValuePairs: KeyValuePair[] = attributes.map(attr => ({
+      key: attr.key,
+      value: String(attr.value), // Convert AttributeValue to string
+    }));
+    // Get legacy span from OtelSpanFacade for link generation
+    const legacySpan = (span as any).getLegacySpan ? (span as any).getLegacySpan() : null;
+    if (!legacySpan) {
+      return [];
+    }
+    return this.linksGetter(legacySpan, keyValuePairs, index);
+  };
 
   // Adapter for OTEL event toggle to legacy log toggle
   eventItemToggleAdapter =
@@ -469,20 +467,19 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       return null;
     }
 
-    const otelTrace = trace.asOtelTrace();
-    const otelSpans = otelTrace.spans;
+    const spans = trace.asOtelTrace().spans;
 
     const color = colorGenerator.getColorByKey(serviceName);
     const isCollapsed = childrenHiddenIDs.has(spanId);
     const isDetailExpanded = detailStates.has(spanId);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanId) : false;
     const showErrorIcon =
-      isErrorOtelSpan(span) || (isCollapsed && otelSpanContainsErredSpan(otelSpans, spanIndex));
+      isErrorOtelSpan(span) || (isCollapsed && otelSpanContainsErredSpan(spans, spanIndex));
     const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanId, criticalPath);
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
-      const rpcSpan = findServerChildOtelSpan(otelSpans.slice(spanIndex));
+      const rpcSpan = findServerChildOtelSpan(spans.slice(spanIndex));
       if (rpcSpan) {
         const rpcViewBounds = this.getViewedBounds()(
           rpcSpan.startTimeUnixMicros,
@@ -557,7 +554,6 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       return null;
     }
 
-    const otelTrace = trace.asOtelTrace();
     const color = colorGenerator.getColorByKey(serviceName);
     return (
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
