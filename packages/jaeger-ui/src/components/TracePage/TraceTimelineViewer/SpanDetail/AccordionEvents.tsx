@@ -27,7 +27,7 @@ type AccordionEventsProps = {
   traceDuration: number;
   initialVisibleCount?: number;
   spanID?: string;
-  useOtelTerms?: boolean;
+  useOtelTerms: boolean;
 };
 
 export default function AccordionEvents({
@@ -43,7 +43,7 @@ export default function AccordionEvents({
   traceDuration,
   initialVisibleCount = 3,
   spanID,
-  useOtelTerms = false,
+  useOtelTerms,
 }: AccordionEventsProps) {
   let arrow: React.ReactNode | null = null;
   let HeaderComponent: 'span' | 'a' = 'span';

@@ -77,6 +77,7 @@ type TReduxProps = {
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
   traceGraphConfig?: TraceGraphConfig;
+  useOtelTerms: boolean;
 };
 
 type TProps = TDispatchProps & TOwnProps & TReduxProps;
@@ -394,6 +395,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           updateNextViewRangeTime={this.updateNextViewRangeTime}
           updateViewRangeTime={this.updateViewRangeTime}
           viewRange={viewRange}
+          useOtelTerms={this.props.useOtelTerms}
         />
       );
     } else if (ETraceViewType.TraceGraph === viewType && headerHeight) {
@@ -456,6 +458,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     disableJsonView,
     trace,
     traceGraphConfig,
+    useOtelTerms: config.useOpenTelemetryTerms,
   };
 }
 

@@ -35,7 +35,7 @@ type SpanDetailProps = {
   focusSpan: (uiFind: string) => void;
   currentViewRangeTime: [number, number];
   traceDuration: number;
-  useOtelTerms?: boolean;
+  useOtelTerms: boolean;
 };
 
 export default function SpanDetail(props: SpanDetailProps) {

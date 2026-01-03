@@ -49,6 +49,7 @@ type SpanBarRowProps = {
   span: IOtelSpan; // OTEL span for SpanBar
   focusSpan: (spanID: string) => void;
   traceDuration: number;
+  useOtelTerms: boolean;
 };
 
 /**
@@ -79,6 +80,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   traceDuration,
   onDetailToggled,
   onChildrenToggled,
+  useOtelTerms,
 }) => {
   const _detailToggle = useCallback(() => {
     onDetailToggled(legacySpan.spanID);
@@ -201,6 +203,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           traceStartTime={traceStartTime}
           span={span}
           traceDuration={traceDuration}
+          useOtelTerms={useOtelTerms}
         />
       </TimelineRow.Cell>
     </TimelineRow>

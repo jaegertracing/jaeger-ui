@@ -14,7 +14,7 @@ import { IEvent, IOtelSpan } from '../../../types/otel';
 
 import './SpanBar.css';
 
-type TCommonProps = {
+type TSpanBarProps = {
   color: string;
   hintSide: string;
   // onClick: (evt: React.MouseEvent<any>) => void;
@@ -35,6 +35,7 @@ type TCommonProps = {
   longLabel: string;
   shortLabel: string;
   traceDuration: number;
+  useOtelTerms: boolean;
 };
 
 function toPercent(value: number) {
@@ -83,7 +84,7 @@ function SpanBarCriticalPath(props: { criticalPathViewStart: number; criticalPat
   return criticalPath;
 }
 
-function SpanBar(props: TCommonProps) {
+function SpanBar(props: TSpanBarProps) {
   const {
     criticalPath,
     viewEnd,
@@ -98,6 +99,7 @@ function SpanBar(props: TCommonProps) {
     shortLabel,
     longLabel,
     traceDuration,
+    useOtelTerms,
   } = props;
 
   // group events based on timestamps
@@ -151,6 +153,7 @@ function SpanBar(props: TCommonProps) {
                 timestamp={traceStartTime}
                 currentViewRangeTime={[0, 1]}
                 traceDuration={traceDuration}
+                useOtelTerms={useOtelTerms}
               />
             }
           >
