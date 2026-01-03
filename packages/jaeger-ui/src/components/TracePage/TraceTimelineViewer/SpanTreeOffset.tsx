@@ -11,7 +11,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 import { actions } from './duck';
 import { ReduxState } from '../../../types';
 import { IOtelSpan } from '../../../types/otel';
-import { otelSpanAncestorIds } from '../../../utils/span-ancestor-ids';
+import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
 import './SpanTreeOffset.css';
 
@@ -24,7 +24,7 @@ type TProps = TDispatchProps & {
   childrenVisible?: boolean;
   hoverIndentGuideIds: Set<string>;
   onClick?: () => void;
-  otelSpan: IOtelSpan;
+  span: IOtelSpan;
   showChildrenIcon?: boolean;
 };
 
@@ -32,19 +32,19 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   childrenVisible = false,
   onClick = undefined,
   showChildrenIcon = true,
-  otelSpan,
+  span,
   hoverIndentGuideIds,
   addHoverIndentGuideId,
   removeHoverIndentGuideId,
 }) => {
   const ancestorIds = useMemo(() => {
-    const ids = otelSpanAncestorIds(otelSpan);
+    const ids = spanAncestorIds(span);
     // Some traces have multiple root-level spans, this connects them all under one guideline and adds the
     // necessary padding for the collapse icon on root-level spans.
     ids.push('root');
     ids.reverse();
     return ids;
-  }, [otelSpan]);
+  }, [span]);
 
   /**
    * If the mouse leaves to anywhere except another span with the same ancestor id, this span's ancestor id is
@@ -80,13 +80,13 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
     }
   };
 
-  const { hasChildren, spanId } = otelSpan;
+  const { hasChildren, spanId } = span;
   const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
   const icon =
     showChildrenIcon && hasChildren && (childrenVisible ? <IoChevronDown /> : <IoChevronForward />);
   return (
     <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
-      {ancestorIds.map(ancestorId => (
+      {ancestorIds.map((ancestorId: string) => (
         <span
           key={ancestorId}
           className={cx('SpanTreeOffset--indentGuide', {

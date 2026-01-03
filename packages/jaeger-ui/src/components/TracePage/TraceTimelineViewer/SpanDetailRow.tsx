@@ -59,7 +59,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
   return (
     <TimelineRow className="detail-row">
       <TimelineRow.Cell width={columnDivision}>
-        <SpanTreeOffset otelSpan={span} />
+        <SpanTreeOffset span={span} />
         <span>
           <span
             className="detail-row-expanded-accent"

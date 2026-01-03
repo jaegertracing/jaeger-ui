@@ -20,11 +20,11 @@ import SpanDetailRow from './SpanDetailRow';
 import {
   createViewedBoundsFunc,
   ViewedBoundsFunctionType,
-  findServerChildOtelSpan,
-  isErrorOtelSpan,
-  isOtelKindClient,
-  isOtelKindProducer,
-  otelSpanContainsErredSpan,
+  findServerChildSpan,
+  isErrorSpan,
+  isKindClient,
+  isKindProducer,
+  spanContainsErredSpan,
 } from './utils';
 import { Accessors } from '../ScrollManager';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
@@ -473,13 +473,12 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isCollapsed = childrenHiddenIDs.has(spanId);
     const isDetailExpanded = detailStates.has(spanId);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanId) : false;
-    const showErrorIcon =
-      isErrorOtelSpan(span) || (isCollapsed && otelSpanContainsErredSpan(spans, spanIndex));
+    const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(spans, spanIndex));
     const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanId, criticalPath);
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
-      const rpcSpan = findServerChildOtelSpan(spans.slice(spanIndex));
+      const rpcSpan = findServerChildSpan(spans.slice(spanIndex));
       if (rpcSpan) {
         const rpcViewBounds = this.getViewedBounds()(
           rpcSpan.startTimeUnixMicros,
@@ -498,7 +497,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     // Leaf, kind == client and has peer.service tag, is likely a client span that does a request
     // to an uninstrumented/external service
     let noInstrumentedServer = null;
-    if (!span.hasChildren && peerServiceAttr && (isOtelKindClient(span) || isOtelKindProducer(span))) {
+    if (!span.hasChildren && peerServiceAttr && (isKindClient(span) || isKindProducer(span))) {
       noInstrumentedServer = {
         serviceName: String(peerServiceAttr.value),
         color: colorGenerator.getColorByKey(String(peerServiceAttr.value)),

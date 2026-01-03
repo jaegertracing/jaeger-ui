@@ -4,7 +4,7 @@
 import React from 'react';
 import { Dropdown, Tooltip } from 'antd';
 import { TooltipPlacement } from 'antd/es/tooltip';
-import NewWindowIcon from '../../common/NewWindowIcon';
+import ReferenceLink from '../url/ReferenceLink';
 import { ILink } from '../../../types/otel';
 
 import './ReferencesButton.css';
@@ -22,21 +22,36 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
   linksList = (links: ReadonlyArray<ILink>) => {
     const dropdownItems = links.map(link => {
       const { span } = link;
+      // Link within the trace should have link.span defined
       const isSameTrace = span !== undefined;
+
+      // Convert ILink to SpanReference format for ReferenceLink
+      const referenceForLink = {
+        traceID: link.traceId,
+        spanID: link.spanId,
+        span: span
+          ? {
+              spanID: span.spanId,
+              operationName: span.name,
+              process: {
+                serviceName: span.resource.serviceName,
+              },
+            }
+          : undefined,
+      };
+
       return {
         key: `${link.spanId}`,
         label: (
-          <a
-            onClick={() => this.props.focusSpan(link.spanId)}
+          <ReferenceLink
+            reference={referenceForLink as any}
+            focusSpan={this.props.focusSpan}
             className="ReferencesButton--TraceRefLink"
-            role="button"
-            tabIndex={0}
           >
             {isSameTrace
               ? `${span.resource.serviceName}:${span.name} - ${link.spanId}`
               : `(another trace) - ${link.spanId}`}
-            {!isSameTrace && <NewWindowIcon />}
-          </a>
+          </ReferenceLink>
         ),
       };
     });
@@ -65,16 +80,30 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
     }
 
     const link = links[0];
+    const { span } = link;
+    const referenceForLink = {
+      traceID: link.traceId,
+      spanID: link.spanId,
+      span: span
+        ? {
+            spanID: span.spanId,
+            operationName: span.name,
+            process: {
+              serviceName: span.resource.serviceName,
+            },
+          }
+        : undefined,
+    };
+
     return (
       <Tooltip {...tooltipProps}>
-        <a
-          onClick={() => focusSpan(link.spanId)}
+        <ReferenceLink
+          reference={referenceForLink as any}
+          focusSpan={focusSpan}
           className="ReferencesButton-MultiParent"
-          role="button"
-          tabIndex={0}
         >
           {children}
-        </a>
+        </ReferenceLink>
       </Tooltip>
     );
   }

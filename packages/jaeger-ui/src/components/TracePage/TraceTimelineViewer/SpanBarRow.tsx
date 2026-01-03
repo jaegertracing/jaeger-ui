@@ -45,7 +45,7 @@ type SpanBarRowProps = {
   showErrorIcon: boolean;
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
-  span: IOtelSpan; // OTEL span
+  span: IOtelSpan;
   focusSpan: (spanID: string) => void;
   traceDuration: number;
   useOtelTerms: boolean;
@@ -113,8 +113,9 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     hintSide = 'right';
   }
 
-  // Check if span has multiple links (similar to multiple references)
-  const hasMultipleLinks = span.links && span.links.length > 1;
+  // In OTEL model, links are used for "related" spans (not parent spans).
+  // Show the references button if there's at least one link.
+  const hasLinks = span.links && span.links.length > 0;
   const hasInboundLinks = span.inboundLinks && span.inboundLinks.length > 0;
 
   return (
@@ -130,7 +131,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
         <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
-            otelSpan={span}
+            span={span}
             onClick={isParent ? _childrenToggle : undefined}
           />
           <a
@@ -166,7 +167,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
           </a>
-          {hasMultipleLinks && (
+          {hasLinks && (
             <ReferencesButton
               links={span.links}
               tooltipText="Contains multiple references"

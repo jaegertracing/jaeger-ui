@@ -6,7 +6,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import { mapDispatchToProps, mapStateToProps, UnconnectedSpanTreeOffset } from './SpanTreeOffset';
-import { otelSpanAncestorIds } from '../../../utils/span-ancestor-ids';
+import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
 jest.mock('../../../utils/span-ancestor-ids');
 
@@ -18,7 +18,7 @@ describe('SpanTreeOffset', () => {
   let props;
 
   beforeEach(() => {
-    otelSpanAncestorIds.mockImplementation(() => [parentSpanID, rootSpanID]);
+    spanAncestorIds.mockImplementation(() => [parentSpanID, rootSpanID]);
     props = {
       addHoverIndentGuideId: jest.fn(),
       hoverIndentGuideIds: new Set(),
@@ -32,7 +32,7 @@ describe('SpanTreeOffset', () => {
 
   describe('.SpanTreeOffset--indentGuide', () => {
     it('renders only one .SpanTreeOffset--indentGuide for entire trace if span has no ancestors', () => {
-      otelSpanAncestorIds.mockReturnValue([]);
+      spanAncestorIds.mockReturnValue([]);
       const { container } = render(<UnconnectedSpanTreeOffset {...props} />);
       const indentGuides = container.querySelectorAll('.SpanTreeOffset--indentGuide');
       expect(indentGuides.length).toBe(1);
