@@ -13,26 +13,44 @@ while getopts "ud" opt; do
   esac
 done
 
-# Find all .tsx files
-MISNAMED_FILES=$(find . -name "*.tsx" -not -path "*/node_modules/*" | while read -r file; do
-    # Check if the file contains JSX-like syntax
-    # We look for: < followed by a letter, or </> (fragment), or </ followed by a letter
-    if ! grep -q -E "<[a-zA-Z]|</[a-zA-Z]|<>" "$file"; then
-        echo "$file"
-    fi
-done)
+MISNAMED_FILES=()
+CANDIDATES=()
 
-if [ -n "$MISNAMED_FILES" ]; then
+# Find all .tsx files
+ALL_TSX=$(find . -name "*.tsx" -not -path "*/node_modules/*")
+
+for file in $ALL_TSX; do
+    # Fast path: if no JSX-like patterns, it's definitely misnamed
+    if ! grep -q -E "<[a-zA-Z]|</[a-zA-Z]|<>" "$file"; then
+        MISNAMED_FILES+=("$file")
+    else
+        # Potentially contains JSX, add to candidates for AST check
+        CANDIDATES+=("$file")
+    fi
+done
+
+# Perform batch AST check for candidates
+if [ ${#CANDIDATES[@]} -gt 0 ]; then
+    # Use Node 24's experimental TS support
+    RESULTS=$(node --experimental-strip-types scripts/find-jsx.ts "${CANDIDATES[@]}" 2>/dev/null)
+    while IFS=: read -r file has_jsx; do
+        if [ "$has_jsx" = "false" ]; then
+            MISNAMED_FILES+=("$file")
+        fi
+    done <<< "$RESULTS"
+fi
+
+if [ ${#MISNAMED_FILES[@]} -gt 0 ]; then
     if [ "$DRY_RUN" = true ]; then
         echo "Dry run: The following files would be renamed:"
-        for file in $MISNAMED_FILES; do
+        for file in "${MISNAMED_FILES[@]}"; do
             new_file="${file%.tsx}.ts"
             echo "  git mv $file $new_file"
         done
         exit 0
     elif [ "$UPDATE" = true ]; then
         echo "Renaming misnamed .tsx files to .ts..."
-        for file in $MISNAMED_FILES; do
+        for file in "${MISNAMED_FILES[@]}"; do
             new_file="${file%.tsx}.ts"
             echo "  git mv $file $new_file"
             git mv "$file" "$new_file" || exit 1
@@ -41,7 +59,7 @@ if [ -n "$MISNAMED_FILES" ]; then
         exit 0
     else
         echo "Found .tsx files that do not appear to contain JSX. Please rename them to .ts:"
-        for file in $MISNAMED_FILES; do
+        for file in "${MISNAMED_FILES[@]}"; do
             echo "  $file"
         done
         echo ""

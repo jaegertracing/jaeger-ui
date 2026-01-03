@@ -188,7 +188,7 @@ export default [
       sourceType: 'module',
       parser: typescriptParser,
       parserOptions: {
-        project: ['./packages/*/tsconfig.json'],
+        project: ['./packages/*/tsconfig.json', './scripts/tsconfig.json'],
         tsconfigRootDir: __dirname,
       },
       globals: commonGlobals,

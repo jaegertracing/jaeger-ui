@@ -54,7 +54,7 @@
     "react-icons": "5.5.0"
   },
   "scripts": {
-    "_tasks/build/lib/js": "babel src --extensions '.tsx,.js' --out-dir lib",
+    "_tasks/build/lib/js": "babel src --extensions '.tsx,.js,.ts' --out-dir lib",
     "_tasks/build/lib/types": "../../node_modules/.bin/tsc --build --force",
     "_tasks/build/umd": "webpack --mode $NODE_ENV --config webpack.umd.config.js",
     "_tasks/clean/dirs": "rimraf lib dist",
