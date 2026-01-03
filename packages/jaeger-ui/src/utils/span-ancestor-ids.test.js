@@ -1,7 +1,7 @@
 // Copyright (c) 2018 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import spanAncestorIdsSpy from './span-ancestor-ids';
+import spanAncestorIdsSpy, { otelSpanAncestorIds } from './span-ancestor-ids';
 
 describe('spanAncestorIdsSpy', () => {
   const ownSpanID = 'ownSpanID';
@@ -81,5 +81,75 @@ describe('spanAncestorIdsSpy', () => {
       references: [{ refType: 'CHILD_OF' }, { refType: 'FOLLOWS_FROM', span: {} }, ...span.references],
     };
     expect(spanAncestorIdsSpy(spanWithSomeEmptyReferences)).toEqual(expectedAncestorIds);
+  });
+});
+
+describe('otelSpanAncestorIds', () => {
+  const rootSpanId = 'root-span-id';
+  const grandparentSpanId = 'grandparent-span-id';
+  const parentSpanId = 'parent-span-id';
+  const childSpanId = 'child-span-id';
+
+  const rootSpan = {
+    spanId: rootSpanId,
+    parentSpanId: undefined,
+  };
+
+  const grandparentSpan = {
+    spanId: grandparentSpanId,
+    parentSpanId: rootSpanId,
+  };
+
+  const parentSpan = {
+    spanId: parentSpanId,
+    parentSpanId: grandparentSpanId,
+  };
+
+  const childSpan = {
+    spanId: childSpanId,
+    parentSpanId: parentSpanId,
+  };
+
+  it('returns an empty array if given falsy span', () => {
+    const spanMap = new Map();
+    expect(otelSpanAncestorIds(null, spanMap)).toEqual([]);
+  });
+
+  it('returns an empty array if span has no parentSpanId', () => {
+    const spanMap = new Map();
+    expect(otelSpanAncestorIds(rootSpan, spanMap)).toEqual([]);
+  });
+
+  it('returns all ancestor span IDs from parent to root', () => {
+    const spanMap = new Map([
+      [rootSpanId, rootSpan],
+      [grandparentSpanId, grandparentSpan],
+      [parentSpanId, parentSpan],
+      [childSpanId, childSpan],
+    ]);
+
+    expect(otelSpanAncestorIds(childSpan, spanMap)).toEqual([parentSpanId, grandparentSpanId, rootSpanId]);
+  });
+
+  it('stops traversal when parent span is not found in spanMap', () => {
+    const spanMap = new Map([
+      [parentSpanId, parentSpan],
+      [childSpanId, childSpan],
+    ]);
+
+    // grandparentSpan and rootSpan are missing from spanMap
+    expect(otelSpanAncestorIds(childSpan, spanMap)).toEqual([
+      parentSpanId,
+      grandparentSpanId, // This is added but traversal stops here since we can't find it in spanMap
+    ]);
+  });
+
+  it('handles single-level parent relationship', () => {
+    const spanMap = new Map([
+      [rootSpanId, rootSpan],
+      [grandparentSpanId, grandparentSpan],
+    ]);
+
+    expect(otelSpanAncestorIds(grandparentSpan, spanMap)).toEqual([rootSpanId]);
   });
 });

@@ -10,21 +10,25 @@ import SpanBar from './SpanBar';
 
 jest.mock('./SpanTreeOffset', () => ({
   __esModule: true,
-  default: jest.fn(({ span, childrenVisible, onClick }) => (
-    <div data-testid="span-tree-offset" onClick={onClick}>
-      SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
-    </div>
-  )),
+  default: jest.fn(({ span, otelSpan, childrenVisible, onClick }) => {
+    const displaySpan = otelSpan || span;
+    const displaySpanId = displaySpan ? displaySpan.spanId || displaySpan.spanID : 'unknown';
+    return (
+      <div data-testid="span-tree-offset" onClick={onClick}>
+        SpanTreeOffset: {displaySpanId} - {childrenVisible ? 'expanded' : 'collapsed'}
+      </div>
+    );
+  }),
 }));
 
 jest.mock('./ReferencesButton', () => ({
   __esModule: true,
-  default: jest.fn(({ tooltipText, references, children }) => (
+  default: jest.fn(({ tooltipText, references, links, children }) => (
     <button
       type="button"
       data-testid="references-button"
       data-tooltip={tooltipText}
-      data-references={JSON.stringify(references)}
+      data-references={JSON.stringify(references || links)}
     >
       {children}
     </button>
@@ -63,18 +67,6 @@ describe('<SpanBarRow>', () => {
     },
     showErrorIcon: false,
     getViewedBounds: jest.fn().mockReturnValue({ start: 0.5, end: 0.6 }),
-    spanID,
-    legacySpan: {
-      duration: 100,
-      hasChildren: true,
-      operationName: 'op-name',
-      process: {
-        serviceName: 'service-name',
-      },
-      spanID,
-      logs: [],
-      startTime: 100,
-    },
     span: {
       traceId: 'trace-id',
       spanId: spanID,
@@ -92,11 +84,14 @@ describe('<SpanBarRow>', () => {
       depth: 0,
       hasChildren: true,
       relativeStartTimeMicros: 100,
+      subsidiarilyReferencedBy: [],
       warnings: null,
     },
+    spanMap: new Map(),
     traceStartTime: 0,
     traceDuration: 1000,
     focusSpan: jest.fn(),
+    useOtelTerms: false,
   };
 
   beforeEach(() => {
@@ -128,41 +123,39 @@ describe('<SpanBarRow>', () => {
   });
 
   it('shows ReferencesButton when span has multiple references', () => {
-    const legacySpan = {
-      ...defaultProps.legacySpan,
-      references: [
-        { refType: 'CHILD_OF', traceID: 't1', spanID: 's1', span: { spanID: 's1' } },
-        { refType: 'CHILD_OF', traceID: 't2', spanID: 's2', span: { spanID: 's2' } },
+    const span = {
+      ...defaultProps.span,
+      links: [
+        { traceId: 't1', spanId: 's1', attributes: [] },
+        { traceId: 't2', spanId: 's2', attributes: [] },
       ],
     };
-    render(<SpanBarRow {...defaultProps} legacySpan={legacySpan} />);
+    render(<SpanBarRow {...defaultProps} span={span} />);
     const btn = screen.getByTestId('references-button');
     expect(btn).toBeVisible();
     expect(btn).toHaveAttribute('data-tooltip', 'Contains multiple references');
   });
 
   it('shows tooltip for a single downstream reference', () => {
-    const legacySpan = {
-      ...defaultProps.legacySpan,
-      subsidiarilyReferencedBy: [
-        { refType: 'CHILD_OF', traceID: 't1', spanID: 's1', span: { spanID: 's1' } },
-      ],
+    const span = {
+      ...defaultProps.span,
+      subsidiarilyReferencedBy: [{ traceId: 't1', spanId: 's1', attributes: [] }],
     };
-    render(<SpanBarRow {...defaultProps} legacySpan={legacySpan} />);
+    render(<SpanBarRow {...defaultProps} span={span} />);
     const btn = screen.getByTestId('references-button');
     expect(btn).toBeVisible();
     expect(btn).toHaveAttribute('data-tooltip', 'This span is referenced by another span');
   });
 
   it('shows tooltip for multiple downstream references', () => {
-    const legacySpan = {
-      ...defaultProps.legacySpan,
+    const span = {
+      ...defaultProps.span,
       subsidiarilyReferencedBy: [
-        { refType: 'CHILD_OF', traceID: 't1', spanID: 's1', span: { spanID: 's1' } },
-        { refType: 'CHILD_OF', traceID: 't2', spanID: 's2', span: { spanID: 's2' } },
+        { traceId: 't1', spanId: 's1', attributes: [] },
+        { traceId: 't2', spanId: 's2', attributes: [] },
       ],
     };
-    render(<SpanBarRow {...defaultProps} legacySpan={legacySpan} />);
+    render(<SpanBarRow {...defaultProps} span={span} />);
     const btn = screen.getByTestId('references-button');
     expect(btn).toBeVisible();
     expect(btn).toHaveAttribute('data-tooltip', 'This span is referenced by multiple other spans');
@@ -227,10 +220,10 @@ describe('<SpanBarRow>', () => {
     const props = {
       ...defaultProps,
       getViewedBounds,
-      legacySpan: {
-        ...defaultProps.legacySpan,
-        startTime: 100,
-        duration: 50,
+      span: {
+        ...defaultProps.span,
+        startTimeUnixMicros: 100,
+        durationMicros: 50,
       },
     };
     render(<SpanBarRow {...props} />);
