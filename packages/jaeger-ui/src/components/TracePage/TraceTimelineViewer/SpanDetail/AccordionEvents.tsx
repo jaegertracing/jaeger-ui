@@ -1,4 +1,5 @@
-// Copyright (c) 2026 Uber Technologies, Inc.
+// Copyright (c) 2026 The Jaeger Authors.
+// Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
