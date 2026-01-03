@@ -53,7 +53,7 @@ export default function SpanDetail(props: SpanDetailProps) {
     focusSpan,
     currentViewRangeTime,
     traceDuration,
-    useOtelTerms = false,
+    useOtelTerms,
   } = props;
 
   const { isAttributesOpen, isResourceOpen, events: eventsState, isWarningsOpen, isLinksOpen } = detailState;
