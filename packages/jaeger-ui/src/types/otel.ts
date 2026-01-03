@@ -49,6 +49,7 @@ export interface ILink {
   traceId: string;
   spanId: string;
   attributes: IAttribute[];
+  span?: IOtelSpan;
 }
 
 export interface IStatus {
@@ -61,6 +62,7 @@ export interface IOtelSpan {
   traceId: string;
   spanId: string;
   parentSpanId?: string;
+  parentSpan?: IOtelSpan;
 
   // Naming & Classification
   name: string;
@@ -81,11 +83,14 @@ export interface IOtelSpan {
   resource: IResource;
   instrumentationScope: IScope;
 
-  // UI-specific (derived properties)
+  // Derived properties
   depth: number;
   hasChildren: boolean;
+  childSpans: ReadonlyArray<IOtelSpan>;
   relativeStartTimeMicros: number; // microseconds since trace start
-  subsidiarilyReferencedBy: ILink[]; // spans that reference this span via links (not parent-child)
+
+  // Inverse links to spans that reference this span via their outbound Links
+  inboundLinks: ILink[];
 
   warnings: ReadonlyArray<string> | null;
 }
@@ -93,7 +98,8 @@ export interface IOtelSpan {
 export interface IOtelTrace {
   traceId: string;
   spans: ReadonlyArray<IOtelSpan>;
-  // Include some trace-level convenience properties if needed by components
+
+  // Some trace-level convenience properties
   durationMicros: number;
   startTimeUnixMicros: number;
   endTimeUnixMicros: number;
