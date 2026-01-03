@@ -1,7 +1,7 @@
 // Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { getEmbeddedState, stripEmbeddedState } from './embedded-url.tsx';
+import { getEmbeddedState, stripEmbeddedState } from './embedded-url';
 
 describe('getEmbeddedState()', () => {
   it('returns null if uiEmbed is not v0', () => {
