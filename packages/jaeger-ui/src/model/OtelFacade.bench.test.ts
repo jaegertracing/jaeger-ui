@@ -57,7 +57,7 @@ describe('OtelFacade Benchmarks', () => {
     spans.forEach(span => {
       // Access pre-computed fields
       const _k = span.kind;
-      const _p = span.parentSpanId;
+      const _p = span.parentSpanID;
       const _a = span.attributes;
     });
     const endAccess = performance.now();

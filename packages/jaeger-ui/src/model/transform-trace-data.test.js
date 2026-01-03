@@ -248,7 +248,7 @@ describe('transformTraceData()', () => {
       // First call - should create instance
       const otelTrace1 = result.asOtelTrace();
       expect(otelTrace1).toBeDefined();
-      expect(otelTrace1.traceId).toBe(traceID);
+      expect(otelTrace1.traceID).toBe(traceID);
       expect(otelTrace1.spans.length).toBe(3);
 
       // Second call - should return same instance (memoization)

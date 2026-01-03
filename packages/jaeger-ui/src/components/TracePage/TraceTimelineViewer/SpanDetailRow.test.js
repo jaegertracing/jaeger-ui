@@ -45,7 +45,7 @@ describe('<SpanDetailRow>', () => {
     },
   };
   const span = {
-    spanId: spanID,
+    spanID: spanID,
     traceId: 'trace-id',
     name: 'op-name',
     startTimeUnixMicro: 1000n,
@@ -104,7 +104,7 @@ describe('<SpanDetailRow>', () => {
     expect(props.onDetailToggled).not.toHaveBeenCalled();
     await user.click(toggleSwitch);
     expect(props.onDetailToggled).toHaveBeenCalledTimes(1);
-    expect(props.onDetailToggled).toHaveBeenCalledWith(props.span.spanId);
+    expect(props.onDetailToggled).toHaveBeenCalledWith(props.span.spanID);
   });
 
   it('renders the span tree offset', () => {
@@ -137,7 +137,7 @@ describe('<SpanDetailRow>', () => {
     expect(receivedProps.eventsToggle).toBe(props.eventsToggle);
     expect(receivedProps.resourceToggle).toBe(props.resourceToggle);
     // span is now converted to IOtelSpan via OtelSpanFacade
-    expect(receivedProps.span).toHaveProperty('spanId', props.span.spanId);
+    expect(receivedProps.span).toHaveProperty('spanID', props.span.spanID);
     expect(receivedProps.span).toHaveProperty('name', props.span.name);
     expect(receivedProps.attributesToggle).toBe(props.attributesToggle);
     expect(receivedProps.traceStartTime).toBe(props.traceStartTime);

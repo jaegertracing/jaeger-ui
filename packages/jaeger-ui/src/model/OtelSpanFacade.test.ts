@@ -55,16 +55,16 @@ describe('OtelSpanFacade', () => {
   });
 
   it('maps basic identity fields', () => {
-    expect(facade.traceId).toBe('trace-1');
-    expect(facade.spanId).toBe('span-1');
+    expect(facade.traceID).toBe('trace-1');
+    expect(facade.spanID).toBe('span-1');
     expect(facade.name).toBe('test-op');
   });
 
-  it('maps parentSpanId from CHILD_OF reference', () => {
-    expect(facade.parentSpanId).toBe('parent-1');
+  it('maps parentSpanID from CHILD_OF reference', () => {
+    expect(facade.parentSpanID).toBe('parent-1');
   });
 
-  describe('parentSpanId calculation', () => {
+  describe('parentSpanID calculation', () => {
     it('uses CHILD_OF reference with same traceID', () => {
       const span: Span = {
         ...mockLegacySpan,
@@ -72,7 +72,7 @@ describe('OtelSpanFacade', () => {
         references: [{ refType: 'CHILD_OF', traceID: 'trace-1', spanID: 'parent-1', span: null }],
       };
       const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanId).toBe('parent-1');
+      expect(spanFacade.parentSpanID).toBe('parent-1');
     });
 
     it('ignores CHILD_OF reference with different traceID', () => {
@@ -82,7 +82,7 @@ describe('OtelSpanFacade', () => {
         references: [{ refType: 'CHILD_OF', traceID: 'trace-2', spanID: 'parent-1', span: null }],
       };
       const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanId).toBeUndefined();
+      expect(spanFacade.parentSpanID).toBeUndefined();
     });
 
     it('uses earliest CHILD_OF reference when multiple exist with same traceID', () => {
@@ -95,7 +95,7 @@ describe('OtelSpanFacade', () => {
         ],
       };
       const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanId).toBe('parent-1');
+      expect(spanFacade.parentSpanID).toBe('parent-1');
     });
 
     it('uses FOLLOWS_FROM reference with same traceID when no CHILD_OF exists', () => {
@@ -105,7 +105,7 @@ describe('OtelSpanFacade', () => {
         references: [{ refType: 'FOLLOWS_FROM', traceID: 'trace-1', spanID: 'link-1', span: null }],
       };
       const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanId).toBe('link-1');
+      expect(spanFacade.parentSpanID).toBe('link-1');
     });
 
     it('uses earliest FOLLOWS_FROM reference when multiple exist with same traceID and no CHILD_OF', () => {
@@ -118,7 +118,7 @@ describe('OtelSpanFacade', () => {
         ],
       };
       const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanId).toBe('link-1');
+      expect(spanFacade.parentSpanID).toBe('link-1');
     });
 
     it('prefers CHILD_OF with same traceID over FOLLOWS_FROM', () => {
@@ -131,7 +131,7 @@ describe('OtelSpanFacade', () => {
         ],
       };
       const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanId).toBe('parent-1');
+      expect(spanFacade.parentSpanID).toBe('parent-1');
     });
 
     it('returns undefined when no references have same traceID', () => {
@@ -144,7 +144,7 @@ describe('OtelSpanFacade', () => {
         ],
       };
       const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanId).toBeUndefined();
+      expect(spanFacade.parentSpanID).toBeUndefined();
     });
 
     it('returns undefined when no references exist', () => {
@@ -154,7 +154,7 @@ describe('OtelSpanFacade', () => {
         references: [],
       };
       const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanId).toBeUndefined();
+      expect(spanFacade.parentSpanID).toBeUndefined();
     });
 
     it('ignores CHILD_OF with different traceID but uses FOLLOWS_FROM with same traceID', () => {
@@ -167,7 +167,7 @@ describe('OtelSpanFacade', () => {
         ],
       };
       const spanFacade = new OtelSpanFacade(span);
-      expect(spanFacade.parentSpanId).toBe('link-1');
+      expect(spanFacade.parentSpanID).toBe('link-1');
     });
   });
 
@@ -199,7 +199,7 @@ describe('OtelSpanFacade', () => {
 
   it('maps links from non-CHILD_OF references', () => {
     expect(facade.links).toHaveLength(1);
-    expect(facade.links[0].spanId).toBe('link-1');
+    expect(facade.links[0].spanID).toBe('link-1');
   });
 
   it('maps status from error tag', () => {
@@ -220,6 +220,6 @@ describe('OtelSpanFacade', () => {
     expect(facade.hasChildren).toBe(false);
     expect(facade.childSpans).toEqual([]);
     expect(facade.relativeStartTimeMicros).toBe(100);
-    expect(facade.inboundLinks[0].spanId).toBe('sub-ref-1');
+    expect(facade.inboundLinks[0].spanID).toBe('sub-ref-1');
   });
 });

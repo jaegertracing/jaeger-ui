@@ -36,7 +36,7 @@ type SpanDetailRowProps = {
 
 const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
   const _detailToggle = () => {
-    props.onDetailToggled(props.span.spanId);
+    props.onDetailToggled(props.span.spanID);
   };
 
   const {

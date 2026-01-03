@@ -84,7 +84,7 @@ export default function SpanDetail(props: SpanDetailProps) {
       value: formatDuration(span.relativeStartTimeMicros),
     },
   ];
-  const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanId}`;
+  const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanID}`;
 
   return (
     <div>
@@ -104,7 +104,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             label={attributesLabel}
             linksGetter={linksGetter}
             isOpen={isAttributesOpen}
-            onToggle={() => attributesToggle(span.spanId)}
+            onToggle={() => attributesToggle(span.spanID)}
           />
           {span.resource.attributes && span.resource.attributes.length > 0 && (
             <AccordionAttributes
@@ -113,7 +113,7 @@ export default function SpanDetail(props: SpanDetailProps) {
               label={resourceLabel}
               linksGetter={linksGetter}
               isOpen={isResourceOpen}
-              onToggle={() => resourceToggle(span.spanId)}
+              onToggle={() => resourceToggle(span.spanID)}
             />
           )}
         </div>
@@ -123,12 +123,12 @@ export default function SpanDetail(props: SpanDetailProps) {
             events={span.events}
             isOpen={eventsState.isOpen}
             openedItems={eventsState.openedItems}
-            onToggle={() => eventsToggle(span.spanId)}
-            onItemToggle={eventItem => eventItemToggle(span.spanId, eventItem)}
+            onToggle={() => eventsToggle(span.spanID)}
+            onItemToggle={eventItem => eventItemToggle(span.spanID, eventItem)}
             timestamp={traceStartTime}
             currentViewRangeTime={currentViewRangeTime}
             traceDuration={traceDuration}
-            spanID={span.spanId}
+            spanID={span.spanID}
             useOtelTerms={useOtelTerms}
           />
         )}
@@ -139,19 +139,19 @@ export default function SpanDetail(props: SpanDetailProps) {
             label={<span className="AccordianWarnings--label">Warnings</span>}
             data={warnings}
             isOpen={isWarningsOpen}
-            onToggle={() => warningsToggle(span.spanId)}
+            onToggle={() => warningsToggle(span.spanID)}
           />
         )}
         {links && links.length > 0 && (links.length > 1 || links[0].refType !== 'CHILD_OF') && (
           <AccordionLinks
             data={links}
             isOpen={isLinksOpen}
-            onToggle={() => linksToggle(span.spanId)}
+            onToggle={() => linksToggle(span.spanID)}
             focusSpan={focusSpan}
           />
         )}
         <small className="SpanDetail--debugInfo">
-          <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {span.spanId}
+          <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {span.spanID}
           <CopyIcon
             copyText={deepLinkCopyText}
             icon={<IoLinkOutline />}
