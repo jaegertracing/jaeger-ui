@@ -26,6 +26,7 @@ if (filePaths.length === 0) {
   process.exit(0);
 }
 
+let hasError = false;
 for (const filePath of filePaths) {
   try {
     const sourceCode = fs.readFileSync(filePath, 'utf8');
@@ -44,5 +45,10 @@ for (const filePath of filePaths) {
     }
   } catch (err) {
     console.error(`Error processing ${filePath}:`, err);
+    hasError = true;
   }
+}
+
+if (hasError) {
+  process.exit(1);
 }
