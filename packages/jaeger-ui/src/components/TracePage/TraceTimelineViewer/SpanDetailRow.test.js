@@ -104,7 +104,7 @@ describe('<SpanDetailRow>', () => {
     expect(props.onDetailToggled).not.toHaveBeenCalled();
     await user.click(toggleSwitch);
     expect(props.onDetailToggled).toHaveBeenCalledTimes(1);
-    expect(props.onDetailToggled).toHaveBeenCalledWith(props.span.spanID);
+    expect(props.onDetailToggled).toHaveBeenCalledWith(props.span.spanId);
   });
 
   it('renders the span tree offset', () => {
@@ -112,8 +112,7 @@ describe('<SpanDetailRow>', () => {
     expect(MockSpanTreeOffset).toHaveBeenCalledTimes(1);
     expect(MockSpanTreeOffset).toHaveBeenCalledWith(
       expect.objectContaining({
-        span: props.span,
-        showChildrenIcon: false,
+        span: props.legacySpan,
       })
     );
   });
@@ -135,12 +134,12 @@ describe('<SpanDetailRow>', () => {
     expect(receivedProps.detailState).toBe(props.detailState);
     expect(receivedProps.linksGetter).toEqual(expect.any(Function));
     expect(receivedProps.eventItemToggle).toEqual(expect.any(Function));
-    expect(receivedProps.eventsToggle).toBe(props.logsToggle);
-    expect(receivedProps.resourceToggle).toBe(props.processToggle);
+    expect(receivedProps.eventsToggle).toBe(props.eventsToggle);
+    expect(receivedProps.resourceToggle).toBe(props.resourceToggle);
     // span is now converted to IOtelSpan via OtelSpanFacade
-    expect(receivedProps.span).toHaveProperty('spanId', props.span.spanID);
-    expect(receivedProps.span).toHaveProperty('name', props.span.operationName);
-    expect(receivedProps.attributesToggle).toBe(props.tagsToggle);
+    expect(receivedProps.span).toHaveProperty('spanId', props.span.spanId);
+    expect(receivedProps.span).toHaveProperty('name', props.span.name);
+    expect(receivedProps.attributesToggle).toBe(props.attributesToggle);
     expect(receivedProps.traceStartTime).toBe(props.traceStartTime);
   });
 
@@ -155,7 +154,7 @@ describe('<SpanDetailRow>', () => {
     const result = linksGetter(attributes, 0);
     expect(result).toBe(linksGetterResponse);
     expect(props.linksGetter).toHaveBeenCalledTimes(1);
-    // linksGetter adapts IAttribute to KeyValuePair format
-    expect(props.linksGetter).toHaveBeenCalledWith(props.span, [{ key: 'myKey', value: 'myValue' }], 0);
+    // linksGetter is passed directly to SpanDetail (no adapter needed since props already have OTEL signature)
+    expect(props.linksGetter).toHaveBeenCalledWith(attributes, 0);
   });
 });

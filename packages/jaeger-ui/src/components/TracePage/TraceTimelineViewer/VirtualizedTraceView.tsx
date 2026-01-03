@@ -32,6 +32,7 @@ import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
 import { Log, Span, Trace, KeyValuePair, criticalPathSection } from '../../../types/trace';
+import { IOtelSpan, IAttribute, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 
 import './VirtualizedTraceView.css';
@@ -370,7 +371,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   // https://github.com/facebook/flow/issues/3076#issuecomment-290944051
   getKeyFromIndex = (index: number) => {
     const { isDetail, span } = this.getRowStates()[index];
-    return `${span.spanID}--${isDetail ? 'detail' : 'bar'}`;
+    return `${span.spanId}--${isDetail ? 'detail' : 'bar'}`;
   };
 
   getIndexFromKey = (key: string) => {
@@ -380,7 +381,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const max = this.getRowStates().length;
     for (let i = 0; i < max; i++) {
       const { span, isDetail } = this.getRowStates()[i];
-      if (span.spanID === _spanID && isDetail === _isDetail) {
+      if (span.spanId === _spanID && isDetail === _isDetail) {
         return i;
       }
     }
@@ -392,7 +393,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     if (!isDetail) {
       return DEFAULT_HEIGHTS.bar;
     }
-    if (Array.isArray(span.logs) && span.logs.length) {
+    if (Array.isArray(span.events) && span.events.length) {
       return DEFAULT_HEIGHTS.detailWithLogs;
     }
     return DEFAULT_HEIGHTS.detail;
@@ -402,6 +403,31 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const { trace } = this.props;
     return getLinks(span, items, itemIndex, trace);
   };
+
+  // Adapter for OTEL components that need links from attributes
+  linksGetterFromAttributes =
+    (legacySpan: Span) => (attributes: ReadonlyArray<IAttribute>, index: number) => {
+      // Convert IAttribute[] to KeyValuePair[] for legacy getLinks function
+      const keyValuePairs: KeyValuePair[] = attributes.map(attr => ({
+        key: attr.key,
+        value: String(attr.value), // Convert AttributeValue to string
+      }));
+      return this.linksGetter(legacySpan, keyValuePairs, index);
+    };
+
+  // Adapter for OTEL event toggle to legacy log toggle
+  eventItemToggleAdapter =
+    (detailLogItemToggle: (spanID: string, log: Log) => void) => (spanID: string, event: IEvent) => {
+      // Convert IEvent to Log for legacy callback
+      const log: Log = {
+        timestamp: event.timeUnixMicro,
+        fields: event.attributes.map(attr => ({
+          key: attr.key,
+          value: String(attr.value), // Convert AttributeValue to string
+        })),
+      };
+      detailLogItemToggle(spanID, log);
+    };
 
   renderRow = (key: string, style: React.CSSProperties, index: number, attrs: object) => {
     const { isDetail, legacySpan, span, spanIndex } = this.getRowStates()[index];
@@ -548,8 +574,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           columnDivision={spanNameColumnWidth}
           onDetailToggled={detailToggle}
           detailState={detailState}
-          linksGetter={this.linksGetter}
-          eventItemToggle={detailLogItemToggle}
+          linksGetter={this.linksGetterFromAttributes(legacySpan)}
+          eventItemToggle={this.eventItemToggleAdapter(detailLogItemToggle)}
           eventsToggle={detailLogsToggle}
           resourceToggle={detailProcessToggle}
           linksToggle={detailReferencesToggle}
