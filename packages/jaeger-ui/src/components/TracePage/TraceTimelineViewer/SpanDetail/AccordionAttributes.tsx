@@ -60,7 +60,7 @@ export default function AccordionAttributes({
     arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
     headerProps = {
       'aria-checked': isOpen,
-      onClick: isEmpty ? null : onToggle,
+      onClick: onToggle,
       role: 'switch',
     };
   }

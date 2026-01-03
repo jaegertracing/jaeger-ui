@@ -27,7 +27,8 @@ export default class DetailState {
     this.isWarningsOpen = Boolean(isWarningsOpen);
     this.events = {
       isOpen: events ? Boolean(events.isOpen) : true,
-      openedItems: events && events.openedItems ? new Set(events.openedItems) : new Set(),
+      openedItems:
+        events && events.openedItems ? new Set(events.openedItems as Iterable<IEvent>) : new Set<IEvent>(),
     };
   }
 

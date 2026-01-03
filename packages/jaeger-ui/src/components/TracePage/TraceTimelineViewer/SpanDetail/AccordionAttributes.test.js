@@ -112,4 +112,15 @@ describe('<AccordionAttributes />', () => {
     expect(table).toBeInTheDocument();
     expect(table).toHaveAttribute('data-data', JSON.stringify(tags));
   });
+
+  it('calls onToggle when data is empty and interactive is true', () => {
+    const propsWithEmptyData = {
+      ...defaultProps,
+      data: [],
+    };
+    render(<AccordionAttributes {...propsWithEmptyData} />);
+    const header = screen.getByText('le-label:').closest('div');
+    fireEvent.click(header);
+    expect(defaultProps.onToggle).toHaveBeenCalledTimes(1);
+  });
 });

@@ -182,21 +182,25 @@ export default function AccordionEvents({
               interactive && !showAllEvents && sortedEvents.length > initialVisibleCount
                 ? sortedEvents.slice(0, initialVisibleCount)
                 : sortedEvents;
-            return visibleLogs.map((event, i) => (
-              <AccordionAttributes
-                // `i` is necessary in the key because timestamps can repeat
+            return visibleLogs.map((event, i) => {
+              const durationLabel = formatDuration(event.timeUnixMicro - timestamp);
+              const labelContent = useOtelTerms ? `${event.name} (${durationLabel})` : durationLabel;
+              return (
+                <AccordionAttributes
+                  // `i` is necessary in the key because timestamps can repeat
 
-                key={`${event.timeUnixMicro}-${i}`}
-                className={i < visibleLogs.length - 1 ? 'ub-mb1' : null}
-                data={event.attributes}
-                highContrast
-                interactive={interactive}
-                isOpen={openedItems ? openedItems.has(event) : false}
-                label={`${formatDuration(event.timeUnixMicro - timestamp)}`}
-                linksGetter={linksGetter}
-                onToggle={interactive && onItemToggle ? () => onItemToggle(event) : null}
-              />
-            ));
+                  key={`${event.timeUnixMicro}-${i}`}
+                  className={i < visibleLogs.length - 1 ? 'ub-mb1' : null}
+                  data={event.attributes}
+                  highContrast
+                  interactive={interactive}
+                  isOpen={openedItems ? openedItems.has(event) : false}
+                  label={labelContent}
+                  linksGetter={linksGetter}
+                  onToggle={interactive && onItemToggle ? () => onItemToggle(event) : null}
+                />
+              );
+            });
           })()}
           {interactive &&
             _sortBy(eventsToDisplay, event => event.timeUnixMicro).length > initialVisibleCount && (
