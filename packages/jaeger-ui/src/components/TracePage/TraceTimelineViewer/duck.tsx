@@ -5,7 +5,8 @@ import { Action, ActionFunctionAny, createActions, handleActions } from 'redux-a
 
 import DetailState from './SpanDetail/DetailState';
 import { TNil } from '../../../types';
-import { Log, Span, Trace } from '../../../types/trace';
+import { Span, Trace } from '../../../types/trace';
+import { IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 import filterSpans from '../../../utils/filter-spans';
 import generateActionTypes from '../../../utils/generate-action-types';
@@ -13,7 +14,7 @@ import guardReducer from '../../../utils/guardReducer';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
 // payloads
-export type TSpanIdLogValue = { logItem: Log; spanID: string };
+export type TSpanIdLogValue = { logItem: IEvent; spanID: string };
 export type TSpanIdValue = { spanID: string };
 type TSpansValue = { spans: Span[] };
 type TTraceUiFindValue = { trace: Trace; uiFind: string | TNil; allowHide?: boolean };
@@ -73,7 +74,7 @@ const fullActions = createActions<TActionTypes>({
   [actionTypes.CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH]: () => ({}),
   [actionTypes.COLLAPSE_ALL]: (spans: Span[]) => ({ spans }),
   [actionTypes.COLLAPSE_ONE]: (spans: Span[]) => ({ spans }),
-  [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID: string, logItem: Log) => ({ logItem, spanID }),
+  [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID: string, logItem: IEvent) => ({ logItem, spanID }),
   [actionTypes.DETAIL_LOGS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.EXPAND_ALL]: () => ({}),
   [actionTypes.EXPAND_ONE]: (spans: Span[]) => ({ spans }),

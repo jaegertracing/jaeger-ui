@@ -74,17 +74,17 @@ function trackLogsItem(store: Store<ReduxState>, action: Action<TSpanIdLogValue>
     return;
   }
   const { logItem } = payload;
-  const isOpen = Boolean(detail.logs.openedItems.has(logItem));
+  const isOpen = Boolean(detail.events.openedItems.has(logItem));
   trackEvent(CATEGORY_LOGS_ITEM, getToggleValue(isOpen));
 }
 
 const trackColumnWidth = (_: Store, { payload }: Action<TWidthValue>) =>
   payload && trackEvent(CATEGORY_COLUMN, ACTION_RESIZE, Math.round(payload.width * 1000));
 const trackDetailRow = (isOpen: boolean) => trackEvent(CATEGORY_ROW, getToggleValue(isOpen));
-const trackLogs = (detail: DetailState) => trackEvent(CATEGORY_LOGS, getToggleValue(detail.logs.isOpen));
+const trackLogs = (detail: DetailState) => trackEvent(CATEGORY_LOGS, getToggleValue(detail.events.isOpen));
 const trackProcess = (detail: DetailState) =>
-  trackEvent(CATEGORY_PROCESS, getToggleValue(detail.isProcessOpen));
-const trackTags = (detail: DetailState) => trackEvent(CATEGORY_TAGS, getToggleValue(detail.isTagsOpen));
+  trackEvent(CATEGORY_PROCESS, getToggleValue(detail.isResourceOpen));
+const trackTags = (detail: DetailState) => trackEvent(CATEGORY_TAGS, getToggleValue(detail.isAttributesOpen));
 
 const hooks: TSpanIdHooks = {
   [types.CHILDREN_TOGGLE]: trackParent,

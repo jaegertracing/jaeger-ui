@@ -12,6 +12,7 @@ import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
 import { criticalPathSection, Span } from '../../../types/trace';
+import { IOtelSpan } from '../../../types/otel';
 
 import './SpanBarRow.css';
 
@@ -44,9 +45,11 @@ type SpanBarRowProps = {
   showErrorIcon: boolean;
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
-  span: Span;
+  legacySpan: Span; // Legacy span for SpanTreeOffset and other legacy components
+  span: IOtelSpan; // OTEL span for SpanBar
   focusSpan: (spanID: string) => void;
   traceDuration: number;
+  useOtelTerms: boolean;
 };
 
 /**
@@ -71,28 +74,30 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   showErrorIcon,
   getViewedBounds,
   traceStartTime,
+  legacySpan,
   span,
   focusSpan,
   traceDuration,
   onDetailToggled,
   onChildrenToggled,
+  useOtelTerms,
 }) => {
   const _detailToggle = useCallback(() => {
-    onDetailToggled(span.spanID);
-  }, [onDetailToggled, span.spanID]);
+    onDetailToggled(legacySpan.spanID);
+  }, [onDetailToggled, legacySpan.spanID]);
 
   const _childrenToggle = useCallback(() => {
-    onChildrenToggled(span.spanID);
-  }, [onChildrenToggled, span.spanID]);
+    onChildrenToggled(legacySpan.spanID);
+  }, [onChildrenToggled, legacySpan.spanID]);
 
   const {
     duration,
     hasChildren: isParent,
     operationName,
     process: { serviceName },
-  } = span;
+  } = legacySpan;
   const label = formatDuration(duration);
-  const viewBounds = getViewedBounds(span.startTime, span.startTime + span.duration);
+  const viewBounds = getViewedBounds(legacySpan.startTime, legacySpan.startTime + legacySpan.duration);
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
 
@@ -120,7 +125,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
         <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
-            span={span}
+            span={legacySpan}
             onClick={isParent ? _childrenToggle : undefined}
           />
           <a
@@ -156,20 +161,20 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
           </a>
-          {span.references && span.references.length > 1 && (
+          {legacySpan.references && legacySpan.references.length > 1 && (
             <ReferencesButton
-              references={span.references}
+              references={legacySpan.references}
               tooltipText="Contains multiple references"
               focusSpan={focusSpan}
             >
               <IoGitNetwork />
             </ReferencesButton>
           )}
-          {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
+          {legacySpan.subsidiarilyReferencedBy && legacySpan.subsidiarilyReferencedBy.length > 0 && (
             <ReferencesButton
-              references={span.subsidiarilyReferencedBy}
+              references={legacySpan.subsidiarilyReferencedBy}
               tooltipText={`This span is referenced by ${
-                span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
+                legacySpan.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
               }`}
               focusSpan={focusSpan}
             >
@@ -198,6 +203,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           traceStartTime={traceStartTime}
           span={span}
           traceDuration={traceDuration}
+          useOtelTerms={useOtelTerms}
         />
       </TimelineRow.Cell>
     </TimelineRow>

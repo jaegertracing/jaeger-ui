@@ -4,12 +4,12 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import AccordianReferences, { References } from './AccordianReferences';
+import AccordionLinks, { References } from './AccordionLinks';
 
 jest.mock('../../url/ReferenceLink', () => {
   return function MockReferenceLink({ children, reference }) {
     return (
-      <div data-testid="reference-link" data-span-id={reference.spanID}>
+      <div data-testid="link-link" data-span-id={reference.spanID}>
         {children}
       </div>
     );
@@ -17,7 +17,7 @@ jest.mock('../../url/ReferenceLink', () => {
 });
 
 const traceID = 'trace1';
-const references = [
+const links = [
   {
     refType: 'CHILD_OF',
     span: {
@@ -51,10 +51,10 @@ const references = [
   },
 ];
 
-describe('<AccordianReferences>', () => {
+describe('<AccordionLinks>', () => {
   const props = {
     compact: false,
-    data: references,
+    data: links,
     highContrast: false,
     isOpen: false,
     onToggle: jest.fn(),
@@ -66,32 +66,32 @@ describe('<AccordianReferences>', () => {
   });
 
   it('renders the component structure correctly without crashing', () => {
-    render(<AccordianReferences {...props} />);
+    render(<AccordionLinks {...props} />);
 
     expect(screen.getByText('References')).toBeInTheDocument();
-    expect(screen.getByText(`(${references.length})`)).toBeInTheDocument();
+    expect(screen.getByText(`(${links.length})`)).toBeInTheDocument();
 
-    const header = screen.getByText('References').closest('.AccordianReferences--header');
+    const header = screen.getByText('References').closest('.AccordionLinks--header');
     expect(header).toBeInTheDocument();
-    expect(header).toHaveClass('AccordianReferences--header');
+    expect(header).toHaveClass('AccordionLinks--header');
   });
 
   it('displays References component content when accordion is expanded', () => {
     const expandedProps = { ...props, isOpen: true };
-    render(<AccordianReferences {...expandedProps} />);
+    render(<AccordionLinks {...expandedProps} />);
 
-    const referencesList = screen.getByRole('list');
-    expect(referencesList).toBeInTheDocument();
-    expect(referencesList).toHaveClass('ReferencesList--List');
+    const linksList = screen.getByRole('list');
+    expect(linksList).toBeInTheDocument();
+    expect(linksList).toHaveClass('ReferencesList--List');
 
-    const referenceLinks = screen.getAllByTestId('reference-link');
-    expect(referenceLinks).toHaveLength(references.length);
+    const linkLinks = screen.getAllByTestId('link-link');
+    expect(linkLinks).toHaveLength(links.length);
   });
 });
 
 describe('<References>', () => {
   const props = {
-    data: references,
+    data: links,
     focusSpan: jest.fn(),
   };
 
@@ -99,11 +99,11 @@ describe('<References>', () => {
     jest.clearAllMocks();
   });
 
-  it('renders complete references list with proper service names and operation details', () => {
+  it('renders complete links list with proper service names and operation details', () => {
     render(<References {...props} />);
 
-    const referenceLinks = screen.getAllByTestId('reference-link');
-    expect(referenceLinks).toHaveLength(references.length);
+    const linkLinks = screen.getAllByTestId('link-link');
+    expect(linkLinks).toHaveLength(links.length);
 
     expect(screen.getByText('service1')).toBeInTheDocument();
     expect(screen.getByText('op1')).toBeInTheDocument();
@@ -114,7 +114,7 @@ describe('<References>', () => {
     expect(screen.getByText('< span in another trace >')).toBeInTheDocument();
 
     const refTypeElements = screen.getAllByText('CHILD_OF');
-    expect(refTypeElements).toHaveLength(references.length);
+    expect(refTypeElements).toHaveLength(links.length);
 
     expect(screen.getByText('span1')).toBeInTheDocument();
     expect(screen.getByText('span3')).toBeInTheDocument();

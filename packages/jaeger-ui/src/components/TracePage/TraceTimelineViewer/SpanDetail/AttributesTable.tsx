@@ -9,9 +9,10 @@ import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-j
 import CopyIcon from '../../../common/CopyIcon';
 
 import { TNil } from '../../../../types';
-import { KeyValuePair, Link } from '../../../../types/trace';
+import { Link } from '../../../../types/trace';
+import { IAttribute } from '../../../../types/otel';
 
-import './KeyValuesTable.css';
+import './AttributesTable.css';
 
 const jsonObjectOrArrayStartRegex = /^(\[|\{)/;
 
@@ -116,14 +117,14 @@ const linkValueList = (links: Link[]) => {
   }));
 };
 
-type KeyValuesTableProps = {
-  data: ReadonlyArray<KeyValuePair>;
-  linksGetter: ((pairs: ReadonlyArray<KeyValuePair>, index: number) => Link[]) | TNil;
+type AttributesTableProps = {
+  data: ReadonlyArray<IAttribute>;
+  linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Link[]) | TNil;
 };
 
-// KeyValuesTable is displayed as a menu at span level.
+// AttributesTable is displayed as a menu at span level.
 // Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/b518cad9-cb37-4775-a3d6-b667a1235f89
-export default function KeyValuesTable(props: KeyValuesTableProps) {
+export default function AttributesTable(props: AttributesTableProps) {
   const { data, linksGetter } = props;
 
   return (
@@ -181,7 +182,7 @@ export default function KeyValuesTable(props: KeyValuesTableProps) {
                   <div className="KeyValueTable--copyContainer">
                     <CopyIcon
                       className="KeyValueTable--copyIcon"
-                      copyText={row.value}
+                      copyText={String(row.value)}
                       tooltipTitle="Copy value"
                       buttonText="Copy"
                     />

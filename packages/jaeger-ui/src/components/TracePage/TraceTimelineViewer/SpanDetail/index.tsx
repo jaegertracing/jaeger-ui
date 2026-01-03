@@ -5,78 +5,91 @@ import React from 'react';
 import { Divider } from 'antd';
 
 import { IoLinkOutline } from 'react-icons/io5';
-import AccordianKeyValues from './AccordianKeyValues';
-import AccordianLogs from './AccordianLogs';
-import AccordianReferences from './AccordianReferences';
-import AccordianText from './AccordianText';
+import AccordionAttributes from './AccordionAttributes';
+import AccordionEvents from './AccordionEvents';
+import AccordionLinks from './AccordionLinks';
+import AccordionText from './AccordionText';
 import DetailState from './DetailState';
 import { formatDuration } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
 import LabeledList from '../../../common/LabeledList';
 
 import { TNil } from '../../../../types';
-import { KeyValuePair, Link, Log, Span } from '../../../../types/trace';
+import { Link } from '../../../../types/trace';
+import { IOtelSpan, IAttribute, IEvent } from '../../../../types/otel';
+import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 
 import './index.css';
 
 type SpanDetailProps = {
   detailState: DetailState;
-  linksGetter: ((links: ReadonlyArray<KeyValuePair>, index: number) => Link[]) | TNil;
-  logItemToggle: (spanID: string, log: Log) => void;
-  logsToggle: (spanID: string) => void;
-  processToggle: (spanID: string) => void;
-  span: Span;
-  tagsToggle: (spanID: string) => void;
+  linksGetter: ((links: ReadonlyArray<IAttribute>, index: number) => Link[]) | TNil;
+  eventItemToggle: (spanID: string, event: IEvent) => void;
+  eventsToggle: (spanID: string) => void;
+  resourceToggle: (spanID: string) => void;
+  span: IOtelSpan;
+  attributesToggle: (spanID: string) => void;
   traceStartTime: number;
   warningsToggle: (spanID: string) => void;
-  referencesToggle: (spanID: string) => void;
+  linksToggle: (spanID: string) => void;
   focusSpan: (uiFind: string) => void;
   currentViewRangeTime: [number, number];
   traceDuration: number;
+  useOtelTerms: boolean;
 };
 
 export default function SpanDetail(props: SpanDetailProps) {
   const {
     detailState,
     linksGetter,
-    logItemToggle,
-    logsToggle,
-    processToggle,
+    eventItemToggle,
+    eventsToggle,
+    resourceToggle,
     span,
-    tagsToggle,
+    attributesToggle,
     traceStartTime,
     warningsToggle,
-    referencesToggle,
+    linksToggle,
     focusSpan,
     currentViewRangeTime,
     traceDuration,
+    useOtelTerms,
   } = props;
-  const { isTagsOpen, isProcessOpen, logs: logsState, isWarningsOpen, isReferencesOpen } = detailState;
-  const { operationName, process, duration, relativeStartTime, spanID, logs, tags, warnings, references } =
-    span;
+
+  const { isAttributesOpen, isResourceOpen, events: eventsState, isWarningsOpen, isLinksOpen } = detailState;
+  const warnings = span.warnings;
+
+  // Get references from the facade for display in AccordionLinks
+  const links = span instanceof OtelSpanFacade ? span.legacyReferences : [];
+
+  // Display labels based on terminology flag
+  const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
+  const resourceLabel = useOtelTerms ? 'Resource' : 'Process';
+  const eventsLabel = useOtelTerms ? 'Events' : 'Logs';
+
   const overviewItems = [
     {
       key: 'svc',
       label: 'Service:',
-      value: process.serviceName,
+      value: span.resource.serviceName,
     },
     {
       key: 'duration',
       label: 'Duration:',
-      value: formatDuration(duration),
+      value: formatDuration(span.durationMicros),
     },
     {
       key: 'start',
       label: 'Start Time:',
-      value: formatDuration(relativeStartTime),
+      value: formatDuration(span.relativeStartTimeMicros),
     },
   ];
-  const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${spanID}`;
+  const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanId}`;
 
   return (
     <div>
       <div className="ub-flex ub-items-center">
-        <h2 className="ub-flex-auto ub-m0">{operationName}</h2>
+        <h2 className="ub-flex-auto ub-m0">{span.name}</h2>
         <LabeledList
           className="ub-tx-right-align"
           dividerClassName="SpanDetail--divider"
@@ -86,60 +99,59 @@ export default function SpanDetail(props: SpanDetailProps) {
       <Divider className="SpanDetail--divider ub-my1" />
       <div>
         <div>
-          <AccordianKeyValues
-            data={tags}
-            label="Tags"
+          <AccordionAttributes
+            data={span.attributes}
+            label={attributesLabel}
             linksGetter={linksGetter}
-            isOpen={isTagsOpen}
-            onToggle={() => tagsToggle(spanID)}
+            isOpen={isAttributesOpen}
+            onToggle={() => attributesToggle(span.spanId)}
           />
-          {process.tags && (
-            <AccordianKeyValues
+          {span.resource.attributes && span.resource.attributes.length > 0 && (
+            <AccordionAttributes
               className="ub-mb1"
-              data={process.tags}
-              label="Process"
+              data={span.resource.attributes}
+              label={resourceLabel}
               linksGetter={linksGetter}
-              isOpen={isProcessOpen}
-              onToggle={() => processToggle(spanID)}
+              isOpen={isResourceOpen}
+              onToggle={() => resourceToggle(span.spanId)}
             />
           )}
         </div>
-        {logs && logs.length > 0 && (
-          <AccordianLogs
+        {span.events && span.events.length > 0 && (
+          <AccordionEvents
             linksGetter={linksGetter}
-            logs={logs}
-            isOpen={logsState.isOpen}
-            openedItems={logsState.openedItems}
-            onToggle={() => logsToggle(spanID)}
-            onItemToggle={logItem => logItemToggle(spanID, logItem)}
+            events={span.events}
+            isOpen={eventsState.isOpen}
+            openedItems={eventsState.openedItems}
+            onToggle={() => eventsToggle(span.spanId)}
+            onItemToggle={eventItem => eventItemToggle(span.spanId, eventItem)}
             timestamp={traceStartTime}
             currentViewRangeTime={currentViewRangeTime}
             traceDuration={traceDuration}
-            spanID={spanID}
+            spanID={span.spanId}
+            useOtelTerms={useOtelTerms}
           />
         )}
         {warnings && warnings.length > 0 && (
-          <AccordianText
+          <AccordionText
             className="AccordianWarnings"
             headerClassName="AccordianWarnings--header"
             label={<span className="AccordianWarnings--label">Warnings</span>}
             data={warnings}
             isOpen={isWarningsOpen}
-            onToggle={() => warningsToggle(spanID)}
+            onToggle={() => warningsToggle(span.spanId)}
           />
         )}
-        {references &&
-          references.length > 0 &&
-          (references.length > 1 || references[0].refType !== 'CHILD_OF') && (
-            <AccordianReferences
-              data={references}
-              isOpen={isReferencesOpen}
-              onToggle={() => referencesToggle(spanID)}
-              focusSpan={focusSpan}
-            />
-          )}
+        {links && links.length > 0 && (links.length > 1 || links[0].refType !== 'CHILD_OF') && (
+          <AccordionLinks
+            data={links}
+            isOpen={isLinksOpen}
+            onToggle={() => linksToggle(span.spanId)}
+            focusSpan={focusSpan}
+          />
+        )}
         <small className="SpanDetail--debugInfo">
-          <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {spanID}
+          <span className="SpanDetail--debugLabel" data-label="SpanID:" /> {span.spanId}
           <CopyIcon
             copyText={deepLinkCopyText}
             icon={<IoLinkOutline />}

@@ -24,28 +24,70 @@ jest.mock('./SpanTreeOffset', () => ({
 
 describe('<SpanDetailRow>', () => {
   const spanID = 'some-id';
+  const legacySpan = {
+    spanID,
+    traceID: 'trace-id',
+    processID: 'p1',
+    operationName: 'op-name',
+    startTime: 1000,
+    duration: 100,
+    depth: 3,
+    relativeStartTime: 0,
+    hasChildren: false,
+    tags: [],
+    logs: [],
+    references: [],
+    warnings: null,
+    subsidiarilyReferencedBy: [],
+    process: {
+      serviceName: 'service',
+      tags: [],
+    },
+  };
+  const span = {
+    spanId: spanID,
+    traceId: 'trace-id',
+    name: 'op-name',
+    startTimeUnixMicro: 1000n,
+    durationMicros: 100n,
+    attributes: [],
+    events: [],
+    resource: {
+      serviceName: 'service',
+      attributes: [],
+    },
+    warnings: null,
+  };
   const props = {
     color: 'some-color',
     columnDivision: 0.5,
     detailState: new DetailState(),
     onDetailToggled: jest.fn(),
     linksGetter: jest.fn(),
-    isFilteredOut: false,
-    logItemToggle: jest.fn(),
-    logsToggle: jest.fn(),
-    processToggle: jest.fn(),
-    span: { spanID, depth: 3 },
-    tagsToggle: jest.fn(),
+    eventItemToggle: jest.fn(),
+    eventsToggle: jest.fn(),
+    resourceToggle: jest.fn(),
+    linksToggle: jest.fn(),
+    warningsToggle: jest.fn(),
+    span,
+    legacySpan,
+    attributesToggle: jest.fn(),
     traceStartTime: 1000,
+    focusSpan: jest.fn(),
+    currentViewRangeTime: [0, 100],
+    traceDuration: 1000,
   };
 
   beforeEach(() => {
     props.onDetailToggled.mockReset();
     props.linksGetter.mockReset();
-    props.logItemToggle.mockReset();
-    props.logsToggle.mockReset();
-    props.processToggle.mockReset();
-    props.tagsToggle.mockReset();
+    props.eventItemToggle.mockReset();
+    props.eventsToggle.mockReset();
+    props.resourceToggle.mockReset();
+    props.linksToggle.mockReset();
+    props.warningsToggle.mockReset();
+    props.attributesToggle.mockReset();
+    props.focusSpan.mockReset();
     MockSpanDetail.mockClear();
     MockSpanTreeOffset.mockClear();
   });
@@ -62,7 +104,7 @@ describe('<SpanDetailRow>', () => {
     expect(props.onDetailToggled).not.toHaveBeenCalled();
     await user.click(toggleSwitch);
     expect(props.onDetailToggled).toHaveBeenCalledTimes(1);
-    expect(props.onDetailToggled).toHaveBeenCalledWith(props.span.spanID);
+    expect(props.onDetailToggled).toHaveBeenCalledWith(props.span.spanId);
   });
 
   it('renders the span tree offset', () => {
@@ -70,8 +112,7 @@ describe('<SpanDetailRow>', () => {
     expect(MockSpanTreeOffset).toHaveBeenCalledTimes(1);
     expect(MockSpanTreeOffset).toHaveBeenCalledWith(
       expect.objectContaining({
-        span: props.span,
-        showChildrenIcon: false,
+        span: props.legacySpan,
       })
     );
   });
@@ -92,11 +133,13 @@ describe('<SpanDetailRow>', () => {
 
     expect(receivedProps.detailState).toBe(props.detailState);
     expect(receivedProps.linksGetter).toEqual(expect.any(Function));
-    expect(receivedProps.logItemToggle).toBe(props.logItemToggle);
-    expect(receivedProps.logsToggle).toBe(props.logsToggle);
-    expect(receivedProps.processToggle).toBe(props.processToggle);
-    expect(receivedProps.span).toBe(props.span);
-    expect(receivedProps.tagsToggle).toBe(props.tagsToggle);
+    expect(receivedProps.eventItemToggle).toEqual(expect.any(Function));
+    expect(receivedProps.eventsToggle).toBe(props.eventsToggle);
+    expect(receivedProps.resourceToggle).toBe(props.resourceToggle);
+    // span is now converted to IOtelSpan via OtelSpanFacade
+    expect(receivedProps.span).toHaveProperty('spanId', props.span.spanId);
+    expect(receivedProps.span).toHaveProperty('name', props.span.name);
+    expect(receivedProps.attributesToggle).toBe(props.attributesToggle);
     expect(receivedProps.traceStartTime).toBe(props.traceStartTime);
   });
 
@@ -105,12 +148,13 @@ describe('<SpanDetailRow>', () => {
     expect(MockSpanDetail).toHaveBeenCalled();
     const receivedProps = MockSpanDetail.mock.calls[0][0];
     const linksGetter = receivedProps.linksGetter;
-    const tags = [{ key: 'myKey', value: 'myValue' }];
+    const attributes = [{ key: 'myKey', value: 'myValue' }];
     const linksGetterResponse = {};
     props.linksGetter.mockReturnValueOnce(linksGetterResponse);
-    const result = linksGetter(tags, 0);
+    const result = linksGetter(attributes, 0);
     expect(result).toBe(linksGetterResponse);
     expect(props.linksGetter).toHaveBeenCalledTimes(1);
-    expect(props.linksGetter).toHaveBeenCalledWith(props.span, tags, 0);
+    // linksGetter is passed directly to SpanDetail (no adapter needed since props already have OTEL signature)
+    expect(props.linksGetter).toHaveBeenCalledWith(attributes, 0);
   });
 });

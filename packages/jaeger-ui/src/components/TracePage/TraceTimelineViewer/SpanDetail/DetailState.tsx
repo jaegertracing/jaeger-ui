@@ -1,51 +1,52 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Log } from '../../../../types/trace';
+import { IEvent } from '../../../../types/otel';
 
 /**
  * Which items of a {@link SpanDetail} component are expanded.
  */
 export default class DetailState {
-  isTagsOpen: boolean;
-  isProcessOpen: boolean;
-  logs: { isOpen: boolean; openedItems: Set<Log> };
+  isAttributesOpen: boolean;
+  isResourceOpen: boolean;
+  events: { isOpen: boolean; openedItems: Set<IEvent> };
   isWarningsOpen: boolean;
-  isReferencesOpen: boolean;
+  isLinksOpen: boolean;
 
   constructor(oldState?: DetailState) {
     const {
-      isTagsOpen,
-      isProcessOpen,
-      isReferencesOpen,
+      isAttributesOpen,
+      isResourceOpen,
+      isLinksOpen,
       isWarningsOpen,
-      logs,
+      events,
     }: DetailState | Record<string, undefined> = oldState || {};
-    this.isTagsOpen = Boolean(isTagsOpen);
-    this.isProcessOpen = Boolean(isProcessOpen);
-    this.isReferencesOpen = Boolean(isReferencesOpen);
+    this.isAttributesOpen = Boolean(isAttributesOpen);
+    this.isResourceOpen = Boolean(isResourceOpen);
+    this.isLinksOpen = Boolean(isLinksOpen);
     this.isWarningsOpen = Boolean(isWarningsOpen);
-    this.logs = {
-      isOpen: logs ? Boolean(logs.isOpen) : true,
-      openedItems: logs && logs.openedItems ? new Set(logs.openedItems) : new Set(),
+    this.events = {
+      isOpen: events ? Boolean(events.isOpen) : true,
+      openedItems:
+        events && events.openedItems ? new Set(events.openedItems as Iterable<IEvent>) : new Set<IEvent>(),
     };
   }
 
-  toggleTags() {
+  toggleAttributes() {
     const next = new DetailState(this);
-    next.isTagsOpen = !this.isTagsOpen;
+    next.isAttributesOpen = !this.isAttributesOpen;
     return next;
   }
 
-  toggleProcess() {
+  toggleResource() {
     const next = new DetailState(this);
-    next.isProcessOpen = !this.isProcessOpen;
+    next.isResourceOpen = !this.isResourceOpen;
     return next;
   }
 
-  toggleReferences() {
+  toggleLinks() {
     const next = new DetailState(this);
-    next.isReferencesOpen = !this.isReferencesOpen;
+    next.isLinksOpen = !this.isLinksOpen;
     return next;
   }
 
@@ -55,19 +56,40 @@ export default class DetailState {
     return next;
   }
 
-  toggleLogs() {
+  toggleEvents() {
     const next = new DetailState(this);
-    next.logs.isOpen = !this.logs.isOpen;
+    next.events.isOpen = !this.events.isOpen;
     return next;
   }
 
-  toggleLogItem(logItem: Log) {
+  toggleEventItem(eventItem: IEvent) {
     const next = new DetailState(this);
-    if (next.logs.openedItems.has(logItem)) {
-      next.logs.openedItems.delete(logItem);
+    if (next.events.openedItems.has(eventItem)) {
+      next.events.openedItems.delete(eventItem);
     } else {
-      next.logs.openedItems.add(logItem);
+      next.events.openedItems.add(eventItem);
     }
     return next;
+  }
+
+  // Legacy method names for backward compatibility
+  toggleTags() {
+    return this.toggleAttributes();
+  }
+
+  toggleProcess() {
+    return this.toggleResource();
+  }
+
+  toggleReferences() {
+    return this.toggleLinks();
+  }
+
+  toggleLogs() {
+    return this.toggleEvents();
+  }
+
+  toggleLogItem(logItem: IEvent) {
+    return this.toggleEventItem(logItem);
   }
 }

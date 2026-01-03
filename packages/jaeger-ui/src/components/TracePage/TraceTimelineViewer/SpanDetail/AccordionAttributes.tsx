@@ -5,26 +5,27 @@ import * as React from 'react';
 import cx from 'classnames';
 import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 
-import * as markers from './AccordianKeyValues.markers';
-import KeyValuesTable from './KeyValuesTable';
+import * as markers from './AccordionAttributes.markers';
+import AttributesTable from './AttributesTable';
 import { TNil } from '../../../../types';
-import { KeyValuePair, Link } from '../../../../types/trace';
+import { Link } from '../../../../types/trace';
+import { IAttribute } from '../../../../types/otel';
 
-import './AccordianKeyValues.css';
+import './AccordionAttributes.css';
 
 // export for tests
-export function KeyValuesSummary({ data }: { data: ReadonlyArray<KeyValuePair> }) {
+export function AttributesSummary({ data }: { data: ReadonlyArray<IAttribute> }) {
   if (!Array.isArray(data) || !data.length) {
     return null;
   }
   return (
-    <ul className="AccordianKeyValues--summary">
+    <ul className="AccordionAttributes--summary">
       {data.map((item, i) => (
         // `i` is necessary in the key because item.key can repeat
 
-        <li className="AccordianKeyValues--summaryItem" key={`${item.key}-${i}`}>
-          <span className="AccordianKeyValues--summaryLabel">{item.key}</span>
-          <span className="AccordianKeyValues--summaryDelim">=</span>
+        <li className="AccordionAttributes--summaryItem" key={`${item.key}-${i}`}>
+          <span className="AccordionAttributes--summaryLabel">{item.key}</span>
+          <span className="AccordionAttributes--summaryDelim">=</span>
           {String(item.value)}
         </li>
       ))}
@@ -32,7 +33,7 @@ export function KeyValuesSummary({ data }: { data: ReadonlyArray<KeyValuePair> }
   );
 }
 
-export default function AccordianKeyValues({
+export default function AccordionAttributes({
   className = null,
   data,
   highContrast = false,
@@ -43,23 +44,23 @@ export default function AccordianKeyValues({
   onToggle = null,
 }: {
   className?: string | TNil;
-  data: ReadonlyArray<KeyValuePair>;
+  data: ReadonlyArray<IAttribute>;
   highContrast?: boolean;
   interactive?: boolean;
   isOpen: boolean;
   label: string;
-  linksGetter: ((pairs: ReadonlyArray<KeyValuePair>, index: number) => Link[]) | TNil;
+  linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Link[]) | TNil;
   onToggle?: null | (() => void);
 }) {
   const isEmpty = !Array.isArray(data) || !data.length;
-  const iconCls = cx('u-align-icon', { 'AccordianKeyValues--emptyIcon': isEmpty });
+  const iconCls = cx('u-align-icon', { 'AccordionAttributes--emptyIcon': isEmpty });
   let arrow: React.ReactNode | null = null;
   let headerProps: object | null = null;
   if (interactive) {
     arrow = isOpen ? <IoChevronDown className={iconCls} /> : <IoChevronForward className={iconCls} />;
     headerProps = {
       'aria-checked': isOpen,
-      onClick: isEmpty ? null : onToggle,
+      onClick: onToggle,
       role: 'switch',
     };
   }
@@ -67,7 +68,7 @@ export default function AccordianKeyValues({
   return (
     <div className={cx(className, 'u-tx-ellipsis')}>
       <div
-        className={cx('AccordianKeyValues--header', {
+        className={cx('AccordionAttributes--header', {
           'is-empty': isEmpty,
           'is-high-contrast': highContrast,
         })}
@@ -78,9 +79,9 @@ export default function AccordianKeyValues({
           {label}
           {isOpen || ':'}
         </strong>
-        {!isOpen && <KeyValuesSummary data={data} />}
+        {!isOpen && <AttributesSummary data={data} />}
       </div>
-      {isOpen && <KeyValuesTable data={data} linksGetter={linksGetter} />}
+      {isOpen && <AttributesTable data={data} linksGetter={linksGetter} />}
     </div>
   );
 }

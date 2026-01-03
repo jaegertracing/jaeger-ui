@@ -8,7 +8,8 @@ import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
 
-import { Log, Span, KeyValuePair, Link } from '../../../types/trace';
+import { IOtelSpan, IAttribute, IEvent } from '../../../types/otel';
+import { Link, Span } from '../../../types/trace';
 
 import './SpanDetailRow.css';
 
@@ -17,50 +18,50 @@ type SpanDetailRowProps = {
   columnDivision: number;
   detailState: DetailState;
   onDetailToggled: (spanID: string) => void;
-  linksGetter: (span: Span, links: ReadonlyArray<KeyValuePair>, index: number) => Link[];
-  logItemToggle: (spanID: string, log: Log) => void;
-  logsToggle: (spanID: string) => void;
-  processToggle: (spanID: string) => void;
-  referencesToggle: (spanID: string) => void;
+  linksGetter: (attributes: ReadonlyArray<IAttribute>, index: number) => Link[];
+  eventItemToggle: (spanID: string, event: IEvent) => void;
+  eventsToggle: (spanID: string) => void;
+  resourceToggle: (spanID: string) => void;
+  linksToggle: (spanID: string) => void;
   warningsToggle: (spanID: string) => void;
-  span: Span;
-  tagsToggle: (spanID: string) => void;
+  span: IOtelSpan;
+  legacySpan: Span; // Legacy span needed for SpanTreeOffset component
+  attributesToggle: (spanID: string) => void;
   traceStartTime: number;
   focusSpan: (uiFind: string) => void;
   currentViewRangeTime: [number, number];
   traceDuration: number;
+  useOtelTerms: boolean;
 };
 
 const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
   const _detailToggle = () => {
-    props.onDetailToggled(props.span.spanID);
-  };
-
-  const _linksGetter = (items: ReadonlyArray<KeyValuePair>, itemIndex: number) => {
-    const { linksGetter, span } = props;
-    return linksGetter(span, items, itemIndex);
+    props.onDetailToggled(props.span.spanId);
   };
 
   const {
     color,
     columnDivision,
     detailState,
-    logItemToggle,
-    logsToggle,
-    processToggle,
-    referencesToggle,
+    eventsToggle,
+    resourceToggle,
+    linksToggle,
     warningsToggle,
     span,
-    tagsToggle,
+    legacySpan,
+    attributesToggle,
     traceStartTime,
     focusSpan,
     currentViewRangeTime,
     traceDuration,
+    linksGetter,
+    eventItemToggle,
+    useOtelTerms,
   } = props;
   return (
     <TimelineRow className="detail-row">
       <TimelineRow.Cell width={columnDivision}>
-        <SpanTreeOffset span={span} showChildrenIcon={false} />
+        <SpanTreeOffset span={legacySpan} />
         <span>
           <span
             className="detail-row-expanded-accent"
@@ -75,18 +76,19 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
         <div className="detail-info-wrapper" style={{ borderTopColor: color }}>
           <SpanDetail
             detailState={detailState}
-            linksGetter={_linksGetter}
-            logItemToggle={logItemToggle}
-            logsToggle={logsToggle}
-            processToggle={processToggle}
-            referencesToggle={referencesToggle}
+            linksGetter={linksGetter}
+            eventItemToggle={eventItemToggle}
+            eventsToggle={eventsToggle}
+            resourceToggle={resourceToggle}
+            linksToggle={linksToggle}
             warningsToggle={warningsToggle}
             span={span}
-            tagsToggle={tagsToggle}
+            attributesToggle={attributesToggle}
             traceStartTime={traceStartTime}
             focusSpan={focusSpan}
             currentViewRangeTime={currentViewRangeTime}
             traceDuration={traceDuration}
+            useOtelTerms={useOtelTerms}
           />
         </div>
       </TimelineRow.Cell>

@@ -164,4 +164,13 @@ export default class OtelSpanFacade implements IOtelSpan {
       attributes: [],
     }));
   }
+
+  // Legacy Jaeger-specific properties for UI compatibility
+  get warnings(): ReadonlyArray<string> | null {
+    return this.legacySpan.warnings;
+  }
+
+  get legacyReferences(): ReadonlyArray<any> {
+    return this.legacySpan.references;
+  }
 }
