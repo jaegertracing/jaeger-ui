@@ -54,6 +54,7 @@ type TVirtualizedTraceViewOwnProps = {
   registerAccessors: (accesors: Accessors) => void;
   trace: Trace;
   criticalPath: criticalPathSection[];
+  useOtelTerms: boolean;
 };
 
 type TDispatchProps = {
@@ -469,6 +470,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       spanNameColumnWidth,
       trace,
       criticalPath,
+      useOtelTerms,
     } = this.props;
     // to avert flow error
     if (!trace) {
@@ -534,6 +536,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           span={span}
           focusSpan={this.focusSpan}
           traceDuration={trace.duration}
+          useOtelTerms={useOtelTerms}
         />
       </div>
     );
@@ -560,6 +563,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       spanNameColumnWidth,
       trace,
       currentViewRangeTime,
+      useOtelTerms,
     } = this.props;
     const detailState = detailStates.get(spanID);
     if (!trace || !detailState) {
@@ -587,6 +591,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           focusSpan={this.focusSpan}
           currentViewRangeTime={currentViewRangeTime}
           traceDuration={trace.duration}
+          useOtelTerms={useOtelTerms}
         />
       </div>
     );

@@ -34,6 +34,7 @@ type TProps = TDispatchProps & {
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: IViewRange;
+  useOtelTerms: boolean;
 };
 
 const NUM_TICKS = 5;

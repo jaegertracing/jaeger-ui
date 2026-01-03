@@ -26,6 +26,7 @@ type AccordianLogsProps = {
   traceDuration: number;
   initialVisibleCount?: number;
   spanID?: string;
+  useOtelTerms: boolean;
 };
 
 export default function AccordianLogs({
@@ -41,7 +42,8 @@ export default function AccordianLogs({
   traceDuration,
   initialVisibleCount = 3,
   spanID,
-}: AccordianLogsProps) {
+  useOtelTerms,
+}: AccordionEventsProps) {
   let arrow: React.ReactNode | null = null;
   let HeaderComponent: 'span' | 'a' = 'span';
   let headerProps: object | null = null;
