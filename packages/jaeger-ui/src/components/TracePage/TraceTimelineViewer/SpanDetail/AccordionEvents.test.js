@@ -218,3 +218,48 @@ describe('<AccordionEvents>', () => {
     window.MutationObserver = originalMutationObserver;
   });
 });
+
+describe('<AccordionEvents> OTEL specifics', () => {
+  const events = [
+    {
+      timeUnixMicro: 10,
+      name: 'otel-event-name',
+      attributes: [],
+    },
+  ];
+
+  const defaultProps = {
+    events,
+    isOpen: true,
+    onItemToggle: jest.fn(),
+    onToggle: jest.fn(),
+    timestamp: 0,
+    traceDuration: 100,
+    currentViewRangeTime: [0.0, 1.0],
+    interactive: true,
+    useOtelTerms: true,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('includes event name in label when useOtelTerms is true', () => {
+    render(<AccordionEvents {...defaultProps} />);
+    expect(mockAccordionAttributes).toHaveBeenCalledWith(
+      expect.objectContaining({
+        label: expect.stringContaining('otel-event-name'),
+      })
+    );
+  });
+
+  it('passes correct props for events with no attributes', () => {
+    render(<AccordionEvents {...defaultProps} />);
+    expect(mockAccordionAttributes).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: [],
+        interactive: true,
+      })
+    );
+  });
+});

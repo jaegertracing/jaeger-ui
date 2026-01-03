@@ -60,7 +60,7 @@ type TVirtualizedTraceViewOwnProps = {
 type TDispatchProps = {
   childrenToggle: (spanID: string) => void;
   clearShouldScrollToFirstUiFindMatch: () => void;
-  detailLogItemToggle: (spanID: string, log: Log) => void;
+  detailLogItemToggle: (spanID: string, log: IEvent) => void;
   detailLogsToggle: (spanID: string) => void;
   detailWarningsToggle: (spanID: string) => void;
   detailReferencesToggle: (spanID: string) => void;
@@ -418,16 +418,9 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   // Adapter for OTEL event toggle to legacy log toggle
   eventItemToggleAdapter =
-    (detailLogItemToggle: (spanID: string, log: Log) => void) => (spanID: string, event: IEvent) => {
-      // Convert IEvent to Log for legacy callback
-      const log: Log = {
-        timestamp: event.timeUnixMicro,
-        fields: event.attributes.map(attr => ({
-          key: attr.key,
-          value: String(attr.value), // Convert AttributeValue to string
-        })),
-      };
-      detailLogItemToggle(spanID, log);
+    (detailLogItemToggle: (spanID: string, log: IEvent) => void) => (spanID: string, event: IEvent) => {
+      // Pass the IEvent directly.
+      detailLogItemToggle(spanID, event);
     };
 
   renderRow = (key: string, style: React.CSSProperties, index: number, attrs: object) => {
