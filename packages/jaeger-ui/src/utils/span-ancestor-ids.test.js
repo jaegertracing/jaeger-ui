@@ -10,25 +10,25 @@ describe('spanAncestorIds', () => {
   const childSpanId = 'child-span-id';
 
   const rootSpan = {
-    spanId: rootSpanId,
+    spanID: rootSpanId,
     parentSpanId: undefined,
     parentSpan: undefined,
   };
 
   const grandparentSpan = {
-    spanId: grandparentSpanId,
+    spanID: grandparentSpanId,
     parentSpanId: rootSpanId,
     parentSpan: rootSpan,
   };
 
   const parentSpan = {
-    spanId: parentSpanId,
+    spanID: parentSpanId,
     parentSpanId: grandparentSpanId,
     parentSpan: grandparentSpan,
   };
 
   const childSpan = {
-    spanId: childSpanId,
+    spanID: childSpanId,
     parentSpanId: parentSpanId,
     parentSpan: parentSpan,
   };
@@ -47,7 +47,7 @@ describe('spanAncestorIds', () => {
 
   it('stops traversal when parent span is not available', () => {
     const isolatedChild = {
-      spanId: childSpanId,
+      spanID: childSpanId,
       parentSpanId: parentSpanId,
       parentSpan: undefined, // No parent span available
     };

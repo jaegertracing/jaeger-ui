@@ -23,9 +23,9 @@ describe('SpanTreeOffset', () => {
       addHoverIndentGuideId: jest.fn(),
       hoverIndentGuideIds: new Set(),
       removeHoverIndentGuideId: jest.fn(),
-      otelSpan: {
+      span: {
         hasChildren: false,
-        spanId: ownSpanID,
+        spanID: ownSpanID,
       },
     };
   });
@@ -110,12 +110,12 @@ describe('SpanTreeOffset', () => {
     let renderResult;
 
     beforeEach(() => {
-      const updatedProps = { ...props, otelSpan: { ...props.otelSpan, hasChildren: true } };
+      const updatedProps = { ...props, span: { ...props.span, hasChildren: true } };
       renderResult = render(<UnconnectedSpanTreeOffset {...updatedProps} />);
     });
 
     it('does not render icon if props.otelSpan.hasChildren is false', () => {
-      const propsWithoutChildren = { ...props, otelSpan: { ...props.otelSpan, hasChildren: false } };
+      const propsWithoutChildren = { ...props, span: { ...props.span, hasChildren: false } };
       const { container } = render(<UnconnectedSpanTreeOffset {...propsWithoutChildren} />);
       expect(container.querySelector('svg')).toBeNull();
     });
@@ -123,7 +123,7 @@ describe('SpanTreeOffset', () => {
     it('does not render icon if props.otelSpan.hasChildren is true and showChildrenIcon is false', () => {
       const propsWithIconDisabled = {
         ...props,
-        otelSpan: { ...props.otelSpan, hasChildren: true },
+        span: { ...props.span, hasChildren: true },
         showChildrenIcon: false,
       };
       const { container } = render(<UnconnectedSpanTreeOffset {...propsWithIconDisabled} />);
@@ -138,7 +138,7 @@ describe('SpanTreeOffset', () => {
     it('renders IoIosArrowDown if props.otelSpan.hasChildren is true and props.childrenVisible is true', () => {
       const propsWithVisibleChildren = {
         ...props,
-        otelSpan: { ...props.otelSpan, hasChildren: true },
+        span: { ...props.span, hasChildren: true },
         childrenVisible: true,
       };
       const { container } = render(<UnconnectedSpanTreeOffset {...propsWithVisibleChildren} />);

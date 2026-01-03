@@ -65,7 +65,7 @@ describe('<SpanBarRow>', () => {
     getViewedBounds: jest.fn().mockReturnValue({ start: 0.5, end: 0.6 }),
     span: {
       traceId: 'trace-id',
-      spanId: spanID,
+      spanID: spanID,
       name: 'op-name',
       kind: 'SERVER',
       startTimeUnixMicros: 100,
@@ -121,8 +121,8 @@ describe('<SpanBarRow>', () => {
     const span = {
       ...defaultProps.span,
       links: [
-        { traceId: 't1', spanId: 's1', attributes: [] },
-        { traceId: 't2', spanId: 's2', attributes: [] },
+        { traceId: 't1', spanID: 's1', attributes: [] },
+        { traceId: 't2', spanID: 's2', attributes: [] },
       ],
     };
     render(<SpanBarRow {...defaultProps} span={span} />);
@@ -134,7 +134,7 @@ describe('<SpanBarRow>', () => {
   it('shows tooltip for a single downstream reference', () => {
     const span = {
       ...defaultProps.span,
-      inboundLinks: [{ traceId: 't1', spanId: 's1', attributes: [] }],
+      inboundLinks: [{ traceId: 't1', spanID: 's1', attributes: [] }],
     };
     render(<SpanBarRow {...defaultProps} span={span} />);
     const btn = screen.getByTestId('references-button');
@@ -146,8 +146,8 @@ describe('<SpanBarRow>', () => {
     const span = {
       ...defaultProps.span,
       inboundLinks: [
-        { traceId: 't1', spanId: 's1', attributes: [] },
-        { traceId: 't2', spanId: 's2', attributes: [] },
+        { traceId: 't1', spanID: 's1', attributes: [] },
+        { traceId: 't2', spanID: 's2', attributes: [] },
       ],
     };
     render(<SpanBarRow {...defaultProps} span={span} />);

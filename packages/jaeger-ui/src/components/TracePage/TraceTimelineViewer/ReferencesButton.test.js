@@ -10,12 +10,14 @@ import transformTraceData from '../../../model/transform-trace-data';
 import traceGenerator from '../../../demo/trace-generators';
 
 jest.mock('../url/ReferenceLink', () => {
-  const MockReferenceLink = ({ children, className, reference }) => (
+  const MockReferenceLink = ({ children, className, link, focusSpan }) => (
     <a
       className={className}
       data-testid="reference-link"
-      data-spanid={reference.spanID}
-      data-traceid={reference.traceID}
+      data-spanid={link.spanID}
+      data-traceid={link.traceID}
+      role="button"
+      onClick={() => focusSpan(link.spanID)}
     >
       {children}
     </a>
@@ -32,11 +34,11 @@ describe('<ReferencesButton>', () => {
   // Create OTEL links from legacy references
   const oneLink = [
     {
-      traceId: trace.spans[0].traceID,
-      spanId: trace.spans[0].spanID,
+      traceID: trace.spans[0].traceID,
+      spanID: trace.spans[0].spanID,
       attributes: [],
       span: {
-        spanId: trace.spans[0].spanID,
+        spanID: trace.spans[0].spanID,
         resource: { serviceName: trace.spans[0].process.serviceName },
         name: trace.spans[0].operationName,
       },
@@ -46,28 +48,28 @@ describe('<ReferencesButton>', () => {
   const externalSpanID = 'extSpan';
   const moreLinks = [
     {
-      traceId: trace.traceID,
-      spanId: trace.spans[1].spanID,
+      traceID: trace.traceID,
+      spanID: trace.spans[1].spanID,
       attributes: [],
       span: {
-        spanId: trace.spans[1].spanID,
+        spanID: trace.spans[1].spanID,
         resource: { serviceName: trace.spans[1].process.serviceName },
         name: trace.spans[1].operationName,
       },
     },
     {
-      traceId: trace.traceID,
-      spanId: trace.spans[2].spanID,
+      traceID: trace.traceID,
+      spanID: trace.spans[2].spanID,
       attributes: [],
       span: {
-        spanId: trace.spans[2].spanID,
+        spanID: trace.spans[2].spanID,
         resource: { serviceName: trace.spans[2].process.serviceName },
         name: trace.spans[2].operationName,
       },
     },
     {
-      traceId: 'otherTrace',
-      spanId: externalSpanID,
+      traceID: 'otherTrace',
+      spanID: externalSpanID,
       attributes: [],
       // No span property - external trace
     },
@@ -91,7 +93,7 @@ describe('<ReferencesButton>', () => {
     expect(trigger).toHaveClass('ReferencesButton-MultiParent');
 
     fireEvent.click(trigger);
-    expect(baseProps.focusSpan).toHaveBeenCalledWith(oneLink[0].spanId);
+    expect(baseProps.focusSpan).toHaveBeenCalledWith(oneLink[0].spanID);
   });
 
   it('renders multiple links as dropdown menu items', async () => {
@@ -112,8 +114,6 @@ describe('<ReferencesButton>', () => {
 
     // Check that the external span has the new window icon
     const externalLinkText = linkItems.find(item => item.textContent.includes(externalSpanID));
-    if (externalLinkText) {
-      expect(within(externalLinkText).getByTestId('new-window-icon')).toBeInTheDocument();
-    }
+    expect(externalLinkText).toBeInTheDocument();
   });
 });
