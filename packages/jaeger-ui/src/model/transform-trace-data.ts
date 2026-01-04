@@ -94,9 +94,13 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     } else {
       spanIdCounts.set(spanID, 1);
     }
-    span.process = data.processes[processID];
+    span.process = data.processes[processID] || { serviceName: 'unknown-service' };
+    span.process.tags = span.process.tags || [];
     span.tags = span.tags || [];
     span.logs = span.logs || [];
+    span.logs.forEach(log => {
+      log.fields = log.fields || [];
+    });
     span.references = span.references || [];
     span.childSpans = [];
     span.subsidiarilyReferencedBy = [];

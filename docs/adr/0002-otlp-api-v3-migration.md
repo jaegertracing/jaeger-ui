@@ -181,6 +181,10 @@ interface Status {
 | `references`          | `parentSpanId + links`  | Split parent vs other refs|
 | `spanID, traceID`     | `spanId, traceId`       | CamelCase consistency     |
 
+### Span References vs. Links
+
+In the legacy model reference types `CHILD_OF` | `FOLLOWS_FROM` were used to indicate both parent/child relations between spans as well as the blocking nature of the child span: a `CHILD_OF` span is presumed to block parent's execution, while a `FOLLOWS_FROM` span does not block parent's execution. In OTEL model the span hierarchy is represented explicitiy via `parentSpanID` field, but the blocking nature of the child span is not represented explicitly. Instead, it can be inferred from the child span's `span_kind`. A `PRODUCER`-`CONSUMER` pair of spans is a non-blocking pair, consumer runs independenly of the parent producer span and does not affet its critical path. Only `INTERNAL`/`CLIENT`/`SERVER` span kinds should be considered blocking.
+
 ---
 
 ## Decision

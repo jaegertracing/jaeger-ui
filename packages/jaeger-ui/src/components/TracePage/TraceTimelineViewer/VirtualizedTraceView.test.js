@@ -491,7 +491,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       render(
         <VirtualizedTraceViewImpl
           {...mockProps}
-          trace={criticalPathTest.trace.asOtelTrace()}
+          trace={criticalPathTest.trace}
           criticalPath={criticalPathTest.criticalPathSections}
         />
       );
@@ -506,7 +506,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
         <VirtualizedTraceViewImpl
           {...mockProps}
           childrenHiddenIDs={childrenHiddenIDs}
-          trace={criticalPathTest.trace.asOtelTrace()}
+          trace={criticalPathTest.trace}
           criticalPath={criticalPathTest.criticalPathSections}
         />
       );
