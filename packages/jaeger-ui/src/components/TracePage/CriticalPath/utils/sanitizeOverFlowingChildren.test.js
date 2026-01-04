@@ -51,7 +51,7 @@ describe.each([
     test3,
     new Map().set(test3.trace.spans[0].spanID, {
       ...createCPSpan(test3.trace.spans[0]),
-      childSpanIds: [],
+      childSpanIDs: [],
     }),
   ],
   [
@@ -59,7 +59,7 @@ describe.each([
     test4,
     new Map().set(test4.trace.spans[0].spanID, {
       ...createCPSpan(test4.trace.spans[0]),
-      childSpanIds: [],
+      childSpanIDs: [],
     }),
   ],
   [
@@ -82,7 +82,7 @@ describe.each([
     test9,
     new Map().set(test9.trace.spans[0].spanID, {
       ...createCPSpan(test9.trace.spans[0]),
-      childSpanIds: [],
+      childSpanIDs: [],
     }),
   ],
 ])('sanitizeOverFlowingChildren - %s', (description, testProps, expectedSanitizedData) => {
@@ -101,7 +101,7 @@ describe.each([
       expect(span.spanID).toBe(expectedSpan.spanID);
       expect(span.startTime).toBe(expectedSpan.startTime);
       expect(span.duration).toBe(expectedSpan.duration);
-      expect(span.childSpanIds).toEqual(expectedSpan.childSpanIds);
+      expect(span.childSpanIDs).toEqual(expectedSpan.childSpanIDs);
       expect(span.references.length).toBe(expectedSpan.references.length);
       // Compare reference properties except the nested span object
       span.references.forEach((ref, i) => {

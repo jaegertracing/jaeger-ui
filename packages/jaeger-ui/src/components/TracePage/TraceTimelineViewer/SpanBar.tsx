@@ -9,7 +9,7 @@ import AccordionEvents from './SpanDetail/AccordionEvents';
 
 import { ViewedBoundsFunctionType } from './utils';
 import { TNil } from '../../../types';
-import { criticalPathSection } from '../../../types/trace';
+import { CriticalPathSection } from '../../../model/critical_path';
 import { IEvent, IOtelSpan } from '../../../types/otel';
 
 import './SpanBar.css';
@@ -19,7 +19,7 @@ type TSpanBarProps = {
   hintSide: string;
   // onClick: (evt: React.MouseEvent<any>) => void;
   onClick?: (evt: React.MouseEvent<any>) => void;
-  criticalPath: criticalPathSection[];
+  criticalPath: CriticalPathSection[];
   viewEnd: number;
   viewStart: number;
   getViewedBounds: ViewedBoundsFunctionType;
@@ -180,7 +180,7 @@ function SpanBar(props: TSpanBarProps) {
           const critcalPathViewBounds = getViewedBounds(each.section_start, each.section_end);
           const criticalPathViewStart = critcalPathViewBounds.start;
           const criticalPathViewEnd = critcalPathViewBounds.end;
-          const key = `${each.spanId}-${index}`;
+          const key = `${each.spanID}-${index}`;
 
           return (
             <SpanBarCriticalPath

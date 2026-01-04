@@ -1,7 +1,7 @@
 // Copyright (c) 2023 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import { CPSpan } from '../../../../types/trace';
+import { CPSpan } from '../../../../model/critical_path';
 
 /**
  * This function resolves overflowing child spans for each span.
@@ -38,7 +38,7 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, CPSpan>): Map<string, 
         spanMap.delete(span.spanID);
 
         // Remove the childSpanId from its parent span
-        parentSpan.childSpanIds = parentSpan.childSpanIds.filter(id => id !== span.spanID);
+        parentSpan.childSpanIDs = parentSpan.childSpanIDs.filter(id => id !== span.spanID);
         return;
       }
       if (childEndTime > parentEndTime) {
@@ -65,7 +65,7 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, CPSpan>): Map<string, 
       spanMap.delete(span.spanID);
 
       // Remove the childSpanId from its parent span
-      parentSpan.childSpanIds = parentSpan.childSpanIds.filter(id => id !== span.spanID);
+      parentSpan.childSpanIDs = parentSpan.childSpanIDs.filter(id => id !== span.spanID);
     } else if (childEndTime <= parentEndTime) {
       // child start before parent, truncate is needed
       //      |----parent----|

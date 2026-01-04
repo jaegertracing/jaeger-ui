@@ -1,7 +1,8 @@
 // Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { CPSpan, CPSpanReference, Span } from '../../../../types/trace';
+import { Span } from '../../../../types/trace';
+import { CPSpan, CPSpanReference } from '../../../../model/critical_path';
 
 /**
  * Creates a CPSpan object from a Span object for use in critical path computation.
@@ -23,7 +24,7 @@ export function createCPSpan(span: Span): CPSpan {
         span: undefined,
       })
     ),
-    childSpanIds: span.childSpans.map(s => s.spanID),
+    childSpanIDs: span.childSpans.map(s => s.spanID),
   };
 }
 

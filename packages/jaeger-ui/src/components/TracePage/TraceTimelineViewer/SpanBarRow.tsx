@@ -11,7 +11,7 @@ import SpanBar from './SpanBar';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
-import { criticalPathSection, Span } from '../../../types/trace';
+import { CriticalPathSection } from '../../../model/critical_path';
 import { IOtelSpan } from '../../../types/otel';
 
 import './SpanBarRow.css';
@@ -19,7 +19,7 @@ import './SpanBarRow.css';
 type SpanBarRowProps = {
   className?: string;
   color: string;
-  criticalPath: criticalPathSection[];
+  criticalPath: CriticalPathSection[];
   columnDivision: number;
   isChildrenExpanded: boolean;
   isDetailExpanded: boolean;
