@@ -67,7 +67,7 @@ export default class OtelSpanFacade implements IOtelSpan {
         attributes: [], // Legacy references don't have attributes
       }));
 
-    const errorTag = (this.legacySpan.tags || []).find(t => t.key === 'error');
+    const errorTag = this.legacySpan.tags.find(t => t.key === 'error');
     this._status =
       errorTag && errorTag.value ? { code: StatusCode.ERROR, message: 'error' } : { code: StatusCode.OK };
 
@@ -84,10 +84,8 @@ export default class OtelSpanFacade implements IOtelSpan {
     }));
   }
 
-  private static toOtelAttributes(
-    tags: ReadonlyArray<{ key: string; value: any }> | undefined
-  ): IAttribute[] {
-    return (tags || [])
+  private static toOtelAttributes(tags: ReadonlyArray<{ key: string; value: any }>): IAttribute[] {
+    return tags
       .filter(kv => kv.value !== null && kv.value !== undefined)
       .map(kv => ({
         key: kv.key,
@@ -159,8 +157,8 @@ export default class OtelSpanFacade implements IOtelSpan {
     // Legacy Jaeger doesn't have explicit instrumentation scope,
     // but we can look for it in tags if it was mapped there by exporters.
     const name =
-      ((this.legacySpan.tags || []).find(t => t.key === 'otel.library.name')?.value as string) || 'unknown';
-    const version = (this.legacySpan.tags || []).find(t => t.key === 'otel.library.version')?.value as string;
+      (this.legacySpan.tags.find(t => t.key === 'otel.library.name')?.value as string) || 'unknown';
+    const version = this.legacySpan.tags.find(t => t.key === 'otel.library.version')?.value as string;
     return { name, version };
   }
 
