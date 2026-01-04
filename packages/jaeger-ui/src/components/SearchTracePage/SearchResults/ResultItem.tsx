@@ -18,7 +18,8 @@ import ResultItemTitle from './ResultItemTitle';
 import colorGenerator from '../../../utils/color-generator';
 import { formatRelativeDate } from '../../../utils/date';
 
-import { KeyValuePair, Trace } from '../../../types/trace';
+import { Trace } from '../../../types/trace';
+import { IAttribute } from '../../../types/otel';
 
 import './ResultItem.css';
 
@@ -33,7 +34,7 @@ type Props = {
   disableComparision: boolean;
 };
 
-const isErrorTag = ({ key, value }: KeyValuePair<boolean | string>) =>
+const isErrorAttribute = ({ key, value }: IAttribute) =>
   key === 'error' && (value === true || value === 'true');
 const trackTraceConversions = () => trackConversions(EAltViewActions.Traces);
 
@@ -46,6 +47,10 @@ export default function ResultItem({
   disableComparision,
 }: Props) {
   const { duration, services = [], startTime, traceName, traceID, spans = [], orphanSpanCount = 0 } = trace;
+
+  // Get OTEL facade for spans
+  const otelTrace = React.useMemo(() => trace.asOtelTrace(), [trace]);
+  const otelSpans = otelTrace.spans;
 
   // Initialize state values
   const [erroredServices, setErroredServices] = React.useState<Set<string>>(new Set());
@@ -60,15 +65,15 @@ export default function ResultItem({
     setFromNow(startTimeDayjs.fromNow());
 
     const errored = new Set<string>();
-    const erredCount = spans.filter(sp => {
-      const hasError = sp.tags.some(isErrorTag);
-      if (hasError) errored.add(sp.process.serviceName);
+    const erredCount = otelSpans.filter(sp => {
+      const hasError = sp.attributes.some(isErrorAttribute);
+      if (hasError) errored.add(sp.resource.serviceName);
       return hasError;
     }).length;
 
     setErroredServices(errored);
     setNumErredSpans(erredCount);
-  }, [startTime, spans]);
+  }, [startTime, otelSpans]);
 
   return (
     <div className="ResultItem" onClick={trackTraceConversions} role="button">
