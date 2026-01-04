@@ -9,7 +9,7 @@ import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
 
 import { IOtelSpan, IAttribute, IEvent } from '../../../types/otel';
-import { Link, Span } from '../../../types/trace';
+import { Hyperlink } from '../../../types/hyperlink';
 
 import './SpanDetailRow.css';
 
@@ -18,7 +18,7 @@ type SpanDetailRowProps = {
   columnDivision: number;
   detailState: DetailState;
   onDetailToggled: (spanID: string) => void;
-  linksGetter: (attributes: ReadonlyArray<IAttribute>, index: number) => Link[];
+  linksGetter: (attributes: ReadonlyArray<IAttribute>, index: number) => Hyperlink[];
   eventItemToggle: (spanID: string, event: IEvent) => void;
   eventsToggle: (spanID: string) => void;
   resourceToggle: (spanID: string) => void;

@@ -10,7 +10,7 @@ import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import AccordionAttributes from './AccordionAttributes';
 import { formatDuration } from '../utils';
 import { TNil } from '../../../../types';
-import { Link } from '../../../../types/trace';
+import { Hyperlink } from '../../../../types/hyperlink';
 import { IEvent, IAttribute } from '../../../../types/otel';
 
 import './AccordionEvents.css';
@@ -18,7 +18,7 @@ import './AccordionEvents.css';
 type AccordionEventsProps = {
   interactive?: boolean;
   isOpen: boolean;
-  linksGetter?: ((pairs: ReadonlyArray<IAttribute>, index: number) => Link[]) | TNil;
+  linksGetter?: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
   events: ReadonlyArray<IEvent>;
   onItemToggle?: (event: IEvent) => void;
   onToggle?: () => void;

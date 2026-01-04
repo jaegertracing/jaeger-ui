@@ -9,7 +9,7 @@ import { JsonView, allExpanded, collapseAllNested, defaultStyles } from 'react-j
 import CopyIcon from '../../../common/CopyIcon';
 
 import { TNil } from '../../../../types';
-import { Link } from '../../../../types/trace';
+import { Hyperlink } from '../../../../types/hyperlink';
 import { IAttribute } from '../../../../types/otel';
 
 import './AttributesTable.css';
@@ -110,7 +110,7 @@ export const LinkValue = (props: { href: string; title?: string; children: React
   </a>
 );
 
-const linkValueList = (links: Link[]) => {
+const linkValueList = (links: Hyperlink[]) => {
   return links.map(({ text, url }, index) => ({
     label: <LinkValue href={url}>{text}</LinkValue>,
     key: `${url}-${index}`,
@@ -119,7 +119,7 @@ const linkValueList = (links: Link[]) => {
 
 type AttributesTableProps = {
   data: ReadonlyArray<IAttribute>;
-  linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Link[]) | TNil;
+  linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
 };
 
 // AttributesTable is displayed as a menu at span level.

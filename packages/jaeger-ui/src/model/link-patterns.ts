@@ -9,7 +9,8 @@ import { encodedStringSupplant, getParamNames } from '../utils/stringSupplant';
 import { getParameterAndFormatter } from '../utils/link-formatting';
 import { getParent } from './span';
 import { TNil } from '../types';
-import { Span, Link, KeyValuePair, Trace } from '../types/trace';
+import { Hyperlink } from '../types/hyperlink';
+import { Span, KeyValuePair, Trace } from '../types/trace';
 
 type ProcessedTemplate = {
   parameters: string[];
@@ -222,7 +223,10 @@ export function computeLinks(
   return result;
 }
 
-export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: WeakMap<KeyValuePair, Link[]>) {
+export function createGetLinks(
+  linkPatterns: ProcessedLinkPattern[],
+  cache: WeakMap<KeyValuePair, Hyperlink[]>
+) {
   return (span: Span, items: ReadonlyArray<KeyValuePair>, itemIndex: number, trace: Trace | undefined) => {
     if (linkPatterns.length === 0) {
       return [];
