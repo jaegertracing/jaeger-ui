@@ -220,7 +220,8 @@ const stateTraceDiffXformer = memoizeOne((stateTrace, stateTraceDiff) => {
 const sortedTracesXformer = memoizeOne((traces, sortBy) => {
   const traceResults = traces.slice();
   sortTraces(traceResults, sortBy);
-  return traceResults;
+  // Convert to OTEL traces
+  return traceResults.map(t => t.asOtelTrace());
 });
 
 const stateServicesXformer = memoizeOne(stateServices => {

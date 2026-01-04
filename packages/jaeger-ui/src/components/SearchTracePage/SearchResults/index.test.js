@@ -83,8 +83,28 @@ afterEach(() => {
 });
 
 const baseTraces = [
-  { traceID: 'a', spans: [], processes: {}, asOtelTrace: () => ({ spans: [] }) },
-  { traceID: 'b', spans: [], processes: {}, asOtelTrace: () => ({ spans: [] }) },
+  {
+    traceID: 'a',
+    spans: [],
+    durationMicros: 1000,
+    startTimeUnixMicros: 0,
+    endTimeUnixMicros: 1000,
+    traceName: 'trace-a',
+    services: [],
+    spanMap: new Map(),
+    rootSpans: [],
+  },
+  {
+    traceID: 'b',
+    spans: [],
+    durationMicros: 1000,
+    startTimeUnixMicros: 0,
+    endTimeUnixMicros: 1000,
+    traceName: 'trace-b',
+    services: [],
+    spanMap: new Map(),
+    rootSpans: [],
+  },
 ];
 const baseProps = {
   cohortAddTrace: jest.fn(),
@@ -176,23 +196,22 @@ describe('<SearchResults>', () => {
       {
         traceID: 'err',
         traceName: 'T',
-        startTime: 0,
-        duration: 1,
-        processes: {},
+        startTimeUnixMicros: 0,
+        endTimeUnixMicros: 1000,
+        durationMicros: 1,
+        services: [],
+        spanMap: new Map(),
+        rootSpans: [],
         spans: [
           {
-            process: { serviceName: 'svc-A' },
-            operationName: 'op-A',
-            tags: [{ key: 'error', value: true }],
+            status: { code: StatusCode.ERROR },
+            resource: { serviceName: 'svc-A', attributes: [] },
+            name: 'op-A',
+            spanID: 's1',
+            traceID: 'err',
+            attributes: [],
           },
         ],
-        asOtelTrace: () => ({
-          spans: [
-            {
-              status: { code: StatusCode.ERROR },
-            },
-          ],
-        }),
       },
     ];
     renderWithRouter(<SearchResults {...baseProps} traces={errorTrace} />);
@@ -222,11 +241,13 @@ describe('<SearchResults>', () => {
           {
             traceID: 'no-spans',
             traceName: 'Empty Trace',
-            startTime: 0,
-            duration: 1,
-            processes: {},
+            startTimeUnixMicros: 0,
+            endTimeUnixMicros: 1000,
+            durationMicros: 1,
+            services: [],
+            spanMap: new Map(),
+            rootSpans: [],
             spans: [],
-            asOtelTrace: () => ({ spans: [] }),
           },
         ]}
       />
@@ -244,24 +265,29 @@ describe('<SearchResults>', () => {
           {
             traceID: 'no-services',
             traceName: 'No Services',
-            startTime: 0,
-            duration: 1,
-            processes: {},
+            startTimeUnixMicros: 0,
+            endTimeUnixMicros: 1000,
+            durationMicros: 1,
+            services: [],
+            spanMap: new Map(),
+            rootSpans: [],
             spans: [
               {
-                process: { serviceName: 'test-service' },
-                operationName: 'test-operation',
-                tags: [],
+                resource: { serviceName: 'test-service', attributes: [] },
+                name: 'test-operation',
+                spanID: 's1',
+                traceID: 'no-services',
+                attributes: [],
+                status: { code: 'OK' },
               },
             ],
-            asOtelTrace: () => ({ spans: [] }),
           },
         ]}
       />
     );
     const data = ScatterPlot.mock.calls[0][0].data[0];
     expect(data.services).toEqual([]);
-    expect(data.rootSpanName).toBe('op-A');
+    expect(data.rootSpanName).toBe('test-operation');
   });
 
   describe('search finished with results', () => {
@@ -293,8 +319,28 @@ describe('<SearchResults>', () => {
         [traceID1]: uiFind1,
       };
       const zeroIDTraces = [
-        { traceID: traceID0, spans: [], processes: {}, asOtelTrace: () => ({ spans: [] }) },
-        { traceID: `000${traceID1}`, spans: [], processes: {}, asOtelTrace: () => ({ spans: [] }) },
+        {
+          traceID: traceID0,
+          spans: [],
+          durationMicros: 1000,
+          startTimeUnixMicros: 0,
+          endTimeUnixMicros: 1000,
+          traceName: traceID0,
+          services: [],
+          spanMap: new Map(),
+          rootSpans: [],
+        },
+        {
+          traceID: `000${traceID1}`,
+          spans: [],
+          durationMicros: 1000,
+          startTimeUnixMicros: 0,
+          endTimeUnixMicros: 1000,
+          traceName: `000${traceID1}`,
+          services: [],
+          spanMap: new Map(),
+          rootSpans: [],
+        },
       ];
       renderWithRouter(<SearchResults {...baseProps} traces={zeroIDTraces} spanLinks={spanLinks} />);
       const calls = ResultItem.mock.calls;

@@ -24,13 +24,12 @@ import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getLocation } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
-import { getTracePageHeaderParts } from '../../../model/trace-viewer';
 import { stripEmbeddedState } from '../../../utils/embedded-url';
 
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
-import { Trace, TraceData } from '../../../types/trace';
-import { StatusCode } from '../../../types/otel';
+import { TraceData } from '../../../types/trace';
+import { IOtelTrace, StatusCode } from '../../../types/otel';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -50,7 +49,7 @@ type SearchResultsProps = {
   showStandaloneLink: boolean;
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
-  traces: Trace[];
+  traces: IOtelTrace[];
   rawTraces: TraceData[];
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
@@ -180,20 +179,38 @@ export function UnconnectedSearchResults({
           <div className="ub-p3 SearchResults--headerScatterPlot">
             <ScatterPlot
               data={traces.map(t => {
-                const rootSpanInfo = t.spans && t.spans.length > 0 ? getTracePageHeaderParts(t.spans) : null;
-                const otelTrace = t.asOtelTrace();
+                // Get root span name from OTEL trace
+                // Use the first root span, or the span with fewest links and earliest start time
+                let rootSpan = t.rootSpans.length > 0 ? t.rootSpans[0] : null;
+                if (!rootSpan && t.spans.length > 0) {
+                  // Fallback: find span with no parent or fewest links
+                  rootSpan = t.spans.reduce((candidate, span) => {
+                    if (!candidate) return span;
+                    const candidateLinks = candidate.links.length;
+                    const spanLinks = span.links.length;
+                    if (
+                      spanLinks < candidateLinks ||
+                      (spanLinks === candidateLinks &&
+                        span.startTimeUnixMicros < candidate.startTimeUnixMicros)
+                    ) {
+                      return span;
+                    }
+                    return candidate;
+                  });
+                }
+
                 return {
-                  x: t.startTime,
-                  y: t.duration,
+                  x: t.startTimeUnixMicros,
+                  y: t.durationMicros,
                   traceID: t.traceID,
                   size: t.spans.length,
                   name: t.traceName,
-                  color: otelTrace.spans.some(sp => sp.status.code === StatusCode.ERROR) ? 'red' : '#12939A',
+                  color: t.spans.some(sp => sp.status.code === StatusCode.ERROR) ? 'red' : '#12939A',
                   services: t.services || [],
-                  rootSpanName: rootSpanInfo?.operationName || 'Unknown',
+                  rootSpanName: rootSpan?.name || 'Unknown',
                 };
               })}
-              onValueClick={(t: Trace) => {
+              onValueClick={(t: IOtelTrace) => {
                 goToTrace(t.traceID);
               }}
             />
@@ -229,7 +246,7 @@ export function UnconnectedSearchResults({
           {traces.map(trace => (
             <li className="ub-my3" key={trace.traceID}>
               <ResultItem
-                durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
+                durationPercent={getPercentageOfDuration(trace.durationMicros, maxTraceDuration)}
                 isInDiffCohort={cohortIds.has(trace.traceID)}
                 linkTo={getLocation(
                   trace.traceID,

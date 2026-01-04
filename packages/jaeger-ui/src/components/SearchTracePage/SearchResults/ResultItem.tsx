@@ -18,7 +18,7 @@ import ResultItemTitle from './ResultItemTitle';
 import colorGenerator from '../../../utils/color-generator';
 import { formatRelativeDate } from '../../../utils/date';
 
-import { Trace } from '../../../types/trace';
+import { IOtelTrace } from '../../../types/otel';
 import { StatusCode } from '../../../types/otel';
 
 import './ResultItem.css';
@@ -30,7 +30,7 @@ type Props = {
   isInDiffCohort: boolean;
   linkTo: LocationDescriptor;
   toggleComparison: (traceID: string) => void;
-  trace: Trace;
+  trace: IOtelTrace;
   disableComparision: boolean;
 };
 
@@ -44,11 +44,19 @@ export default function ResultItem({
   trace,
   disableComparision,
 }: Props) {
-  const { duration, services = [], startTime, traceName, traceID, spans = [], orphanSpanCount = 0 } = trace;
+  const {
+    durationMicros: duration,
+    services = [],
+    startTimeUnixMicros: startTime,
+    traceName,
+    traceID,
+    spans,
+  } = trace;
 
-  // Get OTEL facade for spans
-  const otelTrace = React.useMemo(() => trace.asOtelTrace(), [trace]);
-  const otelSpans = otelTrace.spans;
+  // Calculate orphan span count from OTEL spans
+  // A span is orphaned if it has a parentSpanID but the parent is not in the trace
+  const spanIDs = new Set(spans.map(s => s.spanID));
+  const orphanSpanCount = spans.filter(s => s.parentSpanID && !spanIDs.has(s.parentSpanID)).length;
 
   // Initialize state values
   const [erroredServices, setErroredServices] = React.useState<Set<string>>(new Set());
@@ -63,7 +71,7 @@ export default function ResultItem({
     setFromNow(startTimeDayjs.fromNow());
 
     const errored = new Set<string>();
-    const erredCount = otelSpans.filter(sp => {
+    const erredCount = spans.filter(sp => {
       const hasError = sp.status.code === StatusCode.ERROR;
       if (hasError) errored.add(sp.resource.serviceName);
       return hasError;
@@ -71,7 +79,7 @@ export default function ResultItem({
 
     setErroredServices(errored);
     setNumErredSpans(erredCount);
-  }, [startTime, otelSpans]);
+  }, [startTime, spans]);
 
   return (
     <div className="ResultItem" onClick={trackTraceConversions} role="button">
