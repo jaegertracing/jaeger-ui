@@ -5,13 +5,13 @@ import { CPSpan } from '../../../../types/critical_path';
 
 /**
  * Removes non-blocking child spans and their descendants from the span map.
- * Non-blocking spans (e.g., PRODUCER/CONSUMER) run independently and do not
- * affect their parent's critical path.
+ * Non-blocking spans (i.e. children in PRODUCER/CONSUMER relationship) run
+ * independently and do not affect their parent's critical path.
  *
  * @param spanMap - The map containing spans.
  * @returns A map with only blocking spans remaining.
  */
-const filterBlockingSpans = (spanMap: Map<string, CPSpan>): Map<string, CPSpan> => {
+function filterBlockingSpans(spanMap: Map<string, CPSpan>): Map<string, CPSpan> {
   const nonBlockingSpanIds: string[] = [];
   const descendantIds: string[] = [];
 
@@ -21,11 +21,10 @@ const filterBlockingSpans = (spanMap: Map<string, CPSpan>): Map<string, CPSpan> 
     // The root span (no parentSpanID) is always kept to provide a starting point for the algorithm.
     if (!span.isBlocking && span.parentSpanID) {
       nonBlockingSpanIds.push(span.spanID);
-      // Remove the spanId from childSpanIDs array of its parent span
+      // Remove the spanID from childSpanIDs array of its parent span
       const parentSpan = spanMap.get(span.parentSpanID);
       if (parentSpan) {
         parentSpan.childSpanIDs = parentSpan.childSpanIDs.filter(id => id !== span.spanID);
-        spanMap.set(parentSpan.spanID, { ...parentSpan });
       }
     }
   });
@@ -43,10 +42,10 @@ const filterBlockingSpans = (spanMap: Map<string, CPSpan>): Map<string, CPSpan> 
   findDescendantSpans(nonBlockingSpanIds);
 
   // Delete all non-blocking spans and their descendants
-  const idsToDelete = [...nonBlockingSpanIds, ...descendantIds];
-  idsToDelete.forEach(id => spanMap.delete(id));
+  nonBlockingSpanIds.forEach(id => spanMap.delete(id));
+  descendantIds.forEach(id => spanMap.delete(id));
 
   return spanMap;
-};
+}
 
 export default filterBlockingSpans;

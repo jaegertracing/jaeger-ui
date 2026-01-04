@@ -5,12 +5,12 @@ import { IOtelSpan, SpanKind } from '../../../../types/otel';
 import { CPSpan } from '../../../../types/critical_path';
 
 /**
- * Determines if a span is blocking based on its kind.
- * Producer and Consumer spans are non-blocking (async messaging patterns).
- * Internal, Client, and Server spans are blocking.
+ * Determines if a span is blocking from its parent perspective.
+ * Since OpenTelemetry does not have a blocking/non-blocking indicator,
+ * we only consider child non-blocking in a producer/consumer relationship.
  */
-function isBlockingSpan(kind: SpanKind): boolean {
-  return kind !== SpanKind.PRODUCER && kind !== SpanKind.CONSUMER;
+function isBlockingSpan(childKind: SpanKind, parentKind?: SpanKind): boolean {
+  return !(parentKind === SpanKind.PRODUCER && childKind === SpanKind.CONSUMER);
 }
 
 /**
@@ -24,7 +24,7 @@ export function createCPSpan(span: IOtelSpan): CPSpan {
   return {
     spanID: span.spanID,
     parentSpanID: span.parentSpanID,
-    isBlocking: isBlockingSpan(span.kind),
+    isBlocking: isBlockingSpan(span.kind, span.parentSpan?.kind),
     startTime: span.startTimeUnixMicros,
     duration: span.durationMicros,
     childSpanIDs: span.childSpans.map(s => s.spanID),
