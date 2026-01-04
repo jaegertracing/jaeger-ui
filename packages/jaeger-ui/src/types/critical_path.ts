@@ -4,9 +4,8 @@
 // It is a section of span that lies on critical path
 export type CriticalPathSection = {
   spanID: string;
-  section_start: number;
-  section_end: number;
-  // TODO: rename section_start/end to camelCase
+  sectionStart: number;
+  sectionEnd: number;
 };
 
 // Reference type used in CPSpan for critical path computation

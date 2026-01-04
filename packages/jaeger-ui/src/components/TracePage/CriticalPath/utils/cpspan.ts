@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Span } from '../../../../types/trace';
-import { CPSpan, CPSpanReference } from '../../../../model/critical_path';
+import { CPSpan, CPSpanReference } from '../../../../types/critical_path';
 
 /**
  * Creates a CPSpan object from a Span object for use in critical path computation.

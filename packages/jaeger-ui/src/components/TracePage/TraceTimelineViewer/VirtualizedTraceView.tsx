@@ -32,7 +32,7 @@ import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
 import { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
-import { CriticalPathSection } from '../../../model/critical_path';
+import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IAttribute, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 
@@ -187,9 +187,9 @@ function mergeChildrenCriticalPath(
   const criticalPathSections: CriticalPathSection[] = [];
   criticalPath.forEach(each => {
     if (allRequiredSpanIds.has(each.spanID)) {
-      if (criticalPathSections.length !== 0 && each.section_end === criticalPathSections[0].section_start) {
+      if (criticalPathSections.length !== 0 && each.sectionEnd === criticalPathSections[0].sectionStart) {
         // Merge Critical Paths if they are consecutive
-        criticalPathSections[0].section_start = each.section_start;
+        criticalPathSections[0].sectionStart = each.sectionStart;
       } else {
         criticalPathSections.unshift({ ...each });
       }

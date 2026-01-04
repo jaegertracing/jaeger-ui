@@ -1,7 +1,7 @@
 // Copyright (c) 2023 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import { CPSpan } from '../../../../model/critical_path';
+import { CPSpan } from '../../../../types/critical_path';
 
 /**
  * @returns - Returns the span that finished last among the remaining child spans.

@@ -9,7 +9,7 @@ import AccordionEvents from './SpanDetail/AccordionEvents';
 
 import { ViewedBoundsFunctionType } from './utils';
 import { TNil } from '../../../types';
-import { CriticalPathSection } from '../../../model/critical_path';
+import { CriticalPathSection } from '../../../types/critical_path';
 import { IEvent, IOtelSpan } from '../../../types/otel';
 
 import './SpanBar.css';
@@ -177,7 +177,7 @@ function SpanBar(props: TSpanBarProps) {
       )}
       {criticalPath &&
         criticalPath.map((each, index) => {
-          const critcalPathViewBounds = getViewedBounds(each.section_start, each.section_end);
+          const critcalPathViewBounds = getViewedBounds(each.sectionStart, each.sectionEnd);
           const criticalPathViewStart = critcalPathViewBounds.start;
           const criticalPathViewEnd = critcalPathViewBounds.end;
           const key = `${each.spanID}-${index}`;

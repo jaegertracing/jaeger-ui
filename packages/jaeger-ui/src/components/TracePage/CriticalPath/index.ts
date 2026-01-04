@@ -3,7 +3,7 @@
 
 import memoizeOne from 'memoize-one';
 import { Trace } from '../../../types/trace';
-import { CriticalPathSection, CPSpan } from '../../../model/critical_path';
+import { CriticalPathSection, CPSpan } from '../../../types/critical_path';
 import getChildOfSpans from './utils/getChildOfSpans';
 import findLastFinishingChildSpan from './utils/findLastFinishingChildSpan';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
@@ -43,10 +43,10 @@ const computeCriticalPath = (
   if (lastFinishingChildSpan) {
     spanCriticalSection = {
       spanID: currentSpan.spanID,
-      section_start: lastFinishingChildSpan.startTime + lastFinishingChildSpan.duration,
-      section_end: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
+      sectionStart: lastFinishingChildSpan.startTime + lastFinishingChildSpan.duration,
+      sectionEnd: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
     };
-    if (spanCriticalSection.section_start !== spanCriticalSection.section_end) {
+    if (spanCriticalSection.sectionStart !== spanCriticalSection.sectionEnd) {
       criticalPath.push(spanCriticalSection);
     }
     // Now focus shifts to the lastFinishingChildSpan of cuurent span
@@ -55,10 +55,10 @@ const computeCriticalPath = (
     // If there is no last finishing child then total section upto startTime of span is on critical path
     spanCriticalSection = {
       spanID: currentSpan.spanID,
-      section_start: currentSpan.startTime,
-      section_end: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
+      sectionStart: currentSpan.startTime,
+      sectionEnd: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
     };
-    if (spanCriticalSection.section_start !== spanCriticalSection.section_end) {
+    if (spanCriticalSection.sectionStart !== spanCriticalSection.sectionEnd) {
       criticalPath.push(spanCriticalSection);
     }
     // Now as there are no lfc's focus shifts to parent span from startTime of span

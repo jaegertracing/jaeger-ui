@@ -11,7 +11,7 @@ import SpanBar from './SpanBar';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
-import { CriticalPathSection } from '../../../model/critical_path';
+import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
 
 import './SpanBarRow.css';

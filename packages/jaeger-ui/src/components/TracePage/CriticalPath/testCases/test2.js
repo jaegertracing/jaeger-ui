@@ -77,18 +77,18 @@ const transformedTrace = transformTraceData(happyTrace);
 const criticalPathSections = [
   {
     spanID: 'span-X',
-    section_start: 60,
-    section_end: 101,
+    sectionStart: 60,
+    sectionEnd: 101,
   },
   {
     spanID: 'span-C',
-    section_start: 20,
-    section_end: 60,
+    sectionStart: 20,
+    sectionEnd: 60,
   },
   {
     spanID: 'span-X',
-    section_start: 1,
-    section_end: 20,
+    sectionStart: 1,
+    sectionEnd: 20,
   },
 ];
 

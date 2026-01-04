@@ -1,7 +1,7 @@
 // Copyright (c) 2023 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import { CPSpan } from '../../../../model/critical_path';
+import { CPSpan } from '../../../../types/critical_path';
 /**
  * Removes child spans whose refType is FOLLOWS_FROM and their descendants.
  * @param spanMap - The map containing spans.

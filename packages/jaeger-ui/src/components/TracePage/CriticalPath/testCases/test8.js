@@ -50,8 +50,8 @@ const transformedTrace = transformTraceData(trace);
 const criticalPathSections = [
   {
     spanID: 'span-B',
-    section_start: 10,
-    section_end: 30,
+    sectionStart: 10,
+    sectionEnd: 30,
   },
 ];
 

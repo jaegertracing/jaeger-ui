@@ -13,7 +13,7 @@ import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
 import { TNil, ReduxState } from '../../../types';
 import { Span, Trace } from '../../../types/trace';
-import { CriticalPathSection } from '../../../model/critical_path';
+import { CriticalPathSection } from '../../../types/critical_path';
 
 import './index.css';
 
