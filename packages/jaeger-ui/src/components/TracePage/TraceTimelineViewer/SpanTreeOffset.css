@@ -87,8 +87,9 @@ SPDX-License-Identifier: Apache-2.0
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
+  min-width: 20px;
   height: 20px;
+  padding: 0 4px;
   border-radius: 3px;
   border: 1px solid;
   background-color: var(--surface-secondary);
