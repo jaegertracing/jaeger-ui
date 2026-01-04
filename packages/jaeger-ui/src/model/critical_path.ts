@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Jaeger Authors
+// Copyright (c) 2026 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
 // It is a section of span that lies on critical path
