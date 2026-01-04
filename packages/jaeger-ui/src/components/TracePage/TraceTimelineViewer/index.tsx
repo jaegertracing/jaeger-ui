@@ -12,17 +12,17 @@ import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
 import { TNil, ReduxState } from '../../../types';
-import { Span, Trace } from '../../../types/trace';
+import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 import { CriticalPathSection } from '../../../types/critical_path';
 
 import './index.css';
 
 type TDispatchProps = {
   setSpanNameColumnWidth: (width: number) => void;
-  collapseAll: (spans: ReadonlyArray<Span>) => void;
-  collapseOne: (spans: ReadonlyArray<Span>) => void;
+  collapseAll: (spans: ReadonlyArray<IOtelSpan>) => void;
+  collapseOne: (spans: ReadonlyArray<IOtelSpan>) => void;
   expandAll: () => void;
-  expandOne: (spans: ReadonlyArray<Span>) => void;
+  expandOne: (spans: ReadonlyArray<IOtelSpan>) => void;
 };
 
 type TProps = TDispatchProps & {
@@ -30,7 +30,7 @@ type TProps = TDispatchProps & {
   findMatchesIDs: Set<string> | TNil;
   scrollToFirstVisibleSpan: () => void;
   spanNameColumnWidth: number;
-  trace: Trace;
+  trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
@@ -79,7 +79,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   return (
     <div className="TraceTimelineViewer">
       <TimelineHeaderRow
-        duration={trace.duration}
+        duration={trace.durationMicros}
         nameColumnWidth={spanNameColumnWidth}
         numTicks={NUM_TICKS}
         onCollapseAll={collapseAll}

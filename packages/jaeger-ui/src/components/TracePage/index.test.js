@@ -202,7 +202,10 @@ describe('<TracePage>', () => {
 
         instance.focusUiFindMatches();
 
-        expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(defaultProps.trace.data, uiFind);
+        expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(
+          defaultProps.trace.data.asOtelTrace(),
+          uiFind
+        );
         expect(trackFocusSpy).toHaveBeenCalledTimes(1);
       });
 

@@ -15,7 +15,8 @@ jest.mock('../../../utils/filter-spans');
 jest.mock('../../../utils/span-ancestor-ids');
 
 describe('TraceTimelineViewer/duck', () => {
-  const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 30 }));
+  const legacyTrace = transformTraceData(traceGenerator.trace({ numberOfSpans: 30 }));
+  const trace = legacyTrace.asOtelTrace();
 
   let store;
 
@@ -168,15 +169,25 @@ describe('TraceTimelineViewer/duck', () => {
       store.dispatch(setTraceAction);
       expect(filterSpansSpy).not.toHaveBeenCalled();
 
-      store.dispatch(actions.setTrace(Object.assign({}, trace, { traceID: `${trace.traceID}_1` }), null));
+      const trace1 = transformTraceData({
+        ...legacyTrace,
+        traceID: `${legacyTrace.traceID}_1`,
+      }).asOtelTrace();
+      store.dispatch(actions.setTrace(trace1, null));
       expect(filterSpansSpy).not.toHaveBeenCalled();
 
-      store.dispatch(actions.setTrace(Object.assign({}, trace, { traceID: `${trace.traceID}_2` }), ''));
+      const trace2 = transformTraceData({
+        ...legacyTrace,
+        traceID: `${legacyTrace.traceID}_2`,
+      }).asOtelTrace();
+      store.dispatch(actions.setTrace(trace2, ''));
       expect(filterSpansSpy).not.toHaveBeenCalled();
 
-      store.dispatch(
-        actions.setTrace(Object.assign({}, trace, { traceID: `${trace.traceID}_3` }), 'truthy uiFind string')
-      );
+      const trace3 = transformTraceData({
+        ...legacyTrace,
+        traceID: `${legacyTrace.traceID}_3`,
+      }).asOtelTrace();
+      store.dispatch(actions.setTrace(trace3, 'truthy uiFind string'));
       expect(filterSpansSpy).toHaveBeenCalledTimes(1);
     });
   });

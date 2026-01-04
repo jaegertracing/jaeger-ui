@@ -5,8 +5,7 @@ import { Action, ActionFunctionAny, createActions, handleActions } from 'redux-a
 
 import DetailState from './SpanDetail/DetailState';
 import { TNil } from '../../../types';
-import { Span, Trace } from '../../../types/trace';
-import { IEvent } from '../../../types/otel';
+import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 import filterSpans from '../../../utils/filter-spans';
 import generateActionTypes from '../../../utils/generate-action-types';
@@ -16,8 +15,8 @@ import spanAncestorIds from '../../../utils/span-ancestor-ids';
 // payloads
 export type TSpanIdLogValue = { logItem: IEvent; spanID: string };
 export type TSpanIdValue = { spanID: string };
-type TSpansValue = { spans: Span[] };
-type TTraceUiFindValue = { trace: Trace; uiFind: string | TNil; allowHide?: boolean };
+type TSpansValue = { spans: IOtelSpan[] };
+type TTraceUiFindValue = { trace: IOtelTrace; uiFind: string | TNil; allowHide?: boolean };
 export type TWidthValue = { width: number };
 export type TActionTypes =
   | TSpanIdLogValue
@@ -31,7 +30,7 @@ type TTimelineViewerActions = {
   [actionName: string]: ActionFunctionAny<Action<TActionTypes>>;
 };
 
-function shouldDisableCollapse(allSpans: Span[], hiddenSpansIds: Set<string>) {
+function shouldDisableCollapse(allSpans: IOtelSpan[], hiddenSpansIds: Set<string>) {
   const allParentSpans = allSpans.filter(s => s.hasChildren);
   return allParentSpans.length === hiddenSpansIds.size;
 }
@@ -72,30 +71,30 @@ const fullActions = createActions<TActionTypes>({
   [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
   [actionTypes.CHILDREN_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.CLEAR_SHOULD_SCROLL_TO_FIRST_UI_FIND_MATCH]: () => ({}),
-  [actionTypes.COLLAPSE_ALL]: (spans: Span[]) => ({ spans }),
-  [actionTypes.COLLAPSE_ONE]: (spans: Span[]) => ({ spans }),
+  [actionTypes.COLLAPSE_ALL]: (spans: IOtelSpan[]) => ({ spans }),
+  [actionTypes.COLLAPSE_ONE]: (spans: IOtelSpan[]) => ({ spans }),
   [actionTypes.DETAIL_LOG_ITEM_TOGGLE]: (spanID: string, logItem: IEvent) => ({ logItem, spanID }),
   [actionTypes.DETAIL_LOGS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.EXPAND_ALL]: () => ({}),
-  [actionTypes.EXPAND_ONE]: (spans: Span[]) => ({ spans }),
+  [actionTypes.EXPAND_ONE]: (spans: IOtelSpan[]) => ({ spans }),
   [actionTypes.DETAIL_PROCESS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_WARNINGS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_REFERENCES_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_TAGS_TOGGLE]: (spanID: string) => ({ spanID }),
   [actionTypes.DETAIL_TOGGLE]: (spanID: string) => ({ spanID }),
-  [actionTypes.FOCUS_UI_FIND_MATCHES]: (trace: Trace, uiFind: string | TNil, allowHide?: boolean) => ({
+  [actionTypes.FOCUS_UI_FIND_MATCHES]: (trace: IOtelTrace, uiFind: string | TNil, allowHide?: boolean) => ({
     trace,
     uiFind,
     allowHide,
   }),
   [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: (width: number) => ({ width }),
-  [actionTypes.SET_TRACE]: (trace: Trace, uiFind: string | TNil) => ({ trace, uiFind }),
+  [actionTypes.SET_TRACE]: (trace: IOtelTrace, uiFind: string | TNil) => ({ trace, uiFind }),
 });
 
 export const actions = (fullActions as any).jaegerUi.traceTimelineViewer as TTimelineViewerActions;
 
-function calculateFocusedFindRowStates(uiFind: string, spans: ReadonlyArray<Span>, allowHide = true) {
+function calculateFocusedFindRowStates(uiFind: string, spans: ReadonlyArray<IOtelSpan>, allowHide = true) {
   const spansMap = new Map();
   const childrenHiddenIDs: Set<string> = new Set();
   const detailStates: Map<string, DetailState> = new Map();
@@ -188,7 +187,7 @@ export function collapseOne(state: TTraceTimeline, { spans }: TSpansValue) {
   if (shouldDisableCollapse(spans, state.childrenHiddenIDs)) {
     return state;
   }
-  let nearestCollapsedAncestor: Span | undefined;
+  let nearestCollapsedAncestor: IOtelSpan | undefined;
   const childrenHiddenIDs = spans.reduce((res, curSpan) => {
     if (nearestCollapsedAncestor && curSpan.depth <= nearestCollapsedAncestor.depth) {
       res.add(nearestCollapsedAncestor.spanID);

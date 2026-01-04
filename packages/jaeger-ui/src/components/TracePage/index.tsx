@@ -39,6 +39,7 @@ import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphU
 import { fetchedState } from '../../constants';
 import { FetchedTrace, LocationState, ReduxState, TNil } from '../../types';
 import { Trace } from '../../types/trace';
+import { IOtelTrace } from '../../types/otel';
 import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
@@ -56,7 +57,7 @@ type TDispatchProps = {
   acknowledgeArchive: (id: string) => void;
   archiveTrace: (id: string) => void;
   fetchTrace: (id: string) => void;
-  focusUiFindMatches: (trace: Trace, uiFind: string | TNil) => void;
+  focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil) => void;
 };
 
 type TOwnProps = {
@@ -299,7 +300,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     const { trace, focusUiFindMatches, uiFind } = this.props;
     if (trace && trace.data) {
       trackFocusMatches();
-      focusUiFindMatches(trace.data, uiFind);
+      focusUiFindMatches(trace.data.asOtelTrace(), uiFind);
     }
   };
 
@@ -390,7 +391,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           registerAccessors={this._scrollManager.setAccessors}
           scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
           findMatchesIDs={spanFindMatches}
-          trace={data}
+          trace={data.asOtelTrace()}
           criticalPath={criticalPath}
           updateNextViewRangeTime={this.updateNextViewRangeTime}
           updateViewRangeTime={this.updateViewRangeTime}
