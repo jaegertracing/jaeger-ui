@@ -31,9 +31,9 @@ import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../com
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
-import { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
+import { KeyValuePair } from '../../../types/trace';
 import { CriticalPathSection } from '../../../types/critical_path';
-import { IOtelSpan, IAttribute, IEvent } from '../../../types/otel';
+import { IOtelSpan, IOtelTrace, IAttribute, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 
 import './VirtualizedTraceView.css';
@@ -52,7 +52,7 @@ type TVirtualizedTraceViewOwnProps = {
   findMatchesIDs: Set<string> | TNil;
   scrollToFirstVisibleSpan: () => void;
   registerAccessors: (accesors: Accessors) => void;
-  trace: Trace;
+  trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
   useOtelTerms: boolean;
 };
@@ -68,8 +68,8 @@ type TDispatchProps = {
   detailTagsToggle: (spanID: string) => void;
   detailToggle: (spanID: string) => void;
   setSpanNameColumnWidth: (width: number) => void;
-  setTrace: (trace: Trace | TNil, uiFind: string | TNil) => void;
-  focusUiFindMatches: (trace: Trace, uiFind: string | TNil, allowHide?: boolean) => void;
+  setTrace: (trace: IOtelTrace | TNil, uiFind: string | TNil) => void;
+  focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil, allowHide?: boolean) => void;
 };
 
 type RouteProps = {
@@ -136,14 +136,14 @@ function generateRowStates(
 }
 
 function generateRowStatesFromTrace(
-  trace: Trace | TNil,
+  trace: IOtelTrace | TNil,
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>
 ): RowState[] {
   if (!trace) {
     return [];
   }
-  return generateRowStates(trace.asOtelTrace().spans, childrenHiddenIDs, detailStates);
+  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -155,7 +155,7 @@ function getCssClasses(currentViewRange: [number, number]) {
 }
 
 function mergeChildrenCriticalPath(
-  trace: Trace,
+  trace: IOtelTrace,
   spanID: string,
   criticalPath: CriticalPathSection[]
 ): CriticalPathSection[] {
@@ -169,7 +169,7 @@ function mergeChildrenCriticalPath(
   const spanMap = trace.spanMap;
 
   // If the span is collapsed, recursively find all of its descendants.
-  const findAllDescendants = (span: Span) => {
+  const findAllDescendants = (span: IOtelSpan) => {
     if (span.hasChildren && span.childSpans.length > 0) {
       span.childSpans.forEach(child => {
         allRequiredSpanIds.add(child.spanID);
@@ -299,8 +299,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const [zoomStart, zoomEnd] = currentViewRangeTime;
 
     return memoizedViewBoundsFunc({
-      min: trace.startTime,
-      max: trace.endTime,
+      min: trace.startTimeUnixMicros,
+      max: trace.endTimeUnixMicros,
       viewStart: zoomStart,
       viewEnd: zoomEnd,
     });
@@ -398,7 +398,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   linksGetter = (span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number) => {
     const { trace } = this.props;
     if (!trace) return [];
-    return getLinks(span, items, itemIndex, trace.asOtelTrace());
+    return getLinks(span, items, itemIndex, trace);
   };
 
   // Adapter for OTEL components that need links from attributes
@@ -422,7 +422,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   getCriticalPathSections(
     isCollapsed: boolean,
-    trace: Trace,
+    trace: IOtelTrace,
     spanID: string,
     criticalPath: CriticalPathSection[]
   ) {
@@ -459,7 +459,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       return null;
     }
 
-    const spans = trace.asOtelTrace().spans;
+    const { spans } = trace;
 
     const color = colorGenerator.getColorByKey(serviceName);
     const isCollapsed = childrenHiddenIDs.has(spanID);
@@ -513,10 +513,10 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           noInstrumentedServer={noInstrumentedServer}
           showErrorIcon={showErrorIcon}
           getViewedBounds={this.getViewedBounds()}
-          traceStartTime={trace.startTime}
+          traceStartTime={trace.startTimeUnixMicros}
           span={span}
           focusSpan={this.focusSpan}
-          traceDuration={trace.duration}
+          traceDuration={trace.durationMicros}
           useOtelTerms={useOtelTerms}
         />
       </div>
@@ -561,10 +561,10 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           warningsToggle={detailWarningsToggle}
           span={span}
           attributesToggle={detailTagsToggle}
-          traceStartTime={trace.startTime}
+          traceStartTime={trace.startTimeUnixMicros}
           focusSpan={this.focusSpan}
           currentViewRangeTime={currentViewRangeTime}
-          traceDuration={trace.duration}
+          traceDuration={trace.durationMicros}
           useOtelTerms={useOtelTerms}
         />
       </div>

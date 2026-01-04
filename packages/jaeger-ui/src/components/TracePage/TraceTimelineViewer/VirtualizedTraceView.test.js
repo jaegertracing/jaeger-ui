@@ -10,6 +10,7 @@ import SpanDetailRow from './SpanDetailRow';
 import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
+import OtelTraceFacade from '../../../model/OtelTraceFacade';
 import updateUiFindSpy from '../../../utils/update-ui-find';
 import * as linkPatterns from '../../../model/link-patterns';
 import memoizedTraceCriticalPath from '../CriticalPath/index';
@@ -26,13 +27,15 @@ jest.mock('./ListView', () => {
 describe('<VirtualizedTraceViewImpl>', () => {
   let focusUiFindMatchesMock;
   let mockProps;
+  let legacyTrace;
   let trace;
   let criticalPath;
   let instance;
 
   beforeEach(() => {
-    trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
-    criticalPath = memoizedTraceCriticalPath(trace);
+    legacyTrace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
+    criticalPath = memoizedTraceCriticalPath(legacyTrace);
+    trace = legacyTrace.asOtelTrace();
     focusUiFindMatchesMock = jest.fn();
 
     mockProps = {
@@ -113,6 +116,17 @@ describe('<VirtualizedTraceViewImpl>', () => {
       ...trace.spans.slice(1),
     ];
     const _trace = { ...trace, spans };
+    // We need to re-wrap because we modified the spans of the facade?
+    // OtelTraceFacade takes a legacy trace.
+    // We are modifying the FACADE directly here or the legacy trace?
+    // trace is now OtelTraceFacade.
+    // ...trace spreads the facade properties.
+    // spans is an array of... IOtelSpans?
+    // trace.spans[0] is IOtelSpan.
+    // So the mock data construction here needs to be careful.
+    // The original test code was constructing a legacy trace-like object.
+    // Now trace is IOtelTrace.
+    // So we should construct an IOtelTrace-like object.
     return { props: { ...mockProps, childrenHiddenIDs, trace: _trace }, spans };
   }
 
@@ -362,7 +376,12 @@ describe('<VirtualizedTraceViewImpl>', () => {
           fields: traceGenerator.tags(),
         },
       ];
-      const altTrace = updateSpan(trace, 0, { logs });
+
+      const newLegacySpans = [...legacyTrace.spans];
+      newLegacySpans[0] = { ...newLegacySpans[0], logs };
+      const newLegacyTrace = { ...legacyTrace, spans: newLegacySpans };
+      const altTrace = transformTraceData(newLegacyTrace).asOtelTrace();
+
       const { props, detailState } = expandRow(0);
       props.trace = altTrace;
       instance = createTestInstance(props);
@@ -403,10 +422,17 @@ describe('<VirtualizedTraceViewImpl>', () => {
     });
 
     it('renders a SpanBarRow with a RPC span if the row is collapsed and a client span', () => {
-      const clientTags = [{ key: 'span.kind', value: 'client' }, ...trace.spans[0].tags];
-      const serverTags = [{ key: 'span.kind', value: 'server' }, ...trace.spans[1].tags];
-      let altTrace = updateSpan(trace, 0, { tags: clientTags });
-      altTrace = updateSpan(altTrace, 1, { tags: serverTags });
+      const clientTags = [{ key: 'span.kind', value: 'client' }, ...legacyTrace.spans[0].tags];
+      const serverTags = [{ key: 'span.kind', value: 'server' }, ...legacyTrace.spans[1].tags];
+
+      // Update legacy trace spans
+      const newLegacySpans = [...legacyTrace.spans];
+      newLegacySpans[0] = { ...newLegacySpans[0], tags: clientTags };
+      newLegacySpans[1] = { ...newLegacySpans[1], tags: serverTags };
+
+      const newLegacyTrace = { ...legacyTrace, spans: newLegacySpans };
+      const altTrace = new OtelTraceFacade(newLegacyTrace);
+
       const childrenHiddenIDs = new Set([altTrace.spans[0].spanID]);
 
       instance = createTestInstance({
@@ -426,23 +452,30 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const externServiceName = 'externalServiceTest';
       const leafSpan = trace.spans.find(span => !span.hasChildren);
       const leafSpanIndex = trace.spans.indexOf(leafSpan);
-      const tags = [
+      const tagsVariants = [
         [
           // client span
           { key: 'span.kind', value: 'client' },
           { key: 'peer.service', value: externServiceName },
-          ...leafSpan.tags,
         ],
         [
           // producer span
           { key: 'span.kind', value: 'producer' },
           { key: 'peer.service', value: externServiceName },
-          ...leafSpan.tags,
         ],
       ];
 
-      tags.forEach(tag => {
-        const altTrace = updateSpan(trace, leafSpanIndex, { tags: tag });
+      tagsVariants.forEach(tagsToAdd => {
+        // Construct a new legacy trace with modified tags for the leaf span
+        const newLegacySpans = legacyTrace.spans.map((s, index) => {
+          if (index === leafSpanIndex) {
+            return { ...s, tags: [...s.tags, ...tagsToAdd] };
+          }
+          return s;
+        });
+        const newLegacyTrace = { ...legacyTrace, spans: newLegacySpans };
+        const altTrace = new OtelTraceFacade(newLegacyTrace);
+
         instance = createTestInstance({
           ...mockProps,
           trace: altTrace,
@@ -458,14 +491,14 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
     it('renderSpanBarRow returns null if trace is falsy', () => {
       const component = new VirtualizedTraceViewImpl({ ...mockProps, trace: null });
-      const otelSpan = trace.asOtelTrace().spans[0];
+      const otelSpan = trace.spans[0];
       const result = component.renderSpanBarRow(otelSpan, 0, 'key', {}, {});
       expect(result).toBeNull();
     });
 
     it('renderSpanDetailRow returns null if detailState is missing', () => {
       const component = new VirtualizedTraceViewImpl(mockProps);
-      const otelSpan = trace.asOtelTrace().spans[0];
+      const otelSpan = trace.spans[0];
       const result = component.renderSpanDetailRow(otelSpan, 'key', {}, {});
       expect(result).toBeNull();
     });
@@ -476,7 +509,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       render(
         <VirtualizedTraceViewImpl
           {...mockProps}
-          trace={criticalPathTest.trace}
+          trace={new OtelTraceFacade(criticalPathTest.trace)}
           criticalPath={criticalPathTest.criticalPathSections}
         />
       );
@@ -491,7 +524,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
         <VirtualizedTraceViewImpl
           {...mockProps}
           childrenHiddenIDs={childrenHiddenIDs}
-          trace={criticalPathTest.trace}
+          trace={new OtelTraceFacade(criticalPathTest.trace)}
           criticalPath={criticalPathTest.criticalPathSections}
         />
       );
@@ -599,9 +632,10 @@ describe('<VirtualizedTraceViewImpl>', () => {
     });
 
     it('linksGetter is expected to receive url and text for a given link pattern', () => {
-      const span = trace.asOtelTrace().spans[1];
+      const span = trace.spans[1];
       const key = span.attributes[0].key;
-      const val = encodeURIComponent(span.attributes[0].value);
+      const value = span.attributes[0].value;
+      const val = encodeURIComponent(value);
 
       const linkPatternConfig = [
         {
@@ -616,7 +650,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       expect(instance.linksGetter(span, span.attributes, 0)).toEqual([
         {
-          url: `http://example.com/?key1=${val}&traceID=${trace.traceID}&startTime=${trace.startTime}`,
+          url: `http://example.com/?key1=${val}&traceID=${trace.traceID}&startTime=${trace.startTimeUnixMicros}`,
           text: `For first link traceId is - ${trace.traceID}`,
         },
       ]);
