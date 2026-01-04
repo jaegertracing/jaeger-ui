@@ -14,11 +14,7 @@ function isBlockingSpan(childKind: SpanKind, parentKind?: SpanKind): boolean {
 }
 
 /**
- * Creates a CPSpan object from an IOtelSpan for use in critical path computation.
- * This function creates defensive copies of arrays to prevent mutation of the original trace.
- *
- * @param span - The IOtelSpan object from the trace
- * @returns A CPSpan object with copied data
+ * Creates a CPSpan object from an IOtelSpan.
  */
 export function createCPSpan(span: IOtelSpan): CPSpan {
   return {
@@ -27,19 +23,35 @@ export function createCPSpan(span: IOtelSpan): CPSpan {
     isBlocking: isBlockingSpan(span.kind, span.parentSpan?.kind),
     startTime: span.startTimeUnixMicros,
     duration: span.durationMicros,
-    childSpanIDs: span.childSpans.map(s => s.spanID),
+    childSpanIDs: [], // populated during traversal
   };
 }
 
 /**
- * Creates a Map of CPSpan objects from an array of IOtelSpan objects.
+ * Recursively builds a map of CPSpan objects starting from a root span.
+ * Only blocking spans and their descendants are included in the map.
+ * Non-blocking branches are pruned during traversal.
  *
- * @param spans - Array of IOtelSpan objects from the trace
- * @returns A Map with spanID as key and CPSpan as value
+ * @param rootSpan - The IOtelSpan to start traversal from.
+ * @returns A Map with spanID as key and CPSpan as value.
  */
-export function createCPSpanMap(spans: ReadonlyArray<IOtelSpan>): Map<string, CPSpan> {
-  return spans.reduce((map, span) => {
-    map.set(span.spanID, createCPSpan(span));
-    return map;
-  }, new Map<string, CPSpan>());
+export function createCPSpanMap(rootSpan: IOtelSpan): Map<string, CPSpan> {
+  const spanMap = new Map<string, CPSpan>();
+
+  const traverse = (span: IOtelSpan) => {
+    const cpSpan = createCPSpan(span);
+    spanMap.set(span.spanID, cpSpan);
+
+    span.childSpans.forEach(child => {
+      // A child is blocking if it's NOT a PRODUCER -> CONSUMER relationship.
+      // THE ROOT SPAN ITSELF IS ALWAYS CONSIDERED BLOCKING (already handled by start of traversal).
+      if (isBlockingSpan(child.kind, span.kind)) {
+        cpSpan.childSpanIDs.push(child.spanID);
+        traverse(child);
+      }
+    });
+  };
+
+  traverse(rootSpan);
+  return spanMap;
 }

@@ -4,7 +4,6 @@
 import memoizeOne from 'memoize-one';
 import { IOtelTrace } from '../../../types/otel';
 import { CriticalPathSection, CPSpan } from '../../../types/critical_path';
-import filterBlockingSpans from './utils/filterBlockingSpans';
 import findLastFinishingChildSpan from './utils/findLastFinishingChildSpan';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
 import { createCPSpanMap } from './utils/cpspan';
@@ -76,14 +75,12 @@ const computeCriticalPath = (
 
 function criticalPathForTrace(trace: IOtelTrace): CriticalPathSection[] {
   let criticalPath: CriticalPathSection[] = [];
-  // Create a map of CPSpan objects to avoid modifying the original trace
-  const spanMap = createCPSpanMap(trace.spans);
   for (const rootSpan of trace.rootSpans) {
-    const rootSpanId = rootSpan.spanID;
     try {
-      const filteredSpanMap = filterBlockingSpans(spanMap);
-      const sanitizedSpanMap = sanitizeOverFlowingChildren(filteredSpanMap);
-      criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpanId, criticalPath);
+      // Create a map of CPSpan objects for this root span's tree,
+      // filtering out non-blocking subtrees during creation.
+      const sanitizedSpanMap = sanitizeOverFlowingChildren(createCPSpanMap(rootSpan));
+      criticalPath = computeCriticalPath(sanitizedSpanMap, rootSpan.spanID, criticalPath);
     } catch (error) {
       console.log('error while computing critical path for a trace', error);
     }

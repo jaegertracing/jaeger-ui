@@ -7,7 +7,6 @@ import test6 from '../testCases/test6';
 import test7 from '../testCases/test7';
 import test8 from '../testCases/test8';
 import test9 from '../testCases/test9';
-import filterBlockingSpans from './filterBlockingSpans';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 import { createCPSpan, createCPSpanMap } from './cpspan';
 
@@ -33,6 +32,8 @@ function getExpectedSanitizedData(spans, test) {
 
   spans.forEach(span => {
     const cpSpan = createCPSpan(span);
+    // Explicitly populate childSpanIDs as the recursive builder does
+    cpSpan.childSpanIDs = span.childSpans.map(s => s.spanID);
 
     // Apply modifications if they exist for this span
     if (mods && mods[span.spanID]) {
@@ -87,9 +88,8 @@ describe.each([
   ],
 ])('sanitizeOverFlowingChildren - %s', (description, testProps, expectedSanitizedData) => {
   it(`should sanitize correctly: ${description}`, () => {
-    const spanMap = createCPSpanMap(testProps.trace.spans);
-    const refinedSpanMap = filterBlockingSpans(spanMap);
-    const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
+    const spanMap = createCPSpanMap(testProps.trace.rootSpans[0]);
+    const sanitizedSpanMap = sanitizeOverFlowingChildren(spanMap);
 
     // Compare size and keys
     expect(sanitizedSpanMap.size).toBe(expectedSanitizedData.size);

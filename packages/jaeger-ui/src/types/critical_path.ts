@@ -14,7 +14,7 @@ export type CriticalPathSection = {
 export type CPSpan = {
   spanID: string;
   parentSpanID?: string;
-  isBlocking: boolean; // true for INTERNAL/CLIENT/SERVER, false for PRODUCER/CONSUMER
+  isBlocking: boolean; // is this span blocking the critical path of the parent?
   startTime: number;
   duration: number;
   childSpanIDs: string[];
