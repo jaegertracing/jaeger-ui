@@ -16,11 +16,11 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, CPSpan>): Map<string, 
 
   spanIds.forEach(spanId => {
     const span = spanMap.get(spanId)!;
-    if (!(span && span.references.length)) {
+    if (!span.parentSpanID) {
       return;
     }
     // parentSpan will be undefined when its parentSpan is dropped previously
-    const parentSpan = spanMap.get(span.references[0].spanID);
+    const parentSpan = spanMap.get(span.parentSpanID);
 
     if (!parentSpan) {
       // Drop the child spans of dropped parent span
@@ -84,18 +84,6 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, CPSpan>): Map<string, 
         startTime: parentSpan.startTime,
         duration: parentEndTime - parentSpan.startTime,
       });
-    }
-  });
-
-  // Updated spanIds to ensure to not include dropped spans
-  spanIds = [...spanMap.keys()];
-  // Update Child Span References with updated parent span
-  spanIds.forEach(spanId => {
-    const span = spanMap.get(spanId)!;
-    if (span.references.length) {
-      const parentSpan = spanMap.get(span.references[0].spanID);
-      span.references[0].span = parentSpan;
-      spanMap.set(spanId, { ...span });
     }
   });
 

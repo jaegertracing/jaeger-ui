@@ -7,7 +7,7 @@ import test6 from '../testCases/test6';
 import test7 from '../testCases/test7';
 import test8 from '../testCases/test8';
 import test9 from '../testCases/test9';
-import getChildOfSpans from './getChildOfSpans';
+import filterBlockingSpans from './filterBlockingSpans';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
 import { createCPSpan, createCPSpanMap } from './cpspan';
 
@@ -88,26 +88,20 @@ describe.each([
 ])('sanitizeOverFlowingChildren - %s', (description, testProps, expectedSanitizedData) => {
   it(`should sanitize correctly: ${description}`, () => {
     const spanMap = createCPSpanMap(testProps.trace.spans);
-    const refinedSpanMap = getChildOfSpans(spanMap);
+    const refinedSpanMap = filterBlockingSpans(spanMap);
     const sanitizedSpanMap = sanitizeOverFlowingChildren(refinedSpanMap);
 
     // Compare size and keys
     expect(sanitizedSpanMap.size).toBe(expectedSanitizedData.size);
     expect([...sanitizedSpanMap.keys()].sort()).toEqual([...expectedSanitizedData.keys()].sort());
 
-    // Compare each span's properties (except nested reference.span which may have circular refs)
+    // Compare each span's properties
     sanitizedSpanMap.forEach((span, spanId) => {
       const expectedSpan = expectedSanitizedData.get(spanId);
       expect(span.spanID).toBe(expectedSpan.spanID);
       expect(span.startTime).toBe(expectedSpan.startTime);
       expect(span.duration).toBe(expectedSpan.duration);
       expect(span.childSpanIDs).toEqual(expectedSpan.childSpanIDs);
-      expect(span.references.length).toBe(expectedSpan.references.length);
-      // Compare reference properties except the nested span object
-      span.references.forEach((ref, i) => {
-        expect(ref.spanID).toBe(expectedSpan.references[i].spanID);
-        expect(ref.refType).toBe(expectedSpan.references[i].refType);
-      });
     });
   });
 });

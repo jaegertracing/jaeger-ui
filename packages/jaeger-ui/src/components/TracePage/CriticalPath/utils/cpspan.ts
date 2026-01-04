@@ -1,40 +1,43 @@
 // Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Span } from '../../../../types/trace';
-import { CPSpan, CPSpanReference } from '../../../../types/critical_path';
+import { IOtelSpan, SpanKind } from '../../../../types/otel';
+import { CPSpan } from '../../../../types/critical_path';
 
 /**
- * Creates a CPSpan object from a Span object for use in critical path computation.
+ * Determines if a span is blocking based on its kind.
+ * Producer and Consumer spans are non-blocking (async messaging patterns).
+ * Internal, Client, and Server spans are blocking.
+ */
+function isBlockingSpan(kind: SpanKind): boolean {
+  return kind !== SpanKind.PRODUCER && kind !== SpanKind.CONSUMER;
+}
+
+/**
+ * Creates a CPSpan object from an IOtelSpan for use in critical path computation.
  * This function creates defensive copies of arrays to prevent mutation of the original trace.
  *
- * @param span - The original Span object from the trace
+ * @param span - The IOtelSpan object from the trace
  * @returns A CPSpan object with copied data
  */
-export function createCPSpan(span: Span): CPSpan {
+export function createCPSpan(span: IOtelSpan): CPSpan {
   return {
     spanID: span.spanID,
-    startTime: span.startTime,
-    duration: span.duration,
-    references: span.references.map(
-      (ref): CPSpanReference => ({
-        refType: ref.refType,
-        spanID: ref.spanID,
-        traceID: ref.traceID,
-        span: undefined,
-      })
-    ),
+    parentSpanID: span.parentSpanID,
+    isBlocking: isBlockingSpan(span.kind),
+    startTime: span.startTimeUnixMicros,
+    duration: span.durationMicros,
     childSpanIDs: span.childSpans.map(s => s.spanID),
   };
 }
 
 /**
- * Creates a Map of CPSpan objects from an array of Span objects.
+ * Creates a Map of CPSpan objects from an array of IOtelSpan objects.
  *
- * @param spans - Array of Span objects from the trace
+ * @param spans - Array of IOtelSpan objects from the trace
  * @returns A Map with spanID as key and CPSpan as value
  */
-export function createCPSpanMap(spans: ReadonlyArray<Span>): Map<string, CPSpan> {
+export function createCPSpanMap(spans: ReadonlyArray<IOtelSpan>): Map<string, CPSpan> {
   return spans.reduce((map, span) => {
     map.set(span.spanID, createCPSpan(span));
     return map;

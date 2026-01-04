@@ -95,7 +95,7 @@ const criticalPathSections = [
 
 const test1 = {
   criticalPathSections,
-  trace: transformedTrace,
+  trace: transformedTrace.asOtelTrace(),
 };
 
 export default test1;
