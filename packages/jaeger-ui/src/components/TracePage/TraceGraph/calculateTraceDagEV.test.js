@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import transformTraceData from '../../../model/transform-trace-data';
+import { SpanKind } from '../../../types/otel';
 import calculateTraceDagEV, { mapFollowsFrom } from './calculateTraceDagEV';
 import testTrace from './testTrace.json';
 
@@ -46,7 +47,7 @@ describe('mapFollowsFrom', () => {
         members: [
           {
             span: {
-              kind: 'CLIENT', // Blocking span
+              kind: SpanKind.CLIENT, // Blocking span
             },
           },
         ],
@@ -64,7 +65,7 @@ describe('mapFollowsFrom', () => {
         members: [
           {
             span: {
-              kind: 'CONSUMER', // Non-blocking span (PRODUCER-CONSUMER pair)
+              kind: SpanKind.CONSUMER, // Non-blocking span (PRODUCER-CONSUMER pair)
             },
           },
         ],
@@ -80,27 +81,27 @@ describe('mapFollowsFrom - span kind combinations', () => {
   const testCases = [
     {
       name: 'CLIENT span (blocking)',
-      kind: 'CLIENT',
+      kind: SpanKind.CLIENT,
       expected: false,
     },
     {
       name: 'SERVER span (blocking)',
-      kind: 'SERVER',
+      kind: SpanKind.SERVER,
       expected: false,
     },
     {
       name: 'INTERNAL span (blocking)',
-      kind: 'INTERNAL',
+      kind: SpanKind.INTERNAL,
       expected: false,
     },
     {
       name: 'PRODUCER span (blocking)',
-      kind: 'PRODUCER',
+      kind: SpanKind.PRODUCER,
       expected: false,
     },
     {
       name: 'CONSUMER span (non-blocking)',
-      kind: 'CONSUMER',
+      kind: SpanKind.CONSUMER,
       expected: true,
     },
   ];

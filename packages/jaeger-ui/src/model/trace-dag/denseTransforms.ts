@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { TDenseSpan } from './types';
+import { SpanKind } from '../../types/otel';
 import * as tagKeys from '../../constants/tag-keys';
 
 // -	if span
@@ -15,7 +16,7 @@ function fixLeafService(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   const parent = parentID != null && map.get(parentID);
   const kind = span.kind;
   const peerSvc = attributes[tagKeys.PEER_SERVICE];
-  if (!parent || children.size > 0 || kind !== 'CLIENT' || !peerSvc) {
+  if (!parent || children.size > 0 || kind !== SpanKind.CLIENT || !peerSvc) {
     return;
   }
   const { operation: parentOp } = parent;
@@ -39,7 +40,7 @@ function skipClient(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   const kind = span.kind;
   const parentKind = parent.span.kind;
   const parentPeerSvc = parent.attributes[tagKeys.PEER_SERVICE] || '';
-  if (kind === 'SERVER' && parentKind === 'CLIENT' && parent.children.size === 1) {
+  if (kind === SpanKind.SERVER && parentKind === SpanKind.CLIENT && parent.children.size === 1) {
     parent.skipToChild = parent.operation.indexOf(service) === 0 || parentPeerSvc.indexOf(service) === 0;
   }
 }
@@ -57,7 +58,7 @@ function fixHttpOperation(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   }
   const kind = span.kind;
   const httpMethod = attributes[tagKeys.HTTP_METHOD];
-  if (kind !== 'SERVER' || operation !== httpMethod) {
+  if (kind !== SpanKind.SERVER || operation !== httpMethod) {
     return;
   }
   const parentPeerSvc = parent.attributes[tagKeys.PEER_SERVICE] || '';
@@ -97,7 +98,7 @@ function skipAnnotationSpans(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>
 //     - set parent.skipToChild = true
 function skipClientSpans(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   const { children, parentID, span } = denseSpan;
-  if (children.size !== 1 || span.kind !== 'CLIENT') {
+  if (children.size !== 1 || span.kind !== SpanKind.CLIENT) {
     return;
   }
   const parent = parentID != null && map.get(parentID);
@@ -108,7 +109,7 @@ function skipClientSpans(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   }
 
   denseSpan.skipToChild =
-    child.span.kind === 'CLIENT' && parent.span.resource.serviceName === span.resource.serviceName;
+    child.span.kind === SpanKind.CLIENT && parent.span.resource.serviceName === span.resource.serviceName;
 }
 
 export default function denseTransforms(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {

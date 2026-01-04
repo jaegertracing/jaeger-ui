@@ -9,21 +9,10 @@ import TraceDag from '../../../model/trace-dag/TraceDag';
 import TDagNode from '../../../model/trace-dag/types/TDagNode';
 import { TDenseSpanMembers } from '../../../model/trace-dag/types';
 import { Trace } from '../../../types/trace';
-import { IOtelSpan, IAttribute, SpanKind } from '../../../types/otel';
+import { IOtelSpan, SpanKind, StatusCode } from '../../../types/otel';
 import { TSumSpan, TEv } from './types';
 
 let parentChildOfMap: Record<string, IOtelSpan[]>;
-
-export function isError(attributes: ReadonlyArray<IAttribute>) {
-  if (attributes) {
-    const errorAttr = attributes.find(t => t.key === 'error');
-    if (errorAttr) {
-      return errorAttr.value;
-    }
-  }
-
-  return false;
-}
 
 export function mapFollowsFrom(
   edges: TEdge[],
@@ -31,28 +20,36 @@ export function mapFollowsFrom(
 ): TEdge<{ followsFrom: boolean }>[] {
   return edges.map(e => {
     // In OTEL model, the blocking nature of child spans is determined by span kind:
-    // - PRODUCER-CONSUMER pairs are non-blocking (followsFrom: true)
-    // - INTERNAL/CLIENT/SERVER spans are blocking (followsFrom: false)
+    // - CONSUMER child of PRODUCER parent is non-blocking (followsFrom: true)
+    // - INTERNAL/CLIENT/SERVER/PRODUCER spans are blocking (followsFrom: false)
     let followsFrom = false;
     if (typeof e.to === 'number') {
       const node = nodes[e.to];
       // A node represents a non-blocking relationship if any of its members are CONSUMER spans
       // (which implies a PRODUCER-CONSUMER pair in the parent-child relationship)
-      followsFrom = node.members.some(m => m.span.kind === 'CONSUMER');
+      followsFrom = node.members.some(m => m.span.kind === SpanKind.CONSUMER);
     }
     return { ...e, followsFrom };
   });
 }
 
-function getChildOfSpans(parentID: string, otelTrace: ReturnType<Trace['asOtelTrace']>): IOtelSpan[] {
+/**
+ * Gets blocking child spans (children that contribute to parent's critical path).
+ * In OTEL, CONSUMER children of PRODUCER parents are non-blocking and should be excluded
+ * from critical path calculations, similar to how FOLLOWS_FROM was excluded in legacy code.
+ */
+function getBlockingChildSpans(parentID: string, otelTrace: ReturnType<Trace['asOtelTrace']>): IOtelSpan[] {
   if (!parentChildOfMap) {
     parentChildOfMap = {};
     otelTrace.spans.forEach(s => {
       if (s.parentSpanID) {
-        // Only count CHILD_OF relationships (parentSpanID indicates CHILD_OF)
         const pID = s.parentSpanID;
-        parentChildOfMap[pID] = parentChildOfMap[pID] || [];
-        parentChildOfMap[pID].push(s);
+        // Only include blocking children (not CONSUMER spans)
+        // CONSUMER spans are non-blocking in PRODUCER-CONSUMER pairs
+        if (s.kind !== SpanKind.CONSUMER) {
+          parentChildOfMap[pID] = parentChildOfMap[pID] || [];
+          parentChildOfMap[pID].push(s);
+        }
       }
     });
   }
@@ -61,7 +58,7 @@ function getChildOfSpans(parentID: string, otelTrace: ReturnType<Trace['asOtelTr
 
 function getChildOfDrange(parentID: string, otelTrace: ReturnType<Trace['asOtelTrace']>) {
   const childrenDrange = new DRange();
-  getChildOfSpans(parentID, otelTrace).forEach(s => {
+  getBlockingChildSpans(parentID, otelTrace).forEach(s => {
     // -1 otherwise it will take for each child a micro (incluse,exclusive)
     childrenDrange.add(
       s.startTimeUnixMicros,
@@ -78,7 +75,7 @@ export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan & TDenseSpanM
 
   baseDag.nodesMap.forEach(node => {
     const ntime = node.members.reduce((p, m) => p + m.span.durationMicros, 0);
-    const numErrors = node.members.reduce((p, m) => p + (isError(m.span.attributes) ? 1 : 0), 0);
+    const numErrors = node.members.reduce((p, m) => p + (m.span.status.code === StatusCode.ERROR ? 1 : 0), 0);
     const childDurationsDRange = node.members.reduce((p, m) => {
       // Using DRange to handle overlapping spans (fork-join)
       const cdr = new DRange(
