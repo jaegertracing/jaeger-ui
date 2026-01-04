@@ -176,9 +176,9 @@ describe('OtelSpanFacade', () => {
   });
 
   it('maps timing fields', () => {
-    expect(facade.startTimeUnixMicros).toBe(1000);
-    expect(facade.endTimeUnixMicros).toBe(1500);
-    expect(facade.durationMicros).toBe(500);
+    expect(facade.startTime).toBe(1000);
+    expect(facade.endTime).toBe(1500);
+    expect(facade.duration).toBe(500);
   });
 
   it('maps attributes from tags', () => {
@@ -188,7 +188,7 @@ describe('OtelSpanFacade', () => {
   it('maps events from logs', () => {
     expect(facade.events).toHaveLength(1);
     expect(facade.events[0]).toMatchObject({
-      timeUnixMicro: 1100,
+      timestamp: 1100,
       name: 'test-event',
       attributes: [
         { key: 'event', value: 'test-event' },
@@ -277,7 +277,7 @@ describe('OtelSpanFacade', () => {
     expect(facade.depth).toBe(1);
     expect(facade.hasChildren).toBe(false);
     expect(facade.childSpans).toEqual([]);
-    expect(facade.relativeStartTimeMicros).toBe(100);
+    expect(facade.relativeStartTime).toBe(100);
     expect(facade.inboundLinks[0].spanID).toBe('sub-ref-1');
   });
 });

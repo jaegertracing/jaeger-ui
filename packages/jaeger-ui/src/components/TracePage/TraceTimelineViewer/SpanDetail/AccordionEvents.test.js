@@ -20,7 +20,7 @@ jest.mock('./AccordionAttributes', () => props => {
 describe('<AccordionEvents>', () => {
   const events = [
     {
-      timeUnixMicro: 10,
+      timestamp: 10,
       name: 'event',
       attributes: [
         { key: 'message', value: 'oh the event message' },
@@ -28,7 +28,7 @@ describe('<AccordionEvents>', () => {
       ],
     },
     {
-      timeUnixMicro: 20,
+      timestamp: 20,
       name: 'event',
       attributes: [
         { key: 'message', value: 'oh the next event message' },
@@ -143,7 +143,7 @@ describe('<AccordionEvents>', () => {
     window.dispatchEvent = mockDispatchEvent;
 
     const manyLogs = Array.from({ length: 5 }, (_, i) => ({
-      timeUnixMicro: 10 + i,
+      timestamp: 10 + i,
       name: 'event',
       attributes: [{ key: 'message', value: `event ${i}` }],
     }));
@@ -222,7 +222,7 @@ describe('<AccordionEvents>', () => {
 describe('<AccordionEvents> OTEL specifics', () => {
   const events = [
     {
-      timeUnixMicro: 10,
+      timestamp: 10,
       name: 'otel-event-name',
       attributes: [],
     },

@@ -20,7 +20,7 @@ const findLastFinishingChildSpan = (
     const childSpan = spanMap.get(childId);
     if (!childSpan) return;
 
-    const childEndTime = childSpan.startTime + childSpan.duration;
+    const childEndTime = childSpan.endTime;
 
     if (returningChildStartTime) {
       if (childEndTime < returningChildStartTime) {

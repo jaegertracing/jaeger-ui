@@ -69,9 +69,9 @@ describe('<SpanBarRow>', () => {
       spanID: spanID,
       name: 'op-name',
       kind: 'SERVER',
-      startTimeUnixMicros: 100,
-      endTimeUnixMicros: 200,
-      durationMicros: 100,
+      startTime: 100,
+      endTime: 200,
+      duration: 100,
       attributes: [],
       events: [],
       links: [],
@@ -80,7 +80,7 @@ describe('<SpanBarRow>', () => {
       instrumentationScope: { name: 'scope' },
       depth: 0,
       hasChildren: true,
-      relativeStartTimeMicros: 100,
+      relativeStartTime: 100,
       inboundLinks: [],
       warnings: null,
     },
@@ -219,8 +219,8 @@ describe('<SpanBarRow>', () => {
       getViewedBounds,
       span: {
         ...defaultProps.span,
-        startTimeUnixMicros: 100,
-        durationMicros: 50,
+        startTime: 100,
+        duration: 50,
       },
     };
     render(<SpanBarRow {...props} />);

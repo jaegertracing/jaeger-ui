@@ -56,9 +56,9 @@ describe('OtelTraceFacade', () => {
   it('maps basic trace fields', () => {
     expect(facade.traceID).toBe('trace-1');
     expect(facade.traceName).toBe('test-trace');
-    expect(facade.durationMicros).toBe(500);
-    expect(facade.startTimeUnixMicros).toBe(1000);
-    expect(facade.endTimeUnixMicros).toBe(1500);
+    expect(facade.duration).toBe(500);
+    expect(facade.startTime).toBe(1000);
+    expect(facade.endTime).toBe(1500);
   });
 
   it('maps spans to OtelSpanFacade instances', () => {
