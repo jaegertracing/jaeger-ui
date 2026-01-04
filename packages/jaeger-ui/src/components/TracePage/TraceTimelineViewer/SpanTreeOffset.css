@@ -9,18 +9,13 @@ SPDX-License-Identifier: Apache-2.0
   display: flex;
   align-items: center;
   height: 28px;
+  padding-left: 10px;
+  /* Align with column header and center boxes over vertical lines */
 }
 
 .SpanTreeOffset.is-parent:hover {
   background-color: var(--surface-component-background-hover);
   cursor: pointer;
-}
-
-/* Padding for root spans to match indent guide width */
-.SpanTreeOffset--rootPadding {
-  display: inline-block;
-  width: calc(0.5rem + 20px);
-  flex-shrink: 0;
 }
 
 .SpanTreeOffset--indentGuide {
@@ -74,12 +69,6 @@ SPDX-License-Identifier: Apache-2.0
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-}
-
-/* Center root span box over where vertical line would be  */
-.SpanTreeOffset--iconWrapper.is-root {
-  transform: translateX(-20px);
-  /* Move box left to center on vertical line */
 }
 
 /* Colored box for parent spans - hollow outline */

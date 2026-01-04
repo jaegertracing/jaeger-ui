@@ -104,7 +104,6 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
 
   return (
     <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
-      {isRootSpan && <span className="SpanTreeOffset--rootPadding" />}
       {ancestors.map((ancestor, index) => {
         // Determine the color for this indent guide based on the ancestor
         const guideColor = colorGenerator.getColorByKey(ancestor.resource.serviceName);
@@ -152,7 +151,7 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
       {showChildrenIcon && (
         <span
           className={cx('SpanTreeOffset--iconWrapper', {
-            'is-root': isRootSpan,
+            'is-collapsed': !childrenVisible,
           })}
           data-testid="icon-wrapper"
           onMouseEnter={event => handleMouseEnter(event, spanID)}
