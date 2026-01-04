@@ -15,6 +15,7 @@ import { getUrl } from '../url';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
 import DiffSelection from './DiffSelection';
+import { StatusCode } from '../../../types/otel';
 
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom-v5-compat', () => {
@@ -82,8 +83,8 @@ afterEach(() => {
 });
 
 const baseTraces = [
-  { traceID: 'a', spans: [], processes: {} },
-  { traceID: 'b', spans: [], processes: {} },
+  { traceID: 'a', spans: [], processes: {}, asOtelTrace: () => ({ spans: [] }) },
+  { traceID: 'b', spans: [], processes: {}, asOtelTrace: () => ({ spans: [] }) },
 ];
 const baseProps = {
   cohortAddTrace: jest.fn(),
@@ -185,6 +186,13 @@ describe('<SearchResults>', () => {
             tags: [{ key: 'error', value: true }],
           },
         ],
+        asOtelTrace: () => ({
+          spans: [
+            {
+              status: { code: StatusCode.ERROR },
+            },
+          ],
+        }),
       },
     ];
     renderWithRouter(<SearchResults {...baseProps} traces={errorTrace} />);
@@ -218,6 +226,7 @@ describe('<SearchResults>', () => {
             duration: 1,
             processes: {},
             spans: [],
+            asOtelTrace: () => ({ spans: [] }),
           },
         ]}
       />
@@ -245,6 +254,7 @@ describe('<SearchResults>', () => {
                 tags: [],
               },
             ],
+            asOtelTrace: () => ({ spans: [] }),
           },
         ]}
       />
@@ -283,8 +293,8 @@ describe('<SearchResults>', () => {
         [traceID1]: uiFind1,
       };
       const zeroIDTraces = [
-        { traceID: traceID0, spans: [], processes: {} },
-        { traceID: `000${traceID1}`, spans: [], processes: {} },
+        { traceID: traceID0, spans: [], processes: {}, asOtelTrace: () => ({ spans: [] }) },
+        { traceID: `000${traceID1}`, spans: [], processes: {}, asOtelTrace: () => ({ spans: [] }) },
       ];
       renderWithRouter(<SearchResults {...baseProps} traces={zeroIDTraces} spanLinks={spanLinks} />);
       const calls = ResultItem.mock.calls;

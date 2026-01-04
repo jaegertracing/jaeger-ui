@@ -19,7 +19,7 @@ import colorGenerator from '../../../utils/color-generator';
 import { formatRelativeDate } from '../../../utils/date';
 
 import { Trace } from '../../../types/trace';
-import { IAttribute } from '../../../types/otel';
+import { StatusCode } from '../../../types/otel';
 
 import './ResultItem.css';
 
@@ -34,8 +34,6 @@ type Props = {
   disableComparision: boolean;
 };
 
-const isErrorAttribute = ({ key, value }: IAttribute) =>
-  key === 'error' && (value === true || value === 'true');
 const trackTraceConversions = () => trackConversions(EAltViewActions.Traces);
 
 export default function ResultItem({
@@ -66,7 +64,7 @@ export default function ResultItem({
 
     const errored = new Set<string>();
     const erredCount = otelSpans.filter(sp => {
-      const hasError = sp.attributes.some(isErrorAttribute);
+      const hasError = sp.status.code === StatusCode.ERROR;
       if (hasError) errored.add(sp.resource.serviceName);
       return hasError;
     }).length;

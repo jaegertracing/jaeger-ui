@@ -30,7 +30,7 @@ import { stripEmbeddedState } from '../../../utils/embedded-url';
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
 import { Trace, TraceData } from '../../../types/trace';
-import { IAttribute } from '../../../types/otel';
+import { StatusCode } from '../../../types/otel';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -173,8 +173,6 @@ export function UnconnectedSearchResults({
   }
   const cohortIds = new Set(diffCohort.map(datum => datum.id));
   const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
-  const isErrorAttribute = ({ key, value }: IAttribute) =>
-    key === 'error' && (value === true || value === 'true');
   return (
     <div className="SearchResults">
       <div className="SearchResults--header">
@@ -183,22 +181,14 @@ export function UnconnectedSearchResults({
             <ScatterPlot
               data={traces.map(t => {
                 const rootSpanInfo = t.spans && t.spans.length > 0 ? getTracePageHeaderParts(t.spans) : null;
-                // Use OTEL facade if available, otherwise fall back to legacy spans
-                const otelTrace = t.asOtelTrace?.();
-                const spans = otelTrace ? otelTrace.spans : t.spans;
+                const otelTrace = t.asOtelTrace();
                 return {
                   x: t.startTime,
                   y: t.duration,
                   traceID: t.traceID,
                   size: t.spans.length,
                   name: t.traceName,
-                  color: spans.some(sp => {
-                    // Handle both OTEL and legacy spans
-                    const attrs = 'attributes' in sp ? sp.attributes : sp.tags;
-                    return attrs.some(isErrorAttribute);
-                  })
-                    ? 'red'
-                    : '#12939A',
+                  color: otelTrace.spans.some(sp => sp.status.code === StatusCode.ERROR) ? 'red' : '#12939A',
                   services: t.services || [],
                   rootSpanName: rootSpanInfo?.operationName || 'Unknown',
                 };
