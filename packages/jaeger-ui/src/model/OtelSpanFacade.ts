@@ -53,7 +53,7 @@ export default class OtelSpanFacade implements IOtelSpan {
 
     this._attributes = OtelSpanFacade.toOtelAttributes(this.legacySpan.tags);
 
-    this._events = (this.legacySpan.logs || []).map(log => ({
+    this._events = this.legacySpan.logs.map(log => ({
       timeUnixMicro: log.timestamp,
       name: (log.fields.find(f => f.key === 'event')?.value as string) || 'log',
       attributes: OtelSpanFacade.toOtelAttributes(log.fields),
