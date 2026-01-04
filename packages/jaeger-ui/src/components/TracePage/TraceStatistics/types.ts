@@ -1,3 +1,6 @@
+// Copyright (c) 2020 The Jaeger Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 import { Microseconds } from '../../../types/units';
 
 export interface ITableSpan {
