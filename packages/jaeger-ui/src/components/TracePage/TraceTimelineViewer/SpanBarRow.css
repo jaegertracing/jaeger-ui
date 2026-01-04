@@ -164,6 +164,16 @@ SPDX-License-Identifier: Apache-2.0
   padding: 1px;
 }
 
+/* Hollow variant for bubbled errors from collapsed children */
+.SpanBarRow--errorIcon--hollow {
+  background: transparent;
+  border: 1.5px solid #db2828;
+  color: #db2828;
+  font-weight: bold;
+  padding: 0px;
+  /* Adjust padding since border adds 1.5px */
+}
+
 .SpanBarRow--rpcColorMarker {
   border-radius: 6.5px;
   display: inline-block;
