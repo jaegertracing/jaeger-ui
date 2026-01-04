@@ -3,6 +3,7 @@
 
 import { Trace } from '../types/trace';
 import { IOtelTrace, IOtelSpan } from '../types/otel';
+import { Microseconds } from '../types/units';
 import OtelSpanFacade from './OtelSpanFacade';
 
 export default class OtelTraceFacade implements IOtelTrace {
@@ -80,16 +81,16 @@ export default class OtelTraceFacade implements IOtelTrace {
     return this._rootSpans;
   }
 
-  get durationMicros(): number {
-    return this.legacyTrace.duration;
+  get duration(): Microseconds {
+    return this.legacyTrace.duration as Microseconds;
   }
 
-  get startTimeUnixMicros(): number {
-    return this.legacyTrace.startTime;
+  get startTime(): Microseconds {
+    return this.legacyTrace.startTime as Microseconds;
   }
 
-  get endTimeUnixMicros(): number {
-    return this.legacyTrace.endTime;
+  get endTime(): Microseconds {
+    return this.legacyTrace.endTime as Microseconds;
   }
 
   get traceName(): string {

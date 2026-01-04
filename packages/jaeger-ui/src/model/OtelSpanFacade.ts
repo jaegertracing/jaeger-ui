@@ -14,6 +14,7 @@ import {
   IResource,
   IScope,
 } from '../types/otel';
+import { Microseconds } from '../types/units';
 
 export default class OtelSpanFacade implements IOtelSpan {
   private legacySpan: Span;
@@ -54,7 +55,7 @@ export default class OtelSpanFacade implements IOtelSpan {
     this._attributes = OtelSpanFacade.toOtelAttributes(this.legacySpan.tags);
 
     this._events = this.legacySpan.logs.map(log => ({
-      timeUnixMicro: log.timestamp,
+      timestamp: log.timestamp as Microseconds,
       name: (log.fields.find(f => f.key === 'event')?.value as string) || 'log',
       attributes: OtelSpanFacade.toOtelAttributes(log.fields),
     }));
@@ -113,16 +114,16 @@ export default class OtelSpanFacade implements IOtelSpan {
     return this._kind;
   }
 
-  get startTimeUnixMicros(): number {
-    return this.legacySpan.startTime;
+  get startTime(): Microseconds {
+    return this.legacySpan.startTime as Microseconds;
   }
 
-  get endTimeUnixMicros(): number {
-    return this.legacySpan.startTime + this.legacySpan.duration;
+  get endTime(): Microseconds {
+    return (this.legacySpan.startTime + this.legacySpan.duration) as Microseconds;
   }
 
-  get durationMicros(): number {
-    return this.legacySpan.duration;
+  get duration(): Microseconds {
+    return this.legacySpan.duration as Microseconds;
   }
 
   get attributes(): IAttribute[] {
@@ -178,8 +179,8 @@ export default class OtelSpanFacade implements IOtelSpan {
     this._childSpans = value;
   }
 
-  get relativeStartTimeMicros(): number {
-    return this.legacySpan.relativeStartTime;
+  get relativeStartTime(): Microseconds {
+    return this.legacySpan.relativeStartTime as Microseconds;
   }
 
   get inboundLinks(): ILink[] {

@@ -104,7 +104,7 @@ function SpanBar(props: TSpanBarProps) {
 
   // group events based on timestamps
   const eventGroups = _groupBy(span.events, (event: IEvent) => {
-    const posPercent = getViewedBounds(event.timeUnixMicro, event.timeUnixMicro).start;
+    const posPercent = getViewedBounds(event.timestamp, event.timestamp).start;
     // round to the nearest 0.2%
     return toPercent(Math.round(posPercent * 500) / 500);
   });

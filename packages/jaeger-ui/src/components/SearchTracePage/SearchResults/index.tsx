@@ -180,8 +180,8 @@ export function UnconnectedSearchResults({
             <ScatterPlot
               data={traces.map(t => {
                 return {
-                  x: t.startTimeUnixMicros,
-                  y: t.durationMicros,
+                  x: t.startTime,
+                  y: t.duration,
                   traceID: t.traceID,
                   size: t.spans.length,
                   name: t.traceName,
@@ -225,7 +225,7 @@ export function UnconnectedSearchResults({
           {traces.map(trace => (
             <li className="ub-my3" key={trace.traceID}>
               <ResultItem
-                durationPercent={getPercentageOfDuration(trace.durationMicros, maxTraceDuration)}
+                durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
                 isInDiffCohort={cohortIds.has(trace.traceID)}
                 linkTo={getLocation(
                   trace.traceID,

@@ -91,16 +91,13 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   }, [onChildrenToggled, span.spanID]);
 
   const {
-    durationMicros: duration,
+    duration,
     hasChildren: isParent,
     name: operationName,
     resource: { serviceName },
   } = span;
   const label = formatDuration(duration);
-  const viewBounds = getViewedBounds(
-    span.startTimeUnixMicros,
-    span.startTimeUnixMicros + span.durationMicros
-  );
+  const viewBounds = getViewedBounds(span.startTime, span.startTime + span.duration);
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
 

@@ -1,6 +1,8 @@
 // Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import { Microseconds } from './units';
+
 export enum SpanKind {
   INTERNAL = 'INTERNAL',
   SERVER = 'SERVER',
@@ -40,7 +42,7 @@ export interface IScope {
 }
 
 export interface IEvent {
-  timeUnixMicro: number;
+  timestamp: Microseconds;
   name: string;
   attributes: IAttribute[];
 }
@@ -69,9 +71,9 @@ export interface IOtelSpan {
   kind: SpanKind;
 
   // Timing
-  startTimeUnixMicros: number;
-  endTimeUnixMicros: number;
-  durationMicros: number;
+  startTime: Microseconds;
+  endTime: Microseconds;
+  duration: Microseconds;
 
   // Core Data
   attributes: IAttribute[];
@@ -87,7 +89,7 @@ export interface IOtelSpan {
   depth: number;
   hasChildren: boolean;
   childSpans: ReadonlyArray<IOtelSpan>;
-  relativeStartTimeMicros: number; // microseconds since trace start
+  relativeStartTime: Microseconds; // microseconds since trace start
 
   // Inverse links to spans that reference this span via their outbound Links
   inboundLinks: ILink[];
@@ -100,9 +102,9 @@ export interface IOtelTrace {
   spans: ReadonlyArray<IOtelSpan>;
 
   // Some trace-level convenience properties
-  durationMicros: number;
-  startTimeUnixMicros: number;
-  endTimeUnixMicros: number;
+  duration: Microseconds;
+  startTime: Microseconds;
+  endTime: Microseconds;
   traceName: string;
   services: ReadonlyArray<{ name: string; numberOfSpans: number }>;
 

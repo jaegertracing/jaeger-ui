@@ -21,8 +21,8 @@ export function createCPSpan(span: IOtelSpan): CPSpan {
     spanID: span.spanID,
     parentSpanID: span.parentSpanID,
     isBlocking: isBlockingSpan(span.kind, span.parentSpan?.kind),
-    startTime: span.startTimeUnixMicros,
-    duration: span.durationMicros,
+    startTime: span.startTime,
+    duration: span.duration,
     childSpanIDs: [], // populated during traversal
   };
 }

@@ -3,6 +3,7 @@
 
 import memoizeOne from 'memoize-one';
 import { IOtelTrace, IOtelSpan } from '../../../types/otel';
+import { Microseconds } from '../../../types/units';
 import { ITableSpan } from './types';
 import colorGenerator from '../../../utils/color-generator';
 
@@ -26,23 +27,21 @@ function getChildOfSpans(parentID: string, allSpans: ReadonlyArray<IOtelSpan>): 
   return memoizedParentChildOfMap(allSpans)[parentID] || [];
 }
 
-function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpan>): number {
-  if (!parentSpan.hasChildren) return parentSpan.durationMicros;
+function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpan>): Microseconds {
+  if (!parentSpan.hasChildren) return parentSpan.duration;
 
-  let parentSpanSelfTime = parentSpan.durationMicros;
-  let previousChildEndTime = parentSpan.startTimeUnixMicros;
+  let parentSpanSelfTime = parentSpan.duration;
+  let previousChildEndTime = parentSpan.startTime;
 
-  const children = getChildOfSpans(parentSpan.spanID, allSpans).sort(
-    (a, b) => a.startTimeUnixMicros - b.startTimeUnixMicros
-  );
+  const children = getChildOfSpans(parentSpan.spanID, allSpans).sort((a, b) => a.startTime - b.startTime);
 
-  const parentSpanEndTime = parentSpan.startTimeUnixMicros + parentSpan.durationMicros;
+  const parentSpanEndTime = parentSpan.startTime + parentSpan.duration;
 
   for (let index = 0; index < children.length; index++) {
     const child = children[index];
 
-    const childEndTime = child.startTimeUnixMicros + child.durationMicros;
-    const childStartsAfterParentEnded = child.startTimeUnixMicros > parentSpanEndTime;
+    const childEndTime = child.startTime + child.duration;
+    const childStartsAfterParentEnded = child.startTime > parentSpanEndTime;
     const childEndsBeforePreviousChild = childEndTime < previousChildEndTime;
 
     // parent |..................|
@@ -57,11 +56,11 @@ function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpa
     // child    |.......|                    - previousChild
     // child        |.....|                  - nonOverlappingStartTime is previousChildEndTime
     // child                |.....|          - nonOverlappingStartTime is child.startTime
-    const nonOverlappingStartTime = Math.max(previousChildEndTime, child.startTimeUnixMicros);
+    const nonOverlappingStartTime = Math.max(previousChildEndTime, child.startTime);
     const childEndTimeOrParentEndTime = Math.min(parentSpanEndTime, childEndTime);
 
     const nonOverlappingDuration = childEndTimeOrParentEndTime - nonOverlappingStartTime;
-    parentSpanSelfTime -= nonOverlappingDuration;
+    parentSpanSelfTime = (parentSpanSelfTime - nonOverlappingDuration) as Microseconds;
 
     // last span which can be included in self time calculation, because it ends after parent span ends
     // parent |.......................|
@@ -71,7 +70,7 @@ function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpa
       break;
     }
 
-    previousChildEndTime = childEndTime;
+    previousChildEndTime = childEndTime as Microseconds;
   }
 
   return parentSpanSelfTime;
@@ -85,12 +84,12 @@ function computeColumnValues(
 ) {
   const resultValueChange = resultValue;
   resultValueChange.count += 1;
-  resultValueChange.total += span.durationMicros;
-  if (resultValueChange.min > span.durationMicros) {
-    resultValueChange.min = span.durationMicros;
+  resultValueChange.total = (resultValueChange.total + span.duration) as Microseconds;
+  if (resultValueChange.min > span.duration) {
+    resultValueChange.min = span.duration;
   }
-  if (resultValueChange.max < span.durationMicros) {
-    resultValueChange.max = span.durationMicros;
+  if (resultValueChange.max < span.duration) {
+    resultValueChange.max = span.duration;
   }
 
   const tempSelf = computeSelfTime(span, allSpans);
@@ -100,9 +99,9 @@ function computeColumnValues(
   if (resultValueChange.selfMax < tempSelf) {
     resultValueChange.selfMax = tempSelf;
   }
-  resultValueChange.selfTotal += tempSelf;
+  resultValueChange.selfTotal = (resultValueChange.selfTotal + tempSelf) as Microseconds;
 
-  const onePercent = 100 / trace.durationMicros;
+  const onePercent = 100 / trace.duration;
   resultValueChange.percent = resultValueChange.selfTotal * onePercent;
 
   return resultValueChange;
@@ -113,42 +112,42 @@ function computeColumnValues(
  */
 function buildOneColumn(oneColumn: ITableSpan) {
   const oneColumnChange = oneColumn;
-  oneColumnChange.total = Math.round((oneColumnChange.total / 1000) * 100) / 100;
-  oneColumnChange.avg = Math.round((oneColumnChange.avg / 1000) * 100) / 100;
-  oneColumnChange.min = Math.round((oneColumnChange.min / 1000) * 100) / 100;
-  oneColumnChange.max = Math.round((oneColumnChange.max / 1000) * 100) / 100;
-  oneColumnChange.selfTotal = Math.round((oneColumnChange.selfTotal / 1000) * 100) / 100;
-  oneColumnChange.selfAvg = Math.round((oneColumnChange.selfAvg / 1000) * 100) / 100;
-  oneColumnChange.selfMin = Math.round((oneColumnChange.selfMin / 1000) * 100) / 100;
-  oneColumnChange.selfMax = Math.round((oneColumnChange.selfMax / 1000) * 100) / 100;
+  oneColumnChange.total = (Math.round((oneColumnChange.total / 1000) * 100) / 100) as Microseconds;
+  oneColumnChange.avg = (Math.round((oneColumnChange.avg / 1000) * 100) / 100) as Microseconds;
+  oneColumnChange.min = (Math.round((oneColumnChange.min / 1000) * 100) / 100) as Microseconds;
+  oneColumnChange.max = (Math.round((oneColumnChange.max / 1000) * 100) / 100) as Microseconds;
+  oneColumnChange.selfTotal = (Math.round((oneColumnChange.selfTotal / 1000) * 100) / 100) as Microseconds;
+  oneColumnChange.selfAvg = (Math.round((oneColumnChange.selfAvg / 1000) * 100) / 100) as Microseconds;
+  oneColumnChange.selfMin = (Math.round((oneColumnChange.selfMin / 1000) * 100) / 100) as Microseconds;
+  oneColumnChange.selfMax = (Math.round((oneColumnChange.selfMax / 1000) * 100) / 100) as Microseconds;
   oneColumnChange.percent = Math.round((oneColumnChange.percent / 1) * 100) / 100;
   // oneColumnChange.colorToPercent;
   return oneColumnChange;
 }
 
 type StatsPerTag = {
-  selfTotal: number;
-  selfMin: number;
-  selfMax: number;
-  selfAvg: number;
-  total: number;
-  avg: number;
-  min: number;
-  max: number;
+  selfTotal: Microseconds;
+  selfMin: Microseconds;
+  selfMax: Microseconds;
+  selfAvg: Microseconds;
+  total: Microseconds;
+  avg: Microseconds;
+  min: Microseconds;
+  max: Microseconds;
   count: number;
   percent: number;
 };
 
-function getDefaultStatsValue(trace: IOtelTrace) {
+function getDefaultStatsValue(trace: IOtelTrace): StatsPerTag {
   return {
-    selfTotal: 0,
-    selfMin: trace.durationMicros,
-    selfMax: 0,
-    selfAvg: 0,
-    total: 0,
-    avg: 0,
-    min: trace.durationMicros,
-    max: 0,
+    selfTotal: 0 as Microseconds,
+    selfMin: trace.duration,
+    selfMax: 0 as Microseconds,
+    selfAvg: 0 as Microseconds,
+    total: 0 as Microseconds,
+    avg: 0 as Microseconds,
+    min: trace.duration,
+    max: 0 as Microseconds,
     count: 0,
     percent: 0,
   };
@@ -211,9 +210,9 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
       color = colorGenerator.getColorByKey(attributeValue);
     }
 
-    resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
-    resultValue.avg = resultValue.total / resultValue.count;
-    let tableSpan = {
+    resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as Microseconds;
+    resultValue.avg = (resultValue.total / resultValue.count) as Microseconds;
+    let tableSpan: ITableSpan = {
       hasSubgroupValue: true,
       name: attributeValue,
       count: resultValue.count,
@@ -252,9 +251,9 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
     }
     if (resultValue.count !== 0) {
       // Others is build
-      resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
-      resultValue.avg = resultValue.total / resultValue.count;
-      let tableSpanOTHERS = {
+      resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as Microseconds;
+      resultValue.avg = (resultValue.total / resultValue.count) as Microseconds;
+      let tableSpanOTHERS: ITableSpan = {
         hasSubgroupValue: false,
         name: `Without Attribute: ${selectedAttributeKey}`,
         count: resultValue.count,
@@ -321,9 +320,9 @@ function buildDetail(
       color = colorGenerator.getColorByKey(attributeValue);
     }
 
-    resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
-    resultValue.avg = resultValue.total / resultValue.count;
-    let buildOneColumnValue = {
+    resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as Microseconds;
+    resultValue.avg = (resultValue.total / resultValue.count) as Microseconds;
+    let buildOneColumnValue: ITableSpan = {
       hasSubgroupValue: true,
       name: attributeValue,
       count: resultValue.count,
@@ -362,18 +361,8 @@ function generateDetailRest(
   for (let i = 0; i < allColumnValues.length; i++) {
     newTable.push(allColumnValues[i]);
     if (!allColumnValues[i].isDetail) {
-      let resultValue = {
-        selfTotal: 0,
-        selfAvg: 0,
-        selfMin: trace.durationMicros,
-        selfMax: 0,
-        total: 0,
-        avg: 0,
-        min: trace.durationMicros,
-        max: 0,
-        count: 0,
-        percent: 0,
-      };
+      let resultValue = getDefaultStatsValue(trace);
+
       for (let j = 0; j < allSpans.length; j++) {
         if (
           allColumnValues[i].name === allSpans[j].resource.serviceName ||
@@ -391,10 +380,10 @@ function generateDetailRest(
           }
         }
       }
-      resultValue.avg = resultValue.total / resultValue.count;
-      resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
+      resultValue.avg = (resultValue.total / resultValue.count) as Microseconds;
+      resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as Microseconds;
       if (resultValue.count !== 0) {
-        let buildOneColumnValue = {
+        let buildOneColumnValue: ITableSpan = {
           hasSubgroupValue: false,
           name: `Without Attribute: ${selectedAttributeKeySecond}`,
           count: resultValue.count,
@@ -411,7 +400,7 @@ function generateDetailRest(
           color: '',
           searchColor: '',
           parentElement: allColumnValues[i].name,
-          colorToPercent: 'rgb(248,248,248)',
+          colorToPercent: 'transparent',
           traceID: '',
         };
         buildOneColumnValue = buildOneColumn(buildOneColumnValue);

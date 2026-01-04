@@ -79,7 +79,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   return (
     <div className="TraceTimelineViewer">
       <TimelineHeaderRow
-        duration={trace.durationMicros}
+        duration={trace.duration}
         nameColumnWidth={spanNameColumnWidth}
         numTicks={NUM_TICKS}
         onCollapseAll={collapseAll}
