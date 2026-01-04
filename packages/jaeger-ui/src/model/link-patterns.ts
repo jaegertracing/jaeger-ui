@@ -294,11 +294,7 @@ export const processedLinks: ProcessedLinkPattern[] = (getConfigValue('linkPatte
   .map(processLinkPattern)
   .filter(Boolean);
 
-export const getTraceLinks: (trace: IOtelTrace | undefined) => Hyperlink[] = memoize(10)((
-  trace: IOtelTrace | undefined
-) => {
-  const result: Hyperlink[] = [];
-  if (!trace) return result;
+export const getTraceLinks: (trace: IOtelTrace) => Hyperlink[] = memoize(10)((trace: IOtelTrace) => {
   return computeTraceLink(processedLinks, trace);
 });
 
