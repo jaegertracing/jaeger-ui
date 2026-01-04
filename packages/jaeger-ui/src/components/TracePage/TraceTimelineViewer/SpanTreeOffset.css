@@ -6,6 +6,9 @@ SPDX-License-Identifier: Apache-2.0
 .SpanTreeOffset {
   color: var(--text-primary);
   position: relative;
+  display: flex;
+  align-items: center;
+  height: 28px;
 }
 
 .SpanTreeOffset.is-parent:hover {
@@ -13,29 +16,97 @@ SPDX-License-Identifier: Apache-2.0
   cursor: pointer;
 }
 
+/* Padding for root spans to match indent guide width */
+.SpanTreeOffset--rootPadding {
+  display: inline-block;
+  width: calc(0.5rem + 20px);
+  flex-shrink: 0;
+}
+
 .SpanTreeOffset--indentGuide {
-  /* The size of the indentGuide is based off of the iconWrapper */
-  padding-right: calc(0.5rem + 12px);
+  /* Width to accommodate the box/dot plus spacing */
+  width: calc(0.5rem + 20px);
   height: 100%;
-  border-left: 1px solid transparent;
   display: inline-flex;
+  position: relative;
+  align-items: center;
+  flex-shrink: 0;
 }
 
-.SpanTreeOffset--indentGuide:before {
+/* Vertical line for hierarchy - colored based on service */
+.SpanTreeOffset--indentGuide::after {
   content: '';
-  padding-left: 1px;
-  background-color: var(--border-strong);
+  position: absolute;
+  left: calc(0.25rem + 9.5px);
+  /* Center on 20px box: 0.25rem + (20px / 2) - 0.5px (half of line width) */
+  width: 2px;
+  height: 100%;
+  background-color: currentColor;
 }
 
-.SpanTreeOffset--indentGuide.is-active {
-  border-left-color: var(--border-strongest);
+/* For the last ancestor (immediate parent), only show vertical line in top half */
+.SpanTreeOffset--indentGuide.is-last::after {
+  height: 50%;
+  top: 0;
 }
 
-.SpanTreeOffset--indentGuide.is-active:before {
-  background-color: var(--border-strongest);
+/* For ancestors whose branches have terminated, hide the line completely */
+.SpanTreeOffset--indentGuide.is-terminated::after {
+  display: none;
+}
+
+/* Horizontal line connecting parent to child */
+.SpanTreeOffset--horizontalLine {
+  position: absolute;
+  left: calc(0.25rem + 9.5px);
+  /* Start from vertical line center */
+  width: calc(0.25rem + 10.5px);
+  /* Extend to icon center */
+  height: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: inherit;
 }
 
 .SpanTreeOffset--iconWrapper {
-  position: absolute;
-  right: 0.25rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Center root span box over where vertical line would be  */
+.SpanTreeOffset--iconWrapper.is-root {
+  transform: translateX(-20px);
+  /* Move box left to center on vertical line */
+}
+
+/* Colored box for parent spans - hollow outline */
+.SpanTreeOffset--box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  border: 1px solid;
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Filled box when collapsed */
+.SpanTreeOffset--box.is-collapsed {
+  color: white;
+}
+
+/* Colored dot for leaf spans */
+.SpanTreeOffset--dot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }

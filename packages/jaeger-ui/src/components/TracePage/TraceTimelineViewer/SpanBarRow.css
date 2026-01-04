@@ -80,20 +80,6 @@ SPDX-License-Identifier: Apache-2.0
   text-overflow: ellipsis;
 }
 
-.span-name::before {
-  content: ' ';
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 0;
-  border-left: 4px solid;
-  border-left-color: inherit;
-}
-
-.span-name.is-detail-expanded::before {
-  bottom: 0;
-}
-
 /* This is so the hit area of the span-name extends the rest of the width of the span-name column */
 .span-name::after {
   background: transparent;

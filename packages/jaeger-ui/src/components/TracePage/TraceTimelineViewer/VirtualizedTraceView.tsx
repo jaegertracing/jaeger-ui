@@ -517,6 +517,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           focusSpan={this.focusSpan}
           traceDuration={trace.durationMicros}
           useOtelTerms={useOtelTerms}
+          trace={trace}
         />
       </div>
     );
