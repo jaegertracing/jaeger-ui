@@ -49,7 +49,6 @@ type SpanBarRowProps = {
   focusSpan: (spanID: string) => void;
   traceDuration: number;
   useOtelTerms: boolean;
-  trace: { spanMap: ReadonlyMap<string, IOtelSpan> };
 };
 
 /**
@@ -80,7 +79,6 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   onDetailToggled,
   onChildrenToggled,
   useOtelTerms,
-  trace,
 }) => {
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
@@ -136,7 +134,6 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             span={span}
             onClick={isParent ? _childrenToggle : undefined}
             color={color}
-            spanMap={trace.spanMap}
           />
           <a
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}

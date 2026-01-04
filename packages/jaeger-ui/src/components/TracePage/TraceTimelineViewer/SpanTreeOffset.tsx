@@ -21,14 +21,15 @@ type TDispatchProps = {
   removeHoverIndentGuideId: (spanID: string) => void;
 };
 
-type TProps = TDispatchProps & {
-  childrenVisible?: boolean;
+type TProps = {
+  addHoverIndentGuideId: (spanID: string) => void;
   hoverIndentGuideIds: Set<string>;
+  removeHoverIndentGuideId: (spanID: string) => void;
+  childrenVisible?: boolean;
   onClick?: () => void;
-  span: IOtelSpan;
   showChildrenIcon?: boolean;
+  span: IOtelSpan;
   color: string;
-  spanMap: ReadonlyMap<string, IOtelSpan>;
 };
 
 export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
@@ -40,15 +41,16 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   addHoverIndentGuideId,
   removeHoverIndentGuideId,
   color,
-  spanMap,
 }) => {
-  const ancestorIds = useMemo(() => {
-    const ids = spanAncestorIds(span);
-    // Some traces have multiple root-level spans, this connects them all under one guideline and adds the
-    // necessary padding for the collapse icon on root-level spans.
-    ids.push('root');
-    ids.reverse();
-    return ids;
+  // Build ancestor chain directly from span.parentSpan
+  const ancestors = useMemo(() => {
+    const chain: IOtelSpan[] = [];
+    let current = span.parentSpan;
+    while (current) {
+      chain.unshift(current);
+      current = current.parentSpan;
+    }
+    return chain;
   }, [span]);
 
   /**
@@ -88,14 +90,12 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   const { hasChildren, spanID, childSpans } = span;
   const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
 
-  // Get parent color for horizontal line (last non-root ancestor)
-  const nonRootAncestors = ancestorIds.filter(id => id !== 'root');
-  const parentId = nonRootAncestors[nonRootAncestors.length - 1];
-  const parentSpan = parentId ? spanMap.get(parentId) : null;
+  // Get parent color for horizontal line
+  const parentSpan = span.parentSpan;
   const parentColor = parentSpan ? colorGenerator.getColorByKey(parentSpan.resource.serviceName) : color;
 
-  // Check if this is a root span (no non-root ancestors)
-  const isRootSpan = nonRootAncestors.length === 0;
+  // Check if this is a root span (no parent)
+  const isRootSpan = !parentSpan;
 
   // Check if this span is the last child of its parent
   const isLastChild = parentSpan
@@ -105,56 +105,50 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   return (
     <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
       {isRootSpan && <span className="SpanTreeOffset--rootPadding" />}
-      {ancestorIds
-        .filter(ancestorId => ancestorId !== 'root') // Remove root to eliminate whitespace
-        .map((ancestorId: string, index: number, filteredArray: string[]) => {
-          // Determine the color for this indent guide based on the ancestor
-          const ancestorSpan = spanMap.get(ancestorId);
-          const guideColor = ancestorSpan
-            ? colorGenerator.getColorByKey(ancestorSpan.resource.serviceName)
-            : undefined;
-          const isLastAncestor = index === filteredArray.length - 1;
+      {ancestors.map((ancestor, index) => {
+        // Determine the color for this indent guide based on the ancestor
+        const guideColor = colorGenerator.getColorByKey(ancestor.resource.serviceName);
+        const isLastAncestor = index === ancestors.length - 1;
 
-          // Check if this ancestor is on a "last child" path
-          // For each ancestor, check if all descendants in the chain to this span are last children
-          let isLastInChain = isLastChild; // Start with whether current span is last child
-          if (isLastInChain && index < filteredArray.length - 1) {
-            // For non-immediate ancestors, check if all descendants in the chain are last children
-            for (let i = filteredArray.length - 1; i > index; i--) {
-              const checkSpanId = filteredArray[i];
-              const checkSpan = spanMap.get(checkSpanId);
-              if (checkSpan && checkSpan.parentSpan) {
-                const parentChildren = checkSpan.parentSpan.childSpans;
-                const isLast = parentChildren[parentChildren.length - 1]?.spanID === checkSpanId;
-                if (!isLast) {
-                  isLastInChain = false;
-                  break;
-                }
-              }
-            }
+        // For the immediate parent: check if current span is last child
+        // For non-immediate ancestors: check if the ancestor's branch has terminated
+        // (i.e., the descendant of this ancestor in the chain is the last child of its parent)
+        let shouldTerminate = false;
+
+        if (isLastAncestor) {
+          // For immediate parent, check if current span is last child
+          shouldTerminate = isLastChild;
+        } else {
+          // For non-immediate ancestors, check if their descendant in the chain is the last child
+          // The descendant of this ancestor in the chain is at index + 1
+          const descendantInChain = ancestors[index + 1];
+          if (descendantInChain && descendantInChain.parentSpan) {
+            const parentChildren = descendantInChain.parentSpan.childSpans;
+            shouldTerminate = parentChildren[parentChildren.length - 1]?.spanID === descendantInChain.spanID;
           }
+        }
 
-          return (
-            <span
-              key={ancestorId}
-              className={cx('SpanTreeOffset--indentGuide', {
-                'is-last': isLastAncestor && isLastChild,
-                'is-terminated': !isLastAncestor && isLastInChain,
-              })}
-              style={{
-                color: guideColor,
-              }}
-              data-ancestor-id={ancestorId}
-              data-testid={`indent-guide-${ancestorId}`}
-              onMouseEnter={event => handleMouseEnter(event, ancestorId)}
-              onMouseLeave={event => handleMouseLeave(event, ancestorId)}
-            >
-              {isLastAncestor && (
-                <span className="SpanTreeOffset--horizontalLine" style={{ backgroundColor: parentColor }} />
-              )}
-            </span>
-          );
-        })}
+        return (
+          <span
+            key={ancestor.spanID}
+            className={cx('SpanTreeOffset--indentGuide', {
+              'is-last': isLastAncestor && isLastChild,
+              'is-terminated': !isLastAncestor && shouldTerminate,
+            })}
+            style={{
+              color: guideColor,
+            }}
+            data-ancestor-id={ancestor.spanID}
+            data-testid={`indent-guide-${ancestor.spanID}`}
+            onMouseEnter={event => handleMouseEnter(event, ancestor.spanID)}
+            onMouseLeave={event => handleMouseLeave(event, ancestor.spanID)}
+          >
+            {isLastAncestor && (
+              <span className="SpanTreeOffset--horizontalLine" style={{ backgroundColor: parentColor }} />
+            )}
+          </span>
+        );
+      })}
       {showChildrenIcon && (
         <span
           className={cx('SpanTreeOffset--iconWrapper', {

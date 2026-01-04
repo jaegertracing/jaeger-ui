@@ -39,7 +39,7 @@ SPDX-License-Identifier: Apache-2.0
   position: absolute;
   left: calc(0.25rem + 9.5px);
   /* Center on 20px box: 0.25rem + (20px / 2) - 0.5px (half of line width) */
-  width: 2px;
+  width: 1px;
   height: 100%;
   background-color: currentColor;
 }
@@ -62,7 +62,7 @@ SPDX-License-Identifier: Apache-2.0
   /* Start from vertical line center */
   width: calc(0.25rem + 10.5px);
   /* Extend to icon center */
-  height: 2px;
+  height: 1px;
   top: 50%;
   transform: translateY(-50%);
   background-color: inherit;
