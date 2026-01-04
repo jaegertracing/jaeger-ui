@@ -30,6 +30,17 @@ describe('TraceDiffGraph', () => {
       data: {
         spans: [],
         traceID: 'trace-id-a',
+        asOtelTrace: jest.fn(() => ({
+          spans: [],
+          traceID: 'trace-id-a',
+          spanMap: new Map(),
+          rootSpans: [],
+          durationMicros: 0,
+          startTimeUnixMicros: 0,
+          endTimeUnixMicros: 0,
+          traceName: '',
+          services: [],
+        })),
       },
       error: null,
       id: 'trace-id-a',
@@ -39,6 +50,17 @@ describe('TraceDiffGraph', () => {
       data: {
         spans: [],
         traceID: 'trace-id-b',
+        asOtelTrace: jest.fn(() => ({
+          spans: [],
+          traceID: 'trace-id-b',
+          spanMap: new Map(),
+          rootSpans: [],
+          durationMicros: 0,
+          startTimeUnixMicros: 0,
+          endTimeUnixMicros: 0,
+          traceName: '',
+          services: [],
+        })),
       },
       error: null,
       id: 'trace-id-b',
@@ -167,7 +189,30 @@ describe('TraceDiffGraph', () => {
     };
 
     const matchedTrace = {
-      data: { spans: [span], traceID: 't-id' },
+      data: {
+        spans: [span],
+        traceID: 't-id',
+        asOtelTrace: jest.fn(() => ({
+          spans: [
+            {
+              spanID: 'abc123',
+              name: 'GET /api',
+              resource: { serviceName: 'svc', attributes: [] },
+              attributes: [],
+              events: [],
+              parentSpanID: undefined,
+            },
+          ],
+          traceID: 't-id',
+          spanMap: new Map(),
+          rootSpans: [],
+          durationMicros: 0,
+          startTimeUnixMicros: 0,
+          endTimeUnixMicros: 0,
+          traceName: '',
+          services: [],
+        })),
+      },
       error: null,
       id: 't-id',
       state: fetchedState.DONE,
