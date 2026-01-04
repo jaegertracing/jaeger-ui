@@ -39,14 +39,14 @@ describe('calculateTraceDagEV', () => {
 });
 
 describe('mapFollowsFrom', () => {
-  it('sets followsFrom false if node has CHILD_OF reference and e.to is number', () => {
+  it('sets followsFrom false for blocking spans (CLIENT, SERVER, INTERNAL)', () => {
     const mockEdges = [{ from: 0, to: 0 }];
     const mockNodes = [
       {
         members: [
           {
             span: {
-              parentSpanID: 'parent-id', // OTEL: parentSpanID indicates CHILD_OF
+              kind: 'CLIENT', // Blocking span
             },
           },
         ],
@@ -57,14 +57,14 @@ describe('mapFollowsFrom', () => {
     expect(result[0].followsFrom).toBe(false);
   });
 
-  it('sets followsFrom true if node does NOT have CHILD_OF reference and e.to is number', () => {
+  it('sets followsFrom true for non-blocking CONSUMER spans', () => {
     const mockEdges = [{ from: 0, to: 0 }];
     const mockNodes = [
       {
         members: [
           {
             span: {
-              parentSpanID: undefined, // OTEL: no parentSpanID means FOLLOWS_FROM or root
+              kind: 'CONSUMER', // Non-blocking span (PRODUCER-CONSUMER pair)
             },
           },
         ],
@@ -76,49 +76,44 @@ describe('mapFollowsFrom', () => {
   });
 });
 
-describe('mapFollowsFrom - reference combinations', () => {
+describe('mapFollowsFrom - span kind combinations', () => {
   const testCases = [
     {
-      name: 'only CHILD_OF',
-      parentSpanID: 'parent-id', // OTEL: parentSpanID indicates CHILD_OF
+      name: 'CLIENT span (blocking)',
+      kind: 'CLIENT',
       expected: false,
     },
     {
-      name: 'multiple CHILD_OF',
-      parentSpanID: 'parent-id', // OTEL: still just one parentSpanID
+      name: 'SERVER span (blocking)',
+      kind: 'SERVER',
       expected: false,
     },
     {
-      name: 'only FOLLOWS_FROM',
-      parentSpanID: undefined, // OTEL: no parentSpanID means FOLLOWS_FROM or root
-      expected: true,
-    },
-    {
-      name: 'CHILD_OF followed by FOLLOWS_FROM',
-      parentSpanID: 'parent-id', // OTEL: parentSpanID takes precedence (CHILD_OF)
+      name: 'INTERNAL span (blocking)',
+      kind: 'INTERNAL',
       expected: false,
     },
     {
-      name: 'FOLLOWS_FROM followed by CHILD_OF',
-      parentSpanID: 'parent-id', // OTEL: parentSpanID indicates CHILD_OF
+      name: 'PRODUCER span (blocking)',
+      kind: 'PRODUCER',
       expected: false,
     },
     {
-      name: 'no references at all',
-      parentSpanID: undefined, // OTEL: no parentSpanID (root or no parent)
+      name: 'CONSUMER span (non-blocking)',
+      kind: 'CONSUMER',
       expected: true,
     },
   ];
 
-  testCases.forEach(({ name, parentSpanID, expected }) => {
-    it(`sets followsFrom correctly when ${name}`, () => {
+  testCases.forEach(({ name, kind, expected }) => {
+    it(`sets followsFrom correctly for ${name}`, () => {
       const mockEdges = [{ from: 0, to: 0 }];
       const mockNodes = [
         {
           members: [
             {
               span: {
-                parentSpanID,
+                kind,
               },
             },
           ],

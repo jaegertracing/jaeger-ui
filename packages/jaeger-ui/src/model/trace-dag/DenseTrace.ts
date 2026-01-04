@@ -19,19 +19,17 @@ function convSpans(spans: ReadonlyArray<IOtelSpan>) {
       return { ...accum, [key]: value };
     }, {});
 
-    const parentID: string | null = parentSpanID || null;
-
     const denseSpan = {
       id,
       operation,
-      parentID,
+      parentID: parentSpanID,
       service,
       span,
       attributes,
       children: new Set<string>(),
       skipToChild: false,
     };
-    const parent = parentID && map.get(parentID);
+    const parent = parentSpanID && map.get(parentSpanID);
     if (!parent) {
       // some root spans have a parent ID but it is missing
       roots.add(id);

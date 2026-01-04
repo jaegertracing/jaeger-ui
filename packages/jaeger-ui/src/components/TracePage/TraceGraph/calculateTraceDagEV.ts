@@ -9,7 +9,7 @@ import TraceDag from '../../../model/trace-dag/TraceDag';
 import TDagNode from '../../../model/trace-dag/types/TDagNode';
 import { TDenseSpanMembers } from '../../../model/trace-dag/types';
 import { Trace } from '../../../types/trace';
-import { IOtelSpan, IAttribute } from '../../../types/otel';
+import { IOtelSpan, IAttribute, SpanKind } from '../../../types/otel';
 import { TSumSpan, TEv } from './types';
 
 let parentChildOfMap: Record<string, IOtelSpan[]>;
@@ -30,12 +30,17 @@ export function mapFollowsFrom(
   nodes: TDagNode<TSumSpan & TDenseSpanMembers>[]
 ): TEdge<{ followsFrom: boolean }>[] {
   return edges.map(e => {
-    let hasChildOf = true;
+    // In OTEL model, the blocking nature of child spans is determined by span kind:
+    // - PRODUCER-CONSUMER pairs are non-blocking (followsFrom: true)
+    // - INTERNAL/CLIENT/SERVER spans are blocking (followsFrom: false)
+    let followsFrom = false;
     if (typeof e.to === 'number') {
       const node = nodes[e.to];
-      hasChildOf = node.members.some(m => m.span.parentSpanID !== undefined);
+      // A node represents a non-blocking relationship if any of its members are CONSUMER spans
+      // (which implies a PRODUCER-CONSUMER pair in the parent-child relationship)
+      followsFrom = node.members.some(m => m.span.kind === 'CONSUMER');
     }
-    return { ...e, followsFrom: !hasChildOf };
+    return { ...e, followsFrom };
   });
 }
 
