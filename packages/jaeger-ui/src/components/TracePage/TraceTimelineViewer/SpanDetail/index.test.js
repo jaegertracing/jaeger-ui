@@ -136,7 +136,7 @@ describe('<SpanDetail>', () => {
         traceID: 'trace1',
       },
       {
-        refType: 'FOLLOWS_FROM',
+        refType: 'CHILD_OF',
         span: {
           spanID: 'span3',
           traceID: 'trace1',

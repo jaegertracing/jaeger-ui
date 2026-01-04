@@ -46,10 +46,10 @@ export default class OtelSpanFacade implements IOtelSpan {
     // 2. Otherwise, earliest FOLLOWS_FROM reference with the same traceID
     // 3. If no reference with same traceID exists, parent is undefined
     const { references, traceID } = this.legacySpan;
-    this._parentSpanID = (
+    const parentSpanRef =
       references.find(r => r.traceID === traceID && r.refType === 'CHILD_OF') ??
-      references.find(r => r.traceID === traceID && r.refType === 'FOLLOWS_FROM')
-    )?.spanID;
+      references.find(r => r.traceID === traceID && r.refType === 'FOLLOWS_FROM');
+    this._parentSpanID = parentSpanRef?.spanID;
 
     this._attributes = OtelSpanFacade.toOtelAttributes(this.legacySpan.tags);
 
@@ -60,7 +60,7 @@ export default class OtelSpanFacade implements IOtelSpan {
     }));
 
     this._links = this.legacySpan.references
-      .filter(ref => ref.refType !== 'CHILD_OF')
+      .filter(ref => ref !== parentSpanRef)
       .map(ref => ({
         traceID: ref.traceID,
         spanID: ref.spanID,
