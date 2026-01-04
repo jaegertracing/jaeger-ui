@@ -3,7 +3,6 @@
 
 import memoizeOne from 'memoize-one';
 import { IOtelTrace, IOtelSpan } from '../../../types/otel';
-import { Microseconds } from '../../../types/units';
 import { ITableSpan } from './types';
 import colorGenerator from '../../../utils/color-generator';
 
@@ -27,7 +26,7 @@ function getChildOfSpans(parentID: string, allSpans: ReadonlyArray<IOtelSpan>): 
   return memoizedParentChildOfMap(allSpans)[parentID] || [];
 }
 
-function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpan>): Microseconds {
+function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpan>): IOtelSpan['duration'] {
   if (!parentSpan.hasChildren) return parentSpan.duration;
 
   let parentSpanSelfTime = parentSpan.duration;
@@ -60,7 +59,7 @@ function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpa
     const childEndTimeOrParentEndTime = Math.min(parentSpanEndTime, childEndTime);
 
     const nonOverlappingDuration = childEndTimeOrParentEndTime - nonOverlappingStartTime;
-    parentSpanSelfTime = (parentSpanSelfTime - nonOverlappingDuration) as Microseconds;
+    parentSpanSelfTime = (parentSpanSelfTime - nonOverlappingDuration) as IOtelSpan['duration'];
 
     // last span which can be included in self time calculation, because it ends after parent span ends
     // parent |.......................|
@@ -70,7 +69,7 @@ function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpa
       break;
     }
 
-    previousChildEndTime = childEndTime as Microseconds;
+    previousChildEndTime = childEndTime as IOtelSpan['duration'];
   }
 
   return parentSpanSelfTime;
@@ -84,7 +83,7 @@ function computeColumnValues(
 ) {
   const resultValueChange = resultValue;
   resultValueChange.count += 1;
-  resultValueChange.total = (resultValueChange.total + span.duration) as Microseconds;
+  resultValueChange.total = (resultValueChange.total + span.duration) as IOtelSpan['duration'];
   if (resultValueChange.min > span.duration) {
     resultValueChange.min = span.duration;
   }
@@ -99,7 +98,7 @@ function computeColumnValues(
   if (resultValueChange.selfMax < tempSelf) {
     resultValueChange.selfMax = tempSelf;
   }
-  resultValueChange.selfTotal = (resultValueChange.selfTotal + tempSelf) as Microseconds;
+  resultValueChange.selfTotal = (resultValueChange.selfTotal + tempSelf) as IOtelSpan['duration'];
 
   const onePercent = 100 / trace.duration;
   resultValueChange.percent = resultValueChange.selfTotal * onePercent;
@@ -112,42 +111,46 @@ function computeColumnValues(
  */
 function buildOneColumn(oneColumn: ITableSpan) {
   const oneColumnChange = oneColumn;
-  oneColumnChange.total = (Math.round((oneColumnChange.total / 1000) * 100) / 100) as Microseconds;
-  oneColumnChange.avg = (Math.round((oneColumnChange.avg / 1000) * 100) / 100) as Microseconds;
-  oneColumnChange.min = (Math.round((oneColumnChange.min / 1000) * 100) / 100) as Microseconds;
-  oneColumnChange.max = (Math.round((oneColumnChange.max / 1000) * 100) / 100) as Microseconds;
-  oneColumnChange.selfTotal = (Math.round((oneColumnChange.selfTotal / 1000) * 100) / 100) as Microseconds;
-  oneColumnChange.selfAvg = (Math.round((oneColumnChange.selfAvg / 1000) * 100) / 100) as Microseconds;
-  oneColumnChange.selfMin = (Math.round((oneColumnChange.selfMin / 1000) * 100) / 100) as Microseconds;
-  oneColumnChange.selfMax = (Math.round((oneColumnChange.selfMax / 1000) * 100) / 100) as Microseconds;
+  oneColumnChange.total = (Math.round((oneColumnChange.total / 1000) * 100) / 100) as IOtelSpan['duration'];
+  oneColumnChange.avg = (Math.round((oneColumnChange.avg / 1000) * 100) / 100) as IOtelSpan['duration'];
+  oneColumnChange.min = (Math.round((oneColumnChange.min / 1000) * 100) / 100) as IOtelSpan['duration'];
+  oneColumnChange.max = (Math.round((oneColumnChange.max / 1000) * 100) / 100) as IOtelSpan['duration'];
+  oneColumnChange.selfTotal = (Math.round((oneColumnChange.selfTotal / 1000) * 100) /
+    100) as IOtelSpan['duration'];
+  oneColumnChange.selfAvg = (Math.round((oneColumnChange.selfAvg / 1000) * 100) /
+    100) as IOtelSpan['duration'];
+  oneColumnChange.selfMin = (Math.round((oneColumnChange.selfMin / 1000) * 100) /
+    100) as IOtelSpan['duration'];
+  oneColumnChange.selfMax = (Math.round((oneColumnChange.selfMax / 1000) * 100) /
+    100) as IOtelSpan['duration'];
   oneColumnChange.percent = Math.round((oneColumnChange.percent / 1) * 100) / 100;
   // oneColumnChange.colorToPercent;
   return oneColumnChange;
 }
 
 type StatsPerTag = {
-  selfTotal: Microseconds;
-  selfMin: Microseconds;
-  selfMax: Microseconds;
-  selfAvg: Microseconds;
-  total: Microseconds;
-  avg: Microseconds;
-  min: Microseconds;
-  max: Microseconds;
+  selfTotal: IOtelSpan['duration'];
+  selfMin: IOtelSpan['duration'];
+  selfMax: IOtelSpan['duration'];
+  selfAvg: IOtelSpan['duration'];
+  total: IOtelSpan['duration'];
+  avg: IOtelSpan['duration'];
+  min: IOtelSpan['duration'];
+  max: IOtelSpan['duration'];
   count: number;
   percent: number;
 };
 
 function getDefaultStatsValue(trace: IOtelTrace): StatsPerTag {
   return {
-    selfTotal: 0 as Microseconds,
-    selfMin: trace.duration,
-    selfMax: 0 as Microseconds,
-    selfAvg: 0 as Microseconds,
-    total: 0 as Microseconds,
-    avg: 0 as Microseconds,
-    min: trace.duration,
-    max: 0 as Microseconds,
+    selfTotal: 0 as IOtelSpan['duration'],
+    selfMin: trace.duration as IOtelSpan['duration'],
+    selfMax: 0 as IOtelSpan['duration'],
+    selfAvg: 0 as IOtelSpan['duration'],
+    total: 0 as IOtelSpan['duration'],
+    avg: 0 as IOtelSpan['duration'],
+    min: trace.duration as IOtelSpan['duration'],
+    max: 0 as IOtelSpan['duration'],
     count: 0,
     percent: 0,
   };
@@ -210,8 +213,8 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
       color = colorGenerator.getColorByKey(attributeValue);
     }
 
-    resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as Microseconds;
-    resultValue.avg = (resultValue.total / resultValue.count) as Microseconds;
+    resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as IOtelSpan['duration'];
+    resultValue.avg = (resultValue.total / resultValue.count) as IOtelSpan['duration'];
     let tableSpan: ITableSpan = {
       hasSubgroupValue: true,
       name: attributeValue,
@@ -251,8 +254,8 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
     }
     if (resultValue.count !== 0) {
       // Others is build
-      resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as Microseconds;
-      resultValue.avg = (resultValue.total / resultValue.count) as Microseconds;
+      resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as IOtelSpan['duration'];
+      resultValue.avg = (resultValue.total / resultValue.count) as IOtelSpan['duration'];
       let tableSpanOTHERS: ITableSpan = {
         hasSubgroupValue: false,
         name: `Without Attribute: ${selectedAttributeKey}`,
@@ -320,8 +323,8 @@ function buildDetail(
       color = colorGenerator.getColorByKey(attributeValue);
     }
 
-    resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as Microseconds;
-    resultValue.avg = (resultValue.total / resultValue.count) as Microseconds;
+    resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as IOtelSpan['duration'];
+    resultValue.avg = (resultValue.total / resultValue.count) as IOtelSpan['duration'];
     let buildOneColumnValue: ITableSpan = {
       hasSubgroupValue: true,
       name: attributeValue,
@@ -380,8 +383,8 @@ function generateDetailRest(
           }
         }
       }
-      resultValue.avg = (resultValue.total / resultValue.count) as Microseconds;
-      resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as Microseconds;
+      resultValue.avg = (resultValue.total / resultValue.count) as IOtelSpan['duration'];
+      resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as IOtelSpan['duration'];
       if (resultValue.count !== 0) {
         let buildOneColumnValue: ITableSpan = {
           hasSubgroupValue: false,

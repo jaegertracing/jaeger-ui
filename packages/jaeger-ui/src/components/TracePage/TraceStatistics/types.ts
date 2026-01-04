@@ -1,20 +1,20 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Microseconds } from '../../../types/units';
+import { IOtelSpan } from '../../../types/otel';
 
 export interface ITableSpan {
   hasSubgroupValue: boolean; // True when the entry has the subgroup attribute in it.
   name: string;
   count: number;
-  total: Microseconds;
-  avg: Microseconds;
-  min: Microseconds;
-  max: Microseconds;
-  selfTotal: Microseconds;
-  selfAvg: Microseconds;
-  selfMin: Microseconds;
-  selfMax: Microseconds;
+  total: IOtelSpan['duration'];
+  avg: IOtelSpan['duration'];
+  min: IOtelSpan['duration'];
+  max: IOtelSpan['duration'];
+  selfTotal: IOtelSpan['duration'];
+  selfAvg: IOtelSpan['duration'];
+  selfMin: IOtelSpan['duration'];
+  selfMax: IOtelSpan['duration'];
   percent: number;
   isDetail: boolean; // True when the entry represents a subgroup aggregation.
   parentElement: string;
