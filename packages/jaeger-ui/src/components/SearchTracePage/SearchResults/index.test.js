@@ -93,6 +93,8 @@ const baseTraces = [
     services: [],
     spanMap: new Map(),
     rootSpans: [],
+    orphanSpanCount: 0,
+    hasErrors: () => false,
   },
   {
     traceID: 'b',
@@ -104,6 +106,8 @@ const baseTraces = [
     services: [],
     spanMap: new Map(),
     rootSpans: [],
+    orphanSpanCount: 0,
+    hasErrors: () => false,
   },
 ];
 const baseProps = {
@@ -202,6 +206,8 @@ describe('<SearchResults>', () => {
         services: [],
         spanMap: new Map(),
         rootSpans: [],
+        orphanSpanCount: 0,
+        hasErrors: () => true,
         spans: [
           {
             status: { code: StatusCode.ERROR },
@@ -248,12 +254,13 @@ describe('<SearchResults>', () => {
             spanMap: new Map(),
             rootSpans: [],
             spans: [],
+            orphanSpanCount: 0,
+            hasErrors: () => false,
           },
         ]}
       />
     );
     const data = ScatterPlot.mock.calls[0][0].data[0];
-    expect(data.rootSpanName).toBe('Unknown');
     expect(data.services).toEqual([]);
   });
 
@@ -271,6 +278,8 @@ describe('<SearchResults>', () => {
             services: [],
             spanMap: new Map(),
             rootSpans: [],
+            orphanSpanCount: 0,
+            hasErrors: () => false,
             spans: [
               {
                 resource: { serviceName: 'test-service', attributes: [] },
@@ -287,7 +296,6 @@ describe('<SearchResults>', () => {
     );
     const data = ScatterPlot.mock.calls[0][0].data[0];
     expect(data.services).toEqual([]);
-    expect(data.rootSpanName).toBe('test-operation');
   });
 
   describe('search finished with results', () => {
@@ -329,6 +337,8 @@ describe('<SearchResults>', () => {
           services: [],
           spanMap: new Map(),
           rootSpans: [],
+          orphanSpanCount: 0,
+          hasErrors: () => false,
         },
         {
           traceID: `000${traceID1}`,
@@ -340,6 +350,8 @@ describe('<SearchResults>', () => {
           services: [],
           spanMap: new Map(),
           rootSpans: [],
+          orphanSpanCount: 0,
+          hasErrors: () => false,
         },
       ];
       renderWithRouter(<SearchResults {...baseProps} traces={zeroIDTraces} spanLinks={spanLinks} />);

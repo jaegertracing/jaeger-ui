@@ -51,12 +51,8 @@ export default function ResultItem({
     traceName,
     traceID,
     spans,
+    orphanSpanCount,
   } = trace;
-
-  // Calculate orphan span count from OTEL spans
-  // A span is orphaned if it has a parentSpanID but the parent is not in the trace
-  const spanIDs = new Set(spans.map(s => s.spanID));
-  const orphanSpanCount = spans.filter(s => s.parentSpanID && !spanIDs.has(s.parentSpanID)).length;
 
   // Initialize state values
   const [erroredServices, setErroredServices] = React.useState<Set<string>>(new Set());

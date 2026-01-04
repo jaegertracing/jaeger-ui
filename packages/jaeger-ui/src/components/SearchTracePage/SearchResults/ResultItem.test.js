@@ -17,7 +17,6 @@ const renderWithRouter = ui => {
   return render(ui, { wrapper: MemoryRouter });
 };
 
-let trace; // Use let to allow modification in tests
 let otelTrace; // OTEL facade of trace
 
 beforeEach(() => {
@@ -25,7 +24,7 @@ beforeEach(() => {
   // Some tests modify the trace object (e.g., adding tags).
   // Resetting ensures that each test starts with a clean, unmodified trace,
   // preventing side effects between tests and maintaining test isolation.
-  trace = transformTraceData(traceGenerator.trace({}));
+  const trace = transformTraceData(traceGenerator.trace({}));
   otelTrace = trace.asOtelTrace();
 });
 
@@ -69,6 +68,9 @@ it('<ResultItem /> should not render any ServiceTags when there are no services'
 });
 
 it('<ResultItem /> should render error icon on ServiceTags that have an error tag', () => {
+  // Create a new trace for this test that we can modify
+  const trace = transformTraceData(traceGenerator.trace({}));
+
   // Assume trace has services and spans from the generator. Assert this assumption.
   expect(trace.services).toBeDefined();
   expect(trace.services.length).toBeGreaterThan(0);

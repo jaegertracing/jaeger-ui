@@ -179,35 +179,14 @@ export function UnconnectedSearchResults({
           <div className="ub-p3 SearchResults--headerScatterPlot">
             <ScatterPlot
               data={traces.map(t => {
-                // Get root span name from OTEL trace
-                // Use the first root span, or the span with fewest links and earliest start time
-                let rootSpan = t.rootSpans.length > 0 ? t.rootSpans[0] : null;
-                if (!rootSpan && t.spans.length > 0) {
-                  // Fallback: find span with no parent or fewest links
-                  rootSpan = t.spans.reduce((candidate, span) => {
-                    if (!candidate) return span;
-                    const candidateLinks = candidate.links.length;
-                    const spanLinks = span.links.length;
-                    if (
-                      spanLinks < candidateLinks ||
-                      (spanLinks === candidateLinks &&
-                        span.startTimeUnixMicros < candidate.startTimeUnixMicros)
-                    ) {
-                      return span;
-                    }
-                    return candidate;
-                  });
-                }
-
                 return {
                   x: t.startTimeUnixMicros,
                   y: t.durationMicros,
                   traceID: t.traceID,
                   size: t.spans.length,
                   name: t.traceName,
-                  color: t.spans.some(sp => sp.status.code === StatusCode.ERROR) ? 'red' : '#12939A',
+                  color: t.hasErrors() ? 'red' : '#12939A',
                   services: t.services || [],
-                  rootSpanName: rootSpan?.name || 'Unknown',
                 };
               })}
               onValueClick={(t: IOtelTrace) => {
