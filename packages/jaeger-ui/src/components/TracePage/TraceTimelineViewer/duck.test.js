@@ -96,9 +96,7 @@ describe('TraceTimelineViewer/duck', () => {
       expect(uiFindAncestorIdsSet.size).toBe(8);
 
       trace.spans.forEach(({ spanID }) => {
-        const isMatch = uiFindMatches.has(spanID);
-        const isAncestor = uiFindAncestorIdsSet.has(spanID);
-        expect(state.childrenHiddenIDs.has(spanID)).toBe(!isMatch && !isAncestor);
+        expect(state.childrenHiddenIDs.has(spanID)).toBe(!uiFindAncestorIdsSet.has(spanID));
       });
     });
 

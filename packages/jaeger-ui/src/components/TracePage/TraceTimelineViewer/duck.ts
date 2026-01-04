@@ -111,7 +111,6 @@ function calculateFocusedFindRowStates(uiFind: string, spans: ReadonlyArray<IOte
     matchedSpanIds.forEach(spanID => {
       const span = spansMap.get(spanID);
       detailStates.set(spanID, new DetailState());
-      childrenHiddenIDs.delete(spanID);
       spanAncestorIds(span).forEach(ancestorID => childrenHiddenIDs.delete(ancestorID));
     });
     shouldScrollToFirstUiFindMatch = true;
