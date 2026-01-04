@@ -46,7 +46,7 @@ describe('mapFollowsFrom', () => {
         members: [
           {
             span: {
-              references: [{ refType: 'CHILD_OF' }],
+              parentSpanID: 'parent-id', // OTEL: parentSpanID indicates CHILD_OF
             },
           },
         ],
@@ -64,7 +64,7 @@ describe('mapFollowsFrom', () => {
         members: [
           {
             span: {
-              references: [{ refType: 'FOLLOWS_FROM' }],
+              parentSpanID: undefined, // OTEL: no parentSpanID means FOLLOWS_FROM or root
             },
           },
         ],
@@ -80,37 +80,37 @@ describe('mapFollowsFrom - reference combinations', () => {
   const testCases = [
     {
       name: 'only CHILD_OF',
-      references: [{ refType: 'CHILD_OF' }],
+      parentSpanID: 'parent-id', // OTEL: parentSpanID indicates CHILD_OF
       expected: false,
     },
     {
       name: 'multiple CHILD_OF',
-      references: [{ refType: 'CHILD_OF' }, { refType: 'CHILD_OF' }],
+      parentSpanID: 'parent-id', // OTEL: still just one parentSpanID
       expected: false,
     },
     {
       name: 'only FOLLOWS_FROM',
-      references: [{ refType: 'FOLLOWS_FROM' }],
+      parentSpanID: undefined, // OTEL: no parentSpanID means FOLLOWS_FROM or root
       expected: true,
     },
     {
       name: 'CHILD_OF followed by FOLLOWS_FROM',
-      references: [{ refType: 'CHILD_OF' }, { refType: 'FOLLOWS_FROM' }],
+      parentSpanID: 'parent-id', // OTEL: parentSpanID takes precedence (CHILD_OF)
       expected: false,
     },
     {
       name: 'FOLLOWS_FROM followed by CHILD_OF',
-      references: [{ refType: 'FOLLOWS_FROM' }, { refType: 'CHILD_OF' }],
+      parentSpanID: 'parent-id', // OTEL: parentSpanID indicates CHILD_OF
       expected: false,
     },
     {
       name: 'no references at all',
-      references: [],
+      parentSpanID: undefined, // OTEL: no parentSpanID (root or no parent)
       expected: true,
     },
   ];
 
-  testCases.forEach(({ name, references, expected }) => {
+  testCases.forEach(({ name, parentSpanID, expected }) => {
     it(`sets followsFrom correctly when ${name}`, () => {
       const mockEdges = [{ from: 0, to: 0 }];
       const mockNodes = [
@@ -118,7 +118,7 @@ describe('mapFollowsFrom - reference combinations', () => {
           members: [
             {
               span: {
-                references,
+                parentSpanID,
               },
             },
           ],
