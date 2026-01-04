@@ -10,6 +10,7 @@ export default class OtelTraceFacade implements IOtelTrace {
   private _spans: IOtelSpan[];
   private _spanMap: Map<string, IOtelSpan>;
   private _rootSpans: IOtelSpan[];
+  private _orphanSpanCount: number;
 
   constructor(legacyTrace: Trace) {
     this.legacyTrace = legacyTrace;
@@ -29,6 +30,12 @@ export default class OtelTraceFacade implements IOtelTrace {
       if (!otelSpan) throw new Error(`Root span ${s.spanID} not found in spanMap`);
       return otelSpan;
     });
+
+    // Calculate orphan span count
+    // A span is orphaned if it has a parentSpanID but the parent is not in the trace
+    this._orphanSpanCount = this._spans.filter(
+      s => s.parentSpanID && !this._spanMap.has(s.parentSpanID)
+    ).length;
 
     // Wire up parentSpan, childSpans, and link span references
     this._spans.forEach(span => {
@@ -91,5 +98,13 @@ export default class OtelTraceFacade implements IOtelTrace {
 
   get services(): ReadonlyArray<{ name: string; numberOfSpans: number }> {
     return this.legacyTrace.services;
+  }
+
+  get orphanSpanCount(): number {
+    return this._orphanSpanCount;
+  }
+
+  hasErrors(): boolean {
+    return this._spans.some(sp => sp.status.code === 'ERROR');
   }
 }

@@ -24,12 +24,12 @@ import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getLocation } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
-import { getTracePageHeaderParts } from '../../../model/trace-viewer';
 import { stripEmbeddedState } from '../../../utils/embedded-url';
 
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
-import { KeyValuePair, Trace, TraceData } from '../../../types/trace';
+import { TraceData } from '../../../types/trace';
+import { IOtelTrace, StatusCode } from '../../../types/otel';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -49,7 +49,7 @@ type SearchResultsProps = {
   showStandaloneLink: boolean;
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
-  traces: Trace[];
+  traces: IOtelTrace[];
   rawTraces: TraceData[];
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
@@ -172,8 +172,6 @@ export function UnconnectedSearchResults({
   }
   const cohortIds = new Set(diffCohort.map(datum => datum.id));
   const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
-  const isErrorTag = ({ key, value }: KeyValuePair<string | boolean>) =>
-    key === 'error' && (value === true || value === 'true');
   return (
     <div className="SearchResults">
       <div className="SearchResults--header">
@@ -181,19 +179,17 @@ export function UnconnectedSearchResults({
           <div className="ub-p3 SearchResults--headerScatterPlot">
             <ScatterPlot
               data={traces.map(t => {
-                const rootSpanInfo = t.spans && t.spans.length > 0 ? getTracePageHeaderParts(t.spans) : null;
                 return {
-                  x: t.startTime,
-                  y: t.duration,
+                  x: t.startTimeUnixMicros,
+                  y: t.durationMicros,
                   traceID: t.traceID,
                   size: t.spans.length,
                   name: t.traceName,
-                  color: t.spans.some(sp => sp.tags.some(isErrorTag)) ? 'red' : '#12939A',
+                  color: t.hasErrors() ? 'red' : '#12939A',
                   services: t.services || [],
-                  rootSpanName: rootSpanInfo?.operationName || 'Unknown',
                 };
               })}
-              onValueClick={(t: Trace) => {
+              onValueClick={(t: IOtelTrace) => {
                 goToTrace(t.traceID);
               }}
             />
@@ -229,7 +225,7 @@ export function UnconnectedSearchResults({
           {traces.map(trace => (
             <li className="ub-my3" key={trace.traceID}>
               <ResultItem
-                durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
+                durationPercent={getPercentageOfDuration(trace.durationMicros, maxTraceDuration)}
                 isInDiffCohort={cohortIds.has(trace.traceID)}
                 linkTo={getLocation(
                   trace.traceID,

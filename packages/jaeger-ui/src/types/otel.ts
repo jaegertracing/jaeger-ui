@@ -109,4 +109,10 @@ export interface IOtelTrace {
   // Optimized data structures - created once during trace transformation
   spanMap: ReadonlyMap<string, IOtelSpan>;
   rootSpans: ReadonlyArray<IOtelSpan>;
+
+  // Number of orphan spans (spans with parent references to spans not in the trace)
+  orphanSpanCount: number;
+
+  // Helper methods
+  hasErrors(): boolean;
 }
