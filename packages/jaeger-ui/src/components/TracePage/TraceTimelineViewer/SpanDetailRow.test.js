@@ -24,26 +24,6 @@ jest.mock('./SpanTreeOffset', () => ({
 
 describe('<SpanDetailRow>', () => {
   const spanID = 'some-id';
-  const legacySpan = {
-    spanID,
-    traceID: 'trace-id',
-    processID: 'p1',
-    operationName: 'op-name',
-    startTime: 1000,
-    duration: 100,
-    depth: 3,
-    relativeStartTime: 0,
-    hasChildren: false,
-    tags: [],
-    logs: [],
-    references: [],
-    warnings: null,
-    subsidiarilyReferencedBy: [],
-    process: {
-      serviceName: 'service',
-      tags: [],
-    },
-  };
   const span = {
     spanID: spanID,
     traceId: 'trace-id',
@@ -70,12 +50,12 @@ describe('<SpanDetailRow>', () => {
     linksToggle: jest.fn(),
     warningsToggle: jest.fn(),
     span,
-    legacySpan,
     attributesToggle: jest.fn(),
     traceStartTime: 1000,
     focusSpan: jest.fn(),
     currentViewRangeTime: [0, 100],
     traceDuration: 1000,
+    useOtelTerms: false,
   };
 
   beforeEach(() => {
@@ -112,7 +92,7 @@ describe('<SpanDetailRow>', () => {
     expect(MockSpanTreeOffset).toHaveBeenCalledTimes(1);
     expect(MockSpanTreeOffset).toHaveBeenCalledWith(
       expect.objectContaining({
-        span: props.legacySpan,
+        span: props.span,
       })
     );
   });

@@ -6,7 +6,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import { mapDispatchToProps, mapStateToProps, UnconnectedSpanTreeOffset } from './SpanTreeOffset';
-import spanAncestorIdsSpy from '../../../utils/span-ancestor-ids';
+import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
 jest.mock('../../../utils/span-ancestor-ids');
 
@@ -18,7 +18,7 @@ describe('SpanTreeOffset', () => {
   let props;
 
   beforeEach(() => {
-    spanAncestorIdsSpy.mockImplementation(() => [parentSpanID, rootSpanID]);
+    spanAncestorIds.mockImplementation(() => [parentSpanID, rootSpanID]);
     props = {
       addHoverIndentGuideId: jest.fn(),
       hoverIndentGuideIds: new Set(),
@@ -32,7 +32,7 @@ describe('SpanTreeOffset', () => {
 
   describe('.SpanTreeOffset--indentGuide', () => {
     it('renders only one .SpanTreeOffset--indentGuide for entire trace if span has no ancestors', () => {
-      spanAncestorIdsSpy.mockReturnValue([]);
+      spanAncestorIds.mockReturnValue([]);
       const { container } = render(<UnconnectedSpanTreeOffset {...props} />);
       const indentGuides = container.querySelectorAll('.SpanTreeOffset--indentGuide');
       expect(indentGuides.length).toBe(1);
@@ -114,13 +114,13 @@ describe('SpanTreeOffset', () => {
       renderResult = render(<UnconnectedSpanTreeOffset {...updatedProps} />);
     });
 
-    it('does not render icon if props.span.hasChildren is false', () => {
+    it('does not render icon if props.otelSpan.hasChildren is false', () => {
       const propsWithoutChildren = { ...props, span: { ...props.span, hasChildren: false } };
       const { container } = render(<UnconnectedSpanTreeOffset {...propsWithoutChildren} />);
       expect(container.querySelector('svg')).toBeNull();
     });
 
-    it('does not render icon if props.span.hasChildren is true and showChildrenIcon is false', () => {
+    it('does not render icon if props.otelSpan.hasChildren is true and showChildrenIcon is false', () => {
       const propsWithIconDisabled = {
         ...props,
         span: { ...props.span, hasChildren: true },
@@ -130,12 +130,12 @@ describe('SpanTreeOffset', () => {
       expect(container.querySelector('svg')).toBeNull();
     });
 
-    it('renders IoChevronRight if props.span.hasChildren is true and props.childrenVisible is false', () => {
+    it('renders IoChevronRight if props.otelSpan.hasChildren is true and props.childrenVisible is false', () => {
       const { container } = renderResult;
       expect(container.querySelector('svg')).not.toBeNull();
     });
 
-    it('renders IoIosArrowDown if props.span.hasChildren is true and props.childrenVisible is true', () => {
+    it('renders IoIosArrowDown if props.otelSpan.hasChildren is true and props.childrenVisible is true', () => {
       const propsWithVisibleChildren = {
         ...props,
         span: { ...props.span, hasChildren: true },

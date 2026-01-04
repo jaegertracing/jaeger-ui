@@ -19,12 +19,12 @@ import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 import {
   createViewedBoundsFunc,
+  ViewedBoundsFunctionType,
   findServerChildSpan,
   isErrorSpan,
   isKindClient,
   isKindProducer,
   spanContainsErredSpan,
-  ViewedBoundsFunctionType,
 } from './utils';
 import { Accessors } from '../ScrollManager';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
@@ -42,7 +42,6 @@ import withRouteProps from '../../../utils/withRouteProps';
 
 type RowState = {
   isDetail: boolean;
-  legacySpan: Span;
   span: IOtelSpan;
   spanIndex: number;
 };
@@ -93,19 +92,18 @@ export const DEFAULT_HEIGHTS = {
 const NUM_TICKS = 5;
 
 function generateRowStates(
-  spans: ReadonlyArray<Span> | TNil,
-  otelSpans: ReadonlyArray<IOtelSpan> | TNil,
+  spans: ReadonlyArray<IOtelSpan> | TNil,
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>
 ): RowState[] {
-  if (!spans || !otelSpans) {
+  if (!spans) {
     return [];
   }
   let collapseDepth = null;
   const rowStates = [];
   for (let i = 0; i < spans.length; i++) {
-    const legacySpan = spans[i];
-    const { spanID, depth } = legacySpan;
+    const span = spans[i];
+    const { spanID, depth } = span;
     let hidden = false;
     if (collapseDepth != null) {
       if (depth >= collapseDepth) {
@@ -120,16 +118,13 @@ function generateRowStates(
     if (childrenHiddenIDs.has(spanID)) {
       collapseDepth = depth + 1;
     }
-    const span = otelSpans[i];
     rowStates.push({
-      legacySpan,
       span,
       isDetail: false,
       spanIndex: i,
     });
     if (detailStates.has(spanID)) {
       rowStates.push({
-        legacySpan,
         span,
         isDetail: true,
         spanIndex: i,
@@ -147,8 +142,7 @@ function generateRowStatesFromTrace(
   if (!trace) {
     return [];
   }
-  const otelTrace = trace.asOtelTrace();
-  return generateRowStates(trace.spans, otelTrace.spans, childrenHiddenIDs, detailStates);
+  return generateRowStates(trace.asOtelTrace().spans, childrenHiddenIDs, detailStates);
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -406,15 +400,19 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   };
 
   // Adapter for OTEL components that need links from attributes
-  linksGetterFromAttributes =
-    (legacySpan: Span) => (attributes: ReadonlyArray<IAttribute>, index: number) => {
-      // Convert IAttribute[] to KeyValuePair[] for legacy getLinks function
-      const keyValuePairs: KeyValuePair[] = attributes.map(attr => ({
-        key: attr.key,
-        value: String(attr.value), // Convert AttributeValue to string
-      }));
-      return this.linksGetter(legacySpan, keyValuePairs, index);
-    };
+  linksGetterFromAttributes = (span: IOtelSpan) => (attributes: ReadonlyArray<IAttribute>, index: number) => {
+    // Convert IAttribute[] to KeyValuePair[] for legacy getLinks function
+    const keyValuePairs: KeyValuePair[] = attributes.map(attr => ({
+      key: attr.key,
+      value: String(attr.value), // Convert AttributeValue to string
+    }));
+    // Get legacy span from OtelSpanFacade for link generation
+    const legacySpan = (span as any).getLegacySpan ? (span as any).getLegacySpan() : null;
+    if (!legacySpan) {
+      return [];
+    }
+    return this.linksGetter(legacySpan, keyValuePairs, index);
+  };
 
   // Adapter for OTEL event toggle to legacy log toggle
   eventItemToggleAdapter =
@@ -424,10 +422,10 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     };
 
   renderRow = (key: string, style: React.CSSProperties, index: number, attrs: object) => {
-    const { isDetail, legacySpan, span, spanIndex } = this.getRowStates()[index];
+    const { isDetail, span, spanIndex } = this.getRowStates()[index];
     return isDetail
-      ? this.renderSpanDetailRow(legacySpan, span, key, style, attrs)
-      : this.renderSpanBarRow(legacySpan, span, spanIndex, key, style, attrs);
+      ? this.renderSpanDetailRow(span, key, style, attrs)
+      : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
   };
 
   getCriticalPathSections(
@@ -445,15 +443,14 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   }
 
   renderSpanBarRow(
-    legacySpan: Span,
     span: IOtelSpan,
     spanIndex: number,
     key: string,
     style: React.CSSProperties,
     attrs: object
   ) {
-    const { spanID } = legacySpan;
-    const { serviceName } = legacySpan.process;
+    const { spanID } = span;
+    const { serviceName } = span.resource;
     const {
       childrenHiddenIDs,
       childrenToggle,
@@ -470,40 +467,40 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       return null;
     }
 
+    const spans = trace.asOtelTrace().spans;
+
     const color = colorGenerator.getColorByKey(serviceName);
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
-    const showErrorIcon =
-      isErrorSpan(legacySpan) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
+    const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(spans, spanIndex));
     const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
-      const rpcSpan = findServerChildSpan(trace.spans.slice(spanIndex));
+      const rpcSpan = findServerChildSpan(spans.slice(spanIndex));
       if (rpcSpan) {
-        const rpcViewBounds = this.getViewedBounds()(rpcSpan.startTime, rpcSpan.startTime + rpcSpan.duration);
+        const rpcViewBounds = this.getViewedBounds()(
+          rpcSpan.startTimeUnixMicros,
+          rpcSpan.startTimeUnixMicros + rpcSpan.durationMicros
+        );
         rpc = {
-          color: colorGenerator.getColorByKey(rpcSpan.process.serviceName),
-          operationName: rpcSpan.operationName,
-          serviceName: rpcSpan.process.serviceName,
+          color: colorGenerator.getColorByKey(rpcSpan.resource.serviceName),
+          operationName: rpcSpan.name,
+          serviceName: rpcSpan.resource.serviceName,
           viewEnd: rpcViewBounds.end,
           viewStart: rpcViewBounds.start,
         };
       }
     }
-    const peerServiceKV = legacySpan.tags.find(kv => kv.key === PEER_SERVICE);
+    const peerServiceAttr = span.attributes.find(attr => attr.key === PEER_SERVICE);
     // Leaf, kind == client and has peer.service tag, is likely a client span that does a request
     // to an uninstrumented/external service
     let noInstrumentedServer = null;
-    if (
-      !legacySpan.hasChildren &&
-      peerServiceKV &&
-      (isKindClient(legacySpan) || isKindProducer(legacySpan))
-    ) {
+    if (!span.hasChildren && peerServiceAttr && (isKindClient(span) || isKindProducer(span))) {
       noInstrumentedServer = {
-        serviceName: peerServiceKV.value,
-        color: colorGenerator.getColorByKey(peerServiceKV.value),
+        serviceName: String(peerServiceAttr.value),
+        color: colorGenerator.getColorByKey(String(peerServiceAttr.value)),
       };
     }
 
@@ -525,7 +522,6 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           showErrorIcon={showErrorIcon}
           getViewedBounds={this.getViewedBounds()}
           traceStartTime={trace.startTime}
-          legacySpan={legacySpan}
           span={span}
           focusSpan={this.focusSpan}
           traceDuration={trace.duration}
@@ -535,15 +531,9 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     );
   }
 
-  renderSpanDetailRow(
-    legacySpan: Span,
-    span: IOtelSpan,
-    key: string,
-    style: React.CSSProperties,
-    attrs: object
-  ) {
-    const { spanID } = legacySpan;
-    const { serviceName } = legacySpan.process;
+  renderSpanDetailRow(span: IOtelSpan, key: string, style: React.CSSProperties, attrs: object) {
+    const { spanID } = span;
+    const { serviceName } = span.resource;
     const {
       detailLogItemToggle,
       detailLogsToggle,
@@ -571,14 +561,13 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           columnDivision={spanNameColumnWidth}
           onDetailToggled={detailToggle}
           detailState={detailState}
-          linksGetter={this.linksGetterFromAttributes(legacySpan)}
+          linksGetter={this.linksGetterFromAttributes(span)}
           eventItemToggle={this.eventItemToggleAdapter(detailLogItemToggle)}
           eventsToggle={detailLogsToggle}
           resourceToggle={detailProcessToggle}
           linksToggle={detailReferencesToggle}
           warningsToggle={detailWarningsToggle}
           span={span}
-          legacySpan={legacySpan}
           attributesToggle={detailTagsToggle}
           traceStartTime={trace.startTime}
           focusSpan={this.focusSpan}

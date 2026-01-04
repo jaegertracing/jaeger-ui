@@ -10,29 +10,27 @@ import ReferenceLink from './ReferenceLink';
 describe(ReferenceLink, () => {
   const focusMock = jest.fn();
 
-  const sameTraceRef = {
-    refType: 'CHILD_OF',
+  const sameTraceLink = {
     traceID: 'trace1',
     spanID: 'span1',
     span: {
-      // not null or undefined is an indicator of an internal reference
+      // not null or undefined is an indicator of an internal link
     },
   };
 
-  const externalRef = {
-    refType: 'CHILD_OF',
+  const externalLink = {
     traceID: 'trace2',
     spanID: 'span2',
   };
 
   describe('rendering', () => {
     it('render for this trace', () => {
-      render(<ReferenceLink reference={sameTraceRef} focusSpan={focusMock} />);
+      render(<ReferenceLink link={sameTraceLink} focusSpan={focusMock} />);
       expect(screen.getAllByRole('button').length).toBe(1);
     });
 
     it('render for external trace', () => {
-      render(<ReferenceLink reference={externalRef} focusSpan={focusMock} />);
+      render(<ReferenceLink link={externalLink} focusSpan={focusMock} />);
       expect(screen.getByRole('link')).toHaveAttribute('href', '/trace/trace2?uiFind=span2');
     });
   });
@@ -40,7 +38,7 @@ describe(ReferenceLink, () => {
   describe('focus span', () => {
     it('call focusSpan', () => {
       focusMock.mockReset();
-      render(<ReferenceLink reference={sameTraceRef} focusSpan={focusMock} />);
+      render(<ReferenceLink link={sameTraceLink} focusSpan={focusMock} />);
 
       fireEvent.click(screen.getByRole('button'));
       expect(focusMock).toHaveBeenLastCalledWith('span1');

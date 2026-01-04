@@ -458,13 +458,15 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
     it('renderSpanBarRow returns null if trace is falsy', () => {
       const component = new VirtualizedTraceViewImpl({ ...mockProps, trace: null });
-      const result = component.renderSpanBarRow(trace.spans[0], 0, 'key', {}, {});
+      const otelSpan = trace.asOtelTrace().spans[0];
+      const result = component.renderSpanBarRow(otelSpan, 0, 'key', {}, {});
       expect(result).toBeNull();
     });
 
     it('renderSpanDetailRow returns null if detailState is missing', () => {
       const component = new VirtualizedTraceViewImpl(mockProps);
-      const result = component.renderSpanDetailRow(trace.spans[0], 'key', {}, {});
+      const otelSpan = trace.asOtelTrace().spans[0];
+      const result = component.renderSpanDetailRow(otelSpan, 'key', {}, {});
       expect(result).toBeNull();
     });
   });

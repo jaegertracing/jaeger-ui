@@ -7,9 +7,9 @@ import '@testing-library/jest-dom';
 import AccordionLinks, { References } from './AccordionLinks';
 
 jest.mock('../../url/ReferenceLink', () => {
-  return function MockReferenceLink({ children, reference }) {
+  return function MockReferenceLink({ children, link }) {
     return (
-      <div data-testid="link-link" data-span-id={reference.spanID}>
+      <div data-testid="link-link" data-span-id={link.spanID}>
         {children}
       </div>
     );
@@ -19,12 +19,11 @@ jest.mock('../../url/ReferenceLink', () => {
 const traceID = 'trace1';
 const links = [
   {
-    refType: 'CHILD_OF',
     span: {
       spanID: 'span1',
       traceID,
-      operationName: 'op1',
-      process: {
+      name: 'op1',
+      resource: {
         serviceName: 'service1',
       },
     },
@@ -32,12 +31,11 @@ const links = [
     traceID,
   },
   {
-    refType: 'CHILD_OF',
     span: {
       spanID: 'span3',
       traceID,
-      operationName: 'op2',
-      process: {
+      name: 'op2',
+      resource: {
         serviceName: 'service2',
       },
     },
@@ -45,7 +43,6 @@ const links = [
     traceID,
   },
   {
-    refType: 'CHILD_OF',
     spanID: 'span5',
     traceID: 'trace2',
   },
@@ -112,9 +109,6 @@ describe('<References>', () => {
     expect(screen.getByText('op2')).toBeInTheDocument();
 
     expect(screen.getByText('< span in another trace >')).toBeInTheDocument();
-
-    const refTypeElements = screen.getAllByText('CHILD_OF');
-    expect(refTypeElements).toHaveLength(links.length);
 
     expect(screen.getByText('span1')).toBeInTheDocument();
     expect(screen.getByText('span3')).toBeInTheDocument();

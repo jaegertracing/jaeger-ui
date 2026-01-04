@@ -10,7 +10,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 
 import { actions } from './duck';
 import { ReduxState } from '../../../types';
-import { Span } from '../../../types/trace';
+import { IOtelSpan } from '../../../types/otel';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
 import './SpanTreeOffset.css';
@@ -24,7 +24,7 @@ type TProps = TDispatchProps & {
   childrenVisible?: boolean;
   hoverIndentGuideIds: Set<string>;
   onClick?: () => void;
-  span: Span;
+  span: IOtelSpan;
   showChildrenIcon?: boolean;
 };
 
@@ -86,7 +86,7 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
     showChildrenIcon && hasChildren && (childrenVisible ? <IoChevronDown /> : <IoChevronForward />);
   return (
     <span className={`SpanTreeOffset ${hasChildren ? 'is-parent' : ''}`} {...wrapperProps}>
-      {ancestorIds.map(ancestorId => (
+      {ancestorIds.map((ancestorId: string) => (
         <span
           key={ancestorId}
           className={cx('SpanTreeOffset--indentGuide', {

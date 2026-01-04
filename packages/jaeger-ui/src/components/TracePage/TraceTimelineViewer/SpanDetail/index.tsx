@@ -17,7 +17,6 @@ import LabeledList from '../../../common/LabeledList';
 import { TNil } from '../../../../types';
 import { Link } from '../../../../types/trace';
 import { IOtelSpan, IAttribute, IEvent } from '../../../../types/otel';
-import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 
 import './index.css';
 
@@ -59,8 +58,8 @@ export default function SpanDetail(props: SpanDetailProps) {
   const { isAttributesOpen, isResourceOpen, events: eventsState, isWarningsOpen, isLinksOpen } = detailState;
   const warnings = span.warnings;
 
-  // Get references from the facade for display in AccordionLinks
-  const links = span instanceof OtelSpanFacade ? span.legacyReferences : [];
+  // Get links for display in AccordionLinks
+  const links = span.links || [];
 
   // Display labels based on terminology flag
   const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
@@ -142,7 +141,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => warningsToggle(span.spanID)}
           />
         )}
-        {links && links.length > 0 && (links.length > 1 || links[0].refType !== 'CHILD_OF') && (
+        {links && links.length > 0 && (
           <AccordionLinks
             data={links}
             isOpen={isLinksOpen}

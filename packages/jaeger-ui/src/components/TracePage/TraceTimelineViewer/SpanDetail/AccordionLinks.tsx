@@ -5,11 +5,11 @@ import * as React from 'react';
 import cx from 'classnames';
 import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import './AccordionLinks.css';
-import { SpanReference } from '../../../../types/trace';
+import { ILink } from '../../../../types/otel';
 import ReferenceLink from '../../url/ReferenceLink';
 
 type AccordionLinksProps = {
-  data: ReadonlyArray<SpanReference>;
+  data: ReadonlyArray<ILink>;
   highContrast?: boolean;
   interactive?: boolean;
   isOpen: boolean;
@@ -18,7 +18,7 @@ type AccordionLinksProps = {
 };
 
 type ReferenceItemProps = {
-  data: ReadonlyArray<SpanReference>;
+  data: ReadonlyArray<ILink>;
   focusSpan: (uiFind: string) => void;
 };
 
@@ -29,25 +29,22 @@ export function References(props: ReferenceItemProps) {
   return (
     <div className="ReferencesList u-simple-scrollbars">
       <ul className="ReferencesList--List">
-        {data.map(reference => {
+        {data.map(link => {
           return (
-            <li className="ReferencesList--Item" key={`${reference.spanID}`}>
-              <ReferenceLink reference={reference} focusSpan={focusSpan}>
+            <li className="ReferencesList--Item" key={`${link.spanID}`}>
+              <ReferenceLink link={link} focusSpan={focusSpan}>
                 <span className="ReferencesList--itemContent">
-                  {reference.span ? (
+                  {link.span ? (
                     <span>
-                      <span className="span-svc-name">{reference.span.process.serviceName}</span>
-                      <small className="endpoint-name">{reference.span.operationName}</small>
+                      <span className="span-svc-name">{link.span.resource.serviceName}</span>
+                      <small className="endpoint-name">{link.span.name}</small>
                     </span>
                   ) : (
                     <span className="span-svc-name">&lt; span in another trace &gt;</span>
                   )}
                   <small className="SpanReference--debugInfo">
-                    <span className="SpanReference--debugLabel" data-label="Reference Type:">
-                      {reference.refType}
-                    </span>
                     <span className="SpanReference--debugLabel" data-label="SpanID:">
-                      {reference.spanID}
+                      {link.spanID}
                     </span>
                   </small>
                 </span>
