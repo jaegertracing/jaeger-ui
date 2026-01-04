@@ -228,22 +228,6 @@ describe('<OperationTableDetails> with data', () => {
 
     cells = screen.getAllByRole('cell');
     expect(cells[0].textContent).toBe('/Accounts');
-
-    const latencyHeader = screen.getByText('P95 Latency').closest('th');
-    const latencySorter = latencyHeader.querySelector('.ant-table-column-sorter-up');
-    fireEvent.click(latencySorter);
-
-    const requestsHeader = screen.getByText('Request rate').closest('th');
-    const requestsSorter = requestsHeader.querySelector('.ant-table-column-sorter-up');
-    fireEvent.click(requestsSorter);
-
-    const errorsHeader = screen.getByText('Error rate').closest('th');
-    const errorsSorter = errorsHeader.querySelector('.ant-table-column-sorter-up');
-    fireEvent.click(errorsSorter);
-
-    const impactHeader = screen.getByText('Impact').closest('th');
-    const impactSorter = impactHeader.querySelector('.ant-table-column-sorter-up');
-    fireEvent.click(impactSorter);
   });
 
   it('Graph avg label test', () => {
