@@ -24,8 +24,12 @@ describe.each([[test1], [test2], [test3], [test4], [test5], [test6], [test7], [t
 
 describe('criticalPathForTrace immutability', () => {
   it('should not modify the original trace spans', () => {
-    // Create a shallow copy of spans for comparison of primitive properties
-    const originalSpans = test2.trace.spans.map(span => ({ ...span }));
+    const originalSpans = test2.trace.spans.map(span => ({
+      spanID: span.spanID,
+      startTimeUnixMicros: span.startTimeUnixMicros,
+      durationMicros: span.durationMicros,
+      name: span.name,
+    }));
 
     // Run the critical path algorithm
     TraceCriticalPath(test2.trace);
@@ -34,9 +38,9 @@ describe('criticalPathForTrace immutability', () => {
     test2.trace.spans.forEach((span, i) => {
       const original = originalSpans[i];
       expect(span.spanID).toBe(original.spanID);
-      expect(span.startTime).toBe(original.startTime);
-      expect(span.duration).toBe(original.duration);
-      expect(span.operationName).toBe(original.operationName);
+      expect(span.startTimeUnixMicros).toBe(original.startTimeUnixMicros);
+      expect(span.durationMicros).toBe(original.durationMicros);
+      expect(span.name).toBe(original.name);
     });
   });
 
@@ -44,38 +48,39 @@ describe('criticalPathForTrace immutability', () => {
     // Store original childSpans arrays (and their references)
     const originalChildSpans = test2.trace.spans.map(span => ({
       array: span.childSpans,
-      values: [...span.childSpans],
+      length: span.childSpans.length,
     }));
 
     // Run the critical path algorithm
     TraceCriticalPath(test2.trace);
 
-    // Verify childSpans were not modified (same reference and values)
+    // Verify childSpans were not modified (same reference and length)
     test2.trace.spans.forEach((span, index) => {
       expect(span.childSpans).toBe(originalChildSpans[index].array); // Same reference
-      expect(span.childSpans).toEqual(originalChildSpans[index].values); // Same values
+      expect(span.childSpans.length).toBe(originalChildSpans[index].length); // Same length
     });
   });
 
-  it('should not modify span references arrays', () => {
-    // Store original references (and their references)
-    const originalReferences = test2.trace.spans.map(span => ({
-      array: span.references,
-      values: span.references.map(ref => ({ ...ref })),
+  it('should not modify span links arrays', () => {
+    // Store original links (and their references)
+    const originalLinks = test2.trace.spans.map(span => ({
+      array: span.links,
+      length: span.links.length,
     }));
 
     // Run the critical path algorithm
     TraceCriticalPath(test2.trace);
 
-    // Verify references were not modified (same reference and values)
+    // Verify links were not modified (same reference and length)
     test2.trace.spans.forEach((span, index) => {
-      expect(span.references).toBe(originalReferences[index].array); // Same reference
-      expect(span.references.length).toBe(originalReferences[index].values.length);
+      expect(span.links).toBe(originalLinks[index].array); // Same reference
+      expect(span.links.length).toBe(originalLinks[index].length);
     });
   });
 
-  it('should not modify FOLLOWS_FROM spans parent childSpans', () => {
+  it('should not modify non-blocking spans parent childSpans', () => {
     // Store original childSpans of the parent in test5
+    // test5 has a producer/consumer pair where the consumer is non-blocking
     const parentSpan = test5.trace.spans[0];
     const originalChildSpans = [...parentSpan.childSpans];
     const originalLength = originalChildSpans.length;

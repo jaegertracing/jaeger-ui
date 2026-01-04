@@ -29,6 +29,7 @@ const trace = {
       startTime: 1,
       duration: 30,
       processID: 'p1',
+      tags: [{ key: 'span.kind', value: 'producer' }],
     },
     {
       spanID: 'span-B',
@@ -42,6 +43,7 @@ const trace = {
       startTime: 10,
       duration: 10,
       processID: 'p1',
+      tags: [{ key: 'span.kind', value: 'consumer' }],
     },
     {
       spanID: 'span-C',
@@ -76,7 +78,7 @@ const criticalPathSections = [
 
 const test5 = {
   criticalPathSections,
-  trace: transformedTrace,
+  trace: transformedTrace.asOtelTrace(),
 };
 
 export default test5;

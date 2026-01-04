@@ -31,7 +31,7 @@ const criticalPathSections = [
 
 const test3 = {
   criticalPathSections,
-  trace: transformedTrace,
+  trace: transformedTrace.asOtelTrace(),
 };
 
 export default test3;
