@@ -32,7 +32,7 @@ export default class OtelSpanFacade implements IOtelSpan {
     this.legacySpan = legacySpan;
 
     // Pre-compute expensive fields
-    const kindTag = (this.legacySpan.tags || []).find(t => t.key === 'span.kind');
+    const kindTag = this.legacySpan.tags.find(t => t.key === 'span.kind');
     this._kind = SpanKind.INTERNAL;
     if (kindTag) {
       const val = String(kindTag.value).toUpperCase();
@@ -50,11 +50,6 @@ export default class OtelSpanFacade implements IOtelSpan {
       references.find(r => r.traceID === traceID && r.refType === 'CHILD_OF') ??
       references.find(r => r.traceID === traceID && r.refType === 'FOLLOWS_FROM');
     this._parentSpanID = parentSpanRef?.spanID;
-
-    // If no explicit kind tag, infer non-blocking kind for FOLLOWS_FROM references
-    if (!kindTag && parentSpanRef?.refType === 'FOLLOWS_FROM') {
-      this._kind = SpanKind.PRODUCER;
-    }
 
     this._attributes = OtelSpanFacade.toOtelAttributes(this.legacySpan.tags);
 
