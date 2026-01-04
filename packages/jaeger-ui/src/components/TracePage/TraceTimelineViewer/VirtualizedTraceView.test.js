@@ -10,7 +10,6 @@ import SpanDetailRow from './SpanDetailRow';
 import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
-import OtelTraceFacade from '../../../model/OtelTraceFacade';
 import updateUiFindSpy from '../../../utils/update-ui-find';
 import * as linkPatterns from '../../../model/link-patterns';
 import memoizedTraceCriticalPath from '../CriticalPath/index';
@@ -116,24 +115,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       ...trace.spans.slice(1),
     ];
     const _trace = { ...trace, spans };
-    // We need to re-wrap because we modified the spans of the facade?
-    // OtelTraceFacade takes a legacy trace.
-    // We are modifying the FACADE directly here or the legacy trace?
-    // trace is now OtelTraceFacade.
-    // ...trace spreads the facade properties.
-    // spans is an array of... IOtelSpans?
-    // trace.spans[0] is IOtelSpan.
-    // So the mock data construction here needs to be careful.
-    // The original test code was constructing a legacy trace-like object.
-    // Now trace is IOtelTrace.
-    // So we should construct an IOtelTrace-like object.
     return { props: { ...mockProps, childrenHiddenIDs, trace: _trace }, spans };
-  }
-
-  function updateSpan(srcTrace, spanIndex, update) {
-    const span = { ...srcTrace.spans[spanIndex], ...update };
-    const spans = [...srcTrace.spans.slice(0, spanIndex), span, ...srcTrace.spans.slice(spanIndex + 1)];
-    return { ...srcTrace, spans };
   }
 
   function createTestInstance(props) {
@@ -431,7 +413,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       newLegacySpans[1] = { ...newLegacySpans[1], tags: serverTags };
 
       const newLegacyTrace = { ...legacyTrace, spans: newLegacySpans };
-      const altTrace = new OtelTraceFacade(newLegacyTrace);
+      const altTrace = transformTraceData(newLegacyTrace).asOtelTrace();
 
       const childrenHiddenIDs = new Set([altTrace.spans[0].spanID]);
 
@@ -474,7 +456,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
           return s;
         });
         const newLegacyTrace = { ...legacyTrace, spans: newLegacySpans };
-        const altTrace = new OtelTraceFacade(newLegacyTrace);
+        const altTrace = transformTraceData(newLegacyTrace).asOtelTrace();
 
         instance = createTestInstance({
           ...mockProps,
@@ -509,7 +491,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       render(
         <VirtualizedTraceViewImpl
           {...mockProps}
-          trace={new OtelTraceFacade(criticalPathTest.trace)}
+          trace={criticalPathTest.trace.asOtelTrace()}
           criticalPath={criticalPathTest.criticalPathSections}
         />
       );
@@ -524,7 +506,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
         <VirtualizedTraceViewImpl
           {...mockProps}
           childrenHiddenIDs={childrenHiddenIDs}
-          trace={new OtelTraceFacade(criticalPathTest.trace)}
+          trace={criticalPathTest.trace.asOtelTrace()}
           criticalPath={criticalPathTest.criticalPathSections}
         />
       );
