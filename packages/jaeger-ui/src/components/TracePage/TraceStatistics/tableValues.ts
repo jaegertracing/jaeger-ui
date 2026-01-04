@@ -35,12 +35,12 @@ function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpa
 
   const children = getChildOfSpans(parentSpan.spanID, allSpans).sort((a, b) => a.startTime - b.startTime);
 
-  const parentSpanEndTime = parentSpan.startTime + parentSpan.duration;
+  const parentSpanEndTime = parentSpan.endTime;
 
   for (let index = 0; index < children.length; index++) {
     const child = children[index];
 
-    const childEndTime = child.startTime + child.duration;
+    const childEndTime = child.endTime;
     const childStartsAfterParentEnded = child.startTime > parentSpanEndTime;
     const childEndsBeforePreviousChild = childEndTime < previousChildEndTime;
 

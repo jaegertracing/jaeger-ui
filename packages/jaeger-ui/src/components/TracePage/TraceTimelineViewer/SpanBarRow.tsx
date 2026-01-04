@@ -97,7 +97,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     resource: { serviceName },
   } = span;
   const label = formatDuration(duration);
-  const viewBounds = getViewedBounds(span.startTime, span.startTime + span.duration);
+  const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
 

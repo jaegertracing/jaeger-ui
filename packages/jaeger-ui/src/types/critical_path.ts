@@ -16,6 +16,7 @@ export type CPSpan = {
   parentSpanID?: string;
   isBlocking: boolean; // is this span blocking the critical path of the parent?
   startTime: number;
+  endTime: number;
   duration: number;
   childSpanIDs: string[];
 };

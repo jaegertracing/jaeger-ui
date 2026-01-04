@@ -472,7 +472,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     if (isCollapsed) {
       const rpcSpan = findServerChildSpan(spans.slice(spanIndex));
       if (rpcSpan) {
-        const rpcViewBounds = this.getViewedBounds()(rpcSpan.startTime, rpcSpan.startTime + rpcSpan.duration);
+        const rpcViewBounds = this.getViewedBounds()(rpcSpan.startTime, rpcSpan.endTime);
         rpc = {
           color: colorGenerator.getColorByKey(rpcSpan.resource.serviceName),
           operationName: rpcSpan.name,

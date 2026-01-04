@@ -45,8 +45,8 @@ const computeCriticalPath = (
   if (lastFinishingChildSpan) {
     spanCriticalSection = {
       spanID: currentSpan.spanID,
-      sectionStart: lastFinishingChildSpan.startTime + lastFinishingChildSpan.duration,
-      sectionEnd: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
+      sectionStart: lastFinishingChildSpan.endTime,
+      sectionEnd: returningChildStartTime || currentSpan.endTime,
     };
     if (spanCriticalSection.sectionStart !== spanCriticalSection.sectionEnd) {
       criticalPath.push(spanCriticalSection);
@@ -58,7 +58,7 @@ const computeCriticalPath = (
     spanCriticalSection = {
       spanID: currentSpan.spanID,
       sectionStart: currentSpan.startTime,
-      sectionEnd: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
+      sectionEnd: returningChildStartTime || currentSpan.endTime,
     };
     if (spanCriticalSection.sectionStart !== spanCriticalSection.sectionEnd) {
       criticalPath.push(spanCriticalSection);
