@@ -246,15 +246,8 @@ describe('OtelSpanFacade', () => {
 
     it('includes FOLLOWS_FROM reference even if it is used as parent (fallback)', () => {
       // If no CHILD_OF exists, FOLLOWS_FROM might be used as parent,
-      // but typically we still want it in links if it's a reference?
-      // ACTUALLY, checking implementation:
-      // parent reference is excluded from links using `ref !== parentSpanRef`.
-      // So if a FOLLOWS_FROM becomes the parent, it should be excluded from links?
-      // Let's verify existing behavior or desired behavior.
-      // Usually "Parent" is structural, "Links" are auxiliary.
-      // If a spans says "I follow from X", and X is treated as parent for tree structure,
-      // showing it as a link might be redundant or desired depending on UI instructions.
-      // Current implementation excludes `parentSpanRef`.
+      // it would be standard for async spans like in producer/consumer.
+      // So if a FOLLOWS_FROM becomes the parent, it should be excluded from links.
 
       const span: Span = {
         ...mockLegacySpan,
