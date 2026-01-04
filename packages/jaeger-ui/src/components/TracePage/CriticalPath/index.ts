@@ -76,12 +76,10 @@ const computeCriticalPath = (
 
 function criticalPathForTrace(trace: IOtelTrace): CriticalPathSection[] {
   let criticalPath: CriticalPathSection[] = [];
-  // Use the first root span as the starting point
-  const rootSpanId = trace.rootSpans[0]?.spanID;
-  // If there is root span then algorithm implements
-  if (rootSpanId) {
-    // Create a map of CPSpan objects to avoid modifying the original trace
-    const spanMap = createCPSpanMap(trace.spans);
+  // Create a map of CPSpan objects to avoid modifying the original trace
+  const spanMap = createCPSpanMap(trace.spans);
+  for (const rootSpan of trace.rootSpans) {
+    const rootSpanId = rootSpan.spanID;
     try {
       const filteredSpanMap = filterBlockingSpans(spanMap);
       const sanitizedSpanMap = sanitizeOverFlowingChildren(filteredSpanMap);
