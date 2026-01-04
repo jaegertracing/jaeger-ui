@@ -31,7 +31,6 @@ import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../com
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
-import { KeyValuePair } from '../../../types/trace';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IOtelTrace, IAttribute, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
