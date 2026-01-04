@@ -1,7 +1,7 @@
 // Copyright (c) 2023 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import { CPSpan } from '../../../../types/trace';
+import { CPSpan } from '../../../../types/critical_path';
 /**
  * Removes child spans whose refType is FOLLOWS_FROM and their descendants.
  * @param spanMap - The map containing spans.
@@ -15,9 +15,9 @@ const getChildOfSpans = (spanMap: Map<string, CPSpan>): Map<string, CPSpan> => {
   spanMap.forEach(each => {
     if (each.references[0]?.refType === 'FOLLOWS_FROM') {
       followFromSpanIds.push(each.spanID);
-      // Remove the spanId from childSpanIds array of its parentSpan
+      // Remove the spanId from childSpanIDs array of its parentSpan
       const parentSpan = spanMap.get(each.references[0].spanID)!;
-      parentSpan.childSpanIds = parentSpan.childSpanIds.filter(a => a !== each.spanID);
+      parentSpan.childSpanIDs = parentSpan.childSpanIDs.filter(a => a !== each.spanID);
       spanMap.set(parentSpan.spanID, { ...parentSpan });
     }
   });
@@ -26,9 +26,9 @@ const getChildOfSpans = (spanMap: Map<string, CPSpan>): Map<string, CPSpan> => {
   const findDescendantSpans = (spanIds: ReadonlyArray<string>) => {
     spanIds.forEach(spanId => {
       const span = spanMap.get(spanId)!;
-      if (span.childSpanIds.length > 0) {
-        followFromSpansDescendantIds.push(...span.childSpanIds);
-        findDescendantSpans(span.childSpanIds);
+      if (span.childSpanIDs.length > 0) {
+        followFromSpansDescendantIds.push(...span.childSpanIDs);
+        findDescendantSpans(span.childSpanIDs);
       }
     });
   };

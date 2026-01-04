@@ -1,7 +1,7 @@
 // Copyright (c) 2023 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import { CPSpan } from '../../../../types/trace';
+import { CPSpan } from '../../../../types/critical_path';
 
 /**
  * @returns - Returns the span that finished last among the remaining child spans.
@@ -16,7 +16,7 @@ const findLastFinishingChildSpan = (
   let lastFinishingChildSpan: CPSpan | undefined;
   let maxEndTime = -1;
 
-  currentSpan.childSpanIds.forEach(childId => {
+  currentSpan.childSpanIDs.forEach(childId => {
     const childSpan = spanMap.get(childId);
     if (!childSpan) return;
 

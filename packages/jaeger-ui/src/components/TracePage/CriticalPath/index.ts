@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import memoizeOne from 'memoize-one';
-import { Trace, criticalPathSection, CPSpan } from '../../../types/trace';
+import { Trace } from '../../../types/trace';
+import { CriticalPathSection, CPSpan } from '../../../types/critical_path';
 import getChildOfSpans from './utils/getChildOfSpans';
 import findLastFinishingChildSpan from './utils/findLastFinishingChildSpan';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
@@ -31,21 +32,21 @@ import { createCPSpanMap } from './utils/cpspan';
 const computeCriticalPath = (
   spanMap: Map<string, CPSpan>,
   spanId: string,
-  criticalPath: criticalPathSection[],
+  criticalPath: CriticalPathSection[],
   returningChildStartTime?: number
-): criticalPathSection[] => {
+): CriticalPathSection[] => {
   const currentSpan: CPSpan = spanMap.get(spanId)!;
 
   const lastFinishingChildSpan = findLastFinishingChildSpan(spanMap, currentSpan, returningChildStartTime);
-  let spanCriticalSection: criticalPathSection;
+  let spanCriticalSection: CriticalPathSection;
 
   if (lastFinishingChildSpan) {
     spanCriticalSection = {
-      spanId: currentSpan.spanID,
-      section_start: lastFinishingChildSpan.startTime + lastFinishingChildSpan.duration,
-      section_end: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
+      spanID: currentSpan.spanID,
+      sectionStart: lastFinishingChildSpan.startTime + lastFinishingChildSpan.duration,
+      sectionEnd: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
     };
-    if (spanCriticalSection.section_start !== spanCriticalSection.section_end) {
+    if (spanCriticalSection.sectionStart !== spanCriticalSection.sectionEnd) {
       criticalPath.push(spanCriticalSection);
     }
     // Now focus shifts to the lastFinishingChildSpan of cuurent span
@@ -53,11 +54,11 @@ const computeCriticalPath = (
   } else {
     // If there is no last finishing child then total section upto startTime of span is on critical path
     spanCriticalSection = {
-      spanId: currentSpan.spanID,
-      section_start: currentSpan.startTime,
-      section_end: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
+      spanID: currentSpan.spanID,
+      sectionStart: currentSpan.startTime,
+      sectionEnd: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
     };
-    if (spanCriticalSection.section_start !== spanCriticalSection.section_end) {
+    if (spanCriticalSection.sectionStart !== spanCriticalSection.sectionEnd) {
       criticalPath.push(spanCriticalSection);
     }
     // Now as there are no lfc's focus shifts to parent span from startTime of span
@@ -74,7 +75,7 @@ const computeCriticalPath = (
 };
 
 function criticalPathForTrace(trace: Trace) {
-  let criticalPath: criticalPathSection[] = [];
+  let criticalPath: CriticalPathSection[] = [];
   // As spans are already sorted based on startTime first span is always rootSpan
   const rootSpanId = trace.spans[0].spanID;
   // If there is root span then algorithm implements

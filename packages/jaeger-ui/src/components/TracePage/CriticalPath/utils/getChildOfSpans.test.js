@@ -22,7 +22,7 @@ describe('getChildOfSpans', () => {
     expect(refinedSpanMap.size).toBe(1);
     // Check that the parent span has no children
     const parentSpan = refinedSpanMap.get(test5.trace.spans[0].spanID);
-    expect(parentSpan?.childSpanIds).toEqual([]);
+    expect(parentSpan?.childSpanIDs).toEqual([]);
   });
 
   it('Should not modify the original trace spans', () => {

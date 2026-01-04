@@ -31,7 +31,8 @@ import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../com
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
-import { Log, Span, Trace, KeyValuePair, criticalPathSection } from '../../../types/trace';
+import { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
+import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IAttribute, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 
@@ -52,7 +53,7 @@ type TVirtualizedTraceViewOwnProps = {
   scrollToFirstVisibleSpan: () => void;
   registerAccessors: (accesors: Accessors) => void;
   trace: Trace;
-  criticalPath: criticalPathSection[];
+  criticalPath: CriticalPathSection[];
   useOtelTerms: boolean;
 };
 
@@ -156,8 +157,8 @@ function getCssClasses(currentViewRange: [number, number]) {
 function mergeChildrenCriticalPath(
   trace: Trace,
   spanID: string,
-  criticalPath: criticalPathSection[]
-): criticalPathSection[] {
+  criticalPath: CriticalPathSection[]
+): CriticalPathSection[] {
   if (!criticalPath) {
     return [];
   }
@@ -183,12 +184,12 @@ function mergeChildrenCriticalPath(
     findAllDescendants(startingSpan);
   }
 
-  const criticalPathSections: criticalPathSection[] = [];
+  const criticalPathSections: CriticalPathSection[] = [];
   criticalPath.forEach(each => {
-    if (allRequiredSpanIds.has(each.spanId)) {
-      if (criticalPathSections.length !== 0 && each.section_end === criticalPathSections[0].section_start) {
+    if (allRequiredSpanIds.has(each.spanID)) {
+      if (criticalPathSections.length !== 0 && each.sectionEnd === criticalPathSections[0].sectionStart) {
         // Merge Critical Paths if they are consecutive
-        criticalPathSections[0].section_start = each.section_start;
+        criticalPathSections[0].sectionStart = each.sectionStart;
       } else {
         criticalPathSections.unshift({ ...each });
       }
@@ -201,8 +202,8 @@ function mergeChildrenCriticalPath(
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
-const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: criticalPathSection[]) =>
-  _groupBy(criticalPath, x => x.spanId)
+const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: CriticalPathSection[]) =>
+  _groupBy(criticalPath, x => x.spanID)
 );
 
 // export from tests
@@ -423,7 +424,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     isCollapsed: boolean,
     trace: Trace,
     spanID: string,
-    criticalPath: criticalPathSection[]
+    criticalPath: CriticalPathSection[]
   ) {
     if (isCollapsed) {
       return mergeChildrenCriticalPath(trace, spanID, criticalPath);

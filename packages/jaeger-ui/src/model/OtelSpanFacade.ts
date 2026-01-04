@@ -190,8 +190,4 @@ export default class OtelSpanFacade implements IOtelSpan {
   get warnings(): ReadonlyArray<string> | null {
     return this.legacySpan.warnings;
   }
-
-  get legacyReferences(): ReadonlyArray<any> {
-    return this.legacySpan.references;
-  }
 }
