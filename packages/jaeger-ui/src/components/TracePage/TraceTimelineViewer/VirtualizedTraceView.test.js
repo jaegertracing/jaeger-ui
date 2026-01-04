@@ -599,9 +599,9 @@ describe('<VirtualizedTraceViewImpl>', () => {
     });
 
     it('linksGetter is expected to receive url and text for a given link pattern', () => {
-      const span = trace.spans[1];
-      const key = span.tags[0].key;
-      const val = encodeURIComponent(span.tags[0].value);
+      const span = trace.asOtelTrace().spans[1];
+      const key = span.attributes[0].key;
+      const val = encodeURIComponent(span.attributes[0].value);
 
       const linkPatternConfig = [
         {
@@ -614,7 +614,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       linkPatterns.processedLinks.push(...linkPatternConfig);
 
-      expect(instance.linksGetter(span, span.tags, 0)).toEqual([
+      expect(instance.linksGetter(span, span.attributes, 0)).toEqual([
         {
           url: `http://example.com/?key1=${val}&traceID=${trace.traceID}&startTime=${trace.startTime}`,
           text: `For first link traceId is - ${trace.traceID}`,

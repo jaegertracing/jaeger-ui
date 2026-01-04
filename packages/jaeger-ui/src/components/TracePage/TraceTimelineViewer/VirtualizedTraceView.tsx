@@ -396,7 +396,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   linksGetter = (span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number) => {
     const { trace } = this.props;
-    return getLinks(span, items, itemIndex, trace ? trace.asOtelTrace() : undefined);
+    if (!trace) return [];
+    return getLinks(span, items, itemIndex, trace.asOtelTrace());
   };
 
   // Adapter for OTEL components that need links from attributes

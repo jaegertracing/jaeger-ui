@@ -21,6 +21,10 @@ const ENABLE_LEGACY_LINK_PATTERNS = true;
 type LinkPatternType = 'attributes' | 'resource' | 'events' | 'traces';
 type LegacyLinkPatternType = 'tags' | 'process' | 'logs';
 
+const VALID_TRACE_KEYS = ['traceID', 'traceName', 'duration', 'startTime', 'endTime'];
+
+const VALID_SPAN_KEYS = ['spanID', 'operationName', 'duration', 'startTime'];
+
 type ProcessedLinkPattern = {
   object: any;
   type: (link: LinkPatternType | LegacyLinkPatternType) => boolean;
@@ -95,6 +99,30 @@ export function getParameterInArray(name: string, array: ReadonlyArray<IAttribut
 export function getParameterInAncestor(name: string, span: IOtelSpan): IAttribute | undefined {
   let currentSpan: IOtelSpan | undefined = span;
   while (currentSpan) {
+    if (VALID_SPAN_KEYS.includes(name)) {
+      let value: any;
+      switch (name) {
+        case 'spanID':
+          value = currentSpan.spanID;
+          break;
+        case 'operationName':
+          value = currentSpan.name;
+          break;
+        case 'duration':
+          value = currentSpan.durationMicros;
+          break;
+        case 'startTime':
+          value = currentSpan.startTimeUnixMicros;
+          break;
+        default:
+          // If it's a valid span key but no value found, continue to check attributes
+          break;
+      }
+      if (value !== undefined) {
+        return { key: name, value };
+      }
+    }
+
     const result =
       getParameterInArray(name, currentSpan.attributes) ||
       getParameterInArray(name, currentSpan.resource.attributes);
@@ -107,24 +135,32 @@ export function getParameterInAncestor(name: string, span: IOtelSpan): IAttribut
   return undefined;
 }
 
-const getValidTraceKeys = memoize(10)((trace: IOtelTrace) => {
-  const validKeys = (Object.keys(trace) as (keyof IOtelTrace)[]).filter(
-    key => typeof trace[key] === 'string' || typeof trace[key] === 'number'
-  );
-  return validKeys;
-});
-
 export function getParameterInTrace(
   name: string,
-  trace: IOtelTrace | undefined
-): { key: keyof IOtelTrace; value: any } | undefined {
-  if (trace) {
-    const validTraceKeys = getValidTraceKeys(trace);
-
-    const key = name as keyof IOtelTrace;
-    if (validTraceKeys.includes(key)) {
-      return { key, value: trace[key] };
+  trace: IOtelTrace
+): { key: string; value: any } | undefined {
+  if (VALID_TRACE_KEYS.includes(name)) {
+    let value: any;
+    switch (name) {
+      case 'traceID':
+        value = trace.traceID;
+        break;
+      case 'traceName':
+        value = trace.traceName;
+        break;
+      case 'duration':
+        value = trace.durationMicros;
+        break;
+      case 'startTime':
+        value = trace.startTimeUnixMicros;
+        break;
+      case 'endTime':
+        value = trace.endTimeUnixMicros;
+        break;
+      default:
+        return undefined;
     }
+    return { key: name, value };
   }
 
   return undefined;
@@ -176,7 +212,7 @@ export function computeLinks(
   span: IOtelSpan,
   items: ReadonlyArray<IAttribute>,
   itemIndex: number,
-  trace: IOtelTrace | undefined
+  trace: IOtelTrace
 ): Hyperlink[] {
   const item = items[itemIndex];
   let type: LinkPatternType = 'events';
@@ -239,18 +275,8 @@ export function computeLinks(
 export function createGetLinks(
   linkPatterns: ProcessedLinkPattern[],
   cache: WeakMap<IAttribute, Hyperlink[]>
-): (
-  span: IOtelSpan,
-  items: ReadonlyArray<IAttribute>,
-  itemIndex: number,
-  trace: IOtelTrace | undefined
-) => Hyperlink[] {
-  return (
-    span: IOtelSpan,
-    items: ReadonlyArray<IAttribute>,
-    itemIndex: number,
-    trace: IOtelTrace | undefined
-  ) => {
+): (span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number, trace: IOtelTrace) => Hyperlink[] {
+  return (span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number, trace: IOtelTrace) => {
     if (linkPatterns.length === 0) {
       return [];
     }

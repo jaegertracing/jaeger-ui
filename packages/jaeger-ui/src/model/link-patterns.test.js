@@ -288,22 +288,21 @@ describe('getParameterInTrace()', () => {
     traceName: 'theTrace',
     traceID: 'trc1',
     spans: [],
-    startTime: 1000,
-    endTime: 3000,
+    startTimeUnixMicros: 1000,
+    endTimeUnixMicros: 3000,
     durationMicros: 2000,
     services: [],
   };
 
   it('returns an entry that is present', () => {
-    expect(getParameterInTrace('startTime', trace)).toEqual({ key: 'startTime', value: trace.startTime });
+    expect(getParameterInTrace('startTime', trace)).toEqual({
+      key: 'startTime',
+      value: trace.startTimeUnixMicros,
+    });
   });
 
   it('returns undefined when the entry cannot be found', () => {
     expect(getParameterInTrace('someThingElse', trace)).toBeUndefined();
-  });
-
-  it('returns undefined when there is no trace', () => {
-    expect(getParameterInTrace('traceID')).toBeUndefined();
   });
 });
 
@@ -321,8 +320,8 @@ describe('computeTraceLink()', () => {
     },
     {
       type: 'traces',
-      url: 'http://example.com/?traceID=#{traceID}&traceName=#{traceName}&startTime=#{startTime}&endTime=#{endTime}&duration=#{durationMicros}',
-      text: 'third link (#{traceID}, #{traceName}, #{startTime}, #{endTime}, #{durationMicros})',
+      url: 'http://example.com/?traceID=#{traceID}&traceName=#{traceName}&startTime=#{startTime}&endTime=#{endTime}&duration=#{duration}',
+      text: 'third link (#{traceID}, #{traceName}, #{startTime}, #{endTime}, #{duration})',
     },
     {
       type: 'traces',
@@ -336,8 +335,8 @@ describe('computeTraceLink()', () => {
     traceName: 'theTrace',
     traceID: 'trc1',
     spans: [],
-    startTime: 1000,
-    endTime: 3000000000000,
+    startTimeUnixMicros: 1000,
+    endTimeUnixMicros: 3000000000000,
     durationMicros: 2000,
     services: [],
   };
@@ -403,8 +402,8 @@ describe('computeLinks()', () => {
     traceName: 'theTrace',
     traceID: 'trc1',
     spans: [],
-    startTime: 1000,
-    endTime: 3000,
+    startTimeUnixMicros: 1000,
+    endTimeUnixMicros: 3000,
     durationMicros: 2000,
     services: [],
   };
@@ -525,10 +524,6 @@ describe('getLinks()', () => {
       },
     ]);
     expect(cache.get(span.attributes[0])).toBe(result);
-  });
-
-  it('returns an empty array when trace is undefined', () => {
-    expect(getTraceLinks(undefined)).toEqual([]);
   });
 
   it('returns trace links when valid trace is passed', () => {
