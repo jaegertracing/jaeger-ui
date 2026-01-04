@@ -156,8 +156,8 @@ describe('getParameterInAncestor()', () => {
   const spans = [
     {
       depth: 0,
-      process: {
-        tags: [
+      resource: {
+        attributes: [
           { key: 'a', value: 'a7' },
           { key: 'b', value: 'b7' },
           { key: 'c', value: 'c7' },
@@ -168,7 +168,7 @@ describe('getParameterInAncestor()', () => {
           { key: 'h', value: 'h7' },
         ],
       },
-      tags: [
+      attributes: [
         { key: 'a', value: 'a6' },
         { key: 'b', value: 'b6' },
         { key: 'c', value: 'c6' },
@@ -180,8 +180,8 @@ describe('getParameterInAncestor()', () => {
     },
     {
       depth: 1,
-      process: {
-        tags: [
+      resource: {
+        attributes: [
           { key: 'a', value: 'a5' },
           { key: 'b', value: 'b5' },
           { key: 'c', value: 'c5' },
@@ -190,7 +190,7 @@ describe('getParameterInAncestor()', () => {
           { key: 'f', value: 'f5' },
         ],
       },
-      tags: [
+      attributes: [
         { key: 'a', value: 'a4' },
         { key: 'b', value: 'b4' },
         { key: 'c', value: 'c4' },
@@ -200,15 +200,15 @@ describe('getParameterInAncestor()', () => {
     },
     {
       depth: 1,
-      process: {
-        tags: [
+      resource: {
+        attributes: [
           { key: 'a', value: 'a3' },
           { key: 'b', value: 'b3' },
           { key: 'c', value: 'c3' },
           { key: 'd', value: 'd3' },
         ],
       },
-      tags: [
+      attributes: [
         { key: 'a', value: 'a2' },
         { key: 'b', value: 'b2' },
         { key: 'c', value: 'c2' },
@@ -216,49 +216,34 @@ describe('getParameterInAncestor()', () => {
     },
     {
       depth: 2,
-      process: {
-        tags: [
+      resource: {
+        attributes: [
           { key: 'a', value: 'a1' },
           { key: 'b', value: 'b1' },
         ],
       },
-      tags: [{ key: 'a', value: 'a0' }],
+      attributes: [{ key: 'a', value: 'a0' }],
     },
   ];
-  spans[1].references = [
-    {
-      refType: 'CHILD_OF',
-      span: spans[0],
-    },
-  ];
-  spans[2].references = [
-    {
-      refType: 'CHILD_OF',
-      span: spans[0],
-    },
-  ];
-  spans[3].references = [
-    {
-      refType: 'CHILD_OF',
-      span: spans[2],
-    },
-  ];
+  spans[1].parentSpan = spans[0];
+  spans[2].parentSpan = spans[0];
+  spans[3].parentSpan = spans[2];
 
-  it('uses current span tags', () => {
+  it('uses current span attributes', () => {
     expect(getParameterInAncestor('a', spans[3])).toEqual({ key: 'a', value: 'a0' });
     expect(getParameterInAncestor('a', spans[2])).toEqual({ key: 'a', value: 'a2' });
     expect(getParameterInAncestor('a', spans[1])).toEqual({ key: 'a', value: 'a4' });
     expect(getParameterInAncestor('a', spans[0])).toEqual({ key: 'a', value: 'a6' });
   });
 
-  it('uses current span process tags', () => {
+  it('uses current span resource attributes', () => {
     expect(getParameterInAncestor('b', spans[3])).toEqual({ key: 'b', value: 'b1' });
     expect(getParameterInAncestor('d', spans[2])).toEqual({ key: 'd', value: 'd3' });
     expect(getParameterInAncestor('f', spans[1])).toEqual({ key: 'f', value: 'f5' });
     expect(getParameterInAncestor('h', spans[0])).toEqual({ key: 'h', value: 'h7' });
   });
 
-  it('uses parent span tags', () => {
+  it('uses parent span attributes', () => {
     expect(getParameterInAncestor('c', spans[3])).toEqual({ key: 'c', value: 'c2' });
     expect(getParameterInAncestor('e', spans[2])).toEqual({ key: 'e', value: 'e6' });
     expect(getParameterInAncestor('f', spans[2])).toEqual({ key: 'f', value: 'f6' });
@@ -266,19 +251,19 @@ describe('getParameterInAncestor()', () => {
     expect(getParameterInAncestor('g', spans[1])).toEqual({ key: 'g', value: 'g6' });
   });
 
-  it('uses parent span process tags', () => {
+  it('uses parent span resource attributes', () => {
     expect(getParameterInAncestor('d', spans[3])).toEqual({ key: 'd', value: 'd3' });
     expect(getParameterInAncestor('h', spans[2])).toEqual({ key: 'h', value: 'h7' });
     expect(getParameterInAncestor('h', spans[1])).toEqual({ key: 'h', value: 'h7' });
   });
 
-  it('uses grand-parent span tags', () => {
+  it('uses grand-parent span attributes', () => {
     expect(getParameterInAncestor('e', spans[3])).toEqual({ key: 'e', value: 'e6' });
     expect(getParameterInAncestor('f', spans[3])).toEqual({ key: 'f', value: 'f6' });
     expect(getParameterInAncestor('g', spans[3])).toEqual({ key: 'g', value: 'g6' });
   });
 
-  it('uses grand-parent process tags', () => {
+  it('uses grand-parent resource attributes', () => {
     expect(getParameterInAncestor('h', spans[3])).toEqual({ key: 'h', value: 'h7' });
   });
 
@@ -286,26 +271,26 @@ describe('getParameterInAncestor()', () => {
     expect(getParameterInAncestor('i', spans[3])).toBeUndefined();
   });
 
-  it('does not break if some tags are not defined', () => {
-    const spansWithUndefinedTags = [
+  it('does not break if some attributes are not defined', () => {
+    const spansWithUndefinedAttrs = [
       {
         depth: 0,
-        process: {},
+        resource: {},
       },
     ];
-    expect(getParameterInAncestor('a', spansWithUndefinedTags[0])).toBeUndefined();
+    expect(getParameterInAncestor('a', spansWithUndefinedAttrs[0])).toBeUndefined();
   });
 });
 
 describe('getParameterInTrace()', () => {
   const trace = {
-    processes: [],
+    resource: { attributes: [] },
     traceName: 'theTrace',
     traceID: 'trc1',
     spans: [],
     startTime: 1000,
     endTime: 3000,
-    duration: 2000,
+    durationMicros: 2000,
     services: [],
   };
 
@@ -336,8 +321,8 @@ describe('computeTraceLink()', () => {
     },
     {
       type: 'traces',
-      url: 'http://example.com/?traceID=#{traceID}&traceName=#{traceName}&startTime=#{startTime}&endTime=#{endTime}&duration=#{duration}',
-      text: 'third link (#{traceID}, #{traceName}, #{startTime}, #{endTime}, #{duration})',
+      url: 'http://example.com/?traceID=#{traceID}&traceName=#{traceName}&startTime=#{startTime}&endTime=#{endTime}&duration=#{durationMicros}',
+      text: 'third link (#{traceID}, #{traceName}, #{startTime}, #{endTime}, #{durationMicros})',
     },
     {
       type: 'traces',
@@ -347,13 +332,13 @@ describe('computeTraceLink()', () => {
   ].map(processLinkPattern);
 
   const trace = {
-    processes: [],
+    resource: { attributes: [] },
     traceName: 'theTrace',
     traceID: 'trc1',
     spans: [],
     startTime: 1000,
     endTime: 3000000000000,
-    duration: 2000,
+    durationMicros: 2000,
     services: [],
   };
 
@@ -378,7 +363,7 @@ describe('computeTraceLink()', () => {
 describe('computeLinks()', () => {
   const linkPatterns = [
     {
-      type: 'tags',
+      type: 'attributes',
       key: 'myKey',
       url: 'http://example.com/?myKey=#{myKey}',
       text: 'first link (#{myKey})',
@@ -389,7 +374,7 @@ describe('computeLinks()', () => {
       text: 'second link (#{myOtherKey})',
     },
     {
-      type: 'logs',
+      type: 'events',
       key: 'myThirdKey',
       url: 'http://example.com/?myKey1=#{myKey}&myKey=#{myThirdKey}&traceID=#{trace.traceID}&startTime=#{trace.startTime}',
       text: 'third link (#{myThirdKey}) for traceID - #{trace.traceID}',
@@ -397,13 +382,13 @@ describe('computeLinks()', () => {
   ].map(processLinkPattern);
 
   const spans = [
-    { depth: 0, process: {}, tags: [{ key: 'myKey', value: 'valueOfMyKey' }] },
+    { depth: 0, resource: {}, attributes: [{ key: 'myKey', value: 'valueOfMyKey' }] },
     {
       depth: 1,
-      process: {},
-      logs: [
+      resource: {},
+      events: [
         {
-          fields: [
+          attributes: [
             { key: 'myOtherKey', value: 'valueOfMy+Other+Key' },
             { key: 'myThirdKey', value: 'valueOfThirdMyKey' },
           ],
@@ -411,41 +396,85 @@ describe('computeLinks()', () => {
       ],
     },
   ];
-  spans[1].references = [
-    {
-      refType: 'CHILD_OF',
-      span: spans[0],
-    },
-  ];
+  spans[1].parentSpan = spans[0];
 
   const trace = {
-    processes: [],
+    resource: { attributes: [] },
     traceName: 'theTrace',
     traceID: 'trc1',
     spans: [],
     startTime: 1000,
     endTime: 3000,
-    duration: 2000,
+    durationMicros: 2000,
     services: [],
   };
 
   it('correctly computes links', () => {
-    expect(computeLinks(linkPatterns, spans[0], spans[0].tags, 0)).toEqual([
+    expect(computeLinks(linkPatterns, spans[0], spans[0].attributes, 0)).toEqual([
       {
         url: 'http://example.com/?myKey=valueOfMyKey',
         text: 'first link (valueOfMyKey)',
       },
     ]);
-    expect(computeLinks(linkPatterns, spans[1], spans[1].logs[0].fields, 0)).toEqual([
+    expect(computeLinks(linkPatterns, spans[1], spans[1].events[0].attributes, 0)).toEqual([
       {
         url: 'http://example.com/?myKey=valueOfMy%2BOther%2BKey&myKey=valueOfMyKey',
         text: 'second link (valueOfMy+Other+Key)',
       },
     ]);
-    expect(computeLinks(linkPatterns, spans[1], spans[1].logs[0].fields, 1, trace)).toEqual([
+    expect(computeLinks(linkPatterns, spans[1], spans[1].events[0].attributes, 1, trace)).toEqual([
       {
         url: 'http://example.com/?myKey1=valueOfMyKey&myKey=valueOfThirdMyKey&traceID=trc1&startTime=1000',
         text: 'third link (valueOfThirdMyKey) for traceID - trc1',
+      },
+    ]);
+  });
+
+  it('correctly computes links for legacy patterns', () => {
+    const legacyPatterns = [
+      {
+        type: 'tags',
+        key: 'myKey',
+        url: 'http://example.com/?myKey=#{myKey}',
+        text: 'legacy tag link (#{myKey})',
+      },
+      {
+        type: 'process',
+        key: 'procKey',
+        url: 'http://example.com/?procKey=#{procKey}',
+        text: 'legacy process link (#{procKey})',
+      },
+      {
+        type: 'logs',
+        key: 'logKey',
+        url: 'http://example.com/?logKey=#{logKey}',
+        text: 'legacy log link (#{logKey})',
+      },
+    ].map(processLinkPattern);
+
+    const span = {
+      depth: 0,
+      resource: { attributes: [{ key: 'procKey', value: 'procVal' }] },
+      attributes: [{ key: 'myKey', value: 'myVal' }],
+      events: [{ attributes: [{ key: 'logKey', value: 'logVal' }] }],
+    };
+
+    expect(computeLinks(legacyPatterns, span, span.attributes, 0)).toEqual([
+      {
+        url: 'http://example.com/?myKey=myVal',
+        text: 'legacy tag link (myVal)',
+      },
+    ]);
+    expect(computeLinks(legacyPatterns, span, span.resource.attributes, 0)).toEqual([
+      {
+        url: 'http://example.com/?procKey=procVal',
+        text: 'legacy process link (procVal)',
+      },
+    ]);
+    expect(computeLinks(legacyPatterns, span, span.events[0].attributes, 0)).toEqual([
+      {
+        url: 'http://example.com/?logKey=logVal',
+        text: 'legacy log link (logVal)',
       },
     ]);
   });
@@ -461,7 +490,7 @@ describe('getLinks()', () => {
   ].map(processLinkPattern);
   const template = jest.spyOn(linkPatterns[0].url, 'template');
 
-  const span = { depth: 0, process: {}, tags: [{ key: 'mySpecialKey', value: 'valueOfMyKey' }] };
+  const span = { depth: 0, resource: {}, attributes: [{ key: 'mySpecialKey', value: 'valueOfMyKey' }] };
 
   let cache;
 
@@ -473,21 +502,21 @@ describe('getLinks()', () => {
   it('does not access the cache if there is no link pattern', () => {
     cache.get = jest.fn();
     const getLinks = createGetLinks([], cache);
-    expect(getLinks(span, span.tags, 0)).toEqual([]);
+    expect(getLinks(span, span.attributes, 0)).toEqual([]);
     expect(cache.get).not.toHaveBeenCalled();
   });
 
   it('returns the result from the cache', () => {
     const result = [];
-    cache.set(span.tags[0], result);
+    cache.set(span.attributes[0], result);
     const getLinks = createGetLinks(linkPatterns, cache);
-    expect(getLinks(span, span.tags, 0)).toBe(result);
+    expect(getLinks(span, span.attributes, 0)).toBe(result);
     expect(template).not.toHaveBeenCalled();
   });
 
   it('adds the result to the cache', () => {
     const getLinks = createGetLinks(linkPatterns, cache);
-    const result = getLinks(span, span.tags, 0);
+    const result = getLinks(span, span.attributes, 0);
     expect(template).toHaveBeenCalledTimes(1);
     expect(result).toEqual([
       {
@@ -495,7 +524,7 @@ describe('getLinks()', () => {
         text: 'special key link (valueOfMyKey)',
       },
     ]);
-    expect(cache.get(span.tags[0])).toBe(result);
+    expect(cache.get(span.attributes[0])).toBe(result);
   });
 
   it('returns an empty array when trace is undefined', () => {
@@ -504,13 +533,13 @@ describe('getLinks()', () => {
 
   it('returns trace links when valid trace is passed', () => {
     const trace = {
-      processes: [],
+      resource: { attributes: [] },
       traceName: 'theTrace',
       traceID: 'trc1',
       spans: [],
       startTime: 1000,
       endTime: 2000,
-      duration: 1000,
+      durationMicros: 1000,
       services: [],
     };
     expect(getTraceLinks(trace)).toBeInstanceOf(Array);

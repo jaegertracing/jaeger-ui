@@ -394,24 +394,14 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     return DEFAULT_HEIGHTS.detail;
   };
 
-  linksGetter = (span: Span, items: ReadonlyArray<KeyValuePair>, itemIndex: number) => {
+  linksGetter = (span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number) => {
     const { trace } = this.props;
-    return getLinks(span, items, itemIndex, trace);
+    return getLinks(span, items, itemIndex, trace ? trace.asOtelTrace() : undefined);
   };
 
   // Adapter for OTEL components that need links from attributes
   linksGetterFromAttributes = (span: IOtelSpan) => (attributes: ReadonlyArray<IAttribute>, index: number) => {
-    // Convert IAttribute[] to KeyValuePair[] for legacy getLinks function
-    const keyValuePairs: KeyValuePair[] = attributes.map(attr => ({
-      key: attr.key,
-      value: String(attr.value), // Convert AttributeValue to string
-    }));
-    // Get legacy span from OtelSpanFacade for link generation
-    const legacySpan = (span as any).getLegacySpan ? (span as any).getLegacySpan() : null;
-    if (!legacySpan) {
-      return [];
-    }
-    return this.linksGetter(legacySpan, keyValuePairs, index);
+    return this.linksGetter(span, attributes, index);
   };
 
   // Adapter for OTEL event toggle to legacy log toggle
