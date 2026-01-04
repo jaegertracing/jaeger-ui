@@ -80,20 +80,6 @@ SPDX-License-Identifier: Apache-2.0
   text-overflow: ellipsis;
 }
 
-.span-name::before {
-  content: ' ';
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 0;
-  border-left: 4px solid;
-  border-left-color: inherit;
-}
-
-.span-name.is-detail-expanded::before {
-  bottom: 0;
-}
-
 /* This is so the hit area of the span-name extends the rest of the width of the span-name column */
 .span-name::after {
   background: transparent;
@@ -176,6 +162,16 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 0.85em;
   margin-right: 0.25rem;
   padding: 1px;
+}
+
+/* Hollow variant for bubbled errors from collapsed children */
+.SpanBarRow--errorIcon--hollow {
+  background: transparent;
+  border: 1.5px solid #db2828;
+  color: #db2828;
+  font-weight: bold;
+  padding: 0px;
+  /* Adjust padding since border adds 1.5px */
 }
 
 .SpanBarRow--rpcColorMarker {

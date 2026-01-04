@@ -61,7 +61,8 @@ describe('<SpanBarRow>', () => {
       operationName: 'rpc-op-name',
       serviceName: 'rpc-service-name',
     },
-    showErrorIcon: false,
+    hasOwnError: false,
+    hasChildError: false,
     getViewedBounds: jest.fn().mockReturnValue({ start: 0.5, end: 0.6 }),
     span: {
       traceId: 'trace-id',
@@ -169,10 +170,11 @@ describe('<SpanBarRow>', () => {
     expect(screen.getByText('no-instrumented-service')).toBeVisible();
   });
 
-  it('renders with error icon when showErrorIcon is true', () => {
+  it('renders with error icon when hasOwnError is true', () => {
     const props = {
       ...defaultProps,
-      showErrorIcon: true,
+      hasOwnError: true,
+      hasChildError: false,
     };
     render(<SpanBarRow {...props} />);
     expect(document.querySelector('.SpanBarRow--errorIcon')).toBeInTheDocument();
