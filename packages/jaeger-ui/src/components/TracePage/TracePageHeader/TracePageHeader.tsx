@@ -148,7 +148,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     return null;
   }
 
-  const links = getTraceLinks(trace);
+  const links = getTraceLinks(trace.asOtelTrace());
 
   const summaryItems =
     !hideSummary &&

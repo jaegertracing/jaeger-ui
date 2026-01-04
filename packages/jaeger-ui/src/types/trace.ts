@@ -12,11 +12,6 @@ export type KeyValuePair<ValueType = string> = {
   value: ValueType;
 };
 
-export type Link = {
-  url: string;
-  text: string;
-};
-
 export type Log = {
   timestamp: number;
   fields: ReadonlyArray<KeyValuePair>;

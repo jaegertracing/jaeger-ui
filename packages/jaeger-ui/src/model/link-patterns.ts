@@ -7,26 +7,33 @@ import memoize from 'lru-memoize';
 import { getConfigValue } from '../utils/config/get-config';
 import { encodedStringSupplant, getParamNames } from '../utils/stringSupplant';
 import { getParameterAndFormatter } from '../utils/link-formatting';
-import { getParent } from './span';
 import { TNil } from '../types';
-import { Span, Link, KeyValuePair, Trace } from '../types/trace';
+import { Hyperlink } from '../types/hyperlink';
+import { IOtelSpan, IOtelTrace, IAttribute } from '../types/otel';
 
 type ProcessedTemplate = {
   parameters: string[];
   template: (template: { [key: string]: any }) => string;
 };
 
+const ENABLE_LEGACY_LINK_PATTERNS = true;
+
+type LinkPatternType = 'attributes' | 'resource' | 'events' | 'traces';
+type LegacyLinkPatternType = 'tags' | 'process' | 'logs';
+
+const VALID_TRACE_KEYS = ['traceID', 'traceName', 'duration', 'startTime', 'endTime'];
+
+const VALID_SPAN_KEYS = ['spanID', 'operationName', 'duration', 'startTime'];
+
 type ProcessedLinkPattern = {
   object: any;
-  type: (link: string) => boolean;
+  type: (link: LinkPatternType | LegacyLinkPatternType) => boolean;
   key: (link: string) => boolean;
   value: (value: any) => boolean;
   url: ProcessedTemplate;
   text: ProcessedTemplate;
   parameters: string[];
 };
-
-type TLinksRV = { url: string; text: string }[];
 
 export function processTemplate(template: any, encodeFn: (unencoded: any) => string): ProcessedTemplate {
   if (typeof template !== 'string') {
@@ -42,7 +49,7 @@ export function processTemplate(template: any, encodeFn: (unencoded: any) => str
   };
 }
 
-export function createTestFunction(entry: any) {
+export function createTestFunction(entry: any): (arg: any) => boolean {
   if (typeof entry === 'string') {
     return (arg: any) => arg === entry;
   }
@@ -82,53 +89,89 @@ export function processLinkPattern(pattern: any): ProcessedLinkPattern | TNil {
   }
 }
 
-export function getParameterInArray(name: string, array: ReadonlyArray<KeyValuePair>) {
+export function getParameterInArray(name: string, array: ReadonlyArray<IAttribute>): IAttribute | undefined {
   if (array) {
     return array.find(entry => entry.key === name);
   }
   return undefined;
 }
 
-export function getParameterInAncestor(name: string, span: Span) {
-  let currentSpan: Span | TNil = span;
+export function getParameterInAncestor(name: string, span: IOtelSpan): IAttribute | undefined {
+  let currentSpan: IOtelSpan | undefined = span;
   while (currentSpan) {
+    if (VALID_SPAN_KEYS.includes(name)) {
+      let value: any;
+      switch (name) {
+        case 'spanID':
+          value = currentSpan.spanID;
+          break;
+        case 'operationName':
+          value = currentSpan.name;
+          break;
+        case 'duration':
+          value = currentSpan.durationMicros;
+          break;
+        case 'startTime':
+          value = currentSpan.startTimeUnixMicros;
+          break;
+        default:
+          // If it's a valid span key but no value found, continue to check attributes
+          break;
+      }
+      if (value !== undefined) {
+        return { key: name, value };
+      }
+    }
+
     const result =
-      getParameterInArray(name, currentSpan.tags) || getParameterInArray(name, currentSpan.process.tags);
+      getParameterInArray(name, currentSpan.attributes) ||
+      getParameterInArray(name, currentSpan.resource.attributes);
     if (result) {
       return result;
     }
-    currentSpan = getParent(currentSpan);
+    currentSpan = currentSpan.parentSpan;
   }
 
   return undefined;
 }
 
-const getValidTraceKeys = memoize(10)((trace: Trace) => {
-  const validKeys = (Object.keys(trace) as (keyof Trace)[]).filter(
-    key => typeof trace[key] === 'string' || typeof trace[key] === 'number'
-  );
-  return validKeys;
-});
-
-export function getParameterInTrace(name: string, trace: Trace | undefined) {
-  if (trace) {
-    const validTraceKeys = getValidTraceKeys(trace);
-
-    const key = name as keyof Trace;
-    if (validTraceKeys.includes(key)) {
-      return { key, value: trace[key] };
+export function getParameterInTrace(
+  name: string,
+  trace: IOtelTrace
+): { key: string; value: any } | undefined {
+  if (VALID_TRACE_KEYS.includes(name)) {
+    let value: any;
+    switch (name) {
+      case 'traceID':
+        value = trace.traceID;
+        break;
+      case 'traceName':
+        value = trace.traceName;
+        break;
+      case 'duration':
+        value = trace.durationMicros;
+        break;
+      case 'startTime':
+        value = trace.startTimeUnixMicros;
+        break;
+      case 'endTime':
+        value = trace.endTimeUnixMicros;
+        break;
+      default:
+        return undefined;
     }
+    return { key: name, value };
   }
 
   return undefined;
 }
 
-function callTemplate(template: ProcessedTemplate, data: any) {
+function callTemplate(template: ProcessedTemplate, data: any): string {
   return template.template(data);
 }
 
-export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: Trace) {
-  const result: TLinksRV = [];
+export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: IOtelTrace): Hyperlink[] {
+  const result: Hyperlink[] = [];
 
   linkPatterns
     .filter(pattern => pattern.type('traces'))
@@ -140,7 +183,7 @@ export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: Tr
 
         if (traceKV) {
           // At this point is safe to access to trace object using parameter variable because
-          // we validated parameter against validKeys, this implies that parameter a keyof Trace.
+          // we validated parameter against validKeys, this implies that parameter a keyof IOtelTrace.
           parameterValues[parameterName] = formatFunction ? formatFunction(traceKV.value) : traceKV.value;
 
           return true;
@@ -162,28 +205,35 @@ export function computeTraceLink(linkPatterns: ProcessedLinkPattern[], trace: Tr
 // computeLinks generates {url, text} link pairs by applying link patterms
 // to the element `itemIndex` of `items` array. The values for template
 // variables used in the patterns are looked up first in `items`, then
-// in `span.tags` and `span.process.tags`, and then in ancestor spans
-// recursively via `span.parent`.
+// in `span.attributes` and `span.resource.attributes`, and then in ancestor spans
+// recursively via `span.parentSpan`.
 export function computeLinks(
   linkPatterns: ProcessedLinkPattern[],
-  span: Span,
-  items: ReadonlyArray<KeyValuePair>,
+  span: IOtelSpan,
+  items: ReadonlyArray<IAttribute>,
   itemIndex: number,
-  trace: Trace | undefined
-) {
+  trace: IOtelTrace
+): Hyperlink[] {
   const item = items[itemIndex];
-  let type = 'logs';
-  const processTags = span.process.tags === items;
-  if (processTags) {
-    type = 'process';
+  let type: LinkPatternType = 'events';
+  let legacyType: LegacyLinkPatternType = 'logs';
+
+  if (span.resource.attributes === items) {
+    type = 'resource';
+    legacyType = 'process';
+  } else if (span.attributes === items) {
+    type = 'attributes';
+    legacyType = 'tags';
   }
-  const spanTags = span.tags === items;
-  if (spanTags) {
-    type = 'tags';
-  }
-  const result: { url: string; text: string }[] = [];
+
+  const result: Hyperlink[] = [];
   linkPatterns.forEach(pattern => {
-    if (pattern.type(type) && pattern.key(item.key) && pattern.value(item.value)) {
+    let typeMatches = pattern.type(type);
+    if (!typeMatches && ENABLE_LEGACY_LINK_PATTERNS) {
+      typeMatches = pattern.type(legacyType);
+    }
+
+    if (typeMatches && pattern.key(item.key) && pattern.value(item.value)) {
       const parameterValues: Record<string, any> = {};
       const allParameters = pattern.parameters.every(parameter => {
         let entry;
@@ -193,8 +243,8 @@ export function computeLinks(
         } else {
           entry = getParameterInArray(parameter, items);
 
-          if (!entry && !processTags) {
-            // do not look in ancestors for process tags because the same object may appear in different places in the hierarchy
+          if (!entry && type !== 'resource') {
+            // do not look in ancestors for resource attributes because the same object may appear in different places in the hierarchy
             // and the cache in getLinks uses that object as a key
             entry = getParameterInAncestor(parameter, span);
           }
@@ -222,8 +272,11 @@ export function computeLinks(
   return result;
 }
 
-export function createGetLinks(linkPatterns: ProcessedLinkPattern[], cache: WeakMap<KeyValuePair, Link[]>) {
-  return (span: Span, items: ReadonlyArray<KeyValuePair>, itemIndex: number, trace: Trace | undefined) => {
+export function createGetLinks(
+  linkPatterns: ProcessedLinkPattern[],
+  cache: WeakMap<IAttribute, Hyperlink[]>
+): (span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number, trace: IOtelTrace) => Hyperlink[] {
+  return (span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number, trace: IOtelTrace) => {
     if (linkPatterns.length === 0) {
       return [];
     }
@@ -241,11 +294,7 @@ export const processedLinks: ProcessedLinkPattern[] = (getConfigValue('linkPatte
   .map(processLinkPattern)
   .filter(Boolean);
 
-export const getTraceLinks: (trace: Trace | undefined) => TLinksRV = memoize(10)((
-  trace: Trace | undefined
-) => {
-  const result: TLinksRV = [];
-  if (!trace) return result;
+export const getTraceLinks: (trace: IOtelTrace) => Hyperlink[] = memoize(10)((trace: IOtelTrace) => {
   return computeTraceLink(processedLinks, trace);
 });
 

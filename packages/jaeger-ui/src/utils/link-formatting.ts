@@ -1,12 +1,14 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Trace } from '../types/trace';
-
-const formatFunctions: Record<
-  string,
-  <T extends Trace[keyof Trace]>(value: T, ...args: string[]) => T | string | number
-> = {
+/**
+ * Formatters that can be used in link patterns.
+ *
+ * @property epoch_micros_to_date_iso - Converts epoch microseconds to ISO 8601 date string.
+ * @property pad_start - Pads the start of a string with a given character to a specified length.
+ * @property add - Adds a numeric offset to a number.
+ */
+const formatFunctions: Record<string, <T>(value: T, ...args: string[]) => T | string | number> = {
   epoch_micros_to_date_iso: microsSinceEpoch => {
     if (typeof microsSinceEpoch !== 'number') {
       console.error('epoch_micros_to_date_iso() can only operate on numbers, ignoring formatting', {
@@ -60,7 +62,14 @@ const formatFunctions: Record<
   },
 };
 
-export function getParameterAndFormatter<T = Trace[keyof Trace]>(
+/**
+ * Parses a parameter string that may contain formatters (e.g. "param | formatter1 | formatter2 arg1").
+ * Returns the parameter name and a chained function that applies all specified formatters.
+ *
+ * @param parameter - The parameter string to parse.
+ * @returns An object containing the parameter name and the formatting function (or null if no formatters).
+ */
+export function getParameterAndFormatter<T = any>(
   parameter: string
 ): {
   parameterName: string;

@@ -8,7 +8,7 @@ import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import * as markers from './AccordionAttributes.markers';
 import AttributesTable from './AttributesTable';
 import { TNil } from '../../../../types';
-import { Link } from '../../../../types/trace';
+import { Hyperlink } from '../../../../types/hyperlink';
 import { IAttribute } from '../../../../types/otel';
 
 import './AccordionAttributes.css';
@@ -49,7 +49,7 @@ export default function AccordionAttributes({
   interactive?: boolean;
   isOpen: boolean;
   label: string;
-  linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Link[]) | TNil;
+  linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
   onToggle?: null | (() => void);
 }) {
   const isEmpty = !Array.isArray(data) || !data.length;
