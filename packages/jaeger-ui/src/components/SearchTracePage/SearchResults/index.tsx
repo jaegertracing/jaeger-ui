@@ -77,19 +77,35 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   );
 }
 
-// export for tests
 const getStripCircular = () => {
   const cache = new Set();
-  return (key: string, value: any) => {
+  return function (this: any, key: string, value: any) {
     if (
       key === 'childSpans' ||
       key === 'process' ||
       key === 'span' ||
       key === 'subsidiarilyReferencedBy' ||
-      key === '_otelFacade'
+      key === '_otelFacade' ||
+      key === 'traceName' ||
+      key === 'tracePageTitle' ||
+      key === 'traceEmoji' ||
+      key === 'services' ||
+      key === 'spanMap' ||
+      key === 'rootSpans' ||
+      key === 'orphanSpanCount' ||
+      key === 'endTime' ||
+      key === 'depth' ||
+      key === 'hasChildren' ||
+      key === 'relativeStartTime'
     ) {
       return;
     }
+    // We need to strip duration and startTime from TraceData but not from SpanData.
+    // The TraceData object can be recognized by the presence of 'processes' field.
+    if ((key === 'duration' || key === 'startTime') && this.processes) {
+      return;
+    }
+
     if (typeof value === 'object' && value !== null) {
       if (cache.has(value)) {
         // Circular reference found, discard key
