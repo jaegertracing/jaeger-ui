@@ -1,5 +1,3 @@
-// TODO: @ flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -28,8 +26,7 @@ import { stripEmbeddedState } from '../../../utils/embedded-url';
 
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
-import { TraceData } from '../../../types/trace';
-import { IOtelTrace, StatusCode } from '../../../types/otel';
+import { IOtelTrace } from '../../../types/otel';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -50,7 +47,7 @@ type SearchResultsProps = {
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
   traces: IOtelTrace[];
-  rawTraces: TraceData[];
+  rawTraces: any[];
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
 };
@@ -81,7 +78,7 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
 }
 
 // export for tests
-export function createBlob(rawTraces: TraceData[]) {
+export function createBlob(rawTraces: any[]) {
   return new Blob([`{"data":${JSON.stringify(rawTraces)}}`], { type: 'application/json' });
 }
 

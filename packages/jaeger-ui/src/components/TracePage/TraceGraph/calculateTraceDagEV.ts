@@ -8,7 +8,6 @@ import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
 import TDagNode from '../../../model/trace-dag/types/TDagNode';
 import { TDenseSpanMembers } from '../../../model/trace-dag/types';
-import { Trace } from '../../../types/trace';
 import { IOtelSpan, IOtelTrace, SpanKind, StatusCode } from '../../../types/otel';
 import { TSumSpan, TEv } from './types';
 

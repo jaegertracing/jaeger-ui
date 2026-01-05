@@ -5,13 +5,12 @@ import memoizeOne from 'memoize-one';
 
 import { TDdgPayloadEntry, TDdgPayloadPath, TDdgPayload } from './types';
 import { FetchedTrace } from '../../types';
-import { Span } from '../../types/trace';
+import { IOtelSpan, IOtelTrace, SpanKind } from '../../types/otel';
 
-const isKindServer = (span: Span) =>
-  span.tags.find(({ key, value }) => key === 'span.kind' && value === 'server');
+const isKindServer = (span: IOtelSpan) => span.kind === SpanKind.SERVER;
 
 function transformTracesToPaths(
-  traces: Record<string, FetchedTrace>,
+  traces: Record<string, FetchedTrace<IOtelTrace>>,
   focalService: string,
   focalOperation?: string
 ): TDdgPayload {
@@ -19,12 +18,11 @@ function transformTracesToPaths(
   Object.values(traces).forEach(({ data }) => {
     if (data) {
       // Use the pre-built spanMap and rootSpans from the trace object
-      const spanMap = data.spanMap;
       const rootSpans = data.rootSpans;
       const { traceID } = data;
 
-      // Helper function to walk all paths through the tree, building Span[] paths directly
-      const walkPaths = (span: Span, currentPath: Span[]) => {
+      // Helper function to walk all paths through the tree, building IOtelSpan[] paths directly
+      const walkPaths = (span: IOtelSpan, currentPath: IOtelSpan[]) => {
         const pathWithCurrent = [...currentPath, span];
 
         if (span.childSpans.length === 0) {
@@ -38,22 +36,22 @@ function transformTracesToPaths(
         }
       };
 
-      const processPath = (pathSpans: Span[]) => {
+      const processPath = (pathSpans: IOtelSpan[]) => {
         if (pathSpans.length === 0) return;
 
-        const paths = pathSpans.reduce((reducedSpans: Span[], span: Span): Span[] => {
+        const paths = pathSpans.reduce((reducedSpans: IOtelSpan[], span: IOtelSpan): IOtelSpan[] => {
           if (reducedSpans.length === 0) {
             reducedSpans.push(span);
           } else if (
-            reducedSpans[reducedSpans.length - 1].processID !== span.processID ||
+            reducedSpans[reducedSpans.length - 1].resource.serviceName !== span.resource.serviceName ||
             isKindServer(span)
           ) {
             reducedSpans.push(span);
           }
           return reducedSpans;
         }, []);
-        const path: TDdgPayloadEntry[] = paths.map(({ processID, operationName: operation }) => ({
-          service: data.processes[processID].serviceName,
+        const path: TDdgPayloadEntry[] = paths.map(({ resource, name: operation }) => ({
+          service: resource.serviceName,
           operation,
         }));
         if (
