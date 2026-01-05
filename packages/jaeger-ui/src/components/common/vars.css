@@ -86,12 +86,50 @@ SPDX-License-Identifier: Apache-2.0
   /* Layout Variables */
   --nav-height: 48px;
 
-  /* Trace visualization colors (programmatic - review in Phase 0.4) */
-  --trace-color-1: #2b8cbe;
-  --trace-color-2: #33a02c;
-  --trace-color-3: #e31a1c;
-  --trace-color-4: #ff7f00;
-  --trace-color-5: #6a3d9a;
+  /* 
+     Span categorical colors (IBM Carbon Sequence)
+     Reference: https://www.carbondesignsystem.com/data-visualization/color-palettes/#categorical-palettes
+  */
+  --span-color-1: #0072c3;
+  /* Cyan 60 */
+  --span-color-2: #eb6200;
+  /* Orange 60 */
+  --span-color-3: #8a3ffc;
+  /* Purple 60 */
+  --span-color-4: #b28600;
+  /* Yellow 50 */
+  --span-color-5: #005d5d;
+  /* Teal 70 */
+  --span-color-6: #fa4d56;
+  /* Red 50 */
+  --span-color-7: #198038;
+  /* Green 60 */
+  --span-color-8: #9f1853;
+  /* Magenta 70 */
+  --span-color-9: #002d9c;
+  /* Blue 80 */
+  --span-color-10: #6f6f6f;
+  /* Gray 60 */
+  --span-color-11: #00539c;
+  /* Blue 70 (Cyan-ish) */
+  --span-color-12: #8a3800;
+  /* Orange 70 */
+  --span-color-13: #6929c4;
+  /* Purple 70 */
+  --span-color-14: #8e6a00;
+  /* Yellow 60 */
+  --span-color-15: #002d2d;
+  /* Teal 90 */
+  --span-color-16: #570408;
+  /* Red 90 */
+  --span-color-17: #0e6027;
+  /* Green 70 */
+  --span-color-18: #510224;
+  /* Magenta 90 */
+  --span-color-19: #001141;
+  /* Blue 100 */
+  --span-color-20: #491d8b;
+  /* Purple 80 */
 
   /* ============================================
     HELPER & SMALL-SCOPE TOKENS
@@ -110,13 +148,18 @@ SPDX-License-Identifier: Apache-2.0
   /* Trace Graph */
   --trace-emphasis-highlight: #fff3d7;
 
+  /* Critical Path */
+  --critical-path-color: #000;
+  --critical-path-outline: #fff;
+
   /* ============================================
     TRACE TIMELINE TOKENS
     Used by TracePageHeader, TimelineViewer, SpanGraph components
     ============================================ */
 
-  /* Minimap / SpanGraph */
+  /* Trace Timeline */
   --span-graph-inactive: rgba(216, 216, 216, 0.5);
+  --span-bar-log-marker: rgba(0, 0, 0, 0.5);
 
   /* ============================================
     SYNTAX HIGHLIGHTING TOKENS
@@ -128,7 +171,7 @@ SPDX-License-Identifier: Apache-2.0
   --syntax-null: #6a737d;
 }
 
-:root[data-theme='dark'] {
+[data-theme='dark'] {
   /* ============================================
     TEXT TOKENS - Dark Mode
     ============================================ */
@@ -155,12 +198,50 @@ SPDX-License-Identifier: Apache-2.0
     SPECIAL PURPOSE TOKENS - Dark Mode
     ============================================ */
 
-  /* Trace visualization colors (programmatic - review in Phase 0.4) */
-  --trace-color-1: #4dabf7;
-  --trace-color-2: #51cf66;
-  --trace-color-3: #ff6b6b;
-  --trace-color-4: #ffa94d;
-  --trace-color-5: #9775fa;
+  /* 
+     Span categorical colors (IBM Carbon Sequence) - Dark Mode
+     Reference: https://www.carbondesignsystem.com/data-visualization/color-palettes/#categorical-palettes
+  */
+  --span-color-1: #1192e8;
+  /* Cyan 50 */
+  --span-color-2: #ff832b;
+  /* Orange 50 */
+  --span-color-3: #a56eff;
+  /* Purple 50 */
+  --span-color-4: #f1c21b;
+  /* Yellow 40 */
+  --span-color-5: #009d9a;
+  /* Teal 50 */
+  --span-color-6: #da1e28;
+  /* Red 60 */
+  --span-color-7: #24a148;
+  /* Green 50 */
+  --span-color-8: #ee538b;
+  /* Magenta 50 */
+  --span-color-9: #00539c;
+  /* Blue 70 */
+  --span-color-10: #8d8d8d;
+  /* Gray 50 */
+  --span-color-11: #0072c3;
+  /* Cyan 60 */
+  --span-color-12: #ba4e00;
+  /* Orange 60 */
+  --span-color-13: #8a3ffc;
+  /* Purple 60 */
+  --span-color-14: #b28600;
+  /* Yellow 50 */
+  --span-color-15: #005d5d;
+  /* Teal 70 */
+  --span-color-16: #a2191f;
+  /* Red 70 */
+  --span-color-17: #198038;
+  /* Green 60 */
+  --span-color-18: #9f1853;
+  /* Magenta 70 */
+  --span-color-19: #002d9c;
+  /* Blue 80 */
+  --span-color-20: #6929c4;
+  /* Purple 70 */
 
   /* ============================================
     HELPER & SMALL-SCOPE TOKENS - Dark Mode
@@ -169,12 +250,17 @@ SPDX-License-Identifier: Apache-2.0
   /* Trace Graph */
   --trace-emphasis-highlight: #3d3520;
 
+  /* Critical Path */
+  --critical-path-color: #000;
+  --critical-path-outline: #fff;
+
   /* ============================================
     TRACE TIMELINE TOKENS - Dark Mode
     ============================================ */
 
-  /* Minimap / SpanGraph - dark mode needs visible inactive region */
+  /* Trace Timeline - Dark Mode */
   --span-graph-inactive: rgba(200, 200, 200, 0.25);
+  --span-bar-log-marker: rgba(255, 255, 255, 0.5);
 
   /* ============================================
     SYNTAX HIGHLIGHTING TOKENS - Dark Mode
