@@ -269,7 +269,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
   setTraceView = (viewType: ETraceViewType) => {
     if (this.props.trace && this.props.trace.data && viewType === ETraceViewType.TraceGraph) {
-      this.traceDagEV = calculateTraceDagEV(this.props.trace.data);
+      this.traceDagEV = calculateTraceDagEV(this.props.trace.data.asOtelTrace());
     }
     this.setState({ viewType });
   };
