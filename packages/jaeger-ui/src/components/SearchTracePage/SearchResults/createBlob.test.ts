@@ -77,10 +77,7 @@ describe('createBlob regression test', () => {
     // ensuring we don't accidentally mutate our expected 'rawTrace' during transformation (though transform mutates inputs, we want rawTrace to stay clean for comparison).
     const inputTrace = JSON.parse(JSON.stringify(rawTrace));
     const transformedTrace = transformTraceData(inputTrace);
-
-    if (!transformedTrace) {
-      throw new Error('transformTraceData returned null');
-    }
+    expect(transformedTrace).not.toBeNull();
 
     // 3. Create the blob (this triggers JSON.stringify with getStripCircular)
     const blob = createBlob([transformedTrace]);
