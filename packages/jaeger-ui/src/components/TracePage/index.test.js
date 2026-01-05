@@ -922,7 +922,7 @@ describe('<TracePage>', () => {
 
       instance.setTraceView(ETraceViewType.TraceGraph);
       expect(setStateMock).toHaveBeenCalledWith({ viewType: ETraceViewType.TraceGraph });
-      expect(calculateTraceDagEVSpy).toHaveBeenCalledWith(defaultProps.trace.data);
+      expect(calculateTraceDagEVSpy).toHaveBeenCalledWith(defaultProps.trace.data.asOtelTrace());
 
       setStateMock.mockClear();
       instance.setTraceView(ETraceViewType.TraceSpansView);
