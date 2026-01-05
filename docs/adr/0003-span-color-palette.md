@@ -42,25 +42,25 @@ Legacy data visualization standard.
 | Order | Hue Group | Light Hex | Dark Hex |
 | :--- | :--- | :--- | :--- |
 | 1 | **Cyan** | `#0072c3` | `#1192e8` |
-| 2 | **Purple** | `#8a3ffc` | `#a56eff` |
-| 3 | **Teal** | `#005d5d` | `#009d9a` |
-| 4 | **Magenta** | `#9f1853` | `#ee538b` |
-| 5 | **Red** | `#fa4d56` | `#da1e28` |
-| 6 | **Green** | `#198038` | `#24a148` |
-| 7 | **Yellow** | `#b28600` | `#f1c21b` |
-| 8 | **Orange** | `#eb6200` | `#ff832b` |
-| 9 | **Blue-Mid** | `#002d9c` | `#00539c` |
-| 10 | **Purple-D** | `#6929c4` | `#8a3ffc` |
-| 11 | **Teal-High** | `#002d2d` | `#005d5d` |
-| 12 | **Red-Dark** | `#570408` | `#a2191f` |
-| 13 | **Magenta-H** | `#510224` | `#9f1853` |
-| 14 | **Green-Low** | `#0e6027` | `#198038` |
-| 15 | **Blue-High** | `#001141` | `#002d9c` |
-| 16 | **Orange-H** | `#8a3800` | `#ba4e00` |
-| 17 | **Purple-S** | `#491d8b` | `#6929c4` |
-| 18 | **Yellow-S** | `#8e6a00` | `#b28600` |
-| 19 | **Cyan-Low** | `#00539c` | `#0072c3` |
-| 20 | **Gray** | `#6f6f6f` | `#8d8d8d` |
+| 2 | **Orange** | `#eb6200` | `#ff832b` |
+| 3 | **Purple** | `#8a3ffc` | `#a56eff` |
+| 4 | **Yellow** | `#b28600` | `#f1c21b` |
+| 5 | **Teal** | `#005d5d` | `#009d9a` |
+| 6 | **Red**| `#fa4d56` | `#da1e28` |
+| 7 | **Green** | `#198038` | `#24a148` |
+| 8 | **Magenta** | `#9f1853` | `#ee538b` |
+| 9 | **Blue** | `#002d9c` | `#00539c` |
+| 10 | **Gray** | `#6f6f6f` | `#8d8d8d` |
+| 11 | **Cyan-Alt** | `#00539c` | `#0072c3` |
+| 12 | **Orange-D** | `#8a3800` | `#ba4e00` |
+| 13 | **Purple-D** | `#6929c4` | `#8a3ffc` |
+| 14 | **Yellow-D** | `#8e6a00` | `#b28600` |
+| 15 | **Teal-D** | `#002d2d` | `#005d5d` |
+| 16 | **Red-D** | `#570408` | `#a2191f` |
+| 17 | **Green-D** | `#0e6027` | `#198038` |
+| 18 | **Magenta-D**| `#510224` | `#9f1853` |
+| 19 | **Blue-D** | `#001141` | `#002d9c` |
+| 20 | **Purple-S** | `#491d8b` | `#6929c4` |
 
 ### 2. Grafana Classic
 *Recommended for observability consistency.*
@@ -131,6 +131,12 @@ Adopt the **IBM Carbon-based** 20-color palette (Cyan prioritized first) impleme
 - **Accessibility**: WCAG-compliant contrast in both themes.
 - **Performance**: Instant theme switching via CSS (no JS re-renders).
 - **Maintainability**: Palette changes now happen in a single CSS file.
+
+## Critical Path Visibility
+
+To ensure the critical path line (traditionally black) remains visible against high-luminance and low-luminance span colors, we have implemented a **"Halo" effect**.
+- **Tokens**: Added `--critical-path-color` and `--critical-path-outline` to `vars.css`.
+- **Contrast**: The critical path now features a 1px white outline (via `box-shadow`) which provides a "halo" across both light and dark span backgrounds, ensuring constant legibility regardless of the service color.
 
 ## Success Metrics
 

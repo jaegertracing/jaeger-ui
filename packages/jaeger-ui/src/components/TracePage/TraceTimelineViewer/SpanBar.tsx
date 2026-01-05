@@ -55,7 +55,7 @@ function SpanBarCriticalPath(props: { criticalPathViewStart: number; criticalPat
       className="SpanBar--criticalPath"
       onMouseEnter={() => setShouldLoadTooltip(true)}
       style={{
-        background: 'black',
+        background: 'var(--critical-path-color)',
         left: toPercentInDecimal(props.criticalPathViewStart),
         width: toPercentInDecimal(props.criticalPathViewEnd - props.criticalPathViewStart),
       }}
