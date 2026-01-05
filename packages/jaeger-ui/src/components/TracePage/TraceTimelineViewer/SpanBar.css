@@ -64,10 +64,16 @@ SPDX-License-Identifier: Apache-2.0
 @keyframes runOnce {
   0% {
     left: 0;
+    opacity: 1;
+  }
+
+  99% {
+    opacity: 1;
   }
 
   100% {
     left: 100%;
+    opacity: 0;
   }
 }
 
