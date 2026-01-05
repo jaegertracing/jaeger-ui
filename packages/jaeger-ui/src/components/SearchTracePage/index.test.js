@@ -89,9 +89,9 @@ describe('<SearchTracePage>', () => {
         <SearchTracePage {...testProps} />
       </AllProvider>
     );
-    expect(testProps.fetchServices).toHaveBeenCalledTimes(1);
-    expect(testProps.fetchServiceOperations).toHaveBeenCalledTimes(1);
-    expect(testProps.fetchServiceOperations).toHaveBeenCalledWith('svc-b');
+    expect(props.fetchServices).toHaveBeenCalledTimes(1);
+    expect(props.fetchServiceOperations).toHaveBeenCalledTimes(1);
+    expect(props.fetchServiceOperations).toHaveBeenCalledWith('svc-b');
     store.get = oldFn;
   });
 

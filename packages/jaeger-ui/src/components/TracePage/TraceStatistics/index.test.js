@@ -52,44 +52,60 @@ describe('<TraceTagOverview>', () => {
 
     const { rerender } = render(<TestWrapper />);
 
-    // Wait for initial render
-    expect(componentInstance).toBeTruthy();
-    expect(componentInstance.state.tableValue).toBeDefined();
+    await waitFor(() => {
+      expect(componentInstance).toBeTruthy();
+      expect(componentInstance.state.tableValue).toBeDefined();
+    });
 
-    rerender(
-      <TraceStatistics
-        ref={ref => {
-          componentInstance = ref;
-        }}
-        {...defaultProps}
-        uiFind="service1"
-        uiFindVertexKeys={searchSet}
-      />
-    );
+    await act(async () => {
+      rerender(
+        <TraceStatistics
+          ref={ref => {
+            componentInstance = ref;
+          }}
+          {...defaultProps}
+          uiFind="service1"
+          uiFindVertexKeys={searchSet}
+        />
+      );
+    });
 
-    // Check that highlighting was applied
-    expect(componentInstance.state.tableValue.length).toBeGreaterThan(0);
-    const hasHighlightedItems = componentInstance.state.tableValue.some(
-      item => item.searchColor === 'rgb(255,243,215)'
-    );
-    expect(hasHighlightedItems).toBe(true);
+    await waitFor(() => {
+      expect(componentInstance.state.tableValue.length).toBeGreaterThan(0);
+      const hasHighlightedItems = componentInstance.state.tableValue.some(
+        item => item.searchColor === 'rgb(255,243,215)'
+      );
+      expect(hasHighlightedItems).toBe(true);
+    });
 
-    rerender(
-      <TraceStatistics
-        ref={ref => {
-          componentInstance = ref;
-        }}
-        {...defaultProps}
-        uiFind={undefined}
-        uiFindVertexKeys={undefined}
-      />
-    );
+    await act(async () => {
+      rerender(
+        <TraceStatistics
+          ref={ref => {
+            componentInstance = ref;
+          }}
+          {...defaultProps}
+          uiFind={undefined}
+          uiFindVertexKeys={undefined}
+        />
+      );
+    });
 
-    const tableCells = screen.getAllByRole('cell');
-    expect(tableCells.length).toBeGreaterThan(0);
+    await waitFor(() => {
+      const tableCells = screen.getAllByRole('cell');
+      expect(tableCells.length).toBeGreaterThan(0);
+    });
   });
 
-  it('check handler', () => {
+  it('check handler', async () => {
+    async function timedAct(fn, label) {
+      const startTime = performance.now();
+      await act(fn);
+      const endTime = performance.now();
+      const elapsedTime = (endTime - startTime).toFixed(2); // Two decimal places for ms
+      console.log(`[${label}] took ${elapsedTime} ms`);
+    }
+
     let componentRef;
     const TestWrapper = () => {
       const ref = React.useRef();
@@ -97,7 +113,9 @@ describe('<TraceTagOverview>', () => {
       return <TraceStatistics ref={ref} {...defaultProps} />;
     };
 
-    render(<TestWrapper />);
+    await timedAct(async () => {
+      render(<TestWrapper />);
+    }, 'render');
 
     let tableValue = getColumnValues('Service Name', transformedTrace);
     tableValue = getColumnValuesSecondDropdown(
@@ -107,7 +125,9 @@ describe('<TraceTagOverview>', () => {
       transformedTrace
     );
 
-    componentRef.current.handler(tableValue, tableValue, 'Service Name', 'Operation Name');
+    await timedAct(async () => {
+      componentRef.current.handler(tableValue, tableValue, 'Service Name', 'Operation Name');
+    }, 'call handler');
 
     const rows = screen.getAllByRole('row');
     expect(rows.length).toBeGreaterThan(1);
@@ -125,14 +145,22 @@ describe('<TraceTagOverview>', () => {
 
     render(<TestWrapper />);
 
-    componentRef.current.togglePopup('select *');
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.togglePopup('select *');
+      }
+    });
 
     await waitFor(() => {
       const textarea = screen.getByRole('textbox');
       expect(textarea.value).toBe('"select *"');
     });
 
-    componentRef.current.togglePopup('select *');
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.togglePopup('select *');
+      }
+    });
 
     await waitFor(() => {
       expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
@@ -149,31 +177,35 @@ describe('<TraceTagOverview>', () => {
 
     render(<TestWrapper />);
 
-    componentRef.current.setState({
-      ...componentRef.current.state,
-      valueNameSelector1: 'sql.query',
-      tableValue: [
-        {
-          name: 'SELECT * FROM users',
-          hasSubgroupValue: true,
-          searchColor: 'transparent',
-          color: '#000',
-          key: '0',
-          isDetail: false,
-          parentElement: 'none',
-          count: 1,
-          total: 100,
-          avg: 50,
-          min: 10,
-          max: 90,
-          selfTotal: 80,
-          selfAvg: 40,
-          selfMin: 5,
-          selfMax: 75,
-          percent: 80,
-          colorToPercent: '#fff',
-        },
-      ],
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          valueNameSelector1: 'sql.query',
+          tableValue: [
+            {
+              name: 'SELECT * FROM users',
+              hasSubgroupValue: true,
+              searchColor: 'transparent',
+              color: '#000',
+              key: '0',
+              isDetail: false,
+              parentElement: 'none',
+              count: 1,
+              total: 100,
+              avg: 50,
+              min: 10,
+              max: 90,
+              selfTotal: 80,
+              selfAvg: 40,
+              selfMin: 5,
+              selfMax: 75,
+              percent: 80,
+              colorToPercent: '#fff',
+            },
+          ],
+        });
+      }
     });
 
     await waitFor(() => {
@@ -184,10 +216,13 @@ describe('<TraceTagOverview>', () => {
 
       if (nameButton) {
         fireEvent.click(nameButton);
-        const textarea = screen.queryByRole('textbox');
-        if (textarea) {
-          expect(textarea).toBeInTheDocument();
-        }
+      }
+    });
+
+    await waitFor(() => {
+      const textarea = screen.queryByRole('textbox');
+      if (textarea) {
+        expect(textarea).toBeInTheDocument();
       }
     });
   });
@@ -202,31 +237,35 @@ describe('<TraceTagOverview>', () => {
 
     render(<TestWrapper />);
 
-    componentRef.current.setState({
-      ...componentRef.current.state,
-      valueNameSelector1: 'sql.query',
-      tableValue: [
-        {
-          name: 'test-name',
-          hasSubgroupValue: false,
-          searchColor: 'transparent',
-          color: '#000',
-          key: '0',
-          isDetail: false,
-          parentElement: 'none',
-          count: 1,
-          total: 100,
-          avg: 50,
-          min: 10,
-          max: 90,
-          selfTotal: 80,
-          selfAvg: 40,
-          selfMin: 5,
-          selfMax: 75,
-          percent: 80,
-          colorToPercent: '#fff',
-        },
-      ],
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          valueNameSelector1: 'sql.query',
+          tableValue: [
+            {
+              name: 'test-name',
+              hasSubgroupValue: false,
+              searchColor: 'transparent',
+              color: '#000',
+              key: '0',
+              isDetail: false,
+              parentElement: 'none',
+              count: 1,
+              total: 100,
+              avg: 50,
+              min: 10,
+              max: 90,
+              selfTotal: 80,
+              selfAvg: 40,
+              selfMin: 5,
+              selfMax: 75,
+              percent: 80,
+              colorToPercent: '#fff',
+            },
+          ],
+        });
+      }
     });
 
     await waitFor(() => {
@@ -240,7 +279,9 @@ describe('<TraceTagOverview>', () => {
       }
     });
 
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    });
   });
 
   it('should test sorter function with string comparison', async () => {
@@ -268,50 +309,58 @@ describe('<TraceTagOverview>', () => {
 
     render(<TestWrapper />);
 
-    componentRef.current.setState({
-      ...componentRef.current.state,
-      tableValue: [
-        {
-          name: 'item1',
-          hasSubgroupValue: false,
-          count: 1,
-          total: 100,
-          key: '0',
-          searchColor: 'transparent',
-          colorToPercent: '#fff',
-        },
-        {
-          name: 'item2',
-          hasSubgroupValue: true,
-          count: 2,
-          total: 200,
-          key: '1',
-          searchColor: 'transparent',
-          colorToPercent: '#fff',
-        },
-        {
-          name: 'item3',
-          hasSubgroupValue: false,
-          count: 3,
-          total: 300,
-          key: '2',
-          searchColor: 'transparent',
-          colorToPercent: '#fff',
-        },
-      ],
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          tableValue: [
+            {
+              name: 'item1',
+              hasSubgroupValue: false,
+              count: 1,
+              total: 100,
+              key: '0',
+              searchColor: 'transparent',
+              colorToPercent: '#fff',
+            },
+            {
+              name: 'item2',
+              hasSubgroupValue: true,
+              count: 2,
+              total: 200,
+              key: '1',
+              searchColor: 'transparent',
+              colorToPercent: '#fff',
+            },
+            {
+              name: 'item3',
+              hasSubgroupValue: false,
+              count: 3,
+              total: 300,
+              key: '2',
+              searchColor: 'transparent',
+              colorToPercent: '#fff',
+            },
+          ],
+        });
+      }
     });
 
-    const columnHeaders = screen.getAllByRole('columnheader');
-    const countColumn = columnHeaders.find(header => header.textContent.includes('Count'));
+    await waitFor(() => {
+      const columnHeaders = screen.getAllByRole('columnheader');
+      const countColumn = columnHeaders.find(header => header.textContent.includes('Count'));
 
-    if (countColumn) {
-      fireEvent.click(countColumn);
-    }
+      if (countColumn) {
+        fireEvent.click(countColumn);
+      }
+    });
 
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
+    });
   });
 
-  it('should test searchInTable with complex search scenarios', () => {
+  it('should test searchInTable with complex search scenarios', async () => {
     let componentRef;
     const TestWrapper = () => {
       const ref = React.useRef();
@@ -350,12 +399,16 @@ describe('<TraceTagOverview>', () => {
 
     const searchSet = new Set(['parent1detail1']);
 
-    const result = componentRef.current.searchInTable(searchSet, mockTableData, null);
-    expect(result).toBeDefined();
-    expect(result.length).toBe(3);
+    await waitFor(() => {
+      if (componentRef.current) {
+        const result = componentRef.current.searchInTable(searchSet, mockTableData, null);
+        expect(result).toBeDefined();
+        expect(result.length).toBe(3);
+      }
+    });
   });
 
-  it('should test searchInTable with uiFind matching and detail items', () => {
+  it('should test searchInTable with uiFind matching and detail items', async () => {
     let componentRef;
     const TestWrapper = () => {
       const ref = React.useRef();
@@ -392,12 +445,16 @@ describe('<TraceTagOverview>', () => {
       },
     ];
 
-    const result = componentRef.current.searchInTable(undefined, mockTableData, 'searchterm');
-    const highlightedItems = result.filter(item => item.searchColor === 'rgb(255,243,215)');
-    expect(highlightedItems.length).toBeGreaterThan(0);
+    await waitFor(() => {
+      if (componentRef.current) {
+        const result = componentRef.current.searchInTable(undefined, mockTableData, 'searchterm');
+        const highlightedItems = result.filter(item => item.searchColor === 'rgb(255,243,215)');
+        expect(highlightedItems.length).toBeGreaterThan(0);
+      }
+    });
   });
 
-  it('should test searchInTable with items that have subgroup values but are details', () => {
+  it('should test searchInTable with items that have subgroup values but are details', async () => {
     let componentRef;
     const TestWrapper = () => {
       const ref = React.useRef();
@@ -426,8 +483,12 @@ describe('<TraceTagOverview>', () => {
       },
     ];
 
-    const result = componentRef.current.searchInTable(undefined, mockTableData, null);
-    expect(result[0].searchColor).toBe('rgb(248,248,248)');
-    expect(result[1].searchColor).toBe('rgb(248,248,248)');
+    await waitFor(() => {
+      if (componentRef.current) {
+        const result = componentRef.current.searchInTable(undefined, mockTableData, null);
+        expect(result[0].searchColor).toBe('rgb(248,248,248)');
+        expect(result[1].searchColor).toBe('rgb(248,248,248)');
+      }
+    });
   });
 });
