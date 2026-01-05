@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The Jaeger Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 import { createBlob } from './index';
 import transformTraceData from '../../../model/transform-trace-data';
 import { TraceData, SpanData, SpanReference } from '../../../types/trace';
