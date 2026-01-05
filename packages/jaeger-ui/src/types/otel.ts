@@ -106,6 +106,8 @@ export interface IOtelTrace {
   startTime: Microseconds;
   endTime: Microseconds;
   traceName: string;
+  tracePageTitle: string;
+  traceEmoji: string;
   services: ReadonlyArray<{ name: string; numberOfSpans: number }>;
 
   // Optimized data structures - created once during trace transformation

@@ -427,27 +427,27 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 #### Detailed Component Breakdown
 
 **Pilot Migration**
-- [ ] `TraceTimelineViewer/SpanDetail/KeyValuesTable` - Tags → Attributes
-- [ ] `TraceTimelineViewer/SpanDetail/AccordianLogs` - Logs → Events
+- [x] `TraceTimelineViewer/SpanDetail/KeyValuesTable` - Tags → Attributes ✅
+- [x] `TraceTimelineViewer/SpanDetail/AccordianLogs` - Logs → Events ✅
 
 **Core Display Components**
-- [ ] `TraceTimelineViewer/VirtualizedTraceView` - Main trace view
-- [ ] `TraceTimelineViewer/SpanBarRow` - Span bars
-- [ ] `TraceTimelineViewer/SpanDetailRow` - Span details
-- [ ] `TraceTimelineViewer/utils` - Utility functions (isErrorSpan, etc.)
+- [x] `TraceTimelineViewer/VirtualizedTraceView` - Main trace view ✅
+- [x] `TraceTimelineViewer/SpanBarRow` - Span bars ✅
+- [x] `TraceTimelineViewer/SpanDetailRow` - Span details ✅
+- [x] `TraceTimelineViewer/utils` - Utility functions (isErrorSpan, etc.) ✅
 
 **Statistics & Analysis**
-- [ ] `TraceStatistics/tableValues` - Heavy tag user
-- [ ] `TraceStatistics/PopupSql` - Tag extraction
-- [ ] `TraceStatistics/index` - Statistics display
+- [x] `TraceStatistics/tableValues` - Heavy tag user ✅
+- [x] `TraceStatistics/PopupSql` - Tag extraction ✅
+- [x] `TraceStatistics/index` - Statistics display ✅
 
 **Search & Results**
-- [ ] `SearchResults/ResultItem` - Service name display
+- [x] `SearchResults/ResultItem` - Service name display ✅
 - [ ] `SearchTracePage` - Trace list
 
 **Supporting Components**
-- [ ] `TracePageHeader` - Header info
-- [ ] `TraceFlamegraph` - Flamegraph view
+- [x] `TracePageHeader` - Header info ✅
+- [x] `TraceFlamegraph` - Flamegraph view ✅
 - [ ] `TraceSpanView` - Span table view
 
 **Remaining Components**
