@@ -465,37 +465,37 @@ describe('<SearchResults>', () => {
         expect(JSON.stringify(contentFile)).toBe(content);
       });
     });
+  });
 
-    describe('<SelectSort>', () => {
-      it('calls handleSortChange when selection changes', () => {
-        const handleSortChange = jest.fn();
-        render(<SelectSort sortBy={orderBy.MOST_RECENT} handleSortChange={handleSortChange} />);
-        fireEvent.change(screen.getByTestId('searchable-select'), {
-          target: { value: orderBy.LONGEST_FIRST },
-        });
-        expect(handleSortChange).toHaveBeenCalledWith(orderBy.LONGEST_FIRST);
+  describe('<SelectSort>', () => {
+    it('calls handleSortChange when selection changes', () => {
+      const handleSortChange = jest.fn();
+      render(<SelectSort sortBy={orderBy.MOST_RECENT} handleSortChange={handleSortChange} />);
+      fireEvent.change(screen.getByTestId('searchable-select'), {
+        target: { value: orderBy.LONGEST_FIRST },
       });
-
-      it('updates selected value when sortBy prop changes', () => {
-        const { rerender } = render(<SelectSort sortBy={orderBy.MOST_RECENT} handleSortChange={() => {}} />);
-        rerender(<SelectSort sortBy={orderBy.SHORTEST_FIRST} handleSortChange={() => {}} />);
-        expect(screen.getByTestId('searchable-select')).toHaveValue(orderBy.SHORTEST_FIRST);
-      });
+      expect(handleSortChange).toHaveBeenCalledWith(orderBy.LONGEST_FIRST);
     });
 
-    describe('showStandaloneLink', () => {
-      it('renders Link when showStandaloneLink is true', () => {
-        renderWithRouter(<SearchResults {...baseProps} showStandaloneLink />);
-        const link = screen.getByRole('link');
-        expect(link).toBeInTheDocument();
-        expect(screen.getByTestId('new-window-icon')).toBeInTheDocument();
-      });
+    it('updates selected value when sortBy prop changes', () => {
+      const { rerender } = render(<SelectSort sortBy={orderBy.MOST_RECENT} handleSortChange={() => {}} />);
+      rerender(<SelectSort sortBy={orderBy.SHORTEST_FIRST} handleSortChange={() => {}} />);
+      expect(screen.getByTestId('searchable-select')).toHaveValue(orderBy.SHORTEST_FIRST);
+    });
+  });
 
-      it('does not render Link when showStandaloneLink is false', () => {
-        renderWithRouter(<SearchResults {...baseProps} showStandaloneLink={false} />);
-        expect(screen.queryByRole('link')).not.toBeInTheDocument();
-        expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
-      });
+  describe('showStandaloneLink', () => {
+    it('renders Link when showStandaloneLink is true', () => {
+      renderWithRouter(<SearchResults {...baseProps} showStandaloneLink />);
+      const link = screen.getByRole('link');
+      expect(link).toBeInTheDocument();
+      expect(screen.getByTestId('new-window-icon')).toBeInTheDocument();
+    });
+
+    it('does not render Link when showStandaloneLink is false', () => {
+      renderWithRouter(<SearchResults {...baseProps} showStandaloneLink={false} />);
+      expect(screen.queryByRole('link')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
     });
   });
 });

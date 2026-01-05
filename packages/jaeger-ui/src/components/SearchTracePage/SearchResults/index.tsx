@@ -78,8 +78,33 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
 }
 
 // export for tests
+const getStripCircular = () => {
+  const cache = new Set();
+  return (key: string, value: any) => {
+    if (
+      key === 'childSpans' ||
+      key === 'process' ||
+      key === 'span' ||
+      key === 'subsidiarilyReferencedBy' ||
+      key === '_otelFacade'
+    ) {
+      return;
+    }
+    if (typeof value === 'object' && value !== null) {
+      if (cache.has(value)) {
+        // Circular reference found, discard key
+        return;
+      }
+      // Store value in our collection
+      cache.add(value);
+    }
+    return value;
+  };
+};
+
 export function createBlob(rawTraces: any[]) {
-  return new Blob([`{"data":${JSON.stringify(rawTraces)}}`], { type: 'application/json' });
+  const stringified = JSON.stringify(rawTraces, getStripCircular());
+  return new Blob([`{"data":${stringified}}`], { type: 'application/json' });
 }
 
 export function UnconnectedSearchResults({
