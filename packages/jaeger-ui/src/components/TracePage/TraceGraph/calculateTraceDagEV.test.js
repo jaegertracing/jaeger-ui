@@ -3,7 +3,7 @@
 
 import transformTraceData from '../../../model/transform-trace-data';
 import { SpanKind } from '../../../types/otel';
-import calculateTraceDagEV, { mapFollowsFrom } from './calculateTraceDagEV';
+import calculateTraceDagEV, { mapNonBlocking } from './calculateTraceDagEV';
 import testTrace from './testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
@@ -20,7 +20,7 @@ function assertData(nodes, service, operation, count, errors, time, percent, sel
 
 describe('calculateTraceDagEV', () => {
   it('calculates TraceGraph', () => {
-    const traceDag = calculateTraceDagEV(transformedTrace);
+    const traceDag = calculateTraceDagEV(transformedTrace.asOtelTrace());
     const { vertices: nodes } = traceDag;
     expect(nodes.length).toBe(9);
     assertData(nodes, 'service1', 'op1', 1, 0, 390, 39, 224);
@@ -39,8 +39,8 @@ describe('calculateTraceDagEV', () => {
   });
 });
 
-describe('mapFollowsFrom', () => {
-  it('sets followsFrom false for blocking spans (CLIENT, SERVER, INTERNAL)', () => {
+describe('mapNonBlocking', () => {
+  it('sets isNonBlocking false for blocking spans (CLIENT, SERVER, INTERNAL)', () => {
     const mockEdges = [{ from: 0, to: 0 }];
     const mockNodes = [
       {
@@ -54,11 +54,11 @@ describe('mapFollowsFrom', () => {
       },
     ];
 
-    const result = mapFollowsFrom(mockEdges, mockNodes);
-    expect(result[0].followsFrom).toBe(false);
+    const result = mapNonBlocking(mockEdges, mockNodes);
+    expect(result[0].isNonBlocking).toBe(false);
   });
 
-  it('sets followsFrom true for non-blocking CONSUMER spans', () => {
+  it('sets isNonBlocking true for non-blocking CONSUMER spans', () => {
     const mockEdges = [{ from: 0, to: 0 }];
     const mockNodes = [
       {
@@ -72,12 +72,12 @@ describe('mapFollowsFrom', () => {
       },
     ];
 
-    const result = mapFollowsFrom(mockEdges, mockNodes);
-    expect(result[0].followsFrom).toBe(true);
+    const result = mapNonBlocking(mockEdges, mockNodes);
+    expect(result[0].isNonBlocking).toBe(true);
   });
 });
 
-describe('mapFollowsFrom - span kind combinations', () => {
+describe('mapNonBlocking - span kind combinations', () => {
   const testCases = [
     {
       name: 'CLIENT span (blocking)',
@@ -107,7 +107,7 @@ describe('mapFollowsFrom - span kind combinations', () => {
   ];
 
   testCases.forEach(({ name, kind, expected }) => {
-    it(`sets followsFrom correctly for ${name}`, () => {
+    it(`sets isNonBlocking correctly for ${name}`, () => {
       const mockEdges = [{ from: 0, to: 0 }];
       const mockNodes = [
         {
@@ -121,8 +121,8 @@ describe('mapFollowsFrom - span kind combinations', () => {
         },
       ];
 
-      const result = mapFollowsFrom(mockEdges, mockNodes);
-      expect(result[0].followsFrom).toBe(expected);
+      const result = mapNonBlocking(mockEdges, mockNodes);
+      expect(result[0].isNonBlocking).toBe(expected);
     });
   });
 });

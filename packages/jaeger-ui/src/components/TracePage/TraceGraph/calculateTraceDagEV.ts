@@ -14,22 +14,22 @@ import { TSumSpan, TEv } from './types';
 
 let parentChildOfMap: Record<string, IOtelSpan[]>;
 
-export function mapFollowsFrom(
+export function mapNonBlocking(
   edges: TEdge[],
   nodes: TDagNode<TSumSpan & TDenseSpanMembers>[]
-): TEdge<{ followsFrom: boolean }>[] {
+): TEdge<{ isNonBlocking: boolean }>[] {
   return edges.map(e => {
     // In OTEL model, the blocking nature of child spans is determined by span kind:
-    // - CONSUMER child of PRODUCER parent is non-blocking (followsFrom: true)
-    // - INTERNAL/CLIENT/SERVER/PRODUCER spans are blocking (followsFrom: false)
-    let followsFrom = false;
+    // - CONSUMER child of PRODUCER parent is non-blocking (isNonBlocking: true)
+    // - INTERNAL/CLIENT/SERVER/PRODUCER spans are blocking (isNonBlocking: false)
+    let isNonBlocking = false;
     if (typeof e.to === 'number') {
       const node = nodes[e.to];
       // A node represents a non-blocking relationship if any of its members are CONSUMER spans
       // (which implies a PRODUCER-CONSUMER pair in the parent-child relationship)
-      followsFrom = node.members.some(m => m.span.kind === SpanKind.CONSUMER);
+      isNonBlocking = node.members.some(m => m.span.kind === SpanKind.CONSUMER);
     }
-    return { ...e, followsFrom };
+    return { ...e, isNonBlocking };
   });
 }
 
@@ -97,6 +97,6 @@ export default function calculateTraceDagEV(trace: IOtelTrace): TEv {
   const traceDag = calculateTraceDag(trace);
   const nodes = [...traceDag.nodesMap.values()];
   const ev = convPlexus(traceDag.nodesMap);
-  const edges = mapFollowsFrom(ev.edges, nodes);
+  const edges = mapNonBlocking(ev.edges, nodes);
   return { ...ev, edges };
 }

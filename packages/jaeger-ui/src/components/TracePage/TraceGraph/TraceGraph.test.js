@@ -66,7 +66,7 @@ jest.mock('@jaegertracing/plexus', () => {
 });
 
 const transformedTrace = transformTraceData(testTrace);
-const ev = calculateTraceDagEV(transformedTrace);
+const ev = calculateTraceDagEV(transformedTrace.asOtelTrace());
 
 describe('<TraceGraph>', () => {
   let props;
@@ -154,7 +154,7 @@ describe('<TraceGraph>', () => {
 
     // Verify edge type explanations
     expect(screen.getByText('ChildOf')).toBeInTheDocument();
-    expect(screen.getByText('FollowsFrom')).toBeInTheDocument();
+    expect(screen.getByText('Non-Blocking')).toBeInTheDocument();
 
     // Verify self time explanation
     const helpContent = screen.getByTestId('help-content');
@@ -176,11 +176,11 @@ describe('<TraceGraph>', () => {
     expect(screen.queryByTestId('help-content')).not.toBeInTheDocument();
   });
 
-  it('uses stroke-dash edges for followsFrom', () => {
-    const edge = { from: 0, to: 1, followsFrom: true };
+  it('uses stroke-dash edges for isNonBlocking', () => {
+    const edge = { from: 0, to: 1, isNonBlocking: true };
     expect(setOnEdgePath(edge)).toEqual({ strokeDasharray: 4 });
 
-    const edge2 = { from: 0, to: 1, followsFrom: false };
+    const edge2 = { from: 0, to: 1, isNonBlocking: false };
     expect(setOnEdgePath(edge2)).toEqual({});
   });
 
