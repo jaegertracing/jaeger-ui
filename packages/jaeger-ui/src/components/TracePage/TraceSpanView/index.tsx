@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { Component } from 'react';
-import { Row, Col, Table, Button, Select, Form } from 'antd';
+import { Table, Button, Select, Form } from 'antd';
 import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
 import './index.css';
@@ -172,85 +172,90 @@ export default class TraceSpanView extends Component<Props, State> {
     return (
       <div>
         <h3 className="title--TraceSpanView"> Trace Tabular View</h3>
-        <Row style={{ marginTop: '8px' }}>
-          <Col span={7}>
-            <Form.Item
-              label="Service Name"
-              labelCol={{ span: 6 }}
-              wrapperCol={{ span: 18 }}
-              className="serviceNameDD"
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '16px',
+            marginTop: '8px',
+            paddingLeft: '8px',
+            paddingRight: '8px',
+          }}
+        >
+          <Form.Item
+            label="Service Name"
+            labelCol={{ flex: '0 0 auto' }}
+            wrapperCol={{ flex: '1 1 auto' }}
+            style={{ flex: '1 1 300px', maxWidth: '400px', marginBottom: 0 }}
+            className="serviceNameDD"
+          >
+            <SearchableSelect
+              allowClear
+              mode="multiple"
+              style={{ width: '100%' }}
+              maxTagCount={4}
+              value={this.state.selectedServiceName}
+              maxTagPlaceholder={`+ ${this.state.selectedServiceName.length - 4} Selected`}
+              placeholder="Select Service"
+              onChange={entry => {
+                this.setState(previousState => ({
+                  ...previousState,
+                  selectedServiceName: entry as [],
+                }));
+                // Use resource.serviceName instead of process.serviceName
+                this.onFilteredChangeCustom(entry as [], 'serviceName');
+              }}
+              data-testid="select-service"
             >
-              <SearchableSelect
-                allowClear
-                mode="multiple"
-                style={{ width: '100%' }}
-                maxTagCount={4}
-                value={this.state.selectedServiceName}
-                maxTagPlaceholder={`+ ${this.state.selectedServiceName.length - 4} Selected`}
-                placeholder="Please Select Service "
-                onChange={entry => {
-                  this.setState(previousState => ({
-                    ...previousState,
-                    selectedServiceName: entry as [],
-                  }));
-                  // Use resource.serviceName instead of process.serviceName
-                  this.onFilteredChangeCustom(entry as [], 'serviceName');
-                }}
-                data-testid="select-service"
-              >
-                {this.state.serviceNamesList.map(name => {
-                  return (
-                    <Option value={name} key={name}>
-                      {name}{' '}
-                    </Option>
-                  );
-                })}
-              </SearchableSelect>
-            </Form.Item>
-          </Col>
-          <Col span={9}>
-            <Form.Item
-              label="Operation Name"
-              labelCol={{ span: 6 }}
-              wrapperCol={{ span: 18 }}
-              className="operationNameDD"
+              {this.state.serviceNamesList.map(name => {
+                return (
+                  <Option value={name} key={name}>
+                    {name}{' '}
+                  </Option>
+                );
+              })}
+            </SearchableSelect>
+          </Form.Item>
+          <Form.Item
+            label="Operation Name"
+            labelCol={{ flex: '0 0 auto' }}
+            wrapperCol={{ flex: '1 1 auto' }}
+            style={{ flex: '1 1 300px', maxWidth: '400px', marginBottom: 0 }}
+            className="operationNameDD"
+          >
+            <SearchableSelect
+              allowClear
+              mode="multiple"
+              style={{ width: '100%' }}
+              maxTagCount={4}
+              value={this.state.selectedOperationName}
+              maxTagPlaceholder={`+ ${this.state.selectedOperationName.length - 4} Selected`}
+              placeholder="Select Operation"
+              onChange={entry => {
+                this.setState(previousState => ({
+                  ...previousState,
+                  selectedOperationName: entry as [],
+                }));
+                // Use name instead of operationName
+                this.onFilteredChangeCustom(entry as [], 'operationName');
+              }}
+              data-testid="select-operation"
             >
-              <SearchableSelect
-                allowClear
-                mode="multiple"
-                style={{ width: '100%' }}
-                maxTagCount={4}
-                value={this.state.selectedOperationName}
-                maxTagPlaceholder={`+ ${this.state.selectedOperationName.length - 4} Selected`}
-                placeholder="Please Select Operation"
-                onChange={entry => {
-                  this.setState(previousState => ({
-                    ...previousState,
-                    selectedOperationName: entry as [],
-                  }));
-                  // Use name instead of operationName
-                  this.onFilteredChangeCustom(entry as [], 'operationName');
-                }}
-                data-testid="select-operation"
-              >
-                {this.uniqueOperationNameOptions().map((name: string) => {
-                  return (
-                    <Option value={name} key={name}>
-                      {name}{' '}
-                    </Option>
-                  );
-                })}
-              </SearchableSelect>
-            </Form.Item>
-          </Col>
-          <Col span={2} push={6}>
-            <Form.Item className="reset-filter">
-              <Button type="primary" htmlType="button" onClick={this.handleResetFilter}>
-                Reset Filters
-              </Button>
-            </Form.Item>
-          </Col>
-        </Row>
+              {this.uniqueOperationNameOptions().map((name: string) => {
+                return (
+                  <Option value={name} key={name}>
+                    {name}{' '}
+                  </Option>
+                );
+              })}
+            </SearchableSelect>
+          </Form.Item>
+          <Form.Item className="reset-filter" style={{ flex: '0 0 auto', marginBottom: 0 }}>
+            <Button htmlType="button" onClick={this.handleResetFilter}>
+              Reset Filters
+            </Button>
+          </Form.Item>
+        </div>
 
         <Table
           className="span-table span-view-table"
