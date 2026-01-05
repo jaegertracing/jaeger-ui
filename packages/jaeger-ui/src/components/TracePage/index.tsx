@@ -378,7 +378,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
       toSearch: (locationState && locationState.fromSearch) || null,
-      trace: data,
+      trace: data.asOtelTrace(),
       updateNextViewRangeTime: this.updateNextViewRangeTime,
       updateViewRangeTime: this.updateViewRangeTime,
     };

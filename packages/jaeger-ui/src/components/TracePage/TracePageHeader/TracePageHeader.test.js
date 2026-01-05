@@ -89,7 +89,7 @@ describe('<TracePageHeader>', () => {
   const mockRef = React.createRef();
 
   const defaultProps = {
-    trace,
+    trace: trace.asOtelTrace(),
     canCollapse: false,
     clearSearch: jest.fn(),
     focusUiFindMatches: jest.fn(),
