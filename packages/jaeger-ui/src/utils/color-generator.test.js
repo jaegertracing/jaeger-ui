@@ -30,3 +30,19 @@ it('returns [0,0,0] if invalid color string is passed to strToRgb', () => {
   expect(strToRgb('')).toEqual([0, 0, 0]);
   expect(strToRgb('#1234567')).toEqual([0, 0, 0]);
 });
+
+it('getRgbColorByKey should resolve CSS variables', () => {
+  const originalGetComputedStyle = window.getComputedStyle;
+  window.getComputedStyle = jest.fn().mockReturnValue({
+    getPropertyValue: jest.fn().mockImplementation(prop => {
+      if (prop === '--span-color-1') return '#8a3ffc';
+      return '';
+    }),
+  });
+
+  colorGenerator.clear();
+  const rgb = colorGenerator.getRgbColorByKey('serviceA');
+  expect(rgb).toEqual([138, 63, 252]);
+
+  window.getComputedStyle = originalGetComputedStyle;
+});

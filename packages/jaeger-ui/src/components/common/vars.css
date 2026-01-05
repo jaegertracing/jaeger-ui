@@ -86,12 +86,50 @@ SPDX-License-Identifier: Apache-2.0
   /* Layout Variables */
   --nav-height: 48px;
 
-  /* Trace visualization colors (programmatic - review in Phase 0.4) */
-  --trace-color-1: #2b8cbe;
-  --trace-color-2: #33a02c;
-  --trace-color-3: #e31a1c;
-  --trace-color-4: #ff7f00;
-  --trace-color-5: #6a3d9a;
+  /* 
+     Span categorical colors (IBM Carbon Sequence)
+     Reference: https://www.carbondesignsystem.com/data-visualization/color-palettes/#categorical-palettes
+  */
+  --span-color-1: #0072c3;
+  /* Cyan 60 */
+  --span-color-2: #8a3ffc;
+  /* Purple 60 */
+  --span-color-3: #005d5d;
+  /* Teal 70 */
+  --span-color-4: #9f1853;
+  /* Magenta 70 */
+  --span-color-5: #fa4d56;
+  /* Red 50 */
+  --span-color-6: #198038;
+  /* Green 60 */
+  --span-color-7: #b28600;
+  /* Yellow 50 */
+  --span-color-8: #eb6200;
+  /* Orange 60 */
+  --span-color-9: #002d9c;
+  /* Blue 80 */
+  --span-color-10: #6929c4;
+  /* Purple 70 */
+  --span-color-11: #002d2d;
+  /* Teal 90 */
+  --span-color-12: #570408;
+  /* Red 90 */
+  --span-color-13: #510224;
+  /* Magenta 90 */
+  --span-color-14: #0e6027;
+  /* Green 70 */
+  --span-color-15: #001141;
+  /* Blue 100 */
+  --span-color-16: #8a3800;
+  /* Orange 70 */
+  --span-color-17: #491d8b;
+  /* Purple 80 */
+  --span-color-18: #8e6a00;
+  /* Yellow 60 */
+  --span-color-19: #00539c;
+  /* Blue 70 */
+  --span-color-20: #6f6f6f;
+  /* Gray 60 */
 
   /* ============================================
     HELPER & SMALL-SCOPE TOKENS
@@ -155,12 +193,50 @@ SPDX-License-Identifier: Apache-2.0
     SPECIAL PURPOSE TOKENS - Dark Mode
     ============================================ */
 
-  /* Trace visualization colors (programmatic - review in Phase 0.4) */
-  --trace-color-1: #4dabf7;
-  --trace-color-2: #51cf66;
-  --trace-color-3: #ff6b6b;
-  --trace-color-4: #ffa94d;
-  --trace-color-5: #9775fa;
+  /* 
+     Span categorical colors (IBM Carbon Sequence) - Dark Mode
+     Reference: https://www.carbondesignsystem.com/data-visualization/color-palettes/#categorical-palettes
+  */
+  --span-color-1: #1192e8;
+  /* Cyan 50 */
+  --span-color-2: #a56eff;
+  /* Purple 50 */
+  --span-color-3: #009d9a;
+  /* Teal 50 */
+  --span-color-4: #ee538b;
+  /* Magenta 50 */
+  --span-color-5: #da1e28;
+  /* Red 60 */
+  --span-color-6: #24a148;
+  /* Green 50 */
+  --span-color-7: #f1c21b;
+  /* Yellow 40 */
+  --span-color-8: #ff832b;
+  /* Orange 50 */
+  --span-color-9: #00539c;
+  /* Blue 70 */
+  --span-color-10: #8a3ffc;
+  /* Purple 60 */
+  --span-color-11: #005d5d;
+  /* Teal 70 */
+  --span-color-12: #a2191f;
+  /* Red 70 */
+  --span-color-13: #9f1853;
+  /* Magenta 70 */
+  --span-color-14: #198038;
+  /* Green 60 */
+  --span-color-15: #002d9c;
+  /* Blue 80 */
+  --span-color-16: #ba4e00;
+  /* Orange 60 */
+  --span-color-17: #6929c4;
+  /* Purple 70 */
+  --span-color-18: #b28600;
+  /* Yellow 50 */
+  --span-color-19: #0072c3;
+  /* Cyan 60 */
+  --span-color-20: #8d8d8d;
+  /* Gray 50 */
 
   /* ============================================
     HELPER & SMALL-SCOPE TOKENS - Dark Mode
