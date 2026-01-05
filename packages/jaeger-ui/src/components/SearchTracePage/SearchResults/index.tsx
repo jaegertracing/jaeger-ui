@@ -1,5 +1,3 @@
-// TODO: @ flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -28,8 +26,7 @@ import { stripEmbeddedState } from '../../../utils/embedded-url';
 
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
-import { TraceData } from '../../../types/trace';
-import { IOtelTrace, StatusCode } from '../../../types/otel';
+import { IOtelTrace } from '../../../types/otel';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -50,7 +47,7 @@ type SearchResultsProps = {
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
   traces: IOtelTrace[];
-  rawTraces: TraceData[];
+  rawTraces: any[];
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
 };
@@ -80,9 +77,50 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   );
 }
 
-// export for tests
-export function createBlob(rawTraces: TraceData[]) {
-  return new Blob([`{"data":${JSON.stringify(rawTraces)}}`], { type: 'application/json' });
+const getStripCircular = () => {
+  const cache = new Set();
+  return function (this: any, key: string, value: any) {
+    if (
+      key === 'childSpans' ||
+      key === 'process' ||
+      key === 'span' ||
+      key === 'subsidiarilyReferencedBy' ||
+      key === '_otelFacade' ||
+      key === 'traceName' ||
+      key === 'tracePageTitle' ||
+      key === 'traceEmoji' ||
+      key === 'services' ||
+      key === 'spanMap' ||
+      key === 'rootSpans' ||
+      key === 'orphanSpanCount' ||
+      key === 'endTime' ||
+      key === 'depth' ||
+      key === 'hasChildren' ||
+      key === 'relativeStartTime'
+    ) {
+      return;
+    }
+    // We need to strip duration and startTime from TraceData but not from SpanData.
+    // The TraceData object can be recognized by the presence of 'processes' field.
+    if ((key === 'duration' || key === 'startTime') && this.processes) {
+      return;
+    }
+
+    if (typeof value === 'object' && value !== null) {
+      if (cache.has(value)) {
+        // Circular reference found, discard key
+        return;
+      }
+      // Store value in our collection
+      cache.add(value);
+    }
+    return value;
+  };
+};
+
+export function createBlob(rawTraces: any[]) {
+  const stringified = JSON.stringify(rawTraces, getStripCircular());
+  return new Blob([`{"data":${stringified}}`], { type: 'application/json' });
 }
 
 export function UnconnectedSearchResults({

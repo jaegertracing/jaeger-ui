@@ -451,6 +451,7 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 - [ ] `TraceSpanView` - Span table view
 
 **Remaining Components**
+- [x] `model/ddg/transformTracesToPaths` - DDG Path Aggregation ✅
 - [ ] All remaining Category B and C components
 - [ ] Verification and final testing
 

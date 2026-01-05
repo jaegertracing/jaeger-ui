@@ -18,10 +18,25 @@ import transformDdgData from '../../model/ddg/transformDdgData';
 import transformTracesToPaths from '../../model/ddg/transformTracesToPaths';
 
 import { TDdgStateEntry } from '../../types/TDdgState';
-import { ReduxState } from '../../types';
+import { FetchedTrace, ReduxState } from '../../types';
+import { Trace } from '../../types/trace';
+import { IOtelTrace } from '../../types/otel';
 
 // Required for proper memoization of subsequent function calls
 const svcOp = memoizeOne((service, operation) => ({ service, operation }));
+
+const mapTracesToOtel = memoizeOne(
+  (traces: Record<string, FetchedTrace<Trace>>): Record<string, FetchedTrace<IOtelTrace>> => {
+    const result: Record<string, FetchedTrace<IOtelTrace>> = {};
+    Object.entries(traces).forEach(([id, trace]) => {
+      result[id] = {
+        ...trace,
+        data: trace.data?.asOtelTrace(),
+      };
+    });
+    return result;
+  }
+);
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
@@ -31,7 +46,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   let graphState: TDdgStateEntry | undefined;
   let graph: GraphModel | undefined;
   if (service) {
-    const payload = transformTracesToPaths(state.trace.traces, service, operation);
+    const payload = transformTracesToPaths(mapTracesToOtel(state.trace.traces), service, operation);
     graphState = {
       model: transformDdgData(payload, svcOp(service, operation)),
       state: fetchedState.DONE,
