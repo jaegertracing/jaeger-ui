@@ -15,6 +15,13 @@ import SearchableSelect from '../../common/SearchableSelect';
 
 const Option = Select.Option;
 
+type FilterAccessor = 'serviceName' | 'operationName';
+
+const OTEL_PROPERTY_MAP: Record<FilterAccessor, string> = {
+  serviceName: 'resource.serviceName',
+  operationName: 'name',
+};
+
 function getNestedProperty(path: string, span: any): string {
   return path.split('.').reduce((prev, curr) => {
     return prev ? prev[curr] : null;
@@ -34,7 +41,7 @@ type State = {
   serviceNamesList: string[];
   operationNamesList: string[];
   serviceNameOperationsMap: Map<string, string[]>;
-  filtered: Record<string, string[]>;
+  filtered: Record<FilterAccessor, string[]>;
   selectedServiceName: string[];
   selectedOperationName: string[];
   filteredData: ReadonlyArray<IOtelSpan>;
@@ -64,7 +71,7 @@ export default class TraceSpanView extends Component<Props, State> {
       operationNamesList: [...operationNamesList],
       serviceNameOperationsMap,
       filteredData: this.props.trace.spans,
-      filtered: {},
+      filtered: {} as Record<FilterAccessor, string[]>,
       selectedServiceName: [],
       selectedOperationName: [],
     };
@@ -84,8 +91,8 @@ export default class TraceSpanView extends Component<Props, State> {
     let operationNamesList: string[] = [];
     const serviceNameOperationsMap = this.state.serviceNameOperationsMap;
     // OTEL uses resource.serviceName
-    if (this.state.filtered['resource.serviceName']) {
-      this.state.filtered['resource.serviceName'].forEach((currentValue: string) => {
+    if (this.state.filtered.serviceName) {
+      this.state.filtered.serviceName.forEach((currentValue: string) => {
         operationNamesList = operationNamesList.concat(serviceNameOperationsMap.get(currentValue) || []);
       });
     } else {
@@ -94,22 +101,18 @@ export default class TraceSpanView extends Component<Props, State> {
     return [...new Set(operationNamesList)];
   }
 
-  onFilteredChangeCustom(selectedValues: string[], accessor: string) {
+  onFilteredChangeCustom(selectedValues: string[], accessor: FilterAccessor) {
     const filtered = this.state.filtered;
     filtered[accessor] = selectedValues;
     const data = this.state.data.filter(span => {
-      let isSpanIncluded;
-      Object.keys(filtered).every(filterColumn => {
-        if (filtered[filterColumn].length) {
-          const spanValue = getNestedProperty(filterColumn, span);
-          isSpanIncluded = filtered[filterColumn].includes(spanValue);
-        } else {
-          isSpanIncluded = true;
+      return (Object.keys(filtered) as FilterAccessor[]).every(key => {
+        const filterValues = filtered[key];
+        if (!filterValues || !filterValues.length) {
+          return true;
         }
-        return isSpanIncluded;
+        const spanValue = getNestedProperty(OTEL_PROPERTY_MAP[key], span);
+        return filterValues.includes(spanValue);
       });
-
-      return isSpanIncluded;
     });
 
     this.setState(previousState => ({
@@ -191,7 +194,7 @@ export default class TraceSpanView extends Component<Props, State> {
                     selectedServiceName: entry as [],
                   }));
                   // Use resource.serviceName instead of process.serviceName
-                  this.onFilteredChangeCustom(entry as [], 'resource.serviceName');
+                  this.onFilteredChangeCustom(entry as [], 'serviceName');
                 }}
                 data-testid="select-service"
               >
@@ -226,7 +229,7 @@ export default class TraceSpanView extends Component<Props, State> {
                     selectedOperationName: entry as [],
                   }));
                   // Use name instead of operationName
-                  this.onFilteredChangeCustom(entry as [], 'name');
+                  this.onFilteredChangeCustom(entry as [], 'operationName');
                 }}
                 data-testid="select-operation"
               >
