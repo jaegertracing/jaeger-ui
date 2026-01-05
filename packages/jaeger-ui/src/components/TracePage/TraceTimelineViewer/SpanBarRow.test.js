@@ -61,16 +61,17 @@ describe('<SpanBarRow>', () => {
       operationName: 'rpc-op-name',
       serviceName: 'rpc-service-name',
     },
-    showErrorIcon: false,
+    hasOwnError: false,
+    hasChildError: false,
     getViewedBounds: jest.fn().mockReturnValue({ start: 0.5, end: 0.6 }),
     span: {
       traceId: 'trace-id',
       spanID: spanID,
       name: 'op-name',
       kind: 'SERVER',
-      startTimeUnixMicros: 100,
-      endTimeUnixMicros: 200,
-      durationMicros: 100,
+      startTime: 100,
+      endTime: 200,
+      duration: 100,
       attributes: [],
       events: [],
       links: [],
@@ -79,7 +80,7 @@ describe('<SpanBarRow>', () => {
       instrumentationScope: { name: 'scope' },
       depth: 0,
       hasChildren: true,
-      relativeStartTimeMicros: 100,
+      relativeStartTime: 100,
       inboundLinks: [],
       warnings: null,
     },
@@ -169,10 +170,11 @@ describe('<SpanBarRow>', () => {
     expect(screen.getByText('no-instrumented-service')).toBeVisible();
   });
 
-  it('renders with error icon when showErrorIcon is true', () => {
+  it('renders with error icon when hasOwnError is true', () => {
     const props = {
       ...defaultProps,
-      showErrorIcon: true,
+      hasOwnError: true,
+      hasChildError: false,
     };
     render(<SpanBarRow {...props} />);
     expect(document.querySelector('.SpanBarRow--errorIcon')).toBeInTheDocument();
@@ -217,8 +219,8 @@ describe('<SpanBarRow>', () => {
       getViewedBounds,
       span: {
         ...defaultProps.span,
-        startTimeUnixMicros: 100,
-        durationMicros: 50,
+        startTime: 100,
+        duration: 50,
       },
     };
     render(<SpanBarRow {...props} />);

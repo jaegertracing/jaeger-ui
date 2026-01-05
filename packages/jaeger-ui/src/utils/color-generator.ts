@@ -1,49 +1,31 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-const COLORS_HEX = [
-  '#17B8BE',
-  '#F8DCA1',
-  '#B7885E',
-  '#FFCB99',
-  '#F89570',
-  '#829AE3',
-  '#E79FD5',
-  '#1E96BE',
-  '#89DAC1',
-  '#B3AD9E',
-  '#12939A',
-  '#DDB27C',
-  '#88572C',
-  '#FF9833',
-  '#EF5D28',
-  '#162A65',
-  '#DA70BF',
-  '#125C77',
-  '#4DC19C',
-  '#776E57',
-];
+/**
+ * Span categorical colors are defined in vars.css using the Design Token Architecture.
+ */
+const SPAN_COLOR_VARS = Array.from({ length: 20 }, (_, i) => `--span-color-${i + 1}`);
+const SPAN_COLORS = SPAN_COLOR_VARS.map(v => `var(${v})`);
 
 // TS needs the precise return type
 export function strToRgb(s: string): [number, number, number] {
-  if (s.length !== 7) {
+  const trimmed = s.trim();
+  if (trimmed.length !== 7) {
     return [0, 0, 0];
   }
-  const r = s.slice(1, 3);
-  const g = s.slice(3, 5);
-  const b = s.slice(5);
+  const r = trimmed.slice(1, 3);
+  const g = trimmed.slice(3, 5);
+  const b = trimmed.slice(5);
   return [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16)];
 }
 
 export class ColorGenerator {
-  colorsHex: string[];
-  colorsRgb: [number, number, number][];
+  colors: string[];
   cache: Map<string, number>;
   currentIdx: number;
 
-  constructor(colorsHex: string[] = COLORS_HEX) {
-    this.colorsHex = colorsHex;
-    this.colorsRgb = colorsHex.map(strToRgb);
+  constructor(colors: string[] = SPAN_COLORS) {
+    this.colors = colors;
     this.cache = new Map();
     this.currentIdx = 0;
   }
@@ -53,7 +35,7 @@ export class ColorGenerator {
     if (i == null) {
       i = this.currentIdx;
       this.cache.set(key, this.currentIdx);
-      this.currentIdx = ++this.currentIdx % this.colorsHex.length;
+      this.currentIdx = ++this.currentIdx % this.colors.length;
     }
     return i;
   }
@@ -65,7 +47,7 @@ export class ColorGenerator {
    */
   getColorByKey(key: string) {
     const i = this._getColorIndex(key);
-    return this.colorsHex[i];
+    return this.colors[i];
   }
 
   /**
@@ -75,7 +57,14 @@ export class ColorGenerator {
    */
   getRgbColorByKey(key: string): [number, number, number] {
     const i = this._getColorIndex(key);
-    return this.colorsRgb[i];
+    if (typeof window !== 'undefined' && typeof window.getComputedStyle === 'function') {
+      const hex = window.getComputedStyle(document.documentElement).getPropertyValue(SPAN_COLOR_VARS[i]);
+      if (hex) {
+        return strToRgb(hex);
+      }
+    }
+    // Fallback or default if window is not available (e.g. tests or server-side)
+    return [0, 0, 0];
   }
 
   clear() {

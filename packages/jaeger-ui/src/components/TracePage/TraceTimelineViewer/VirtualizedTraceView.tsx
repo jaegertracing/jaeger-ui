@@ -298,8 +298,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const [zoomStart, zoomEnd] = currentViewRangeTime;
 
     return memoizedViewBoundsFunc({
-      min: trace.startTimeUnixMicros,
-      max: trace.endTimeUnixMicros,
+      min: trace.startTime,
+      max: trace.endTime,
       viewStart: zoomStart,
       viewEnd: zoomEnd,
     });
@@ -464,17 +464,15 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
-    const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(spans, spanIndex));
+    const hasOwnError = isErrorSpan(span);
+    const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
     const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
       const rpcSpan = findServerChildSpan(spans.slice(spanIndex));
       if (rpcSpan) {
-        const rpcViewBounds = this.getViewedBounds()(
-          rpcSpan.startTimeUnixMicros,
-          rpcSpan.startTimeUnixMicros + rpcSpan.durationMicros
-        );
+        const rpcViewBounds = this.getViewedBounds()(rpcSpan.startTime, rpcSpan.endTime);
         rpc = {
           color: colorGenerator.getColorByKey(rpcSpan.resource.serviceName),
           operationName: rpcSpan.name,
@@ -510,12 +508,13 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           onChildrenToggled={childrenToggle}
           rpc={rpc}
           noInstrumentedServer={noInstrumentedServer}
-          showErrorIcon={showErrorIcon}
+          hasOwnError={hasOwnError}
+          hasChildError={hasChildError}
           getViewedBounds={this.getViewedBounds()}
-          traceStartTime={trace.startTimeUnixMicros}
+          traceStartTime={trace.startTime}
           span={span}
           focusSpan={this.focusSpan}
-          traceDuration={trace.durationMicros}
+          traceDuration={trace.duration}
           useOtelTerms={useOtelTerms}
         />
       </div>
@@ -560,10 +559,10 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           warningsToggle={detailWarningsToggle}
           span={span}
           attributesToggle={detailTagsToggle}
-          traceStartTime={trace.startTimeUnixMicros}
+          traceStartTime={trace.startTime}
           focusSpan={this.focusSpan}
           currentViewRangeTime={currentViewRangeTime}
-          traceDuration={trace.durationMicros}
+          traceDuration={trace.duration}
           useOtelTerms={useOtelTerms}
         />
       </div>

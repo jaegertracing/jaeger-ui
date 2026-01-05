@@ -38,7 +38,11 @@ SPDX-License-Identifier: Apache-2.0
   top: 45%;
   height: 11%;
   z-index: 2;
-  overflow: hidden;
+  overflow: visible;
+  /* Changed from hidden to show shadow */
+  box-shadow:
+    0 -0.5px 0 var(--critical-path-outline),
+    0 0.5px 0 var(--critical-path-outline);
 }
 
 .SpanBar--criticalPath::before {
@@ -60,9 +64,16 @@ SPDX-License-Identifier: Apache-2.0
 @keyframes runOnce {
   0% {
     left: 0;
+    opacity: 1;
   }
+
+  99% {
+    opacity: 1;
+  }
+
   100% {
     left: 100%;
+    opacity: 0;
   }
 }
 
@@ -90,7 +101,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SpanBar--logMarker {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--span-bar-log-marker);
   cursor: pointer;
   height: 60%;
   min-width: 1px;
@@ -99,7 +110,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SpanBar--logMarker:hover {
-  background-color: #000;
+  background-color: var(--text-primary);
   transform: scale(1.2);
   transition: transform 0.3s ease;
 }

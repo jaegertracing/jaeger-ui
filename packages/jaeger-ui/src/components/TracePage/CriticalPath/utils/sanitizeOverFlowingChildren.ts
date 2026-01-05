@@ -16,19 +16,19 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, CPSpan>): Map<string, 
 
   spanIds.forEach(spanId => {
     const span = spanMap.get(spanId)!;
-    if (!(span && span.references.length)) {
+    if (!span.parentSpanID) {
       return;
     }
     // parentSpan will be undefined when its parentSpan is dropped previously
-    const parentSpan = spanMap.get(span.references[0].spanID);
+    const parentSpan = spanMap.get(span.parentSpanID);
 
     if (!parentSpan) {
       // Drop the child spans of dropped parent span
       spanMap.delete(span.spanID);
       return;
     }
-    const childEndTime = span.startTime + span.duration;
-    const parentEndTime = parentSpan.startTime + parentSpan.duration;
+    const childEndTime = span.endTime;
+    const parentEndTime = parentSpan.endTime;
     if (span.startTime >= parentSpan.startTime) {
       if (span.startTime >= parentEndTime) {
         // child outside of parent range => drop the child span
@@ -47,7 +47,8 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, CPSpan>): Map<string, 
         //              |----child--|
         spanMap.set(span.spanID, {
           ...span,
-          duration: parentEndTime - span.startTime,
+          duration: (parentEndTime - span.startTime) as CPSpan['duration'],
+          endTime: parentEndTime,
         });
         return;
       }
@@ -73,7 +74,7 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, CPSpan>): Map<string, 
       spanMap.set(span.spanID, {
         ...span,
         startTime: parentSpan.startTime,
-        duration: childEndTime - parentSpan.startTime,
+        duration: (childEndTime - parentSpan.startTime) as CPSpan['duration'],
       });
     } else {
       // child start before parent and end after parent, truncate is needed
@@ -82,20 +83,9 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, CPSpan>): Map<string, 
       spanMap.set(span.spanID, {
         ...span,
         startTime: parentSpan.startTime,
-        duration: parentEndTime - parentSpan.startTime,
+        duration: (parentEndTime - parentSpan.startTime) as CPSpan['duration'],
+        endTime: parentEndTime,
       });
-    }
-  });
-
-  // Updated spanIds to ensure to not include dropped spans
-  spanIds = [...spanMap.keys()];
-  // Update Child Span References with updated parent span
-  spanIds.forEach(spanId => {
-    const span = spanMap.get(spanId)!;
-    if (span.references.length) {
-      const parentSpan = spanMap.get(span.references[0].spanID);
-      span.references[0].span = parentSpan;
-      spanMap.set(spanId, { ...span });
     }
   });
 

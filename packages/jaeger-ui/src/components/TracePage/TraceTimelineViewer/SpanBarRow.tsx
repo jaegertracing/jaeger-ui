@@ -42,7 +42,8 @@ type SpanBarRowProps = {
         serviceName: string;
       }
     | TNil;
-  showErrorIcon: boolean;
+  hasOwnError: boolean;
+  hasChildError: boolean;
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
   span: IOtelSpan;
@@ -70,7 +71,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   numTicks,
   rpc = null,
   noInstrumentedServer,
-  showErrorIcon,
+  hasOwnError,
+  hasChildError,
   getViewedBounds,
   traceStartTime,
   span,
@@ -89,16 +91,13 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   }, [onChildrenToggled, span.spanID]);
 
   const {
-    durationMicros: duration,
+    duration,
     hasChildren: isParent,
     name: operationName,
     resource: { serviceName },
   } = span;
   const label = formatDuration(duration);
-  const viewBounds = getViewedBounds(
-    span.startTimeUnixMicros,
-    span.startTimeUnixMicros + span.durationMicros
-  );
+  const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
 
@@ -133,6 +132,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             childrenVisible={isChildrenExpanded}
             span={span}
             onClick={isParent ? _childrenToggle : undefined}
+            color={color}
           />
           <a
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
@@ -145,7 +145,10 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             <span
               className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
             >
-              {showErrorIcon && <IoAlert className="SpanBarRow--errorIcon" />}
+              {hasOwnError && <IoAlert className="SpanBarRow--errorIcon" />}
+              {!hasOwnError && hasChildError && (
+                <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
+              )}
               {serviceName}{' '}
               {rpc && (
                 <span>

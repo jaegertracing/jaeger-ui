@@ -288,16 +288,16 @@ describe('getParameterInTrace()', () => {
     traceName: 'theTrace',
     traceID: 'trc1',
     spans: [],
-    startTimeUnixMicros: 1000,
-    endTimeUnixMicros: 3000,
-    durationMicros: 2000,
+    startTime: 1000,
+    endTime: 3000,
+    duration: 2000,
     services: [],
   };
 
   it('returns an entry that is present', () => {
     expect(getParameterInTrace('startTime', trace)).toEqual({
       key: 'startTime',
-      value: trace.startTimeUnixMicros,
+      value: trace.startTime,
     });
   });
 
@@ -335,9 +335,9 @@ describe('computeTraceLink()', () => {
     traceName: 'theTrace',
     traceID: 'trc1',
     spans: [],
-    startTimeUnixMicros: 1000,
-    endTimeUnixMicros: 3000000000000,
-    durationMicros: 2000,
+    startTime: 1000,
+    endTime: 3000000000000,
+    duration: 2000,
     services: [],
   };
 
@@ -402,9 +402,9 @@ describe('computeLinks()', () => {
     traceName: 'theTrace',
     traceID: 'trc1',
     spans: [],
-    startTimeUnixMicros: 1000,
-    endTimeUnixMicros: 3000,
-    durationMicros: 2000,
+    startTime: 1000,
+    endTime: 3000,
+    duration: 2000,
     services: [],
   };
 
@@ -534,7 +534,7 @@ describe('getLinks()', () => {
       spans: [],
       startTime: 1000,
       endTime: 2000,
-      durationMicros: 1000,
+      duration: 1000,
       services: [],
     };
     expect(getTraceLinks(trace)).toBeInstanceOf(Array);

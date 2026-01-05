@@ -109,10 +109,10 @@ export function getParameterInAncestor(name: string, span: IOtelSpan): IAttribut
           value = currentSpan.name;
           break;
         case 'duration':
-          value = currentSpan.durationMicros;
+          value = currentSpan.duration;
           break;
         case 'startTime':
-          value = currentSpan.startTimeUnixMicros;
+          value = currentSpan.startTime;
           break;
         default:
           // If it's a valid span key but no value found, continue to check attributes
@@ -149,13 +149,13 @@ export function getParameterInTrace(
         value = trace.traceName;
         break;
       case 'duration':
-        value = trace.durationMicros;
+        value = trace.duration;
         break;
       case 'startTime':
-        value = trace.startTimeUnixMicros;
+        value = trace.startTime;
         break;
       case 'endTime':
-        value = trace.endTimeUnixMicros;
+        value = trace.endTime;
         break;
       default:
         return undefined;

@@ -384,7 +384,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     };
 
     let view;
-    const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data) : [];
+    const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data.asOtelTrace()) : [];
     if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
       view = (
         <TraceTimelineViewer

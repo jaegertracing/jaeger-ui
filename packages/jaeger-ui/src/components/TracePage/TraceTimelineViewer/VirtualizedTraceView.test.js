@@ -491,7 +491,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       render(
         <VirtualizedTraceViewImpl
           {...mockProps}
-          trace={criticalPathTest.trace.asOtelTrace()}
+          trace={criticalPathTest.trace}
           criticalPath={criticalPathTest.criticalPathSections}
         />
       );
@@ -506,7 +506,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
         <VirtualizedTraceViewImpl
           {...mockProps}
           childrenHiddenIDs={childrenHiddenIDs}
-          trace={criticalPathTest.trace.asOtelTrace()}
+          trace={criticalPathTest.trace}
           criticalPath={criticalPathTest.criticalPathSections}
         />
       );
@@ -632,7 +632,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       expect(instance.linksGetter(span, span.attributes, 0)).toEqual([
         {
-          url: `http://example.com/?key1=${val}&traceID=${trace.traceID}&startTime=${trace.startTimeUnixMicros}`,
+          url: `http://example.com/?key1=${val}&traceID=${trace.traceID}&startTime=${trace.startTime}`,
           text: `For first link traceId is - ${trace.traceID}`,
         },
       ]);

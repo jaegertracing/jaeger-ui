@@ -277,7 +277,6 @@ describe('CustomTooltip', () => {
       name: 'Test Trace',
       size: 42,
       services: [{ name: 'service1' }, { name: 'service2' }],
-      rootSpanName: 'GET /api/test',
     };
     const { container } = render(<CustomTooltip active payload={[{ payload }]} />);
 
@@ -288,14 +287,12 @@ describe('CustomTooltip', () => {
     expect(statsElement).toBeTruthy();
     expect(statsElement.textContent).toContain('Spans: 42');
     expect(statsElement.textContent).toContain('Services: 2');
-    expect(statsElement.textContent).toContain('Root Operation: GET /api/test');
   });
 
   it('handles missing services data', () => {
     const payload = {
       name: 'Test Trace',
       size: 10,
-      rootSpanName: 'test-operation',
     };
     const { container } = render(<CustomTooltip active payload={[{ payload }]} />);
 
@@ -303,7 +300,7 @@ describe('CustomTooltip', () => {
     expect(statsElement.textContent).toContain('Services: 0');
   });
 
-  it('handles missing rootSpanName', () => {
+  it('handles services data', () => {
     const payload = {
       name: 'Test Trace',
       size: 15,
@@ -313,7 +310,6 @@ describe('CustomTooltip', () => {
 
     const statsElement = container.querySelector('.scatter-plot-hint-stats');
     expect(statsElement.textContent).toContain('Services: 2');
-    expect(statsElement.textContent).toContain('Root Operation: Unknown');
   });
 
   it('returns null when not active', () => {

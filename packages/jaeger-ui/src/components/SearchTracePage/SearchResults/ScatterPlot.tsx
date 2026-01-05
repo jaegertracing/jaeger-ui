@@ -30,7 +30,6 @@ export type TScatterPlotPoint = {
     name: string;
     numberOfSpans: number;
   }>;
-  rootSpanName?: string;
   color?: string;
 };
 
@@ -62,9 +61,6 @@ export const CustomTooltip = ({
           </div>
           <div>
             <strong>Services:</strong> {numServices}
-          </div>
-          <div>
-            <strong>Root Operation:</strong> {data.rootSpanName || 'Unknown'}
           </div>
         </div>
       </div>

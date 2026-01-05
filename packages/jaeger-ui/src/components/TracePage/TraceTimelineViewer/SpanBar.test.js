@@ -38,8 +38,8 @@ describe('<SpanBar>', () => {
       spanId: 'test-span',
       traceId: 'test-trace',
       name: 'test-op',
-      startTimeUnixMicro: 0n,
-      durationMicros: 100n,
+      startTime: 0,
+      duration: 100,
       attributes: [],
       resource: {
         serviceName: 'test-service',
@@ -48,21 +48,21 @@ describe('<SpanBar>', () => {
       warnings: null,
       events: [
         {
-          timeUnixMicro: 10,
+          timestamp: 10,
           attributes: [
             { key: 'message', value: 'oh the log message' },
             { key: 'something', value: 'else' },
           ],
         },
         {
-          timeUnixMicro: 10,
+          timestamp: 10,
           attributes: [
             { key: 'message', value: 'oh the second log message' },
             { key: 'something', value: 'different' },
           ],
         },
         {
-          timeUnixMicro: 20,
+          timestamp: 20,
           attributes: [
             { key: 'message', value: 'oh the next log message' },
             { key: 'more', value: 'stuff' },
