@@ -9,6 +9,7 @@ import '@testing-library/jest-dom';
 import { UnconnectedTraceDiffGraph as TraceDiffGraph } from './TraceDiffGraph';
 import { fetchedState } from '../../../constants';
 import * as getConfig from '../../../utils/config/get-config';
+import transformTraceData from '../../../model/transform-trace-data';
 
 jest.mock('../../common/UiFindInput', () => props => (
   <div data-testid="ui-find-input" {...props.inputProps}>
@@ -25,21 +26,38 @@ const renderWithRouter = component => {
 };
 
 describe('TraceDiffGraph', () => {
+  // Create proper legacy trace fixtures
+  const traceFixtureA = {
+    traceID: 'trace-id-a',
+    spans: [],
+    processes: {
+      p1: {
+        serviceName: 'service-a',
+        tags: [],
+      },
+    },
+  };
+
+  const traceFixtureB = {
+    traceID: 'trace-id-b',
+    spans: [],
+    processes: {
+      p1: {
+        serviceName: 'service-b',
+        tags: [],
+      },
+    },
+  };
+
   const baseProps = {
     a: {
-      data: {
-        spans: [],
-        traceID: 'trace-id-a',
-      },
+      data: transformTraceData(traceFixtureA),
       error: null,
       id: 'trace-id-a',
       state: fetchedState.DONE,
     },
     b: {
-      data: {
-        spans: [],
-        traceID: 'trace-id-b',
-      },
+      data: transformTraceData(traceFixtureB),
       error: null,
       id: 'trace-id-b',
       state: fetchedState.DONE,
@@ -158,16 +176,33 @@ describe('TraceDiffGraph', () => {
   });
 
   it('shows match count when uiFind matches span data', () => {
-    const span = {
-      spanID: 'abc123',
-      operationName: 'GET /api',
-      process: { serviceName: 'svc' },
-      tags: [],
-      logs: [],
+    const traceWithSpan = {
+      traceID: 't-id',
+      spans: [
+        {
+          traceID: 't-id',
+          spanID: 'abc123',
+          flags: 1,
+          operationName: 'GET /api',
+          startTime: 1542666452979000,
+          duration: 10000,
+          references: [],
+          tags: [],
+          logs: [],
+          processID: 'p1',
+          warnings: null,
+        },
+      ],
+      processes: {
+        p1: {
+          serviceName: 'svc',
+          tags: [],
+        },
+      },
     };
 
     const matchedTrace = {
-      data: { spans: [span], traceID: 't-id' },
+      data: transformTraceData(traceWithSpan),
       error: null,
       id: 't-id',
       state: fetchedState.DONE,

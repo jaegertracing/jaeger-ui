@@ -14,3 +14,12 @@ draft-release:
 prepare-release:
 	@test $(VERSION) || (echo "VERSION is not set. Use 'make prepare-release VERSION=vX.Y.Z'"; exit 1)
 	python3 scripts/prepare-release.py --version $(VERSION)
+
+.PHONY: fmt
+fmt:
+	npm run prettier
+
+.PHONY: lint
+lint:
+	npm run lint
+

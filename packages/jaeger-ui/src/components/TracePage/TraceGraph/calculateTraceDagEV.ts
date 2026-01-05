@@ -8,74 +8,73 @@ import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
 import TDagNode from '../../../model/trace-dag/types/TDagNode';
 import { TDenseSpanMembers } from '../../../model/trace-dag/types';
-import { Trace, Span, KeyValuePair } from '../../../types/trace';
+import { Trace } from '../../../types/trace';
+import { IOtelSpan, IOtelTrace, SpanKind, StatusCode } from '../../../types/otel';
 import { TSumSpan, TEv } from './types';
 
-let parentChildOfMap: Record<string, Span[]>;
+let parentChildOfMap: Record<string, IOtelSpan[]>;
 
-export function isError(tags: ReadonlyArray<KeyValuePair>) {
-  if (tags) {
-    const errorTag = tags.find(t => t.key === 'error');
-    if (errorTag) {
-      return errorTag.value;
-    }
-  }
-
-  return false;
-}
-
-export function mapFollowsFrom(
+export function mapNonBlocking(
   edges: TEdge[],
   nodes: TDagNode<TSumSpan & TDenseSpanMembers>[]
-): TEdge<{ followsFrom: boolean }>[] {
+): TEdge<{ isNonBlocking: boolean }>[] {
   return edges.map(e => {
-    let hasChildOf = true;
+    // In OTEL model, the blocking nature of child spans is determined by span kind:
+    // - CONSUMER child of PRODUCER parent is non-blocking (isNonBlocking: true)
+    // - INTERNAL/CLIENT/SERVER/PRODUCER spans are blocking (isNonBlocking: false)
+    let isNonBlocking = false;
     if (typeof e.to === 'number') {
       const node = nodes[e.to];
-      hasChildOf = node.members.some(
-        m => m.span.references && m.span.references.some(r => r.refType === 'CHILD_OF')
-      );
+      // A node represents a non-blocking relationship if any of its members are CONSUMER spans
+      // (which implies a PRODUCER-CONSUMER pair in the parent-child relationship)
+      isNonBlocking = node.members.some(m => m.span.kind === SpanKind.CONSUMER);
     }
-    return { ...e, followsFrom: !hasChildOf };
+    return { ...e, isNonBlocking };
   });
 }
 
-function getChildOfSpans(parentID: string, trace: Trace): Span[] {
+/**
+ * Gets blocking child spans (children that contribute to parent's critical path).
+ * In OTEL, CONSUMER children of PRODUCER parents are non-blocking and should be excluded
+ * from critical path calculations, similar to how FOLLOWS_FROM was excluded in legacy code.
+ */
+function getBlockingChildSpans(parentID: string, trace: IOtelTrace): IOtelSpan[] {
   if (!parentChildOfMap) {
     parentChildOfMap = {};
     trace.spans.forEach(s => {
-      if (s.references) {
-        // Filter for CHILD_OF we don't want to calculate FOLLOWS_FROM (prod-cons)
-        const parentIDs = s.references.filter(r => r.refType === 'CHILD_OF').map(r => r.spanID);
-        parentIDs.forEach((pID: string) => {
+      if (s.parentSpanID) {
+        const pID = s.parentSpanID;
+        // Only include blocking children (not CONSUMER spans)
+        // CONSUMER spans are non-blocking in PRODUCER-CONSUMER pairs
+        if (s.kind !== SpanKind.CONSUMER) {
           parentChildOfMap[pID] = parentChildOfMap[pID] || [];
           parentChildOfMap[pID].push(s);
-        });
+        }
       }
     });
   }
   return parentChildOfMap[parentID] || [];
 }
 
-function getChildOfDrange(parentID: string, trace: Trace) {
+function getChildOfDrange(parentID: string, trace: IOtelTrace) {
   const childrenDrange = new DRange();
-  getChildOfSpans(parentID, trace).forEach(s => {
+  getBlockingChildSpans(parentID, trace).forEach(s => {
     // -1 otherwise it will take for each child a micro (incluse,exclusive)
     childrenDrange.add(s.startTime, s.startTime + (s.duration <= 0 ? 0 : s.duration - 1));
   });
   return childrenDrange;
 }
 
-export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan & TDenseSpanMembers> {
+export function calculateTraceDag(trace: IOtelTrace): TraceDag<TSumSpan & TDenseSpanMembers> {
   const baseDag = TraceDag.newFromTrace(trace);
   const dag = new TraceDag<TSumSpan & TDenseSpanMembers>();
 
   baseDag.nodesMap.forEach(node => {
     const ntime = node.members.reduce((p, m) => p + m.span.duration, 0);
-    const numErrors = node.members.reduce((p, m) => p + (isError(m.span.tags) ? 1 : 0), 0);
+    const numErrors = node.members.reduce((p, m) => p + (m.span.status.code === StatusCode.ERROR ? 1 : 0), 0);
     const childDurationsDRange = node.members.reduce((p, m) => {
       // Using DRange to handle overlapping spans (fork-join)
-      const cdr = new DRange(m.span.startTime, m.span.startTime + m.span.duration).intersect(
+      const cdr = new DRange(m.span.startTime, m.span.endTime).intersect(
         getChildOfDrange(m.span.spanID, trace)
       );
       return p + cdr.length;
@@ -94,10 +93,10 @@ export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan & TDenseSpanM
   return dag;
 }
 
-export default function calculateTraceDagEV(trace: Trace): TEv {
+export default function calculateTraceDagEV(trace: IOtelTrace): TEv {
   const traceDag = calculateTraceDag(trace);
   const nodes = [...traceDag.nodesMap.values()];
   const ev = convPlexus(traceDag.nodesMap);
-  const edges = mapFollowsFrom(ev.edges, nodes);
+  const edges = mapNonBlocking(ev.edges, nodes);
   return { ...ev, edges };
 }

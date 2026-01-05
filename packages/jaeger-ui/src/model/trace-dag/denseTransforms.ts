@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { TDenseSpan } from './types';
+import { SpanKind } from '../../types/otel';
 import * as tagKeys from '../../constants/tag-keys';
 
 // -	if span
@@ -11,11 +12,11 @@ import * as tagKeys from '../../constants/tag-keys';
 //     -	has parent.operation endsWith self.operation
 //     -	set self.service = self-tag peer.service
 function fixLeafService(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
-  const { children, operation, parentID, tags } = denseSpan;
+  const { children, operation, parentID, attributes, span } = denseSpan;
   const parent = parentID != null && map.get(parentID);
-  const kind = tags[tagKeys.SPAN_KIND];
-  const peerSvc = tags[tagKeys.PEER_SERVICE];
-  if (!parent || children.size > 0 || kind !== 'client' || !peerSvc) {
+  const kind = span.kind;
+  const peerSvc = attributes[tagKeys.PEER_SERVICE];
+  if (!parent || children.size > 0 || kind !== SpanKind.CLIENT || !peerSvc) {
     return;
   }
   const { operation: parentOp } = parent;
@@ -31,15 +32,15 @@ function fixLeafService(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
 //     -	(parent.operation OR parent-tag peer.service) startsWith self.service
 //     -	set parent.skipToChild = true
 function skipClient(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
-  const { parentID, service, tags } = denseSpan;
+  const { parentID, service, span } = denseSpan;
   const parent = parentID != null && map.get(parentID);
   if (!parent) {
     return;
   }
-  const kind = tags[tagKeys.SPAN_KIND];
-  const parentKind = parent.tags[tagKeys.SPAN_KIND];
-  const parentPeerSvc = parent.tags[tagKeys.PEER_SERVICE] || '';
-  if (kind === 'server' && parentKind === 'client' && parent.children.size === 1) {
+  const kind = span.kind;
+  const parentKind = parent.span.kind;
+  const parentPeerSvc = parent.attributes[tagKeys.PEER_SERVICE] || '';
+  if (kind === SpanKind.SERVER && parentKind === SpanKind.CLIENT && parent.children.size === 1) {
     parent.skipToChild = parent.operation.indexOf(service) === 0 || parentPeerSvc.indexOf(service) === 0;
   }
 }
@@ -50,17 +51,17 @@ function skipClient(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
 //     -	(parent.operation OR parent-tag peer.service) startsWith self.service
 //     - fix self.operation
 function fixHttpOperation(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
-  const { parentID, operation, service, tags } = denseSpan;
+  const { parentID, operation, service, attributes, span } = denseSpan;
   const parent = parentID != null && map.get(parentID);
   if (!parent) {
     return;
   }
-  const kind = tags[tagKeys.SPAN_KIND];
-  const httpMethod = tags[tagKeys.HTTP_METHOD];
-  if (kind !== 'server' || operation !== httpMethod) {
+  const kind = span.kind;
+  const httpMethod = attributes[tagKeys.HTTP_METHOD];
+  if (kind !== SpanKind.SERVER || operation !== httpMethod) {
     return;
   }
-  const parentPeerSvc = parent.tags[tagKeys.PEER_SERVICE] || '';
+  const parentPeerSvc = parent.attributes[tagKeys.PEER_SERVICE] || '';
   if (parent.operation.indexOf(service) === 0 || parentPeerSvc.indexOf(service) === 0) {
     const rx = new RegExp(`^${service}(::)?`);
     const endpoint = parent.operation.replace(rx, '');
@@ -72,11 +73,11 @@ function fixHttpOperation(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
 // -	if span
 //     - has no tags
 //     - has only one child
-//     - parent.process === self.process
+//     - parent.resource.serviceName === self.resource.serviceName
 //     - set self.skipToChild = true
 function skipAnnotationSpans(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   const { children, parentID, span } = denseSpan;
-  if (children.size !== 1 || span.tags.length !== 0) {
+  if (children.size !== 1 || span.attributes.length !== 0) {
     return;
   }
   const parent = parentID != null && map.get(parentID);
@@ -86,18 +87,18 @@ function skipAnnotationSpans(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>
     return;
   }
 
-  denseSpan.skipToChild = parent.span.processID === span.processID;
+  denseSpan.skipToChild = parent.span.resource.serviceName === span.resource.serviceName;
 }
 
 // -	if span
 //     - is a client span
 //     - has only one child
 //     - the child is a server span
-//     - parent.span.processID === self.span.processID
+//     - parent.span.resource.serviceName === self.span.resource.serviceName
 //     - set parent.skipToChild = true
 function skipClientSpans(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
-  const { children, parentID, span, tags } = denseSpan;
-  if (children.size !== 1 || tags[tagKeys.SPAN_KIND] !== 'client') {
+  const { children, parentID, span } = denseSpan;
+  if (children.size !== 1 || span.kind !== SpanKind.CLIENT) {
     return;
   }
   const parent = parentID != null && map.get(parentID);
@@ -108,7 +109,7 @@ function skipClientSpans(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {
   }
 
   denseSpan.skipToChild =
-    child.tags[tagKeys.SPAN_KIND] === 'client' && parent.span.processID === span.processID;
+    child.span.kind === SpanKind.CLIENT && parent.span.resource.serviceName === span.resource.serviceName;
 }
 
 export default function denseTransforms(denseSpan: TDenseSpan, map: Map<string, TDenseSpan>) {

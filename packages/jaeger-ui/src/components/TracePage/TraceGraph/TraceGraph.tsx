@@ -39,7 +39,7 @@ type State = {
 const { classNameIsSmall, scaleOpacity, scaleStrokeOpacity } = Digraph.propsFactories;
 
 export function setOnEdgePath(e: any) {
-  return e.followsFrom ? { strokeDasharray: 4 } : {};
+  return e.isNonBlocking ? { strokeDasharray: 4 } : {};
 }
 
 const HELP_CONTENT = (
@@ -92,7 +92,7 @@ const HELP_CONTENT = (
           style={{ stroke: '#000', strokeWidth: 2, strokeDasharray: '4' }}
         />
         <text alignmentBaseline="middle" x="100" y="30">
-          FollowsFrom
+          Non-Blocking
         </text>
       </svg>
     </div>

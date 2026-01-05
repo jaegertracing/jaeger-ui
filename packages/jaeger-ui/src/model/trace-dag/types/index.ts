@@ -1,17 +1,17 @@
 // Copyright (c) 2018-2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Span } from '../../../types/trace';
+import { IOtelSpan } from '../../../types/otel';
 import { TNil } from '../../../types';
 
 export type NodeID = string;
 
 export type TDenseSpan = {
-  span: Span;
+  span: IOtelSpan;
   id: string;
   service: string;
   operation: string;
-  tags: Record<string, any>;
+  attributes: Record<string, any>;
   parentID: string | TNil;
   skipToChild: boolean;
   children: Set<string>;
