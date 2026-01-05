@@ -149,7 +149,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       textFilter =>
         `${textFilter} ${_get(this.props.trace, 'traceID')} ${_get(this.props.trace, 'data.spans.length')}`
     );
-    this._scrollManager = new ScrollManager(trace && trace.data, {
+    this._scrollManager = new ScrollManager(trace && trace.data ? trace.data.asOtelTrace() : undefined, {
       scrollBy,
       scrollTo,
     });
@@ -179,7 +179,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   componentDidUpdate({ id: prevID }: TProps) {
     const { id, trace } = this.props;
 
-    this._scrollManager.setTrace(trace && trace.data);
+    this._scrollManager.setTrace(trace && trace.data ? trace.data.asOtelTrace() : undefined);
 
     this.setHeaderHeight(this._headerElm);
     if (!trace) {
@@ -414,7 +414,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
         <TraceStatistics trace={data.asOtelTrace()} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />
       );
     } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
-      view = <TraceSpanView trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
+      view = <TraceSpanView trace={data.asOtelTrace()} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
     } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
       view = <TraceFlamegraph trace={trace} />;
     }

@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
 import './index.css';
 import { TNil } from '../../../types';
-import { Trace, Span } from '../../../types/trace';
+import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 import { timeConversion } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -22,7 +22,7 @@ function getNestedProperty(path: string, span: any): string {
 }
 
 type Props = {
-  trace: Trace;
+  trace: IOtelTrace;
   uiFindVertexKeys: Set<string> | TNil;
   uiFind: string | null | undefined;
 };
@@ -30,14 +30,14 @@ type Props = {
 type State = {
   searchText: string;
   searchedColumn: string;
-  data: ReadonlyArray<Span>;
+  data: ReadonlyArray<IOtelSpan>;
   serviceNamesList: string[];
   operationNamesList: string[];
   serviceNameOperationsMap: Map<string, string[]>;
   filtered: Record<string, string[]>;
   selectedServiceName: string[];
   selectedOperationName: string[];
-  filteredData: ReadonlyArray<Span>;
+  filteredData: ReadonlyArray<IOtelSpan>;
 };
 
 export default class TraceSpanView extends Component<Props, State> {
@@ -48,11 +48,12 @@ export default class TraceSpanView extends Component<Props, State> {
     const serviceNameOperationsMap = new Map<string, string[]>();
 
     this.props.trace.spans.forEach(span => {
-      serviceNamesList.add(span.process.serviceName);
-      operationNamesList.add(span.operationName);
-      const operationNames = serviceNameOperationsMap.get(span.process.serviceName) || [];
-      operationNames.push(span.operationName);
-      serviceNameOperationsMap.set(span.process.serviceName, operationNames);
+      const serviceName = span.resource.serviceName;
+      serviceNamesList.add(serviceName);
+      operationNamesList.add(span.name);
+      const operationNames = serviceNameOperationsMap.get(serviceName) || [];
+      operationNames.push(span.name);
+      serviceNameOperationsMap.set(serviceName, operationNames);
     });
 
     this.state = {
@@ -82,8 +83,9 @@ export default class TraceSpanView extends Component<Props, State> {
   uniqueOperationNameOptions() {
     let operationNamesList: string[] = [];
     const serviceNameOperationsMap = this.state.serviceNameOperationsMap;
-    if (this.state.filtered['process.serviceName']) {
-      this.state.filtered['process.serviceName'].forEach((currentValue: string) => {
+    // OTEL uses resource.serviceName
+    if (this.state.filtered['resource.serviceName']) {
+      this.state.filtered['resource.serviceName'].forEach((currentValue: string) => {
         operationNamesList = operationNamesList.concat(serviceNameOperationsMap.get(currentValue) || []);
       });
     } else {
@@ -92,7 +94,7 @@ export default class TraceSpanView extends Component<Props, State> {
     return [...new Set(operationNamesList)];
   }
 
-  onFilteredChangeCustom(selectedValues: string[], accessor: keyof Span) {
+  onFilteredChangeCustom(selectedValues: string[], accessor: string) {
     const filtered = this.state.filtered;
     filtered[accessor] = selectedValues;
     const data = this.state.data.filter(span => {
@@ -118,24 +120,24 @@ export default class TraceSpanView extends Component<Props, State> {
   }
 
   render() {
-    const columns: ColumnProps<Span>[] = [
+    const columns: ColumnProps<IOtelSpan>[] = [
       {
         title: 'Service Name',
-        dataIndex: ['process', 'serviceName'],
+        dataIndex: ['resource', 'serviceName'],
         width: '25%',
-        sorter: (a, b) => a.process.serviceName.localeCompare(b.process.serviceName),
+        sorter: (a, b) => a.resource.serviceName.localeCompare(b.resource.serviceName),
       },
       {
         title: 'Operation',
-        dataIndex: 'operationName',
+        dataIndex: 'name',
         width: '25%',
-        sorter: (a, b) => a.operationName.localeCompare(b.operationName),
+        sorter: (a, b) => a.name.localeCompare(b.name),
       },
       {
         title: 'ID',
         dataIndex: 'spanID',
         sorter: (a, b) => a.spanID.localeCompare(b.spanID),
-        render: (text: string, record: Span) => {
+        render: (text: string, record: IOtelSpan) => {
           return (
             <a
               href={prefixUrl(`/trace/${record.traceID}?uiFind=${text}`)}
@@ -151,8 +153,8 @@ export default class TraceSpanView extends Component<Props, State> {
         title: 'Duration',
         dataIndex: 'duration',
         sorter: (a, b) => a.duration - b.duration,
-        render: (cell: string) => {
-          return timeConversion(parseInt(cell, 10));
+        render: (cell: number) => {
+          return timeConversion(cell);
         },
       },
       {
@@ -188,7 +190,8 @@ export default class TraceSpanView extends Component<Props, State> {
                     ...previousState,
                     selectedServiceName: entry as [],
                   }));
-                  this.onFilteredChangeCustom(entry as [], 'process.serviceName' as keyof Span);
+                  // Use resource.serviceName instead of process.serviceName
+                  this.onFilteredChangeCustom(entry as [], 'resource.serviceName');
                 }}
                 data-testid="select-service"
               >
@@ -222,7 +225,8 @@ export default class TraceSpanView extends Component<Props, State> {
                     ...previousState,
                     selectedOperationName: entry as [],
                   }));
-                  this.onFilteredChangeCustom(entry as [], 'operationName');
+                  // Use name instead of operationName
+                  this.onFilteredChangeCustom(entry as [], 'name');
                 }}
                 data-testid="select-operation"
               >

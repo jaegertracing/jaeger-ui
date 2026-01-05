@@ -82,6 +82,7 @@ import filterSpansSpy from '../../utils/filter-spans';
 import updateUiFindSpy from '../../utils/update-ui-find';
 import { ETraceViewType } from './types';
 import ScrollManager from './ScrollManager';
+import OtelTraceFacade from '../../model/OtelTraceFacade';
 
 const renderWithRouter = (ui, { route = '/' } = {}) => {
   return render(<MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>);
@@ -112,6 +113,8 @@ describe('makeShortcutCallbacks()', () => {
 
 describe('<TracePage>', () => {
   const trace = transformTraceData(traceGenerator.trace({}));
+  const otelTrace = new OtelTraceFacade(trace);
+  trace.asOtelTrace = () => otelTrace;
   const defaultProps = {
     acknowledgeArchive: jest.fn(),
     archiveTrace: jest.fn(),
@@ -431,7 +434,7 @@ describe('<TracePage>', () => {
     const { rerender } = render(<TracePage {...defaultProps} trace={null} />);
     rerender(<TracePage {...defaultProps} trace={{ data: trace, state: fetchedState.DONE }} />);
 
-    expect(setTraceMock).toHaveBeenCalledWith(trace);
+    expect(setTraceMock).toHaveBeenCalledWith(otelTrace);
   });
 
   it('calls resetShortcuts, cancelScroll, and scrollManager.destroy on unmount', () => {

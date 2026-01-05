@@ -6,10 +6,12 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceSpanView from './index';
 import transformTraceData from '../../../model/transform-trace-data';
+import OtelTraceFacade from '../../../model/OtelTraceFacade';
 
 import testTrace from '../TraceStatistics/tableValuesTestTrace/testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
+const otelTrace = new OtelTraceFacade(transformedTrace);
 
 jest.mock('../../common/SearchableSelect', () => {
   const mockReact = jest.requireActual('react');
@@ -44,7 +46,7 @@ describe('<TraceSpanView>', () => {
 
   beforeEach(() => {
     defaultProps = {
-      trace: transformedTrace,
+      trace: otelTrace,
       uiFind: undefined,
       uiFindVertexKeys: undefined,
     };
