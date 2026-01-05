@@ -60,10 +60,7 @@ function getChildOfDrange(parentID: string, otelTrace: ReturnType<Trace['asOtelT
   const childrenDrange = new DRange();
   getBlockingChildSpans(parentID, otelTrace).forEach(s => {
     // -1 otherwise it will take for each child a micro (incluse,exclusive)
-    childrenDrange.add(
-      s.startTimeUnixMicros,
-      s.startTimeUnixMicros + (s.durationMicros <= 0 ? 0 : s.durationMicros - 1)
-    );
+    childrenDrange.add(s.startTime, s.startTime + (s.duration <= 0 ? 0 : s.duration - 1));
   });
   return childrenDrange;
 }
@@ -74,14 +71,13 @@ export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan & TDenseSpanM
   const dag = new TraceDag<TSumSpan & TDenseSpanMembers>();
 
   baseDag.nodesMap.forEach(node => {
-    const ntime = node.members.reduce((p, m) => p + m.span.durationMicros, 0);
+    const ntime = node.members.reduce((p, m) => p + m.span.duration, 0);
     const numErrors = node.members.reduce((p, m) => p + (m.span.status.code === StatusCode.ERROR ? 1 : 0), 0);
     const childDurationsDRange = node.members.reduce((p, m) => {
       // Using DRange to handle overlapping spans (fork-join)
-      const cdr = new DRange(
-        m.span.startTimeUnixMicros,
-        m.span.startTimeUnixMicros + m.span.durationMicros
-      ).intersect(getChildOfDrange(m.span.spanID, otelTrace));
+      const cdr = new DRange(m.span.startTime, m.span.endTime).intersect(
+        getChildOfDrange(m.span.spanID, otelTrace)
+      );
       return p + cdr.length;
     }, 0);
     const stime = ntime - childDurationsDRange;
@@ -90,7 +86,7 @@ export function calculateTraceDag(trace: Trace): TraceDag<TSumSpan & TDenseSpanM
       count: node.members.length,
       errors: numErrors,
       time: ntime,
-      percent: (100 / otelTrace.durationMicros) * ntime,
+      percent: (100 / otelTrace.duration) * ntime,
       selfTime: stime,
       percentSelfTime: (100 / ntime) * stime,
     });
