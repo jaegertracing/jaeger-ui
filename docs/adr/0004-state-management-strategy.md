@@ -989,7 +989,7 @@ function SpanRow({ spanId, trace }: { spanId: string; trace: Trace }) {
 
 ### Phase 2: Introduce React Query for Data Fetching (3-4 weeks)
 
-**Goal**: Separate server state from Redux.
+**Goal**: Separate server state from Redux. This aligns with **ADR-0002 Phase 3**, where we switch to the `/api/v3/` OTLP endpoints. Instead of implementing new Redux reducers for OTLP data, we will use React Query directly.
 
 1. **Setup React Query**:
    ```typescript
