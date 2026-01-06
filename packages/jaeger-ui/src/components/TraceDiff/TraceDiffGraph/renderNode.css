@@ -91,3 +91,50 @@ SPDX-License-Identifier: Apache-2.0
 .DiffNode--popover.is-removed .ant-popover-arrow {
   background: #cc1616;
 }
+
+[data-theme='dark'] .DiffNode {
+  background: #6a6a6a;
+  border: 1px solid #555;
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme='dark'] .DiffNode.is-more {
+  background: #5cb52e;
+  border-color: #3d8f1f;
+}
+
+[data-theme='dark'] .DiffNode.is-added {
+  background: #3d8f1f;
+}
+
+[data-theme='dark'] .DiffNode.is-less {
+  border-color: #d93636;
+  background: #c75757;
+}
+
+[data-theme='dark'] .DiffNode.is-removed {
+  background: #d93636;
+}
+
+[data-theme='dark'] .DiffNode--metricCell {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .DiffNode--metricCell.is-added,
+[data-theme='dark'] .DiffNode--metricCell.is-removed {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .DiffNode--popover.is-same .ant-popover-arrow {
+  background: #555;
+}
+
+[data-theme='dark'] .DiffNode--popover.is-more .ant-popover-arrow,
+[data-theme='dark'] .DiffNode--popover.is-added .ant-popover-arrow {
+  background: #3d8f1f;
+}
+
+[data-theme='dark'] .DiffNode--popover.is-less .ant-popover-arrow,
+[data-theme='dark'] .DiffNode--popover.is-removed .ant-popover-arrow {
+  background: #d93636;
+}

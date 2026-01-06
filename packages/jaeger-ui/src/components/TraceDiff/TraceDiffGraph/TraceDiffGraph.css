@@ -14,7 +14,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TraceDiffGraph--errorsWrapper {
-  background: #eee;
+  background: var(--surface-secondary);
   bottom: 0;
   left: 0;
   overflow: auto;
@@ -35,7 +35,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TraceDiffGraph--dag.is-uiFind-mode {
-  background: #ddd;
+  background: var(--surface-tertiary);
 }
 
 /* Find within diff */
@@ -48,9 +48,14 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TraceDiffGraph--uiFind > .ant-input {
-  border: 1px solid #aaa;
-  border-radius: 0;
-  box-shadow: 0 0 2px 2px #ccc;
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-component-focus);
+}
+
+.TraceDiffGraph--uiFind > .ant-input::placeholder {
+  color: var(--text-secondary);
 }
 
 .TraceDiffGraph--emptyState {
@@ -65,9 +70,9 @@ SPDX-License-Identifier: Apache-2.0
   max-width: 500px;
   text-align: center;
   padding: 2rem;
-  background-color: #f5f5f5;
+  background-color: var(--surface-tertiary);
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .TraceDiffGraph--emptyStateHeader {
@@ -86,7 +91,7 @@ SPDX-License-Identifier: Apache-2.0
 .TraceDiffGraph--traceB {
   font-size: 32px;
   font-weight: bold;
-  color: rgb(0, 0, 0);
+  color: var(--text-primary);
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -109,14 +114,14 @@ SPDX-License-Identifier: Apache-2.0
   top: 15px;
   width: 3px;
   height: 30px;
-  background-color: #199;
+  background-color: var(--interactive-primary);
   transform: translateX(-50%);
 }
 
 .TraceDiffGraph--emptyStateTitle {
   margin-top: 0.5 rem;
   margin-bottom: 0.75rem;
-  color: #aaa;
+  color: var(--text-secondary);
   text-align: center;
   font-weight: 600;
 }
@@ -129,7 +134,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TraceDiffGraph--emptyStateButton {
-  background-color: #199;
+  background-color: var(--interactive-primary);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -141,15 +146,15 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TraceDiffGraph--emptyStateButton:hover {
-  background-color: rgb(28, 138, 138);
+  background-color: var(--interactive-primary-hover);
   color: white;
   text-decoration: none;
 }
 
 .TraceDiffGraph--helpButton {
   background-color: transparent;
-  border: 1px solid #199;
-  color: #199;
+  border: 1px solid var(--interactive-primary);
+  color: var(--interactive-primary);
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
