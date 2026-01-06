@@ -16,31 +16,6 @@ SPDX-License-Identifier: Apache-2.0
   max-width: 100%;
 }
 
-/* Dark mode overrides for Ant Design Input */
-.TracePageSearchBar--bar .ant-input {
-  background-color: var(--surface-primary);
-  border-color: var(--border-strong);
-  color: var(--text-primary);
-}
-
-.TracePageSearchBar--bar .ant-input::placeholder {
-  color: var(--text-muted);
-}
-
-.TracePageSearchBar--bar .ant-input-affix-wrapper {
-  background-color: var(--surface-primary);
-  border-color: var(--border-strong);
-}
-
-.TracePageSearchBar--bar .ant-input-clear-icon {
-  color: var(--text-secondary);
-  transition: color 0.2s;
-}
-
-.TracePageSearchBar--bar .ant-input-clear-icon:hover {
-  color: var(--text-primary);
-}
-
 .TracePageSearchBar--count {
   opacity: 0.6;
   color: var(--text-secondary);
