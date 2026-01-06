@@ -462,45 +462,105 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 - [x] `model/ddg/transformTracesToPaths` - DDG Path Aggregation ✅
 - [x] Verification and final testing ✅
 
-### Phase 3: Backend API Switch
+### Phase 3: Backend API Switch (Incremental)
 
-**Goal**: Switch from `/api/` to `/api/v3/` OTLP endpoints.
+**Goal**: Switch from `/api/` to `/api/v3/` OTLP endpoints using **React Query** for data loading. This phase is broken down into granular milestones to minimize risk and allow for early validation.
 
-#### 3.1 OTLP API Client
+#### Milestone 3.1: Metadata Exploration (Search Page)
+**Goal**: Implement the simplest OTLP endpoints and integrate them into the Search page.
+- [ ] Implement `fetchServices()` and `fetchSpanNames(service)` in `OtlpApiClient`.
+- [ ] Setup `QueryClient` and `QueryClientProvider`.
+- [ ] Create `useServices()` and `useSpanNames(service)` hooks.
+- [ ] Update `SearchForm.jsx` to use these hooks instead of Redux/JaegerAPI.
+- **Verification**: Search page dropdowns are populated from `/api/v3/`.
 
-- [ ] Create `src/api/v3/client.ts`:
-  ```typescript
-  export class OtlpApiClient {
-    async getTrace(traceId: string): Promise<IOtelTrace> {
-      const response = await fetch(`/api/v3/traces/${traceId}`);
-      const otlpData = await response.json();
-      return parseOtlpTrace(otlpData);
-    }
-    
-    async findTraces(query: SearchQuery): Promise<IOtelTrace[]> {
-      // ... implement with OTLP query params
-    }
-  }
-  ```
+#### Milestone 3.2: Single Trace Loading
+**Goal**: Load a full trace by ID using the new OTLP parser.
+- [ ] Implement `getTrace(traceId)` in `OtlpApiClient`.
+- [ ] Implement the OTLP Parser (`src/api/v3/parser.ts`) to convert OTLP JSON to `IOtelTrace`.
+- [ ] Create `useTrace(traceId)` hook.
+- [ ] Update `TracePage` to use the new hook.
+- [ ] Use `OtelTraceFacade` to wrap the new data, ensuring visual parity in components.
+- **Verification**: Opening a trace (e.g., via direct URL) loads data from `/api/v3/`.
 
-#### 3.2 OTLP Parser
+#### Milestone 3.3: Trace Search
+**Goal**: Implement full search functionality, including input parameter conversion.
+- [ ] Implement `findTraces(query)` in `OtlpApiClient`.
+- [ ] Map Search UI parameters to OTLP query parameters.
+- [ ] Update `SearchPage` results to use the new client via React Query.
+- **Verification**: Searching for traces from the UI returns results from `/api/v3/`.
+
+#### Milestone 3.4: Extended Operations & Cleanup
+**Goal**: Migrate remaining operations and decommission legacy code.
+- [ ] Implement `archiveTrace`, `fetchDependencies`, and `fetchMetrics`.
+- [ ] Update unmigrated components to use the new client.
+- [ ] Gradually decommission Redux actions/reducers for trace data.
+- [ ] Transition to Phase 4 (Cleanup).
+
+---
+
+#### 3.5 OTLP Data Model (Wire vs. Domain)
+
+To maintain a clean separation between the backend's wire format and the UI's domain model, we will adopt a two-tier type system for the OTLP route:
+
+1.  **Wire Format Types (`IOtlpTraceData`)**:
+    - **Customary Source**: These types should be **generated** from the [Jaeger API v3 Swagger/IDL definition](https://github.com/jaegertracing/jaeger-idl/tree/main/proto/api_v3).
+    - **Role**: Defines the raw JSON/Protobuf structure as returned by `/api/v3/`. No UI-specific properties.
+2.  **Domain Model Types (`IOtelTrace`, `IOtelSpan`)**:
+    - **Role**: The "enriched" model used by UI components.
+    - **Unified Interface**: This is the same interface that `OtelTraceFacade` implements for legacy data.
+    - **Properties**: Includes derived UI properties (depth, hasChildren, relative timing, critical path, etc.) that are NOT present in the wire format.
+
+#### 3.6 OTLP Parser & Enrichment
+
+The new `OtlpParser` replaces the role of `transformTraceData` for the OTLP route.
 
 - [ ] Create `src/api/v3/parser.ts`:
   ```typescript
-  // Parse OTLP JSON/protobuf → IOtelSpan/IOtelTrace
-  export function parseOtlpTrace(otlpData: any): IOtelTrace {
-    // Direct OTLP → IOtelSpan (no legacy conversion)
-    // Still add UI-specific derived fields:
-    // - depth, hasChildren, startTime, endTime, duration
-    // - childSpans, inboundLinks
+  /**
+   * Transforms raw OTLP wire data into the enriched domain model.
+   * This is equivalent to transformTraceData for the native route.
+   */
+  export function parseOtlpTrace(wireData: IOtlpTraceData): IOtelTrace {
+    // 1. Validate wireData (optionally with Zod)
+    // 2. Map OTLP properties to IOtelTrace
+    // 3. ENRICH: Calculate derived properties (depth, parent/child refs, etc.)
+    // 4. Return enriched IOtelTrace
   }
   ```
 
-#### 3.3 Redux Integration
+#### 3.7 Integration Testing Strategy
 
-- [ ] Update `src/reducers/trace.ts` to use OTLP parser
-- [ ] Add feature flag for gradual rollout
-- [ ] Testing and validation
+To ensure `OtlpApiClient` successfully interfaces with the Jaeger backend before UI integration, a multi-layered testing approach will be adopted:
+
+##### 1. Service-Level Mocking (MSW)
+Instead of mocking `fetch` directly, use **Mock Service Worker (MSW)** to intercept network requests at the service layer.
+- **Goal**: Test parsing logic, error handling, and URL construction using the real `fetch` API against realistic mocked OTLP payloads.
+
+##### 2. Contract Validation (Zod)
+Use a runtime validation library (e.g., `zod`) in the parser to validate the incoming OTLP JSON.
+- **Goal**: Catch backend breaking changes at the network boundary. Ensures `wireData` strictly matches our generated types.
+
+##### 3. Backend Smoke Tests (Real Jaeger)
+A standalone integration test script that runs against a live Jaeger instance.
+- **Workflow**: Start `jaegertracing/jaeger` via Docker, send sample OTLP data, and verify the client can fetch and parse it correctly.
+
+#### 3.8 Facade Coexistence & Cache Transition
+
+During the transition, the UI will see two paths to the same unified interface (`IOtelTrace`):
+- **Legacy Path**: `Jaeger JSON (v1) -> Redux Store -> OtelTraceFacade -> IOtelTrace`
+- **Native Path**: `OTLP JSON (v3) -> React Query -> OtlpParser -> IOtelTrace`
+
+**Handling the Overlap**:
+- **Redundant Fetching (Temporary)**: Navigating from Search to Trace will trigger a re-fetch from `/api/v3/`.
+- **Deliberate Separation**: We will separate **Trace Summaries** (lighter, for Search) from the **Full Trace** (for Trace Page) to optimize memory usage.
+- **Decommissioning**: Once Milestones 3.1-3.3 are complete, the Legacy Path and Redux dependency for trace data will be removed.
+
+**Deliberate Separation (Permanent Design) of Search and Trace data**
+
+We will move towards a model where the Search page only fetches **Trace Summaries**, while the Trace page fetches the **Full Trace**.
+- **Rationale**: Currently, loading full traces on the Search page causes significant memory bloat, especially when searching over large sets. Separating these ensures the Search page remains lightweight.
+- **UI Performance**: To maintain the "fast navigation" feel, we can implement **Pre-fetching** on hover/intent via React Query, loading the full trace in the background before the user even clicks.
 
 ### Phase 4: Cleanup & Optimization
 
