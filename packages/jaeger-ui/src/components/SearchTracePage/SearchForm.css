@@ -99,3 +99,7 @@ SPDX-License-Identifier: Apache-2.0
   background-color: var(--text-secondary);
   border-radius: 4px;
 }
+
+.ant-select-dropdown .ant-select-item-option-selected {
+  background-color: rgba(var(--interactive-primary-rgb), 0.2) !important;
+}
