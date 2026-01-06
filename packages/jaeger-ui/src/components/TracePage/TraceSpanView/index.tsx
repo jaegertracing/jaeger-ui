@@ -15,18 +15,7 @@ import SearchableSelect from '../../common/SearchableSelect';
 
 const Option = Select.Option;
 
-type FilterAccessor = 'serviceName' | 'operationName';
-
-const OTEL_PROPERTY_MAP: Record<FilterAccessor, string> = {
-  serviceName: 'resource.serviceName',
-  operationName: 'name',
-};
-
-function getNestedProperty(path: string, span: any): string {
-  return path.split('.').reduce((prev, curr) => {
-    return prev ? prev[curr] : null;
-  }, span);
-}
+type FilterType = 'serviceName' | 'operationName';
 
 type Props = {
   trace: IOtelTrace;
@@ -41,9 +30,7 @@ type State = {
   serviceNamesList: string[];
   operationNamesList: string[];
   serviceNameOperationsMap: Map<string, string[]>;
-  filtered: Record<FilterAccessor, string[]>;
-  selectedServiceName: string[];
-  selectedOperationName: string[];
+  filters: Record<FilterType, string[]>;
   filteredData: ReadonlyArray<IOtelSpan>;
 };
 
@@ -71,9 +58,7 @@ export default class TraceSpanView extends Component<Props, State> {
       operationNamesList: [...operationNamesList],
       serviceNameOperationsMap,
       filteredData: this.props.trace.spans,
-      filtered: {} as Record<FilterAccessor, string[]>,
-      selectedServiceName: [],
-      selectedOperationName: [],
+      filters: {} as Record<FilterType, string[]>,
     };
     this.handleResetFilter = this.handleResetFilter.bind(this);
     this.uniqueOperationNameOptions = this.uniqueOperationNameOptions.bind(this);
@@ -81,8 +66,7 @@ export default class TraceSpanView extends Component<Props, State> {
 
   handleResetFilter() {
     this.setState(previousState => ({
-      selectedServiceName: [],
-      selectedOperationName: [],
+      filters: {} as Record<FilterType, string[]>,
       filteredData: previousState.data,
     }));
   }
@@ -90,36 +74,43 @@ export default class TraceSpanView extends Component<Props, State> {
   uniqueOperationNameOptions() {
     let operationNamesList: string[] = [];
     const serviceNameOperationsMap = this.state.serviceNameOperationsMap;
-    // OTEL uses resource.serviceName
-    if (this.state.filtered.serviceName) {
-      this.state.filtered.serviceName.forEach((currentValue: string) => {
-        operationNamesList = operationNamesList.concat(serviceNameOperationsMap.get(currentValue) || []);
-      });
+    if (this.state.filters.serviceName) {
+      operationNamesList = this.state.filters.serviceName.flatMap(
+        svc => serviceNameOperationsMap.get(svc) || []
+      );
     } else {
       operationNamesList = this.state.operationNamesList;
     }
-    return [...new Set(operationNamesList)];
+    return [...new Set(operationNamesList)]; // take distinct values
   }
 
-  onFilteredChangeCustom(selectedValues: string[], accessor: FilterAccessor) {
-    const filtered = this.state.filtered;
-    filtered[accessor] = selectedValues;
-    const data = this.state.data.filter(span => {
-      return (Object.keys(filtered) as FilterAccessor[]).every(key => {
-        const filterValues = filtered[key];
-        if (!filterValues || !filterValues.length) {
-          return true;
+  onFilteredChangeCustom(selectedValues: string[], filterType: FilterType) {
+    // Update the filter state
+    const newFilters = { ...this.state.filters, [filterType]: selectedValues };
+
+    // Filter spans: a span passes if it matches all active filters
+    const filteredData = this.state.data.filter(span => {
+      // Check serviceName filter (if active)
+      if (newFilters.serviceName && newFilters.serviceName.length > 0) {
+        if (!newFilters.serviceName.includes(span.resource.serviceName)) {
+          return false;
         }
-        const spanValue = getNestedProperty(OTEL_PROPERTY_MAP[key], span);
-        return filterValues.includes(spanValue);
-      });
+      }
+
+      // Check operationName filter (if active)
+      if (newFilters.operationName && newFilters.operationName.length > 0) {
+        if (!newFilters.operationName.includes(span.name)) {
+          return false;
+        }
+      }
+
+      return true;
     });
 
-    this.setState(previousState => ({
-      ...previousState,
-      filtered,
-      filteredData: data,
-    }));
+    this.setState({
+      filters: newFilters,
+      filteredData,
+    });
   }
 
   render() {
@@ -194,15 +185,10 @@ export default class TraceSpanView extends Component<Props, State> {
               mode="multiple"
               style={{ width: '100%' }}
               maxTagCount={4}
-              value={this.state.selectedServiceName}
-              maxTagPlaceholder={`+ ${this.state.selectedServiceName.length - 4} Selected`}
+              value={this.state.filters.serviceName || []}
+              maxTagPlaceholder={`+ ${(this.state.filters.serviceName?.length || 0) - 4} Selected`}
               placeholder="Select Service"
               onChange={entry => {
-                this.setState(previousState => ({
-                  ...previousState,
-                  selectedServiceName: entry as [],
-                }));
-                // Use resource.serviceName instead of process.serviceName
                 this.onFilteredChangeCustom(entry as [], 'serviceName');
               }}
               data-testid="select-service"
@@ -228,15 +214,10 @@ export default class TraceSpanView extends Component<Props, State> {
               mode="multiple"
               style={{ width: '100%' }}
               maxTagCount={4}
-              value={this.state.selectedOperationName}
-              maxTagPlaceholder={`+ ${this.state.selectedOperationName.length - 4} Selected`}
+              value={this.state.filters.operationName || []}
+              maxTagPlaceholder={`+ ${(this.state.filters.operationName?.length || 0) - 4} Selected`}
               placeholder="Select Operation"
               onChange={entry => {
-                this.setState(previousState => ({
-                  ...previousState,
-                  selectedOperationName: entry as [],
-                }));
-                // Use name instead of operationName
                 this.onFilteredChangeCustom(entry as [], 'operationName');
               }}
               data-testid="select-operation"
