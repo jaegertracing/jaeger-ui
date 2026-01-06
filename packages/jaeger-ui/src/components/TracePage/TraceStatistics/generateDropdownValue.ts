@@ -6,8 +6,7 @@ import _uniq from 'lodash/uniq';
 import { IOtelTrace } from '../../../types/otel';
 import { ITableSpan } from './types';
 
-const getServiceName = () => 'Service Name';
-const getOperationName = (useOtelTerms: boolean) => (useOtelTerms ? 'Span Name' : 'Operation Name');
+import { getServiceName, getOperationName } from './tableValues';
 
 /**
  * Used to get the values if attribute is picked from the first dropdown.

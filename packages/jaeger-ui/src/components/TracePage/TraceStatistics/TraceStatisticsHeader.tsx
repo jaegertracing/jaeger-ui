@@ -6,7 +6,7 @@ import React, { Component } from 'react';
 import { IOtelTrace } from '../../../types/otel';
 import { ITableSpan } from './types';
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
-import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
+import { getColumnValues, getColumnValuesSecondDropdown, getServiceName } from './tableValues';
 import SearchableSelect from '../../common/SearchableSelect';
 import generateColor from './generateColor';
 import './TraceStatisticsHeader.css';
@@ -48,7 +48,7 @@ const optionsNameSelector3 = new Map([
 export default class TraceStatisticsHeader extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    const serviceName = 'Service Name';
+    const serviceName = getServiceName();
     this.props.handler(
       getColumnValues(serviceName, this.props.trace, this.props.useOtelTerms),
       getColumnValues(serviceName, this.props.trace, this.props.useOtelTerms),

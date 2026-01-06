@@ -6,8 +6,9 @@ import { IOtelTrace, IOtelSpan } from '../../../types/otel';
 import { ITableSpan } from './types';
 import colorGenerator from '../../../utils/color-generator';
 
-const getServiceName = () => 'Service Name';
-const getOperationName = (useOtelTerms: boolean) => (useOtelTerms ? 'Span Name' : 'Operation Name');
+export const getServiceName = () => 'Service Name';
+export const getOperationName = (useOtelTerms: boolean) => (useOtelTerms ? 'Span Name' : 'Operation Name');
+export const getAttributeName = (useOtelTerms: boolean) => (useOtelTerms ? 'Attribute' : 'Tag');
 
 function parentChildOfMap(allSpans: ReadonlyArray<IOtelSpan>): Record<string, IOtelSpan[]> {
   const parentChildOfMap: Record<string, IOtelSpan[]> = {};
@@ -259,7 +260,7 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace, use
       resultValue.avg = (resultValue.total / resultValue.count) as IOtelSpan['duration'];
       let tableSpanOTHERS: ITableSpan = {
         hasSubgroupValue: false,
-        name: `Without Attribute: ${selectedAttributeKey}`,
+        name: `Without ${getAttributeName(useOtelTerms)}: ${selectedAttributeKey}`,
         count: resultValue.count,
         total: resultValue.total,
         avg: resultValue.avg,
@@ -391,7 +392,7 @@ function generateDetailRest(
       if (resultValue.count !== 0) {
         let buildOneColumnValue: ITableSpan = {
           hasSubgroupValue: false,
-          name: `Without Attribute: ${selectedAttributeKeySecond}`,
+          name: `Without ${getAttributeName(useOtelTerms)}: ${selectedAttributeKeySecond}`,
           count: resultValue.count,
           total: resultValue.total,
           avg: resultValue.avg,
