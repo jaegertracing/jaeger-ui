@@ -431,7 +431,7 @@ describe('<TracePage>', () => {
     const { rerender } = render(<TracePage {...defaultProps} trace={null} />);
     rerender(<TracePage {...defaultProps} trace={{ data: trace, state: fetchedState.DONE }} />);
 
-    expect(setTraceMock).toHaveBeenCalledWith(otelTrace);
+    expect(setTraceMock).toHaveBeenCalledWith(trace.asOtelTrace());
   });
 
   it('calls resetShortcuts, cancelScroll, and scrollManager.destroy on unmount', () => {
