@@ -27,7 +27,7 @@ type State = {
   data: ReadonlyArray<IOtelSpan>;
   serviceNamesList: string[];
   operationNamesList: string[];
-  serviceNameOperationsMap: Map<string, string[]>;
+  serviceToOperationsMap: Map<string, string[]>;
   filters: Record<FilterType, string[]>;
   filteredData: ReadonlyArray<IOtelSpan>;
 };
@@ -37,17 +37,17 @@ export default class TraceSpanView extends Component<Props, State> {
     super(props, state);
     const serviceNamesSet = new Set<string>();
     const operationNamesSet = new Set<string>();
-    const serviceNameOperationsMap = new Map<string, Set<string>>();
+    const serviceToOperationsMap = new Map<string, Set<string>>();
 
     this.props.trace.spans.forEach(span => {
       const serviceName = span.resource.serviceName;
       serviceNamesSet.add(serviceName);
       operationNamesSet.add(span.name);
 
-      if (!serviceNameOperationsMap.has(serviceName)) {
-        serviceNameOperationsMap.set(serviceName, new Set<string>());
+      if (!serviceToOperationsMap.has(serviceName)) {
+        serviceToOperationsMap.set(serviceName, new Set<string>());
       }
-      serviceNameOperationsMap.get(serviceName)!.add(span.name);
+      serviceToOperationsMap.get(serviceName)!.add(span.name);
     });
 
     // Sort alphabetically for better UX
@@ -55,9 +55,9 @@ export default class TraceSpanView extends Component<Props, State> {
     const operationNamesList = [...operationNamesSet].sort();
 
     // Convert operation sets to sorted arrays
-    const sortedServiceNameOperationsMap = new Map<string, string[]>();
-    serviceNameOperationsMap.forEach((operations, serviceName) => {
-      sortedServiceNameOperationsMap.set(serviceName, [...operations].sort());
+    const sortedServiceToOperationsMap = new Map<string, string[]>();
+    serviceToOperationsMap.forEach((operations, serviceName) => {
+      sortedServiceToOperationsMap.set(serviceName, [...operations].sort());
     });
 
     this.state = {
@@ -66,7 +66,7 @@ export default class TraceSpanView extends Component<Props, State> {
       data: this.props.trace.spans,
       serviceNamesList,
       operationNamesList,
-      serviceNameOperationsMap: sortedServiceNameOperationsMap,
+      serviceToOperationsMap: sortedServiceToOperationsMap,
       filteredData: this.props.trace.spans,
       filters: {} as Record<FilterType, string[]>,
     };
@@ -82,11 +82,11 @@ export default class TraceSpanView extends Component<Props, State> {
   }
 
   uniqueOperationNameOptions() {
-    let operationNamesList: string[] = [];
-    const serviceNameOperationsMap = this.state.serviceNameOperationsMap;
+    let operationNamesList: string[];
     if (this.state.filters.serviceName) {
+      const serviceToOperationsMap = this.state.serviceToOperationsMap;
       operationNamesList = this.state.filters.serviceName.flatMap(
-        svc => serviceNameOperationsMap.get(svc) || []
+        svc => serviceToOperationsMap.get(svc) || []
       );
     } else {
       operationNamesList = this.state.operationNamesList;
