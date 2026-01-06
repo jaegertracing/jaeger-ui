@@ -20,11 +20,20 @@ type TracePageSearchBarProps = {
   focusUiFindMatches: () => void;
   resultCount: number;
   navigable: boolean;
+  useOtelTerms: boolean;
 };
 
 export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwardedRef: React.Ref<InputRef> }) {
-  const { focusUiFindMatches, forwardedRef, navigable, nextResult, prevResult, resultCount, textFilter } =
-    props;
+  const {
+    focusUiFindMatches,
+    forwardedRef,
+    navigable,
+    nextResult,
+    prevResult,
+    resultCount,
+    textFilter,
+    useOtelTerms,
+  } = props;
 
   const count = textFilter ? <span className="TracePageSearchBar--count">{resultCount}</span> : null;
 
@@ -41,9 +50,10 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
       <div style={{ wordBreak: 'normal' }}>
         <p>
           This is an in-page search. Enter the query as a list of space-separated string terms. Each term is
-          used in a substring match against any of the following data elements: service name, operation name,
-          span ID, and key-value pairs in tags and logs. The spans that match any of the search terms will be
-          highlighted.
+          used in a substring match against any of the following data elements: service name,{' '}
+          {useOtelTerms ? 'span name' : 'operation name'}, span ID, and key-value pairs in{' '}
+          {useOtelTerms ? 'attributes and events' : 'tags and logs'}. The spans that match any of the search
+          terms will be highlighted.
         </p>
         <p>
           For exact phrase search surround the query in double quotes like{' '}

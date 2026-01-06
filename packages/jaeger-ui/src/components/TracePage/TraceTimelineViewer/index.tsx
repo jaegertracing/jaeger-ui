@@ -90,6 +90,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
         viewRangeTime={viewRange.time}
         updateNextViewRangeTime={updateNextViewRangeTime}
         updateViewRangeTime={updateViewRangeTime}
+        useOtelTerms={props.useOtelTerms}
       />
       <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
     </div>

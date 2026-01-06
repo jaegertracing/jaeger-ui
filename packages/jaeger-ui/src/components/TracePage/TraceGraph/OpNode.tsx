@@ -24,13 +24,14 @@ type Props = {
   operation: string;
   service: string;
   mode: string;
+  useOtelTerms: boolean;
 };
 
 export const MODE_SERVICE = 'service';
 export const MODE_TIME = 'time';
 export const MODE_SELFTIME = 'selftime';
 
-export const HELP_TABLE = (
+export const getHelpTable = (useOtelTerms: boolean) => (
   <table className="OpNode OpNode--legendNode">
     <tbody>
       <tr>
@@ -42,7 +43,7 @@ export const HELP_TABLE = (
       </tr>
       <tr>
         <td className="OpNode--metricCell">Duration</td>
-        <td className="OpNode--labelCell">Operation</td>
+        <td className="OpNode--labelCell">{useOtelTerms ? 'Span Name' : 'Operation'}</td>
         <td className="OpNode--metricCell">Self time</td>
       </tr>
     </tbody>
@@ -54,7 +55,7 @@ export function round2(percent: number) {
 }
 
 const OpNode = React.memo<Props>(
-  ({ count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode }) => {
+  ({ count, errors, time, percent, selfTime, percentSelfTime, operation, service, mode, useOtelTerms }) => {
     // Spans over 20 % time are full red - we have probably to reconsider better approach
     let backgroundColor;
     if (mode === MODE_TIME) {
@@ -113,9 +114,9 @@ const OpNode = React.memo<Props>(
 
 export default OpNode;
 
-export function getNodeRenderer(mode: string) {
+export function getNodeRenderer(mode: string, useOtelTerms: boolean) {
   return function drawNode(vertex: TDagPlexusVertex<TSumSpan & TDenseSpanMembers>) {
-    return <OpNode {...vertex.data} mode={mode} />;
+    return <OpNode {...vertex.data} mode={mode} useOtelTerms={useOtelTerms} />;
   };
 }
 

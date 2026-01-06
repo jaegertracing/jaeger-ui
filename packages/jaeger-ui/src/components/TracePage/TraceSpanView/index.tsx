@@ -19,6 +19,7 @@ type Props = {
   trace: IOtelTrace;
   uiFindVertexKeys: Set<string> | TNil;
   uiFind: string | null | undefined;
+  useOtelTerms: boolean;
 };
 
 type State = {
@@ -137,7 +138,7 @@ export default class TraceSpanView extends Component<Props, State> {
         render: (_, span) => span.resource.serviceName,
       },
       {
-        title: 'Operation',
+        title: this.props.useOtelTerms ? 'Span Name' : 'Operation',
         width: '25%',
         sorter: (a, b) => a.name.localeCompare(b.name),
         render: (_, span) => span.name,
@@ -277,7 +278,7 @@ export default class TraceSpanView extends Component<Props, State> {
             </SearchableSelect>
           </Form.Item>
           <Form.Item
-            label="Operation Name"
+            label={this.props.useOtelTerms ? 'Span Name' : 'Operation Name'}
             labelCol={{ flex: '0 0 auto' }}
             wrapperCol={{ flex: '1 1 auto' }}
             style={{ flex: '1 1 300px', maxWidth: '400px', marginBottom: 0 }}
@@ -290,7 +291,7 @@ export default class TraceSpanView extends Component<Props, State> {
               maxTagCount={4}
               value={this.state.filters.operationName || []}
               maxTagPlaceholder={`+ ${(this.state.filters.operationName?.length || 0) - 4} Selected`}
-              placeholder="Select Operation"
+              placeholder={this.props.useOtelTerms ? 'Select Span Name' : 'Select Operation'}
               onChange={entry => {
                 this.onFilteredChangeCustom(entry as [], 'operationName');
               }}
