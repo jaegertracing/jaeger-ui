@@ -26,3 +26,8 @@ SPDX-License-Identifier: Apache-2.0
   width: 20%;
   z-index: 1;
 }
+
+/* Reduce padding for more compact, data-dense display */
+.span-view-table .ant-table-tbody > tr > td {
+  padding: 8px 12px;
+}

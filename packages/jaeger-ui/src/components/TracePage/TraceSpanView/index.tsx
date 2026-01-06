@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { Component } from 'react';
-import { Table, Button, Select, Form } from 'antd';
+import { Table, Button, Select, Form, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
 import './index.css';
@@ -12,6 +12,7 @@ import { timeConversion } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import SearchableSelect from '../../common/SearchableSelect';
+import { formatCompactDuration } from '../../../utils/format-duration';
 
 type FilterType = 'serviceName' | 'operationName';
 
@@ -30,6 +31,7 @@ type State = {
   serviceToOperationsMap: Map<string, string[]>;
   filters: Record<FilterType, string[]>;
   filteredData: ReadonlyArray<IOtelSpan>;
+  maxDuration: number;
 };
 
 export default class TraceSpanView extends Component<Props, State> {
@@ -60,6 +62,9 @@ export default class TraceSpanView extends Component<Props, State> {
       sortedServiceToOperationsMap.set(serviceName, [...operations].sort());
     });
 
+    // Compute max duration once for the entire trace
+    const maxDuration = Math.max(...this.props.trace.spans.map(s => s.duration), 1);
+
     this.state = {
       searchText: '',
       searchedColumn: '',
@@ -69,6 +74,7 @@ export default class TraceSpanView extends Component<Props, State> {
       serviceToOperationsMap: sortedServiceToOperationsMap,
       filteredData: this.props.trace.spans,
       filters: {} as Record<FilterType, string[]>,
+      maxDuration,
     };
     this.handleResetFilter = this.handleResetFilter.bind(this);
     this.uniqueOperationNameOptions = this.uniqueOperationNameOptions.bind(this);
@@ -127,46 +133,102 @@ export default class TraceSpanView extends Component<Props, State> {
     const columns: ColumnProps<IOtelSpan>[] = [
       {
         title: 'Service Name',
-        dataIndex: ['resource', 'serviceName'],
         width: '25%',
         sorter: (a, b) => a.resource.serviceName.localeCompare(b.resource.serviceName),
+        render: (_, span) => span.resource.serviceName,
       },
       {
         title: 'Operation',
-        dataIndex: 'name',
         width: '25%',
         sorter: (a, b) => a.name.localeCompare(b.name),
+        render: (_, span) => span.name,
       },
       {
-        title: 'ID',
-        dataIndex: 'spanID',
+        title: 'Span ID',
         sorter: (a, b) => a.spanID.localeCompare(b.spanID),
-        render: (text: string, record: IOtelSpan) => {
+        render: (_, span) => {
           return (
             <a
-              href={prefixUrl(`/trace/${record.traceID}?uiFind=${text}`)}
+              href={prefixUrl(`/trace/${span.traceID}?uiFind=${span.spanID}`)}
               target={getTargetEmptyOrBlank()}
               rel="noopener noreferrer"
             >
-              {text}
+              {span.spanID}
             </a>
           );
         },
       },
       {
         title: 'Duration',
-        dataIndex: 'duration',
         sorter: (a, b) => a.duration - b.duration,
-        render: (cell: number) => {
-          return timeConversion(cell);
+        render: (_, span) => {
+          const percentage = (span.duration / this.state.maxDuration) * 100;
+          const preciseValue = timeConversion(span.duration);
+          const compactValue = formatCompactDuration(span.duration);
+
+          return (
+            <Tooltip title={preciseValue}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                }}
+              >
+                <div
+                  style={{
+                    flexGrow: 1,
+                    height: '6px',
+                    background: 'var(--surface-tertiary)',
+                    marginRight: '12px',
+                    position: 'relative',
+                    borderRadius: '2px',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${Math.max(percentage, 2)}%`,
+                      height: '100%',
+                      background: 'var(--interactive-primary)',
+                      borderRadius: '2px',
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    whiteSpace: 'nowrap',
+                    minWidth: '60px',
+                    textAlign: 'right',
+                    fontFamily: 'monospace',
+                    fontSize: '12px',
+                  }}
+                >
+                  {compactValue}
+                </div>
+              </div>
+            </Tooltip>
+          );
         },
       },
       {
         title: 'Start Time',
-        dataIndex: 'startTime',
         sorter: (a, b) => a.startTime - b.startTime,
-        render: (cell: number) => {
-          return dayjs(cell / 1000).format('DD MMM YYYY hh:mm A');
+        render: (_, span) => {
+          const preciseValue = timeConversion(span.relativeStartTime);
+          const compactValue = formatCompactDuration(span.relativeStartTime);
+
+          return (
+            <Tooltip
+              title={`${dayjs(span.startTime / 1000).format('DD MMM YYYY hh:mm:ss A')} (${preciseValue})`}
+            >
+              <span
+                style={{ fontFamily: 'monospace', fontSize: '12px', display: 'block', textAlign: 'right' }}
+              >
+                {compactValue}
+              </span>
+            </Tooltip>
+          );
         },
       },
     ];
