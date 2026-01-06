@@ -412,7 +412,12 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       );
     } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
       view = (
-        <TraceStatistics trace={data.asOtelTrace()} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />
+        <TraceStatistics
+          trace={data.asOtelTrace()}
+          uiFindVertexKeys={spanFindMatches}
+          uiFind={uiFind}
+          useOtelTerms={this.props.useOtelTerms}
+        />
       );
     } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
       view = (
