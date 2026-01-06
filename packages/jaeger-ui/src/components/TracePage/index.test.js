@@ -82,7 +82,6 @@ import filterSpansSpy from '../../utils/filter-spans';
 import updateUiFindSpy from '../../utils/update-ui-find';
 import { ETraceViewType } from './types';
 import ScrollManager from './ScrollManager';
-import OtelTraceFacade from '../../model/OtelTraceFacade';
 
 const renderWithRouter = (ui, { route = '/' } = {}) => {
   return render(<MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>);
@@ -113,8 +112,6 @@ describe('makeShortcutCallbacks()', () => {
 
 describe('<TracePage>', () => {
   const trace = transformTraceData(traceGenerator.trace({}));
-  const otelTrace = new OtelTraceFacade(trace);
-  trace.asOtelTrace = () => otelTrace;
   const defaultProps = {
     acknowledgeArchive: jest.fn(),
     archiveTrace: jest.fn(),
