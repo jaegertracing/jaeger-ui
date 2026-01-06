@@ -151,6 +151,7 @@ export default class TraceSpanView extends Component<Props, State> {
               href={prefixUrl(`/trace/${span.traceID}?uiFind=${span.spanID}`)}
               target={getTargetEmptyOrBlank()}
               rel="noopener noreferrer"
+              className="span-id-cell"
             >
               {span.spanID}
             </a>
@@ -176,6 +177,7 @@ export default class TraceSpanView extends Component<Props, State> {
                 }}
               >
                 <div
+                  className="duration-bar-background"
                   style={{
                     flexGrow: 1,
                     height: '6px',
@@ -235,6 +237,7 @@ export default class TraceSpanView extends Component<Props, State> {
       <div>
         <h3 className="title--TraceSpanView"> Trace Tabular View</h3>
         <div
+          className="TraceSpanView--filters"
           style={{
             display: 'flex',
             flexWrap: 'wrap',
