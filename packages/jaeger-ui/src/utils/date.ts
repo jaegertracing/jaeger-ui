@@ -7,6 +7,7 @@ import _round from 'lodash/round';
 import _duration, { DurationUnitType } from 'dayjs/plugin/duration';
 
 import { toFloatPrecision } from './number';
+import { Microseconds } from '../types/units';
 
 dayjs.extend(_duration);
 
@@ -133,17 +134,18 @@ export function formatSecondTime(duration: number): string {
 }
 
 /**
- * Humanizes the duration for display.
+ * Humanizes a duration for display with up to two units.
+ * Shows both primary and secondary units when applicable (e.g., "2d 3h").
+ * For decimal-based units (μs, ms, s), displays as a decimal (e.g., "2.36ms").
+ *
+ * @param duration - Duration in microseconds
+ * @returns Formatted string with up to 2 units (e.g., "2.36ms", "2d 3h")
  *
  * @example
- * 5000ms => 5s
- * 1000μs => 1ms
- * 183840s => 2d 3h
- *
- * @param {number} duration - Unix Time
- * @return {string} formatted duration
+ * formatDuration(2357) // => "2.36ms"
+ * formatDuration(183840000000) // => "2d 3h"
  */
-export function formatDuration(duration: number): string {
+export function formatDuration(duration: Microseconds): string {
   // Drop all units that are too large except the last one
   const [primaryUnit, secondaryUnit] = _dropWhile(
     UNIT_STEPS,
@@ -217,12 +219,39 @@ export function convertToTimeUnit(microseconds: number, targetTimeUnit: string):
   return dayjs.duration(microseconds / 1000, 'ms').as(targetTimeUnit as DurationUnitType);
 }
 
-export function timeConversion(microseconds: number): string {
+/**
+ * Formats a duration in microseconds to a compact string with 3 significant digits.
+ * Useful for displaying durations in tables where space is limited and excessive precision
+ * reduces readability.
+ *
+ * @param microseconds - Duration in microseconds
+ * @returns Formatted string with 3 significant digits and appropriate unit (μs, ms, s, m)
+ *
+ * @example
+ * formatDurationCompact(123) // => "123μs"
+ * formatDurationCompact(13835) // => "13.8ms"
+ * formatDurationCompact(135842) // => "136ms"
+ * formatDurationCompact(1835200) // => "1.84s"
+ */
+export function formatDurationCompact(microseconds: Microseconds): string {
   if (microseconds < 1000) {
-    return `${microseconds}μs`;
+    return `${Math.round(microseconds)}μs`;
   }
 
-  const timeUnit = getSuitableTimeUnit(microseconds) as Exclude<LongTimeUnit, 'microseconds'>;
+  const ms = microseconds / 1000;
+  if (ms < 1000) {
+    // Format to 3 significant digits
+    const formatted = ms < 10 ? ms.toPrecision(2) : ms < 100 ? ms.toPrecision(3) : Math.round(ms);
+    return `${formatted}ms`;
+  }
 
-  return `${dayjs.duration(microseconds / 1000, 'ms').as(timeUnit)}${convertTimeUnitToShortTerm(timeUnit)}`;
+  const s = ms / 1000;
+  if (s < 60) {
+    const formatted = s < 10 ? s.toPrecision(2) : s < 100 ? s.toPrecision(3) : Math.round(s);
+    return `${formatted}s`;
+  }
+
+  const m = s / 60;
+  const formatted = m < 10 ? m.toPrecision(2) : m < 100 ? m.toPrecision(3) : Math.round(m);
+  return `${formatted}m`;
 }

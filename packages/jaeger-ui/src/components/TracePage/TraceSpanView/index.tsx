@@ -8,11 +8,10 @@ import { ColumnProps } from 'antd/es/table';
 import './index.css';
 import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
-import { timeConversion } from '../../../utils/date';
+import { formatDuration, formatDurationCompact } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import SearchableSelect from '../../common/SearchableSelect';
-import { formatCompactDuration } from '../../../utils/format-duration';
 
 type FilterType = 'serviceName' | 'operationName';
 
@@ -163,8 +162,8 @@ export default class TraceSpanView extends Component<Props, State> {
         sorter: (a, b) => a.duration - b.duration,
         render: (_, span) => {
           const percentage = (span.duration / this.state.maxDuration) * 100;
-          const preciseValue = timeConversion(span.duration);
-          const compactValue = formatCompactDuration(span.duration);
+          const preciseValue = formatDuration(span.duration);
+          const compactValue = formatDurationCompact(span.duration);
 
           return (
             <Tooltip title={preciseValue}>
@@ -215,8 +214,8 @@ export default class TraceSpanView extends Component<Props, State> {
         title: 'Start Time',
         sorter: (a, b) => a.startTime - b.startTime,
         render: (_, span) => {
-          const preciseValue = timeConversion(span.relativeStartTime);
-          const compactValue = formatCompactDuration(span.relativeStartTime);
+          const preciseValue = formatDuration(span.relativeStartTime);
+          const compactValue = formatDurationCompact(span.relativeStartTime);
 
           return (
             <Tooltip

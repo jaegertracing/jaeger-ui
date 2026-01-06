@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import TraceName from '../../common/TraceName';
 import { fetchedState } from '../../../constants';
 import { formatDuration } from '../../../utils/date';
+import { Microseconds } from '../../../types/units';
 
 import { FetchedState, TNil } from '../../../types';
 import { ApiError } from '../../../types/api-error';
@@ -68,7 +69,9 @@ export default function ResultItemTitle({
   const content = (
     <>
       <span className="ResultItemTitle--durationBar" style={{ width: `${durationPercent}%` }} />
-      {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
+      {duration != null && (
+        <span className="ub-right ub-relative">{formatDuration(duration as Microseconds)}</span>
+      )}
       <h3 className="ResultItemTitle--title">
         <TraceName error={error} state={state} traceName={traceName} />
         <TraceId traceId={traceID} className="ResultItemTitle--idExcerpt" />

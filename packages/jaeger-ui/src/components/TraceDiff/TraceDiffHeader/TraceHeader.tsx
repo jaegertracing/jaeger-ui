@@ -9,6 +9,7 @@ import RelativeDate from '../../common/RelativeDate';
 import TraceName from '../../common/TraceName';
 import { fetchedState } from '../../../constants';
 import { formatDuration } from '../../../utils/date';
+import { Microseconds } from '../../../types/units';
 
 import { FetchedState, TNil } from '../../../types';
 import { ApiError } from '../../../types/api-error';
@@ -46,7 +47,9 @@ export function Attrs({
       </li>
       <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
         <span className="u-tx-muted">Duration: </span>
-        <strong data-testid="TraceDiffHeader--traceAttr--duration">{formatDuration(duration || 0)}</strong>
+        <strong data-testid="TraceDiffHeader--traceAttr--duration">
+          {formatDuration((duration || 0) as Microseconds)}
+        </strong>
       </li>
       <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
         <span className="u-tx-muted">Spans: </span>{' '}

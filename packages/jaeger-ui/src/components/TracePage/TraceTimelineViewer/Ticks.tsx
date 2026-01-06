@@ -3,7 +3,8 @@
 
 import * as React from 'react';
 
-import { formatDuration } from './utils';
+import { formatDuration } from '../../../utils/date';
+import { Microseconds } from '../../../types/units';
 import { TNil } from '../../../types';
 
 import './Ticks.css';
@@ -22,7 +23,7 @@ export default function Ticks({ endTime = null, numTicks, showLabels = null, sta
     const viewingDuration = (endTime || 0) - (startTime || 0);
     for (let i = 0; i < numTicks; i++) {
       const durationAtTick = (startTime || 0) + (i / (numTicks - 1)) * viewingDuration;
-      labels.push(formatDuration(durationAtTick));
+      labels.push(formatDuration(durationAtTick as Microseconds));
     }
   }
   const ticks: React.ReactNode[] = [];
