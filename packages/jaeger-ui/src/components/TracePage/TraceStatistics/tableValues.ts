@@ -247,38 +247,39 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace, use
         spanWithNoSelectedAttribute.push(allSpans[i]);
       }
     }
-  }
-  // Others is calculated
-  let resultValue = getDefaultStatsValue(trace);
-  for (let i = 0; i < spanWithNoSelectedAttribute.length; i++) {
-    resultValue = computeColumnValues(trace, spanWithNoSelectedAttribute[i], allSpans, resultValue);
-  }
-  if (resultValue.count !== 0) {
-    // Others is build
-    resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as IOtelSpan['duration'];
-    resultValue.avg = (resultValue.total / resultValue.count) as IOtelSpan['duration'];
-    let tableSpanOTHERS: ITableSpan = {
-      hasSubgroupValue: false,
-      name: `Without Attribute: ${selectedAttributeKey}`,
-      count: resultValue.count,
-      total: resultValue.total,
-      avg: resultValue.avg,
-      min: resultValue.min,
-      max: resultValue.max,
-      isDetail: false,
-      selfTotal: resultValue.selfTotal,
-      selfAvg: resultValue.selfAvg,
-      selfMin: resultValue.selfMin,
-      selfMax: resultValue.selfMax,
-      percent: resultValue.percent,
-      color: '',
-      searchColor: 'transparent',
-      parentElement: '',
-      colorToPercent: 'rgb(248,248,248)',
-      traceID: '',
-    };
-    tableSpanOTHERS = buildOneColumn(tableSpanOTHERS);
-    allTableValues.push(tableSpanOTHERS);
+
+    // Others is calculated
+    let resultValue = getDefaultStatsValue(trace);
+    for (let i = 0; i < spanWithNoSelectedAttribute.length; i++) {
+      resultValue = computeColumnValues(trace, spanWithNoSelectedAttribute[i], allSpans, resultValue);
+    }
+    if (resultValue.count !== 0) {
+      // Others is build
+      resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as IOtelSpan['duration'];
+      resultValue.avg = (resultValue.total / resultValue.count) as IOtelSpan['duration'];
+      let tableSpanOTHERS: ITableSpan = {
+        hasSubgroupValue: false,
+        name: `Without Attribute: ${selectedAttributeKey}`,
+        count: resultValue.count,
+        total: resultValue.total,
+        avg: resultValue.avg,
+        min: resultValue.min,
+        max: resultValue.max,
+        isDetail: false,
+        selfTotal: resultValue.selfTotal,
+        selfAvg: resultValue.selfAvg,
+        selfMin: resultValue.selfMin,
+        selfMax: resultValue.selfMax,
+        percent: resultValue.percent,
+        color: '',
+        searchColor: 'transparent',
+        parentElement: '',
+        colorToPercent: 'rgb(248,248,248)',
+        traceID: '',
+      };
+      tableSpanOTHERS = buildOneColumn(tableSpanOTHERS);
+      allTableValues.push(tableSpanOTHERS);
+    }
   }
   return allTableValues;
 }
@@ -497,6 +498,14 @@ export function getColumnValues(selectedAttributeKey: string, trace: IOtelTrace,
   return valueFirstDropdown(selectedAttributeKey, trace, useOtelTerms);
 }
 
+/**
+ * Returns the values of the table shown after the selection of the second dropdown.
+ * @param actualTableValues actual values of the table
+ * @param selectedAttributeKey first key which is selected
+ * @param selectedAttributeKeySecond second key which is selected
+ * @param trace whole information about the trace
+ * @param useOtelTerms whether to use OpenTelemetry terms
+ */
 export function getColumnValuesSecondDropdown(
   actualTableValues: ITableSpan[],
   selectedAttributeKey: string,
