@@ -10,6 +10,7 @@ import TraceStatisticsHeader from './TraceStatisticsHeader';
 import { ITableSpan } from './types';
 import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
+import { getServiceName } from './tableValues';
 
 type Props = {
   trace: IOtelTrace;
@@ -116,7 +117,7 @@ export default class TraceStatistics extends Component<Props, State> {
       showPopup: false,
       popupContent: '',
       wholeTable: [],
-      valueNameSelector1: 'Service Name',
+      valueNameSelector1: getServiceName(),
       valueNameSelector2: null,
     };
 
