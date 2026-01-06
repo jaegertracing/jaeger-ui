@@ -15,6 +15,7 @@ type AccordionLinksProps = {
   isOpen: boolean;
   onToggle?: null | (() => void);
   focusSpan: (uiFind: string) => void;
+  useOtelTerms: boolean;
 };
 
 type ReferenceItemProps = {
@@ -90,7 +91,7 @@ export default class AccordionLinks extends React.PureComponent<AccordionLinksPr
         >
           {arrow}
           <strong>
-            <span className="AccordionLinks--label">References</span>
+            <span className="AccordionLinks--label">{this.props.useOtelTerms ? 'Links' : 'References'}</span>
           </strong>{' '}
           ({data.length})
         </div>

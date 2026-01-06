@@ -104,35 +104,35 @@ Build a **facade/wrapper over legacy data** that presents OTEL interface:
 // Target: OTEL-centric interface
 interface OtelSpan {
   // Identity
-  traceId: string;              // was: traceID
-  spanId: string;               // was: spanID
-  parentSpanId?: string;        // was: references[0].spanID
-  
+  traceID: string;
+  spanID: string;
+  parentSpanID?: string;        // was: references[0].spanID
+
   // Naming & Classification
   name: string;                 // was: operationName
   kind: SpanKind;               // was: derived from tags['span.kind']
-  
-  // Timing (microseconds initially, nanoseconds later)
-  startTimeUnixMicros: number;  // was: startTime
-  endTimeUnixMicros: number;    // was: startTime + duration
-  durationMicros: number;       // keep for convenience
-  
+
+  // Timing
+  startTime: Microseconds;      // was: startTime
+  endTime: Microseconds;        // was: startTime + duration
+  duration: Microseconds;       // keep for convenience
+
   // Core Data (OTEL terminology)
-  attributes: Attribute[];      // was: tags: KeyValuePair[]
-  events: Event[];              // was: logs: Log[]
-  links: Link[];                // was: references (except parent)
-  status: Status;               // was: derived from tags['error'], etc.
-  
+  attributes: IAttribute[];     // was: tags: KeyValuePair[]
+  events: IEvent[];             // was: logs: Log[]
+  links: ILink[];               // was: references (except parent)
+  status: IStatus;              // was: derived from tags['error'], etc.
+
   // Context
-  resource: Resource;           // was: process
-  instrumentationScope: Scope;  // new OTEL concept (required in OTEL)
-  
+  resource: IResource;          // was: process
+  instrumentationScope: IScope; // new OTEL concept (required in OTEL)
+
   // UI-specific (derived properties - keep these)
   depth: number;
   hasChildren: boolean;
-  relativeStartTimeMicros: number;    // microseconds since trace start
-  childSpanIds: string[];
-  subsidiarilyReferencedBy: Link[];  // spans that reference this span via links (not parent)
+  relativeStartTime: Microseconds;    // microseconds since trace start
+  childSpans: ReadonlyArray<IOtelSpan>;
+  inboundLinks: ILink[];        // was: subsidiaries (not parent)
 }
 
 // OTEL Resource (was Process)
@@ -178,8 +178,8 @@ interface Status {
 | `logs`                | `events`                | Semantic events not logs  |
 | `operationName`       | `name`                  | Simpler, standard name    |
 | `KeyValuePair`        | `Attribute`             | Typed values in OTEL      |
-| `references`          | `parentSpanId + links`  | Split parent vs other refs|
-| `spanID, traceID`     | `spanId, traceId`       | CamelCase consistency     |
+| `references`          | `parentSpanID + links` | Split parent vs other refs|
+| `spanID, traceID`     | `spanID, traceID`      | Consistent with Jaeger    |
 
 ### Span References vs. Links
 
@@ -222,7 +222,7 @@ In the legacy model reference types `CHILD_OF` | `FOLLOWS_FROM` were used to ind
 │  │    • .resource → maps span.process                       │   │
 │  │    • .events → maps span.logs                            │   │
 │  │    • .name → maps span.operationName                     │   │
-│  │    • .spanId → maps span.spanID                          │   │
+│  │    • .spanID → maps span.spanID                          │   │
 │  │                                                           │   │
 │  │  - OtelTraceFacade wraps Trace                           │   │
 │  │    • .spans → returns OtelSpanFacade[]                   │   │
@@ -247,8 +247,8 @@ In the legacy model reference types `CHILD_OF` | `FOLLOWS_FROM` were used to ind
 │    ↓                                                             │
 │  Redux Store: OTLP Model (DIRECTLY)                             │
 │    {                                                             │
-│      spans: OtelSpan[]  // native OTLP structure                │
-│      // spanId, name, attributes, events, resource, etc.        │
+│      spans: IOtelSpan[]  // native OTLP structure                │
+│      // spanID, name, attributes, events, resource, etc.        │
 │    }                                                             │
 │    ↓                                                             │
 │  Components (ALREADY MIGRATED - no changes needed)              │
@@ -295,10 +295,10 @@ In the legacy model reference types `CHILD_OF` | `FOLLOWS_FROM` were used to ind
     // Map legacy → OTEL
     get spanId(): string { return this.legacySpan.spanID; }
     get name(): string { return this.legacySpan.operationName; }
-    get attributes(): Attribute[] { 
+    get attributes(): IAttribute[] { 
       return this.legacySpan.tags.map(kv => ({
         key: kv.key,
-        value: kv.value
+        value: kv.value as AttributeValue
       }));
     }
     get resource(): Resource {
@@ -342,9 +342,9 @@ In the legacy model reference types `CHILD_OF` | `FOLLOWS_FROM` were used to ind
     return trace;
   };
   
-  export const useOtelSpan = (traceId: string, spanId: string): OtelSpan | null => {
+  export const useOtelSpan = (traceId: string, spanId: string): IOtelSpan | null => {
     const spans = useSelector(state => selectOtelSpans(state, traceId));
-    return spans.find(s => s.spanId === spanId) || null;
+    return spans.find(s => s.spanID === spanId) || null;
   };
   ```
 
@@ -443,16 +443,22 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 
 **Search & Results**
 - [x] `SearchResults/ResultItem` - Service name display ✅
-- [ ] `SearchTracePage` - Trace list
+- [/] `SearchTracePage` - Trace list (Partial migration)
+- [x] `SearchForm.jsx` - Terminology: "Operation" → "Span Name", "Tags" → "Attributes" ✅
 
 **Supporting Components**
 - [x] `TracePageHeader` - Header info ✅
 - [x] `TraceFlamegraph` - Flamegraph view ✅
-- [ ] `TraceSpanView` - Span table view
+- [x] `TraceSpanView` - Span table view ✅. Terminology update: "Operation" → "Span Name" ✅
+- [x] `TracePageSearchBar` - Tooltip terminology update ✅
+
+**Timeline & Graph**
+- [x] `TimelineHeaderRow` - "Service & Operation" → "Service & Span Name" ✅
+- [x] `AccordionLinks` - "References" → "Links" ✅
+- [x] `OpNode` - Graph nodes: "Operation" → "Span Name" ✅
 
 **Remaining Components**
 - [x] `model/ddg/transformTracesToPaths` - DDG Path Aggregation ✅
-- [ ] All remaining Category B and C components
 - [ ] Verification and final testing
 
 ### Phase 3: Backend API Switch
@@ -464,13 +470,13 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 - [ ] Create `src/api/v3/client.ts`:
   ```typescript
   export class OtlpApiClient {
-    async getTrace(traceId: string): Promise<OtelTrace> {
+    async getTrace(traceId: string): Promise<IOtelTrace> {
       const response = await fetch(`/api/v3/traces/${traceId}`);
       const otlpData = await response.json();
       return parseOtlpTrace(otlpData);
     }
     
-    async findTraces(query: SearchQuery): Promise<OtelTrace[]> {
+    async findTraces(query: SearchQuery): Promise<IOtelTrace[]> {
       // ... implement with OTLP query params
     }
   }
@@ -480,11 +486,12 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 
 - [ ] Create `src/api/v3/parser.ts`:
   ```typescript
-  // Parse OTLP JSON/protobuf → OtelSpan/OtelTrace
-  export function parseOtlpTrace(otlpData: any): OtelTrace {
-    // Direct OTLP → OtelSpan (no legacy conversion)
+  // Parse OTLP JSON/protobuf → IOtelSpan/IOtelTrace
+  export function parseOtlpTrace(otlpData: any): IOtelTrace {
+    // Direct OTLP → IOtelSpan (no legacy conversion)
     // Still add UI-specific derived fields:
-    // - depth, hasChildren, relativeStartTimeMicros, childSpanIds
+    // - depth, hasChildren, startTime, endTime, duration
+    // - childSpans, inboundLinks
   }
   ```
 
@@ -499,7 +506,7 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 **Goal**: Remove facade layer and legacy code.
 
 - [ ] Remove `OtelSpanFacade`, `OtelTraceFacade` classes
-- [ ] Update selectors to return OtelSpan directly
+- [ ] Update selectors to return `IOtelSpan` directly
 - [ ] Remove legacy types (mark as deprecated first)
 - [ ] Remove `src/api/jaeger.ts` (old REST API)
 - [ ] Remove `transformTraceData` (old transformer)

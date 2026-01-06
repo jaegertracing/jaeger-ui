@@ -147,6 +147,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             isOpen={isLinksOpen}
             onToggle={() => linksToggle(span.spanID)}
             focusSpan={focusSpan}
+            useOtelTerms={useOtelTerms}
           />
         )}
         <small className="SpanDetail--debugInfo">

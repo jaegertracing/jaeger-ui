@@ -358,7 +358,8 @@ export class SearchFormImpl extends React.PureComponent {
         <FormItem
           label={
             <span>
-              Operation <span className="SearchForm--labelCount">({opsForSvc ? opsForSvc.length : 0})</span>
+              {this.props.useOtelTerms ? 'Span Name' : 'Operation'}{' '}
+              <span className="SearchForm--labelCount">({opsForSvc ? opsForSvc.length : 0})</span>
             </span>
           }
         >
@@ -366,7 +367,7 @@ export class SearchFormImpl extends React.PureComponent {
             name="operation"
             value={this.state.formData.operation}
             disabled={submitting || noSelectedService}
-            placeholder="Select An Operation"
+            placeholder={this.props.useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
             onChange={value => this.handleChange({ operation: value })}
           >
             {['all'].concat(opsForSvc).map(op => (
@@ -380,7 +381,7 @@ export class SearchFormImpl extends React.PureComponent {
         <FormItem
           label={
             <div>
-              Tags{' '}
+              {this.props.useOtelTerms ? 'Attributes' : 'Tags'}{' '}
               <Popover
                 placement="topLeft"
                 trigger="click"
@@ -646,6 +647,7 @@ SearchFormImpl.propTypes = {
     label: PropTypes.string.isRequired,
     value: PropTypes.string.isRequired,
   }).isRequired,
+  useOtelTerms: PropTypes.bool,
   services: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string,
@@ -767,6 +769,7 @@ export function mapStateToProps(state) {
     },
     searchMaxLookback: _get(state, 'config.search.maxLookback'),
     searchAdjustEndTime: _get(state, 'config.search.adjustEndTime'),
+    useOtelTerms: _get(state, 'config.useOpenTelemetryTerms'),
   };
 }
 
