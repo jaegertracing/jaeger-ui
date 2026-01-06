@@ -9,7 +9,6 @@ import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 
 import AccordionAttributes from './AccordionAttributes';
 import { formatDuration } from '../../../../utils/date';
-import { Microseconds } from '../../../../types/units';
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
 import { IEvent, IAttribute } from '../../../../types/otel';
@@ -185,7 +184,7 @@ export default function AccordionEvents({
                 ? sortedEvents.slice(0, initialVisibleCount)
                 : sortedEvents;
             return visibleLogs.map((event, i) => {
-              const durationLabel = formatDuration((event.timestamp - timestamp) as Microseconds);
+              const durationLabel = formatDuration((event.timestamp - timestamp) as IEvent['timestamp']);
               const labelContent = useOtelTerms ? `${event.name} (${durationLabel})` : durationLabel;
               return (
                 <AccordionAttributes
