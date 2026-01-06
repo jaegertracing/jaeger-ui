@@ -35,26 +35,38 @@ type State = {
 export default class TraceSpanView extends Component<Props, State> {
   constructor(props: Props, state: State) {
     super(props, state);
-    const serviceNamesList = new Set<string>();
-    const operationNamesList = new Set<string>();
-    const serviceNameOperationsMap = new Map<string, string[]>();
+    const serviceNamesSet = new Set<string>();
+    const operationNamesSet = new Set<string>();
+    const serviceNameOperationsMap = new Map<string, Set<string>>();
 
     this.props.trace.spans.forEach(span => {
       const serviceName = span.resource.serviceName;
-      serviceNamesList.add(serviceName);
-      operationNamesList.add(span.name);
-      const operationNames = serviceNameOperationsMap.get(serviceName) || [];
-      operationNames.push(span.name);
-      serviceNameOperationsMap.set(serviceName, operationNames);
+      serviceNamesSet.add(serviceName);
+      operationNamesSet.add(span.name);
+
+      if (!serviceNameOperationsMap.has(serviceName)) {
+        serviceNameOperationsMap.set(serviceName, new Set<string>());
+      }
+      serviceNameOperationsMap.get(serviceName)!.add(span.name);
+    });
+
+    // Sort alphabetically for better UX
+    const serviceNamesList = [...serviceNamesSet].sort();
+    const operationNamesList = [...operationNamesSet].sort();
+
+    // Convert operation sets to sorted arrays
+    const sortedServiceNameOperationsMap = new Map<string, string[]>();
+    serviceNameOperationsMap.forEach((operations, serviceName) => {
+      sortedServiceNameOperationsMap.set(serviceName, [...operations].sort());
     });
 
     this.state = {
       searchText: '',
       searchedColumn: '',
       data: this.props.trace.spans,
-      serviceNamesList: [...serviceNamesList],
-      operationNamesList: [...operationNamesList],
-      serviceNameOperationsMap,
+      serviceNamesList,
+      operationNamesList,
+      serviceNameOperationsMap: sortedServiceNameOperationsMap,
       filteredData: this.props.trace.spans,
       filters: {} as Record<FilterType, string[]>,
     };
