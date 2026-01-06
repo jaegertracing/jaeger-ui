@@ -183,13 +183,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             <ReferencesButton
               links={span.inboundLinks}
               tooltipText={
-                useOtelTerms
-                  ? `This span is linked from ${
-                      span.inboundLinks.length === 1 ? 'another span' : 'multiple other spans'
-                    }`
-                  : `This span is referenced by ${
-                      span.inboundLinks.length === 1 ? 'another span' : 'multiple other spans'
-                    }`
+                (useOtelTerms ? 'This span is linked from ' : 'This span is referenced by ') +
+                (span.inboundLinks.length === 1 ? 'another span' : 'multiple other spans')
               }
               focusSpan={focusSpan}
             >
