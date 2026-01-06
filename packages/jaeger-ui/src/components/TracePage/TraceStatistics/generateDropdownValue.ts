@@ -6,13 +6,17 @@ import _uniq from 'lodash/uniq';
 import { IOtelTrace } from '../../../types/otel';
 import { ITableSpan } from './types';
 
-const serviceName = 'Service Name';
-const operationName = 'Operation Name';
+const getServiceName = () => 'Service Name';
+const getOperationName = (useOtelTerms: boolean) => (useOtelTerms ? 'Span Name' : 'Operation Name');
 
 /**
  * Used to get the values if attribute is picked from the first dropdown.
  */
-function getValueAttributeIsPicked(trace: IOtelTrace, attributeKeyFromFirstDropdown: string) {
+function getValueAttributeIsPicked(
+  trace: IOtelTrace,
+  attributeKeyFromFirstDropdown: string,
+  useOtelTerms: boolean
+) {
   const allSpans = trace.spans;
   const attributeKeys = new Set<string>();
 
@@ -32,15 +36,18 @@ function getValueAttributeIsPicked(trace: IOtelTrace, attributeKeyFromFirstDropd
 
   attributeKeys.delete(attributeKeyFromFirstDropdown);
 
-  return [serviceName, operationName, ...attributeKeys];
+  return [getServiceName(), getOperationName(useOtelTerms), ...attributeKeys];
 }
 
 /**
  * Used to get the values if no attribute is picked from the first dropdown.
  */
-function getValueNoAttributeIsPicked(trace: IOtelTrace, nameSelectorTitle: string) {
+function getValueNoAttributeIsPicked(trace: IOtelTrace, nameSelectorTitle: string, useOtelTerms: boolean) {
   const availableAttributes = [];
   const allSpans = trace.spans;
+  const serviceName = getServiceName();
+  const operationName = getOperationName(useOtelTerms);
+
   if (nameSelectorTitle === serviceName) {
     availableAttributes.push(operationName);
   } else {
@@ -54,20 +61,27 @@ function getValueNoAttributeIsPicked(trace: IOtelTrace, nameSelectorTitle: strin
   return _uniq(availableAttributes);
 }
 
-export function generateDropdownValue(trace: IOtelTrace) {
+export function generateDropdownValue(trace: IOtelTrace, useOtelTerms: boolean) {
   const allSpans = trace.spans;
   const attributes = _flatten(allSpans.map(o => o.attributes));
   const attributeKeys = _uniq(attributes.map(o => o.key));
-  const values = [serviceName, operationName, ...attributeKeys];
+  const values = [getServiceName(), getOperationName(useOtelTerms), ...attributeKeys];
   return values;
 }
 
-export function generateSecondDropdownValue(trace: IOtelTrace, dropdownTitle1: string) {
+export function generateSecondDropdownValue(
+  trace: IOtelTrace,
+  dropdownTitle1: string,
+  useOtelTerms: boolean
+) {
   let values;
+  const serviceName = getServiceName();
+  const operationName = getOperationName(useOtelTerms);
+
   if (dropdownTitle1 !== serviceName && dropdownTitle1 !== operationName) {
-    values = getValueAttributeIsPicked(trace, dropdownTitle1);
+    values = getValueAttributeIsPicked(trace, dropdownTitle1, useOtelTerms);
   } else {
-    values = getValueNoAttributeIsPicked(trace, dropdownTitle1);
+    values = getValueNoAttributeIsPicked(trace, dropdownTitle1, useOtelTerms);
   }
   return values;
 }

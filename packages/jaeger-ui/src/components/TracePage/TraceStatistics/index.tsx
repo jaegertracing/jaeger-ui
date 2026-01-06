@@ -15,6 +15,7 @@ type Props = {
   trace: IOtelTrace;
   uiFindVertexKeys: Set<string> | TNil;
   uiFind: string | null | undefined;
+  useOtelTerms: boolean;
 };
 
 type State = {
@@ -342,6 +343,7 @@ export default class TraceStatistics extends Component<Props, State> {
           tableValue={this.state.tableValue}
           wholeTable={this.state.wholeTable}
           handler={this.handler}
+          useOtelTerms={this.props.useOtelTerms}
         />
 
         {this.state.showPopup ? (

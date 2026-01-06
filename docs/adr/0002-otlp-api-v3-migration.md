@@ -437,13 +437,13 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 - [x] `TraceTimelineViewer/utils` - Utility functions (isErrorSpan, etc.) ✅
 
 **Statistics & Analysis**
-- [x] `TraceStatistics/tableValues` - Heavy tag user ✅
+- [x] `TraceStatistics/tableValues` - Heavy tag user ✅ (Terminology updated)
 - [x] `TraceStatistics/PopupSql` - Tag extraction ✅
-- [x] `TraceStatistics/index` - Statistics display ✅
+- [x] `TraceStatistics/index` - Statistics display ✅ (Terminology updated)
 
 **Search & Results**
 - [x] `SearchResults/ResultItem` - Service name display ✅
-- [/] `SearchTracePage` - Trace list (Partial migration)
+- [x] `SearchTracePage` - Trace list ✅
 - [x] `SearchForm.jsx` - Terminology: "Operation" → "Span Name", "Tags" → "Attributes" ✅
 
 **Supporting Components**
@@ -454,6 +454,7 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 
 **Timeline & Graph**
 - [x] `TimelineHeaderRow` - "Service & Operation" → "Service & Span Name" ✅
+- [x] `SpanBarRow` - Tooltip terminology update ✅
 - [x] `AccordionLinks` - "References" → "Links" ✅
 - [x] `OpNode` - Graph nodes: "Operation" → "Span Name" ✅
 
