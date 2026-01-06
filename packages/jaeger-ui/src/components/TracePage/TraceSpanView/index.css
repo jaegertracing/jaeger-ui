@@ -32,24 +32,9 @@ SPDX-License-Identifier: Apache-2.0
   padding: 8px 12px;
 }
 
-.span-view-table .ant-table-column-sorter-up,
-.span-view-table .ant-table-column-sorter-down {
-  color: var(--text-secondary);
-}
-
-.span-view-table .ant-table-column-sorter-up.active,
-.span-view-table .ant-table-column-sorter-down.active {
-  color: var(--interactive-primary);
-}
-
 /* Make duration bar background more visible in dark theme */
 [data-theme='dark'] .span-view-table .duration-bar-background {
   background: rgba(255, 255, 255, 0.15) !important;
-}
-
-/* Make placeholder text visible in Service/Operation dropdowns */
-.TraceSpanView--filters .ant-select-placeholder {
-  color: var(--text-muted) !important;
 }
 
 /* Monospace font for Span ID column */
