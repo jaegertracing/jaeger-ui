@@ -9,6 +9,7 @@ import TimelineViewingLayer from './TimelineViewingLayer';
 import Ticks from '../Ticks';
 import TimelineRow from '../TimelineRow';
 import { TUpdateViewRangeTimeFunction, IViewRangeTime, ViewRangeTimeUpdate } from '../../types';
+import { IOtelSpan } from '../../../../types/otel';
 
 import './TimelineHeaderRow.css';
 
@@ -41,6 +42,8 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
     viewRangeTime,
   } = props;
   const [viewStart, viewEnd] = viewRangeTime.current;
+  const startTime = (viewStart * duration) as IOtelSpan['startTime'];
+  const endTime = (viewEnd * duration) as IOtelSpan['endTime'];
   return (
     <TimelineRow className="TimelineHeaderRow">
       <TimelineRow.Cell className="ub-flex ub-px2" width={nameColumnWidth}>
@@ -59,7 +62,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
           updateViewRangeTime={updateViewRangeTime}
           viewRangeTime={viewRangeTime}
         />
-        <Ticks numTicks={numTicks} startTime={viewStart * duration} endTime={viewEnd * duration} showLabels />
+        <Ticks numTicks={numTicks} startTime={startTime} endTime={endTime} showLabels />
       </TimelineRow.Cell>
       <VerticalResizer position={nameColumnWidth} onChange={onColummWidthChange} min={0.15} max={0.85} />
     </TimelineRow>
