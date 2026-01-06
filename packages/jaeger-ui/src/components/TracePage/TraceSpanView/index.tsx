@@ -13,8 +13,6 @@ import prefixUrl from '../../../utils/prefix-url';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import SearchableSelect from '../../common/SearchableSelect';
 
-const Option = Select.Option;
-
 type FilterType = 'serviceName' | 'operationName';
 
 type Props = {
@@ -195,9 +193,9 @@ export default class TraceSpanView extends Component<Props, State> {
             >
               {this.state.serviceNamesList.map(name => {
                 return (
-                  <Option value={name} key={name}>
+                  <Select.Option value={name} key={name}>
                     {name}{' '}
-                  </Option>
+                  </Select.Option>
                 );
               })}
             </SearchableSelect>
@@ -224,9 +222,9 @@ export default class TraceSpanView extends Component<Props, State> {
             >
               {this.uniqueOperationNameOptions().map((name: string) => {
                 return (
-                  <Option value={name} key={name}>
+                  <Select.Option value={name} key={name}>
                     {name}{' '}
-                  </Option>
+                  </Select.Option>
                 );
               })}
             </SearchableSelect>
