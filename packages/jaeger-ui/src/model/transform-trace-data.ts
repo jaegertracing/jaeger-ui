@@ -6,6 +6,7 @@ import _isEqual from 'lodash/isEqual';
 import { getConfigValue } from '../utils/config/get-config';
 import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-viewer';
 import { KeyValuePair, Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
+import { IOtelTrace } from '../types/otel';
 
 import OtelTraceFacade from './OtelTraceFacade';
 
@@ -207,9 +208,9 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     spanMap,
     rootSpans,
     processes: data.processes,
-    duration: traceEndTime - traceStartTime,
-    startTime: traceStartTime,
-    endTime: traceEndTime,
+    duration: (traceEndTime - traceStartTime) as IOtelTrace['duration'],
+    startTime: traceStartTime as IOtelTrace['startTime'],
+    endTime: traceEndTime as IOtelTrace['endTime'],
     orphanSpanCount,
 
     asOtelTrace() {

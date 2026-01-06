@@ -3,6 +3,7 @@
 
 import OtelTraceFacade from './OtelTraceFacade';
 import { Trace } from '../types/trace';
+import { IOtelTrace } from '../types/otel';
 
 describe('OtelFacade Benchmarks', () => {
   const numSpans = 10000;
@@ -11,9 +12,9 @@ describe('OtelFacade Benchmarks', () => {
     traceName: 'test-trace',
     tracePageTitle: 'test-trace',
     traceEmoji: '',
-    duration: 1000,
-    startTime: 0,
-    endTime: 1000,
+    duration: 1000 as IOtelTrace['duration'],
+    startTime: 0 as IOtelTrace['startTime'],
+    endTime: 1000 as IOtelTrace['endTime'],
     services: [{ name: 'test-service', numberOfSpans: numSpans }],
     processes: {
       p1: { serviceName: 'test-service', tags: [] },

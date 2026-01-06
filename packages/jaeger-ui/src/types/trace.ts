@@ -64,10 +64,10 @@ export type TraceData = {
 };
 
 export type Trace = TraceData & {
-  duration: number;
-  endTime: number;
+  duration: IOtelTrace['duration'];
+  endTime: IOtelTrace['endTime'];
   spans: ReadonlyArray<Span>;
-  startTime: number;
+  startTime: IOtelTrace['startTime'];
   traceName: string;
   tracePageTitle: string;
   traceEmoji: string;
