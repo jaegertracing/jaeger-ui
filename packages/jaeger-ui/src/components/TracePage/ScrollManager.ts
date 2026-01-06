@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { TNil } from '../../types';
-import { Span, SpanReference, Trace } from '../../types/trace';
+import { IOtelSpan, IOtelTrace } from '../../types/otel';
 
 /**
  * `Accessors` is necessary because `ScrollManager` needs to be created by
@@ -36,40 +36,22 @@ interface IScroller {
  * Returns `{ isHidden: true, ... }` if one of the parents of `span` is
  * collapsed, e.g. has children hidden.
  *
- * @param {Span} span The Span to check for.
+ * @param {IOtelSpan} span The Span to check for.
  * @param {Set<string>} childrenAreHidden The set of Spans known to have hidden
  *                                        children, either because it is
  *                                        collapsed or has a collapsed parent.
- * @param {Map<string, Span | TNil} spansMap Mapping from spanID to Span.
  * @returns {{ isHidden: boolean, parentIds: Set<string> }}
  */
-function isSpanHidden(
-  span: Span,
-  childrenAreHidden: Set<string>,
-  spansMap: ReadonlyMap<string, Span | TNil>
-) {
+function isSpanHidden(span: IOtelSpan, childrenAreHidden: Set<string>) {
   const parentIDs = new Set<string>();
-  let { references }: { references: ReadonlyArray<SpanReference> | TNil } = span;
-  let parentID: undefined | string;
-  const checkRef = (ref: SpanReference) => {
-    if (ref.refType === 'CHILD_OF' || ref.refType === 'FOLLOWS_FROM') {
-      parentID = ref.spanID;
-      parentIDs.add(parentID);
-      return childrenAreHidden.has(parentID);
+  let current: IOtelSpan | undefined = span.parentSpan;
+
+  while (current) {
+    parentIDs.add(current.spanID);
+    if (childrenAreHidden.has(current.spanID)) {
+      return { isHidden: true, parentIDs };
     }
-    return false;
-  };
-  while (Array.isArray(references) && references.length) {
-    const isHidden = references.some(checkRef);
-    if (isHidden) {
-      return { isHidden, parentIDs };
-    }
-    if (!parentID) {
-      break;
-    }
-    const parent = spansMap.get(parentID);
-    parentID = undefined;
-    references = parent && parent.references;
+    current = current.parentSpan;
   }
   return { parentIDs, isHidden: false };
 }
@@ -79,11 +61,11 @@ function isSpanHidden(
  * and scrolling to the previous or next visible span.
  */
 export default class ScrollManager {
-  _trace: Trace | TNil;
+  _trace: IOtelTrace | TNil;
   _scroller: IScroller | TNil;
   _accessors: Accessors | TNil;
 
-  constructor(trace: Trace | TNil, scroller: IScroller) {
+  constructor(trace: IOtelTrace | TNil, scroller: IScroller) {
     this._trace = trace;
     this._scroller = scroller;
     this._accessors = undefined;
@@ -148,8 +130,7 @@ export default class ScrollManager {
     const findMatches = xrs.getSearchedSpanIDs();
     const _collapsed = xrs.getCollapsedChildren();
     const childrenAreHidden = _collapsed ? new Set(_collapsed) : null;
-    // use the pre-built spanMap from the trace object
-    const spansMap: ReadonlyMap<string, Span> = childrenAreHidden ? this._trace.spanMap : new Map();
+
     const boundary = direction < 0 ? -1 : spans.length;
     let nextSpanIndex: number | undefined;
     for (let i = fullViewSpanIndex + direction; i !== boundary; i += direction) {
@@ -166,7 +147,7 @@ export default class ScrollManager {
       }
       if (childrenAreHidden) {
         // make sure the span is not collapsed
-        const { isHidden, parentIDs } = isSpanHidden(span, childrenAreHidden, spansMap);
+        const { isHidden, parentIDs } = isSpanHidden(span, childrenAreHidden);
         if (isHidden) {
           parentIDs.forEach(id => childrenAreHidden.add(id));
           continue;
@@ -183,7 +164,7 @@ export default class ScrollManager {
       if (childrenAreHidden) {
         let isFallbackHidden: boolean;
         do {
-          const { isHidden, parentIDs } = isSpanHidden(spans[nextSpanIndex], childrenAreHidden, spansMap);
+          const { isHidden, parentIDs } = isSpanHidden(spans[nextSpanIndex], childrenAreHidden);
           if (isHidden) {
             parentIDs.forEach(id => childrenAreHidden.add(id));
             nextSpanIndex--;
@@ -200,7 +181,7 @@ export default class ScrollManager {
    * Sometimes the ScrollManager is created before the trace is loaded. This
    * setter allows the trace to be set asynchronously.
    */
-  setTrace(trace: Trace | TNil) {
+  setTrace(trace: IOtelTrace | TNil) {
     this._trace = trace;
   }
 

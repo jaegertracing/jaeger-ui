@@ -3,6 +3,7 @@
 
 import OtelTraceFacade from './OtelTraceFacade';
 import { Trace, Span, Process } from '../types/trace';
+import { IOtelTrace } from '../types/otel';
 
 describe('OtelTraceFacade', () => {
   const mockProcess: Process = {
@@ -14,8 +15,8 @@ describe('OtelTraceFacade', () => {
     traceID: 'trace-1',
     spanID: 'span-1',
     operationName: 'test-op',
-    startTime: 1000,
-    duration: 500,
+    startTime: 1000 as IOtelTrace['startTime'],
+    duration: 500 as IOtelTrace['duration'],
     processID: 'p1',
     process: mockProcess,
     tags: [],
@@ -33,9 +34,9 @@ describe('OtelTraceFacade', () => {
     traceID: 'trace-1',
     spans: [mockSpan],
     processes: { p1: mockProcess },
-    duration: 500,
-    startTime: 1000,
-    endTime: 1500,
+    duration: 500 as IOtelTrace['duration'],
+    startTime: 1000 as IOtelTrace['startTime'],
+    endTime: 1500 as IOtelTrace['endTime'],
     traceName: 'test-trace',
     tracePageTitle: 'test-trace-title',
     traceEmoji: '😀',
@@ -56,9 +57,9 @@ describe('OtelTraceFacade', () => {
   it('maps basic trace fields', () => {
     expect(facade.traceID).toBe('trace-1');
     expect(facade.traceName).toBe('test-trace');
-    expect(facade.duration).toBe(500);
-    expect(facade.startTime).toBe(1000);
-    expect(facade.endTime).toBe(1500);
+    expect(facade.duration).toBe(500 as IOtelTrace['duration']);
+    expect(facade.startTime).toBe(1000 as IOtelTrace['startTime']);
+    expect(facade.endTime).toBe(1500 as IOtelTrace['endTime']);
   });
 
   it('maps spans to OtelSpanFacade instances', () => {

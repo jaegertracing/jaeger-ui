@@ -9,7 +9,7 @@ import transformTraceData from '../../../model/transform-trace-data';
 
 import testTrace from '../TraceStatistics/tableValuesTestTrace/testTrace.json';
 
-const transformedTrace = transformTraceData(testTrace);
+const trace = transformTraceData(testTrace).asOtelTrace();
 
 jest.mock('../../common/SearchableSelect', () => {
   const mockReact = jest.requireActual('react');
@@ -44,7 +44,7 @@ describe('<TraceSpanView>', () => {
 
   beforeEach(() => {
     defaultProps = {
-      trace: transformedTrace,
+      trace,
       uiFind: undefined,
       uiFindVertexKeys: undefined,
     };
