@@ -7,6 +7,12 @@ import '@testing-library/jest-dom';
 import { convertJaegerTraceToProfile } from '@pyroscope/flamegraph';
 import TraceFlamegraph from './index';
 import testTrace from './testTrace.json';
+import { useThemeMode } from '../../App/ThemeProvider';
+
+// Mock the ThemeProvider
+jest.mock('../../App/ThemeProvider', () => ({
+  useThemeMode: jest.fn(),
+}));
 
 // Mock the FlamegraphRenderer component
 jest.mock('@pyroscope/flamegraph', () => {
@@ -14,8 +20,8 @@ jest.mock('@pyroscope/flamegraph', () => {
   return {
     ...originalModule, // Keep original convertJaegerTraceToProfile
 
-    FlamegraphRenderer: jest.fn(({ profile }) => (
-      <div data-testid="flamegraph-renderer">
+    FlamegraphRenderer: jest.fn(({ profile, colorMode }) => (
+      <div data-testid="flamegraph-renderer" data-color-mode={colorMode}>
         {profile ? `Profile Loaded - Units: ${profile.metadata?.units}` : 'No Profile Data'}
       </div>
     )),
@@ -48,6 +54,7 @@ describe('convertJaegerTraceToProfile', () => {
 describe('<TraceFlamegraph />', () => {
   beforeEach(() => {
     FlamegraphRenderer.mockClear();
+    useThemeMode.mockReturnValue({ mode: 'light' });
   });
 
   it('renders the flamegraph wrapper', () => {
@@ -102,5 +109,27 @@ describe('<TraceFlamegraph />', () => {
 
     // Check the content rendered by the mock for no profile
     expect(renderer).toHaveTextContent('No Profile Data');
+  });
+
+  it('passes light colorMode to FlamegraphRenderer in light mode', () => {
+    useThemeMode.mockReturnValue({ mode: 'light' });
+    render(<TraceFlamegraph trace={testTrace} />);
+
+    const renderer = screen.getByTestId('flamegraph-renderer');
+    expect(renderer).toHaveAttribute('data-color-mode', 'light');
+
+    const receivedProps = FlamegraphRenderer.mock.calls[0][0];
+    expect(receivedProps.colorMode).toBe('light');
+  });
+
+  it('passes dark colorMode to FlamegraphRenderer in dark mode', () => {
+    useThemeMode.mockReturnValue({ mode: 'dark' });
+    render(<TraceFlamegraph trace={testTrace} />);
+
+    const renderer = screen.getByTestId('flamegraph-renderer');
+    expect(renderer).toHaveAttribute('data-color-mode', 'dark');
+
+    const receivedProps = FlamegraphRenderer.mock.calls[0][0];
+    expect(receivedProps.colorMode).toBe('dark');
   });
 });

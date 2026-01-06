@@ -4,4 +4,39 @@ SPDX-License-Identifier: Apache-2.0
 */
 .Flamegraph-wrapper {
   padding: 0 calc(1rem - 5px);
+  background-color: var(--surface-primary);
+  border-radius: 4px;
+}
+
+/* Dark mode overrides for Pyroscope flamegraph component */
+[data-theme='dark'] .Flamegraph-wrapper {
+  color: var(--text-primary);
+}
+
+/* Override Pyroscope's internal styles for dark mode compatibility */
+[data-theme='dark'] .Flamegraph-wrapper .flamegraph-container {
+  background-color: var(--surface-primary);
+}
+
+[data-theme='dark'] .Flamegraph-wrapper input,
+[data-theme='dark'] .Flamegraph-wrapper select,
+[data-theme='dark'] .Flamegraph-wrapper button,
+[data-theme='dark'] .Flamegraph-wrapper input[type='text'],
+[data-theme='dark'] .Flamegraph-wrapper input[type='search'] {
+  background-color: var(--surface-component-background);
+  color: #fff !important;
+  border-color: var(--border-default) !important;
+}
+
+[data-theme='dark'] .Flamegraph-wrapper input::placeholder,
+[data-theme='dark'] .Flamegraph-wrapper input[type='text']::placeholder,
+[data-theme='dark'] .Flamegraph-wrapper input[type='search']::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+  opacity: 1 !important;
+}
+
+[data-theme='dark'] .Flamegraph-wrapper input:focus,
+[data-theme='dark'] .Flamegraph-wrapper select:focus {
+  border-color: var(--interactive-primary);
+  outline: none;
 }
