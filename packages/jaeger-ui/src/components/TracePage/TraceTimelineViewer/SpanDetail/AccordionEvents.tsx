@@ -8,7 +8,7 @@ import _sortBy from 'lodash/sortBy';
 import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 
 import AccordionAttributes from './AccordionAttributes';
-import { formatDuration } from '../utils';
+import { formatDuration } from '../../../../utils/date';
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
 import { IEvent, IAttribute } from '../../../../types/otel';
@@ -113,7 +113,7 @@ export default function AccordionEvents({
     const viewStartAbsolute = timestamp + currentViewRangeTime[0] * traceDuration;
     const viewEndAbsolute = timestamp + currentViewRangeTime[1] * traceDuration;
     return events.filter(event => {
-      return event.timeUnixMicro >= viewStartAbsolute && event.timeUnixMicro <= viewEndAbsolute;
+      return event.timestamp >= viewStartAbsolute && event.timestamp <= viewEndAbsolute;
     });
   }, [events, timestamp, currentViewRangeTime, traceDuration]);
 
@@ -178,19 +178,19 @@ export default function AccordionEvents({
       {isOpen && (
         <div className="AccordionEvents--content" ref={contentRef}>
           {(() => {
-            const sortedEvents = _sortBy(eventsToDisplay, event => event.timeUnixMicro);
+            const sortedEvents = _sortBy(eventsToDisplay, event => event.timestamp);
             const visibleLogs =
               interactive && !showAllEvents && sortedEvents.length > initialVisibleCount
                 ? sortedEvents.slice(0, initialVisibleCount)
                 : sortedEvents;
             return visibleLogs.map((event, i) => {
-              const durationLabel = formatDuration(event.timeUnixMicro - timestamp);
+              const durationLabel = formatDuration((event.timestamp - timestamp) as IEvent['timestamp']);
               const labelContent = useOtelTerms ? `${event.name} (${durationLabel})` : durationLabel;
               return (
                 <AccordionAttributes
                   // `i` is necessary in the key because timestamps can repeat
 
-                  key={`${event.timeUnixMicro}-${i}`}
+                  key={`${event.timestamp}-${i}`}
                   className={i < visibleLogs.length - 1 ? 'ub-mb1' : null}
                   data={event.attributes}
                   highContrast
@@ -203,34 +203,33 @@ export default function AccordionEvents({
               );
             });
           })()}
-          {interactive &&
-            _sortBy(eventsToDisplay, event => event.timeUnixMicro).length > initialVisibleCount && (
-              <div>
-                {!showAllEvents ? (
-                  <button
-                    type="button"
-                    className="AccordionEvents--toggle"
-                    onClick={() => {
-                      setShowAllEvents(true);
-                      notifyListReflow();
-                    }}
-                  >
-                    show more...
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="AccordionEvents--toggle"
-                    onClick={() => {
-                      setShowAllEvents(false);
-                      notifyListReflow();
-                    }}
-                  >
-                    show less
-                  </button>
-                )}
-              </div>
-            )}
+          {interactive && _sortBy(eventsToDisplay, event => event.timestamp).length > initialVisibleCount && (
+            <div>
+              {!showAllEvents ? (
+                <button
+                  type="button"
+                  className="AccordionEvents--toggle"
+                  onClick={() => {
+                    setShowAllEvents(true);
+                    notifyListReflow();
+                  }}
+                >
+                  show more...
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="AccordionEvents--toggle"
+                  onClick={() => {
+                    setShowAllEvents(false);
+                    notifyListReflow();
+                  }}
+                >
+                  show less
+                </button>
+              )}
+            </div>
+          )}
           <small className="AccordionEvents--footer">
             {useOtelTerms ? 'Event' : 'Log'} timestamps are relative to the start time of the full trace.
           </small>

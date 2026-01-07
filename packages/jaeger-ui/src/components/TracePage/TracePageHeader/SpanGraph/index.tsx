@@ -8,7 +8,7 @@ import CanvasSpanGraph from './CanvasSpanGraph';
 import TickLabels from './TickLabels';
 import ViewingLayer from './ViewingLayer';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../../types';
-import { Span, Trace } from '../../../../types/trace';
+import { IOtelSpan, IOtelTrace } from '../../../../types/otel';
 
 import './SpanGraph.css';
 
@@ -17,7 +17,7 @@ const TIMELINE_TICK_INTERVAL = 4;
 
 type SpanGraphProps = {
   height?: number;
-  trace: Trace;
+  trace: IOtelTrace;
   viewRange: IViewRange;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   updateNextViewRangeTime: (nextUpdate: ViewRangeTimeUpdate) => void;
@@ -29,15 +29,15 @@ type SpanItem = {
   serviceName: string;
 };
 
-function getItem(span: Span): SpanItem {
+function getItem(span: IOtelSpan): SpanItem {
   return {
     valueOffset: span.relativeStartTime,
     valueWidth: span.duration,
-    serviceName: span.process.serviceName,
+    serviceName: span.resource.serviceName,
   };
 }
 
-function getItems(trace: Trace): SpanItem[] {
+function getItems(trace: IOtelTrace): SpanItem[] {
   return trace.spans.map(getItem);
 }
 

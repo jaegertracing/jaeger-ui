@@ -28,9 +28,6 @@ export function useThemeMode() {
   return useContext(ThemeModeContext);
 }
 
-const { defaultAlgorithm, defaultSeed } = theme;
-const mapToken = defaultAlgorithm(defaultSeed);
-
 // The base theme customizes some dimensional properties.
 const baseThemeConfig: ThemeConfig = {
   cssVar: {},
@@ -79,7 +76,6 @@ const darkTheme: ThemeConfig = {
   ...baseThemeConfig,
   algorithm: theme.darkAlgorithm,
   token: {
-    ...mapToken,
     colorPrimary: '#4dd0e1',
     colorBgLayout: '#0b1625',
     colorBgContainer: '#162338',

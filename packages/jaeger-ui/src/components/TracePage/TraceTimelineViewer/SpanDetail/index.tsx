@@ -75,12 +75,12 @@ export default function SpanDetail(props: SpanDetailProps) {
     {
       key: 'duration',
       label: 'Duration:',
-      value: formatDuration(span.durationMicros),
+      value: formatDuration(span.duration),
     },
     {
       key: 'start',
       label: 'Start Time:',
-      value: formatDuration(span.relativeStartTimeMicros),
+      value: formatDuration(span.relativeStartTime),
     },
   ];
   const deepLinkCopyText = `${window.location.origin}${window.location.pathname}?uiFind=${span.spanID}`;
@@ -147,6 +147,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             isOpen={isLinksOpen}
             onToggle={() => linksToggle(span.spanID)}
             focusSpan={focusSpan}
+            useOtelTerms={useOtelTerms}
           />
         )}
         <small className="SpanDetail--debugInfo">

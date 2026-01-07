@@ -3,43 +3,33 @@
 
 import denseTransforms from './denseTransforms';
 import { TDenseSpan } from './types';
-import { Span, Trace } from '../../types/trace';
+import { IOtelSpan, IOtelTrace } from '../../types/otel';
 
-function convSpans(spans: ReadonlyArray<Span>) {
+function convSpans(spans: ReadonlyArray<IOtelSpan>) {
   const map: Map<string, TDenseSpan> = new Map();
   const roots: Set<string> = new Set();
   const ids: string[] = [];
   spans.forEach(span => {
-    const { spanID: id, operationName: operation, process, references, tags: spanTags } = span;
+    const { spanID: id, name: operation, resource, parentSpanID, attributes: spanAttributes } = span;
     ids.push(id);
-    const { serviceName: service } = process;
+    const { serviceName: service } = resource;
 
-    const tags = spanTags.reduce((accum: Record<string, string>, tag) => {
-      const { key, value } = tag;
+    const attributes = spanAttributes.reduce((accum: Record<string, any>, attr) => {
+      const { key, value } = attr;
       return { ...accum, [key]: value };
     }, {});
-
-    let parentID: string | null = null;
-    if (references && references.length) {
-      const { refType, spanID } = references[0];
-      if (refType !== 'CHILD_OF' && refType !== 'FOLLOWS_FROM') {
-        console.warn(`Unrecognized ref type: ${refType}`);
-      } else {
-        parentID = spanID;
-      }
-    }
 
     const denseSpan = {
       id,
       operation,
-      parentID,
+      parentID: parentSpanID,
       service,
       span,
-      tags,
+      attributes,
       children: new Set<string>(),
       skipToChild: false,
     };
-    const parent = parentID && map.get(parentID);
+    const parent = parentSpanID && map.get(parentSpanID);
     if (!parent) {
       // some root spans have a parent ID but it is missing
       roots.add(id);
@@ -62,11 +52,11 @@ function makeDense(spanIDs: string[], map: Map<string, TDenseSpan>) {
 }
 
 export default class DenseTrace {
-  trace: Trace;
+  trace: IOtelTrace;
   rootIDs: Set<string>;
   denseSpansMap: Map<string, TDenseSpan>;
 
-  constructor(trace: Trace) {
+  constructor(trace: IOtelTrace) {
     this.trace = trace;
     const { ids, map, roots } = convSpans(trace.spans);
     makeDense(ids, map);

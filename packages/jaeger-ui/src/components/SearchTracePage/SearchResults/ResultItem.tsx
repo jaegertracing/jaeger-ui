@@ -18,8 +18,7 @@ import ResultItemTitle from './ResultItemTitle';
 import colorGenerator from '../../../utils/color-generator';
 import { formatRelativeDate } from '../../../utils/date';
 
-import { IOtelTrace } from '../../../types/otel';
-import { StatusCode } from '../../../types/otel';
+import { IOtelTrace, StatusCode } from '../../../types/otel';
 
 import './ResultItem.css';
 
@@ -44,15 +43,7 @@ export default function ResultItem({
   trace,
   disableComparision,
 }: Props) {
-  const {
-    durationMicros: duration,
-    services = [],
-    startTimeUnixMicros: startTime,
-    traceName,
-    traceID,
-    spans,
-    orphanSpanCount,
-  } = trace;
+  const { duration, services = [], startTime, traceName, traceID, spans, orphanSpanCount } = trace;
 
   // Initialize state values
   const [erroredServices, setErroredServices] = React.useState<Set<string>>(new Set());

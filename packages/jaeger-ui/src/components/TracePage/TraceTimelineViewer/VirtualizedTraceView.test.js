@@ -632,7 +632,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       expect(instance.linksGetter(span, span.attributes, 0)).toEqual([
         {
-          url: `http://example.com/?key1=${val}&traceID=${trace.traceID}&startTime=${trace.startTimeUnixMicros}`,
+          url: `http://example.com/?key1=${val}&traceID=${trace.traceID}&startTime=${trace.startTime}`,
           text: `For first link traceId is - ${trace.traceID}`,
         },
       ]);

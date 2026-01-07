@@ -27,8 +27,8 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, CPSpan>): Map<string, 
       spanMap.delete(span.spanID);
       return;
     }
-    const childEndTime = span.startTime + span.duration;
-    const parentEndTime = parentSpan.startTime + parentSpan.duration;
+    const childEndTime = span.endTime;
+    const parentEndTime = parentSpan.endTime;
     if (span.startTime >= parentSpan.startTime) {
       if (span.startTime >= parentEndTime) {
         // child outside of parent range => drop the child span
@@ -47,7 +47,8 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, CPSpan>): Map<string, 
         //              |----child--|
         spanMap.set(span.spanID, {
           ...span,
-          duration: parentEndTime - span.startTime,
+          duration: (parentEndTime - span.startTime) as CPSpan['duration'],
+          endTime: parentEndTime,
         });
         return;
       }
@@ -73,7 +74,7 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, CPSpan>): Map<string, 
       spanMap.set(span.spanID, {
         ...span,
         startTime: parentSpan.startTime,
-        duration: childEndTime - parentSpan.startTime,
+        duration: (childEndTime - parentSpan.startTime) as CPSpan['duration'],
       });
     } else {
       // child start before parent and end after parent, truncate is needed
@@ -82,7 +83,8 @@ const sanitizeOverFlowingChildren = (spanMap: Map<string, CPSpan>): Map<string, 
       spanMap.set(span.spanID, {
         ...span,
         startTime: parentSpan.startTime,
-        duration: parentEndTime - parentSpan.startTime,
+        duration: (parentEndTime - parentSpan.startTime) as CPSpan['duration'],
+        endTime: parentEndTime,
       });
     }
   });

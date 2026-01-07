@@ -6,8 +6,9 @@ import { IOtelTrace, IOtelSpan } from '../../../types/otel';
 import { ITableSpan } from './types';
 import colorGenerator from '../../../utils/color-generator';
 
-const serviceName = 'Service Name';
-const operationName = 'Operation Name';
+export const getServiceName = () => 'Service Name';
+export const getOperationName = (useOtelTerms: boolean) => (useOtelTerms ? 'Span Name' : 'Operation Name');
+export const getAttributeName = (useOtelTerms: boolean) => (useOtelTerms ? 'Attribute' : 'Tag');
 
 function parentChildOfMap(allSpans: ReadonlyArray<IOtelSpan>): Record<string, IOtelSpan[]> {
   const parentChildOfMap: Record<string, IOtelSpan[]> = {};
@@ -26,23 +27,21 @@ function getChildOfSpans(parentID: string, allSpans: ReadonlyArray<IOtelSpan>): 
   return memoizedParentChildOfMap(allSpans)[parentID] || [];
 }
 
-function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpan>): number {
-  if (!parentSpan.hasChildren) return parentSpan.durationMicros;
+function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpan>): IOtelSpan['duration'] {
+  if (!parentSpan.hasChildren) return parentSpan.duration;
 
-  let parentSpanSelfTime = parentSpan.durationMicros;
-  let previousChildEndTime = parentSpan.startTimeUnixMicros;
+  let parentSpanSelfTime = parentSpan.duration;
+  let previousChildEndTime = parentSpan.startTime;
 
-  const children = getChildOfSpans(parentSpan.spanID, allSpans).sort(
-    (a, b) => a.startTimeUnixMicros - b.startTimeUnixMicros
-  );
+  const children = getChildOfSpans(parentSpan.spanID, allSpans).sort((a, b) => a.startTime - b.startTime);
 
-  const parentSpanEndTime = parentSpan.startTimeUnixMicros + parentSpan.durationMicros;
+  const parentSpanEndTime = parentSpan.endTime;
 
   for (let index = 0; index < children.length; index++) {
     const child = children[index];
 
-    const childEndTime = child.startTimeUnixMicros + child.durationMicros;
-    const childStartsAfterParentEnded = child.startTimeUnixMicros > parentSpanEndTime;
+    const childEndTime = child.endTime;
+    const childStartsAfterParentEnded = child.startTime > parentSpanEndTime;
     const childEndsBeforePreviousChild = childEndTime < previousChildEndTime;
 
     // parent |..................|
@@ -57,11 +56,11 @@ function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpa
     // child    |.......|                    - previousChild
     // child        |.....|                  - nonOverlappingStartTime is previousChildEndTime
     // child                |.....|          - nonOverlappingStartTime is child.startTime
-    const nonOverlappingStartTime = Math.max(previousChildEndTime, child.startTimeUnixMicros);
+    const nonOverlappingStartTime = Math.max(previousChildEndTime, child.startTime);
     const childEndTimeOrParentEndTime = Math.min(parentSpanEndTime, childEndTime);
 
     const nonOverlappingDuration = childEndTimeOrParentEndTime - nonOverlappingStartTime;
-    parentSpanSelfTime -= nonOverlappingDuration;
+    parentSpanSelfTime = (parentSpanSelfTime - nonOverlappingDuration) as IOtelSpan['duration'];
 
     // last span which can be included in self time calculation, because it ends after parent span ends
     // parent |.......................|
@@ -71,7 +70,7 @@ function computeSelfTime(parentSpan: IOtelSpan, allSpans: ReadonlyArray<IOtelSpa
       break;
     }
 
-    previousChildEndTime = childEndTime;
+    previousChildEndTime = childEndTime as IOtelSpan['duration'];
   }
 
   return parentSpanSelfTime;
@@ -85,12 +84,12 @@ function computeColumnValues(
 ) {
   const resultValueChange = resultValue;
   resultValueChange.count += 1;
-  resultValueChange.total += span.durationMicros;
-  if (resultValueChange.min > span.durationMicros) {
-    resultValueChange.min = span.durationMicros;
+  resultValueChange.total = (resultValueChange.total + span.duration) as IOtelSpan['duration'];
+  if (resultValueChange.min > span.duration) {
+    resultValueChange.min = span.duration;
   }
-  if (resultValueChange.max < span.durationMicros) {
-    resultValueChange.max = span.durationMicros;
+  if (resultValueChange.max < span.duration) {
+    resultValueChange.max = span.duration;
   }
 
   const tempSelf = computeSelfTime(span, allSpans);
@@ -100,9 +99,9 @@ function computeColumnValues(
   if (resultValueChange.selfMax < tempSelf) {
     resultValueChange.selfMax = tempSelf;
   }
-  resultValueChange.selfTotal += tempSelf;
+  resultValueChange.selfTotal = (resultValueChange.selfTotal + tempSelf) as IOtelSpan['duration'];
 
-  const onePercent = 100 / trace.durationMicros;
+  const onePercent = 100 / trace.duration;
   resultValueChange.percent = resultValueChange.selfTotal * onePercent;
 
   return resultValueChange;
@@ -113,52 +112,56 @@ function computeColumnValues(
  */
 function buildOneColumn(oneColumn: ITableSpan) {
   const oneColumnChange = oneColumn;
-  oneColumnChange.total = Math.round((oneColumnChange.total / 1000) * 100) / 100;
-  oneColumnChange.avg = Math.round((oneColumnChange.avg / 1000) * 100) / 100;
-  oneColumnChange.min = Math.round((oneColumnChange.min / 1000) * 100) / 100;
-  oneColumnChange.max = Math.round((oneColumnChange.max / 1000) * 100) / 100;
-  oneColumnChange.selfTotal = Math.round((oneColumnChange.selfTotal / 1000) * 100) / 100;
-  oneColumnChange.selfAvg = Math.round((oneColumnChange.selfAvg / 1000) * 100) / 100;
-  oneColumnChange.selfMin = Math.round((oneColumnChange.selfMin / 1000) * 100) / 100;
-  oneColumnChange.selfMax = Math.round((oneColumnChange.selfMax / 1000) * 100) / 100;
+  oneColumnChange.total = (Math.round((oneColumnChange.total / 1000) * 100) / 100) as IOtelSpan['duration'];
+  oneColumnChange.avg = (Math.round((oneColumnChange.avg / 1000) * 100) / 100) as IOtelSpan['duration'];
+  oneColumnChange.min = (Math.round((oneColumnChange.min / 1000) * 100) / 100) as IOtelSpan['duration'];
+  oneColumnChange.max = (Math.round((oneColumnChange.max / 1000) * 100) / 100) as IOtelSpan['duration'];
+  oneColumnChange.selfTotal = (Math.round((oneColumnChange.selfTotal / 1000) * 100) /
+    100) as IOtelSpan['duration'];
+  oneColumnChange.selfAvg = (Math.round((oneColumnChange.selfAvg / 1000) * 100) /
+    100) as IOtelSpan['duration'];
+  oneColumnChange.selfMin = (Math.round((oneColumnChange.selfMin / 1000) * 100) /
+    100) as IOtelSpan['duration'];
+  oneColumnChange.selfMax = (Math.round((oneColumnChange.selfMax / 1000) * 100) /
+    100) as IOtelSpan['duration'];
   oneColumnChange.percent = Math.round((oneColumnChange.percent / 1) * 100) / 100;
   // oneColumnChange.colorToPercent;
   return oneColumnChange;
 }
 
 type StatsPerTag = {
-  selfTotal: number;
-  selfMin: number;
-  selfMax: number;
-  selfAvg: number;
-  total: number;
-  avg: number;
-  min: number;
-  max: number;
+  selfTotal: IOtelSpan['duration'];
+  selfMin: IOtelSpan['duration'];
+  selfMax: IOtelSpan['duration'];
+  selfAvg: IOtelSpan['duration'];
+  total: IOtelSpan['duration'];
+  avg: IOtelSpan['duration'];
+  min: IOtelSpan['duration'];
+  max: IOtelSpan['duration'];
   count: number;
   percent: number;
 };
 
-function getDefaultStatsValue(trace: IOtelTrace) {
+function getDefaultStatsValue(trace: IOtelTrace): StatsPerTag {
   return {
-    selfTotal: 0,
-    selfMin: trace.durationMicros,
-    selfMax: 0,
-    selfAvg: 0,
-    total: 0,
-    avg: 0,
-    min: trace.durationMicros,
-    max: 0,
+    selfTotal: 0 as IOtelSpan['duration'],
+    selfMin: trace.duration as IOtelSpan['duration'],
+    selfMax: 0 as IOtelSpan['duration'],
+    selfAvg: 0 as IOtelSpan['duration'],
+    total: 0 as IOtelSpan['duration'],
+    avg: 0 as IOtelSpan['duration'],
+    min: trace.duration as IOtelSpan['duration'],
+    max: 0 as IOtelSpan['duration'],
     count: 0,
     percent: 0,
   };
 }
 
-function getAttributeValueFromSpan(attributeKey: string, span: IOtelSpan) {
+function getAttributeValueFromSpan(attributeKey: string, span: IOtelSpan, useOtelTerms: boolean) {
   let attributeValue = null as null | string;
-  if (attributeKey === operationName) {
+  if (attributeKey === getOperationName(useOtelTerms)) {
     attributeValue = span.name;
-  } else if (attributeKey === serviceName) {
+  } else if (attributeKey === getServiceName()) {
     attributeValue = span.resource.serviceName;
   } else {
     const attr = span.attributes.find(a => a.key === attributeKey);
@@ -173,7 +176,7 @@ function getAttributeValueFromSpan(attributeKey: string, span: IOtelSpan) {
 /**
  * Is used if only one dropdown is selected.
  */
-function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
+function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace, useOtelTerms: boolean) {
   const allSpans = trace.spans;
 
   // used to build the table
@@ -186,7 +189,7 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
   const spanIdsWithSelectedAttribute = new Set<string>();
 
   for (let i = 0; i < allSpans.length; i++) {
-    const attributeValue = getAttributeValueFromSpan(selectedAttributeKey, allSpans[i]);
+    const attributeValue = getAttributeValueFromSpan(selectedAttributeKey, allSpans[i], useOtelTerms);
 
     if (!attributeValue) {
       continue;
@@ -207,13 +210,13 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
     const resultValue = statsPerAttributeValue[attributeValue];
 
     let color = '';
-    if (selectedAttributeKey === serviceName) {
+    if (selectedAttributeKey === getServiceName()) {
       color = colorGenerator.getColorByKey(attributeValue);
     }
 
-    resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
-    resultValue.avg = resultValue.total / resultValue.count;
-    let tableSpan = {
+    resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as IOtelSpan['duration'];
+    resultValue.avg = (resultValue.total / resultValue.count) as IOtelSpan['duration'];
+    let tableSpan: ITableSpan = {
       hasSubgroupValue: true,
       name: attributeValue,
       count: resultValue.count,
@@ -230,14 +233,14 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
       color,
       searchColor: '',
       parentElement: 'none',
-      colorToPercent: 'tranparent',
+      colorToPercent: 'transparent',
       traceID: '',
     };
     tableSpan = buildOneColumn(tableSpan);
     allTableValues.push(tableSpan);
   }
   // checks if there is OTHERS
-  if (selectedAttributeKey !== serviceName && selectedAttributeKey !== operationName) {
+  if (selectedAttributeKey !== getServiceName() && selectedAttributeKey !== getOperationName(useOtelTerms)) {
     for (let i = 0; i < allSpans.length; i++) {
       const spanHasSelectedAttribute = spanIdsWithSelectedAttribute.has(allSpans[i].spanID);
 
@@ -245,6 +248,7 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
         spanWithNoSelectedAttribute.push(allSpans[i]);
       }
     }
+
     // Others is calculated
     let resultValue = getDefaultStatsValue(trace);
     for (let i = 0; i < spanWithNoSelectedAttribute.length; i++) {
@@ -252,11 +256,11 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
     }
     if (resultValue.count !== 0) {
       // Others is build
-      resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
-      resultValue.avg = resultValue.total / resultValue.count;
-      let tableSpanOTHERS = {
+      resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as IOtelSpan['duration'];
+      resultValue.avg = (resultValue.total / resultValue.count) as IOtelSpan['duration'];
+      let tableSpanOTHERS: ITableSpan = {
         hasSubgroupValue: false,
-        name: `Without Attribute: ${selectedAttributeKey}`,
+        name: `Without ${getAttributeName(useOtelTerms)}: ${selectedAttributeKey}`,
         count: resultValue.count,
         total: resultValue.total,
         avg: resultValue.avg,
@@ -289,7 +293,8 @@ function buildDetail(
   allSpans: ReadonlyArray<IOtelSpan>,
   selectedAttributeKeySecond: string,
   parentName: string,
-  trace: IOtelTrace
+  trace: IOtelTrace,
+  useOtelTerms: boolean
 ) {
   const newColumnValues = [];
 
@@ -297,7 +302,7 @@ function buildDetail(
   const uniqueValuesForSelectedAttribute = new Set<string>();
 
   for (let i = 0; i < tempArray.length; i++) {
-    const attributeValue = getAttributeValueFromSpan(selectedAttributeKeySecond, tempArray[i]);
+    const attributeValue = getAttributeValueFromSpan(selectedAttributeKeySecond, tempArray[i], useOtelTerms);
 
     if (!attributeValue) {
       continue;
@@ -317,13 +322,13 @@ function buildDetail(
     const resultValue = statsPerAttributeValue[attributeValue];
 
     let color = '';
-    if (selectedAttributeKeySecond === serviceName) {
+    if (selectedAttributeKeySecond === getServiceName()) {
       color = colorGenerator.getColorByKey(attributeValue);
     }
 
-    resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
-    resultValue.avg = resultValue.total / resultValue.count;
-    let buildOneColumnValue = {
+    resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as IOtelSpan['duration'];
+    resultValue.avg = (resultValue.total / resultValue.count) as IOtelSpan['duration'];
+    let buildOneColumnValue: ITableSpan = {
       hasSubgroupValue: true,
       name: attributeValue,
       count: resultValue.count,
@@ -355,25 +360,16 @@ function buildDetail(
 function generateDetailRest(
   allColumnValues: ITableSpan[],
   selectedAttributeKeySecond: string,
-  trace: IOtelTrace
+  trace: IOtelTrace,
+  useOtelTerms: boolean
 ) {
   const allSpans = trace.spans;
   const newTable = [];
   for (let i = 0; i < allColumnValues.length; i++) {
     newTable.push(allColumnValues[i]);
     if (!allColumnValues[i].isDetail) {
-      let resultValue = {
-        selfTotal: 0,
-        selfAvg: 0,
-        selfMin: trace.durationMicros,
-        selfMax: 0,
-        total: 0,
-        avg: 0,
-        min: trace.durationMicros,
-        max: 0,
-        count: 0,
-        percent: 0,
-      };
+      let resultValue = getDefaultStatsValue(trace);
+
       for (let j = 0; j < allSpans.length; j++) {
         if (
           allColumnValues[i].name === allSpans[j].resource.serviceName ||
@@ -391,12 +387,12 @@ function generateDetailRest(
           }
         }
       }
-      resultValue.avg = resultValue.total / resultValue.count;
-      resultValue.selfAvg = resultValue.selfTotal / resultValue.count;
+      resultValue.avg = (resultValue.total / resultValue.count) as IOtelSpan['duration'];
+      resultValue.selfAvg = (resultValue.selfTotal / resultValue.count) as IOtelSpan['duration'];
       if (resultValue.count !== 0) {
-        let buildOneColumnValue = {
+        let buildOneColumnValue: ITableSpan = {
           hasSubgroupValue: false,
-          name: `Without Attribute: ${selectedAttributeKeySecond}`,
+          name: `Without ${getAttributeName(useOtelTerms)}: ${selectedAttributeKeySecond}`,
           count: resultValue.count,
           total: resultValue.total,
           avg: resultValue.avg,
@@ -429,17 +425,19 @@ function valueSecondDropdown(
   actualTableValues: ITableSpan[],
   selectedAttributeKey: string,
   selectedAttributeKeySecond: string,
-  trace: IOtelTrace
+  trace: IOtelTrace,
+  useOtelTerms: boolean
 ) {
   const allSpans = trace.spans;
   const allTableValues = [];
 
   const isSecondDropdownAttribute =
-    selectedAttributeKeySecond !== serviceName && selectedAttributeKeySecond !== operationName;
+    selectedAttributeKeySecond !== getServiceName() &&
+    selectedAttributeKeySecond !== getOperationName(useOtelTerms);
 
   const spansMatchingAttributeValueFromFirstDropdown = {} as Record<string, IOtelSpan[]>;
   for (let i = 0; i < allSpans.length; i++) {
-    const attributeValue = getAttributeValueFromSpan(selectedAttributeKey, allSpans[i]);
+    const attributeValue = getAttributeValueFromSpan(selectedAttributeKey, allSpans[i], useOtelTerms);
 
     if (!attributeValue) {
       continue;
@@ -472,7 +470,8 @@ function valueSecondDropdown(
       allSpans,
       selectedAttributeKeySecond,
       actualTableValues[i].name,
-      trace
+      trace,
+      useOtelTerms
     );
 
     allTableValues.push(actualTableValues[i]);
@@ -486,7 +485,7 @@ function valueSecondDropdown(
 
   // if second dropdown is an attribute a rest must be created
   if (isSecondDropdownAttribute) {
-    return generateDetailRest(allTableValues, selectedAttributeKeySecond, trace);
+    return generateDetailRest(allTableValues, selectedAttributeKeySecond, trace, useOtelTerms);
     // if no attribute is selected the values can be returned
   }
   return allTableValues;
@@ -496,8 +495,8 @@ function valueSecondDropdown(
  * Returns the values of the table shown after the selection of the first dropdown.
  * @param selectedAttributeKey the key which was selected
  */
-export function getColumnValues(selectedAttributeKey: string, trace: IOtelTrace) {
-  return valueFirstDropdown(selectedAttributeKey, trace);
+export function getColumnValues(selectedAttributeKey: string, trace: IOtelTrace, useOtelTerms: boolean) {
+  return valueFirstDropdown(selectedAttributeKey, trace, useOtelTerms);
 }
 
 /**
@@ -506,15 +505,23 @@ export function getColumnValues(selectedAttributeKey: string, trace: IOtelTrace)
  * @param selectedAttributeKey first key which is selected
  * @param selectedAttributeKeySecond second key which is selected
  * @param trace whole information about the trace
+ * @param useOtelTerms whether to use OpenTelemetry terms
  */
 export function getColumnValuesSecondDropdown(
   actualTableValues: ITableSpan[],
   selectedAttributeKey: string,
   selectedAttributeKeySecond: string,
-  trace: IOtelTrace
+  trace: IOtelTrace,
+  useOtelTerms: boolean
 ) {
   if (selectedAttributeKeySecond !== 'Reset') {
-    return valueSecondDropdown(actualTableValues, selectedAttributeKey, selectedAttributeKeySecond, trace);
+    return valueSecondDropdown(
+      actualTableValues,
+      selectedAttributeKey,
+      selectedAttributeKeySecond,
+      trace,
+      useOtelTerms
+    );
   }
-  return getColumnValues(selectedAttributeKey, trace);
+  return getColumnValues(selectedAttributeKey, trace, useOtelTerms);
 }

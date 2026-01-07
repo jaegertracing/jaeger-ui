@@ -104,7 +104,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TraceGraph--menu .ant-btn.active {
-  background-color: #1890ff;
+  background-color: var(--interactive-primary);
   color: white;
-  border-color: #1890ff;
+  border-color: var(--interactive-primary);
 }

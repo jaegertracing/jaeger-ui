@@ -11,6 +11,7 @@ import { getUrl as getTracePageUrl } from '../../TracePage/url';
 import { fetchedState } from '../../../constants';
 
 import { FetchedTrace } from '../../../types';
+import { IOtelTrace } from '../../../types/otel';
 
 import './DiffSelection.css';
 
@@ -42,7 +43,7 @@ export default function DiffSelection({ toggleComparison, traces }: Props) {
             return (
               <ResultItemTitle
                 key={id}
-                duration={data && data.duration}
+                duration={data && (data.duration as IOtelTrace['duration'])}
                 error={error}
                 isInDiffCohort
                 linkTo={getTracePageUrl(id)}

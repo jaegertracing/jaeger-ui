@@ -3,16 +3,17 @@
 
 import * as React from 'react';
 
-import { formatDuration } from './utils';
+import { formatDuration } from '../../../utils/date';
 import { TNil } from '../../../types';
+import { IOtelSpan } from '../../../types/otel';
 
 import './Ticks.css';
 
 type TicksProps = {
-  endTime?: number | TNil;
   numTicks: number;
   showLabels?: boolean | TNil;
-  startTime?: number | TNil;
+  startTime?: IOtelSpan['startTime'] | TNil;
+  endTime?: IOtelSpan['endTime'] | TNil;
 };
 
 export default function Ticks({ endTime = null, numTicks, showLabels = null, startTime = null }: TicksProps) {
@@ -22,7 +23,7 @@ export default function Ticks({ endTime = null, numTicks, showLabels = null, sta
     const viewingDuration = (endTime || 0) - (startTime || 0);
     for (let i = 0; i < numTicks; i++) {
       const durationAtTick = (startTime || 0) + (i / (numTicks - 1)) * viewingDuration;
-      labels.push(formatDuration(durationAtTick));
+      labels.push(formatDuration(durationAtTick as IOtelSpan['duration']));
     }
   }
   const ticks: React.ReactNode[] = [];

@@ -38,7 +38,6 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { fetchedState } from '../../constants';
 import { FetchedTrace, LocationState, ReduxState, TNil } from '../../types';
-import { Trace } from '../../types/trace';
 import { IOtelTrace } from '../../types/otel';
 import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
@@ -149,7 +148,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       textFilter =>
         `${textFilter} ${_get(this.props.trace, 'traceID')} ${_get(this.props.trace, 'data.spans.length')}`
     );
-    this._scrollManager = new ScrollManager(trace && trace.data, {
+    this._scrollManager = new ScrollManager(trace && trace.data ? trace.data.asOtelTrace() : undefined, {
       scrollBy,
       scrollTo,
     });
@@ -179,7 +178,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   componentDidUpdate({ id: prevID }: TProps) {
     const { id, trace } = this.props;
 
-    this._scrollManager.setTrace(trace && trace.data);
+    this._scrollManager.setTrace(trace && trace.data ? trace.data.asOtelTrace() : undefined);
 
     this.setHeaderHeight(this._headerElm);
     if (!trace) {
@@ -269,7 +268,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 
   setTraceView = (viewType: ETraceViewType) => {
     if (this.props.trace && this.props.trace.data && viewType === ETraceViewType.TraceGraph) {
-      this.traceDagEV = calculateTraceDagEV(this.props.trace.data);
+      this.traceDagEV = calculateTraceDagEV(this.props.trace.data.asOtelTrace());
     }
     this.setState({ viewType });
   };
@@ -378,9 +377,10 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
       toSearch: (locationState && locationState.fromSearch) || null,
-      trace: data,
+      trace: data.asOtelTrace(),
       updateNextViewRangeTime: this.updateNextViewRangeTime,
       updateViewRangeTime: this.updateViewRangeTime,
+      useOtelTerms: this.props.useOtelTerms,
     };
 
     let view;
@@ -407,14 +407,27 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           uiFind={uiFind}
           uiFindVertexKeys={graphFindMatches}
           traceGraphConfig={traceGraphConfig}
+          useOtelTerms={this.props.useOtelTerms}
         />
       );
     } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
       view = (
-        <TraceStatistics trace={data.asOtelTrace()} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />
+        <TraceStatistics
+          trace={data.asOtelTrace()}
+          uiFindVertexKeys={spanFindMatches}
+          uiFind={uiFind}
+          useOtelTerms={this.props.useOtelTerms}
+        />
       );
     } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
-      view = <TraceSpanView trace={data} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
+      view = (
+        <TraceSpanView
+          trace={data.asOtelTrace()}
+          uiFindVertexKeys={spanFindMatches}
+          uiFind={uiFind}
+          useOtelTerms={this.props.useOtelTerms}
+        />
+      );
     } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
       view = <TraceFlamegraph trace={trace} />;
     }

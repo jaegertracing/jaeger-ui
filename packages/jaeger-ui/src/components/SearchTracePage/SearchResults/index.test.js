@@ -452,50 +452,88 @@ describe('<SearchResults>', () => {
 
         expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
         const blobArg = URL.createObjectURL.mock.calls[0][0];
-        expect(blobArg.text).toEqual([`{"data":${JSON.stringify(baseProps.rawTraces)}}`]);
+
+        // Construct expected output by keeping only non-derived fields
+        const expectedTraces = baseProps.rawTraces.map(
+          ({ traceID, spans, durationMicros, startTimeUnixMicros, endTimeUnixMicros }) => ({
+            traceID,
+            spans,
+            durationMicros,
+            startTimeUnixMicros,
+            endTimeUnixMicros,
+          })
+        );
+
+        expect(blobArg.text).toEqual([`{"data":${JSON.stringify(expectedTraces)}}`]);
         expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
 
         global.Blob = orig;
       });
 
       it('when create a download file then it can be read back', async () => {
-        const content = `{"data":${JSON.stringify(baseProps.rawTraces)}}`;
-        const file = new File([createBlob(baseProps.rawTraces)], 'test.json');
+        // Construct expected output by keeping only non-derived fields
+        const expectedTraces = baseProps.rawTraces.map(
+          ({ traceID, spans, durationMicros, startTimeUnixMicros, endTimeUnixMicros }) => ({
+            traceID,
+            spans,
+            durationMicros,
+            startTimeUnixMicros,
+            endTimeUnixMicros,
+          })
+        );
+
+        const content = `{"data":${JSON.stringify(expectedTraces)}}`;
+        // Pass the blob content (string) directly to File to avoid JSDOM Blob-in-File issues if any
+        // createBlob returns a Blob. getting text from it.
+        const blob = createBlob(baseProps.rawTraces);
+        // In JSDOM/Node, blob parts are stored. We can extract string.
+        // But here we rely on standard APIs.
+        // If createBlob returns a real JSDOM Blob, new File([blob]) should work.
+        // If it fails with [object Object], it might be that JSDOM File doesn't unwrap Blob parts recursively or correctly.
+        // Let's try to get text first.
+        const blobText = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsText(blob);
+        });
+        const file = new File([blobText], 'test.json');
+
         const contentFile = await readJsonFile({ file });
         expect(JSON.stringify(contentFile)).toBe(content);
       });
     });
+  });
 
-    describe('<SelectSort>', () => {
-      it('calls handleSortChange when selection changes', () => {
-        const handleSortChange = jest.fn();
-        render(<SelectSort sortBy={orderBy.MOST_RECENT} handleSortChange={handleSortChange} />);
-        fireEvent.change(screen.getByTestId('searchable-select'), {
-          target: { value: orderBy.LONGEST_FIRST },
-        });
-        expect(handleSortChange).toHaveBeenCalledWith(orderBy.LONGEST_FIRST);
+  describe('<SelectSort>', () => {
+    it('calls handleSortChange when selection changes', () => {
+      const handleSortChange = jest.fn();
+      render(<SelectSort sortBy={orderBy.MOST_RECENT} handleSortChange={handleSortChange} />);
+      fireEvent.change(screen.getByTestId('searchable-select'), {
+        target: { value: orderBy.LONGEST_FIRST },
       });
-
-      it('updates selected value when sortBy prop changes', () => {
-        const { rerender } = render(<SelectSort sortBy={orderBy.MOST_RECENT} handleSortChange={() => {}} />);
-        rerender(<SelectSort sortBy={orderBy.SHORTEST_FIRST} handleSortChange={() => {}} />);
-        expect(screen.getByTestId('searchable-select')).toHaveValue(orderBy.SHORTEST_FIRST);
-      });
+      expect(handleSortChange).toHaveBeenCalledWith(orderBy.LONGEST_FIRST);
     });
 
-    describe('showStandaloneLink', () => {
-      it('renders Link when showStandaloneLink is true', () => {
-        renderWithRouter(<SearchResults {...baseProps} showStandaloneLink />);
-        const link = screen.getByRole('link');
-        expect(link).toBeInTheDocument();
-        expect(screen.getByTestId('new-window-icon')).toBeInTheDocument();
-      });
+    it('updates selected value when sortBy prop changes', () => {
+      const { rerender } = render(<SelectSort sortBy={orderBy.MOST_RECENT} handleSortChange={() => {}} />);
+      rerender(<SelectSort sortBy={orderBy.SHORTEST_FIRST} handleSortChange={() => {}} />);
+      expect(screen.getByTestId('searchable-select')).toHaveValue(orderBy.SHORTEST_FIRST);
+    });
+  });
 
-      it('does not render Link when showStandaloneLink is false', () => {
-        renderWithRouter(<SearchResults {...baseProps} showStandaloneLink={false} />);
-        expect(screen.queryByRole('link')).not.toBeInTheDocument();
-        expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
-      });
+  describe('showStandaloneLink', () => {
+    it('renders Link when showStandaloneLink is true', () => {
+      renderWithRouter(<SearchResults {...baseProps} showStandaloneLink />);
+      const link = screen.getByRole('link');
+      expect(link).toBeInTheDocument();
+      expect(screen.getByTestId('new-window-icon')).toBeInTheDocument();
+    });
+
+    it('does not render Link when showStandaloneLink is false', () => {
+      renderWithRouter(<SearchResults {...baseProps} showStandaloneLink={false} />);
+      expect(screen.queryByRole('link')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
     });
   });
 });

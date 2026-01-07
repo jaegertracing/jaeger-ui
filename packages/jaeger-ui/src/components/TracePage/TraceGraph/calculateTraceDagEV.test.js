@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import transformTraceData from '../../../model/transform-trace-data';
-import calculateTraceDagEV, { mapFollowsFrom } from './calculateTraceDagEV';
+import { SpanKind } from '../../../types/otel';
+import calculateTraceDagEV, { mapNonBlocking } from './calculateTraceDagEV';
 import testTrace from './testTrace.json';
 
 const transformedTrace = transformTraceData(testTrace);
@@ -19,7 +20,7 @@ function assertData(nodes, service, operation, count, errors, time, percent, sel
 
 describe('calculateTraceDagEV', () => {
   it('calculates TraceGraph', () => {
-    const traceDag = calculateTraceDagEV(transformedTrace);
+    const traceDag = calculateTraceDagEV(transformedTrace.asOtelTrace());
     const { vertices: nodes } = traceDag;
     expect(nodes.length).toBe(9);
     assertData(nodes, 'service1', 'op1', 1, 0, 390, 39, 224);
@@ -38,95 +39,90 @@ describe('calculateTraceDagEV', () => {
   });
 });
 
-describe('mapFollowsFrom', () => {
-  it('sets followsFrom false if node has CHILD_OF reference and e.to is number', () => {
+describe('mapNonBlocking', () => {
+  it('sets isNonBlocking false for blocking spans (CLIENT, SERVER, INTERNAL)', () => {
     const mockEdges = [{ from: 0, to: 0 }];
     const mockNodes = [
       {
         members: [
           {
             span: {
-              references: [{ refType: 'CHILD_OF' }],
+              kind: SpanKind.CLIENT, // Blocking span
             },
           },
         ],
       },
     ];
 
-    const result = mapFollowsFrom(mockEdges, mockNodes);
-    expect(result[0].followsFrom).toBe(false);
+    const result = mapNonBlocking(mockEdges, mockNodes);
+    expect(result[0].isNonBlocking).toBe(false);
   });
 
-  it('sets followsFrom true if node does NOT have CHILD_OF reference and e.to is number', () => {
+  it('sets isNonBlocking true for non-blocking CONSUMER spans', () => {
     const mockEdges = [{ from: 0, to: 0 }];
     const mockNodes = [
       {
         members: [
           {
             span: {
-              references: [{ refType: 'FOLLOWS_FROM' }],
+              kind: SpanKind.CONSUMER, // Non-blocking span (PRODUCER-CONSUMER pair)
             },
           },
         ],
       },
     ];
 
-    const result = mapFollowsFrom(mockEdges, mockNodes);
-    expect(result[0].followsFrom).toBe(true);
+    const result = mapNonBlocking(mockEdges, mockNodes);
+    expect(result[0].isNonBlocking).toBe(true);
   });
 });
 
-describe('mapFollowsFrom - reference combinations', () => {
+describe('mapNonBlocking - span kind combinations', () => {
   const testCases = [
     {
-      name: 'only CHILD_OF',
-      references: [{ refType: 'CHILD_OF' }],
+      name: 'CLIENT span (blocking)',
+      kind: SpanKind.CLIENT,
       expected: false,
     },
     {
-      name: 'multiple CHILD_OF',
-      references: [{ refType: 'CHILD_OF' }, { refType: 'CHILD_OF' }],
+      name: 'SERVER span (blocking)',
+      kind: SpanKind.SERVER,
       expected: false,
     },
     {
-      name: 'only FOLLOWS_FROM',
-      references: [{ refType: 'FOLLOWS_FROM' }],
-      expected: true,
-    },
-    {
-      name: 'CHILD_OF followed by FOLLOWS_FROM',
-      references: [{ refType: 'CHILD_OF' }, { refType: 'FOLLOWS_FROM' }],
+      name: 'INTERNAL span (blocking)',
+      kind: SpanKind.INTERNAL,
       expected: false,
     },
     {
-      name: 'FOLLOWS_FROM followed by CHILD_OF',
-      references: [{ refType: 'FOLLOWS_FROM' }, { refType: 'CHILD_OF' }],
+      name: 'PRODUCER span (blocking)',
+      kind: SpanKind.PRODUCER,
       expected: false,
     },
     {
-      name: 'no references at all',
-      references: [],
+      name: 'CONSUMER span (non-blocking)',
+      kind: SpanKind.CONSUMER,
       expected: true,
     },
   ];
 
-  testCases.forEach(({ name, references, expected }) => {
-    it(`sets followsFrom correctly when ${name}`, () => {
+  testCases.forEach(({ name, kind, expected }) => {
+    it(`sets isNonBlocking correctly for ${name}`, () => {
       const mockEdges = [{ from: 0, to: 0 }];
       const mockNodes = [
         {
           members: [
             {
               span: {
-                references,
+                kind,
               },
             },
           ],
         },
       ];
 
-      const result = mapFollowsFrom(mockEdges, mockNodes);
-      expect(result[0].followsFrom).toBe(expected);
+      const result = mapNonBlocking(mockEdges, mockNodes);
+      expect(result[0].isNonBlocking).toBe(expected);
     });
   });
 });

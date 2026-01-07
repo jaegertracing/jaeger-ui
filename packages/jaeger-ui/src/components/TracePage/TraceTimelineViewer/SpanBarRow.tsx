@@ -91,16 +91,13 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   }, [onChildrenToggled, span.spanID]);
 
   const {
-    durationMicros: duration,
+    duration,
     hasChildren: isParent,
     name: operationName,
     resource: { serviceName },
   } = span;
   const label = formatDuration(duration);
-  const viewBounds = getViewedBounds(
-    span.startTimeUnixMicros,
-    span.startTimeUnixMicros + span.durationMicros
-  );
+  const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
 
@@ -176,7 +173,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           {hasLinks && (
             <ReferencesButton
               links={span.links}
-              tooltipText="Contains multiple references"
+              tooltipText={useOtelTerms ? 'Contains multiple links' : 'Contains multiple references'}
               focusSpan={focusSpan}
             >
               <IoGitNetwork />
@@ -185,9 +182,10 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           {hasInboundLinks && (
             <ReferencesButton
               links={span.inboundLinks}
-              tooltipText={`This span is referenced by ${
-                span.inboundLinks.length === 1 ? 'another span' : 'multiple other spans'
-              }`}
+              tooltipText={
+                (useOtelTerms ? 'This span is linked from ' : 'This span is referenced by ') +
+                (span.inboundLinks.length === 1 ? 'another span' : 'multiple other spans')
+              }
               focusSpan={focusSpan}
             >
               <IoCloudUploadOutline />

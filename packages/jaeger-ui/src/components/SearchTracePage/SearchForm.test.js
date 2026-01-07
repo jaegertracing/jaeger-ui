@@ -3,14 +3,14 @@
 
 jest.mock('store');
 jest.mock('../common/SearchableSelect', () => {
-  const MockSearchableSelect = ({ onChange, name, disabled, ...props }) => {
-    if (onChange && name) {
-      MockSearchableSelect.onChangeFns[name] = onChange;
+  const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, value, ...props }) => {
+    if (onChange && testId) {
+      MockSearchableSelect.onChangeFns[testId] = onChange;
     }
-    if (name) {
-      MockSearchableSelect.disabled[name] = disabled;
+    if (testId) {
+      MockSearchableSelect.disabled[testId] = disabled;
     }
-    return <div data-testid={`mock-select-${name}`} data-disabled={disabled} />;
+    return <div data-testid={`mock-select-${testId}`} data-disabled={disabled} data-value={value} />;
   };
   MockSearchableSelect.onChangeFns = {};
   MockSearchableSelect.disabled = {};
@@ -18,7 +18,8 @@ jest.mock('../common/SearchableSelect', () => {
 });
 
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { act } from 'react';
 import '@testing-library/jest-dom';
 import dayjs from 'dayjs';
 import queryString from 'query-string';
@@ -430,20 +431,22 @@ describe('submitForm()', () => {
 });
 
 describe('<SearchForm>', () => {
+  afterEach(cleanup);
   beforeEach(() => {
     jest.clearAllMocks();
     SearchableSelect.onChangeFns = {};
     SearchableSelect.disabled = {};
   });
 
-  it('enables operations only when a service is selected', () => {
-    render(<SearchForm {...defaultProps} />);
+  it('enables operations only when a service is selected', async () => {
+    render(<SearchForm key="fresh" {...defaultProps} />);
 
     expect(SearchableSelect.disabled.operation).toBe(true);
+    cleanup();
 
-    render(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+    render(<SearchForm key="with-svc" {...defaultProps} initialValues={{ service: 'svcA' }} />);
 
-    expect(SearchableSelect.disabled.operation).toBe(false);
+    await waitFor(() => expect(SearchableSelect.disabled.operation).toBe(false));
   });
 
   it('keeps operation disabled when no service selected', () => {
@@ -453,13 +456,9 @@ describe('<SearchForm>', () => {
   });
 
   it('enables operation when unknown service selected', () => {
-    class TestSearchForm extends SearchForm {
-      componentDidMount() {
-        this.handleChange({ service: 'svcC' });
-      }
-    }
-
-    render(<TestSearchForm {...defaultProps} />);
+    render(<SearchForm {...defaultProps} />);
+    const serviceOnChange = SearchableSelect.onChangeFns.service;
+    serviceOnChange('svcC');
 
     expect(defaultProps.changeServiceHandler).toHaveBeenCalledWith('svcC');
   });
@@ -476,7 +475,7 @@ describe('<SearchForm>', () => {
       },
     };
 
-    const { container } = render(<SearchForm {...props} />);
+    const { container } = render(<SearchForm key="custom-date" {...props} />);
 
     const startDateInput = container.querySelector('input[name="startDate"]');
     const endDateInput = container.querySelector('input[name="endDate"]');
@@ -486,7 +485,9 @@ describe('<SearchForm>', () => {
   });
 
   it('disables the submit button when a service is not selected', () => {
-    const { container } = render(<SearchForm {...defaultProps} initialValues={{ service: '-' }} />);
+    const { container } = render(
+      <SearchForm key="disabled-no-svc" {...defaultProps} initialValues={{ service: '-' }} />
+    );
 
     const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(submitButton).toBeDisabled();
@@ -494,7 +495,12 @@ describe('<SearchForm>', () => {
 
   it('disables the submit button when the form has invalid data', () => {
     const { container } = render(
-      <SearchForm {...defaultProps} invalid={true} initialValues={{ service: 'svcA' }} />
+      <SearchForm
+        key="disabled-invalid"
+        {...defaultProps}
+        invalid={true}
+        initialValues={{ service: 'svcA' }}
+      />
     );
 
     const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
@@ -502,7 +508,9 @@ describe('<SearchForm>', () => {
   });
 
   it('disables the submit button when duration is invalid', () => {
-    const { container } = render(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+    const { container } = render(
+      <SearchForm key="duration-val" {...defaultProps} initialValues={{ service: 'svcA' }} />
+    );
 
     const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
     expect(submitButton).not.toBeDisabled();
@@ -541,34 +549,37 @@ describe('<SearchForm>', () => {
     expect(tagsInput.value).toBe('new=tag');
   });
 
-  it('prevents default form submission behavior', () => {
-    class TestSearchForm extends SearchForm {
-      componentDidMount() {
-        const mockEvent = { preventDefault: jest.fn() };
-        this.handleSubmit(mockEvent);
+  it('prevents default form submission behavior', async () => {
+    const { container } = render(
+      <SearchForm {...defaultProps} searchAdjustEndTime="1m" initialValues={{ service: 'svcA' }} />
+    );
+    const form = container.querySelector('form');
 
-        expect(mockEvent.preventDefault).toHaveBeenCalled();
+    await waitFor(() =>
+      expect(container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`)).not.toBeDisabled()
+    );
 
-        expect(this.props.submitFormHandler).toHaveBeenCalledWith(
-          this.state.formData,
-          this.props.searchAdjustEndTime,
-          this.state.adjustTimeEnabled
-        );
-      }
-    }
+    fireEvent.submit(form);
 
-    render(<TestSearchForm {...defaultProps} searchAdjustEndTime="1m" />);
+    await waitFor(() => expect(defaultProps.submitFormHandler).toHaveBeenCalled());
+
+    expect(defaultProps.submitFormHandler).toHaveBeenCalledWith(
+      expect.objectContaining({ service: 'svcA' }),
+      '1m',
+      expect.any(Boolean)
+    );
   });
 });
 
 describe('SearchForm onChange handlers', () => {
+  afterEach(cleanup);
   beforeEach(() => {
     jest.clearAllMocks();
     SearchableSelect.onChangeFns = {};
     SearchableSelect.disabled = {};
   });
 
-  it('calls handleChange with proper arguments when onChange handlers are triggered', () => {
+  it('updates form data when onChange handlers are triggered', async () => {
     const props = {
       ...defaultProps,
       initialValues: {
@@ -577,70 +588,78 @@ describe('SearchForm onChange handlers', () => {
         startDateTime: '18:19',
         endDate: '2025-08-06',
         endDateTime: '18:19',
+        service: 'svcA',
       },
     };
 
-    const handleChangeMock = jest.fn();
+    const { getByTestId, container } = render(<SearchForm key="on-change" {...props} />);
 
-    class TestSearchForm extends SearchForm {
-      constructor(props) {
-        super(props);
-        this.handleChange = handleChangeMock;
-      }
-    }
+    // Service
+    await act(async () => {
+      SearchableSelect.onChangeFns.service('testService');
+    });
+    expect(defaultProps.changeServiceHandler).toHaveBeenCalledWith('testService');
+    await waitFor(() =>
+      expect(getByTestId('mock-select-service').getAttribute('data-value')).toBe('testService')
+    );
 
-    const { container } = render(<TestSearchForm {...props} />);
-    const serviceOnChange = SearchableSelect.onChangeFns.service;
-    expect(serviceOnChange).toBeDefined();
-    serviceOnChange('testService');
-    expect(handleChangeMock).toHaveBeenCalledWith({ service: 'testService' });
+    // Operation
+    await act(async () => {
+      SearchableSelect.onChangeFns.operation('testOperation');
+    });
+    await waitFor(() =>
+      expect(getByTestId('mock-select-operation').getAttribute('data-value')).toBe('testOperation')
+    );
 
-    const operationOnChange = SearchableSelect.onChangeFns.operation;
-    expect(operationOnChange).toBeDefined();
-    operationOnChange('testOperation');
-    expect(handleChangeMock).toHaveBeenCalledWith({ operation: 'testOperation' });
-
-    const lookbackOnChange = SearchableSelect.onChangeFns.lookback;
-    expect(lookbackOnChange).toBeDefined();
-    lookbackOnChange('2h');
-    expect(handleChangeMock).toHaveBeenCalledWith({ lookback: '2h' });
-
+    // Date/Time inputs (should be visible initially because lookback is 'custom')
+    await waitFor(() => expect(container.querySelector('input[name="startDate"]')).not.toBeNull());
     const startDateInput = container.querySelector('input[name="startDate"]');
-    expect(startDateInput).toBeInTheDocument();
-    fireEvent.change(startDateInput, { target: { value: '2025-08-07' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ startDate: '2025-08-07' });
+    await act(async () => {
+      fireEvent.change(startDateInput, { target: { value: '2025-08-07' } });
+    });
+    await waitFor(() => expect(startDateInput.value).toBe('2025-08-07'));
 
     const startDateTimeInput = container.querySelector('input[name="startDateTime"]');
-    expect(startDateTimeInput).toBeInTheDocument();
-    fireEvent.change(startDateTimeInput, { target: { value: '10:00' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ startDateTime: '10:00' });
+    await act(async () => {
+      fireEvent.change(startDateTimeInput, { target: { value: '10:00' } });
+    });
+    await waitFor(() => expect(startDateTimeInput.value).toBe('10:00'));
 
     const endDateInput = container.querySelector('input[name="endDate"]');
-    expect(endDateInput).toBeInTheDocument();
-    fireEvent.change(endDateInput, { target: { value: '2025-08-08' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ endDate: '2025-08-08' });
+    await act(async () => {
+      fireEvent.change(endDateInput, { target: { value: '2025-08-08' } });
+    });
+    await waitFor(() => expect(endDateInput.value).toBe('2025-08-08'));
 
     const endDateTimeInput = container.querySelector('input[name="endDateTime"]');
-    expect(endDateTimeInput).toBeInTheDocument();
-    fireEvent.change(endDateTimeInput, { target: { value: '11:00' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ endDateTime: '11:00' });
+    await act(async () => {
+      fireEvent.change(endDateTimeInput, { target: { value: '11:00' } });
+    });
+    await waitFor(() => expect(endDateTimeInput.value).toBe('11:00'));
+
+    // Lookback (testing change from 'custom' to '2h')
+    await act(async () => {
+      SearchableSelect.onChangeFns.lookback('2h');
+    });
+    await waitFor(() => expect(getByTestId('mock-select-lookback').getAttribute('data-value')).toBe('2h'));
 
     const resultsLimitInput = container.querySelector('input[name="resultsLimit"]');
-    expect(resultsLimitInput).toBeInTheDocument();
-    fireEvent.change(resultsLimitInput, { target: { value: '100' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ resultsLimit: '100' });
+    await act(async () => {
+      fireEvent.change(resultsLimitInput, { target: { value: '100' } });
+    });
+    await waitFor(() => expect(resultsLimitInput.value).toBe('100'));
 
     const tagsInput = container.querySelector('input[name="tags"]');
-    expect(tagsInput).toBeInTheDocument();
-    fireEvent.change(tagsInput, { target: { value: 'error=true' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ tags: 'error=true' });
+    await act(async () => {
+      fireEvent.change(tagsInput, { target: { value: 'error=true' } });
+    });
+    await waitFor(() => expect(tagsInput.value).toBe('error=true'));
 
     const maxDurationInput = container.querySelector('input[name="maxDuration"]');
-    expect(maxDurationInput).toBeInTheDocument();
-    fireEvent.change(maxDurationInput, { target: { value: '5s' } });
-    expect(handleChangeMock).toHaveBeenCalledWith({ maxDuration: '5s' });
-
-    expect(handleChangeMock).toHaveBeenCalledTimes(10);
+    await act(async () => {
+      fireEvent.change(maxDurationInput, { target: { value: '5s' } });
+    });
+    await waitFor(() => expect(maxDurationInput.value).toBe('5s'));
   });
 });
 
@@ -703,8 +722,8 @@ describe('mapStateToProps()', () => {
       const tagsLogfmt = 'error=true span.kind=client';
       const common = {
         lookback: '2h',
-        maxDuration: null,
-        minDuration: null,
+        maxDuration: undefined,
+        minDuration: undefined,
         operation: 'Driver::findNearest',
         service: 'driver',
       };
@@ -841,12 +860,12 @@ describe('mapStateToProps()', () => {
 
     expect(values).toEqual({
       service: '-',
-      resultsLimit: 20,
+      resultsLimit: '20',
       lookback: '1h',
       operation: 'all',
       tags: undefined,
-      minDuration: null,
-      maxDuration: null,
+      minDuration: undefined,
+      maxDuration: undefined,
       traceIDs: null,
     });
     expect(startDate).toBe(dateParams.dateStr);

@@ -298,8 +298,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const [zoomStart, zoomEnd] = currentViewRangeTime;
 
     return memoizedViewBoundsFunc({
-      min: trace.startTimeUnixMicros,
-      max: trace.endTimeUnixMicros,
+      min: trace.startTime,
+      max: trace.endTime,
       viewStart: zoomStart,
       viewEnd: zoomEnd,
     });
@@ -472,10 +472,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     if (isCollapsed) {
       const rpcSpan = findServerChildSpan(spans.slice(spanIndex));
       if (rpcSpan) {
-        const rpcViewBounds = this.getViewedBounds()(
-          rpcSpan.startTimeUnixMicros,
-          rpcSpan.startTimeUnixMicros + rpcSpan.durationMicros
-        );
+        const rpcViewBounds = this.getViewedBounds()(rpcSpan.startTime, rpcSpan.endTime);
         rpc = {
           color: colorGenerator.getColorByKey(rpcSpan.resource.serviceName),
           operationName: rpcSpan.name,
@@ -514,10 +511,10 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           hasOwnError={hasOwnError}
           hasChildError={hasChildError}
           getViewedBounds={this.getViewedBounds()}
-          traceStartTime={trace.startTimeUnixMicros}
+          traceStartTime={trace.startTime}
           span={span}
           focusSpan={this.focusSpan}
-          traceDuration={trace.durationMicros}
+          traceDuration={trace.duration}
           useOtelTerms={useOtelTerms}
         />
       </div>
@@ -562,10 +559,10 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           warningsToggle={detailWarningsToggle}
           span={span}
           attributesToggle={detailTagsToggle}
-          traceStartTime={trace.startTimeUnixMicros}
+          traceStartTime={trace.startTime}
           focusSpan={this.focusSpan}
           currentViewRangeTime={currentViewRangeTime}
-          traceDuration={trace.durationMicros}
+          traceDuration={trace.duration}
           useOtelTerms={useOtelTerms}
         />
       </div>

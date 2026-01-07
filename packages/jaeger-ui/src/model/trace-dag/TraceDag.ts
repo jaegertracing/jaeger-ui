@@ -5,10 +5,10 @@ import DenseTrace from './DenseTrace';
 import { ancestralPathParentOrLeaf, TIdFactory } from './id-factories';
 import { TDenseSpan, TDiffCounts, NodeID, TDenseSpanMembers } from './types';
 import TDagNode from './types/TDagNode';
-import { Trace } from '../../types/trace';
+import { IOtelTrace } from '../../types/otel';
 
 export default class TraceDag<TData extends { [k: string]: unknown }> {
-  static newFromTrace(trace: Trace, idFactory: TIdFactory = ancestralPathParentOrLeaf) {
+  static newFromTrace(trace: IOtelTrace, idFactory: TIdFactory = ancestralPathParentOrLeaf) {
     const dag: TraceDag<TDenseSpanMembers> = new TraceDag();
     const { denseSpansMap, rootIDs } = new DenseTrace(trace);
 

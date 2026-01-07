@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import memoizeOne from 'memoize-one';
-import { IOtelTrace } from '../../../types/otel';
+import { IOtelTrace, IOtelSpan } from '../../../types/otel';
 import { CriticalPathSection, CPSpan } from '../../../types/critical_path';
 import findLastFinishingChildSpan from './utils/findLastFinishingChildSpan';
 import sanitizeOverFlowingChildren from './utils/sanitizeOverFlowingChildren';
@@ -32,7 +32,7 @@ const computeCriticalPath = (
   spanMap: Map<string, CPSpan>,
   spanId: string,
   criticalPath: CriticalPathSection[],
-  returningChildStartTime?: number
+  returningChildStartTime?: IOtelSpan['startTime']
 ): CriticalPathSection[] => {
   const currentSpan: CPSpan | undefined = spanMap.get(spanId);
   if (!currentSpan) {
@@ -45,8 +45,8 @@ const computeCriticalPath = (
   if (lastFinishingChildSpan) {
     spanCriticalSection = {
       spanID: currentSpan.spanID,
-      sectionStart: lastFinishingChildSpan.startTime + lastFinishingChildSpan.duration,
-      sectionEnd: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
+      sectionStart: lastFinishingChildSpan.endTime,
+      sectionEnd: (returningChildStartTime || currentSpan.endTime) as IOtelSpan['endTime'],
     };
     if (spanCriticalSection.sectionStart !== spanCriticalSection.sectionEnd) {
       criticalPath.push(spanCriticalSection);
@@ -58,7 +58,7 @@ const computeCriticalPath = (
     spanCriticalSection = {
       spanID: currentSpan.spanID,
       sectionStart: currentSpan.startTime,
-      sectionEnd: returningChildStartTime || currentSpan.startTime + currentSpan.duration,
+      sectionEnd: (returningChildStartTime || currentSpan.endTime) as IOtelSpan['endTime'],
     };
     if (spanCriticalSection.sectionStart !== spanCriticalSection.sectionEnd) {
       criticalPath.push(spanCriticalSection);

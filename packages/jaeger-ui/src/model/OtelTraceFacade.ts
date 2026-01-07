@@ -80,20 +80,28 @@ export default class OtelTraceFacade implements IOtelTrace {
     return this._rootSpans;
   }
 
-  get durationMicros(): number {
-    return this.legacyTrace.duration;
+  get duration(): IOtelTrace['duration'] {
+    return this.legacyTrace.duration as IOtelTrace['duration'];
   }
 
-  get startTimeUnixMicros(): number {
-    return this.legacyTrace.startTime;
+  get startTime(): IOtelTrace['startTime'] {
+    return this.legacyTrace.startTime as IOtelTrace['startTime'];
   }
 
-  get endTimeUnixMicros(): number {
-    return this.legacyTrace.endTime;
+  get endTime(): IOtelTrace['endTime'] {
+    return this.legacyTrace.endTime as IOtelTrace['endTime'];
   }
 
   get traceName(): string {
     return this.legacyTrace.traceName;
+  }
+
+  get tracePageTitle(): string {
+    return this.legacyTrace.tracePageTitle;
+  }
+
+  get traceEmoji(): string {
+    return this.legacyTrace.traceEmoji;
   }
 
   get services(): ReadonlyArray<{ name: string; numberOfSpans: number }> {

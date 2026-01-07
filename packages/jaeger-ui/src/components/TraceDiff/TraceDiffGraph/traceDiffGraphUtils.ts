@@ -10,7 +10,7 @@ import convPlexus from '../../../model/trace-dag/convPlexus';
 import TraceDag from '../../../model/trace-dag/TraceDag';
 import { TDenseSpanMembers, TDiffCounts } from '../../../model/trace-dag/types';
 import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
-import { Trace } from '../../../types/trace';
+import { IOtelTrace } from '../../../types/otel';
 import filterSpans from '../../../utils/filter-spans';
 
 function getUiFindVertexKeysFn(
@@ -29,7 +29,7 @@ function getUiFindVertexKeysFn(
 
 export const getUiFindVertexKeys = memoizeOne(getUiFindVertexKeysFn);
 
-function getEdgesAndVerticesFn(aData: Trace, bData: Trace) {
+function getEdgesAndVerticesFn(aData: IOtelTrace, bData: IOtelTrace) {
   const aTraceDag = TraceDag.newFromTrace(aData);
   const bTraceDag = TraceDag.newFromTrace(bData);
   const diffDag = TraceDag.diff(aTraceDag, bTraceDag);

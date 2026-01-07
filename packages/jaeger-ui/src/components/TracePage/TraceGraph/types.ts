@@ -16,6 +16,6 @@ export type TSumSpan = {
 };
 
 export type TEv = {
-  edges: TEdge<{ followsFrom: boolean }>[];
+  edges: TEdge<{ isNonBlocking: boolean }>[];
   vertices: TDagPlexusVertex<TSumSpan & TDenseSpanMembers>[];
 };

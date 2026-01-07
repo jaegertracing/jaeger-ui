@@ -22,8 +22,8 @@ export type IWebAnalytics = iWebAnalytics;
 
 export type FetchedState = 'FETCH_DONE' | 'FETCH_ERROR' | 'FETCH_LOADING';
 
-export type FetchedTrace = {
-  data?: Trace;
+export type FetchedTrace<T = Trace> = {
+  data?: T;
   error?: ApiError;
   id: string;
   state?: FetchedState;

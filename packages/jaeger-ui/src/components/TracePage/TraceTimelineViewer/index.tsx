@@ -79,7 +79,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   return (
     <div className="TraceTimelineViewer">
       <TimelineHeaderRow
-        duration={trace.durationMicros}
+        duration={trace.duration}
         nameColumnWidth={spanNameColumnWidth}
         numTicks={NUM_TICKS}
         onCollapseAll={collapseAll}
@@ -90,6 +90,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
         viewRangeTime={viewRange.time}
         updateNextViewRangeTime={updateNextViewRangeTime}
         updateViewRangeTime={updateViewRangeTime}
+        useOtelTerms={props.useOtelTerms}
       />
       <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
     </div>
