@@ -3,7 +3,7 @@
 
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
-import { Route, Redirect, Switch } from 'react-router-dom';
+import { Route, Navigate, Routes } from 'react-router-dom';
 
 import NotFound from './NotFound';
 import Page from './Page';
@@ -51,43 +51,21 @@ export default class JaegerUIApp extends Component<{}> {
           }
           {/* @ts-ignore */}
           <Page>
-            <Switch>
-              <Route path={searchPath}>
-                <SearchTracePage />
-              </Route>
-              <Route path={traceDiffPath}>
-                <TraceDiff />
-              </Route>
-              <Route path={tracePath}>
-                <TracePage />
-              </Route>
-              <Route path={dependenciesPath}>
-                <DependencyGraph />
-              </Route>
-              <Route path={deepDependenciesPath}>
-                <DeepDependencies />
-              </Route>
-              <Route path={qualityMetricsPath}>
-                <QualityMetrics />
-              </Route>
-              <Route path={monitorATMPath}>
-                <MonitorATMPage />
-              </Route>
+            <Routes>
+              <Route path={searchPath} element={<SearchTracePage />} />
+              <Route path={traceDiffPath} element={<TraceDiff />} />
+              <Route path={tracePath} element={<TracePage />} />
+              <Route path={dependenciesPath} element={<DependencyGraph />} />
+              <Route path={deepDependenciesPath} element={<DeepDependencies />} />
+              <Route path={qualityMetricsPath} element={<QualityMetrics />} />
+              <Route path={monitorATMPath} element={<MonitorATMPage />} />
 
-              <Route exact path="/">
-                <Redirect to={searchPath} />
-              </Route>
-              <Route exact path={prefixUrl()}>
-                <Redirect to={searchPath} />
-              </Route>
-              <Route exact path={prefixUrl('/')}>
-                <Redirect to={searchPath} />
-              </Route>
+              <Route path="/" element={<Navigate to={searchPath} replace />} />
+              <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
+              <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
 
-              <Route>
-                <NotFound error="Page not found" />
-              </Route>
-            </Switch>
+              <Route path="*" element={<NotFound error="Page not found" />} />
+            </Routes>
           </Page>
         </Provider>
       </ThemeProvider>

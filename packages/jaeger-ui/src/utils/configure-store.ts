@@ -14,14 +14,13 @@ import { getAppEnvironment } from './constants';
 import { ReduxState } from '../types';
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   interface Window {
     __REDUX_DEVTOOLS_EXTENSION__?: () => StoreEnhancer;
   }
 }
 
 const { createReduxHistory, routerMiddleware, routerReducer } = createReduxHistoryContext({
-  history: createBrowserHistory(),
+  history: createBrowserHistory() as any,
 });
 
 export default function configureStore(): Store<any> {
