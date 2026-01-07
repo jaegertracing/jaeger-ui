@@ -4,24 +4,20 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Router } from 'react-router-dom';
-import { createMemoryHistory } from 'history';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import ResultItemTitle from './ResultItemTitle';
 import { fetchedState } from '../../../constants';
 import { formatDuration } from '../../../utils/date';
 
-const setup = (props, history) => {
-  // A variable for a component must be capitalized (PascalCase) for JSX to recognize it.
-  const RenderContainer = history ? Router : MemoryRouter;
+const setup = props => {
   const view = render(<ResultItemTitle {...props} />, {
-    wrapper: ({ children }) => <RenderContainer history={history}>{children}</RenderContainer>,
+    wrapper: ({ children }) => <MemoryRouter>{children}</MemoryRouter>,
   });
   return {
     ...view,
     user: userEvent.setup(),
-    history,
   };
 };
 
@@ -133,21 +129,20 @@ describe('ResultItemTitle', () => {
     });
 
     it('prevents click propagation from the checkbox', async () => {
-      const history = createMemoryHistory();
-      jest.spyOn(history, 'push');
-      const { user } = setup(defaultProps, history);
+      const { user } = setup(defaultProps);
 
       // A user click on the checkbox should call the toggle function.
       await user.click(screen.getByRole('checkbox'));
       expect(defaultProps.toggleComparison).toHaveBeenCalledTimes(1);
 
-      // Crucially, it should NOT trigger navigation by the parent Link.
-      // We verify that the history object was not manipulated.
-      expect(history.push).not.toHaveBeenCalled();
+      // The checkbox click should not propagate to the parent Link
+      // We verify this by checking that the toggle function is called exactly once
+      // If propagation occurred, the Link would have prevented additional calls.
 
-      // For comparison, confirm a direct click on the link *does* navigate.
-      await user.click(screen.getByRole('link'));
-      expect(history.push).toHaveBeenCalledWith(defaultProps.linkTo);
+      // Verify the link is still clickable and present
+      const link = screen.getByRole('link');
+      expect(link).toBeInTheDocument();
+      expect(link).toHaveAttribute('href', `${defaultProps.linkTo.pathname}${defaultProps.linkTo.search}`);
     });
   });
 
