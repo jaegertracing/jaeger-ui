@@ -140,7 +140,7 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
     tabItems.push({
       label: 'Search',
       key: 'searchForm',
-      children: <SearchFormWithOtlpMetadata />,
+      children: <SearchFormWithOtlpMetadata key={JSON.stringify(urlQueryParams)} />,
     });
     if (!disableFileUploadControl) {
       tabItems.push({

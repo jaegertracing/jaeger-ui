@@ -1,10 +1,10 @@
 // Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { useState } from 'react';
+import { connect } from 'react-redux';
 import { useServices, useSpanNames } from '../../hooks/useOtlpMetadata';
-import SearchFormImpl from './SearchForm';
-import LoadingIndicator from '../common/LoadingIndicator';
+import { SearchFormImpl, mapStateToProps, mapDispatchToProps } from './SearchForm';
 
 /**
  * Wrapper component that fetches services and span names using React Query
@@ -14,22 +14,20 @@ import LoadingIndicator from '../common/LoadingIndicator';
  * the existing SearchForm component.
  */
 export function SearchFormWithOtlpMetadata(props: any) {
+  const [currentService, setCurrentService] = useState<string | undefined>(props.initialValues?.service);
+
   const { data: servicesList, isLoading: isLoadingServices, error: servicesError } = useServices();
 
-  // Get the currently selected service from props or local storage
-  const selectedService = props.initialValues?.service;
-
-  // Fetch span names for the selected service
+  // Fetch span names for the currently selected service
   const { data: spanNames, isLoading: isLoadingSpanNames } = useSpanNames(
-    selectedService && selectedService !== '-' ? selectedService : null
+    currentService && currentService !== '-' ? currentService : null
   );
 
-  // Show loading indicator while services are being fetched
-  if (isLoadingServices) {
-    return <LoadingIndicator />;
-  }
+  const handleServiceChange = (service: string) => {
+    setCurrentService(service);
+    props.changeServiceHandler(service);
+  };
 
-  // Show error if services failed to load
   if (servicesError) {
     return <div className="SearchForm--error">Error loading services: {servicesError.message}</div>;
   }
@@ -38,11 +36,19 @@ export function SearchFormWithOtlpMetadata(props: any) {
   // The existing SearchForm expects: { name: string, operations: string[] }[]
   const services = (servicesList || []).map(serviceName => ({
     name: serviceName,
-    operations: selectedService === serviceName ? spanNames || [] : [],
+    operations: currentService === serviceName ? spanNames || [] : [],
   }));
 
   // Pass through all props to SearchForm, with services from React Query
-  return <SearchFormImpl {...props} services={services} submitting={isLoadingSpanNames} />;
+  return (
+    <SearchFormImpl
+      {...props}
+      services={services}
+      isLoadingServices={isLoadingServices}
+      isLoadingSpanNames={isLoadingSpanNames}
+      changeServiceHandler={handleServiceChange}
+    />
+  );
 }
 
-export default SearchFormWithOtlpMetadata;
+export default connect(mapStateToProps, mapDispatchToProps)(SearchFormWithOtlpMetadata);

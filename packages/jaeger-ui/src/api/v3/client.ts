@@ -30,14 +30,16 @@ export class OtlpApiClient {
    * @returns Promise<string[]> - Array of span names
    */
   async fetchSpanNames(service: string): Promise<string[]> {
-    const response = await fetch(`${this.apiRoot}services/${encodeURIComponent(service)}/operations`);
+    const response = await fetch(`${this.apiRoot}operations?service=${encodeURIComponent(service)}`);
     if (!response.ok) {
       throw new Error(
         `Failed to fetch span names for service "${service}": ${response.status} ${response.statusText}`
       );
     }
     const data = await response.json();
-    return data.spanNames || [];
+    const operations: { name: string; spanKind: string }[] = data.operations || [];
+    // Extract unique names to maintain compatibility with existing UI
+    return Array.from(new Set(operations.map(op => op.name))).sort();
   }
 }
 

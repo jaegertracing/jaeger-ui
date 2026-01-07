@@ -338,6 +338,8 @@ interface ISearchFormImplProps {
   useOtelTerms?: boolean;
   services: IServiceWithOperations[];
   initialValues?: Partial<ISearchFormFields> & { traceIDs?: string | null };
+  isLoadingServices?: boolean;
+  isLoadingSpanNames?: boolean;
   searchTraces: SearchTracesFunction;
   changeServiceHandler: (service: string) => void;
   submitFormHandler: (
@@ -360,6 +362,8 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   useOtelTerms,
   services = [],
   initialValues,
+  isLoadingServices = false,
+  isLoadingSpanNames = false,
   changeServiceHandler,
   submitFormHandler,
 }) => {
@@ -431,6 +435,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           value={formData.service}
           placeholder="Select A Service"
           disabled={submitting}
+          loading={isLoadingServices}
           onChange={(value: string) => handleChange({ service: value })}
         >
           {services.map(service => (
@@ -452,6 +457,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           data-testid="operation"
           value={formData.operation}
           disabled={submitting || noSelectedService}
+          loading={isLoadingSpanNames}
           placeholder={useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
           onChange={(value: string) => handleChange({ operation: value })}
         >
@@ -751,18 +757,11 @@ export function mapStateToProps(state: ReduxState) {
   let lastSearchOperation: string | undefined;
 
   if (lastSearch) {
-    // last search is only valid if the service is in the list of services
     const { operation: lastOp, service: lastSvc } = lastSearch;
     if (lastSvc && lastSvc !== '-') {
-      // Check if state.services exists (it won't when using React Query)
-      if (state.services?.services?.includes(lastSvc)) {
-        lastSearchService = lastSvc;
-        if (lastOp && lastOp !== '-') {
-          const ops = state.services.operationsForService[lastSvc];
-          if (lastOp === 'all' || (ops && ops.includes(lastOp))) {
-            lastSearchOperation = lastOp;
-          }
-        }
+      lastSearchService = lastSvc;
+      if (lastOp && lastOp !== '-') {
+        lastSearchOperation = lastOp;
       }
     }
   }
@@ -845,6 +844,7 @@ export function mapStateToProps(state: ReduxState) {
     searchMaxLookback: _get(state, 'config.search.maxLookback'),
     searchAdjustEndTime: _get(state, 'config.search.adjustEndTime'),
     useOtelTerms: _get(state, 'config.useOpenTelemetryTerms'),
+    submitting: state.trace.loadingTraces,
   };
 }
 
