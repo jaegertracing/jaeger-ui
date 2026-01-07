@@ -16,13 +16,38 @@ SPDX-License-Identifier: Apache-2.0
   color: rgb(153, 153, 153);
   font-style: italic;
   cursor: default;
+  background-color: transparent !important;
 }
 
 .MainTableData--TraceStatistics {
   border-top: 1px solid var(--border-strong);
+  background-color: var(--bg-2) !important;
 }
 
 .MainTableData--TraceStatistics:hover {
-  background: var(--surface-component-background-hover);
+  background-color: var(--bg-3) !important;
   color: var(--text-primary);
+}
+
+/* For table cells */
+.span-table .ant-table-cell {
+  background-color: inherit !important;
+}
+
+/* Default row background that adapts to theme */
+.span-table .ant-table-row {
+  background-color: var(--bg-1);
+}
+
+.span-table .ant-table-row:hover {
+  background-color: var(--bg-2);
+}
+
+/* Expanded rows */
+.span-table .ant-table-row-level-0 {
+  background-color: var(--bg-1);
+}
+
+.span-table .ant-table-row-level-1 {
+  background-color: var(--bg-2);
 }
