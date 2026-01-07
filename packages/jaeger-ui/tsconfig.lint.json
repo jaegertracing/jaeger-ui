@@ -20,8 +20,8 @@
   "files": [
     "src/components/App/index.tsx",
     "src/components/DependencyGraph/index.tsx",
-    "src/components/SearchTracePage/index.jsx",
-    "src/components/SearchTracePage/SearchForm.jsx",
+    "src/components/SearchTracePage/index.tsx",
+    "src/components/SearchTracePage/SearchForm.tsx",
     "src/components/SearchTracePage/SearchResults/ScatterPlot.tsx",
     "src/components/DependencyGraph/sample_data/large.json",
     "src/components/DependencyGraph/sample_data/small.json",

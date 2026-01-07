@@ -31,21 +31,20 @@ const AllProvider = ({ children }) => (
 
 describe('<SearchTracePage>', () => {
   const queryOfResults = {};
-  let wrapper;
   let traces;
   let traceResultsToDownload;
   let props;
 
-  beforeEach(() => {
-    traces = [
+  const getDefaultProps = () => {
+    const traces = [
       { traceID: 'a', spans: [], processes: {} },
       { traceID: 'b', spans: [], processes: {} },
     ];
-    traceResultsToDownload = [
+    const traceResultsToDownload = [
       { traceID: 'a', spans: [], processes: {} },
       { traceID: 'b', spans: [], processes: {} },
     ];
-    props = {
+    return {
       queryOfResults,
       traces,
       traceResultsToDownload,
@@ -64,25 +63,30 @@ describe('<SearchTracePage>', () => {
       fetchServices: jest.fn(),
       searchTraces: jest.fn(),
     };
-    wrapper = render(
+  };
+
+  beforeEach(() => {
+    props = getDefaultProps();
+    traces = props.traces;
+    traceResultsToDownload = props.traceResultsToDownload;
+  });
+
+  it('searches for traces if `service` or `traceID` are in the query string', () => {
+    render(
       <AllProvider>
         <SearchTracePage {...props} />
       </AllProvider>
     );
-  });
-
-  it('searches for traces if `service` or `traceID` are in the query string', () => {
     expect(props.searchTraces).toHaveBeenCalledTimes(1);
   });
 
   it('loads the services and operations if a service is stored', () => {
-    props.fetchServices.mockClear();
-    props.fetchServiceOperations.mockClear();
     const oldFn = store.get;
     store.get = jest.fn(() => ({ service: 'svc-b' }));
-    wrapper = render(
+    const testProps = { ...props, urlQueryParams: {} };
+    render(
       <AllProvider>
-        <SearchTracePage {...{ ...props, urlQueryParams: {} }} />
+        <SearchTracePage {...testProps} />
       </AllProvider>
     );
     expect(props.fetchServices).toHaveBeenCalledTimes(1);
@@ -92,11 +96,9 @@ describe('<SearchTracePage>', () => {
   });
 
   it('loads the operations linked to the URL service parameter if present', () => {
-    props.fetchServices.mockClear();
-    props.fetchServiceOperations.mockClear();
     const oldFn = store.get;
     store.get = jest.fn(() => ({ service: 'svc-b' }));
-    wrapper = render(
+    render(
       <AllProvider>
         <SearchTracePage {...props} />
       </AllProvider>
