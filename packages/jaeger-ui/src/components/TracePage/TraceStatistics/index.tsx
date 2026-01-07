@@ -10,11 +10,13 @@ import TraceStatisticsHeader from './TraceStatisticsHeader';
 import { ITableSpan } from './types';
 import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
+import { getServiceName } from './tableValues';
 
 type Props = {
   trace: IOtelTrace;
   uiFindVertexKeys: Set<string> | TNil;
   uiFind: string | null | undefined;
+  useOtelTerms: boolean;
 };
 
 type State = {
@@ -115,7 +117,7 @@ export default class TraceStatistics extends Component<Props, State> {
       showPopup: false,
       popupContent: '',
       wholeTable: [],
-      valueNameSelector1: 'Service Name',
+      valueNameSelector1: getServiceName(),
       valueNameSelector2: null,
     };
 
@@ -342,6 +344,7 @@ export default class TraceStatistics extends Component<Props, State> {
           tableValue={this.state.tableValue}
           wholeTable={this.state.wholeTable}
           handler={this.handler}
+          useOtelTerms={this.props.useOtelTerms}
         />
 
         {this.state.showPopup ? (

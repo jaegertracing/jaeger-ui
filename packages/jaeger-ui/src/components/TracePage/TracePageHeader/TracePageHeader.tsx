@@ -53,6 +53,7 @@ type TracePageHeaderEmbedProps = {
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: IViewRange;
+  useOtelTerms: boolean;
 };
 
 export const HEADER_ITEMS = [
@@ -141,6 +142,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     updateNextViewRangeTime,
     updateViewRangeTime,
     viewRange,
+    useOtelTerms,
   } = props;
 
   if (!trace) {
@@ -197,6 +199,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           resultCount={resultCount}
           textFilter={textFilter}
           navigable={viewType === ETraceViewType.TraceTimelineViewer}
+          useOtelTerms={useOtelTerms}
         />
         {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
         {showViewOptions && (

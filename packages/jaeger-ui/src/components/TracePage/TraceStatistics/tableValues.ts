@@ -6,8 +6,9 @@ import { IOtelTrace, IOtelSpan } from '../../../types/otel';
 import { ITableSpan } from './types';
 import colorGenerator from '../../../utils/color-generator';
 
-const serviceName = 'Service Name';
-const operationName = 'Operation Name';
+export const getServiceName = () => 'Service Name';
+export const getOperationName = (useOtelTerms: boolean) => (useOtelTerms ? 'Span Name' : 'Operation Name');
+export const getAttributeName = (useOtelTerms: boolean) => (useOtelTerms ? 'Attribute' : 'Tag');
 
 function parentChildOfMap(allSpans: ReadonlyArray<IOtelSpan>): Record<string, IOtelSpan[]> {
   const parentChildOfMap: Record<string, IOtelSpan[]> = {};
@@ -156,11 +157,11 @@ function getDefaultStatsValue(trace: IOtelTrace): StatsPerTag {
   };
 }
 
-function getAttributeValueFromSpan(attributeKey: string, span: IOtelSpan) {
+function getAttributeValueFromSpan(attributeKey: string, span: IOtelSpan, useOtelTerms: boolean) {
   let attributeValue = null as null | string;
-  if (attributeKey === operationName) {
+  if (attributeKey === getOperationName(useOtelTerms)) {
     attributeValue = span.name;
-  } else if (attributeKey === serviceName) {
+  } else if (attributeKey === getServiceName()) {
     attributeValue = span.resource.serviceName;
   } else {
     const attr = span.attributes.find(a => a.key === attributeKey);
@@ -175,7 +176,7 @@ function getAttributeValueFromSpan(attributeKey: string, span: IOtelSpan) {
 /**
  * Is used if only one dropdown is selected.
  */
-function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
+function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace, useOtelTerms: boolean) {
   const allSpans = trace.spans;
 
   // used to build the table
@@ -188,7 +189,7 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
   const spanIdsWithSelectedAttribute = new Set<string>();
 
   for (let i = 0; i < allSpans.length; i++) {
-    const attributeValue = getAttributeValueFromSpan(selectedAttributeKey, allSpans[i]);
+    const attributeValue = getAttributeValueFromSpan(selectedAttributeKey, allSpans[i], useOtelTerms);
 
     if (!attributeValue) {
       continue;
@@ -209,7 +210,7 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
     const resultValue = statsPerAttributeValue[attributeValue];
 
     let color = '';
-    if (selectedAttributeKey === serviceName) {
+    if (selectedAttributeKey === getServiceName()) {
       color = colorGenerator.getColorByKey(attributeValue);
     }
 
@@ -239,7 +240,7 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
     allTableValues.push(tableSpan);
   }
   // checks if there is OTHERS
-  if (selectedAttributeKey !== serviceName && selectedAttributeKey !== operationName) {
+  if (selectedAttributeKey !== getServiceName() && selectedAttributeKey !== getOperationName(useOtelTerms)) {
     for (let i = 0; i < allSpans.length; i++) {
       const spanHasSelectedAttribute = spanIdsWithSelectedAttribute.has(allSpans[i].spanID);
 
@@ -247,6 +248,7 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
         spanWithNoSelectedAttribute.push(allSpans[i]);
       }
     }
+
     // Others is calculated
     let resultValue = getDefaultStatsValue(trace);
     for (let i = 0; i < spanWithNoSelectedAttribute.length; i++) {
@@ -258,7 +260,7 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace) {
       resultValue.avg = (resultValue.total / resultValue.count) as IOtelSpan['duration'];
       let tableSpanOTHERS: ITableSpan = {
         hasSubgroupValue: false,
-        name: `Without Attribute: ${selectedAttributeKey}`,
+        name: `Without ${getAttributeName(useOtelTerms)}: ${selectedAttributeKey}`,
         count: resultValue.count,
         total: resultValue.total,
         avg: resultValue.avg,
@@ -291,7 +293,8 @@ function buildDetail(
   allSpans: ReadonlyArray<IOtelSpan>,
   selectedAttributeKeySecond: string,
   parentName: string,
-  trace: IOtelTrace
+  trace: IOtelTrace,
+  useOtelTerms: boolean
 ) {
   const newColumnValues = [];
 
@@ -299,7 +302,7 @@ function buildDetail(
   const uniqueValuesForSelectedAttribute = new Set<string>();
 
   for (let i = 0; i < tempArray.length; i++) {
-    const attributeValue = getAttributeValueFromSpan(selectedAttributeKeySecond, tempArray[i]);
+    const attributeValue = getAttributeValueFromSpan(selectedAttributeKeySecond, tempArray[i], useOtelTerms);
 
     if (!attributeValue) {
       continue;
@@ -319,7 +322,7 @@ function buildDetail(
     const resultValue = statsPerAttributeValue[attributeValue];
 
     let color = '';
-    if (selectedAttributeKeySecond === serviceName) {
+    if (selectedAttributeKeySecond === getServiceName()) {
       color = colorGenerator.getColorByKey(attributeValue);
     }
 
@@ -357,7 +360,8 @@ function buildDetail(
 function generateDetailRest(
   allColumnValues: ITableSpan[],
   selectedAttributeKeySecond: string,
-  trace: IOtelTrace
+  trace: IOtelTrace,
+  useOtelTerms: boolean
 ) {
   const allSpans = trace.spans;
   const newTable = [];
@@ -388,7 +392,7 @@ function generateDetailRest(
       if (resultValue.count !== 0) {
         let buildOneColumnValue: ITableSpan = {
           hasSubgroupValue: false,
-          name: `Without Attribute: ${selectedAttributeKeySecond}`,
+          name: `Without ${getAttributeName(useOtelTerms)}: ${selectedAttributeKeySecond}`,
           count: resultValue.count,
           total: resultValue.total,
           avg: resultValue.avg,
@@ -421,17 +425,19 @@ function valueSecondDropdown(
   actualTableValues: ITableSpan[],
   selectedAttributeKey: string,
   selectedAttributeKeySecond: string,
-  trace: IOtelTrace
+  trace: IOtelTrace,
+  useOtelTerms: boolean
 ) {
   const allSpans = trace.spans;
   const allTableValues = [];
 
   const isSecondDropdownAttribute =
-    selectedAttributeKeySecond !== serviceName && selectedAttributeKeySecond !== operationName;
+    selectedAttributeKeySecond !== getServiceName() &&
+    selectedAttributeKeySecond !== getOperationName(useOtelTerms);
 
   const spansMatchingAttributeValueFromFirstDropdown = {} as Record<string, IOtelSpan[]>;
   for (let i = 0; i < allSpans.length; i++) {
-    const attributeValue = getAttributeValueFromSpan(selectedAttributeKey, allSpans[i]);
+    const attributeValue = getAttributeValueFromSpan(selectedAttributeKey, allSpans[i], useOtelTerms);
 
     if (!attributeValue) {
       continue;
@@ -464,7 +470,8 @@ function valueSecondDropdown(
       allSpans,
       selectedAttributeKeySecond,
       actualTableValues[i].name,
-      trace
+      trace,
+      useOtelTerms
     );
 
     allTableValues.push(actualTableValues[i]);
@@ -478,7 +485,7 @@ function valueSecondDropdown(
 
   // if second dropdown is an attribute a rest must be created
   if (isSecondDropdownAttribute) {
-    return generateDetailRest(allTableValues, selectedAttributeKeySecond, trace);
+    return generateDetailRest(allTableValues, selectedAttributeKeySecond, trace, useOtelTerms);
     // if no attribute is selected the values can be returned
   }
   return allTableValues;
@@ -488,8 +495,8 @@ function valueSecondDropdown(
  * Returns the values of the table shown after the selection of the first dropdown.
  * @param selectedAttributeKey the key which was selected
  */
-export function getColumnValues(selectedAttributeKey: string, trace: IOtelTrace) {
-  return valueFirstDropdown(selectedAttributeKey, trace);
+export function getColumnValues(selectedAttributeKey: string, trace: IOtelTrace, useOtelTerms: boolean) {
+  return valueFirstDropdown(selectedAttributeKey, trace, useOtelTerms);
 }
 
 /**
@@ -498,15 +505,23 @@ export function getColumnValues(selectedAttributeKey: string, trace: IOtelTrace)
  * @param selectedAttributeKey first key which is selected
  * @param selectedAttributeKeySecond second key which is selected
  * @param trace whole information about the trace
+ * @param useOtelTerms whether to use OpenTelemetry terms
  */
 export function getColumnValuesSecondDropdown(
   actualTableValues: ITableSpan[],
   selectedAttributeKey: string,
   selectedAttributeKeySecond: string,
-  trace: IOtelTrace
+  trace: IOtelTrace,
+  useOtelTerms: boolean
 ) {
   if (selectedAttributeKeySecond !== 'Reset') {
-    return valueSecondDropdown(actualTableValues, selectedAttributeKey, selectedAttributeKeySecond, trace);
+    return valueSecondDropdown(
+      actualTableValues,
+      selectedAttributeKey,
+      selectedAttributeKeySecond,
+      trace,
+      useOtelTerms
+    );
   }
-  return getColumnValues(selectedAttributeKey, trace);
+  return getColumnValues(selectedAttributeKey, trace, useOtelTerms);
 }

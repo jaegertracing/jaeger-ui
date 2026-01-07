@@ -6,7 +6,6 @@ import { Row, Col, Input, Alert, Select } from 'antd';
 import { ActionFunction, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
 import _isEmpty from 'lodash/isEmpty';
-// @ts-expect-error - store module lacks proper TypeScript definitions
 import store from 'store';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';

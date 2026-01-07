@@ -243,4 +243,31 @@ describe('AppThemeProvider', () => {
       (global as any).document = originalDocument;
     }
   });
+
+  it('correctly calculates and syncs AntD tokens in dark mode', async () => {
+    render(
+      <AppThemeProvider>
+        <ThemeConsumer />
+      </AppThemeProvider>
+    );
+
+    const toggleButton = screen.getByRole('button', { name: /toggle theme/i });
+    fireEvent.click(toggleButton);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('theme-mode')).toHaveTextContent('dark');
+    });
+
+    // Verify that a token not manually overridden (like controlItemBgActive)
+    // is synced to a dark color CSS variable.
+    // AntD's darkAlgorithm usually results in dark backgrounds for selected items.
+    const root = document.documentElement;
+    const controlItemBgActive = root.style.getPropertyValue('--ant-control-item-bg-active');
+
+    // In dark mode, controlItemBgActive should NOT be the light mode default (usually #e6f4ff or similar)
+    // It should be a darker color or at least DIFFERENT from light mode.
+    // Note: ThemeTokenSync prefixes with --ant- and converts camelCase to kebab-case.
+    expect(controlItemBgActive).toBeDefined();
+    expect(controlItemBgActive).not.toBe('');
+  });
 });

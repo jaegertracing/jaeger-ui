@@ -38,7 +38,6 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
 import { fetchedState } from '../../constants';
 import { FetchedTrace, LocationState, ReduxState, TNil } from '../../types';
-import { Trace } from '../../types/trace';
 import { IOtelTrace } from '../../types/otel';
 import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
@@ -381,6 +380,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       trace: data.asOtelTrace(),
       updateNextViewRangeTime: this.updateNextViewRangeTime,
       updateViewRangeTime: this.updateViewRangeTime,
+      useOtelTerms: this.props.useOtelTerms,
     };
 
     let view;
@@ -407,14 +407,27 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
           uiFind={uiFind}
           uiFindVertexKeys={graphFindMatches}
           traceGraphConfig={traceGraphConfig}
+          useOtelTerms={this.props.useOtelTerms}
         />
       );
     } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
       view = (
-        <TraceStatistics trace={data.asOtelTrace()} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />
+        <TraceStatistics
+          trace={data.asOtelTrace()}
+          uiFindVertexKeys={spanFindMatches}
+          uiFind={uiFind}
+          useOtelTerms={this.props.useOtelTerms}
+        />
       );
     } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
-      view = <TraceSpanView trace={data.asOtelTrace()} uiFindVertexKeys={spanFindMatches} uiFind={uiFind} />;
+      view = (
+        <TraceSpanView
+          trace={data.asOtelTrace()}
+          uiFindVertexKeys={spanFindMatches}
+          uiFind={uiFind}
+          useOtelTerms={this.props.useOtelTerms}
+        />
+      );
     } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
       view = <TraceFlamegraph trace={trace} />;
     }

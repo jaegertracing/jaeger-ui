@@ -173,7 +173,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           {hasLinks && (
             <ReferencesButton
               links={span.links}
-              tooltipText="Contains multiple references"
+              tooltipText={useOtelTerms ? 'Contains multiple links' : 'Contains multiple references'}
               focusSpan={focusSpan}
             >
               <IoGitNetwork />
@@ -182,9 +182,10 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           {hasInboundLinks && (
             <ReferencesButton
               links={span.inboundLinks}
-              tooltipText={`This span is referenced by ${
-                span.inboundLinks.length === 1 ? 'another span' : 'multiple other spans'
-              }`}
+              tooltipText={
+                (useOtelTerms ? 'This span is linked from ' : 'This span is referenced by ') +
+                (span.inboundLinks.length === 1 ? 'another span' : 'multiple other spans')
+              }
               focusSpan={focusSpan}
             >
               <IoCloudUploadOutline />
