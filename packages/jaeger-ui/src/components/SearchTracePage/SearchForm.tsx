@@ -801,13 +801,15 @@ export function mapStateToProps(state: ReduxState) {
 
     let data: Record<string, string> | null = null;
     if (Array.isArray(tagParams)) {
-      data = tagParams.reduce(
-        (accum, str) => {
-          convFormerTag(accum, str);
-          return accum;
-        },
-        {} as Record<string, string>
-      );
+      data = tagParams
+        .filter((str): str is string => !!str) // skip null, undefined, empty strings
+        .reduce(
+          (accum, str) => {
+            convFormerTag(accum, str);
+            return accum;
+          },
+          {} as Record<string, string>
+        );
     } else if (typeof tagParams === 'string') {
       const target: Record<string, string> = {};
       data = convFormerTag(target, tagParams) ? target : null;
