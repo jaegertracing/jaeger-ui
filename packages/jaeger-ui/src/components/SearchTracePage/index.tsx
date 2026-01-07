@@ -8,14 +8,13 @@ import { bindActionCreators, Dispatch } from 'redux';
 import store from 'store';
 import memoizeOne from 'memoize-one';
 
-import SearchForm from './SearchForm';
+import SearchFormWithOtlpMetadata from './SearchFormWithOtlpMetadata';
 import SearchResults from './SearchResults';
 import { isSameQuery, getUrlState } from './url';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import * as fileReaderActions from '../../actions/file-reader-api';
 import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
-import LoadingIndicator from '../common/LoadingIndicator';
 import { actions as traceDiffActions } from '../TraceDiff/duck';
 import { fetchedState } from '../../constants';
 import { sortTraces } from '../../model/search';
@@ -90,16 +89,8 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
   };
 
   componentDidMount() {
-    const {
-      diffCohort,
-      fetchMultipleTraces,
-      fetchServiceOperations,
-      fetchServices,
-      isHomepage,
-      queryOfResults,
-      searchTraces,
-      urlQueryParams,
-    } = this.props;
+    const { diffCohort, fetchMultipleTraces, isHomepage, queryOfResults, searchTraces, urlQueryParams } =
+      this.props;
     if (
       !isHomepage &&
       urlQueryParams &&
@@ -112,19 +103,8 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
     if (needForDiffs.length) {
       fetchMultipleTraces(needForDiffs);
     }
-    fetchServices();
-    let { service } = (store.get('lastSearch') as { service?: string } | undefined) || {};
-    if (urlQueryParams && urlQueryParams.service) {
-      const urlService = urlQueryParams.service;
-      if (typeof urlService === 'string') {
-        service = urlService;
-      } else if (Array.isArray(urlService)) {
-        service = urlService[0];
-      }
-    }
-    if (service && service !== '-') {
-      fetchServiceOperations(service);
-    }
+    // Note: No longer calling fetchServices() or fetchServiceOperations()
+    // The SearchFormWithOtlpMetadata component handles this via React Query
   }
 
   handleSortChange = (sortBy: string) => {
@@ -141,10 +121,8 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
       errors,
       isHomepage,
       disableFileUploadControl,
-      loadingServices,
       loadingTraces,
       maxTraceDuration,
-      services,
       traceResultsToDownload,
       queryOfResults,
       loadJsonTraces,
@@ -158,11 +136,12 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
     const showErrors = errors && !loadingTraces;
     const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
     const tabItems = [];
-    if (!loadingServices && services) {
-      tabItems.push({ label: 'Search', key: 'searchForm', children: <SearchForm services={services} /> });
-    } else {
-      tabItems.push({ label: 'Search', key: 'searchForm', children: <LoadingIndicator /> });
-    }
+    // Always show the search form, loading is handled by SearchFormWithOtlpMetadata
+    tabItems.push({
+      label: 'Search',
+      key: 'searchForm',
+      children: <SearchFormWithOtlpMetadata />,
+    });
     if (!disableFileUploadControl) {
       tabItems.push({
         label: 'Upload',
@@ -269,34 +248,9 @@ const sortedTracesXformer = memoizeOne((traces: Trace[], sortBy: string) => {
   return traceResults.map(t => t.asOtelTrace());
 });
 
-const stateServicesXformer = memoizeOne((stateServices: ReduxState['services']) => {
-  const {
-    loading: loadingServices,
-    services: serviceList,
-    operationsForService: opsBySvc,
-    error: serviceError,
-  } = stateServices;
-  const selectedService = store.get?.('lastSearch')?.service;
-  if (
-    selectedService &&
-    serviceList &&
-    serviceList.includes(selectedService) &&
-    (!opsBySvc || !opsBySvc[selectedService] || opsBySvc[selectedService].length === 0)
-  ) {
-    return { loadingServices: true, services: serviceList, serviceError };
-  }
-  const services =
-    serviceList &&
-    serviceList.map(name => ({
-      name,
-      operations: opsBySvc[name] || [],
-    }));
-  return { loadingServices, services, serviceError };
-});
-
 // export to test
 export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: boolean } {
-  const { embedded, router, services: stServices, traceDiff, config } = state;
+  const { embedded, router, traceDiff, config } = state;
   const query = getUrlState(router.location.search);
   const isHomepage = !Object.keys(query).length;
   const { disableFileUploadControl } = config;
@@ -309,27 +263,20 @@ export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: 
     loadingTraces,
   } = stateTraceXformer(state.trace);
   const diffCohort = stateTraceDiffXformer(state.trace, traceDiff);
-  const { loadingServices, services, serviceError } = stateServicesXformer(stServices);
   const errors: Array<{ message: string }> = [];
   if (traceError && typeof traceError === 'object' && 'message' in traceError) {
     errors.push({ message: traceError.message });
   }
-  if (serviceError) {
-    if (typeof serviceError === 'string') {
-      errors.push({ message: serviceError });
-    } else if (typeof serviceError === 'object' && 'message' in serviceError) {
-      errors.push({ message: serviceError.message });
-    }
-  }
+  // Note: Removed serviceError check as we no longer use Redux for services
   return {
     queryOfResults: queryOfResults as IQueryOfResults | null,
     diffCohort,
     embedded,
     isHomepage,
-    loadingServices,
     disableFileUploadControl,
     loadingTraces,
-    services: (services || null) as IServiceWithOperations[] | null,
+    loadingServices: false, // Stubbed out
+    services: null, // Stubbed out
     traces,
     traceResultsToDownload: rawTraces,
     errors: errors.length ? errors : null,
@@ -340,18 +287,15 @@ export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: 
 }
 
 function mapDispatchToProps(dispatch: Dispatch): IDispatchProps {
-  const { fetchMultipleTraces, fetchServiceOperations, fetchServices, searchTraces } = bindActionCreators(
-    jaegerApiActions,
-    dispatch
-  );
+  const { fetchMultipleTraces, searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
   const { loadJsonTraces } = bindActionCreators(fileReaderActions, dispatch);
   const { cohortAddTrace, cohortRemoveTrace } = bindActionCreators(traceDiffActions, dispatch);
   return {
     cohortAddTrace,
     cohortRemoveTrace,
     fetchMultipleTraces,
-    fetchServiceOperations,
-    fetchServices,
+    fetchServiceOperations: () => {}, // Stubbed out
+    fetchServices: () => {}, // Stubbed out
     searchTraces,
     loadJsonTraces,
   };

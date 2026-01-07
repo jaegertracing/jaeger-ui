@@ -754,7 +754,8 @@ export function mapStateToProps(state: ReduxState) {
     // last search is only valid if the service is in the list of services
     const { operation: lastOp, service: lastSvc } = lastSearch;
     if (lastSvc && lastSvc !== '-') {
-      if (state.services.services && state.services.services.includes(lastSvc)) {
+      // Check if state.services exists (it won't when using React Query)
+      if (state.services?.services?.includes(lastSvc)) {
         lastSearchService = lastSvc;
         if (lastOp && lastOp !== '-') {
           const ops = state.services.operationsForService[lastSvc];
