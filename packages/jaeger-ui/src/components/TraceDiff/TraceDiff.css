@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .TraceDiff--graphWrapper {
-  background: #f0f0f0;
+  background: var(--surface-primary);
   bottom: 0;
   left: 0;
   position: fixed;
