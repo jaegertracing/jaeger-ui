@@ -409,26 +409,13 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler]
   );
 
-  const { opsForSvc, noSelectedService, tz, invalidDuration, selectedService, selectedLookback } =
-    useMemo(() => {
-      const svc: string | undefined = formData.service;
-      const lb: string | undefined = formData.lookback;
-      const selectedServicePayload = services.find(s => s.name === svc);
-      const ops = (selectedServicePayload && selectedServicePayload.operations) || [];
-      const noSvc = svc === '-' || !svc;
-      const timezone = lb === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
-      const invDuration =
-        validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
-
-      return {
-        opsForSvc: ops,
-        noSelectedService: noSvc,
-        tz: timezone,
-        invalidDuration: invDuration,
-        selectedService: svc,
-        selectedLookback: lb,
-      };
-    }, [formData.service, formData.lookback, formData.minDuration, formData.maxDuration, services]);
+  const { service: selectedService, lookback: selectedLookback } = formData;
+  const selectedServicePayload = services.find(s => s.name === selectedService);
+  const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
+  const noSelectedService = selectedService === '-' || !selectedService;
+  const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
+  const invalidDuration =
+    validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
 
   return (
     <Form layout="vertical" onSubmitCapture={handleSubmit}>
