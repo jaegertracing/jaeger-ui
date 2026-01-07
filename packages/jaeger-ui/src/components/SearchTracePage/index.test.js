@@ -3,6 +3,7 @@
 
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import { CompatRouter } from 'react-router-dom-v5-compat';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 jest.mock('store');
 
@@ -19,14 +20,18 @@ import { MOST_RECENT, MOST_SPANS } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
 import { store as globalStore } from '../../utils/configure-store';
 
+const queryClient = new QueryClient();
+
 const AllProvider = ({ children }) => (
-  <BrowserRouter>
-    <Provider store={globalStore}>
-      <MemoryRouter>
-        <CompatRouter>{children}</CompatRouter>
-      </MemoryRouter>
-    </Provider>
-  </BrowserRouter>
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <Provider store={globalStore}>
+        <MemoryRouter>
+          <CompatRouter>{children}</CompatRouter>
+        </MemoryRouter>
+      </Provider>
+    </BrowserRouter>
+  </QueryClientProvider>
 );
 
 describe('<SearchTracePage>', () => {
@@ -139,7 +144,10 @@ describe('<SearchTracePage>', () => {
     };
     const result = mapStateToProps(state);
     expect(result.loadingServices).toBe(true);
-    expect(result.services).toEqual(['svc-a', 'svc-b']);
+    expect(result.services).toEqual([
+      { name: 'svc-a', operations: [] },
+      { name: 'svc-b', operations: [] },
+    ]);
     store.get = oldFn;
   });
 

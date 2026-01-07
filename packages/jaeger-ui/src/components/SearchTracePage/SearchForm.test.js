@@ -16,6 +16,11 @@ jest.mock('../common/SearchableSelect', () => {
   MockSearchableSelect.disabled = {};
   return MockSearchableSelect;
 });
+jest.mock('../../hooks/useConfig', () => ({
+  useConfig: () => ({
+    useOpenTelemetryTerms: false,
+  }),
+}));
 
 import React from 'react';
 import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';

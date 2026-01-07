@@ -15,6 +15,7 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import * as fileReaderActions from '../../actions/file-reader-api';
 import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
+import LoadingIndicator from '../common/LoadingIndicator';
 import { actions as traceDiffActions } from '../TraceDiff/duck';
 import { fetchedState } from '../../constants';
 import { sortTraces } from '../../model/search';
@@ -103,8 +104,29 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
     if (needForDiffs.length) {
       fetchMultipleTraces(needForDiffs);
     }
-    // Note: No longer calling fetchServices() or fetchServiceOperations()
-    // The SearchFormWithOtlpMetadata component handles this via React Query
+    const { fetchServices, fetchServiceOperations, services } = this.props;
+    fetchServices();
+    const { service: urlService } = urlQueryParams || {};
+    const lastSearch = store.get('lastSearch');
+    let service: any = urlService && urlService !== '-' ? urlService : lastSearch?.service;
+    if (Array.isArray(service)) [service] = service;
+    if (service && typeof service === 'string' && (!services || !services.length)) {
+      fetchServiceOperations(service);
+    }
+  }
+
+  componentDidUpdate() {
+    const { fetchServiceOperations, services, urlQueryParams } = this.props;
+    let { service } = urlQueryParams || {};
+    if (Array.isArray(service)) [service] = service;
+    if (
+      service &&
+      typeof service === 'string' &&
+      service !== '-' &&
+      (!services || !services.find(s => s.name === service))
+    ) {
+      fetchServiceOperations(service);
+    }
   }
 
   handleSortChange = (sortBy: string) => {
@@ -129,12 +151,18 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
       urlQueryParams,
       sortedTracesXformer,
       traces,
+      services,
+      loadingServices,
     } = this.props;
     const { sortBy } = this.state;
     const traceResults = sortedTracesXformer(traces, sortBy);
     const hasTraceResults = traceResults && traceResults.length > 0;
     const showErrors = errors && !loadingTraces;
     const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
+
+    if (loadingServices) {
+      return <LoadingIndicator />;
+    }
     const tabItems = [];
     // Always show the search form, loading is handled by SearchFormWithOtlpMetadata
     tabItems.push({
@@ -226,10 +254,7 @@ const stateTraceXformer = memoizeOne((stateTrace: ReduxState['trace']) => {
   const traces = results.map(id => traceMap[id].data).filter((t): t is Trace => t !== undefined);
   // rawTraces is populated by the trace reducer when search results are returned
   const rawTraces = (stateTrace as any).rawTraces || [];
-  const maxDuration = Math.max.apply(
-    null,
-    traces.map(tr => tr.duration)
-  );
+  const maxDuration = Math.max(0, ...traces.map(tr => tr.duration || 0));
   return { traces, rawTraces, maxDuration, traceError, loadingTraces, query };
 });
 
@@ -253,6 +278,8 @@ export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: 
   const { embedded, router, traceDiff, config } = state;
   const query = getUrlState(router.location.search);
   const isHomepage = !Object.keys(query).length;
+  const lastSearch = store.get('lastSearch');
+  const selectedService = query.service || (lastSearch && lastSearch.service);
   const { disableFileUploadControl } = config;
   const {
     query: queryOfResults,
@@ -275,14 +302,24 @@ export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: 
     isHomepage,
     disableFileUploadControl,
     loadingTraces,
-    loadingServices: false, // Stubbed out
-    services: null, // Stubbed out
     traces,
     traceResultsToDownload: rawTraces,
     errors: errors.length ? errors : null,
     maxTraceDuration: maxDuration,
     sortedTracesXformer,
     urlQueryParams: Object.keys(query).length > 0 ? query : null,
+    loadingServices: Boolean(
+      state.services.loading ||
+      (selectedService &&
+        selectedService !== '-' &&
+        (!state.services.operationsForService || !state.services.operationsForService[selectedService]))
+    ),
+    services: state.services.services
+      ? state.services.services.map(name => ({
+          name,
+          operations: state.services.operationsForService[name] || [],
+        }))
+      : null,
   };
 }
 
@@ -294,8 +331,9 @@ function mapDispatchToProps(dispatch: Dispatch): IDispatchProps {
     cohortAddTrace,
     cohortRemoveTrace,
     fetchMultipleTraces,
-    fetchServiceOperations: () => {}, // Stubbed out
-    fetchServices: () => {}, // Stubbed out
+    fetchServiceOperations: (service: string) =>
+      dispatch(jaegerApiActions.fetchServiceOperations(service) as any),
+    fetchServices: () => dispatch(jaegerApiActions.fetchServices() as any),
     searchTraces,
     loadJsonTraces,
   };

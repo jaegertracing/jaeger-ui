@@ -844,7 +844,7 @@ export function mapStateToProps(state: ReduxState) {
     },
     searchMaxLookback: _get(state, 'config.search.maxLookback'),
     searchAdjustEndTime: _get(state, 'config.search.adjustEndTime'),
-    submitting: state.trace.search.state === fetchedState.LOADING,
+    submitting: state.trace?.search?.state === fetchedState.LOADING,
   };
 }
 
