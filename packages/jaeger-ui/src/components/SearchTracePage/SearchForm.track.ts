@@ -21,8 +21,8 @@ export function trackFormInput(
   resultsLimit: number,
   operation: string,
   tags: string,
-  minDuration: number,
-  maxDuration: number,
+  minDuration: string | undefined,
+  maxDuration: string | undefined,
   lookback: string,
   serviceName: string
 ) {

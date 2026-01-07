@@ -2,17 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Input, Button, Popover, Select, Row, Col, Form, Switch } from 'antd';
+import { Input, InputNumber, Button, Popover, Select, Row, Col, Form, Switch } from 'antd';
 import _get from 'lodash/get';
-import logfmtParser from 'logfmt/lib/logfmt_parser';
-import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import dayjs from 'dayjs';
 import memoizeOne from 'memoize-one';
-import PropTypes from 'prop-types';
 import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { connect, ConnectedProps } from 'react-redux';
+import { bindActionCreators, Dispatch } from 'redux';
+import logfmtParser from 'logfmt/lib/logfmt_parser';
+import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import store from 'store';
 
 import * as markers from './SearchForm.markers';
@@ -29,13 +28,32 @@ import { getConfigValue } from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
+import { ReduxState } from '../../types';
+import { SearchQuery } from '../../types/search';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
 
 const ADJUST_TIME_ENABLED_KEY = 'jaeger-ui/search-adjust-time-enabled';
 
-export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate, endDateTime }) {
+interface TimeStampParams {
+  startDate: string;
+  startDateTime: string;
+  endDate: string;
+  endDateTime: string;
+}
+
+interface TimeStampResult {
+  start: string;
+  end: string;
+}
+
+export function getUnixTimeStampInMSFromForm({
+  startDate,
+  startDateTime,
+  endDate,
+  endDateTime,
+}: TimeStampParams): TimeStampResult {
   const start = `${startDate} ${startDateTime}`;
   const end = `${endDate} ${endDateTime}`;
   return {
@@ -44,7 +62,7 @@ export function getUnixTimeStampInMSFromForm({ startDate, startDateTime, endDate
   };
 }
 
-export function convTagsLogfmt(tags) {
+export function convTagsLogfmt(tags: string | null | undefined): string | null {
   if (!tags) {
     return null;
   }
@@ -60,12 +78,17 @@ export function convTagsLogfmt(tags) {
   return JSON.stringify(data);
 }
 
-export function lookbackToTimestamp(lookback, from) {
-  const unit = lookback.substr(-1);
+export function lookbackToTimestamp(lookback: string, from: Date | number): number {
+  const unit = lookback.substr(-1) as any; // dayjs ManipulateType
   return dayjs(from).subtract(parseInt(lookback, 10), unit).valueOf() * 1000;
 }
 
-const lookbackOptions = [
+interface ILookbackOption {
+  label: string;
+  value: string;
+}
+
+const lookbackOptions: ILookbackOption[] = [
   {
     label: '5 Minutes',
     value: '5m',
@@ -132,10 +155,10 @@ const lookbackOptions = [
   },
 ];
 
-export const optionsWithinMaxLookback = memoizeOne(maxLookback => {
+export const optionsWithinMaxLookback = memoizeOne((maxLookback: ILookbackOption) => {
   const now = new Date();
   const minTimestamp = lookbackToTimestamp(maxLookback.value, now);
-  const lookbackToTimestampMap = new Map();
+  const lookbackToTimestampMap = new Map<string, number>();
   const options = lookbackOptions.filter(({ value }) => {
     const lookbackTimestamp = lookbackToTimestamp(value, now);
     lookbackToTimestampMap.set(value, lookbackTimestamp);
@@ -157,7 +180,7 @@ export const optionsWithinMaxLookback = memoizeOne(maxLookback => {
   ));
 });
 
-export function traceIDsToQuery(traceIDs) {
+export function traceIDsToQuery(traceIDs: string | null | undefined): string[] | null {
   if (!traceIDs) {
     return null;
   }
@@ -165,9 +188,15 @@ export function traceIDsToQuery(traceIDs) {
 }
 
 export const placeholderDurationFields = 'e.g. 1.2s, 100ms, 500us';
-export function validateDurationFields(value) {
+
+interface ValidationError {
+  content: string;
+  title: string;
+}
+
+export function validateDurationFields(value: string | null | undefined): ValidationError | undefined {
   if (!value) return undefined;
-  return /\d[\d\\.]*(us|ms|s|m|h)$/.test(value)
+  return /\d[\d.]*( us|ms|s|m|h)$/.test(value)
     ? undefined
     : {
         content: `Please enter a number followed by a duration unit, ${placeholderDurationFields}`,
@@ -175,11 +204,23 @@ export function validateDurationFields(value) {
       };
 }
 
-export function convertQueryParamsToFormDates({ start, end }) {
-  let queryStartDate;
-  let queryStartDateTime;
-  let queryEndDate;
-  let queryEndDateTime;
+interface QueryParams {
+  start?: string;
+  end?: string;
+}
+
+interface FormDates {
+  queryStartDate?: string;
+  queryStartDateTime?: string;
+  queryEndDate?: string;
+  queryEndDateTime?: string;
+}
+
+export function convertQueryParamsToFormDates({ start, end }: QueryParams): FormDates {
+  let queryStartDate: string | undefined;
+  let queryStartDateTime: string | undefined;
+  let queryEndDate: string | undefined;
+  let queryEndDateTime: string | undefined;
   if (end) {
     const endUnixNs = parseInt(end, 10);
     queryEndDate = formatDate(endUnixNs);
@@ -201,7 +242,7 @@ export function convertQueryParamsToFormDates({ start, end }) {
 
 // Applies time adjustment to shift end time back by the specified duration
 // This helps avoid incomplete traces that may still be receiving spans
-export function applyAdjustTime(endTimestamp, adjustTime) {
+export function applyAdjustTime(endTimestamp: number, adjustTime: string | null | undefined): number {
   if (!adjustTime) {
     return endTimestamp;
   }
@@ -209,7 +250,28 @@ export function applyAdjustTime(endTimestamp, adjustTime) {
   return adjustedEnd;
 }
 
-export function submitForm(fields, searchTraces, adjustTime, adjustTimeEnabled) {
+interface ISearchFormFields {
+  resultsLimit: number;
+  service: string;
+  startDate: string;
+  startDateTime: string;
+  endDate: string;
+  endDateTime: string;
+  operation: string;
+  tags?: string;
+  minDuration?: string;
+  maxDuration?: string;
+  lookback: string;
+}
+
+type SearchTracesFunction = typeof jaegerApiActions.searchTraces;
+
+export function submitForm(
+  fields: ISearchFormFields,
+  searchTraces: SearchTracesFunction,
+  adjustTime: string | null | undefined,
+  adjustTimeEnabled: boolean
+): void {
   const {
     resultsLimit,
     service,
@@ -226,12 +288,12 @@ export function submitForm(fields, searchTraces, adjustTime, adjustTimeEnabled) 
   // Note: traceID is ignored when the form is submitted
   store.set('lastSearch', { service, operation });
 
-  let start;
-  let end;
+  let start: string | number;
+  let end: number;
   if (lookback !== 'custom') {
     const now = new Date();
-    start = lookbackToTimestamp(lookback, now);
-    end = now * 1000;
+    start = String(lookbackToTimestamp(lookback, now));
+    end = now.valueOf() * 1000;
   } else {
     const times = getUnixTimeStampInMSFromForm({
       startDate,
@@ -240,7 +302,7 @@ export function submitForm(fields, searchTraces, adjustTime, adjustTimeEnabled) 
       endDateTime,
     });
     start = times.start;
-    end = times.end;
+    end = parseInt(times.end, 10);
   }
 
   // Apply time adjustment to exclude very recent traces that may be incomplete
@@ -248,23 +310,56 @@ export function submitForm(fields, searchTraces, adjustTime, adjustTimeEnabled) 
     end = applyAdjustTime(end, adjustTime);
   }
 
-  trackFormInput(resultsLimit, operation, tags, minDuration, maxDuration, lookback, service);
+  trackFormInput(resultsLimit, operation, tags || '', minDuration, maxDuration, lookback, service);
 
   searchTraces({
     service,
     operation: operation !== DEFAULT_OPERATION ? operation : undefined,
     limit: resultsLimit,
     lookback,
-    start,
-    end,
+    start: String(start),
+    end: String(end),
     tags: convTagsLogfmt(tags) || undefined,
     minDuration: minDuration || null,
     maxDuration: maxDuration || null,
-  });
+  } as SearchQuery);
 }
 
-export class SearchFormImpl extends React.PureComponent {
-  constructor(props) {
+interface IServiceWithOperations {
+  name: string;
+  operations?: string[];
+}
+
+interface ISearchFormImplProps {
+  invalid?: boolean;
+  submitting?: boolean;
+  searchMaxLookback?: ILookbackOption;
+  searchAdjustEndTime?: string;
+  useOtelTerms?: boolean;
+  services: IServiceWithOperations[];
+  initialValues?: Partial<ISearchFormFields> & { traceIDs?: string | null };
+  searchTraces: SearchTracesFunction;
+  changeServiceHandler: (service: string) => void;
+  submitFormHandler: (
+    fields: ISearchFormFields,
+    adjustEndTime: string | null | undefined,
+    adjustTimeEnabled: boolean
+  ) => void;
+}
+
+interface ISearchFormImplState {
+  formData: Partial<ISearchFormFields>;
+  adjustTimeEnabled: boolean;
+}
+
+export class SearchFormImpl extends React.PureComponent<ISearchFormImplProps, ISearchFormImplState> {
+  static defaultProps = {
+    invalid: false,
+    services: [],
+    submitting: false,
+  };
+
+  constructor(props: ISearchFormImplProps) {
     super(props);
     // Initialize adjustTimeEnabled from local storage, defaulting to true if config has adjustEndTime
     const storedAdjustTimeEnabled = store.get(ADJUST_TIME_ENABLED_KEY);
@@ -289,7 +384,7 @@ export class SearchFormImpl extends React.PureComponent {
     };
   }
 
-  handleChange = fieldData => {
+  handleChange = (fieldData: Partial<ISearchFormFields>) => {
     this.setState(prevState => ({
       formData: {
         ...prevState.formData,
@@ -307,15 +402,15 @@ export class SearchFormImpl extends React.PureComponent {
     }
   };
 
-  handleAdjustTimeToggle = checked => {
+  handleAdjustTimeToggle = (checked: boolean) => {
     this.setState({ adjustTimeEnabled: checked });
     store.set(ADJUST_TIME_ENABLED_KEY, checked);
   };
 
-  handleSubmit = e => {
+  handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     this.props.submitFormHandler(
-      this.state.formData,
+      this.state.formData as ISearchFormFields,
       this.props.searchAdjustEndTime,
       this.state.adjustTimeEnabled
     );
@@ -341,12 +436,13 @@ export class SearchFormImpl extends React.PureComponent {
             </span>
           }
         >
+          {/* @ts-ignore - name prop is used by test mocks */}
           <SearchableSelect
-            name="service"
+            // name="service"
             value={this.state.formData.service}
             placeholder="Select A Service"
             disabled={submitting}
-            onChange={value => this.handleChange({ service: value })}
+            onChange={(value: string) => this.handleChange({ service: value })}
           >
             {services.map(service => (
               <Option key={service.name} value={service.name}>
@@ -363,12 +459,13 @@ export class SearchFormImpl extends React.PureComponent {
             </span>
           }
         >
+          {/* @ts-ignore - name prop is used by test mocks */}
           <SearchableSelect
-            name="operation"
+            // name="operation"
             value={this.state.formData.operation}
             disabled={submitting || noSelectedService}
             placeholder={this.props.useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
-            onChange={value => this.handleChange({ operation: value })}
+            onChange={(value: string) => this.handleChange({ operation: value })}
           >
             {['all'].concat(opsForSvc).map(op => (
               <Option key={op} value={op}>
@@ -486,14 +583,15 @@ export class SearchFormImpl extends React.PureComponent {
           )}
         </div>
         <FormItem>
+          {/* @ts-ignore - name prop is used by test mocks */}
           <SearchableSelect
-            name="lookback"
+            // name="lookback"
             value={this.state.formData.lookback}
             disabled={submitting}
             defaultValue={DEFAULT_LOOKBACK}
-            onChange={value => this.handleChange({ lookback: value })}
+            onChange={(value: string) => this.handleChange({ lookback: value })}
           >
-            {optionsWithinMaxLookback(searchMaxLookback)}
+            {searchMaxLookback && optionsWithinMaxLookback(searchMaxLookback)}
             <Option value="custom">Custom Time Range</Option>
           </SearchableSelect>
         </FormItem>
@@ -595,7 +693,9 @@ export class SearchFormImpl extends React.PureComponent {
                 disabled={submitting}
                 validate={validateDurationFields}
                 placeholder={placeholderDurationFields}
-                onChange={e => this.handleChange({ maxDuration: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  this.handleChange({ maxDuration: e.target.value })
+                }
               />
             </FormItem>
           </Col>
@@ -608,29 +708,30 @@ export class SearchFormImpl extends React.PureComponent {
                 disabled={submitting}
                 validate={validateDurationFields}
                 placeholder={placeholderDurationFields}
-                onChange={e => this.handleChange({ minDuration: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  this.handleChange({ minDuration: e.target.value })
+                }
               />
             </FormItem>
           </Col>
         </Row>
 
         <FormItem label="Limit Results">
-          <Input
+          <InputNumber
             name="resultsLimit"
             value={this.state.formData.resultsLimit}
             disabled={submitting}
-            type="number"
             placeholder="Limit Results"
             min={1}
             max={getConfigValue('search.maxLimit')}
-            onChange={e => this.handleChange({ resultsLimit: e.target.value })}
+            onChange={value => this.handleChange({ resultsLimit: value })}
           />
         </FormItem>
 
         <Button
           htmlType="submit"
           className="SearchForm--submit"
-          disabled={submitting || noSelectedService || invalid || invalidDuration}
+          disabled={submitting || noSelectedService || invalid || invalidDuration !== undefined}
           data-test={markers.SUBMIT_BTN}
         >
           Find Traces
@@ -640,29 +741,7 @@ export class SearchFormImpl extends React.PureComponent {
   }
 }
 
-SearchFormImpl.propTypes = {
-  invalid: PropTypes.bool,
-  submitting: PropTypes.bool,
-  searchMaxLookback: PropTypes.shape({
-    label: PropTypes.string.isRequired,
-    value: PropTypes.string.isRequired,
-  }).isRequired,
-  useOtelTerms: PropTypes.bool,
-  services: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string,
-      operations: PropTypes.arrayOf(PropTypes.string),
-    })
-  ),
-};
-
-SearchFormImpl.defaultProps = {
-  invalid: false,
-  services: [],
-  submitting: false,
-};
-
-export function mapStateToProps(state) {
+export function mapStateToProps(state: ReduxState) {
   const {
     service,
     limit,
@@ -680,15 +759,15 @@ export function mapStateToProps(state) {
   const nowInMicroseconds = dayjs().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);
   const currentTime = formatTime(nowInMicroseconds);
-  const lastSearch = store.get('lastSearch');
-  let lastSearchService;
-  let lastSearchOperation;
+  const lastSearch = store.get('lastSearch') as { service?: string; operation?: string } | undefined;
+  let lastSearchService: string | undefined;
+  let lastSearchOperation: string | undefined;
 
   if (lastSearch) {
     // last search is only valid if the service is in the list of services
     const { operation: lastOp, service: lastSvc } = lastSearch;
     if (lastSvc && lastSvc !== '-') {
-      if (state.services.services.includes(lastSvc)) {
+      if (state.services.services && state.services.services.includes(lastSvc)) {
         lastSearchService = lastSvc;
         if (lastOp && lastOp !== '-') {
           const ops = state.services.operationsForService[lastSvc];
@@ -701,13 +780,16 @@ export function mapStateToProps(state) {
   }
 
   const { queryStartDate, queryStartDateTime, queryEndDate, queryEndDateTime } =
-    convertQueryParamsToFormDates({ start, end });
+    convertQueryParamsToFormDates({
+      start: start as string | undefined,
+      end: end as string | undefined,
+    });
 
-  let tags;
+  let tags: string | undefined;
   // continue to parse tagParams to remain backward compatible with older URLs
   // but, parse to logfmt format instead of the former "key:value|k2:v2"
   if (tagParams) {
-    function convFormerTag(accum, value) {
+    function convFormerTag(accum: Record<string, string>, value: string): boolean {
       const parts = value.split(':', 2);
       const key = parts[0];
       if (key) {
@@ -717,14 +799,17 @@ export function mapStateToProps(state) {
       return false;
     }
 
-    let data;
+    let data: Record<string, string> | null = null;
     if (Array.isArray(tagParams)) {
-      data = tagParams.reduce((accum, str) => {
-        convFormerTag(accum, str);
-        return accum;
-      }, {});
+      data = tagParams.reduce(
+        (accum, str) => {
+          convFormerTag(accum, str);
+          return accum;
+        },
+        {} as Record<string, string>
+      );
     } else if (typeof tagParams === 'string') {
-      const target = {};
+      const target: Record<string, string> = {};
       data = convFormerTag(target, tagParams) ? target : null;
     }
     if (data) {
@@ -738,33 +823,34 @@ export function mapStateToProps(state) {
     }
   }
   if (logfmtTags) {
-    let data;
+    let data: Record<string, unknown>;
     try {
-      data = JSON.parse(logfmtTags);
+      data = JSON.parse(logfmtTags as string);
       tags = logfmtStringify(data);
     } catch (_) {
       tags = 'Parse Error';
     }
   }
-  let traceIDs;
+  let traceIDs: string | undefined;
   if (traceIDParams) {
-    traceIDs = traceIDParams instanceof Array ? traceIDParams.join(',') : traceIDParams;
+    traceIDs = traceIDParams instanceof Array ? traceIDParams.join(',') : (traceIDParams as string);
   }
 
   return {
     destroyOnUnmount: false,
     initialValues: {
-      service: service || lastSearchService || '-',
-      resultsLimit: limit || DEFAULT_LIMIT,
-      lookback: lookback || DEFAULT_LOOKBACK,
+      service: (service as string | undefined) || lastSearchService || '-',
+      resultsLimit:
+        typeof limit === 'string' ? parseInt(limit, 10) : typeof limit === 'number' ? limit : DEFAULT_LIMIT,
+      lookback: (lookback as string | undefined) || DEFAULT_LOOKBACK,
       startDate: queryStartDate || today,
       startDateTime: queryStartDateTime || '00:00',
       endDate: queryEndDate || today,
       endDateTime: queryEndDateTime || currentTime,
-      operation: operation || lastSearchOperation || DEFAULT_OPERATION,
+      operation: (operation as string | undefined) || lastSearchOperation || DEFAULT_OPERATION,
       tags,
-      minDuration: minDuration || null,
-      maxDuration: maxDuration || null,
+      minDuration: (minDuration as string | undefined) || null,
+      maxDuration: (maxDuration as string | undefined) || null,
       traceIDs: traceIDs || null,
     },
     searchMaxLookback: _get(state, 'config.search.maxLookback'),
@@ -773,18 +859,24 @@ export function mapStateToProps(state) {
   };
 }
 
-export function mapDispatchToProps(dispatch) {
+export function mapDispatchToProps(dispatch: Dispatch) {
   const { searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
   return {
     searchTraces,
-    changeServiceHandler: service =>
+    changeServiceHandler: (service: string) =>
       dispatch({
         type: CHANGE_SERVICE_ACTION_TYPE,
         payload: service,
       }),
-    submitFormHandler: (fields, adjustEndTime, adjustTimeEnabled) =>
-      submitForm(fields, searchTraces, adjustEndTime, adjustTimeEnabled),
+    submitFormHandler: (
+      fields: ISearchFormFields,
+      adjustEndTime: string | null | undefined,
+      adjustTimeEnabled: boolean
+    ) => submitForm(fields, searchTraces, adjustEndTime || null, adjustTimeEnabled),
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SearchFormImpl);
+const connector = connect(mapStateToProps, mapDispatchToProps);
+type PropsFromRedux = ConnectedProps<typeof connector>;
+
+export default connector(SearchFormImpl);

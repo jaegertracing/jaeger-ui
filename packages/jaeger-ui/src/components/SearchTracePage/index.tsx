@@ -3,9 +3,8 @@
 
 import { Component } from 'react';
 import { Col, Row, Tabs } from 'antd';
-import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { bindActionCreators, Dispatch } from 'redux';
 import store from 'store';
 import memoizeOne from 'memoize-one';
 
@@ -26,10 +25,71 @@ import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
 import withRouteProps from '../../utils/withRouteProps';
 import { trackSortByChange } from './SearchForm.track';
+import { ReduxState, FetchedTrace } from '../../types';
+import { SearchQuery } from '../../types/search';
+import { Trace } from '../../types/trace';
+import { IOtelTrace } from '../../types/otel';
+
+interface IServiceWithOperations {
+  name: string;
+  operations: string[];
+}
+
+type TUrlState = Record<string, string[] | string | undefined> & {
+  traceID?: string | string[];
+  spanLinks?: Record<string, string>;
+};
+
+interface IQueryOfResults extends Partial<SearchQuery> {
+  service?: string;
+  limit?: string | number;
+}
+
+interface IEmbeddedConfig {
+  searchHideGraph?: boolean;
+}
+
+interface ISearchTracePageImplOwnProps {
+  isHomepage?: boolean;
+}
+
+interface ISearchTracePageImplState {
+  sortBy: string;
+}
+
+// Props from mapStateToProps
+interface IStateProps {
+  queryOfResults: IQueryOfResults | null;
+  diffCohort: FetchedTrace[];
+  embedded?: IEmbeddedConfig;
+  loadingServices: boolean;
+  disableFileUploadControl?: boolean;
+  loadingTraces: boolean;
+  services: IServiceWithOperations[] | null;
+  traces: Trace[];
+  traceResultsToDownload: unknown[];
+  errors: Array<{ message: string }> | null;
+  maxTraceDuration: number;
+  sortedTracesXformer: (traces: Trace[], sortBy: string) => IOtelTrace[];
+  urlQueryParams: TUrlState | null;
+}
+
+// Props from mapDispatchToProps
+interface IDispatchProps {
+  cohortAddTrace: (traceId: string) => void;
+  cohortRemoveTrace: (traceId: string) => void;
+  fetchMultipleTraces: (traceIds: string[]) => void;
+  fetchServiceOperations: (service: string) => void;
+  fetchServices: () => void;
+  searchTraces: (query: TUrlState) => void;
+  loadJsonTraces: (fileList: { file: File }) => void;
+}
+
+type SearchTracePageImplProps = ISearchTracePageImplOwnProps & IStateProps & IDispatchProps;
 
 // export for tests
-export class SearchTracePageImpl extends Component {
-  state = {
+export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISearchTracePageImplState> {
+  state: ISearchTracePageImplState = {
     sortBy: orderBy.MOST_RECENT,
   };
 
@@ -44,7 +104,12 @@ export class SearchTracePageImpl extends Component {
       searchTraces,
       urlQueryParams,
     } = this.props;
-    if (!isHomepage && urlQueryParams && !isSameQuery(urlQueryParams, queryOfResults)) {
+    if (
+      !isHomepage &&
+      urlQueryParams &&
+      queryOfResults &&
+      !isSameQuery(urlQueryParams as any, queryOfResults as any)
+    ) {
       searchTraces(urlQueryParams);
     }
     const needForDiffs = diffCohort.filter(ft => ft.state == null).map(ft => ft.id);
@@ -52,7 +117,7 @@ export class SearchTracePageImpl extends Component {
       fetchMultipleTraces(needForDiffs);
     }
     fetchServices();
-    let { service } = store.get('lastSearch') || {};
+    let { service } = (store.get('lastSearch') as { service?: string } | undefined) || {};
     if (urlQueryParams && urlQueryParams.service) {
       service = urlQueryParams.service;
     }
@@ -61,7 +126,7 @@ export class SearchTracePageImpl extends Component {
     }
   }
 
-  handleSortChange = sortBy => {
+  handleSortChange = (sortBy: string) => {
     this.setState({ sortBy });
     trackSortByChange(sortBy);
   };
@@ -127,7 +192,7 @@ export class SearchTracePageImpl extends Component {
               cohortAddTrace={cohortAddTrace}
               cohortRemoveTrace={cohortRemoveTrace}
               diffCohort={diffCohort}
-              disableComparisons={embedded}
+              disableComparisons={!!embedded}
               hideGraph={embedded && embedded.searchHideGraph}
               loading={loadingTraces}
               maxTraceDuration={maxTraceDuration}
@@ -154,56 +219,31 @@ export class SearchTracePageImpl extends Component {
     );
   }
 }
-SearchTracePageImpl.propTypes = {
-  isHomepage: PropTypes.bool,
 
-  traceResultsToDownload: PropTypes.array,
+// Type definitions
+interface ITraceMapEntry {
+  data: Trace;
+}
 
-  diffCohort: PropTypes.array,
-  cohortAddTrace: PropTypes.func,
-  cohortRemoveTrace: PropTypes.func,
-  embedded: PropTypes.shape({
-    searchHideGraph: PropTypes.bool,
-  }),
-  maxTraceDuration: PropTypes.number,
-  loadingServices: PropTypes.bool,
-  disableFileUploadControl: PropTypes.bool,
-  loadingTraces: PropTypes.bool,
-  urlQueryParams: PropTypes.shape({
-    service: PropTypes.string,
-    limit: PropTypes.string,
-  }),
-  queryOfResults: PropTypes.shape({
-    service: PropTypes.string,
-    limit: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  }),
-  services: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string,
-      operations: PropTypes.arrayOf(PropTypes.string),
-    })
-  ),
-  searchTraces: PropTypes.func,
-  history: PropTypes.shape({
-    push: PropTypes.func,
-  }),
-  fetchMultipleTraces: PropTypes.func,
-  fetchServiceOperations: PropTypes.func,
-  fetchServices: PropTypes.func,
-  errors: PropTypes.arrayOf(
-    PropTypes.shape({
-      message: PropTypes.string,
-    })
-  ),
-  loadJsonTraces: PropTypes.func,
-};
+interface ISearchState {
+  query?: SearchQuery;
+  results: string[];
+  state?: string;
+  error?: { message: string } | null;
+}
 
-const stateTraceXformer = memoizeOne(stateTrace => {
-  const { traces: traceMap, rawTraces, search } = stateTrace;
+interface IStateTraceDiff {
+  cohort: string[];
+}
+
+const stateTraceXformer = memoizeOne((stateTrace: ReduxState['trace']) => {
+  const { traces: traceMap, search } = stateTrace;
   const { query, results, state, error: traceError } = search;
 
   const loadingTraces = state === fetchedState.LOADING;
-  const traces = results.map(id => traceMap[id].data);
+  const traces = results.map(id => traceMap[id].data).filter((t): t is Trace => t !== undefined);
+  // rawTraces is populated by the trace reducer when search results are returned
+  const rawTraces = (stateTrace as any).rawTraces || [];
   const maxDuration = Math.max.apply(
     null,
     traces.map(tr => tr.duration)
@@ -211,20 +251,22 @@ const stateTraceXformer = memoizeOne(stateTrace => {
   return { traces, rawTraces, maxDuration, traceError, loadingTraces, query };
 });
 
-const stateTraceDiffXformer = memoizeOne((stateTrace, stateTraceDiff) => {
-  const { traces } = stateTrace;
-  const { cohort } = stateTraceDiff;
-  return cohort.map(id => traces[id] || { id });
-});
+const stateTraceDiffXformer = memoizeOne(
+  (stateTrace: ReduxState['trace'], stateTraceDiff: IStateTraceDiff) => {
+    const { traces } = stateTrace;
+    const { cohort } = stateTraceDiff;
+    return cohort.map(id => traces[id] || { id, state: null });
+  }
+);
 
-const sortedTracesXformer = memoizeOne((traces, sortBy) => {
+const sortedTracesXformer = memoizeOne((traces: Trace[], sortBy: string) => {
   const traceResults = traces.slice();
   sortTraces(traceResults, sortBy);
   // Convert to OTEL traces
   return traceResults.map(t => t.asOtelTrace());
 });
 
-const stateServicesXformer = memoizeOne(stateServices => {
+const stateServicesXformer = memoizeOne((stateServices: ReduxState['services']) => {
   const {
     loading: loadingServices,
     services: serviceList,
@@ -250,7 +292,7 @@ const stateServicesXformer = memoizeOne(stateServices => {
 });
 
 // export to test
-export function mapStateToProps(state) {
+export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: boolean } {
   const { embedded, router, services: stServices, traceDiff, config } = state;
   const query = getUrlState(router.location.search);
   const isHomepage = !Object.keys(query).length;
@@ -265,15 +307,19 @@ export function mapStateToProps(state) {
   } = stateTraceXformer(state.trace);
   const diffCohort = stateTraceDiffXformer(state.trace, traceDiff);
   const { loadingServices, services, serviceError } = stateServicesXformer(stServices);
-  const errors = [];
-  if (traceError) {
-    errors.push(traceError);
+  const errors: Array<{ message: string }> = [];
+  if (traceError && typeof traceError === 'object' && 'message' in traceError) {
+    errors.push({ message: traceError.message });
   }
   if (serviceError) {
-    errors.push(serviceError);
+    if (typeof serviceError === 'string') {
+      errors.push({ message: serviceError });
+    } else if (typeof serviceError === 'object' && 'message' in serviceError) {
+      errors.push({ message: serviceError.message });
+    }
   }
   return {
-    queryOfResults,
+    queryOfResults: queryOfResults as IQueryOfResults | null,
     diffCohort,
     embedded,
     isHomepage,
@@ -290,7 +336,7 @@ export function mapStateToProps(state) {
   };
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch: Dispatch): IDispatchProps {
   const { fetchMultipleTraces, fetchServiceOperations, fetchServices, searchTraces } = bindActionCreators(
     jaegerApiActions,
     dispatch
@@ -308,4 +354,6 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(SearchTracePageImpl));
+const connector = connect(mapStateToProps, mapDispatchToProps);
+
+export default withRouteProps(connector(SearchTracePageImpl));
