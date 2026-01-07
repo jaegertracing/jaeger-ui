@@ -17,6 +17,13 @@ SPDX-License-Identifier: Apache-2.0
 .Flamegraph-wrapper input::placeholder,
 .Flamegraph-wrapper input[type='text']::placeholder,
 [data-theme='dark'].Flamegraph-wrapper input[type='search']::placeholder {
-  color: var(--critical-path-outline) !important;
+  color: var(--text-secondary) !important ;
   opacity: 1;
+}
+
+[data-theme='dark'] .Flamegraph-wrapper {
+  --ps-tooltip-bg: var(--surface-component-background);
+  --ps-tooltip-text: var(--text-primary);
+  --ps-tooltip-header-bg: var(--surface-tertiary);
+  --ps-right-click-info: var(--text-secondary);
 }
