@@ -23,3 +23,6 @@ fmt:
 lint:
 	npm run lint
 
+.PHONY: test
+test:
+	npm run test

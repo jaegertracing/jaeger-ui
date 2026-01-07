@@ -3,14 +3,14 @@
 
 jest.mock('store');
 jest.mock('../common/SearchableSelect', () => {
-  const MockSearchableSelect = ({ onChange, name, disabled, ...props }) => {
-    if (onChange && name) {
-      MockSearchableSelect.onChangeFns[name] = onChange;
+  const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, ...props }) => {
+    if (onChange && testId) {
+      MockSearchableSelect.onChangeFns[testId] = onChange;
     }
-    if (name) {
-      MockSearchableSelect.disabled[name] = disabled;
+    if (testId) {
+      MockSearchableSelect.disabled[testId] = disabled;
     }
-    return <div data-testid={`mock-select-${name}`} data-disabled={disabled} />;
+    return <div data-testid={`mock-select-${testId}`} data-disabled={disabled} />;
   };
   MockSearchableSelect.onChangeFns = {};
   MockSearchableSelect.disabled = {};
@@ -703,8 +703,8 @@ describe('mapStateToProps()', () => {
       const tagsLogfmt = 'error=true span.kind=client';
       const common = {
         lookback: '2h',
-        maxDuration: null,
-        minDuration: null,
+        maxDuration: undefined,
+        minDuration: undefined,
         operation: 'Driver::findNearest',
         service: 'driver',
       };
@@ -841,12 +841,12 @@ describe('mapStateToProps()', () => {
 
     expect(values).toEqual({
       service: '-',
-      resultsLimit: 20,
+      resultsLimit: '20',
       lookback: '1h',
       operation: 'all',
       tags: undefined,
-      minDuration: null,
-      maxDuration: null,
+      minDuration: undefined,
+      maxDuration: undefined,
       traceIDs: null,
     });
     expect(startDate).toBe(dateParams.dateStr);
