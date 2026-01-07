@@ -843,8 +843,7 @@ export function mapStateToProps(state: ReduxState) {
     destroyOnUnmount: false,
     initialValues: {
       service: (service as string | undefined) || lastSearchService || '-',
-      resultsLimit:
-        typeof limit === 'string' ? parseInt(limit, 10) : typeof limit === 'number' ? limit : DEFAULT_LIMIT,
+      resultsLimit: (limit as string | undefined) || String(DEFAULT_LIMIT),
       lookback: (lookback as string | undefined) || DEFAULT_LOOKBACK,
       startDate: queryStartDate || today,
       startDateTime: queryStartDateTime || '00:00',
@@ -852,8 +851,8 @@ export function mapStateToProps(state: ReduxState) {
       endDateTime: queryEndDateTime || currentTime,
       operation: (operation as string | undefined) || lastSearchOperation || DEFAULT_OPERATION,
       tags,
-      minDuration: (minDuration as string | undefined) || null,
-      maxDuration: (maxDuration as string | undefined) || null,
+      minDuration: (minDuration as string | undefined) || undefined,
+      maxDuration: (maxDuration as string | undefined) || undefined,
       traceIDs: traceIDs || null,
     },
     searchMaxLookback: _get(state, 'config.search.maxLookback'),
