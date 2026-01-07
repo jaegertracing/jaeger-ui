@@ -28,6 +28,7 @@ import { getConfigValue } from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
+import { useConfig } from '../../hooks/useConfig';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
 
@@ -335,7 +336,6 @@ interface ISearchFormImplProps {
   submitting?: boolean;
   searchMaxLookback?: ILookbackOption;
   searchAdjustEndTime?: string;
-  useOtelTerms?: boolean;
   services: IServiceWithOperations[];
   initialValues?: Partial<ISearchFormFields> & { traceIDs?: string | null };
   isLoadingServices?: boolean;
@@ -359,7 +359,6 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   submitting = false,
   searchMaxLookback,
   searchAdjustEndTime,
-  useOtelTerms,
   services = [],
   initialValues,
   isLoadingServices = false,
@@ -367,6 +366,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   changeServiceHandler,
   submitFormHandler,
 }) => {
+  const { useOpenTelemetryTerms: useOtelTerms } = useConfig();
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
     operation: initialValues?.operation,
@@ -843,7 +843,6 @@ export function mapStateToProps(state: ReduxState) {
     },
     searchMaxLookback: _get(state, 'config.search.maxLookback'),
     searchAdjustEndTime: _get(state, 'config.search.adjustEndTime'),
-    useOtelTerms: _get(state, 'config.useOpenTelemetryTerms'),
     submitting: state.trace.loadingTraces,
   };
 }
