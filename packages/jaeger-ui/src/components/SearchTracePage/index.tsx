@@ -29,16 +29,12 @@ import { ReduxState, FetchedTrace } from '../../types';
 import { SearchQuery } from '../../types/search';
 import { Trace } from '../../types/trace';
 import { IOtelTrace } from '../../types/otel';
+import type { TUrlState } from './url';
 
 interface IServiceWithOperations {
   name: string;
   operations: string[];
 }
-
-type TUrlState = Record<string, string[] | string | undefined> & {
-  traceID?: string | string[];
-  spanLinks?: Record<string, string>;
-};
 
 interface IQueryOfResults extends Partial<SearchQuery> {
   service?: string;
@@ -119,7 +115,12 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
     fetchServices();
     let { service } = (store.get('lastSearch') as { service?: string } | undefined) || {};
     if (urlQueryParams && urlQueryParams.service) {
-      service = urlQueryParams.service;
+      const urlService = urlQueryParams.service;
+      if (typeof urlService === 'string') {
+        service = urlService;
+      } else if (Array.isArray(urlService)) {
+        service = urlService[0];
+      }
     }
     if (service && service !== '-') {
       fetchServiceOperations(service);
@@ -189,21 +190,23 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
           )}
           {!showErrors && (
             <SearchResults
-              cohortAddTrace={cohortAddTrace}
-              cohortRemoveTrace={cohortRemoveTrace}
-              diffCohort={diffCohort}
-              disableComparisons={!!embedded}
-              hideGraph={embedded && embedded.searchHideGraph}
-              loading={loadingTraces}
-              maxTraceDuration={maxTraceDuration}
-              queryOfResults={queryOfResults}
-              showStandaloneLink={Boolean(embedded)}
-              skipMessage={isHomepage}
-              spanLinks={urlQueryParams && urlQueryParams.spanLinks}
-              traces={traceResults}
-              rawTraces={traceResultsToDownload}
-              sortBy={this.state.sortBy}
-              handleSortChange={this.handleSortChange}
+              {...({
+                cohortAddTrace,
+                cohortRemoveTrace,
+                diffCohort,
+                disableComparisons: !!embedded,
+                hideGraph: embedded && embedded.searchHideGraph,
+                loading: loadingTraces,
+                maxTraceDuration,
+                queryOfResults,
+                showStandaloneLink: Boolean(embedded),
+                skipMessage: isHomepage,
+                spanLinks: urlQueryParams && urlQueryParams.spanLinks,
+                traces: traceResults,
+                rawTraces: traceResultsToDownload,
+                sortBy: this.state.sortBy,
+                handleSortChange: this.handleSortChange,
+              } as any)}
             />
           )}
           {showLogo && (
@@ -326,7 +329,7 @@ export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: 
     loadingServices,
     disableFileUploadControl,
     loadingTraces,
-    services,
+    services: (services || null) as IServiceWithOperations[] | null,
     traces,
     traceResultsToDownload: rawTraces,
     errors: errors.length ? errors : null,

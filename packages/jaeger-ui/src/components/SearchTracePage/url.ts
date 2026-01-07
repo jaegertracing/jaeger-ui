@@ -28,6 +28,8 @@ type TUrlState = Record<string, string | string[] | undefined | Record<string, s
   spanLinks?: Record<string, string>;
 };
 
+export type { TUrlState };
+
 export function getUrl(query?: TUrlState) {
   const searchUrl = prefixUrl(`/search`);
   if (!query) return searchUrl;
