@@ -4,14 +4,14 @@
 import * as React from 'react';
 import { Input, Button, Popover, Select, Row, Col, Form, Switch } from 'antd';
 import _get from 'lodash/get';
+import logfmtParser from 'logfmt/lib/logfmt_parser';
+import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import dayjs from 'dayjs';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
 import { connect, ConnectedProps } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
-import logfmtParser from 'logfmt/lib/logfmt_parser';
-import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import store from 'store';
 
 import * as markers from './SearchForm.markers';
