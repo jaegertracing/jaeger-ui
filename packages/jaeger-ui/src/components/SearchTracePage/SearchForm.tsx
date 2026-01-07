@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Input, InputNumber, Button, Popover, Select, Row, Col, Form, Switch } from 'antd';
+import { Input, Button, Popover, Select, Row, Col, Form, Switch } from 'antd';
 import _get from 'lodash/get';
 import dayjs from 'dayjs';
 import memoizeOne from 'memoize-one';
@@ -251,7 +251,7 @@ export function applyAdjustTime(endTimestamp: number, adjustTime: string | null 
 }
 
 interface ISearchFormFields {
-  resultsLimit: number;
+  resultsLimit: string;
   service: string;
   startDate: string;
   startDateTime: string;
@@ -717,14 +717,15 @@ export class SearchFormImpl extends React.PureComponent<ISearchFormImplProps, IS
         </Row>
 
         <FormItem label="Limit Results">
-          <InputNumber
+          <Input
             name="resultsLimit"
             value={this.state.formData.resultsLimit}
             disabled={submitting}
             placeholder="Limit Results"
+            type="number"
             min={1}
             max={getConfigValue('search.maxLimit')}
-            onChange={value => this.handleChange({ resultsLimit: value })}
+            onChange={e => this.handleChange({ resultsLimit: e.target.value })}
           />
         </FormItem>
 

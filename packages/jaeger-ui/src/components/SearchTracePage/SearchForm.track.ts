@@ -18,7 +18,7 @@ export const CATEGORY_MAX_DURATION = `${FORM_CATEGORY_BASE}/max_duration`;
 export const CATEGORY_LIMIT = `${FORM_CATEGORY_BASE}/limit`;
 export const CATEGORY_SERVICE = `${FORM_CATEGORY_BASE}/serviceName`;
 export function trackFormInput(
-  resultsLimit: number,
+  resultsLimit: string,
   operation: string,
   tags: string,
   minDuration: string | undefined,
@@ -27,7 +27,7 @@ export function trackFormInput(
   serviceName: string
 ) {
   trackEvent(CATEGORY_OPERATION, operation === constants.DEFAULT_OPERATION ? ACTION_DEFAULT : ACTION_SET);
-  trackEvent(CATEGORY_LIMIT, resultsLimit === constants.DEFAULT_LIMIT ? ACTION_DEFAULT : ACTION_SET);
+  trackEvent(CATEGORY_LIMIT, resultsLimit === String(constants.DEFAULT_LIMIT) ? ACTION_DEFAULT : ACTION_SET);
   trackEvent(CATEGORY_MAX_DURATION, maxDuration ? ACTION_SET : ACTION_CLEAR);
   trackEvent(CATEGORY_MIN_DURATION, minDuration ? ACTION_SET : ACTION_CLEAR);
   trackEvent(CATEGORY_TAGS, tags ? ACTION_SET : ACTION_CLEAR);
