@@ -47,13 +47,6 @@ SPDX-License-Identifier: Apache-2.0
   z-index: 1;
 }
 
-.TraceDiffGraph--uiFind > .ant-input {
-  background-color: var(--surface-primary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-strong);
-  box-shadow: var(--shadow-component-focus);
-}
-
 .TraceDiffGraph--emptyState {
   display: flex;
   align-items: center;
