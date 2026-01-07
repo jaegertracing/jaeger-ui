@@ -1,5 +1,6 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
+
 // This file is necessary because the build system (Vite) requires
 // isolatedModules to be true but for linting we need it to be false. We run
 // tsc-lint from the project root, but packages have their own tsconfig for
