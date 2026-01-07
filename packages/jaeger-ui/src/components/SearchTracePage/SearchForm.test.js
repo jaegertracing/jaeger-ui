@@ -3,14 +3,14 @@
 
 jest.mock('store');
 jest.mock('../common/SearchableSelect', () => {
-  const MockSearchableSelect = ({ onChange, name, disabled, ...props }) => {
-    if (onChange && name) {
-      MockSearchableSelect.onChangeFns[name] = onChange;
+  const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, ...props }) => {
+    if (onChange && testId) {
+      MockSearchableSelect.onChangeFns[testId] = onChange;
     }
-    if (name) {
-      MockSearchableSelect.disabled[name] = disabled;
+    if (testId) {
+      MockSearchableSelect.disabled[testId] = disabled;
     }
-    return <div data-testid={`mock-select-${name}`} data-disabled={disabled} />;
+    return <div data-testid={`mock-select-${testId}`} data-disabled={disabled} />;
   };
   MockSearchableSelect.onChangeFns = {};
   MockSearchableSelect.disabled = {};

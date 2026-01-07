@@ -436,9 +436,8 @@ export class SearchFormImpl extends React.PureComponent<ISearchFormImplProps, IS
             </span>
           }
         >
-          {/* @ts-ignore - name prop is used by test mocks */}
           <SearchableSelect
-            name="service"
+            data-testid="service"
             value={this.state.formData.service}
             placeholder="Select A Service"
             disabled={submitting}
@@ -459,9 +458,8 @@ export class SearchFormImpl extends React.PureComponent<ISearchFormImplProps, IS
             </span>
           }
         >
-          {/* @ts-ignore - name prop is used by test mocks */}
           <SearchableSelect
-            name="operation"
+            data-testid="operation"
             value={this.state.formData.operation}
             disabled={submitting || noSelectedService}
             placeholder={this.props.useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
@@ -583,9 +581,8 @@ export class SearchFormImpl extends React.PureComponent<ISearchFormImplProps, IS
           )}
         </div>
         <FormItem>
-          {/* @ts-ignore - name prop is used by test mocks */}
           <SearchableSelect
-            name="lookback"
+            data-testid="lookback"
             value={this.state.formData.lookback}
             disabled={submitting}
             defaultValue={DEFAULT_LOOKBACK}
