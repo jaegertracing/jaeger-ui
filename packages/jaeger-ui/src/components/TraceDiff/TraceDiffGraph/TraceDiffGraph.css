@@ -54,10 +54,6 @@ SPDX-License-Identifier: Apache-2.0
   box-shadow: var(--shadow-component-focus);
 }
 
-.TraceDiffGraph--uiFind > .ant-input::placeholder {
-  color: var(--text-secondary);
-}
-
 .TraceDiffGraph--emptyState {
   display: flex;
   align-items: center;
