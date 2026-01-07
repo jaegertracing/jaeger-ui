@@ -21,7 +21,7 @@ SPDX-License-Identifier: Apache-2.0
   opacity: 1;
 }
 
-[data-theme='dark'] .Flamegraph-wrapper {
+.Flamegraph-wrapper {
   --ps-tooltip-bg: var(--surface-component-background);
   --ps-tooltip-text: var(--text-primary);
   --ps-tooltip-header-bg: var(--surface-tertiary);
