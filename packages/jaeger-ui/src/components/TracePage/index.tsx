@@ -64,6 +64,7 @@ type TOwnProps = {
   history: RouterHistory;
   location: Location<LocationState>;
   params: { id: string };
+  useOtelTerms: boolean;
 };
 
 type TReduxProps = {

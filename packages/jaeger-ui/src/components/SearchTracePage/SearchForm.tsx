@@ -31,6 +31,7 @@ import ValidatedFormField from '../../utils/ValidatedFormField';
 import { useConfig } from '../../hooks/useConfig';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
+import { fetchedState } from '../../constants';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -843,7 +844,7 @@ export function mapStateToProps(state: ReduxState) {
     },
     searchMaxLookback: _get(state, 'config.search.maxLookback'),
     searchAdjustEndTime: _get(state, 'config.search.adjustEndTime'),
-    submitting: state.trace.loadingTraces,
+    submitting: state.trace.search.state === fetchedState.LOADING,
   };
 }
 
