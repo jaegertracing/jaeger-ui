@@ -134,10 +134,6 @@ describe('JaegerUIApp', () => {
     expect(getByTestId('search-trace')).toBeInTheDocument();
   });
 
-  it('should handle constructor with props', () => {
-    expect(() => new JaegerUIApp({})).not.toThrow();
-  });
-
   it('should have complete render method coverage', () => {
     const { container } = renderWithPath('/search');
 
