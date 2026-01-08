@@ -67,12 +67,6 @@ type TProps = TDispatchProps &
     vertexKey: string;
   };
 
-type TState = {
-  childrenVisibility?: ECheckedStatus | null;
-  parentVisibility?: ECheckedStatus | null;
-  shouldPositionTooltipBelow?: boolean;
-};
-
 export function getNodeRenderer({
   baseUrl,
   density,
@@ -132,80 +126,94 @@ export function measureNode() {
   };
 }
 
-export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TState> {
-  state: TState = {};
-  hoveredIndices: Set<number> = new Set();
-  private nodeRef = React.createRef<HTMLDivElement>();
+export function UnconnectedDdgNodeContent(props: TProps) {
+  const {
+    decorationID,
+    decorationProgressbar,
+    decorationValue,
+    focalNodeUrl,
+    focusPathsThroughVertex,
+    getDecoration,
+    getGenerationVisibility,
+    getVisiblePathElems,
+    hideVertex: hideVertexProp,
+    isFocalNode,
+    isPositioned,
+    operation,
+    selectVertex,
+    service,
+    setOperation: setOperationProp,
+    setViewModifier,
+    updateGenerationVisibility,
+    vertex,
+    vertexKey,
+  } = props;
 
-  constructor(props: TProps) {
-    super(props);
+  const [childrenVisibility, setChildrenVisibility] = React.useState<ECheckedStatus | null | undefined>();
+  const [parentVisibility, setParentVisibility] = React.useState<ECheckedStatus | null | undefined>();
+  const [shouldPositionTooltipBelow, setShouldPositionTooltipBelow] = React.useState<boolean | undefined>();
 
-    this.getDecoration();
-  }
+  const nodeRef = React.useRef<HTMLDivElement>(null);
+  const hoveredIndicesRef = React.useRef<Set<number>>(new Set());
 
-  componentDidUpdate(prevProps: TProps) {
-    if (prevProps.decorationID !== this.props.decorationID) this.getDecoration();
-  }
-
-  componentWillUnmount() {
-    if (this.hoveredIndices.size) {
-      this.props.setViewModifier(Array.from(this.hoveredIndices), EViewModifier.Hovered, false);
-      this.hoveredIndices.clear();
-    }
-  }
-
-  private getDecoration() {
-    const { decorationID, getDecoration, operation, service } = this.props;
-
+  // Fetch decoration on mount and when decorationID changes
+  React.useEffect(() => {
     if (decorationID) {
       getDecoration(decorationID, service, typeof operation === 'string' ? operation : undefined);
     }
-  }
+  }, [decorationID, getDecoration, service, operation]);
 
-  private checkTooltipPosition = () => {
-    if (!this.nodeRef.current) return;
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (hoveredIndicesRef.current.size) {
+        setViewModifier(Array.from(hoveredIndicesRef.current), EViewModifier.Hovered, false);
+        hoveredIndicesRef.current.clear();
+      }
+    };
+  }, [setViewModifier]);
+
+  const checkTooltipPosition = React.useCallback(() => {
+    if (!nodeRef.current) return;
     const header = document.querySelector('.DdgHeader--controlHeader');
     if (!header) return;
     const shouldPositionBelow =
-      this.nodeRef.current.getBoundingClientRect().top - 200 < header.getBoundingClientRect().bottom + 20;
-    if (this.state.shouldPositionTooltipBelow !== shouldPositionBelow) {
-      this.setState({ shouldPositionTooltipBelow: shouldPositionBelow });
+      nodeRef.current.getBoundingClientRect().top - 200 < header.getBoundingClientRect().bottom + 20;
+    if (shouldPositionTooltipBelow !== shouldPositionBelow) {
+      setShouldPositionTooltipBelow(shouldPositionBelow);
     }
-  };
+  }, [shouldPositionTooltipBelow]);
 
-  private focusPaths = () => {
-    const { focusPathsThroughVertex, vertexKey } = this.props;
+  const focusPaths = React.useCallback(() => {
     focusPathsThroughVertex(vertexKey);
-  };
+  }, [focusPathsThroughVertex, vertexKey]);
 
-  private handleClick = () => {
-    const { decorationValue, selectVertex, vertex } = this.props;
+  const handleClick = React.useCallback(() => {
     if (decorationValue) selectVertex(vertex);
-  };
+  }, [decorationValue, selectVertex, vertex]);
 
-  private hideVertex = () => {
-    const { hideVertex, vertexKey } = this.props;
-    hideVertex(vertexKey);
-  };
+  const hideVertex = React.useCallback(() => {
+    hideVertexProp(vertexKey);
+  }, [hideVertexProp, vertexKey]);
 
-  private setOperation = (operation: string) => {
-    trackVertexSetOperation();
-    this.props.setOperation(operation);
-  };
+  const setOperation = React.useCallback(
+    (op: string) => {
+      trackVertexSetOperation();
+      setOperationProp(op);
+    },
+    [setOperationProp]
+  );
 
-  private updateChildren = () => {
-    const { updateGenerationVisibility, vertexKey } = this.props;
+  const updateChildren = React.useCallback(() => {
     updateGenerationVisibility(vertexKey, EDirection.Downstream);
-  };
+  }, [updateGenerationVisibility, vertexKey]);
 
-  private updateParents = () => {
-    const { updateGenerationVisibility, vertexKey } = this.props;
+  const updateParents = React.useCallback(() => {
     updateGenerationVisibility(vertexKey, EDirection.Upstream);
-  };
+  }, [updateGenerationVisibility, vertexKey]);
 
-  private viewTraces = () => {
+  const viewTraces = React.useCallback(() => {
     trackViewTraces();
-    const { vertexKey, getVisiblePathElems } = this.props;
     const elems = getVisiblePathElems(vertexKey);
     if (elems) {
       const urlIds: Set<string> = new Set();
@@ -233,159 +241,155 @@ export class UnconnectedDdgNodeContent extends React.PureComponent<TProps, TStat
       }
       window.open(getSearchUrl({ traceID: Array.from(urlIds) }), '_blank');
     }
-  };
+  }, [getVisiblePathElems, vertexKey]);
 
-  private onMouseUx = (event: React.MouseEvent<HTMLElement>) => {
-    const { getGenerationVisibility, getVisiblePathElems, setViewModifier, vertexKey } = this.props;
-    const hovered = event.type === 'mouseover';
-    const visIndices = hovered
-      ? (getVisiblePathElems(vertexKey) || []).map(({ visibilityIdx }) => {
-          this.hoveredIndices.add(visibilityIdx);
-          return visibilityIdx;
-        })
-      : Array.from(this.hoveredIndices);
-    setViewModifier(visIndices, EViewModifier.Hovered, hovered);
+  const onMouseUx = React.useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      const hovered = event.type === 'mouseover';
+      const visIndices = hovered
+        ? (getVisiblePathElems(vertexKey) || []).map(({ visibilityIdx }) => {
+            hoveredIndicesRef.current.add(visibilityIdx);
+            return visibilityIdx;
+          })
+        : Array.from(hoveredIndicesRef.current);
+      setViewModifier(visIndices, EViewModifier.Hovered, hovered);
 
-    if (hovered) {
-      if (this.state.shouldPositionTooltipBelow === undefined) this.checkTooltipPosition();
-      this.setState({
-        childrenVisibility: getGenerationVisibility(vertexKey, EDirection.Downstream),
-        parentVisibility: getGenerationVisibility(vertexKey, EDirection.Upstream),
-      });
-    } else this.hoveredIndices.clear();
-  };
+      if (hovered) {
+        if (shouldPositionTooltipBelow === undefined) checkTooltipPosition();
+        setChildrenVisibility(getGenerationVisibility(vertexKey, EDirection.Downstream));
+        setParentVisibility(getGenerationVisibility(vertexKey, EDirection.Upstream));
+      } else {
+        hoveredIndicesRef.current.clear();
+      }
+    },
+    [
+      checkTooltipPosition,
+      getGenerationVisibility,
+      getVisiblePathElems,
+      setViewModifier,
+      shouldPositionTooltipBelow,
+      vertexKey,
+    ]
+  );
 
-  render() {
-    const { childrenVisibility, parentVisibility } = this.state;
-    const {
-      decorationProgressbar,
-      decorationValue,
-      focalNodeUrl,
-      isFocalNode,
-      isPositioned,
-      operation,
-      service,
-    } = this.props;
+  const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
+  const trueRadius = decorationProgressbar ? RADIUS - PROGRESS_BAR_STROKE_WIDTH : RADIUS;
+  const scaleFactor = trueRadius / radius;
+  const transform = `translate(${RADIUS - radius}px, ${RADIUS - radius}px) scale(${scaleFactor})`;
 
-    const { radius, svcWidth, opWidth, svcMarginTop } = calcPositioning(service, operation);
-    const trueRadius = decorationProgressbar ? RADIUS - PROGRESS_BAR_STROKE_WIDTH : RADIUS;
-    const scaleFactor = trueRadius / radius;
-    const transform = `translate(${RADIUS - radius}px, ${RADIUS - radius}px) scale(${scaleFactor})`;
+  const menuItems: IActionMenuItem[] = [
+    {
+      id: 'set-focus',
+      label: 'Set focus',
+      icon: setFocusIcon,
+      href: focalNodeUrl || undefined,
+      onClick: trackSetFocus,
+      isVisible: Boolean(focalNodeUrl),
+    },
+    {
+      id: 'view-traces',
+      label: 'View traces',
+      icon: <NewWindowIcon />,
+      onClick: viewTraces,
+    },
+    {
+      id: 'focus-paths',
+      label: 'Focus paths through this node',
+      icon: <IoLocate />,
+      onClick: focusPaths,
+      isVisible: !isFocalNode,
+    },
+    {
+      id: 'hide-node',
+      label: 'Hide node',
+      icon: <IoEyeOff />,
+      onClick: hideVertex,
+      isVisible: !isFocalNode,
+    },
+    {
+      id: 'view-parents',
+      label: 'View Parents',
+      icon: null,
+      onClick: updateParents,
+      isVisible: Boolean(parentVisibility),
+      checkboxProps: parentVisibility
+        ? {
+            checked: parentVisibility === ECheckedStatus.Full,
+            indeterminate: parentVisibility === ECheckedStatus.Partial,
+          }
+        : undefined,
+    },
+    {
+      id: 'view-children',
+      label: 'View Children',
+      icon: null,
+      onClick: updateChildren,
+      isVisible: Boolean(childrenVisibility),
+      checkboxProps: childrenVisibility
+        ? {
+            checked: childrenVisibility === ECheckedStatus.Full,
+            indeterminate: childrenVisibility === ECheckedStatus.Partial,
+          }
+        : undefined,
+    },
+  ];
 
-    const menuItems: IActionMenuItem[] = [
-      {
-        id: 'set-focus',
-        label: 'Set focus',
-        icon: setFocusIcon,
-        href: focalNodeUrl || undefined,
-        onClick: trackSetFocus,
-        isVisible: Boolean(focalNodeUrl),
-      },
-      {
-        id: 'view-traces',
-        label: 'View traces',
-        icon: <NewWindowIcon />,
-        onClick: this.viewTraces,
-      },
-      {
-        id: 'focus-paths',
-        label: 'Focus paths through this node',
-        icon: <IoLocate />,
-        onClick: this.focusPaths,
-        isVisible: !isFocalNode,
-      },
-      {
-        id: 'hide-node',
-        label: 'Hide node',
-        icon: <IoEyeOff />,
-        onClick: this.hideVertex,
-        isVisible: !isFocalNode,
-      },
-      {
-        id: 'view-parents',
-        label: 'View Parents',
-        icon: null,
-        onClick: this.updateParents,
-        isVisible: Boolean(parentVisibility),
-        checkboxProps: parentVisibility
-          ? {
-              checked: parentVisibility === ECheckedStatus.Full,
-              indeterminate: parentVisibility === ECheckedStatus.Partial,
-            }
-          : undefined,
-      },
-      {
-        id: 'view-children',
-        label: 'View Children',
-        icon: null,
-        onClick: this.updateChildren,
-        isVisible: Boolean(childrenVisibility),
-        checkboxProps: childrenVisibility
-          ? {
-              checked: childrenVisibility === ECheckedStatus.Full,
-              indeterminate: childrenVisibility === ECheckedStatus.Partial,
-            }
-          : undefined,
-      },
-    ];
-
-    return (
+  return (
+    <div
+      ref={nodeRef}
+      className="DdgNodeContent"
+      role="button"
+      tabIndex={0}
+      onMouseOver={onMouseUx}
+      onMouseOut={onMouseUx}
+    >
+      {decorationProgressbar}
       <div
-        ref={this.nodeRef}
-        className="DdgNodeContent"
+        className={cx('DdgNodeContent--core', {
+          'is-decorated': decorationValue,
+          'is-focalNode': isFocalNode,
+          'is-missingDecoration': typeof decorationValue === 'string',
+          'is-positioned': isPositioned,
+        })}
+        onClick={handleClick}
         role="button"
-        tabIndex={0}
-        onMouseOver={this.onMouseUx}
-        onMouseOut={this.onMouseUx}
+        style={{ width: `${radius * 2}px`, height: `${radius * 2}px`, transform }}
       >
-        {decorationProgressbar}
-        <div
-          className={cx('DdgNodeContent--core', {
-            'is-decorated': decorationValue,
-            'is-focalNode': isFocalNode,
-            'is-missingDecoration': typeof decorationValue === 'string',
-            'is-positioned': isPositioned,
-          })}
-          onClick={this.handleClick}
-          role="button"
-          style={{ width: `${radius * 2}px`, height: `${radius * 2}px`, transform }}
-        >
-          <div className="DdgNodeContent--labelWrapper">
-            <h4
+        <div className="DdgNodeContent--labelWrapper">
+          <h4
+            className="DdgNodeContent--label"
+            style={{ marginTop: `${svcMarginTop}px`, width: `${svcWidth}px` }}
+          >
+            <BreakableText text={service} wordRegexp={WORD_RX} />
+          </h4>
+          {operation && (
+            <div
               className="DdgNodeContent--label"
-              style={{ marginTop: `${svcMarginTop}px`, width: `${svcWidth}px` }}
+              style={{ paddingTop: `${OP_PADDING_TOP}px`, width: `${opWidth}px` }}
             >
-              <BreakableText text={service} wordRegexp={WORD_RX} />
-            </h4>
-            {operation && (
-              <div
-                className="DdgNodeContent--label"
-                style={{ paddingTop: `${OP_PADDING_TOP}px`, width: `${opWidth}px` }}
-              >
-                {Array.isArray(operation) ? (
-                  <Popover
-                    content={<FilteredList options={operation} value={null} setValue={this.setOperation} />}
-                    placement="bottom"
-                    title="Select Operation to Filter Graph"
-                  >
-                    <span>{`${operation.length} Operations`}</span>
-                  </Popover>
-                ) : (
-                  <BreakableText text={operation} wordRegexp={WORD_RX} />
-                )}
-              </div>
-            )}
-          </div>
+              {Array.isArray(operation) ? (
+                <Popover
+                  content={<FilteredList options={operation} value={null} setValue={setOperation} />}
+                  placement="bottom"
+                  title="Select Operation to Filter Graph"
+                >
+                  <span>{`${operation.length} Operations`}</span>
+                </Popover>
+              ) : (
+                <BreakableText text={operation} wordRegexp={WORD_RX} />
+              )}
+            </div>
+          )}
         </div>
-        <ActionsMenu
-          items={menuItems}
-          className={cx('DdgNodeContent--actionsWrapper', {
-            'DdgNodeContent--actionsWrapper-below': this.state.shouldPositionTooltipBelow,
-          })}
-        />
       </div>
-    );
-  }
+      <ActionsMenu
+        items={menuItems}
+        className={cx('DdgNodeContent--actionsWrapper', {
+          'DdgNodeContent--actionsWrapper-below': shouldPositionTooltipBelow,
+        })}
+      />
+    </div>
+  );
 }
 
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
