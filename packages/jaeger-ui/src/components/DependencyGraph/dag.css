@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .DAG {
-  border: 1px solid #bbb;
+  border: 1px solid var(--border-default);
   cursor: move;
   overflow: hidden;
   height: 100%;
@@ -13,15 +13,15 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .DAG--dag {
-  background: #fafafa;
+  background: var(--surface-primary);
   stroke-width: 0.7;
-  stroke: #444;
+  stroke: var(--text-primary);
 }
 
 .DAG--dag marker {
   stroke-width: 0.7;
-  stroke: #444;
-  fill: #444;
+  stroke: var(--text-primary);
+  fill: var(--text-primary);
 }
 
 .DAG--node {
@@ -32,12 +32,12 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .DAG--nodeCircle {
-  background-color: #dddddd;
+  background-color: var(--surface-secondary);
   border-radius: 50%;
   height: 3rem;
   width: 3rem;
   margin-bottom: 1.75rem;
-  border: 1px solid #bbb;
+  border: 1px solid var(--border-default);
   box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.15);
 }
 
@@ -61,8 +61,8 @@ SPDX-License-Identifier: Apache-2.0
   text-align: center;
   font-weight: bold;
   font-size: 1.25rem;
-  color: #7f7f7f;
-  background-color: #fafafa;
+  color: var(--text-primary);
+  background-color: var(--surface-primary);
 }
 
 .DAG--error {
@@ -76,6 +76,6 @@ SPDX-License-Identifier: Apache-2.0
 .DAG > div:last-child {
   position: fixed;
   z-index: 1000;
-  background: #fafafa;
-  border: 1px solid #d0d0d0;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-default);
 }
