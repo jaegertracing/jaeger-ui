@@ -160,9 +160,6 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
     const showErrors = errors && !loadingTraces;
     const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
 
-    if (loadingServices) {
-      return <LoadingIndicator />;
-    }
     const tabItems = [];
     // Always show the search form, loading is handled by SearchFormWithOtlpMetadata
     tabItems.push({

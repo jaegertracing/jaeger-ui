@@ -28,6 +28,7 @@ import { getConfigValue } from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
+import LoadingIndicator from '../common/LoadingIndicator';
 import { useConfig } from '../../hooks/useConfig';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
@@ -421,6 +422,10 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
   const invalidDuration =
     validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
+
+  if (isLoadingServices && (!services || services.length === 0)) {
+    return <LoadingIndicator />;
+  }
 
   return (
     <Form layout="vertical" onSubmitCapture={handleSubmit}>
