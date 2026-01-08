@@ -354,8 +354,6 @@ describe('<DdgNodeContent>', () => {
     });
 
     it('handles case when node ref is not available', () => {
-      // With the functional component, we verify that the component handles missing ref gracefully
-      // by checking it doesn't throw when hovering before ref is assigned
       const { container } = render(<DdgNodeContent {...props} />);
       const nodeContent = container.querySelector('.DdgNodeContent');
 
@@ -522,10 +520,6 @@ describe('<DdgNodeContent>', () => {
         // Open the popover to access the FilteredList
         const operationsText = screen.getByText('4 Operations');
         fireEvent.click(operationsText);
-
-        // The setOperation is called when selecting from FilteredList
-        // We verify tracking is called by testing through the UI
-        // For this test, we need to verify the prop is correctly wired
         expect(props.setOperation).not.toHaveBeenCalled();
         expect(track.trackVertexSetOperation).not.toHaveBeenCalled();
       });
