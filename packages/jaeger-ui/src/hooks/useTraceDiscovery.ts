@@ -12,7 +12,7 @@ export function useServices() {
   return useQuery({
     queryKey: ['services'],
     queryFn: () => jaegerClient.fetchServices(),
-    staleTime: Infinity, // Services list changes infrequently
+    staleTime: 60 * 1000, // 1 minute
   });
 }
 
@@ -26,6 +26,6 @@ export function useSpanNames(service: string | null) {
     queryKey: ['spanNames', service],
     queryFn: () => jaegerClient.fetchSpanNames(service!),
     enabled: !!service, // Only fetch when service is selected
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 60 * 1000, // 1 minute
   });
 }
