@@ -11,9 +11,7 @@ coverage:
   status:
     project:
       default:
-        # ABSOLUTE FLOOR: The status will fail if overall coverage is below 95%.
-        # This is enforced *after* the relative check passes.
-        target: 95%
+        target: auto  # Prevents Plexus from tanking the global status
 
         # RELATIVE PROTECTION: This is the maximum allowed drop *below* the base commit's coverage.
         # Setting this to 0% means the project coverage cannot drop at all,
@@ -36,6 +34,22 @@ coverage:
         if_no_uploads: error
         if_not_found: success
         if_ci_failed: error
+
+flags:
+  jaeger-ui:
+    paths:
+      - "packages/jaeger-ui/src/"
+    target: 95%       # The "Absolute Floor" for your main UI
+    threshold: 0%
+    # We define a flag-specific patch so you see the breakdown in the PR
+    carryforward: true
+
+  plexus:
+    paths:
+      - "packages/plexus/src/"
+    target: auto      # Allows Plexus to start at 0% and grow
+    threshold: 0%
+    carryforward: true
 
 ignore:
   - "packages/jaeger-ui/src/utils/helpers/ReactShallowRenderer.js"
