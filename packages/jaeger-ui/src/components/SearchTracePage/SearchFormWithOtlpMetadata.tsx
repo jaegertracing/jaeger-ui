@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import { useServices, useSpanNames } from '../../hooks/useOtlpMetadata';
+import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { SearchFormImpl, mapStateToProps, mapDispatchToProps } from './SearchForm';
 
 /**
@@ -19,9 +19,12 @@ export function SearchFormWithOtlpMetadata(props: any) {
   const { data: servicesList, isLoading: isLoadingServices, error: servicesError } = useServices();
 
   // Fetch span names for the currently selected service
-  const { data: spanNames, isLoading: isLoadingSpanNames } = useSpanNames(
+  const { data: spanNamesData, isLoading: isLoadingSpanNames } = useSpanNames(
     currentService && currentService !== '-' ? currentService : null
   );
+
+  // Extract unique names to maintain compatibility with existing UI
+  const spanNames = Array.from(new Set((spanNamesData || []).map(op => op.name))).sort();
 
   const handleServiceChange = (service: string) => {
     setCurrentService(service);
@@ -36,7 +39,7 @@ export function SearchFormWithOtlpMetadata(props: any) {
   // The existing SearchForm expects: { name: string, operations: string[] }[]
   const services = (servicesList || []).map(serviceName => ({
     name: serviceName,
-    operations: currentService === serviceName ? spanNames || [] : [],
+    operations: currentService === serviceName ? spanNames : [],
   }));
 
   // Pass through all props to SearchForm, with services from React Query
@@ -51,4 +54,13 @@ export function SearchFormWithOtlpMetadata(props: any) {
   );
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SearchFormWithOtlpMetadata);
+const mergedMapStateToProps = (state: any, ownProps: any) => {
+  const reduxProps = mapStateToProps(state, ownProps);
+  return {
+    ...reduxProps,
+    ...ownProps,
+    initialValues: ownProps.initialValues || reduxProps.initialValues,
+  };
+};
+
+export default connect(mergedMapStateToProps, mapDispatchToProps)(SearchFormWithOtlpMetadata);

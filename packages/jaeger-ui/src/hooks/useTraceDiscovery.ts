@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery } from '@tanstack/react-query';
-import { otlpApiClient } from '../api/v3/client';
+import { jaegerClient } from '../api/v3/client';
 
 /**
- * React Query hook to fetch the list of services from the OTLP API.
+ * React Query hook to fetch the list of services from the Jaeger API.
  * @returns Query result with services array
  */
 export function useServices() {
   return useQuery({
     queryKey: ['services'],
-    queryFn: () => otlpApiClient.fetchServices(),
+    queryFn: () => jaegerClient.fetchServices(),
     staleTime: Infinity, // Services list changes infrequently
   });
 }
@@ -24,7 +24,7 @@ export function useServices() {
 export function useSpanNames(service: string | null) {
   return useQuery({
     queryKey: ['spanNames', service],
-    queryFn: () => otlpApiClient.fetchSpanNames(service!),
+    queryFn: () => jaegerClient.fetchSpanNames(service!),
     enabled: !!service, // Only fetch when service is selected
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

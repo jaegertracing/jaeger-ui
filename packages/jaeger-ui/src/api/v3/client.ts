@@ -8,15 +8,15 @@
  * and returns native OTLP data structures.
  */
 
-export class OtlpApiClient {
-  private apiRoot = '/api/v3/';
+export class JaegerClient {
+  private apiRoot = '/api/v3';
 
   /**
-   * Fetch the list of services from the OTLP API.
+   * Fetch the list of services from the Jaeger API.
    * @returns Promise<string[]> - Array of service names
    */
   async fetchServices(): Promise<string[]> {
-    const response = await fetch(`${this.apiRoot}services`);
+    const response = await fetch(`${this.apiRoot}/services`);
     if (!response.ok) {
       throw new Error(`Failed to fetch services: ${response.status} ${response.statusText}`);
     }
@@ -27,21 +27,19 @@ export class OtlpApiClient {
   /**
    * Fetch the list of span names (operations) for a given service.
    * @param service - The service name
-   * @returns Promise<string[]> - Array of span names
+   * @returns Promise<{ name: string; spanKind: string }[]> - Array of span name objects
    */
-  async fetchSpanNames(service: string): Promise<string[]> {
-    const response = await fetch(`${this.apiRoot}operations?service=${encodeURIComponent(service)}`);
+  async fetchSpanNames(service: string): Promise<{ name: string; spanKind: string }[]> {
+    const response = await fetch(`${this.apiRoot}/operations?service=${encodeURIComponent(service)}`);
     if (!response.ok) {
       throw new Error(
         `Failed to fetch span names for service "${service}": ${response.status} ${response.statusText}`
       );
     }
     const data = await response.json();
-    const operations: { name: string; spanKind: string }[] = data.operations || [];
-    // Extract unique names to maintain compatibility with existing UI
-    return Array.from(new Set(operations.map(op => op.name))).sort();
+    return data.operations || [];
   }
 }
 
 // Export a singleton instance
-export const otlpApiClient = new OtlpApiClient();
+export const jaegerClient = new JaegerClient();

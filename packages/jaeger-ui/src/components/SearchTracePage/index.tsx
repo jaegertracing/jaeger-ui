@@ -31,11 +31,6 @@ import { Trace } from '../../types/trace';
 import { IOtelTrace } from '../../types/otel';
 import type { TUrlState } from './url';
 
-interface IServiceWithOperations {
-  name: string;
-  operations: string[];
-}
-
 interface IQueryOfResults extends Partial<SearchQuery> {
   service?: string;
   limit?: string | number;
@@ -58,10 +53,8 @@ interface IStateProps {
   queryOfResults: IQueryOfResults | null;
   diffCohort: FetchedTrace[];
   embedded?: IEmbeddedConfig;
-  loadingServices: boolean;
   disableFileUploadControl?: boolean;
   loadingTraces: boolean;
-  services: IServiceWithOperations[] | null;
   traces: Trace[];
   traceResultsToDownload: unknown[];
   errors: Array<{ message: string }> | null;
@@ -75,8 +68,6 @@ interface IDispatchProps {
   cohortAddTrace: (traceId: string) => void;
   cohortRemoveTrace: (traceId: string) => void;
   fetchMultipleTraces: (traceIds: string[]) => void;
-  fetchServiceOperations: (service: string) => void;
-  fetchServices: () => void;
   searchTraces: (query: TUrlState) => void;
   loadJsonTraces: (fileList: { file: File }) => void;
 }
@@ -104,30 +95,9 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
     if (needForDiffs.length) {
       fetchMultipleTraces(needForDiffs);
     }
-    const { fetchServices, fetchServiceOperations, services } = this.props;
-    fetchServices();
-    const { service: urlService } = urlQueryParams || {};
-    const lastSearch = store.get('lastSearch');
-    let service: any = urlService && urlService !== '-' ? urlService : lastSearch?.service;
-    if (Array.isArray(service)) [service] = service;
-    if (service && typeof service === 'string' && (!services || !services.length)) {
-      fetchServiceOperations(service);
-    }
   }
 
-  componentDidUpdate() {
-    const { fetchServiceOperations, services, urlQueryParams } = this.props;
-    let { service } = urlQueryParams || {};
-    if (Array.isArray(service)) [service] = service;
-    if (
-      service &&
-      typeof service === 'string' &&
-      service !== '-' &&
-      (!services || !services.find(s => s.name === service))
-    ) {
-      fetchServiceOperations(service);
-    }
-  }
+  componentDidUpdate() {}
 
   handleSortChange = (sortBy: string) => {
     this.setState({ sortBy });
@@ -151,8 +121,6 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
       urlQueryParams,
       sortedTracesXformer,
       traces,
-      services,
-      loadingServices,
     } = this.props;
     const { sortBy } = this.state;
     const traceResults = sortedTracesXformer(traces, sortBy);
@@ -165,7 +133,12 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
     tabItems.push({
       label: 'Search',
       key: 'searchForm',
-      children: <SearchFormWithOtlpMetadata key={JSON.stringify(urlQueryParams)} />,
+      children: (
+        <SearchFormWithOtlpMetadata
+          key={JSON.stringify(urlQueryParams)}
+          {...({ initialValues: urlQueryParams } as any)}
+        />
+      ),
     });
     if (!disableFileUploadControl) {
       tabItems.push({
@@ -270,13 +243,10 @@ const sortedTracesXformer = memoizeOne((traces: Trace[], sortBy: string) => {
   return traceResults.map(t => t.asOtelTrace());
 });
 
-// export to test
 export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: boolean } {
   const { embedded, router, traceDiff, config } = state;
   const query = getUrlState(router.location.search);
   const isHomepage = !Object.keys(query).length;
-  const lastSearch = store.get('lastSearch');
-  const selectedService = query.service || (lastSearch && lastSearch.service);
   const { disableFileUploadControl } = config;
   const {
     query: queryOfResults,
@@ -291,7 +261,7 @@ export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: 
   if (traceError && typeof traceError === 'object' && 'message' in traceError) {
     errors.push({ message: traceError.message });
   }
-  // Note: Removed serviceError check as we no longer use Redux for services
+  // Note: Removed serviceError and loadingServices check as we no longer use Redux for services
   return {
     queryOfResults: queryOfResults as IQueryOfResults | null,
     diffCohort,
@@ -305,18 +275,6 @@ export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: 
     maxTraceDuration: maxDuration,
     sortedTracesXformer,
     urlQueryParams: Object.keys(query).length > 0 ? query : null,
-    loadingServices: Boolean(
-      state.services.loading ||
-      (selectedService &&
-        selectedService !== '-' &&
-        (!state.services.operationsForService || !state.services.operationsForService[selectedService]))
-    ),
-    services: state.services.services
-      ? state.services.services.map(name => ({
-          name,
-          operations: state.services.operationsForService[name] || [],
-        }))
-      : null,
   };
 }
 
@@ -328,9 +286,6 @@ function mapDispatchToProps(dispatch: Dispatch): IDispatchProps {
     cohortAddTrace,
     cohortRemoveTrace,
     fetchMultipleTraces,
-    fetchServiceOperations: (service: string) =>
-      dispatch(jaegerApiActions.fetchServiceOperations(service) as any),
-    fetchServices: () => dispatch(jaegerApiActions.fetchServices() as any),
     searchTraces,
     loadJsonTraces,
   };

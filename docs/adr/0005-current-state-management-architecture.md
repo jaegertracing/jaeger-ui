@@ -46,12 +46,12 @@ The legacy core of the application. It manages traces, configuration, and search
 ### 2. TanStack Query (Server State)
 The modern standard for fetching and caching server data. Currently being introduced via the OTLP API v3 migration.
 
-- **Location**: `src/hooks/` (e.g., `useOtlpMetadata.ts`), `src/api/v3/client.ts`.
+- **Location**: `src/hooks/` (e.g., `useTraceDiscovery.ts`), `src/api/v3/client.ts` (`JaegerClient`).
 - **Primary Benefits**: Automatic caching, localized loading indicators, and simplified error handling.
 - **How it Works (The "Plumbing & Taps" Model)**:
     - **`QueryClientProvider` (The Plumbing)**: Wrapped around the root of the app (`App/index.tsx`), this makes a central client available to all components via React Context.
     - **`QueryClient` (The Central Cache)**: A singleton object that holds all fetched data in memory, indexed by "Query Keys" (e.g., `['services']`).
-    - **Hooks (The Taps)**: Components use hooks like `useQuery` to "subscribe" to a specific key. If the data is in the cache, it's returned immediately; if not, it triggers a fetch. When the cache is updated, the hooks automatically trigger a re-render in the subscribing components.
+    - **Hooks (The Taps)**: Components use hooks like `useQuery` to "subscribe" to a specific key. If the data is in the cache, it's returned immediately; if not, it triggers a fetch via the `jaegerClient`. When the cache is updated, the hooks automatically trigger a re-render in the subscribing components.
 - **Usage**: All new API interactions should use TanStack Query. It replaces the Redux "fetch action -> reducer -> selector" pattern.
 
 ### 3. URL State (Intended Source of Truth)
