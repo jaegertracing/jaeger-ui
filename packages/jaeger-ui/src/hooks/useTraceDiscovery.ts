@@ -13,6 +13,7 @@ export function useServices() {
     queryKey: ['services'],
     queryFn: () => jaegerClient.fetchServices(),
     staleTime: 60 * 1000, // 1 minute
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -27,5 +28,6 @@ export function useSpanNames(service: string | null) {
     queryFn: () => jaegerClient.fetchSpanNames(service!),
     enabled: !!service, // Only fetch when service is selected
     staleTime: 60 * 1000, // 1 minute
+    refetchOnWindowFocus: true,
   });
 }
