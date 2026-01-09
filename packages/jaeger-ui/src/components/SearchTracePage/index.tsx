@@ -109,9 +109,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     if (needForDiffs.length) {
       fetchMultipleTraces(needForDiffs);
     }
-    // This may require "eslint-disable-next-line react-hooks/exhaustive-deps"
-    // in the future if we enable this linter.
-    // https://github.com/jaegertracing/jaeger-ui/issues/3445
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSortChange = useCallback((newSortBy: string) => {
@@ -192,17 +190,6 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
 }
 
 // Type definitions
-interface ITraceMapEntry {
-  data: Trace;
-}
-
-interface ISearchState {
-  query?: SearchQuery;
-  results: string[];
-  state?: string;
-  error?: { message: string } | null;
-}
-
 interface IStateTraceDiff {
   cohort: string[];
 }
