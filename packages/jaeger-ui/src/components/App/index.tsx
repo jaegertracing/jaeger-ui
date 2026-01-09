@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { Route, Redirect, Switch } from 'react-router-dom';
 
@@ -32,12 +31,10 @@ import './index.css';
 import { store } from '../../utils/configure-store';
 import ThemeProvider from './ThemeProvider';
 
-export default function JaegerUIApp() {
-  useEffect(() => {
-    (JaegerAPI as any).apiRoot = DEFAULT_API_ROOT;
-    processScripts();
-  }, []);
+JaegerAPI.apiRoot = DEFAULT_API_ROOT;
+processScripts();
 
+export default function JaegerUIApp() {
   return (
     <ThemeProvider>
       <Provider store={store as any}>

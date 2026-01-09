@@ -68,9 +68,11 @@ jest.mock('../common/utils.css', () => ({}));
 jest.mock('antd/dist/reset.css', () => ({}));
 jest.mock('./index.css', () => ({}));
 
-import JaegerUIApp from './index';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import processScripts from '../../utils/config/process-scripts';
+
+// Module-level initialization happens at import time
+import JaegerUIApp from './index';
 
 const renderWithPath = pathname => {
   mockHistory = createMockHistory(pathname);
@@ -85,15 +87,14 @@ const renderWithPath = pathname => {
 
 describe('JaegerUIApp', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    JaegerAPI.apiRoot = null;
     mockHistory = createMockHistory();
   });
 
-  it('should initialize API and process scripts', () => {
-    renderWithPath('/search');
+  // Module-level initialization tests - these run once when module is imported
+  it('should initialize API and process scripts at module load time', () => {
+    // Verify it was called exactly once during module initialization
     expect(JaegerAPI.apiRoot).toBe(DEFAULT_API_ROOT);
-    expect(processScripts).toHaveBeenCalled();
+    expect(processScripts).toHaveBeenCalledTimes(1);
   });
 
   it('should render Page wrapper', () => {
@@ -140,5 +141,18 @@ describe('JaegerUIApp', () => {
     expect(container.firstChild).toBeDefined();
     expect(container.querySelector('[data-testid="page"]')).toBeInTheDocument();
     expect(container.querySelector('[data-testid="search-trace"]')).toBeInTheDocument();
+  });
+
+  it('should not re-initialize on component re-renders (module-level init is one-time)', () => {
+    const { rerender } = renderWithPath('/search');
+    rerender(
+      <MemoryRouter initialEntries={['/trace-diff']}>
+        <CompatRouter>
+          <JaegerUIApp />
+        </CompatRouter>
+      </MemoryRouter>
+    );
+    // processScripts was called once at module load, not on each render
+    expect(processScripts).toHaveBeenCalledTimes(1);
   });
 });
