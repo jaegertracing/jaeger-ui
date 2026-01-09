@@ -55,7 +55,7 @@ export function SearchFormWithOtlpMetadata(props: any) {
 }
 
 const mergedMapStateToProps = (state: any, ownProps: any) => {
-  const reduxProps = mapStateToProps(state, ownProps);
+  const reduxProps = mapStateToProps(state);
   return {
     ...reduxProps,
     ...ownProps,
