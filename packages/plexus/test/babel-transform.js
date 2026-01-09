@@ -22,4 +22,11 @@ const babelConfiguration = {
   ],
 };
 
+const babelConfigurationForDepcheck = {
+  presets: babelConfiguration.presets,
+  plugins: babelConfiguration.plugins,
+};
+
 module.exports = babelJest.createTransformer(babelConfiguration);
+module.exports.babelConfiguration = babelConfiguration;
+module.exports.babelConfigurationForDepcheck = babelConfigurationForDepcheck;
