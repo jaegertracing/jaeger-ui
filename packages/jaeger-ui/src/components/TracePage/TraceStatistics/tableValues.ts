@@ -275,7 +275,7 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace, use
         color: '',
         searchColor: 'transparent',
         parentElement: '',
-        colorToPercent: 'rgb(248,248,248)',
+        colorToPercent: 'transparent',
         traceID: '',
       };
       tableSpanOTHERS = buildOneColumn(tableSpanOTHERS);
@@ -345,7 +345,7 @@ function buildDetail(
       color,
       searchColor: '',
       parentElement: parentName,
-      colorToPercent: 'rgb(248,248,248)',
+      colorToPercent: 'transparent',
       traceID: '',
     };
     buildOneColumnValue = buildOneColumn(buildOneColumnValue);
@@ -407,7 +407,7 @@ function generateDetailRest(
           color: '',
           searchColor: '',
           parentElement: allColumnValues[i].name,
-          colorToPercent: 'rgb(248,248,248)',
+          colorToPercent: 'transparent',
           traceID: '',
         };
         buildOneColumnValue = buildOneColumn(buildOneColumnValue);

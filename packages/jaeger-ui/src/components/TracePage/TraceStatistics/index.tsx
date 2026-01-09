@@ -36,72 +36,72 @@ const columnsArray: {
   suffix: string;
   titleDescription?: string;
 }[] = [
-  {
-    title: 'Group',
-    attribute: 'name',
-    suffix: '',
-  },
-  {
-    title: 'Count',
-    attribute: 'count',
-    suffix: '',
-    titleDescription: 'Number of spans',
-  },
-  {
-    title: 'Total',
-    attribute: 'total',
-    suffix: 'ms',
-    titleDescription: 'Total duration of all spans',
-  },
-  {
-    title: 'Avg',
-    attribute: 'avg',
-    suffix: 'ms',
-    titleDescription: 'Average duration of all spans',
-  },
-  {
-    title: 'Min',
-    attribute: 'min',
-    suffix: 'ms',
-    titleDescription: 'Minimum duration across all spans',
-  },
-  {
-    title: 'Max',
-    attribute: 'max',
-    suffix: 'ms',
-    titleDescription: 'Maximum duration across all spans',
-  },
-  {
-    title: 'ST Total',
-    attribute: 'selfTotal',
-    suffix: 'ms',
-    titleDescription: 'Sum of Self Time (time spent in a span when it was not waiting on children)',
-  },
-  {
-    title: 'ST Avg',
-    attribute: 'selfAvg',
-    suffix: 'ms',
-    titleDescription: 'Average Self Time (time spent in a span when it was not waiting on children)',
-  },
-  {
-    title: 'ST Min',
-    attribute: 'selfMin',
-    suffix: 'ms',
-    titleDescription: 'Minimum Self Time (time spent in a span when it was not waiting on children)',
-  },
-  {
-    title: 'ST Max',
-    attribute: 'selfMax',
-    suffix: 'ms',
-    titleDescription: 'Maximum Self Time (time spent in a span when it was not waiting on children)',
-  },
-  {
-    title: 'ST in Duration',
-    attribute: 'percent',
-    suffix: '%',
-    titleDescription: 'Percentage of ST Total vs. Total',
-  },
-];
+    {
+      title: 'Group',
+      attribute: 'name',
+      suffix: '',
+    },
+    {
+      title: 'Count',
+      attribute: 'count',
+      suffix: '',
+      titleDescription: 'Number of spans',
+    },
+    {
+      title: 'Total',
+      attribute: 'total',
+      suffix: 'ms',
+      titleDescription: 'Total duration of all spans',
+    },
+    {
+      title: 'Avg',
+      attribute: 'avg',
+      suffix: 'ms',
+      titleDescription: 'Average duration of all spans',
+    },
+    {
+      title: 'Min',
+      attribute: 'min',
+      suffix: 'ms',
+      titleDescription: 'Minimum duration across all spans',
+    },
+    {
+      title: 'Max',
+      attribute: 'max',
+      suffix: 'ms',
+      titleDescription: 'Maximum duration across all spans',
+    },
+    {
+      title: 'ST Total',
+      attribute: 'selfTotal',
+      suffix: 'ms',
+      titleDescription: 'Sum of Self Time (time spent in a span when it was not waiting on children)',
+    },
+    {
+      title: 'ST Avg',
+      attribute: 'selfAvg',
+      suffix: 'ms',
+      titleDescription: 'Average Self Time (time spent in a span when it was not waiting on children)',
+    },
+    {
+      title: 'ST Min',
+      attribute: 'selfMin',
+      suffix: 'ms',
+      titleDescription: 'Minimum Self Time (time spent in a span when it was not waiting on children)',
+    },
+    {
+      title: 'ST Max',
+      attribute: 'selfMax',
+      suffix: 'ms',
+      titleDescription: 'Maximum Self Time (time spent in a span when it was not waiting on children)',
+    },
+    {
+      title: 'ST in Duration',
+      attribute: 'percent',
+      suffix: '%',
+      titleDescription: 'Percentage of ST Total vs. Total',
+    },
+  ];
 
 /**
  * Trace Statistics Component
@@ -196,15 +196,15 @@ export default class TraceStatistics extends Component<Props, State> {
     uiFind: string | null | undefined
   ) => {
     const allTableSpansChange = allTableSpans;
-    const yellowSearchCollor = 'rgb(255,243,215)';
-    const defaultGrayCollor = 'rgb(248,248,248)';
+    const yellowSearchColor = 'var(--trace-emphasis-highlight)';
+    const defaultGrayColor = 'var(--surface-primary)';
     for (let i = 0; i < allTableSpansChange.length; i++) {
       if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
         allTableSpansChange[i].searchColor = 'transparent';
       } else if (allTableSpansChange[i].hasSubgroupValue) {
-        allTableSpansChange[i].searchColor = defaultGrayCollor;
+        allTableSpansChange[i].searchColor = defaultGrayColor;
       } else {
-        allTableSpansChange[i].searchColor = defaultGrayCollor;
+        allTableSpansChange[i].searchColor = defaultGrayColor;
       }
     }
     if (typeof uiFindVertexKeys !== 'undefined') {
@@ -217,13 +217,13 @@ export default class TraceStatistics extends Component<Props, State> {
             -1
           ) {
             if (allTableSpansChange[i].parentElement === 'none') {
-              allTableSpansChange[i].searchColor = yellowSearchCollor;
+              allTableSpansChange[i].searchColor = yellowSearchColor;
             } else if (
               uiFindVertexKeysSplit[uiFindVertexKeysSplit.length - 1].indexOf(
                 allTableSpansChange[i].parentElement
               ) !== -1
             ) {
-              allTableSpansChange[i].searchColor = yellowSearchCollor;
+              allTableSpansChange[i].searchColor = yellowSearchColor;
             }
           }
         }
@@ -232,17 +232,17 @@ export default class TraceStatistics extends Component<Props, State> {
     if (uiFind) {
       for (let i = 0; i < allTableSpansChange.length; i++) {
         if (allTableSpansChange[i].name.indexOf(uiFind!) !== -1) {
-          allTableSpansChange[i].searchColor = yellowSearchCollor;
+          allTableSpansChange[i].searchColor = yellowSearchColor;
 
           for (let j = 0; j < allTableSpansChange.length; j++) {
             if (allTableSpansChange[j].parentElement === allTableSpansChange[i].name) {
-              allTableSpansChange[j].searchColor = yellowSearchCollor;
+              allTableSpansChange[j].searchColor = yellowSearchColor;
             }
           }
           if (allTableSpansChange[i].isDetail) {
             for (let j = 0; j < allTableSpansChange.length; j++) {
               if (allTableSpansChange[i].parentElement === allTableSpansChange[j].name) {
-                allTableSpansChange[j].searchColor = yellowSearchCollor;
+                allTableSpansChange[j].searchColor = yellowSearchColor;
               }
             }
           }

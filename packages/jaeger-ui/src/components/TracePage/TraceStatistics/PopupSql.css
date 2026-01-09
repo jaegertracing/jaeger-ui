@@ -23,9 +23,10 @@ SPDX-License-Identifier: Apache-2.0
   top: 33%;
   bottom: 30%;
   margin: auto;
-  background: rgb(255, 255, 255);
+  background: var(--surface-primary);
   z-index: 3;
   border-radius: 5px;
+  border: 1px solid var(--border-strong);
 }
 
 .PopupSQL--header {
@@ -33,6 +34,7 @@ SPDX-License-Identifier: Apache-2.0
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--text-primary);
 }
 
 .PopupSQL--sqlContent {
@@ -41,10 +43,11 @@ SPDX-License-Identifier: Apache-2.0
   margin-right: auto;
   width: 80%;
   height: 60%;
-  color: rgb(0, 128, 128);
+  color: var(--text-primary);
+  background: var(--surface-secondary);
   font-family: monospace;
   font-size: 13px;
-  outline-color: rgb(0, 128, 128);
+  outline-color: var(--interactive-primary);
   padding: 5px;
   resize: none;
 }
