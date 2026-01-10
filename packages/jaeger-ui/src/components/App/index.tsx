@@ -31,6 +31,8 @@ import './index.css';
 import { store } from '../../utils/configure-store';
 import ThemeProvider from './ThemeProvider';
 
+// Initialize API configuration and process configuration scripts at module level
+// to ensure they run once when the application is loaded, before any components are rendered
 JaegerAPI.apiRoot = DEFAULT_API_ROOT;
 processScripts();
 
