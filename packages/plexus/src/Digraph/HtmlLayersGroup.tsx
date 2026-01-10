@@ -15,7 +15,7 @@ type TProps<T = {}, U = {}> = Omit<THtmlLayersGroup<T, U>, 'layerType' | 'key'> 
   setSizeVertices: (senderKey: string, sizeVertices: TSizeVertex<T>[]) => void;
 };
 
-const HtmlLayersGroup = <T extends {} = {}, U extends {} = {}>(props: TProps<T, U>) => {
+const HtmlLayersGroup = <T = {}, U = {}>(props: TProps<T, U>) => {
   const { getClassName, layers, graphState, setSizeVertices } = props;
 
   const renderLayers = () => {
