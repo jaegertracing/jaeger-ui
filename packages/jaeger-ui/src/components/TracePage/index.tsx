@@ -61,7 +61,7 @@ type TDispatchProps = {
 
 type TOwnProps = {
   history: RouterHistory;
-  location: Location<LocationState>;
+  location: Location;
   params: { id: string };
 };
 
@@ -291,7 +291,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
     const { history } = this.props;
     if (id && id !== id.toLowerCase()) {
-      history.replace(getLocation(id.toLowerCase(), location.state));
+      history.replace(getLocation(id.toLowerCase(), location.state as LocationState));
     }
   }
 
@@ -376,7 +376,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
-      toSearch: (locationState && locationState.fromSearch) || null,
+      toSearch: ((locationState as any) && (locationState as any).fromSearch) || null,
       trace: data.asOtelTrace(),
       updateNextViewRangeTime: this.updateNextViewRangeTime,
       updateViewRangeTime: this.updateViewRangeTime,
@@ -456,7 +456,8 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const archiveEnabled = Boolean(config.archiveEnabled);
   const storageCapabilities = config.storageCapabilities;
   const { disableJsonView, criticalPathEnabled } = config;
-  const { state: locationState } = router.location;
+  const { state: rawState } = router.location;
+  const locationState = rawState as LocationState;
   const searchUrl = (locationState && locationState.fromSearch) || null;
   const { traceGraph: traceGraphConfig } = config;
 

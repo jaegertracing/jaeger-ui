@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import { Checkbox } from 'antd';
+import { To } from 'history';
 import { Link } from 'react-router-dom';
 
 import TraceId from '../../common/TraceId';
@@ -22,7 +23,7 @@ type Props = {
   durationPercent?: number;
   error?: ApiError;
   isInDiffCohort: boolean;
-  linkTo: React.ComponentProps<typeof Link>['to'] | TNil;
+  linkTo: To | TNil;
   state?: FetchedState | TNil;
   targetBlank?: boolean;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;

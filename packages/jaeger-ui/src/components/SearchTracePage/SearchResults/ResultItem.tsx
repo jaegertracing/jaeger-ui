@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { Col, Divider, Row, Tag } from 'antd';
-import { LocationDescriptor } from 'history';
+import { To } from 'history';
 import { Link } from 'react-router-dom';
 
 import _sortBy from 'lodash/sortBy';
@@ -27,7 +27,7 @@ dayjs.extend(relativeTime);
 type Props = {
   durationPercent: number;
   isInDiffCohort: boolean;
-  linkTo: LocationDescriptor;
+  linkTo: To;
   toggleComparison: (traceID: string) => void;
   trace: IOtelTrace;
   disableComparision: boolean;
