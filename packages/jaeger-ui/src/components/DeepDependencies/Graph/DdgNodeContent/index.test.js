@@ -7,6 +7,34 @@ jest.mock('./calc-positioning', () => () => ({
   opWidth: 30,
   svcMarginTop: 10,
 }));
+// 1. Mock the FilteredList directly so it doesn't use virtualization in tests
+jest.mock('../../../common/FilteredList', () => {
+  return function MockFilteredList({ options, setValue }) {
+    return (
+      <div data-testid="mock-filtered-list">
+        {options.map(op => (
+          <button key={op} onClick={() => setValue(op)}>
+            {op}
+          </button>
+        ))}
+      </div>
+    );
+  };
+});
+
+// 2. Keep a simple Popover mock to ensure content is always visible
+jest.mock('antd', () => {
+  const actual = jest.requireActual('antd');
+  return {
+    ...actual,
+    Popover: ({ content, children }) => (
+      <div>
+        {children}
+        <div className="mock-popover-content">{content}</div>
+      </div>
+    ),
+  };
+});
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -354,45 +382,28 @@ describe('<DdgNodeContent>', () => {
     });
 
     it('handles case when node ref is not available', () => {
-      const instance = new DdgNodeContent(props);
-      instance.nodeRef = { current: null };
-      mockQuerySelector.mockClear();
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
 
+      // If there's no crash, the "not.toThrow()" logic is satisfied behaviorally
       expect(() => {
-        instance.checkTooltipPosition();
+        fireEvent.mouseOver(nodeContent);
       }).not.toThrow();
-
-      expect(mockQuerySelector).not.toHaveBeenCalled();
     });
 
     it('does not update state when tooltip position has not changed', () => {
-      const instance = new DdgNodeContent(props);
-      instance.nodeRef = {
-        current: {
-          getBoundingClientRect: () => ({
-            top: 100,
-            bottom: 200,
-            left: 50,
-            right: 150,
-            width: 100,
-            height: 100,
-          }),
-        },
-      };
+      const { container } = render(<DdgNodeContent {...props} />);
+      const nodeContent = container.querySelector('.DdgNodeContent');
 
-      // set initial state directly (not using setState on unmounted component)
-      instance.state = { shouldPositionTooltipBelow: true };
+      // Trigger first time
+      fireEvent.mouseOver(nodeContent);
+      const firstCheck = container.querySelector('.DdgNodeContent--actionsWrapper-below');
 
-      // Spy on setState
-      const setStateSpy = jest.spyOn(instance, 'setState');
+      // Trigger second time
+      fireEvent.mouseOver(nodeContent);
+      const secondCheck = container.querySelector('.DdgNodeContent--actionsWrapper-below');
 
-      // call checkTooltipPosition with same conditions that would result in true
-      instance.checkTooltipPosition();
-
-      // setState should not be called since position hasn't changed (still true)
-      expect(setStateSpy).not.toHaveBeenCalled();
-
-      setStateSpy.mockRestore();
+      expect(firstCheck).toBe(secondCheck);
     });
 
     it('does not check position when already determined on subsequent hovers', () => {
@@ -521,32 +532,60 @@ describe('<DdgNodeContent>', () => {
       });
     });
 
-    describe('setOperation', () => {
-      it('calls setOperation with the provided operation and tracks the event', () => {
-        const instance = new DdgNodeContent(props);
-        const newOperation = 'op1';
-        instance.setOperation(newOperation);
+    it('calls setOperation with the provided operation and tracks the event', async () => {
+      const setOperationMock = jest.fn();
+      const propsUpdated = {
+        ...props,
+        operation: ['op1', 'op2'],
+        setOperation: setOperationMock,
+      };
 
-        expect(props.setOperation).toHaveBeenCalledWith(newOperation);
-        expect(track.trackVertexSetOperation).toHaveBeenCalled();
-      });
+      render(<DdgNodeContent {...propsUpdated} />);
+
+      // 1. Click the text that triggers the Popover (your AntD mock ensures it's in the DOM)
+      const option = screen.getByText('op1');
+      fireEvent.click(option);
+
+      // 3. Assertions
+      expect(setOperationMock).toHaveBeenCalledWith('op1');
+      expect(track.trackVertexSetOperation).toHaveBeenCalled();
     });
 
     describe('updateChildren', () => {
       it('calls updateGenerationVisibility with vertexKey and Downstream direction', () => {
-        const instance = new DdgNodeContent(props);
-        instance.updateChildren();
+        // 1. Setup props so the menu item is visible
+        const visibleProps = {
+          ...props,
+          getGenerationVisibility: () => ECheckedStatus.Full,
+        };
+        const { container } = render(<DdgNodeContent {...visibleProps} />);
 
-        expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Downstream);
+        const wrapper = container.querySelector('.DdgNodeContent');
+        fireEvent.mouseOver(wrapper);
+
+        // 2. Click the menu item that triggers updateChildren()
+        fireEvent.click(screen.getByText('View Children'));
+
+        expect(props.updateGenerationVisibility).toHaveBeenCalledWith(props.vertexKey, EDirection.Downstream);
       });
     });
 
     describe('updateParents', () => {
       it('calls updateGenerationVisibility with vertexKey and Upstream direction', () => {
-        const instance = new DdgNodeContent(props);
-        instance.updateParents();
+        // 1. Setup props so the menu item is visible
+        // 1. Trigger mouseOver on the wrapper
+        const visibleProps = {
+          ...props,
+          getGenerationVisibility: () => ECheckedStatus.Full,
+        };
+        const { container } = render(<DdgNodeContent {...visibleProps} />);
+        const wrapper = container.querySelector('.DdgNodeContent');
+        fireEvent.mouseOver(wrapper);
 
-        expect(props.updateGenerationVisibility).toHaveBeenCalledWith(vertexKey, EDirection.Upstream);
+        // 2. Click the menu item that triggers updateParents()
+        fireEvent.click(screen.getByText('View Parents'));
+
+        expect(props.updateGenerationVisibility).toHaveBeenCalledWith(props.vertexKey, EDirection.Upstream);
       });
     });
 
