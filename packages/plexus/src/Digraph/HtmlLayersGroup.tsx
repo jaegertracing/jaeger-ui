@@ -15,10 +15,10 @@ type TProps<T = {}, U = {}> = Omit<THtmlLayersGroup<T, U>, 'layerType' | 'key'> 
   setSizeVertices: (senderKey: string, sizeVertices: TSizeVertex<T>[]) => void;
 };
 
-export default class HtmlLayersGroup<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
-  private renderLayers() {
-    const { getClassName, layers, graphState, setSizeVertices } = this.props;
+const HtmlLayersGroup = <T = {}, U = {}>(props: TProps<T, U>) => {
+  const { getClassName, layers, graphState, setSizeVertices } = props;
 
+  const renderLayers = () => {
     return layers.map(layer => {
       const { key, setOnContainer } = layer;
 
@@ -55,13 +55,13 @@ export default class HtmlLayersGroup<T = {}, U = {}> extends React.PureComponent
       // html edges layer
       throw new Error('Not implemented');
     });
-  }
+  };
 
-  render() {
-    return (
-      <HtmlLayer topLayer classNamePart="HtmlLayersGroup" {...this.props}>
-        {this.renderLayers()}
-      </HtmlLayer>
-    );
-  }
-}
+  return (
+    <HtmlLayer topLayer classNamePart="HtmlLayersGroup" {...props}>
+      {renderLayers()}
+    </HtmlLayer>
+  );
+};
+
+export default React.memo(HtmlLayersGroup) as typeof HtmlLayersGroup;
