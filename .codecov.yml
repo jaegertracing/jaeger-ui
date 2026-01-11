@@ -1,3 +1,9 @@
+# Copyright (c) The Jaeger Authors
+# SPDX-License-Identifier: Apache-2.0
+
+# Validate config via:
+#   curl -X POST --data-binary @.codecov.yml https://codecov.io/validate
+
 codecov:
   notify:
     require_ci_to_pass: yes
@@ -11,9 +17,7 @@ coverage:
   status:
     project:
       default:
-        # ABSOLUTE FLOOR: The status will fail if overall coverage is below 95%.
-        # This is enforced *after* the relative check passes.
-        target: 95%
+        target: auto  # Prevents Plexus from tanking the global status
 
         # RELATIVE PROTECTION: This is the maximum allowed drop *below* the base commit's coverage.
         # Setting this to 0% means the project coverage cannot drop at all,
@@ -25,6 +29,19 @@ coverage:
         if_not_found: success
         if_ci_failed: error
         only_pulls: false
+
+      jaeger-ui:
+        flags:
+          - jaeger-ui
+        target: 95%  # The "Absolute Floor" for main UI
+        threshold: 0%
+
+      plexus:
+        flags:
+          - plexus
+        target: auto  # Allows Plexus to start at 0% and grow
+        threshold: 0%
+
     patch:
       default:
         only_pulls: true
@@ -36,6 +53,17 @@ coverage:
         if_no_uploads: error
         if_not_found: success
         if_ci_failed: error
+
+flags:
+  jaeger-ui:
+    paths:
+      - "packages/jaeger-ui/src/"
+    carryforward: true  # see the breakdown in the PR
+
+  plexus:
+    paths:
+      - "packages/plexus/src/"
+    carryforward: true
 
 ignore:
   - "packages/jaeger-ui/src/utils/helpers/ReactShallowRenderer.js"

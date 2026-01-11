@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { Component } from 'react';
 import { Provider } from 'react-redux';
 import { Route, Redirect, Switch } from 'react-router-dom';
 
@@ -32,65 +31,62 @@ import './index.css';
 import { store } from '../../utils/configure-store';
 import ThemeProvider from './ThemeProvider';
 
-export default class JaegerUIApp extends Component<{}> {
-  constructor(props: {}) {
-    super(props);
-    (JaegerAPI as any).apiRoot = DEFAULT_API_ROOT;
-    processScripts();
-  }
+// Initialize API configuration and process configuration scripts at module level
+// to ensure they run once when the application is loaded, before any components are rendered
+JaegerAPI.apiRoot = DEFAULT_API_ROOT;
+processScripts();
 
-  render() {
-    return (
-      <ThemeProvider>
-        <Provider store={store as any}>
-          {
-            // the Page component is a connected component (wrapped by Redux's connect HOC)
-            // that is also wrapped by a custom withRouteProps HOC.
-            // The @ts-ignore was added because of a specific TypeScript error that occurs
-            // when mixing Redux 5/9, React 19, and complex HOCs.
-          }
-          {/* @ts-ignore */}
-          <Page>
-            <Switch>
-              <Route path={searchPath}>
-                <SearchTracePage />
-              </Route>
-              <Route path={traceDiffPath}>
-                <TraceDiff />
-              </Route>
-              <Route path={tracePath}>
-                <TracePage />
-              </Route>
-              <Route path={dependenciesPath}>
-                <DependencyGraph />
-              </Route>
-              <Route path={deepDependenciesPath}>
-                <DeepDependencies />
-              </Route>
-              <Route path={qualityMetricsPath}>
-                <QualityMetrics />
-              </Route>
-              <Route path={monitorATMPath}>
-                <MonitorATMPage />
-              </Route>
+export default function JaegerUIApp() {
+  return (
+    <ThemeProvider>
+      <Provider store={store as any}>
+        {
+          // the Page component is a connected component (wrapped by Redux's connect HOC)
+          // that is also wrapped by a custom withRouteProps HOC.
+          // The @ts-ignore was added because of a specific TypeScript error that occurs
+          // when mixing Redux 5/9, React 19, and complex HOCs.
+        }
+        {/* @ts-ignore */}
+        <Page>
+          <Switch>
+            <Route path={searchPath}>
+              <SearchTracePage />
+            </Route>
+            <Route path={traceDiffPath}>
+              <TraceDiff />
+            </Route>
+            <Route path={tracePath}>
+              <TracePage />
+            </Route>
+            <Route path={dependenciesPath}>
+              <DependencyGraph />
+            </Route>
+            <Route path={deepDependenciesPath}>
+              <DeepDependencies />
+            </Route>
+            <Route path={qualityMetricsPath}>
+              <QualityMetrics />
+            </Route>
+            <Route path={monitorATMPath}>
+              <MonitorATMPage />
+            </Route>
 
-              <Route exact path="/">
-                <Redirect to={searchPath} />
-              </Route>
-              <Route exact path={prefixUrl()}>
-                <Redirect to={searchPath} />
-              </Route>
-              <Route exact path={prefixUrl('/')}>
-                <Redirect to={searchPath} />
-              </Route>
+            <Route exact path="/">
+              <Redirect to={searchPath} />
+            </Route>
+            <Route exact path={prefixUrl()}>
+              <Redirect to={searchPath} />
+            </Route>
+            <Route exact path={prefixUrl('/')}>
+              <Redirect to={searchPath} />
+            </Route>
 
-              <Route>
-                <NotFound error="Page not found" />
-              </Route>
-            </Switch>
-          </Page>
-        </Provider>
-      </ThemeProvider>
-    );
-  }
+            <Route>
+              <NotFound error="Page not found" />
+            </Route>
+          </Switch>
+        </Page>
+      </Provider>
+    </ThemeProvider>
+  );
 }
