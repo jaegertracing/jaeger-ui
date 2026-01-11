@@ -541,12 +541,9 @@ describe('<DdgNodeContent>', () => {
       };
 
       render(<DdgNodeContent {...propsUpdated} />);
-
-      // 1. Click the text that triggers the Popover (your AntD mock ensures it's in the DOM)
       const option = screen.getByText('op1');
       fireEvent.click(option);
 
-      // 3. Assertions
       expect(setOperationMock).toHaveBeenCalledWith('op1');
       expect(track.trackVertexSetOperation).toHaveBeenCalled();
     });
@@ -559,7 +556,6 @@ describe('<DdgNodeContent>', () => {
           getGenerationVisibility: () => ECheckedStatus.Full,
         };
         const { container } = render(<DdgNodeContent {...visibleProps} />);
-
         const wrapper = container.querySelector('.DdgNodeContent');
         fireEvent.mouseOver(wrapper);
 
@@ -573,7 +569,6 @@ describe('<DdgNodeContent>', () => {
     describe('updateParents', () => {
       it('calls updateGenerationVisibility with vertexKey and Upstream direction', () => {
         // 1. Setup props so the menu item is visible
-        // 1. Trigger mouseOver on the wrapper
         const visibleProps = {
           ...props,
           getGenerationVisibility: () => ECheckedStatus.Full,
