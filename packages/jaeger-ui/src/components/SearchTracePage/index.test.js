@@ -97,60 +97,17 @@ describe('<SearchTracePage>', () => {
     expect(props.searchTraces).toHaveBeenCalledTimes(1);
   });
 
-  it('loads the services and operations if a service is stored', () => {
-    const oldFn = store.get;
-    store.get = jest.fn(() => ({ service: 'svc-b' }));
-    const testProps = { ...props, urlQueryParams: {} };
-    render(
-      <AllProvider>
-        <SearchTracePage {...testProps} />
-      </AllProvider>
-    );
-    expect(props.fetchServices).toHaveBeenCalledTimes(1);
-    expect(props.fetchServiceOperations).toHaveBeenCalledTimes(1);
-    expect(props.fetchServiceOperations).toHaveBeenCalledWith('svc-b');
-    store.get = oldFn;
-  });
-
-  it('loads the operations linked to the URL service parameter if present', () => {
-    const oldFn = store.get;
-    store.get = jest.fn(() => ({ service: 'svc-b' }));
-    render(
-      <AllProvider>
-        <SearchTracePage {...props} />
-      </AllProvider>
-    );
-    expect(props.searchTraces).toHaveBeenCalledTimes(1);
-  });
-
-  it('loads the services and operations if a service is stored', async () => {
-    const oldFn = store.get;
-    store.get = jest.fn(() => ({ service: 'svc-b' }));
-    render(
-      <AllProvider>
-        <SearchTracePage {...{ ...props, urlQueryParams: null }} />
-      </AllProvider>
-    );
-    expect(useServices).toHaveBeenCalled();
-    expect(useSpanNames).toHaveBeenCalledWith('svc-b');
-    store.get = oldFn;
-  });
-
-  it('loads the operations linked to the URL service parameter if present', async () => {
-    const oldFn = store.get;
-    store.get = jest.fn(() => ({ service: 'svc-b' }));
+  it('uses React Query hooks to fetch services', () => {
     render(
       <AllProvider>
         <SearchTracePage {...props} />
       </AllProvider>
     );
     expect(useServices).toHaveBeenCalled();
-    expect(useSpanNames).toHaveBeenCalledWith('svc-a');
-    store.get = oldFn;
   });
 
   it('shows a loading indicator when services are being fetched', async () => {
-    useServices.mockReturnValue({ data: [], isLoading: true });
+    useServices.mockReturnValue({ data: [], isLoading: true, error: null });
     const { container } = render(
       <AllProvider>
         <SearchTracePage {...props} />

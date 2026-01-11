@@ -30,6 +30,7 @@ import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { useConfig } from '../../hooks/useConfig';
+import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
 import { fetchedState } from '../../constants';
@@ -338,12 +339,8 @@ interface ISearchFormImplProps {
   submitting?: boolean;
   searchMaxLookback?: ILookbackOption;
   searchAdjustEndTime?: string;
-  services: IServiceWithOperations[];
   initialValues?: Partial<ISearchFormFields> & { traceIDs?: string | null };
-  isLoadingServices?: boolean;
-  isLoadingSpanNames?: boolean;
   searchTraces: SearchTracesFunction;
-  changeServiceHandler: (service: string) => void;
   submitFormHandler: (
     fields: ISearchFormFields,
     adjustEndTime: string | null | undefined,
@@ -361,11 +358,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   submitting = false,
   searchMaxLookback,
   searchAdjustEndTime,
-  services = [],
   initialValues,
-  isLoadingServices = false,
-  isLoadingSpanNames = false,
-  changeServiceHandler,
   submitFormHandler,
 }) => {
   const { useOpenTelemetryTerms: useOtelTerms } = useConfig();
@@ -383,24 +376,45 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     resultsLimit: initialValues?.resultsLimit,
   }));
 
+  // Fetch services using React Query
+  const { data: servicesList, isLoading: isLoadingServices, error: servicesError } = useServices();
+
+  // Fetch span names for the currently selected service
+  const currentService = formData.service;
+  const { data: spanNamesData, isLoading: isLoadingSpanNames } = useSpanNames(
+    currentService && currentService !== '-' ? currentService : null
+  );
+
+  // Extract unique names to maintain compatibility with existing UI
+  const spanNames = useMemo(
+    () => Array.from(new Set((spanNamesData || []).map(op => op.name))).sort(),
+    [spanNamesData]
+  );
+
+  // Transform services data to match the expected format
+  const services: IServiceWithOperations[] = useMemo(
+    () =>
+      (servicesList || []).map(serviceName => ({
+        name: serviceName,
+        operations: currentService === serviceName ? spanNames : [],
+      })),
+    [servicesList, currentService, spanNames]
+  );
+
   const [adjustTimeEnabled, setAdjustTimeEnabled] = useState<boolean>(() => {
     const storedAdjustTimeEnabled = store.get(ADJUST_TIME_ENABLED_KEY);
     return storedAdjustTimeEnabled !== undefined ? storedAdjustTimeEnabled : Boolean(searchAdjustEndTime);
   });
 
-  const handleChange = useCallback(
-    (fieldData: Partial<ISearchFormFields>) => {
-      setFormData(prev => {
-        const nextFormData = { ...prev, ...fieldData };
-        if (fieldData.service) {
-          changeServiceHandler(fieldData.service);
-          nextFormData.operation = DEFAULT_OPERATION;
-        }
-        return nextFormData;
-      });
-    },
-    [changeServiceHandler]
-  );
+  const handleChange = useCallback((fieldData: Partial<ISearchFormFields>) => {
+    setFormData(prev => {
+      const nextFormData = { ...prev, ...fieldData };
+      if (fieldData.service) {
+        nextFormData.operation = DEFAULT_OPERATION;
+      }
+      return nextFormData;
+    });
+  }, []);
 
   const handleAdjustTimeToggle = useCallback((checked: boolean) => {
     setAdjustTimeEnabled(checked);
@@ -422,6 +436,12 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
   const invalidDuration =
     validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
+
+  if (servicesError) {
+    return (
+      <div className="SearchForm--error">Error loading services: {(servicesError as Error).message}</div>
+    );
+  }
 
   if (isLoadingServices && (!services || services.length === 0)) {
     return <LoadingIndicator />;
@@ -857,11 +877,6 @@ export function mapDispatchToProps(dispatch: Dispatch) {
   const { searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
   return {
     searchTraces,
-    changeServiceHandler: (service: string) =>
-      dispatch({
-        type: CHANGE_SERVICE_ACTION_TYPE,
-        payload: service,
-      }),
     submitFormHandler: (
       fields: ISearchFormFields,
       adjustEndTime: string | null | undefined,

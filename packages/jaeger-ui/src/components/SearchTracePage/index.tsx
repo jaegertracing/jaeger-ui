@@ -8,7 +8,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 import store from 'store';
 import memoizeOne from 'memoize-one';
 
-import SearchFormWithOtlpMetadata from './SearchFormWithOtlpMetadata';
+import SearchForm from './SearchForm';
 import SearchResults from './SearchResults';
 import { isSameQuery, getUrlState } from './url';
 import * as jaegerApiActions from '../../actions/jaeger-api';
@@ -129,16 +129,11 @@ export class SearchTracePageImpl extends Component<SearchTracePageImplProps, ISe
     const showLogo = isHomepage && !hasTraceResults && !loadingTraces && !errors;
 
     const tabItems = [];
-    // Always show the search form, loading is handled by SearchFormWithOtlpMetadata
+    // Always show the search form, loading is handled by SearchForm
     tabItems.push({
       label: 'Search',
       key: 'searchForm',
-      children: (
-        <SearchFormWithOtlpMetadata
-          key={JSON.stringify(urlQueryParams)}
-          {...({ initialValues: urlQueryParams } as any)}
-        />
-      ),
+      children: <SearchForm key={JSON.stringify(urlQueryParams)} />,
     });
     if (!disableFileUploadControl) {
       tabItems.push({

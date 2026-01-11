@@ -21,6 +21,20 @@ jest.mock('../../hooks/useConfig', () => ({
     useOpenTelemetryTerms: false,
   }),
 }));
+jest.mock('../../hooks/useTraceDiscovery', () => ({
+  useServices: jest.fn(() => ({
+    data: ['svcA', 'svcB'],
+    isLoading: false,
+    error: null,
+  })),
+  useSpanNames: jest.fn(() => ({
+    data: [
+      { name: 'A', spanKind: 'server' },
+      { name: 'B', spanKind: 'client' },
+    ],
+    isLoading: false,
+  })),
+}));
 
 import React from 'react';
 import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
@@ -73,11 +87,6 @@ const defaultProps = {
     label: '2 Days',
     value: '2d',
   },
-  services: [
-    { name: 'svcA', operations: ['A', 'B'] },
-    { name: 'svcB', operations: ['A', 'B'] },
-  ],
-  changeServiceHandler: jest.fn(),
   submitFormHandler: jest.fn(),
 };
 
@@ -460,14 +469,6 @@ describe('<SearchForm>', () => {
     expect(SearchableSelect.disabled.operation).toBe(true);
   });
 
-  it('enables operation when unknown service selected', () => {
-    render(<SearchForm {...defaultProps} />);
-    const serviceOnChange = SearchableSelect.onChangeFns.service;
-    serviceOnChange('svcC');
-
-    expect(defaultProps.changeServiceHandler).toHaveBeenCalledWith('svcC');
-  });
-
   it('shows custom date inputs when lookback is set to "custom"', () => {
     const props = {
       ...defaultProps,
@@ -603,7 +604,6 @@ describe('SearchForm onChange handlers', () => {
     await act(async () => {
       SearchableSelect.onChangeFns.service('testService');
     });
-    expect(defaultProps.changeServiceHandler).toHaveBeenCalledWith('testService');
     await waitFor(() =>
       expect(getByTestId('mock-select-service').getAttribute('data-value')).toBe('testService')
     );
@@ -924,21 +924,7 @@ describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
     expect(mapDispatchToProps(() => {})).toEqual({
       searchTraces: expect.any(Function),
-      changeServiceHandler: expect.any(Function),
       submitFormHandler: expect.any(Function),
-    });
-  });
-
-  it('should dispatch changeServiceHandler correctly', () => {
-    const dispatch = jest.fn();
-    const { changeServiceHandler } = mapDispatchToProps(dispatch);
-    const service = 'test-service';
-
-    changeServiceHandler(service);
-
-    expect(dispatch).toHaveBeenCalledWith({
-      type: CHANGE_SERVICE_ACTION_TYPE,
-      payload: service,
     });
   });
 });
