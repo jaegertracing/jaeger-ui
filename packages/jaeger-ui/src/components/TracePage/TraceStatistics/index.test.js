@@ -74,7 +74,7 @@ describe('<TraceTagOverview>', () => {
     await waitFor(() => {
       expect(componentInstance.state.tableValue.length).toBeGreaterThan(0);
       const hasHighlightedItems = componentInstance.state.tableValue.some(
-        item => item.searchColor === 'rgb(255,243,215)'
+        item => item.searchColor === 'var(--trace-emphasis-highlight)'
       );
       expect(hasHighlightedItems).toBe(true);
     });
@@ -128,7 +128,7 @@ describe('<TraceTagOverview>', () => {
     );
 
     await timedAct(async () => {
-      componentRef.current.handler(tableValue, tableValue, 'Service Name', 'Operation Name');
+      componentRef.current.handler(tableValue, tableValue, 'Service Name', 'Operation Name', 'count');
     }, 'call handler');
 
     const rows = screen.getAllByRole('row');
@@ -450,7 +450,7 @@ describe('<TraceTagOverview>', () => {
     await waitFor(() => {
       if (componentRef.current) {
         const result = componentRef.current.searchInTable(undefined, mockTableData, 'searchterm');
-        const highlightedItems = result.filter(item => item.searchColor === 'rgb(255,243,215)');
+        const highlightedItems = result.filter(item => item.searchColor === 'var(--trace-emphasis-highlight)');
         expect(highlightedItems.length).toBeGreaterThan(0);
       }
     });
@@ -488,8 +488,8 @@ describe('<TraceTagOverview>', () => {
     await waitFor(() => {
       if (componentRef.current) {
         const result = componentRef.current.searchInTable(undefined, mockTableData, null);
-        expect(result[0].searchColor).toBe('rgb(248,248,248)');
-        expect(result[1].searchColor).toBe('rgb(248,248,248)');
+        expect(result[0].searchColor).toBe('var(--surface-primary)');
+        expect(result[1].searchColor).toBe('var(--surface-primary)');
       }
     });
   });

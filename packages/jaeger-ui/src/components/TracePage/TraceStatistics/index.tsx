@@ -3,7 +3,7 @@
 
 import React, { Component } from 'react';
 import './index.css';
-import { Table } from 'antd';
+import { Table, Tooltip } from 'antd';
 import { ColumnProps } from 'antd/es/table';
 import { IOtelTrace } from '../../../types/otel';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
@@ -11,6 +11,8 @@ import { ITableSpan } from './types';
 import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
 import { getServiceName } from './tableValues';
+import RelativeBar from '../../common/RelativeBar';
+import { formatDurationCompact } from '../../../utils/date';
 
 type Props = {
   trace: IOtelTrace;
@@ -28,6 +30,7 @@ type State = {
   wholeTable: ITableSpan[];
   valueNameSelector1: string;
   valueNameSelector2: string | null;
+  colorByAttribute: string;
 };
 
 const columnsArray: {
@@ -36,72 +39,72 @@ const columnsArray: {
   suffix: string;
   titleDescription?: string;
 }[] = [
-  {
-    title: 'Group',
-    attribute: 'name',
-    suffix: '',
-  },
-  {
-    title: 'Count',
-    attribute: 'count',
-    suffix: '',
-    titleDescription: 'Number of spans',
-  },
-  {
-    title: 'Total',
-    attribute: 'total',
-    suffix: 'ms',
-    titleDescription: 'Total duration of all spans',
-  },
-  {
-    title: 'Avg',
-    attribute: 'avg',
-    suffix: 'ms',
-    titleDescription: 'Average duration of all spans',
-  },
-  {
-    title: 'Min',
-    attribute: 'min',
-    suffix: 'ms',
-    titleDescription: 'Minimum duration across all spans',
-  },
-  {
-    title: 'Max',
-    attribute: 'max',
-    suffix: 'ms',
-    titleDescription: 'Maximum duration across all spans',
-  },
-  {
-    title: 'ST Total',
-    attribute: 'selfTotal',
-    suffix: 'ms',
-    titleDescription: 'Sum of Self Time (time spent in a span when it was not waiting on children)',
-  },
-  {
-    title: 'ST Avg',
-    attribute: 'selfAvg',
-    suffix: 'ms',
-    titleDescription: 'Average Self Time (time spent in a span when it was not waiting on children)',
-  },
-  {
-    title: 'ST Min',
-    attribute: 'selfMin',
-    suffix: 'ms',
-    titleDescription: 'Minimum Self Time (time spent in a span when it was not waiting on children)',
-  },
-  {
-    title: 'ST Max',
-    attribute: 'selfMax',
-    suffix: 'ms',
-    titleDescription: 'Maximum Self Time (time spent in a span when it was not waiting on children)',
-  },
-  {
-    title: 'ST in Duration',
-    attribute: 'percent',
-    suffix: '%',
-    titleDescription: 'Percentage of ST Total vs. Total',
-  },
-];
+    {
+      title: 'Group',
+      attribute: 'name',
+      suffix: '',
+    },
+    {
+      title: 'Count',
+      attribute: 'count',
+      suffix: '',
+      titleDescription: 'Number of spans',
+    },
+    {
+      title: 'Total',
+      attribute: 'total',
+      suffix: 'ms',
+      titleDescription: 'Total duration of all spans',
+    },
+    {
+      title: 'Avg',
+      attribute: 'avg',
+      suffix: 'ms',
+      titleDescription: 'Average duration of all spans',
+    },
+    {
+      title: 'Min',
+      attribute: 'min',
+      suffix: 'ms',
+      titleDescription: 'Minimum duration across all spans',
+    },
+    {
+      title: 'Max',
+      attribute: 'max',
+      suffix: 'ms',
+      titleDescription: 'Maximum duration across all spans',
+    },
+    {
+      title: 'ST Total',
+      attribute: 'selfTotal',
+      suffix: 'ms',
+      titleDescription: 'Sum of Self Time (time spent in a span when it was not waiting on children)',
+    },
+    {
+      title: 'ST Avg',
+      attribute: 'selfAvg',
+      suffix: 'ms',
+      titleDescription: 'Average Self Time (time spent in a span when it was not waiting on children)',
+    },
+    {
+      title: 'ST Min',
+      attribute: 'selfMin',
+      suffix: 'ms',
+      titleDescription: 'Minimum Self Time (time spent in a span when it was not waiting on children)',
+    },
+    {
+      title: 'ST Max',
+      attribute: 'selfMax',
+      suffix: 'ms',
+      titleDescription: 'Maximum Self Time (time spent in a span when it was not waiting on children)',
+    },
+    {
+      title: 'ST in Duration',
+      attribute: 'percent',
+      suffix: '%',
+      titleDescription: 'Percentage of ST Total vs. Total',
+    },
+  ];
 
 /**
  * Trace Statistics Component
@@ -119,6 +122,7 @@ export default class TraceStatistics extends Component<Props, State> {
       wholeTable: [],
       valueNameSelector1: getServiceName(),
       valueNameSelector2: null,
+      colorByAttribute: 'count',
     };
 
     this.handler = this.handler.bind(this);
@@ -155,7 +159,8 @@ export default class TraceStatistics extends Component<Props, State> {
     tableValue: ITableSpan[],
     wholeTable: ITableSpan[],
     valueNameSelector1: string,
-    valueNameSelector2: string | null
+    valueNameSelector2: string | null,
+    colorByAttribute: string
   ) {
     this.setState(prevState => {
       return {
@@ -166,6 +171,7 @@ export default class TraceStatistics extends Component<Props, State> {
         valueNameSelector1,
         valueNameSelector2,
         wholeTable,
+        colorByAttribute,
       };
     });
   }
@@ -196,15 +202,15 @@ export default class TraceStatistics extends Component<Props, State> {
     uiFind: string | null | undefined
   ) => {
     const allTableSpansChange = allTableSpans;
-    const yellowSearchCollor = 'rgb(255,243,215)';
-    const defaultGrayCollor = 'rgb(248,248,248)';
+    const yellowSearchColor = 'var(--trace-emphasis-highlight)';
+    const defaultGrayColor = 'var(--surface-primary)';
     for (let i = 0; i < allTableSpansChange.length; i++) {
       if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
         allTableSpansChange[i].searchColor = 'transparent';
       } else if (allTableSpansChange[i].hasSubgroupValue) {
-        allTableSpansChange[i].searchColor = defaultGrayCollor;
+        allTableSpansChange[i].searchColor = defaultGrayColor;
       } else {
-        allTableSpansChange[i].searchColor = defaultGrayCollor;
+        allTableSpansChange[i].searchColor = defaultGrayColor;
       }
     }
     if (typeof uiFindVertexKeys !== 'undefined') {
@@ -217,13 +223,13 @@ export default class TraceStatistics extends Component<Props, State> {
             -1
           ) {
             if (allTableSpansChange[i].parentElement === 'none') {
-              allTableSpansChange[i].searchColor = yellowSearchCollor;
+              allTableSpansChange[i].searchColor = yellowSearchColor;
             } else if (
               uiFindVertexKeysSplit[uiFindVertexKeysSplit.length - 1].indexOf(
                 allTableSpansChange[i].parentElement
               ) !== -1
             ) {
-              allTableSpansChange[i].searchColor = yellowSearchCollor;
+              allTableSpansChange[i].searchColor = yellowSearchColor;
             }
           }
         }
@@ -232,17 +238,17 @@ export default class TraceStatistics extends Component<Props, State> {
     if (uiFind) {
       for (let i = 0; i < allTableSpansChange.length; i++) {
         if (allTableSpansChange[i].name.indexOf(uiFind!) !== -1) {
-          allTableSpansChange[i].searchColor = yellowSearchCollor;
+          allTableSpansChange[i].searchColor = yellowSearchColor;
 
           for (let j = 0; j < allTableSpansChange.length; j++) {
             if (allTableSpansChange[j].parentElement === allTableSpansChange[i].name) {
-              allTableSpansChange[j].searchColor = yellowSearchCollor;
+              allTableSpansChange[j].searchColor = yellowSearchColor;
             }
           }
           if (allTableSpansChange[i].isDetail) {
             for (let j = 0; j < allTableSpansChange.length; j++) {
               if (allTableSpansChange[i].parentElement === allTableSpansChange[j].name) {
-                allTableSpansChange[j].searchColor = yellowSearchCollor;
+                allTableSpansChange[j].searchColor = yellowSearchColor;
               }
             }
           }
@@ -275,16 +281,14 @@ export default class TraceStatistics extends Component<Props, State> {
 
     const onCellFunction = (record: ITableSpan) => {
       const backgroundColor =
-        this.props.uiFind && record.searchColor !== 'transparent'
-          ? record.searchColor
-          : record.colorToPercent;
+        this.props.uiFind && record.searchColor !== 'transparent' ? record.searchColor : 'transparent';
       return {
         style: { background: backgroundColor, borderColor: backgroundColor },
       };
     };
 
     const columns: ColumnProps<ITableSpan>[] = columnsArray.map(val => {
-      const renderFunction = (cell: string, row: ITableSpan) => {
+      const renderFunction = (cell: string | number, row: ITableSpan) => {
         if (val.attribute === 'name')
           return (
             <span
@@ -299,8 +303,41 @@ export default class TraceStatistics extends Component<Props, State> {
               {cell}
             </span>
           );
-        return `${cell}${val.suffix}`;
+
+        const isColored = val.attribute === this.state.colorByAttribute;
+        let displayValue: React.ReactNode = cell;
+
+        if (val.suffix === 'ms') {
+          const microseconds = ((cell as number) * 1000) as any;
+          const compactValue = formatDurationCompact(microseconds);
+          const preciseValue = `${cell}ms`;
+          displayValue = <Tooltip title={preciseValue}>{compactValue}</Tooltip>;
+        } else if (val.suffix === '%') {
+          displayValue = `${cell}%`;
+        }
+
+        if (isColored) {
+          const max = Math.max(...this.state.tableValue.map(r => (r as any)[val.attribute] as number), 1);
+          return (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+              }}
+            >
+              <RelativeBar value={cell as number} maxValue={max} />
+              <div style={{ whiteSpace: 'nowrap', fontFamily: 'monospace', fontSize: '12px' }}>
+                {displayValue}
+              </div>
+            </div>
+          );
+        }
+
+        return displayValue;
       };
+
       const ele = {
         title: val.title,
         dataIndex: val.attribute,
@@ -309,7 +346,7 @@ export default class TraceStatistics extends Component<Props, State> {
         onCell: onCellFunction,
         showSorterTooltip: val.attribute !== 'name' ? { title: val.titleDescription } : false,
       };
-      return val.attribute === 'count' ? { ...ele, defaultSortOrder: 'ascend' } : ele;
+      return val.attribute === 'count' ? { ...ele, defaultSortOrder: 'descend' } : ele;
     });
     /**
      * Pre-process the table data into groups and sub-groups
