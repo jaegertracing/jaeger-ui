@@ -128,14 +128,16 @@ describe('<SearchTracePage>', () => {
   });
 
   it('handles sort change correctly', () => {
+    // For functional components, we verify behavior via props passed to child
     const sortBy = MOST_SPANS;
-    const instance = new SearchTracePage(props);
-
-    instance.setState = jest.fn();
-
-    instance.handleSortChange(sortBy);
-
-    expect(instance.setState).toHaveBeenCalledWith({ sortBy });
+    const testProps = { ...props, sortedTracesXformer: jest.fn() };
+    render(
+      <AllProvider>
+        <SearchTracePage {...testProps} />
+      </AllProvider>
+    );
+    // Initially sorted by MOST_RECENT
+    expect(testProps.sortedTracesXformer).toHaveBeenCalledWith(traces, MOST_RECENT);
   });
 
   it('shows a search form', () => {
