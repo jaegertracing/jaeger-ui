@@ -133,7 +133,6 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     if (service && service !== '-') {
       fetchServiceOperations(service);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSortChange = (newSortBy: string) => {
@@ -199,7 +198,12 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
           />
         )}
         {showLogo && (
-          <img className="SearchTracePage--logo js-test-logo" alt="presentation" src={JaegerLogo} width="400" />
+          <img
+            className="SearchTracePage--logo js-test-logo"
+            alt="presentation"
+            src={JaegerLogo}
+            width="400"
+          />
         )}
       </Col>
     </Row>
