@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
+import { memo } from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
@@ -23,62 +24,62 @@ type Props = {
 const abs = Math.abs;
 const max = Math.max;
 
-export class DiffNode extends React.PureComponent<Props> {
-  render() {
-    const { a, b, operation, service } = this.props;
-    const isSame = a === b;
-    const className = cx({
-      'is-same': isSame,
-      'is-changed': !isSame,
-      'is-more': b > a && a > 0,
-      'is-added': a === 0,
-      'is-less': a > b && b > 0,
-      'is-removed': b === 0,
-    });
-    const chgSign = a < b ? '+' : '-';
-    const table = (
-      <table className={`DiffNode ${className}`}>
-        <tbody className="DiffNode--body">
-          <tr>
-            <td
-              className={`DiffNode--metricCell ${className}`}
-              rowSpan={isSame ? 2 : 1}
-              data-testid="diff-metric-cell"
-            >
-              {isSame ? null : <span className="DiffNode--metricSymbol">{chgSign}</span>}
-              {isSame ? a : abs(b - a)}
+function DiffNodeComponent(props: Props) {
+  const { a, b, operation, service } = props;
+  const isSame = a === b;
+  const className = cx({
+    'is-same': isSame,
+    'is-changed': !isSame,
+    'is-more': b > a && a > 0,
+    'is-added': a === 0,
+    'is-less': a > b && b > 0,
+    'is-removed': b === 0,
+  });
+  const chgSign = a < b ? '+' : '-';
+  const table = (
+    <table className={`DiffNode ${className}`}>
+      <tbody className="DiffNode--body">
+        <tr>
+          <td
+            className={`DiffNode--metricCell ${className}`}
+            rowSpan={isSame ? 2 : 1}
+            data-testid="diff-metric-cell"
+          >
+            {isSame ? null : <span className="DiffNode--metricSymbol">{chgSign}</span>}
+            {isSame ? a : abs(b - a)}
+          </td>
+          <td className={`DiffNode--labelCell ${className}`}>
+            <strong>{service}</strong>
+            <CopyIcon
+              className="DiffNode--copyIcon"
+              copyText={`${service} ${operation}`}
+              tooltipTitle="Copy label"
+              buttonText="Copy"
+            />
+          </td>
+        </tr>
+        <tr>
+          {isSame ? null : (
+            <td className={`DiffNode--metricCell ${className}`} data-testid="diff-percent-cell">
+              <span className="DiffNode--metricSymbol">{chgSign}</span>
+              {a === 0 || b === 0 ? 100 : abs(((a - b) / max(a, b)) * 100).toFixed(0)}
+              <span className="DiffNode--metricSymbol">%</span>
             </td>
-            <td className={`DiffNode--labelCell ${className}`}>
-              <strong>{service}</strong>
-              <CopyIcon
-                className="DiffNode--copyIcon"
-                copyText={`${service} ${operation}`}
-                tooltipTitle="Copy label"
-                buttonText="Copy"
-              />
-            </td>
-          </tr>
-          <tr>
-            {isSame ? null : (
-              <td className={`DiffNode--metricCell ${className}`} data-testid="diff-percent-cell">
-                <span className="DiffNode--metricSymbol">{chgSign}</span>
-                {a === 0 || b === 0 ? 100 : abs(((a - b) / max(a, b)) * 100).toFixed(0)}
-                <span className="DiffNode--metricSymbol">%</span>
-              </td>
-            )}
-            <td className={`DiffNode--labelCell ${className}`}>{operation}</td>
-          </tr>
-        </tbody>
-      </table>
-    );
+          )}
+          <td className={`DiffNode--labelCell ${className}`}>{operation}</td>
+        </tr>
+      </tbody>
+    </table>
+  );
 
-    return (
-      <Popover classNames={{ root: `DiffNode--popover ${className}` }} mouseEnterDelay={0.25} content={table}>
-        {table}
-      </Popover>
-    );
-  }
+  return (
+    <Popover classNames={{ root: `DiffNode--popover ${className}` }} mouseEnterDelay={0.25} content={table}>
+      {table}
+    </Popover>
+  );
 }
+
+export const DiffNode = memo(DiffNodeComponent);
 
 export default function renderNode(vertex: TDagPlexusVertex<TDiffCounts>) {
   const { a, b, operation, service } = vertex.data;
