@@ -15,7 +15,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .ArchiveNotifier--errorIcon {
-  color: #c00;
+  color: var(--feedback-error);
 }
 
 .ArchiveNotifier--doneIcon {

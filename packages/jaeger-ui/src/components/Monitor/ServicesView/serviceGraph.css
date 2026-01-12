@@ -10,7 +10,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .graph-container {
-  border: 1px solid #d7d7d7;
+  border: 1px solid var(--border-default);
   padding: 14px 12px 12px 12px;
   border-radius: 4px;
 }
@@ -41,11 +41,11 @@ SPDX-License-Identifier: Apache-2.0
 
 .crosshair-value {
   width: 140;
-  color: #6b6b76;
+  color: var(--text-secondary);
 }
 
 .graph-axis {
-  stroke: #e6e6e9;
+  stroke: var(--border-default);
   stroke-width: 2;
 }
 
