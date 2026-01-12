@@ -126,6 +126,20 @@ describe('reducers/services', () => {
     expect(state).toEqual(expected);
   });
 
+  it('should handle a failed operations for a service fetch', () => {
+    const error = new Error('some-message');
+    const state = serviceReducer(initialState, {
+      type: `${fetchServiceOperations}_REJECTED`,
+      meta: { serviceName },
+      payload: error,
+    });
+    const expected = {
+      ...initialState,
+      error,
+    };
+    expect(state).toEqual(expected);
+  });
+
   it('should handle a successful server operations for a service fetch', () => {
     const state = serviceReducer(initialState, {
       type: `${fetchServiceServerOps}_FULFILLED`,

@@ -96,7 +96,9 @@ function fetchOpsDone(state: ServicesState, { meta, payload }: any): ServicesSta
   return { ...state, operationsForService };
 }
 
-// TODO(joe): fetchOpsErred
+function fetchOpsErred(state: ServicesState, { payload: error }: any): ServicesState {
+  return { ...state, error };
+}
 
 export default handleActions(
   {
@@ -109,6 +111,7 @@ export default handleActions(
 
     [`${fetchOps}_PENDING`]: fetchOpsStarted,
     [`${fetchOps}_FULFILLED`]: fetchOpsDone,
+    [`${fetchOps}_REJECTED`]: fetchOpsErred,
   },
   initialState
 );
