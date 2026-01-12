@@ -1,0 +1,24 @@
+/*
+Copyright (c) 2024 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.RelativeBar {
+    flex-grow: 1;
+    min-width: 50px;
+    height: 6px;
+    background: var(--surface-tertiary);
+    margin-right: 12px;
+    position: relative;
+    border-radius: 2px;
+}
+
+[data-theme='dark'] .RelativeBar {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.RelativeBar--fill {
+    height: 100%;
+    background: var(--interactive-primary);
+    border-radius: 2px;
+}

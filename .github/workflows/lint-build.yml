@@ -32,7 +32,7 @@ jobs:
       - name: Ensure PR is not on main branch
         uses: jaegertracing/jaeger/.github/actions/block-pr-from-main-branch@main
 
-  validate-renovate-config:
+  validate-3rd-party-configs:
     runs-on: ubuntu-latest
     steps:
     - uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
@@ -43,9 +43,15 @@ jobs:
       with:
         submodules: false
 
-    - name: validate renovate config
+    - name: validate Forking Renovate Bot config
       run: |
         docker run \
           -v $PWD/renovate.json:/usr/src/app/renovate.json \
           ghcr.io/renovatebot/renovate:latest \
           renovate-config-validator
+
+    - name: validate Codecov config
+      run: |
+        RESPONSE=$(curl -s --data-binary @.codecov.yml https://codecov.io/validate)
+        echo "$RESPONSE"
+        echo "$RESPONSE" | grep -q "Valid"

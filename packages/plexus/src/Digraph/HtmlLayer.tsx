@@ -19,20 +19,27 @@ type TProps<T = {}, U = {}> = Record<string, unknown> &
 
 const STYLE: React.CSSProperties = { left: 0, position: 'absolute', top: 0 };
 
-export default class HtmlLayer<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
-  render() {
-    const { children, classNamePart, getClassName, graphState, setOnContainer, standalone, topLayer } =
-      this.props;
-    const { zoomTransform } = graphState;
-    const zoomStyle = { style: topLayer || standalone ? ZoomManager.getZoomStyle(zoomTransform) : {} };
-    const containerProps = assignMergeCss(
-      {
-        className: getClassName(classNamePart),
-        style: STYLE,
-      },
-      zoomStyle,
-      getProps(setOnContainer, graphState)
-    );
-    return <div {...containerProps}>{children}</div>;
-  }
-}
+const HtmlLayer = <T = {}, U = {}>({
+  children,
+  classNamePart,
+  getClassName,
+  graphState,
+  setOnContainer,
+  standalone,
+  topLayer,
+}: TProps<T, U>) => {
+  const { zoomTransform } = graphState;
+  const zoomStyle = { style: topLayer || standalone ? ZoomManager.getZoomStyle(zoomTransform) : {} };
+  const containerProps = assignMergeCss(
+    {
+      className: getClassName(classNamePart),
+      style: STYLE,
+    },
+    zoomStyle,
+    getProps(setOnContainer, graphState)
+  );
+
+  return <div {...containerProps}>{children}</div>;
+};
+
+export default React.memo(HtmlLayer) as typeof HtmlLayer;
