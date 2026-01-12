@@ -28,8 +28,12 @@ import { getConfigValue } from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
+import LoadingIndicator from '../common/LoadingIndicator';
+import { useConfig } from '../../hooks/useConfig';
+import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
+import { fetchedState } from '../../constants';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -335,11 +339,8 @@ interface ISearchFormImplProps {
   submitting?: boolean;
   searchMaxLookback?: ILookbackOption;
   searchAdjustEndTime?: string;
-  useOtelTerms?: boolean;
-  services: IServiceWithOperations[];
   initialValues?: Partial<ISearchFormFields> & { traceIDs?: string | null };
   searchTraces: SearchTracesFunction;
-  changeServiceHandler: (service: string) => void;
   submitFormHandler: (
     fields: ISearchFormFields,
     adjustEndTime: string | null | undefined,
@@ -357,12 +358,10 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   submitting = false,
   searchMaxLookback,
   searchAdjustEndTime,
-  useOtelTerms,
-  services = [],
   initialValues,
-  changeServiceHandler,
   submitFormHandler,
 }) => {
+  const { useOpenTelemetryTerms: useOtelTerms } = useConfig();
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
     operation: initialValues?.operation,
@@ -377,24 +376,45 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     resultsLimit: initialValues?.resultsLimit,
   }));
 
+  // Fetch services using React Query
+  const { data: servicesList, isLoading: isLoadingServices, error: servicesError } = useServices();
+
+  // Fetch span names for the currently selected service
+  const currentService = formData.service;
+  const { data: spanNamesData, isLoading: isLoadingSpanNames } = useSpanNames(
+    currentService && currentService !== '-' ? currentService : null
+  );
+
+  // Extract unique names to maintain compatibility with existing UI
+  const spanNames = useMemo(
+    () => Array.from(new Set((spanNamesData || []).map(op => op.name))).sort(),
+    [spanNamesData]
+  );
+
+  // Transform services data to match the expected format
+  const services: IServiceWithOperations[] = useMemo(
+    () =>
+      (servicesList || []).map(serviceName => ({
+        name: serviceName,
+        operations: currentService === serviceName ? spanNames : [],
+      })),
+    [servicesList, currentService, spanNames]
+  );
+
   const [adjustTimeEnabled, setAdjustTimeEnabled] = useState<boolean>(() => {
     const storedAdjustTimeEnabled = store.get(ADJUST_TIME_ENABLED_KEY);
     return storedAdjustTimeEnabled !== undefined ? storedAdjustTimeEnabled : Boolean(searchAdjustEndTime);
   });
 
-  const handleChange = useCallback(
-    (fieldData: Partial<ISearchFormFields>) => {
-      setFormData(prev => {
-        const nextFormData = { ...prev, ...fieldData };
-        if (fieldData.service) {
-          changeServiceHandler(fieldData.service);
-          nextFormData.operation = DEFAULT_OPERATION;
-        }
-        return nextFormData;
-      });
-    },
-    [changeServiceHandler]
-  );
+  const handleChange = useCallback((fieldData: Partial<ISearchFormFields>) => {
+    setFormData(prev => {
+      const nextFormData = { ...prev, ...fieldData };
+      if (fieldData.service) {
+        nextFormData.operation = DEFAULT_OPERATION;
+      }
+      return nextFormData;
+    });
+  }, []);
 
   const handleAdjustTimeToggle = useCallback((checked: boolean) => {
     setAdjustTimeEnabled(checked);
@@ -417,6 +437,16 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const invalidDuration =
     validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
 
+  if (servicesError) {
+    return (
+      <div className="SearchForm--error">Error loading services: {(servicesError as Error).message}</div>
+    );
+  }
+
+  if (isLoadingServices && (!services || services.length === 0)) {
+    return <LoadingIndicator />;
+  }
+
   return (
     <Form layout="vertical" onSubmitCapture={handleSubmit}>
       <FormItem
@@ -431,6 +461,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           value={formData.service}
           placeholder="Select A Service"
           disabled={submitting}
+          loading={isLoadingServices}
           onChange={(value: string) => handleChange({ service: value })}
         >
           {services.map(service => (
@@ -452,6 +483,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           data-testid="operation"
           value={formData.operation}
           disabled={submitting || noSelectedService}
+          loading={isLoadingSpanNames}
           placeholder={useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
           onChange={(value: string) => handleChange({ operation: value })}
         >
@@ -751,17 +783,11 @@ export function mapStateToProps(state: ReduxState) {
   let lastSearchOperation: string | undefined;
 
   if (lastSearch) {
-    // last search is only valid if the service is in the list of services
     const { operation: lastOp, service: lastSvc } = lastSearch;
     if (lastSvc && lastSvc !== '-') {
-      if (state.services.services && state.services.services.includes(lastSvc)) {
-        lastSearchService = lastSvc;
-        if (lastOp && lastOp !== '-') {
-          const ops = state.services.operationsForService[lastSvc];
-          if (lastOp === 'all' || (ops && ops.includes(lastOp))) {
-            lastSearchOperation = lastOp;
-          }
-        }
+      lastSearchService = lastSvc;
+      if (lastOp && lastOp !== '-') {
+        lastSearchOperation = lastOp;
       }
     }
   }
@@ -843,7 +869,7 @@ export function mapStateToProps(state: ReduxState) {
     },
     searchMaxLookback: _get(state, 'config.search.maxLookback'),
     searchAdjustEndTime: _get(state, 'config.search.adjustEndTime'),
-    useOtelTerms: _get(state, 'config.useOpenTelemetryTerms'),
+    submitting: state.trace?.search?.state === fetchedState.LOADING,
   };
 }
 
@@ -851,11 +877,6 @@ export function mapDispatchToProps(dispatch: Dispatch) {
   const { searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
   return {
     searchTraces,
-    changeServiceHandler: (service: string) =>
-      dispatch({
-        type: CHANGE_SERVICE_ACTION_TYPE,
-        payload: service,
-      }),
     submitFormHandler: (
       fields: ISearchFormFields,
       adjustEndTime: string | null | undefined,

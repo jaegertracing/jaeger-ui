@@ -26,6 +26,7 @@ import calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import TraceGraph from './TraceGraph/TraceGraph';
 import { TEv } from './TraceGraph/types';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
+import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
@@ -63,6 +64,7 @@ type TOwnProps = {
   history: RouterHistory;
   location: Location<LocationState>;
   params: { id: string };
+  useOtelTerms: boolean;
 };
 
 type TReduxProps = {
@@ -77,7 +79,6 @@ type TReduxProps = {
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
   traceGraphConfig?: TraceGraphConfig;
-  useOtelTerms: boolean;
 };
 
 type TProps = TDispatchProps & TOwnProps & TReduxProps;
@@ -472,7 +473,6 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     disableJsonView,
     trace,
     traceGraphConfig,
-    useOtelTerms: config.useOpenTelemetryTerms,
   };
 }
 
@@ -484,4 +484,11 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
 }
 
-export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(TracePageImpl));
+const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
+
+const TracePage = (props: any) => {
+  const { useOpenTelemetryTerms } = useConfig();
+  return <ConnectedTracePage {...props} useOtelTerms={useOpenTelemetryTerms} />;
+};
+
+export default withRouteProps(TracePage);
