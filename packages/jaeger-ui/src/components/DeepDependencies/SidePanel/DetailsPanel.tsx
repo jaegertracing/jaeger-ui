@@ -80,7 +80,7 @@ export function UnconnectedDetailsPanel(props: TProps) {
         setDetailsErred(true);
         setDetailsLoading(false);
       });
-  }, [decorationSchema, operation, service]);
+  }, [decorationSchema, _op, service]);
 
   // Fetch details on mount and when dependencies change
   useEffect(() => {
