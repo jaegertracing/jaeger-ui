@@ -33,75 +33,89 @@ type State = {
   colorByAttribute: string;
 };
 
+type ColumnValueType = 'count' | 'percent' | 'time' | 'text';
+
 const columnsArray: {
   title: string;
   attribute: keyof ITableSpan;
   suffix: string;
+  valueType: ColumnValueType;
   titleDescription?: string;
 }[] = [
     {
       title: 'Group',
       attribute: 'name',
       suffix: '',
+      valueType: 'text',
     },
     {
       title: 'Count',
       attribute: 'count',
       suffix: '',
+      valueType: 'count',
       titleDescription: 'Number of spans',
     },
     {
       title: 'Total',
       attribute: 'total',
       suffix: 'ms',
+      valueType: 'time',
       titleDescription: 'Total duration of all spans',
     },
     {
       title: 'Avg',
       attribute: 'avg',
       suffix: 'ms',
+      valueType: 'time',
       titleDescription: 'Average duration of all spans',
     },
     {
       title: 'Min',
       attribute: 'min',
       suffix: 'ms',
+      valueType: 'time',
       titleDescription: 'Minimum duration across all spans',
     },
     {
       title: 'Max',
       attribute: 'max',
       suffix: 'ms',
+      valueType: 'time',
       titleDescription: 'Maximum duration across all spans',
     },
     {
       title: 'ST Total',
       attribute: 'selfTotal',
       suffix: 'ms',
+      valueType: 'time',
       titleDescription: 'Sum of Self Time (time spent in a span when it was not waiting on children)',
     },
     {
       title: 'ST Avg',
       attribute: 'selfAvg',
       suffix: 'ms',
+      valueType: 'time',
       titleDescription: 'Average Self Time (time spent in a span when it was not waiting on children)',
     },
     {
       title: 'ST Min',
       attribute: 'selfMin',
       suffix: 'ms',
+      valueType: 'time',
       titleDescription: 'Minimum Self Time (time spent in a span when it was not waiting on children)',
     },
     {
       title: 'ST Max',
       attribute: 'selfMax',
       suffix: 'ms',
+      valueType: 'time',
       titleDescription: 'Maximum Self Time (time spent in a span when it was not waiting on children)',
     },
     {
       title: 'ST in Duration',
       attribute: 'percent',
       suffix: '%',
+      valueType: 'percent',
       titleDescription: 'Percentage of ST Total vs. Total',
     },
   ];
@@ -192,7 +206,7 @@ export default class TraceStatistics extends Component<Props, State> {
   }
 
   /**
-   * Colors found entries in the table.
+   * Marks entries in the table that match search criteria.
    * @param uiFindVertexKeys Set of found spans
    * @param allTableSpans entries that are shown
    */
@@ -202,15 +216,13 @@ export default class TraceStatistics extends Component<Props, State> {
     uiFind: string | null | undefined
   ) => {
     const allTableSpansChange = allTableSpans;
-    const yellowSearchColor = 'var(--trace-emphasis-highlight)';
-    const defaultGrayColor = 'var(--surface-primary)';
+    // Initialize all entries as not matching search
     for (let i = 0; i < allTableSpansChange.length; i++) {
+      // Parent rows with subgroups should not be highlighted
       if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
-        allTableSpansChange[i].searchColor = 'transparent';
-      } else if (allTableSpansChange[i].hasSubgroupValue) {
-        allTableSpansChange[i].searchColor = defaultGrayColor;
+        allTableSpansChange[i].searchMatch = false;
       } else {
-        allTableSpansChange[i].searchColor = defaultGrayColor;
+        allTableSpansChange[i].searchMatch = false;
       }
     }
     if (typeof uiFindVertexKeys !== 'undefined') {
@@ -223,13 +235,13 @@ export default class TraceStatistics extends Component<Props, State> {
             -1
           ) {
             if (allTableSpansChange[i].parentElement === 'none') {
-              allTableSpansChange[i].searchColor = yellowSearchColor;
+              allTableSpansChange[i].searchMatch = true;
             } else if (
               uiFindVertexKeysSplit[uiFindVertexKeysSplit.length - 1].indexOf(
                 allTableSpansChange[i].parentElement
               ) !== -1
             ) {
-              allTableSpansChange[i].searchColor = yellowSearchColor;
+              allTableSpansChange[i].searchMatch = true;
             }
           }
         }
@@ -238,17 +250,17 @@ export default class TraceStatistics extends Component<Props, State> {
     if (uiFind) {
       for (let i = 0; i < allTableSpansChange.length; i++) {
         if (allTableSpansChange[i].name.indexOf(uiFind!) !== -1) {
-          allTableSpansChange[i].searchColor = yellowSearchColor;
+          allTableSpansChange[i].searchMatch = true;
 
           for (let j = 0; j < allTableSpansChange.length; j++) {
             if (allTableSpansChange[j].parentElement === allTableSpansChange[i].name) {
-              allTableSpansChange[j].searchColor = yellowSearchColor;
+              allTableSpansChange[j].searchMatch = true;
             }
           }
           if (allTableSpansChange[i].isDetail) {
             for (let j = 0; j < allTableSpansChange.length; j++) {
               if (allTableSpansChange[i].parentElement === allTableSpansChange[j].name) {
-                allTableSpansChange[j].searchColor = yellowSearchColor;
+                allTableSpansChange[j].searchMatch = true;
               }
             }
           }
@@ -280,10 +292,8 @@ export default class TraceStatistics extends Component<Props, State> {
     };
 
     const onCellFunction = (record: ITableSpan) => {
-      const backgroundColor =
-        this.props.uiFind && record.searchColor !== 'transparent' ? record.searchColor : 'transparent';
       return {
-        style: { background: backgroundColor, borderColor: backgroundColor },
+        className: this.props.uiFind && record.searchMatch ? 'TraceStatistics--searchMatch' : '',
       };
     };
 
@@ -304,38 +314,35 @@ export default class TraceStatistics extends Component<Props, State> {
             </span>
           );
 
-        const isColored = val.attribute === this.state.colorByAttribute;
+        const includeBars = val.attribute === this.state.colorByAttribute;
         let displayValue: React.ReactNode = cell;
 
-        if (val.suffix === 'ms') {
+        if (val.valueType === 'time') {
           const microseconds = ((cell as number) * 1000) as any;
           const compactValue = formatDurationCompact(microseconds);
-          const preciseValue = `${cell}ms`;
+          const preciseValue = `${cell}${val.suffix}`;
           displayValue = <Tooltip title={preciseValue}>{compactValue}</Tooltip>;
-        } else if (val.suffix === '%') {
+        } else if (val.valueType === 'percent') {
           displayValue = `${cell}%`;
         }
 
-        if (isColored) {
+        if (includeBars) {
           const max = Math.max(...this.state.tableValue.map(r => (r as any)[val.attribute] as number), 1);
           return (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
-              }}
-            >
+            <div className="TraceStatistics--valueContainer">
               <RelativeBar value={cell as number} maxValue={max} />
-              <div style={{ whiteSpace: 'nowrap', fontFamily: 'monospace', fontSize: '12px' }}>
+              <div className="TraceStatistics--valueDisplay">
                 {displayValue}
               </div>
             </div>
           );
         }
 
-        return displayValue;
+        return (
+          <div className="TraceStatistics--valueDisplay">
+            {displayValue}
+          </div>
+        );
       };
 
       const ele = {
@@ -345,6 +352,7 @@ export default class TraceStatistics extends Component<Props, State> {
         render: renderFunction,
         onCell: onCellFunction,
         showSorterTooltip: val.attribute !== 'name' ? { title: val.titleDescription } : false,
+        align: val.attribute === 'name' ? ('left' as const) : ('right' as const),
       };
       return val.attribute === 'count' ? { ...ele, defaultSortOrder: 'descend' } : ele;
     });
