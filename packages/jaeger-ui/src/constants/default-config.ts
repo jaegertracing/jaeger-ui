@@ -116,6 +116,7 @@ const defaultConfig: Config = {
   themes: {
     enabled: true,
   },
+  timeFormat: '24h',
   useOpenTelemetryTerms: false,
 };
 
