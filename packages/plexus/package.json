@@ -67,13 +67,13 @@
     "_tasks/build/lib/types": "../../node_modules/.bin/tsc --build --force",
     "_tasks/build/umd": "webpack --mode $NODE_ENV --config webpack.umd.config.js",
     "_tasks/clean/dirs": "rimraf lib dist",
-    "_tasks/clean/worker": "rimraf src/LayoutManager/layout.worker*.js* || exit 0",
+    "_tasks/clean/worker": "rimraf src/LayoutManager/layout.worker*js*",
     "_tasks/bundle-worker": "webpack --mode $NODE_ENV --config webpack.layout-worker.config.js",
     "_tasks/dev-server": "webpack-dev-server --mode $NODE_ENV --config webpack.dev.config.js",
-    "build": "cross-env NODE_ENV=production npm-run-all -ln --serial _tasks/clean/* _tasks/bundle-worker --parallel _tasks/build/**",
+    "build": "NODE_ENV=production npm-run-all -ln --serial _tasks/clean/* _tasks/bundle-worker --parallel _tasks/build/**",
     "coverage": "jest --coverage --passWithNoTests",
     "prepublishOnly": "npm run build",
-    "start": "cross-env NODE_ENV=development npm-run-all -ln --serial _tasks/clean/worker _tasks/bundle-worker --parallel '_tasks/bundle-worker --watch' _tasks/dev-server",
+    "start": "NODE_ENV='development' npm-run-all -ln --serial _tasks/clean/worker _tasks/bundle-worker --parallel '_tasks/bundle-worker --watch' _tasks/dev-server",
     "test": "jest --silent --color --maxWorkers=50%"
   },
   "jest": {
