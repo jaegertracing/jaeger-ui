@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, act } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import MeasurableNodesLayer from './MeasurableNodesLayer';
 import { ELayerType, ELayoutPhase } from './types';
 
@@ -94,8 +94,7 @@ describe('MeasurableNodesLayer', () => {
       expect(getByTestId('measurable-nodes')).toBeTruthy();
     });
 
-    it('renders null when nodeRefs is falsy', () => {
-      // This shouldn't happen normally, but test the conditional
+    it('renders content when nodeRefs are initialized', () => {
       const { container } = render(<MeasurableNodesLayer {...defaultProps} />);
       expect(container.firstChild).toBeTruthy();
     });
