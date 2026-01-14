@@ -16,36 +16,54 @@ type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNo
   vertex: TVertex<T>;
 };
 
+// Exposed methods via ref for parent components
+export type TMeasurableNodeHandle = {
+  getRef: () => {
+    htmlWrapper: HTMLDivElement | null | undefined;
+    svgWrapper: SVGGElement | null | undefined;
+  };
+  measure: () => { height: number; width: number };
+};
+
 const SVG_HIDDEN_STYLE = { visibility: 'hidden' };
 
-export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T>> {
-  htmlRef = React.createRef<HTMLDivElement>();
-  svgRef = React.createRef<SVGGElement>();
+const MeasurableNodeImpl = <T = {},>(props: TProps<T>, ref: React.Ref<TMeasurableNodeHandle>) => {
+  const { getClassName, hidden, layerType, layoutVertex, renderNode, renderUtils, setOnNode, vertex } = props;
 
-  private measureHtml() {
-    const { current } = this.htmlRef;
-    if (!current) {
-      return { height: 0, width: 0 };
-    }
-    return {
-      height: current.offsetHeight,
-      width: current.offsetWidth,
-    };
-  }
+  const htmlRef = React.useRef<HTMLDivElement>(null);
+  const svgRef = React.useRef<SVGGElement>(null);
 
-  private measureSvg() {
-    const { current } = this.svgRef;
-    if (!current) {
-      return { height: 0, width: 0 };
-    }
-    const { height, width } = current.getBBox();
-    return { height, width };
-  }
+  // Expose methods to parent via ref
+  React.useImperativeHandle(ref, () => ({
+    getRef: () => {
+      if (layerType === ELayerType.Html) {
+        return { htmlWrapper: htmlRef.current, svgWrapper: undefined };
+      }
+      return { svgWrapper: svgRef.current, htmlWrapper: undefined };
+    },
+    measure: () => {
+      if (layerType === ELayerType.Html) {
+        const current = htmlRef.current;
+        if (!current) {
+          return { height: 0, width: 0 };
+        }
+        return {
+          height: current.offsetHeight,
+          width: current.offsetWidth,
+        };
+      }
+      const current = svgRef.current;
+      if (!current) {
+        return { height: 0, width: 0 };
+      }
+      const { height, width } = current.getBBox();
+      return { height, width };
+    },
+  }));
 
-  private renderHtml() {
-    const { getClassName, hidden, renderNode, renderUtils, setOnNode, vertex, layoutVertex } = this.props;
+  if (layerType === ELayerType.Html) {
     const { height = null, left = null, top = null, width = null } = layoutVertex || {};
-    const props = assignMergeCss(
+    const mergedProps = assignMergeCss(
       {
         className: getClassName('MeasurableHtmlNode'),
         style: {
@@ -61,46 +79,33 @@ export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T
       getProps(setOnNode, vertex, renderUtils, layoutVertex)
     );
     return (
-      <div ref={this.htmlRef} {...props}>
+      <div ref={htmlRef} {...mergedProps}>
         {renderNode(vertex, renderUtils, layoutVertex)}
       </div>
     );
   }
 
-  private renderSvg() {
-    const { getClassName, hidden, renderNode, renderUtils, setOnNode, vertex, layoutVertex } = this.props;
-    const { left = null, top = null } = layoutVertex || {};
-    const props = assignMergeCss(
-      {
-        className: getClassName('MeasurableSvgNode'),
-        transform: left == null || top == null ? undefined : `translate(${left.toFixed()}, ${top.toFixed()})`,
-        style: hidden ? SVG_HIDDEN_STYLE : null,
-      },
-      getProps(setOnNode, vertex, renderUtils, layoutVertex)
-    );
-    return (
-      <g ref={this.svgRef} {...props}>
-        {renderNode(vertex, renderUtils, layoutVertex)}
-      </g>
-    );
-  }
+  // SVG layer
+  const { left = null, top = null } = layoutVertex || {};
+  const mergedProps = assignMergeCss(
+    {
+      className: getClassName('MeasurableSvgNode'),
+      transform: left == null || top == null ? undefined : `translate(${left.toFixed()}, ${top.toFixed()})`,
+      style: hidden ? SVG_HIDDEN_STYLE : null,
+    },
+    getProps(setOnNode, vertex, renderUtils, layoutVertex)
+  );
+  return (
+    <g ref={svgRef} {...mergedProps}>
+      {renderNode(vertex, renderUtils, layoutVertex)}
+    </g>
+  );
+};
 
-  getRef() {
-    if (this.props.layerType === ELayerType.Html) {
-      return { htmlWrapper: this.htmlRef.current, svgWrapper: undefined };
-    }
-    return { svgWrapper: this.svgRef.current, htmlWrapper: undefined };
-  }
+// forwardRef with generic type support
+const MeasurableNode = React.forwardRef(MeasurableNodeImpl) as <T = {}>(
+  props: TProps<T> & { ref?: React.Ref<TMeasurableNodeHandle> }
+) => React.ReactElement | null;
 
-  measure() {
-    return this.props.layerType === ELayerType.Html ? this.measureHtml() : this.measureSvg();
-  }
-
-  render() {
-    const { layerType } = this.props;
-    if (layerType === ELayerType.Html) {
-      return this.renderHtml();
-    }
-    return this.renderSvg();
-  }
-}
+// React.memo provides shallow comparison equivalent to PureComponent
+export default React.memo(MeasurableNode) as typeof MeasurableNode;
