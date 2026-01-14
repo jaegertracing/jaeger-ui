@@ -6,15 +6,19 @@ import { render } from '@testing-library/react';
 import Nodes from './Nodes';
 import { ELayerType } from './types';
 
-// mock Node 子組件
+// Mock Node child component
+const mockNodeProps = [];
 jest.mock('./Node', () => {
-  const MockNode = props => (
-    <div
-      data-testid="node"
-      data-vertex-key={props.layoutVertex.vertex.key}
-      data-layer-type={props.layerType}
-    />
-  );
+  const MockNode = props => {
+    mockNodeProps.push(props);
+    return (
+      <div
+        data-testid="node"
+        data-vertex-key={props.layoutVertex.vertex.key}
+        data-layer-type={props.layerType}
+      />
+    );
+  };
   return MockNode;
 });
 
@@ -28,7 +32,7 @@ describe('Nodes', () => {
 
   const mockRenderNode = () => <span>node content</span>;
 
-  // 建立測試用的 layoutVertex
+  // Create mock layoutVertex for testing
   const createLayoutVertex = key => ({
     vertex: { key },
     height: 50,
@@ -97,14 +101,19 @@ describe('Nodes', () => {
     });
   });
 
-  it('handles setOnNode prop', () => {
+  it('passes setOnNode to child components', () => {
+    mockNodeProps.length = 0;
     const mockSetOnNode = jest.fn();
     const { getAllByTestId } = render(
       <div>
         <Nodes {...defaultProps} setOnNode={mockSetOnNode} />
       </div>
     );
-    // 只要能 render 不 crash 就算通過
     expect(getAllByTestId('node')).toHaveLength(3);
+
+    // Verify setOnNode is passed to each child component
+    mockNodeProps.forEach(props => {
+      expect(props.setOnNode).toBe(mockSetOnNode);
+    });
   });
 });

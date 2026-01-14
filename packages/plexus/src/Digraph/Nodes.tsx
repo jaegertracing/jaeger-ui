@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
@@ -16,31 +16,37 @@ type TProps<T = {}> = TNodeRenderer<T> & {
   renderUtils: TRendererUtils;
 };
 
-export default class Nodes<T = {}> extends React.Component<TProps<T>> {
-  shouldComponentUpdate(np: TProps<T>) {
-    const p = this.props;
-    return (
-      p.renderNode !== np.renderNode ||
-      p.getClassName !== np.getClassName ||
-      p.layerType !== np.layerType ||
-      p.layoutVertices !== np.layoutVertices ||
-      p.renderUtils !== np.renderUtils ||
-      !isSamePropSetter(p.setOnNode, np.setOnNode)
-    );
-  }
-
-  render() {
-    const { getClassName, layoutVertices, renderUtils, layerType, renderNode, setOnNode } = this.props;
-    return layoutVertices.map(lv => (
-      <Node
-        key={lv.vertex.key}
-        getClassName={getClassName}
-        layerType={layerType}
-        layoutVertex={lv}
-        renderNode={renderNode}
-        renderUtils={renderUtils}
-        setOnNode={setOnNode}
-      />
-    ));
-  }
+// Comparison function that mirrors the original shouldComponentUpdate logic
+function arePropsEqual<T>(prev: TProps<T>, next: TProps<T>): boolean {
+  return (
+    prev.renderNode === next.renderNode &&
+    prev.getClassName === next.getClassName &&
+    prev.layerType === next.layerType &&
+    prev.layoutVertices === next.layoutVertices &&
+    prev.renderUtils === next.renderUtils &&
+    isSamePropSetter(prev.setOnNode, next.setOnNode)
+  );
 }
+
+const Nodes = <T = {},>({
+  getClassName,
+  layoutVertices,
+  renderUtils,
+  layerType,
+  renderNode,
+  setOnNode,
+}: TProps<T>) => {
+  return layoutVertices.map(lv => (
+    <Node
+      key={lv.vertex.key}
+      getClassName={getClassName}
+      layerType={layerType}
+      layoutVertex={lv}
+      renderNode={renderNode}
+      renderUtils={renderUtils}
+      setOnNode={setOnNode}
+    />
+  ));
+};
+
+export default React.memo(Nodes, arePropsEqual) as unknown as typeof Nodes;
