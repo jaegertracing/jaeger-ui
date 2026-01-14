@@ -16,31 +16,32 @@ type TProps<T = {}> = TNodeRenderer<T> & {
   renderUtils: TRendererUtils;
 };
 
-export default class Nodes<T = {}> extends React.Component<TProps<T>> {
-  shouldComponentUpdate(np: TProps<T>) {
-    const p = this.props;
-    return (
-      p.renderNode !== np.renderNode ||
-      p.getClassName !== np.getClassName ||
-      p.layerType !== np.layerType ||
-      p.layoutVertices !== np.layoutVertices ||
-      p.renderUtils !== np.renderUtils ||
-      !isSamePropSetter(p.setOnNode, np.setOnNode)
-    );
-  }
-
-  render() {
-    const { getClassName, layoutVertices, renderUtils, layerType, renderNode, setOnNode } = this.props;
-    return layoutVertices.map(lv => (
-      <Node
-        key={lv.vertex.key}
-        getClassName={getClassName}
-        layerType={layerType}
-        layoutVertex={lv}
-        renderNode={renderNode}
-        renderUtils={renderUtils}
-        setOnNode={setOnNode}
-      />
-    ));
-  }
+// Custom comparison function for React.memo (inverse of shouldComponentUpdate)
+function arePropsEqual<T>(prevProps: TProps<T>, nextProps: TProps<T>): boolean {
+  return (
+    prevProps.renderNode === nextProps.renderNode &&
+    prevProps.getClassName === nextProps.getClassName &&
+    prevProps.layerType === nextProps.layerType &&
+    prevProps.layoutVertices === nextProps.layoutVertices &&
+    prevProps.renderUtils === nextProps.renderUtils &&
+    isSamePropSetter(prevProps.setOnNode, nextProps.setOnNode)
+  );
 }
+
+const Nodes = <T = {},>(props: TProps<T>) => {
+  const { getClassName, layoutVertices, renderUtils, layerType, renderNode, setOnNode } = props;
+  return layoutVertices.map(lv => (
+    <Node
+      key={lv.vertex.key}
+      getClassName={getClassName}
+      layerType={layerType}
+      layoutVertex={lv}
+      renderNode={renderNode}
+      renderUtils={renderUtils}
+      setOnNode={setOnNode}
+    />
+  ));
+};
+
+// React.memo with custom comparison replaces shouldComponentUpdate
+export default React.memo(Nodes, arePropsEqual) as typeof Nodes;
