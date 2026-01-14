@@ -17,32 +17,33 @@ type TProps<T = {}> = {
   setOnEdge?: TSetProps<(edge: TLayoutEdge<T>, utils: TRendererUtils) => TAnyProps | null>;
 };
 
-export default class SvgEdges<T = {}> extends React.Component<TProps<T>> {
-  shouldComponentUpdate(np: TProps<T>) {
-    const p = this.props;
-    return (
-      p.getClassName !== np.getClassName ||
-      p.layoutEdges !== np.layoutEdges ||
-      p.markerEndId !== np.markerEndId ||
-      p.markerStartId !== np.markerStartId ||
-      p.renderUtils !== np.renderUtils ||
-      !isSamePropSetter(p.setOnEdge, np.setOnEdge)
-    );
-  }
-
-  render() {
-    const { getClassName, layoutEdges, markerEndId, markerStartId, renderUtils, setOnEdge } = this.props;
-    return layoutEdges.map(edge => (
-      <SvgEdge
-        key={`${edge.edge.from}\v${edge.edge.to}`}
-        getClassName={getClassName}
-        layoutEdge={edge}
-        markerEndId={markerEndId}
-        markerStartId={markerStartId}
-        renderUtils={renderUtils}
-        setOnEdge={setOnEdge}
-        label={edge.edge.label}
-      />
-    ));
-  }
+// Custom comparison function for React.memo (inverse of shouldComponentUpdate)
+function arePropsEqual<T>(prevProps: TProps<T>, nextProps: TProps<T>): boolean {
+  return (
+    prevProps.getClassName === nextProps.getClassName &&
+    prevProps.layoutEdges === nextProps.layoutEdges &&
+    prevProps.markerEndId === nextProps.markerEndId &&
+    prevProps.markerStartId === nextProps.markerStartId &&
+    prevProps.renderUtils === nextProps.renderUtils &&
+    isSamePropSetter(prevProps.setOnEdge, nextProps.setOnEdge)
+  );
 }
+
+const SvgEdges = <T = {},>(props: TProps<T>) => {
+  const { getClassName, layoutEdges, markerEndId, markerStartId, renderUtils, setOnEdge } = props;
+  return layoutEdges.map(edge => (
+    <SvgEdge
+      key={`${edge.edge.from}\v${edge.edge.to}`}
+      getClassName={getClassName}
+      layoutEdge={edge}
+      markerEndId={markerEndId}
+      markerStartId={markerStartId}
+      renderUtils={renderUtils}
+      setOnEdge={setOnEdge}
+      label={edge.edge.label}
+    />
+  ));
+};
+
+// React.memo with custom comparison replaces shouldComponentUpdate
+export default React.memo(SvgEdges, arePropsEqual) as typeof SvgEdges;
