@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import ReferencesButton from './ReferencesButton';
@@ -26,12 +26,9 @@ jest.mock('../url/ReferenceLink', () => {
   return MockReferenceLink;
 });
 
-jest.mock('../../common/NewWindowIcon', () => () => <span data-testid="new-window-icon">↗</span>);
-
-describe('<ReferencesButton>', () => {
+describe('<ReferencesButton />', () => {
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
 
-  // Create OTEL links from legacy references
   const oneLink = [
     {
       traceID: trace.spans[0].traceID,
@@ -71,7 +68,6 @@ describe('<ReferencesButton>', () => {
       traceID: 'otherTrace',
       spanID: externalSpanID,
       attributes: [],
-      // No span property - external trace
     },
   ];
 
@@ -85,7 +81,7 @@ describe('<ReferencesButton>', () => {
     jest.clearAllMocks();
   });
 
-  it('renders a single link directly', () => {
+  it('renders a single reference as a direct link and triggers focusSpan', () => {
     render(<ReferencesButton {...baseProps} links={oneLink} />);
 
     const trigger = screen.getByTestId('button-children').closest('a');
@@ -93,27 +89,26 @@ describe('<ReferencesButton>', () => {
     expect(trigger).toHaveClass('ReferencesButton-MultiParent');
 
     fireEvent.click(trigger);
+    expect(baseProps.focusSpan).toHaveBeenCalledTimes(1);
     expect(baseProps.focusSpan).toHaveBeenCalledWith(oneLink[0].spanID);
   });
 
-  it('renders multiple links as dropdown menu items', async () => {
+  it('renders multiple references inside a dropdown menu', async () => {
     render(<ReferencesButton {...baseProps} links={moreLinks} />);
 
     const trigger = screen.getByTestId('button-children').closest('a');
-    expect(trigger).toHaveClass('ReferencesButton-MultiParent');
     expect(trigger).toBeInTheDocument();
 
     fireEvent.click(trigger);
 
-    // Find dropdown items (they're rendered as anchors with role="button")
-    const dropdownItems = await screen.findAllByRole('button', { hidden: false });
-    // Filter to get just the link items (not the trigger itself)
-    const linkItems = dropdownItems.filter(item => item.classList.contains('ReferencesButton--TraceRefLink'));
+    const items = await screen.findAllByRole('button');
 
-    expect(linkItems.length).toBeGreaterThan(0);
+    const linkItems = items.filter(el => el.classList.contains('ReferencesButton--TraceRefLink'));
 
-    // Check that the external span has the new window icon
-    const externalLinkText = linkItems.find(item => item.textContent.includes(externalSpanID));
-    expect(externalLinkText).toBeInTheDocument();
+    expect(linkItems.length).toBe(3);
+
+    const externalItem = linkItems.find(el => el.textContent.includes(externalSpanID));
+
+    expect(externalItem).toBeInTheDocument();
   });
 });
