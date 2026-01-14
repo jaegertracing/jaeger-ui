@@ -34,32 +34,36 @@ const MeasurableNodeImpl = <T = {},>(props: TProps<T>, ref: React.Ref<TMeasurabl
   const svgRef = React.useRef<SVGGElement>(null);
 
   // Expose methods to parent via ref
-  React.useImperativeHandle(ref, () => ({
-    getRef: () => {
-      if (layerType === ELayerType.Html) {
-        return { htmlWrapper: htmlRef.current, svgWrapper: undefined };
-      }
-      return { svgWrapper: svgRef.current, htmlWrapper: undefined };
-    },
-    measure: () => {
-      if (layerType === ELayerType.Html) {
-        const current = htmlRef.current;
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      getRef: () => {
+        if (layerType === ELayerType.Html) {
+          return { htmlWrapper: htmlRef.current, svgWrapper: undefined };
+        }
+        return { svgWrapper: svgRef.current, htmlWrapper: undefined };
+      },
+      measure: () => {
+        if (layerType === ELayerType.Html) {
+          const current = htmlRef.current;
+          if (!current) {
+            return { height: 0, width: 0 };
+          }
+          return {
+            height: current.offsetHeight,
+            width: current.offsetWidth,
+          };
+        }
+        const current = svgRef.current;
         if (!current) {
           return { height: 0, width: 0 };
         }
-        return {
-          height: current.offsetHeight,
-          width: current.offsetWidth,
-        };
-      }
-      const current = svgRef.current;
-      if (!current) {
-        return { height: 0, width: 0 };
-      }
-      const { height, width } = current.getBBox();
-      return { height, width };
-    },
-  }));
+        const { height, width } = current.getBBox();
+        return { height, width };
+      },
+    }),
+    [layerType]
+  );
 
   if (layerType === ELayerType.Html) {
     const { height = null, left = null, top = null, width = null } = layoutVertex || {};
