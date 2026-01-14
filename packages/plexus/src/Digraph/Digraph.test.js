@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, act, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import Digraph from './index';
 import { ELayerType, ELayoutPhase } from './types';
 

@@ -151,7 +151,7 @@ const Digraph = <T = unknown, U = unknown>(props: TDigraphProps<T, U>) => {
   const setSizeVertices = React.useCallback(
     (senderKey: string, sizeVertices: TSizeVertex<T>[]) => {
       if (senderKey !== measurableNodesKey) {
-        const values = `expected ${JSON.stringify(measurableNodesKey)}, recieved ${JSON.stringify(senderKey)}`;
+        const values = `expected ${JSON.stringify(measurableNodesKey)}, received ${JSON.stringify(senderKey)}`;
         throw new Error(`Key mismatch for measuring nodes; ${values}`);
       }
       setState(prev => ({ ...prev, sizeVertices, layoutPhase: ELayoutPhase.CalcPositions }));
