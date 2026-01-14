@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import memoizeOne from 'memoize-one';
 
 import { TAnyProps, TRendererUtils, TSetProps } from './types';
 import { assignMergeCss, getProps } from './utils';
@@ -48,42 +47,50 @@ function computeLabelCoord(pathPoints: [number, number][], label?: string | unde
   return { labelX, labelY };
 }
 
-export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
-  makePathD = memoizeOne(makePathD);
+const SvgEdge = <U = {},>({
+  getClassName,
+  layoutEdge,
+  markerEndId,
+  markerStartId,
+  renderUtils,
+  setOnEdge,
+  label,
+}: TProps<U>) => {
+  const { pathPoints } = layoutEdge;
 
-  render() {
-    const { getClassName, layoutEdge, markerEndId, markerStartId, renderUtils, setOnEdge, label } =
-      this.props;
-    const { pathPoints } = layoutEdge;
-    const d = makePathD(pathPoints);
-    const markerEnd = makeIriRef(renderUtils, markerEndId);
-    const markerStart = makeIriRef(renderUtils, markerStartId);
-    const customProps = assignMergeCss(
-      {
-        className: getClassName('SvgEdge'),
-      },
-      getProps(setOnEdge, layoutEdge, renderUtils)
-    );
+  // Memoize path d string to avoid recomputation when pathPoints haven't changed
+  const d = React.useMemo(() => makePathD(pathPoints), [pathPoints]);
 
-    const { labelX, labelY } = computeLabelCoord(pathPoints, label);
+  const markerEnd = makeIriRef(renderUtils, markerEndId);
+  const markerStart = makeIriRef(renderUtils, markerStartId);
+  const customProps = assignMergeCss(
+    {
+      className: getClassName('SvgEdge'),
+    },
+    getProps(setOnEdge, layoutEdge, renderUtils)
+  );
 
-    return (
-      <g>
-        <path
-          d={d}
-          fill="none"
-          vectorEffect="non-scaling-stroke"
-          markerEnd={markerEnd}
-          markerStart={markerStart}
-          {...customProps}
-        />
+  const { labelX, labelY } = computeLabelCoord(pathPoints, label);
 
-        {label && (
-          <text x={labelX} y={labelY} fill="#000" fontSize="1rem" fontWeight="bold">
-            {label}
-          </text>
-        )}
-      </g>
-    );
-  }
-}
+  return (
+    <g>
+      <path
+        d={d}
+        fill="none"
+        vectorEffect="non-scaling-stroke"
+        markerEnd={markerEnd}
+        markerStart={markerStart}
+        {...customProps}
+      />
+
+      {label && (
+        <text x={labelX} y={labelY} fill="#000" fontSize="1rem" fontWeight="bold">
+          {label}
+        </text>
+      )}
+    </g>
+  );
+};
+
+// React.memo provides shallow comparison equivalent to PureComponent
+export default React.memo(SvgEdge) as typeof SvgEdge;
