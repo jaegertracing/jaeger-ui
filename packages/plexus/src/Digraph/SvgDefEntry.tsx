@@ -47,16 +47,17 @@ function renderDefaultMarker(
   );
 }
 
-export default class SvgDefEntry<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
-  render() {
-    const { getClassName, localId, graphState, renderEntry = renderDefaultMarker, setOnEntry } = this.props;
-    const id = graphState.renderUtils.getGlobalId(localId);
-    const entryProps = assignMergeCss(
-      {
-        className: getClassName('DefEntry'),
-      },
-      getProps(setOnEntry, graphState)
-    );
-    return renderEntry(graphState, entryProps, id);
-  }
-}
+const SvgDefEntry = <T = {}, U = {}>(props: TProps<T, U>) => {
+  const { getClassName, localId, graphState, renderEntry = renderDefaultMarker, setOnEntry } = props;
+  const id = graphState.renderUtils.getGlobalId(localId);
+  const entryProps = assignMergeCss(
+    {
+      className: getClassName('DefEntry'),
+    },
+    getProps(setOnEntry, graphState)
+  );
+  return renderEntry(graphState, entryProps, id);
+};
+
+// React.memo provides shallow comparison equivalent to PureComponent
+export default React.memo(SvgDefEntry) as typeof SvgDefEntry;
