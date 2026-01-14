@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
@@ -17,32 +17,39 @@ type TProps<T = {}> = {
   setOnEdge?: TSetProps<(edge: TLayoutEdge<T>, utils: TRendererUtils) => TAnyProps | null>;
 };
 
-export default class SvgEdges<T = {}> extends React.Component<TProps<T>> {
-  shouldComponentUpdate(np: TProps<T>) {
-    const p = this.props;
-    return (
-      p.getClassName !== np.getClassName ||
-      p.layoutEdges !== np.layoutEdges ||
-      p.markerEndId !== np.markerEndId ||
-      p.markerStartId !== np.markerStartId ||
-      p.renderUtils !== np.renderUtils ||
-      !isSamePropSetter(p.setOnEdge, np.setOnEdge)
-    );
-  }
-
-  render() {
-    const { getClassName, layoutEdges, markerEndId, markerStartId, renderUtils, setOnEdge } = this.props;
-    return layoutEdges.map(edge => (
-      <SvgEdge
-        key={`${edge.edge.from}\v${edge.edge.to}`}
-        getClassName={getClassName}
-        layoutEdge={edge}
-        markerEndId={markerEndId}
-        markerStartId={markerStartId}
-        renderUtils={renderUtils}
-        setOnEdge={setOnEdge}
-        label={edge.edge.label}
-      />
-    ));
-  }
+// Comparison function that mirrors the original shouldComponentUpdate logic
+// Returns true if props are equal (no re-render needed)
+function arePropsEqual<T>(prev: TProps<T>, next: TProps<T>): boolean {
+  return (
+    prev.getClassName === next.getClassName &&
+    prev.layoutEdges === next.layoutEdges &&
+    prev.markerEndId === next.markerEndId &&
+    prev.markerStartId === next.markerStartId &&
+    prev.renderUtils === next.renderUtils &&
+    isSamePropSetter(prev.setOnEdge, next.setOnEdge)
+  );
 }
+
+const SvgEdges = <T = {},>({
+  getClassName,
+  layoutEdges,
+  markerEndId,
+  markerStartId,
+  renderUtils,
+  setOnEdge,
+}: TProps<T>) => {
+  return layoutEdges.map(edge => (
+    <SvgEdge
+      key={`${edge.edge.from}\v${edge.edge.to}`}
+      getClassName={getClassName}
+      layoutEdge={edge}
+      markerEndId={markerEndId}
+      markerStartId={markerStartId}
+      renderUtils={renderUtils}
+      setOnEdge={setOnEdge}
+      label={edge.edge.label}
+    />
+  ));
+};
+
+export default React.memo(SvgEdges, arePropsEqual) as unknown as typeof SvgEdges;

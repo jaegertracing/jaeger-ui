@@ -5,16 +5,19 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import SvgEdges from './SvgEdges';
 
-// mock SvgEdge 子組件，這樣測試才不會受到子組件的影響
+// Mock SvgEdge child component
+const mockSvgEdgeProps = [];
 jest.mock('./SvgEdge', () => {
-  const MockSvgEdge = props => (
-    <g data-testid="svg-edge" data-from={props.layoutEdge.edge.from} data-to={props.layoutEdge.edge.to} />
-  );
+  const MockSvgEdge = props => {
+    mockSvgEdgeProps.push(props);
+    return (
+      <g data-testid="svg-edge" data-from={props.layoutEdge.edge.from} data-to={props.layoutEdge.edge.to} />
+    );
+  };
   return MockSvgEdge;
 });
 
 describe('SvgEdges', () => {
-  // 準備測試用的 mock 資料
   const mockGetClassName = name => `plexus--${name}`;
 
   const mockRenderUtils = {
@@ -22,7 +25,7 @@ describe('SvgEdges', () => {
     getZoomTransform: () => ({ k: 1, x: 0, y: 0 }),
   };
 
-  // 建立幾條測試用的 edge
+  // Create mock edges for testing
   const createMockEdge = (from, to) => ({
     edge: { from, to },
     pathPoints: [
@@ -33,7 +36,7 @@ describe('SvgEdges', () => {
 
   const mockLayoutEdges = [createMockEdge('node-a', 'node-b'), createMockEdge('node-b', 'node-c')];
 
-  // 包一個 svg 容器，因為 SvgEdge 會渲染 SVG 元素
+  // Wrap in svg container since SvgEdge renders SVG elements
   const renderInSvg = edges => {
     return render(
       <svg>
@@ -58,17 +61,16 @@ describe('SvgEdges', () => {
     const { getAllByTestId } = renderInSvg(mockLayoutEdges);
     const edges = getAllByTestId('svg-edge');
 
-    // 檢查第一條 edge
+    // Check first edge
     expect(edges[0]).toHaveAttribute('data-from', 'node-a');
     expect(edges[0]).toHaveAttribute('data-to', 'node-b');
 
-    // 檢查第二條
+    // Check second edge
     expect(edges[1]).toHaveAttribute('data-from', 'node-b');
     expect(edges[1]).toHaveAttribute('data-to', 'node-c');
   });
 
   it('handles optional marker props', () => {
-    // 這個測試確認有 marker 的情況也能正常 render
     const { getAllByTestId } = render(
       <svg>
         <SvgEdges
@@ -80,7 +82,27 @@ describe('SvgEdges', () => {
         />
       </svg>
     );
-    // 只要不 crash 就算過
     expect(getAllByTestId('svg-edge')).toHaveLength(2);
+  });
+
+  it('passes setOnEdge to child components', () => {
+    mockSvgEdgeProps.length = 0;
+    const mockSetOnEdge = jest.fn();
+    const { getAllByTestId } = render(
+      <svg>
+        <SvgEdges
+          getClassName={mockGetClassName}
+          layoutEdges={mockLayoutEdges}
+          renderUtils={mockRenderUtils}
+          setOnEdge={mockSetOnEdge}
+        />
+      </svg>
+    );
+    expect(getAllByTestId('svg-edge')).toHaveLength(2);
+
+    // Verify setOnEdge is passed to each child component
+    mockSvgEdgeProps.forEach(props => {
+      expect(props.setOnEdge).toBe(mockSetOnEdge);
+    });
   });
 });
