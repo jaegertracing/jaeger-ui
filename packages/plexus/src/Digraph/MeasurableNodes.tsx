@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
@@ -17,45 +17,44 @@ type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNo
   vertices: TVertex<T>[];
 };
 
-export default class MeasurableNodes<T = {}> extends React.Component<TProps<T>> {
-  shouldComponentUpdate(np: TProps<T>) {
-    const p = this.props;
-    return (
-      p.renderNode !== np.renderNode ||
-      p.getClassName !== np.getClassName ||
-      p.layerType !== np.layerType ||
-      p.layoutVertices !== np.layoutVertices ||
-      p.nodeRefs !== np.nodeRefs ||
-      p.renderUtils !== np.renderUtils ||
-      p.vertices !== np.vertices ||
-      !isSamePropSetter(p.setOnNode, np.setOnNode)
-    );
-  }
-
-  render() {
-    const {
-      getClassName,
-      nodeRefs,
-      layoutVertices,
-      renderUtils,
-      vertices,
-      layerType,
-      renderNode,
-      setOnNode,
-    } = this.props;
-    return vertices.map((vertex, i) => (
-      <MeasurableNode<T>
-        key={vertex.key}
-        getClassName={getClassName}
-        ref={nodeRefs[i]}
-        hidden={!layoutVertices}
-        layerType={layerType}
-        renderNode={renderNode}
-        renderUtils={renderUtils}
-        vertex={vertex}
-        layoutVertex={layoutVertices && layoutVertices[i]}
-        setOnNode={setOnNode}
-      />
-    ));
-  }
+// Comparison function that mirrors the original shouldComponentUpdate logic
+function arePropsEqual<T>(prev: TProps<T>, next: TProps<T>): boolean {
+  return (
+    prev.renderNode === next.renderNode &&
+    prev.getClassName === next.getClassName &&
+    prev.layerType === next.layerType &&
+    prev.layoutVertices === next.layoutVertices &&
+    prev.nodeRefs === next.nodeRefs &&
+    prev.renderUtils === next.renderUtils &&
+    prev.vertices === next.vertices &&
+    isSamePropSetter(prev.setOnNode, next.setOnNode)
+  );
 }
+
+const MeasurableNodes = <T = {},>({
+  getClassName,
+  nodeRefs,
+  layoutVertices,
+  renderUtils,
+  vertices,
+  layerType,
+  renderNode,
+  setOnNode,
+}: TProps<T>) => {
+  return vertices.map((vertex, i) => (
+    <MeasurableNode<T>
+      key={vertex.key}
+      getClassName={getClassName}
+      ref={nodeRefs[i]}
+      hidden={!layoutVertices}
+      layerType={layerType}
+      renderNode={renderNode}
+      renderUtils={renderUtils}
+      vertex={vertex}
+      layoutVertex={layoutVertices && layoutVertices[i]}
+      setOnNode={setOnNode}
+    />
+  ));
+};
+
+export default React.memo(MeasurableNodes, arePropsEqual) as unknown as typeof MeasurableNodes;
