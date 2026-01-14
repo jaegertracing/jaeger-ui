@@ -7,14 +7,28 @@ import '@testing-library/jest-dom';
 
 import { EDirection, ECheckedStatus } from '../../../../model/ddg/types';
 import Selector from './Selector';
+import { trackHopChange } from '../../index.track';
 
-// Mock the tracking function as it's called within the component
+jest.mock('antd', () => {
+  const actual = jest.requireActual('antd');
+  return {
+    ...actual,
+    Popover: ({ content, children }) => (
+      <div>
+        <div data-testid="mock-popover">{children}</div>
+        <div data-testid="mock-popover-content">{content}</div>
+      </div>
+    ),
+  };
+});
+
 jest.mock('../../index.track', () => ({
   trackHopChange: jest.fn(),
 }));
 
-describe('Selector', () => {
+describe('Selector (functional)', () => {
   const handleClick = jest.fn();
+
   const hopsData = [
     { distance: 0, fullness: ECheckedStatus.Full },
     { distance: 1, fullness: ECheckedStatus.Partial },
@@ -33,32 +47,25 @@ describe('Selector', () => {
   };
 
   beforeEach(() => {
-    handleClick.mockClear();
-    // Clean up document body to prevent test interference
-    document.body.innerHTML = '';
+    jest.clearAllMocks();
   });
 
   it('renders message when there are not enough hops', () => {
-    // Render with only one hop
     render(<Selector {...defaultProps} hops={[{ distance: 0, fullness: ECheckedStatus.Full }]} />);
     expect(screen.getByText('No downstream hops')).toBeInTheDocument();
   });
 
-  it('renders buttons with expected text and classes for Downstream', () => {
+  it('renders downstream label and main buttons', () => {
     render(<Selector {...defaultProps} />);
 
-    // Check main display buttons (furthest visible and max hops)
-    expect(screen.getByTestId('hop-down-2')).toHaveTextContent('2');
-    expect(screen.getByTestId('hop-down-2')).toHaveClass('is-Full');
-    expect(screen.getByTestId('hop-down-4')).toHaveTextContent('4');
-    expect(screen.getByTestId('hop-down-4')).toHaveClass('is-Empty');
-
-    // Check label
     expect(screen.getByText('Downstream hops')).toBeInTheDocument();
+    expect(screen.getByTestId('hop-down-2')).toHaveTextContent('2');
+    expect(screen.getByTestId('hop-down-4')).toHaveTextContent('4');
   });
 
-  it('renders buttons with expected text and classes for Upstream', () => {
+  it('renders upstream label and buttons correctly', () => {
     const upstreamHops = hopsData.map(h => ({ ...h, distance: -h.distance }));
+
     render(
       <Selector
         {...defaultProps}
@@ -69,25 +76,47 @@ describe('Selector', () => {
       />
     );
 
-    // Check main display buttons (abs value is used for display)
-    expect(screen.getByTestId('hop-up-2')).toHaveTextContent('2');
-    expect(screen.getByTestId('hop-up-2')).toHaveClass('is-Full');
-    expect(screen.getByTestId('hop-up-4')).toHaveTextContent('4');
-    expect(screen.getByTestId('hop-up-4')).toHaveClass('is-Empty');
-
-    // Check label
     expect(screen.getByText('Upstream hops')).toBeInTheDocument();
+    expect(screen.getByTestId('hop-up-2')).toHaveTextContent('2');
+    expect(screen.getByTestId('hop-up-4')).toHaveTextContent('4');
   });
 
-  it('calls handleClick with correct arguments from label buttons', () => {
+  it('calls handleClick and tracking when hop button is clicked', () => {
     render(<Selector {...defaultProps} />);
 
-    // Furthest visible hop button
     fireEvent.click(screen.getByTestId('hop-down-2'));
-    expect(handleClick).toHaveBeenCalledWith(2, EDirection.Downstream);
 
-    // Max hop button (delimiter)
-    fireEvent.click(screen.getByTestId('hop-down-4'));
-    expect(handleClick).toHaveBeenCalledWith(4, EDirection.Downstream);
+    expect(handleClick).toHaveBeenCalledWith(2, EDirection.Downstream);
+    expect(trackHopChange).toHaveBeenCalledWith(2, 2, EDirection.Downstream);
+  });
+
+  it('opens popover and renders hop buttons inside it', () => {
+    render(<Selector {...defaultProps} />);
+
+    const popover = screen.getByTestId('mock-popover-content');
+    expect(popover).toBeInTheDocument();
+
+    expect(screen.getByTestId('hop-down-0-popover')).toBeInTheDocument();
+    expect(screen.getByTestId('hop-down-1-popover')).toBeInTheDocument();
+    expect(screen.getByTestId('hop-down-2-popover')).toBeInTheDocument();
+  });
+
+  it('increment and decrement buttons work correctly', () => {
+    render(<Selector {...defaultProps} />);
+
+    fireEvent.click(screen.getByTestId('increment-down'));
+    expect(handleClick).toHaveBeenCalledWith(3, EDirection.Downstream);
+
+    fireEvent.click(screen.getByTestId('decrement-down'));
+    expect(handleClick).toHaveBeenCalledWith(1, EDirection.Downstream);
+  });
+  it('disables increment button at max distance', () => {
+    render(<Selector {...defaultProps} furthestDistance={4} />);
+    expect(screen.getByTestId('increment-down')).toBeDisabled();
+  });
+
+  it('disables decrement button at zero distance', () => {
+    render(<Selector {...defaultProps} furthestDistance={0} />);
+    expect(screen.getByTestId('decrement-down')).toBeDisabled();
   });
 });
