@@ -1,4 +1,4 @@
-// Copyright (c) 2026 The Jaeger Authors.
+// Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
@@ -158,7 +158,7 @@ describe('SvgEdges', () => {
 
   describe('edge key generation', () => {
     it('generates unique keys using from and to with vertical tab separator', () => {
-      // The key format is `${edge.from}\v${edge.to}` where \v is vertical tab
+      // The key format is `${layoutEdge.edge.from}\v${layoutEdge.edge.to}` where \v is vertical tab
       const { container } = render(
         <svg>
           <SvgEdges {...defaultProps} />
