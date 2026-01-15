@@ -11,33 +11,37 @@ const mockNodesProps = [];
 const mockHtmlLayerProps = [];
 const mockSvgLayerProps = [];
 
+// 使用 React.createElement 而非 JSX，因為 jest.mock 的工廠函數不允許引用外部變數
 jest.mock('./Nodes', () => {
+  const React = require('react');
   const MockNodes = props => {
     mockNodesProps.push(props);
-    return <g data-testid="nodes" />;
+    return React.createElement('g', { 'data-testid': 'nodes' });
   };
   return MockNodes;
 });
 
 jest.mock('./HtmlLayer', () => {
+  const React = require('react');
   const MockHtmlLayer = ({ children, classNamePart, ...rest }) => {
     mockHtmlLayerProps.push({ classNamePart, ...rest });
-    return (
-      <div data-testid="html-layer" data-classname-part={classNamePart}>
-        {children}
-      </div>
+    return React.createElement(
+      'div',
+      { 'data-testid': 'html-layer', 'data-classname-part': classNamePart },
+      children
     );
   };
   return MockHtmlLayer;
 });
 
 jest.mock('./SvgLayer', () => {
+  const React = require('react');
   const MockSvgLayer = ({ children, classNamePart, ...rest }) => {
     mockSvgLayerProps.push({ classNamePart, ...rest });
-    return (
-      <svg data-testid="svg-layer" data-classname-part={classNamePart}>
-        {children}
-      </svg>
+    return React.createElement(
+      'svg',
+      { 'data-testid': 'svg-layer', 'data-classname-part': classNamePart },
+      children
     );
   };
   return MockSvgLayer;
