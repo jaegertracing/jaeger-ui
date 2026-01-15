@@ -4,7 +4,7 @@
 import React, { memo, useEffect, useMemo, useRef } from 'react';
 import memoize from 'memoize-one';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
-import { TSetProps, TFromGraphStateFn, TDefEntry } from '@jaegertracing/plexus/lib/Digraph/types';
+import { TSetProps, TFromGraphStateFn, TDefEntry, TLayer } from '@jaegertracing/plexus/lib/Digraph/types';
 import { TEdge } from '@jaegertracing/plexus/lib/types';
 import TNonEmptyArray from '@jaegertracing/plexus/lib/types/TNonEmptyArray';
 
@@ -109,62 +109,66 @@ const Graph = ({
     };
   }, [layoutManager]);
 
-  const { getNodeRenderers: memoGetNodeRenderers, getNodeContentRenderer, getSetOnEdge: memoGetSetOnEdge } =
-    memoizedFnsRef.current;
+  const {
+    getNodeRenderers: memoGetNodeRenderers,
+    getNodeContentRenderer,
+    getSetOnEdge: memoGetSetOnEdge,
+  } = memoizedFnsRef.current;
 
   const nodeRenderers = memoGetNodeRenderers(uiFindMatches || emptyFindSetRef.current, verticesViewModifiers);
 
   const layers = useMemo(
-    () => [
-      {
-        key: 'nodes/find-emphasis/vector-color-band',
-        layerType: 'svg' as const,
-        renderNode: nodeRenderers.vectorFindColorBand,
-      },
-      {
-        key: 'nodes/find-emphasis/html',
-        layerType: 'html' as const,
-        renderNode: nodeRenderers.htmlEmphasis,
-      },
-      {
-        key: 'nodes/vector-border',
-        layerType: 'svg' as const,
-        renderNode: nodeRenderers.vectorBorder,
-        setOnContainer: verticesViewModifiers.size
-          ? setOnVectorBorderContainerWithViewModifiers
-          : Digraph.propsFactories.scaleStrokeOpacityStrongest,
-      },
-      {
-        key: 'edges',
-        layerType: 'svg' as const,
-        edges: true,
-        defs: edgesDefs,
-        markerEndId: 'arrow',
-        setOnContainer: edgesViewModifiers.size
-          ? setOnEdgesContainer.withViewModifiers
-          : setOnEdgesContainer.withoutViewModifiers,
-        setOnEdge: memoGetSetOnEdge(edgesViewModifiers),
-      },
-      {
-        key: 'nodes/content',
-        layerType: 'html' as const,
-        measurable: true,
-        measureNode,
-        renderNode: getNodeContentRenderer({
-          baseUrl,
-          density,
-          extraUrlArgs,
-          focusPathsThroughVertex,
-          getGenerationVisibility,
-          getVisiblePathElems,
-          hideVertex,
-          selectVertex,
-          setOperation,
-          setViewModifier,
-          updateGenerationVisibility,
-        }),
-      },
-    ],
+    () =>
+      [
+        {
+          key: 'nodes/find-emphasis/vector-color-band',
+          layerType: 'svg' as const,
+          renderNode: nodeRenderers.vectorFindColorBand,
+        },
+        {
+          key: 'nodes/find-emphasis/html',
+          layerType: 'html' as const,
+          renderNode: nodeRenderers.htmlEmphasis,
+        },
+        {
+          key: 'nodes/vector-border',
+          layerType: 'svg' as const,
+          renderNode: nodeRenderers.vectorBorder,
+          setOnContainer: verticesViewModifiers.size
+            ? setOnVectorBorderContainerWithViewModifiers
+            : Digraph.propsFactories.scaleStrokeOpacityStrongest,
+        },
+        {
+          key: 'edges',
+          layerType: 'svg' as const,
+          edges: true,
+          defs: edgesDefs,
+          markerEndId: 'arrow',
+          setOnContainer: edgesViewModifiers.size
+            ? setOnEdgesContainer.withViewModifiers
+            : setOnEdgesContainer.withoutViewModifiers,
+          setOnEdge: memoGetSetOnEdge(edgesViewModifiers),
+        },
+        {
+          key: 'nodes/content',
+          layerType: 'html' as const,
+          measurable: true,
+          measureNode,
+          renderNode: getNodeContentRenderer({
+            baseUrl,
+            density,
+            extraUrlArgs,
+            focusPathsThroughVertex,
+            getGenerationVisibility,
+            getVisiblePathElems,
+            hideVertex,
+            selectVertex,
+            setOperation,
+            setViewModifier,
+            updateGenerationVisibility,
+          }),
+        },
+      ] as TNonEmptyArray<TLayer<TDdgVertex, unknown>>,
     [
       nodeRenderers,
       verticesViewModifiers,
