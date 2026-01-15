@@ -6,17 +6,31 @@ import { render, waitFor } from '@testing-library/react';
 import MeasurableNodesLayer from './MeasurableNodesLayer';
 import { ELayoutPhase, ELayerType } from './types';
 
-jest.mock('./HtmlLayer', () => ({ children, classNamePart }) => (
-  <div data-testid="html-layer" data-classname={classNamePart}>
-    {children}
-  </div>
-));
+jest.mock('./HtmlLayer', () => {
+  const React = require('react');
+  return ({ children, classNamePart }) =>
+    React.createElement(
+      'div',
+      {
+        'data-testid': 'html-layer',
+        'data-classname': classNamePart,
+      },
+      children
+    );
+});
 
-jest.mock('./SvgLayer', () => ({ children, classNamePart }) => (
-  <svg data-testid="svg-layer" data-classname={classNamePart}>
-    {children}
-  </svg>
-));
+jest.mock('./SvgLayer', () => {
+  const React = require('react');
+  return ({ children, classNamePart }) =>
+    React.createElement(
+      'svg',
+      {
+        'data-testid': 'svg-layer',
+        'data-classname': classNamePart,
+      },
+      children
+    );
+});
 
 // Store mock instances by vertex key
 const mockNodeInstances = {};
