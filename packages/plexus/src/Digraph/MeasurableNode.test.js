@@ -273,11 +273,48 @@ describe('MeasurableNode', () => {
       expect(typeof result.width).toBe('number');
     });
 
-    // Note: The null ref checks (lines 56, 65 in MeasurableNode.tsx) are defensive
-    // programming for edge cases. In JSDOM, refs are always populated when the
-    // component renders, so these paths are not reachable in standard tests.
-    // The coverage for these lines is intentionally not 100% as they represent
-    // safety checks for theoretical edge cases in production environments.
+    // Cross-validation: Test that measure() still works correctly after component lifecycle
+    it('measure returns valid dimensions throughout component lifecycle', () => {
+      const ref = React.createRef();
+      const { unmount } = render(
+        <svg>
+          <MeasurableNode {...defaultProps} ref={ref} layerType={ELayerType.Svg} />
+        </svg>
+      );
+
+      // Before unmount - ref should be populated
+      expect(ref.current).not.toBeNull();
+      const beforeUnmount = ref.current.measure();
+      expect(beforeUnmount).toHaveProperty('height');
+      expect(beforeUnmount).toHaveProperty('width');
+
+      // Store reference to measure function before unmount
+      const measureFn = ref.current.measure;
+
+      // After unmount
+      unmount();
+
+      // After unmount, ref.current becomes null, but the measure function
+      // closure still holds references to the internal refs which are now null
+      // This is the ONLY way to trigger the null ref checks (lines 56, 65)
+      const afterUnmount = measureFn();
+      expect(afterUnmount).toEqual({ height: 0, width: 0 });
+    });
+
+    it('measure returns zero dimensions after HTML component unmounts', () => {
+      const ref = React.createRef();
+      const { unmount } = render(<MeasurableNode {...defaultProps} ref={ref} layerType={ELayerType.Html} />);
+
+      // Store reference to measure function before unmount
+      const measureFn = ref.current.measure;
+
+      // After unmount, internal refs become null
+      unmount();
+
+      // This triggers the null check on line 56
+      const afterUnmount = measureFn();
+      expect(afterUnmount).toEqual({ height: 0, width: 0 });
+    });
   });
 
   describe('React.memo behavior', () => {
