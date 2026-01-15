@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import memoizeOne from 'memoize-one';
@@ -58,7 +58,7 @@ type TState = {
   selectedSampleDatasetType: string;
 };
 
-/* ---------------- helpers (unchanged) ---------------- */
+/* ---------------- helpers (UNCHANGED) ---------------- */
 
 const createSampleDataManager = () => {
   let sampleDAGDataset: TServiceCall[] = [];
@@ -78,8 +78,6 @@ const createSampleDataManager = () => {
   };
 };
 
-const { getSampleData, loadSampleData } = createSampleDataManager();
-
 const findConnectedServices = (
   serviceCalls: TServiceCall[],
   startService: string,
@@ -88,6 +86,7 @@ const findConnectedServices = (
   const nodes = new Set([startService]);
   const edges: TServiceCall[] = [];
   const queue = [{ service: startService, depth: 0 }];
+
   const maxDepthValue = maxDepth ?? Number.MAX_SAFE_INTEGER;
 
   while (queue.length > 0) {
@@ -122,27 +121,37 @@ const formatServiceCalls = (
     const edges: TEdge[] = [];
 
     serviceCalls.forEach(d => {
-      if (d.parent.trim().length && d.child.trim().length) {
+      if (d.parent.trim().length !== 0 && d.child.trim().length !== 0) {
         if (!nodeMap[d.parent]) {
           nodes.push({ key: d.parent });
           nodeMap[d.parent] = true;
         }
+
         if (!nodeMap[d.child]) {
           nodes.push({ key: d.child });
           nodeMap[d.child] = true;
         }
-        edges.push({ from: d.parent, to: d.child, label: `${d.callCount}` });
+
+        edges.push({
+          from: d.parent,
+          to: d.child,
+          label: `${d.callCount}`,
+        });
       }
     });
 
     return { nodes, edges };
   }
 
-  const { nodes, edges } = findConnectedServices(serviceCalls, selectedService, selectedDepth);
+  const { nodes: connectedNodes, edges: connectedEdges } = findConnectedServices(
+    serviceCalls,
+    selectedService,
+    selectedDepth
+  );
 
   return {
-    nodes: Array.from(nodes).map(key => ({ key })),
-    edges: edges.map(edge => ({
+    nodes: Array.from(connectedNodes).map(key => ({ key })),
+    edges: connectedEdges.map(edge => ({
       from: edge.parent,
       to: edge.child,
       label: `${edge.callCount}`,
@@ -150,9 +159,11 @@ const formatServiceCalls = (
   };
 };
 
-/* ---------------- functional component ---------------- */
+const { getSampleData, loadSampleData } = createSampleDataManager();
 
-export const DependencyGraphPageImpl: React.FC<TProps> = props => {
+/* ---------------- FUNCTIONAL COMPONENT ---------------- */
+
+export function DependencyGraphPageImpl(props: TProps) {
   const { nodes, links, error, loading, dependencies, uiFind, fetchDependencies } = props;
 
   const [state, setState] = useState<TState>({
@@ -165,38 +176,34 @@ export const DependencyGraphPageImpl: React.FC<TProps> = props => {
 
   const { selectedService, selectedLayout, selectedDepth, debouncedDepth, selectedSampleDatasetType } = state;
 
-  /* ---------- instance fields ---------- */
-
-  const debouncedDepthChangeRef = useRef(
+  const debouncedDepthChange = useRef(
     debounce((value: number | null) => {
       setState(prev => ({ ...prev, debouncedDepth: value }));
     }, 1000)
-  );
+  ).current;
 
-  const getMemoizedGraphDataRef = useRef(
-    memoizeOne((deps: TServiceCall[], svc: string | null, depth: number | null) =>
-      formatServiceCalls(deps ?? [], svc, depth)
+  const getMemoizedGraphData = useRef(
+    memoizeOne((dependencies: TServiceCall[], selectedService: string | null, selectedDepth: number | null) =>
+      formatServiceCalls(dependencies ?? [], selectedService, selectedDepth)
     )
-  );
+  ).current;
 
-  const getMemoizedMatchCountRef = useRef(
-    memoizeOne((nodes: TVertex[], uiFind: string | undefined) => {
+  const getMemoizedMatchCount = useRef(
+    memoizeOne((graphDataNodes: TVertex[], uiFind: string | undefined) => {
       if (!uiFind) return 0;
-      return nodes.filter(n => n.key.toLowerCase().includes(uiFind.toLowerCase())).length;
+      return graphDataNodes.filter(node => node.key.toLowerCase().includes(uiFind.toLowerCase())).length;
     })
-  );
+  ).current;
 
-  /* ---------- methods ---------- */
-
-  const updateLayout = useCallback(() => {
-    const dataset = getSampleData().length > 0 ? getSampleData() : dependencies;
-    const nextLayout = dataset.length > dagMaxNumServices ? 'sfdp' : 'dot';
+  const updateLayout = () => {
+    const dataset: TServiceCall[] = getSampleData().length > 0 ? getSampleData() : dependencies;
+    const layout: 'dot' | 'sfdp' = dataset.length > dagMaxNumServices ? 'sfdp' : 'dot';
 
     setState(prev => {
-      if (nextLayout !== prev.selectedLayout) {
+      if (layout !== prev.selectedLayout) {
         return {
           ...prev,
-          selectedLayout: nextLayout,
+          selectedLayout: layout,
           selectedService: null,
           selectedDepth: 5,
           debouncedDepth: 5,
@@ -204,40 +211,7 @@ export const DependencyGraphPageImpl: React.FC<TProps> = props => {
       }
       return prev;
     });
-  }, [dependencies]);
-
-  const handleServiceSelect = useCallback((service: string | null) => {
-    setState(prev => ({ ...prev, selectedService: service }));
-  }, []);
-
-  const handleLayoutSelect = useCallback((layout: string) => {
-    setState(prev => ({ ...prev, selectedLayout: layout }));
-  }, []);
-
-  const handleDepthChange = useCallback((value: number | null) => {
-    if (value === null || value === undefined) {
-      setState(prev => ({ ...prev, selectedDepth: value, debouncedDepth: value }));
-    } else if (Number.isInteger(value) && value >= 0) {
-      setState(prev => ({ ...prev, selectedDepth: value }));
-      debouncedDepthChangeRef.current(value);
-    } else {
-      setState(prev => ({ ...prev, selectedDepth: 0, debouncedDepth: 0 }));
-    }
-  }, []);
-
-  const handleSampleDatasetTypeChange = useCallback(
-    (type: string) => {
-      setState(prev => ({ ...prev, selectedSampleDatasetType: type }));
-      loadSampleData(type).then(() => fetchDependencies());
-    },
-    [fetchDependencies]
-  );
-
-  const handleReset = useCallback(() => {
-    setState(prev => ({ ...prev, selectedService: null, selectedDepth: 5, debouncedDepth: 5 }));
-  }, []);
-
-  /* ---------- lifecycle ---------- */
+  };
 
   useEffect(() => {
     fetchDependencies();
@@ -248,10 +222,42 @@ export const DependencyGraphPageImpl: React.FC<TProps> = props => {
     updateLayout();
   }, [dependencies]);
 
-  /* ---------- derived ---------- */
+  /* ---------- handlers ---------- */
 
-  const graphData = getMemoizedGraphDataRef.current(dependencies, selectedService, debouncedDepth);
-  const matchCount = getMemoizedMatchCountRef.current(graphData.nodes, uiFind);
+  const handleServiceSelect = (service: string | null) => {
+    setState(prev => ({ ...prev, selectedService: service }));
+  };
+
+  const handleLayoutSelect = (layout: string) => {
+    setState(prev => ({ ...prev, selectedLayout: layout }));
+  };
+
+  const handleDepthChange = (value: number | null) => {
+    if (value === null || value === undefined) {
+      setState(prev => ({ ...prev, selectedDepth: value, debouncedDepth: value }));
+    } else if (Number.isInteger(value) && value >= 0) {
+      setState(prev => ({ ...prev, selectedDepth: value }));
+      debouncedDepthChange(value);
+    } else {
+      setState(prev => ({ ...prev, selectedDepth: 0, debouncedDepth: 0 }));
+    }
+  };
+
+  const handleSampleDatasetTypeChange = (selectedSampleDatasetType: string) => {
+    setState(prev => ({ ...prev, selectedSampleDatasetType }));
+    loadSampleData(selectedSampleDatasetType).then(() => {
+      fetchDependencies();
+    });
+  };
+
+  const handleReset = () => {
+    setState(prev => ({
+      ...prev,
+      selectedService: null,
+      selectedDepth: 5,
+      debouncedDepth: 5,
+    }));
+  };
 
   /* ---------- render ---------- */
 
@@ -275,6 +281,8 @@ export const DependencyGraphPageImpl: React.FC<TProps> = props => {
   }
 
   const isHierarchicalDisabled = dependencies.length > dagMaxNumServices;
+  const graphData = getMemoizedGraphData(dependencies, selectedService, debouncedDepth);
+  const matchCount = getMemoizedMatchCount(graphData.nodes, uiFind);
 
   return (
     <div>
@@ -308,9 +316,9 @@ export const DependencyGraphPageImpl: React.FC<TProps> = props => {
       </div>
     </div>
   );
-};
+}
 
-/* ---------------- redux (unchanged) ---------------- */
+/* ---------------- redux unchanged ---------------- */
 
 type TFormattedLink = {
   source: string;
@@ -358,6 +366,7 @@ const formatDependenciesAsNodesAndLinks = memoizeOne(dependencies => {
   return { nodes: data.nodes, links: data.links };
 });
 
+// export for tests
 export function mapStateToProps(state: ReduxState): Omit<TProps, 'fetchDependencies'> {
   const { dependencies, error, loading } = state.dependencies;
   let links: TEdge[] | null = null;
@@ -369,7 +378,7 @@ export function mapStateToProps(state: ReduxState): Omit<TProps, 'fetchDependenc
     nodes = formatted.nodes;
   }
 
-  const dataset = getSampleData().length > 0 ? getSampleData() : dependencies;
+  const dataset: TServiceCall[] = getSampleData().length > 0 ? getSampleData() : dependencies;
 
   return {
     loading,
@@ -381,6 +390,7 @@ export function mapStateToProps(state: ReduxState): Omit<TProps, 'fetchDependenc
   };
 }
 
+// export for tests
 export function mapDispatchToProps(dispatch: Dispatch): Pick<TProps, 'fetchDependencies'> {
   const { fetchDependencies } = bindActionCreators(jaegerApiActions, dispatch);
   return { fetchDependencies };
