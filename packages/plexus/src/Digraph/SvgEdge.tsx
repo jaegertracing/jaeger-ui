@@ -58,8 +58,10 @@ const SvgEdge = <U = {},>({
 }: TProps<U>) => {
   const { pathPoints } = layoutEdge;
 
-  // Memoize path d string to avoid recomputation when pathPoints haven't changed
-  const d = React.useMemo(() => makePathD(pathPoints), [pathPoints]);
+  // Use stringified pathPoints for deep comparison to detect content changes
+  const pathPointsKey = JSON.stringify(pathPoints);
+  // Memoize path d string to avoid recomputation when pathPoints content hasn't changed
+  const d = React.useMemo(() => makePathD(pathPoints), [pathPointsKey]);
 
   const markerEnd = makeIriRef(renderUtils, markerEndId);
   const markerStart = makeIriRef(renderUtils, markerStartId);
