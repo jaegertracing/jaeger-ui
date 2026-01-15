@@ -20,7 +20,7 @@ jest.mock('./utils', () => ({
     return args[0] ? { 'data-custom': 'entry-prop' } : null;
   },
   // getValueScaler is called at module load time, so we provide a simple mock
-  getValueScaler: () => k => 0.5,
+  getValueScaler: () => () => 0.5,
 }));
 
 describe('SvgDefEntry', () => {
