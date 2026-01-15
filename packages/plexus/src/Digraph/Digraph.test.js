@@ -362,8 +362,8 @@ describe('Digraph', () => {
 
   describe('React.memo behavior', () => {
     it('is wrapped with React.memo for performance', () => {
-      // After conversion to functional component
-      expect(Digraph.$$typeof).toBeDefined();
+      // React.memo wraps components with a special $$typeof
+      expect(Digraph.$$typeof).toBe(Symbol.for('react.memo'));
     });
   });
 });
