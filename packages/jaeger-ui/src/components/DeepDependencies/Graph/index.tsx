@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { PureComponent } from 'react';
+import React, { memo, useEffect, useMemo, useRef } from 'react';
 import memoize from 'memoize-one';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
 import { TSetProps, TFromGraphStateFn, TDefEntry } from '@jaegertracing/plexus/lib/Digraph/types';
@@ -60,32 +60,119 @@ const edgesDefs: TNonEmptyArray<TDefEntry<TDdgVertex, unknown>> = [
   { localId: 'arrow-hovered', setOnEntry: { className: 'Ddg--Arrow is-pathHovered' } },
 ];
 
-export default class Graph extends PureComponent<TProps> {
-  private getNodeRenderers = memoize(getNodeRenderers);
-  private getNodeContentRenderer = memoize(getNodeRenderer);
-  private getSetOnEdge = memoize(getSetOnEdge);
+const Graph = ({
+  baseUrl,
+  density,
+  edges,
+  edgesViewModifiers,
+  extraUrlArgs,
+  focusPathsThroughVertex,
+  getGenerationVisibility,
+  getVisiblePathElems,
+  hideVertex,
+  selectVertex,
+  setOperation,
+  setViewModifier,
+  uiFindMatches,
+  updateGenerationVisibility,
+  vertices,
+  verticesViewModifiers,
+}: TProps) => {
+  // Stable layout manager instance persists across renders
+  const layoutManagerRef = useRef<LayoutManager | null>(null);
+  if (!layoutManagerRef.current) {
+    layoutManagerRef.current = new LayoutManager({
+      nodesep: 0.55,
+      ranksep: 1.5,
+      rankdir: 'TB',
+      shape: 'circle',
+      splines: 'polyline',
+      useDotEdges: true,
+    });
+  }
+  const layoutManager = layoutManagerRef.current;
 
-  private layoutManager: LayoutManager = new LayoutManager({
-    nodesep: 0.55,
-    ranksep: 1.5,
-    rankdir: 'TB',
-    shape: 'circle',
-    splines: 'polyline',
-    useDotEdges: true,
+  // Empty set for fallback when uiFindMatches is undefined
+  const emptyFindSetRef = useRef(new Set<string>());
+
+  // Memoized functions using refs to avoid recreating memoize instances
+  const memoizedFnsRef = useRef({
+    getNodeRenderers: memoize(getNodeRenderers),
+    getNodeContentRenderer: memoize(getNodeRenderer),
+    getSetOnEdge: memoize(getSetOnEdge),
   });
 
-  private emptyFindSet: Set<string> = new Set();
+  // Cleanup layout manager on unmount
+  useEffect(() => {
+    return () => {
+      layoutManager.stopAndRelease();
+    };
+  }, [layoutManager]);
 
-  componentWillUnmount() {
-    this.layoutManager.stopAndRelease();
-  }
+  const { getNodeRenderers: memoGetNodeRenderers, getNodeContentRenderer, getSetOnEdge: memoGetSetOnEdge } =
+    memoizedFnsRef.current;
 
-  render() {
-    const {
+  const nodeRenderers = memoGetNodeRenderers(uiFindMatches || emptyFindSetRef.current, verticesViewModifiers);
+
+  const layers = useMemo(
+    () => [
+      {
+        key: 'nodes/find-emphasis/vector-color-band',
+        layerType: 'svg' as const,
+        renderNode: nodeRenderers.vectorFindColorBand,
+      },
+      {
+        key: 'nodes/find-emphasis/html',
+        layerType: 'html' as const,
+        renderNode: nodeRenderers.htmlEmphasis,
+      },
+      {
+        key: 'nodes/vector-border',
+        layerType: 'svg' as const,
+        renderNode: nodeRenderers.vectorBorder,
+        setOnContainer: verticesViewModifiers.size
+          ? setOnVectorBorderContainerWithViewModifiers
+          : Digraph.propsFactories.scaleStrokeOpacityStrongest,
+      },
+      {
+        key: 'edges',
+        layerType: 'svg' as const,
+        edges: true,
+        defs: edgesDefs,
+        markerEndId: 'arrow',
+        setOnContainer: edgesViewModifiers.size
+          ? setOnEdgesContainer.withViewModifiers
+          : setOnEdgesContainer.withoutViewModifiers,
+        setOnEdge: memoGetSetOnEdge(edgesViewModifiers),
+      },
+      {
+        key: 'nodes/content',
+        layerType: 'html' as const,
+        measurable: true,
+        measureNode,
+        renderNode: getNodeContentRenderer({
+          baseUrl,
+          density,
+          extraUrlArgs,
+          focusPathsThroughVertex,
+          getGenerationVisibility,
+          getVisiblePathElems,
+          hideVertex,
+          selectVertex,
+          setOperation,
+          setViewModifier,
+          updateGenerationVisibility,
+        }),
+      },
+    ],
+    [
+      nodeRenderers,
+      verticesViewModifiers,
+      edgesViewModifiers,
+      memoGetSetOnEdge,
+      getNodeContentRenderer,
       baseUrl,
       density,
-      edges,
-      edgesViewModifiers,
       extraUrlArgs,
       focusPathsThroughVertex,
       getGenerationVisibility,
@@ -94,73 +181,23 @@ export default class Graph extends PureComponent<TProps> {
       selectVertex,
       setOperation,
       setViewModifier,
-      uiFindMatches,
       updateGenerationVisibility,
-      vertices,
-      verticesViewModifiers,
-    } = this.props;
-    const nodeRenderers = this.getNodeRenderers(uiFindMatches || this.emptyFindSet, verticesViewModifiers);
+    ]
+  );
 
-    return (
-      <Digraph<TDdgVertex>
-        minimap
-        zoom
-        minimapClassName="u-miniMap"
-        layoutManager={this.layoutManager}
-        edges={edges}
-        vertices={vertices}
-        measurableNodesKey="nodes/content"
-        layers={[
-          {
-            key: 'nodes/find-emphasis/vector-color-band',
-            layerType: 'svg',
-            renderNode: nodeRenderers.vectorFindColorBand,
-          },
-          {
-            key: 'nodes/find-emphasis/html',
-            layerType: 'html',
-            renderNode: nodeRenderers.htmlEmphasis,
-          },
-          {
-            key: 'nodes/vector-border',
-            layerType: 'svg',
-            renderNode: nodeRenderers.vectorBorder,
-            setOnContainer: verticesViewModifiers.size
-              ? setOnVectorBorderContainerWithViewModifiers
-              : Digraph.propsFactories.scaleStrokeOpacityStrongest,
-          },
-          {
-            key: 'edges',
-            layerType: 'svg',
-            edges: true,
-            defs: edgesDefs,
-            markerEndId: 'arrow',
-            setOnContainer: edgesViewModifiers.size
-              ? setOnEdgesContainer.withViewModifiers
-              : setOnEdgesContainer.withoutViewModifiers,
-            setOnEdge: this.getSetOnEdge(edgesViewModifiers),
-          },
-          {
-            key: 'nodes/content',
-            layerType: 'html',
-            measurable: true,
-            measureNode,
-            renderNode: this.getNodeContentRenderer({
-              baseUrl,
-              density,
-              extraUrlArgs,
-              focusPathsThroughVertex,
-              getGenerationVisibility,
-              getVisiblePathElems,
-              hideVertex,
-              selectVertex,
-              setOperation,
-              setViewModifier,
-              updateGenerationVisibility,
-            }),
-          },
-        ]}
-      />
-    );
-  }
-}
+  return (
+    <Digraph<TDdgVertex>
+      minimap
+      zoom
+      minimapClassName="u-miniMap"
+      layoutManager={layoutManager}
+      edges={edges}
+      vertices={vertices}
+      measurableNodesKey="nodes/content"
+      layers={layers}
+    />
+  );
+};
+
+// memo provides shallow comparison equivalent to PureComponent
+export default memo(Graph);
