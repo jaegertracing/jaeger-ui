@@ -273,7 +273,7 @@ describe('SvgDefEntry', () => {
 
   describe('React.memo behavior', () => {
     it('is wrapped with React.memo for performance', () => {
-      expect(SvgDefEntry.$$typeof).toBeDefined();
+      expect(SvgDefEntry.$$typeof).toBe(Symbol.for('react.memo'));
     });
   });
 });
