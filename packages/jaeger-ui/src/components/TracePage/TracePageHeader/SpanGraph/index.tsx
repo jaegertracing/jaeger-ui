@@ -48,12 +48,13 @@ const SpanGraph = ({
   updateNextViewRangeTime,
   updateViewRangeTime,
 }: SpanGraphProps) => {
-  // Memoize items calculation based on trace reference
-  const items = useMemo(() => (trace ? getItems(trace) : []), [trace]);
-
+  // Early return if no trace data - avoid unnecessary hook execution
   if (!trace) {
     return <div />;
   }
+
+  // Memoize items calculation based on trace reference
+  const items = useMemo(() => getItems(trace), [trace]);
 
   return (
     <div className="SpanGraph ub-pb2 ub-px2">
