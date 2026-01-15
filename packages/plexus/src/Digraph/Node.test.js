@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import Node from './Node';
 import { ELayerType } from './types';
 
@@ -135,5 +136,6 @@ describe('Node', () => {
     );
     const wrapper = container.querySelector('.plexus--Node');
     expect(wrapper).toHaveAttribute('data-custom', 'value');
+    expect(mockSetOnNode).toHaveBeenCalledWith(mockLayoutVertex, mockRenderUtils);
   });
 });
