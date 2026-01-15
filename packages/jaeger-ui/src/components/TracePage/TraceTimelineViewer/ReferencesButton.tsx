@@ -18,7 +18,7 @@ type TReferencesButtonProps = {
 
 // ReferencesButton is displayed as a menu at the span level.
 // Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/2b29921a-2225-4a01-9018-1a1952f186ef
-const ReferencesButton: React.FC<TReferencesButtonProps> = memo(function ReferencesButton({
+const ReferencesButton: React.FC<TReferencesButtonProps> = memo(function ({
   links,
   children,
   tooltipText,
@@ -71,5 +71,5 @@ const ReferencesButton: React.FC<TReferencesButtonProps> = memo(function Referen
     </Tooltip>
   );
 });
-
+ReferencesButton.displayName = 'ReferencesButton';
 export default ReferencesButton;
