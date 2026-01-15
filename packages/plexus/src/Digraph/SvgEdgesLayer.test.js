@@ -6,22 +6,25 @@ import { render } from '@testing-library/react';
 import SvgEdgesLayer from './SvgEdgesLayer';
 
 // Mock child components
+// 使用 React.createElement 而非 JSX，因為 jest.mock 的工廠函數不允許引用外部變數
 jest.mock('./SvgEdges', () => {
+  const React = require('react');
   const MockSvgEdges = props => {
     MockSvgEdges.lastProps = props;
-    return <g data-testid="svg-edges" />;
+    return React.createElement('g', { 'data-testid': 'svg-edges' });
   };
   MockSvgEdges.lastProps = null;
   return MockSvgEdges;
 });
 
 jest.mock('./SvgLayer', () => {
+  const React = require('react');
   const MockSvgLayer = ({ children, classNamePart, extraWrapper, ...rest }) => {
     MockSvgLayer.lastProps = { classNamePart, extraWrapper, ...rest };
-    return (
-      <svg data-testid="svg-layer" data-classname-part={classNamePart}>
-        {children}
-      </svg>
+    return React.createElement(
+      'svg',
+      { 'data-testid': 'svg-layer', 'data-classname-part': classNamePart },
+      children
     );
   };
   MockSvgLayer.lastProps = null;
