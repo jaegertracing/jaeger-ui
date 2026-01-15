@@ -272,11 +272,18 @@ describe('MeasurableNode', () => {
       expect(typeof result.height).toBe('number');
       expect(typeof result.width).toBe('number');
     });
+
+    // Note: The null ref checks (lines 56, 65 in MeasurableNode.tsx) are defensive
+    // programming for edge cases. In JSDOM, refs are always populated when the
+    // component renders, so these paths are not reachable in standard tests.
+    // The coverage for these lines is intentionally not 100% as they represent
+    // safety checks for theoretical edge cases in production environments.
   });
 
   describe('React.memo behavior', () => {
     it('is wrapped with React.memo for performance', () => {
-      expect(MeasurableNode.$$typeof).toBeDefined();
+      // React.memo wraps components with a special $$typeof
+      expect(MeasurableNode.$$typeof).toBe(Symbol.for('react.memo'));
     });
   });
 });
