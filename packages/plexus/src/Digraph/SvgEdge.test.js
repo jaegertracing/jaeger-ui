@@ -173,8 +173,8 @@ describe('SvgEdge', () => {
 
   describe('React.memo behavior', () => {
     it('is wrapped with React.memo for performance', () => {
-      // React.memo wraps the component, so we check it's not a class
-      expect(SvgEdge.$$typeof).toBeDefined();
+      // React.memo wraps components with a special $$typeof
+      expect(SvgEdge.$$typeof).toBe(Symbol.for('react.memo'));
     });
   });
 });
