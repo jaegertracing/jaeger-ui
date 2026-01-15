@@ -7,8 +7,9 @@ import { forwardRef, memo, ReactElement, Ref, useImperativeHandle, useRef } from
 import { TMeasurableNodeRenderer, TLayerType, TRendererUtils, ELayerType } from './types';
 import { assignMergeCss, getProps } from './utils';
 import { TLayoutVertex, TVertex } from '../types';
+import { TOneOfTwo } from '../types/TOneOf';
 
-type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNode'> & {
+type TProps<T = Record<string, unknown>> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNode'> & {
   getClassName: (name: string) => string;
   hidden: boolean;
   layerType: TLayerType;
@@ -19,16 +20,19 @@ type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNo
 
 // Exposed methods via ref for parent components
 export type TMeasurableNodeHandle = {
-  getRef: () => {
-    htmlWrapper: HTMLDivElement | null | undefined;
-    svgWrapper: SVGGElement | null | undefined;
-  };
+  getRef: () => TOneOfTwo<
+    { htmlWrapper: HTMLDivElement | null; svgWrapper?: undefined },
+    { svgWrapper: SVGGElement | null; htmlWrapper?: undefined }
+  >;
   measure: () => { height: number; width: number };
 };
 
 const SVG_HIDDEN_STYLE = { visibility: 'hidden' };
 
-const MeasurableNodeImpl = <T = {},>(props: TProps<T>, ref: Ref<TMeasurableNodeHandle>) => {
+const MeasurableNodeImpl = <T = Record<string, unknown>,>(
+  props: TProps<T>,
+  ref: Ref<TMeasurableNodeHandle>
+) => {
   const { getClassName, hidden, layerType, layoutVertex, renderNode, renderUtils, setOnNode, vertex } = props;
 
   const htmlRef = useRef<HTMLDivElement>(null);
@@ -111,7 +115,7 @@ const MeasurableNodeImpl = <T = {},>(props: TProps<T>, ref: Ref<TMeasurableNodeH
 };
 
 // forwardRef with generic type support
-const MeasurableNode = forwardRef(MeasurableNodeImpl) as <T = {}>(
+const MeasurableNode = forwardRef(MeasurableNodeImpl) as <T = Record<string, unknown>>(
   props: TProps<T> & { ref?: Ref<TMeasurableNodeHandle> }
 ) => ReactElement | null;
 
