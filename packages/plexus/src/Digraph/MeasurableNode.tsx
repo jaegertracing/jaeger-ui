@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { forwardRef, memo, ReactElement, Ref, useImperativeHandle, useRef } from 'react';
 
 import { TMeasurableNodeRenderer, TLayerType, TRendererUtils, ELayerType } from './types';
 import { assignMergeCss, getProps } from './utils';
@@ -31,16 +30,16 @@ const SVG_HIDDEN_STYLE = { visibility: 'hidden' };
 
 const MeasurableNodeImpl = <T = Record<string, unknown>,>(
   props: TProps<T>,
-  ref: Ref<TMeasurableNodeHandle>
+  ref: React.Ref<TMeasurableNodeHandle>
 ) => {
   const { getClassName, hidden, layerType, layoutVertex, renderNode, renderUtils, setOnNode, vertex } = props;
 
-  const htmlRef = useRef<HTMLDivElement>(null);
-  const svgRef = useRef<SVGGElement>(null);
+  const htmlRef = React.useRef<HTMLDivElement>(null);
+  const svgRef = React.useRef<SVGGElement>(null);
 
   // useImperativeHandle allows parent components to call measure() and getRef() on this component,
   // which is necessary for the layout algorithm to measure node dimensions before positioning.
-  useImperativeHandle(
+  React.useImperativeHandle(
     ref,
     () => ({
       getRef: () => {
@@ -115,9 +114,9 @@ const MeasurableNodeImpl = <T = Record<string, unknown>,>(
 };
 
 // forwardRef with generic type support
-const MeasurableNode = forwardRef(MeasurableNodeImpl) as <T = Record<string, unknown>>(
-  props: TProps<T> & { ref?: Ref<TMeasurableNodeHandle> }
-) => ReactElement | null;
+const MeasurableNode = React.forwardRef(MeasurableNodeImpl) as <T = Record<string, unknown>>(
+  props: TProps<T> & { ref?: React.Ref<TMeasurableNodeHandle> }
+) => React.ReactElement | null;
 
 // memo provides shallow comparison equivalent to PureComponent
-export default memo(MeasurableNode) as typeof MeasurableNode;
+export default React.memo(MeasurableNode) as typeof MeasurableNode;

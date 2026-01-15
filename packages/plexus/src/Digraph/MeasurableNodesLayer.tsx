@@ -4,7 +4,7 @@
 import * as React from 'react';
 
 import HtmlLayer from './HtmlLayer';
-import MeasurableNode, { TMeasurableNodeHandle } from './MeasurableNode';
+import { TMeasurableNodeHandle } from './MeasurableNode';
 import MeasurableNodes from './MeasurableNodes';
 import SvgLayer from './SvgLayer';
 import {

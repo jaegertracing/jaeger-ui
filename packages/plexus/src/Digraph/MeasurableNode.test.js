@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Uber Technologies, Inc.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
@@ -259,16 +259,16 @@ describe('MeasurableNode', () => {
         </svg>
       );
       const result = ref.current.measure();
-      // In JSDOM, getBBox returns 0,0 for unmocked SVG elements
-      expect(typeof result.height).toBe('number');
-      expect(typeof result.width).toBe('number');
+      // getBBox is mocked in beforeAll to return { height: 100, width: 200 }
+      expect(result.height).toBe(100);
+      expect(result.width).toBe(200);
     });
 
     it('returns dimensions for HTML layer', () => {
       const ref = React.createRef();
       render(<MeasurableNode {...defaultProps} ref={ref} layerType={ELayerType.Html} />);
       const result = ref.current.measure();
-      // In JSDOM, offsetHeight/offsetWidth return 0 for unmocked elements
+      // In JSDOM, offsetHeight/offsetWidth return 0 for elements without actual layout
       expect(typeof result.height).toBe('number');
       expect(typeof result.width).toBe('number');
     });

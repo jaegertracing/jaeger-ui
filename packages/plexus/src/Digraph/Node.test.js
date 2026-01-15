@@ -138,4 +138,11 @@ describe('Node', () => {
     expect(wrapper).toHaveAttribute('data-custom', 'value');
     expect(mockSetOnNode).toHaveBeenCalledWith(mockLayoutVertex, mockRenderUtils);
   });
+
+  describe('React.memo behavior', () => {
+    it('is wrapped with React.memo for performance', () => {
+      // React.memo wraps components with a special $$typeof
+      expect(Node.$$typeof).toBe(Symbol.for('react.memo'));
+    });
+  });
 });
