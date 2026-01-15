@@ -9,10 +9,12 @@ import { ELayerType } from './types';
 // Track props passed to mocked Node component
 const mockNodeProps = [];
 
+// 使用 React.createElement 而非 JSX，因為 jest.mock 的工廠函數不允許引用外部變數
 jest.mock('./Node', () => {
+  const React = require('react');
   const MockNode = props => {
     mockNodeProps.push(props);
-    return <g data-testid={`node-${props.layoutVertex.vertex.key}`} />;
+    return React.createElement('g', { 'data-testid': `node-${props.layoutVertex.vertex.key}` });
   };
   return MockNode;
 });

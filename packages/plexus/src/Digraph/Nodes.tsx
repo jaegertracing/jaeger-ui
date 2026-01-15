@@ -28,7 +28,7 @@ function arePropsEqual<T>(prevProps: TProps<T>, nextProps: TProps<T>): boolean {
   );
 }
 
-const Nodes = <T = {},>(props: TProps<T>) => {
+function NodesImpl<T = {}>(props: TProps<T>): React.ReactElement[] {
   const { getClassName, layoutVertices, renderUtils, layerType, renderNode, setOnNode } = props;
   return layoutVertices.map(
     (lv): React.ReactElement => (
@@ -43,7 +43,12 @@ const Nodes = <T = {},>(props: TProps<T>) => {
       />
     )
   );
-};
+}
 
 // React.memo with custom comparison replaces shouldComponentUpdate
-export default React.memo(Nodes, arePropsEqual) as typeof Nodes;
+// Use generic function type to preserve type parameters
+type TNodesComponent = <T = {}>(props: TProps<T>) => React.ReactElement[];
+
+const Nodes: TNodesComponent = React.memo(NodesImpl, arePropsEqual) as unknown as TNodesComponent;
+
+export default Nodes;
