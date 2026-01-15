@@ -26,8 +26,8 @@ describe('SvgEdges', () => {
   const createLayoutEdge = (from, to, label = undefined) => ({
     edge: { from, to, label },
     pathPoints: [
-      { x: 0, y: 0 },
-      { x: 100, y: 100 },
+      [0, 0],
+      [100, 100],
     ],
   });
 
