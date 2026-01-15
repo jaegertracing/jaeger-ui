@@ -1,7 +1,7 @@
-// Copyright (c) 2026 The Jaeger Authors.
+// Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as React from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 
 import { TMeasurableNodeRenderer, TLayerType, TRendererUtils, ELayerType } from './types';
 import { assignMergeCss, getProps } from './utils';
@@ -29,10 +29,10 @@ const MeasurableNodeInner = <T = {},>(
   { getClassName, hidden, layerType, layoutVertex, renderNode, renderUtils, setOnNode, vertex }: TProps<T>,
   ref: React.Ref<MeasurableNodeRef>
 ) => {
-  const htmlRef = React.useRef<HTMLDivElement>(null);
-  const svgRef = React.useRef<SVGGElement>(null);
+  const htmlRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGGElement>(null);
 
-  const measureHtml = React.useCallback(() => {
+  const measureHtml = useCallback(() => {
     const current = htmlRef.current;
     if (!current) {
       return { height: 0, width: 0 };
@@ -43,7 +43,7 @@ const MeasurableNodeInner = <T = {},>(
     };
   }, []);
 
-  const measureSvg = React.useCallback(() => {
+  const measureSvg = useCallback(() => {
     const current = svgRef.current;
     if (!current) {
       return { height: 0, width: 0 };
@@ -52,8 +52,9 @@ const MeasurableNodeInner = <T = {},>(
     return { height, width };
   }, []);
 
-  // Expose methods via ref using useImperativeHandle
-  React.useImperativeHandle(
+  // useImperativeHandle allows parent components to call measure() and getRef() on this component,
+  // which is necessary for the layout algorithm to measure node dimensions before positioning.
+  useImperativeHandle(
     ref,
     () => ({
       measure: () => (layerType === ELayerType.Html ? measureHtml() : measureSvg()),
@@ -108,8 +109,8 @@ const MeasurableNodeInner = <T = {},>(
   );
 };
 
-// Use forwardRef to expose methods via ref
-const MeasurableNode = React.forwardRef(MeasurableNodeInner) as <T = {}>(
+// forwardRef allows parent components to attach refs to this component
+const MeasurableNode = forwardRef(MeasurableNodeInner) as <T = {}>(
   props: TProps<T> & { ref?: React.Ref<MeasurableNodeRef> }
 ) => React.ReactElement | null;
 
