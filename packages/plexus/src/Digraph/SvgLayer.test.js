@@ -16,7 +16,8 @@ jest.mock('./SvgDefEntry', () => {
 
 // Mock ZoomManager
 jest.mock('../zoom/ZoomManager', () => ({
-  getZoomAttr: transform => (transform ? `scale(${transform.k})` : null),
+  getZoomAttr: transform =>
+    transform ? `translate(${transform.x.toFixed()},${transform.y.toFixed()}) scale(${transform.k})` : null,
 }));
 
 describe('SvgLayer', () => {
@@ -162,7 +163,7 @@ describe('SvgLayer', () => {
       const graphState = createGraphState({ k: 2, x: 10, y: 20 });
       const { container } = render(<SvgLayer {...defaultProps} graphState={graphState} standalone />);
       const transformer = container.querySelector('g.test-SvgLayer--transformer');
-      expect(transformer.getAttribute('transform')).toBe('scale(2)');
+      expect(transformer.getAttribute('transform')).toBe('translate(10,20) scale(2)');
     });
   });
 
@@ -182,7 +183,7 @@ describe('SvgLayer', () => {
 
   describe('React.memo behavior', () => {
     it('is wrapped with React.memo for performance', () => {
-      expect(SvgLayer.$$typeof).toBeDefined();
+      expect(SvgLayer.$$typeof).toBe(Symbol.for('react.memo'));
     });
   });
 });
