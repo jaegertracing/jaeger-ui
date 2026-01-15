@@ -96,11 +96,20 @@ const Graph = ({
   const emptyFindSetRef = useRef(new Set<string>());
 
   // Memoized functions using refs to avoid recreating memoize instances
-  const memoizedFnsRef = useRef({
-    getNodeRenderers: memoize(getNodeRenderers),
-    getNodeContentRenderer: memoize(getNodeRenderer),
-    getSetOnEdge: memoize(getSetOnEdge),
-  });
+  // Use lazy initialization pattern to prevent unnecessary object creation on each render
+  const memoizedFnsRef = useRef<{
+    getNodeRenderers: typeof getNodeRenderers;
+    getNodeContentRenderer: typeof getNodeRenderer;
+    getSetOnEdge: typeof getSetOnEdge;
+  } | null>(null);
+
+  if (!memoizedFnsRef.current) {
+    memoizedFnsRef.current = {
+      getNodeRenderers: memoize(getNodeRenderers),
+      getNodeContentRenderer: memoize(getNodeRenderer),
+      getSetOnEdge: memoize(getSetOnEdge),
+    };
+  }
 
   // Cleanup layout manager on unmount
   useEffect(() => {
@@ -109,11 +118,12 @@ const Graph = ({
     };
   }, [layoutManager]);
 
+  // Non-null assertion is safe here because we initialize above
   const {
     getNodeRenderers: memoGetNodeRenderers,
     getNodeContentRenderer,
     getSetOnEdge: memoGetSetOnEdge,
-  } = memoizedFnsRef.current;
+  } = memoizedFnsRef.current!;
 
   const nodeRenderers = memoGetNodeRenderers(uiFindMatches || emptyFindSetRef.current, verticesViewModifiers);
 
