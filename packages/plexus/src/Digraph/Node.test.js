@@ -174,8 +174,8 @@ describe('Node', () => {
 
   describe('React.memo behavior', () => {
     it('is wrapped with React.memo for performance', () => {
-      // React.memo components have a $$typeof symbol
-      expect(Node.$$typeof).toBeDefined();
+      // React.memo wraps components with a special $$typeof
+      expect(Node.$$typeof).toBe(Symbol.for('react.memo'));
     });
   });
 });
