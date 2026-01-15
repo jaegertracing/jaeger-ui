@@ -49,18 +49,19 @@ const MeasurableNodesLayer = <T = {}, U = {}>(props: TProps<T, U>) => {
 
   const { layoutPhase, layoutVertices, renderUtils, vertices } = graphState;
 
-  // Track vertices and create refs when vertices change
-  // This replaces getDerivedStateFromProps + constructor initialization
-  const [trackedVertices, setTrackedVertices] = React.useState<TVertex<T>[]>(vertices);
+  // Track vertices reference to detect changes
+  const prevVerticesRef = React.useRef<TVertex<T>[]>(vertices);
   const [nodeRefs, setNodeRefs] = React.useState<Array<React.RefObject<MeasurableNode<T>>>>(() =>
     createRefs<MeasurableNode<T>>(vertices.length)
   );
 
-  // Update refs when vertices change (equivalent to getDerivedStateFromProps)
-  if (vertices !== trackedVertices) {
-    setTrackedVertices(vertices);
-    setNodeRefs(createRefs<MeasurableNode<T>>(vertices.length));
-  }
+  // Update refs when vertices change (replaces getDerivedStateFromProps)
+  React.useEffect(() => {
+    if (vertices !== prevVerticesRef.current) {
+      prevVerticesRef.current = vertices;
+      setNodeRefs(createRefs<MeasurableNode<T>>(vertices.length));
+    }
+  }, [vertices]);
 
   // Measure nodes after render (equivalent to componentDidMount + componentDidUpdate)
   React.useEffect(() => {
@@ -100,7 +101,7 @@ const MeasurableNodesLayer = <T = {}, U = {}>(props: TProps<T, U>) => {
       }
     }
     setSizeVertices(senderKey, sizeVertices);
-  });
+  }, [layoutPhase, nodeRefs, vertices, measureNode, layerType, senderKey, setSizeVertices]);
 
   if (!nodeRefs) {
     return null;
