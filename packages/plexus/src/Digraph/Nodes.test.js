@@ -20,7 +20,7 @@ jest.mock('./Node', () => {
 // Mock isSamePropSetter for testing comparison logic
 let mockIsSamePropSetterReturn = true;
 jest.mock('./utils', () => ({
-  isSamePropSetter: (a, b) => mockIsSamePropSetterReturn,
+  isSamePropSetter: (prevSetter, nextSetter) => mockIsSamePropSetterReturn,
 }));
 
 describe('Nodes', () => {

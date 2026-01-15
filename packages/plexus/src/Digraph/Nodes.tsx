@@ -30,17 +30,19 @@ function arePropsEqual<T>(prevProps: TProps<T>, nextProps: TProps<T>): boolean {
 
 const Nodes = <T = {},>(props: TProps<T>) => {
   const { getClassName, layoutVertices, renderUtils, layerType, renderNode, setOnNode } = props;
-  return layoutVertices.map(lv => (
-    <Node
-      key={lv.vertex.key}
-      getClassName={getClassName}
-      layerType={layerType}
-      layoutVertex={lv}
-      renderNode={renderNode}
-      renderUtils={renderUtils}
-      setOnNode={setOnNode}
-    />
-  ));
+  return layoutVertices.map(
+    (lv): React.ReactElement => (
+      <Node
+        key={lv.vertex.key}
+        getClassName={getClassName}
+        layerType={layerType}
+        layoutVertex={lv}
+        renderNode={renderNode}
+        renderUtils={renderUtils}
+        setOnNode={setOnNode}
+      />
+    )
+  );
 };
 
 // React.memo with custom comparison replaces shouldComponentUpdate
