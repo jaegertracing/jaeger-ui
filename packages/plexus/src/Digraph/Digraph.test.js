@@ -31,50 +31,57 @@ jest.mock('../zoom/ZoomManager', () => {
   };
 });
 
+// 使用 React.createElement 而非 JSX，因為 jest.mock 的工廠函數不允許引用外部變數
 jest.mock('../zoom/MiniMap', () => {
+  const React = require('react');
   const MockMiniMap = props => {
     mockMiniMapProps.push(props);
-    return <div data-testid="minimap" />;
+    return React.createElement('div', { 'data-testid': 'minimap' });
   };
   return MockMiniMap;
 });
 
 jest.mock('./HtmlLayersGroup', () => {
+  const React = require('react');
   const MockHtmlLayersGroup = props => {
     mockHtmlLayersGroupProps.push(props);
-    return <div data-testid="html-layers-group" />;
+    return React.createElement('div', { 'data-testid': 'html-layers-group' });
   };
   return MockHtmlLayersGroup;
 });
 
 jest.mock('./SvgLayersGroup', () => {
+  const React = require('react');
   const MockSvgLayersGroup = props => {
     mockSvgLayersGroupProps.push(props);
-    return <svg data-testid="svg-layers-group" />;
+    return React.createElement('svg', { 'data-testid': 'svg-layers-group' });
   };
   return MockSvgLayersGroup;
 });
 
 jest.mock('./SvgEdgesLayer', () => {
+  const React = require('react');
   const MockSvgEdgesLayer = props => {
     mockSvgEdgesLayerProps.push(props);
-    return <svg data-testid="svg-edges-layer" />;
+    return React.createElement('svg', { 'data-testid': 'svg-edges-layer' });
   };
   return MockSvgEdgesLayer;
 });
 
 jest.mock('./MeasurableNodesLayer', () => {
+  const React = require('react');
   const MockMeasurableNodesLayer = props => {
     mockMeasurableNodesLayerProps.push(props);
-    return <div data-testid="measurable-nodes-layer" />;
+    return React.createElement('div', { 'data-testid': 'measurable-nodes-layer' });
   };
   return MockMeasurableNodesLayer;
 });
 
 jest.mock('./NodesLayer', () => {
+  const React = require('react');
   const MockNodesLayer = props => {
     mockNodesLayerProps.push(props);
-    return <div data-testid="nodes-layer" />;
+    return React.createElement('div', { 'data-testid': 'nodes-layer' });
   };
   return MockNodesLayer;
 });
