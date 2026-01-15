@@ -13,7 +13,7 @@ import _groupBy from 'lodash/groupBy';
 import memoizeOne from 'memoize-one';
 import { Location, History } from 'history';
 import { actions } from './duck';
-import ListView from './ListView';
+import ListView, { TListViewRef } from './ListView';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
@@ -207,7 +207,7 @@ const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: CriticalPathSect
 
 // export from tests
 export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
-  listView: ListView | TNil;
+  listView: TListViewRef | TNil;
   constructor(props: VirtualizedTraceViewProps) {
     super(props);
     const { setTrace, trace, uiFind } = props;
@@ -354,7 +354,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     throw new Error(`unable to find row for span index: ${index}`);
   };
 
-  setListView = (listView: ListView | TNil) => {
+  setListView = (listView: TListViewRef | TNil) => {
     const isChanged = this.listView !== listView;
     this.listView = listView;
     if (listView && isChanged) {
