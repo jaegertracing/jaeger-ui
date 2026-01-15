@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { forwardRef, memo, Ref, useImperativeHandle, useRef } from 'react';
+import { forwardRef, memo, ReactElement, Ref, useImperativeHandle, useRef } from 'react';
 
 import { TMeasurableNodeRenderer, TLayerType, TRendererUtils, ELayerType } from './types';
 import { assignMergeCss, getProps } from './utils';
@@ -113,7 +113,7 @@ const MeasurableNodeImpl = <T = {},>(props: TProps<T>, ref: Ref<TMeasurableNodeH
 // forwardRef with generic type support
 const MeasurableNode = forwardRef(MeasurableNodeImpl) as <T = {}>(
   props: TProps<T> & { ref?: Ref<TMeasurableNodeHandle> }
-) => React.ReactElement | null;
+) => ReactElement | null;
 
 // memo provides shallow comparison equivalent to PureComponent
 export default memo(MeasurableNode) as typeof MeasurableNode;
