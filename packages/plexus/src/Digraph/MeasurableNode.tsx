@@ -65,6 +65,8 @@ const MeasurableNodeImpl = <T = {},>(props: TProps<T>, ref: Ref<TMeasurableNodeH
       },
     }),
     [layerType]
+    // Note: htmlRef and svgRef are stable refs created by useRef and do not need to be in dependencies.
+    // React guarantees that useRef returns the same object on every render.
   );
 
   if (layerType === ELayerType.Html) {
