@@ -104,7 +104,7 @@ describe('Node', () => {
     });
   });
 
-  it('handles null left/top in layoutVertex', () => {
+  it('handles null left/top in HTML layer type', () => {
     const vertexWithNullPosition = createLayoutVertex('test', null, null);
     const { container } = render(
       <div>
@@ -125,6 +125,19 @@ describe('Node', () => {
     );
     const wrapper = container.querySelector('.plexus--Node');
     expect(wrapper).toHaveAttribute('transform', 'translate(10,20)');
+  });
+
+  it('handles null left/top in SVG layer type', () => {
+    const vertexWithNullPosition = createLayoutVertex('test', null, null);
+    const { container } = render(
+      <svg>
+        <Node {...defaultProps} layerType={ELayerType.Svg} layoutVertex={vertexWithNullPosition} />
+      </svg>
+    );
+    const wrapper = container.querySelector('.plexus--Node');
+    expect(wrapper).toBeInTheDocument();
+    // Transform attribute should not be set when left/top are null
+    expect(wrapper).not.toHaveAttribute('transform');
   });
 
   it('passes setOnNode to child when provided', () => {

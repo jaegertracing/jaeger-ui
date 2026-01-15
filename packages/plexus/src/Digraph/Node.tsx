@@ -43,7 +43,12 @@ const Node = <T = {},>({
     {
       className: getClassName('Node'),
       style: layerType === ELayerType.Html ? getHtmlStyle(layoutVertex) : null,
-      transform: layerType === ELayerType.Svg ? `translate(${left.toFixed()},${top.toFixed()})` : null,
+      transform:
+        layerType === ELayerType.Svg
+          ? left == null || top == null
+            ? null
+            : `translate(${left.toFixed()},${top.toFixed()})`
+          : null,
     },
     getProps(setOnNode, layoutVertex, renderUtils)
   );
