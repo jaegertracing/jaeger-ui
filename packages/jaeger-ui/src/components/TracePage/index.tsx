@@ -379,6 +379,8 @@ export const TracePageImpl = React.memo(
           if (updates.slimView !== undefined) setSlimView(updates.slimView);
           if (updates.viewType !== undefined) setViewType(updates.viewType);
           if (updates.viewRange !== undefined) setViewRange(updates.viewRange);
+          // Note: callback is invoked after state updates are scheduled, but React may not
+          // have committed updates yet. Consumers needing post-render logic should use useEffect.
           if (callback) setTimeout(callback, 0);
         },
         _headerElm,

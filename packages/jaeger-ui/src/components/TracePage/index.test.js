@@ -484,15 +484,20 @@ describe('<TracePage>', () => {
   });
 
   it('computes graphFindMatches and sets findCount based on traceDagEV when viewType is TraceGraph', () => {
-    const mockVertices = [{ key: 'v1' }, { key: 'v2' }];
     const mockMatches = new Set(['v1']);
+
+    // Set up spy before render so it intercepts the computation during render
+    const getUiFindVertexKeysSpy = jest
+      .spyOn(getUiFindVertexKeys, 'getUiFindVertexKeys')
+      .mockReturnValue(mockMatches);
 
     const { componentRef } = renderWithRef({
       ...defaultProps,
       uiFind: 'some-search',
     });
 
-    // Set up state and traceDagEV
+    // Set view type to TraceGraph to trigger graphFindMatches computation
+    // setState will trigger a re-render internally, no need for explicit rerender()
     act(() => {
       componentRef.current.setState({
         viewType: ETraceViewType.TraceGraph,
@@ -502,12 +507,10 @@ describe('<TracePage>', () => {
       });
     });
 
-    const getUiFindVertexKeysSpy = jest
-      .spyOn(getUiFindVertexKeys, 'getUiFindVertexKeys')
-      .mockReturnValue(mockMatches);
-
-    // The computation happens during render, so let's verify the spy was set up
+    // Verify state was updated
     expect(componentRef.current.state.viewType).toBe(ETraceViewType.TraceGraph);
+    // Verify spy was called during render (may be called multiple times due to React renders)
+    expect(getUiFindVertexKeysSpy).toHaveBeenCalled();
 
     getUiFindVertexKeysSpy.mockRestore();
   });
