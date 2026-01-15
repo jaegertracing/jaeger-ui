@@ -48,13 +48,13 @@ const SpanGraph = ({
   updateNextViewRangeTime,
   updateViewRangeTime,
 }: SpanGraphProps) => {
-  // Early return if no trace data - avoid unnecessary hook execution
+  // Memoize items calculation - must be called before any conditional returns
+  // to comply with React Rules of Hooks (hooks must be called in same order every render)
+  const items = useMemo(() => (trace ? getItems(trace) : []), [trace]);
+
   if (!trace) {
     return <div />;
   }
-
-  // Memoize items calculation based on trace reference
-  const items = useMemo(() => getItems(trace), [trace]);
 
   return (
     <div className="SpanGraph ub-pb2 ub-px2">
