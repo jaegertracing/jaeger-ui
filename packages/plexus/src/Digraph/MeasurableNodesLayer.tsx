@@ -4,7 +4,7 @@
 import * as React from 'react';
 
 import HtmlLayer from './HtmlLayer';
-import MeasurableNode from './MeasurableNode';
+import MeasurableNode, { TMeasurableNodeHandle } from './MeasurableNode';
 import MeasurableNodes from './MeasurableNodes';
 import SvgLayer from './SvgLayer';
 import {
@@ -28,7 +28,7 @@ type TProps<T = {}, U = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> &
   };
 
 type TState<T> = {
-  nodeRefs: Array<React.RefObject<MeasurableNode<T>>>;
+  nodeRefs: Array<React.RefObject<TMeasurableNodeHandle>>;
   vertices: TVertex<T>[];
 };
 
@@ -52,7 +52,7 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
     }
     return {
       vertices,
-      nodeRefs: createRefs<MeasurableNode<T>>(vertices.length),
+      nodeRefs: createRefs<TMeasurableNodeHandle>(vertices.length),
     };
   }
 
@@ -62,7 +62,7 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
     const { vertices } = graphState;
     this.state = {
       vertices,
-      nodeRefs: createRefs<MeasurableNode<T>>(vertices.length),
+      nodeRefs: createRefs<TMeasurableNodeHandle>(vertices.length),
     };
   }
 
@@ -84,7 +84,7 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
       return;
     }
     const { layerType, measureNode, senderKey, setSizeVertices } = this.props;
-    let current: MeasurableNode<T> | null = null;
+    let current: TMeasurableNodeHandle | null = null;
     const utils = measureNode && {
       layerType,
       getWrapper: () => {

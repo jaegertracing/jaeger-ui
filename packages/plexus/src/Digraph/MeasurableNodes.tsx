@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 
-import MeasurableNode from './MeasurableNode';
+import MeasurableNode, { TMeasurableNodeHandle } from './MeasurableNode';
 import { TMeasurableNodeRenderer, TLayerType, TRendererUtils } from './types';
 import { isSamePropSetter } from './utils';
 import { TLayoutVertex, TVertex } from '../types';
@@ -12,7 +12,7 @@ type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNo
   getClassName: (name: string) => string;
   layerType: TLayerType;
   layoutVertices: TLayoutVertex<T>[] | null;
-  nodeRefs: React.RefObject<MeasurableNode<T>>[];
+  nodeRefs: React.RefObject<TMeasurableNodeHandle>[];
   renderUtils: TRendererUtils;
   vertices: TVertex<T>[];
 };
