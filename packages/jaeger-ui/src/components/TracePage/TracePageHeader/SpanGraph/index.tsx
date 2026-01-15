@@ -63,7 +63,7 @@ const SpanGraph = ({
         <ViewingLayer
           viewRange={viewRange}
           numTicks={TIMELINE_TICK_INTERVAL}
-          height={height}
+          height={height || DEFAULT_HEIGHT}
           updateViewRangeTime={updateViewRangeTime}
           updateNextViewRangeTime={updateNextViewRangeTime}
         />
