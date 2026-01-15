@@ -216,7 +216,7 @@ describe('SvgLayersGroup', () => {
 
   describe('React.memo behavior', () => {
     it('is wrapped with React.memo for performance', () => {
-      expect(SvgLayersGroup.$$typeof).toBeDefined();
+      expect(SvgLayersGroup.$$typeof).toBe(Symbol.for('react.memo'));
     });
   });
 });
