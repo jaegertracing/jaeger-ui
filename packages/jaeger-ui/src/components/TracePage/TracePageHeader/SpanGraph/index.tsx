@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as React from 'react';
 import { memo, useMemo } from 'react';
 
 import CanvasSpanGraph from './CanvasSpanGraph';
@@ -64,7 +63,7 @@ const SpanGraph = ({
         <ViewingLayer
           viewRange={viewRange}
           numTicks={TIMELINE_TICK_INTERVAL}
-          height={height}
+          height={height || DEFAULT_HEIGHT}
           updateViewRangeTime={updateViewRangeTime}
           updateNextViewRangeTime={updateNextViewRangeTime}
         />
