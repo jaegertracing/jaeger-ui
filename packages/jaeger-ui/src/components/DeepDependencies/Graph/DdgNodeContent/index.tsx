@@ -160,7 +160,7 @@ export const UnconnectedDdgNodeContent = (props: TProps) => {
     if (decorationID) {
       getDecoration(decorationID, service, typeof operation === 'string' ? operation : undefined);
     }
-  }, [decorationID, getDecoration, operation, service]);
+  }, [decorationID, getDecoration]);
 
   React.useEffect(() => {
     return () => {
@@ -169,7 +169,7 @@ export const UnconnectedDdgNodeContent = (props: TProps) => {
         hoveredIndices.current.clear();
       }
     };
-  }, [setViewModifier]);
+  }, []);
 
   const checkTooltipPosition = React.useCallback(() => {
     if (!nodeRef.current) return;
