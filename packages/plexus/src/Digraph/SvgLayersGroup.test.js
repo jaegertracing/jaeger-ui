@@ -216,7 +216,34 @@ describe('SvgLayersGroup', () => {
 
   describe('React.memo behavior', () => {
     it('is wrapped with React.memo for performance', () => {
+      // Verify component is wrapped with React.memo by checking $$typeof
       expect(SvgLayersGroup.$$typeof).toBe(Symbol.for('react.memo'));
+    });
+
+    it('does not re-render when props are unchanged', () => {
+      let renderCount = 0;
+
+      // Create a mock layer renderer that tracks renders
+      const trackingLayers = [
+        {
+          key: 'tracking-layer',
+          setOnContainer: jest.fn(),
+          renderNode: jest.fn(() => {
+            renderCount++;
+            return null;
+          }),
+        },
+      ];
+
+      const { rerender } = render(<SvgLayersGroup {...defaultProps} layers={trackingLayers} />);
+
+      const initialRenderCount = renderCount;
+
+      // Rerender with the exact same props (same object references)
+      rerender(<SvgLayersGroup {...defaultProps} layers={trackingLayers} />);
+
+      // With React.memo, the component should not re-render when props are unchanged
+      expect(renderCount).toBe(initialRenderCount);
     });
   });
 });
