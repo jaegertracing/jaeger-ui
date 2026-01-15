@@ -66,6 +66,10 @@ const propsFactories: Record<string, TFromGraphStateFn<any, any>> = {
   scaleStrokeOpacityStrongest: scaleProperty.strokeOpacityStrongest,
 };
 
+const makeClassNameFactory = memoizeOne((prefix: string) => {
+  return (name: string) => `${prefix} ${prefix}-Digraph--${name}`;
+});
+
 const Digraph = <T = unknown, U = unknown>({
   className = '',
   classNamePrefix = 'plexus',
@@ -85,6 +89,7 @@ const Digraph = <T = unknown, U = unknown>({
 
   const rootRef = React.useRef<HTMLDivElement>(null);
   const zoomManagerRef = React.useRef<ZoomManager | null>(null);
+  const zoomTransformRef = React.useRef<ZoomTransform>(zoomIdentity);
 
   const [state, setState] = React.useState<TDigraphState<T, U>>(() => {
     const initialState: TDigraphState<T, U> = {
@@ -107,19 +112,15 @@ const Digraph = <T = unknown, U = unknown>({
     return initialState;
   });
 
-  const makeClassNameFactory = React.useMemo(
-    () =>
-      memoizeOne((prefix: string) => {
-        return (name: string) => `${prefix} ${prefix}-Digraph--${name}`;
-      }),
-    []
-  );
+  React.useEffect(() => {
+    zoomTransformRef.current = state.zoomTransform;
+  }, [state.zoomTransform]);
 
   const getClassName = makeClassNameFactory(classNamePrefix);
 
   const getGlobalId = React.useCallback((name: string) => `${baseId}--${name}`, [baseId]);
 
-  const getZoomTransform = React.useCallback(() => state.zoomTransform, [state.zoomTransform]);
+  const getZoomTransform = React.useCallback(() => zoomTransformRef.current, []);
 
   const renderUtils = React.useMemo<TRendererUtils>(
     () => ({
@@ -129,7 +130,6 @@ const Digraph = <T = unknown, U = unknown>({
     [getGlobalId, getZoomTransform]
   );
 
-  // ✅ Layout done callback (now stable with useCallback)
   const onLayoutDone = React.useCallback((result: TCancelled | TLayoutDone<T, U>) => {
     if (result.isCancelled) {
       return;
@@ -166,31 +166,6 @@ const Digraph = <T = unknown, U = unknown>({
     [edges, layoutManager, measurableNodesKey, onLayoutDone]
   );
 
-  // ✅ FIX: Handle props changes (edges/vertices) - CRITICAL!
-  React.useEffect(() => {
-    const hasEdges = Array.isArray(edges) && edges.length > 0;
-    const hasVertices = Array.isArray(vertices) && vertices.length > 0;
-
-    if (hasEdges && hasVertices) {
-      setState(prev => ({
-        ...prev,
-        edges,
-        vertices,
-        layoutPhase: ELayoutPhase.CalcSizes,
-        layoutEdges: null,
-        layoutGraph: null,
-        layoutVertices: null,
-      }));
-    } else {
-      setState(prev => ({
-        ...prev,
-        edges: [],
-        vertices: [],
-        layoutPhase: ELayoutPhase.NoData,
-      }));
-    }
-  }, [edges, vertices]);
-
   // ✅ Initialize zoom manager
   React.useEffect(() => {
     if (zoomEnabled) {
@@ -205,12 +180,10 @@ const Digraph = <T = unknown, U = unknown>({
       }
 
       return () => {
-        // ✅ FIX: Check if dispose exists, otherwise just clear reference
         if (zoomManagerRef.current) {
-          // TypeScript-safe disposal
-          const manager = zoomManagerRef.current as any;
-          if (typeof manager.dispose === 'function') {
-            manager.dispose();
+          const selection = (zoomManagerRef.current as any).selection;
+          if (selection) {
+            selection.on('.zoom', null);
           }
           zoomManagerRef.current = null;
         }
@@ -225,10 +198,9 @@ const Digraph = <T = unknown, U = unknown>({
     if (rootRef.current && zoomManagerRef.current) {
       zoomManagerRef.current.setElement(rootRef.current);
     }
-  });
+  }, [zoomEnabled]);
 
-  // ✅ Render layers with proper dependencies
-  const renderLayers = React.useCallback(() => {
+  const renderedLayers = React.useMemo(() => {
     const { sizeVertices: _, ...partialGraphState } = state;
     const graphState = {
       ...partialGraphState,
@@ -335,7 +307,7 @@ const Digraph = <T = unknown, U = unknown>({
   return (
     <div {...rootProps}>
       <div style={builtinStyle} ref={rootRef}>
-        {renderLayers()}
+        {renderedLayers}
       </div>
       {minimapEnabled && zoomManagerRef.current && (
         <MiniMap
@@ -351,6 +323,44 @@ const Digraph = <T = unknown, U = unknown>({
 Digraph.propsFactories = propsFactories;
 Digraph.scaleProperty = scaleProperty;
 
-export default React.memo(Digraph) as <T = unknown, U = unknown>(
+function arePropsEqual<T, U>(prevProps: TDigraphProps<T, U>, nextProps: TDigraphProps<T, U>): boolean {
+  // Compare primitive props
+  if (
+    prevProps.className !== nextProps.className ||
+    prevProps.classNamePrefix !== nextProps.classNamePrefix ||
+    prevProps.measurableNodesKey !== nextProps.measurableNodesKey ||
+    prevProps.minimap !== nextProps.minimap ||
+    prevProps.minimapClassName !== nextProps.minimapClassName ||
+    prevProps.zoom !== nextProps.zoom ||
+    prevProps.layoutManager !== nextProps.layoutManager
+  ) {
+    return false;
+  }
+
+  // Compare style object (shallow)
+  if (prevProps.style !== nextProps.style) {
+    return false;
+  }
+
+  // Compare setOnGraph function reference
+  if (prevProps.setOnGraph !== nextProps.setOnGraph) {
+    return false;
+  }
+
+  // Compare arrays by reference
+  // Note: edges and vertices props are NOT used to update state after mount
+  // This matches original class component behavior
+  if (
+    prevProps.edges !== nextProps.edges ||
+    prevProps.vertices !== nextProps.vertices ||
+    prevProps.layers !== nextProps.layers
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+export default React.memo(Digraph, arePropsEqual) as <T = unknown, U = unknown>(
   props: TDigraphProps<T, U>
 ) => React.ReactElement;
