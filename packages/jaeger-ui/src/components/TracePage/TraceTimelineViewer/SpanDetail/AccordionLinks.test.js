@@ -84,6 +84,20 @@ describe('<AccordionLinks>', () => {
     const linkLinks = screen.getAllByTestId('link-link');
     expect(linkLinks).toHaveLength(links.length);
   });
+
+  it('renders "References" label when useOtelTerms is false', () => {
+    render(<AccordionLinks {...props} useOtelTerms={false} />);
+
+    expect(screen.getByText('References')).toBeInTheDocument();
+    expect(screen.queryByText('Links')).not.toBeInTheDocument();
+  });
+
+  it('renders "Links" label when useOtelTerms is true', () => {
+    render(<AccordionLinks {...props} useOtelTerms={true} />);
+
+    expect(screen.getByText('Links')).toBeInTheDocument();
+    expect(screen.queryByText('References')).not.toBeInTheDocument();
+  });
 });
 
 describe('<References>', () => {
