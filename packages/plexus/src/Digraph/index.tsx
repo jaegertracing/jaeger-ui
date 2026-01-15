@@ -91,20 +91,42 @@ const Digraph = <T = unknown, U = unknown>(props: TDigraphProps<T, U>) => {
   const baseIdRef = React.useRef(`plexus--Digraph--${idCounter++}`);
   const rootRef = React.useRef<HTMLDivElement>(null);
 
-  // Create ZoomManager once if zoom is enabled
-  const zoomManagerRef = React.useRef<ZoomManager | null>(null);
-
   // State management
   const [state, setState] = React.useState<TDigraphState<T, U>>(() => getInitialState(edges, vertices));
 
-  // Initialize ZoomManager on first render if zoom is enabled
-  if (zoomEnabled && !zoomManagerRef.current) {
-    zoomManagerRef.current = new ZoomManager((zoomTransform: ZoomTransform) => {
+  // Create ZoomManager via useMemo - only created once when zoom is enabled
+  // useMemo is safe here because the factory has no side effects on the DOM
+  const zoomManager = React.useMemo(() => {
+    if (!zoomEnabled) {
+      return null;
+    }
+    return new ZoomManager((zoomTransform: ZoomTransform) => {
       setState(prev => ({ ...prev, zoomTransform }));
     });
-  }
+  }, [zoomEnabled]);
 
-  const zoomManager = zoomManagerRef.current;
+  // Track previous edges/vertices to detect changes
+  const prevEdgesRef = React.useRef(edges);
+  const prevVerticesRef = React.useRef(vertices);
+
+  // Sync state when edges or vertices props change (skip on initial mount)
+  React.useEffect(() => {
+    const edgesChanged = prevEdgesRef.current !== edges;
+    const verticesChanged = prevVerticesRef.current !== vertices;
+
+    if (edgesChanged || verticesChanged) {
+      prevEdgesRef.current = edges;
+      prevVerticesRef.current = vertices;
+
+      const nextState = getInitialState<T, U>(edges, vertices);
+      setState(prev => ({
+        ...prev,
+        edges: nextState.edges,
+        vertices: nextState.vertices,
+        layoutPhase: nextState.layoutPhase,
+      }));
+    }
+  }, [edges, vertices]);
 
   // Utility functions
   const getGlobalId = React.useCallback((name: string) => `${baseIdRef.current}--${name}`, []);
