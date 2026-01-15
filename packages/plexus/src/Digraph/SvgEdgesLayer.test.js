@@ -158,7 +158,8 @@ describe('SvgEdgesLayer', () => {
 
   describe('React.memo behavior', () => {
     it('is wrapped with React.memo for performance', () => {
-      expect(SvgEdgesLayer.$$typeof).toBeDefined();
+      // Verify component is wrapped with React.memo by checking $$typeof
+      expect(SvgEdgesLayer.$$typeof).toBe(Symbol.for('react.memo'));
     });
   });
 });
