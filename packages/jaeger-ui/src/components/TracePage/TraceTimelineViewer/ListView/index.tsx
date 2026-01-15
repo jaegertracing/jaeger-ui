@@ -360,6 +360,7 @@ const ListView = React.forwardRef<TListViewRef, TListViewProps>(function ListVie
     return () => {
       if (_windowScrollListenerAdded.current) {
         window.removeEventListener('scroll', _handleScroll);
+        _windowScrollListenerAdded.current = false;
       }
     };
   }, [windowScroller, _handleScroll]);
