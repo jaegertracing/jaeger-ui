@@ -39,7 +39,7 @@ jest.mock('../../common/SearchableSelect', () => {
   };
 });
 
-describe('<TraceSpanView>', () => {
+describe('<TraceSpanView /> (functional)', () => {
   let defaultProps;
 
   beforeEach(() => {
@@ -47,6 +47,7 @@ describe('<TraceSpanView>', () => {
       trace,
       uiFind: undefined,
       uiFindVertexKeys: undefined,
+      useOtelTerms: false, // ✅ REQUIRED for functional component
     };
   });
 
@@ -70,7 +71,7 @@ describe('<TraceSpanView>', () => {
     expect(formControls.length).toBe(3);
   });
 
-  it('Should change value when onChange was called', () => {
+  it('should change value when Service onChange is called', () => {
     render(<TraceSpanView {...defaultProps} />);
 
     const serviceSelect = screen.getByTestId('select-service');
@@ -80,20 +81,20 @@ describe('<TraceSpanView>', () => {
     expect(serviceSelect.value).toBe('service2');
   });
 
-  it('Should change value when onChange and Rest the value when called reset', () => {
+  it('should reset value when Reset Filters is clicked', () => {
     render(<TraceSpanView {...defaultProps} />);
 
     const serviceSelect = screen.getByTestId('select-service');
+
     fireEvent.change(serviceSelect, { target: { value: 'service2' } });
     expect(serviceSelect.value).toBe('service2');
 
-    const resetButton = screen.getByText('Reset Filters');
-    fireEvent.click(resetButton);
+    fireEvent.click(screen.getByText('Reset Filters'));
 
     expect(serviceSelect.value).toBe('');
   });
 
-  it('Should change value when onChange OperationName DD was called', () => {
+  it('should change value when Operation onChange is called', () => {
     render(<TraceSpanView {...defaultProps} />);
 
     const operationSelect = screen.getByTestId('select-operation');
@@ -103,7 +104,7 @@ describe('<TraceSpanView>', () => {
     expect(operationSelect.value).toBe('op2');
   });
 
-  it('check handler', () => {
+  it('check handler options', () => {
     render(<TraceSpanView {...defaultProps} />);
 
     const serviceSelect = screen.getByTestId('select-service');
@@ -117,7 +118,7 @@ describe('<TraceSpanView>', () => {
     const operationOptions = Array.from(operationSelect.querySelectorAll('option')).slice(1);
 
     expect(operationOptions.length).toBe(6);
-    expect(operationOptions.map(opt => opt.textContent.trim())).toEqual(
+    expect(operationOptions.map(opt => opt.textContent?.trim())).toEqual(
       expect.arrayContaining(['op1', 'op2', 'op3', 'op4', 'op6', 'op7'])
     );
   });
