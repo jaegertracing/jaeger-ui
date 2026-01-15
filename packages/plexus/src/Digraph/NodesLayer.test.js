@@ -182,7 +182,7 @@ describe('NodesLayer', () => {
 
   describe('React.memo behavior', () => {
     it('is wrapped with React.memo for performance', () => {
-      expect(NodesLayer.$$typeof).toBeDefined();
+      expect(NodesLayer.$$typeof).toBe(Symbol.for('react.memo'));
     });
   });
 });
