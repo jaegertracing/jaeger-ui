@@ -149,7 +149,7 @@ const searchInTable = (
     }
   }
   if (uiFindVertexKeys) {
-    uiFindVertexKeys.forEach(function calc(value) {
+    uiFindVertexKeys.forEach(function highlightMatchingRows(value) {
       const uiFindVertexKeysSplit = value.split('\u000b');
 
       for (let i = 0; i < allTableSpansChange.length; i++) {
@@ -277,11 +277,12 @@ const TraceStatistics = forwardRef<TraceStatisticsHandle, Props>(function TraceS
   // componentDidUpdate equivalent - respond ONLY to uiFindVertexKeys changes
   // This matches the original class component behavior which only checked uiFindVertexKeys
   useEffect(() => {
-    if (prevUiFindVertexKeysRef.current === undefined) {
-      // Initial mount - no action needed since tableValue is empty
-      // The original constructor also called searchInTable on empty state which had no effect
-    } else if (uiFindVertexKeys !== prevUiFindVertexKeysRef.current) {
-      // uiFindVertexKeys changed - update search highlighting
+    // Skip initial mount (prevRef is undefined) - tableValue is empty so search has no effect
+    // Only update when uiFindVertexKeys actually changes after initial mount
+    if (
+      prevUiFindVertexKeysRef.current !== undefined &&
+      uiFindVertexKeys !== prevUiFindVertexKeysRef.current
+    ) {
       const searchedTableValue = searchInTable(
         uiFindVertexKeys ?? undefined,
         tableValueRef.current,
