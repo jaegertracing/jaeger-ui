@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Uber Technologies, Inc.
+// Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import React, {
@@ -265,29 +265,32 @@ const TraceStatistics = forwardRef<TraceStatisticsHandle, Props>(function TraceS
     setPopupContent(content);
   }, []);
 
-  /**
-   * Updates the table value search highlighting when search changes
-   */
-  const changeTableValueSearch = useCallback(() => {
-    const searchedTableValue = searchInTable(uiFindVertexKeys ?? undefined, tableValue, uiFind);
-    setTableValue(searchedTableValue);
-  }, [uiFindVertexKeys, tableValue, uiFind]);
+  // Refs to access current values in useEffect without triggering re-runs
+  const tableValueRef = useRef(tableValue);
+  const uiFindRef = useRef(uiFind);
+  tableValueRef.current = tableValue;
+  uiFindRef.current = uiFind;
 
-  // Track previous uiFindVertexKeys for comparison and initial mount
+  // Track previous uiFindVertexKeys for comparison
   const prevUiFindVertexKeysRef = useRef<Set<string> | TNil | undefined>(undefined);
 
-  // componentDidUpdate equivalent - respond to uiFindVertexKeys changes
-  // Also handles initial search call on first render (constructor behavior)
+  // componentDidUpdate equivalent - respond ONLY to uiFindVertexKeys changes
+  // This matches the original class component behavior which only checked uiFindVertexKeys
   useEffect(() => {
     if (prevUiFindVertexKeysRef.current === undefined) {
-      // Initial mount - run the initial search (matches constructor behavior)
-      searchInTable(uiFindVertexKeys ?? undefined, tableValue, uiFind);
+      // Initial mount - no action needed since tableValue is empty
+      // The original constructor also called searchInTable on empty state which had no effect
     } else if (uiFindVertexKeys !== prevUiFindVertexKeysRef.current) {
-      // Props changed - update search highlighting
-      changeTableValueSearch();
+      // uiFindVertexKeys changed - update search highlighting
+      const searchedTableValue = searchInTable(
+        uiFindVertexKeys ?? undefined,
+        tableValueRef.current,
+        uiFindRef.current
+      );
+      setTableValue(searchedTableValue);
     }
     prevUiFindVertexKeysRef.current = uiFindVertexKeys;
-  }, [uiFindVertexKeys, changeTableValueSearch, tableValue, uiFind]);
+  }, [uiFindVertexKeys]);
 
   // Expose methods and state for tests
   useImperativeHandle(ref, () => {
