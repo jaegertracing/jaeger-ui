@@ -283,9 +283,12 @@ const TraceStatistics = forwardRef<TraceStatisticsHandle, Props>(function TraceS
       prevUiFindVertexKeysRef.current !== undefined &&
       uiFindVertexKeys !== prevUiFindVertexKeysRef.current
     ) {
+      // Clone array to avoid mutating React state directly
+      // searchInTable modifies the array in-place for performance
+      const tableValueCopy = tableValueRef.current.map(item => ({ ...item }));
       const searchedTableValue = searchInTable(
         uiFindVertexKeys ?? undefined,
-        tableValueRef.current,
+        tableValueCopy,
         uiFindRef.current
       );
       setTableValue(searchedTableValue);
