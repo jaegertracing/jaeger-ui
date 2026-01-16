@@ -125,10 +125,17 @@ const columnsArray: {
   },
 ];
 
+// Search highlight colors - defined at module level to avoid recreation on each call
+const YELLOW_SEARCH_COLOR = 'rgb(255,243,215)';
+const DEFAULT_GRAY_COLOR = 'rgb(248,248,248)';
+
 /**
  * Colors found entries in the table.
+ * NOTE: This function mutates the input array in-place for performance.
+ * Callers should clone the array before passing if immutability is required.
+ *
  * @param uiFindVertexKeys Set of found spans
- * @param allTableSpans entries that are shown
+ * @param allTableSpans entries that are shown (will be mutated)
  * @param uiFind search string
  */
 const searchInTable = (
@@ -136,60 +143,60 @@ const searchInTable = (
   allTableSpans: ITableSpan[],
   uiFind: string | null | undefined
 ): ITableSpan[] => {
-  const allTableSpansChange = allTableSpans;
-  const yellowSearchColor = 'rgb(255,243,215)';
-  const defaultGrayColor = 'rgb(248,248,248)';
-  for (let i = 0; i < allTableSpansChange.length; i++) {
-    if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
-      allTableSpansChange[i].searchColor = 'transparent';
-    } else if (allTableSpansChange[i].hasSubgroupValue) {
-      allTableSpansChange[i].searchColor = defaultGrayColor;
+  // Reset all search colors to default
+  for (let i = 0; i < allTableSpans.length; i++) {
+    if (!allTableSpans[i].isDetail && allTableSpans[i].hasSubgroupValue) {
+      allTableSpans[i].searchColor = 'transparent';
+    } else if (allTableSpans[i].hasSubgroupValue) {
+      allTableSpans[i].searchColor = DEFAULT_GRAY_COLOR;
     } else {
-      allTableSpansChange[i].searchColor = defaultGrayColor;
+      allTableSpans[i].searchColor = DEFAULT_GRAY_COLOR;
     }
   }
+
+  // Highlight rows matching uiFindVertexKeys
   if (uiFindVertexKeys) {
     uiFindVertexKeys.forEach(function highlightMatchingRows(value) {
       const uiFindVertexKeysSplit = value.split('\u000b');
 
-      for (let i = 0; i < allTableSpansChange.length; i++) {
-        if (
-          uiFindVertexKeysSplit[uiFindVertexKeysSplit.length - 1].indexOf(allTableSpansChange[i].name) !== -1
-        ) {
-          if (allTableSpansChange[i].parentElement === 'none') {
-            allTableSpansChange[i].searchColor = yellowSearchColor;
+      for (let i = 0; i < allTableSpans.length; i++) {
+        if (uiFindVertexKeysSplit[uiFindVertexKeysSplit.length - 1].indexOf(allTableSpans[i].name) !== -1) {
+          if (allTableSpans[i].parentElement === 'none') {
+            allTableSpans[i].searchColor = YELLOW_SEARCH_COLOR;
           } else if (
             uiFindVertexKeysSplit[uiFindVertexKeysSplit.length - 1].indexOf(
-              allTableSpansChange[i].parentElement
+              allTableSpans[i].parentElement
             ) !== -1
           ) {
-            allTableSpansChange[i].searchColor = yellowSearchColor;
+            allTableSpans[i].searchColor = YELLOW_SEARCH_COLOR;
           }
         }
       }
     });
   }
-  if (uiFind) {
-    for (let i = 0; i < allTableSpansChange.length; i++) {
-      if (allTableSpansChange[i].name.indexOf(uiFind) !== -1) {
-        allTableSpansChange[i].searchColor = yellowSearchColor;
 
-        for (let j = 0; j < allTableSpansChange.length; j++) {
-          if (allTableSpansChange[j].parentElement === allTableSpansChange[i].name) {
-            allTableSpansChange[j].searchColor = yellowSearchColor;
+  // Highlight rows matching uiFind text
+  if (uiFind) {
+    for (let i = 0; i < allTableSpans.length; i++) {
+      if (allTableSpans[i].name.indexOf(uiFind) !== -1) {
+        allTableSpans[i].searchColor = YELLOW_SEARCH_COLOR;
+
+        for (let j = 0; j < allTableSpans.length; j++) {
+          if (allTableSpans[j].parentElement === allTableSpans[i].name) {
+            allTableSpans[j].searchColor = YELLOW_SEARCH_COLOR;
           }
         }
-        if (allTableSpansChange[i].isDetail) {
-          for (let j = 0; j < allTableSpansChange.length; j++) {
-            if (allTableSpansChange[i].parentElement === allTableSpansChange[j].name) {
-              allTableSpansChange[j].searchColor = yellowSearchColor;
+        if (allTableSpans[i].isDetail) {
+          for (let j = 0; j < allTableSpans.length; j++) {
+            if (allTableSpans[i].parentElement === allTableSpans[j].name) {
+              allTableSpans[j].searchColor = YELLOW_SEARCH_COLOR;
             }
           }
         }
       }
     }
   }
-  return allTableSpansChange;
+  return allTableSpans;
 };
 
 /**
@@ -354,23 +361,44 @@ const TraceStatistics = forwardRef<TraceStatisticsHandle, Props>(function TraceS
     [uiFind]
   );
 
+  // Single memoized handler using data attributes to avoid creating function per cell
+  const handleNameCellKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLSpanElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const target = e.currentTarget;
+        const hasSubgroupValue = target.dataset.hasSubgroupValue === 'true';
+        const name = target.dataset.name || '';
+        onClickOption(hasSubgroupValue, name);
+      }
+    },
+    [onClickOption]
+  );
+
+  // Single memoized click handler using data attributes
+  const handleNameCellClick = useCallback(
+    (e: React.MouseEvent<HTMLSpanElement>) => {
+      const target = e.currentTarget;
+      const hasSubgroupValue = target.dataset.hasSubgroupValue === 'true';
+      const name = target.dataset.name || '';
+      onClickOption(hasSubgroupValue, name);
+    },
+    [onClickOption]
+  );
+
   const columns: ColumnProps<ITableSpan>[] = useMemo(
     () =>
       columnsArray.map(val => {
         const renderFunction = (cell: string, row: ITableSpan) => {
           if (val.attribute === 'name') {
-            const handleKeyDown = (e: React.KeyboardEvent) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onClickOption(row.hasSubgroupValue, row.name);
-              }
-            };
             return (
               <span
                 role="button"
                 tabIndex={0}
-                onClick={() => onClickOption(row.hasSubgroupValue, row.name)}
-                onKeyDown={handleKeyDown}
+                data-has-subgroup-value={row.hasSubgroupValue}
+                data-name={row.name}
+                onClick={handleNameCellClick}
+                onKeyDown={handleNameCellKeyDown}
                 style={{
                   borderLeft: `4px solid ${row.color || 'transparent'}`,
                   padding: '7px 0px 7px 10px',
@@ -393,7 +421,7 @@ const TraceStatistics = forwardRef<TraceStatisticsHandle, Props>(function TraceS
         };
         return val.attribute === 'count' ? { ...ele, defaultSortOrder: 'ascend' } : ele;
       }),
-    [onClickOption, onCellFunction, sorterFunction]
+    [onClickOption, onCellFunction, sorterFunction, handleNameCellKeyDown, handleNameCellClick]
   );
 
   /**
