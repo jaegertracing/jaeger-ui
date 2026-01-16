@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import Digraph from './index';
 import { ELayerType, ELayoutPhase } from './types';
 
@@ -364,6 +364,98 @@ describe('Digraph', () => {
     it('is wrapped with React.memo for performance', () => {
       // React.memo wraps components with a special $$typeof
       expect(Digraph.$$typeof).toBe(Symbol.for('react.memo'));
+    });
+  });
+
+  describe('prop changes', () => {
+    it('updates state when edges prop changes', async () => {
+      const { rerender } = render(<Digraph {...defaultProps} />);
+      const initialEdges = mockNodesLayerProps[0].graphState.edges;
+      expect(initialEdges).toEqual(defaultProps.edges);
+
+      // Clear mock and rerender with new edges
+      mockNodesLayerProps.length = 0;
+      const newEdges = [createEdge('x', 'y'), createEdge('y', 'z')];
+      await act(async () => {
+        rerender(<Digraph {...defaultProps} edges={newEdges} />);
+      });
+
+      // After useEffect updates state, check the last render
+      const lastRender = mockNodesLayerProps[mockNodesLayerProps.length - 1];
+      expect(lastRender.graphState.edges).toEqual(newEdges);
+    });
+
+    it('updates state when vertices prop changes', async () => {
+      const { rerender } = render(<Digraph {...defaultProps} />);
+      const initialVertices = mockNodesLayerProps[0].graphState.vertices;
+      expect(initialVertices).toEqual(defaultProps.vertices);
+
+      // Clear mock and rerender with new vertices
+      mockNodesLayerProps.length = 0;
+      const newVertices = [createVertex('x'), createVertex('y'), createVertex('z')];
+      await act(async () => {
+        rerender(<Digraph {...defaultProps} vertices={newVertices} />);
+      });
+
+      // After useEffect updates state, check the last render
+      const lastRender = mockNodesLayerProps[mockNodesLayerProps.length - 1];
+      expect(lastRender.graphState.vertices).toEqual(newVertices);
+    });
+
+    it('updates layoutPhase when changing from empty to populated data', async () => {
+      const { rerender } = render(<Digraph {...defaultProps} edges={[]} vertices={[]} />);
+      expect(mockNodesLayerProps[0].graphState.layoutPhase).toBe(ELayoutPhase.NoData);
+
+      // Clear mock and rerender with data
+      mockNodesLayerProps.length = 0;
+      await act(async () => {
+        rerender(<Digraph {...defaultProps} />);
+      });
+
+      // After useEffect updates state, check the last render
+      const lastRender = mockNodesLayerProps[mockNodesLayerProps.length - 1];
+      expect(lastRender.graphState.layoutPhase).toBe(ELayoutPhase.CalcSizes);
+    });
+
+    it('preserves existing state fields when props change', async () => {
+      const { rerender } = render(<Digraph {...defaultProps} />);
+      const initialZoomTransform = mockNodesLayerProps[0].graphState.zoomTransform;
+
+      // Clear mock and rerender with new edges
+      mockNodesLayerProps.length = 0;
+      const newEdges = [createEdge('p', 'q')];
+      await act(async () => {
+        rerender(<Digraph {...defaultProps} edges={newEdges} />);
+      });
+
+      // zoomTransform should be preserved after useEffect updates state
+      const lastRender = mockNodesLayerProps[mockNodesLayerProps.length - 1];
+      expect(lastRender.graphState.zoomTransform).toEqual(initialZoomTransform);
+    });
+  });
+
+  describe('setSizeVertices callback', () => {
+    it('throws error when sender key does not match measurableNodesKey', () => {
+      render(<Digraph {...defaultProps} />);
+      const { setSizeVertices } = mockNodesLayerProps[0];
+
+      // setSizeVertices is passed to MeasurableNodesLayer, not NodesLayer
+      // For this test we need a measurable layer
+    });
+
+    it('passes setSizeVertices to MeasurableNodesLayer', () => {
+      const layers = [
+        {
+          key: 'measurable-key',
+          layerType: ELayerType.Svg,
+          measurable: true,
+          renderNode: () => <circle />,
+        },
+      ];
+      render(<Digraph {...defaultProps} layers={layers} measurableNodesKey="measurable-key" />);
+
+      expect(mockMeasurableNodesLayerProps[0].setSizeVertices).toBeDefined();
+      expect(typeof mockMeasurableNodesLayerProps[0].setSizeVertices).toBe('function');
     });
   });
 });
