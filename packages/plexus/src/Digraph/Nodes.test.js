@@ -7,17 +7,18 @@ import Nodes from './Nodes';
 import { ELayerType } from './types';
 
 // Mock Node child component
+// Note: jest.mock factory cannot use JSX (compiled to _jsx which is out of scope)
+// Must use React.createElement and require('react') inside the factory
 const mockNodeProps = [];
 jest.mock('./Node', () => {
+  const React = require('react');
   const MockNode = props => {
     mockNodeProps.push(props);
-    return (
-      <div
-        data-testid="node"
-        data-vertex-key={props.layoutVertex.vertex.key}
-        data-layer-type={props.layerType}
-      />
-    );
+    return React.createElement('div', {
+      'data-testid': 'node',
+      'data-vertex-key': props.layoutVertex.vertex.key,
+      'data-layer-type': props.layerType,
+    });
   };
   return MockNode;
 });
