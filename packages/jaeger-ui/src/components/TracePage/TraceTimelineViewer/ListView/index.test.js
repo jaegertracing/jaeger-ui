@@ -247,5 +247,150 @@ describe('<ListView>', () => {
         expect(hasChanged).toBe(true);
       });
     });
+
+    describe('non-windowScroller mode', () => {
+      beforeEach(() => {
+        const result = renderWithRef(props);
+        wrapper = result.container;
+        componentRef = result.componentRef;
+      });
+
+      it('_isViewChanged uses wrapper element for clientHeight and scrollTop', () => {
+        expect(componentRef.current).toBeDefined();
+        const wrapperElm = componentRef.current._wrapperElm;
+        expect(wrapperElm).toBeTruthy();
+
+        // Set up spies on wrapper element properties
+        const viewHeight = componentRef.current._viewHeight;
+        const scrollTop = componentRef.current._scrollTop;
+        Object.defineProperties(wrapperElm, {
+          clientHeight: {
+            get: () => viewHeight + 1,
+            configurable: true,
+          },
+          scrollTop: {
+            get: () => scrollTop + 1,
+            configurable: true,
+          },
+        });
+
+        const hasChanged = componentRef.current._isViewChanged();
+        expect(hasChanged).toBe(true);
+      });
+
+      it('_isViewChanged returns false when wrapper element is null', () => {
+        expect(componentRef.current).toBeDefined();
+        // Set wrapper to null via _initWrapper
+        act(() => {
+          componentRef.current._initWrapper(null);
+        });
+        const hasChanged = componentRef.current._isViewChanged();
+        expect(hasChanged).toBe(false);
+      });
+
+      it('_calcViewIndexes resets indexes when wrapper element is null', () => {
+        expect(componentRef.current).toBeDefined();
+        // Set wrapper to null
+        act(() => {
+          componentRef.current._initWrapper(null);
+        });
+        // Call _calcViewIndexes
+        componentRef.current._calcViewIndexes();
+        expect(componentRef.current._viewHeight).toBe(-1);
+        expect(componentRef.current._startIndex).toBe(0);
+        expect(componentRef.current._endIndex).toBe(0);
+      });
+
+      it('_positionList returns early when wrapper element is null', () => {
+        expect(componentRef.current).toBeDefined();
+        // Set wrapper to null
+        act(() => {
+          componentRef.current._initWrapper(null);
+        });
+        // Should not throw
+        componentRef.current._positionList();
+        // _isScrolledOrResized should be reset to false
+        expect(componentRef.current._isScrolledOrResized).toBe(false);
+      });
+    });
+
+    describe('internal ref accessors', () => {
+      beforeEach(() => {
+        // Use non-windowScroller mode to avoid global document.documentElement pollution
+        const result = renderWithRef(props);
+        wrapper = result.container;
+        componentRef = result.componentRef;
+      });
+
+      it('exposes _startIndex and _endIndex', () => {
+        expect(componentRef.current).toBeDefined();
+        expect(typeof componentRef.current._startIndex).toBe('number');
+        expect(typeof componentRef.current._endIndex).toBe('number');
+      });
+
+      it('exposes _htmlTopOffset and _windowScrollListenerAdded', () => {
+        expect(componentRef.current).toBeDefined();
+        expect(typeof componentRef.current._htmlTopOffset).toBe('number');
+        expect(typeof componentRef.current._windowScrollListenerAdded).toBe('boolean');
+      });
+
+      it('exposes _wrapperElm and _itemHolderElm', () => {
+        expect(componentRef.current).toBeDefined();
+        expect(componentRef.current._wrapperElm).toBeTruthy();
+        expect(componentRef.current._itemHolderElm).toBeTruthy();
+      });
+    });
+
+    describe('_scanItemHeights edge cases', () => {
+      let consoleWarnSpy;
+
+      beforeEach(() => {
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const result = renderWithRef(props);
+        wrapper = result.container;
+        componentRef = result.componentRef;
+      });
+
+      afterEach(() => {
+        consoleWarnSpy.mockRestore();
+      });
+
+      it('warns when item key is not found on child node', () => {
+        expect(componentRef.current).toBeDefined();
+        const itemHolder = componentRef.current._itemHolderElm;
+        expect(itemHolder).toBeTruthy();
+
+        // Add a child without data-item-key attribute
+        const badChild = document.createElement('div');
+        itemHolder.appendChild(badChild);
+
+        // Trigger scan
+        act(() => {
+          componentRef.current._scanItemHeights();
+        });
+
+        expect(consoleWarnSpy).toHaveBeenCalledWith('itemKey not found');
+
+        // Cleanup
+        itemHolder.removeChild(badChild);
+      });
+    });
+
+    describe('forceUpdate', () => {
+      beforeEach(() => {
+        const result = renderWithRef(props);
+        wrapper = result.container;
+        componentRef = result.componentRef;
+      });
+
+      it('exposes forceUpdate method that triggers re-render', () => {
+        expect(componentRef.current).toBeDefined();
+        expect(typeof componentRef.current.forceUpdate).toBe('function');
+        // Should not throw
+        act(() => {
+          componentRef.current.forceUpdate();
+        });
+      });
+    });
   });
 });
