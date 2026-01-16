@@ -181,6 +181,7 @@ const Graph = ({
       ] as TNonEmptyArray<TLayer<TDdgVertex, unknown>>,
     [
       nodeRenderers,
+      uiFindMatches,
       verticesViewModifiers,
       edgesViewModifiers,
       memoGetSetOnEdge,
