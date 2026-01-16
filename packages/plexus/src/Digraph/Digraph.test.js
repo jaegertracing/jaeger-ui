@@ -436,11 +436,20 @@ describe('Digraph', () => {
 
   describe('setSizeVertices callback', () => {
     it('throws error when sender key does not match measurableNodesKey', () => {
-      render(<Digraph {...defaultProps} />);
-      const { setSizeVertices } = mockNodesLayerProps[0];
+      const layers = [
+        {
+          key: 'measurable-key',
+          layerType: ELayerType.Svg,
+          measurable: true,
+          renderNode: () => <circle />,
+        },
+      ];
+      render(<Digraph {...defaultProps} layers={layers} measurableNodesKey="expected-key" />);
 
-      // setSizeVertices is passed to MeasurableNodesLayer, not NodesLayer
-      // For this test we need a measurable layer
+      const { setSizeVertices } = mockMeasurableNodesLayerProps[0];
+
+      // Call with wrong sender key should throw error
+      expect(() => setSizeVertices('wrong-key', [])).toThrow('Key mismatch for measuring nodes');
     });
 
     it('passes setSizeVertices to MeasurableNodesLayer', () => {
