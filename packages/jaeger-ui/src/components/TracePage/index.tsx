@@ -155,11 +155,17 @@ export const TracePageImpl = React.memo(
     const _searchBar = useRef<InputRef>(null);
     const traceDagEV = useRef<TEv | TNil>(null);
 
-    // State ref for imperative handle
+    // State ref for imperative handle - updated during render for synchronous access
+    // This is intentional: useImperativeHandle exposes state getter that must return current values
     const stateRef = useRef<TState>({ headerHeight, slimView, viewType, viewRange });
     stateRef.current = { headerHeight, slimView, viewType, viewRange };
 
-    // Props ref for callbacks that need current props
+    // Props ref for memoization resolver - must be updated during render
+    // The _filterSpans memoization below uses propsRef.current in its cache key resolver.
+    // If we moved this update to useEffect, the resolver would read stale props during render,
+    // causing incorrect cache hits/misses. This is a deliberate trade-off: we update the ref
+    // during render to ensure memoization works correctly, accepting that this technically
+    // violates React's "no side effects during render" guideline.
     const propsRef = useRef(props);
     propsRef.current = props;
 
