@@ -187,7 +187,6 @@ describe('DeepDependencyGraphPage', () => {
         });
 
         it('removes op from urlState when clearOperation is called', () => {
-          const clearOperationMock = jest.fn();
           render(
             <DeepDependencyGraphPageImpl
               {...props}
@@ -456,7 +455,6 @@ describe('DeepDependencyGraphPage', () => {
         });
 
         it('component handles generation visibility updates', () => {
-          const direction = EDirection.Upstream;
           props.graph.getVisWithUpdatedGeneration.mockReturnValueOnce({
             visEncoding,
             update: ECheckedStatus.Full,

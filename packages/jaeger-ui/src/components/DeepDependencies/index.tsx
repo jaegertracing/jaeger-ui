@@ -102,6 +102,16 @@ export const DeepDependencyGraphPageImpl: React.FC<TProps> = ({
 }) => {
   const [selectedVertex, setSelectedVertex] = useState<TDdgVertex | undefined>(undefined);
 
+  const updateUrlState = useCallback(
+    (newValues: Partial<TDdgSparseUrlState>) => {
+      const getUrlArg = { uiFind, ...urlState, ...newValues, ...extraUrlArgs };
+      const hash = _get(graphState, 'model.hash');
+      if (hash) getUrlArg.hash = hash;
+      navigate(getUrl(getUrlArg, baseUrl));
+    },
+    [baseUrl, extraUrlArgs, graphState, navigate, uiFind, urlState]
+  );
+
   // Fetch model if stale
   const fetchModelIfStale = useCallback(() => {
     const { service, operation } = urlState;
@@ -138,7 +148,7 @@ export const DeepDependencyGraphPageImpl: React.FC<TProps> = ({
   const clearOperation = useCallback(() => {
     trackClearOperation();
     updateUrlState({ operation: undefined });
-  }, []);
+  }, [updateUrlState]);
 
   const getVisiblePathElems = useCallback(
     (key: string) => {
@@ -147,7 +157,7 @@ export const DeepDependencyGraphPageImpl: React.FC<TProps> = ({
       }
       return undefined;
     },
-    [graph, urlState.visEncoding]
+    [graph, urlState.visEncoding, updateUrlState]
   );
 
   const focusPathsThroughVertex = useCallback(
@@ -161,7 +171,7 @@ export const DeepDependencyGraphPageImpl: React.FC<TProps> = ({
       );
       updateUrlState({ visEncoding: encode(indices) });
     },
-    [getVisiblePathElems]
+    [getVisiblePathElems, updateUrlState]
   );
 
   const getGenerationVisibility = useCallback(
@@ -187,13 +197,19 @@ export const DeepDependencyGraphPageImpl: React.FC<TProps> = ({
     [graph, urlState.visEncoding]
   );
 
-  const setDecoration = useCallback((decoration: string | undefined) => {
-    updateUrlState({ decoration });
-  }, []);
+  const setDecoration = useCallback(
+    (decoration: string | undefined) => {
+      updateUrlState({ decoration });
+    },
+    [updateUrlState]
+  );
 
-  const setDensity = useCallback((density: EDdgDensity) => {
-    updateUrlState({ density });
-  }, []);
+  const setDensity = useCallback(
+    (density: EDdgDensity) => {
+      updateUrlState({ density });
+    },
+    [updateUrlState]
+  );
 
   const setDistance = useCallback(
     (distance: number, direction: EDirection) => {
@@ -277,16 +293,6 @@ export const DeepDependencyGraphPageImpl: React.FC<TProps> = ({
       updateUrlState({ visEncoding });
     },
     [graph, urlState.visEncoding]
-  );
-
-  const updateUrlState = useCallback(
-    (newValues: Partial<TDdgSparseUrlState>) => {
-      const getUrlArg = { uiFind, ...urlState, ...newValues, ...extraUrlArgs };
-      const hash = _get(graphState, 'model.hash');
-      if (hash) getUrlArg.hash = hash;
-      navigate(getUrl(getUrlArg, baseUrl));
-    },
-    [baseUrl, extraUrlArgs, graphState, navigate, uiFind, urlState]
   );
 
   const { density, operation, service, visEncoding } = urlState;
