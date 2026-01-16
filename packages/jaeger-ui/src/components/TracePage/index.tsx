@@ -164,6 +164,9 @@ export const TracePageImpl = React.memo(
     propsRef.current = props;
 
     // Create memoized filterSpans function
+    // Empty dependency array is intentional: the memoize resolver uses propsRef.current
+    // which always reflects current props. Recreating the memoize function would clear
+    // its internal cache, defeating the purpose of memoization across renders.
     const _filterSpans = useMemo(
       () =>
         _memoize(
@@ -226,7 +229,7 @@ export const TracePageImpl = React.memo(
     );
 
     const setHeaderHeight = useCallback((elm: HTMLElement | TNil) => {
-      _headerElm.current = elm;
+      _headerElm.current = elm ?? null;
       if (elm) {
         setHeaderHeightState(prevHeight => {
           if (prevHeight !== elm.clientHeight) {
