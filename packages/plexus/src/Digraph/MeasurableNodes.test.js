@@ -7,17 +7,18 @@ import MeasurableNodes from './MeasurableNodes';
 import { ELayerType } from './types';
 
 // Mock MeasurableNode child component
+// Note: jest.mock factory cannot use JSX (compiled to _jsx which is out of scope)
+// Must use React.createElement and require('react') inside the factory
 const mockMeasurableNodeProps = [];
 jest.mock('./MeasurableNode', () => {
+  const React = require('react');
   return function MockMeasurableNode(props) {
     mockMeasurableNodeProps.push(props);
-    return (
-      <div
-        data-testid="measurable-node"
-        data-vertex-key={props.vertex.key}
-        data-hidden={props.hidden.toString()}
-      />
-    );
+    return React.createElement('div', {
+      'data-testid': 'measurable-node',
+      'data-vertex-key': props.vertex.key,
+      'data-hidden': props.hidden.toString(),
+    });
   };
 });
 
