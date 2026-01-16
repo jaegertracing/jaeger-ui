@@ -79,8 +79,12 @@ const Graph = ({
   verticesViewModifiers,
 }: TProps) => {
   // Stable layout manager instance persists across renders
+  // Track if stopped to handle React 18 Strict Mode's double-invocation of effects
   const layoutManagerRef = useRef<LayoutManager | null>(null);
-  if (!layoutManagerRef.current) {
+  const isStoppedRef = useRef(false);
+
+  // Re-create LayoutManager if it was stopped (handles Strict Mode re-mount)
+  if (!layoutManagerRef.current || isStoppedRef.current) {
     layoutManagerRef.current = new LayoutManager({
       nodesep: 0.55,
       ranksep: 1.5,
@@ -89,6 +93,7 @@ const Graph = ({
       splines: 'polyline',
       useDotEdges: true,
     });
+    isStoppedRef.current = false;
   }
   const layoutManager = layoutManagerRef.current;
 
@@ -112,12 +117,14 @@ const Graph = ({
   }
 
   // Cleanup layout manager on unmount
+  // In React 18 Strict Mode, this cleanup runs between the double-mount cycle.
+  // The isStoppedRef flag ensures we re-create the LayoutManager on re-mount.
   useEffect(() => {
     return () => {
       layoutManager.stopAndRelease();
+      isStoppedRef.current = true;
     };
-    // layoutManager is a stable ref that never changes, so empty deps ensures cleanup only on unmount
-  }, []);
+  }, [layoutManager]);
 
   // Non-null assertion is safe here because we initialize above
   const {
