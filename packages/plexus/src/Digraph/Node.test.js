@@ -8,6 +8,12 @@ import Node from './Node';
 import { ELayerType } from './types';
 
 describe('Node', () => {
+  it('is wrapped with React.memo for performance optimization', () => {
+    // Verify that the component is wrapped with React.memo
+    // React.memo wrapped components have $$typeof === Symbol.for('react.memo')
+    expect(Node.$$typeof).toBe(Symbol.for('react.memo'));
+  });
+
   const mockGetClassName = name => `plexus--${name}`;
 
   const mockRenderUtils = {
