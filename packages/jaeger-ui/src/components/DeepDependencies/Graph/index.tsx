@@ -116,15 +116,18 @@ const Graph = ({
     };
   }
 
-  // Cleanup layout manager on unmount
-  // In React 18 Strict Mode, this cleanup runs between the double-mount cycle.
-  // The isStoppedRef flag ensures we re-create the LayoutManager on re-mount.
+  // Cleanup layout manager on unmount only
+  // Use empty deps array and access ref directly to avoid stale closure issues.
+  // When deps include layoutManager, changing from instance A to B causes:
+  // 1. Old cleanup runs (sets isStoppedRef=true)
+  // 2. But B was already created in render phase with isStoppedRef=false
+  // 3. Now isStoppedRef=true incorrectly, causing unnecessary re-creation on next render
   useEffect(() => {
     return () => {
-      layoutManager.stopAndRelease();
+      layoutManagerRef.current?.stopAndRelease();
       isStoppedRef.current = true;
     };
-  }, [layoutManager]);
+  }, []);
 
   // Non-null assertion is safe here because we initialize above
   const {
