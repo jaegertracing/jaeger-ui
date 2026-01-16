@@ -51,4 +51,5 @@ const MeasurableNodes = <T = {},>(props: TProps<T>) => {
 };
 
 // React.memo with custom comparison replaces shouldComponentUpdate
-export default React.memo(MeasurableNodes, arePropsEqual) as typeof MeasurableNodes;
+// Cast through unknown required for generic components with React.memo
+export default React.memo(MeasurableNodes, arePropsEqual) as unknown as typeof MeasurableNodes;
