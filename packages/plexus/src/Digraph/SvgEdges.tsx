@@ -46,4 +46,6 @@ const SvgEdges = <T = {},>(props: TProps<T>) => {
 };
 
 // React.memo with custom comparison replaces shouldComponentUpdate
-export default React.memo(SvgEdges, arePropsEqual) as typeof SvgEdges;
+// Cast through unknown because MemoExoticComponent's ReactNode return type
+// doesn't directly overlap with the function's Element[] return type
+export default React.memo(SvgEdges, arePropsEqual) as unknown as typeof SvgEdges;
