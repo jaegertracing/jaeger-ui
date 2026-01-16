@@ -118,14 +118,25 @@ describe('MeasurableNode', () => {
   });
 
   describe('with null layoutVertex', () => {
-    it('renders without positioning when layoutVertex is null', () => {
+    it('renders without positioning when layoutVertex is null (HTML)', () => {
       const { container } = render(
         <div>
-          <MeasurableNode {...defaultProps} layoutVertex={null} />
+          <MeasurableNode {...defaultProps} layoutVertex={null} layerType={ELayerType.Html} />
         </div>
       );
       const wrapper = container.querySelector('.plexus--MeasurableHtmlNode');
       expect(wrapper).toBeInTheDocument();
+    });
+
+    it('renders without positioning when layoutVertex is null (SVG)', () => {
+      const { container } = render(
+        <svg>
+          <MeasurableNode {...defaultProps} layoutVertex={null} layerType={ELayerType.Svg} />
+        </svg>
+      );
+      const wrapper = container.querySelector('.plexus--MeasurableSvgNode');
+      expect(wrapper).toBeInTheDocument();
+      expect(wrapper).not.toHaveAttribute('transform');
     });
   });
 
@@ -185,6 +196,36 @@ describe('MeasurableNode', () => {
       expect(typeof ref.current.getRef).toBe('function');
       const refResult = ref.current.getRef();
       expect(refResult).toHaveProperty('svgWrapper');
+    });
+
+    it('measure returns zero dimensions when HTML ref is null (after unmount)', () => {
+      const ref = React.createRef();
+      const { unmount } = render(
+        <div>
+          <MeasurableNode {...defaultProps} ref={ref} layerType={ELayerType.Html} />
+        </div>
+      );
+      // Keep reference to the imperative handle before unmount
+      const imperativeHandle = ref.current;
+      unmount();
+      // After unmount, the internal htmlRef.current is null
+      const measurement = imperativeHandle.measure();
+      expect(measurement).toEqual({ height: 0, width: 0 });
+    });
+
+    it('measure returns zero dimensions when SVG ref is null (after unmount)', () => {
+      const ref = React.createRef();
+      const { unmount } = render(
+        <svg>
+          <MeasurableNode {...defaultProps} ref={ref} layerType={ELayerType.Svg} />
+        </svg>
+      );
+      // Keep reference to the imperative handle before unmount
+      const imperativeHandle = ref.current;
+      unmount();
+      // After unmount, the internal svgRef.current is null
+      const measurement = imperativeHandle.measure();
+      expect(measurement).toEqual({ height: 0, width: 0 });
     });
   });
 
