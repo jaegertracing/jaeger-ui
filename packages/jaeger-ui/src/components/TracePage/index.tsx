@@ -315,7 +315,7 @@ export const TracePageImpl = React.memo(
       _scrollManager.current.scrollToPrevVisibleSpan();
     }, []);
 
-    // componentDidMount equivalent
+    // componentDidMount equivalent - runs only once on mount
     useEffect(() => {
       ensureTraceFetched();
       updateViewRangeTime(0, 1);
@@ -344,7 +344,9 @@ export const TracePageImpl = React.memo(
           scrollTo,
         });
       };
-    }, [ensureTraceFetched, updateViewRangeTime, _adjustViewRange, clearSearch, focusOnSearchBar]);
+      // Empty dependency array: mirrors original componentDidMount behavior.
+      // Callbacks are captured at mount time; subsequent changes don't require re-registration.
+    }, []);
 
     // Track previous id for componentDidUpdate logic
     const prevIdRef = useRef<string | undefined>(undefined);
