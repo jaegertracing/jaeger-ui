@@ -116,7 +116,8 @@ const Graph = ({
     return () => {
       layoutManager.stopAndRelease();
     };
-  }, [layoutManager]);
+    // layoutManager is a stable ref that never changes, so empty deps ensures cleanup only on unmount
+  }, []);
 
   // Non-null assertion is safe here because we initialize above
   const {
@@ -184,12 +185,10 @@ const Graph = ({
       },
     ] as TNonEmptyArray<TLayer<TDdgVertex, unknown>>;
   }, [
+    // Data dependencies that trigger recalculation
     uiFindMatches,
     verticesViewModifiers,
     edgesViewModifiers,
-    memoGetNodeRenderers,
-    memoGetSetOnEdge,
-    getNodeContentRenderer,
     baseUrl,
     density,
     extraUrlArgs,
@@ -201,6 +200,8 @@ const Graph = ({
     setOperation,
     setViewModifier,
     updateGenerationVisibility,
+    // memoGetNodeRenderers, memoGetSetOnEdge, getNodeContentRenderer are stable refs
+    // stored in useRef - they never change, so excluded from deps
   ]);
 
   return (
