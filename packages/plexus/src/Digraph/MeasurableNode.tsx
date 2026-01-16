@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, memo, useCallback, useImperativeHandle, useRef } from 'react';
 
 import { TMeasurableNodeRenderer, TLayerType, TRendererUtils, ELayerType } from './types';
 import { assignMergeCss, getProps } from './utils';
@@ -110,7 +110,8 @@ const MeasurableNodeInner = <T = {},>(
 };
 
 // forwardRef allows parent components to attach refs to this component
-const MeasurableNode = forwardRef(MeasurableNodeInner) as <T = {}>(
+// memo provides shallow prop comparison similar to the original PureComponent
+const MeasurableNode = memo(forwardRef(MeasurableNodeInner)) as <T = {}>(
   props: TProps<T> & { ref?: React.Ref<MeasurableNodeRef> }
 ) => React.ReactElement | null;
 

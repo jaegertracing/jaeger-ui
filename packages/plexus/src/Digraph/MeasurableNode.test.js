@@ -7,6 +7,12 @@ import MeasurableNode from './MeasurableNode';
 import { ELayerType } from './types';
 
 describe('MeasurableNode', () => {
+  it('is wrapped with React.memo for performance optimization', () => {
+    // Verify that the component is wrapped with React.memo
+    // React.memo wrapped components have $$typeof === Symbol.for('react.memo')
+    expect(MeasurableNode.$$typeof).toBe(Symbol.for('react.memo'));
+  });
+
   const mockGetClassName = name => `plexus--${name}`;
 
   const mockRenderUtils = {
