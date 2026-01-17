@@ -77,12 +77,12 @@
     "u-basscss": "2.0.1"
   },
   "scripts": {
-    "build": "cross-env NODE_ENV=production vite build",
+    "build": "NODE_ENV=production vite build",
     "coverage": "npm run test-ci -- --coverage",
-    "start:ga-debug": "cross-env REACT_APP_GA_DEBUG=1 vite",
+    "start:ga-debug": "REACT_APP_GA_DEBUG=1 vite",
     "start": "vite",
     "test": "jest --silent --color --maxWorkers=50%",
-    "test-ci": "cross-env CI=1 jest --silent --color --maxWorkers=4"
+    "test-ci": "CI=1 jest --silent --color --maxWorkers=4"
   },
   "jest": {
     "globalSetup": "./test/jest.global-setup.js",
