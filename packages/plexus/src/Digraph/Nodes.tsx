@@ -17,7 +17,8 @@ type TProps<T = {}> = TNodeRenderer<T> & {
 };
 
 // Comparison function that mirrors the original shouldComponentUpdate logic
-function arePropsEqual<T>(prev: TProps<T>, next: TProps<T>): boolean {
+// Exported for testing purposes
+export function arePropsEqual<T>(prev: TProps<T>, next: TProps<T>): boolean {
   return (
     prev.renderNode === next.renderNode &&
     prev.getClassName === next.getClassName &&
