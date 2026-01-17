@@ -27,6 +27,14 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   disconnect: jest.fn(),
 }));
 
+jest.mock('react-router-dom-v5-compat', () => ({
+  useSearchParams: jest.fn(() => {
+    const searchParams = new URLSearchParams();
+    const setSearchParams = jest.fn();
+    return [searchParams, setSearchParams];
+  }),
+}));
+
 jest.mock('../../../utils/config/get-config', () => ({
   getConfigValue: jest.fn(() => 'https://www.jaegertracing.io/docs/latest/spm/'),
   __esModule: true,
@@ -418,11 +426,11 @@ describe('<MonitorATMServicesView>', () => {
     });
 
     afterEach(() => {
-      trackSelectServiceSpy.mockRestore();
-      trackSelectSpanKindSpy.mockRestore();
-      trackSelectTimeframeSpy.mockRestore();
-      trackSearchOperationSpy.mockRestore();
-      trackViewAllTracesSpy.mockRestore();
+      trackSelectServiceSpy?.mockRestore();
+      trackSelectSpanKindSpy?.mockRestore();
+      trackSelectTimeframeSpy?.mockRestore();
+      trackSearchOperationSpy?.mockRestore();
+      trackViewAllTracesSpy?.mockRestore();
     });
 
     it('should handle service change and call tracking', async () => {
