@@ -26,6 +26,7 @@ import calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import TraceGraph from './TraceGraph/TraceGraph';
 import { TEv } from './TraceGraph/types';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
+import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
@@ -63,21 +64,21 @@ type TOwnProps = {
   history: RouterHistory;
   location: Location<LocationState>;
   params: { id: string };
+  archiveEnabled: boolean;
+  storageCapabilities: StorageCapabilities | TNil;
+  criticalPathEnabled: boolean;
+  disableJsonView: boolean;
+  traceGraphConfig?: TraceGraphConfig;
+  useOtelTerms: boolean;
 };
 
 type TReduxProps = {
-  archiveEnabled: boolean;
-  storageCapabilities: StorageCapabilities | TNil;
   archiveTraceState: TraceArchive | TNil;
-  criticalPathEnabled: boolean;
   embedded: null | EmbeddedState;
   id: string;
   searchUrl: null | string;
-  disableJsonView: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
-  traceGraphConfig?: TraceGraphConfig;
-  useOtelTerms: boolean;
 };
 
 type TProps = TDispatchProps & TOwnProps & TReduxProps;
@@ -449,30 +450,20 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { id } = ownProps.params;
-  const { archive, config, embedded, router } = state;
+  const { archive, embedded, router } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
-  const archiveEnabled = Boolean(config.archiveEnabled);
-  const storageCapabilities = config.storageCapabilities;
-  const { disableJsonView, criticalPathEnabled } = config;
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
-  const { traceGraph: traceGraphConfig } = config;
 
   return {
     ...extractUiFindFromState(state),
-    archiveEnabled,
-    storageCapabilities,
     archiveTraceState,
-    criticalPathEnabled,
     embedded,
     id,
     searchUrl,
-    disableJsonView,
     trace,
-    traceGraphConfig,
-    useOtelTerms: config.useOpenTelemetryTerms,
   };
 }
 
@@ -484,4 +475,27 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
 }
 
-export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(TracePageImpl));
+const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
+
+type TracePageProps = {
+  history: RouterHistory;
+  location: Location<LocationState>;
+  params: { id: string };
+};
+
+const TracePage = (props: TracePageProps) => {
+  const config = useConfig();
+  return (
+    <ConnectedTracePage
+      {...props}
+      archiveEnabled={Boolean(config.archiveEnabled)}
+      storageCapabilities={config.storageCapabilities}
+      criticalPathEnabled={config.criticalPathEnabled}
+      disableJsonView={config.disableJsonView}
+      traceGraphConfig={config.traceGraph}
+      useOtelTerms={config.useOpenTelemetryTerms}
+    />
+  );
+};
+
+export default withRouteProps(TracePage);
