@@ -68,7 +68,7 @@ describe('<SearchTracePage>', () => {
       { traceID: 'b', spans: [], processes: {} },
     ];
     return {
-      queryOfResults,
+      queryOfResults: null, // null on initial page load
       traces,
       traceResultsToDownload,
       diffCohort: [],
@@ -95,6 +95,38 @@ describe('<SearchTracePage>', () => {
       </AllProvider>
     );
     expect(props.searchTraces).toHaveBeenCalledTimes(1);
+  });
+
+  it('searches for traces on initial page load when URL has search params (no previous results)', () => {
+    const testProps = {
+      ...props,
+      queryOfResults: null, // No previous search results
+      urlQueryParams: { service: 'test-service', limit: 20 },
+      searchTraces: jest.fn(),
+    };
+    render(
+      <AllProvider>
+        <SearchTracePage {...testProps} />
+      </AllProvider>
+    );
+    expect(testProps.searchTraces).toHaveBeenCalledTimes(1);
+    expect(testProps.searchTraces).toHaveBeenCalledWith({ service: 'test-service', limit: 20 });
+  });
+
+  it('does not search again if URL params match existing queryOfResults', () => {
+    const query = { service: 'svc-a', limit: 20 };
+    const testProps = {
+      ...props,
+      queryOfResults: query, // Already have results for this query
+      urlQueryParams: query, // Same query in URL
+      searchTraces: jest.fn(),
+    };
+    render(
+      <AllProvider>
+        <SearchTracePage {...testProps} />
+      </AllProvider>
+    );
+    expect(testProps.searchTraces).not.toHaveBeenCalled();
   });
 
   it('uses React Query hooks to fetch services', () => {
