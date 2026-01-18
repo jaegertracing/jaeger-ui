@@ -21,6 +21,9 @@ const DocumentTitle: React.FC<Props> = ({ title }) => {
     if (typeof title === 'string' && title !== document.title) {
       document.title = title;
     }
+  }, [title]);
+
+  React.useEffect(() => {
     return () => {
       if (prevTitleRef.current != null) {
         try {
@@ -30,7 +33,7 @@ const DocumentTitle: React.FC<Props> = ({ title }) => {
         }
       }
     };
-  }, [title]);
+  }, []);
 
   return null;
 };

@@ -159,7 +159,7 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   const getSelectedService = useCallback(() => {
     const { services } = props;
     return selectedService || store.get('lastAtmSearchService') || services[0];
-  }, [props.services, selectedService]);
+  }, [props, selectedService]);
 
   const handleServiceChange = useCallback((value: string) => {
     setSelectedService(value);
@@ -224,7 +224,7 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
     return () => {
       window.removeEventListener('resize', updateDimensions);
     };
-  }, [updateDimensions, calcGraphXDomain]);
+  }, [props, updateDimensions, calcGraphXDomain]);
 
   // componentDidUpdate equivalent
   useEffect(() => {
@@ -232,7 +232,7 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
     if (services.length !== 0) {
       fetchMetrics();
     }
-  }, [props.services]);
+  }, [props, fetchMetrics]);
 
   useEffect(() => {
     calcGraphXDomain();
@@ -240,7 +240,7 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
 
   useEffect(() => {
     fetchMetrics();
-  }, [selectedService, selectedSpanKind, selectedTimeFrame]);
+  }, [selectedService, selectedSpanKind, selectedTimeFrame, fetchMetrics]);
 
   const { services, metrics, servicesLoading } = props;
   const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;

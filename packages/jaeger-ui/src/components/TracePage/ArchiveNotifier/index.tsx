@@ -83,7 +83,7 @@ const ArchiveNotifier: React.FC<Props> = props => {
     const nextNotifiedState = getNextNotifiedState(props);
     updateNotification(notifiedStateRef.current, nextNotifiedState, props);
     notifiedStateRef.current = nextNotifiedState;
-  }, [props.archivedState]);
+  }, [props]);
 
   useEffect(() => {
     return () => {
