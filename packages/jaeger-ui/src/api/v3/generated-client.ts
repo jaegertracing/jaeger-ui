@@ -1,4 +1,10 @@
-import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+// Copyright (c) 2026 The Jaeger Authors.
+// SPDX-License-Identifier: Apache-2.0
+//
+// This file is AUTO-GENERATED from the Jaeger OpenAPI spec.
+// Do not edit manually. Regenerate using: npm run generate:api-types
+
+// import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
 import { z } from 'zod';
 
 type AnyValue = Partial<{
@@ -21,31 +27,16 @@ type KeyValueList = Partial<{
   values: Array<KeyValue>;
 }>;
 
-const Operation = z.object({ name: z.string(), spanKind: z.string() }).partial().passthrough();
-const GetOperationsResponse = z
-  .object({ operations: z.array(Operation) })
-  .partial()
-  .passthrough();
-const GoogleProtobufAny = z.object({ '@type': z.string() }).partial().passthrough();
+const Operation = z.object({ name: z.string(), spanKind: z.string() }).passthrough();
+const GetOperationsResponse = z.object({ operations: z.array(Operation) }).passthrough();
+const GoogleProtobufAny = z.object({ '@type': z.string() }).passthrough();
 const Status = z
   .object({ code: z.number().int(), message: z.string(), details: z.array(GoogleProtobufAny) })
-  .partial()
   .passthrough();
-const GetServicesResponse = z
-  .object({ services: z.array(z.string()) })
-  .partial()
-  .passthrough();
-const ArrayValue: z.ZodType<ArrayValue> = z.lazy(() =>
-  z
-    .object({ values: z.array(AnyValue) })
-    .partial()
-    .passthrough()
-);
+const GetServicesResponse = z.object({ services: z.array(z.string()) }).passthrough();
+const ArrayValue: z.ZodType<ArrayValue> = z.lazy(() => z.object({ values: z.array(AnyValue) }).passthrough());
 const KeyValueList: z.ZodType<KeyValueList> = z.lazy(() =>
-  z
-    .object({ values: z.array(KeyValue) })
-    .partial()
-    .passthrough()
+  z.object({ values: z.array(KeyValue) }).passthrough()
 );
 const AnyValue: z.ZodType<AnyValue> = z.lazy(() =>
   z
@@ -58,15 +49,13 @@ const AnyValue: z.ZodType<AnyValue> = z.lazy(() =>
       kvlistValue: KeyValueList,
       bytesValue: z.string(),
     })
-    .partial()
     .passthrough()
 );
 const KeyValue: z.ZodType<KeyValue> = z.lazy(() =>
-  z.object({ key: z.string(), value: AnyValue }).partial().passthrough()
+  z.object({ key: z.string(), value: AnyValue }).passthrough()
 );
 const Resource = z
   .object({ attributes: z.array(KeyValue), droppedAttributesCount: z.number().int() })
-  .partial()
   .passthrough();
 const InstrumentationScope = z
   .object({
@@ -75,7 +64,6 @@ const InstrumentationScope = z
     attributes: z.array(KeyValue),
     droppedAttributesCount: z.number().int(),
   })
-  .partial()
   .passthrough();
 const Span_Event = z
   .object({
@@ -84,7 +72,6 @@ const Span_Event = z
     attributes: z.array(KeyValue),
     droppedAttributesCount: z.number().int(),
   })
-  .partial()
   .passthrough();
 const Span_Link = z
   .object({
@@ -95,7 +82,6 @@ const Span_Link = z
     droppedAttributesCount: z.number().int(),
     flags: z.number().int(),
   })
-  .partial()
   .passthrough();
 const Span = z
   .object({
@@ -116,20 +102,14 @@ const Span = z
     droppedLinksCount: z.number().int(),
     status: Status,
   })
-  .partial()
   .passthrough();
 const ScopeSpans = z
   .object({ scope: InstrumentationScope, spans: z.array(Span), schemaUrl: z.string() })
-  .partial()
   .passthrough();
 const ResourceSpans = z
   .object({ resource: Resource, scopeSpans: z.array(ScopeSpans), schemaUrl: z.string() })
-  .partial()
   .passthrough();
-const TracesData = z
-  .object({ resourceSpans: z.array(ResourceSpans) })
-  .partial()
-  .passthrough();
+const TracesData = z.object({ resourceSpans: z.array(ResourceSpans) }).passthrough();
 
 export const schemas = {
   Operation,
@@ -151,6 +131,7 @@ export const schemas = {
   TracesData,
 };
 
+/*
 const endpoints = makeApi([
   {
     method: 'get',
@@ -272,9 +253,17 @@ const endpoints = makeApi([
     response: TracesData,
   },
 ]);
+*/
 
-export const api = new Zodios(endpoints);
+// export const api = new Zodios(endpoints);
 
+/*
 export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
   return new Zodios(baseUrl, endpoints, options);
 }
+*/
+
+// Export commonly used schemas individually for convenience
+export { GetServicesResponse as ServicesResponseSchema };
+export { GetOperationsResponse as OperationsResponseSchema };
+export { Operation as OperationSchema };

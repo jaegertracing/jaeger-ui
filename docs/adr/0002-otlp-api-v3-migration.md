@@ -529,7 +529,9 @@ The new `OtlpParser` replaces the role of `transformTraceData` for the OTLP rout
   }
   ```
 
-#### 3.6.1 Wire Format Type Generation & Validation
+#### 3.6.1 Wire Format Type Generation & Validation ✅
+
+**Status**: ✅ Complete (2026-01-18) - Runtime validation with Zod active for services and operations endpoints.
 
 To ensure type safety and runtime validation of API responses, we will use code generation from the OpenAPI spec combined with Zod schemas.
 
@@ -708,12 +710,11 @@ export class JaegerClient {
 
 ##### Code Generation Workflow
 
-Add to `package.json`:
+Add to `package.json` (root):
 ```json
 {
   "scripts": {
-    "generate:api-types": "openapi-typescript http://localhost:16686/api/v3/openapi.json -o src/api/v3/generated-types.ts",
-    "prebuild": "npm run generate:api-types"
+    "generate:api-types": "openapi-zod-client https://raw.githubusercontent.com/jaegertracing/jaeger-idl/refs/heads/main/swagger/api_v3/query_service.openapi.yaml --output packages/jaeger-ui/src/api/v3/generated-client.ts --with-alias && node scripts/postprocess-schemas.cjs"
   }
 }
 ```

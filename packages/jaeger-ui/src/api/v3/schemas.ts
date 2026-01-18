@@ -1,46 +1,22 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { z } from 'zod';
-
 /**
- * API Response Schemas
+ * Zod schemas for Jaeger v3 API responses
  *
- * These schemas validate responses from the Jaeger v3 API.
- * They provide both runtime validation (via Zod) and compile-time types (via z.infer).
+ * These are imported from generated-client.ts which is auto-generated from OpenAPI spec
+ * and post-processed to remove .partial() for strict validation.
  */
 
-/**
- * Schema for /api/v3/services response
- */
-export const ServicesResponseSchema = z.object({
-  services: z.array(z.string()),
-});
-
-export type ServicesResponse = z.infer<typeof ServicesResponseSchema>;
-
-/**
- * Schema for individual operation in /api/v3/operations response
- */
-export const OperationSchema = z.object({
-  name: z.string(),
-  spanKind: z.string(),
-});
-
-/**
- * Schema for /api/v3/operations response
- */
-export const OperationsResponseSchema = z.object({
-  operations: z.array(OperationSchema),
-});
-
-export type OperationsResponse = z.infer<typeof OperationsResponseSchema>;
-export type Operation = z.infer<typeof OperationSchema>;
+// Import auto-generated schemas (post-processed for strict validation)
+export { ServicesResponseSchema, OperationsResponseSchema, OperationSchema } from './generated-client';
 
 /**
  * Helper validators for trace and span IDs in hex format
- * (prepared for future use in Milestone 3.2)
+ * These are custom additions not present in the OpenAPI spec
  */
+import { z } from 'zod';
+
 export const traceIdHex = z.string().regex(/^[0-9a-f]{32}$/i, 'Invalid trace ID: must be 32-char hex string');
 
 export const spanIdHex = z.string().regex(/^[0-9a-f]{16}$/i, 'Invalid span ID: must be 16-char hex string');
