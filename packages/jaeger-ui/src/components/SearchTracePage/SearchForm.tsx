@@ -329,11 +329,6 @@ export function submitForm(
   } as SearchQuery);
 }
 
-interface IServiceWithOperations {
-  name: string;
-  operations?: string[];
-}
-
 interface ISearchFormImplProps {
   invalid?: boolean;
   submitting?: boolean;
@@ -346,11 +341,6 @@ interface ISearchFormImplProps {
     adjustEndTime: string | null | undefined,
     adjustTimeEnabled: boolean
   ) => void;
-}
-
-interface ISearchFormImplState {
-  formData: Partial<ISearchFormFields>;
-  adjustTimeEnabled: boolean;
 }
 
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
@@ -377,7 +367,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   }));
 
   // Fetch services using React Query
-  const { data: servicesList, isLoading: isLoadingServices, error: servicesError } = useServices();
+  const { data: services = [], isLoading: isLoadingServices, error: servicesError } = useServices();
 
   // Fetch span names for the currently selected service
   const currentService = formData.service;
@@ -387,20 +377,12 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     error: spanNamesError,
   } = useSpanNames(currentService && currentService !== '-' ? currentService : null);
 
-  // Extract unique names to maintain compatibility with existing UI
+  // Extract unique operation names from span data
+  // API returns { name, spanKind }[] where the same name can appear with different spanKinds
+  // We deduplicate to show only unique names in the operations dropdown
   const spanNames = useMemo(
     () => Array.from(new Set((spanNamesData || []).map(op => op.name))).sort(),
     [spanNamesData]
-  );
-
-  // Transform services data to match the expected format
-  const services: IServiceWithOperations[] = useMemo(
-    () =>
-      (servicesList || []).map(serviceName => ({
-        name: serviceName,
-        operations: currentService === serviceName ? spanNames : [],
-      })),
-    [servicesList, currentService, spanNames]
   );
 
   const [adjustTimeEnabled, setAdjustTimeEnabled] = useState<boolean>(() => {
@@ -432,14 +414,12 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 
   const { service: selectedService, lookback: selectedLookback } = formData;
-  const selectedServicePayload = services.find(s => s.name === selectedService);
-  const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
   const noSelectedService = selectedService === '-' || !selectedService;
   const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
   const invalidDuration =
     validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
 
-  if (isLoadingServices && (!services || services.length === 0) && !servicesError) {
+  if (isLoadingServices && services.length === 0 && !servicesError) {
     return <LoadingIndicator />;
   }
 
@@ -462,9 +442,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           loading={isLoadingServices}
           onChange={(value: string) => handleChange({ service: value })}
         >
-          {services.map(service => (
-            <Option key={service.name} value={service.name}>
-              {service.name}
+          {services.map(serviceName => (
+            <Option key={serviceName} value={serviceName}>
+              {serviceName}
             </Option>
           ))}
         </SearchableSelect>
@@ -473,7 +453,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
         label={
           <span>
             {useOtelTerms ? 'Span Name' : 'Operation'}{' '}
-            <span className="SearchForm--labelCount">({opsForSvc ? opsForSvc.length : 0})</span>
+            <span className="SearchForm--labelCount">({spanNames.length})</span>
           </span>
         }
         validateStatus={spanNamesError ? 'error' : undefined}
@@ -487,7 +467,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder={useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
           onChange={(value: string) => handleChange({ operation: value })}
         >
-          {['all'].concat(opsForSvc).map(op => (
+          {['all'].concat(spanNames).map(op => (
             <Option key={op} value={op}>
               {op}
             </Option>
