@@ -210,8 +210,9 @@ const Graph = ({
     setOperation,
     setViewModifier,
     updateGenerationVisibility,
-    // memoGetNodeRenderers, memoGetSetOnEdge, getNodeContentRenderer are stable refs
-    // stored in useRef - they never change, so excluded from deps
+    // memoGetNodeRenderers, memoGetSetOnEdge, and getNodeContentRenderer are memoize-one
+    // functions held in stable refs; they handle their own argument-based caching, and all
+    // arguments passed to them are listed above, so the function refs themselves are excluded.
   ]);
 
   return (
