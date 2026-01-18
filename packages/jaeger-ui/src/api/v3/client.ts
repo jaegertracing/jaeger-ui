@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /**
- * OTLP API v3 Client
+ * Jaeger API v3 Client
  *
  * This client interacts with the Jaeger backend's /api/v3/ endpoints
  * and returns native OTLP data structures.
