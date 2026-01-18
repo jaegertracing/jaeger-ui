@@ -109,7 +109,7 @@ export default function AltViewOptions(props: Props) {
   const currentItem = MENU_ITEMS.find(item => item.viewType === viewType);
   const dropdownText = currentItem ? currentItem.label : 'Alternate Views';
   return (
-    <Dropdown menu={{ items: dropdownItems }}>
+    <Dropdown menu={{ items: dropdownItems }} trigger={['click']}>
       <Button className="AltViewOptions">
         {`${dropdownText} `}
         <IoChevronDown />

@@ -130,14 +130,15 @@ const baseRules = {
 };
 
 const typescriptRules = {
-  '@typescript-eslint/naming-convention': [
-    'error',
-    {
-      selector: 'interface',
-      format: ['PascalCase'],
-      prefix: ['I'],
-    },
-  ],
+  // Disabled: Modern TypeScript style guides don't require I prefix for interfaces
+  // '@typescript-eslint/naming-convention': [
+  //   'error',
+  //   {
+  //     selector: 'interface',
+  //     format: ['PascalCase'],
+  //     prefix: ['I'],
+  //   },
+  // ],
   '@typescript-eslint/no-this-alias': 'off',
   '@typescript-eslint/no-use-before-define': 'warn',
   '@typescript-eslint/no-redeclare': 'warn',
@@ -188,7 +189,7 @@ export default [
       sourceType: 'module',
       parser: typescriptParser,
       parserOptions: {
-        project: ['./packages/*/tsconfig.json'],
+        project: ['./packages/*/tsconfig.json', './scripts/tsconfig.json'],
         tsconfigRootDir: __dirname,
       },
       globals: commonGlobals,

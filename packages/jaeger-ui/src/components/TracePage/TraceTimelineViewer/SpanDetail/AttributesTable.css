@@ -1,0 +1,54 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.KeyValueTable {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
+  margin-bottom: 0.7em;
+  max-height: 450px;
+  overflow: auto;
+}
+
+.KeyValueTable--body {
+  vertical-align: baseline;
+}
+
+.KeyValueTable--row > td {
+  padding: 0.25rem 0.5rem;
+}
+
+.KeyValueTable--row:nth-child(2n) > td {
+  background: var(--surface-secondary);
+}
+
+.KeyValueTable--keyColumn {
+  color: var(--text-secondary);
+  white-space: pre;
+  width: 125px;
+}
+
+.KeyValueTable--valueColumn {
+  position: relative;
+}
+
+.KeyValueTable--copyContainer {
+  float: right;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.KeyValueTable--row:not(:hover) .KeyValueTable--copyContainer .KeyValueTable--copyIcon {
+  visibility: hidden;
+}
+
+.KeyValueTable--row > td {
+  padding: 0.25rem 0.5rem;
+  vertical-align: top;
+}
+
+.KeyValueTable--linkIcon {
+  vertical-align: middle;
+  font-weight: bold;
+}

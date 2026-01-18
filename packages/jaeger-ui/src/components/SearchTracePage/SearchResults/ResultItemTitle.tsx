@@ -3,26 +3,26 @@
 
 import * as React from 'react';
 import { Checkbox } from 'antd';
-import { LocationDescriptor } from 'history';
 import { Link } from 'react-router-dom';
 
+import TraceId from '../../common/TraceId';
 import TraceName from '../../common/TraceName';
 import { fetchedState } from '../../../constants';
 import { formatDuration } from '../../../utils/date';
 
 import { FetchedState, TNil } from '../../../types';
+import { IOtelTrace } from '../../../types/otel';
 import { ApiError } from '../../../types/api-error';
 
 import './ResultItemTitle.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
-import TraceId from '../../common/TraceId';
 
 type Props = {
-  duration?: number;
+  duration?: IOtelTrace['duration'];
   durationPercent?: number;
   error?: ApiError;
   isInDiffCohort: boolean;
-  linkTo: LocationDescriptor | TNil;
+  linkTo: React.ComponentProps<typeof Link>['to'] | TNil;
   state?: FetchedState | TNil;
   targetBlank?: boolean;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;

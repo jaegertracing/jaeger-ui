@@ -5,16 +5,18 @@ import React, { Component } from 'react';
 import './index.css';
 import { Table } from 'antd';
 import { ColumnProps } from 'antd/es/table';
-import { Trace } from '../../../types/trace';
+import { IOtelTrace } from '../../../types/otel';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
 import { ITableSpan } from './types';
 import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
+import { getServiceName } from './tableValues';
 
 type Props = {
-  trace: Trace;
+  trace: IOtelTrace;
   uiFindVertexKeys: Set<string> | TNil;
   uiFind: string | null | undefined;
+  useOtelTerms: boolean;
 };
 
 type State = {
@@ -102,7 +104,7 @@ const columnsArray: {
 ];
 
 /**
- * Trace Tag Overview Component
+ * Trace Statistics Component
  */
 export default class TraceStatistics extends Component<Props, State> {
   constructor(props: Props) {
@@ -115,7 +117,7 @@ export default class TraceStatistics extends Component<Props, State> {
       showPopup: false,
       popupContent: '',
       wholeTable: [],
-      valueNameSelector1: 'Service Name',
+      valueNameSelector1: getServiceName(),
       valueNameSelector2: null,
     };
 
@@ -207,7 +209,7 @@ export default class TraceStatistics extends Component<Props, State> {
     }
     if (typeof uiFindVertexKeys !== 'undefined') {
       uiFindVertexKeys!.forEach(function calc(value) {
-        const uiFindVertexKeysSplit = value.split('');
+        const uiFindVertexKeysSplit = value.split('\u000b');
 
         for (let i = 0; i < allTableSpansChange.length; i++) {
           if (
@@ -342,6 +344,7 @@ export default class TraceStatistics extends Component<Props, State> {
           tableValue={this.state.tableValue}
           wholeTable={this.state.wholeTable}
           handler={this.handler}
+          useOtelTerms={this.props.useOtelTerms}
         />
 
         {this.state.showPopup ? (

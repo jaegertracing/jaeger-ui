@@ -17,33 +17,39 @@ import traceWithThreeShortChildren from './tableValuesTestTrace/traceWithThreeSh
 import traceWithTwoChildrenStartedAtTraceStart from './tableValuesTestTrace/traceWithTwoChildrenStartedAtTraceStart.json';
 import traceWithMultipleSpansWithTheSameValueInDifferentTags from './tableValuesTestTrace/traceWithMultipleSpansWithTheSameValueInDifferentTags.json';
 
-const transformedTrace = transformTraceData(testTraceNormal);
-const transformedTraceSpanAmongEachOthe = transformTraceData(traceSpanAmongEachOther);
-const transformedTraceSpanAmongEachOtheGrouped = transformTraceData(traceSpanAmongEachOtherGrouped);
+const transformedTrace = transformTraceData(testTraceNormal).asOtelTrace();
+const transformedTraceSpanAmongEachOthe = transformTraceData(traceSpanAmongEachOther).asOtelTrace();
+const transformedTraceSpanAmongEachOtheGrouped = transformTraceData(
+  traceSpanAmongEachOtherGrouped
+).asOtelTrace();
 const transformedTraceSpanAmongEachOtheGroupedAndSpans = transformTraceData(
   traceSpanAmongEachOtherGroupedAndSpans
-);
-const transformedTraceSpanLongerAsParent = transformTraceData(traceSpanLongerAsParent);
+).asOtelTrace();
+const transformedTraceSpanLongerAsParent = transformTraceData(traceSpanLongerAsParent).asOtelTrace();
 const transformedTraceWithOverlappingChildrenLongerThanParent = transformTraceData(
   traceWithOverlappingChildrenLongerThanParent
-);
-const transformedTraceWithTwoNonOverlappingChildren = transformTraceData(traceWithTwoNonOverlappingChildren);
-const transformedTraceWithOverlappingChildren = transformTraceData(traceWithOverlappingChildren);
+).asOtelTrace();
+const transformedTraceWithTwoNonOverlappingChildren = transformTraceData(
+  traceWithTwoNonOverlappingChildren
+).asOtelTrace();
+const transformedTraceWithOverlappingChildren = transformTraceData(
+  traceWithOverlappingChildren
+).asOtelTrace();
 const transformedtraceWithSingleChildLongerThanParentAndStartsAfterParent = transformTraceData(
   traceWithSingleChildLongerThanParentAndStartsAfterParent
-);
-const transformedTraceWithThreeShortChildren = transformTraceData(traceWithThreeShortChildren);
+).asOtelTrace();
+const transformedTraceWithThreeShortChildren = transformTraceData(traceWithThreeShortChildren).asOtelTrace();
 const transformedTraceWithTwoChildrenStartedAtTraceStart = transformTraceData(
   traceWithTwoChildrenStartedAtTraceStart
-);
+).asOtelTrace();
 
 const transformedTraceWithMultipleSpansWithTheSameValueInDifferentTags = transformTraceData(
   traceWithMultipleSpansWithTheSameValueInDifferentTags
-);
+).asOtelTrace();
 
 describe('tableValues', () => {
   it("getColumnValuesSecondDropdown doesn't return duplicated data when input contains details", () => {
-    let resultArray = getColumnValues('Service Name', transformedTrace);
+    let resultArray = getColumnValues('Service Name', transformedTrace, false);
 
     resultArray = getColumnValuesSecondDropdown(
       resultArray,
@@ -65,7 +71,7 @@ describe('tableValues', () => {
   });
 
   it('get values only first nameSelector is selected (Service Name)', () => {
-    const resultArray = getColumnValues('Service Name', transformedTrace);
+    const resultArray = getColumnValues('Service Name', transformedTrace, false);
 
     expect(resultArray[0].count).toBe(2);
     expect(resultArray[0].total).toBe(7.4);
@@ -91,7 +97,7 @@ describe('tableValues', () => {
   });
 
   it('get values only first dropdown is selected (Operation Name', () => {
-    const resultArray = getColumnValues('Operation Name', transformedTrace);
+    const resultArray = getColumnValues('Operation Name', transformedTrace, false);
 
     expect(resultArray[0].count).toBe(1);
     expect(resultArray[0].total).toBe(4.9);
@@ -128,7 +134,7 @@ describe('tableValues', () => {
   });
 
   it('get values only first dropdown is selected (Tag)', () => {
-    const resultArray = getColumnValues('database', transformedTrace);
+    const resultArray = getColumnValues('database', transformedTrace, false);
 
     expect(resultArray[0].count).toBe(2);
     expect(resultArray[0].total).toBe(0.07);
@@ -154,7 +160,7 @@ describe('tableValues', () => {
   });
 
   it('get values two dropdowns are selected (Service Name, Operation Name', () => {
-    let resultArray = getColumnValues('Service Name', transformedTrace);
+    let resultArray = getColumnValues('Service Name', transformedTrace, false);
 
     resultArray = getColumnValuesSecondDropdown(
       resultArray,
@@ -231,7 +237,7 @@ describe('tableValues', () => {
   });
 
   it('get values two dropdowns are selected (Operation Name, Service Name', () => {
-    let resultArray = getColumnValues('Operation Name', transformedTrace);
+    let resultArray = getColumnValues('Operation Name', transformedTrace, false);
 
     resultArray = getColumnValuesSecondDropdown(
       resultArray,
@@ -319,9 +325,15 @@ describe('tableValues', () => {
   });
 
   it('get values two dropdowns are selected (Tag, Service Name)', () => {
-    let resultArray = getColumnValues('database', transformedTrace);
+    let resultArray = getColumnValues('database', transformedTrace, false);
 
-    resultArray = getColumnValuesSecondDropdown(resultArray, 'database', 'Service Name', transformedTrace);
+    resultArray = getColumnValuesSecondDropdown(
+      resultArray,
+      'database',
+      'Service Name',
+      transformedTrace,
+      false
+    );
 
     expect(resultArray[0].count).toBe(2);
     expect(resultArray[0].total).toBe(0.07);
@@ -358,9 +370,15 @@ describe('tableValues', () => {
   });
 
   it('get values two dropdowns are selected (Service Name, Tag)', () => {
-    let resultArray = getColumnValues('Service Name', transformedTrace);
+    let resultArray = getColumnValues('Service Name', transformedTrace, false);
 
-    resultArray = getColumnValuesSecondDropdown(resultArray, 'Service Name', 'database', transformedTrace);
+    resultArray = getColumnValuesSecondDropdown(
+      resultArray,
+      'Service Name',
+      'database',
+      transformedTrace,
+      false
+    );
 
     expect(resultArray[0].count).toBe(2);
     expect(resultArray[0].total).toBe(7.4);
@@ -419,9 +437,9 @@ describe('tableValues', () => {
   });
 
   it('get values two dropdowns are selected (Tag, Tag)', () => {
-    let resultArray = getColumnValues('database', transformedTrace);
+    let resultArray = getColumnValues('database', transformedTrace, false);
 
-    resultArray = getColumnValuesSecondDropdown(resultArray, 'database', 'sql', transformedTrace);
+    resultArray = getColumnValuesSecondDropdown(resultArray, 'database', 'sql', transformedTrace, false);
 
     expect(resultArray[0].count).toBe(2);
     expect(resultArray[0].total).toBe(0.07);
@@ -469,7 +487,7 @@ describe('tableValues', () => {
   });
 
   it('returns allTableValues when second dropdown is not a tag (falls through)', () => {
-    const first = getColumnValues('Operation Name', transformedTrace);
+    const first = getColumnValues('Operation Name', transformedTrace, false);
     const afterSecond = getColumnValuesSecondDropdown(
       first,
       'Operation Name',
@@ -484,16 +502,22 @@ describe('tableValues', () => {
   });
 
   it('returns first-dropdown values again when second dropdown is "Reset"', () => {
-    const first = getColumnValues('Service Name', transformedTrace);
-    const resetResult = getColumnValuesSecondDropdown(first, 'Service Name', 'Reset', transformedTrace);
+    const first = getColumnValues('Service Name', transformedTrace, false);
+    const resetResult = getColumnValuesSecondDropdown(
+      first,
+      'Service Name',
+      'Reset',
+      transformedTrace,
+      false
+    );
 
-    expect(resetResult).toEqual(getColumnValues('Service Name', transformedTrace));
+    expect(resetResult).toEqual(getColumnValues('Service Name', transformedTrace, false));
   });
 });
 
 describe('check self time', () => {
   it('spans among each other', () => {
-    let resultArray = getColumnValues('Service Name', transformedTraceSpanAmongEachOthe);
+    let resultArray = getColumnValues('Service Name', transformedTraceSpanAmongEachOthe, false);
 
     resultArray = getColumnValuesSecondDropdown(
       resultArray,
@@ -506,7 +530,7 @@ describe('check self time', () => {
   });
 
   it('spans among each other grouped', () => {
-    let resultArray = getColumnValues('Service Name', transformedTraceSpanAmongEachOtheGrouped);
+    let resultArray = getColumnValues('Service Name', transformedTraceSpanAmongEachOtheGrouped, false);
     resultArray = getColumnValuesSecondDropdown(
       resultArray,
       'Service Name',
@@ -517,7 +541,11 @@ describe('check self time', () => {
   });
 
   it(' spans among each other and two other children', () => {
-    let resultArray = getColumnValues('Service Name', transformedTraceSpanAmongEachOtheGroupedAndSpans);
+    let resultArray = getColumnValues(
+      'Service Name',
+      transformedTraceSpanAmongEachOtheGroupedAndSpans,
+      false
+    );
     resultArray = getColumnValuesSecondDropdown(
       resultArray,
       'Service Name',
@@ -528,7 +556,7 @@ describe('check self time', () => {
   });
 
   it(' span is longer as parent', () => {
-    let resultArray = getColumnValues('Service Name', transformedTraceSpanLongerAsParent);
+    let resultArray = getColumnValues('Service Name', transformedTraceSpanLongerAsParent, false);
     resultArray = getColumnValuesSecondDropdown(
       resultArray,
       'Service Name',
@@ -548,12 +576,16 @@ describe('check self time', () => {
   });
 
   it('span with two children that do not overlap and one is longer than its parent', () => {
-    const [serviceOne] = getColumnValues('Service Name', transformedTraceWithTwoNonOverlappingChildren);
+    const [serviceOne] = getColumnValues(
+      'Service Name',
+      transformedTraceWithTwoNonOverlappingChildren,
+      false
+    );
     expect(serviceOne.selfTotal).toBe(0.03);
   });
 
   it('span with two overlapping children where one is longer than its parent', () => {
-    const [serviceOne] = getColumnValues('Service Name', transformedTraceWithOverlappingChildren);
+    const [serviceOne] = getColumnValues('Service Name', transformedTraceWithOverlappingChildren, false);
     expect(serviceOne.selfTotal).toBe(0);
   });
 
@@ -566,12 +598,16 @@ describe('check self time', () => {
   });
 
   it('span with three children shorter than their parent, two of which overlap', () => {
-    const [serviceOne] = getColumnValues('Service Name', transformedTraceWithThreeShortChildren);
+    const [serviceOne] = getColumnValues('Service Name', transformedTraceWithThreeShortChildren, false);
     expect(serviceOne.selfTotal).toBe(0.01);
   });
 
   it('span with two children started at trace start time', () => {
-    const [serviceOne] = getColumnValues('Service Name', transformedTraceWithTwoChildrenStartedAtTraceStart);
+    const [serviceOne] = getColumnValues(
+      'Service Name',
+      transformedTraceWithTwoChildrenStartedAtTraceStart,
+      false
+    );
     expect(serviceOne.selfTotal).toBe(0);
   });
 

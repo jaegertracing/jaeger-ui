@@ -19,19 +19,20 @@ import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
 import {
   createViewedBoundsFunc,
+  ViewedBoundsFunctionType,
   findServerChildSpan,
   isErrorSpan,
   isKindClient,
   isKindProducer,
   spanContainsErredSpan,
-  ViewedBoundsFunctionType,
 } from './utils';
 import { Accessors } from '../ScrollManager';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
-import { Log, Span, Trace, KeyValuePair, criticalPathSection } from '../../../types/trace';
+import { CriticalPathSection } from '../../../types/critical_path';
+import { IOtelSpan, IOtelTrace, IAttribute, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 
 import './VirtualizedTraceView.css';
@@ -41,7 +42,7 @@ import withRouteProps from '../../../utils/withRouteProps';
 
 type RowState = {
   isDetail: boolean;
-  span: Span;
+  span: IOtelSpan;
   spanIndex: number;
 };
 
@@ -50,14 +51,15 @@ type TVirtualizedTraceViewOwnProps = {
   findMatchesIDs: Set<string> | TNil;
   scrollToFirstVisibleSpan: () => void;
   registerAccessors: (accesors: Accessors) => void;
-  trace: Trace;
-  criticalPath: criticalPathSection[];
+  trace: IOtelTrace;
+  criticalPath: CriticalPathSection[];
+  useOtelTerms: boolean;
 };
 
 type TDispatchProps = {
   childrenToggle: (spanID: string) => void;
   clearShouldScrollToFirstUiFindMatch: () => void;
-  detailLogItemToggle: (spanID: string, log: Log) => void;
+  detailLogItemToggle: (spanID: string, log: IEvent) => void;
   detailLogsToggle: (spanID: string) => void;
   detailWarningsToggle: (spanID: string) => void;
   detailReferencesToggle: (spanID: string) => void;
@@ -65,8 +67,8 @@ type TDispatchProps = {
   detailTagsToggle: (spanID: string) => void;
   detailToggle: (spanID: string) => void;
   setSpanNameColumnWidth: (width: number) => void;
-  setTrace: (trace: Trace | TNil, uiFind: string | TNil) => void;
-  focusUiFindMatches: (trace: Trace, uiFind: string | TNil, allowHide?: boolean) => void;
+  setTrace: (trace: IOtelTrace | TNil, uiFind: string | TNil) => void;
+  focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil, allowHide?: boolean) => void;
 };
 
 type RouteProps = {
@@ -90,7 +92,7 @@ export const DEFAULT_HEIGHTS = {
 const NUM_TICKS = 5;
 
 function generateRowStates(
-  spans: Span[] | TNil,
+  spans: ReadonlyArray<IOtelSpan> | TNil,
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>
 ): RowState[] {
@@ -133,11 +135,14 @@ function generateRowStates(
 }
 
 function generateRowStatesFromTrace(
-  trace: Trace | TNil,
+  trace: IOtelTrace | TNil,
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>
 ): RowState[] {
-  return trace ? generateRowStates(trace.spans, childrenHiddenIDs, detailStates) : [];
+  if (!trace) {
+    return [];
+  }
+  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -148,37 +153,42 @@ function getCssClasses(currentViewRange: [number, number]) {
   });
 }
 
-const memoizedSpanByID = memoizeOne((spans: Span[]) => new Map(spans.map(x => [x.spanID, x])));
-
 function mergeChildrenCriticalPath(
-  trace: Trace,
+  trace: IOtelTrace,
   spanID: string,
-  criticalPath: criticalPathSection[]
-): criticalPathSection[] {
+  criticalPath: CriticalPathSection[]
+): CriticalPathSection[] {
   if (!criticalPath) {
     return [];
   }
   // Define an array to store the IDs of the span and its descendants (if the span is collapsed)
   const allRequiredSpanIds = new Set<string>([spanID]);
 
-  // If the span is collapsed, recursively find all of its descendants.
-  const findAllDescendants = (currentChildSpanIds: Set<string>) => {
-    currentChildSpanIds.forEach(eachId => {
-      const currentChildSpan = memoizedSpanByID(trace.spans).get(eachId)!;
-      if (currentChildSpan.hasChildren) {
-        currentChildSpan.childSpanIds.forEach(x => allRequiredSpanIds.add(x));
-        findAllDescendants(new Set<string>(currentChildSpan.childSpanIds));
-      }
-    });
-  };
-  findAllDescendants(allRequiredSpanIds);
+  // Use pre-built spanMap
+  const spanMap = trace.spanMap;
 
-  const criticalPathSections: criticalPathSection[] = [];
+  // If the span is collapsed, recursively find all of its descendants.
+  const findAllDescendants = (span: IOtelSpan) => {
+    if (span.hasChildren && span.childSpans.length > 0) {
+      span.childSpans.forEach(child => {
+        allRequiredSpanIds.add(child.spanID);
+        findAllDescendants(child);
+      });
+    }
+  };
+
+  // Start from the initially selected span
+  const startingSpan = spanMap.get(spanID);
+  if (startingSpan) {
+    findAllDescendants(startingSpan);
+  }
+
+  const criticalPathSections: CriticalPathSection[] = [];
   criticalPath.forEach(each => {
-    if (allRequiredSpanIds.has(each.spanId)) {
-      if (criticalPathSections.length !== 0 && each.section_end === criticalPathSections[0].section_start) {
+    if (allRequiredSpanIds.has(each.spanID)) {
+      if (criticalPathSections.length !== 0 && each.sectionEnd === criticalPathSections[0].sectionStart) {
         // Merge Critical Paths if they are consecutive
-        criticalPathSections[0].section_start = each.section_start;
+        criticalPathSections[0].sectionStart = each.sectionStart;
       } else {
         criticalPathSections.unshift({ ...each });
       }
@@ -191,8 +201,8 @@ function mergeChildrenCriticalPath(
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
-const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: criticalPathSection[]) =>
-  _groupBy(criticalPath, x => x.spanId)
+const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: CriticalPathSection[]) =>
+  _groupBy(criticalPath, x => x.spanID)
 );
 
 // export from tests
@@ -378,16 +388,29 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     if (!isDetail) {
       return DEFAULT_HEIGHTS.bar;
     }
-    if (Array.isArray(span.logs) && span.logs.length) {
+    if (Array.isArray(span.events) && span.events.length) {
       return DEFAULT_HEIGHTS.detailWithLogs;
     }
     return DEFAULT_HEIGHTS.detail;
   };
 
-  linksGetter = (span: Span, items: KeyValuePair[], itemIndex: number) => {
+  linksGetter = (span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number) => {
     const { trace } = this.props;
+    if (!trace) return [];
     return getLinks(span, items, itemIndex, trace);
   };
+
+  // Adapter for OTEL components that need links from attributes
+  linksGetterFromAttributes = (span: IOtelSpan) => (attributes: ReadonlyArray<IAttribute>, index: number) => {
+    return this.linksGetter(span, attributes, index);
+  };
+
+  // Adapter for OTEL event toggle to legacy log toggle
+  eventItemToggleAdapter =
+    (detailLogItemToggle: (spanID: string, log: IEvent) => void) => (spanID: string, event: IEvent) => {
+      // Pass the IEvent directly.
+      detailLogItemToggle(spanID, event);
+    };
 
   renderRow = (key: string, style: React.CSSProperties, index: number, attrs: object) => {
     const { isDetail, span, spanIndex } = this.getRowStates()[index];
@@ -398,9 +421,9 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   getCriticalPathSections(
     isCollapsed: boolean,
-    trace: Trace,
+    trace: IOtelTrace,
     spanID: string,
-    criticalPath: criticalPathSection[]
+    criticalPath: CriticalPathSection[]
   ) {
     if (isCollapsed) {
       return mergeChildrenCriticalPath(trace, spanID, criticalPath);
@@ -410,9 +433,15 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     return spanID in pathBySpanID ? pathBySpanID[spanID] : [];
   }
 
-  renderSpanBarRow(span: Span, spanIndex: number, key: string, style: React.CSSProperties, attrs: object) {
+  renderSpanBarRow(
+    span: IOtelSpan,
+    spanIndex: number,
+    key: string,
+    style: React.CSSProperties,
+    attrs: object
+  ) {
     const { spanID } = span;
-    const { serviceName } = span.process;
+    const { serviceName } = span.resource;
     const {
       childrenHiddenIDs,
       childrenToggle,
@@ -422,40 +451,45 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       spanNameColumnWidth,
       trace,
       criticalPath,
+      useOtelTerms,
     } = this.props;
     // to avert flow error
     if (!trace) {
       return null;
     }
+
+    const { spans } = trace;
+
     const color = colorGenerator.getColorByKey(serviceName);
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
-    const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
+    const hasOwnError = isErrorSpan(span);
+    const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
     const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
-      const rpcSpan = findServerChildSpan(trace.spans.slice(spanIndex));
+      const rpcSpan = findServerChildSpan(spans.slice(spanIndex));
       if (rpcSpan) {
-        const rpcViewBounds = this.getViewedBounds()(rpcSpan.startTime, rpcSpan.startTime + rpcSpan.duration);
+        const rpcViewBounds = this.getViewedBounds()(rpcSpan.startTime, rpcSpan.endTime);
         rpc = {
-          color: colorGenerator.getColorByKey(rpcSpan.process.serviceName),
-          operationName: rpcSpan.operationName,
-          serviceName: rpcSpan.process.serviceName,
+          color: colorGenerator.getColorByKey(rpcSpan.resource.serviceName),
+          operationName: rpcSpan.name,
+          serviceName: rpcSpan.resource.serviceName,
           viewEnd: rpcViewBounds.end,
           viewStart: rpcViewBounds.start,
         };
       }
     }
-    const peerServiceKV = span.tags.find(kv => kv.key === PEER_SERVICE);
+    const peerServiceAttr = span.attributes.find(attr => attr.key === PEER_SERVICE);
     // Leaf, kind == client and has peer.service tag, is likely a client span that does a request
     // to an uninstrumented/external service
     let noInstrumentedServer = null;
-    if (!span.hasChildren && peerServiceKV && (isKindClient(span) || isKindProducer(span))) {
+    if (!span.hasChildren && peerServiceAttr && (isKindClient(span) || isKindProducer(span))) {
       noInstrumentedServer = {
-        serviceName: peerServiceKV.value,
-        color: colorGenerator.getColorByKey(peerServiceKV.value),
+        serviceName: String(peerServiceAttr.value),
+        color: colorGenerator.getColorByKey(String(peerServiceAttr.value)),
       };
     }
 
@@ -474,20 +508,22 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           onChildrenToggled={childrenToggle}
           rpc={rpc}
           noInstrumentedServer={noInstrumentedServer}
-          showErrorIcon={showErrorIcon}
+          hasOwnError={hasOwnError}
+          hasChildError={hasChildError}
           getViewedBounds={this.getViewedBounds()}
           traceStartTime={trace.startTime}
           span={span}
           focusSpan={this.focusSpan}
           traceDuration={trace.duration}
+          useOtelTerms={useOtelTerms}
         />
       </div>
     );
   }
 
-  renderSpanDetailRow(span: Span, key: string, style: React.CSSProperties, attrs: object) {
+  renderSpanDetailRow(span: IOtelSpan, key: string, style: React.CSSProperties, attrs: object) {
     const { spanID } = span;
-    const { serviceName } = span.process;
+    const { serviceName } = span.resource;
     const {
       detailLogItemToggle,
       detailLogsToggle,
@@ -500,11 +536,13 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       spanNameColumnWidth,
       trace,
       currentViewRangeTime,
+      useOtelTerms,
     } = this.props;
     const detailState = detailStates.get(spanID);
     if (!trace || !detailState) {
       return null;
     }
+
     const color = colorGenerator.getColorByKey(serviceName);
     return (
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
@@ -513,18 +551,19 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           columnDivision={spanNameColumnWidth}
           onDetailToggled={detailToggle}
           detailState={detailState}
-          linksGetter={this.linksGetter}
-          logItemToggle={detailLogItemToggle}
-          logsToggle={detailLogsToggle}
-          processToggle={detailProcessToggle}
-          referencesToggle={detailReferencesToggle}
+          linksGetter={this.linksGetterFromAttributes(span)}
+          eventItemToggle={this.eventItemToggleAdapter(detailLogItemToggle)}
+          eventsToggle={detailLogsToggle}
+          resourceToggle={detailProcessToggle}
+          linksToggle={detailReferencesToggle}
           warningsToggle={detailWarningsToggle}
           span={span}
-          tagsToggle={detailTagsToggle}
+          attributesToggle={detailTagsToggle}
           traceStartTime={trace.startTime}
           focusSpan={this.focusSpan}
           currentViewRangeTime={currentViewRangeTime}
           traceDuration={trace.duration}
+          useOtelTerms={useOtelTerms}
         />
       </div>
     );

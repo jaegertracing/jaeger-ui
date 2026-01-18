@@ -4,6 +4,7 @@
 import React from 'react';
 
 import { formatDuration } from '../../../../utils/date';
+import { Microseconds } from '../../../../types/units';
 
 import './TickLabels.css';
 
@@ -21,7 +22,7 @@ export default function TickLabels(props: TickLabelsProps) {
     const style = portion === 1 ? { right: '0%' } : { left: `${portion * 100}%` };
     ticks.push(
       <div key={portion} className="TickLabels--label" style={style} data-testid="tick">
-        {formatDuration(duration * portion)}
+        {formatDuration((duration * portion) as Microseconds)}
       </div>
     );
   }

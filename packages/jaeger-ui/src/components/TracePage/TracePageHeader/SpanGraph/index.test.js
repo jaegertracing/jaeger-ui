@@ -17,7 +17,7 @@ jest.mock('./TickLabels', () => jest.fn(() => <div data-testid="TickLabels" />))
 jest.mock('./ViewingLayer', () => jest.fn(() => <div data-testid="ViewingLayer" />));
 
 describe('<SpanGraph>', () => {
-  const trace = transformTraceData(traceGenerator.trace({}));
+  const trace = transformTraceData(traceGenerator.trace({})).asOtelTrace();
   const defaultProps = {
     trace,
     updateViewRangeTime: jest.fn(),
@@ -66,7 +66,7 @@ describe('<SpanGraph>', () => {
     const expectedItems = trace.spans.map(span => ({
       valueOffset: span.relativeStartTime,
       valueWidth: span.duration,
-      serviceName: span.process.serviceName,
+      serviceName: span.resource.serviceName,
     }));
 
     const [canvasProps] = CanvasSpanGraph.mock.calls[0];

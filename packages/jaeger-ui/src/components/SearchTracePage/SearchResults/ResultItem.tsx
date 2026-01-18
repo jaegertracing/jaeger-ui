@@ -18,7 +18,7 @@ import ResultItemTitle from './ResultItemTitle';
 import colorGenerator from '../../../utils/color-generator';
 import { formatRelativeDate } from '../../../utils/date';
 
-import { KeyValuePair, Trace } from '../../../types/trace';
+import { IOtelTrace, StatusCode } from '../../../types/otel';
 
 import './ResultItem.css';
 
@@ -29,12 +29,10 @@ type Props = {
   isInDiffCohort: boolean;
   linkTo: LocationDescriptor;
   toggleComparison: (traceID: string) => void;
-  trace: Trace;
+  trace: IOtelTrace;
   disableComparision: boolean;
 };
 
-const isErrorTag = ({ key, value }: KeyValuePair<boolean | string>) =>
-  key === 'error' && (value === true || value === 'true');
 const trackTraceConversions = () => trackConversions(EAltViewActions.Traces);
 
 export default function ResultItem({
@@ -45,7 +43,7 @@ export default function ResultItem({
   trace,
   disableComparision,
 }: Props) {
-  const { duration, services = [], startTime, traceName, traceID, spans = [], orphanSpanCount = 0 } = trace;
+  const { duration, services = [], startTime, traceName, traceID, spans, orphanSpanCount } = trace;
 
   // Initialize state values
   const [erroredServices, setErroredServices] = React.useState<Set<string>>(new Set());
@@ -61,8 +59,8 @@ export default function ResultItem({
 
     const errored = new Set<string>();
     const erredCount = spans.filter(sp => {
-      const hasError = sp.tags.some(isErrorTag);
-      if (hasError) errored.add(sp.process.serviceName);
+      const hasError = sp.status.code === StatusCode.ERROR;
+      if (hasError) errored.add(sp.resource.serviceName);
       return hasError;
     }).length;
 

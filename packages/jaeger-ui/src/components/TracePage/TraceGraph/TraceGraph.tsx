@@ -14,7 +14,7 @@ import {
   MODE_SERVICE,
   MODE_TIME,
   MODE_SELFTIME,
-  HELP_TABLE,
+  getHelpTable,
 } from './OpNode';
 import { TEv, TSumSpan } from './types';
 import { TDenseSpanMembers } from '../../../model/trace-dag/types';
@@ -30,6 +30,7 @@ type Props = {
   uiFind: string | TNil;
   uiFindVertexKeys: Set<string> | TNil;
   traceGraphConfig?: TraceGraphConfig;
+  useOtelTerms: boolean;
 };
 type State = {
   showHelp: boolean;
@@ -39,12 +40,12 @@ type State = {
 const { classNameIsSmall, scaleOpacity, scaleStrokeOpacity } = Digraph.propsFactories;
 
 export function setOnEdgePath(e: any) {
-  return e.followsFrom ? { strokeDasharray: 4 } : {};
+  return e.isNonBlocking ? { strokeDasharray: 4 } : {};
 }
 
-const HELP_CONTENT = (
+export const getHelpContent = (useOtelTerms: boolean) => (
   <div className="TraceGraph--help-content" data-testid="help-content">
-    {HELP_TABLE}
+    {getHelpTable(useOtelTerms)}
     <div>
       <table>
         <tbody>
@@ -92,7 +93,7 @@ const HELP_CONTENT = (
           style={{ stroke: '#000', strokeWidth: 2, strokeDasharray: '4' }}
         />
         <text alignmentBaseline="middle" x="100" y="30">
-          FollowsFrom
+          Non-Blocking
         </text>
       </svg>
     </div>
@@ -142,7 +143,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
   };
 
   render() {
-    const { ev, headerHeight, uiFind, uiFindVertexKeys } = this.props;
+    const { ev, headerHeight, uiFind, uiFindVertexKeys, useOtelTerms } = this.props;
     const { showHelp, mode } = this.state;
     if (!ev) {
       return <h1 className="u-mt-vast u-tx-muted ub-tx-center">No trace found</h1>;
@@ -184,7 +185,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
               key: 'nodes',
               layerType: 'html',
               measurable: true,
-              renderNode: cacheAs(`trace-graph/nodes/render/${mode}`, getNodeRenderer(mode)),
+              renderNode: cacheAs(`trace-graph/nodes/render/${mode}`, getNodeRenderer(mode, useOtelTerms)),
             },
           ]}
           setOnGraph={classNameIsSmall}
@@ -254,7 +255,7 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
                 </a>
               }
             >
-              {HELP_CONTENT}
+              {getHelpContent(useOtelTerms)}
             </Card>
           )}
         </div>

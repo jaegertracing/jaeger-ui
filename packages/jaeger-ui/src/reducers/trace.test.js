@@ -15,6 +15,12 @@ const ACTION_POSTFIX_REJECTED = '_REJECTED';
 const trace = traceGenerator.trace({ numberOfSpans: 1 });
 const { traceID: id } = trace;
 
+const ignoreAsOtelTrace = traceData => {
+  if (!traceData) return traceData;
+  const { asOtelTrace, ...rest } = traceData;
+  return rest;
+};
+
 describe('fetch a trace', () => {
   it('sets loading true on a fetch', () => {
     const state = traceReducer(undefined, {
@@ -31,7 +37,12 @@ describe('fetch a trace', () => {
       payload: { data: [trace] },
       meta: { id },
     });
-    expect(state.traces).toEqual({ [id]: { id, data: transformTraceData(trace), state: fetchedState.DONE } });
+    const expectedData = ignoreAsOtelTrace(transformTraceData(trace));
+    const actualData = ignoreAsOtelTrace(state.traces[id].data);
+
+    expect(state.traces[id].state).toBe(fetchedState.DONE);
+    expect(state.traces[id].id).toBe(id);
+    expect(actualData).toEqual(expectedData);
   });
 
   it('handles a failed FETCH_TRACE', () => {
@@ -77,12 +88,18 @@ describe('fetch multiple traces', () => {
           payload: { data: [trace, traceB] },
         }
       );
-      const outcome = {
-        ...traces,
-        [id]: { id, data: transformTraceData(trace), state: fetchedState.DONE },
-        [idB]: { id: idB, data: transformTraceData(traceB), state: fetchedState.DONE },
-      };
-      expect(state.traces).toEqual(outcome);
+
+      const actualTraceA = state.traces[id];
+      const actualTraceB = state.traces[idB];
+
+      expect(actualTraceA.state).toBe(fetchedState.DONE);
+      expect(ignoreAsOtelTrace(actualTraceA.data)).toEqual(ignoreAsOtelTrace(transformTraceData(trace)));
+
+      expect(actualTraceB.state).toBe(fetchedState.DONE);
+      expect(ignoreAsOtelTrace(actualTraceB.data)).toEqual(ignoreAsOtelTrace(transformTraceData(traceB)));
+
+      // Check preservation of existing state
+      expect(state.traces.preExisting).toBe(traces.preExisting);
     });
 
     it('saves all error data', () => {
@@ -181,22 +198,22 @@ describe('search traces', () => {
         meta: { query },
       }
     );
-    const outcome = {
-      traces: {
-        [id]: {
-          id,
-          data: transformTraceData(trace),
-          state: fetchedState.DONE,
-        },
-      },
-      rawTraces: [trace],
-      search: {
-        query,
-        state: fetchedState.DONE,
-        results: [id],
-      },
-    };
-    expect(state).toEqual(outcome);
+
+    // Check search state
+    expect(state.search).toEqual({
+      query,
+      state: fetchedState.DONE,
+      results: [id],
+    });
+
+    // Check trace state
+    const actualTrace = state.traces[id];
+    expect(actualTrace.state).toBe(fetchedState.DONE);
+    expect(actualTrace.id).toBe(id);
+    expect(ignoreAsOtelTrace(actualTrace.data)).toEqual(ignoreAsOtelTrace(transformTraceData(trace)));
+
+    // Check rawTraces
+    expect(state.rawTraces).toEqual([trace]);
   });
 
   it('handles a failed request', () => {
@@ -253,21 +270,19 @@ describe('load json traces', () => {
       type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_FULFILLED}`,
       payload: { data: [trace] },
     });
-    const outcome = {
-      traces: {
-        [id]: {
-          id,
-          data: transformTraceData(trace),
-          state: fetchedState.DONE,
-        },
-      },
-      search: {
-        query: null,
-        state: fetchedState.DONE,
-        results: [id],
-      },
-    };
-    expect(state).toEqual(outcome);
+
+    // Check search state
+    expect(state.search).toEqual({
+      query: null,
+      state: fetchedState.DONE,
+      results: [id],
+    });
+
+    // Check trace state
+    const actualTrace = state.traces[id];
+    expect(actualTrace.state).toBe(fetchedState.DONE);
+    expect(actualTrace.id).toBe(id);
+    expect(ignoreAsOtelTrace(actualTrace.data)).toEqual(ignoreAsOtelTrace(transformTraceData(trace)));
   });
 
   it('handles a failed load json request', () => {
@@ -275,6 +290,7 @@ describe('load json traces', () => {
     const state = traceReducer(undefined, {
       type: `${fileReaderActions.loadJsonTraces}${ACTION_POSTFIX_REJECTED}`,
       payload: error,
+      meta: { id },
     });
     const outcome = {
       error,

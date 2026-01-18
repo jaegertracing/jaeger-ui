@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { SpanReference } from '../../../types/trace';
+import { ILink } from '../../../types/otel';
 import { getUrl } from '.';
 
 type ReferenceLinkProps = {
-  reference: SpanReference;
+  link: ILink;
   children: React.ReactNode;
   className?: string;
   focusSpan: (spanID: string) => void;
@@ -14,18 +14,23 @@ type ReferenceLinkProps = {
 };
 
 export default function ReferenceLink(props: ReferenceLinkProps) {
-  const { reference, children, className, focusSpan, ...otherProps } = props;
+  const { link, children, className, focusSpan, ...otherProps } = props;
   delete otherProps.onClick;
-  if (reference.span) {
+
+  // link within the trace should have link.span defined
+  const isSameTrace = link.span !== undefined;
+
+  if (isSameTrace) {
     return (
-      <a role="button" onClick={() => focusSpan(reference.spanID)} className={className} {...otherProps}>
+      <a role="button" onClick={() => focusSpan(link.spanID)} className={className} {...otherProps}>
         {children}
       </a>
     );
   }
+
   return (
     <a
-      href={getUrl(reference.traceID, reference.spanID)}
+      href={getUrl(link.traceID, link.spanID)}
       target="_blank"
       rel="noopener noreferrer"
       className={className}

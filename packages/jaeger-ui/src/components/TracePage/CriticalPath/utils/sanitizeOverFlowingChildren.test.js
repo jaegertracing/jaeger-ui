@@ -7,38 +7,101 @@ import test6 from '../testCases/test6';
 import test7 from '../testCases/test7';
 import test8 from '../testCases/test8';
 import test9 from '../testCases/test9';
-import getChildOfSpans from './getChildOfSpans';
 import sanitizeOverFlowingChildren from './sanitizeOverFlowingChildren';
+import { createCPSpan, createCPSpanMap } from './cpspan';
 
-// Function to make expected data for test6 and test7
+// Function to make expected data for test6, test7, and test8
 function getExpectedSanitizedData(spans, test) {
-  const testSanitizedData = {
-    test6: [spans[0], { ...spans[1], duration: 15 }, { ...spans[2], duration: 10, startTime: 15 }],
-    test7: [spans[0], { ...spans[1], duration: 15 }, { ...spans[2], duration: 10 }],
-    test8: [spans[0], { ...spans[1], startTime: 10, duration: 20 }],
+  // Define what the expected modifications are for each test
+  const modifications = {
+    test6: {
+      'span-B': { duration: 15 },
+      'span-C': { duration: 10, startTime: 15 },
+    },
+    test7: {
+      'span-B': { duration: 15 },
+      'span-C': { duration: 10 },
+    },
+    test8: {
+      'span-B': { startTime: 10, duration: 20 },
+    },
   };
-  const spanMap = testSanitizedData[test].reduce((map, span) => {
-    map.set(span.spanID, span);
-    return map;
-  }, new Map());
+
+  const mods = modifications[test];
+  const spanMap = new Map();
+
+  spans.forEach(span => {
+    const cpSpan = createCPSpan(span);
+    // Explicitly populate childSpanIDs as the recursive builder does
+    cpSpan.childSpanIDs = span.childSpans.map(s => s.spanID);
+
+    // Apply modifications if they exist for this span
+    if (mods && mods[span.spanID]) {
+      Object.assign(cpSpan, mods[span.spanID]);
+    }
+
+    spanMap.set(span.spanID, cpSpan);
+  });
+
   return spanMap;
 }
 
 describe.each([
-  [test3, new Map().set(test3.trace.spans[0].spanID, { ...test3.trace.spans[0], childSpanIds: [] })],
-  [test4, new Map().set(test4.trace.spans[0].spanID, { ...test4.trace.spans[0], childSpanIds: [] })],
-  [test6, getExpectedSanitizedData(test6.trace.spans, 'test6')],
-  [test7, getExpectedSanitizedData(test7.trace.spans, 'test7')],
-  [test8, getExpectedSanitizedData(test8.trace.spans, 'test8')],
-  [test9, new Map().set(test9.trace.spans[0].spanID, { ...test9.trace.spans[0], childSpanIds: [] })],
-])('sanitizeOverFlowingChildren', (testProps, expectedSanitizedData) => {
-  it('Should sanitize the data(overflowing spans) correctly', () => {
-    const refinedSpanData = getChildOfSpans(testProps.trace.spans);
-    const spanMap = refinedSpanData.reduce((map, span) => {
-      map.set(span.spanID, span);
-      return map;
-    }, new Map());
+  [
+    'child starts after parent ends - child dropped',
+    test3,
+    new Map().set(test3.trace.spans[0].spanID, {
+      ...createCPSpan(test3.trace.spans[0]),
+      childSpanIDs: [],
+    }),
+  ],
+  [
+    'child and grandchild start after parent ends - both dropped',
+    test4,
+    new Map().set(test4.trace.spans[0].spanID, {
+      ...createCPSpan(test4.trace.spans[0]),
+      childSpanIDs: [],
+    }),
+  ],
+  [
+    'child starts before parent and ends after - both truncated',
+    test6,
+    getExpectedSanitizedData(test6.trace.spans, 'test6'),
+  ],
+  [
+    'child starts before parent - child start truncated',
+    test7,
+    getExpectedSanitizedData(test7.trace.spans, 'test7'),
+  ],
+  [
+    'child starts before parent - child start adjusted',
+    test8,
+    getExpectedSanitizedData(test8.trace.spans, 'test8'),
+  ],
+  [
+    'child ends before parent starts - child dropped',
+    test9,
+    new Map().set(test9.trace.spans[0].spanID, {
+      ...createCPSpan(test9.trace.spans[0]),
+      childSpanIDs: [],
+    }),
+  ],
+])('sanitizeOverFlowingChildren - %s', (description, testProps, expectedSanitizedData) => {
+  it(`should sanitize correctly: ${description}`, () => {
+    const spanMap = createCPSpanMap(testProps.trace.rootSpans[0]);
     const sanitizedSpanMap = sanitizeOverFlowingChildren(spanMap);
-    expect(sanitizedSpanMap).toStrictEqual(expectedSanitizedData);
+
+    // Compare size and keys
+    expect(sanitizedSpanMap.size).toBe(expectedSanitizedData.size);
+    expect([...sanitizedSpanMap.keys()].sort()).toEqual([...expectedSanitizedData.keys()].sort());
+
+    // Compare each span's properties
+    sanitizedSpanMap.forEach((span, spanId) => {
+      const expectedSpan = expectedSanitizedData.get(spanId);
+      expect(span.spanID).toBe(expectedSpan.spanID);
+      expect(span.startTime).toBe(expectedSpan.startTime);
+      expect(span.duration).toBe(expectedSpan.duration);
+      expect(span.childSpanIDs).toEqual(expectedSpan.childSpanIDs);
+    });
   });
 });

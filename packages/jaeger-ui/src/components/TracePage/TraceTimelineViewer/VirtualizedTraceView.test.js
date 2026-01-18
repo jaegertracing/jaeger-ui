@@ -26,13 +26,15 @@ jest.mock('./ListView', () => {
 describe('<VirtualizedTraceViewImpl>', () => {
   let focusUiFindMatchesMock;
   let mockProps;
+  let legacyTrace;
   let trace;
   let criticalPath;
   let instance;
 
   beforeEach(() => {
-    trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
-    criticalPath = memoizedTraceCriticalPath(trace);
+    legacyTrace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));
+    criticalPath = memoizedTraceCriticalPath(legacyTrace);
+    trace = legacyTrace.asOtelTrace();
     focusUiFindMatchesMock = jest.fn();
 
     mockProps = {
@@ -81,21 +83,39 @@ describe('<VirtualizedTraceViewImpl>', () => {
     const childrenHiddenIDs = new Set([newSpanID]);
     const spans = [
       trace.spans[0],
-      // this span is condidered to have collapsed children
-      { spanID: newSpanID, depth: 1 },
+      // this span is considered to have collapsed children
+      {
+        ...trace.spans[0],
+        spanID: newSpanID,
+        depth: 1,
+        childSpans: [],
+        tags: [],
+        process: trace.spans[0].process,
+        references: [],
+      },
       // these two "spans" are children and should be hidden
-      { depth: 2 },
-      { depth: 3 },
+      {
+        ...trace.spans[0],
+        spanID: 'child-1',
+        depth: 2,
+        childSpans: [],
+        tags: [],
+        process: trace.spans[0].process,
+        references: [],
+      },
+      {
+        ...trace.spans[0],
+        spanID: 'child-2',
+        depth: 3,
+        childSpans: [],
+        tags: [],
+        process: trace.spans[0].process,
+        references: [],
+      },
       ...trace.spans.slice(1),
     ];
     const _trace = { ...trace, spans };
     return { props: { ...mockProps, childrenHiddenIDs, trace: _trace }, spans };
-  }
-
-  function updateSpan(srcTrace, spanIndex, update) {
-    const span = { ...srcTrace.spans[spanIndex], ...update };
-    const spans = [...srcTrace.spans.slice(0, spanIndex), span, ...srcTrace.spans.slice(spanIndex + 1)];
-    return { ...srcTrace, spans };
   }
 
   function createTestInstance(props) {
@@ -124,7 +144,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 
   it('renders when a trace is not set', () => {
-    const { container } = render(<VirtualizedTraceViewImpl {...mockProps} trace={[]} />);
+    const { container } = render(<VirtualizedTraceViewImpl {...mockProps} trace={null} />);
     expect(container).toBeTruthy();
   });
 
@@ -338,7 +358,12 @@ describe('<VirtualizedTraceViewImpl>', () => {
           fields: traceGenerator.tags(),
         },
       ];
-      const altTrace = updateSpan(trace, 0, { logs });
+
+      const newLegacySpans = [...legacyTrace.spans];
+      newLegacySpans[0] = { ...newLegacySpans[0], logs };
+      const newLegacyTrace = { ...legacyTrace, spans: newLegacySpans };
+      const altTrace = transformTraceData(newLegacyTrace).asOtelTrace();
+
       const { props, detailState } = expandRow(0);
       props.trace = altTrace;
       instance = createTestInstance(props);
@@ -356,7 +381,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       const spanBarRow = rowResult.props.children;
       expect(spanBarRow.type).toBe(SpanBarRow);
-      expect(spanBarRow.props.span).toBe(trace.spans[1]);
+      // span is now an IOtelSpan from trace.asOtelTrace()
+      expect(spanBarRow.props.span.spanID).toBe(trace.spans[1].spanID);
       expect(spanBarRow.props.isChildrenExpanded).toBe(true);
       expect(spanBarRow.props.isDetailExpanded).toBe(false);
     });
@@ -372,15 +398,23 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       const spanDetailRow = rowResult.props.children;
       expect(spanDetailRow.type).toBe(SpanDetailRow);
-      expect(spanDetailRow.props.span).toBe(trace.spans[1]);
+      // span is now an IOtelSpan from trace.asOtelTrace()
+      expect(spanDetailRow.props.span.spanID).toBe(trace.spans[1].spanID);
       expect(spanDetailRow.props.detailState).toBe(detailState);
     });
 
     it('renders a SpanBarRow with a RPC span if the row is collapsed and a client span', () => {
-      const clientTags = [{ key: 'span.kind', value: 'client' }, ...trace.spans[0].tags];
-      const serverTags = [{ key: 'span.kind', value: 'server' }, ...trace.spans[1].tags];
-      let altTrace = updateSpan(trace, 0, { tags: clientTags });
-      altTrace = updateSpan(altTrace, 1, { tags: serverTags });
+      const clientTags = [{ key: 'span.kind', value: 'client' }, ...legacyTrace.spans[0].tags];
+      const serverTags = [{ key: 'span.kind', value: 'server' }, ...legacyTrace.spans[1].tags];
+
+      // Update legacy trace spans
+      const newLegacySpans = [...legacyTrace.spans];
+      newLegacySpans[0] = { ...newLegacySpans[0], tags: clientTags };
+      newLegacySpans[1] = { ...newLegacySpans[1], tags: serverTags };
+
+      const newLegacyTrace = { ...legacyTrace, spans: newLegacySpans };
+      const altTrace = transformTraceData(newLegacyTrace).asOtelTrace();
+
       const childrenHiddenIDs = new Set([altTrace.spans[0].spanID]);
 
       instance = createTestInstance({
@@ -400,23 +434,30 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const externServiceName = 'externalServiceTest';
       const leafSpan = trace.spans.find(span => !span.hasChildren);
       const leafSpanIndex = trace.spans.indexOf(leafSpan);
-      const tags = [
+      const tagsVariants = [
         [
           // client span
           { key: 'span.kind', value: 'client' },
           { key: 'peer.service', value: externServiceName },
-          ...leafSpan.tags,
         ],
         [
           // producer span
           { key: 'span.kind', value: 'producer' },
           { key: 'peer.service', value: externServiceName },
-          ...leafSpan.tags,
         ],
       ];
 
-      tags.forEach(tag => {
-        const altTrace = updateSpan(trace, leafSpanIndex, { tags: tag });
+      tagsVariants.forEach(tagsToAdd => {
+        // Construct a new legacy trace with modified tags for the leaf span
+        const newLegacySpans = legacyTrace.spans.map((s, index) => {
+          if (index === leafSpanIndex) {
+            return { ...s, tags: [...s.tags, ...tagsToAdd] };
+          }
+          return s;
+        });
+        const newLegacyTrace = { ...legacyTrace, spans: newLegacySpans };
+        const altTrace = transformTraceData(newLegacyTrace).asOtelTrace();
+
         instance = createTestInstance({
           ...mockProps,
           trace: altTrace,
@@ -432,13 +473,15 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
     it('renderSpanBarRow returns null if trace is falsy', () => {
       const component = new VirtualizedTraceViewImpl({ ...mockProps, trace: null });
-      const result = component.renderSpanBarRow(trace.spans[0], 0, 'key', {}, {});
+      const otelSpan = trace.spans[0];
+      const result = component.renderSpanBarRow(otelSpan, 0, 'key', {}, {});
       expect(result).toBeNull();
     });
 
     it('renderSpanDetailRow returns null if detailState is missing', () => {
       const component = new VirtualizedTraceViewImpl(mockProps);
-      const result = component.renderSpanDetailRow(trace.spans[0], 'key', {}, {});
+      const otelSpan = trace.spans[0];
+      const result = component.renderSpanDetailRow(otelSpan, 'key', {}, {});
       expect(result).toBeNull();
     });
   });
@@ -572,8 +615,9 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
     it('linksGetter is expected to receive url and text for a given link pattern', () => {
       const span = trace.spans[1];
-      const key = span.tags[0].key;
-      const val = encodeURIComponent(span.tags[0].value);
+      const key = span.attributes[0].key;
+      const value = span.attributes[0].value;
+      const val = encodeURIComponent(value);
 
       const linkPatternConfig = [
         {
@@ -586,7 +630,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       linkPatterns.processedLinks.push(...linkPatternConfig);
 
-      expect(instance.linksGetter(span, span.tags, 0)).toEqual([
+      expect(instance.linksGetter(span, span.attributes, 0)).toEqual([
         {
           url: `http://example.com/?key1=${val}&traceID=${trace.traceID}&startTime=${trace.startTime}`,
           text: `For first link traceId is - ${trace.traceID}`,

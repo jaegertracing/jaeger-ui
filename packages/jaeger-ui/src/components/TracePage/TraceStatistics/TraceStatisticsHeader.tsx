@@ -3,16 +3,16 @@
 
 import { Checkbox, Select } from 'antd';
 import React, { Component } from 'react';
-import { Trace } from '../../../types/trace';
+import { IOtelTrace } from '../../../types/otel';
 import { ITableSpan } from './types';
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
-import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
+import { getColumnValues, getColumnValuesSecondDropdown, getServiceName } from './tableValues';
 import SearchableSelect from '../../common/SearchableSelect';
 import generateColor from './generateColor';
 import './TraceStatisticsHeader.css';
 
 type Props = {
-  trace: Trace;
+  trace: IOtelTrace;
   tableValue: ITableSpan[];
   wholeTable: ITableSpan[];
   handler: (
@@ -21,6 +21,7 @@ type Props = {
     valueNameSelector1: string,
     valueNameSelector2: string | null
   ) => void;
+  useOtelTerms: boolean;
 };
 
 type State = {
@@ -47,15 +48,16 @@ const optionsNameSelector3 = new Map([
 export default class TraceStatisticsHeader extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
+    const serviceName = getServiceName();
     this.props.handler(
-      getColumnValues('Service Name', this.props.trace),
-      getColumnValues('Service Name', this.props.trace),
-      'Service Name',
+      getColumnValues(serviceName, this.props.trace, this.props.useOtelTerms),
+      getColumnValues(serviceName, this.props.trace, this.props.useOtelTerms),
+      serviceName,
       null
     );
 
     this.state = {
-      valueNameSelector1: 'Service Name',
+      valueNameSelector1: serviceName,
       valueNameSelector2: null,
       valueNameSelector3: 'Count',
       checkboxStatus: false,
@@ -87,12 +89,12 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       valueNameSelector2: null,
     });
     const newTableValue = generateColor(
-      getColumnValues(value, this.props.trace),
+      getColumnValues(value, this.props.trace, this.props.useOtelTerms),
       this.getValue(),
       this.state.checkboxStatus
     );
     const newWohleTable = generateColor(
-      getColumnValues(value, this.props.trace),
+      getColumnValues(value, this.props.trace, this.props.useOtelTerms),
       this.getValue(),
       this.state.checkboxStatus
     );
@@ -111,7 +113,8 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
         this.props.tableValue,
         this.state.valueNameSelector1,
         value,
-        this.props.trace
+        this.props.trace,
+        this.props.useOtelTerms
       ),
       this.getValue(),
       this.state.checkboxStatus
@@ -121,7 +124,8 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
         this.props.wholeTable,
         this.state.valueNameSelector1,
         value,
-        this.props.trace
+        this.props.trace,
+        this.props.useOtelTerms
       ),
       this.getValue(),
       this.state.checkboxStatus
@@ -178,12 +182,12 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
     });
 
     const newTableValue = generateColor(
-      getColumnValues(this.state.valueNameSelector1, this.props.trace),
+      getColumnValues(this.state.valueNameSelector1, this.props.trace, this.props.useOtelTerms),
       this.getValue(),
       this.state.checkboxStatus
     );
     const newWholeTable = generateColor(
-      getColumnValues(this.state.valueNameSelector1, this.props.trace),
+      getColumnValues(this.state.valueNameSelector1, this.props.trace, this.props.useOtelTerms),
       this.getValue(),
       this.state.checkboxStatus
     );
@@ -191,8 +195,12 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
   }
 
   render() {
-    const optionsNameSelector1 = generateDropdownValue(this.props.trace);
-    const optionsNameSelector2 = generateSecondDropdownValue(this.props.trace, this.state.valueNameSelector1);
+    const optionsNameSelector1 = generateDropdownValue(this.props.trace, this.props.useOtelTerms);
+    const optionsNameSelector2 = generateSecondDropdownValue(
+      this.props.trace,
+      this.state.valueNameSelector1,
+      this.props.useOtelTerms
+    );
 
     return (
       <div className="TraceStatisticsHeader">

@@ -10,13 +10,14 @@ import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
 
 import testTrace from './tableValuesTestTrace/testTrace.json';
 
-const transformedTrace = transformTraceData(testTrace);
+const transformedTrace = transformTraceData(testTrace).asOtelTrace();
 
 describe('<TraceTagOverview>', () => {
   const defaultProps = {
     trace: transformedTrace,
     uiFind: undefined,
     uiFindVertexKeys: undefined,
+    useOtelTerms: false,
   };
 
   afterEach(cleanup);
@@ -117,12 +118,13 @@ describe('<TraceTagOverview>', () => {
       render(<TestWrapper />);
     }, 'render');
 
-    let tableValue = getColumnValues('Service Name', transformedTrace);
+    let tableValue = getColumnValues('Service Name', transformedTrace, false);
     tableValue = getColumnValuesSecondDropdown(
       tableValue,
       'Service Name',
       'Operation Name',
-      transformedTrace
+      transformedTrace,
+      false
     );
 
     await timedAct(async () => {

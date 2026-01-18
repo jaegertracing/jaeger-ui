@@ -3,7 +3,6 @@
 
 import {
   formatDuration,
-  timeConversion,
   getSuitableTimeUnit,
   convertTimeUnitToShortTerm,
   convertToTimeUnit,
@@ -14,7 +13,8 @@ import {
   formatDatetime,
   formatMillisecondTime,
   formatSecondTime,
-} from './date.tsx';
+  formatDurationCompact,
+} from './date';
 
 const ONE_SECOND = 1000 * ONE_MILLISECOND;
 const ONE_MINUTE = 60 * ONE_SECOND;
@@ -64,33 +64,6 @@ describe('formatDuration', () => {
   it('displays times of 0', () => {
     const input = 0;
     expect(formatDuration(input)).toBe('0μs');
-  });
-});
-
-describe('timeConversion', () => {
-  it('displays time in nanoseconds', () => {
-    const input = 999;
-    expect(timeConversion(input)).toBe('999μs');
-  });
-  it('displays time in milliseconds ', () => {
-    const input = 5000;
-    expect(timeConversion(input)).toBe('5ms');
-  });
-  it('displays time in seconds', () => {
-    const input = 5000000;
-    expect(timeConversion(input)).toBe('5s');
-  });
-  it('displays time in minutes', () => {
-    const input = 120000000;
-    expect(timeConversion(input)).toBe('2m');
-  });
-  it('displays time in hours', () => {
-    const input = 7200000000;
-    expect(timeConversion(input)).toBe('2h');
-  });
-  it('displays time in days', () => {
-    const input = 172800000000;
-    expect(timeConversion(input)).toBe('2d');
   });
 });
 
@@ -240,5 +213,76 @@ describe('format microseconds', () => {
   it('formatSecondTime formats microseconds to seconds', () => {
     const durationInMicroseconds = 1000 * ONE_MILLISECOND;
     expect(formatSecondTime(durationInMicroseconds)).toBe('1s');
+  });
+});
+
+describe('formatDurationCompact', () => {
+  describe('microseconds', () => {
+    it('formats values < 1μs', () => {
+      expect(formatDurationCompact(0)).toBe('0μs');
+      expect(formatDurationCompact(0.5)).toBe('1μs'); // rounds up
+    });
+
+    it('formats small microsecond values', () => {
+      expect(formatDurationCompact(1)).toBe('1μs');
+      expect(formatDurationCompact(123)).toBe('123μs');
+      expect(formatDurationCompact(999)).toBe('999μs');
+    });
+  });
+
+  describe('milliseconds', () => {
+    it('formats values 1-10ms with 2 significant digits', () => {
+      expect(formatDurationCompact(1000)).toBe('1.0ms');
+      expect(formatDurationCompact(1500)).toBe('1.5ms');
+      expect(formatDurationCompact(9999)).toBe('10ms'); // rounds to 10
+    });
+
+    it('formats values 10-100ms with 3 significant digits', () => {
+      expect(formatDurationCompact(13835)).toBe('13.8ms');
+      expect(formatDurationCompact(50000)).toBe('50.0ms');
+      expect(formatDurationCompact(99999)).toBe('100ms'); // rounds to 100
+    });
+
+    it('formats values 100-1000ms with rounding', () => {
+      expect(formatDurationCompact(135842)).toBe('136ms');
+      expect(formatDurationCompact(500000)).toBe('500ms');
+      expect(formatDurationCompact(999000)).toBe('999ms');
+    });
+  });
+
+  describe('seconds', () => {
+    it('formats values 1-10s with 2 significant digits', () => {
+      expect(formatDurationCompact(1000000)).toBe('1.0s');
+      expect(formatDurationCompact(1835200)).toBe('1.8s');
+      expect(formatDurationCompact(9999000)).toBe('10s');
+    });
+
+    it('formats values 10-60s with 3 significant digits', () => {
+      expect(formatDurationCompact(15000000)).toBe('15.0s');
+      expect(formatDurationCompact(45678000)).toBe('45.7s');
+      expect(formatDurationCompact(59999000)).toBe('60.0s');
+    });
+  });
+
+  describe('minutes', () => {
+    it('formats values >= 60s as minutes', () => {
+      expect(formatDurationCompact(60000000)).toBe('1.0m');
+      expect(formatDurationCompact(150000000)).toBe('2.5m');
+      expect(formatDurationCompact(600000000)).toBe('10.0m'); // toPrecision(3) = "10.0"
+    });
+
+    it('formats large minute values with appropriate precision', () => {
+      expect(formatDurationCompact(3600000000)).toBe('60.0m'); // 1 hour, toPrecision(3) = "60.0"
+      expect(formatDurationCompact(7200000000)).toBe('120m'); // 2 hours, rounds
+    });
+  });
+
+  describe('edge cases', () => {
+    it('handles unit boundaries correctly', () => {
+      expect(formatDurationCompact(999)).toBe('999μs');
+      expect(formatDurationCompact(1000)).toBe('1.0ms');
+      expect(formatDurationCompact(999999)).toBe('1000ms');
+      expect(formatDurationCompact(1000000)).toBe('1.0s');
+    });
   });
 });

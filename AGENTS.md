@@ -1,5 +1,16 @@
 # AI Agent Instructions for Jaeger UI
 
+## Task Completion Criteria
+
+When you have completed a task, run the following commands:
+
+```bash
+npm run prettier
+npm run lint
+npm test
+npm run build
+```
+
 ## Project Overview
 
 Jaeger UI is a React-based visualization tool for distributed tracing. It's built as a monorepo with multiple packages using npm workspaces.

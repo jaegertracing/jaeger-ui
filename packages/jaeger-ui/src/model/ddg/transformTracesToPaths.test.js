@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import transformTracesToPaths from './transformTracesToPaths';
+import transformTraceData from '../transform-trace-data';
+import OtelTraceFacade from '../OtelTraceFacade';
 
 describe('transform traces to ddg paths', () => {
   const makeExpectedPath = (pathSpans, trace) => ({
     path: pathSpans.map(({ processID, operationName: operation }) => ({
-      service: trace.data.processes[processID].serviceName,
+      service: `${processID}-name`,
       operation,
     })),
     attributes: [{ key: 'exemplar_trace_id', value: trace.data.traceID }],
@@ -20,14 +22,17 @@ describe('transform traces to ddg paths', () => {
   };
 
   const makeSpan = (spanName, parent, kind, operationName, processID) => ({
-    hasChildren: true,
+    traceID: 'test-trace-id', // Required by transformTraceData
+    spanID: `${spanName} spanID`,
     operationName: operationName || `${spanName} operation`,
     processID: processID || `${spanName} processID`,
+    startTime: Date.now() * 1000, // Required by transformTraceData (in microseconds)
+    duration: 1000, // Required by transformTraceData
     references: parent
       ? [
           {
             refType: 'CHILD_OF',
-            span: parent,
+            traceID: 'test-trace-id',
             spanID: parent.spanID,
           },
         ]
@@ -41,23 +46,34 @@ describe('transform traces to ddg paths', () => {
               value: kind === undefined ? 'server' : kind,
             },
           ],
-    spanID: `${spanName} spanID`,
+    logs: [], // Required by transformTraceData
   });
-  const makeTrace = (spans, traceID) => ({
-    data: {
-      processes: spans.reduce(
-        (result, span) => ({
-          ...result,
-          [span.processID]: {
-            serviceName: `${span.processID}-name`,
-          },
-        }),
-        {}
-      ),
-      spans,
+
+  const makeTrace = (spans, traceID) => {
+    // Build processes map from spans
+    const processes = spans.reduce((result, span) => {
+      if (!result[span.processID]) {
+        result[span.processID] = {
+          serviceName: `${span.processID}-name`,
+          tags: [],
+        };
+      }
+      return result;
+    }, {});
+
+    // Use transformTraceData to build the trace with spanMap, rootSpans, and childSpans
+    const traceData = {
       traceID,
-    },
-  });
+      processes,
+      spans: spans.map(span => ({ ...span, traceID })),
+    };
+
+    const transformedTrace = transformTraceData(traceData);
+
+    return {
+      data: new OtelTraceFacade(transformedTrace),
+    };
+  };
   const makeTraces = (...traces) =>
     traces.reduce((res, trace) => ({ ...res, [trace.data.traceID]: trace }), {});
 
@@ -76,7 +92,7 @@ describe('transform traces to ddg paths', () => {
   const longerPath = makeExpectedPath([rootSpan, focalSpan, followsFocalSpan], longerTrace);
   const missTrace = makeTrace([rootSpan, notPathSpan], missTraceID);
 
-  const focalSvc = shortTrace.data.processes[focalSpan.processID].serviceName;
+  const focalSvc = `${focalSpan.processID}-name`;
 
   it('transforms single short trace result payload', () => {
     const { dependencies: result } = transformTracesToPaths(makeTraces(shortTrace), focalSvc);
@@ -196,7 +212,7 @@ describe('transform traces to ddg paths', () => {
     spanServiceAServer.hasChildren = false;
     const { dependencies: result } = transformTracesToPaths(
       makeTraces(clientServerTrace),
-      clientServerTrace.data.processes[spanServiceAClient.processID].serviceName
+      `${spanServiceAClient.processID}-name`
     );
     expect(new Set(result)).toEqual(
       new Set([makeExpectedPath([spanServiceAClient, spanServiceAServer], clientServerTrace)])

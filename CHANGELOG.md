@@ -9,6 +9,56 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v2.14.1 (2026-01-02)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Dark theme fixes ([@yurishkuro](https://github.com/yurishkuro) in [#3285](https://github.com/jaegertracing/jaeger-ui/pull/3285))
+* Fix span detail panel in dark theme ([@yurishkuro](https://github.com/yurishkuro) in [#3283](https://github.com/jaegertracing/jaeger-ui/pull/3283))
+
+## v2.14.0 (2026-01-01)
+
+#### ✨ New Features
+
+* Enable theme selector by default ([@yurishkuro](https://github.com/yurishkuro) in [#3257](https://github.com/jaegertracing/jaeger-ui/pull/3257))
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Add visual indicator for synthetic otel attributes ([@DCchoudhury15](https://github.com/DCchoudhury15) in [#3259](https://github.com/jaegertracing/jaeger-ui/pull/3259))
+* Fix: dark mode styling for trace view with design tokens ([@jkowall](https://github.com/jkowall) in [#3246](https://github.com/jaegertracing/jaeger-ui/pull/3246))
+* Fix in-trace search ([@yurishkuro](https://github.com/yurishkuro) in [#3255](https://github.com/jaegertracing/jaeger-ui/pull/3255))
+* Feat: add incomplete trace detection and adjustable search time offset ([@xenonnn4w](https://github.com/xenonnn4w) in [#3248](https://github.com/jaegertracing/jaeger-ui/pull/3248))
+* Fix: constant visible white borders in the trace spans ([@unknown]() in [#3125](https://github.com/jaegertracing/jaeger-ui/pull/3125))
+* Force light mode by default if config is disabled ([@yurishkuro](https://github.com/yurishkuro) in [#3204](https://github.com/jaegertracing/jaeger-ui/pull/3204))
+* Use outlined tags for contrast ([@bobrik](https://github.com/bobrik) in [#3202](https://github.com/jaegertracing/jaeger-ui/pull/3202))
+
+#### 🚧 Experimental Features
+
+* Fix parentspanid calculation to validate traceid and handle follows_from references ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3268](https://github.com/jaegertracing/jaeger-ui/pull/3268))
+* Add lazy otel facade to domain model ([@yurishkuro](https://github.com/yurishkuro) in [#3263](https://github.com/jaegertracing/jaeger-ui/pull/3263))
+* Add useopentelemetryterms feature flag ([@yurishkuro](https://github.com/yurishkuro) in [#3262](https://github.com/jaegertracing/jaeger-ui/pull/3262))
+* Introduce otel data model ([@yurishkuro](https://github.com/yurishkuro) in [#3261](https://github.com/jaegertracing/jaeger-ui/pull/3261))
+* Apply styles to make minimap work in dark theme ([@yurishkuro](https://github.com/yurishkuro) in [#3256](https://github.com/jaegertracing/jaeger-ui/pull/3256))
+* Move theme vars back to root ([@yurishkuro](https://github.com/yurishkuro) in [#3247](https://github.com/jaegertracing/jaeger-ui/pull/3247))
+* Define theme vars in terms of antd vars ([@yurishkuro](https://github.com/yurishkuro) in [#3245](https://github.com/jaegertracing/jaeger-ui/pull/3245))
+* Fix dark mode by using css variables ([@jkowall](https://github.com/jkowall) in [#3242](https://github.com/jaegertracing/jaeger-ui/pull/3242))
+
+#### ⚙️ Refactoring
+
+* Simplify transformtracedata ([@yurishkuro](https://github.com/yurishkuro) in [#3274](https://github.com/jaegertracing/jaeger-ui/pull/3274))
+* Fix unsafe type coercion and add readonly collection fields ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3273](https://github.com/jaegertracing/jaeger-ui/pull/3273))
+* Persist spanmap and rootspans in trace object; use childspans array for tree structure ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3266](https://github.com/jaegertracing/jaeger-ui/pull/3266))
+* Prevent trace mutation during critical path computation ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3271](https://github.com/jaegertracing/jaeger-ui/pull/3271))
+* Convert tracestatistics to oteltrace ([@yurishkuro](https://github.com/yurishkuro) in [#3264](https://github.com/jaegertracing/jaeger-ui/pull/3264))
+* Convert 3 more jsx files to typescript ([@yurishkuro](https://github.com/yurishkuro) in [#3241](https://github.com/jaegertracing/jaeger-ui/pull/3241))
+* Fix: qualitymetrics auto-refresh issue ([@unknown]() in [#3222](https://github.com/jaegertracing/jaeger-ui/pull/3222))
+* Migrate qualitymetrics/index to use navigate instead of history ([@unknown]() in [#3214](https://github.com/jaegertracing/jaeger-ui/pull/3214))
+* Migrate uifindinput from history to navigate ([@unknown]() in [#3217](https://github.com/jaegertracing/jaeger-ui/pull/3217))
+* Convert servicegraph class component to functional component ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3212](https://github.com/jaegertracing/jaeger-ui/pull/3212))
+* Convert qualitymetrics/index to functional component ([@unknown]() in [#3210](https://github.com/jaegertracing/jaeger-ui/pull/3210))
+* Make update-ui-find backward compatible ([@unknown]() in [#3209](https://github.com/jaegertracing/jaeger-ui/pull/3209))
+* Remove usehistory - unused code ([@unknown]() in [#3207](https://github.com/jaegertracing/jaeger-ui/pull/3207))
+
 ## v1.76.0 (2025-12-03)
 
 #### 🐞 Bug fixes, Minor Improvements

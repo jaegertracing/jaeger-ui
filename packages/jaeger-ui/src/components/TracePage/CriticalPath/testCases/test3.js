@@ -23,15 +23,15 @@ const traceStart = 100;
 
 const criticalPathSections = [
   {
-    spanId: '006c3cf93508f205',
-    section_start: traceStart,
-    section_end: traceStart + 40,
+    spanID: '006c3cf93508f205',
+    sectionStart: traceStart,
+    sectionEnd: traceStart + 40,
   },
 ];
 
 const test3 = {
   criticalPathSections,
-  trace: transformedTrace,
+  trace: transformedTrace.asOtelTrace(),
 };
 
 export default test3;

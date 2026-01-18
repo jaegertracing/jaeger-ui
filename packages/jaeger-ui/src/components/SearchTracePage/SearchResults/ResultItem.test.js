@@ -17,20 +17,21 @@ const renderWithRouter = ui => {
   return render(ui, { wrapper: MemoryRouter });
 };
 
-let trace; // Use let to allow modification in tests
+let otelTrace; // OTEL facade of trace
 
 beforeEach(() => {
   // Reset trace data before each test.
   // Some tests modify the trace object (e.g., adding tags).
   // Resetting ensures that each test starts with a clean, unmodified trace,
   // preventing side effects between tests and maintaining test isolation.
-  trace = transformTraceData(traceGenerator.trace({}));
+  const trace = transformTraceData(traceGenerator.trace({}));
+  otelTrace = trace.asOtelTrace();
 });
 
 it('<ResultItem /> should render base case correctly', () => {
   renderWithRouter(
     <ResultItem
-      trace={trace}
+      trace={otelTrace}
       durationPercent={50}
       linkTo=""
       toggleComparison={() => {}}
@@ -38,17 +39,22 @@ it('<ResultItem /> should render base case correctly', () => {
       disableComparision={false}
     />
   );
-  expect(screen.getByTestId(markers.NUM_SPANS)).toHaveTextContent(`${trace.spans.length} Spans`);
+  expect(screen.getByTestId(markers.NUM_SPANS)).toHaveTextContent(`${otelTrace.spans.length} Spans`);
   const serviceTagsContainer = screen.getByTestId(markers.SERVICE_TAGS);
   const serviceTags = serviceTagsContainer.querySelectorAll('li > .ResultItem--serviceTag');
-  expect(serviceTags).toHaveLength(trace.services.length);
+  expect(serviceTags).toHaveLength(otelTrace.services.length);
 });
 
 it('<ResultItem /> should not render any ServiceTags when there are no services', () => {
-  const traceWithoutServices = { ...trace, services: [] };
+  // Create a proper OTEL trace with empty services but valid spans
+  const otelTraceWithoutServices = {
+    ...otelTrace,
+    services: [],
+    spans: otelTrace.spans, // Keep spans array
+  };
   renderWithRouter(
     <ResultItem
-      trace={traceWithoutServices}
+      trace={otelTraceWithoutServices}
       durationPercent={50}
       linkTo=""
       toggleComparison={() => {}}
@@ -62,6 +68,9 @@ it('<ResultItem /> should not render any ServiceTags when there are no services'
 });
 
 it('<ResultItem /> should render error icon on ServiceTags that have an error tag', () => {
+  // Create a new trace for this test that we can modify
+  const trace = transformTraceData(traceGenerator.trace({}));
+
   // Assume trace has services and spans from the generator. Assert this assumption.
   expect(trace.services).toBeDefined();
   expect(trace.services.length).toBeGreaterThan(0);
@@ -79,9 +88,13 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error ta
   spanWithError.tags = spanWithError.tags || [];
   spanWithError.tags.push({ key: 'error', value: true });
 
+  // Clear cached OTEL facade and regenerate with the updated error tag
+  trace._otelFacade = undefined;
+  const updatedOtelTrace = trace.asOtelTrace();
+
   renderWithRouter(
     <ResultItem
-      trace={trace}
+      trace={updatedOtelTrace}
       durationPercent={50}
       linkTo=""
       toggleComparison={() => {}}
@@ -105,7 +118,7 @@ it('calls trackConversions on click', () => {
   const spy = jest.spyOn(tracking, 'trackConversions');
   renderWithRouter(
     <ResultItem
-      trace={trace}
+      trace={otelTrace}
       durationPercent={50}
       linkTo=""
       toggleComparison={() => {}}

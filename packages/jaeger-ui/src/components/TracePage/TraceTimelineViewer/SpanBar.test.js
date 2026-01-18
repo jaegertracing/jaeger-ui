@@ -19,7 +19,7 @@ describe('<SpanBar>', () => {
     viewEnd: 1,
     viewStart: 0,
     getViewedBounds: s => {
-      // Log entries
+      // Event entries
       if (s === 10) {
         return { start: 0.1, end: 0.1 };
       }
@@ -33,26 +33,37 @@ describe('<SpanBar>', () => {
       viewEnd: 0.75,
       color: '#000',
     },
-    tracestartTime: 0,
+    traceStartTime: 0,
     span: {
-      logs: [
+      spanId: 'test-span',
+      traceId: 'test-trace',
+      name: 'test-op',
+      startTime: 0,
+      duration: 100,
+      attributes: [],
+      resource: {
+        serviceName: 'test-service',
+        attributes: [],
+      },
+      warnings: null,
+      events: [
         {
           timestamp: 10,
-          fields: [
+          attributes: [
             { key: 'message', value: 'oh the log message' },
             { key: 'something', value: 'else' },
           ],
         },
         {
           timestamp: 10,
-          fields: [
+          attributes: [
             { key: 'message', value: 'oh the second log message' },
             { key: 'something', value: 'different' },
           ],
         },
         {
           timestamp: 20,
-          fields: [
+          attributes: [
             { key: 'message', value: 'oh the next log message' },
             { key: 'more', value: 'stuff' },
           ],
@@ -74,8 +85,8 @@ describe('<SpanBar>', () => {
     expect(screen.queryByText(longLabel)).toBeNull();
   });
 
-  it('log markers count', () => {
-    // 3 log entries, two grouped together with the same timestamp
+  it('event markers count', () => {
+    // 3 event entries, two grouped together with the same timestamp
     render(<SpanBar {...props} />);
     expect(screen.getAllByTestId('SpanBar--logMarker').length).toEqual(2);
   });

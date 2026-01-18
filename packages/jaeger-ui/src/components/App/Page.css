@@ -9,6 +9,7 @@ SPDX-License-Identifier: Apache-2.0
   position: fixed;
   width: 100%;
   z-index: 11;
+  font-weight: 500;
 }
 
 .Page--content {
@@ -25,6 +26,7 @@ SPDX-License-Identifier: Apache-2.0
   top: var(--nav-height);
 }
 
-.ant-menu-item:hover {
-  background-color: transparent !important;
+.ant-menu-dark {
+  /* same color as in Docsy theme for jaegertracing.io */
+  background-color: #1a4767;
 }

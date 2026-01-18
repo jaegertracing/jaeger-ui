@@ -12,16 +12,17 @@ import { merge as mergeShortcuts } from '../keyboard-shortcuts';
 import { Accessors } from '../ScrollManager';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '../types';
 import { TNil, ReduxState } from '../../../types';
-import { criticalPathSection, Span, Trace } from '../../../types/trace';
+import { IOtelSpan, IOtelTrace } from '../../../types/otel';
+import { CriticalPathSection } from '../../../types/critical_path';
 
 import './index.css';
 
 type TDispatchProps = {
   setSpanNameColumnWidth: (width: number) => void;
-  collapseAll: (spans: Span[]) => void;
-  collapseOne: (spans: Span[]) => void;
+  collapseAll: (spans: ReadonlyArray<IOtelSpan>) => void;
+  collapseOne: (spans: ReadonlyArray<IOtelSpan>) => void;
   expandAll: () => void;
-  expandOne: (spans: Span[]) => void;
+  expandOne: (spans: ReadonlyArray<IOtelSpan>) => void;
 };
 
 type TProps = TDispatchProps & {
@@ -29,11 +30,12 @@ type TProps = TDispatchProps & {
   findMatchesIDs: Set<string> | TNil;
   scrollToFirstVisibleSpan: () => void;
   spanNameColumnWidth: number;
-  trace: Trace;
-  criticalPath: criticalPathSection[];
+  trace: IOtelTrace;
+  criticalPath: CriticalPathSection[];
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: IViewRange;
+  useOtelTerms: boolean;
 };
 
 const NUM_TICKS = 5;
@@ -88,6 +90,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
         viewRangeTime={viewRange.time}
         updateNextViewRangeTime={updateNextViewRangeTime}
         updateViewRangeTime={updateViewRangeTime}
+        useOtelTerms={props.useOtelTerms}
       />
       <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
     </div>

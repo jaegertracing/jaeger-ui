@@ -5,8 +5,8 @@ SPDX-License-Identifier: Apache-2.0
 
 .TraceDiffHeader {
   background: var(--surface-primary);
-  border-bottom: 1px solid #e8e8e8;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--border-default);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex: 0;
   position: relative;
@@ -19,15 +19,15 @@ SPDX-License-Identifier: Apache-2.0
   align-items: center;
   justify-content: center;
   width: 50px;
-  background: #f5f5f5;
-  border-right: 1px solid #e8e8e8;
+  background: var(--surface-tertiary);
+  border-right: 1px solid var(--border-default);
 }
 
 .TraceDiffHeader--label {
   margin: 0;
   font-size: 24px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .TraceDiffHeader--traceSection {
@@ -39,7 +39,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TraceDiffHeader--traceSection:hover {
-  background-color: #f9f9f9;
+  background-color: var(--surface-component-background-hover);
 }
 
 .TraceDiffHeader--divider {
@@ -47,9 +47,9 @@ SPDX-License-Identifier: Apache-2.0
   align-items: center;
   justify-content: center;
   padding: 0 15px;
-  background: #f5f5f5;
-  border-right: 1px solid #e8e8e8;
-  border-left: 1px solid #e8e8e8;
+  background: var(--surface-tertiary);
+  border-right: 1px solid var(--border-default);
+  border-left: 1px solid var(--border-default);
 }
 
 .TraceDiffHeader--vsContainer {
@@ -59,8 +59,8 @@ SPDX-License-Identifier: Apache-2.0
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #199;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  background: var(--interactive-primary);
+  box-shadow: var(--shadow-sm);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
@@ -68,7 +68,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .TraceDiffHeader--vsContainer:hover {
   transform: scale(1.05);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-md);
 }
 
 .TraceDiffHeader--vsLabel {
@@ -81,7 +81,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .TraceDiffHeader--popover .ant-popover-title {
   padding: 10px;
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .TraceDiffHeader--popover .ant-popover-inner-content {
@@ -90,8 +90,5 @@ SPDX-License-Identifier: Apache-2.0
 
 .TraceDiffHeader--popover .ant-popover-inner {
   border-radius: 4px;
-  box-shadow:
-    0 3px 6px -4px rgba(0, 0, 0, 0.12),
-    0 6px 16px 0 rgba(0, 0, 0, 0.08),
-    0 9px 28px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-lg);
 }

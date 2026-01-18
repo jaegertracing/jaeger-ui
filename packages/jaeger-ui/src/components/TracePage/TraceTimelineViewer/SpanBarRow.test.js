@@ -19,12 +19,12 @@ jest.mock('./SpanTreeOffset', () => ({
 
 jest.mock('./ReferencesButton', () => ({
   __esModule: true,
-  default: jest.fn(({ tooltipText, references, children }) => (
+  default: jest.fn(({ tooltipText, links, children }) => (
     <button
       type="button"
       data-testid="references-button"
       data-tooltip={tooltipText}
-      data-references={JSON.stringify(references)}
+      data-references={JSON.stringify(links)}
     >
       {children}
     </button>
@@ -61,22 +61,33 @@ describe('<SpanBarRow>', () => {
       operationName: 'rpc-op-name',
       serviceName: 'rpc-service-name',
     },
-    showErrorIcon: false,
+    hasOwnError: false,
+    hasChildError: false,
     getViewedBounds: jest.fn().mockReturnValue({ start: 0.5, end: 0.6 }),
     span: {
-      duration: 100,
-      hasChildren: true,
-      operationName: 'op-name',
-      process: {
-        serviceName: 'service-name',
-      },
-      spanID,
-      logs: [],
+      traceId: 'trace-id',
+      spanID: spanID,
+      name: 'op-name',
+      kind: 'SERVER',
       startTime: 100,
+      endTime: 200,
+      duration: 100,
+      attributes: [],
+      events: [],
+      links: [],
+      status: { code: 'OK' },
+      resource: { attributes: [], serviceName: 'service-name' },
+      instrumentationScope: { name: 'scope' },
+      depth: 0,
+      hasChildren: true,
+      relativeStartTime: 100,
+      inboundLinks: [],
+      warnings: null,
     },
     traceStartTime: 0,
     traceDuration: 1000,
     focusSpan: jest.fn(),
+    useOtelTerms: false,
   };
 
   beforeEach(() => {
@@ -110,9 +121,9 @@ describe('<SpanBarRow>', () => {
   it('shows ReferencesButton when span has multiple references', () => {
     const span = {
       ...defaultProps.span,
-      references: [
-        { refType: 'CHILD_OF', traceID: 't1', spanID: 's1', span: { spanID: 's1' } },
-        { refType: 'CHILD_OF', traceID: 't2', spanID: 's2', span: { spanID: 's2' } },
+      links: [
+        { traceId: 't1', spanID: 's1', attributes: [] },
+        { traceId: 't2', spanID: 's2', attributes: [] },
       ],
     };
     render(<SpanBarRow {...defaultProps} span={span} />);
@@ -124,9 +135,7 @@ describe('<SpanBarRow>', () => {
   it('shows tooltip for a single downstream reference', () => {
     const span = {
       ...defaultProps.span,
-      subsidiarilyReferencedBy: [
-        { refType: 'CHILD_OF', traceID: 't1', spanID: 's1', span: { spanID: 's1' } },
-      ],
+      inboundLinks: [{ traceId: 't1', spanID: 's1', attributes: [] }],
     };
     render(<SpanBarRow {...defaultProps} span={span} />);
     const btn = screen.getByTestId('references-button');
@@ -137,9 +146,9 @@ describe('<SpanBarRow>', () => {
   it('shows tooltip for multiple downstream references', () => {
     const span = {
       ...defaultProps.span,
-      subsidiarilyReferencedBy: [
-        { refType: 'CHILD_OF', traceID: 't1', spanID: 's1', span: { spanID: 's1' } },
-        { refType: 'CHILD_OF', traceID: 't2', spanID: 's2', span: { spanID: 's2' } },
+      inboundLinks: [
+        { traceId: 't1', spanID: 's1', attributes: [] },
+        { traceId: 't2', spanID: 's2', attributes: [] },
       ],
     };
     render(<SpanBarRow {...defaultProps} span={span} />);
@@ -161,10 +170,11 @@ describe('<SpanBarRow>', () => {
     expect(screen.getByText('no-instrumented-service')).toBeVisible();
   });
 
-  it('renders with error icon when showErrorIcon is true', () => {
+  it('renders with error icon when hasOwnError is true', () => {
     const props = {
       ...defaultProps,
-      showErrorIcon: true,
+      hasOwnError: true,
+      hasChildError: false,
     };
     render(<SpanBarRow {...props} />);
     expect(document.querySelector('.SpanBarRow--errorIcon')).toBeInTheDocument();

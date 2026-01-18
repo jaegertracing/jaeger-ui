@@ -11,6 +11,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .LabeledList--item {
   display: inline-block;
+  margin-right: 0.5rem;
 }
 
 .LabeledList--label {

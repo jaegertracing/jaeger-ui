@@ -69,15 +69,15 @@ const transformedTrace = transformTraceData(trace);
 
 const criticalPathSections = [
   {
-    spanId: 'span-A',
-    section_start: 1,
-    section_end: 31,
+    spanID: 'span-A',
+    sectionStart: 1,
+    sectionEnd: 31,
   },
 ];
 
 const test4 = {
   criticalPathSections,
-  trace: transformedTrace,
+  trace: transformedTrace.asOtelTrace(),
 };
 
 export default test4;

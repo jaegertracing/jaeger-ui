@@ -104,7 +104,7 @@ export const UnconnectedTraceDiffGraph: React.FC<Props> = React.memo(props => {
     return <div className="TraceDiffGraph--graphWrapper" />;
   }
 
-  const { edges, vertices } = getEdgesAndVertices(aData, bData);
+  const { edges, vertices } = getEdgesAndVertices(aData.asOtelTrace(), bData.asOtelTrace());
   const keys = getUiFindVertexKeys(uiFind, vertices);
   const dagClassName = cx('TraceDiffGraph--dag', { 'is-uiFind-mode': !!uiFind });
   const inputProps: Record<string, string | undefined> = {

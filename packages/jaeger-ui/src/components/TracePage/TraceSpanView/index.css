@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
   width: 100%;
   padding-top: 0.3%;
   padding-bottom: 0.3%;
-  padding-left: 0.4%;
+  padding-left: 8px;
   background: var(--surface-tertiary);
   margin-bottom: 0%;
 }
@@ -25,4 +25,20 @@ SPDX-License-Identifier: Apache-2.0
 .span-table .ant-dropdown {
   width: 20%;
   z-index: 1;
+}
+
+/* Reduce padding for more compact, data-dense display */
+.span-view-table .ant-table-tbody > tr > td {
+  padding: 8px 12px;
+}
+
+/* Make duration bar background more visible in dark theme */
+[data-theme='dark'] .span-view-table .duration-bar-background {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Monospace font for Span ID column */
+.span-view-table .span-id-cell {
+  font-family: monospace;
+  font-size: 12px;
 }

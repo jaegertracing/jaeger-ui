@@ -4,14 +4,13 @@
 import React from 'react';
 import { Dropdown, Tooltip } from 'antd';
 import { TooltipPlacement } from 'antd/es/tooltip';
-import NewWindowIcon from '../../common/NewWindowIcon';
-import { SpanReference } from '../../../types/trace';
+import ReferenceLink from '../url/ReferenceLink';
+import { ILink } from '../../../types/otel';
 
 import './ReferencesButton.css';
-import ReferenceLink from '../url/ReferenceLink';
 
 type TReferencesButtonProps = {
-  references: SpanReference[];
+  links: ReadonlyArray<ILink>;
   children: React.ReactNode;
   tooltipText: string;
   focusSpan: (spanID: string) => void;
@@ -20,21 +19,23 @@ type TReferencesButtonProps = {
 // ReferencesButton is displayed as a menu at the span level.
 // Example: https://github.com/jaegertracing/jaeger-ui/assets/94157520/2b29921a-2225-4a01-9018-1a1952f186ef
 export default class ReferencesButton extends React.PureComponent<TReferencesButtonProps> {
-  referencesList = (references: SpanReference[]) => {
-    const dropdownItems = references.map(ref => {
-      const { span, spanID } = ref;
+  linksList = (links: ReadonlyArray<ILink>) => {
+    const dropdownItems = links.map(link => {
+      const { span } = link;
+      // Link within the trace should have link.span defined
+      const isSameTrace = span !== undefined;
+
       return {
-        key: `${spanID}`,
+        key: `${link.spanID}`,
         label: (
           <ReferenceLink
-            reference={ref}
+            link={link}
             focusSpan={this.props.focusSpan}
             className="ReferencesButton--TraceRefLink"
           >
-            {span
-              ? `${span.process.serviceName}:${span.operationName} - ${ref.spanID}`
-              : `(another trace) - ${ref.spanID}`}
-            {!span && <NewWindowIcon />}
+            {isSameTrace
+              ? `${span.resource.serviceName}:${span.name} - ${link.spanID}`
+              : `(another trace) - ${link.spanID}`}
           </ReferenceLink>
         ),
       };
@@ -43,7 +44,7 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
   };
 
   render() {
-    const { references, children, tooltipText, focusSpan } = this.props;
+    const { links, children, tooltipText, focusSpan } = this.props;
 
     const tooltipProps = {
       arrowPointAtCenter: true,
@@ -53,23 +54,21 @@ export default class ReferencesButton extends React.PureComponent<TReferencesBut
       classNames: { root: 'ReferencesButton--tooltip' },
     };
 
-    if (references.length > 1) {
+    if (links.length > 1) {
       return (
         <Tooltip {...tooltipProps}>
-          <Dropdown
-            menu={{ items: this.referencesList(references) }}
-            placement="bottomRight"
-            trigger={['click']}
-          >
+          <Dropdown menu={{ items: this.linksList(links) }} placement="bottomRight" trigger={['click']}>
             <a className="ReferencesButton-MultiParent">{children}</a>
           </Dropdown>
         </Tooltip>
       );
     }
-    const ref = references[0];
+
+    const link = links[0];
+
     return (
       <Tooltip {...tooltipProps}>
-        <ReferenceLink reference={ref} focusSpan={focusSpan} className="ReferencesButton-MultiParent">
+        <ReferenceLink link={link} focusSpan={focusSpan} className="ReferencesButton-MultiParent">
           {children}
         </ReferenceLink>
       </Tooltip>

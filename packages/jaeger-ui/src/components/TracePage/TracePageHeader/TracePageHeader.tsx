@@ -5,7 +5,6 @@ import * as React from 'react';
 import { Button, InputRef, Tooltip } from 'antd';
 import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
-import _values from 'lodash/values';
 import { IoArrowBack, IoFileTrayFull, IoChevronForward, IoWarning } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 
@@ -19,7 +18,7 @@ import LabeledList from '../../common/LabeledList';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import TraceName from '../../common/TraceName';
 import { TNil } from '../../../types';
-import { Trace } from '../../../types/trace';
+import { IOtelTrace } from '../../../types/otel';
 import { formatDatetime, formatDuration } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
 
@@ -49,18 +48,19 @@ type TracePageHeaderEmbedProps = {
   slimView: boolean;
   textFilter: string | TNil;
   toSearch: string | null;
-  trace: Trace;
+  trace: IOtelTrace;
   viewType: ETraceViewType;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRange: IViewRange;
+  useOtelTerms: boolean;
 };
 
 export const HEADER_ITEMS = [
   {
     key: 'timestamp',
     label: 'Trace Start',
-    renderer: (trace: Trace) => {
+    renderer: (trace: IOtelTrace) => {
       const dateStr = formatDatetime(trace.startTime);
       const match = dateStr.match(/^(.+)(\.\d+)$/);
       return match ? (
@@ -76,22 +76,22 @@ export const HEADER_ITEMS = [
   {
     key: 'duration',
     label: 'Duration',
-    renderer: (trace: Trace) => formatDuration(trace.duration),
+    renderer: (trace: IOtelTrace) => formatDuration(trace.duration),
   },
   {
     key: 'service-count',
     label: 'Services',
-    renderer: (trace: Trace) => new Set(_values(trace.processes).map(p => p.serviceName)).size,
+    renderer: (trace: IOtelTrace) => trace.services.length,
   },
   {
     key: 'depth',
     label: 'Depth',
-    renderer: (trace: Trace) => _get(_maxBy(trace.spans, 'depth'), 'depth', 0) + 1,
+    renderer: (trace: IOtelTrace) => _get(_maxBy(trace.spans as any[], 'depth'), 'depth', 0) + 1,
   },
   {
     key: 'span-count',
     label: 'Total Spans',
-    renderer: (trace: Trace) => {
+    renderer: (trace: IOtelTrace) => {
       const orphanCount = trace.orphanSpanCount ?? 0;
       const tooltipText = `This trace may be incomplete. ${orphanCount} span${orphanCount !== 1 ? 's' : ''} ${orphanCount !== 1 ? 'have' : 'has'} missing parent span(s).`;
       return (
@@ -142,6 +142,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     updateNextViewRangeTime,
     updateViewRangeTime,
     viewRange,
+    useOtelTerms,
   } = props;
 
   if (!trace) {
@@ -198,6 +199,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           resultCount={resultCount}
           textFilter={textFilter}
           navigable={viewType === ETraceViewType.TraceTimelineViewer}
+          useOtelTerms={useOtelTerms}
         />
         {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
         {showViewOptions && (

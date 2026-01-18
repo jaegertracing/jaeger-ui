@@ -202,7 +202,10 @@ describe('<TracePage>', () => {
 
         instance.focusUiFindMatches();
 
-        expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(defaultProps.trace.data, uiFind);
+        expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(
+          defaultProps.trace.data.asOtelTrace(),
+          uiFind
+        );
         expect(trackFocusSpy).toHaveBeenCalledTimes(1);
       });
 
@@ -428,7 +431,7 @@ describe('<TracePage>', () => {
     const { rerender } = render(<TracePage {...defaultProps} trace={null} />);
     rerender(<TracePage {...defaultProps} trace={{ data: trace, state: fetchedState.DONE }} />);
 
-    expect(setTraceMock).toHaveBeenCalledWith(trace);
+    expect(setTraceMock).toHaveBeenCalledWith(trace.asOtelTrace());
   });
 
   it('calls resetShortcuts, cancelScroll, and scrollManager.destroy on unmount', () => {
@@ -919,7 +922,7 @@ describe('<TracePage>', () => {
 
       instance.setTraceView(ETraceViewType.TraceGraph);
       expect(setStateMock).toHaveBeenCalledWith({ viewType: ETraceViewType.TraceGraph });
-      expect(calculateTraceDagEVSpy).toHaveBeenCalledWith(defaultProps.trace.data);
+      expect(calculateTraceDagEVSpy).toHaveBeenCalledWith(defaultProps.trace.data.asOtelTrace());
 
       setStateMock.mockClear();
       instance.setTraceView(ETraceViewType.TraceSpansView);

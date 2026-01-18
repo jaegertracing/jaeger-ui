@@ -104,35 +104,35 @@ Build a **facade/wrapper over legacy data** that presents OTEL interface:
 // Target: OTEL-centric interface
 interface OtelSpan {
   // Identity
-  traceId: string;              // was: traceID
-  spanId: string;               // was: spanID
-  parentSpanId?: string;        // was: references[0].spanID
-  
+  traceID: string;
+  spanID: string;
+  parentSpanID?: string;        // was: references[0].spanID
+
   // Naming & Classification
   name: string;                 // was: operationName
   kind: SpanKind;               // was: derived from tags['span.kind']
-  
-  // Timing (microseconds initially, nanoseconds later)
-  startTimeUnixMicros: number;  // was: startTime
-  endTimeUnixMicros: number;    // was: startTime + duration
-  durationMicros: number;       // keep for convenience
-  
+
+  // Timing
+  startTime: Microseconds;      // was: startTime
+  endTime: Microseconds;        // was: startTime + duration
+  duration: Microseconds;       // keep for convenience
+
   // Core Data (OTEL terminology)
-  attributes: Attribute[];      // was: tags: KeyValuePair[]
-  events: Event[];              // was: logs: Log[]
-  links: Link[];                // was: references (except parent)
-  status: Status;               // was: derived from tags['error'], etc.
-  
+  attributes: IAttribute[];     // was: tags: KeyValuePair[]
+  events: IEvent[];             // was: logs: Log[]
+  links: ILink[];               // was: references (except parent)
+  status: IStatus;              // was: derived from tags['error'], etc.
+
   // Context
-  resource: Resource;           // was: process
-  instrumentationScope: Scope;  // new OTEL concept (required in OTEL)
-  
+  resource: IResource;          // was: process
+  instrumentationScope: IScope; // new OTEL concept (required in OTEL)
+
   // UI-specific (derived properties - keep these)
   depth: number;
   hasChildren: boolean;
-  relativeStartTimeMicros: number;    // microseconds since trace start
-  childSpanIds: string[];
-  subsidiarilyReferencedBy: Link[];  // spans that reference this span via links (not parent)
+  relativeStartTime: Microseconds;    // microseconds since trace start
+  childSpans: ReadonlyArray<IOtelSpan>;
+  inboundLinks: ILink[];        // was: subsidiaries (not parent)
 }
 
 // OTEL Resource (was Process)
@@ -178,8 +178,12 @@ interface Status {
 | `logs`                | `events`                | Semantic events not logs  |
 | `operationName`       | `name`                  | Simpler, standard name    |
 | `KeyValuePair`        | `Attribute`             | Typed values in OTEL      |
-| `references`          | `parentSpanId + links`  | Split parent vs other refs|
-| `spanID, traceID`     | `spanId, traceId`       | CamelCase consistency     |
+| `references`          | `parentSpanID + links` | Split parent vs other refs|
+| `spanID, traceID`     | `spanID, traceID`      | Consistent with Jaeger    |
+
+### Span References vs. Links
+
+In the legacy model reference types `CHILD_OF` | `FOLLOWS_FROM` were used to indicate both parent/child relations between spans as well as the blocking nature of the child span: a `CHILD_OF` span is presumed to block parent's execution, while a `FOLLOWS_FROM` span does not block parent's execution. In OTEL model the span hierarchy is represented explicitiy via `parentSpanID` field, but the blocking nature of the child span is not represented explicitly. Instead, it can be inferred from the child span's `span_kind`. A `PRODUCER`-`CONSUMER` pair of spans is a non-blocking pair, consumer runs independenly of the parent producer span and does not affet its critical path. Only `INTERNAL`/`CLIENT`/`SERVER` span kinds should be considered blocking.
 
 ---
 
@@ -211,14 +215,14 @@ interface Status {
 │    ↓                                                             │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │ OTEL FACADE LAYER (NEW)                                  │   │
-│  │ src/model/otel-facade/                                   │   │
+│  │ src/model/                                                │   │
 │  │                                                           │   │
 │  │  - OtelSpanFacade wraps Span                             │   │
 │  │    • .attributes → maps span.tags                        │   │
 │  │    • .resource → maps span.process                       │   │
 │  │    • .events → maps span.logs                            │   │
 │  │    • .name → maps span.operationName                     │   │
-│  │    • .spanId → maps span.spanID                          │   │
+│  │    • .spanID → maps span.spanID                          │   │
 │  │                                                           │   │
 │  │  - OtelTraceFacade wraps Trace                           │   │
 │  │    • .spans → returns OtelSpanFacade[]                   │   │
@@ -243,8 +247,8 @@ interface Status {
 │    ↓                                                             │
 │  Redux Store: OTLP Model (DIRECTLY)                             │
 │    {                                                             │
-│      spans: OtelSpan[]  // native OTLP structure                │
-│      // spanId, name, attributes, events, resource, etc.        │
+│      spans: IOtelSpan[]  // native OTLP structure                │
+│      // spanID, name, attributes, events, resource, etc.        │
 │    }                                                             │
 │    ↓                                                             │
 │  Components (ALREADY MIGRATED - no changes needed)              │
@@ -266,13 +270,11 @@ interface Status {
 
 ## Implementation Plan
 
-### Phase 1: Build OTEL Facade
+### Phase 1: Build OTEL Facade ✅
 
 **Goal**: Create facade layer that presents OTEL interface over legacy data.
 
-#### 1.1 Create Facade Types
-
-- [ ] Create `src/types/otel.tsx` with OTEL interfaces:
+#### 1.1 Create Facade Types ✅
   ```typescript
   export interface OtelSpan { ... }
   export interface OtelTrace { ... }
@@ -285,9 +287,7 @@ interface Status {
   export enum StatusCode { ... }
   ```
 
-#### 1.2 Implement Facade Classes
-
-- [ ] Create `src/model/otel-facade/OtelSpanFacade.tsx`:
+#### 1.2 Implement Facade Classes ✅
   ```typescript
   export class OtelSpanFacade implements OtelSpan {
     constructor(private legacySpan: Span) {}
@@ -295,10 +295,10 @@ interface Status {
     // Map legacy → OTEL
     get spanId(): string { return this.legacySpan.spanID; }
     get name(): string { return this.legacySpan.operationName; }
-    get attributes(): Attribute[] { 
+    get attributes(): IAttribute[] { 
       return this.legacySpan.tags.map(kv => ({
         key: kv.key,
-        value: kv.value
+        value: kv.value as AttributeValue
       }));
     }
     get resource(): Resource {
@@ -318,12 +318,10 @@ interface Status {
   }
   ```
 
-- [ ] Create `src/model/otel-facade/OtelTraceFacade.tsx`
-- [ ] Create `src/model/otel-facade/index.tsx` (exports)
+- ✅ Create `src/model/OtelTraceFacade.tsx`
+- ✅ Create `src/model/OtelSpanFacade.tsx`
 
-#### 1.3 Create Facade Selectors
-
-- [ ] Create `src/selectors/otel.tsx`:
+#### 1.3 Create Facade Selectors ✅
   ```typescript
   // Redux selectors that return facade wrappers
   export const selectOtelTrace = (state, traceId) => {
@@ -337,27 +335,33 @@ interface Status {
   };
   ```
 
-#### 1.4 Create React Hooks
-
-- [ ] Create `src/hooks/useOtelTrace.tsx`:
+#### 1.4 Create React Hooks ✅
   ```typescript
   export const useOtelTrace = (traceId: string): OtelTrace | null => {
     const trace = useSelector(state => selectOtelTrace(state, traceId));
     return trace;
   };
   
-  export const useOtelSpan = (traceId: string, spanId: string): OtelSpan | null => {
+  export const useOtelSpan = (traceId: string, spanId: string): IOtelSpan | null => {
     const spans = useSelector(state => selectOtelSpans(state, traceId));
-    return spans.find(s => s.spanId === spanId) || null;
+    return spans.find(s => s.spanID === spanId) || null;
   };
   ```
 
-#### 1.5 Testing
+#### 1.6 Terminology Toggle Feature Flag
+Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to `false`) to control the display terminology.
 
-- [ ] Unit tests for each facade class
-- [ ] Test all property mappings
-- [ ] Test with real trace data
-- [ ] Performance benchmarks (facade overhead should be minimal)
+- When `false`: Use legacy terminology (Tags, Logs, Processes, References, Operation Name).
+- When `true`: Use OpenTelemetry terminology (Attributes, Events, Resources, Links, Span Name).
+
+**Implementation Guidelines**:
+- Components MUST check this flag before rendering labels or choosing which properties of the facade to display.
+- Prefer using the `OtelSpanFacade` even when the flag is `false`, as the facade provides a unified interface, but use the flag to decide which terminology to present to the user.
+
+#### 1.7 Testing ✅
+- ✅ Test all property mappings
+- ✅ Test with real trace data
+- ✅ Performance benchmarks (facade overhead should be minimal)
 
 ### Phase 2: Component Migration
 
@@ -405,9 +409,13 @@ interface Status {
    ```
 
 3. **Update UI labels:**
+  Use `config.useOpenTelemetryTerms` to control which labels to display:
+   - Legacy → OpenTelemetry
    - "Tags" → "Attributes"
    - "Process" → "Resource"
    - "Logs" → "Events"
+   - "references" → "Links"
+   - "operationName" → "spanName"
 
 4. **Update tests:**
    - Mock OtelSpan instead of Span
@@ -419,78 +427,147 @@ interface Status {
 #### Detailed Component Breakdown
 
 **Pilot Migration**
-- [ ] `TraceTimelineViewer/SpanDetail/KeyValuesTable` - Tags → Attributes
-- [ ] `TraceTimelineViewer/SpanDetail/AccordianLogs` - Logs → Events
+- [x] `TraceTimelineViewer/SpanDetail/KeyValuesTable` - Tags → Attributes ✅
+- [x] `TraceTimelineViewer/SpanDetail/AccordianLogs` - Logs → Events ✅
 
 **Core Display Components**
-- [ ] `TraceTimelineViewer/VirtualizedTraceView` - Main trace view
-- [ ] `TraceTimelineViewer/SpanBarRow` - Span bars
-- [ ] `TraceTimelineViewer/SpanDetailRow` - Span details
-- [ ] `TraceTimelineViewer/utils` - Utility functions (isErrorSpan, etc.)
+- [x] `TraceTimelineViewer/VirtualizedTraceView` - Main trace view ✅
+- [x] `TraceTimelineViewer/SpanBarRow` - Span bars ✅
+- [x] `TraceTimelineViewer/SpanDetailRow` - Span details ✅
+- [x] `TraceTimelineViewer/utils` - Utility functions (isErrorSpan, etc.) ✅
 
 **Statistics & Analysis**
-- [ ] `TraceStatistics/tableValues` - Heavy tag user
-- [ ] `TraceStatistics/PopupSql` - Tag extraction
-- [ ] `TraceStatistics/index` - Statistics display
+- [x] `TraceStatistics/tableValues` - Heavy tag user ✅ (Terminology updated)
+- [x] `TraceStatistics/PopupSql` - Tag extraction ✅
+- [x] `TraceStatistics/index` - Statistics display ✅ (Terminology updated)
 
 **Search & Results**
-- [ ] `SearchResults/ResultItem` - Service name display
-- [ ] `SearchTracePage` - Trace list
+- [x] `SearchResults/ResultItem` - Service name display ✅
+- [x] `SearchTracePage` - Trace list ✅
+- [x] `SearchForm.jsx` - Terminology: "Operation" → "Span Name", "Tags" → "Attributes" ✅
 
 **Supporting Components**
-- [ ] `TracePageHeader` - Header info
-- [ ] `TraceFlamegraph` - Flamegraph view
-- [ ] `TraceSpanView` - Span table view
+- [x] `TracePageHeader` - Header info ✅
+- [x] `TraceFlamegraph` - Flamegraph view ✅
+- [x] `TraceSpanView` - Span table view ✅. Terminology update: "Operation" → "Span Name" ✅
+- [x] `TracePageSearchBar` - Tooltip terminology update ✅
+
+**Timeline & Graph**
+- [x] `TimelineHeaderRow` - "Service & Operation" → "Service & Span Name" ✅
+- [x] `SpanBarRow` - Tooltip terminology update ✅
+- [x] `AccordionLinks` - "References" → "Links" ✅
+- [x] `OpNode` - Graph nodes: "Operation" → "Span Name" ✅
 
 **Remaining Components**
-- [ ] All remaining Category B and C components
-- [ ] Verification and final testing
+- [x] `model/ddg/transformTracesToPaths` - DDG Path Aggregation ✅
+- [x] Verification and final testing ✅
 
-### Phase 3: Backend API Switch
+### Phase 3: Backend API Switch (Incremental)
 
-**Goal**: Switch from `/api/` to `/api/v3/` OTLP endpoints.
+**Goal**: Switch from `/api/` to `/api/v3/` OTLP endpoints using **React Query** for data loading. This phase is broken down into granular milestones to minimize risk and allow for early validation.
 
-#### 3.1 OTLP API Client
+#### Milestone 3.1: Metadata Exploration (Search Page)
+**Goal**: Implement the simplest OTLP endpoints and integrate them into the Search page.
+- [ ] Implement `fetchServices()` and `fetchSpanNames(service)` in `OtlpApiClient`.
+- [ ] Setup `QueryClient` and `QueryClientProvider`.
+- [ ] Create `useServices()` and `useSpanNames(service)` hooks.
+- [ ] Update `SearchForm.jsx` to use these hooks instead of Redux/JaegerAPI.
+- **Verification**: Search page dropdowns are populated from `/api/v3/`.
 
-- [ ] Create `src/api/v3/client.ts`:
-  ```typescript
-  export class OtlpApiClient {
-    async getTrace(traceId: string): Promise<OtelTrace> {
-      const response = await fetch(`/api/v3/traces/${traceId}`);
-      const otlpData = await response.json();
-      return parseOtlpTrace(otlpData);
-    }
-    
-    async findTraces(query: SearchQuery): Promise<OtelTrace[]> {
-      // ... implement with OTLP query params
-    }
-  }
-  ```
+#### Milestone 3.2: Single Trace Loading
+**Goal**: Load a full trace by ID using the new OTLP parser.
+- [ ] Implement `getTrace(traceId)` in `OtlpApiClient`.
+- [ ] Implement the OTLP Parser (`src/api/v3/parser.ts`) to convert OTLP JSON to `IOtelTrace`.
+- [ ] Create `useTrace(traceId)` hook.
+- [ ] Update `TracePage` to use the new hook.
+- [ ] Use `OtelTraceFacade` to wrap the new data, ensuring visual parity in components.
+- **Verification**: Opening a trace (e.g., via direct URL) loads data from `/api/v3/`.
 
-#### 3.2 OTLP Parser
+#### Milestone 3.3: Trace Search
+**Goal**: Implement full search functionality, including input parameter conversion.
+- [ ] Implement `findTraces(query)` in `OtlpApiClient`.
+- [ ] Map Search UI parameters to OTLP query parameters.
+- [ ] Update `SearchPage` results to use the new client via React Query.
+- **Verification**: Searching for traces from the UI returns results from `/api/v3/`.
+
+#### Milestone 3.4: Extended Operations & Cleanup
+**Goal**: Migrate remaining operations and decommission legacy code.
+- [ ] Implement `archiveTrace`, `fetchDependencies`, and `fetchMetrics`.
+- [ ] Update unmigrated components to use the new client.
+- [ ] Gradually decommission Redux actions/reducers for trace data.
+- [ ] Transition to Phase 4 (Cleanup).
+
+---
+
+#### 3.5 OTLP Data Model (Wire vs. Domain)
+
+To maintain a clean separation between the backend's wire format and the UI's domain model, we will adopt a two-tier type system for the OTLP route:
+
+1.  **Wire Format Types (`IOtlpTraceData`)**:
+    - **Customary Source**: These types should be **generated** from the [Jaeger API v3 Swagger/IDL definition](https://github.com/jaegertracing/jaeger-idl/tree/main/proto/api_v3).
+    - **Role**: Defines the raw JSON/Protobuf structure as returned by `/api/v3/`. No UI-specific properties.
+2.  **Domain Model Types (`IOtelTrace`, `IOtelSpan`)**:
+    - **Role**: The "enriched" model used by UI components.
+    - **Unified Interface**: This is the same interface that `OtelTraceFacade` implements for legacy data.
+    - **Properties**: Includes derived UI properties (depth, hasChildren, relative timing, critical path, etc.) that are NOT present in the wire format.
+
+#### 3.6 OTLP Parser & Enrichment
+
+The new `OtlpParser` replaces the role of `transformTraceData` for the OTLP route.
 
 - [ ] Create `src/api/v3/parser.ts`:
   ```typescript
-  // Parse OTLP JSON/protobuf → OtelSpan/OtelTrace
-  export function parseOtlpTrace(otlpData: any): OtelTrace {
-    // Direct OTLP → OtelSpan (no legacy conversion)
-    // Still add UI-specific derived fields:
-    // - depth, hasChildren, relativeStartTimeMicros, childSpanIds
+  /**
+   * Transforms raw OTLP wire data into the enriched domain model.
+   * This is equivalent to transformTraceData for the native route.
+   */
+  export function parseOtlpTrace(wireData: IOtlpTraceData): IOtelTrace {
+    // 1. Validate wireData (optionally with Zod)
+    // 2. Map OTLP properties to IOtelTrace
+    // 3. ENRICH: Calculate derived properties (depth, parent/child refs, etc.)
+    // 4. Return enriched IOtelTrace
   }
   ```
 
-#### 3.3 Redux Integration
+#### 3.7 Integration Testing Strategy
 
-- [ ] Update `src/reducers/trace.ts` to use OTLP parser
-- [ ] Add feature flag for gradual rollout
-- [ ] Testing and validation
+To ensure `OtlpApiClient` successfully interfaces with the Jaeger backend before UI integration, a multi-layered testing approach will be adopted:
+
+##### 1. Service-Level Mocking (MSW)
+Instead of mocking `fetch` directly, use **Mock Service Worker (MSW)** to intercept network requests at the service layer.
+- **Goal**: Test parsing logic, error handling, and URL construction using the real `fetch` API against realistic mocked OTLP payloads.
+
+##### 2. Contract Validation (Zod)
+Use a runtime validation library (e.g., `zod`) in the parser to validate the incoming OTLP JSON.
+- **Goal**: Catch backend breaking changes at the network boundary. Ensures `wireData` strictly matches our generated types.
+
+##### 3. Backend Smoke Tests (Real Jaeger)
+A standalone integration test script that runs against a live Jaeger instance.
+- **Workflow**: Start `jaegertracing/jaeger` via Docker, send sample OTLP data, and verify the client can fetch and parse it correctly.
+
+#### 3.8 Facade Coexistence & Cache Transition
+
+During the transition, the UI will see two paths to the same unified interface (`IOtelTrace`):
+- **Legacy Path**: `Jaeger JSON (v1) -> Redux Store -> OtelTraceFacade -> IOtelTrace`
+- **Native Path**: `OTLP JSON (v3) -> React Query -> OtlpParser -> IOtelTrace`
+
+**Handling the Overlap**:
+- **Redundant Fetching (Temporary)**: Navigating from Search to Trace will trigger a re-fetch from `/api/v3/`.
+- **Deliberate Separation**: We will separate **Trace Summaries** (lighter, for Search) from the **Full Trace** (for Trace Page) to optimize memory usage.
+- **Decommissioning**: Once Milestones 3.1-3.3 are complete, the Legacy Path and Redux dependency for trace data will be removed.
+
+**Deliberate Separation (Permanent Design) of Search and Trace data**
+
+We will move towards a model where the Search page only fetches **Trace Summaries**, while the Trace page fetches the **Full Trace**.
+- **Rationale**: Currently, loading full traces on the Search page causes significant memory bloat, especially when searching over large sets. Separating these ensures the Search page remains lightweight.
+- **UI Performance**: To maintain the "fast navigation" feel, we can implement **Pre-fetching** on hover/intent via React Query, loading the full trace in the background before the user even clicks.
 
 ### Phase 4: Cleanup & Optimization
 
 **Goal**: Remove facade layer and legacy code.
 
 - [ ] Remove `OtelSpanFacade`, `OtelTraceFacade` classes
-- [ ] Update selectors to return OtelSpan directly
+- [ ] Update selectors to return `IOtelSpan` directly
 - [ ] Remove legacy types (mark as deprecated first)
 - [ ] Remove `src/api/jaeger.ts` (old REST API)
 - [ ] Remove `transformTraceData` (old transformer)

@@ -66,6 +66,7 @@ describe('transformTraceData()', () => {
       startTime,
       duration,
       tags: [],
+      logs: [],
       processID: 'p1',
     },
     {
@@ -82,6 +83,7 @@ describe('transformTraceData()', () => {
       startTime: startTime + 100,
       duration,
       tags: [],
+      logs: [],
       processID: 'p1',
     },
   ];
@@ -100,6 +102,7 @@ describe('transformTraceData()', () => {
     startTime: startTime + 50,
     duration,
     tags: [],
+    logs: [],
     processID: 'p1',
   };
 
@@ -110,6 +113,7 @@ describe('transformTraceData()', () => {
     startTime: startTime + 50,
     duration,
     tags: [],
+    logs: [],
     processID: 'p1',
   };
 
@@ -226,5 +230,226 @@ describe('transformTraceData()', () => {
 
     const result = transformTraceData(traceData);
     expect(result.orphanSpanCount).toBe(1);
+  });
+
+  describe('asOtelTrace()', () => {
+    it('should implement IOtelTrace interface and memoize the instance', () => {
+      const traceData = {
+        traceID,
+        processes,
+        spans: [...spans, rootSpanWithoutRefs],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // Check if asOtelTrace exists
+      expect(typeof result.asOtelTrace).toBe('function');
+
+      // First call - should create instance
+      const otelTrace1 = result.asOtelTrace();
+      expect(otelTrace1).toBeDefined();
+      expect(otelTrace1.traceID).toBe(traceID);
+      expect(otelTrace1.spans.length).toBe(3);
+
+      // Second call - should return same instance (memoization)
+      const otelTrace2 = result.asOtelTrace();
+      expect(otelTrace2).toBe(otelTrace1);
+    });
+  });
+
+  describe('spanMap, rootSpans, and childSpans collections', () => {
+    it('should build spanMap with all spans', () => {
+      const traceData = {
+        traceID,
+        processes,
+        spans: [...spans, rootSpanWithoutRefs],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // spanMap should contain all spans
+      expect(result.spanMap).toBeInstanceOf(Map);
+      expect(result.spanMap.size).toBe(3);
+      expect(result.spanMap.get(rootSpanID)).toBeDefined();
+      expect(result.spanMap.get(spans[0].spanID)).toBeDefined();
+      expect(result.spanMap.get(spans[1].spanID)).toBeDefined();
+    });
+
+    it('should identify root spans correctly', () => {
+      const traceData = {
+        traceID,
+        processes,
+        spans: [...spans, rootSpanWithoutRefs],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // Should have one root span (rootSpanWithoutRefs)
+      expect(result.rootSpans).toBeInstanceOf(Array);
+      expect(result.rootSpans.length).toBe(1);
+      expect(result.rootSpans[0].spanID).toBe(rootSpanID);
+      expect(result.rootSpans[0].operationName).toBe(rootOperationName);
+    });
+
+    it('should build childSpans arrays correctly', () => {
+      const traceData = {
+        traceID,
+        processes,
+        spans: [...spans, rootSpanWithoutRefs],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // Root span should have two children
+      const rootSpan = result.spanMap.get(rootSpanID);
+      expect(rootSpan.childSpans).toBeInstanceOf(Array);
+      expect(rootSpan.childSpans.length).toBe(2);
+
+      // Children should be sorted by start time
+      expect(rootSpan.childSpans[0].spanID).toBe(spans[0].spanID);
+      expect(rootSpan.childSpans[1].spanID).toBe(spans[1].spanID);
+
+      // Child spans should have no children
+      const childSpan1 = result.spanMap.get(spans[0].spanID);
+      const childSpan2 = result.spanMap.get(spans[1].spanID);
+      expect(childSpan1.childSpans).toEqual([]);
+      expect(childSpan2.childSpans).toEqual([]);
+    });
+
+    it('should handle orphan spans as root spans', () => {
+      const traceData = {
+        traceID,
+        processes,
+        spans: [...spans, rootSpanWithMissingRef],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // rootSpanWithMissingRef references a missing parent, so it should be a root span
+      expect(result.rootSpans.length).toBe(1);
+      expect(result.rootSpans[0].spanID).toBe(rootSpanID);
+
+      // The root span should still have its two children
+      const rootSpan = result.spanMap.get(rootSpanID);
+      expect(rootSpan.childSpans.length).toBe(2);
+    });
+
+    it('should handle multiple root spans', () => {
+      const secondRoot = {
+        traceID,
+        spanID: 'secondRoot',
+        operationName: 'secondRootOp',
+        startTime: startTime + 100,
+        duration,
+        tags: [],
+        logs: [],
+        processID: 'p1',
+      };
+
+      const traceData = {
+        traceID,
+        processes,
+        spans: [rootSpanWithoutRefs, secondRoot],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // Should have two root spans
+      expect(result.rootSpans.length).toBe(2);
+      expect(result.rootSpans[0].spanID).toBe(rootSpanID);
+      expect(result.rootSpans[1].spanID).toBe(secondRoot.spanID);
+    });
+
+    it('should maintain span references in childSpans array', () => {
+      const traceData = {
+        traceID,
+        processes,
+        spans: [...spans, rootSpanWithoutRefs],
+      };
+
+      const result = transformTraceData(traceData);
+
+      const rootSpan = result.spanMap.get(rootSpanID);
+
+      // childSpans should contain actual span objects, not IDs
+      rootSpan.childSpans.forEach(child => {
+        expect(child.spanID).toBeDefined();
+        expect(child.operationName).toBeDefined();
+        expect(child).toBe(result.spanMap.get(child.spanID));
+      });
+    });
+
+    it('should calculate depth and sort spans in DFS order', () => {
+      // Create a linear trace: Root -> Child -> GrandChild
+      const grandChildSpan = {
+        traceID,
+        spanID: 'grandChild',
+        operationName: 'grandChildOp',
+        references: [{ refType: 'CHILD_OF', traceID, spanID: spans[0].spanID }],
+        startTime: startTime + 200,
+        duration: 10,
+        tags: [],
+        processID: 'p1',
+      };
+
+      // spans[0] is 'someOperationName', referencing rootSpanID
+      // rootSpanWithoutRefs is the root (start + 50)
+      // spans[0] starts at startTime (0 relative to trace start? No, trace start is startTime).
+
+      // Let's use a fresh set of spans to be clear about order
+      const tStart = 1000;
+      const root = { ...rootSpanWithoutRefs, spanID: 'root', startTime: tStart, references: [] };
+      const child1 = {
+        ...spans[0],
+        spanID: 'child1',
+        startTime: tStart + 10,
+        references: [{ refType: 'CHILD_OF', traceID, spanID: 'root' }],
+      };
+      const child2 = {
+        ...spans[1],
+        spanID: 'child2',
+        startTime: tStart + 20,
+        references: [{ refType: 'CHILD_OF', traceID, spanID: 'root' }],
+      };
+      const grandChild1 = {
+        ...spans[0],
+        spanID: 'grandChild1',
+        startTime: tStart + 15,
+        references: [{ refType: 'CHILD_OF', traceID, spanID: 'child1' }],
+      };
+
+      // Tree structure:
+      // root (0)
+      //   -> child1 (10)
+      //      -> grandChild1 (15)
+      //   -> child2 (20)
+
+      // Expected DFS order: root, child1, grandChild1, child2
+
+      const traceData = {
+        traceID,
+        processes,
+        spans: [root, child1, child2, grandChild1],
+      };
+
+      const result = transformTraceData(traceData);
+
+      // Check depth
+      const map = result.spanMap;
+      expect(map.get('root').depth).toBe(0);
+      expect(map.get('child1').depth).toBe(1);
+      expect(map.get('grandChild1').depth).toBe(2);
+      expect(map.get('child2').depth).toBe(1);
+
+      // Check hasChildren
+      expect(map.get('root').hasChildren).toBe(true);
+      expect(map.get('child1').hasChildren).toBe(true);
+      expect(map.get('grandChild1').hasChildren).toBe(false);
+      expect(map.get('child2').hasChildren).toBe(false);
+
+      // Check flat spans order (DFS)
+      const ids = result.spans.map(s => s.spanID);
+      expect(ids).toEqual(['root', 'child1', 'grandChild1', 'child2']);
+    });
   });
 });

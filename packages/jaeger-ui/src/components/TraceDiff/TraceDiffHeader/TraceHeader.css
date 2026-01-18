@@ -5,8 +5,8 @@ SPDX-License-Identifier: Apache-2.0
 
 .TraceDiffHeader--traceHeader {
   align-items: stretch;
-  background: #fafafa;
-  border-right: 1px solid #d8d8d8;
+  background: var(--surface-primary);
+  border-right: 1px solid var(--border-default);
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -38,11 +38,11 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TraceDiffHeader--traceTitle.is-error {
-  color: #c00;
+  color: var(--feedback-error);
 }
 
 .TraceDiffHeader--traceTitleChevron {
-  color: #199;
+  color: var(--interactive-primary);
   font-size: 0.75em;
   position: absolute;
   right: 15px;
@@ -60,8 +60,8 @@ SPDX-License-Identifier: Apache-2.0
   list-style: none;
   margin: 0;
   padding: 8px 15px;
-  background: #fafafa;
-  border-top: 1px solid #f0f0f0;
+  background: var(--surface-primary);
+  border-top: 1px solid var(--border-default);
 }
 
 .TraceDiffHeader--traceAttr {

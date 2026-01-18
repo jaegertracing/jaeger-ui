@@ -5,20 +5,21 @@ import React, { useState } from 'react';
 import { Popover, Tooltip } from 'antd';
 import _groupBy from 'lodash/groupBy';
 
-import AccordianLogs from './SpanDetail/AccordianLogs';
+import AccordionEvents from './SpanDetail/AccordionEvents';
 
 import { ViewedBoundsFunctionType } from './utils';
 import { TNil } from '../../../types';
-import { Span, criticalPathSection } from '../../../types/trace';
+import { CriticalPathSection } from '../../../types/critical_path';
+import { IEvent, IOtelSpan } from '../../../types/otel';
 
 import './SpanBar.css';
 
-type TCommonProps = {
+type TSpanBarProps = {
   color: string;
   hintSide: string;
   // onClick: (evt: React.MouseEvent<any>) => void;
   onClick?: (evt: React.MouseEvent<any>) => void;
-  criticalPath: criticalPathSection[];
+  criticalPath: CriticalPathSection[];
   viewEnd: number;
   viewStart: number;
   getViewedBounds: ViewedBoundsFunctionType;
@@ -30,10 +31,11 @@ type TCommonProps = {
       }
     | TNil;
   traceStartTime: number;
-  span: Span;
+  span: IOtelSpan;
   longLabel: string;
   shortLabel: string;
   traceDuration: number;
+  useOtelTerms: boolean;
 };
 
 function toPercent(value: number) {
@@ -53,7 +55,7 @@ function SpanBarCriticalPath(props: { criticalPathViewStart: number; criticalPat
       className="SpanBar--criticalPath"
       onMouseEnter={() => setShouldLoadTooltip(true)}
       style={{
-        background: 'black',
+        background: 'var(--critical-path-color)',
         left: toPercentInDecimal(props.criticalPathViewStart),
         width: toPercentInDecimal(props.criticalPathViewEnd - props.criticalPathViewStart),
       }}
@@ -82,7 +84,7 @@ function SpanBarCriticalPath(props: { criticalPathViewStart: number; criticalPat
   return criticalPath;
 }
 
-function SpanBar(props: TCommonProps) {
+function SpanBar(props: TSpanBarProps) {
   const {
     criticalPath,
     viewEnd,
@@ -97,10 +99,12 @@ function SpanBar(props: TCommonProps) {
     shortLabel,
     longLabel,
     traceDuration,
+    useOtelTerms,
   } = props;
-  // group logs based on timestamps
-  const logGroups = _groupBy(span.logs, log => {
-    const posPercent = getViewedBounds(log.timestamp, log.timestamp).start;
+
+  // group events based on timestamps
+  const eventGroups = _groupBy(span.events, (event: IEvent) => {
+    const posPercent = getViewedBounds(event.timestamp, event.timestamp).start;
     // round to the nearest 0.2%
     return toPercent(Math.round(posPercent * 500) / 500);
   });
@@ -135,20 +139,21 @@ function SpanBar(props: TCommonProps) {
         <div className={`SpanBar--label is-${hintSide}`}>{label}</div>
       </div>
       <div>
-        {Object.keys(logGroups).map(positionKey => (
+        {Object.keys(eventGroups).map(positionKey => (
           <Popover
             key={positionKey}
             arrow={{ pointAtCenter: true }}
             classNames={{ root: 'SpanBar--logHint' }}
             placement="topLeft"
             content={
-              <AccordianLogs
+              <AccordionEvents
                 interactive={false}
                 isOpen
-                logs={logGroups[positionKey]}
+                events={eventGroups[positionKey]}
                 timestamp={traceStartTime}
                 currentViewRangeTime={[0, 1]}
                 traceDuration={traceDuration}
+                useOtelTerms={useOtelTerms}
               />
             }
           >
@@ -172,10 +177,10 @@ function SpanBar(props: TCommonProps) {
       )}
       {criticalPath &&
         criticalPath.map((each, index) => {
-          const critcalPathViewBounds = getViewedBounds(each.section_start, each.section_end);
+          const critcalPathViewBounds = getViewedBounds(each.sectionStart, each.sectionEnd);
           const criticalPathViewStart = critcalPathViewBounds.start;
           const criticalPathViewEnd = critcalPathViewBounds.end;
-          const key = `${each.spanId}-${index}`;
+          const key = `${each.spanID}-${index}`;
 
           return (
             <SpanBarCriticalPath

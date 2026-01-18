@@ -11,14 +11,15 @@ import SpanBar from './SpanBar';
 import Ticks from './Ticks';
 
 import { TNil } from '../../../types';
-import { criticalPathSection, Span } from '../../../types/trace';
+import { CriticalPathSection } from '../../../types/critical_path';
+import { IOtelSpan } from '../../../types/otel';
 
 import './SpanBarRow.css';
 
 type SpanBarRowProps = {
   className?: string;
   color: string;
-  criticalPath: criticalPathSection[];
+  criticalPath: CriticalPathSection[];
   columnDivision: number;
   isChildrenExpanded: boolean;
   isDetailExpanded: boolean;
@@ -41,12 +42,14 @@ type SpanBarRowProps = {
         serviceName: string;
       }
     | TNil;
-  showErrorIcon: boolean;
+  hasOwnError: boolean;
+  hasChildError: boolean;
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
-  span: Span;
+  span: IOtelSpan;
   focusSpan: (spanID: string) => void;
   traceDuration: number;
+  useOtelTerms: boolean;
 };
 
 /**
@@ -68,7 +71,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   numTicks,
   rpc = null,
   noInstrumentedServer,
-  showErrorIcon,
+  hasOwnError,
+  hasChildError,
   getViewedBounds,
   traceStartTime,
   span,
@@ -76,6 +80,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   traceDuration,
   onDetailToggled,
   onChildrenToggled,
+  useOtelTerms,
 }) => {
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
@@ -88,11 +93,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   const {
     duration,
     hasChildren: isParent,
-    operationName,
-    process: { serviceName },
+    name: operationName,
+    resource: { serviceName },
   } = span;
   const label = formatDuration(duration);
-  const viewBounds = getViewedBounds(span.startTime, span.startTime + span.duration);
+  const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
 
@@ -106,6 +111,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     longLabel = `${label} | ${labelDetail}`;
     hintSide = 'right';
   }
+
+  // In OTEL model, links are used for "related" spans (not parent spans).
+  // Show the references button if there's at least one link.
+  const hasLinks = span.links && span.links.length > 0;
+  const hasInboundLinks = span.inboundLinks && span.inboundLinks.length > 0;
 
   return (
     <TimelineRow
@@ -122,6 +132,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             childrenVisible={isChildrenExpanded}
             span={span}
             onClick={isParent ? _childrenToggle : undefined}
+            color={color}
           />
           <a
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
@@ -134,7 +145,10 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             <span
               className={`span-svc-name ${isParent && !isChildrenExpanded ? 'is-children-collapsed' : ''}`}
             >
-              {showErrorIcon && <IoAlert className="SpanBarRow--errorIcon" />}
+              {hasOwnError && <IoAlert className="SpanBarRow--errorIcon" />}
+              {!hasOwnError && hasChildError && (
+                <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
+              )}
               {serviceName}{' '}
               {rpc && (
                 <span>
@@ -156,21 +170,22 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             </span>
             <small className="endpoint-name">{rpc ? rpc.operationName : operationName}</small>
           </a>
-          {span.references && span.references.length > 1 && (
+          {hasLinks && (
             <ReferencesButton
-              references={span.references}
-              tooltipText="Contains multiple references"
+              links={span.links}
+              tooltipText={useOtelTerms ? 'Contains multiple links' : 'Contains multiple references'}
               focusSpan={focusSpan}
             >
               <IoGitNetwork />
             </ReferencesButton>
           )}
-          {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
+          {hasInboundLinks && (
             <ReferencesButton
-              references={span.subsidiarilyReferencedBy}
-              tooltipText={`This span is referenced by ${
-                span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
-              }`}
+              links={span.inboundLinks}
+              tooltipText={
+                (useOtelTerms ? 'This span is linked from ' : 'This span is referenced by ') +
+                (span.inboundLinks.length === 1 ? 'another span' : 'multiple other spans')
+              }
               focusSpan={focusSpan}
             >
               <IoCloudUploadOutline />
@@ -198,6 +213,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           traceStartTime={traceStartTime}
           span={span}
           traceDuration={traceDuration}
+          useOtelTerms={useOtelTerms}
         />
       </TimelineRow.Cell>
     </TimelineRow>

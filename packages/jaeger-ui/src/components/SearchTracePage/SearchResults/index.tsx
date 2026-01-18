@@ -1,5 +1,3 @@
-// TODO: @ flow
-
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -24,12 +22,11 @@ import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getLocation } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
-import { getTracePageHeaderParts } from '../../../model/trace-viewer';
 import { stripEmbeddedState } from '../../../utils/embedded-url';
 
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
-import { KeyValuePair, Trace, TraceData } from '../../../types/trace';
+import { IOtelTrace } from '../../../types/otel';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -49,8 +46,8 @@ type SearchResultsProps = {
   showStandaloneLink: boolean;
   skipMessage?: boolean;
   spanLinks?: Record<string, string> | undefined;
-  traces: Trace[];
-  rawTraces: TraceData[];
+  traces: IOtelTrace[];
+  rawTraces: any[];
   sortBy: string;
   handleSortChange: (sortBy: string) => void;
 };
@@ -80,9 +77,50 @@ export function SelectSort({ sortBy, handleSortChange }: SelectSortProps) {
   );
 }
 
-// export for tests
-export function createBlob(rawTraces: TraceData[]) {
-  return new Blob([`{"data":${JSON.stringify(rawTraces)}}`], { type: 'application/json' });
+const getStripCircular = () => {
+  const cache = new Set();
+  return function (this: any, key: string, value: any) {
+    if (
+      key === 'childSpans' ||
+      key === 'process' ||
+      key === 'span' ||
+      key === 'subsidiarilyReferencedBy' ||
+      key === '_otelFacade' ||
+      key === 'traceName' ||
+      key === 'tracePageTitle' ||
+      key === 'traceEmoji' ||
+      key === 'services' ||
+      key === 'spanMap' ||
+      key === 'rootSpans' ||
+      key === 'orphanSpanCount' ||
+      key === 'endTime' ||
+      key === 'depth' ||
+      key === 'hasChildren' ||
+      key === 'relativeStartTime'
+    ) {
+      return;
+    }
+    // We need to strip duration and startTime from TraceData but not from SpanData.
+    // The TraceData object can be recognized by the presence of 'processes' field.
+    if ((key === 'duration' || key === 'startTime') && this.processes) {
+      return;
+    }
+
+    if (typeof value === 'object' && value !== null) {
+      if (cache.has(value)) {
+        // Circular reference found, discard key
+        return;
+      }
+      // Store value in our collection
+      cache.add(value);
+    }
+    return value;
+  };
+};
+
+export function createBlob(rawTraces: any[]) {
+  const stringified = JSON.stringify(rawTraces, getStripCircular());
+  return new Blob([`{"data":${stringified}}`], { type: 'application/json' });
 }
 
 export function UnconnectedSearchResults({
@@ -172,8 +210,6 @@ export function UnconnectedSearchResults({
   }
   const cohortIds = new Set(diffCohort.map(datum => datum.id));
   const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
-  const isErrorTag = ({ key, value }: KeyValuePair<string | boolean>) =>
-    key === 'error' && (value === true || value === 'true');
   return (
     <div className="SearchResults">
       <div className="SearchResults--header">
@@ -181,19 +217,17 @@ export function UnconnectedSearchResults({
           <div className="ub-p3 SearchResults--headerScatterPlot">
             <ScatterPlot
               data={traces.map(t => {
-                const rootSpanInfo = t.spans && t.spans.length > 0 ? getTracePageHeaderParts(t.spans) : null;
                 return {
                   x: t.startTime,
                   y: t.duration,
                   traceID: t.traceID,
                   size: t.spans.length,
                   name: t.traceName,
-                  color: t.spans.some(sp => sp.tags.some(isErrorTag)) ? 'red' : '#12939A',
+                  color: t.hasErrors() ? 'red' : '#12939A',
                   services: t.services || [],
-                  rootSpanName: rootSpanInfo?.operationName || 'Unknown',
                 };
               })}
-              onValueClick={(t: Trace) => {
+              onValueClick={(t: IOtelTrace) => {
                 goToTrace(t.traceID);
               }}
             />

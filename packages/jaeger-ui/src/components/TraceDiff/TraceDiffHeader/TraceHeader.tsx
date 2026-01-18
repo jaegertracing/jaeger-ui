@@ -11,6 +11,7 @@ import { fetchedState } from '../../../constants';
 import { formatDuration } from '../../../utils/date';
 
 import { FetchedState, TNil } from '../../../types';
+import { IOtelTrace } from '../../../types/otel';
 import { ApiError } from '../../../types/api-error';
 import TraceId from '../../common/TraceId';
 
@@ -34,7 +35,7 @@ export function Attrs({
   totalSpans,
 }: {
   startTime: number | TNil;
-  duration: number | TNil;
+  duration: IOtelTrace['duration'] | TNil;
   totalSpans: number | TNil;
 }) {
   return (
@@ -46,7 +47,9 @@ export function Attrs({
       </li>
       <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
         <span className="u-tx-muted">Duration: </span>
-        <strong data-testid="TraceDiffHeader--traceAttr--duration">{formatDuration(duration || 0)}</strong>
+        <strong data-testid="TraceDiffHeader--traceAttr--duration">
+          {formatDuration((duration || 0) as IOtelTrace['duration'])}
+        </strong>
       </li>
       <li className="TraceDiffHeader--traceAttr" data-testid="TraceDiffHeader--traceAttr">
         <span className="u-tx-muted">Spans: </span>{' '}
@@ -65,7 +68,7 @@ export default function TraceHeader({
   totalSpans,
   traceName,
 }: {
-  duration: number | TNil;
+  duration: IOtelTrace['duration'] | TNil;
   error?: ApiError;
   startTime: number | TNil;
   state: FetchedState | TNil;

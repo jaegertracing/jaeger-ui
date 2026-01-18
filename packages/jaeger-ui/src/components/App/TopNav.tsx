@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
 import ThemeToggleButton from './ThemeToggleButton';
+import Branding from './Branding';
 import * as dependencyGraph from '../DependencyGraph/url';
 import * as deepDependencies from '../DeepDependencies/url';
 import * as qualityMetrics from '../QualityMetrics/url';
@@ -99,12 +100,8 @@ function isItem(itemOrGroup: ConfigMenuItem | ConfigMenuGroup): itemOrGroup is C
 
 const itemsGlobalLeft: MenuProps['items'] = [
   {
-    label: (
-      <Link to={prefixUrl('/')} style={{ fontSize: '14px', fontWeight: 500 }}>
-        JAEGER UI
-      </Link>
-    ),
-    key: 'JAEGER UI',
+    label: <Branding />,
+    key: 'Branding',
   },
 ];
 

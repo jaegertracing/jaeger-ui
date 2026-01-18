@@ -3,11 +3,11 @@
 
 import { Dropdown } from 'antd';
 import * as React from 'react';
-import { Link } from '../../types/trace';
+import { Hyperlink } from '../../types/hyperlink';
 import NewWindowIcon from './NewWindowIcon';
 
 type ExternalLinksProps = {
-  links: Link[];
+  links: Hyperlink[];
 };
 
 const LinkValue = (props: {
@@ -28,7 +28,7 @@ const LinkValue = (props: {
 );
 
 // export for testing
-export const linkValueList = (links: Link[]) => {
+export const linkValueList = (links: Hyperlink[]) => {
   const dropdownItems = links.map(({ text, url }, index) => ({
     label: (
       <LinkValue href={url} title={text}>

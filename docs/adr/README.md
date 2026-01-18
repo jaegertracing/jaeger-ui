@@ -10,3 +10,4 @@ An Architecture Decision Record (ADR) is a document that captures an important a
 
 - [ADR-0001: Design Token-Based Theming Architecture](./0001-design-token-based-theming.md) - Proposed approach for implementing dark mode and theming using CSS custom properties and design tokens
 - [ADR-0002: Migration from Legacy Jaeger Data Model to OTLP via API v3](./0002-otlp-api-v3-migration.md) - Comprehensive plan for migrating from legacy Jaeger JSON data model to OpenTelemetry Protocol (OTLP) data model via API v3 endpoints
+- [ADR-0003: Span Color Palette for Trace Visualization](./0003-span-color-palette.md) - Selection and architecture for a theme-aware, 20-color qualitative palette for span visualization
