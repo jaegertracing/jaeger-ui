@@ -12,30 +12,6 @@ export class JaegerClient {
   private apiRoot = '/api/v3';
 
   /**
-   * Fetch with timeout support using AbortController.
-   * @param url - The URL to fetch
-   * @param timeout - Timeout in milliseconds (default: 10 seconds)
-   * @returns Promise<Response>
-   * @throws Error if request times out or network error occurs
-   */
-  private async fetchWithTimeout(url: string, timeout = 10000): Promise<Response> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-    try {
-      const response = await fetch(url, { signal: controller.signal });
-      return response;
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error(`Request timeout after ${timeout}ms`);
-      }
-      throw error;
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
-
-  /**
    * Fetch the list of services from the Jaeger API.
    * @returns Promise<string[]> - Array of service names
    */
@@ -64,6 +40,30 @@ export class JaegerClient {
     }
     const data = await response.json();
     return data.operations || [];
+  }
+
+  /**
+   * Fetch with timeout support using AbortController.
+   * @param url - The URL to fetch
+   * @param timeout - Timeout in milliseconds (default: 10 seconds)
+   * @returns Promise<Response>
+   * @throws Error if request times out or network error occurs
+   */
+  private async fetchWithTimeout(url: string, timeout = 10000): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      return response;
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error(`Request timeout after ${timeout}ms`);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 }
 
