@@ -30,7 +30,7 @@
     "jsdom": "27.4.0",
     "lint-staged": "16.2.7",
     "npm-run-all2": "8.0.1",
-    "openapi-zod-client": "^1.18.3",
+    "openapi-zod-client": "1.18.3",
     "prettier": "3.7.2",
     "rxjs-compat": "6.6.7",
     "typescript": "5.9.3"
