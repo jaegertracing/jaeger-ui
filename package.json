@@ -14,6 +14,7 @@
   "devDependencies": {
     "@babel/cli": "7.28.0",
     "@babel/core": "7.28.5",
+    "ajv": "^6.12.6",
     "@typescript-eslint/eslint-plugin": "8.50.0",
     "@typescript-eslint/parser": "8.50.0",
     "cross-env": "10.1.0",
@@ -30,6 +31,7 @@
     "jsdom": "27.4.0",
     "lint-staged": "16.2.7",
     "npm-run-all2": "8.0.1",
+    "openapi-zod-client": "1.18.3",
     "prettier": "3.7.2",
     "rxjs-compat": "6.6.7",
     "typescript": "5.9.3"
@@ -55,6 +57,7 @@
     "lint": "npm-run-all -ln --parallel prettier-lint tsc-lint eslint check-license check-copyright-year check-tsx-naming",
     "prepare": "husky && npm run --workspace @jaegertracing/plexus prepublishOnly",
     "prettier": "prettier --write '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}'",
+    "generate:api-types": "openapi-zod-client https://raw.githubusercontent.com/jaegertracing/jaeger-idl/refs/heads/main/swagger/api_v3/query_service.openapi.yaml --output packages/jaeger-ui/src/api/v3/generated-client.ts --with-alias && node scripts/postprocess-schemas.cjs && prettier --write packages/jaeger-ui/src/api/v3/generated-client.ts",
     "prettier-lint": "prettier --list-different '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}' || (echo '*** PLEASE RUN npm run prettier AND RESUBMIT ***' && false)",
     "test": "npm run --workspaces test --",
     "tsc-lint": "tsc --build",

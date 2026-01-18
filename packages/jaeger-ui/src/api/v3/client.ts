@@ -8,6 +8,8 @@
  * and returns native OTLP data structures.
  */
 
+import { ServicesResponseSchema, OperationsResponseSchema } from './schemas';
+
 export class JaegerClient {
   private apiRoot = '/api/v3';
 
@@ -21,7 +23,10 @@ export class JaegerClient {
       throw new Error(`Failed to fetch services: ${response.status} ${response.statusText}`);
     }
     const data = await response.json();
-    return data.services || [];
+
+    // Runtime validation with Zod
+    const validated = ServicesResponseSchema.parse(data);
+    return validated.services;
   }
 
   /**
@@ -39,7 +44,10 @@ export class JaegerClient {
       );
     }
     const data = await response.json();
-    return data.operations || [];
+
+    // Runtime validation with Zod
+    const validated = OperationsResponseSchema.parse(data);
+    return validated.operations;
   }
 
   /**
