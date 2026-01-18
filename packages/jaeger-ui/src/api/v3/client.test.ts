@@ -53,7 +53,7 @@ describe('JaegerClient', () => {
       expect(result).toEqual([]);
     });
 
-    it('returns empty array when API returns no services field', async () => {
+    it('throws validation error when API returns no services field', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({}),
@@ -61,9 +61,8 @@ describe('JaegerClient', () => {
 
       const promise = client.fetchServices();
       jest.runAllTimers();
-      const result = await promise;
 
-      expect(result).toEqual([]);
+      await expect(promise).rejects.toThrow(); // ZodError
     });
 
     it('throws error when response is not OK', async () => {
@@ -146,7 +145,7 @@ describe('JaegerClient', () => {
       expect(result).toEqual([]);
     });
 
-    it('returns empty array when API returns no operations field', async () => {
+    it('throws validation error when API returns no operations field', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({}),
@@ -154,9 +153,8 @@ describe('JaegerClient', () => {
 
       const promise = client.fetchSpanNames('test-service');
       jest.runAllTimers();
-      const result = await promise;
 
-      expect(result).toEqual([]);
+      await expect(promise).rejects.toThrow(); // ZodError
     });
 
     it('throws error when response is not OK with service name in message', async () => {
@@ -178,7 +176,7 @@ describe('JaegerClient', () => {
 
   describe('fetchWithTimeout', () => {
     it('successfully completes requests within timeout', async () => {
-      const mockResponse = { ok: true, json: async () => ({}) };
+      const mockResponse = { ok: true, json: async () => ({ services: [] }) };
       mockFetch.mockResolvedValue(mockResponse);
 
       const promise = client.fetchServices();
@@ -186,6 +184,18 @@ describe('JaegerClient', () => {
       const result = await promise;
 
       expect(result).toEqual([]);
+    });
+
+    it('throws validation error when API returns invalid structure', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ services: 'not-an-array' }),
+      });
+
+      const promise = client.fetchServices();
+      jest.runAllTimers();
+
+      await expect(promise).rejects.toThrow(); // ZodError
     });
 
     it('aborts and throws timeout error after default timeout (10s)', async () => {

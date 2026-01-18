@@ -562,7 +562,7 @@ npm install -D openapi-zod-client
 npm install zod
 
 # Generate both TypeScript types + Zod schemas from corrected Swagger spec
-npx openapi-zod-client http://localhost:16686/api/v3/openapi.json \
+npx openapi-zod-client https://raw.githubusercontent.com/jaegertracing/jaeger-idl/refs/heads/main/swagger/api_v3/query_service.openapi.yaml \
   --output src/api/v3/generated-client.ts \
   --with-alias
 ```

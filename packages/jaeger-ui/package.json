@@ -33,6 +33,7 @@
     "jest-environment-jsdom": "30.2.0",
     "jest-junit": "16.0.0",
     "less": "4.5.1",
+    "openapi-zod-client": "^1.18.3",
     "terser": "5.44.1",
     "vite": "7.3.0"
   },
@@ -75,7 +76,8 @@
     "redux-promise-middleware": "6.2.0",
     "store": "2.0.12",
     "tween-functions": "1.2.0",
-    "u-basscss": "2.0.1"
+    "u-basscss": "2.0.1",
+    "zod": "^4.3.5"
   },
   "scripts": {
     "build": "NODE_ENV=production REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite build",
