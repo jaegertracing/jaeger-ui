@@ -529,6 +529,218 @@ The new `OtlpParser` replaces the role of `transformTraceData` for the OTLP rout
   }
   ```
 
+#### 3.6.1 Wire Format Type Generation & Validation
+
+To ensure type safety and runtime validation of API responses, we will use code generation from the OpenAPI spec combined with Zod schemas.
+
+##### Type & Schema Generation Strategy
+
+**Chosen Approach**: Use `openapi-zod-client` to generate both TypeScript types AND Zod schemas from OpenAPI spec.
+
+**Requirements**:
+- **OpenAPI v3 spec** (current Swagger v2 being migrated in jaeger-idl repository)
+- `openapi-zod-client` has optimal support for OpenAPI v3 format
+
+**Why automated schema generation?**
+- Keeps TypeScript types and Zod schemas in perfect sync with OpenAPI spec
+- Single source of truth (corrected OpenAPI spec)
+- No manual schema maintenance required
+- API contract changes caught at both compile time (TypeScript) and runtime (Zod)
+
+**Alternative Considered**: `openapi-typescript` for types only
+- Would require manual Zod schema creation
+- Risk of schemas drifting out of sync with types
+- Rejected in favor of automated approach
+
+**Installation**:
+
+```bash
+# Dev dependency only (build-time code generation)
+npm install -D openapi-zod-client
+
+# Production dependency (runtime validation)
+npm install zod
+
+# Generate both TypeScript types + Zod schemas from corrected Swagger spec
+npx openapi-zod-client http://localhost:16686/api/v3/openapi.json \
+  --output src/api/v3/generated-client.ts \
+  --with-alias
+```
+
+**Generated output** provides both types and schemas:
+```typescript
+// src/api/v3/generated-client.ts (auto-generated)
+import { z } from 'zod';
+
+// Auto-generated Zod schema
+export const v1SpanSchema = z.object({
+  trace_id: z.string(),  // Validates string type (from corrected spec)
+  span_id: z.string(),
+  parent_span_id: z.string().optional(),
+  name: z.string(),
+  start_time_unix_nano: z.string(),
+  // ... all other fields with automatic validation
+});
+
+// Auto-generated TypeScript type (inferred from Zod schema)
+export type v1Span = z.infer<typeof v1SpanSchema>;
+
+// Export all schemas for runtime validation
+export const schemas = {
+  v1Span: v1SpanSchema,
+  ServicesResponse: ServicesResponseSchema,
+  OperationsResponse: OperationsResponseSchema,
+  // ... other auto-generated schemas
+};
+```
+
+##### Handling OTEL-JSON vs. Swagger Spec Mismatch
+
+**The Mismatch**: Swagger spec currently defines IDs as `type: "string", format: "byte"` (OpenAPI convention for base64), but OTEL-JSON wire format uses hex encoding per OTLP specification.
+
+| Protobuf | Swagger Spec (Current) | Actual Wire Format |
+|----------|------------------------|-------------------|
+| `bytes trace_id` | `type: string, format: byte` | `"0102030405060708090a0b0c0d0e0f10"` (hex) |
+
+**Chosen Approach: Fix Swagger Spec (Option A)**
+
+Correct the Swagger spec post-generation in the jaeger-idl repository to accurately represent OTEL-JSON wire format.
+
+**Prerequisites** (jaeger-idl repository):
+- [ ] **Migrate to OpenAPI v3**: Convert existing Swagger v2 spec to OpenAPI v3
+  - Required for optimal tooling support (`openapi-zod-client` targets OpenAPI v3)
+  - Enables automated TypeScript + Zod schema generation
+  - Separate task created in jaeger-idl repository
+
+**Action Items** (jaeger-idl repository):
+- [ ] Update OpenAPI v3 generation to use `format: "string"` (not `format: "byte"`) for trace_id/span_id fields
+- [ ] Verify corrected spec accurately documents hex-encoded wire format
+- [ ] Publish updated OpenAPI v3 spec
+
+**Benefits**:
+- Swagger spec becomes the true source of truth for REST API contract
+- Eliminates confusion about expected format (hex vs base64)
+- Other API consumers can trust the spec documentation
+- Generated TypeScript types remain `string` (no change to Jaeger UI)
+
+**Alternative Considered (Not Chosen): Accept Mismatch**
+- Live with `format: "byte"` in Swagger spec
+- Use custom Zod validation to enforce hex format
+- **Trade-off**: Spec doesn't accurately document wire format
+
+##### Runtime Validation with Zod
+
+Create Zod schemas to validate API responses and enforce hex encoding:
+
+```typescript
+// src/api/v3/schemas.ts
+import { z } from 'zod';
+
+// Hex-encoded ID validators
+const traceIdHex = z.string().regex(/^[0-9a-f]{32}$/i, 'Invalid trace ID: must be 32-char hex string');
+const spanIdHex = z.string().regex(/^[0-9a-f]{16}$/i, 'Invalid span ID: must be 16-char hex string');
+
+// Simple endpoints - full validation
+export const ServicesResponseSchema = z.object({
+  services: z.array(z.string())
+});
+
+export const OperationsResponseSchema = z.object({
+  operations: z.array(z.object({
+    name: z.string(),
+    spanKind: z.string()
+  }))
+});
+
+// Complex endpoints - validate critical fields
+export const SpanSchema = z.object({
+  trace_id: traceIdHex,
+  span_id: spanIdHex,
+  parent_span_id: spanIdHex.optional(),
+  name: z.string(),
+  start_time_unix_nano: z.string(),
+  end_time_unix_nano: z.string(),
+  // Relaxed validation for nested structures (performance)
+  attributes: z.array(z.unknown()).optional(),
+  events: z.array(z.unknown()).optional(),
+  links: z.array(z.unknown()).optional(),
+  status: z.unknown().optional()
+});
+```
+
+##### Integration in API Client
+
+```typescript
+// src/api/v3/client.ts
+import type { components } from './generated-types';
+import { ServicesResponseSchema, SpanSchema } from './schemas';
+
+type ServicesResponse = components['schemas']['ServicesResponse'];
+
+export class JaegerClient {
+  async fetchServices(): Promise<string[]> {
+    const response = await this.fetchWithTimeout(`${this.apiRoot}/services`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch services: ${response.status}`);
+    }
+    const data = await response.json();
+    
+    // Runtime validation
+    const validated = ServicesResponseSchema.parse(data);
+    return validated.services;
+  }
+
+  async fetchTrace(traceId: string): Promise<IOtlpTraceData> {
+    const response = await this.fetchWithTimeout(`${this.apiRoot}/traces/${traceId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trace: ${response.status}`);
+    }
+    const data = await response.json();
+    
+    // Validate critical structure (avoids full validation overhead)
+    // Zod will throw ZodError if IDs are base64 instead of hex
+    // Error message will clearly indicate format mismatch
+    
+    return data as IOtlpTraceData;
+  }
+}
+```
+
+##### Code Generation Workflow
+
+Add to `package.json`:
+```json
+{
+  "scripts": {
+    "generate:api-types": "openapi-typescript http://localhost:16686/api/v3/openapi.json -o src/api/v3/generated-types.ts",
+    "prebuild": "npm run generate:api-types"
+  }
+}
+```
+
+**When to Regenerate**:
+- Automatically before builds (via `prebuild` script)
+- When backend OpenAPI spec changes
+- During development as API evolves
+
+##### Testing Strategy
+
+**Unit Tests**: Validate Zod schemas with valid/invalid payloads
+```typescript
+describe('ID Validation', () => {
+  it('accepts hex-encoded trace ID', () => {
+    expect(traceIdHex.parse('0102030405060708090a0b0c0d0e0f10')).toBe('0102030405060708090a0b0c0d0e0f10');
+  });
+
+  it('rejects base64-encoded trace ID', () => {
+    expect(() => traceIdHex.parse('AQIDBA==')).toThrow('must be 32-char hex string');
+  });
+});
+```
+
+**Integration Tests**: Test against real Jaeger backend to confirm hex encoding
+
+
 #### 3.7 Integration Testing Strategy
 
 To ensure `OtlpApiClient` successfully interfaces with the Jaeger backend before UI integration, a multi-layered testing approach will be adopted:
