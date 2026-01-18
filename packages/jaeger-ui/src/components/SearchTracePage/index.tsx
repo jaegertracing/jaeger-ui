@@ -9,6 +9,8 @@ import { bindActionCreators, Dispatch } from 'redux';
 import store from 'store';
 import memoizeOne from 'memoize-one';
 
+import { useConfig } from '../../hooks/useConfig';
+
 import SearchForm from './SearchForm';
 import SearchResults from './SearchResults';
 import { isSameQuery, getUrlState } from './url';
@@ -49,7 +51,6 @@ interface IStateProps {
   queryOfResults: IQueryOfResults | null;
   diffCohort: FetchedTrace[];
   embedded?: IEmbeddedConfig;
-  disableFileUploadControl?: boolean;
   loadingTraces: boolean;
   traces: Trace[];
   traceResultsToDownload: unknown[];
@@ -80,7 +81,6 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     errors,
     fetchMultipleTraces,
     isHomepage,
-    disableFileUploadControl,
     loadingTraces,
     maxTraceDuration,
     traceResultsToDownload,
@@ -92,6 +92,8 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     traces,
   } = props;
 
+  const config = useConfig();
+  const { disableFileUploadControl } = config;
   const [sortBy, setSortBy] = useState(orderBy.MOST_RECENT);
 
   // componentDidMount logic
@@ -233,10 +235,9 @@ const sortedTracesXformer = memoizeOne((traces: Trace[], sortBy: string) => {
 });
 
 export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: boolean } {
-  const { embedded, router, traceDiff, config } = state;
+  const { embedded, router, traceDiff } = state;
   const query = getUrlState(router.location.search);
   const isHomepage = !Object.keys(query).length;
-  const { disableFileUploadControl } = config;
   const {
     query: queryOfResults,
     traces,
@@ -250,13 +251,13 @@ export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: 
   if (traceError && typeof traceError === 'object' && 'message' in traceError) {
     errors.push({ message: traceError.message });
   }
-  // Note: Removed serviceError and loadingServices check as we no longer use Redux for services
+  // Note: Removed serviceError, loadingServices and disableFileUploadControl
+  // as we no longer use Redux for services (PR 3329).
   return {
     queryOfResults: queryOfResults as IQueryOfResults | null,
     diffCohort,
     embedded,
     isHomepage,
-    disableFileUploadControl,
     loadingTraces,
     traces,
     traceResultsToDownload: rawTraces,

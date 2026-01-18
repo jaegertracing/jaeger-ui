@@ -201,14 +201,27 @@ describe('<SearchTracePage>', () => {
   });
 
   it('hides Upload tab if it is disabled via config', () => {
-    const testProps = {
-      ...props,
-      disableFileUploadControl: true,
-    };
+    // Create a custom store with disableFileUploadControl: true
+    const customStore = require('redux').createStore(() => ({
+      ...globalStore.getState(),
+      config: {
+        ...globalStore.getState().config,
+        disableFileUploadControl: true,
+      },
+    }));
+
     const { container } = render(
-      <AllProvider>
-        <SearchTracePage {...testProps} />
-      </AllProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Provider store={customStore}>
+            <MemoryRouter>
+              <CompatRouter>
+                <SearchTracePage {...props} />
+              </CompatRouter>
+            </MemoryRouter>
+          </Provider>
+        </BrowserRouter>
+      </QueryClientProvider>
     );
     expect(container.querySelector('[data-node-key="fileLoader"]')).not.toBeInTheDocument();
   });
@@ -255,7 +268,6 @@ describe('mapStateToProps()', () => {
     expect(diffCohort[0].data.traceID).toBe(trace.traceID);
 
     expect(rest).toEqual({
-      disableFileUploadControl: false,
       embedded: undefined,
       queryOfResults: undefined,
       isHomepage: true,
