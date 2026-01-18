@@ -575,6 +575,98 @@ describe('<SearchForm>', () => {
       expect.any(Boolean)
     );
   });
+
+  describe('error handling', () => {
+    const { useServices, useSpanNames } = require('../../hooks/useTraceDiscovery');
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('displays error message when services fetch fails', () => {
+      useServices.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('Failed to fetch services'),
+      });
+
+      const { container } = render(<SearchForm {...defaultProps} />);
+
+      // Should still render the form
+      expect(container.querySelector('form')).toBeInTheDocument();
+
+      // Should display error message for services
+      expect(container.textContent).toContain('Error loading services: Failed to fetch services');
+    });
+
+    it('displays error message when span names fetch fails', async () => {
+      useServices.mockReturnValue({
+        data: ['svcA', 'svcB'],
+        isLoading: false,
+        error: null,
+      });
+
+      useSpanNames.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('Failed to fetch span names'),
+      });
+
+      const { container } = render(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+
+      // Should still render the form
+      expect(container.querySelector('form')).toBeInTheDocument();
+
+      // Should display error message for operations
+      await waitFor(() => {
+        expect(container.textContent).toContain('Error loading operations: Failed to fetch span names');
+      });
+    });
+
+    it('form remains functional when services error occurs', () => {
+      useServices.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('Service error'),
+      });
+
+      const { container } = render(<SearchForm {...defaultProps} />);
+
+      // Form should still be present
+      const form = container.querySelector('form');
+      expect(form).toBeInTheDocument();
+
+      // Submit button should be disabled (no service selected due to error)
+      const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+      expect(submitButton).toBeDisabled();
+    });
+
+    it('form remains functional when span names error occurs', async () => {
+      useServices.mockReturnValue({
+        data: ['svcA', 'svcB'],
+        isLoading: false,
+        error: null,
+      });
+
+      useSpanNames.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('Span names error'),
+      });
+
+      const { container } = render(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+
+      // Form should still be present
+      const form = container.querySelector('form');
+      expect(form).toBeInTheDocument();
+
+      // Submit button should still work (can search without selecting specific operation)
+      await waitFor(() => {
+        const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+        expect(submitButton).not.toBeDisabled();
+      });
+    });
+  });
 });
 
 describe('SearchForm onChange handlers', () => {

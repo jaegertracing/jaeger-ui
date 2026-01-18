@@ -381,9 +381,11 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
 
   // Fetch span names for the currently selected service
   const currentService = formData.service;
-  const { data: spanNamesData, isLoading: isLoadingSpanNames } = useSpanNames(
-    currentService && currentService !== '-' ? currentService : null
-  );
+  const {
+    data: spanNamesData,
+    isLoading: isLoadingSpanNames,
+    error: spanNamesError,
+  } = useSpanNames(currentService && currentService !== '-' ? currentService : null);
 
   // Extract unique names to maintain compatibility with existing UI
   const spanNames = useMemo(
@@ -437,13 +439,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const invalidDuration =
     validateDurationFields(formData.minDuration) || validateDurationFields(formData.maxDuration);
 
-  if (servicesError) {
-    return (
-      <div className="SearchForm--error">Error loading services: {(servicesError as Error).message}</div>
-    );
-  }
-
-  if (isLoadingServices && (!services || services.length === 0)) {
+  if (isLoadingServices && (!services || services.length === 0) && !servicesError) {
     return <LoadingIndicator />;
   }
 
@@ -455,6 +451,8 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
             Service <span className="SearchForm--labelCount">({services.length})</span>
           </span>
         }
+        validateStatus={servicesError ? 'error' : undefined}
+        help={servicesError ? `Error loading services: ${(servicesError as Error).message}` : undefined}
       >
         <SearchableSelect
           data-testid="service"
@@ -478,6 +476,8 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
             <span className="SearchForm--labelCount">({opsForSvc ? opsForSvc.length : 0})</span>
           </span>
         }
+        validateStatus={spanNamesError ? 'error' : undefined}
+        help={spanNamesError ? `Error loading operations: ${(spanNamesError as Error).message}` : undefined}
       >
         <SearchableSelect
           data-testid="operation"
