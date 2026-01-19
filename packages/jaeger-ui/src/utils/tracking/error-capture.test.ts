@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The Jaeger Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 import { init, captureException, formatErrorMessage, formatStackTrace } from './error-capture';
 
 describe('error-capture', () => {
