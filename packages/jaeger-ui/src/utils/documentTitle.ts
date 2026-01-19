@@ -24,11 +24,12 @@ const DocumentTitle: React.FC<Props> = ({ title }) => {
   }, [title]);
 
   React.useEffect(() => {
+    const previousTitle = prevTitleRef.current;
     return () => {
-      if (prevTitleRef.current != null) {
+      if (previousTitle != null) {
         try {
-          document.title = prevTitleRef.current;
-        } catch (e) {
+          document.title = previousTitle;
+        } catch {
           // ignore in weird test envs
         }
       }

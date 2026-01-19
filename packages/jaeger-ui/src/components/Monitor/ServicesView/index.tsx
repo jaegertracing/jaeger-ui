@@ -130,6 +130,14 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 
 // export for tests
 export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
+  const {
+    services,
+    metrics,
+    servicesLoading,
+    fetchServices,
+    fetchAllServiceMetrics,
+    fetchAggregatedServiceMetrics,
+  } = props;
   const docsLink = getConfigValue('monitor.docsLink');
   const graphDivWrapper = useRef<HTMLDivElement>(null);
   const [endTime, setEndTime] = useState<number>(Date.now());
@@ -157,9 +165,8 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   }, []);
 
   const getSelectedService = useCallback(() => {
-    const { services } = props;
     return selectedService || store.get('lastAtmSearchService') || services[0];
-  }, [props, selectedService]);
+  }, [services, selectedService]);
 
   const handleServiceChange = useCallback((value: string) => {
     setSelectedService(value);
@@ -179,7 +186,6 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   }, []);
 
   const fetchMetrics = useCallback(() => {
-    const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, services } = props;
     const currentService = selectedService || services[0];
 
     if (currentService) {
@@ -205,9 +211,9 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
       setSearchOps('');
     }
   }, [
-    props.fetchAllServiceMetrics,
-    props.fetchAggregatedServiceMetrics,
-    props.services,
+    fetchAllServiceMetrics,
+    fetchAggregatedServiceMetrics,
+    services,
     selectedService,
     selectedSpanKind,
     selectedTimeFrame,
@@ -215,7 +221,6 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
 
   // componentDidMount equivalent
   useEffect(() => {
-    const { fetchServices } = props;
     fetchServices();
     window.addEventListener('resize', updateDimensions);
     updateDimensions();
@@ -224,15 +229,14 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
     return () => {
       window.removeEventListener('resize', updateDimensions);
     };
-  }, [props, updateDimensions, calcGraphXDomain]);
+  }, [fetchServices, updateDimensions, calcGraphXDomain]);
 
   // componentDidUpdate equivalent
   useEffect(() => {
-    const { services } = props;
     if (services.length !== 0) {
       fetchMetrics();
     }
-  }, [props, fetchMetrics]);
+  }, [services, fetchMetrics]);
 
   useEffect(() => {
     calcGraphXDomain();
@@ -242,7 +246,6 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
     fetchMetrics();
   }, [selectedService, selectedSpanKind, selectedTimeFrame, fetchMetrics]);
 
-  const { services, metrics, servicesLoading } = props;
   const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
   const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
   const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
