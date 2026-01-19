@@ -88,6 +88,7 @@ let breadcrumbsList: IBreadcrumb[] = [];
 let onErrorCallback: ((error: IErrorData, context: IErrorContext) => void) | null = null;
 let sessionStartTime = Date.now();
 let errorTags: { [key: string]: string } = {};
+let isInitialized = false;
 
 const MAX_BREADCRUMBS = 100;
 
@@ -308,6 +309,10 @@ export function init(options: IInitOptions = {}) {
   onErrorCallback = onError || null;
   errorTags = tags;
 
+  if (isInitialized) {
+    return;
+  }
+
   // Setup breadcrumb tracking
   setupBreadcrumbs();
 
@@ -323,6 +328,8 @@ export function init(options: IInitOptions = {}) {
       captureException(error);
     });
   }
+
+  isInitialized = true;
 }
 
 /**
