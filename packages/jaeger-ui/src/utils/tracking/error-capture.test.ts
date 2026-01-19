@@ -54,7 +54,11 @@ describe('error-capture', () => {
 
       // Let's rely on the fact that if we fix the code, repeat calls shouldn't change it.
       // Let's capture the state after one call.
+      init();
       const afterFirstInitFetch = window.fetch;
+
+      // Prove it's wrapped (optional, but good)
+      expect(afterFirstInitFetch).not.toBe(mockFetch);
 
       init();
       expect(window.fetch).toBe(afterFirstInitFetch);
