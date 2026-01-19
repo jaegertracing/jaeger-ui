@@ -424,7 +424,7 @@ const TraceStatistics = forwardRef<TraceStatisticsHandle, Props>(function TraceS
         };
         return val.attribute === 'count' ? { ...ele, defaultSortOrder: 'ascend' } : ele;
       }),
-    [onClickOption, onCellFunction, sorterFunction, handleNameCellKeyDown, handleNameCellClick]
+    [onCellFunction, sorterFunction, handleNameCellKeyDown, handleNameCellClick]
   );
 
   /**
