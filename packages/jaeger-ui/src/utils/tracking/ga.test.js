@@ -5,6 +5,7 @@ import * as GA from './ga';
 import { getAppEnvironment } from '../constants';
 
 jest.mock('../constants');
+jest.mock('../../site-prefix', () => 'test-prefix');
 
 let longStr = '---';
 

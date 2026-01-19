@@ -277,7 +277,7 @@ export function captureException(error: any) {
 
   // Add error as breadcrumb
   addBreadcrumb({
-    category: 'sentry',
+    category: 'error',
     message: `${errorObj.name}: ${errorObj.message}`,
   });
 

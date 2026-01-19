@@ -18,12 +18,12 @@ import { Config } from '../../types/config';
 import { IWebAnalyticsFunc } from '../../types/tracking';
 import { getAppEnvironment, shouldDebugGoogleAnalytics } from '../constants';
 import parseQuery from '../parseQuery';
+import prefixUrl from '../prefix-url';
 
 // GA-specific formatting utilities
 let origin: string | null = null;
 function getOrigin(): string {
   if (origin === null && typeof window !== 'undefined') {
-    const prefixUrl = require('../prefix-url').default;
     origin = window.location.origin + prefixUrl('');
   }
   return origin || '';
@@ -161,7 +161,7 @@ function formatBreadcrumbs(crumbs: IBreadcrumb[]): string {
         break;
       }
 
-      case 'sentry': {
+      case 'error': {
         const msg = c.message ? truncate(formatErrorMessage(c.message), 58) : null;
         joiner.push(`${onNewLine ? '' : '\n'}${msg}\n`);
         onNewLine = true;
@@ -257,7 +257,6 @@ function formatErrorForGA(
 // Modify the `window` object to have an additional attribute `dataLayer`
 // This is required by the gtag.js script to work
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 interface WindowWithGATracking extends Window {
   dataLayer: (string | object)[][] | undefined;
 }
