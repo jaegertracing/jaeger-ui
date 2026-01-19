@@ -252,7 +252,10 @@ const TraceStatistics = forwardRef<TraceStatisticsHandle, Props>(function TraceS
       newValueNameSelector1: string,
       newValueNameSelector2: string | null
     ) => {
-      const searchedTableValue = searchInTable(uiFindVertexKeys ?? undefined, newTableValue, uiFind);
+      // Clone array to avoid mutating caller's data
+      // searchInTable modifies array in-place for performance
+      const tableValueCopy = newTableValue.map(item => ({ ...item }));
+      const searchedTableValue = searchInTable(uiFindVertexKeys ?? undefined, tableValueCopy, uiFind);
       setTableValue(searchedTableValue);
       setSortIndex(1);
       setSortAsc(false);
