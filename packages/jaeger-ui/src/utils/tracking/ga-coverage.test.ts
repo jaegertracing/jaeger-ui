@@ -9,6 +9,12 @@ jest.mock('../constants', () => ({
 
 jest.mock('../prefix-url', () => (s: string) => s);
 
+declare global {
+  interface Window {
+    dataLayer: any[];
+  }
+}
+
 describe('GA Coverage', () => {
   let originalFetch: typeof window.fetch;
   let mockFetch: jest.Mock;
