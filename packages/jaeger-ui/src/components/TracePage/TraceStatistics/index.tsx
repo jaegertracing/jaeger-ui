@@ -314,14 +314,40 @@ const TraceStatistics = forwardRef<TraceStatisticsHandle, Props>(function TraceS
       },
       setState: (newState: Partial<State> | ((prev: State) => Partial<State>)) => {
         const updates = typeof newState === 'function' ? newState(stateRef.current) : newState;
-        if (updates.tableValue !== undefined) setTableValue(updates.tableValue);
-        if (updates.sortIndex !== undefined) setSortIndex(updates.sortIndex);
-        if (updates.sortAsc !== undefined) setSortAsc(updates.sortAsc);
-        if (updates.showPopup !== undefined) setShowPopup(updates.showPopup);
-        if (updates.popupContent !== undefined) setPopupContent(updates.popupContent);
-        if (updates.wholeTable !== undefined) setWholeTable(updates.wholeTable);
-        if (updates.valueNameSelector1 !== undefined) setValueNameSelector1(updates.valueNameSelector1);
-        if (updates.valueNameSelector2 !== undefined) setValueNameSelector2(updates.valueNameSelector2);
+        // Update stateRef immediately to handle sequential calls before re-render
+        // This prevents race conditions when using function updater pattern
+        if (updates.tableValue !== undefined) {
+          stateRef.current.tableValue = updates.tableValue;
+          setTableValue(updates.tableValue);
+        }
+        if (updates.sortIndex !== undefined) {
+          stateRef.current.sortIndex = updates.sortIndex;
+          setSortIndex(updates.sortIndex);
+        }
+        if (updates.sortAsc !== undefined) {
+          stateRef.current.sortAsc = updates.sortAsc;
+          setSortAsc(updates.sortAsc);
+        }
+        if (updates.showPopup !== undefined) {
+          stateRef.current.showPopup = updates.showPopup;
+          setShowPopup(updates.showPopup);
+        }
+        if (updates.popupContent !== undefined) {
+          stateRef.current.popupContent = updates.popupContent;
+          setPopupContent(updates.popupContent);
+        }
+        if (updates.wholeTable !== undefined) {
+          stateRef.current.wholeTable = updates.wholeTable;
+          setWholeTable(updates.wholeTable);
+        }
+        if (updates.valueNameSelector1 !== undefined) {
+          stateRef.current.valueNameSelector1 = updates.valueNameSelector1;
+          setValueNameSelector1(updates.valueNameSelector1);
+        }
+        if (updates.valueNameSelector2 !== undefined) {
+          stateRef.current.valueNameSelector2 = updates.valueNameSelector2;
+          setValueNameSelector2(updates.valueNameSelector2);
+        }
       },
       handler,
       togglePopup,
