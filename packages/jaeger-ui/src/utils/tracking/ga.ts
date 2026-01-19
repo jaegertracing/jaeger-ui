@@ -205,10 +205,6 @@ function formatBreadcrumbs(crumbs: IBreadcrumb[]): string {
     return accum;
   }, []);
 
-  if (c && ci !== joiner.length - 1) {
-    compacted.push(String(joiner.length - ci));
-  }
-
   return compacted
     .join('')
     .trim()

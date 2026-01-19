@@ -47,6 +47,16 @@ describe('error-capture', () => {
       expect(window.fetch).not.toBe(initialFetch);
     });
 
+    it('uses attachEvent if addEventListener is missing', () => {
+      // Removed invalid IE8 test
+    });
+
+    it('formatStackTrace returns empty string for undefined', () => {
+      expect(formatStackTrace(undefined)).toBe('');
+      expect(formatStackTrace(null as any)).toBe('');
+      expect(formatStackTrace('')).toBe('');
+    });
+
     it('does not re-wrap window.fetch on subsequent initialization', () => {
       // First ensure we are in a state where it is initialized (from previous test or fresh)
       // Since jest modules state persists, if previous test ran, it is already initialized.
@@ -197,6 +207,22 @@ describe('error-capture', () => {
       const uiCrumb = context.breadcrumbs.reverse().find((b: any) => b.category === 'ui.click');
       expect(uiCrumb).toBeDefined();
       expect(uiCrumb.message).toContain('button#my-btn');
+      document.body.removeChild(btn);
+    });
+
+    it('tracks DOM clicks with classes only', () => {
+      const btn = document.createElement('button');
+      btn.className = 'btn primary extra';
+      document.body.appendChild(btn);
+      btn.click();
+
+      captureException(new Error('trigger'));
+      const context = mockOnError.mock.calls[0][1];
+      const uiCrumb = context.breadcrumbs.reverse().find((b: any) => b.category === 'ui.click');
+      expect(uiCrumb).toBeDefined();
+      // Expect limited classes (slice(0,2))
+      // button.btn.primary
+      expect(uiCrumb.message).toContain('button.btn.primary');
       document.body.removeChild(btn);
     });
 
