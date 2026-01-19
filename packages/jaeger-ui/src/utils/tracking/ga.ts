@@ -10,7 +10,6 @@ import {
   init as ErrorCaptureInit,
   trackNavigation,
   formatErrorMessage,
-  formatStackTrace,
 } from './error-capture';
 
 import { TNil } from '../../types';
@@ -19,6 +18,15 @@ import { IWebAnalyticsFunc } from '../../types/tracking';
 import { getAppEnvironment, shouldDebugGoogleAnalytics } from '../constants';
 import parseQuery from '../parseQuery';
 import prefixUrl from '../prefix-url';
+
+// Modify the `window` object to have an additional attribute `dataLayer`
+// This is required by the gtag.js script to work
+
+interface WindowWithGATracking extends Window {
+  dataLayer: (string | object)[][] | undefined;
+}
+
+declare let window: WindowWithGATracking;
 
 // GA-specific formatting utilities
 let origin: string | null = null;
@@ -253,15 +261,6 @@ function formatErrorForGA(
     value,
   };
 }
-
-// Modify the `window` object to have an additional attribute `dataLayer`
-// This is required by the gtag.js script to work
-
-interface WindowWithGATracking extends Window {
-  dataLayer: (string | object)[][] | undefined;
-}
-
-declare let window: WindowWithGATracking;
 
 const isTruish = (value?: string | string[]) => {
   return Boolean(value) && value !== '0' && value !== 'false';

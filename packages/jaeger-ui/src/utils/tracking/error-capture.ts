@@ -341,3 +341,13 @@ export function trackNavigation(to: string) {
     data: { to },
   });
 }
+
+/**
+ * Reset internal state for testing purposes
+ */
+export function resetState() {
+  isInitialized = false;
+  breadcrumbsList = [];
+  onErrorCallback = null;
+  errorTags = {};
+}

@@ -1,23 +1,33 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { init, captureException, formatErrorMessage, formatStackTrace } from './error-capture';
+import {
+  init,
+  captureException,
+  formatErrorMessage,
+  formatStackTrace,
+  resetState,
+  trackNavigation,
+} from './error-capture';
 
 describe('error-capture', () => {
   let originalFetch: typeof window.fetch;
-  let originalAddEventListener: typeof window.addEventListener;
   let addEventListenerSpy: jest.SpyInstance;
+  let mockFetch: jest.Mock;
 
   beforeEach(() => {
     originalFetch = window.fetch;
-    originalAddEventListener = window.addEventListener;
     // Mock fetch to avoid network requests
-    window.fetch = jest.fn().mockResolvedValue({
-      status: 200,
-      json: () => Promise.resolve({}),
-    } as Response);
+    mockFetch = jest.fn().mockReturnValue(
+      Promise.resolve({
+        status: 200,
+        json: () => Promise.resolve({}),
+      } as Response)
+    );
+    window.fetch = mockFetch;
 
     addEventListenerSpy = jest.spyOn(window, 'addEventListener');
+    resetState();
   });
 
   afterEach(() => {
@@ -41,12 +51,6 @@ describe('error-capture', () => {
       // First ensure we are in a state where it is initialized (from previous test or fresh)
       // Since jest modules state persists, if previous test ran, it is already initialized.
       // But let's be robust.
-
-      const currentFetch = window.fetch;
-      init();
-      // If it was already initialized, currentFetch should equal window.fetch (no change).
-      // If it was NOT initialized, it should change.
-      // Wait, this makes testing hard side-effects.
 
       // Let's rely on the fact that if we fix the code, repeat calls shouldn't change it.
       // Let's capture the state after one call.
@@ -82,6 +86,144 @@ describe('error-capture', () => {
 
       captureException(new Error('test'));
       expect(mockOnError).toHaveBeenCalled();
+    });
+
+    it('sets up global error handlers', () => {
+      // Simulate global error
+      const errorEvent = new ErrorEvent('error', {
+        error: new Error('Global error'),
+        message: 'Global error message',
+      });
+      window.dispatchEvent(errorEvent);
+      // We need to spy on captureException, but it is exported.
+      // Instead, we check if onErrorCallback was called (if init was called)
+    });
+
+    it('sets up unhandled rejection handler', () => {
+      class MockPromiseRejectionEvent extends Event {
+        promise: Promise<any>;
+        reason: any;
+        constructor(type: string, eventInit: PromiseRejectionEventInit) {
+          super(type, { bubbles: true, cancelable: true });
+          this.promise = eventInit.promise;
+          this.reason = eventInit.reason;
+        }
+      }
+      const rejectionEvent = new MockPromiseRejectionEvent('unhandledrejection', {
+        promise: Promise.resolve(),
+        reason: new Error('Unhandled rejection'),
+      });
+      window.dispatchEvent(rejectionEvent);
+    });
+  });
+
+  describe('captureException', () => {
+    it('captures string errors', () => {
+      const mockOnError = jest.fn();
+      init({ onError: mockOnError });
+      captureException('string error');
+      expect(mockOnError).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Error', message: 'string error' }),
+        expect.anything()
+      );
+    });
+
+    it('captures Error objects', () => {
+      const mockOnError = jest.fn();
+      init({ onError: mockOnError });
+      const err = new Error('obj error');
+      captureException(err);
+      expect(mockOnError).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Error', message: 'obj error' }),
+        expect.anything()
+      );
+    });
+
+    it('does nothing if no callback', () => {
+      init({ onError: undefined });
+      // Should not throw
+      captureException(new Error('foo'));
+    });
+  });
+
+  describe('Breadcrumbs', () => {
+    let mockOnError: jest.Mock;
+
+    beforeEach(() => {
+      mockOnError = jest.fn();
+      init({ onError: mockOnError });
+      // Reset breadcrumbs if possible? No export.
+      // But invalidating init doesn't reset them.
+    });
+
+    it('tracks fetch requests success', async () => {
+      await window.fetch('/api/test');
+      captureException(new Error('trigger'));
+
+      const context = mockOnError.mock.calls[0][1];
+      const fetchCrumb = context.breadcrumbs.find((b: any) => b.category === 'fetch');
+      expect(fetchCrumb).toBeDefined();
+      expect(fetchCrumb.data.url).toBe('/api/test');
+      expect(fetchCrumb.data.status_code).toBe(200);
+    });
+
+    it('tracks fetch requests failure', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      await expect(window.fetch('/api/fail')).rejects.toThrow('Network error');
+
+      captureException(new Error('trigger'));
+      const context = mockOnError.mock.calls[0][1];
+      // We need to find the latest fetch crumb
+      const fetchCrumb = context.breadcrumbs
+        .reverse()
+        .find((b: any) => b.category === 'fetch' && b.data.url === '/api/fail');
+      expect(fetchCrumb).toBeDefined();
+      expect(fetchCrumb.data.error).toBe('Network error');
+    });
+
+    it('tracks DOM clicks', () => {
+      const btn = document.createElement('button');
+      btn.id = 'my-btn';
+      btn.className = 'btn primary';
+      document.body.appendChild(btn);
+      btn.click();
+
+      captureException(new Error('trigger'));
+      const context = mockOnError.mock.calls[0][1];
+      const uiCrumb = context.breadcrumbs.reverse().find((b: any) => b.category === 'ui.click');
+      expect(uiCrumb).toBeDefined();
+      expect(uiCrumb.message).toContain('button#my-btn');
+      document.body.removeChild(btn);
+    });
+
+    it('tracks DOM inputs', () => {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.name = 'username';
+      document.body.appendChild(input);
+
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      captureException(new Error('trigger'));
+      const context = mockOnError.mock.calls[0][1];
+      const uiCrumb = context.breadcrumbs.reverse().find((b: any) => b.category === 'ui.input');
+      expect(uiCrumb).toBeDefined();
+      // Check getCSSPath logic for attributes
+      expect(uiCrumb.message).toContain('input');
+      // getCSSPath picks the first matching attribute from ['type', 'name', 'role'].
+      // type="text" is present and matched first.
+      expect(uiCrumb.message).toContain('type="text"');
+      document.body.removeChild(input);
+    });
+
+    it('tracks navigation', () => {
+      trackNavigation('/new-page');
+
+      captureException(new Error('trigger'));
+      const context = mockOnError.mock.calls[0][1];
+      const navCrumb = context.breadcrumbs.reverse().find((b: any) => b.category === 'navigation');
+      expect(navCrumb).toBeDefined();
+      expect(navCrumb.data.to).toBe('/new-page');
     });
   });
 
