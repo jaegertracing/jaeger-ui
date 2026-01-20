@@ -5,11 +5,13 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import SvgEdges from './SvgEdges';
 
-// Mock SvgEdge child component
+// Mock SvgEdge child component with render tracking
 const mockSvgEdgeProps = [];
+let mockRenderCount = 0;
 jest.mock('./SvgEdge', () => {
   const MockSvgEdge = props => {
     mockSvgEdgeProps.push(props);
+    mockRenderCount++;
     return (
       <g data-testid="svg-edge" data-from={props.layoutEdge.edge.from} data-to={props.layoutEdge.edge.to} />
     );
@@ -20,6 +22,7 @@ jest.mock('./SvgEdge', () => {
 describe('SvgEdges', () => {
   beforeEach(() => {
     mockSvgEdgeProps.length = 0;
+    mockRenderCount = 0;
   });
 
   const mockGetClassName = name => `plexus--${name}`;
@@ -106,6 +109,96 @@ describe('SvgEdges', () => {
     // Verify setOnEdge is passed to each child component
     mockSvgEdgeProps.forEach(props => {
       expect(props.setOnEdge).toBe(mockSetOnEdge);
+    });
+  });
+
+  describe('memoization behavior', () => {
+    it('does not re-render when props remain the same', () => {
+      const { rerender } = render(
+        <svg>
+          <SvgEdges
+            getClassName={mockGetClassName}
+            layoutEdges={mockLayoutEdges}
+            renderUtils={mockRenderUtils}
+          />
+        </svg>
+      );
+
+      const initialRenderCount = mockRenderCount;
+      expect(initialRenderCount).toBe(2); // 2 edges rendered
+
+      // Re-render with same props
+      rerender(
+        <svg>
+          <SvgEdges
+            getClassName={mockGetClassName}
+            layoutEdges={mockLayoutEdges}
+            renderUtils={mockRenderUtils}
+          />
+        </svg>
+      );
+
+      // Render count should not increase due to memoization
+      expect(mockRenderCount).toBe(initialRenderCount);
+    });
+
+    it('re-renders when layoutEdges changes', () => {
+      const { rerender } = render(
+        <svg>
+          <SvgEdges
+            getClassName={mockGetClassName}
+            layoutEdges={mockLayoutEdges}
+            renderUtils={mockRenderUtils}
+          />
+        </svg>
+      );
+
+      const initialRenderCount = mockRenderCount;
+
+      // Create new edges array (different reference)
+      const newLayoutEdges = [createMockEdge('node-x', 'node-y')];
+
+      rerender(
+        <svg>
+          <SvgEdges
+            getClassName={mockGetClassName}
+            layoutEdges={newLayoutEdges}
+            renderUtils={mockRenderUtils}
+          />
+        </svg>
+      );
+
+      // Render count should increase because layoutEdges changed
+      expect(mockRenderCount).toBeGreaterThan(initialRenderCount);
+    });
+
+    it('re-renders when markerEndId changes', () => {
+      const { rerender } = render(
+        <svg>
+          <SvgEdges
+            getClassName={mockGetClassName}
+            layoutEdges={mockLayoutEdges}
+            renderUtils={mockRenderUtils}
+            markerEndId="arrow-end"
+          />
+        </svg>
+      );
+
+      const initialRenderCount = mockRenderCount;
+
+      rerender(
+        <svg>
+          <SvgEdges
+            getClassName={mockGetClassName}
+            layoutEdges={mockLayoutEdges}
+            renderUtils={mockRenderUtils}
+            markerEndId="different-arrow"
+          />
+        </svg>
+      );
+
+      // Render count should increase because markerEndId changed
+      expect(mockRenderCount).toBeGreaterThan(initialRenderCount);
     });
   });
 });
