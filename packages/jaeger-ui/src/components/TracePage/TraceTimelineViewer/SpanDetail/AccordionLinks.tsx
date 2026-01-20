@@ -8,16 +8,6 @@ import './AccordionLinks.css';
 import { ILink } from '../../../../types/otel';
 import ReferenceLink from '../../url/ReferenceLink';
 
-type AccordionLinksProps = {
-  data: ReadonlyArray<ILink>;
-  highContrast?: boolean;
-  interactive?: boolean;
-  isOpen: boolean;
-  onToggle?: null | (() => void);
-  focusSpan: (uiFind: string) => void;
-  useOtelTerms: boolean;
-};
-
 type ReferenceItemProps = {
   data: ReadonlyArray<ILink>;
   focusSpan: (uiFind: string) => void;
@@ -58,15 +48,20 @@ export function References(props: ReferenceItemProps) {
   );
 }
 
-function AccordionLinks({
-  data,
-  highContrast = false,
-  interactive = true,
-  isOpen,
-  onToggle = null,
-  focusSpan,
-  useOtelTerms,
-}: AccordionLinksProps) {
+function AccordionLinks(props: {
+  data: ReadonlyArray<ILink>;
+  highContrast?: boolean;
+  interactive?: boolean;
+  isOpen: boolean;
+  onToggle?: null | (() => void);
+  focusSpan: (uiFind: string) => void;
+  useOtelTerms: boolean;
+}) {
+  const { data, isOpen, focusSpan, useOtelTerms } = props;
+  const highContrast = props.highContrast ?? false;
+  const interactive = props.interactive ?? true;
+  const onToggle = props.onToggle ?? null;
+
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKReferences--emptyIcon': isEmpty });
   let arrow: React.ReactNode | null = null;
