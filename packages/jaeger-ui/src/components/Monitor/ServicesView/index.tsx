@@ -138,7 +138,9 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const [serviceOpsMetrics, setServiceOpsMetrics] = useState<ServiceOpsMetrics[] | undefined>(undefined);
   const [searchOps, setSearchOps] = useState<string>('');
   const [graphXDomain, setGraphXDomain] = useState<number[]>([]);
-  const [selectedService, setSelectedService] = useState<string | undefined>(undefined);
+  const [selectedService, setSelectedService] = useState<string | undefined>(
+    store.get('lastAtmSearchService')
+  );
   const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(
     store.get('lastAtmSearchSpanKind') || 'server'
   );
