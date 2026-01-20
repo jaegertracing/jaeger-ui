@@ -27,10 +27,6 @@ type ReferenceItemProps = {
 export function References(props: ReferenceItemProps) {
   const { data, focusSpan } = props;
 
-  if (!Array.isArray(data)) {
-    return null;
-  }
-
   return (
     <div className="ReferencesList u-simple-scrollbars">
       <ul className="ReferencesList--List">
@@ -100,7 +96,7 @@ function AccordionLinks({
         <strong>
           <span className="AccordionLinks--label">{useOtelTerms ? 'Links' : 'References'}</span>
         </strong>{' '}
-        ({data.length})
+        ({data?.length ?? 0})
       </div>
       {isOpen && <References data={data} focusSpan={focusSpan} />}
     </div>

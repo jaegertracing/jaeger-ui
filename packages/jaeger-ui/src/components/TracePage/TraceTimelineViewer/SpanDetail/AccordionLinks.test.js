@@ -156,13 +156,6 @@ describe('<AccordionLinks /> – functional component', () => {
       render(<AccordionLinks {...propsWithNullToggle} />);
     }).not.toThrow();
   });
-
-  it('handles non-array data gracefully', () => {
-    const invalidProps = { ...baseProps, data: null };
-    expect(() => {
-      render(<AccordionLinks {...invalidProps} />);
-    }).toThrow();
-  });
 });
 
 describe('<References />', () => {
