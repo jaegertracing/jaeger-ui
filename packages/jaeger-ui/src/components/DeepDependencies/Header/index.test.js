@@ -1,16 +1,5 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -26,34 +15,42 @@ jest.mock('./HopsSelector', () => {
   };
 });
 
-jest.mock('../../common/NameSelector', () => {
+jest.mock('../../common/SearchableSelect', () => {
   const mockReact = jest.requireActual('react');
-  return function MockNameSelector(props) {
-    const { label, value, setValue, clearValue, placeholder, options = [] } = props;
+  return function MockSearchableSelect(props) {
+    const { value, onChange, allowClear, onClear, placeholder, children, className, status } = props;
+    // Extract options from children
+    const options = mockReact.Children.toArray(children)
+      .map(child => {
+        if (child.props && child.props.value !== undefined) {
+          return { value: child.props.value, label: child.props.children };
+        }
+        return null;
+      })
+      .filter(Boolean);
+
     return mockReact.createElement(
       'div',
-      { 'data-testid': `name-selector-${label.toLowerCase()}` },
-      mockReact.createElement('label', null, label),
+      { 'data-testid': `searchable-select`, className, 'data-status': status },
       mockReact.createElement(
         'select',
         {
           value: value || '',
           onChange: e => {
-            if (setValue) {
-              setValue(e.target.value);
+            if (onChange) {
+              onChange(e.target.value);
             }
           },
-          'data-testid': `${label.toLowerCase()}-select`,
+          'data-testid': 'select-input',
         },
         mockReact.createElement('option', { value: '' }, placeholder),
-        options.map(option => mockReact.createElement('option', { key: option, value: option }, option))
-      ),
-      clearValue &&
-        mockReact.createElement(
-          'button',
-          { onClick: clearValue, 'data-testid': `clear-${label.toLowerCase()}` },
-          'Clear'
+        options.map(option =>
+          mockReact.createElement('option', { key: option.value, value: option.value }, option.label)
         )
+      ),
+      allowClear &&
+        value &&
+        mockReact.createElement('button', { onClick: onClear, 'data-testid': 'clear-button' }, 'Clear')
     );
   };
 });
@@ -134,22 +131,22 @@ describe('<Header>', () => {
   it('omits the operation selector if a service is not selected', () => {
     render(<Header {...minProps} />);
 
-    const nameSelectors = screen.getAllByTestId(/name-selector-/);
-    expect(nameSelectors).toHaveLength(1);
-    expect(screen.getByTestId('name-selector-service')).toBeInTheDocument();
-    expect(screen.queryByTestId('name-selector-operation')).not.toBeInTheDocument();
+    const selects = screen.getAllByTestId('searchable-select');
+    expect(selects).toHaveLength(1);
+    expect(screen.getByText('Service:')).toBeInTheDocument();
+    expect(screen.queryByText('Operation:')).not.toBeInTheDocument();
   });
 
   it('renders the operation selector iff a service is selected', () => {
     const { rerender } = render(<Header {...minProps} />);
 
-    let nameSelectors = screen.getAllByTestId(/name-selector-/);
-    expect(nameSelectors).toHaveLength(1);
+    let selects = screen.getAllByTestId('searchable-select');
+    expect(selects).toHaveLength(1);
 
     rerender(<Header {...minProps} service={service} services={services} />);
-    nameSelectors = screen.getAllByTestId(/name-selector-/);
-    expect(nameSelectors).toHaveLength(2);
-    expect(screen.getByTestId('name-selector-operation')).toBeInTheDocument();
+    selects = screen.getAllByTestId('searchable-select');
+    expect(selects).toHaveLength(2);
+    expect(screen.getByText('Operation:')).toBeInTheDocument();
 
     rerender(
       <Header
@@ -169,7 +166,9 @@ describe('<Header>', () => {
     const testOp = 'test operation';
     expect(trackSetOpSpy).not.toHaveBeenCalled();
 
-    const operationSelect = screen.getByTestId('operation-select');
+    // Get all selects and find the operation one (second select)
+    const selectInputs = screen.getAllByTestId('select-input');
+    const operationSelect = selectInputs[1]; // Second select is the operation
     fireEvent.change(operationSelect, { target: { value: testOp } });
 
     expect(trackSetOpSpy).toHaveBeenCalledTimes(1);

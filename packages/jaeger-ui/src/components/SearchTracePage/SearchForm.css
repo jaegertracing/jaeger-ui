@@ -1,34 +1,23 @@
 /*
 Copyright (c) 2017 Uber Technologies, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+SPDX-License-Identifier: Apache-2.0
 */
 
 .SearchForm--labelCount {
-  color: #999;
+  color: var(--text-muted);
 }
 
 .SearchForm--hintTrigger {
-  border: 1px solid #999;
+  border: 1px solid var(--text-muted);
   border-radius: 100px;
-  color: #999;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 1px;
 }
 
 .SearchForm--hintTrigger:hover {
-  color: #000;
-  border-color: #000;
+  color: var(--text-primary);
+  border-color: var(--text-primary);
 }
 
 .SearchForm--tagsHintTitle {
@@ -36,18 +25,18 @@ limitations under the License.
 }
 
 .SearchForm--submit {
-  background-color: #11939a;
-  color: white;
+  background-color: var(--interactive-primary);
+  color: var(--text-inverse);
   float: right;
 }
 
 .SearchForm--submit:hover {
-  background-color: #fff;
+  background-color: var(--surface-primary);
   float: right;
 }
 
 .SearchForm--submit:active {
-  background-color: #fff;
+  background-color: var(--surface-primary);
   float: right;
 }
 
@@ -56,7 +45,12 @@ limitations under the License.
 }
 
 .SearchForm--tagsHintEg {
-  color: teal;
+  color: var(--text-link);
+}
+
+/* Reduce the default Ant Design Form.Item margin to make the form more compact */
+.SearchTracePage--find .ant-form-item {
+  margin-bottom: 12px;
 }
 
 .ant-select-dropdown .rc-virtual-list-holder {
@@ -68,12 +62,12 @@ limitations under the License.
 .ant-select-dropdown .rc-virtual-list::-webkit-scrollbar,
 .ant-select-dropdown .rc-virtual-list-holder::-webkit-scrollbar {
   width: 8px;
-  background-color: #f1f1f1;
+  background-color: var(--surface-secondary);
 }
 
 .ant-select-dropdown::-webkit-scrollbar-thumb,
 .ant-select-dropdown .rc-virtual-list::-webkit-scrollbar-thumb,
 .ant-select-dropdown .rc-virtual-list-holder::-webkit-scrollbar-thumb {
-  background-color: #292929;
+  background-color: var(--text-secondary);
   border-radius: 4px;
 }

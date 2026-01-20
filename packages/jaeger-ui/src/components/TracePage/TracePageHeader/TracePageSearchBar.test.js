@@ -1,16 +1,5 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
@@ -79,7 +68,7 @@ describe('<TracePageSearchBar>', () => {
 
     it('renders buttons', () => {
       const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(4);
+      expect(buttons).toHaveLength(3);
 
       buttons.forEach(button => {
         expect(button).toHaveClass('TracePageSearchBar--btn');
@@ -89,27 +78,20 @@ describe('<TracePageSearchBar>', () => {
 
       const upButton = screen.getByTestId('UpOutlined');
       const downButton = screen.getByTestId('DownOutlined');
-      const closeButton = screen.getByTestId('CloseOutlined');
 
       fireEvent.click(upButton);
       expect(defaultProps.prevResult).toHaveBeenCalled();
 
       fireEvent.click(downButton);
       expect(defaultProps.nextResult).toHaveBeenCalled();
-
-      fireEvent.click(closeButton);
-      expect(defaultProps.clearSearch).toHaveBeenCalled();
     });
 
     it('hides navigation buttons when not navigable', () => {
       cleanup();
       render(<TracePageSearchBar {...defaultProps} navigable={false} />);
 
-      const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(1);
-
-      const closeButton = screen.getByTestId('CloseOutlined');
-      expect(closeButton).toBeInTheDocument();
+      const buttons = screen.queryAllByRole('button');
+      expect(buttons).toHaveLength(0);
     });
   });
 
@@ -128,7 +110,7 @@ describe('<TracePageSearchBar>', () => {
 
     it('renders buttons', () => {
       const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(4);
+      expect(buttons).toHaveLength(3);
 
       buttons.forEach(button => {
         expect(button).toHaveClass('TracePageSearchBar--btn');

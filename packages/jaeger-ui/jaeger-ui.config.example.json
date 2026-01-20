@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "menuEnabled": true
+  },
+  "monitor": {
+    "menuEnabled": true
+  },
+  "linkPatterns": [
+    {
+      "type": "process",
+      "key": "jaeger.version",
+      "url": "https://github.com/jaegertracing/jaeger-client-java/releases/tag/#{jaeger.version}",
+      "text": "Information about Jaeger SDK release #{jaeger.version}"
+    }
+  ]
+}

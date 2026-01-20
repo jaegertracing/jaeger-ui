@@ -1,23 +1,15 @@
 // Copyright (c) 2023 The Jaeger Authors.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 /* eslint-disable import/no-extraneous-dependencies */
-import { PluginOption, defineConfig } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
-import vitePluginImp from 'vite-plugin-imp';
 import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const proxyConfig = {
   target: 'http://localhost:16686',
@@ -27,6 +19,69 @@ const proxyConfig = {
   xfwd: true,
 };
 
+/**
+ * Vite plugin to inject local UI config during development.
+ * This mimics the behavior of the Go query-service which injects config into index.html.
+ *
+ * Supports two config file formats:
+ * 1. jaeger-ui.config.js - JavaScript file that exports a config object (or function returning one)
+ * 2. jaeger-ui.config.json - JSON file with config object
+ *
+ * The plugin only runs in development mode (npm start).
+ *
+ * Security note: These config files are local to the developer's machine and are
+ * excluded from git via .gitignore. The content is injected into the HTML during
+ * development only, similar to how the Go query-service injects config in production.
+ */
+function jaegerUiConfigPlugin() {
+  const jsConfigPath = path.resolve(__dirname, 'jaeger-ui.config.js');
+  const jsonConfigPath = path.resolve(__dirname, 'jaeger-ui.config.json');
+
+  return {
+    name: 'jaeger-ui-config',
+    transformIndexHtml: {
+      order: 'pre' as const,
+      async handler(html: string) {
+        // Check for JS config first (higher priority, like in Go server)
+        if (fs.existsSync(jsConfigPath)) {
+          try {
+            const jsContent = fs.readFileSync(jsConfigPath, 'utf-8');
+            // Replace the JAEGER_CONFIG_JS comment with UIConfig function
+            // This mimics the Go server behavior for .js config files
+            const uiConfigFn = `function UIConfig() { ${jsContent} }`;
+            html = html.replace('// JAEGER_CONFIG_JS', uiConfigFn);
+            console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.js');
+            return html;
+          } catch (err) {
+            console.error('[jaeger-ui-config] Error loading jaeger-ui.config.js:', err);
+          }
+        }
+
+        // Check for JSON config
+        if (fs.existsSync(jsonConfigPath)) {
+          try {
+            const jsonContent = fs.readFileSync(jsonConfigPath, 'utf-8');
+            // Validate it's valid JSON and use stringified result for injection
+            const parsedConfig = JSON.parse(jsonContent);
+            // Replace DEFAULT_CONFIG with the JSON content
+            // This mimics the Go server behavior for .json config files
+            html = html.replace(
+              'const JAEGER_CONFIG = DEFAULT_CONFIG;',
+              `const JAEGER_CONFIG = ${JSON.stringify(parsedConfig)};`
+            );
+            console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.json');
+            return html;
+          } catch (err) {
+            console.error('[jaeger-ui-config] Error loading jaeger-ui.config.json:', err);
+          }
+        }
+
+        return html;
+      },
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   define: {
@@ -35,6 +90,7 @@ export default defineConfig({
     __APP_ENVIRONMENT__: JSON.stringify(process.env.NODE_ENV || 'development'),
   },
   plugins: [
+    jaegerUiConfigPlugin(),
     react({
       babel: {
         babelrc: true,
@@ -42,19 +98,6 @@ export default defineConfig({
     }),
     legacy({
       targets: ['>0.5%', 'not dead', 'not ie <= 11', 'not op_mini all'],
-    }),
-    // Use vite-plugin-imp to automatically import corresponding styles
-    // each time an AntD component is used.
-    vitePluginImp({
-      libList: [
-        {
-          libName: 'antd',
-          style: name => `antd/es/${name}/style`,
-        },
-      ],
-      // vite-plugin-imp by default tries to optimize all lodash imports as well,
-      // but logs warnings in attempting to do so, so disable it.
-      exclude: ['lodash'],
     }),
   ],
   css: {

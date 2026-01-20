@@ -1,17 +1,6 @@
 /*
 Copyright (c) 2017 Uber Technologies, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+SPDX-License-Identifier: Apache-2.0
 */
 
 .VerticalResizer {
@@ -42,23 +31,23 @@ limitations under the License.
 }
 
 .VerticalResizer--dragger:hover {
-  border-left: 2px solid rgba(0, 0, 0, 0.3);
+  border-left: 2px solid var(--border-subtle);
 }
 
 .VerticalResizer.isDraggingLeft > .VerticalResizer--dragger,
 .VerticalResizer.isDraggingRight > .VerticalResizer--dragger {
-  background: rgba(136, 0, 136, 0.05);
+  background: var(--resizer-drag-bg);
   width: unset;
 }
 
 .VerticalResizer.isDraggingLeft > .VerticalResizer--dragger {
-  border-left: 2px solid #808;
-  border-right: 1px solid #999;
+  border-left: 2px solid var(--interactive-primary);
+  border-right: 1px solid var(--text-muted);
 }
 
 .VerticalResizer.isDraggingRight > .VerticalResizer--dragger {
-  border-left: 1px solid #999;
-  border-right: 2px solid #808;
+  border-left: 1px solid var(--text-muted);
+  border-right: 2px solid var(--interactive-primary);
 }
 
 .VerticalResizer--dragger::before {
@@ -84,7 +73,7 @@ limitations under the License.
 
 .VerticalResizer--gripIcon::before,
 .VerticalResizer--gripIcon::after {
-  border-right: 1px solid #ccc;
+  border-right: 1px solid var(--border-default);
   content: ' ';
   height: 9px;
   position: absolute;
@@ -100,5 +89,5 @@ limitations under the License.
 .VerticalResizer.isDraggingRight > .VerticalResizer--gripIcon::before,
 .VerticalResizer.isDraggingLeft > .VerticalResizer--gripIcon::after,
 .VerticalResizer.isDraggingRight > .VerticalResizer--gripIcon::after {
-  border-right: 1px solid rgba(136, 0, 136, 0.5);
+  border-right: 1px solid rgba(var(--interactive-primary-rgb), 0.5);
 }
