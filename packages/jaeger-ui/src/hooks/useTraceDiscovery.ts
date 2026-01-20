@@ -31,3 +31,24 @@ export function useSpanNames(service: string | null): UseQueryResult<{ name: str
     refetchOnWindowFocus: true,
   });
 }
+
+/**
+ * React Query hook to fetch the list of server-side operations for a given service.
+ * @param service - The service name
+ * @returns Query result with server operation names array
+ */
+export function useServerOps(service: string | null): UseQueryResult<string[]> {
+  return useQuery({
+    queryKey: ['serverOps', service],
+    queryFn: async () => {
+      const ops = await jaegerClient.fetchSpanNames(service!);
+      return ops
+        .filter(op => op.spanKind === 'server')
+        .map(op => op.name)
+        .sort();
+    },
+    enabled: !!service, // Only fetch when service is selected
+    staleTime: 60 * 1000, // 1 minute
+    refetchOnWindowFocus: true,
+  });
+}

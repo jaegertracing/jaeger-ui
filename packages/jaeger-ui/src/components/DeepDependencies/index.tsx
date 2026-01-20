@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { History as RouterHistory, Location } from 'history';
-import { useNavigate } from 'react-router-dom-v5-compat';
+import { Location } from 'history';
+import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
 import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
@@ -40,6 +40,7 @@ import { TDdgStateEntry } from '../../types/TDdgState';
 import './index.css';
 import { ApiError } from '../../types/api-error';
 import withRouteProps from '../../utils/withRouteProps';
+import { useServerOps, useServices } from '../../hooks/useTraceDiscovery';
 
 interface IDoneState {
   state: typeof fetchedState.DONE;
@@ -54,8 +55,6 @@ interface IErrorState {
 export type TDispatchProps = {
   addViewModifier?: (kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }) => void;
   fetchDeepDependencyGraph?: (query: TDdgModelParams) => void;
-  fetchServices?: () => void;
-  fetchServiceServerOps?: (service: string) => void;
   removeViewModifierFromIndices?: (
     kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }
   ) => void;
@@ -64,10 +63,13 @@ export type TDispatchProps = {
 export type TReduxProps = TExtractUiFindFromStateReturn & {
   graph: GraphModel | undefined;
   graphState?: TDdgStateEntry;
-  serverOpsForService?: Record<string, string[]>;
-  services?: string[] | null;
   showOp: boolean;
   urlState: TDdgSparseUrlState;
+};
+
+export type THookProps = {
+  services: string[];
+  serverOps?: string[];
 };
 
 export type TOwnProps = {
@@ -78,7 +80,9 @@ export type TOwnProps = {
   showSvcOpsHeader: boolean;
 };
 
-export type TProps = TDispatchProps & TReduxProps & TOwnProps;
+export type TExternalProps = Partial<Omit<TOwnProps, 'navigate' | 'location'>>;
+
+export type TProps = TDispatchProps & TReduxProps & TOwnProps & THookProps;
 
 type TState = {
   selectedVertex?: TDdgVertex;
@@ -104,21 +108,6 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
   constructor(props: TProps) {
     super(props);
     DeepDependencyGraphPageImpl.fetchModelIfStale(props);
-
-    const { fetchServices, fetchServiceServerOps, serverOpsForService, services, urlState } = props;
-    const { service } = urlState;
-
-    if (!services && fetchServices) {
-      fetchServices();
-    }
-    if (
-      service &&
-      serverOpsForService &&
-      !Reflect.has(serverOpsForService, service) &&
-      fetchServiceServerOps
-    ) {
-      fetchServiceServerOps(service);
-    }
   }
 
   componentDidUpdate() {
@@ -195,10 +184,6 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
   };
 
   setService = (service: string) => {
-    const { fetchServiceServerOps, serverOpsForService } = this.props;
-    if (serverOpsForService && !Reflect.has(serverOpsForService, service) && fetchServiceServerOps) {
-      fetchServiceServerOps(service);
-    }
     this.updateUrlState({ operation: undefined, service, visEncoding: undefined });
     trackSetService();
   };
@@ -259,7 +244,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
       extraUrlArgs,
       graph,
       graphState,
-      serverOpsForService,
+      serverOps,
       services,
       showOp,
       uiFind,
@@ -376,7 +361,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
             distanceToPathElems={distanceToPathElems}
             hiddenUiFindMatches={hiddenUiFindMatches}
             operation={operation}
-            operations={serverOpsForService && serverOpsForService[service || '']}
+            operations={serverOps}
             service={service}
             services={services}
             setDensity={this.setDensity}
@@ -399,8 +384,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { services: stServices } = state;
-  const { services, serverOpsForService } = stServices;
+  // SERVICES AND OPS REMOVED FROM REDUX
   const urlState = getUrlState(ownProps.location.search);
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
@@ -415,8 +399,6 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   return {
     graph,
     graphState,
-    serverOpsForService,
-    services,
     showOp,
     urlState: sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
     ...extractUiFindFromState(state),
@@ -425,19 +407,32 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 
 // export for tests
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchDeepDependencyGraph, fetchServiceServerOps, fetchServices } = bindActionCreators(
-    jaegerApiActions,
-    dispatch
-  );
+  const { fetchDeepDependencyGraph } = bindActionCreators(jaegerApiActions, dispatch);
   const { addViewModifier, removeViewModifierFromIndices } = bindActionCreators(ddgActions, dispatch);
 
   return {
     addViewModifier,
     fetchDeepDependencyGraph,
-    fetchServiceServerOps,
-    fetchServices,
     removeViewModifierFromIndices,
   };
 }
 
-export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(DeepDependencyGraphPageImpl));
+const ConnectedDeepDependencyGraphPageImpl = withRouteProps(
+  connect(mapStateToProps, mapDispatchToProps)(DeepDependencyGraphPageImpl)
+) as React.ComponentType<Omit<TOwnProps, 'location' | 'navigate'> & THookProps>;
+
+export default function DeepDependencyGraphPage({
+  baseUrl = ROUTE_PATH,
+  showSvcOpsHeader = true,
+  ...restProps
+}: TExternalProps) {
+  const { data: services = [] } = useServices();
+  const location = useLocation();
+  const urlState = getUrlState(location.search);
+  const { service } = urlState;
+  const { data: serverOps } = useServerOps(service || null);
+
+  const props = { baseUrl, showSvcOpsHeader, ...restProps };
+
+  return <ConnectedDeepDependencyGraphPageImpl {...props} services={services} serverOps={serverOps} />;
+}

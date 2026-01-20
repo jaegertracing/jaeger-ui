@@ -101,31 +101,6 @@ describe('DeepDependencyGraphPage', () => {
     const ddgWithoutGraph = new DeepDependencyGraphPageImpl(propsWithoutGraph);
     const setIdx = visibilityIdx => ({ visibilityIdx });
 
-    describe('constructor', () => {
-      beforeEach(() => {
-        props.fetchServices.mockReset();
-        props.fetchServiceServerOps.mockReset();
-      });
-
-      it('fetches services if services are not provided', () => {
-        new DeepDependencyGraphPageImpl({ ...props, services: [] });
-        expect(props.fetchServices).not.toHaveBeenCalled();
-        new DeepDependencyGraphPageImpl(props);
-        expect(props.fetchServices).toHaveBeenCalledTimes(1);
-      });
-
-      it('fetches operations if service is provided without operations', () => {
-        const { service, ...urlState } = props.urlState;
-        new DeepDependencyGraphPageImpl({ ...props, urlState });
-        expect(props.fetchServiceServerOps).not.toHaveBeenCalled();
-        new DeepDependencyGraphPageImpl({ ...props, serverOpsForService: { [service]: [] } });
-        expect(props.fetchServiceServerOps).not.toHaveBeenCalled();
-        new DeepDependencyGraphPageImpl(props);
-        expect(props.fetchServiceServerOps).toHaveBeenLastCalledWith(service);
-        expect(props.fetchServiceServerOps).toHaveBeenCalledTimes(1);
-      });
-    });
-
     describe('updateUrlState', () => {
       const visEncoding = 'test vis encoding';
       let getUrlSpy;
@@ -397,22 +372,6 @@ describe('DeepDependencyGraphPage', () => {
           );
           expect(props.navigate).toHaveBeenCalledTimes(1);
           expect(trackSetServiceSpy).toHaveBeenCalledTimes(1);
-        });
-
-        it('fetches operations for service when not yet provided', () => {
-          ddgPageImpl.setService(service);
-          expect(props.fetchServiceServerOps).toHaveBeenLastCalledWith(service);
-          expect(props.fetchServiceServerOps).toHaveBeenCalledTimes(1);
-          expect(trackSetServiceSpy).toHaveBeenCalledTimes(1);
-
-          const pageWithOpForService = new DeepDependencyGraphPageImpl({
-            ...props,
-            serverOpsForService: { [service]: [props.urlState.operation] },
-          });
-          const { length: callCount } = props.fetchServiceServerOps.mock.calls;
-          pageWithOpForService.setService(service);
-          expect(props.fetchServiceServerOps).toHaveBeenCalledTimes(callCount);
-          expect(trackSetServiceSpy).toHaveBeenCalledTimes(2);
         });
       });
 
@@ -871,8 +830,6 @@ describe('DeepDependencyGraphPage', () => {
       expect(mapDispatchToProps(() => {})).toEqual({
         addViewModifier: expect.any(Function),
         fetchDeepDependencyGraph: expect.any(Function),
-        fetchServices: expect.any(Function),
-        fetchServiceServerOps: expect.any(Function),
         removeViewModifierFromIndices: expect.any(Function),
       });
     });
@@ -988,12 +945,6 @@ describe('DeepDependencyGraphPage', () => {
 
       const doneResult = mapStateToProps(doneState, ownProps);
       expect(doneResult.graph).toBe(mockGraph);
-    });
-
-    it('includes services and serverOpsForService', () => {
-      expect(mapStateToProps(state, ownProps)).toEqual(
-        expect.objectContaining({ serverOpsForService, services })
-      );
     });
 
     it('sanitizes urlState', () => {

@@ -4,7 +4,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import { useServices, useSpanNames } from './useTraceDiscovery';
+import { useServices, useSpanNames, useServerOps } from './useTraceDiscovery';
 import { jaegerClient } from '../api/v3/client';
 
 jest.mock('../api/v3/client', () => ({
@@ -266,6 +266,54 @@ describe('useTraceDiscovery', () => {
 
       rerender({ service: null });
 
+      expect(result.current.fetchStatus).toBe('idle');
+      expect(jaegerClient.fetchSpanNames).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('useServerOps', () => {
+    it('returns loading state initially when service is provided', () => {
+      (jaegerClient.fetchSpanNames as jest.Mock).mockImplementation(
+        () => new Promise(() => {}) // Never resolves
+      );
+
+      const { result } = renderHook(() => useServerOps('test-service'), {
+        wrapper: createWrapper(),
+      });
+
+      expect(result.current.isLoading).toBe(true);
+      expect(result.current.data).toBeUndefined();
+    });
+
+    it('successfully fetches and filters server operations', async () => {
+      const mockOperations = [
+        { name: 'GET /api/users', spanKind: 'server' },
+        { name: 'POST /api/orders', spanKind: 'server' },
+        { name: 'GET /health', spanKind: 'client' }, // Should be filtered out
+        { name: 'internal-op', spanKind: 'internal' }, // Should be filtered out
+      ];
+      (jaegerClient.fetchSpanNames as jest.Mock).mockResolvedValue(mockOperations);
+
+      const { result } = renderHook(() => useServerOps('my-service'), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      // Should only contain sorted server operation names
+      expect(result.current.data).toEqual(['GET /api/users', 'POST /api/orders']);
+      expect(jaegerClient.fetchSpanNames).toHaveBeenCalledWith('my-service');
+      expect(jaegerClient.fetchSpanNames).toHaveBeenCalledTimes(1);
+    });
+
+    it('behaves like useSpanNames when service is null', () => {
+      const { result } = renderHook(() => useServerOps(null), {
+        wrapper: createWrapper(),
+      });
+
+      expect(result.current.isLoading).toBe(false);
       expect(result.current.fetchStatus).toBe('idle');
       expect(jaegerClient.fetchSpanNames).not.toHaveBeenCalled();
     });

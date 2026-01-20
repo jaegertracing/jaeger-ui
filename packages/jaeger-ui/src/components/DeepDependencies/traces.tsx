@@ -84,6 +84,8 @@ export const TracesDdgImpl: React.FC<TracesDdgImplProps> = React.memo(props => {
       extraUrlArgs={extraArgs}
       showSvcOpsHeader={false}
       navigate={navigate}
+      services={[]}
+      serverOps={[]}
       {...props}
     />
   );

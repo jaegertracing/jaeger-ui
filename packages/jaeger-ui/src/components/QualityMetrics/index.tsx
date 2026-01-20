@@ -3,10 +3,9 @@
 
 import * as React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
 
-import * as jaegerApiActions from '../../actions/jaeger-api';
+import { useServices } from '../../hooks/useTraceDiscovery';
+
 import JaegerAPI from '../../api/jaeger';
 import LoadingIndicator from '../common/LoadingIndicator';
 import DetailsCard from '../common/DetailsCard';
@@ -17,22 +16,22 @@ import MetricCard from './MetricCard';
 import ScoreCard from './ScoreCard';
 import { getUrl, getUrlState } from './url';
 
-import { ReduxState } from '../../types';
 import { TQualityMetrics } from './types';
 
 import './index.css';
 
-type TDispatchProps = {
-  fetchServices: () => void;
-};
+// type TDispatchProps = {
+//   fetchServices: () => void;
+// };
 
-type TReduxProps = {
-  services?: string[] | null;
-};
+// type TReduxProps = {
+//   services?: string[] | null;
+// };
+//
+// export type TProps = TDispatchProps & TReduxProps;
+export type TProps = {};
 
-export type TProps = TDispatchProps & TReduxProps;
-
-export function UnconnectedQualityMetrics({ fetchServices, services }: TProps) {
+export function QualityMetricsImpl() {
   const navigate = useNavigate();
   const location = useLocation();
   const { lookback, service } = React.useMemo(() => getUrlState(location.search), [location.search]);
@@ -40,11 +39,7 @@ export function UnconnectedQualityMetrics({ fetchServices, services }: TProps) {
   const [error, setError] = React.useState<Error | undefined>();
   const [loading, setLoading] = React.useState<boolean>(false);
 
-  React.useEffect(() => {
-    if (!services) {
-      fetchServices();
-    }
-  }, [fetchServices, services]);
+  const { data: services = [] } = useServices();
 
   React.useEffect(() => {
     if (!service) return;
@@ -151,21 +146,4 @@ export function UnconnectedQualityMetrics({ fetchServices, services }: TProps) {
   );
 }
 
-export function mapStateToProps(state: ReduxState): TReduxProps {
-  const {
-    services: { services },
-  } = state;
-  return {
-    services,
-  };
-}
-
-export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchServices } = bindActionCreators(jaegerApiActions, dispatch);
-
-  return {
-    fetchServices,
-  };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(UnconnectedQualityMetrics);
+export default QualityMetricsImpl;
