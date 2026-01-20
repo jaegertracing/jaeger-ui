@@ -181,10 +181,10 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, []);
 
   const fetchMetrics = useCallback(() => {
-    const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics } = props;
+    const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;
     const currentService = selectedService || services[0];
 
-    if (currentService) {
+    if (currentService && metrics.isATMActivated) {
       const newEndTime = Date.now();
       setEndTime(newEndTime);
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
@@ -209,7 +209,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, [
     props.fetchAllServiceMetrics,
     props.fetchAggregatedServiceMetrics,
-    props.fetchAggregatedServiceMetrics,
+    props.metrics.isATMActivated,
     services,
     selectedService,
     selectedSpanKind,

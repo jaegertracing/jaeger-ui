@@ -3,11 +3,18 @@
 
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
 import JaegerAPI from '../../api/jaeger';
 import * as getUrl from './url';
-import { UnconnectedQualityMetrics, mapDispatchToProps, mapStateToProps } from '.';
+import QualityMetricsImpl from '.';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: false },
+  },
+});
 
 const mockNavigate = jest.fn();
 const mockLocation = { search: '?service=test-service&lookback=48' };
@@ -75,7 +82,7 @@ jest.mock(
 );
 
 describe('QualityMetrics', () => {
-  describe('UnconnectedQualityMetrics', () => {
+  describe('QualityMetricsImpl', () => {
     const props = {
       fetchServices: jest.fn(),
       services: ['foo', 'bar', 'baz'],
@@ -106,22 +113,13 @@ describe('QualityMetrics', () => {
       headerMock.setLookback = null;
     });
 
-    describe('constructor', () => {
-      it('fetches services if none are provided', () => {
-        const { services: _ses, ...propsWithoutServices } = props;
-        render(<UnconnectedQualityMetrics {...propsWithoutServices} />);
-        expect(props.fetchServices).toHaveBeenCalledTimes(1);
-      });
-
-      it('no-ops if services are provided', () => {
-        render(<UnconnectedQualityMetrics {...props} />);
-        expect(props.fetchServices).not.toHaveBeenCalled();
-      });
-    });
-
     describe('componentDidMount', () => {
       it('fetches quality metrics', () => {
-        render(<UnconnectedQualityMetrics {...props} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
         expect(fetchQualityMetricsSpy).toHaveBeenCalledWith('test-service', 48);
       });
@@ -129,34 +127,58 @@ describe('QualityMetrics', () => {
 
     describe('componentDidUpdate', () => {
       it('clears state and fetches quality metrics if service changed', () => {
-        const { rerender } = render(<UnconnectedQualityMetrics {...props} />);
+        const { rerender } = render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
 
         const service = 'not-test-service';
         mockLocation.search = `?service=${service}&lookback=48`;
-        rerender(<UnconnectedQualityMetrics {...props} />);
+        rerender(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(2);
         expect(fetchQualityMetricsSpy).toHaveBeenLastCalledWith(service, 48);
         mockLocation.search = '?service=test-service&lookback=48';
       });
 
       it('clears state and fetches quality metrics if lookback changed', () => {
-        const { rerender } = render(<UnconnectedQualityMetrics {...props} />);
+        const { rerender } = render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
 
         const lookback = 48 + 10;
         mockLocation.search = `?service=test-service&lookback=${lookback}`;
-        rerender(<UnconnectedQualityMetrics {...props} />);
+        rerender(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(2);
         expect(fetchQualityMetricsSpy).toHaveBeenLastCalledWith('test-service', lookback);
         mockLocation.search = '?service=test-service&lookback=48';
       });
 
       it('no-ops if neither service or lookback changed', () => {
-        const { rerender } = render(<UnconnectedQualityMetrics {...props} />);
+        const { rerender } = render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
 
-        rerender(<UnconnectedQualityMetrics {...props} services={[]} />);
+        rerender(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} services={[]} />
+          </QueryClientProvider>
+        );
         expect(fetchQualityMetricsSpy).toHaveBeenCalledTimes(1);
       });
     });
@@ -164,13 +186,21 @@ describe('QualityMetrics', () => {
     describe('fetches quality metrics', () => {
       it('no-ops on falsy service', () => {
         mockLocation.search = '?lookback=48';
-        render(<UnconnectedQualityMetrics {...propsWithoutService} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
         expect(fetchQualityMetricsSpy).not.toHaveBeenCalled();
         mockLocation.search = '?service=test-service&lookback=48';
       });
 
       it('fetches quality metrics and updates state on success', async () => {
-        render(<UnconnectedQualityMetrics {...props} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
 
         const qualityMetrics = {
           bannerText: 'test banner text',
@@ -187,7 +217,11 @@ describe('QualityMetrics', () => {
       });
 
       it('fetches quality metrics and updates state on error', async () => {
-        render(<UnconnectedQualityMetrics {...props} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
 
         const error = { message: 'Error message' };
 
@@ -219,7 +253,11 @@ describe('QualityMetrics', () => {
       });
 
       it('sets service', () => {
-        render(<UnconnectedQualityMetrics {...props} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
         const testService = 'new test-service';
 
         headerMock.setService(testService);
@@ -232,7 +270,11 @@ describe('QualityMetrics', () => {
       });
 
       it('sets lookback', () => {
-        render(<UnconnectedQualityMetrics {...props} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
 
         headerMock.setLookback(testLookback);
 
@@ -245,7 +287,11 @@ describe('QualityMetrics', () => {
 
       it('sets lookback without service', () => {
         mockLocation.search = '?lookback=48';
-        render(<UnconnectedQualityMetrics {...propsWithoutService} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
 
         headerMock.setLookback(testLookback);
 
@@ -258,7 +304,11 @@ describe('QualityMetrics', () => {
       });
 
       it('ignores falsy lookback', () => {
-        render(<UnconnectedQualityMetrics {...props} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
 
         headerMock.setLookback(null);
 
@@ -266,13 +316,21 @@ describe('QualityMetrics', () => {
       });
 
       it('ignores string lookback', () => {
-        render(<UnconnectedQualityMetrics {...props} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
 
         headerMock.setLookback('test-service');
       });
 
       it('ignores less than one lookback', () => {
-        render(<UnconnectedQualityMetrics {...props} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
 
         headerMock.setLookback(-1);
 
@@ -280,7 +338,11 @@ describe('QualityMetrics', () => {
       });
 
       it('ignores fractional lookback', () => {
-        render(<UnconnectedQualityMetrics {...props} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
 
         headerMock.setLookback(2.5);
 
@@ -291,7 +353,11 @@ describe('QualityMetrics', () => {
     describe('render', () => {
       it('renders without loading, error, or metrics', () => {
         mockLocation.search = '?lookback=48';
-        render(<UnconnectedQualityMetrics {...propsWithoutService} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
         expect(screen.getByTestId('header')).toBeInTheDocument();
         expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
         expect(screen.queryByText(/error/i)).not.toBeInTheDocument();
@@ -300,12 +366,20 @@ describe('QualityMetrics', () => {
       });
 
       it('renders when loading', () => {
-        render(<UnconnectedQualityMetrics {...props} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
         expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
       });
 
       it('renders when errored', async () => {
-        render(<UnconnectedQualityMetrics {...props} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
 
         const message = 'Error message';
 
@@ -322,7 +396,11 @@ describe('QualityMetrics', () => {
       });
 
       it('renders with metrics', async () => {
-        render(<UnconnectedQualityMetrics {...props} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
 
         const metrics = {
           bannerText: 'test banner text',
@@ -359,7 +437,11 @@ describe('QualityMetrics', () => {
       });
 
       it('renders client versions when qualityMetrics.clients is present', async () => {
-        render(<UnconnectedQualityMetrics {...props} />);
+        render(
+          <QueryClientProvider client={queryClient}>
+            <QualityMetricsImpl {...props} />
+          </QueryClientProvider>
+        );
 
         const metricsWithClients = {
           bannerText: 'banner',
@@ -386,35 +468,6 @@ describe('QualityMetrics', () => {
         expect(screen.getByText('5')).toBeInTheDocument();
         expect(screen.getByText('ExamplesLink Component')).toBeInTheDocument();
       });
-    });
-  });
-
-  describe('mapDispatchToProps()', () => {
-    it('creates the actions correctly', () => {
-      expect(mapDispatchToProps(() => {})).toEqual({
-        fetchServices: expect.any(Function),
-      });
-    });
-  });
-
-  describe('mapStateToProps()', () => {
-    let getUrlStateSpy;
-    const urlState = {
-      lookback: 108,
-      service: 'test-service',
-    };
-
-    beforeAll(() => {
-      getUrlStateSpy = jest.spyOn(getUrl, 'getUrlState').mockImplementation(search => search && urlState);
-    });
-
-    it('gets services from redux state', () => {
-      const services = [urlState.service, 'foo', 'bar'];
-      expect(
-        mapStateToProps({
-          services: { services },
-        })
-      ).toEqual({ services });
     });
   });
 });

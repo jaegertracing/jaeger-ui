@@ -44,7 +44,7 @@ jest.mock('store', () => ({
 }));
 
 jest.mock('../../../hooks/useTraceDiscovery', () => ({
-  useServices: jest.fn(() => ({ data: [], isLoading: false })),
+  useServices: jest.fn(() => ({ data: ['service1', 'service2'], isLoading: false })),
 }));
 
 jest.mock('lodash/debounce', () => fn => fn);
@@ -128,7 +128,7 @@ jest.mock('antd', () => {
 
 const state = {
   services: {},
-  metrics: originInitialState,
+  metrics: { ...originInitialState, isATMActivated: true },
   selectedService: undefined,
 };
 
@@ -712,7 +712,7 @@ describe('<MonitorATMServicesView> on page switch', () => {
     services: {
       services: [],
     },
-    metrics: originInitialState,
+    metrics: { ...originInitialState, isATMActivated: true },
     selectedService: undefined,
   };
 
@@ -747,7 +747,7 @@ describe('<MonitorATMServicesView> on page switch', () => {
 describe('mapStateToProps()', () => {
   it('refines state to generate the props', () => {
     expect(mapStateToProps(state)).toEqual({
-      metrics: originInitialState,
+      metrics: { ...originInitialState, isATMActivated: true },
     });
   });
 });
