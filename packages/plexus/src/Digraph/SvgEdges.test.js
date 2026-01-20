@@ -18,6 +18,10 @@ jest.mock('./SvgEdge', () => {
 });
 
 describe('SvgEdges', () => {
+  beforeEach(() => {
+    mockSvgEdgeProps.length = 0;
+  });
+
   const mockGetClassName = name => `plexus--${name}`;
 
   const mockRenderUtils = {
@@ -86,7 +90,6 @@ describe('SvgEdges', () => {
   });
 
   it('passes setOnEdge to child components', () => {
-    mockSvgEdgeProps.length = 0;
     const mockSetOnEdge = jest.fn();
     const { getAllByTestId } = render(
       <svg>
