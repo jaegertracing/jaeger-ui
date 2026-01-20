@@ -28,23 +28,18 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TraceDiffHeader--traceTitle span {
-  display: inline-block;
-  max-width: calc(100% - 2em);
-  word-wrap: break-word;
+  display: inline;
+  max-width: 100%;
   white-space: normal;
   overflow-wrap: break-word;
+  word-break: keep-all;
   min-width: 0;
-}
-
-@container (max-width: 600px) {
-  .TraceDiffHeader--traceTitle span {
-    display: grid;
-    grid-auto-rows: auto;
-  }
+  line-height: 1.4;
 }
 
 .TraceDiffHeader--traceTitle span .u-tx-muted {
-  white-space: nowrap;
+  display: inline;
+  white-space: normal;
 }
 
 .TraceDiffHeader--traceTitle.is-error {
