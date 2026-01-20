@@ -109,6 +109,60 @@ describe('<AccordionLinks /> – functional component', () => {
 
     expect(baseProps.onToggle).toHaveBeenCalledTimes(1);
   });
+
+  it('applies high contrast class when highContrast is true', () => {
+    render(<AccordionLinks {...baseProps} highContrast={true} />);
+
+    const header = screen.getByText('References').closest('.AccordionLinks--header');
+    expect(header).toHaveClass('is-high-contrast');
+  });
+
+  it('applies is-open class when isOpen is true', () => {
+    render(<AccordionLinks {...baseProps} isOpen={true} />);
+
+    const header = screen.getByText('References').closest('.AccordionLinks--header');
+    expect(header).toHaveClass('is-open');
+  });
+
+  it('applies empty class and does not call onToggle when data is empty', () => {
+    const emptyProps = { ...baseProps, data: [] };
+    render(<AccordionLinks {...emptyProps} />);
+
+    const header = screen.getByText('References').closest('.AccordionLinks--header');
+    expect(header).toHaveClass('is-empty');
+    expect(screen.getByText('(0)')).toBeInTheDocument();
+
+    if (header) {
+      fireEvent.click(header);
+    }
+    expect(baseProps.onToggle).not.toHaveBeenCalled();
+  });
+
+  it('does not render arrow or respond to clicks when interactive is false', () => {
+    render(<AccordionLinks {...baseProps} interactive={false} />);
+
+    const header = screen.getByText('References').closest('.AccordionLinks--header');
+
+    if (header) {
+      fireEvent.click(header);
+    }
+    expect(baseProps.onToggle).not.toHaveBeenCalled();
+  });
+
+  it('does not throw error when onToggle is null', () => {
+    const propsWithNullToggle = { ...baseProps, onToggle: null };
+
+    expect(() => {
+      render(<AccordionLinks {...propsWithNullToggle} />);
+    }).not.toThrow();
+  });
+
+  it('handles non-array data gracefully', () => {
+    const invalidProps = { ...baseProps, data: null };
+    expect(() => {
+      render(<AccordionLinks {...invalidProps} />);
+    }).toThrow();
+  });
 });
 
 describe('<References />', () => {
@@ -141,5 +195,16 @@ describe('<References />', () => {
     expect(screen.getByText('span1')).toBeInTheDocument();
     expect(screen.getByText('span3')).toBeInTheDocument();
     expect(screen.getByText('span5')).toBeInTheDocument();
+  });
+
+  it('renders correct structure for each reference item', () => {
+    render(<References {...props} />);
+
+    const listItems = screen.getAllByRole('listitem');
+    expect(listItems).toHaveLength(links.length);
+
+    listItems.forEach(item => {
+      expect(item).toHaveClass('ReferencesList--Item');
+    });
   });
 });

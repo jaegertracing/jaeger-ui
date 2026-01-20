@@ -27,6 +27,10 @@ type ReferenceItemProps = {
 export function References(props: ReferenceItemProps) {
   const { data, focusSpan } = props;
 
+  if (!Array.isArray(data)) {
+    return null;
+  }
+
   return (
     <div className="ReferencesList u-simple-scrollbars">
       <ul className="ReferencesList--List">
@@ -58,7 +62,7 @@ export function References(props: ReferenceItemProps) {
   );
 }
 
-const AccordionLinks: React.FC<AccordionLinksProps> = ({
+function AccordionLinks({
   data,
   highContrast = false,
   interactive = true,
@@ -66,7 +70,7 @@ const AccordionLinks: React.FC<AccordionLinksProps> = ({
   onToggle = null,
   focusSpan,
   useOtelTerms,
-}) => {
+}: AccordionLinksProps) {
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKReferences--emptyIcon': isEmpty });
 
@@ -101,6 +105,6 @@ const AccordionLinks: React.FC<AccordionLinksProps> = ({
       {isOpen && <References data={data} focusSpan={focusSpan} />}
     </div>
   );
-};
+}
 
 export default React.memo(AccordionLinks);
