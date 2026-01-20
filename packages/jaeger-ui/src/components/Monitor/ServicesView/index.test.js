@@ -178,7 +178,6 @@ describe('<MonitorATMServicesView>', () => {
     const loadingProps = {
       ...props,
       ...props,
-      servicesLoading: true,
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
     };
@@ -749,7 +748,6 @@ describe('mapStateToProps()', () => {
   it('refines state to generate the props', () => {
     expect(mapStateToProps(state)).toEqual({
       metrics: originInitialState,
-      servicesLoading: false,
     });
   });
 });

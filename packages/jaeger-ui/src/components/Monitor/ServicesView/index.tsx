@@ -43,7 +43,6 @@ import SearchableSelect from '../../common/SearchableSelect';
 import { useServices } from '../../../hooks/useTraceDiscovery';
 
 type TReduxProps = {
-  servicesLoading: boolean;
   metrics: MetricsReduxState;
 };
 
@@ -436,7 +435,6 @@ export function MonitorATMServicesViewImpl(props: TProps) {
 export function mapStateToProps(state: ReduxState): TReduxProps {
   const { metrics } = state;
   return {
-    servicesLoading: false, // Deprecated in favor of hook
     metrics,
   };
 }
