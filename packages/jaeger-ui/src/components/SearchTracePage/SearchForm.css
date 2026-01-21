@@ -33,14 +33,10 @@ SPDX-License-Identifier: Apache-2.0
 
 .SearchForm--submit:hover {
   background-color: var(--surface-primary);
-  float: right;
-  max-width: 100%;
 }
 
 .SearchForm--submit:active {
   background-color: var(--surface-primary);
-  float: right;
-  max-width: 100%;
 }
 
 .SearchForm--tagsHintInfo {
