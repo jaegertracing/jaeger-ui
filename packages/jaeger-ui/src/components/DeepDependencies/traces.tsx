@@ -79,6 +79,8 @@ export const TracesDdgImpl: React.FC<TracesDdgImplProps> = React.memo(props => {
   const extraArgs = { end, start, limit, lookback, maxDuration, minDuration, view };
 
   return (
+    // Note: services and serverOps are intentionally empty arrays because this traces view
+    // sets showSvcOpsHeader=false, hiding the service/operation selector UI elements.
     <DeepDependencyGraphPageImpl
       baseUrl={ROUTE_PATH}
       extraUrlArgs={extraArgs}

@@ -83,12 +83,8 @@ jest.mock(
 
 describe('QualityMetrics', () => {
   describe('QualityMetricsImpl', () => {
-    const props = {
-      fetchServices: jest.fn(),
-      services: ['foo', 'bar', 'baz'],
-    };
+    const props = {};
 
-    const { ...propsWithoutService } = props;
     let fetchQualityMetricsSpy;
     let promise;
     let res;
@@ -106,7 +102,6 @@ describe('QualityMetrics', () => {
 
     beforeEach(() => {
       mockNavigate.mockClear();
-      props.fetchServices.mockClear();
       fetchQualityMetricsSpy.mockClear();
       headerMock.props = null;
       headerMock.setService = null;

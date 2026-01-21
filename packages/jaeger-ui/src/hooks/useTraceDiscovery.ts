@@ -3,6 +3,7 @@
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
+import { localeStringComparator } from '../utils/sort';
 
 /**
  * React Query hook to fetch the list of services from the Jaeger API.
@@ -45,7 +46,7 @@ export function useServerOps(service: string | null): UseQueryResult<string[]> {
       return ops
         .filter(op => op.spanKind === 'server')
         .map(op => op.name)
-        .sort();
+        .sort(localeStringComparator);
     },
     enabled: !!service, // Only fetch when service is selected
     staleTime: 60 * 1000, // 1 minute

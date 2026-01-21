@@ -177,7 +177,6 @@ describe('<MonitorATMServicesView>', () => {
     cleanup();
     const loadingProps = {
       ...props,
-      ...props,
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
     };
@@ -737,8 +736,7 @@ describe('<MonitorATMServicesView> on page switch', () => {
     cleanup();
   });
 
-  it('function invocation check on page load', () => {
-    useServices.mockReturnValue({ data: ['apple'], isLoading: false });
+  it('metrics fetch invocation check on page load', () => {
     expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
     expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
   });

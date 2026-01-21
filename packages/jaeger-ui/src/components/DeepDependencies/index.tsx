@@ -384,7 +384,8 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  // SERVICES AND OPS REMOVED FROM REDUX
+  // Services and operations are now fetched using React Query hooks (useServices/useServerOps)
+  // instead of Redux state. See the default export wrapper component below.
   const urlState = getUrlState(ownProps.location.search);
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
