@@ -200,5 +200,127 @@ describe('SvgEdges', () => {
       // Render count should increase because markerEndId changed
       expect(mockRenderCount).toBeGreaterThan(initialRenderCount);
     });
+
+    it('re-renders when markerStartId changes', () => {
+      const { rerender } = render(
+        <svg>
+          <SvgEdges
+            getClassName={mockGetClassName}
+            layoutEdges={mockLayoutEdges}
+            renderUtils={mockRenderUtils}
+            markerStartId="arrow-start"
+          />
+        </svg>
+      );
+
+      const initialRenderCount = mockRenderCount;
+
+      rerender(
+        <svg>
+          <SvgEdges
+            getClassName={mockGetClassName}
+            layoutEdges={mockLayoutEdges}
+            renderUtils={mockRenderUtils}
+            markerStartId="different-arrow-start"
+          />
+        </svg>
+      );
+
+      expect(mockRenderCount).toBeGreaterThan(initialRenderCount);
+    });
+
+    it('re-renders when getClassName changes', () => {
+      const { rerender } = render(
+        <svg>
+          <SvgEdges
+            getClassName={mockGetClassName}
+            layoutEdges={mockLayoutEdges}
+            renderUtils={mockRenderUtils}
+          />
+        </svg>
+      );
+
+      const initialRenderCount = mockRenderCount;
+
+      // Create new getClassName function (different reference)
+      const newGetClassName = name => `different--${name}`;
+
+      rerender(
+        <svg>
+          <SvgEdges
+            getClassName={newGetClassName}
+            layoutEdges={mockLayoutEdges}
+            renderUtils={mockRenderUtils}
+          />
+        </svg>
+      );
+
+      expect(mockRenderCount).toBeGreaterThan(initialRenderCount);
+    });
+
+    it('re-renders when renderUtils changes', () => {
+      const { rerender } = render(
+        <svg>
+          <SvgEdges
+            getClassName={mockGetClassName}
+            layoutEdges={mockLayoutEdges}
+            renderUtils={mockRenderUtils}
+          />
+        </svg>
+      );
+
+      const initialRenderCount = mockRenderCount;
+
+      // Create new renderUtils object (different reference)
+      const newRenderUtils = {
+        getGlobalId: id => `new-global-${id}`,
+        getZoomTransform: () => ({ k: 2, x: 10, y: 10 }),
+      };
+
+      rerender(
+        <svg>
+          <SvgEdges
+            getClassName={mockGetClassName}
+            layoutEdges={mockLayoutEdges}
+            renderUtils={newRenderUtils}
+          />
+        </svg>
+      );
+
+      expect(mockRenderCount).toBeGreaterThan(initialRenderCount);
+    });
+
+    it('re-renders when setOnEdge changes', () => {
+      const mockSetOnEdge = jest.fn();
+
+      const { rerender } = render(
+        <svg>
+          <SvgEdges
+            getClassName={mockGetClassName}
+            layoutEdges={mockLayoutEdges}
+            renderUtils={mockRenderUtils}
+            setOnEdge={mockSetOnEdge}
+          />
+        </svg>
+      );
+
+      const initialRenderCount = mockRenderCount;
+
+      // Create new setOnEdge function (different reference)
+      const newSetOnEdge = jest.fn();
+
+      rerender(
+        <svg>
+          <SvgEdges
+            getClassName={mockGetClassName}
+            layoutEdges={mockLayoutEdges}
+            renderUtils={mockRenderUtils}
+            setOnEdge={newSetOnEdge}
+          />
+        </svg>
+      );
+
+      expect(mockRenderCount).toBeGreaterThan(initialRenderCount);
+    });
   });
 });
