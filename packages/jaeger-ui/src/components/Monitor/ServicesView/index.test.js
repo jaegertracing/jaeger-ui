@@ -244,7 +244,7 @@ describe('<MonitorATMServicesView>', () => {
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
   });
 
-  it('function invocation check on page load', () => {
+  it('fetches metrics only when services are available', () => {
     expect(mockFetchAllServiceMetrics).not.toHaveBeenCalled();
     expect(mockFetchAggregatedServiceMetrics).not.toHaveBeenCalled();
 
