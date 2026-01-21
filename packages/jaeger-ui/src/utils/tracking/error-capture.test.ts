@@ -158,6 +158,29 @@ describe('error-capture', () => {
       // Should not throw
       captureException(new Error('foo'));
     });
+
+    it('ignores 501 errors from metrics API', () => {
+      const mockOnError = jest.fn();
+      init({ onError: mockOnError });
+      const err: any = new Error('HTTP Error: metrics querying is currently disabled');
+      err.httpStatus = 501;
+      captureException(err);
+      // Should not call the error callback for 501 errors
+      expect(mockOnError).not.toHaveBeenCalled();
+    });
+
+    it('captures non-501 HTTP errors normally', () => {
+      const mockOnError = jest.fn();
+      init({ onError: mockOnError });
+      const err: any = new Error('HTTP Error: Not Found');
+      err.httpStatus = 404;
+      captureException(err);
+      // Should call the error callback for other HTTP errors
+      expect(mockOnError).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Error', message: 'HTTP Error: Not Found' }),
+        expect.anything()
+      );
+    });
   });
 
   describe('Breadcrumbs', () => {
