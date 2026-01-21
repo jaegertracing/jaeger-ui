@@ -6,11 +6,29 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import _set from 'lodash/set';
 
+jest.mock('node-fetch', () =>
+  jest.fn(() =>
+    Promise.resolve({
+      status: 200,
+      ok: true,
+      json: () => Promise.resolve({}),
+      text: () => Promise.resolve(''),
+    })
+  )
+);
+
 jest.mock('react-router-dom-v5-compat', () => ({
   useNavigate: () => jest.fn(),
+  useLocation: () => ({ search: '?service=test-service&operation=test-op' }),
+}));
+
+jest.mock('../../hooks/useTraceDiscovery', () => ({
+  useServices: jest.fn(() => ({ data: ['svc1', 'svc2'], isLoading: false })),
+  useServerOps: jest.fn(() => ({ data: ['op1', 'op2'] })),
 }));
 
 import { DeepDependencyGraphPageImpl, mapDispatchToProps, mapStateToProps } from '.';
+import DefaultDeepDependencyGraphPage from '.';
 import * as track from './index.track';
 import * as url from './url';
 import * as getSearchUrl from '../SearchTracePage/url';
@@ -19,6 +37,7 @@ import getStateEntryKey from '../../model/ddg/getStateEntryKey';
 import * as GraphModel from '../../model/ddg/GraphModel';
 import * as codec from '../../model/ddg/visibility-codec';
 import * as getConfig from '../../utils/config/get-config';
+import { useServices, useServerOps } from '../../hooks/useTraceDiscovery';
 
 import { ECheckedStatus, EDirection, EDdgDensity, EViewModifier } from '../../model/ddg/types';
 
@@ -950,6 +969,53 @@ describe('DeepDependencyGraphPage', () => {
     it('sanitizes urlState', () => {
       mapStateToProps(doneState, ownProps);
       expect(sanitizeUrlStateSpy).toHaveBeenLastCalledWith(expected.urlState, hash);
+    });
+  });
+
+  describe('DeepDependencyGraphPage (default export wrapper)', () => {
+    const { MemoryRouter } = require('react-router-dom');
+
+    const { Provider } = require('react-redux');
+
+    const { createStore } = require('redux');
+
+    const { QueryClient, QueryClientProvider } = require('@tanstack/react-query');
+
+    const mockReduxStore = createStore(() => ({
+      ddg: {},
+      router: { location: { search: '?service=test-service' } },
+    }));
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    const renderWithAllProviders = component => {
+      return render(
+        <QueryClientProvider client={queryClient}>
+          <Provider store={mockReduxStore}>
+            <MemoryRouter initialEntries={['/?service=test-service']}>{component}</MemoryRouter>
+          </Provider>
+        </QueryClientProvider>
+      );
+    };
+
+    beforeEach(() => {
+      useServices.mockClear();
+      useServerOps.mockClear();
+    });
+
+    it('renders and calls useServices and useServerOps hooks', () => {
+      renderWithAllProviders(<DefaultDeepDependencyGraphPage />);
+      expect(useServices).toHaveBeenCalled();
+      expect(useServerOps).toHaveBeenCalled();
+    });
+
+    it('passes custom props to wrapped component', () => {
+      renderWithAllProviders(
+        <DefaultDeepDependencyGraphPage baseUrl="/custom-path" showSvcOpsHeader={false} />
+      );
+      expect(useServices).toHaveBeenCalled();
     });
   });
 });
