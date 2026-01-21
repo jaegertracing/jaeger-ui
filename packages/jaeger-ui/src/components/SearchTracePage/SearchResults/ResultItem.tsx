@@ -81,7 +81,7 @@ export default function ResultItem({
       />
       <Link to={linkTo}>
         <Row>
-          <Col span={4} className="ub-p2">
+          <Col xs={6} sm={6} md={4} lg={4} className="ub-p2">
             <Tag className="ub-m1" data-testid={markers.NUM_SPANS} variant="outlined">
               {numSpans} Span{numSpans > 1 && 's'}
             </Tag>
@@ -101,7 +101,7 @@ export default function ResultItem({
               </Tag>
             )}
           </Col>
-          <Col span={16} className="ub-p2">
+          <Col xs={12} sm={12} md={16} lg={16} className="ub-p2">
             <ul className="ub-list-reset" data-testid={markers.SERVICE_TAGS}>
               {_sortBy(services, s => s.name).map(service => {
                 const { name, numberOfSpans: count } = service;
@@ -120,7 +120,7 @@ export default function ResultItem({
               })}
             </ul>
           </Col>
-          <Col span={4} className="ub-p3 ub-tx-right-align">
+          <Col xs={6} sm={6} md={4} lg={4} className="ub-p3 ub-tx-right-align">
             {formatRelativeDate(startTime / 1000)}
             <Divider vertical />
             {timeStr.slice(0, -3)}&nbsp;{timeStr.slice(-2)}
