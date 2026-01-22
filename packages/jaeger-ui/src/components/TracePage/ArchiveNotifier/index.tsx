@@ -22,8 +22,7 @@ type Props = {
   acknowledge: () => void;
 };
 
-function getNextNotifiedState(props: Props): ENotifiedState | null {
-  const { archivedState } = props;
+function getNextNotifiedState(archivedState: TraceArchive | TNil): ENotifiedState | null {
   if (!archivedState) {
     return null;
   }
@@ -33,7 +32,12 @@ function getNextNotifiedState(props: Props): ENotifiedState | null {
   return 'isAcknowledged' in archivedState && archivedState.isAcknowledged ? null : ENotifiedState.Outcome;
 }
 
-function updateNotification(oldState: ENotifiedState | null, nextState: ENotifiedState | null, props: Props) {
+function updateNotification(
+  oldState: ENotifiedState | null,
+  nextState: ENotifiedState | null,
+  acknowledge: () => void,
+  archivedState: TraceArchive | TNil
+) {
   if (oldState === nextState) {
     return;
   }
@@ -49,7 +53,6 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
     });
     return;
   }
-  const { acknowledge, archivedState } = props;
   if (nextState === ENotifiedState.Outcome) {
     if (archivedState && 'error' in archivedState) {
       const { error } = archivedState;
@@ -78,12 +81,13 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
 
 const ArchiveNotifier: React.FC<Props> = props => {
   const notifiedStateRef = useRef<ENotifiedState | null>(null);
+  const { acknowledge, archivedState } = props;
 
   useEffect(() => {
-    const nextNotifiedState = getNextNotifiedState(props);
-    updateNotification(notifiedStateRef.current, nextNotifiedState, props);
+    const nextNotifiedState = getNextNotifiedState(archivedState);
+    updateNotification(notifiedStateRef.current, nextNotifiedState, acknowledge, archivedState);
     notifiedStateRef.current = nextNotifiedState;
-  }, [props.archivedState]);
+  }, [acknowledge, archivedState]);
 
   useEffect(() => {
     return () => {
