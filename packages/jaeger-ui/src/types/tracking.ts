@@ -1,7 +1,6 @@
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { BrowserClient } from '@sentry/browser';
 import { TNil } from '.';
 import { Config } from './config';
 
@@ -11,7 +10,7 @@ export interface IWebAnalyticsFunc {
 
 export default interface IWebAnalytics {
   init: () => void;
-  context: boolean | typeof BrowserClient | null;
+  context: boolean | null;
   isEnabled: () => boolean;
   trackPageView: (pathname: string, search: string | TNil) => void;
   trackError: (description: string) => void;

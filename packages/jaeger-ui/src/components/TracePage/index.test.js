@@ -1147,7 +1147,6 @@ describe('mapStateToProps()', () => {
     expect(props).toEqual({
       id: traceID,
       embedded,
-      archiveEnabled: false,
       archiveTraceState: undefined,
       searchUrl: null,
       trace: { data: {}, state: fetchedState.DONE },
@@ -1176,7 +1175,6 @@ describe('mapStateToProps()', () => {
     expect(props).toEqual({
       id: traceID,
       embedded,
-      archiveEnabled: false,
       archiveTraceState: undefined,
       searchUrl: fakeUrl,
       trace: { data: {}, state: fetchedState.DONE },
@@ -1190,12 +1188,10 @@ describe('mapStateToProps()', () => {
     expect(props).toEqual({
       id: traceID,
       embedded,
-      archiveEnabled: false,
       archiveTraceState: undefined,
       searchUrl: null,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
-      traceGraphConfig: { layoutManagerMemory: fakeMemory },
     });
   });
 });
