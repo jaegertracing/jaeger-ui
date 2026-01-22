@@ -16,22 +16,22 @@ type TProps<T = {}> = TNodeRenderer<T> & {
   renderUtils: TRendererUtils;
 };
 
-export default class Nodes<T = {}> extends React.Component<TProps<T>> {
-  shouldComponentUpdate(np: TProps<T>) {
-    const p = this.props;
-    return (
-      p.renderNode !== np.renderNode ||
-      p.getClassName !== np.getClassName ||
-      p.layerType !== np.layerType ||
-      p.layoutVertices !== np.layoutVertices ||
-      p.renderUtils !== np.renderUtils ||
-      !isSamePropSetter(p.setOnNode, np.setOnNode)
-    );
-  }
+// Custom comparison function for React.memo (inverse of shouldComponentUpdate)
+function arePropsEqual<T>(prevProps: TProps<T>, nextProps: TProps<T>): boolean {
+  return (
+    prevProps.renderNode === nextProps.renderNode &&
+    prevProps.getClassName === nextProps.getClassName &&
+    prevProps.layerType === nextProps.layerType &&
+    prevProps.layoutVertices === nextProps.layoutVertices &&
+    prevProps.renderUtils === nextProps.renderUtils &&
+    isSamePropSetter(prevProps.setOnNode, nextProps.setOnNode)
+  );
+}
 
-  render() {
-    const { getClassName, layoutVertices, renderUtils, layerType, renderNode, setOnNode } = this.props;
-    return layoutVertices.map(lv => (
+function NodesImpl<T = {}>(props: TProps<T>): React.ReactElement[] {
+  const { getClassName, layoutVertices, renderUtils, layerType, renderNode, setOnNode } = props;
+  return layoutVertices.map(
+    (lv): React.ReactElement => (
       <Node
         key={lv.vertex.key}
         getClassName={getClassName}
@@ -41,6 +41,14 @@ export default class Nodes<T = {}> extends React.Component<TProps<T>> {
         renderUtils={renderUtils}
         setOnNode={setOnNode}
       />
-    ));
-  }
+    )
+  );
 }
+
+// React.memo with custom comparison replaces shouldComponentUpdate
+// Use generic function type to preserve type parameters
+type TNodesComponent = <T = {}>(props: TProps<T>) => React.ReactElement[];
+
+const Nodes: TNodesComponent = React.memo(NodesImpl, arePropsEqual) as unknown as TNodesComponent;
+
+export default Nodes;
