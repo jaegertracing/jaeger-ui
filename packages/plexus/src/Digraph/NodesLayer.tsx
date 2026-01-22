@@ -16,26 +16,29 @@ type TProps<T = {}, U = {}> = TNodeRenderer<T> &
     standalone?: boolean;
   };
 
-export default class NodesLayer<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
-  render() {
-    const { renderNode } = this.props;
-    const { layoutVertices, renderUtils } = this.props.graphState;
-    if (!layoutVertices || !renderNode) {
-      return null;
-    }
-    const { getClassName, layerType, setOnNode } = this.props;
-    const LayerComponent = layerType === ELayerType.Html ? HtmlLayer : SvgLayer;
-    return (
-      <LayerComponent {...this.props} classNamePart="NodesLayer">
-        <Nodes<T>
-          getClassName={getClassName}
-          layerType={layerType}
-          layoutVertices={layoutVertices}
-          renderNode={renderNode}
-          renderUtils={renderUtils}
-          setOnNode={setOnNode}
-        />
-      </LayerComponent>
-    );
+const NodesLayer = <T = {}, U = {}>(props: TProps<T, U>) => {
+  const { renderNode, graphState, getClassName, layerType, setOnNode } = props;
+  const { layoutVertices, renderUtils } = graphState;
+
+  if (!layoutVertices || !renderNode) {
+    return null;
   }
-}
+
+  const LayerComponent = layerType === ELayerType.Html ? HtmlLayer : SvgLayer;
+
+  return (
+    <LayerComponent {...props} classNamePart="NodesLayer">
+      <Nodes<T>
+        getClassName={getClassName}
+        layerType={layerType}
+        layoutVertices={layoutVertices}
+        renderNode={renderNode}
+        renderUtils={renderUtils}
+        setOnNode={setOnNode}
+      />
+    </LayerComponent>
+  );
+};
+
+// React.memo provides shallow comparison equivalent to PureComponent
+export default React.memo(NodesLayer) as typeof NodesLayer;
