@@ -21,6 +21,7 @@ import { TDenseSpanMembers } from '../../../model/trace-dag/types';
 import TDagPlexusVertex from '../../../model/trace-dag/types/TDagPlexusVertex';
 import { TNil } from '../../../types';
 import { TraceGraphConfig } from '../../../types/config';
+import { exportTraceGraph } from '../../../utils/exportTraceGraph';
 
 import './TraceGraph.css';
 
@@ -134,6 +135,14 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
     this.setState({ mode: newMode });
   }
 
+  handleExportClick = async () => {
+    try {
+      await exportTraceGraph.exportToSVG();
+    } catch (error) {
+      alert(`Failed to export graph: ${(error as Error).message}`);
+    }
+  };
+
   showHelp = () => {
     this.setState({ showHelp: true });
   };
@@ -241,6 +250,19 @@ export default class TraceGraph extends React.PureComponent<Props, State> {
                   onClick={() => this.toggleNodeMode(MODE_SELFTIME)}
                 >
                   ST
+                </Button>
+              </Tooltip>
+            </li>
+            <li>
+              <Tooltip placement="left" title="Export">
+                <Button
+                  className={cx('TraceGraph--btn-exportTraceGraph')}
+                  htmlType="button"
+                  shape="circle"
+                  size="small"
+                  onClick={() => this.handleExportClick()}
+                >
+                  E
                 </Button>
               </Tooltip>
             </li>
