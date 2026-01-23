@@ -1,0 +1,19 @@
+/*
+Copyright (c) 2025 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.TraceExportButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.TraceExportButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.TraceExportButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
