@@ -19,6 +19,14 @@ jest.mock('../../actions/jaeger-api');
 // Mock the 'store' npm package
 jest.mock('store');
 
+jest.mock('react-router-dom-v5-compat', () => ({
+  useSearchParams: jest.fn(() => {
+    const searchParams = new URLSearchParams();
+    const setSearchParams = jest.fn();
+    return [searchParams, setSearchParams];
+  }),
+}));
+
 // --- Mock References ---
 // Reference the mocked actions module
 const mockedJaegerApiActions = jaegerApiActions;

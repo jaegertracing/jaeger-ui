@@ -39,6 +39,7 @@ import {
 } from './index.track';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
+import { useSearchParams } from 'react-router-dom-v5-compat';
 
 type TReduxProps = {
   services: string[];
@@ -135,14 +136,22 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   const [endTime, setEndTime] = useState<number>(Date.now());
   const [graphWidth, setGraphWidth] = useState<number>(300);
   const [serviceOpsMetrics, setServiceOpsMetrics] = useState<ServiceOpsMetrics[] | undefined>(undefined);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const serviceParam = searchParams.get('service');
+  const spanKindParam = searchParams.get('spankind');
+  const timeFrameParam = searchParams.get('timeframe');
   const [searchOps, setSearchOps] = useState<string>('');
   const [graphXDomain, setGraphXDomain] = useState<number[]>([]);
-  const [selectedService, setSelectedService] = useState<string>(store.get('lastAtmSearchService') || '');
+  const [selectedService, setSelectedService] = useState<string>(
+    serviceParam || store.get('lastAtmSearchService') || ''
+  );
   const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(
-    store.get('lastAtmSearchSpanKind') || 'server'
+    spanKindParam || store.get('lastAtmSearchSpanKind') || 'server'
   );
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(
-    store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds
+    (timeFrameParam ? parseInt(timeFrameParam, 10) : null) ||
+      store.get('lastAtmSearchTimeframe') ||
+      oneHourInMilliSeconds
   );
 
   const calcGraphXDomain = useCallback(() => {
@@ -240,6 +249,16 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
 
   useEffect(() => {
     fetchMetrics();
+  }, [selectedService, selectedSpanKind, selectedTimeFrame]);
+
+  useEffect(() => {
+    const params: Record<string, string> = {
+      service: selectedService,
+      spankind: selectedSpanKind,
+      timeframe: String(selectedTimeFrame),
+    };
+
+    setSearchParams(params, { replace: true });
   }, [selectedService, selectedSpanKind, selectedTimeFrame]);
 
   const { services, metrics, servicesLoading } = props;
