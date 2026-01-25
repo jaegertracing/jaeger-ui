@@ -4,6 +4,7 @@
 import * as React from 'react';
 import { Location } from 'history';
 import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
+import { useMemo } from 'react';
 import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
@@ -37,10 +38,13 @@ import { getConfigValue } from '../../utils/config/get-config';
 import { ReduxState } from '../../types';
 import { TDdgStateEntry } from '../../types/TDdgState';
 
+import '../../utils/sort';
+import { localeStringComparator } from '../../utils/sort';
+
 import './index.css';
 import { ApiError } from '../../types/api-error';
 import withRouteProps from '../../utils/withRouteProps';
-import { useServerOps, useServices } from '../../hooks/useTraceDiscovery';
+import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 
 interface IDoneState {
   state: typeof fetchedState.DONE;
@@ -384,7 +388,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  // Services and operations are now fetched using React Query hooks (useServices/useServerOps)
+  // Services and operations are now fetched using React Query hooks (useServices/useServerSpanNames)
   // instead of Redux state. See the default export wrapper component below.
   const urlState = getUrlState(ownProps.location.search);
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
@@ -431,7 +435,11 @@ export default function DeepDependencyGraphPage({
   const location = useLocation();
   const urlState = getUrlState(location.search);
   const { service } = urlState;
-  const { data: serverOps } = useServerOps(service || null);
+  const { data: serverOpsData = [] } = useSpanNames(service || null, 'server');
+  const serverOps = useMemo(
+    () => serverOpsData.map(op => op.name).sort(localeStringComparator),
+    [serverOpsData]
+  );
 
   const props = { baseUrl, showSvcOpsHeader, ...restProps };
 

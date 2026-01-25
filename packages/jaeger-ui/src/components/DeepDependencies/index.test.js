@@ -24,7 +24,12 @@ jest.mock('react-router-dom-v5-compat', () => ({
 
 jest.mock('../../hooks/useTraceDiscovery', () => ({
   useServices: jest.fn(() => ({ data: ['svc1', 'svc2'], isLoading: false })),
-  useServerOps: jest.fn(() => ({ data: ['op1', 'op2'] })),
+  useSpanNames: jest.fn(() => ({
+    data: [
+      { name: 'op1', spanKind: 'server' },
+      { name: 'op2', spanKind: 'server' },
+    ],
+  })),
 }));
 
 import { DeepDependencyGraphPageImpl, mapDispatchToProps, mapStateToProps } from '.';
@@ -37,7 +42,7 @@ import getStateEntryKey from '../../model/ddg/getStateEntryKey';
 import * as GraphModel from '../../model/ddg/GraphModel';
 import * as codec from '../../model/ddg/visibility-codec';
 import * as getConfig from '../../utils/config/get-config';
-import { useServices, useServerOps } from '../../hooks/useTraceDiscovery';
+import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 
 import { ECheckedStatus, EDirection, EDdgDensity, EViewModifier } from '../../model/ddg/types';
 
@@ -1001,14 +1006,16 @@ describe('DeepDependencyGraphPage', () => {
     };
 
     beforeEach(() => {
+      // Restore spies from other tests (like getUrlState)
+      jest.restoreAllMocks();
       useServices.mockClear();
-      useServerOps.mockClear();
+      useSpanNames.mockClear();
     });
 
-    it('renders and calls useServices and useServerOps hooks', () => {
+    it('calls useServices and useSpanNames hooks', () => {
       renderWithAllProviders(<DefaultDeepDependencyGraphPage />);
       expect(useServices).toHaveBeenCalled();
-      expect(useServerOps).toHaveBeenCalled();
+      expect(useSpanNames).toHaveBeenCalledWith('test-service', 'server');
     });
 
     it('passes custom props to wrapped component', () => {

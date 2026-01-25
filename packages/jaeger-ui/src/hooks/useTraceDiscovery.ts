@@ -21,35 +21,25 @@ export function useServices(): UseQueryResult<string[]> {
 /**
  * React Query hook to fetch the list of span names (operations) for a given service.
  * @param service - The service name
- * @returns Query result with span names array
+ * @param spanKind - Optional span kind to filter by (e.g. 'server')
+ * @returns Query result with array of span name / span kind pairs. Span kinds are lowercase.
  */
-export function useSpanNames(service: string | null): UseQueryResult<{ name: string; spanKind: string }[]> {
+export function useSpanNames(
+  service: string | null,
+  spanKind?: string
+): UseQueryResult<{ name: string; spanKind: string }[]> {
   return useQuery({
     queryKey: ['spanNames', service],
     queryFn: () => jaegerClient.fetchSpanNames(service!),
     enabled: !!service, // Only fetch when service is selected
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
-  });
-}
-
-/**
- * React Query hook to fetch the list of server-side operations for a given service.
- * @param service - The service name
- * @returns Query result with server operation names array
- */
-export function useServerOps(service: string | null): UseQueryResult<string[]> {
-  return useQuery({
-    queryKey: ['serverOps', service],
-    queryFn: async () => {
-      const ops = await jaegerClient.fetchSpanNames(service!);
-      return ops
-        .filter(op => op.spanKind === 'server')
-        .map(op => op.name)
-        .sort(localeStringComparator);
+    select: data => {
+      if (spanKind) {
+        const normalizedKind = spanKind.toLowerCase();
+        return data.filter(op => op.spanKind === normalizedKind);
+      }
+      return data;
     },
-    enabled: !!service, // Only fetch when service is selected
-    staleTime: 60 * 1000, // 1 minute
-    refetchOnWindowFocus: true,
   });
 }
