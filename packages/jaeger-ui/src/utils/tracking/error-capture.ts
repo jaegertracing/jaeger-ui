@@ -275,6 +275,12 @@ function setupBreadcrumbs() {
 export function captureException(error: any) {
   const errorObj = error instanceof Error ? error : new Error(String(error));
 
+  // Ignore 501 errors from metrics API - they indicate metrics storage is not configured,
+  // which is an expected state that should be handled gracefully by the UI
+  if ((errorObj as any).httpStatus === 501) {
+    return;
+  }
+
   // Add error as breadcrumb
   addBreadcrumb({
     category: 'error',
