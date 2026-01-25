@@ -20,17 +20,6 @@ import { TQualityMetrics } from './types';
 
 import './index.css';
 
-// type TDispatchProps = {
-//   fetchServices: () => void;
-// };
-
-// type TReduxProps = {
-//   services?: string[] | null;
-// };
-//
-// export type TProps = TDispatchProps & TReduxProps;
-export type TProps = {};
-
 export function QualityMetricsImpl() {
   const navigate = useNavigate();
   const location = useLocation();
