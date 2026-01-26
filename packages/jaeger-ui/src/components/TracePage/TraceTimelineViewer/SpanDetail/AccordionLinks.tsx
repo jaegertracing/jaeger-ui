@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Jaeger Authors.
+﻿// Copyright (c) 2019 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
@@ -48,7 +48,15 @@ export function References(props: ReferenceItemProps) {
   );
 }
 
-function AccordionLinks(props: {
+function AccordionLinks({
+  data,
+  highContrast = false,
+  interactive = true,
+  isOpen,
+  onToggle = null,
+  focusSpan,
+  useOtelTerms,
+}: {
   data: ReadonlyArray<ILink>;
   highContrast?: boolean;
   interactive?: boolean;
@@ -57,11 +65,6 @@ function AccordionLinks(props: {
   focusSpan: (uiFind: string) => void;
   useOtelTerms: boolean;
 }) {
-  const { data, isOpen, focusSpan, useOtelTerms } = props;
-  const highContrast = props.highContrast ?? false;
-  const interactive = props.interactive ?? true;
-  const onToggle = props.onToggle ?? null;
-
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKReferences--emptyIcon': isEmpty });
   let arrow: React.ReactNode | null = null;
