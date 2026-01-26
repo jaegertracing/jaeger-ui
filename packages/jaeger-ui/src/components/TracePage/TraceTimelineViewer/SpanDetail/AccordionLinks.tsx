@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 The Jaeger Authors.
+// Copyright (c) 2019 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
