@@ -38,7 +38,6 @@ import { getConfigValue } from '../../utils/config/get-config';
 import { ReduxState } from '../../types';
 import { TDdgStateEntry } from '../../types/TDdgState';
 
-import '../../utils/sort';
 import { localeStringComparator } from '../../utils/sort';
 
 import './index.css';

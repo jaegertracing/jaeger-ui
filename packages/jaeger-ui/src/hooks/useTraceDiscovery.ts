@@ -3,7 +3,6 @@
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
-import { localeStringComparator } from '../utils/sort';
 
 /**
  * React Query hook to fetch the list of services from the Jaeger API.
