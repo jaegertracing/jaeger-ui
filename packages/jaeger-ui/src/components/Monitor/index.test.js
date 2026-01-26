@@ -9,7 +9,6 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import store from 'store';
 import MonitorATMPage from '.';
-import servicesReducer from '../../reducers/services';
 import metricsReducer from '../../reducers/metrics';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 
@@ -19,6 +18,14 @@ jest.mock('../../actions/jaeger-api');
 // Mock the 'store' npm package
 jest.mock('store');
 
+// Mock useServices hook with stable data reference to prevent infinite loops
+jest.mock('../../hooks/useTraceDiscovery', () => {
+  const services = ['service1', 'service2'];
+  return {
+    useServices: jest.fn(() => ({ data: services, isLoading: false })),
+  };
+});
+
 // --- Mock References ---
 // Reference the mocked actions module
 const mockedJaegerApiActions = jaegerApiActions;
@@ -26,11 +33,9 @@ const mockedStorage = store;
 
 // --- Redux Setup ---
 const rootReducer = combineReducers({
-  services: servicesReducer,
   metrics: metricsReducer,
 });
 const initialState = {
-  services: { services: [], loading: false, error: null, operations: {} },
   metrics: {
     loading: false,
     operationMetricsLoading: false,
@@ -56,7 +61,6 @@ describe('<MonitorATMPage>', () => {
     // --- Configure Mocks ---
     // Configure mock implementations on the *actions* module
     // Use mockImplementation or mockReturnValue as appropriate for actions
-    mockedJaegerApiActions.fetchServices.mockImplementation(() => ({ type: 'FETCH_SERVICES_MOCK' }));
     mockedJaegerApiActions.fetchAllServiceMetrics.mockImplementation(() => ({
       type: 'FETCH_ALL_METRICS_MOCK',
     }));
@@ -86,13 +90,13 @@ describe('<MonitorATMPage>', () => {
     expect(container).toBeDefined();
 
     // Check calls on the mocked *actions*
-    expect(mockedJaegerApiActions.fetchServices).toHaveBeenCalledTimes(1);
-    // Metrics fetches should NOT happen on initial mount because initialState.services is empty.
-    expect(mockedJaegerApiActions.fetchAllServiceMetrics).not.toHaveBeenCalled();
-    expect(mockedJaegerApiActions.fetchAggregatedServiceMetrics).not.toHaveBeenCalled();
+
+    // Metrics fetches should happen because useServices hook provides data.
+    expect(mockedJaegerApiActions.fetchAllServiceMetrics).toHaveBeenCalled();
+    expect(mockedJaegerApiActions.fetchAggregatedServiceMetrics).toHaveBeenCalled();
 
     // Check main headings and selectors
-    expect(screen.getByRole('heading', { name: /Service/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^Service$/ })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Span Kind/i })).toBeInTheDocument();
     expect(screen.getAllByRole('combobox').length).toBeGreaterThanOrEqual(3);
 
@@ -137,7 +141,7 @@ describe('<MonitorATMPage>', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
 
     // fetchServices is called unconditionally in componentDidMount
-    expect(mockedJaegerApiActions.fetchServices).toHaveBeenCalledTimes(1);
+
     // Metrics fetches should NOT happen if services array is initially empty
     expect(mockedJaegerApiActions.fetchAllServiceMetrics).not.toHaveBeenCalled();
     expect(mockedJaegerApiActions.fetchAggregatedServiceMetrics).not.toHaveBeenCalled();

@@ -100,23 +100,6 @@ describe('actions/jaeger-api', () => {
     expect(meta.query).toEqual(query);
   });
 
-  it('@JAEGER_API/FETCH_SERVICES should return a promise', () => {
-    const { payload } = jaegerApiActions.fetchServices();
-    expect(isPromise(payload)).toBeTruthy();
-  });
-
-  it('@JAEGER_API/FETCH_SERVICE_OPERATIONS should call the JaegerAPI', () => {
-    jaegerApiActions.fetchServiceOperations('service');
-    expect(JaegerAPI.fetchServiceOperations).toHaveBeenCalledTimes(1);
-    expect(JaegerAPI.fetchServiceOperations).toHaveBeenCalledWith('service');
-  });
-
-  it('@JAEGER_API/FETCH_SERVICE_SERVER_OP should call the JaegerAPI', () => {
-    jaegerApiActions.fetchServiceServerOps('service');
-    expect(JaegerAPI.fetchServiceServerOps).toHaveBeenCalledTimes(1);
-    expect(JaegerAPI.fetchServiceServerOps).toHaveBeenCalledWith('service');
-  });
-
   it('@JAEGER_API/FETCH_DEEP_DEPENDENCY_GRAPH should fetch the graph by params', () => {
     jaegerApiActions.fetchDeepDependencyGraph(query);
     expect(JaegerAPI.fetchDeepDependencyGraph).toHaveBeenCalledWith(query);
