@@ -58,7 +58,43 @@ export type SearchableSelectProps = SelectProps & {
  */
 const SearchableSelect: FunctionComponent<SearchableSelectProps> = ({ fuzzy, ...props }) => {
   const filterOption = fuzzy ? filterOptionsFuzzy : filterOptionsByLabel;
-  return <Select showSearch filterOption={filterOption} {...props} />;
+
+  // Handle the specific arrow click issue in Ant Design v6
+  const handleMouseDown = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+
+    // Check if the click is on the arrow icon specifically
+    // We need to be precise here to avoid interfering with option clicks
+    const isArrowIcon = target.classList.contains('ant-select-arrow') ||
+                       (target.closest('.ant-select-arrow') !== null &&
+                        !target.closest('.ant-select-dropdown'));
+
+    if (isArrowIcon) {
+      // Prevent the default mousedown behavior on the arrow which can cause
+      // the dropdown to close immediately after opening
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Manually trigger the click to open the dropdown by simulating a click
+      // on the selector area instead of the arrow
+      const selectElement = target.closest('.ant-select') as HTMLElement;
+      if (selectElement) {
+        const selector = selectElement.querySelector('.ant-select-selector') as HTMLElement;
+        if (selector) {
+          selector.click();
+        }
+      }
+    }
+  };
+
+  return (
+    <Select
+      showSearch
+      filterOption={filterOption}
+      onMouseDown={handleMouseDown}
+      {...props}
+    />
+  );
 };
 
 export default SearchableSelect;
