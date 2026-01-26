@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .Ddg--Header--ChevronDown {
-  color: #999;
+  color: var(--text-muted);
   height: 0.7em;
   padding-bottom: 0.15em;
   width: 0.7em;

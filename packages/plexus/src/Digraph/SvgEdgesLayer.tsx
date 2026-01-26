@@ -16,7 +16,7 @@ type TProps<T = {}, U = {}> = Omit<TStandaloneEdgesLayer<T, U>, 'edges' | 'layer
 // Add the default black stroke on an outter <g> so CSS classes or styles
 // on the inner <g> can override it
 // TODO: A more configurable appraoch to setting a default stroke color
-const INHERIT_STROKE = { stroke: '#000' };
+const INHERIT_STROKE = { stroke: 'var(--text-primary, #000)' };
 
 export default class SvgEdgesLayer<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   render() {
