@@ -24,10 +24,10 @@ describe('getValidState', () => {
     });
   });
 
-  it('uses b as a and cohort[0] for b when only b is provided', () => {
+  it('preserves b in slot b and uses cohort[0] for a when only b is provided', () => {
     expect(getValidState({ b, cohort })).toEqual({
-      a: b,
-      b: cohort[0],
+      a: cohort[0],
+      b,
       cohort: [b, ...cohort],
     });
   });
