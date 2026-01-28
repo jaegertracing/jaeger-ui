@@ -174,6 +174,18 @@ ComponentName/
 - Keep subject line under 50 characters
 - Use imperative mood in subject line
 
+## Working with GitHub CLI (`gh`)
+
+To effectively gather context from Pull Requests, especially for review comments:
+
+### Fetching Review Comments
+
+Use the GitHub API with pagination to retrieve all comments in a raw JSON format. This is often more reliable than `gh pr view` for automated analysis.
+
+```bash
+gh api repos/jaegertracing/jaeger-ui/pulls/:number/comments --paginate --jq '.[].body'
+```
+
 ## Additional Notes
 
 - The `plexus` package is a directed graph visualization library used by jaeger-ui

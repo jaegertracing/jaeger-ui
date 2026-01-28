@@ -1302,6 +1302,36 @@ const serviceOpsErrorsNoMetrics = {
   },
 };
 
+const serviceOpsLatenciesUndefinedMetrics = {
+  status: 'fulfilled',
+  value: {
+    name: 'service_operation_latencies',
+    type: 'GAUGE',
+    help: '0.95th quantile latency, grouped by service & operation',
+    metrics: undefined,
+  },
+};
+
+const serviceOpsCallsUndefinedMetrics = {
+  status: 'fulfilled',
+  value: {
+    name: 'service_operation_call_rate',
+    type: 'GAUGE',
+    help: 'calls/sec, grouped by service & operation',
+    metrics: undefined,
+  },
+};
+
+const serviceOpsErrorsUndefinedMetrics = {
+  status: 'fulfilled',
+  value: {
+    name: 'service_operation_error_rate',
+    type: 'GAUGE',
+    help: 'error rate, computed as a fraction of errors/sec over calls/sec, grouped by service & operation',
+    metrics: undefined,
+  },
+};
+
 export {
   serviceLatencies50,
   serviceLatencies75,
@@ -1330,4 +1360,7 @@ export {
   serviceOpsMetricsNoMetrics,
   serviceOpsCallsNoMetrics,
   serviceOpsErrorsNoMetrics,
+  serviceOpsLatenciesUndefinedMetrics,
+  serviceOpsCallsUndefinedMetrics,
+  serviceOpsErrorsUndefinedMetrics,
 };
