@@ -160,7 +160,7 @@ export const UnconnectedDdgNodeContent = (props: TProps) => {
     if (decorationID) {
       getDecoration(decorationID, service, typeof operation === 'string' ? operation : undefined);
     }
-  }, [decorationID, getDecoration]);
+  }, [decorationID, getDecoration, service, operation]);
 
   React.useEffect(() => {
     return () => {
