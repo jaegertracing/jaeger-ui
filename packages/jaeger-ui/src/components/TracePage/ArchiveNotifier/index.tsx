@@ -77,13 +77,14 @@ function updateNotification(oldState: ENotifiedState | null, nextState: ENotifie
 }
 
 const ArchiveNotifier: React.FC<Props> = props => {
+  const { archivedState, acknowledge } = props;
   const notifiedStateRef = useRef<ENotifiedState | null>(null);
 
   useEffect(() => {
-    const nextNotifiedState = getNextNotifiedState(props);
-    updateNotification(notifiedStateRef.current, nextNotifiedState, props);
+    const nextNotifiedState = getNextNotifiedState({ archivedState, acknowledge });
+    updateNotification(notifiedStateRef.current, nextNotifiedState, { archivedState, acknowledge });
     notifiedStateRef.current = nextNotifiedState;
-  }, [props.archivedState]);
+  }, [archivedState, acknowledge]);
 
   useEffect(() => {
     return () => {
