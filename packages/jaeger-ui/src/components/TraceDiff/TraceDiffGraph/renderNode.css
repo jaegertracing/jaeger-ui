@@ -43,7 +43,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .DiffNode--metricCell {
   padding: 0.3rem 0.5rem;
-  background: var(--span-color-10);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .DiffNode--metricCell.is-changed {
