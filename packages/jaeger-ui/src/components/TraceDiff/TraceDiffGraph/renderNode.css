@@ -4,12 +4,11 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .DiffNode {
-  background: #bbb;
+  background: var(--surface-component-background);
   border: 1px solid #777;
   box-shadow: 0 0px 3px 1px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   white-space: nowrap;
-  color: var(--critical-path-color);
 }
 
 .DiffNode.is-changed {
@@ -19,7 +18,6 @@ SPDX-License-Identifier: Apache-2.0
 .DiffNode.is-more {
   background: #78d539;
   border-color: #2a8f04;
-  color: var(--critical-path-color);
 }
 
 .DiffNode.is-added {
@@ -31,7 +29,6 @@ SPDX-License-Identifier: Apache-2.0
 .DiffNode.is-less {
   border-color: #cc1616;
   background: #ffa39e;
-  color: var(--critical-path-color);
 }
 
 .DiffNode.is-removed {
@@ -46,7 +43,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .DiffNode--metricCell {
   padding: 0.3rem 0.5rem;
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--span-color-10);
 }
 
 .DiffNode--metricCell.is-changed {
