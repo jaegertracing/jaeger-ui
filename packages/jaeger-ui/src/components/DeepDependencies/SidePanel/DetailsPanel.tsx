@@ -43,6 +43,7 @@ export function UnconnectedDetailsPanel(props: TProps) {
     // Reset state at the beginning of fetch
     setDetails(undefined);
     setDetailsErred(false);
+    setDetailsLoading(true);
 
     const { detailUrl, detailPath, detailColumnDefPath, opDetailUrl, opDetailPath, opDetailColumnDefPath } =
       decorationSchema;
