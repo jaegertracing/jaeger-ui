@@ -40,6 +40,10 @@ export function UnconnectedDetailsPanel(props: TProps) {
   const operation = _op && !Array.isArray(_op) ? _op : undefined;
 
   const fetchDetails = useCallback(() => {
+    // Reset state at the beginning of fetch
+    setDetails(undefined);
+    setDetailsErred(false);
+
     const { detailUrl, detailPath, detailColumnDefPath, opDetailUrl, opDetailPath, opDetailColumnDefPath } =
       decorationSchema;
 
@@ -84,11 +88,6 @@ export function UnconnectedDetailsPanel(props: TProps) {
 
   // Fetch details on mount and when dependencies change
   useEffect(() => {
-    // Reset state when dependencies change
-    setDetails(undefined);
-    setDetailsErred(false);
-    setDetailsLoading(false);
-
     fetchDetails();
   }, [fetchDetails]);
 
