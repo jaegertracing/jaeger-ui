@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Checkbox, Select } from 'antd';
-import React, { Component } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { IOtelTrace } from '../../../types/otel';
 import { ITableSpan } from './types';
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
@@ -10,6 +10,19 @@ import { getColumnValues, getColumnValuesSecondDropdown, getServiceName } from '
 import SearchableSelect from '../../common/SearchableSelect';
 import generateColor from './generateColor';
 import './TraceStatisticsHeader.css';
+
+/**
+ * Props for the TraceStatisticsHeader component.
+ * @property {IOtelTrace} trace - The OpenTelemetry trace object containing trace information.
+ * @property {ITableSpan[]} tableValue - The current filtered or displayed span data in the table.
+ * @property {ITableSpan[]} wholeTable - The complete unfiltered span data for the entire trace.
+ * @property {function} handler - Callback function to handle table value changes and selections.
+ *   @param {ITableSpan[]} tableValue - The current table span values.
+ *   @param {ITableSpan[]} wholeTable - The complete table span values.
+ *   @param {string} valueNameSelector1 - The primary value selector name.
+ *   @param {string | null} valueNameSelector2 - The optional secondary value selector name.
+ * @property {boolean} useOtelTerms - Flag to determine whether to use OpenTelemetry terminology in the UI.
+ */
 
 type Props = {
   trace: IOtelTrace;
@@ -22,14 +35,6 @@ type Props = {
     valueNameSelector2: string | null
   ) => void;
   useOtelTerms: boolean;
-};
-
-type State = {
-  valueNameSelector1: string;
-  valueNameSelector2: string | null;
-  valueNameSelector3: string;
-
-  checkboxStatus: boolean;
 };
 
 const optionsNameSelector3 = new Map([
@@ -45,220 +50,169 @@ const optionsNameSelector3 = new Map([
   ['ST in Duration', 'percent'],
 ]);
 
-export default class TraceStatisticsHeader extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
+export default function TraceStatisticsHeader(props: Props) {
+  const { trace, tableValue, wholeTable, handler, useOtelTerms } = props;
+
+  // This ensures that the service name is only computed once on initial render
+  const initialServiceName = useMemo(() => getServiceName(), []);
+
+  const [valueNameSelector1, setValueNameSelector1State] = useState<string>(initialServiceName);
+  const [valueNameSelector2, setValueNameSelector2State] = useState<string | null>(null);
+  const [valueNameSelector3, setValueNameSelector3State] = useState<string>('Count');
+  const [checkboxStatus, setCheckboxStatus] = useState<boolean>(false);
+
+  const getColorValue = useCallback(() => {
+    const toColor = optionsNameSelector3.get(valueNameSelector3);
+    return toColor ?? '';
+  }, [valueNameSelector3]);
+
+  useEffect(() => {
     const serviceName = getServiceName();
-    this.props.handler(
-      getColumnValues(serviceName, this.props.trace, this.props.useOtelTerms),
-      getColumnValues(serviceName, this.props.trace, this.props.useOtelTerms),
+    handler(
+      getColumnValues(serviceName, trace, useOtelTerms),
+      getColumnValues(serviceName, trace, useOtelTerms),
       serviceName,
       null
     );
+  }, [trace, useOtelTerms, handler]);
 
-    this.state = {
-      valueNameSelector1: serviceName,
-      valueNameSelector2: null,
-      valueNameSelector3: 'Count',
-      checkboxStatus: false,
-    };
-    this.setValueNameSelector1 = this.setValueNameSelector1.bind(this);
-    this.setValueNameSelector2 = this.setValueNameSelector2.bind(this);
-    this.setValueNameSelector3 = this.setValueNameSelector3.bind(this);
-    this.checkboxButton = this.checkboxButton.bind(this);
-    this.clearValue = this.clearValue.bind(this);
-  }
+  const setValueNameSelector1 = useCallback(
+    (value: string) => {
+      setValueNameSelector1State(value);
+      setValueNameSelector2State(null);
+      const colorValue = getColorValue();
+      const newTableValue = generateColor(
+        getColumnValues(value, trace, useOtelTerms),
+        colorValue,
+        checkboxStatus
+      );
+      const newWholeTable = generateColor(
+        getColumnValues(value, trace, useOtelTerms),
+        colorValue,
+        checkboxStatus
+      );
+      handler(newTableValue, newWholeTable, value, null);
+    },
+    [trace, useOtelTerms, handler, checkboxStatus, getColorValue]
+  );
 
-  /**
-   * Returns the value of optionsNameSelector3.
-   */
-  getValue() {
-    let toColor = optionsNameSelector3.get(this.state.valueNameSelector3);
-    if (toColor === undefined) {
-      toColor = '';
-    }
-    return toColor;
-  }
+  const setValueNameSelector2 = useCallback(
+    (value: string) => {
+      setValueNameSelector2State(value);
+      const colorValue = getColorValue();
+      const newTableValue = generateColor(
+        getColumnValuesSecondDropdown(tableValue, valueNameSelector1, value, trace, useOtelTerms),
+        colorValue,
+        checkboxStatus
+      );
+      const newWholeTable = generateColor(
+        getColumnValuesSecondDropdown(wholeTable, valueNameSelector1, value, trace, useOtelTerms),
+        colorValue,
+        checkboxStatus
+      );
+      handler(newTableValue, newWholeTable, valueNameSelector1, value);
+    },
+    [tableValue, wholeTable, valueNameSelector1, trace, useOtelTerms, handler, checkboxStatus, getColorValue]
+  );
 
-  /**
-   * Is called after a value from the first dropdown is selected.
-   */
-  setValueNameSelector1(value: string) {
-    this.setState({
-      valueNameSelector1: value,
-      valueNameSelector2: null,
-    });
+  const setValueNameSelector3 = useCallback(
+    (value: string) => {
+      setValueNameSelector3State(value);
+      const toColor = optionsNameSelector3.get(value) ?? '';
+      const newTableValue = generateColor(tableValue, toColor, checkboxStatus);
+      const newWholeTable = generateColor(wholeTable, toColor, checkboxStatus);
+      handler(newTableValue, newWholeTable, valueNameSelector1, valueNameSelector2);
+    },
+    [tableValue, wholeTable, valueNameSelector1, valueNameSelector2, handler, checkboxStatus]
+  );
+
+  const checkboxButton = useCallback(
+    (e: any) => {
+      const checked = e.target.checked;
+      setCheckboxStatus(checked);
+      const colorValue = getColorValue();
+      const newTableValue = generateColor(tableValue, colorValue, checked);
+      const newWholeTable = generateColor(wholeTable, colorValue, checked);
+      handler(newTableValue, newWholeTable, valueNameSelector1, valueNameSelector2);
+    },
+    [tableValue, wholeTable, valueNameSelector1, valueNameSelector2, handler, getColorValue]
+  );
+
+  const clearValue = useCallback(() => {
+    setValueNameSelector2State(null);
+    const colorValue = getColorValue();
     const newTableValue = generateColor(
-      getColumnValues(value, this.props.trace, this.props.useOtelTerms),
-      this.getValue(),
-      this.state.checkboxStatus
-    );
-    const newWohleTable = generateColor(
-      getColumnValues(value, this.props.trace, this.props.useOtelTerms),
-      this.getValue(),
-      this.state.checkboxStatus
-    );
-    this.props.handler(newTableValue, newWohleTable, value, null);
-  }
-
-  /**
-   * Is called after a value from the second dropdown is selected.
-   */
-  setValueNameSelector2(value: string) {
-    this.setState({
-      valueNameSelector2: value,
-    });
-    const newTableValue = generateColor(
-      getColumnValuesSecondDropdown(
-        this.props.tableValue,
-        this.state.valueNameSelector1,
-        value,
-        this.props.trace,
-        this.props.useOtelTerms
-      ),
-      this.getValue(),
-      this.state.checkboxStatus
-    );
-    const newWohleTable = generateColor(
-      getColumnValuesSecondDropdown(
-        this.props.wholeTable,
-        this.state.valueNameSelector1,
-        value,
-        this.props.trace,
-        this.props.useOtelTerms
-      ),
-      this.getValue(),
-      this.state.checkboxStatus
-    );
-    this.props.handler(newTableValue, newWohleTable, this.state.valueNameSelector1, value);
-  }
-
-  /**
-   * Is called after a value from the third dropdown is selected.
-   */
-  setValueNameSelector3(value: string) {
-    this.setState({
-      valueNameSelector3: value,
-    });
-
-    let toColor = optionsNameSelector3.get(value);
-    if (toColor === undefined) {
-      toColor = '';
-    }
-    const newTableValue = generateColor(this.props.tableValue, toColor, this.state.checkboxStatus);
-    const newWohleTable = generateColor(this.props.wholeTable, toColor, this.state.checkboxStatus);
-    this.props.handler(
-      newTableValue,
-      newWohleTable,
-      this.state.valueNameSelector1,
-      this.state.valueNameSelector2
-    );
-  }
-
-  /**
-   * Is called after the checkbox changes its status.
-   */
-  checkboxButton(e: any) {
-    this.setState({
-      checkboxStatus: e.target.checked,
-    });
-
-    const newTableValue = generateColor(this.props.tableValue, this.getValue(), e.target.checked);
-    const newWholeTable = generateColor(this.props.wholeTable, this.getValue(), e.target.checked);
-    this.props.handler(
-      newTableValue,
-      newWholeTable,
-      this.state.valueNameSelector1,
-      this.state.valueNameSelector2
-    );
-  }
-
-  /**
-   * Sets the second dropdown to "No Item selected" and sets the table to the values after the first dropdown.
-   */
-  clearValue() {
-    this.setState({
-      valueNameSelector2: null,
-    });
-
-    const newTableValue = generateColor(
-      getColumnValues(this.state.valueNameSelector1, this.props.trace, this.props.useOtelTerms),
-      this.getValue(),
-      this.state.checkboxStatus
+      getColumnValues(valueNameSelector1, trace, useOtelTerms),
+      colorValue,
+      checkboxStatus
     );
     const newWholeTable = generateColor(
-      getColumnValues(this.state.valueNameSelector1, this.props.trace, this.props.useOtelTerms),
-      this.getValue(),
-      this.state.checkboxStatus
+      getColumnValues(valueNameSelector1, trace, useOtelTerms),
+      colorValue,
+      checkboxStatus
     );
-    this.props.handler(newTableValue, newWholeTable, this.state.valueNameSelector1, null);
-  }
+    handler(newTableValue, newWholeTable, valueNameSelector1, null);
+  }, [valueNameSelector1, trace, useOtelTerms, handler, checkboxStatus, getColorValue]);
 
-  render() {
-    const optionsNameSelector1 = generateDropdownValue(this.props.trace, this.props.useOtelTerms);
-    const optionsNameSelector2 = generateSecondDropdownValue(
-      this.props.trace,
-      this.state.valueNameSelector1,
-      this.props.useOtelTerms
-    );
+  const optionsNameSelector1 = generateDropdownValue(trace, useOtelTerms);
+  const optionsNameSelector2Options = generateSecondDropdownValue(trace, valueNameSelector1, useOtelTerms);
 
-    return (
-      <div className="TraceStatisticsHeader">
+  return (
+    <div className="TraceStatisticsHeader">
+      <label className="TraceStatisticsHeader--label">
+        <span className="TraceStatisticsHeader--labelText">Group By:</span>
+        <SearchableSelect
+          className="TraceStatisticsHeader--select"
+          value={valueNameSelector1}
+          onChange={setValueNameSelector1}
+          popupMatchSelectWidth={false}
+          fuzzy
+        >
+          {optionsNameSelector1.map(opt => (
+            <Select.Option key={opt} value={opt}>
+              {opt}
+            </Select.Option>
+          ))}
+        </SearchableSelect>
+      </label>
+      <label className="TraceStatisticsHeader--label">
+        <span className="TraceStatisticsHeader--labelText">Sub-Group:</span>
+        <SearchableSelect
+          className="TraceStatisticsHeader--select"
+          value={valueNameSelector2}
+          onChange={setValueNameSelector2}
+          allowClear
+          onClear={clearValue}
+          placeholder="No item selected"
+          popupMatchSelectWidth={false}
+          fuzzy
+        >
+          {optionsNameSelector2Options.map(opt => (
+            <Select.Option key={opt} value={opt}>
+              {opt}
+            </Select.Option>
+          ))}
+        </SearchableSelect>
+      </label>
+      <div className="TraceStatisticsHeader--colorByWrapper">
+        <Checkbox className="TraceStatisticsHeader--checkbox" onChange={checkboxButton} />
         <label className="TraceStatisticsHeader--label">
-          <span className="TraceStatisticsHeader--labelText">Group By:</span>
+          <span className="TraceStatisticsHeader--labelText">Color by:</span>
           <SearchableSelect
             className="TraceStatisticsHeader--select"
-            value={this.state.valueNameSelector1}
-            onChange={this.setValueNameSelector1}
+            value={valueNameSelector3}
+            onChange={setValueNameSelector3}
             popupMatchSelectWidth={false}
             fuzzy
           >
-            {optionsNameSelector1.map(opt => (
+            {Array.from(optionsNameSelector3.keys()).map(opt => (
               <Select.Option key={opt} value={opt}>
                 {opt}
               </Select.Option>
             ))}
           </SearchableSelect>
         </label>
-        <label className="TraceStatisticsHeader--label">
-          <span className="TraceStatisticsHeader--labelText">Sub-Group:</span>
-          <SearchableSelect
-            className="TraceStatisticsHeader--select"
-            value={this.state.valueNameSelector2}
-            onChange={this.setValueNameSelector2}
-            allowClear
-            onClear={this.clearValue}
-            placeholder="No item selected"
-            popupMatchSelectWidth={false}
-            fuzzy
-          >
-            {optionsNameSelector2.map(opt => (
-              <Select.Option key={opt} value={opt}>
-                {opt}
-              </Select.Option>
-            ))}
-          </SearchableSelect>
-        </label>
-        <div className="TraceStatisticsHeader--colorByWrapper">
-          <Checkbox className="TraceStatisticsHeader--checkbox" onChange={this.checkboxButton} />
-          <label className="TraceStatisticsHeader--label">
-            <span className="TraceStatisticsHeader--labelText">Color by:</span>
-            <SearchableSelect
-              className="TraceStatisticsHeader--select"
-              value={this.state.valueNameSelector3}
-              onChange={this.setValueNameSelector3}
-              popupMatchSelectWidth={false}
-              fuzzy
-            >
-              {Array.from(optionsNameSelector3.keys()).map(opt => (
-                <Select.Option key={opt} value={opt}>
-                  {opt}
-                </Select.Option>
-              ))}
-            </SearchableSelect>
-          </label>
-        </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
