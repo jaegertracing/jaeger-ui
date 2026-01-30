@@ -130,6 +130,7 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 // export for tests
 
 export function MonitorATMServicesViewImpl(props: TProps) {
+  const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;
   const { data: services = [], isLoading: servicesLoading } = useServices();
   const docsLink = getConfigValue('monitor.docsLink');
   const graphDivWrapper = useRef<HTMLDivElement>(null);
@@ -181,7 +182,6 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, []);
 
   const fetchMetrics = useCallback(() => {
-    const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;
     const currentService = selectedService || services[0];
 
     if (currentService && metrics.isATMActivated) {
@@ -207,9 +207,9 @@ export function MonitorATMServicesViewImpl(props: TProps) {
       setSearchOps('');
     }
   }, [
-    props.fetchAllServiceMetrics,
-    props.fetchAggregatedServiceMetrics,
-    props.metrics.isATMActivated,
+    fetchAllServiceMetrics,
+    fetchAggregatedServiceMetrics,
+    metrics.isATMActivated,
     services,
     selectedService,
     selectedSpanKind,
@@ -232,17 +232,17 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     if (services.length !== 0) {
       fetchMetrics();
     }
-  }, [services]);
+  }, [services, fetchMetrics]);
 
   useEffect(() => {
     calcGraphXDomain();
-  }, [selectedTimeFrame, calcGraphXDomain]);
+  }, [calcGraphXDomain]);
 
   useEffect(() => {
     fetchMetrics();
-  }, [selectedService, selectedSpanKind, selectedTimeFrame]);
+  }, [fetchMetrics]);
 
-  const { metrics } = props;
+
   const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
   const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
   const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
