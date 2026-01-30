@@ -1,3 +1,6 @@
+// Copyright (c) 2025 The Jaeger Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -5,9 +8,6 @@ import TraceStatisticsHeader from './TraceStatisticsHeader';
 import * as tableValues from './tableValues';
 import * as generateDropdownValue from './generateDropdownValue';
 import * as generateColor from './generateColor';
-
-// Copyright (c) 2025 The Jaeger Authors.
-// SPDX-License-Identifier: Apache-2.0
 
 jest.mock('./tableValues');
 jest.mock('./generateDropdownValue');

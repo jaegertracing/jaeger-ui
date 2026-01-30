@@ -154,8 +154,14 @@ export default function TraceStatisticsHeader(props: Props) {
     handler(newTableValue, newWholeTable, valueNameSelector1, null);
   }, [valueNameSelector1, trace, useOtelTerms, handler, checkboxStatus, getColorValue]);
 
-  const optionsNameSelector1 = generateDropdownValue(trace, useOtelTerms);
-  const optionsNameSelector2Options = generateSecondDropdownValue(trace, valueNameSelector1, useOtelTerms);
+  const optionsNameSelector1 = useMemo(
+    () => generateDropdownValue(trace, useOtelTerms),
+    [trace, useOtelTerms]
+  );
+  const optionsNameSelector2Options = useMemo(
+    () => generateSecondDropdownValue(trace, valueNameSelector1, useOtelTerms),
+    [trace, valueNameSelector1, useOtelTerms]
+  );
 
   return (
     <div className="TraceStatisticsHeader">
