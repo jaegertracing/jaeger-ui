@@ -10,12 +10,25 @@ SPDX-License-Identifier: Apache-2.0
   height: 100%;
   width: 100%;
   position: relative;
+  background: #fafafa;
+}
+
+body[data-theme='dark'] .DAG,
+html[data-theme='dark'] .DAG {
+  background: #162338 !important; /* Enforce Dark Blue */
+  border-color: #444;
 }
 
 .DAG--dag {
-  background: #fafafa;
+  background: transparent;
   stroke-width: 0.7;
   stroke: #444;
+}
+
+body[data-theme='dark'] .DAG--dag,
+html[data-theme='dark'] .DAG--dag {
+  background: #162338 !important; /* Explicit Dark Blue, no transparency risk */
+  stroke: #bbb;
 }
 
 .DAG--dag marker {
@@ -32,18 +45,41 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .DAG--nodeCircle {
-  background-color: #dddddd;
+  background-color: var(--surface-secondary, #fff);
   border-radius: 50%;
-  height: 3rem;
-  width: 3rem;
-  margin-bottom: 1.75rem;
-  border: 1px solid #bbb;
+  height: 6rem; /* Large size (~96px) */
+  width: 6rem;
+  margin-bottom: 0.5rem;
+  border: 2px solid #bbb;
   box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease-out;
 }
 
+body[data-theme='dark'] .DAG--nodeCircle,
+html[data-theme='dark'] .DAG--nodeCircle {
+  background-color: #0b1625; /* Requested Dark Color */
+  border-color: #bbb;
+  box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.5);
+}
+
+/* Pink border only for the focal node */
 .DAG--nodeCircle.is-focalNode {
-  border: 2px solid #eb2f96;
+  border-color: #eb2f96;
+}
+
+/* External Pink Ring using pseudo-element */
+.DAG--nodeCircle.is-focalNode::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140%;
+  height: 140%;
+  border-radius: 50%;
   background-image: repeating-linear-gradient(30deg, transparent, #eb2f96 3px, transparent 5px);
+  z-index: -1;
+  opacity: 0.8;
 }
 
 .DAG--nodeCircle.is-match {
@@ -57,12 +93,37 @@ SPDX-License-Identifier: Apache-2.0
 
 .DAG--nodeLabel {
   position: absolute;
-  top: 3rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   text-align: center;
   font-weight: bold;
-  font-size: 1.25rem;
-  color: #7f7f7f;
-  background-color: #fafafa;
+  font-size: 0.9rem;
+  color: #333;
+  background-color: transparent;
+  width: 100%;
+  padding: 0 4px;
+  pointer-events: none;
+  word-wrap: break-word;
+  line-height: 1.1;
+}
+
+body[data-theme='dark'] .DAG--nodeLabel,
+html[data-theme='dark'] .DAG--nodeLabel {
+  background-color: transparent !important;
+  color: #fff;
+}
+
+/* Fix Edge Label Text (SVG) in Dark Mode */
+.DAG--dag text {
+  stroke: none; /* Remove outline from text */
+  fill: #333;
+}
+
+body[data-theme='dark'] .DAG--dag text,
+html[data-theme='dark'] .DAG--dag text {
+  stroke: none;
+  fill: #ddd;
 }
 
 .DAG--error {
@@ -78,4 +139,23 @@ SPDX-License-Identifier: Apache-2.0
   z-index: 1000;
   background: #fafafa;
   border: 1px solid #d0d0d0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+body[data-theme='dark'] .DAG > div:last-child {
+  background: #2b303e !important; /* Dark menu background */
+  border-color: #555;
+  color: #eee;
+}
+
+body[data-theme='dark'] .DAG > div:last-child a,
+html[data-theme='dark'] .DAG > div:last-child a {
+  color: #eee;
+}
+
+body[data-theme='dark'] .DAG > div:last-child a:hover,
+html[data-theme='dark'] .DAG > div:last-child a:hover {
+  background-color: #3b4254; /* Hover state for menu items */
+  color: #fff;
 }
