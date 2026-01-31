@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Checkbox, Select } from 'antd';
+import { Checkbox, CheckboxChangeEvent, Select } from 'antd';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { IOtelTrace } from '../../../types/otel';
 import { ITableSpan } from './types';
@@ -62,14 +62,16 @@ const TraceStatisticsHeader: React.FC<Props> = (props: Props) => {
   const [valueNameSelector3, setValueNameSelector3State] = useState<string>('Count');
   const [checkboxStatus, setCheckboxStatus] = useState<boolean>(false);
 
-  const getColorValue = () => optionsNameSelector3.get(valueNameSelector3) ?? '';
+  const getColorValue = useCallback(
+    () => optionsNameSelector3.get(valueNameSelector3) ?? '',
+    [valueNameSelector3]
+  );
 
   useEffect(() => {
-    const serviceName = getServiceName();
     handler(
-      getColumnValues(serviceName, trace, useOtelTerms),
-      getColumnValues(serviceName, trace, useOtelTerms),
-      serviceName,
+      getColumnValues(initialServiceName, trace, useOtelTerms),
+      getColumnValues(initialServiceName, trace, useOtelTerms),
+      initialServiceName,
       null
     );
   }, []);
@@ -125,7 +127,7 @@ const TraceStatisticsHeader: React.FC<Props> = (props: Props) => {
   );
 
   const checkboxButton = useCallback(
-    (e: any) => {
+    (e: CheckboxChangeEvent) => {
       const checked = e.target.checked;
       setCheckboxStatus(checked);
       const colorValue = getColorValue();
