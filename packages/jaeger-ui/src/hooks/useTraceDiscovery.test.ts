@@ -269,5 +269,46 @@ describe('useTraceDiscovery', () => {
       expect(result.current.fetchStatus).toBe('idle');
       expect(jaegerClient.fetchSpanNames).not.toHaveBeenCalled();
     });
+
+    it('filters by spanKind when provided', async () => {
+      const mockOps = [
+        { name: 'op1', spanKind: 'server' },
+        { name: 'op2', spanKind: 'client' },
+        { name: 'op3', spanKind: 'server' },
+      ];
+      (jaegerClient.fetchSpanNames as jest.Mock).mockResolvedValue(mockOps);
+
+      const { result } = renderHook(() => useSpanNames('service-1', 'server'), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.data).toEqual([
+        { name: 'op1', spanKind: 'server' },
+        { name: 'op3', spanKind: 'server' },
+      ]);
+      expect(jaegerClient.fetchSpanNames).toHaveBeenCalledWith('service-1');
+    });
+
+    it('returns all ops when spanKind is not provided', async () => {
+      const mockOps = [
+        { name: 'op1', spanKind: 'server' },
+        { name: 'op2', spanKind: 'client' },
+      ];
+      (jaegerClient.fetchSpanNames as jest.Mock).mockResolvedValue(mockOps);
+
+      const { result } = renderHook(() => useSpanNames('service-1'), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.data).toEqual(mockOps);
+    });
   });
 });
