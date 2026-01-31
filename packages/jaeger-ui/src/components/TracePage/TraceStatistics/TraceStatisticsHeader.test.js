@@ -159,9 +159,8 @@ describe('TraceStatisticsHeader', () => {
 
     // Then clear it
     const clearButton = container.querySelector('.ant-select-clear');
-    if (clearButton) {
-      fireEvent.click(clearButton);
-    }
+    expect(clearButton).toBeInTheDocument();
+    fireEvent.click(clearButton);
 
     await waitFor(() => {
       expect(mockHandler).toHaveBeenCalledWith(mockTableValue, mockTableValue, 'test-service', null);
