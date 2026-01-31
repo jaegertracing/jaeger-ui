@@ -1,6 +1,7 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+import * as React from 'react';
 import { Checkbox, Select } from 'antd';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { IOtelTrace } from '../../../types/otel';
@@ -50,7 +51,7 @@ const optionsNameSelector3 = new Map([
   ['ST in Duration', 'percent'],
 ]);
 
-export default function TraceStatisticsHeader(props: Props) {
+const TraceStatisticsHeader: React.FC<Props> = (props: Props) => {
   const { trace, tableValue, wholeTable, handler, useOtelTerms } = props;
 
   // This ensures that the service name is only computed once on initial render
@@ -218,4 +219,6 @@ export default function TraceStatisticsHeader(props: Props) {
       </div>
     </div>
   );
-}
+};
+
+export default React.memo(TraceStatisticsHeader);
