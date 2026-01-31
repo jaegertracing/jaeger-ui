@@ -20,6 +20,8 @@ import { formatRelativeDate } from '../../../utils/date';
 import { IOtelTrace, StatusCode } from '../../../types/otel';
 
 import './ResultItem.css';
+import { getTimeFormat } from '../../../utils/time-format';
+import { getConfigValue } from '../../../utils/config/get-config';
 
 dayjs.extend(relativeTime);
 
@@ -50,10 +52,11 @@ export default function ResultItem({
   const [numErredSpans, setNumErredSpans] = React.useState(0);
   const [timeStr, setTimeStr] = React.useState('');
   const [fromNow, setFromNow] = React.useState<string | boolean>('');
+  const is24h = getConfigValue('timeFormat') === '24h';
 
   React.useEffect(() => {
     const startTimeDayjs = dayjs(startTime / 1000);
-    setTimeStr(startTimeDayjs.format('h:mm:ss a'));
+    setTimeStr(startTimeDayjs.format(getTimeFormat(true)));
     setFromNow(startTimeDayjs.fromNow());
 
     const errored = new Set<string>();
@@ -123,7 +126,7 @@ export default function ResultItem({
           <Col span={4} className="ub-p3 ub-tx-right-align">
             {formatRelativeDate(startTime / 1000)}
             <Divider vertical />
-            {timeStr.slice(0, -3)}&nbsp;{timeStr.slice(-2)}
+            {timeStr}
             <br />
             <small>{fromNow}</small>
           </Col>

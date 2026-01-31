@@ -12,6 +12,7 @@ import { formatDuration, formatDurationCompact } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import SearchableSelect from '../../common/SearchableSelect';
+import { getTimeFormat } from '../../../utils/time-format';
 
 type FilterType = 'serviceName' | 'operationName';
 
@@ -222,7 +223,7 @@ export default class TraceSpanView extends Component<Props, State> {
 
           return (
             <Tooltip
-              title={`${dayjs(span.startTime / 1000).format('DD MMM YYYY hh:mm:ss A')} (${preciseValue})`}
+              title={`${dayjs(span.startTime / 1000).format(`DD MMM YYYY ${getTimeFormat(true)}`)} (${preciseValue})`}
             >
               <span
                 style={{ fontFamily: 'monospace', fontSize: '12px', display: 'block', textAlign: 'right' }}
