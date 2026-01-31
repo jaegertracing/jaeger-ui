@@ -186,12 +186,19 @@ function fetchOpsMetricsDone(
               service_operation_call_rate: 0,
               service_operation_error_rate: 0,
             };
-            metricDetails.labels.forEach((label: { name: string; value: string }) => {
-              if (label.name === 'operation') {
-                opsName = label.value;
-              }
-            });
-
+            if (Array.isArray(metricDetails.labels)) {
+              metricDetails.labels.forEach((label: { name: string; value: string }) => {
+                if (label.name === 'operation') {
+                  opsName = label.value;
+                }
+              });
+            } else {
+              // No labels → skip this metric entry
+              return;
+            }
+            if (!Array.isArray(metricDetails.metricPoints)) {
+              return;
+            }
             if (opsName) {
               if (opsMetrics[opsName] === undefined) {
                 opsMetrics[opsName] = {
