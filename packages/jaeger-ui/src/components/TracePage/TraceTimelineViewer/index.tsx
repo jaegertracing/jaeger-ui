@@ -48,21 +48,29 @@ const NUM_TICKS = 5;
  */
 
 export const TraceTimelineViewerImpl = (props: TProps) => {
+  const {
+    collapseAll: propsCollapseAll,
+    collapseOne: propsCollapseOne,
+    expandAll: propsExpandAll,
+    expandOne: propsExpandOne,
+    trace,
+  } = props;
+
   const collapseAll = useCallback(() => {
-    props.collapseAll(props.trace.spans);
-  }, [props.collapseAll, props.trace.spans]);
+    propsCollapseAll(trace.spans);
+  }, [propsCollapseAll, trace.spans]);
 
   const collapseOne = useCallback(() => {
-    props.collapseOne(props.trace.spans);
-  }, [props.collapseOne, props.trace.spans]);
+    propsCollapseOne(trace.spans);
+  }, [propsCollapseOne, trace.spans]);
 
   const expandAll = useCallback(() => {
-    props.expandAll();
-  }, [props.expandAll]);
+    propsExpandAll();
+  }, [propsExpandAll]);
 
   const expandOne = useCallback(() => {
-    props.expandOne(props.trace.spans);
-  }, [props.expandOne, props.trace.spans]);
+    propsExpandOne(trace.spans);
+  }, [propsExpandOne, trace.spans]);
 
   useEffect(() => {
     mergeShortcuts({
@@ -74,7 +82,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   }, [collapseAll, expandAll, collapseOne, expandOne]);
 
   const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRangeTime, viewRange, ...rest } = props;
-  const { spanNameColumnWidth, trace } = rest;
+  const { spanNameColumnWidth } = rest;
 
   return (
     <div className="TraceTimelineViewer">

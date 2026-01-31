@@ -86,10 +86,12 @@ export const RenderDot = ({
   );
 };
 
+const DEFAULT_CALCULATE_CONTAINER_WIDTH = (container: HTMLElement) => container.clientWidth;
+
 export default function ScatterPlot({
   data,
   onValueClick,
-  calculateContainerWidth = (container: HTMLElement) => container.clientWidth,
+  calculateContainerWidth = DEFAULT_CALCULATE_CONTAINER_WIDTH,
 }: TScatterPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -107,7 +109,7 @@ export default function ScatterPlot({
     window.addEventListener('resize', updateContainerWidth);
 
     return () => window.removeEventListener('resize', updateContainerWidth);
-  }, []);
+  }, [calculateContainerWidth]);
 
   const xMin = Math.min(...data.map(d => d.x));
   const xMax = Math.max(...data.map(d => d.x));

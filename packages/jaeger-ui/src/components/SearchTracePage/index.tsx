@@ -109,10 +109,8 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     if (needForDiffs.length) {
       fetchMultipleTraces(needForDiffs);
     }
-    // This may require "eslint-disable-next-line react-hooks/exhaustive-deps"
-    // in the future if we enable this linter.
     // https://github.com/jaegertracing/jaeger-ui/issues/3445
-  }, []);
+  }, [diffCohort, fetchMultipleTraces, isHomepage, queryOfResults, searchTraces, urlQueryParams]);
 
   const handleSortChange = useCallback((newSortBy: string) => {
     setSortBy(newSortBy);
