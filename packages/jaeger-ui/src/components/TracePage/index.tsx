@@ -285,14 +285,17 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   ensureTraceFetched() {
-    const { fetchTrace, location, trace, id } = this.props;
-    if (!trace) {
-      fetchTrace(id);
-      return;
-    }
-    const { history } = this.props;
+    const { fetchTrace, location, trace, id, history } = this.props;
+
+    // Normalize URL to lowercase immediately if needed
     if (id && id !== id.toLowerCase()) {
       history.replace(getLocation(id.toLowerCase(), location.state));
+      return;
+    }
+
+    // Fetch trace if not already loaded
+    if (!trace) {
+      fetchTrace(id);
     }
   }
 
