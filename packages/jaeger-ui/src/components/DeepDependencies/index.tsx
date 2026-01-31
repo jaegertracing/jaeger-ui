@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { Location } from 'history';
-import { useLocation } from 'react-router-dom-v5-compat';
+import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
 import { useMemo } from 'react';
 import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
@@ -78,12 +78,12 @@ export type THookProps = {
 export type TOwnProps = {
   baseUrl: string;
   extraUrlArgs?: { [key: string]: unknown };
-  history: { push: (path: string) => void };
+  navigate: ReturnType<typeof useNavigate>;
   location: Location;
   showSvcOpsHeader: boolean;
 };
 
-export type TExternalProps = Partial<Omit<TOwnProps, 'history' | 'location'>>;
+export type TExternalProps = Partial<Omit<TOwnProps, 'navigate' | 'location'>>;
 
 export type TProps = TDispatchProps & TReduxProps & TOwnProps & THookProps;
 
@@ -233,11 +233,11 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
   };
 
   updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
-    const { baseUrl, extraUrlArgs, graphState, history, uiFind, urlState } = this.props;
+    const { baseUrl, extraUrlArgs, graphState, navigate, uiFind, urlState } = this.props;
     const getUrlArg = { uiFind, ...urlState, ...newValues, ...extraUrlArgs };
     const hash = _get(graphState, 'model.hash');
     if (hash) getUrlArg.hash = hash;
-    history.push(getUrl(getUrlArg, baseUrl));
+    navigate(getUrl(getUrlArg, baseUrl));
   };
 
   render() {
@@ -423,7 +423,7 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
 
 const ConnectedDeepDependencyGraphPageImpl = withRouteProps(
   connect(mapStateToProps, mapDispatchToProps)(DeepDependencyGraphPageImpl)
-) as React.ComponentType<Omit<TOwnProps, 'location' | 'history'> & THookProps>;
+) as React.ComponentType<Omit<TOwnProps, 'location' | 'navigate'> & THookProps>;
 
 export default function DeepDependencyGraphPage({
   baseUrl = ROUTE_PATH,

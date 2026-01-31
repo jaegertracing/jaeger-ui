@@ -91,7 +91,7 @@ describe('DeepDependencyGraphPage', () => {
         state: fetchedState.DONE,
         viewModifiers: new Map(),
       },
-      history: { push: jest.fn() },
+      navigate: jest.fn(),
       serverOpsForService: {},
       removeViewModifierFromIndices: jest.fn(),
       urlState: {
@@ -137,7 +137,7 @@ describe('DeepDependencyGraphPage', () => {
 
       beforeEach(() => {
         getUrlSpy.mockReset();
-        props.history.push.mockReset();
+        props.navigate.mockReset();
         trackHideSpy.mockClear();
       });
 
@@ -147,7 +147,7 @@ describe('DeepDependencyGraphPage', () => {
           const kwarg = { [propName]: value };
           ddgPageImpl.updateUrlState(kwarg);
           expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, props.urlState, kwarg), undefined);
-          expect(props.history.push).toHaveBeenCalledTimes(i + 1);
+          expect(props.navigate).toHaveBeenCalledTimes(i + 1);
         });
       });
 
@@ -158,7 +158,7 @@ describe('DeepDependencyGraphPage', () => {
         };
         ddgPageImpl.updateUrlState(kwarg);
         expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, props.urlState, kwarg), undefined);
-        expect(props.history.push).toHaveBeenCalledTimes(1);
+        expect(props.navigate).toHaveBeenCalledTimes(1);
       });
 
       it('leaves unspecified, previously-undefined values as undefined', () => {
@@ -174,7 +174,7 @@ describe('DeepDependencyGraphPage', () => {
         ddgPageWithFewerProps.updateUrlState(kwarg);
         expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, otherUrlState, kwarg), undefined);
         expect(getUrlSpy).not.toHaveBeenLastCalledWith(expect.objectContaining({ start: expect.anything() }));
-        expect(props.history.push).toHaveBeenCalledTimes(1);
+        expect(props.navigate).toHaveBeenCalledTimes(1);
       });
 
       it('includes props.graphState.model.hash iff it is truthy', () => {
@@ -337,7 +337,7 @@ describe('DeepDependencyGraphPage', () => {
           graphStateless.setDistance(distance, direction);
           expect(encodeDistanceSpy).not.toHaveBeenCalled();
           expect(getUrlSpy).not.toHaveBeenCalled();
-          expect(props.history.push).not.toHaveBeenCalled();
+          expect(props.navigate).not.toHaveBeenCalled();
 
           const graphStateLoading = new DeepDependencyGraphPageImpl({
             ...graphStatelessProps,
@@ -346,7 +346,7 @@ describe('DeepDependencyGraphPage', () => {
           graphStateLoading.setDistance(distance, direction);
           expect(encodeDistanceSpy).not.toHaveBeenCalled();
           expect(getUrlSpy).not.toHaveBeenCalled();
-          expect(props.history.push).not.toHaveBeenCalled();
+          expect(props.navigate).not.toHaveBeenCalled();
 
           ddgPageImpl.setDistance(distance, direction);
           expect(encodeDistanceSpy).toHaveBeenLastCalledWith({
@@ -359,7 +359,7 @@ describe('DeepDependencyGraphPage', () => {
             Object.assign({}, props.urlState, { visEncoding }),
             undefined
           );
-          expect(props.history.push).toHaveBeenCalledTimes(1);
+          expect(props.navigate).toHaveBeenCalledTimes(1);
         });
       });
 
@@ -371,7 +371,7 @@ describe('DeepDependencyGraphPage', () => {
             Object.assign({}, props.urlState, { operation, visEncoding: undefined }),
             undefined
           );
-          expect(props.history.push).toHaveBeenCalledTimes(1);
+          expect(props.navigate).toHaveBeenCalledTimes(1);
         });
       });
 
@@ -394,7 +394,7 @@ describe('DeepDependencyGraphPage', () => {
             Object.assign({}, props.urlState, { operation: undefined, service, visEncoding: undefined }),
             undefined
           );
-          expect(props.history.push).toHaveBeenCalledTimes(1);
+          expect(props.navigate).toHaveBeenCalledTimes(1);
           expect(trackSetServiceSpy).toHaveBeenCalledTimes(1);
         });
       });
