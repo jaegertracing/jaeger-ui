@@ -13,6 +13,7 @@ SPDX-License-Identifier: Apache-2.0
   min-width: 0;
   margin: 0;
   padding: 0;
+  container-type: inline-size;
 }
 
 .TraceDiffHeader--traceTitle {
@@ -27,14 +28,18 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .TraceDiffHeader--traceTitle span {
-  display: inline-block;
-  max-width: calc(100% - 2em);
-  word-wrap: break-word;
+  display: inline;
+  max-width: 100%;
   white-space: normal;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+  min-width: 0;
+  line-height: 1.4;
 }
 
 .TraceDiffHeader--traceTitle span .u-tx-muted {
-  white-space: nowrap;
+  display: inline;
+  white-space: normal;
 }
 
 .TraceDiffHeader--traceTitle.is-error {
