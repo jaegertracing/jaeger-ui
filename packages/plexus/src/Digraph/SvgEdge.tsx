@@ -79,7 +79,7 @@ export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
         />
 
         {label && (
-          <text x={labelX} y={labelY} fill="#000" fontSize="1rem" fontWeight="bold">
+          <text x={labelX} y={labelY} fill="var(--text-primary, #000)" fontSize="1rem" fontWeight="bold">
             {label}
           </text>
         )}
