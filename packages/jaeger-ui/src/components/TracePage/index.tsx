@@ -33,7 +33,7 @@ import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
-import { getLocation, getUrl } from './url';
+import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState } from '../common/UiFindInput';
@@ -488,7 +488,7 @@ const TracePage = (props: TracePageProps) => {
 
   useEffect(() => {
     if (traceID && traceID !== traceID.toLowerCase()) {
-      navigate(`/trace/${traceID.toLowerCase()}${location.search}`, { replace: true });
+      navigate(`/trace/${traceID.toLowerCase()}${location.search}`, { replace: true, state: location.state });
     }
   }, [traceID, navigate, location.search]);
 
