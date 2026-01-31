@@ -74,7 +74,7 @@ export default function TraceStatisticsHeader(props: Props) {
       serviceName,
       null
     );
-  }, [trace, useOtelTerms, handler]);
+  }, []);
 
   const setValueNameSelector1 = useCallback(
     (value: string) => {

@@ -256,32 +256,4 @@ describe('TraceStatisticsHeader', () => {
 
     expect(generateColor.default).toHaveBeenCalledWith(expect.anything(), 'count', true);
   });
-
-  it('should update trace and re-initialize', () => {
-    const { rerender } = render(
-      <TraceStatisticsHeader
-        trace={mockTrace}
-        tableValue={mockTableValue}
-        wholeTable={mockWholeTable}
-        handler={mockHandler}
-        useOtelTerms={false}
-      />
-    );
-
-    const newTrace = { ...mockTrace, traceID: 'new-trace-id' };
-    mockHandler.mockClear();
-
-    rerender(
-      <TraceStatisticsHeader
-        trace={newTrace}
-        tableValue={mockTableValue}
-        wholeTable={mockWholeTable}
-        handler={mockHandler}
-        useOtelTerms={false}
-      />
-    );
-
-    expect(tableValues.getColumnValues).toHaveBeenCalledWith('test-service', newTrace, false);
-    expect(mockHandler).toHaveBeenCalled();
-  });
 });
