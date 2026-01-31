@@ -1,0 +1,89 @@
+{
+  "private": true,
+  "name": "jaeger-ui-monorepo",
+  "version": "0.0.1",
+  "type": "module",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jaegertracing/jaeger-ui.git"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "@babel/cli": "7.28.0",
+    "@babel/core": "7.28.5",
+    "@testing-library/dom": "^10.4.1",
+    "ajv": "^6.12.6",
+    "@typescript-eslint/eslint-plugin": "8.50.0",
+    "@typescript-eslint/parser": "8.50.0",
+    "cross-env": "10.1.0",
+    "depcheck": "1.4.7",
+    "eslint": "9.39.1",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-jest": "29.11.0",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-prettier": "5.5.4",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-testing-library": "7.15.1",
+    "husky": "9.1.0",
+    "jsdom": "27.4.0",
+    "lint-staged": "16.2.7",
+    "npm-run-all2": "8.0.1",
+    "openapi-zod-client": "1.18.3",
+    "prettier": "3.8.1",
+    "rxjs-compat": "6.6.7",
+    "typescript": "5.9.3"
+  },
+  "overrides": {
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "yaml": "2.8.0"
+  },
+  "workspaces": [
+    "packages/plexus",
+    "packages/jaeger-ui"
+  ],
+  "scripts": {
+    "build": "npm run --workspaces build",
+    "check-copyright-year": "./scripts/check-copyright-year.sh",
+    "check-license": "./scripts/check-license.sh",
+    "check-tsx-naming": "./scripts/check-tsx-naming.sh",
+    "coverage": "npm run --workspaces coverage",
+    "depcheck": "./scripts/run-depcheck.sh",
+    "eslint": "eslint --cache 'scripts/*.{js,jsx,ts,tsx}' 'packages/*/src/**/*.{js,jsx,ts,tsx}' 'packages/*/*.{js,jsx,ts,tsx,mts}'",
+    "fmt": "npm run prettier",
+    "lint": "npm-run-all -ln --parallel prettier-lint tsc-lint eslint check-license check-copyright-year check-tsx-naming",
+    "prepare": "husky && npm run --workspace @jaegertracing/plexus prepublishOnly",
+    "prettier": "prettier --write '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}'",
+    "generate:api-types": "openapi-zod-client https://raw.githubusercontent.com/jaegertracing/jaeger-idl/refs/heads/main/swagger/api_v3/query_service.openapi.yaml --output packages/jaeger-ui/src/api/v3/generated-client.ts --with-alias && node scripts/postprocess-schemas.cjs && prettier --write packages/jaeger-ui/src/api/v3/generated-client.ts",
+    "prettier-lint": "prettier --list-different '{.,scripts}/*.{js,jsx,json,md,ts,tsx,mts}' 'packages/*/{src,demo/src}/**/!(layout.worker.bundled|react-vis).{css,js,jsx,json,md,ts,tsx}' 'packages/*/*.{css,js,jsx,json,md,ts,tsx,mts}' || (echo '*** PLEASE RUN npm run prettier AND RESUBMIT ***' && false)",
+    "test": "npm run --workspaces test --",
+    "tsc-lint": "tsc --build",
+    "tsc-lint-debug": "tsc --listFiles",
+    "start": "cd packages/jaeger-ui && npm run start",
+    "update-snapshots": "cd packages/jaeger-ui && npm test -- -u"
+  },
+  "prettier": {
+    "arrowParens": "avoid",
+    "printWidth": 110,
+    "proseWrap": "never",
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mts}": [
+      "eslint --cache --fix",
+      "prettier --write"
+    ],
+    "*.{json,css}": [
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "@tanstack/react-virtual": "3.13.12",
+    "react-side-effect": "2.1.2"
+  }
+}

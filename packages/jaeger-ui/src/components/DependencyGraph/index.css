@@ -1,0 +1,23 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.DependencyGraph--graphWrapper {
+  bottom: 1rem;
+  left: 1rem;
+  overflow: hidden;
+  position: fixed;
+  right: 1rem;
+  top: 130px;
+}
+
+.rv-force__node {
+  fill: #11939a;
+  cursor: pointer;
+}
+
+.rv-force__label {
+  user-select: none;
+  pointer-events: none;
+}

@@ -1,0 +1,30 @@
+/*
+Copyright (c) 2019 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.Ddg {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+
+.Ddg--center {
+  margin: auto;
+  text-align: center;
+  max-width: 60%;
+}
+
+.Ddg--graphWrapper {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.Ddg--graphWrapper.is-horizontal {
+  flex-direction: row;
+}

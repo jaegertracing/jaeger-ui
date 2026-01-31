@@ -1,0 +1,31 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.Ticks {
+  pointer-events: none;
+}
+
+.Ticks--tick {
+  position: absolute;
+  height: 100%;
+  width: 1px;
+  background: var(--border-strong);
+}
+
+.Ticks--tick:last-child {
+  width: 0;
+}
+
+.Ticks--tickLabel {
+  left: 0.25rem;
+  position: absolute;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.Ticks--tickLabel.isEndAnchor {
+  left: initial;
+  right: 0.25rem;
+}

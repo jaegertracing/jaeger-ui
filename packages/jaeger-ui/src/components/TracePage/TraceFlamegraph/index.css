@@ -1,0 +1,29 @@
+/*
+Copyright (c) 2022 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+.Flamegraph-wrapper {
+  padding: 0 calc(1rem - 5px);
+}
+/* Style  flamegraph inputs with design tokens */
+.Flamegraph-wrapper input,
+.Flamegraph-wrapper input[type='text'],
+.Flamegraph-wrapper input[type='search'] {
+  background-color: var(--surface-component-background);
+  color: var(--text-primary) !important;
+  border-color: var(--border-default);
+}
+
+.Flamegraph-wrapper input::placeholder,
+.Flamegraph-wrapper input[type='text']::placeholder,
+.Flamegraph-wrapper input[type='search']::placeholder {
+  color: var(--text-secondary) !important ;
+  opacity: 1;
+}
+
+.Flamegraph-wrapper {
+  --ps-tooltip-bg: var(--surface-component-background);
+  --ps-tooltip-text: var(--text-primary);
+  --ps-tooltip-header-bg: var(--surface-tertiary);
+  --ps-right-click-info: var(--text-secondary);
+}

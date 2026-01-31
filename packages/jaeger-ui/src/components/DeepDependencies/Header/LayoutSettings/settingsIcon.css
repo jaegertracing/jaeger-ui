@@ -1,0 +1,12 @@
+/*
+Copyright (c) 2019 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.Ddg--LayoutSettings--SettingsIcon {
+  fill: currentColor;
+  height: 18px;
+  margin-bottom: -4px;
+  margin-right: 0.3em;
+  width: 18px;
+}

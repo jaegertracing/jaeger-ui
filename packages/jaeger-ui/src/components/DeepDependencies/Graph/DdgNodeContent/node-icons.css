@@ -1,0 +1,12 @@
+/*
+Copyright (c) 2019 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.DdgNode--SetFocusIcon {
+  box-sizing: content-box;
+  color: inherit;
+  height: 1.05em;
+  padding: 0.1em;
+  width: 1.05em;
+}

@@ -1,0 +1,28 @@
+// Copyright (c) 2019 Uber Technologies, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "lib": ["es2017", "dom", "dom.iterable", "webworker"],
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "jsx": "preserve",
+    "outDir": "lib",
+    "rootDir": "src",
+    "composite": true
+  },
+  "include": [
+    "src",
+    // easier to add `./typings` here than deal with typeRoots, paths, etc.
+    "./typings"
+  ]
+}

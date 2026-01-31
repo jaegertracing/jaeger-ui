@@ -1,0 +1,33 @@
+/*
+Copyright (c) 2025 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.ThemeToggleButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-inline: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  background: transparent !important;
+  height: 30px;
+}
+
+.ThemeToggleButton:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.ThemeToggleButton--icon {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ThemeToggleButton--label {
+  font-size: 11px;
+}

@@ -1,0 +1,28 @@
+/*
+Copyright (c) 2020 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.title--TraceStatistics {
+  width: 100%;
+  padding-top: 0.3%;
+  padding-bottom: 0.3%;
+  padding-left: 8px;
+  background: var(--surface-tertiary);
+  margin-bottom: 0%;
+}
+
+.undefClass--TraceStatistics {
+  color: rgb(153, 153, 153);
+  font-style: italic;
+  cursor: default;
+}
+
+.MainTableData--TraceStatistics {
+  border-top: 1px solid var(--border-strong);
+}
+
+.MainTableData--TraceStatistics:hover {
+  background: var(--surface-component-background-hover);
+  color: var(--text-primary);
+}

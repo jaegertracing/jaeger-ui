@@ -1,0 +1,33 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.TimelineHeaderRow {
+  background: var(--surface-tertiary);
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  height: 38px;
+  line-height: 38px;
+  position: fixed;
+  width: 100%;
+  z-index: 4;
+}
+
+.TimelineHeaderRow::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: inherit;
+}
+
+.TimelineHeaderRow--title {
+  flex: 1;
+  overflow: hidden;
+  margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

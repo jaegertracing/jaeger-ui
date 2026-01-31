@@ -1,0 +1,26 @@
+/*
+Copyright (c) 2019 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.Ddg--Edges {
+  stroke: #444;
+  stroke-width: 0.7;
+}
+
+.Ddg--Edges.is-withViewModifiers {
+  stroke-opacity: 0.15;
+}
+
+.DdgArrow.is-pathHovered {
+  stroke: none;
+}
+
+.Ddg--Edge.is-pathHovered {
+  stroke-opacity: 1;
+  stroke-width: 0.85;
+}
+
+.DdgVectorBorders.is-withViewModifiers {
+  stroke-opacity: 0.1;
+}

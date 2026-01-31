@@ -1,0 +1,32 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.Page--topNav {
+  height: auto;
+  padding: 0;
+  position: fixed;
+  width: 100%;
+  z-index: 11;
+  font-weight: 500;
+}
+
+.Page--content {
+  display: flex;
+  flex-direction: column;
+  left: 0;
+  min-height: calc(100% - var(--nav-height));
+  position: absolute;
+  right: 0;
+  background-color: var(--surface-primary);
+}
+
+.Page--content--no-embedded {
+  top: var(--nav-height);
+}
+
+.ant-menu-dark {
+  /* same color as in Docsy theme for jaegertracing.io */
+  background-color: #1a4767;
+}

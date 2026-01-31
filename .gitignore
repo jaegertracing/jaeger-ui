@@ -1,0 +1,26 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+assets.tar.gz
+
+# dependencies
+node_modules
+
+# production
+build
+
+# reports
+coverage
+junit.xml
+
+# misc
+.DS_Store
+npm-debug.log
+.vscode
+.idea
+.eslintcache
+.envrc
+.vscode
+
+# scripts
+scripts/release-notes.py
+scripts/draft-release.py

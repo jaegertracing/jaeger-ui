@@ -1,0 +1,11 @@
+/*
+Copyright (c) 2019 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.Ddg--Header--ChevronDown {
+  color: #999;
+  height: 0.7em;
+  padding-bottom: 0.15em;
+  width: 0.7em;
+}

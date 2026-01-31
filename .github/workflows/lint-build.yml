@@ -1,0 +1,57 @@
+name: "Lint and Build"
+
+on:
+  merge_group:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ (github.event.pull_request && github.event.pull_request.number) || github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          cache: npm
+          node-version-file: '.nvmrc'
+      - run: npm ci
+      - name: Run depcheck
+        run: npm run depcheck
+      - run: npm run lint
+      - run: npm run build
+      - name: Ensure PR is not on main branch
+        uses: jaegertracing/jaeger/.github/actions/block-pr-from-main-branch@main
+
+  validate-3rd-party-configs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      with:
+        submodules: false
+
+    - name: validate Forking Renovate Bot config
+      run: |
+        docker run \
+          -v $PWD/renovate.json:/usr/src/app/renovate.json \
+          ghcr.io/renovatebot/renovate:latest \
+          renovate-config-validator
+
+    - name: validate Codecov config
+      run: |
+        RESPONSE=$(curl -s --data-binary @.codecov.yml https://codecov.io/validate)
+        echo "$RESPONSE"
+        echo "$RESPONSE" | grep -q "Valid"

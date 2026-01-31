@@ -1,0 +1,98 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.VerticalResizer {
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.VerticalResizer.is-flipped {
+  transform: scaleX(-1);
+}
+
+.VerticalResizer--wrapper {
+  bottom: 0;
+  position: absolute;
+  top: 0;
+}
+
+.VerticalResizer--dragger {
+  border-left: 2px solid transparent;
+  cursor: col-resize;
+  height: calc(100vh - var(--nav-height));
+  margin-left: -1px;
+  position: absolute;
+  top: 0;
+  width: 1px;
+}
+
+.VerticalResizer--dragger:hover {
+  border-left: 2px solid var(--border-strongest);
+}
+
+.VerticalResizer.isDraggingLeft > .VerticalResizer--dragger,
+.VerticalResizer.isDraggingRight > .VerticalResizer--dragger {
+  background: var(--resizer-drag-bg);
+  width: unset;
+}
+
+.VerticalResizer.isDraggingLeft > .VerticalResizer--dragger {
+  border-left: 2px solid var(--interactive-primary);
+  border-right: 1px solid var(--text-muted);
+}
+
+.VerticalResizer.isDraggingRight > .VerticalResizer--dragger {
+  border-left: 1px solid var(--text-muted);
+  border-right: 2px solid var(--interactive-primary);
+}
+
+.VerticalResizer--dragger::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -8px;
+  right: 0;
+  content: ' ';
+}
+
+.VerticalResizer.isDraggingLeft > .VerticalResizer--dragger::before,
+.VerticalResizer.isDraggingRight > .VerticalResizer--dragger::before {
+  left: -2000px;
+  right: -2000px;
+}
+
+.VerticalResizer--gripIcon {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.VerticalResizer--gripIcon::before,
+.VerticalResizer--gripIcon::after {
+  border-right: 1px solid var(--border-strong);
+  content: ' ';
+  height: 9px;
+  position: absolute;
+  right: 9px;
+  top: 25px;
+}
+
+.VerticalResizer--gripIcon::after {
+  right: 5px;
+}
+
+.VerticalResizer:hover .VerticalResizer--gripIcon::before,
+.VerticalResizer:hover .VerticalResizer--gripIcon::after {
+  border-right-color: var(--border-strongest);
+}
+
+.VerticalResizer.isDraggingLeft > .VerticalResizer--gripIcon::before,
+.VerticalResizer.isDraggingRight > .VerticalResizer--gripIcon::before,
+.VerticalResizer.isDraggingLeft > .VerticalResizer--gripIcon::after,
+.VerticalResizer.isDraggingRight > .VerticalResizer--gripIcon::after {
+  border-right: 1px solid rgba(var(--interactive-primary-rgb), 0.5);
+}

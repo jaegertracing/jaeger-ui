@@ -1,0 +1,54 @@
+/*
+Copyright (c) 2019 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.FilteredList--list {
+  background: var(--surface-tertiary);
+}
+
+.FilteredList--filterCheckbox {
+  margin: 0 0.5em;
+}
+
+.FilteredList--filterWrapper {
+  align-items: center;
+  background: var(--surface-primary);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  position: relative;
+  z-index: 10;
+}
+
+.FilteredList--inputWrapper {
+  align-items: center;
+  background: var(--surface-primary);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-grow: 1;
+  position: relative;
+  z-index: 10;
+}
+
+.FilteredList--filterIcon {
+  font-size: 1.3em;
+  margin: 0 0.25em 0 0.65em;
+  position: absolute;
+}
+
+.FilteredList--filterIcon.isMulti {
+  margin-left: 2em;
+}
+
+.FilteredList--filterInput {
+  border: none;
+  flex: 1;
+  height: auto;
+  padding: 0.5em 0.3em 0.5em 2.5em;
+}
+
+.FilteredList--filterInput:focus {
+  box-shadow: inset 0px 0px 3px 1px #6aa;
+  outline: 1px solid #199;
+  outline-offset: -1px;
+}

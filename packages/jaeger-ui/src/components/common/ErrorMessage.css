@@ -1,0 +1,53 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.ErrorMessage {
+  position: relative;
+  word-break: break-word;
+  word-wrap: break-word;
+}
+
+.ErrorMessage--msg {
+  color: var(--feedback-error);
+  margin: 0;
+  padding-bottom: 1rem;
+}
+
+.ErrorMessage--details {
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  overflow: auto;
+}
+
+.ErrorMessage--detailsTable {
+  min-width: 100%;
+}
+
+.ErrorMessage--detailItem:nth-child(2n) > .ErrorMessage--attr,
+.ErrorMessage--detailItem:nth-child(2n) > .ErrorMessage--value {
+  background-color: var(--surface-tertiary);
+  border-bottom: 1px solid var(--border-default);
+  border-top: 1px solid var(--border-default);
+}
+
+/* dont have extra borders on the bottom row */
+.ErrorMessage--detailItem:last-child > .ErrorMessage--attr,
+.ErrorMessage--detailItem:last-child > .ErrorMessage--value {
+  border-bottom: none;
+}
+
+.ErrorMessage--attr {
+  color: var(--text-muted);
+  padding: 0.5em;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.ErrorMessage--value {
+  color: var(--text-primary);
+  font-family: monospace;
+  padding: 0.5em;
+  white-space: pre;
+}

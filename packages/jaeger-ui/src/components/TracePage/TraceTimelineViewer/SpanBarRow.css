@@ -1,0 +1,189 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.span-row.is-matching-filter {
+  background-color: var(--trace-emphasis-highlight);
+}
+
+.span-name-column {
+  position: relative;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.span-name-column:hover {
+  z-index: 1;
+}
+
+.span-row.clipping-left .span-name-column::before {
+  content: ' ';
+  height: 100%;
+  position: absolute;
+  width: 6px;
+  background-image: linear-gradient(to right, rgba(25, 25, 25, 0.25), rgba(32, 32, 32, 0));
+  left: 100%;
+  z-index: -1;
+}
+
+.span-name-wrapper {
+  background: var(--surface-secondary);
+  line-height: 27px;
+  overflow: hidden;
+  display: flex;
+}
+
+.span-name-wrapper.is-matching-filter {
+  background-color: var(--trace-emphasis-highlight);
+}
+
+.span-name-wrapper:hover {
+  border-right: 1px solid #bbb;
+  float: left;
+  min-width: calc(100% + 1px);
+  overflow: visible;
+}
+
+.span-row:hover .span-name-wrapper {
+  background: var(--surface-secondary);
+  background: linear-gradient(
+    90deg,
+    var(--surface-tertiary),
+    var(--surface-secondary) 75%,
+    var(--surface-secondary)
+  );
+}
+
+.span-row.is-matching-filter:hover .span-name-wrapper {
+  background: linear-gradient(90deg, #fff5e1, #fff5e1 75%, #ffe6c9);
+}
+
+.span-row.is-expanded .span-name-wrapper {
+  background: var(--surface-secondary);
+  box-shadow: 0 1px 0 var(--border-default);
+}
+
+.span-row.is-expanded .span-name-wrapper.is-matching-filter {
+  background: var(--trace-emphasis-highlight);
+}
+
+.span-name {
+  color: var(--text-primary);
+  cursor: pointer;
+  flex: 1 1 auto;
+  outline: none;
+  overflow: hidden;
+  padding-right: 0.25em;
+  position: relative;
+  text-overflow: ellipsis;
+}
+
+/* This is so the hit area of the span-name extends the rest of the width of the span-name column */
+.span-name::after {
+  background: transparent;
+  bottom: 0;
+  content: ' ';
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 1000px;
+}
+
+.span-name:focus {
+  text-decoration: none;
+}
+
+.endpoint-name {
+  color: var(--text-secondary);
+}
+
+.span-name:hover > .endpoint-name {
+  color: var(--text-primary);
+}
+
+.span-svc-name {
+  padding: 0 0.25rem 0 0.5rem;
+  font-size: 1.05em;
+}
+
+.span-svc-name.is-children-collapsed {
+  font-weight: bold;
+  font-style: italic;
+}
+
+.span-view {
+  position: relative;
+}
+
+.span-row:hover .span-view {
+  background-color: var(--surface-secondary);
+  outline: 1px solid var(--border-default);
+}
+
+.span-row.is-matching-filter:hover .span-view {
+  background-color: var(--trace-emphasis-highlight);
+  outline: 1px solid var(--border-default);
+}
+
+.span-row.is-expanded .span-view {
+  background: var(--surface-secondary);
+  outline: 1px solid var(--border-default);
+}
+
+.span-row.is-expanded.is-matching-filter .span-view {
+  background: var(--trace-emphasis-highlight);
+  outline: 1px solid var(--border-default);
+}
+
+.span-row.is-expanded:hover .span-view {
+  background: var(--surface-secondary);
+}
+
+.span-row.is-expanded.is-matching-filter:hover .span-view {
+  background: var(--trace-emphasis-highlight);
+}
+
+.span-row.clipping-right .span-view::before {
+  content: ' ';
+  height: 100%;
+  position: absolute;
+  width: 6px;
+  background-image: linear-gradient(to left, rgba(25, 25, 25, 0.25), rgba(32, 32, 32, 0));
+  right: 0%;
+  z-index: 1;
+}
+
+.SpanBarRow--errorIcon {
+  background: #db2828;
+  border-radius: 6.5px;
+  color: #fff;
+  font-size: 0.85em;
+  margin-right: 0.25rem;
+  padding: 1px;
+}
+
+/* Hollow variant for bubbled errors from collapsed children */
+.SpanBarRow--errorIcon--hollow {
+  background: transparent;
+  border: 1.5px solid #db2828;
+  color: #db2828;
+  font-weight: bold;
+  padding: 0px;
+  /* Adjust padding since border adds 1.5px */
+}
+
+.SpanBarRow--rpcColorMarker {
+  border-radius: 6.5px;
+  display: inline-block;
+  font-size: 0.85em;
+  height: 1em;
+  margin-right: 0.25rem;
+  padding: 1px;
+  width: 1em;
+  vertical-align: middle;
+}
+
+.SpanBarRow--arrowForwardIcon {
+  vertical-align: middle;
+}

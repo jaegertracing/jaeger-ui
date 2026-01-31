@@ -1,0 +1,96 @@
+// Copyright (c) 2019 Uber Technologies, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+import _isEmpty from 'lodash/isEmpty';
+import memoizeOne from 'memoize-one';
+import { matchPath } from 'react-router-dom';
+import queryString from 'query-string';
+import parseQuery from '../../utils/parseQuery';
+
+import { EDdgDensity, TDdgSparseUrlState } from '../../model/ddg/types';
+import prefixUrl from '../../utils/prefix-url';
+
+export const ROUTE_PATH = prefixUrl('/deep-dependencies');
+
+const ROUTE_MATCHER = { path: ROUTE_PATH, strict: true, exact: true };
+
+export function matches(path: string) {
+  return Boolean(matchPath(path, ROUTE_MATCHER));
+}
+
+export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }, baseUrl: string = ROUTE_PATH) {
+  if (args && !_isEmpty(args)) {
+    const stringifyArgs =
+      Reflect.has(args, 'showOp') && args.showOp !== undefined
+        ? {
+            ...args,
+            showOp: args.showOp ? 1 : 0,
+          }
+        : args;
+    return `${baseUrl}?${queryString.stringify(stringifyArgs)}`;
+  }
+  return baseUrl;
+}
+
+function firstParam(arg: string | string[]): string {
+  if (Array.isArray(arg)) {
+    const returnVal = arg[0];
+    console.warn(`Found multiple query parameters: "${arg}", using "${returnVal}"`);
+    return returnVal;
+  }
+  return arg;
+}
+
+export const getUrlState = memoizeOne(function getUrlState(search: string): TDdgSparseUrlState {
+  const {
+    density = EDdgDensity.PreventPathEntanglement,
+    decoration,
+    end,
+    hash,
+    operation,
+    service,
+    showOp,
+    start,
+    visEncoding,
+  } = parseQuery(search);
+  const rv: TDdgSparseUrlState = {
+    density: firstParam(density) as EDdgDensity,
+  };
+  if (decoration) {
+    rv.decoration = firstParam(decoration);
+  }
+  if (end) {
+    rv.end = Number.parseInt(firstParam(end), 10);
+  }
+  if (hash) {
+    rv.hash = firstParam(hash);
+  }
+  if (operation) {
+    rv.operation = firstParam(operation);
+  }
+  if (service) {
+    rv.service = firstParam(service);
+  }
+  if (showOp) {
+    rv.showOp = Boolean(+firstParam(showOp));
+  }
+  if (start) {
+    rv.start = Number.parseInt(firstParam(start), 10);
+  }
+  if (visEncoding) {
+    rv.visEncoding = firstParam(visEncoding);
+  }
+  return rv;
+});
+
+export const sanitizeUrlState = memoizeOne(function sanitizeUrlStateImpl(
+  state: TDdgSparseUrlState,
+  hash?: string
+): TDdgSparseUrlState {
+  if (hash && state.hash === hash) {
+    return state;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { visEncoding, ...sanitized } = state;
+  return sanitized;
+});

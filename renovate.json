@@ -1,0 +1,25 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":gitSignOff"],
+  "labels": ["changelog:dependencies"],
+  "suppressNotifications": ["prEditedNotification"],
+  "schedule": ["on sunday"],
+  "packageRules": [
+    {
+      "groupName": "do not apply patch upgrades to dependencies",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["patch", "digest"],
+      "enabled": false
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions deps"
+    },
+    {
+      "groupName": "do not apply patch upgrades to GH workflows",
+      "matchFileNames": [".github/workflows/**"],
+      "matchUpdateTypes": ["patch", "digest"],
+      "enabled": false
+    }
+  ]
+}

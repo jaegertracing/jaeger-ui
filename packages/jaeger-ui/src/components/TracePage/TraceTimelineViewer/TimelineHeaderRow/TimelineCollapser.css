@@ -1,0 +1,42 @@
+/*
+Copyright (c) 2017 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.TimelineCollapser {
+  align-items: center;
+  display: flex;
+  flex: none;
+  justify-content: center;
+  margin-right: 0.5rem;
+}
+
+.TimelineCollapser--tooltipTitle {
+  white-space: pre;
+}
+
+.TimelineCollapser--btn,
+.TimelineCollapser--btn-expand {
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-right: 0.2rem;
+  padding: 0.1rem;
+}
+
+.TimelineCollapser--btn:hover,
+.TimelineCollapser--btn-expand:hover {
+  color: var(--interactive-primary-hover);
+}
+
+.TimelineCollapser--btn-size {
+  font-size: 22px;
+}
+
+.TimelineCollapser--btn-down {
+  transform: rotate(90deg);
+}
+
+.TimelineCollapser .TimelineCollapser--btn-size:nth-child(3),
+.TimelineCollapser .TimelineCollapser--btn-size:nth-child(4) {
+  font-size: 24px;
+}

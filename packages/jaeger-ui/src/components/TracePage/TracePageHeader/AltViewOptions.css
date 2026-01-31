@@ -1,0 +1,19 @@
+/*
+Copyright (c) 2020 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.AltViewOptions {
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  height: 32px;
+  line-height: 30px;
+  margin-right: 1rem;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+}
+
+.AltViewOptions svg {
+  margin-left: 3px;
+}

@@ -1,0 +1,131 @@
+// Copyright (c) 2019 Uber Technologies, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+import { TVertex } from '@jaegertracing/plexus/lib/types';
+
+import PathElem from './PathElem';
+
+export { default as PathElem } from './PathElem';
+
+export enum EViewModifier {
+  None,
+  Hovered,
+  Selected,
+  Emphasized = 1 << 2,
+  PathHovered = 1 << 3,
+}
+
+export enum EDdgDensity {
+  ExternalVsInternal = 'ext-vs-int',
+  MostConcise = 'mc',
+  OnePerLevel = 'per-level',
+  PreventPathEntanglement = 'ppe',
+  UpstreamVsDownstream = 'up-vs-down',
+}
+
+export enum ECheckedStatus {
+  Empty = 'Empty',
+  Full = 'Full',
+  Partial = 'Partial',
+}
+
+export enum EDirection {
+  Upstream = -1,
+  Downstream = 1,
+}
+
+export type TDdgPayloadEntry = {
+  operation: string;
+  service: string;
+};
+
+export type TDdgPayloadPath = {
+  path: TDdgPayloadEntry[];
+  // TODO: Everett Tech Debt: Fix KeyValuePair types
+  attributes: {
+    key: 'exemplar_trace_id';
+    value: string;
+  }[];
+};
+
+export type TDdgPayload = {
+  dependencies: TDdgPayloadPath[];
+};
+
+export type TDdgService = {
+  name: string;
+  operations: Map<string, TDdgOperation>;
+};
+
+export type TDdgOperation = {
+  name: string;
+  pathElems: PathElem[];
+  service: TDdgService;
+};
+
+export type TDdgServiceMap = Map<string, TDdgService>;
+
+export type TDdgPath = {
+  focalIdx: number;
+  members: PathElem[];
+  traceIDs: string[];
+};
+
+export type TDdgDistanceToPathElems = Map<number, PathElem[]>;
+
+export type TDdgModel = {
+  distanceToPathElems: TDdgDistanceToPathElems;
+  hash: string;
+  paths: TDdgPath[];
+  services: TDdgServiceMap;
+  visIdxToPathElem: PathElem[];
+};
+
+export type TDdgVertex = TVertex<{
+  isFocalNode: boolean;
+  key: string;
+  operation: string | string[] | null;
+  service: string;
+}>;
+
+export type TDdgSparseUrlState = {
+  density: EDdgDensity;
+  decoration?: string;
+  end?: number;
+  hash?: string;
+  operation?: string;
+  service?: string;
+  showOp?: boolean;
+  start?: number;
+  visEncoding?: string;
+};
+
+export type TDdgModelParams = {
+  service: string;
+  operation?: string;
+  start: number;
+  end: number;
+};
+
+export type TDdgActionMeta = {
+  query: TDdgModelParams;
+};
+
+export type TDdgAddViewModifierPayload = TDdgModelParams & {
+  // Number instead of EViewModifier so that multiple views can be changed at once.
+  viewModifier: number;
+  visibilityIndices: number[];
+};
+
+export type TDdgClearViewModifiersFromIndicesPayload = TDdgAddViewModifierPayload & { viewModifier?: void };
+
+export type TDdgRemoveViewModifierFromIndicesPayload = TDdgAddViewModifierPayload;
+
+export type TDdgRemoveViewModifierPayload = TDdgAddViewModifierPayload & { visibilityIndices?: void };
+
+export type TDdgViewModifierRemovalPayload =
+  | TDdgClearViewModifiersFromIndicesPayload
+  | TDdgRemoveViewModifierFromIndicesPayload
+  | TDdgRemoveViewModifierPayload;
+
+export type THop = { distance: number; fullness: ECheckedStatus };

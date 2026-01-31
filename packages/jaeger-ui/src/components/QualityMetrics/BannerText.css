@@ -1,0 +1,11 @@
+/*
+Copyright (c) 2020 Uber Technologies, Inc.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.BannerText {
+  font-size: 1.5em;
+  font-weight: heavy;
+  padding: 0.5rem 1rem 0.5rem 1rem;
+  text-align: center;
+}
