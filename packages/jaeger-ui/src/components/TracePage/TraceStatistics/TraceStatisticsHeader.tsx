@@ -54,17 +54,14 @@ export default function TraceStatisticsHeader(props: Props) {
   const { trace, tableValue, wholeTable, handler, useOtelTerms } = props;
 
   // This ensures that the service name is only computed once on initial render
-  const initialServiceName = useMemo(() => getServiceName(), []);
+  const initialServiceName = getServiceName();
 
   const [valueNameSelector1, setValueNameSelector1State] = useState<string>(initialServiceName);
   const [valueNameSelector2, setValueNameSelector2State] = useState<string | null>(null);
   const [valueNameSelector3, setValueNameSelector3State] = useState<string>('Count');
   const [checkboxStatus, setCheckboxStatus] = useState<boolean>(false);
 
-  const getColorValue = useCallback(() => {
-    const toColor = optionsNameSelector3.get(valueNameSelector3);
-    return toColor ?? '';
-  }, [valueNameSelector3]);
+  const getColorValue = () => optionsNameSelector3.get(valueNameSelector3) ?? '';
 
   useEffect(() => {
     const serviceName = getServiceName();
@@ -158,7 +155,7 @@ export default function TraceStatisticsHeader(props: Props) {
     () => generateDropdownValue(trace, useOtelTerms),
     [trace, useOtelTerms]
   );
-  const optionsNameSelector2Options = useMemo(
+  const optionsNameSelector2 = useMemo(
     () => generateSecondDropdownValue(trace, valueNameSelector1, useOtelTerms),
     [trace, valueNameSelector1, useOtelTerms]
   );
@@ -193,7 +190,7 @@ export default function TraceStatisticsHeader(props: Props) {
           popupMatchSelectWidth={false}
           fuzzy
         >
-          {optionsNameSelector2Options.map(opt => (
+          {optionsNameSelector2.map(opt => (
             <Select.Option key={opt} value={opt}>
               {opt}
             </Select.Option>
