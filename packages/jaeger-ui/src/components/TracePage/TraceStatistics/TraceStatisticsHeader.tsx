@@ -55,7 +55,7 @@ const TraceStatisticsHeader: React.FC<Props> = (props: Props) => {
   const { trace, tableValue, wholeTable, handler, useOtelTerms } = props;
 
   // This ensures that the service name is only computed once on initial render
-  const initialServiceName = getServiceName();
+const initialServiceName = useMemo(() => getServiceName(), []);
 
   const [valueNameSelector1, setValueNameSelector1State] = useState<string>(initialServiceName);
   const [valueNameSelector2, setValueNameSelector2State] = useState<string | null>(null);
