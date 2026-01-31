@@ -7,3 +7,9 @@ stats.html
 # Local UI config files for development (see README.md for details)
 jaeger-ui.config.js
 jaeger-ui.config.json
+
+# npm / windows garbage
+%APPDATA%
+npm-cache
+**/_cacache
+node_modules

@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import { CompatRouter } from 'react-router-dom-v5-compat';
 
@@ -290,3 +290,36 @@ describe('mapStateToProps', () => {
     expect(mapStateToProps(testState)).toBe(testState);
   });
 });
+
+
+
+// NOTE(router-v7):
+// TopNav still requires CompatRouter because child components
+// (e.g. TraceIDSearchInput) depend on v5-compatible routing hooks.
+// This test avoids mocked history while preserving current behavior,
+// and will be updated as part of the Router v7 data-router migration.
+describe('Router migration safety', () => {
+  it('derives navigation state from router context without relying on mocked history', () => {
+    render(
+      <MemoryRouter initialEntries={['/search']}>
+        <CompatRouter>
+          <TopNav
+            {...{
+              config: {
+                menu: [],
+              },
+              pathname: '/search',
+              traceDiff: {},
+            }}
+          />
+        </CompatRouter>
+      </MemoryRouter>
+    );
+
+    const searchLink = screen.getByRole('link', { name: 'Search' });
+
+    expect(searchLink).toBeInTheDocument();
+    expect(searchLink.getAttribute('href')).toContain('/search');
+  });
+});
+
