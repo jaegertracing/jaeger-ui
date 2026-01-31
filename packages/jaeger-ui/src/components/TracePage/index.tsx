@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
+import { useEffect } from 'react';
 import { InputRef } from 'antd';
+import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
@@ -285,14 +287,9 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   ensureTraceFetched() {
-    const { fetchTrace, location, trace, id } = this.props;
+    const { fetchTrace, trace, id } = this.props;
     if (!trace) {
       fetchTrace(id);
-      return;
-    }
-    const { history } = this.props;
-    if (id && id !== id.toLowerCase()) {
-      history.replace(getLocation(id.toLowerCase(), location.state));
     }
   }
 
@@ -485,6 +482,16 @@ type TracePageProps = {
 
 const TracePage = (props: TracePageProps) => {
   const config = useConfig();
+  const traceID = props.params.id;
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (traceID && traceID !== traceID.toLowerCase()) {
+      navigate(`/trace/${traceID.toLowerCase()}${location.search}`, { replace: true });
+    }
+  }, [traceID, navigate, location.search]);
+
   return (
     <ConnectedTracePage
       {...props}
