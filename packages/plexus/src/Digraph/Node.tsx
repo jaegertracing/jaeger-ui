@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
@@ -26,23 +26,35 @@ function getHtmlStyle(lv: TLayoutVertex<any>) {
   };
 }
 
-export default class Node<T = {}> extends React.PureComponent<TProps<T>> {
-  render() {
-    const { getClassName, layerType, renderNode, renderUtils, setOnNode, layoutVertex } = this.props;
-    const nodeContent = renderNode(layoutVertex, renderUtils);
-    if (!nodeContent) {
-      return null;
-    }
-    const { left, top } = layoutVertex;
-    const props = assignMergeCss(
-      {
-        className: getClassName('Node'),
-        style: layerType === ELayerType.Html ? getHtmlStyle(layoutVertex) : null,
-        transform: layerType === ELayerType.Svg ? `translate(${left.toFixed()},${top.toFixed()})` : null,
-      },
-      getProps(setOnNode, layoutVertex, renderUtils)
-    );
-    const Wrapper = layerType === ELayerType.Html ? 'div' : 'g';
-    return <Wrapper {...props}>{nodeContent}</Wrapper>;
+const Node = <T = {},>({
+  getClassName,
+  layerType,
+  renderNode,
+  renderUtils,
+  setOnNode,
+  layoutVertex,
+}: TProps<T>) => {
+  const nodeContent = renderNode(layoutVertex, renderUtils);
+  if (!nodeContent) {
+    return null;
   }
-}
+  const { left, top } = layoutVertex;
+  const props = assignMergeCss(
+    {
+      className: getClassName('Node'),
+      style: layerType === ELayerType.Html ? getHtmlStyle(layoutVertex) : null,
+      transform:
+        layerType === ELayerType.Svg
+          ? left == null || top == null
+            ? null
+            : `translate(${left.toFixed()},${top.toFixed()})`
+          : null,
+    },
+    getProps(setOnNode, layoutVertex, renderUtils)
+  );
+  const Wrapper = layerType === ELayerType.Html ? 'div' : 'g';
+  return <Wrapper {...props}>{nodeContent}</Wrapper>;
+};
+
+// React.memo provides shallow comparison equivalent to PureComponent
+export default React.memo(Node) as typeof Node;
