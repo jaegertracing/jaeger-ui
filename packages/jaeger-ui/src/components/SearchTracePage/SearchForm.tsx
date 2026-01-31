@@ -723,14 +723,16 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
         />
       </FormItem>
 
-      <Button
-        htmlType="submit"
-        className="SearchForm--submit"
-        disabled={submitting || noSelectedService || invalid || invalidDuration !== undefined}
-        data-test={markers.SUBMIT_BTN}
-      >
-        Find Traces
-      </Button>
+      <FormItem>
+        <Button
+          htmlType="submit"
+          className="SearchForm--submit"
+          disabled={submitting || noSelectedService || invalid || invalidDuration !== undefined}
+          data-test={markers.SUBMIT_BTN}
+        >
+          Find Traces
+        </Button>
+      </FormItem>
     </Form>
   );
 };
