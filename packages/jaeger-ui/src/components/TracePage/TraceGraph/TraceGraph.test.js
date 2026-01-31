@@ -82,7 +82,7 @@ describe('<TraceGraph>', () => {
     render(<TraceGraph {...props} />);
     expect(screen.getByTestId('mock-digraph')).toBeInTheDocument();
     expect(document.querySelectorAll('.TraceGraph--menu').length).toBe(1);
-    expect(screen.getAllByRole('button').length).toBe(3);
+    expect(screen.getAllByRole('button').length).toBe(4);
   });
 
   it('may show no traces', () => {
