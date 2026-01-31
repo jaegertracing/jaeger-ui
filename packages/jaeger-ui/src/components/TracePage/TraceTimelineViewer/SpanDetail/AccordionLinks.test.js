@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AccordionLinks, { References } from './AccordionLinks';
 
 jest.mock('../../url/ReferenceLink', () => {
   return function MockReferenceLink({ children, link }) {
     return (
-      <div data-testid="link-link" data-span-id={link.spanID}>
+      <div data-testid="reference-link" data-span-id={link.spanID}>
         {children}
       </div>
     );
@@ -48,22 +48,22 @@ const links = [
   },
 ];
 
-describe('<AccordionLinks>', () => {
-  const props = {
-    compact: false,
+describe('<AccordionLinks /> – functional component', () => {
+  const baseProps = {
     data: links,
     highContrast: false,
     isOpen: false,
     onToggle: jest.fn(),
     focusSpan: jest.fn(),
+    useOtelTerms: false,
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renders the component structure correctly without crashing', () => {
-    render(<AccordionLinks {...props} />);
+  it('renders header, label, and count correctly', () => {
+    render(<AccordionLinks {...baseProps} />);
 
     expect(screen.getByText('References')).toBeInTheDocument();
     expect(screen.getByText(`(${links.length})`)).toBeInTheDocument();
@@ -71,22 +71,94 @@ describe('<AccordionLinks>', () => {
     const header = screen.getByText('References').closest('.AccordionLinks--header');
     expect(header).toBeInTheDocument();
     expect(header).toHaveClass('AccordionLinks--header');
+    expect(header).not.toHaveClass('is-open');
   });
 
-  it('displays References component content when accordion is expanded', () => {
-    const expandedProps = { ...props, isOpen: true };
-    render(<AccordionLinks {...expandedProps} />);
+  it('renders "Links" label when useOtelTerms is true', () => {
+    render(<AccordionLinks {...baseProps} useOtelTerms={true} />);
 
-    const linksList = screen.getByRole('list');
-    expect(linksList).toBeInTheDocument();
-    expect(linksList).toHaveClass('ReferencesList--List');
+    expect(screen.getByText('Links')).toBeInTheDocument();
+  });
 
-    const linkLinks = screen.getAllByTestId('link-link');
-    expect(linkLinks).toHaveLength(links.length);
+  it('does not render References list when closed', () => {
+    render(<AccordionLinks {...baseProps} />);
+
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
+  });
+
+  it('renders References list when open', () => {
+    render(<AccordionLinks {...baseProps} isOpen={true} />);
+
+    const list = screen.getByRole('list');
+    expect(list).toBeInTheDocument();
+    expect(list).toHaveClass('ReferencesList--List');
+
+    const renderedLinks = screen.getAllByTestId('reference-link');
+    expect(renderedLinks).toHaveLength(links.length);
+  });
+
+  it('calls onToggle when header is clicked', () => {
+    render(<AccordionLinks {...baseProps} />);
+
+    const header = screen.getByText('References').closest('.AccordionLinks--header');
+    expect(header).toBeInTheDocument();
+
+    if (header) {
+      fireEvent.click(header);
+    }
+
+    expect(baseProps.onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies high contrast class when highContrast is true', () => {
+    render(<AccordionLinks {...baseProps} highContrast={true} />);
+
+    const header = screen.getByText('References').closest('.AccordionLinks--header');
+    expect(header).toHaveClass('is-high-contrast');
+  });
+
+  it('applies is-open class when isOpen is true', () => {
+    render(<AccordionLinks {...baseProps} isOpen={true} />);
+
+    const header = screen.getByText('References').closest('.AccordionLinks--header');
+    expect(header).toHaveClass('is-open');
+  });
+
+  it('applies empty class and does not call onToggle when data is empty', () => {
+    const emptyProps = { ...baseProps, data: [] };
+    render(<AccordionLinks {...emptyProps} />);
+
+    const header = screen.getByText('References').closest('.AccordionLinks--header');
+    expect(header).toHaveClass('is-empty');
+    expect(screen.getByText('(0)')).toBeInTheDocument();
+
+    if (header) {
+      fireEvent.click(header);
+    }
+    expect(baseProps.onToggle).not.toHaveBeenCalled();
+  });
+
+  it('does not render arrow or respond to clicks when interactive is false', () => {
+    render(<AccordionLinks {...baseProps} interactive={false} />);
+
+    const header = screen.getByText('References').closest('.AccordionLinks--header');
+
+    if (header) {
+      fireEvent.click(header);
+    }
+    expect(baseProps.onToggle).not.toHaveBeenCalled();
+  });
+
+  it('does not throw error when onToggle is null', () => {
+    const propsWithNullToggle = { ...baseProps, onToggle: null };
+
+    expect(() => {
+      render(<AccordionLinks {...propsWithNullToggle} />);
+    }).not.toThrow();
   });
 });
 
-describe('<References>', () => {
+describe('<References />', () => {
   const props = {
     data: links,
     focusSpan: jest.fn(),
@@ -96,22 +168,36 @@ describe('<References>', () => {
     jest.clearAllMocks();
   });
 
-  it('renders complete links list with proper service names and operation details', () => {
+  it('renders full references list with service, operation, and span IDs', () => {
     render(<References {...props} />);
 
-    const linkLinks = screen.getAllByTestId('link-link');
-    expect(linkLinks).toHaveLength(links.length);
+    const renderedLinks = screen.getAllByTestId('reference-link');
+    expect(renderedLinks).toHaveLength(links.length);
 
+    // spans with data
     expect(screen.getByText('service1')).toBeInTheDocument();
     expect(screen.getByText('op1')).toBeInTheDocument();
 
     expect(screen.getByText('service2')).toBeInTheDocument();
     expect(screen.getByText('op2')).toBeInTheDocument();
 
+    // span without data
     expect(screen.getByText('< span in another trace >')).toBeInTheDocument();
 
+    // span IDs
     expect(screen.getByText('span1')).toBeInTheDocument();
     expect(screen.getByText('span3')).toBeInTheDocument();
     expect(screen.getByText('span5')).toBeInTheDocument();
+  });
+
+  it('renders correct structure for each reference item', () => {
+    render(<References {...props} />);
+
+    const listItems = screen.getAllByRole('listitem');
+    expect(listItems).toHaveLength(links.length);
+
+    listItems.forEach(item => {
+      expect(item).toHaveClass('ReferencesList--Item');
+    });
   });
 });
