@@ -1,9 +1,8 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as React from 'react';
 import { Checkbox, CheckboxChangeEvent, Select } from 'antd';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { IOtelTrace } from '../../../types/otel';
 import { ITableSpan } from './types';
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
@@ -55,7 +54,7 @@ const TraceStatisticsHeader: React.FC<Props> = (props: Props) => {
   const { trace, tableValue, wholeTable, handler, useOtelTerms } = props;
 
   // This ensures that the service name is only computed once on initial render
-const initialServiceName = useMemo(() => getServiceName(), []);
+  const initialServiceName = getServiceName();
 
   const [valueNameSelector1, setValueNameSelector1State] = useState<string>(initialServiceName);
   const [valueNameSelector2, setValueNameSelector2State] = useState<string | null>(null);
