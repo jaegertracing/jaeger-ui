@@ -20,7 +20,7 @@ SPDX-License-Identifier: Apache-2.0
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-.TraceIDSearchInput--input .ant-input {
+.ant-menu-dark .TraceIDSearchInput--input .ant-input {
   background-color: transparent;
   color: rgba(255, 255, 255, 0.85);
 }
