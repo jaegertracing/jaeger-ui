@@ -488,7 +488,7 @@ const TracePage = (props: TracePageProps) => {
 
   useEffect(() => {
     if (traceID && traceID !== traceID.toLowerCase()) {
-      navigate(`/trace/${traceID.toLowerCase()}${location.search}`, { replace: true, state: location.state });
+      navigate(`../${traceID.toLowerCase()}${location.search}`, { replace: true, state: location.state });
     }
   }, [traceID, navigate, location.search]);
 
