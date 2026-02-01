@@ -337,16 +337,9 @@ describe('<TracePage>', () => {
   });
 
   it('forces lowercase id', () => {
-    const navigateMock = jest.fn();
-    jest.doMock('react-router-dom-v5-compat', () => ({
-      ...jest.requireActual('react-router-dom-v5-compat'),
-      useNavigate: () => navigateMock,
-      useLocation: () => ({ search: '' }),
-    }));
-
-    // The URL normalization is now handled by the TracePage functional wrapper component
-    // which uses useNavigate hook. Since TracePageImpl (class component) is tested directly,
-    // this test now verifies the class component doesn't error with uppercase IDs.
+    // The URL normalization is now handled by the TracePage functional wrapper component.
+    // Since TracePageImpl (class component) is tested directly here, this test verifies
+    // that the class component doesn't error with uppercase IDs.
     const props = {
       ...defaultProps,
       id: trace.traceID.toUpperCase(),

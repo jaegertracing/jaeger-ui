@@ -490,7 +490,7 @@ const TracePage = (props: TracePageProps) => {
     if (traceID && traceID !== traceID.toLowerCase()) {
       navigate(`../${traceID.toLowerCase()}${location.search}`, { replace: true, state: location.state });
     }
-  }, [traceID, navigate, location.search]);
+  }, [traceID, navigate, location.search, location.state]);
 
   return (
     <ConnectedTracePage
