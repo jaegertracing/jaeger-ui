@@ -38,6 +38,32 @@ jest.mock('antd', () => {
   return { ...actual, Menu, Dropdown };
 });
 
+jest.mock('../../utils/config/get-config', () => {
+  return {
+    __esModule: true,
+    default: jest.fn(() => ({
+      qualityMetrics: {
+        apiEndpoint: '/quality-metrics',
+      },
+    })),
+    getConfigValue: jest.fn(key => {
+      switch (key) {
+        case 'dependencies.menuEnabled':
+        case 'deepDependencies.menuEnabled':
+        case 'qualityMetrics.menuEnabled':
+        case 'monitor.menuEnabled':
+        case 'themes.enabled':
+          return true;
+        case 'qualityMetrics.menuLabel':
+          return 'Quality';
+        default:
+          return false;
+      }
+    }),
+  };
+});
+
+
 describe('<TopNav>', () => {
   const labelGitHub = 'GitHub';
   const githubUrl = 'https://github.com/uber/jaeger';
