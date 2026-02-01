@@ -1,10 +1,20 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
 {
   "extends": "../../tsconfig",
   "compilerOptions": {
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": [
+      "node",
+      "jest",
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "lodash",
+      "redux-actions",
+      "deep-freeze",
+      "object-hash"
+    ]
   },
   "include": ["src/**/*.tsx", "src/**/*.ts", "src/**/*.json", "typings"]
 }

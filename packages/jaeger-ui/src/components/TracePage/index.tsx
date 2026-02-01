@@ -285,11 +285,11 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   ensureTraceFetched() {
-    const { fetchTrace, location, trace, id, history } = this.props;
+    const { fetchTrace, location, trace, id, history, uiFind } = this.props;
 
     // Normalize URL to lowercase immediately if needed
     if (id && id !== id.toLowerCase()) {
-      history.replace(getLocation(id.toLowerCase(), location.state));
+      history.replace(getLocation(id.toLowerCase(), location.state, uiFind || undefined));
       return;
     }
 
