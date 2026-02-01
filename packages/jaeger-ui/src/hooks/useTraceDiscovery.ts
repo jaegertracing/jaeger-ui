@@ -20,14 +20,25 @@ export function useServices(): UseQueryResult<string[]> {
 /**
  * React Query hook to fetch the list of span names (operations) for a given service.
  * @param service - The service name
- * @returns Query result with span names array
+ * @param spanKind - Optional span kind to filter by (e.g. 'server')
+ * @returns Query result with array of span name / span kind pairs. Span kinds are lowercase.
  */
-export function useSpanNames(service: string | null): UseQueryResult<{ name: string; spanKind: string }[]> {
+export function useSpanNames(
+  service: string | null,
+  spanKind?: string
+): UseQueryResult<{ name: string; spanKind: string }[]> {
   return useQuery({
     queryKey: ['spanNames', service],
     queryFn: () => jaegerClient.fetchSpanNames(service!),
     enabled: !!service, // Only fetch when service is selected
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
+    select: data => {
+      if (spanKind) {
+        const normalizedKind = spanKind.toLowerCase();
+        return data.filter(op => op.spanKind === normalizedKind);
+      }
+      return data;
+    },
   });
 }

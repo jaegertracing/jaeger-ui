@@ -11,30 +11,63 @@ jest.mock(
     })
 );
 
+jest.mock('redux-first-history', () => ({
+  replace: jest.fn(url => ({ type: 'REPLACE', payload: url })),
+}));
+
+jest.mock('../components/SearchTracePage/url', () => ({
+  getUrl: jest.fn(query => `/search?${JSON.stringify(query)}`),
+}));
+
 import * as jaegerMiddlewares from './index';
-import { fetchServiceOperations } from '../actions/jaeger-api';
-import { CHANGE_SERVICE_ACTION_TYPE } from '../constants/search-form';
+import { searchTraces } from '../actions/jaeger-api';
+import { replace } from 'redux-first-history';
+import { getUrl as getSearchUrl } from '../components/SearchTracePage/url';
 
 it('jaegerMiddlewares should contain the promise middleware', () => {
   expect(typeof jaegerMiddlewares.promise).toBe('function');
 });
 
-it('loadOperationsForServiceMiddleware fetches operations for services', () => {
-  const { loadOperationsForServiceMiddleware } = jaegerMiddlewares;
-  const dispatch = jest.fn();
-  const next = jest.fn();
-  const action = {
-    type: CHANGE_SERVICE_ACTION_TYPE,
-    payload: 'yo',
+describe('historyUpdateMiddleware', () => {
+  const mockStore = {
+    dispatch: jest.fn(),
   };
-  loadOperationsForServiceMiddleware({ dispatch })(next)(action);
+  const mockNext = jest.fn(action => action);
 
-  // Check that dispatch was called with the correct action structure
-  expect(dispatch).toHaveBeenCalledTimes(1);
-  const dispatchedAction = dispatch.mock.calls[0][0];
-  expect(dispatchedAction.type).toBe('@JAEGER_API/FETCH_SERVICE_OPERATIONS');
-  expect(dispatchedAction.meta).toEqual({ serviceName: 'yo' });
-  expect(dispatchedAction.payload).toBeInstanceOf(Promise);
+  beforeEach(() => {
+    mockStore.dispatch.mockClear();
+    mockNext.mockClear();
+    replace.mockClear();
+    getSearchUrl.mockClear();
+  });
 
-  expect(next).toHaveBeenCalledWith(action);
+  it('dispatches replace action when action type matches searchTraces', () => {
+    const query = { service: 'test-service', operation: 'test-op' };
+    const action = {
+      type: String(searchTraces),
+      meta: { query },
+    };
+
+    jaegerMiddlewares.historyUpdateMiddleware(mockStore)(mockNext)(action);
+
+    expect(getSearchUrl).toHaveBeenCalledWith(query);
+    expect(replace).toHaveBeenCalled();
+    expect(mockStore.dispatch).toHaveBeenCalled();
+    expect(mockNext).toHaveBeenCalledWith(action);
+  });
+
+  it('does not dispatch replace action for non-searchTraces actions', () => {
+    const action = {
+      type: 'SOME_OTHER_ACTION',
+      payload: { data: 'test' },
+    };
+
+    const result = jaegerMiddlewares.historyUpdateMiddleware(mockStore)(mockNext)(action);
+
+    expect(getSearchUrl).not.toHaveBeenCalled();
+    expect(replace).not.toHaveBeenCalled();
+    expect(mockStore.dispatch).not.toHaveBeenCalled();
+    expect(mockNext).toHaveBeenCalledWith(action);
+    expect(result).toBe(action);
+  });
 });
