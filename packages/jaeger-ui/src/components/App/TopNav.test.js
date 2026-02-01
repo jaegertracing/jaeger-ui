@@ -9,14 +9,6 @@ import { CompatRouter } from 'react-router-dom-v5-compat';
 
 import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
 
-jest.mock('../../utils/configure-store', () => ({
-  history: {
-    push: jest.fn(),
-    replace: jest.fn(),
-  },
-  store: {},
-}));
-
 jest.mock('antd', () => {
   const actual = jest.requireActual('antd');
 
@@ -44,31 +36,6 @@ jest.mock('antd', () => {
   );
 
   return { ...actual, Menu, Dropdown };
-});
-
-jest.mock('../../utils/config/get-config', () => {
-  return {
-    __esModule: true,
-    default: jest.fn(() => ({
-      qualityMetrics: {
-        apiEndpoint: '/quality-metrics',
-      },
-    })),
-    getConfigValue: jest.fn(key => {
-      switch (key) {
-        case 'dependencies.menuEnabled':
-        case 'deepDependencies.menuEnabled':
-        case 'qualityMetrics.menuEnabled':
-        case 'monitor.menuEnabled':
-        case 'themes.enabled':
-          return true;
-        case 'qualityMetrics.menuLabel':
-          return 'Quality';
-        default:
-          return false;
-      }
-    }),
-  };
 });
 
 describe('<TopNav>', () => {
