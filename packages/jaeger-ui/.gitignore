@@ -9,7 +9,7 @@ jaeger-ui.config.js
 jaeger-ui.config.json
 
 # npm / windows garbage
-%APPDATA%
+AppData/
 npm-cache
 **/_cacache
 node_modules
