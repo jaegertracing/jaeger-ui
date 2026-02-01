@@ -99,3 +99,24 @@ SPDX-License-Identifier: Apache-2.0
   background-color: var(--text-secondary);
   border-radius: 4px;
 }
+
+/* 
+  Accessibility fix for WCAG 2.1: 
+  Ensure sufficient contrast (>= 4.5:1) for selected dropdown items in Dark Mode.
+  Specifically targets the search sidebar selects via a custom dropdown class.
+  Overrides default Ant Design styles to use high-contrast theme variables.
+*/
+[data-theme='dark']
+  .SearchForm--selectDropdown
+  .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: var(--interactive-primary);
+  color: var(--text-inverse);
+  font-weight: 600;
+}
+
+[data-theme='dark']
+  .SearchForm--selectDropdown
+  .ant-select-item-option-selected.ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: var(--interactive-primary-hover);
+  color: var(--text-inverse);
+}

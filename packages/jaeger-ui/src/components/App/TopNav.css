@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 .Dropdown--icon-container {
   display: flex;
-  color: var(--text-inverse);
+  color: #fff;
   margin-right: 30px;
   flex-direction: row;
   align-items: center;
@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .Dropdown--icon-container:hover {
-  color: var(--text-inverse);
+  color: #fff;
 }
 
 .Dropdown--icon-container .Dropdown--icon {
@@ -21,12 +21,12 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .Menu--item .ant-menu-title-content {
-  color: var(--text-inverse);
+  color: #fff;
 }
 
 /* Ensure nav links are always visible on dark nav */
 .Menu--item .ant-menu-title-content a {
-  color: rgba(255, 255, 255, 0.85);
+  color: #fff;
 }
 
 .Menu--item .ant-menu-title-content a:hover {

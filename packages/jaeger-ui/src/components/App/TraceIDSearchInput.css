@@ -22,21 +22,21 @@ SPDX-License-Identifier: Apache-2.0
 
 .TraceIDSearchInput--input .ant-input {
   background-color: transparent;
-  color: rgba(255, 255, 255, 0.85);
+  color: #fff !important;
 }
 
 .TraceIDSearchInput--input .ant-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .TraceIDSearchInput--input .ant-input-prefix {
-  color: rgba(255, 255, 255, 0.5);
+  color: #fff;
 }
 
 .TraceIDSearchInput--input .ant-input-clear-icon {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .TraceIDSearchInput--input .ant-input-clear-icon:hover {
-  color: rgba(255, 255, 255, 0.85);
+  color: #fff;
 }

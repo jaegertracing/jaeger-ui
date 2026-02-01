@@ -435,6 +435,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder="Select A Service"
           disabled={submitting}
           loading={isLoadingServices}
+          dropdownClassName="SearchForm--selectDropdown"
           onChange={(value: string) => handleChange({ service: value })}
         >
           {services.map(serviceName => (
@@ -460,6 +461,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           disabled={submitting || noSelectedService}
           loading={isLoadingSpanNames}
           placeholder={useOtelTerms ? 'Select A Span Name' : 'Select An Operation'}
+          dropdownClassName="SearchForm--selectDropdown"
           onChange={(value: string) => handleChange({ operation: value })}
         >
           {['all'].concat(spanNames).map(op => (
@@ -583,6 +585,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           value={formData.lookback}
           disabled={submitting}
           defaultValue={DEFAULT_LOOKBACK}
+          dropdownClassName="SearchForm--selectDropdown"
           onChange={(value: string) => handleChange({ lookback: value })}
         >
           {searchMaxLookback && optionsWithinMaxLookback(searchMaxLookback)}
