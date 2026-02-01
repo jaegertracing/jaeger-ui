@@ -7,8 +7,7 @@
 import './site-prefix';
 
 import React from 'react';
-import { Router } from 'react-router-dom';
-import { CompatRouter } from 'react-router-dom-v5-compat';
+import { HistoryRouter as Router } from 'redux-first-history/rr6';
 import { createRoot } from 'react-dom/client';
 
 import JaegerUIApp from './components/App';
@@ -36,18 +35,14 @@ if (typeof trackingContext === 'object' && trackingContext !== null) {
   (trackingContext as any).context(() => {
     root.render(
       <Router history={history}>
-        <CompatRouter>
-          <JaegerUIApp />
-        </CompatRouter>
+        <JaegerUIApp />
       </Router>
     );
   });
 } else {
   root.render(
     <Router history={history}>
-      <CompatRouter>
-        <JaegerUIApp />
-      </CompatRouter>
+      <JaegerUIApp />
     </Router>
   );
 }
