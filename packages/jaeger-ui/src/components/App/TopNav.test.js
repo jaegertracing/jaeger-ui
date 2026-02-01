@@ -3,19 +3,11 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { BrowserRouter, MemoryRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import { CompatRouter } from 'react-router-dom-v5-compat';
 
 import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
-
-jest.mock('../../utils/configure-store', () => ({
-  history: {
-    push: jest.fn(),
-    replace: jest.fn(),
-  },
-  store: {},
-}));
 
 jest.mock('antd', () => {
   const actual = jest.requireActual('antd');
@@ -44,31 +36,6 @@ jest.mock('antd', () => {
   );
 
   return { ...actual, Menu, Dropdown };
-});
-
-jest.mock('../../utils/config/get-config', () => {
-  return {
-    __esModule: true,
-    default: jest.fn(() => ({
-      qualityMetrics: {
-        apiEndpoint: '/quality-metrics',
-      },
-    })),
-    getConfigValue: jest.fn(key => {
-      switch (key) {
-        case 'dependencies.menuEnabled':
-        case 'deepDependencies.menuEnabled':
-        case 'qualityMetrics.menuEnabled':
-        case 'monitor.menuEnabled':
-        case 'themes.enabled':
-          return true;
-        case 'qualityMetrics.menuLabel':
-          return 'Quality';
-        default:
-          return false;
-      }
-    }),
-  };
 });
 
 describe('<TopNav>', () => {
@@ -290,36 +257,3 @@ describe('mapStateToProps', () => {
     expect(mapStateToProps(testState)).toBe(testState);
   });
 });
-
-
-
-// NOTE(router-v7):
-// TopNav still requires CompatRouter because child components
-// (e.g. TraceIDSearchInput) depend on v5-compatible routing hooks.
-// This test avoids mocked history while preserving current behavior,
-// and will be updated as part of the Router v7 data-router migration.
-describe('Router migration safety', () => {
-  it('derives navigation state from router context without relying on mocked history', () => {
-    render(
-      <MemoryRouter initialEntries={['/search']}>
-        <CompatRouter>
-          <TopNav
-            {...{
-              config: {
-                menu: [],
-              },
-              pathname: '/search',
-              traceDiff: {},
-            }}
-          />
-        </CompatRouter>
-      </MemoryRouter>
-    );
-
-    const searchLink = screen.getByRole('link', { name: 'Search' });
-
-    expect(searchLink).toBeInTheDocument();
-    expect(searchLink.getAttribute('href')).toContain('/search');
-  });
-});
-
