@@ -20,7 +20,6 @@ export interface ITableSpan {
   parentElement: string;
   color: string; // If it is a service name, the color will be set.
   searchMatch: boolean; // True when the entry matches the search criteria
-  colorToPercent: string; // Color created by percent
   traceID: string;
 }
 

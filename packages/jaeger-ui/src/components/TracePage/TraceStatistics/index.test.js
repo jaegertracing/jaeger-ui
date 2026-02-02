@@ -201,7 +201,6 @@ describe('<TraceTagOverview>', () => {
               selfMin: 5,
               selfMax: 75,
               percent: 80,
-              colorToPercent: '#fff',
             },
           ],
         });
@@ -261,7 +260,6 @@ describe('<TraceTagOverview>', () => {
               selfMin: 5,
               selfMax: 75,
               percent: 80,
-              colorToPercent: '#fff',
             },
           ],
         });
@@ -321,7 +319,6 @@ describe('<TraceTagOverview>', () => {
               total: 100,
               key: '0',
               searchMatch: false,
-              colorToPercent: '#fff',
             },
             {
               name: 'item2',
@@ -330,7 +327,6 @@ describe('<TraceTagOverview>', () => {
               total: 200,
               key: '1',
               searchMatch: false,
-              colorToPercent: '#fff',
             },
             {
               name: 'item3',
@@ -339,7 +335,6 @@ describe('<TraceTagOverview>', () => {
               total: 300,
               key: '2',
               searchMatch: false,
-              colorToPercent: '#fff',
             },
           ],
         });
