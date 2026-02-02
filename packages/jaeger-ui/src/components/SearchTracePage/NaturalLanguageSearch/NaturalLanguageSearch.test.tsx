@@ -33,7 +33,7 @@ describe('NaturalLanguageSearch', () => {
       render(<NaturalLanguageSearch {...defaultProps} />);
 
       expect(screen.getByText('AI Search')).toBeInTheDocument();
-      expect(screen.getByText('Beta')).toBeInTheDocument();
+      expect(screen.getByText('Experimental')).toBeInTheDocument();
       expect(screen.getByPlaceholderText(/Try:/)).toBeInTheDocument();
     });
 
@@ -55,6 +55,14 @@ describe('NaturalLanguageSearch', () => {
       render(<NaturalLanguageSearch {...defaultProps} placeholder="Custom placeholder" />);
 
       expect(screen.getByPlaceholderText('Custom placeholder')).toBeInTheDocument();
+    });
+
+    it('renders with proper aria-labels for accessibility', () => {
+      render(<NaturalLanguageSearch {...defaultProps} />);
+
+      expect(screen.getByLabelText('Natural language search input')).toBeInTheDocument();
+      expect(screen.getByLabelText('Search with AI')).toBeInTheDocument();
+      expect(screen.getByLabelText('Example: 500 errors greater than 2 seconds')).toBeInTheDocument();
     });
   });
 
@@ -104,6 +112,17 @@ describe('NaturalLanguageSearch', () => {
       expect(input).toBeDisabled();
       expect(button).toBeDisabled();
     });
+
+    it('disables example buttons when disabled prop is true', () => {
+      render(<NaturalLanguageSearch {...defaultProps} disabled />);
+
+      const exampleButtons = screen
+        .getAllByRole('button')
+        .filter(btn => btn.classList.contains('NaturalLanguageSearch--exampleBtn'));
+      exampleButtons.forEach(btn => {
+        expect(btn).toBeDisabled();
+      });
+    });
   });
 
   describe('API interactions', () => {
@@ -142,13 +161,47 @@ describe('NaturalLanguageSearch', () => {
       });
     });
 
+    it('clears input after successful extraction', async () => {
+      const mockParams = { service: 'payment-service' };
+      mockParseNaturalLanguageQuery.mockResolvedValue(mockParams);
+
+      render(<NaturalLanguageSearch {...defaultProps} />);
+
+      const input = screen.getByPlaceholderText(/Try:/);
+      fireEvent.change(input, { target: { value: 'test query' } });
+
+      const button = screen.getByRole('button', { name: /search/i });
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(input).toHaveValue('');
+      });
+    });
+
+    it('does not call onSearchParamsExtracted when result is empty', async () => {
+      mockParseNaturalLanguageQuery.mockResolvedValue({});
+
+      const onSearchParamsExtracted = jest.fn();
+      render(<NaturalLanguageSearch {...defaultProps} onSearchParamsExtracted={onSearchParamsExtracted} />);
+
+      const input = screen.getByPlaceholderText(/Try:/);
+      fireEvent.change(input, { target: { value: 'gibberish' } });
+
+      const button = screen.getByRole('button', { name: /search/i });
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(onSearchParamsExtracted).not.toHaveBeenCalled();
+      });
+    });
+
     it('shows loading state while processing', async () => {
       // Create a promise that we can control
-      let resolvePromise: (value: any) => void;
-      const promise = new Promise(resolve => {
+      let resolvePromise: (value: nlQueryApi.INLSearchParams) => void;
+      const promise = new Promise<nlQueryApi.INLSearchParams>(resolve => {
         resolvePromise = resolve;
       });
-      mockParseNaturalLanguageQuery.mockReturnValue(promise as any);
+      mockParseNaturalLanguageQuery.mockReturnValue(promise);
 
       render(<NaturalLanguageSearch {...defaultProps} />);
 
@@ -163,6 +216,9 @@ describe('NaturalLanguageSearch', () => {
         expect(screen.getByText('Analyzing...')).toBeInTheDocument();
       });
 
+      // Input should be disabled during loading
+      expect(input).toBeDisabled();
+
       // Resolve the promise
       resolvePromise!({ service: 'test' });
 
@@ -171,7 +227,7 @@ describe('NaturalLanguageSearch', () => {
       });
     });
 
-    it('handles API errors gracefully', async () => {
+    it('handles NLQueryError gracefully', async () => {
       mockParseNaturalLanguageQuery.mockRejectedValue(
         new nlQueryApi.NLQueryError('Failed to parse', 'PARSE_ERROR')
       );
@@ -186,6 +242,37 @@ describe('NaturalLanguageSearch', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Failed to parse')).toBeInTheDocument();
+      });
+    });
+
+    it('handles generic errors gracefully', async () => {
+      mockParseNaturalLanguageQuery.mockRejectedValue(new TypeError('Unexpected error'));
+
+      render(<NaturalLanguageSearch {...defaultProps} />);
+
+      const input = screen.getByPlaceholderText(/Try:/);
+      fireEvent.change(input, { target: { value: 'test query' } });
+
+      const button = screen.getByRole('button', { name: /search/i });
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(screen.getByText('Failed to process query')).toBeInTheDocument();
+      });
+    });
+
+    it('displays error with role="alert" for accessibility', async () => {
+      mockParseNaturalLanguageQuery.mockRejectedValue(new nlQueryApi.NLQueryError('Test error', 'TEST'));
+
+      render(<NaturalLanguageSearch {...defaultProps} />);
+
+      const input = screen.getByPlaceholderText(/Try:/);
+      fireEvent.change(input, { target: { value: 'test' } });
+      fireEvent.click(screen.getByRole('button', { name: /search/i }));
+
+      await waitFor(() => {
+        const errorElement = screen.getByRole('alert');
+        expect(errorElement).toHaveTextContent('Test error');
       });
     });
 
@@ -211,6 +298,49 @@ describe('NaturalLanguageSearch', () => {
       fireEvent.keyDown(input, { key: 'Enter' });
 
       expect(mockParseNaturalLanguageQuery).not.toHaveBeenCalled();
+    });
+
+    it('does not trigger search on Enter when disabled', async () => {
+      render(<NaturalLanguageSearch {...defaultProps} disabled />);
+
+      const input = screen.getByPlaceholderText(/Try:/);
+      fireEvent.change(input, { target: { value: 'test query' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+
+      expect(mockParseNaturalLanguageQuery).not.toHaveBeenCalled();
+    });
+
+    it('prevents double submission while loading', async () => {
+      let resolvePromise: (value: nlQueryApi.INLSearchParams) => void;
+      const promise = new Promise<nlQueryApi.INLSearchParams>(resolve => {
+        resolvePromise = resolve;
+      });
+      mockParseNaturalLanguageQuery.mockReturnValue(promise);
+
+      render(<NaturalLanguageSearch {...defaultProps} />);
+
+      const input = screen.getByPlaceholderText(/Try:/);
+      fireEvent.change(input, { target: { value: 'test query' } });
+
+      const button = screen.getByRole('button', { name: /search/i });
+      fireEvent.click(button);
+
+      // Wait for loading state
+      await waitFor(() => {
+        expect(screen.getByText('Analyzing...')).toBeInTheDocument();
+      });
+
+      // Input should be disabled during loading
+      expect(input).toBeDisabled();
+
+      // Try pressing Enter - should not trigger another call
+      fireEvent.keyDown(input, { key: 'Enter' });
+
+      // Should still only have been called once
+      expect(mockParseNaturalLanguageQuery).toHaveBeenCalledTimes(1);
+
+      // Cleanup
+      resolvePromise!({ service: 'test' });
     });
   });
 });
@@ -266,6 +396,13 @@ describe('nlQueryApi', () => {
       const result = nlParamsToFormValues({});
       expect(Object.keys(result)).toHaveLength(0);
     });
+
+    it('quotes tag values with spaces', () => {
+      const result = nlParamsToFormValues({
+        tags: { message: 'hello world' },
+      });
+      expect(result.tags).toBe('message="hello world"');
+    });
   });
 
   describe('NLQueryError', () => {
@@ -286,6 +423,11 @@ describe('nlQueryApi', () => {
     it('allows setting isRetryable', () => {
       const error = new NLQueryError('Test error', 'TIMEOUT', true);
       expect(error.isRetryable).toBe(true);
+    });
+
+    it('defaults code to UNKNOWN', () => {
+      const error = new NLQueryError('Test error');
+      expect(error.code).toBe('UNKNOWN');
     });
   });
 });

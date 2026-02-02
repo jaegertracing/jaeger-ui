@@ -1,7 +1,18 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import prefixUrl from '../../../utils/prefix-url';
+/**
+ * ⚠️ EXPERIMENTAL / MOCK IMPLEMENTATION
+ *
+ * This module provides a client-side mock for natural language query parsing.
+ * It uses regex patterns to extract search parameters, NOT a real LLM.
+ *
+ * This is a reference implementation for the LFX Mentorship project:
+ * "AI-Powered Trace Analysis with Local LLM Support"
+ *
+ * Backend integration with LangChainGo + Ollama is planned for future work.
+ * See: https://github.com/jaegertracing/jaeger/issues/7832
+ */
 
 /**
  * Search parameters extracted from natural language query.
@@ -40,26 +51,10 @@ export class NLQueryError extends Error {
 }
 
 /**
- * API endpoint for natural language query parsing.
- * This will be implemented in the Jaeger Query Service backend.
- */
-const NL_QUERY_ENDPOINT = prefixUrl('/api/ai/parse-query');
-
-/**
- * Check if the backend AI feature is enabled.
- * For now, we use a mock implementation.
- */
-let _mockEnabled = true;
-
-export function setMockEnabled(enabled: boolean): void {
-  _mockEnabled = enabled;
-}
-
-/**
  * Parse a natural language query into structured search parameters.
  *
- * This function calls the Jaeger Query Service backend which uses
- * LangChainGo + Ollama to extract search parameters from natural language.
+ * ⚠️ MOCK IMPLEMENTATION: This uses regex-based heuristics, not a real LLM.
+ * The function name is kept generic to allow future backend integration.
  *
  * @param query - The natural language query (e.g., "500 errors from payment-service > 2s")
  * @returns Extracted search parameters
@@ -74,63 +69,21 @@ export async function parseNaturalLanguageQuery(query: string): Promise<INLSearc
     throw new NLQueryError('Query cannot be empty', 'EMPTY_QUERY');
   }
 
-  // For now, use mock implementation until backend is deployed
-  // TODO: Replace with actual API call when backend is ready
-  if (_mockEnabled) {
-    return mockParseQuery(query);
-  }
-
-  try {
-    const response = await fetch(NL_QUERY_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'same-origin',
-      body: JSON.stringify({ query }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMsg = errorData.message || `HTTP ${response.status}: ${response.statusText}`;
-
-      if (response.status === 503) {
-        throw new NLQueryError(
-          'AI service is not available. Is Ollama running?',
-          'SERVICE_UNAVAILABLE',
-          true
-        );
-      }
-      if (response.status === 408 || response.status === 504) {
-        throw new NLQueryError('Request timed out. The model may be loading.', 'TIMEOUT', true);
-      }
-
-      throw new NLQueryError(errorMsg, 'API_ERROR');
-    }
-
-    const data = await response.json();
-    return data.params || data;
-  } catch (err) {
-    if (err instanceof NLQueryError) {
-      throw err;
-    }
-
-    // Network error or other fetch failure
-    throw new NLQueryError(
-      'Failed to connect to AI service. Check if the backend is running.',
-      'NETWORK_ERROR',
-      true
-    );
-  }
+  // Use mock implementation (regex-based extraction)
+  // TODO: Replace with backend API call when available
+  return mockExtractSearchParams(query);
 }
 
 /**
- * Mock implementation for parsing natural language queries.
- * This provides a realistic demo experience without requiring the backend.
+ * Mock implementation for extracting search parameters from natural language.
+ * Uses regex patterns to identify common query patterns.
  *
- * In production, this is replaced by the actual LangChainGo + Ollama backend.
+ * This provides a demo experience without requiring the backend.
+ * Simulates network latency for realistic UX.
+ *
+ * @internal This is a mock - do not rely on its behavior for production.
  */
-function mockParseQuery(query: string): Promise<INLSearchParams> {
+function mockExtractSearchParams(query: string): Promise<INLSearchParams> {
   return new Promise((resolve, reject) => {
     // Simulate network latency (300-800ms)
     const delay = 300 + Math.random() * 500;
@@ -148,7 +101,12 @@ function mockParseQuery(query: string): Promise<INLSearchParams> {
       for (const pattern of servicePatterns) {
         const match = query.match(pattern);
         if (match) {
-          params.service = match[1].replace(/-service$/i, '') + '-service';
+          let serviceName = match[1];
+          // Avoid duplicating -service suffix
+          if (!serviceName.endsWith('-service')) {
+            serviceName = `${serviceName}-service`;
+          }
+          params.service = serviceName;
           break;
         }
       }
@@ -232,11 +190,23 @@ function mockParseQuery(query: string): Promise<INLSearchParams> {
 }
 
 /**
+ * Form field values expected by SearchForm component.
+ */
+export interface IFormValues {
+  service?: string;
+  operation?: string;
+  tags?: string;
+  minDuration?: string;
+  maxDuration?: string;
+  resultsLimit?: string;
+}
+
+/**
  * Convert extracted NL params to the format expected by SearchForm.
  * Maps the INLSearchParams to form field values.
  */
-export function nlParamsToFormValues(params: INLSearchParams): Record<string, any> {
-  const formValues: Record<string, any> = {};
+export function nlParamsToFormValues(params: INLSearchParams): IFormValues {
+  const formValues: IFormValues = {};
 
   if (params.service) {
     formValues.service = params.service;

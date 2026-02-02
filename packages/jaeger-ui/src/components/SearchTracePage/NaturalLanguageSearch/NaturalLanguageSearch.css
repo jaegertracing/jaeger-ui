@@ -55,7 +55,7 @@ SPDX-License-Identifier: Apache-2.0
 .NaturalLanguageSearch--input:focus,
 .NaturalLanguageSearch--input:hover {
   border-color: var(--interactive-primary);
-  box-shadow: 0 0 0 2px rgba(var(--interactive-primary-rgb), 0.1);
+  box-shadow: 0 0 0 2px var(--interactive-primary-light);
 }
 
 .NaturalLanguageSearch--input-error {
@@ -139,7 +139,7 @@ SPDX-License-Identifier: Apache-2.0
 .NaturalLanguageSearch--exampleBtn:hover:not(:disabled) {
   color: var(--interactive-primary);
   border-color: var(--interactive-primary);
-  background: rgba(var(--interactive-primary-rgb), 0.05);
+  background: var(--interactive-primary-light);
 }
 
 .NaturalLanguageSearch--exampleBtn:disabled {
@@ -164,6 +164,7 @@ SPDX-License-Identifier: Apache-2.0
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.6;
   }
