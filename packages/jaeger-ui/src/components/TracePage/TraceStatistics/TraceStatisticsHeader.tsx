@@ -8,7 +8,6 @@ import { ITableSpan } from './types';
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
 import { getColumnValues, getColumnValuesSecondDropdown, getServiceName } from './tableValues';
 import SearchableSelect from '../../common/SearchableSelect';
-import generateColor from './generateColor';
 import './TraceStatisticsHeader.css';
 
 type Props = {
@@ -19,7 +18,8 @@ type Props = {
     tableValue: ITableSpan[],
     wholeTable: ITableSpan[],
     valueNameSelector1: string,
-    valueNameSelector2: string | null
+    valueNameSelector2: string | null,
+    colorByAttribute: string
   ) => void;
   useOtelTerms: boolean;
 };
@@ -49,11 +49,14 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     const serviceName = getServiceName();
+    const checkboxStatus = false;
+    const colorBy = this.getValue(checkboxStatus);
     this.props.handler(
       getColumnValues(serviceName, this.props.trace, this.props.useOtelTerms),
       getColumnValues(serviceName, this.props.trace, this.props.useOtelTerms),
       serviceName,
-      null
+      null,
+      colorBy
     );
 
     this.state = {
@@ -72,10 +75,13 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
   /**
    * Returns the value of optionsNameSelector3.
    */
-  getValue() {
+  getValue(checkboxStatus = this.state.checkboxStatus) {
+    if (!checkboxStatus) {
+      return '';
+    }
     let toColor = optionsNameSelector3.get(this.state.valueNameSelector3);
     if (toColor === undefined) {
-      toColor = '';
+      toColor = 'count';
     }
     return toColor;
   }
@@ -84,53 +90,39 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
    * Is called after a value from the first dropdown is selected.
    */
   setValueNameSelector1(value: string) {
+    const toColor = this.getValue();
     this.setState({
       valueNameSelector1: value,
       valueNameSelector2: null,
     });
-    const newTableValue = generateColor(
-      getColumnValues(value, this.props.trace, this.props.useOtelTerms),
-      this.getValue(),
-      this.state.checkboxStatus
-    );
-    const newWohleTable = generateColor(
-      getColumnValues(value, this.props.trace, this.props.useOtelTerms),
-      this.getValue(),
-      this.state.checkboxStatus
-    );
-    this.props.handler(newTableValue, newWohleTable, value, null);
+    const newTableValue = getColumnValues(value, this.props.trace, this.props.useOtelTerms);
+    const newWohleTable = getColumnValues(value, this.props.trace, this.props.useOtelTerms);
+    this.props.handler(newTableValue, newWohleTable, value, null, toColor);
   }
 
   /**
    * Is called after a value from the second dropdown is selected.
    */
   setValueNameSelector2(value: string) {
+    const toColor = this.getValue();
     this.setState({
       valueNameSelector2: value,
     });
-    const newTableValue = generateColor(
-      getColumnValuesSecondDropdown(
-        this.props.tableValue,
-        this.state.valueNameSelector1,
-        value,
-        this.props.trace,
-        this.props.useOtelTerms
-      ),
-      this.getValue(),
-      this.state.checkboxStatus
+    const newTableValue = getColumnValuesSecondDropdown(
+      this.props.tableValue,
+      this.state.valueNameSelector1,
+      value,
+      this.props.trace,
+      this.props.useOtelTerms
     );
-    const newWohleTable = generateColor(
-      getColumnValuesSecondDropdown(
-        this.props.wholeTable,
-        this.state.valueNameSelector1,
-        value,
-        this.props.trace,
-        this.props.useOtelTerms
-      ),
-      this.getValue(),
-      this.state.checkboxStatus
+    const newWohleTable = getColumnValuesSecondDropdown(
+      this.props.wholeTable,
+      this.state.valueNameSelector1,
+      value,
+      this.props.trace,
+      this.props.useOtelTerms
     );
-    this.props.handler(newTableValue, newWohleTable, this.state.valueNameSelector1, value);
+    this.props.handler(newTableValue, newWohleTable, this.state.valueNameSelector1, value, toColor);
   }
 
   /**
@@ -143,15 +135,14 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
 
     let toColor = optionsNameSelector3.get(value);
     if (toColor === undefined) {
-      toColor = '';
+      toColor = 'count';
     }
-    const newTableValue = generateColor(this.props.tableValue, toColor, this.state.checkboxStatus);
-    const newWohleTable = generateColor(this.props.wholeTable, toColor, this.state.checkboxStatus);
     this.props.handler(
-      newTableValue,
-      newWohleTable,
+      this.props.tableValue,
+      this.props.wholeTable,
       this.state.valueNameSelector1,
-      this.state.valueNameSelector2
+      this.state.valueNameSelector2,
+      toColor
     );
   }
 
@@ -159,17 +150,17 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
    * Is called after the checkbox changes its status.
    */
   checkboxButton(e: any) {
+    const { checked } = e.target;
     this.setState({
-      checkboxStatus: e.target.checked,
+      checkboxStatus: checked,
     });
 
-    const newTableValue = generateColor(this.props.tableValue, this.getValue(), e.target.checked);
-    const newWholeTable = generateColor(this.props.wholeTable, this.getValue(), e.target.checked);
     this.props.handler(
-      newTableValue,
-      newWholeTable,
+      this.props.tableValue,
+      this.props.wholeTable,
       this.state.valueNameSelector1,
-      this.state.valueNameSelector2
+      this.state.valueNameSelector2,
+      this.getValue(checked)
     );
   }
 
@@ -177,21 +168,22 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
    * Sets the second dropdown to "No Item selected" and sets the table to the values after the first dropdown.
    */
   clearValue() {
+    const toColor = this.getValue();
     this.setState({
       valueNameSelector2: null,
     });
 
-    const newTableValue = generateColor(
-      getColumnValues(this.state.valueNameSelector1, this.props.trace, this.props.useOtelTerms),
-      this.getValue(),
-      this.state.checkboxStatus
+    const newTableValue = getColumnValues(
+      this.state.valueNameSelector1,
+      this.props.trace,
+      this.props.useOtelTerms
     );
-    const newWholeTable = generateColor(
-      getColumnValues(this.state.valueNameSelector1, this.props.trace, this.props.useOtelTerms),
-      this.getValue(),
-      this.state.checkboxStatus
+    const newWholeTable = getColumnValues(
+      this.state.valueNameSelector1,
+      this.props.trace,
+      this.props.useOtelTerms
     );
-    this.props.handler(newTableValue, newWholeTable, this.state.valueNameSelector1, null);
+    this.props.handler(newTableValue, newWholeTable, this.state.valueNameSelector1, null, toColor);
   }
 
   render() {

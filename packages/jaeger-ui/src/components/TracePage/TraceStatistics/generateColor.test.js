@@ -16,10 +16,10 @@ describe('generateColor', () => {
 
     expect(tableValue1[0].isDetail).toBe(false);
     expect(tableValue1[0].count).toBe(8);
-    expect(tableValue1[0].colorToPercent).toBe('rgb(248,70,70)');
+    expect(tableValue1[0].colorToPercent).toBe('rgba(255, 77, 79, 0.8)');
     expect(tableValue1[1].isDetail).toBe(false);
     expect(tableValue1[1].count).toBe(3);
-    expect(tableValue1[1].colorToPercent).toBe('rgb(248,173.75,173.75)');
+    expect(tableValue1[1].colorToPercent).toBe('rgba(255, 77, 79, 0.3)');
 
     tableValue1 = generateColor(tableValue1, 'count', false);
     expect(tableValue1[0].isDetail).toBe(false);
@@ -36,10 +36,12 @@ describe('generateColor', () => {
 
     expect(tableValue1[0].isDetail).toBe(false);
     expect(tableValue1[0].total).toBe(573);
-    expect(tableValue1[0].colorToPercent).toBe('rgb(248,70,70)');
+    expect(tableValue1[0].colorToPercent).toBe('rgba(255, 77, 79, 0.8)');
     expect(tableValue1[1].isDetail).toBe(false);
     expect(tableValue1[1].total).toBe(238);
-    expect(tableValue1[1].colorToPercent).toBe('rgb(248,167.05061082024432,167.05061082024432)');
+    // factor = 238 / 573 = 0.4153577...
+    // alpha = factor * 0.8 = 0.332286... -> 0.332
+    expect(tableValue1[1].colorToPercent).toBe('rgba(255, 77, 79, 0.332)');
 
     tableValue1 = generateColor(tableValue1, 'count', false);
     expect(tableValue1[0].isDetail).toBe(false);
@@ -63,10 +65,12 @@ describe('generateColor', () => {
 
     expect(tableValue2[0].isDetail).toBe(false);
     expect(tableValue2[0].count).toBe(8);
-    expect(tableValue2[0].colorToPercent).toBe('rgb(248,70,70)');
+    expect(tableValue2[0].colorToPercent).toBe('rgba(255, 77, 79, 0.8)');
     expect(tableValue2[1].isDetail).toBe(true);
     expect(tableValue2[1].count).toBe(1);
-    expect(tableValue2[1].colorToPercent).toBe('rgb(248,215.25,215.25)');
+    // factor = 1 / 8 = 0.125
+    // alpha = 0.125 * 0.8 = 0.1
+    expect(tableValue2[1].colorToPercent).toBe('rgba(255, 77, 79, 0.1)');
 
     tableValue2 = generateColor(tableValue2, 'count', false);
 
@@ -75,7 +79,7 @@ describe('generateColor', () => {
     expect(tableValue2[0].colorToPercent).toBe('transparent');
     expect(tableValue2[1].isDetail).toBe(true);
     expect(tableValue2[1].count).toBe(1);
-    expect(tableValue2[1].colorToPercent).toBe('rgb(248,248,248)');
+    expect(tableValue2[1].colorToPercent).toBe('transparent');
   });
 
   it('check generateColor with total, two NameSelectors are selcted', () => {
@@ -91,10 +95,12 @@ describe('generateColor', () => {
 
     expect(tableValue2[0].isDetail).toBe(false);
     expect(tableValue2[0].total).toBe(573);
-    expect(tableValue2[0].colorToPercent).toBe('rgb(248,70,70)');
+    expect(tableValue2[0].colorToPercent).toBe('rgba(255, 77, 79, 0.8)');
     expect(tableValue2[1].isDetail).toBe(true);
     expect(tableValue2[1].total).toBe(390);
-    expect(tableValue2[1].colorToPercent).toBe('rgb(248,123.01570680628271,123.01570680628271)');
+    // factor = 390 / 573 = 0.680628...
+    // alpha = factor * 0.8 = 0.544502... -> 0.545
+    expect(tableValue2[1].colorToPercent).toBe('rgba(255, 77, 79, 0.545)');
 
     tableValue2 = generateColor(tableValue2, 'total', false);
 
@@ -103,7 +109,7 @@ describe('generateColor', () => {
     expect(tableValue2[0].colorToPercent).toBe('transparent');
     expect(tableValue2[1].isDetail).toBe(true);
     expect(tableValue2[1].total).toBe(390);
-    expect(tableValue2[1].colorToPercent).toBe('rgb(248,248,248)');
+    expect(tableValue2[1].colorToPercent).toBe('transparent');
   });
 
   it('covers percent attribute with colorToPercent=true', () => {
@@ -114,7 +120,9 @@ describe('generateColor', () => {
 
     const output = generateColor(input, 'percent', true);
 
-    expect(output[0].colorToPercent).toBe('rgb(248,111.5,111.5)');
-    expect(output[1].colorToPercent).toBe('rgb(248,194.5,194.5)');
+    // factor = 75/100 = 0.75; alpha = 0.75 * 0.8 = 0.6
+    expect(output[0].colorToPercent).toBe('rgba(255, 77, 79, 0.6)');
+    // factor = 25/100 = 0.25; alpha = 0.25 * 0.8 = 0.2
+    expect(output[1].colorToPercent).toBe('rgba(255, 77, 79, 0.2)');
   });
 });

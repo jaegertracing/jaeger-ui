@@ -26,3 +26,22 @@ SPDX-License-Identifier: Apache-2.0
   background: var(--surface-component-background-hover);
   color: var(--text-primary);
 }
+
+.TraceStatistics--searchMatch {
+  background: var(--trace-emphasis-highlight) !important;
+  border-color: var(--trace-emphasis-highlight) !important;
+}
+
+.TraceStatistics--valueContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.TraceStatistics--valueDisplay {
+  white-space: nowrap;
+  font-family: monospace;
+  font-size: 12px;
+  text-align: right;
+}

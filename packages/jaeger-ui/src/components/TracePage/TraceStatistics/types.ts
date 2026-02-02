@@ -19,7 +19,7 @@ export interface ITableSpan {
   isDetail: boolean; // True when the entry represents a subgroup aggregation.
   parentElement: string;
   color: string; // If it is a service name, the color will be set.
-  searchColor: string;
+  searchMatch: boolean; // True when the entry matches the search criteria
   colorToPercent: string; // Color created by percent
   traceID: string;
 }
