@@ -107,7 +107,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       <VirtualizedTraceView
         {...rest}
         trace={trace}
-        spanNameColumnWidth={spanNameColumnWidth}
         useOtelTerms={useOtelTerms}
         currentViewRangeTime={viewRange.time.current}
       />
