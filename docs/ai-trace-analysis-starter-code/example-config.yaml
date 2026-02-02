@@ -1,0 +1,69 @@
+# Jaeger v2 Configuration Example
+# This shows how to enable the Natural Language Query feature
+#
+# To run:
+#   1. Start Ollama: ollama serve
+#   2. Pull model: ollama pull qwen2.5:0.5b
+#   3. Start Jaeger with this config: jaeger --config config.yaml
+
+extensions:
+  jaeger_query:
+    # Main query service configuration
+    grpc:
+      endpoint: 0.0.0.0:16685
+    http:
+      endpoint: 0.0.0.0:16686
+
+    # Natural Language Query configuration (NEW)
+    nlquery:
+      # Enable/disable the feature (default: false)
+      enabled: true
+
+      # LLM provider to use (currently only "ollama" is supported)
+      provider: ollama
+
+      # Ollama-specific configuration
+      ollama:
+        # URL of the Ollama server
+        server_url: http://localhost:11434
+
+        # Model to use for query parsing
+        # Recommended models (smallest to largest):
+        #   - qwen2.5:0.5b (fastest, good accuracy)
+        #   - phi3:mini (better accuracy, slower)
+        #   - llama3.2:1b (alternative)
+        model: qwen2.5:0.5b
+
+        # Request timeout
+        timeout: 10s
+
+        # Temperature for generation (0.0 = deterministic)
+        # IMPORTANT: Keep at 0.0 for consistent, reproducible results
+        temperature: 0.0
+
+        # Maximum tokens in response
+        max_tokens: 256
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+
+exporters:
+  jaeger_storage_exporter:
+    trace_storage: memstore
+
+service:
+  extensions: [jaeger_query]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [jaeger_storage_exporter]
