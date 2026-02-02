@@ -5,7 +5,6 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
-import { CompatRouter } from 'react-router-dom-v5-compat';
 
 jest.mock('./NotFound', () => () => <div data-testid="not-found" />);
 jest.mock('./Page', () => ({ children }) => <div data-testid="page">{children}</div>);
@@ -78,9 +77,7 @@ const renderWithPath = pathname => {
   mockHistory = createMockHistory(pathname);
   return render(
     <MemoryRouter initialEntries={[pathname]}>
-      <CompatRouter>
-        <JaegerUIApp />
-      </CompatRouter>
+      <JaegerUIApp />
     </MemoryRouter>
   );
 };
@@ -147,9 +144,7 @@ describe('JaegerUIApp', () => {
     const { rerender } = renderWithPath('/search');
     rerender(
       <MemoryRouter initialEntries={['/trace-diff']}>
-        <CompatRouter>
-          <JaegerUIApp />
-        </CompatRouter>
+        <JaegerUIApp />
       </MemoryRouter>
     );
     // processScripts was called once at module load, not on each render

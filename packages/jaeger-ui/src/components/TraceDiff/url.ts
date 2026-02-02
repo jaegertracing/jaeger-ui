@@ -15,10 +15,8 @@ export type TDiffRouteParams = {
 
 export const ROUTE_PATH = prefixUrl('/trace/:a?\\.\\.\\.:b?');
 
-const ROUTE_MATCHER = { path: ROUTE_PATH, strict: true, exact: true };
-
 export function matches(path: string) {
-  return Boolean(matchPath(path, ROUTE_MATCHER));
+  return Boolean(matchPath(ROUTE_PATH, path));
 }
 
 export function getUrl(state: TTraceDiffState) {

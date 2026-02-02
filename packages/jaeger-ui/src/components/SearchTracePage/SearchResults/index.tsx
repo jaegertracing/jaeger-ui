@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useCallback } from 'react';
 import { Select } from 'antd';
 import { Link } from 'react-router-dom';
-import { Location, useNavigate } from 'react-router-dom-v5-compat';
+import { useNavigate, Location } from 'react-router-dom';
 import queryString from 'query-string';
 
 import AltViewOptions from './AltViewOptions';

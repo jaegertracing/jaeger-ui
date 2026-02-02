@@ -1,9 +1,9 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { BrowserRouter, MemoryRouter } from 'react-router-dom';
-import { CompatRouter } from 'react-router-dom-v5-compat';
+import { BrowserRouter, MemoryRouter, unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createMemoryHistory } from 'history';
 
 jest.mock('../../api/v3/client', () => ({
   jaegerClient: {
@@ -40,15 +40,13 @@ const queryClient = new QueryClient({
   },
 });
 
+const history = createMemoryHistory();
+
 const AllProvider = ({ children }) => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <Provider store={globalStore}>
-        <MemoryRouter>
-          <CompatRouter>{children}</CompatRouter>
-        </MemoryRouter>
-      </Provider>
-    </BrowserRouter>
+    <HistoryRouter history={history}>
+      <Provider store={globalStore}>{children}</Provider>
+    </HistoryRouter>
   </QueryClientProvider>
 );
 
@@ -233,7 +231,6 @@ describe('<SearchTracePage>', () => {
   });
 
   it('hides Upload tab if it is disabled via config', () => {
-    // Create a custom store with disableFileUploadControl: true
     const customStore = require('redux').createStore(() => ({
       ...globalStore.getState(),
       config: {
@@ -244,15 +241,11 @@ describe('<SearchTracePage>', () => {
 
     const { container } = render(
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
+        <MemoryRouter>
           <Provider store={customStore}>
-            <MemoryRouter>
-              <CompatRouter>
-                <SearchTracePage {...props} />
-              </CompatRouter>
-            </MemoryRouter>
+            <SearchTracePage {...props} />
           </Provider>
-        </BrowserRouter>
+        </MemoryRouter>
       </QueryClientProvider>
     );
     expect(container.querySelector('[data-node-key="fileLoader"]')).not.toBeInTheDocument();

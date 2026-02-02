@@ -4,7 +4,6 @@
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { CompatRouter } from 'react-router-dom-v5-compat';
 import '@testing-library/jest-dom';
 
 import { createBlob, UnconnectedSearchResults as SearchResults, SelectSort } from '.';
@@ -18,8 +17,8 @@ import DiffSelection from './DiffSelection';
 import { StatusCode } from '../../../types/otel';
 
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom-v5-compat', () => {
-  const actual = jest.requireActual('react-router-dom-v5-compat');
+jest.mock('react-router-dom', () => {
+  const actual = jest.requireActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -130,11 +129,7 @@ const baseProps = {
 };
 
 // to wrap component with Router context (for use in rerender)
-const withRouter = ui => (
-  <MemoryRouter>
-    <CompatRouter>{ui}</CompatRouter>
-  </MemoryRouter>
-);
+const withRouter = ui => <MemoryRouter>{ui}</MemoryRouter>;
 
 // function that automatically wraps with Router context
 const renderWithRouter = (ui, options = {}) => {
