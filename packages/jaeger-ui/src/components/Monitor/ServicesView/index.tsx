@@ -239,10 +239,6 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     calcGraphXDomain();
   }, [selectedTimeFrame, calcGraphXDomain]);
 
-  useEffect(() => {
-    fetchMetrics();
-  }, [fetchMetrics]);
-
   const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
   const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
   const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
