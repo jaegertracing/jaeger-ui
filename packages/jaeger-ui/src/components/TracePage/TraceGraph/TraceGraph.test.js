@@ -90,8 +90,7 @@ describe('<TraceGraph>', () => {
     expect(screen.getByText('No trace found')).toBeInTheDocument();
   });
 
-  it('switches node mode when clicking mode buttons - with state verification', async () => {
-    const setStateSpy = jest.spyOn(TraceGraph.prototype, 'setState');
+  it('switches node mode when clicking mode buttons', async () => {
     render(<TraceGraph {...props} />);
 
     // Initial mode should be service
@@ -100,22 +99,31 @@ describe('<TraceGraph>', () => {
     const selftimeButton = screen.getByRole('button', { name: 'ST' });
     const serviceButton = screen.getByRole('button', { name: 'S' });
 
+    // Verify initial button states
+    expect(serviceButton).toHaveClass('active');
+    expect(timeButton).not.toHaveClass('active');
+    expect(selftimeButton).not.toHaveClass('active');
+
     // Switch to time
     await userEvent.click(timeButton);
-    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_TIME }); // Verify state change
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_TIME);
+    expect(timeButton).toHaveClass('active');
+    expect(serviceButton).not.toHaveClass('active');
+    expect(selftimeButton).not.toHaveClass('active');
 
     // Switch to selftime
     await userEvent.click(selftimeButton);
-    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_SELFTIME });
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SELFTIME);
+    expect(selftimeButton).toHaveClass('active');
+    expect(serviceButton).not.toHaveClass('active');
+    expect(timeButton).not.toHaveClass('active');
 
     // Switch back to service
     await userEvent.click(serviceButton);
-    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_SERVICE });
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
-
-    setStateSpy.mockRestore();
+    expect(serviceButton).toHaveClass('active');
+    expect(timeButton).not.toHaveClass('active');
+    expect(selftimeButton).not.toHaveClass('active');
   });
 
   it('shows help', async () => {
