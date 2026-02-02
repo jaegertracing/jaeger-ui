@@ -1,0 +1,174 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.NaturalLanguageSearch {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-primary) 100%);
+  border: 1px solid var(--border-secondary);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.NaturalLanguageSearch--header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.NaturalLanguageSearch--icon {
+  font-size: 16px;
+  color: var(--interactive-primary);
+}
+
+.NaturalLanguageSearch--label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.NaturalLanguageSearch--beta {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  background: var(--interactive-primary);
+  color: var(--text-inverse);
+  border-radius: 4px;
+  cursor: help;
+}
+
+.NaturalLanguageSearch--inputWrapper {
+  display: flex;
+  gap: 8px;
+}
+
+.NaturalLanguageSearch--input {
+  flex: 1;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.NaturalLanguageSearch--input:focus,
+.NaturalLanguageSearch--input:hover {
+  border-color: var(--interactive-primary);
+  box-shadow: 0 0 0 2px rgba(var(--interactive-primary-rgb), 0.1);
+}
+
+.NaturalLanguageSearch--input-error {
+  border-color: var(--status-error);
+}
+
+.NaturalLanguageSearch--input-error:focus,
+.NaturalLanguageSearch--input-error:hover {
+  border-color: var(--status-error);
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.1);
+}
+
+.NaturalLanguageSearch--searchIcon {
+  color: var(--text-muted);
+}
+
+.NaturalLanguageSearch--clearIcon {
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.NaturalLanguageSearch--clearIcon:hover {
+  color: var(--text-primary);
+}
+
+.NaturalLanguageSearch--button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  border-radius: 6px;
+  min-width: 100px;
+  background: var(--interactive-primary);
+  border-color: var(--interactive-primary);
+}
+
+.NaturalLanguageSearch--button:hover:not(:disabled) {
+  background: var(--surface-primary);
+  border-color: var(--surface-primary);
+}
+
+.NaturalLanguageSearch--button:disabled {
+  opacity: 0.6;
+}
+
+.NaturalLanguageSearch--error {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 77, 79, 0.1);
+  border: 1px solid var(--status-error);
+  border-radius: 4px;
+  color: var(--status-error);
+  font-size: 13px;
+}
+
+.NaturalLanguageSearch--examples {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.NaturalLanguageSearch--examplesLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.NaturalLanguageSearch--exampleBtn {
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--surface-tertiary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.NaturalLanguageSearch--exampleBtn:hover:not(:disabled) {
+  color: var(--interactive-primary);
+  border-color: var(--interactive-primary);
+  background: rgba(var(--interactive-primary-rgb), 0.05);
+}
+
+.NaturalLanguageSearch--exampleBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .NaturalLanguageSearch {
+    background: linear-gradient(135deg, var(--surface-secondary) 0%, var(--surface-tertiary) 100%);
+  }
+
+  .NaturalLanguageSearch--exampleBtn {
+    background: var(--surface-secondary);
+  }
+}
+
+/* Animation for loading state */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.NaturalLanguageSearch--button.ant-btn-loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
