@@ -11,12 +11,13 @@ SPDX-License-Identifier: Apache-2.0
 
 .HopsSelector--Selector--decrement,
 .HopsSelector--Selector--increment {
-  background-color: #f4f4f4;
+  background-color: var(--surface-tertiary);
   border: none;
   cursor: pointer;
   height: 27px;
   padding: 0em 0.3em 0.3em;
   width: 27px;
+  color: var(--surface-tertiary-text);
 }
 
 .HopsSelector--Selector--decrement {
