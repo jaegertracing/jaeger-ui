@@ -126,7 +126,7 @@ export default function ResultItem({
           <Col span={4} className="ub-p3 ub-tx-right-align">
             {formatRelativeDate(startTime / 1000)}
             <Divider vertical />
-            {is24h ? timeStr : `${timeStr.slice(0, -3)}&nbsp;${timeStr.slice(-3)}`}
+            {is24h ? timeStr : `${timeStr.slice(0, -3)}&nbsp;${timeStr.slice(-2)}`}
             <br />
             <small>{fromNow}</small>
           </Col>
