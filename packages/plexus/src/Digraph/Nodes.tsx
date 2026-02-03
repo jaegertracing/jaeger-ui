@@ -1,6 +1,5 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // Copyright (c) 2019 Uber Technologies, Inc.
-// Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
@@ -31,7 +30,8 @@ export function arePropsEqual<T>(prev: TProps<T>, next: TProps<T>): boolean {
   );
 }
 
-function Nodes<T = {}>({
+// prettier-ignore
+function Nodes<T = {},>({
   getClassName,
   layoutVertices,
   renderUtils,
@@ -52,4 +52,7 @@ function Nodes<T = {}>({
   ));
 }
 
+// Note: The double cast via `unknown` is required here because `Nodes` is generic
+// and uses a custom comparator; React.memo's return type does not preserve the
+// generic signature, so we assert back to `typeof Nodes` via `unknown`.
 export default React.memo(Nodes, arePropsEqual) as unknown as typeof Nodes;
