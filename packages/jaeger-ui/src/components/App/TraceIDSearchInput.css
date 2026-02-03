@@ -11,6 +11,7 @@ SPDX-License-Identifier: Apache-2.0
 .TraceIDSearchInput--input.ant-input-affix-wrapper {
   background-color: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .TraceIDSearchInput--input.ant-input-affix-wrapper:hover,
