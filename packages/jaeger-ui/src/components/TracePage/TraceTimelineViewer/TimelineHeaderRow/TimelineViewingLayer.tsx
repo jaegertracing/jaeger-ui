@@ -115,6 +115,19 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
 
   const rootRef = useRef<HTMLDivElement>(null);
 
+  // Store props in refs to avoid recreating callbacks when props change.
+  // This mirrors the class component pattern where instance methods accessed this.props.
+  const viewRangeTimeRef = useRef(viewRangeTime);
+  const updateNextViewRangeTimeRef = useRef(updateNextViewRangeTime);
+  const updateViewRangeTimeRef = useRef(updateViewRangeTime);
+
+  // Keep refs in sync with latest props
+  useEffect(() => {
+    viewRangeTimeRef.current = viewRangeTime;
+    updateNextViewRangeTimeRef.current = updateNextViewRangeTime;
+    updateViewRangeTimeRef.current = updateViewRangeTime;
+  });
+
   const getDraggingBounds = useCallback((): DraggableBounds => {
     const current = rootRef.current;
     if (!current) {
@@ -124,37 +137,31 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
     return { clientXLeft, width };
   }, []);
 
-  const handleReframeMouseMove = useCallback(
-    ({ value }: DraggingUpdate) => {
-      const [viewStart, viewEnd] = viewRangeTime.current;
-      const cursor = mapFromViewSubRange(viewStart, viewEnd, value);
-      updateNextViewRangeTime({ cursor });
-    },
-    [viewRangeTime, updateNextViewRangeTime]
-  );
+  const handleReframeMouseMove = useCallback(({ value }: DraggingUpdate) => {
+    const [viewStart, viewEnd] = viewRangeTimeRef.current.current;
+    const cursor = mapFromViewSubRange(viewStart, viewEnd, value);
+    updateNextViewRangeTimeRef.current({ cursor });
+  }, []);
 
   const handleReframeMouseLeave = useCallback(() => {
-    updateNextViewRangeTime({ cursor: undefined });
-  }, [updateNextViewRangeTime]);
+    updateNextViewRangeTimeRef.current({ cursor: undefined });
+  }, []);
 
-  const getAnchorAndShift = useCallback(
-    (value: number) => {
-      const { current, reframe } = viewRangeTime;
-      const [viewStart, viewEnd] = current;
-      const shift = mapFromViewSubRange(viewStart, viewEnd, value);
-      const anchor = reframe ? reframe.anchor : shift;
-      return { anchor, shift };
-    },
-    [viewRangeTime]
-  );
+  const getAnchorAndShift = useCallback((value: number) => {
+    const { current, reframe } = viewRangeTimeRef.current;
+    const [viewStart, viewEnd] = current;
+    const shift = mapFromViewSubRange(viewStart, viewEnd, value);
+    const anchor = reframe ? reframe.anchor : shift;
+    return { anchor, shift };
+  }, []);
 
   const handleReframeDragUpdate = useCallback(
     ({ value }: DraggingUpdate) => {
       const { anchor, shift } = getAnchorAndShift(value);
       const update = { reframe: { anchor, shift } };
-      updateNextViewRangeTime(update);
+      updateNextViewRangeTimeRef.current(update);
     },
-    [getAnchorAndShift, updateNextViewRangeTime]
+    [getAnchorAndShift]
   );
 
   const handleReframeDragEnd = useCallback(
@@ -162,11 +169,12 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
       const { anchor, shift } = getAnchorAndShift(value);
       const [start, end] = shift < anchor ? [shift, anchor] : [anchor, shift];
       manager.resetBounds();
-      updateViewRangeTime(start, end, 'timeline-header');
+      updateViewRangeTimeRef.current(start, end, 'timeline-header');
     },
-    [getAnchorAndShift, updateViewRangeTime]
+    [getAnchorAndShift]
   );
 
+  // DraggableManager is created once and stable across renders
   const draggerReframe = useMemo(
     () =>
       new DraggableManager({
@@ -187,12 +195,8 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
   );
 
   // Reset bounds when boundsInvalidator changes
-  const prevBoundsInvalidatorRef = useRef(boundsInvalidator);
   useEffect(() => {
-    if (prevBoundsInvalidatorRef.current !== boundsInvalidator) {
-      draggerReframe.resetBounds();
-      prevBoundsInvalidatorRef.current = boundsInvalidator;
-    }
+    draggerReframe.resetBounds();
   }, [boundsInvalidator, draggerReframe]);
 
   // Cleanup on unmount
