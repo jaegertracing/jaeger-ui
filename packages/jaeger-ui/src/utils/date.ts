@@ -8,7 +8,7 @@ import _duration, { DurationUnitType } from 'dayjs/plugin/duration';
 
 import { toFloatPrecision } from './number';
 import { Microseconds } from '../types/units';
-import { getTimeFormat } from './time-format';
+import { getTimeFormatWithSeconds, getTimeFormatWithoutSeconds } from './time-format';
 
 dayjs.extend(_duration);
 
@@ -88,7 +88,7 @@ export function formatDate(duration: number): string {
  * ```
  */
 export function formatTime(duration: number): string {
-  return dayjs(duration / ONE_MILLISECOND).format(`${getTimeFormat(false)}`);
+  return dayjs(duration / ONE_MILLISECOND).format(`${getTimeFormatWithoutSeconds()}`);
 }
 
 /**
@@ -101,7 +101,7 @@ export function formatTime(duration: number): string {
  * ```
  */
 export function formatDatetime(duration: number): string {
-  return dayjs(duration / ONE_MILLISECOND).format(`MMMM D YYYY, ${getTimeFormat(true)}.SSS`);
+  return dayjs(duration / ONE_MILLISECOND).format(`MMMM D YYYY, ${getTimeFormatWithSeconds()}.SSS`);
 }
 
 /**

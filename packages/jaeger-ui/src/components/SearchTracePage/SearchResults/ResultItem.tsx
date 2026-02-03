@@ -20,7 +20,7 @@ import { formatRelativeDate } from '../../../utils/date';
 import { IOtelTrace, StatusCode } from '../../../types/otel';
 
 import './ResultItem.css';
-import { getTimeFormat } from '../../../utils/time-format';
+import { getTimeFormatWithSeconds } from '../../../utils/time-format';
 import { getConfigValue } from '../../../utils/config/get-config';
 
 dayjs.extend(relativeTime);
@@ -56,7 +56,7 @@ export default function ResultItem({
 
   React.useEffect(() => {
     const startTimeDayjs = dayjs(startTime / 1000);
-    setTimeStr(startTimeDayjs.format(getTimeFormat(true)));
+    setTimeStr(startTimeDayjs.format(getTimeFormatWithSeconds()));
     setFromNow(startTimeDayjs.fromNow());
 
     const errored = new Set<string>();
@@ -126,7 +126,7 @@ export default function ResultItem({
           <Col span={4} className="ub-p3 ub-tx-right-align">
             {formatRelativeDate(startTime / 1000)}
             <Divider vertical />
-            {timeStr}
+            {is24h ? timeStr : `${timeStr.slice(0, -3)}&nbsp;${timeStr.slice(-3)}`}
             <br />
             <small>{fromNow}</small>
           </Col>

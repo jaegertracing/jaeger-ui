@@ -19,7 +19,7 @@ import { FALLBACK_TRACE_NAME } from '../../../constants';
 import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
 
 import './ScatterPlot.css';
-import { getTimeFormat } from '../../../utils/time-format';
+import { getTimeFormatWithSeconds } from '../../../utils/time-format';
 
 export type TScatterPlotPoint = {
   x: number;
@@ -156,7 +156,7 @@ export default function ScatterPlot({
               name="Time"
               domain={[xMin, xMax]}
               ticks={generateUniqueTicks(xMin, xMax, 10)}
-              tickFormatter={t => dayjs(t / ONE_MILLISECOND).format(getTimeFormat(true))}
+              tickFormatter={t => dayjs(t / ONE_MILLISECOND).format(getTimeFormatWithSeconds())}
               tick={{ fontSize: 11, dy: 5 }}
               axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
               tickLine={{ stroke: '#e6e6e9', strokeWidth: 1 }}

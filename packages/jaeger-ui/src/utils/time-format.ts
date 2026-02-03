@@ -1,11 +1,17 @@
 import { getConfigValue } from './config/get-config';
 
-export function getTimeFormat(withSeconds = true) {
-  const timeformat = getConfigValue('timeFormat');
-  if (timeformat === '24h') {
-    return withSeconds ? 'HH:mm:ss' : 'HH:mm';
+export function getTimeFormatWithSeconds() {
+  const timeFormat = getConfigValue('timeFormat');
+  if (timeFormat.toLowerCase() === '24h') {
+    return 'HH:mm:ss';
   }
+  return 'hh:mm:ss a';
+}
 
-  // default to 12h
-  return withSeconds ? 'hh:mm:ss a' : 'hh:mm a';
+export function getTimeFormatWithoutSeconds() {
+  const timeFormat = getConfigValue('timeFormat');
+  if (timeFormat.toLowerCase() === '24h') {
+    return 'HH:mm';
+  }
+  return 'hh:mm a';
 }

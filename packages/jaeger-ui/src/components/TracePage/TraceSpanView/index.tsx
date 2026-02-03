@@ -8,11 +8,10 @@ import { ColumnProps } from 'antd/es/table';
 import './index.css';
 import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
-import { formatDuration, formatDurationCompact } from '../../../utils/date';
+import { formatDuration, formatDurationCompact, formatDatetime } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import SearchableSelect from '../../common/SearchableSelect';
-import { getTimeFormat } from '../../../utils/time-format';
 
 type FilterType = 'serviceName' | 'operationName';
 
@@ -222,9 +221,7 @@ export default class TraceSpanView extends Component<Props, State> {
           const compactValue = formatDurationCompact(span.relativeStartTime);
 
           return (
-            <Tooltip
-              title={`${dayjs(span.startTime / 1000).format(`DD MMM YYYY ${getTimeFormat(true)}`)} (${preciseValue})`}
-            >
+            <Tooltip title={`${formatDatetime(span.startTime)} (${preciseValue})`}>
               <span
                 style={{ fontFamily: 'monospace', fontSize: '12px', display: 'block', textAlign: 'right' }}
               >
