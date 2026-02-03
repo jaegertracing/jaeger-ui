@@ -109,6 +109,8 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     if (needForDiffs.length) {
       fetchMultipleTraces(needForDiffs);
     }
+    // Intentionally run only on mount, we only want to trigger the initial search
+    // and fetch diff traces once when the component loads, not on every state change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
