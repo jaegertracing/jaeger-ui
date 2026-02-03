@@ -34,20 +34,6 @@ export const searchTraces = createAction(
   (query: Record<string, any>) => ({ query })
 );
 
-export const fetchServices = createAction('@JAEGER_API/FETCH_SERVICES', () => JaegerAPI.fetchServices());
-
-export const fetchServiceOperations = createAction(
-  '@JAEGER_API/FETCH_SERVICE_OPERATIONS',
-  (serviceName: string) => JaegerAPI.fetchServiceOperations(serviceName),
-  (serviceName: string) => ({ serviceName })
-);
-
-export const fetchServiceServerOps = createAction(
-  '@JAEGER_API/FETCH_SERVICE_SERVER_OP',
-  (serviceName: string) => JaegerAPI.fetchServiceServerOps(serviceName),
-  (serviceName: string) => ({ serviceName })
-);
-
 export const fetchDeepDependencyGraph = createAction(
   '@JAEGER_API/FETCH_DEEP_DEPENDENCY_GRAPH',
   (query: Record<string, any>) => JaegerAPI.fetchDeepDependencyGraph(query),
