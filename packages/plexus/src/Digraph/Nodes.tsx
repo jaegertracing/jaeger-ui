@@ -1,4 +1,5 @@
 // Copyright (c) 2026 The Jaeger Authors.
+// Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
@@ -16,8 +17,8 @@ type TProps<T = {}> = TNodeRenderer<T> & {
   renderUtils: TRendererUtils;
 };
 
-// Comparison function that mirrors the original shouldComponentUpdate logic
-// Exported for testing purposes
+// Custom comparator for React.memo because setOnNode can be an array,
+// which requires element-wise comparison via isSamePropSetter.
 export function arePropsEqual<T>(prev: TProps<T>, next: TProps<T>): boolean {
   return (
     prev.renderNode === next.renderNode &&
@@ -29,14 +30,14 @@ export function arePropsEqual<T>(prev: TProps<T>, next: TProps<T>): boolean {
   );
 }
 
-const Nodes = <T = {},>({
+function Nodes<T = {}>({
   getClassName,
   layoutVertices,
   renderUtils,
   layerType,
   renderNode,
   setOnNode,
-}: TProps<T>) => {
+}: TProps<T>) {
   return layoutVertices.map(lv => (
     <Node
       key={lv.vertex.key}
@@ -48,6 +49,6 @@ const Nodes = <T = {},>({
       setOnNode={setOnNode}
     />
   ));
-};
+}
 
 export default React.memo(Nodes, arePropsEqual) as unknown as typeof Nodes;
