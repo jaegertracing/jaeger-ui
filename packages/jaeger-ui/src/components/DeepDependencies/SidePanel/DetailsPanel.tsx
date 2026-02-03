@@ -40,11 +40,6 @@ export function UnconnectedDetailsPanel(props: TProps) {
   const operation = _op && !Array.isArray(_op) ? _op : undefined;
 
   const fetchDetails = useCallback(() => {
-    // Reset state at the beginning of fetch
-    setDetails(undefined);
-    setDetailsErred(false);
-    setDetailsLoading(true);
-
     const { detailUrl, detailPath, detailColumnDefPath, opDetailUrl, opDetailPath, opDetailColumnDefPath } =
       decorationSchema;
 
@@ -62,6 +57,11 @@ export function UnconnectedDetailsPanel(props: TProps) {
     }
 
     if (!fetchUrl || !getDetailPath) return;
+
+    // Reset state after validating we have a URL to fetch
+    setDetails(undefined);
+    setDetailsErred(false);
+    setDetailsLoading(true);
 
     JaegerAPI.fetchDecoration(fetchUrl)
       .then((res: unknown) => {

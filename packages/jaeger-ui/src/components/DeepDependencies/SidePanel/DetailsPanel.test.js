@@ -93,6 +93,20 @@ describe('<SidePanel>', () => {
       expect(fetchDecorationSpy).not.toHaveBeenCalled();
       component3.unmount();
     });
+
+    it('does not leave loading state when schema has no URLs', () => {
+      const { container } = render(
+        <DetailsPanel
+          service={service}
+          decorationSchema={{
+            name: 'Test without URLs',
+          }}
+        />
+      );
+      expect(fetchDecorationSpy).not.toHaveBeenCalled();
+      // Should not be stuck in loading state when no URL/path is configured
+      expect(container.querySelector('.Ddg--DetailsPanel--LoadingWrapper')).not.toBeInTheDocument();
+    });
   });
 
   describe('render', () => {
