@@ -4,7 +4,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Tooltip } from 'antd';
 import _get from 'lodash/get';
-import { useSelector } from 'react-redux';
+import { shallowEqual, useSelector } from 'react-redux';
 
 import BreakableText from '../../common/BreakableText';
 import DetailsCard from '../../common/DetailsCard';
@@ -147,9 +147,12 @@ export const UnconnectedDetailsPanel = React.memo(function UnconnectedDetailsPan
 });
 
 const DetailsPanel: React.FC<TOwnProps> = props => {
-  const decorationState = useSelector((state: ReduxState) => extractDecorationFromState(state, props));
+  const decorationState = useSelector(
+    (state: ReduxState) => extractDecorationFromState(state, props),
+    shallowEqual
+  );
 
   return <UnconnectedDetailsPanel {...props} {...decorationState} />;
 };
 
-export default React.memo(DetailsPanel);
+export default DetailsPanel;
