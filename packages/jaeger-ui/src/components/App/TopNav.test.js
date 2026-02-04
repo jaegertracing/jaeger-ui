@@ -63,7 +63,6 @@ jest.mock('../../utils/config/get-config', () => {
   };
 });
 
-
 describe('<TopNav>', () => {
   const labelGitHub = 'GitHub';
   const githubUrl = 'https://github.com/uber/jaeger';
