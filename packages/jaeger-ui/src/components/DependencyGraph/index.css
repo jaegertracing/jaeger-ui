@@ -14,10 +14,10 @@ SPDX-License-Identifier: Apache-2.0
 
 [data-theme='dark'] .DependencyGraph--graphWrapper,
 body[data-theme='dark'] .DependencyGraph--graphWrapper {
-  background: #162338 !important;
+  background: var(--surface-secondary);
 }
 
-.rv-force__node {
+.rv-force__node {good
   fill: #11939a;
   cursor: pointer;
 }
