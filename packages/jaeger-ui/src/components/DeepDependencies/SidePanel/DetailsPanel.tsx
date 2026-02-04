@@ -1,7 +1,6 @@
 // Copyright (c) 2020 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { Tooltip } from 'antd';
 import _get from 'lodash/get';
