@@ -43,6 +43,11 @@ export function UnconnectedDetailsPanel(props: TProps) {
     const { detailUrl, detailPath, detailColumnDefPath, opDetailUrl, opDetailPath, opDetailColumnDefPath } =
       decorationSchema;
 
+    // Reset state first to clear any previous details when switching schemas
+    setDetails(undefined);
+    setDetailsErred(false);
+    setDetailsLoading(false);
+
     let fetchUrl: string | undefined;
     let getDetailPath: string | undefined;
     let getDefPath: string | undefined;
@@ -58,9 +63,6 @@ export function UnconnectedDetailsPanel(props: TProps) {
 
     if (!fetchUrl || !getDetailPath) return;
 
-    // Reset state after validating we have a URL to fetch
-    setDetails(undefined);
-    setDetailsErred(false);
     setDetailsLoading(true);
 
     JaegerAPI.fetchDecoration(fetchUrl)
