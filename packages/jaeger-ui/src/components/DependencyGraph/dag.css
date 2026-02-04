@@ -45,6 +45,7 @@ html[data-theme='dark'] .DAG--dag {
 }
 
 .DAG--nodeCircle {
+  position: relative;
   background-color: var(--surface-secondary, #fff);
   border-radius: 50%;
   height: 6rem; /* Large size (~96px) */
