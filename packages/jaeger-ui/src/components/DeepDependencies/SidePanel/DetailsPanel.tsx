@@ -62,12 +62,15 @@ export const UnconnectedDetailsPanel = React.memo(function UnconnectedDetailsPan
       getDefPath = detailColumnDefPath && stringSupplant(detailColumnDefPath, { service });
     }
 
-    if (!fetchUrl || !getDetailPath) return;
+    if (!fetchUrl || !getDetailPath) return undefined;
+
+    let isCancelled = false;
 
     setDetailsLoading(true);
 
     JaegerAPI.fetchDecoration(fetchUrl)
       .then((res: unknown) => {
+        if (isCancelled) return;
         let erred = false;
         let fetchedDetails = _get(res, getDetailPath as string);
         if (fetchedDetails === undefined) {
@@ -82,10 +85,15 @@ export const UnconnectedDetailsPanel = React.memo(function UnconnectedDetailsPan
         setDetailsLoading(false);
       })
       .catch((err: Error) => {
+        if (isCancelled) return;
         setDetails(`Unable to fetch decoration: ${err.message || err}`);
         setDetailsErred(true);
         setDetailsLoading(false);
       });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [operation, service, decorationSchema]);
 
   const onResize = useCallback((newWidth: number) => {
