@@ -11,19 +11,6 @@ import SearchableSelect from '../../common/SearchableSelect';
 import generateColor from './generateColor';
 import './TraceStatisticsHeader.css';
 
-/**
- * Props for the TraceStatisticsHeader component.
- * @property {IOtelTrace} trace - The OpenTelemetry trace object containing trace information.
- * @property {ITableSpan[]} tableValue - The current filtered or displayed span data in the table.
- * @property {ITableSpan[]} wholeTable - The complete unfiltered span data for the entire trace.
- * @property {function} handler - Callback function to handle table value changes and selections.
- *   @param {ITableSpan[]} tableValue - The current table span values.
- *   @param {ITableSpan[]} wholeTable - The complete table span values.
- *   @param {string} valueNameSelector1 - The primary value selector name.
- *   @param {string | null} valueNameSelector2 - The optional secondary value selector name.
- * @property {boolean} useOtelTerms - Flag to determine whether to use OpenTelemetry terminology in the UI.
- */
-
 type Props = {
   trace: IOtelTrace;
   tableValue: ITableSpan[];
@@ -53,9 +40,10 @@ const optionsNameSelector3 = new Map([
 const TraceStatisticsHeader: React.FC<Props> = (props: Props) => {
   const { trace, tableValue, wholeTable, handler, useOtelTerms } = props;
 
-  // This ensures that the service name is only computed once on initial render
-  const initialServiceName = getServiceName();
+  // Memoized initial service name computed once on mount
+  const initialServiceName = useMemo(() => getServiceName(), []);
 
+  // State management for dropdown selections and checkbox
   const [valueNameSelector1, setValueNameSelector1State] = useState<string>(initialServiceName);
   const [valueNameSelector2, setValueNameSelector2State] = useState<string | null>(null);
   const [valueNameSelector3, setValueNameSelector3State] = useState<string>('Count');
@@ -75,6 +63,7 @@ const TraceStatisticsHeader: React.FC<Props> = (props: Props) => {
     );
   }, []);
 
+  // Callback function that handles the selection of the first value name selector.
   const setValueNameSelector1 = useCallback(
     (value: string) => {
       setValueNameSelector1State(value);
@@ -153,6 +142,7 @@ const TraceStatisticsHeader: React.FC<Props> = (props: Props) => {
     handler(newTableValue, newWholeTable, valueNameSelector1, null);
   }, [valueNameSelector1, trace, useOtelTerms, handler, checkboxStatus, getColorValue]);
 
+  // Memoized dropdown value options generated from the trace data and OTel terminology preference.
   const optionsNameSelector1 = useMemo(
     () => generateDropdownValue(trace, useOtelTerms),
     [trace, useOtelTerms]
