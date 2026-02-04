@@ -44,6 +44,10 @@ export const UnconnectedDetailsPanel = React.memo(function UnconnectedDetailsPan
     const { detailUrl, detailPath, detailColumnDefPath, opDetailUrl, opDetailPath, opDetailColumnDefPath } =
       decorationSchema;
 
+    setDetails(undefined);
+    setDetailsErred(false);
+    setDetailsLoading(false);
+
     let fetchUrl: string | undefined;
     let getDetailPath: string | undefined;
     let getDefPath: string | undefined;
@@ -60,8 +64,6 @@ export const UnconnectedDetailsPanel = React.memo(function UnconnectedDetailsPan
 
     if (!fetchUrl || !getDetailPath) return;
 
-    setDetails(undefined);
-    setDetailsErred(false);
     setDetailsLoading(true);
 
     JaegerAPI.fetchDecoration(fetchUrl)
