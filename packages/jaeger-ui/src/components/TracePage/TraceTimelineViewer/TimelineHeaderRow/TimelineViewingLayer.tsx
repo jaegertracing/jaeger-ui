@@ -194,9 +194,13 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
     ]
   );
 
-  // Reset bounds when boundsInvalidator changes
+  // Reset bounds when boundsInvalidator changes, but not on initial mount
+  const prevBoundsInvalidatorRef = useRef(boundsInvalidator);
   useEffect(() => {
-    draggerReframe.resetBounds();
+    if (prevBoundsInvalidatorRef.current !== boundsInvalidator) {
+      draggerReframe.resetBounds();
+      prevBoundsInvalidatorRef.current = boundsInvalidator;
+    }
   }, [boundsInvalidator, draggerReframe]);
 
   // Cleanup on unmount
