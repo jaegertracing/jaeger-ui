@@ -94,7 +94,7 @@ describe('<SidePanel>', () => {
       component3.unmount();
     });
 
-    it('does not leave loading state when schema has no URLs', () => {
+    it('does not enter loading state when schema has no URLs', () => {
       const { container } = render(
         <DetailsPanel
           service={service}
