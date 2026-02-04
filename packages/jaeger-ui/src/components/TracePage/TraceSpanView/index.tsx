@@ -27,53 +27,94 @@ export default function TraceSpanView({
   useOtelTerms: boolean;
 }) {
   const [data, setData] = useState<ReadonlyArray<IOtelSpan>>([]);
-  const [serviceNamesList, setServiceNamesList] = useState<string[]>([]);
-  const [operationNamesList, setOperationNamesList] = useState<string[]>([]);
-  const [serviceToOperationsMap, setServiceToOperationsMap] = useState<Map<string, string[]>>(new Map());
+  const [svcNamesList, setSvcNamesList] = useState<string[]>([]);
+  const [opNamesList, setOpNamesList] = useState<string[]>([]);
+  const [svcToOperationsMap, setSvcToOperationsMap] = useState<Map<string, string[]>>(new Map());
   const [filters, setFilters] = useState<Record<FilterType, string[]>>({} as Record<FilterType, string[]>);
   const [filteredData, setFilteredData] = useState<readonly IOtelSpan[]>([]);
-  const [maxDuration, setMaxDuration] = useState<number>(0);
+  const [maximumDuration, setMaximumDuration] = useState<number>(0);
 
   useEffect(() => {
     const serviceNamesSet = new Set<string>();
     const operationNamesSet = new Set<string>();
-    const svcToOperationsMap = new Map<string, Set<string>>();
-
-    setData(trace.spans);
-    setFilteredData(trace.spans);
-
-    let serviceNamesListSorted: string[];
-    let operationNamesListSorted: string[];
-    const sortedServiceToOperationsMap = new Map<string, string[]>();
+    const serviceToOperationsMap = new Map<string, Set<string>>();
 
     trace.spans.forEach(span => {
       const serviceName = span.resource.serviceName;
       serviceNamesSet.add(serviceName);
       operationNamesSet.add(span.name);
 
-      if (!svcToOperationsMap.has(serviceName)) {
-        svcToOperationsMap.set(serviceName, new Set<string>());
+      if (!serviceToOperationsMap.has(serviceName)) {
+        serviceToOperationsMap.set(serviceName, new Set<string>());
       }
-      svcToOperationsMap.get(serviceName)!.add(span.name);
+      serviceToOperationsMap.get(serviceName)!.add(span.name);
     });
 
     // Sort alphabetically for better UX
-    serviceNamesListSorted = [...serviceNamesSet].sort();
-    operationNamesListSorted = [...operationNamesSet].sort();
+    const serviceNamesList = [...serviceNamesSet].sort();
+    const operationNamesList = [...operationNamesSet].sort();
 
     // Convert operation sets to sorted arrays
-    svcToOperationsMap.forEach((operations, servName) => {
-      sortedServiceToOperationsMap.set(servName, [...operations].sort());
+    const sortedServiceToOperationsMap = new Map<string, string[]>();
+    serviceToOperationsMap.forEach((operations, serviceName) => {
+      sortedServiceToOperationsMap.set(serviceName, [...operations].sort());
     });
 
     // Compute max duration once for the entire trace
-    const maximumDuration = Math.max(...trace.spans.map(s => s.duration), 1);
+    const maxDuration = Math.max(...trace.spans.map(s => s.duration), 1);
 
-    setServiceNamesList(() => [...serviceNamesListSorted]);
-    setOperationNamesList(() => [...operationNamesListSorted]);
-    setServiceToOperationsMap(sortedServiceToOperationsMap);
-    setMaxDuration(maximumDuration);
+    setData(trace.spans);
+    setFilteredData(trace.spans);
+    setSvcNamesList(serviceNamesList);
+    setOpNamesList(operationNamesList);
+    setSvcToOperationsMap(sortedServiceToOperationsMap);
+    setMaximumDuration(maxDuration);
   }, []);
+
+  function handleResetFilter() {
+    setFilters({} as Record<FilterType, string[]>);
+    setFilteredData(data);
+  }
+
+  function uniqueOperationNameOptions() {
+    let operationNamesList: string[];
+    if (filters.serviceName) {
+      const serviceToOperationsMap = svcToOperationsMap;
+      operationNamesList = filters.serviceName.flatMap(svc => serviceToOperationsMap.get(svc) || []);
+    } else {
+      operationNamesList = opNamesList;
+    }
+    return [...new Set(operationNamesList)]; // take distinct values
+  }
+
+  function onFilteredChangeCustom(selectedValues: string[], filterType: FilterType) {
+    // Update the filter state
+    const newFilters = {
+      ...filters,
+      [filterType]: selectedValues,
+    } as Record<FilterType, string[]>;
+
+    // Filter spans: a span passes if it matches all active filters
+    const newFilteredData = data.filter(span => {
+      if (newFilters.serviceName && newFilters.serviceName.length > 0) {
+        if (!newFilters.serviceName.includes(span.resource.serviceName)) {
+          return false;
+        }
+      }
+
+      // Check operationName filter (if active)
+      if (newFilters.operationName && newFilters.operationName.length > 0) {
+        if (!newFilters.operationName.includes(span.name)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    setFilters(newFilters);
+    setFilteredData(newFilteredData);
+  }
 
   const columns: ColumnProps<IOtelSpan>[] = [
     {
@@ -108,7 +149,7 @@ export default function TraceSpanView({
       title: 'Duration',
       sorter: (a, b) => a.duration - b.duration,
       render: (_, span) => {
-        const percentage = (span.duration / maxDuration) * 100;
+        const percentage = (span.duration / maximumDuration) * 100;
         const preciseValue = formatDuration(span.duration);
         const compactValue = formatDurationCompact(span.duration);
 
@@ -178,51 +219,6 @@ export default function TraceSpanView({
     },
   ];
 
-  function onFilteredChangeCustom(selectedValues: string[], filterType: FilterType) {
-    // Update the filter state
-    const newFilters = {
-      ...filters,
-      [filterType]: selectedValues,
-    } as Record<FilterType, string[]>;
-
-    // Filter spans: a span passes if it matches all active filters
-    const temp = data.filter(span => {
-      if (newFilters.serviceName && newFilters.serviceName.length > 0) {
-        if (!newFilters.serviceName.includes(span.resource.serviceName)) {
-          return false;
-        }
-      }
-
-      // Check operationName filter (if active)
-      if (newFilters.operationName && newFilters.operationName.length > 0) {
-        if (!newFilters.operationName.includes(span.name)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-
-    setFilters(newFilters);
-    setFilteredData(temp);
-  }
-
-  function uniqueOperationNameOptions() {
-    let opNamesList: string[];
-    if (filters.serviceName) {
-      // const serviceToOperationsMap = serviceToOperationsMap;
-      opNamesList = filters.serviceName.flatMap(svc => serviceToOperationsMap.get(svc) || []);
-    } else {
-      opNamesList = operationNamesList;
-    }
-    return [...new Set(opNamesList)]; // take distinct values
-  }
-
-  function handleResetFilter() {
-    setFilters({} as Record<FilterType, string[]>);
-    setFilteredData(data);
-  }
-
   return (
     <div>
       <h3 className="title--TraceSpanView"> Trace Tabular View</h3>
@@ -257,7 +253,7 @@ export default function TraceSpanView({
             }}
             data-testid="select-service"
           >
-            {serviceNamesList.map(name => {
+            {svcNamesList.map(name => {
               return (
                 <Select.Option value={name} key={name}>
                   {name}{' '}
