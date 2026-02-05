@@ -65,7 +65,7 @@ export default function TraceStatisticsHeader(props: Props) {
       serviceName,
       null
     );
-  }, []);
+  }, [handler, trace, useOtelTerms]);
 
   /**
    * Is called after a value from the first dropdown is selected.
