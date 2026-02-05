@@ -8,7 +8,6 @@ SPDX-License-Identifier: Apache-2.0
   align-items: center;
   height: 100%;
   flex-shrink: 0;
-  min-width: fit-content;
   gap: 6px;
   padding-right: 12px;
 }
@@ -30,7 +29,6 @@ SPDX-License-Identifier: Apache-2.0
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: fit-content;
 }
 
 .Branding:hover .Branding--name {

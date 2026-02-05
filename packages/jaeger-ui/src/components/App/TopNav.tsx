@@ -162,7 +162,7 @@ export function TopNavImpl(props: Props) {
         selectable={false}
         disabledOverflow
         selectedKeys={[pathname]}
-        style={{ flex: '0 0 auto', minWidth: 'fit-content' }}
+        style={{ flex: '0 0 auto' }}
       />
     </div>
   );
