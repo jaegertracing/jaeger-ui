@@ -64,7 +64,7 @@ function getNextViewLayout(start: number, position: number) {
  * handles showing the current view range and handles mouse UX for modifying it.
  */
 const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, ref: React.Ref<unknown>) {
-  const { height, numTicks, updateViewRangeTime, updateNextViewRangeTime, viewRange } = props;
+  const { height, numTicks, updateViewRangeTime, viewRange } = props;
 
   /**
    * Cursor line should not be drawn when the mouse is over the scrubber handle.
