@@ -48,21 +48,36 @@ const NUM_TICKS = 5;
  */
 
 export const TraceTimelineViewerImpl = (props: TProps) => {
+  const {
+    collapseAll: collapseAllAction,
+    collapseOne: collapseOneAction,
+    expandAll: expandAllAction,
+    expandOne: expandOneAction,
+    setSpanNameColumnWidth,
+    updateNextViewRangeTime,
+    updateViewRangeTime,
+    viewRange,
+    trace,
+    spanNameColumnWidth,
+    useOtelTerms,
+    ...rest
+  } = props;
+
   const collapseAll = useCallback(() => {
-    props.collapseAll(props.trace.spans);
-  }, [props.collapseAll, props.trace.spans]);
+    collapseAllAction(trace.spans);
+  }, [collapseAllAction, trace.spans]);
 
   const collapseOne = useCallback(() => {
-    props.collapseOne(props.trace.spans);
-  }, [props.collapseOne, props.trace.spans]);
+    collapseOneAction(trace.spans);
+  }, [collapseOneAction, trace.spans]);
 
   const expandAll = useCallback(() => {
-    props.expandAll();
-  }, [props.expandAll]);
+    expandAllAction();
+  }, [expandAllAction]);
 
   const expandOne = useCallback(() => {
-    props.expandOne(props.trace.spans);
-  }, [props.expandOne, props.trace.spans]);
+    expandOneAction(trace.spans);
+  }, [expandOneAction, trace.spans]);
 
   useEffect(() => {
     mergeShortcuts({
@@ -72,9 +87,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       expandOne,
     });
   }, [collapseAll, expandAll, collapseOne, expandOne]);
-
-  const { setSpanNameColumnWidth, updateNextViewRangeTime, updateViewRangeTime, viewRange, ...rest } = props;
-  const { spanNameColumnWidth, trace } = rest;
 
   return (
     <div className="TraceTimelineViewer">
@@ -90,9 +102,14 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
         viewRangeTime={viewRange.time}
         updateNextViewRangeTime={updateNextViewRangeTime}
         updateViewRangeTime={updateViewRangeTime}
-        useOtelTerms={props.useOtelTerms}
+        useOtelTerms={useOtelTerms}
       />
-      <VirtualizedTraceView {...rest} currentViewRangeTime={viewRange.time.current} />
+      <VirtualizedTraceView
+        {...rest}
+        trace={trace}
+        useOtelTerms={useOtelTerms}
+        currentViewRangeTime={viewRange.time.current}
+      />
     </div>
   );
 };
