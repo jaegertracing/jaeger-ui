@@ -3,7 +3,7 @@
 
 import { Button } from 'antd';
 import cx from 'classnames';
-import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 
 import GraphTicks from './GraphTicks';
 import Scrubber from './Scrubber';
@@ -64,7 +64,7 @@ function getNextViewLayout(start: number, position: number) {
  * handles showing the current view range and handles mouse UX for modifying it.
  */
 const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, ref: React.Ref<unknown>) {
-  const { height, numTicks, updateViewRangeTime, viewRange } = props;
+  const { height, numTicks, viewRange } = props;
 
   /**
    * Cursor line should not be drawn when the mouse is over the scrubber handle.
@@ -74,24 +74,6 @@ const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, 
   const _root = useRef<Element | TNil>(undefined);
   const propsRef = useRef(props);
   propsRef.current = props;
-
-  /**
-   * `_draggerReframe` handles clicking and dragging on the `ViewingLayer` to
-   * redefined the view range.
-   */
-  const _draggerReframe = useRef<DraggableManager | null>(null);
-
-  /**
-   * `_draggerStart` handles dragging the left scrubber to adjust the start of
-   * the view range.
-   */
-  const _draggerStart = useRef<DraggableManager | null>(null);
-
-  /**
-   * `_draggerEnd` handles dragging the right scrubber to adjust the end of
-   * the view range.
-   */
-  const _draggerEnd = useRef<DraggableManager | null>(null);
 
   const _getDraggingBounds = (tag: string | TNil): DraggableBounds => {
     if (!_root.current) {
@@ -162,6 +144,7 @@ const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, 
     }
     manager.resetBounds();
     setPreventCursorLine(false);
+
     propsRef.current.updateViewRangeTime(update[0], update[1], 'minimap');
   };
 
@@ -169,7 +152,7 @@ const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, 
    * Resets the zoom to fully zoomed out.
    */
   const _resetTimeZoomClickHandler = () => {
-    updateViewRangeTime(0, 1);
+    propsRef.current.updateViewRangeTime(0, 1);
   };
 
   /**
@@ -204,9 +187,12 @@ const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, 
     ];
   };
 
-  // Initialize DraggableManager instances once
-  if (!_draggerReframe.current) {
-    _draggerReframe.current = new DraggableManager({
+  /**
+   * `draggerReframe` handles clicking and dragging on the `ViewingLayer` to
+   * redefined the view range.
+   */
+  const [draggerReframe] = useState(() => {
+    return new DraggableManager({
       getBounds: _getDraggingBounds,
       onDragEnd: _handleReframeDragEnd,
       onDragMove: _handleReframeDragUpdate,
@@ -215,8 +201,14 @@ const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, 
       onMouseLeave: _handleReframeMouseLeave,
       tag: dragTypes.REFRAME,
     });
+  });
 
-    _draggerStart.current = new DraggableManager({
+  /**
+   * `draggerStart` handles dragging the left scrubber to adjust the start of
+   * the view range.
+   */
+  const [draggerStart] = useState(() => {
+    return new DraggableManager({
       getBounds: _getDraggingBounds,
       onDragEnd: _handleScrubberDragEnd,
       onDragMove: _handleScrubberDragUpdate,
@@ -225,8 +217,14 @@ const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, 
       onMouseLeave: _handleScrubberEnterLeave,
       tag: dragTypes.SHIFT_START,
     });
+  });
 
-    _draggerEnd.current = new DraggableManager({
+  /**
+   * `draggerEnd` handles dragging the right scrubber to adjust the end of
+   * the view range.
+   */
+  const [draggerEnd] = useState(() => {
+    return new DraggableManager({
       getBounds: _getDraggingBounds,
       onDragEnd: _handleScrubberDragEnd,
       onDragMove: _handleScrubberDragUpdate,
@@ -235,24 +233,25 @@ const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, 
       onMouseLeave: _handleScrubberEnterLeave,
       tag: dragTypes.SHIFT_END,
     });
-  }
+  });
 
   // Cleanup DraggableManager instances on unmount
   useEffect(() => {
     return () => {
-      _draggerReframe.current?.dispose();
-      _draggerEnd.current?.dispose();
-      _draggerStart.current?.dispose();
+      draggerReframe.dispose();
+      draggerStart.dispose();
+      draggerEnd.dispose();
     };
+  }, [draggerReframe, draggerStart, draggerEnd]);
+
+  const setRootCallback = useCallback((el: SVGSVGElement | null) => {
+    _root.current = el;
   }, []);
 
   // Expose instance methods via ref (backwards compatibility)
   useImperativeHandle(ref, () => ({
     get _root() {
       return _root.current;
-    },
-    set _root(el: Element | TNil) {
-      _root.current = el;
     },
     _setRoot: (el: Element | TNil) => {
       _root.current = el;
@@ -266,12 +265,6 @@ const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, 
     _handleScrubberEnterLeave,
     _handleScrubberDragUpdate,
     _handleScrubberDragEnd,
-    get state() {
-      return { preventCursorLine };
-    },
-    setState: (newState: { preventCursorLine: boolean }) => {
-      setPreventCursorLine(newState.preventCursorLine);
-    },
   }));
 
   const { current, cursor, shiftStart, shiftEnd, reframe } = viewRange.time;
@@ -300,10 +293,10 @@ const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, 
       <svg
         height={height}
         className="ViewingLayer--graph"
-        ref={_root as React.RefObject<SVGSVGElement>}
-        onMouseDown={_draggerReframe.current!.handleMouseDown}
-        onMouseLeave={_draggerReframe.current!.handleMouseLeave}
-        onMouseMove={_draggerReframe.current!.handleMouseMove}
+        ref={setRootCallback}
+        onMouseDown={draggerReframe.handleMouseDown}
+        onMouseLeave={draggerReframe.handleMouseLeave}
+        onMouseMove={draggerReframe.handleMouseMove}
       >
         {leftInactive > 0 && (
           <rect x={0} y={0} height="100%" width={`${leftInactive}%`} className="ViewingLayer--inactive" />
@@ -332,17 +325,17 @@ const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, 
         {shiftEnd != null && _getMarkers(viewEnd, shiftEnd, true)}
         <Scrubber
           isDragging={shiftStart != null}
-          onMouseDown={_draggerStart.current!.handleMouseDown}
-          onMouseEnter={_draggerStart.current!.handleMouseEnter}
-          onMouseLeave={_draggerStart.current!.handleMouseLeave}
+          onMouseDown={draggerStart.handleMouseDown}
+          onMouseEnter={draggerStart.handleMouseEnter}
+          onMouseLeave={draggerStart.handleMouseLeave}
           position={viewStart || 0}
         />
         <Scrubber
           isDragging={shiftEnd != null}
           position={viewEnd || 1}
-          onMouseDown={_draggerEnd.current!.handleMouseDown}
-          onMouseEnter={_draggerEnd.current!.handleMouseEnter}
-          onMouseLeave={_draggerEnd.current!.handleMouseLeave}
+          onMouseDown={draggerEnd.handleMouseDown}
+          onMouseEnter={draggerEnd.handleMouseEnter}
+          onMouseLeave={draggerEnd.handleMouseLeave}
         />
         {reframe != null && _getMarkers(reframe.anchor, reframe.shift, false)}
       </svg>

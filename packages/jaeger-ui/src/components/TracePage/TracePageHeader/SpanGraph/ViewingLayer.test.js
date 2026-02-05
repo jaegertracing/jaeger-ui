@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ViewingLayer, { dragTypes } from './ViewingLayer';
 import { EUpdateTypes } from '../../../../utils/DraggableManager';
@@ -39,7 +39,7 @@ describe('<SpanGraph>', () => {
     });
 
     it('throws if _root is not set', () => {
-      ref.current._root = null;
+      ref.current._setRoot(null);
       expect(() => ref.current._getDraggingBounds(dragTypes.REFRAME)).toThrow();
     });
 
@@ -161,14 +161,25 @@ describe('<SpanGraph>', () => {
     });
 
     describe('scrubber', () => {
-      it('prevents the cursor from being drawn on scrubber mouseover', () => {
-        fireEvent.mouseEnter(container.querySelectorAll('[data-testid="scrubber"]')[0]);
-        expect(ref.current.state.preventCursorLine).toBe(true);
+      beforeEach(() => {
+        // Ensure cursor is visible by default so we can test it gets hidden
+        // Must clone object to bypass React.memo shallow comparison
+        const newTime = { ...props.viewRange.time, cursor: 0.5 };
+        const newViewRange = { ...props.viewRange, time: newTime };
+        props = { ...props, viewRange: newViewRange };
+        rerender(<ViewingLayer ref={ref} {...props} />);
       });
 
-      it('prevents the cursor from being drawn on scrubber mouseleave', () => {
+      it('prevents the cursor from being drawn on scrubber mouseover', () => {
+        fireEvent.mouseEnter(container.querySelectorAll('[data-testid="scrubber"]')[0]);
+        expect(container.querySelector('.ViewingLayer--cursorGuide')).not.toBeInTheDocument();
+      });
+
+      it('prevents the cursor from being drawn on scrubber mouseleave', async () => {
         fireEvent.mouseLeave(container.querySelectorAll('[data-testid="scrubber"]')[0]);
-        expect(ref.current.state.preventCursorLine).toBe(false);
+        await waitFor(() =>
+          expect(container.querySelector('.ViewingLayer--cursorGuide')).toBeInTheDocument()
+        );
       });
 
       describe('drag start and update', () => {
@@ -195,7 +206,7 @@ describe('<SpanGraph>', () => {
         });
       });
 
-      it('updates the view on drag end', () => {
+      it('updates the view on drag end', async () => {
         const [start, end] = props.viewRange.time.current;
         const cases = [
           {
@@ -207,13 +218,23 @@ describe('<SpanGraph>', () => {
             expectArgs: [start, 0.5, 'minimap'],
           },
         ];
-        cases.forEach(({ update, expectArgs }) => {
-          ref.current.setState({ preventCursorLine: true });
+
+        for (const { update, expectArgs } of cases) {
+          // Simulate hiding cursor first (e.g. dragging started)
+          fireEvent.mouseEnter(container.querySelectorAll('[data-testid="scrubber"]')[0]);
+          expect(container.querySelector('.ViewingLayer--cursorGuide')).not.toBeInTheDocument();
+
+          // End drag
           ref.current._handleScrubberDragEnd(update);
-          expect(ref.current.state.preventCursorLine).toBe(false);
+
+          // Verify cursor returns
+          await waitFor(() =>
+            expect(container.querySelector('.ViewingLayer--cursorGuide')).toBeInTheDocument()
+          );
+
           expect(update.manager.resetBounds).toHaveBeenCalled();
           expect(props.updateViewRangeTime).toHaveBeenLastCalledWith(...expectArgs);
-        });
+        }
       });
     });
   });
