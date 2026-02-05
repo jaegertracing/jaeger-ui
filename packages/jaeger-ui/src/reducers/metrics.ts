@@ -306,7 +306,7 @@ function fetchOpsMetricsDone(
   return { ...state, serviceOpsMetrics, opsError, operationMetricsLoading: false };
 }
 
-export default handleActions(
+export default handleActions<MetricsReduxState, any>(
   {
     [`${fetchAllServiceMetrics}_PENDING`]: fetchStarted,
     [`${fetchAllServiceMetrics}_FULFILLED`]: fetchServiceMetricsDone,
