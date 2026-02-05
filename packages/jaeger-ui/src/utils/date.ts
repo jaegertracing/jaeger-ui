@@ -17,7 +17,6 @@ const YESTERDAY = 'Yesterday';
 
 export const STANDARD_DATE_FORMAT = 'YYYY-MM-DD';
 export const STANDARD_TIME_FORMAT = 'HH:mm';
-export const STANDARD_DATETIME_FORMAT = 'MMMM D YYYY, HH:mm:ss.SSS';
 
 /** @constant 1ms as the number of microseconds, which is the precision of Jaeger timestamps */
 export const ONE_MILLISECOND = 1000 * 1;

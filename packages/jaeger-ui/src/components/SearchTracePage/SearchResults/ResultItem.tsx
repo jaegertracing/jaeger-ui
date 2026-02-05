@@ -126,6 +126,9 @@ export default function ResultItem({
           <Col span={4} className="ub-p3 ub-tx-right-align">
             {formatRelativeDate(startTime / 1000)}
             <Divider vertical />
+            {/* For 12h format: slice off the trailing " am"/" pm" (including the preceding space),
+            keep only the suffix ("am"/"pm"), and re-join with &nbsp; for non-breaking layout.
+            For 24h: no suffix exists → use full timeStr without slicing to avoid corruption. */}
             {is24h ? timeStr : `${timeStr.slice(0, -3)}&nbsp;${timeStr.slice(-2)}`}
             <br />
             <small>{fromNow}</small>
