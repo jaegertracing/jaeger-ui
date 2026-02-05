@@ -15,7 +15,7 @@ type TProps<T = {}, U = {}> = Omit<TSvgLayersGroup<T, U>, 'layerType' | 'key'> &
 
 function SvgLayersGroup<T = {}, U = {}>(props: TProps<T, U>) {
   const { getClassName, layers, graphState } = props;
-  const renderLayers = React.useMemo(() => {
+  const renderLayers = () => {
     return layers.map(layer => {
       const { key, setOnContainer } = layer;
       if (layer.edges) {
@@ -47,11 +47,11 @@ function SvgLayersGroup<T = {}, U = {}>(props: TProps<T, U>) {
         />
       );
     });
-  }, [layers, getClassName, graphState]);
+  };
 
   return (
     <SvgLayer topLayer {...props} classNamePart="SvgLayersGroup">
-      {renderLayers}
+      {renderLayers()}
     </SvgLayer>
   );
 }
