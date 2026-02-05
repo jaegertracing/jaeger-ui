@@ -58,29 +58,15 @@ export function References(props: ReferenceItemProps) {
   );
 }
 
-type AccordionLinksDefaultProps = {
-  highContrast: boolean;
-  interactive: boolean;
-  onToggle: null | (() => void);
-};
-
-const defaultProps: AccordionLinksDefaultProps = {
-  highContrast: false,
-  interactive: true,
-  onToggle: null,
-};
-
-export default function AccordionLinks(props: AccordionLinksProps) {
-  const {
-    data,
-    highContrast = defaultProps.highContrast,
-    interactive = defaultProps.interactive,
-    isOpen,
-    onToggle = defaultProps.onToggle,
-    focusSpan,
-    useOtelTerms,
-  } = props;
-
+export default React.memo(function AccordionLinks({
+  data,
+  highContrast = false,
+  interactive = true,
+  isOpen,
+  onToggle = null,
+  focusSpan,
+  useOtelTerms,
+}: AccordionLinksProps) {
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordianKReferences--emptyIcon': isEmpty });
   let arrow: React.ReactNode | null = null;
@@ -114,4 +100,4 @@ export default function AccordionLinks(props: AccordionLinksProps) {
       {isOpen && <References data={data} focusSpan={focusSpan} />}
     </div>
   );
-}
+});
