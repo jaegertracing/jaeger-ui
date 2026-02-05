@@ -59,12 +59,8 @@ export default function TraceStatisticsHeader(props: Props) {
 
   useEffect(() => {
     const serviceName = getServiceName();
-    handler(
-      getColumnValues(serviceName, trace, useOtelTerms),
-      getColumnValues(serviceName, trace, useOtelTerms),
-      serviceName,
-      null
-    );
+    const columnValues = getColumnValues(serviceName, trace, useOtelTerms);
+    handler(columnValues, columnValues, serviceName, null);
   }, [handler, trace, useOtelTerms]);
 
   /**
@@ -74,17 +70,9 @@ export default function TraceStatisticsHeader(props: Props) {
     (value: string) => {
       setValueNameSelector1State(value);
       setValueNameSelector2State(null);
-      const newTableValue = generateColor(
-        getColumnValues(value, trace, useOtelTerms),
-        getValue(),
-        checkboxStatus
-      );
-      const newWholeTable = generateColor(
-        getColumnValues(value, trace, useOtelTerms),
-        getValue(),
-        checkboxStatus
-      );
-      handler(newTableValue, newWholeTable, value, null);
+      const columnValues = getColumnValues(value, trace, useOtelTerms);
+      const colored = generateColor(columnValues, getValue(), checkboxStatus);
+      handler(colored, colored, value, null);
     },
     [trace, useOtelTerms, getValue, checkboxStatus, handler]
   );
@@ -148,17 +136,9 @@ export default function TraceStatisticsHeader(props: Props) {
   const clearValue = useCallback(() => {
     setValueNameSelector2State(null);
 
-    const newTableValue = generateColor(
-      getColumnValues(valueNameSelector1, trace, useOtelTerms),
-      getValue(),
-      checkboxStatus
-    );
-    const newWholeTable = generateColor(
-      getColumnValues(valueNameSelector1, trace, useOtelTerms),
-      getValue(),
-      checkboxStatus
-    );
-    handler(newTableValue, newWholeTable, valueNameSelector1, null);
+    const columnValues = getColumnValues(valueNameSelector1, trace, useOtelTerms);
+    const colored = generateColor(columnValues, getValue(), checkboxStatus);
+    handler(colored, colored, valueNameSelector1, null);
   }, [valueNameSelector1, trace, useOtelTerms, getValue, checkboxStatus, handler]);
 
   const optionsNameSelector1 = generateDropdownValue(trace, useOtelTerms);
