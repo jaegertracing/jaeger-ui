@@ -5,6 +5,21 @@ SPDX-License-Identifier: Apache-2.0
 
 .TraceIDSearchInput--form {
   line-height: inherit;
+  min-width: 200px;
+  max-width: 400px;
+  width: 100%;
+  gap: 4px;
+}
+
+.TraceIDSearchInput--input {
+  width: 100%;
+  min-width: 200px;
+}
+
+.TraceIDSearchInput--input .ant-input {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 /* Dark styling for header search - nav is always dark */

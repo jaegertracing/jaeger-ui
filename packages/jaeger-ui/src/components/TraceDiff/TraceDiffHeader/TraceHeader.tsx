@@ -81,18 +81,20 @@ export default function TraceHeader({
   return (
     <div className="TraceDiffHeader--traceHeader" data-testid="TraceDiffHeader--traceHeader">
       <h1 className="TraceDiffHeader--traceTitle">
-        <span>
+        <div className="TraceDiffHeader--traceTitleText">
           {traceID ? (
             <React.Fragment>
               <TraceName key="name" traceName={traceName} error={error} state={state} />{' '}
               <TraceId key="id" traceId={traceID} className="ub-pr2" />
-              <TraceTimelineLink traceID={traceID} />
             </React.Fragment>
           ) : (
             <span className="u-tx-muted">Select a Trace...</span>
           )}
-        </span>
-        <IoChevronDown className="TraceDiffHeader--traceTitleChevron" />
+        </div>
+        <div className="TraceDiffHeader--traceTitleActions">
+          {traceID && <TraceTimelineLink traceID={traceID} />}
+          <IoChevronDown className="TraceDiffHeader--traceTitleChevron" />
+        </div>
       </h1>
       <AttrsComponent startTime={startTime} duration={duration} totalSpans={totalSpans} />
     </div>
