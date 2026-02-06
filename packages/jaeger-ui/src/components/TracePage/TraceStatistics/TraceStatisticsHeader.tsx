@@ -61,7 +61,7 @@ const TraceStatisticsHeader: React.FC<Props> = (props: Props) => {
       initialServiceName,
       null
     );
-  }, []);
+  }, [handler, initialServiceName, trace, useOtelTerms]);
 
   // Callback function that handles the selection of the first value name selector.
   const setValueNameSelector1 = useCallback(
