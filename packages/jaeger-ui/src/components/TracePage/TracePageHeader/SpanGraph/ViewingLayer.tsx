@@ -174,7 +174,7 @@ const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, 
         x={layout.x}
         y="0"
         width={layout.width}
-        height={height - 2}
+        height={propsRef.current.height - 2}
       />,
       <rect
         key="edge"
@@ -182,7 +182,7 @@ const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, 
         x={layout.leadingX}
         y="0"
         width="1"
-        height={height - 2}
+        height={propsRef.current.height - 2}
       />,
     ];
   };
@@ -249,23 +249,27 @@ const ViewingLayer = forwardRef(function ViewingLayer(props: ViewingLayerProps, 
   }, []);
 
   // Expose instance methods via ref (backwards compatibility)
-  useImperativeHandle(ref, () => ({
-    get _root() {
-      return _root.current;
-    },
-    _setRoot: (el: Element | TNil) => {
-      _root.current = el;
-    },
-    _getDraggingBounds,
-    _getMarkers,
-    _handleReframeMouseMove,
-    _handleReframeMouseLeave,
-    _handleReframeDragUpdate,
-    _handleReframeDragEnd,
-    _handleScrubberEnterLeave,
-    _handleScrubberDragUpdate,
-    _handleScrubberDragEnd,
-  }));
+  useImperativeHandle(
+    ref,
+    () => ({
+      get _root() {
+        return _root.current;
+      },
+      _setRoot: (el: Element | TNil) => {
+        _root.current = el;
+      },
+      _getDraggingBounds,
+      _getMarkers,
+      _handleReframeMouseMove,
+      _handleReframeMouseLeave,
+      _handleReframeDragUpdate,
+      _handleReframeDragEnd,
+      _handleScrubberEnterLeave,
+      _handleScrubberDragUpdate,
+      _handleScrubberDragEnd,
+    }),
+    []
+  );
 
   const { current, cursor, shiftStart, shiftEnd, reframe } = viewRange.time;
   const haveNextTimeRange = shiftStart != null || shiftEnd != null || reframe != null;
