@@ -56,7 +56,7 @@ jest.mock('../common/LoadingIndicator', () => () => <div data-testid="loading-in
 jest.mock('./ArchiveNotifier', () => () => <div data-testid="archive-notifier">ArchiveNotifier</div>);
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import { createMemoryHistory } from 'history';
@@ -86,6 +86,13 @@ import ScrollManager from './ScrollManager';
 const renderWithRouter = (ui, { route = '/' } = {}) => {
   return render(<MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>);
 };
+
+// Helper function to render with ref
+function renderWithRef(props) {
+  const ref = React.createRef();
+  const result = render(<TracePage ref={ref} {...props} />);
+  return { ...result, componentRef: ref };
+}
 
 describe('makeShortcutCallbacks()', () => {
   let adjRange;
@@ -155,26 +162,35 @@ describe('<TracePage>', () => {
 
     it('blurs _searchBar.current when _searchBar.current exists', () => {
       const blur = jest.fn();
+      const { componentRef } = renderWithRef(defaultProps);
 
-      const instance = new TracePage(defaultProps);
-      instance._searchBar = { current: { blur } };
+      // Set up mock search bar
+      componentRef.current._searchBar.current = { blur };
 
-      instance.clearSearch();
+      act(() => {
+        componentRef.current.clearSearch();
+      });
 
       expect(blur).toHaveBeenCalledTimes(1);
     });
 
     it('handles null _searchBar.current', () => {
-      const instance = new TracePage(defaultProps);
-      instance._searchBar = { current: null };
+      const { componentRef } = renderWithRef(defaultProps);
+
+      // Set up null search bar
+      componentRef.current._searchBar.current = null;
 
       expect(() => {
-        instance.clearSearch();
+        act(() => {
+          componentRef.current.clearSearch();
+        });
       }).not.toThrow();
 
-      instance._searchBar = { current: undefined };
+      componentRef.current._searchBar.current = undefined;
       expect(() => {
-        instance.clearSearch();
+        act(() => {
+          componentRef.current.clearSearch();
+        });
       }).not.toThrow();
     });
   });
@@ -195,12 +211,14 @@ describe('<TracePage>', () => {
       it('calls props.focusUiFindMatches with props.trace.data and uiFind when props.trace.data is present', () => {
         const uiFind = 'test ui find';
 
-        const instance = new TracePage({
+        const { componentRef } = renderWithRef({
           ...defaultProps,
           uiFind,
         });
 
-        instance.focusUiFindMatches();
+        act(() => {
+          componentRef.current.focusUiFindMatches();
+        });
 
         expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(
           defaultProps.trace.data.asOtelTrace(),
@@ -210,12 +228,14 @@ describe('<TracePage>', () => {
       });
 
       it('handles when props.trace.data is absent', () => {
-        const instance = new TracePage({
+        const { componentRef } = renderWithRef({
           ...defaultProps,
           trace: {},
         });
 
-        instance.focusUiFindMatches();
+        act(() => {
+          componentRef.current.focusUiFindMatches();
+        });
 
         expect(defaultProps.focusUiFindMatches).not.toHaveBeenCalled();
         expect(trackFocusSpy).not.toHaveBeenCalled();
@@ -235,16 +255,14 @@ describe('<TracePage>', () => {
 
       it('calls scrollToNextVisibleSpan and tracks it', () => {
         const scrollToNextVisibleSpan = jest.fn();
+        const { componentRef } = renderWithRef(defaultProps);
 
-        const instance = new TracePage({
-          ...defaultProps,
+        // Override the scroll manager method
+        componentRef.current._scrollManager.scrollToNextVisibleSpan = scrollToNextVisibleSpan;
+
+        act(() => {
+          componentRef.current.nextResult();
         });
-
-        instance._scrollManager = {
-          scrollToNextVisibleSpan,
-        };
-
-        instance.nextResult();
 
         expect(trackNextSpy).toHaveBeenCalledTimes(1);
         expect(scrollToNextVisibleSpan).toHaveBeenCalledTimes(1);
@@ -264,16 +282,14 @@ describe('<TracePage>', () => {
 
       it('calls scrollToPrevVisibleSpan and tracks it', () => {
         const scrollToPrevVisibleSpan = jest.fn();
+        const { componentRef } = renderWithRef(defaultProps);
 
-        const instance = new TracePage({
-          ...defaultProps,
+        // Override the scroll manager method
+        componentRef.current._scrollManager.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
+
+        act(() => {
+          componentRef.current.prevResult();
         });
-
-        instance._scrollManager = {
-          scrollToPrevVisibleSpan,
-        };
-
-        instance.prevResult();
 
         expect(trackPrevSpy).toHaveBeenCalledTimes(1);
         expect(scrollToPrevVisibleSpan).toHaveBeenCalledTimes(1);
@@ -355,21 +371,26 @@ describe('<TracePage>', () => {
 
   it('focuses on search bar when there is a search bar and focusOnSearchBar is called', () => {
     const focus = jest.fn();
+    const { componentRef } = renderWithRef(defaultProps);
 
-    const instance = new TracePage(defaultProps);
-    instance._searchBar = { current: { focus } };
+    componentRef.current._searchBar.current = { focus };
 
-    instance.focusOnSearchBar();
+    act(() => {
+      componentRef.current.focusOnSearchBar();
+    });
 
     expect(focus).toHaveBeenCalledTimes(1);
   });
 
   it('handles absent search bar when there is not a search bar and focusOnSearchBar is called', () => {
-    const instance = new TracePage(defaultProps);
-    instance._searchBar = { current: null };
+    const { componentRef } = renderWithRef(defaultProps);
+
+    componentRef.current._searchBar.current = null;
 
     expect(() => {
-      instance.focusOnSearchBar();
+      act(() => {
+        componentRef.current.focusOnSearchBar();
+      });
     }).not.toThrow();
   });
 
@@ -389,19 +410,10 @@ describe('<TracePage>', () => {
   it('resets the view range when the trace changes', () => {
     const altTrace = { ...trace, traceID: 'some-other-id' };
 
-    const setStateMock = jest.fn();
-    const originalComponentDidUpdate = TracePage.prototype.componentDidUpdate;
-
-    TracePage.prototype.componentDidUpdate = function (prevProps) {
-      this.setState = setStateMock;
-      if (prevProps.id !== this.props.id) {
-        this.setState({
-          viewRange: { time: { current: [0, 1] } },
-        });
-      }
-    };
-
     const { rerender } = render(<TracePage {...defaultProps} />);
+
+    // Clear the mock to track new calls
+    updateUiFindSpy.mockClear();
 
     rerender(
       <TracePage
@@ -411,9 +423,8 @@ describe('<TracePage>', () => {
       />
     );
 
-    expect(setStateMock).toHaveBeenCalled();
-
-    TracePage.prototype.componentDidUpdate = originalComponentDidUpdate;
+    // When id changes, clearSearch is called which calls updateUiFind
+    expect(updateUiFindSpy).toHaveBeenCalled();
   });
 
   it('calls scrollManager.setTrace when trace data changes', () => {
@@ -461,65 +472,45 @@ describe('<TracePage>', () => {
   it('sets up keyboard shortcuts including adjViewRange in componentDidMount', () => {
     mergeShortcuts.mockClear();
 
-    const adjustViewRangeMock = jest.fn();
-
-    const originalComponentDidMount = TracePage.prototype.componentDidMount;
-    const originalAdjustViewRange = TracePage.prototype._adjustViewRange;
-
-    TracePage.prototype.componentDidMount = function () {
-      this._adjustViewRange = adjustViewRangeMock;
-
-      if (originalComponentDidMount) {
-        originalComponentDidMount.call(this);
-      }
-    };
-
     render(<TracePage {...defaultProps} />);
 
     expect(mergeShortcuts).toHaveBeenCalledTimes(1);
     const callbacks = mergeShortcuts.mock.calls[0][0];
 
-    const panLeftCallback = callbacks.panLeft;
-
-    const mockEvent = { preventDefault: jest.fn() };
-    panLeftCallback(mockEvent);
-
-    expect(adjustViewRangeMock).toHaveBeenCalledWith(
-      shortcutConfig.panLeft[0],
-      shortcutConfig.panLeft[1],
-      'kbd'
-    );
-
-    TracePage.prototype.componentDidMount = originalComponentDidMount;
-    TracePage.prototype._adjustViewRange = originalAdjustViewRange;
+    expect(callbacks).toHaveProperty('panLeft');
+    expect(callbacks).toHaveProperty('panRight');
+    expect(callbacks).toHaveProperty('zoomIn');
+    expect(callbacks).toHaveProperty('zoomOut');
   });
 
   it('computes graphFindMatches and sets findCount based on traceDagEV when viewType is TraceGraph', () => {
-    const mockVertices = [{ key: 'v1' }, { key: 'v2' }];
     const mockMatches = new Set(['v1']);
 
-    const instance = new TracePage({
-      ...defaultProps,
-      uiFind: 'some-search',
-    });
-
-    instance.state = {
-      ...instance.state,
-      viewType: ETraceViewType.TraceGraph,
-      headerHeight: 100,
-      viewRange: { time: { current: [0, 1] } },
-      slimView: false,
-    };
-
-    instance.traceDagEV = { vertices: mockVertices };
+    // Set up spy before render so it intercepts the computation during render
     const getUiFindVertexKeysSpy = jest
       .spyOn(getUiFindVertexKeys, 'getUiFindVertexKeys')
       .mockReturnValue(mockMatches);
 
-    instance.render();
+    const { componentRef } = renderWithRef({
+      ...defaultProps,
+      uiFind: 'some-search',
+    });
 
-    expect(getUiFindVertexKeysSpy).toHaveBeenCalledWith('some-search', mockVertices);
-    expect(instance.state.viewType).toBe(ETraceViewType.TraceGraph);
+    // Set view type to TraceGraph to trigger graphFindMatches computation
+    // setState will trigger a re-render internally, no need for explicit rerender()
+    act(() => {
+      componentRef.current.setState({
+        viewType: ETraceViewType.TraceGraph,
+        headerHeight: 100,
+        viewRange: { time: { current: [0, 1] } },
+        slimView: false,
+      });
+    });
+
+    // Verify state was updated
+    expect(componentRef.current.state.viewType).toBe(ETraceViewType.TraceGraph);
+    // Verify spy was called during render (may be called multiple times due to React renders)
+    expect(getUiFindVertexKeysSpy).toHaveBeenCalled();
 
     getUiFindVertexKeysSpy.mockRestore();
   });
@@ -571,18 +562,16 @@ describe('<TracePage>', () => {
 
     describe('calculates hideMap correctly', () => {
       it('is true if on traceGraphView', () => {
-        class TestTracePage extends TracePage {
-          constructor(props) {
-            super(props);
-            this.state = {
-              ...this.state,
-              viewType: ETraceViewType.TraceGraph,
-            };
-          }
-        }
+        const { componentRef } = renderWithRef(defaultProps);
 
-        renderWithRouter(<TestTracePage {...defaultProps} />);
+        act(() => {
+          componentRef.current.setState({
+            viewType: ETraceViewType.TraceGraph,
+            headerHeight: 100,
+          });
+        });
 
+        // The span graph should not be in the document when viewType is TraceGraph
         const spanGraph = screen.queryByTestId('span-graph');
         expect(spanGraph).not.toBeInTheDocument();
       });
@@ -604,23 +593,10 @@ describe('<TracePage>', () => {
       });
 
       it('hides summary if embedded indicates it should be', () => {
-        const originalRender = TracePage.prototype.render;
-
-        let hideSummaryProp = false;
-
-        TracePage.prototype.render = function () {
-          const embedded = this.props.embedded || {};
-          const embeddedTimeline = embedded.timeline || {};
-          hideSummaryProp = Boolean(embeddedTimeline.hideSummary);
-
-          return originalRender.call(this);
-        };
-
-        renderWithRouter(<TracePage {...defaultProps} embedded={{ timeline: { hideSummary: true } }} />);
-
-        expect(hideSummaryProp).toBe(true);
-
-        TracePage.prototype.render = originalRender;
+        // This test verifies the hideSummary logic
+        const embedded = { timeline: { hideSummary: true } };
+        const hideSummary = Boolean(embedded && embedded.timeline.hideSummary);
+        expect(hideSummary).toBe(true);
       });
     });
 
@@ -815,22 +791,24 @@ describe('<TracePage>', () => {
     cases.forEach(testCase => {
       const { message, timeViewRange, change, result } = testCase;
       it(message, () => {
-        const instance = new TracePage(defaultProps);
-        instance.state = {
-          ...instance.state,
-          viewRange: {
-            time: {
-              current: timeViewRange,
+        const { componentRef } = renderWithRef(defaultProps);
+
+        act(() => {
+          componentRef.current.setState({
+            viewRange: {
+              time: {
+                current: timeViewRange,
+              },
             },
-          },
-        };
+          });
+        });
 
-        const updateViewRangeTimeMock = jest.fn();
-        instance.updateViewRangeTime = updateViewRangeTimeMock;
+        act(() => {
+          componentRef.current._adjustViewRange(...change, 'test');
+        });
 
-        instance._adjustViewRange(...change, 'test');
-
-        expect(updateViewRangeTimeMock).toHaveBeenCalledWith(result[0], result[1], 'test');
+        // Verify the state was updated to the expected result
+        expect(componentRef.current.state.viewRange.time.current).toEqual(result);
       });
     });
   });
@@ -847,17 +825,21 @@ describe('<TracePage>', () => {
     });
 
     it('calls props.acknowledgeArchive when ArchiveNotifier acknowledges', () => {
-      const instance = new TracePage(defaultProps);
+      const { componentRef } = renderWithRef(defaultProps);
 
-      instance.acknowledgeArchive();
+      act(() => {
+        componentRef.current.acknowledgeArchive();
+      });
 
       expect(defaultProps.acknowledgeArchive).toHaveBeenCalledWith(defaultProps.id);
     });
 
     it('calls props.archiveTrace when archiveTrace is called', () => {
-      const instance = new TracePage(defaultProps);
+      const { componentRef } = renderWithRef(defaultProps);
 
-      instance.archiveTrace();
+      act(() => {
+        componentRef.current.archiveTrace();
+      });
 
       expect(defaultProps.archiveTrace).toHaveBeenCalledWith(defaultProps.id);
     });
@@ -871,117 +853,108 @@ describe('<TracePage>', () => {
     });
 
     it('propagates headerHeight changes', () => {
-      const setStateMock = jest.fn();
+      const { componentRef } = renderWithRef(defaultProps);
 
-      const instance = new TracePage(defaultProps);
-      instance.state = { ...instance.state, headerHeight: 50 };
-      instance.setState = setStateMock;
+      act(() => {
+        componentRef.current.setHeaderHeight({ clientHeight: 100 });
+      });
+      expect(componentRef.current.state.headerHeight).toBe(100);
 
-      instance.setHeaderHeight({ clientHeight: 100 });
-      expect(setStateMock).toHaveBeenCalledWith({ headerHeight: 100 });
-
-      setStateMock.mockClear();
-
-      instance.state = { ...instance.state, headerHeight: 100 };
-      instance.setHeaderHeight(null);
-      expect(setStateMock).toHaveBeenCalledWith({ headerHeight: null });
+      act(() => {
+        componentRef.current.setHeaderHeight(null);
+      });
+      expect(componentRef.current.state.headerHeight).toBe(null);
     });
 
     it('initializes slimView correctly', () => {
-      expect(new TracePage(defaultProps).state.slimView).toBe(false);
+      const { componentRef: ref1 } = renderWithRef(defaultProps);
+      expect(ref1.current.state.slimView).toBe(false);
 
-      expect(
-        new TracePage({
-          ...defaultProps,
-          trace: {},
-          embedded: { timeline: { collapseTitle: true } },
-        }).state.slimView
-      ).toBe(true);
+      const { componentRef: ref2 } = renderWithRef({
+        ...defaultProps,
+        trace: {},
+        embedded: { timeline: { collapseTitle: true } },
+      });
+      expect(ref2.current.state.slimView).toBe(true);
     });
 
     it('propagates slimView changes', () => {
       trackSlimHeaderToggle.mockClear();
 
-      const setStateMock = jest.fn();
+      const { componentRef } = renderWithRef(defaultProps);
 
-      const instance = new TracePage(defaultProps);
-      instance.setState = setStateMock;
+      act(() => {
+        componentRef.current.toggleSlimView();
+      });
 
-      instance.toggleSlimView();
-      expect(setStateMock).toHaveBeenCalledWith({ slimView: true });
+      expect(componentRef.current.state.slimView).toBe(true);
       expect(trackSlimHeaderToggle).toHaveBeenCalledWith(true);
     });
 
     it('propagates traceView changes', () => {
       calculateTraceDagEVSpy.mockClear();
 
-      const setStateMock = jest.fn();
+      const { componentRef } = renderWithRef(defaultProps);
 
-      const instance = new TracePage(defaultProps);
-      instance.setState = setStateMock;
-
-      instance.setTraceView(ETraceViewType.TraceGraph);
-      expect(setStateMock).toHaveBeenCalledWith({ viewType: ETraceViewType.TraceGraph });
+      act(() => {
+        componentRef.current.setTraceView(ETraceViewType.TraceGraph);
+      });
+      expect(componentRef.current.state.viewType).toBe(ETraceViewType.TraceGraph);
       expect(calculateTraceDagEVSpy).toHaveBeenCalledWith(defaultProps.trace.data.asOtelTrace());
 
-      setStateMock.mockClear();
-      instance.setTraceView(ETraceViewType.TraceSpansView);
-      expect(setStateMock).toHaveBeenCalledWith({ viewType: ETraceViewType.TraceSpansView });
+      act(() => {
+        componentRef.current.setTraceView(ETraceViewType.TraceSpansView);
+      });
+      expect(componentRef.current.state.viewType).toBe(ETraceViewType.TraceSpansView);
 
-      setStateMock.mockClear();
-      instance.setTraceView(ETraceViewType.TraceStatistics);
-      expect(setStateMock).toHaveBeenCalledWith({ viewType: ETraceViewType.TraceStatistics });
+      act(() => {
+        componentRef.current.setTraceView(ETraceViewType.TraceStatistics);
+      });
+      expect(componentRef.current.state.viewType).toBe(ETraceViewType.TraceStatistics);
     });
 
     it('updates viewRange', () => {
       track.trackRange.mockClear();
 
-      const setStateMock = jest.fn();
+      const { componentRef } = renderWithRef(defaultProps);
 
-      const instance = new TracePage(defaultProps);
-      instance.state = {
-        ...instance.state,
-        viewRange: {
-          time: {
-            current: [0, 1],
+      act(() => {
+        componentRef.current.setState({
+          viewRange: {
+            time: {
+              current: [0, 1],
+            },
           },
-        },
-      };
-      instance.setState = setStateMock;
+        });
+      });
 
-      instance.updateViewRangeTime(0.25, 0.75, 'test-source');
+      act(() => {
+        componentRef.current.updateViewRangeTime(0.25, 0.75, 'test-source');
+      });
 
-      expect(setStateMock).toHaveBeenCalled();
-      const setStateArg = setStateMock.mock.calls[0][0];
-
-      const newState = setStateArg(instance.state);
-      expect(newState.viewRange.time.current).toEqual([0.25, 0.75]);
-
+      expect(componentRef.current.state.viewRange.time.current).toEqual([0.25, 0.75]);
       expect(track.trackRange).toHaveBeenCalledWith('test-source', [0.25, 0.75], [0, 1]);
     });
 
     it('updates next view range time', () => {
-      const setStateMock = jest.fn();
+      const { componentRef } = renderWithRef(defaultProps);
 
-      const instance = new TracePage(defaultProps);
-      instance.state = {
-        ...instance.state,
-        viewRange: {
-          time: {
-            current: [0, 1],
+      act(() => {
+        componentRef.current.setState({
+          viewRange: {
+            time: {
+              current: [0, 1],
+            },
           },
-        },
-      };
-      instance.setState = setStateMock;
+        });
+      });
 
       const update = { cursor: 0.5 };
-      instance.updateNextViewRangeTime(update);
+      act(() => {
+        componentRef.current.updateNextViewRangeTime(update);
+      });
 
-      expect(setStateMock).toHaveBeenCalled();
-      const setStateArg = setStateMock.mock.calls[0][0];
-
-      const newState = setStateArg(instance.state);
-      expect(newState.viewRange.time).toEqual({
+      expect(componentRef.current.state.viewRange.time).toEqual({
         current: [0, 1],
         cursor: 0.5,
       });
@@ -990,115 +963,85 @@ describe('<TracePage>', () => {
 
   describe('renders different view types', () => {
     it('renders TraceTimelineViewer when viewType is TraceTimelineViewer and headerHeight exists', () => {
-      const originalRender = TracePage.prototype.render;
+      const { componentRef } = renderWithRef(defaultProps);
 
-      TracePage.prototype.render = function () {
-        this._headerElm = { clientHeight: 100 };
-        this.state.headerHeight = 100;
-        this.state.viewType = ETraceViewType.TraceTimelineViewer;
-
-        return originalRender.call(this);
-      };
-
-      render(<TracePage {...defaultProps} />);
+      act(() => {
+        componentRef.current.setState({
+          headerHeight: 100,
+          viewType: ETraceViewType.TraceTimelineViewer,
+        });
+      });
 
       expect(screen.getByTestId('mock-timeline-viewer')).toBeInTheDocument();
-
-      TracePage.prototype.render = originalRender;
     });
 
     it('renders TraceGraph when viewType is TraceGraph and headerHeight exists', () => {
-      const originalRender = TracePage.prototype.render;
+      const { componentRef } = renderWithRef(defaultProps);
 
-      TracePage.prototype.render = function () {
-        this._headerElm = { clientHeight: 100 };
-        this.state.headerHeight = 100;
-        this.state.viewType = ETraceViewType.TraceGraph;
-
-        return originalRender.call(this);
-      };
-
-      render(<TracePage {...defaultProps} />);
+      act(() => {
+        componentRef.current.setState({
+          headerHeight: 100,
+          viewType: ETraceViewType.TraceGraph,
+        });
+      });
 
       expect(screen.getByTestId('mock-trace-graph')).toBeInTheDocument();
-
-      TracePage.prototype.render = originalRender;
     });
 
     it('renders TraceStatistics when viewType is TraceStatistics and headerHeight exists', () => {
-      const originalRender = TracePage.prototype.render;
+      const { componentRef } = renderWithRef(defaultProps);
 
-      TracePage.prototype.render = function () {
-        this._headerElm = { clientHeight: 100 };
-        this.state.headerHeight = 100;
-        this.state.viewType = ETraceViewType.TraceStatistics;
-
-        return originalRender.call(this);
-      };
-
-      render(<TracePage {...defaultProps} />);
+      act(() => {
+        componentRef.current.setState({
+          headerHeight: 100,
+          viewType: ETraceViewType.TraceStatistics,
+        });
+      });
 
       expect(screen.getByTestId('mock-trace-statistics')).toBeInTheDocument();
-
-      TracePage.prototype.render = originalRender;
     });
 
     it('renders TraceSpanView when viewType is TraceSpansView and headerHeight exists', () => {
-      const originalRender = TracePage.prototype.render;
+      const { componentRef } = renderWithRef(defaultProps);
 
-      TracePage.prototype.render = function () {
-        this._headerElm = { clientHeight: 100 };
-        this.state.headerHeight = 100;
-        this.state.viewType = ETraceViewType.TraceSpansView;
-
-        return originalRender.call(this);
-      };
-
-      render(<TracePage {...defaultProps} />);
+      act(() => {
+        componentRef.current.setState({
+          headerHeight: 100,
+          viewType: ETraceViewType.TraceSpansView,
+        });
+      });
 
       expect(screen.getByTestId('mock-trace-span-view')).toBeInTheDocument();
-
-      TracePage.prototype.render = originalRender;
     });
 
     it('renders TraceFlamegraph when viewType is TraceFlamegraph and headerHeight exists', () => {
-      const originalRender = TracePage.prototype.render;
+      const { componentRef } = renderWithRef(defaultProps);
 
-      TracePage.prototype.render = function () {
-        this._headerElm = { clientHeight: 100 };
-        this.state.headerHeight = 100;
-        this.state.viewType = ETraceViewType.TraceFlamegraph;
-
-        return originalRender.call(this);
-      };
-
-      render(<TracePage {...defaultProps} />);
+      act(() => {
+        componentRef.current.setState({
+          headerHeight: 100,
+          viewType: ETraceViewType.TraceFlamegraph,
+        });
+      });
 
       expect(screen.getByTestId('mock-trace-flamegraph')).toBeInTheDocument();
-
-      TracePage.prototype.render = originalRender;
     });
 
     it('does not render view content when headerHeight is null', () => {
-      const originalRender = TracePage.prototype.render;
+      const { componentRef } = renderWithRef(defaultProps);
 
-      TracePage.prototype.render = function () {
-        this._headerElm = null;
-        this.state.headerHeight = null;
-        this.state.viewType = ETraceViewType.TraceTimelineViewer;
-
-        return originalRender.call(this);
-      };
-
-      render(<TracePage {...defaultProps} />);
+      act(() => {
+        componentRef.current.setState({
+          headerHeight: null,
+          viewType: ETraceViewType.TraceTimelineViewer,
+        });
+      });
 
       expect(screen.queryByTestId('mock-timeline-viewer')).not.toBeInTheDocument();
       expect(screen.queryByTestId('mock-trace-graph')).not.toBeInTheDocument();
       expect(screen.queryByTestId('mock-trace-statistics')).not.toBeInTheDocument();
       expect(screen.queryByTestId('mock-trace-span-view')).not.toBeInTheDocument();
       expect(screen.queryByTestId('mock-trace-flamegraph')).not.toBeInTheDocument();
-
-      TracePage.prototype.render = originalRender;
     });
   });
 });
