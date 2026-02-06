@@ -94,4 +94,22 @@ describe('<SpanGraph>', () => {
 
     expect(secondItems).toBe(firstItems);
   });
+
+  it('uses default height when height is not provided', () => {
+    render(<SpanGraph {...defaultProps} />);
+    const [viewingLayerProps] = ViewingLayer.mock.calls[0];
+    expect(viewingLayerProps.height).toBe(60);
+  });
+
+  it('uses default height when height is falsy (0)', () => {
+    render(<SpanGraph {...defaultProps} height={0} />);
+    const [viewingLayerProps] = ViewingLayer.mock.calls[0];
+    expect(viewingLayerProps.height).toBe(60);
+  });
+
+  it('uses provided height when valid', () => {
+    render(<SpanGraph {...defaultProps} height={100} />);
+    const [viewingLayerProps] = ViewingLayer.mock.calls[0];
+    expect(viewingLayerProps.height).toBe(100);
+  });
 });
