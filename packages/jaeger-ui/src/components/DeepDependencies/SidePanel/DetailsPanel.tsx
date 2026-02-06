@@ -38,20 +38,11 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
   const [state, setState] = React.useState<TState>({});
   const isFirstRender = React.useRef(true);
 
-  const fetchDetails = React.useCallback(() => {
-    const {
-      decorationSchema: {
-        detailUrl,
-        detailPath,
-        detailColumnDefPath,
-        opDetailUrl,
-        opDetailPath,
-        opDetailColumnDefPath,
-      },
-      operation: _op,
-      service,
-    } = props;
+  const { decorationSchema, operation: _op, service } = props;
+  const { detailUrl, detailPath, detailColumnDefPath, opDetailUrl, opDetailPath, opDetailColumnDefPath } =
+    decorationSchema;
 
+  const fetchDetails = React.useCallback(() => {
     const operation = _op && !Array.isArray(_op) ? _op : undefined;
 
     let fetchUrl: string | undefined;
@@ -100,7 +91,16 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
           detailsLoading: false,
         }));
       });
-  }, [props.decorationSchema, props.operation, props.service]);
+  }, [
+    _op,
+    service,
+    detailUrl,
+    detailPath,
+    detailColumnDefPath,
+    opDetailUrl,
+    opDetailPath,
+    opDetailColumnDefPath,
+  ]);
 
   React.useEffect(() => {
     if (isFirstRender.current) {
@@ -117,13 +117,13 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
     }));
 
     fetchDetails();
-  }, [props.operation, props.service, props.decorationSchema, fetchDetails]);
+  }, [_op, service, decorationSchema, fetchDetails]);
 
   const onResize = React.useCallback((width: number) => {
     setState(prev => ({ ...prev, width }));
   }, []);
 
-  const { decorationProgressbar, decorationSchema, decorationValue, operation: _op, service } = props;
+  const { decorationProgressbar, decorationValue } = props;
   const { detailLink } = decorationSchema;
   const { width = 0.3 } = state;
 
