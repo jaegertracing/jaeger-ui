@@ -105,6 +105,30 @@ const ViewingLayer: React.FC<ViewingLayerProps> = ({
     draggerStartRef.current?.handleMouseDown(e);
   }, []);
 
+  const onEndMouseEnter = React.useCallback((e: React.MouseEvent<SVGSVGElement | HTMLDivElement>) => {
+    draggerEndRef.current?.handleMouseEnter(e);
+  }, []);
+
+  const onEndMouseLeave = React.useCallback((e: React.MouseEvent<SVGSVGElement | HTMLDivElement>) => {
+    draggerEndRef.current?.handleMouseLeave(e);
+  }, []);
+
+  const onEndMouseDown = React.useCallback((e: React.MouseEvent<SVGSVGElement | HTMLDivElement>) => {
+    draggerEndRef.current?.handleMouseDown(e);
+  }, []);
+
+  const onReframeMouseDown = React.useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    draggerReframeRef.current?.handleMouseDown(e);
+  }, []);
+
+  const onReframeMouseLeave = React.useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    draggerReframeRef.current?.handleMouseLeave(e);
+  }, []);
+
+  const onReframeMouseMove = React.useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    draggerReframeRef.current?.handleMouseMove(e);
+  }, []);
+
   const getDraggingBounds = React.useCallback(
     (tag: string | TNil): DraggableBounds => {
       if (!rootRef.current) {
@@ -297,9 +321,9 @@ const ViewingLayer: React.FC<ViewingLayerProps> = ({
         height={height}
         className="ViewingLayer--graph"
         ref={rootRef}
-        onMouseDown={draggerReframeRef.current?.handleMouseDown}
-        onMouseLeave={draggerReframeRef.current?.handleMouseLeave}
-        onMouseMove={draggerReframeRef.current?.handleMouseMove}
+        onMouseDown={onReframeMouseDown}
+        onMouseLeave={onReframeMouseLeave}
+        onMouseMove={onReframeMouseMove}
       >
         {leftInactive > 0 && (
           <rect x={0} y={0} height="100%" width={`${leftInactive}%`} className="ViewingLayer--inactive" />
@@ -338,9 +362,9 @@ const ViewingLayer: React.FC<ViewingLayerProps> = ({
         <Scrubber
           isDragging={shiftEnd != null}
           position={viewEnd || 1}
-          onMouseDown={onStartMouseDown}
-          onMouseEnter={onStartMouseEnter}
-          onMouseLeave={onStartMouseLeave}
+          onMouseDown={onEndMouseDown}
+          onMouseEnter={onEndMouseEnter}
+          onMouseLeave={onEndMouseLeave}
         />
         {reframe != null && getMarkers(reframe.anchor, reframe.shift, false)}
       </svg>
