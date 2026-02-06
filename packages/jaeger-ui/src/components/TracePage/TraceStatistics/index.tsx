@@ -218,12 +218,7 @@ export default class TraceStatistics extends Component<Props, State> {
     const allTableSpansChange = allTableSpans;
     // Initialize all entries as not matching search
     for (let i = 0; i < allTableSpansChange.length; i++) {
-      // Parent rows with subgroups should not be highlighted
-      if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
-        allTableSpansChange[i].searchMatch = false;
-      } else {
-        allTableSpansChange[i].searchMatch = false;
-      }
+      allTableSpansChange[i].searchMatch = false;
     }
     if (typeof uiFindVertexKeys !== 'undefined') {
       uiFindVertexKeys!.forEach(function calc(value) {
@@ -267,6 +262,18 @@ export default class TraceStatistics extends Component<Props, State> {
         }
       }
     }
+
+    // Parent rows with subgroups should never be highlighted (they are transparent in logic)
+    // We only apply this if there are actually detail rows (subgroups) in the table.
+    const hasDetails = allTableSpansChange.some(s => s.isDetail);
+    if (hasDetails) {
+      for (let i = 0; i < allTableSpansChange.length; i++) {
+        if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
+          allTableSpansChange[i].searchMatch = false;
+        }
+      }
+    }
+
     return allTableSpansChange;
   };
 
