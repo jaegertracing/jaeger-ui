@@ -380,7 +380,7 @@ export default class TraceStatistics extends Component<Props, State> {
           row.hasSubgroupValue &&
           row.children &&
           row.children.length > 0 &&
-          row.children.filter(child => child.hasSubgroupValue).length > 1
+          row.children.some(child => child.hasSubgroupValue)
       )
       .map(row => row.key!);
 
