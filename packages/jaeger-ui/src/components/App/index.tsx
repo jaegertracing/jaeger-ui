@@ -1,9 +1,9 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { Component } from 'react';
 import { Provider } from 'react-redux';
 import { Route, Redirect, Switch } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import NotFound from './NotFound';
 import Page from './Page';
@@ -32,15 +32,24 @@ import './index.css';
 import { store } from '../../utils/configure-store';
 import ThemeProvider from './ThemeProvider';
 
-export default class JaegerUIApp extends Component<{}> {
-  constructor(props: {}) {
-    super(props);
-    (JaegerAPI as any).apiRoot = DEFAULT_API_ROOT;
-    processScripts();
-  }
+// Create a React Query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
-  render() {
-    return (
+// Initialize API configuration and process configuration scripts at module level
+// to ensure they run once when the application is loaded, before any components are rendered
+JaegerAPI.apiRoot = DEFAULT_API_ROOT;
+processScripts();
+
+export default function JaegerUIApp() {
+  return (
+    <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <Provider store={store as any}>
           {
@@ -49,7 +58,7 @@ export default class JaegerUIApp extends Component<{}> {
             // The @ts-ignore was added because of a specific TypeScript error that occurs
             // when mixing Redux 5/9, React 19, and complex HOCs.
           }
-          {/* @ts-ignore */}
+          {/* @ts-expect-error - TypeScript error with Redux 5/9, React 19, and complex HOCs */}
           <Page>
             <Switch>
               <Route path={searchPath}>
@@ -91,6 +100,6 @@ export default class JaegerUIApp extends Component<{}> {
           </Page>
         </Provider>
       </ThemeProvider>
-    );
-  }
+    </QueryClientProvider>
+  );
 }

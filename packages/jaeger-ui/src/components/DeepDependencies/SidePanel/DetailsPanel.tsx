@@ -34,47 +34,21 @@ type TState = {
   width?: number;
 };
 
-export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState> {
-  state: TState = {};
+function UnconnectedDetailsPanelImpl(props: TProps) {
+  const [state, setState] = React.useState<TState>({});
+  const isFirstRender = React.useRef(true);
 
-  componentDidMount() {
-    this.fetchDetails();
-  }
+  const { decorationSchema, operation: _op, service } = props;
+  const { detailUrl, detailPath, detailColumnDefPath, opDetailUrl, opDetailPath, opDetailColumnDefPath } =
+    decorationSchema;
 
-  componentDidUpdate(prevProps: TProps) {
-    if (
-      prevProps.operation !== this.props.operation ||
-      prevProps.service !== this.props.service ||
-      prevProps.decorationSchema !== this.props.decorationSchema
-    ) {
-      this.setState({
-        details: undefined,
-        detailsErred: false,
-        detailsLoading: false,
-      });
-      this.fetchDetails();
-    }
-  }
-
-  fetchDetails() {
-    const {
-      decorationSchema: {
-        detailUrl,
-        detailPath,
-        detailColumnDefPath,
-        opDetailUrl,
-        opDetailPath,
-        opDetailColumnDefPath,
-      },
-      operation: _op,
-      service,
-    } = this.props;
-
+  const fetchDetails = React.useCallback(() => {
     const operation = _op && !Array.isArray(_op) ? _op : undefined;
 
     let fetchUrl: string | undefined;
     let getDetailPath: string | undefined;
     let getDefPath: string | undefined;
+
     if (opDetailUrl && opDetailPath && operation) {
       fetchUrl = stringSupplant(opDetailUrl, { service, operation });
       getDetailPath = stringSupplant(opDetailPath, { service, operation });
@@ -87,81 +61,123 @@ export class UnconnectedDetailsPanel extends React.PureComponent<TProps, TState>
 
     if (!fetchUrl || !getDetailPath) return;
 
-    this.setState({ detailsLoading: true });
+    setState(prev => ({ ...prev, detailsLoading: true }));
 
     JaegerAPI.fetchDecoration(fetchUrl)
       .then((res: unknown) => {
         let detailsErred = false;
         let details = _get(res, getDetailPath as string);
+
         if (details === undefined) {
           details = `\`${getDetailPath}\` not found in response`;
           detailsErred = true;
         }
+
         const columnDefs: TColumnDefs = getDefPath ? _get(res, getDefPath, []) : [];
 
-        this.setState({ columnDefs, details, detailsErred, detailsLoading: false });
+        setState(prev => ({
+          ...prev,
+          columnDefs,
+          details,
+          detailsErred,
+          detailsLoading: false,
+        }));
       })
       .catch((err: Error) => {
-        this.setState({
+        setState(prev => ({
+          ...prev,
           details: `Unable to fetch decoration: ${err.message || err}`,
           detailsErred: true,
           detailsLoading: false,
-        });
+        }));
       });
-  }
+  }, [
+    _op,
+    service,
+    detailUrl,
+    detailPath,
+    detailColumnDefPath,
+    opDetailUrl,
+    opDetailPath,
+    opDetailColumnDefPath,
+  ]);
 
-  onResize = (width: number) => {
-    this.setState({ width });
-  };
+  React.useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      fetchDetails();
+      return;
+    }
 
-  render() {
-    const { decorationProgressbar, decorationSchema, decorationValue, operation: _op, service } = this.props;
-    const { detailLink } = decorationSchema;
-    const { width = 0.3 } = this.state;
-    const operation = _op && !Array.isArray(_op) ? _op : undefined;
-    return (
-      <div className="Ddg--DetailsPanel" style={{ width: `${width * 100}vw` }}>
-        <div className="Ddg--DetailsPanel--SvcOpHeader">
-          <BreakableText text={service} />
-          {operation && <BreakableText text={`::${operation}`} />}
-        </div>
-        <div className="Ddg--DetailsPanel--DecorationHeader">
-          <span>{stringSupplant(decorationSchema.name, { service, operation })}</span>
-          {detailLink && (
-            <Tooltip arrow={{ pointAtCenter: true }} title="More Info">
-              <a
-                className="Ddg--DetailsPanel--DetailLink"
-                href={stringSupplant(detailLink, { service, operation })}
-                target="_blank"
-                rel="noreferrer noopener"
-              >
-                <NewWindowIcon />
-              </a>
-            </Tooltip>
-          )}
-        </div>
-        {decorationProgressbar ? (
-          <div className="Ddg--DetailsPanel--PercentCircleWrapper">{decorationProgressbar}</div>
-        ) : (
-          <span className="Ddg--DetailsPanel--errorMsg">{decorationValue}</span>
-        )}
-        {this.state.detailsLoading && (
-          <div className="Ddg--DetailsPanel--LoadingWrapper">
-            <LoadingIndicator className="Ddg--DetailsPanel--LoadingIndicator" />
-          </div>
-        )}
-        {this.state.details && (
-          <DetailsCard
-            className={`Ddg--DetailsPanel--DetailsCard ${this.state.detailsErred ? 'is-error' : ''}`}
-            columnDefs={this.state.columnDefs}
-            details={this.state.details}
-            header="Details"
-          />
-        )}
-        <VerticalResizer max={0.8} min={0.1} onChange={this.onResize} position={width} rightSide />
+    setState(prev => ({
+      ...prev,
+      details: undefined,
+      detailsErred: false,
+      detailsLoading: false,
+    }));
+
+    fetchDetails();
+  }, [_op, service, fetchDetails]);
+
+  const onResize = React.useCallback((width: number) => {
+    setState(prev => ({ ...prev, width }));
+  }, []);
+
+  const { decorationProgressbar, decorationValue } = props;
+  const { detailLink } = decorationSchema;
+  const { width = 0.3 } = state;
+
+  const operation = _op && !Array.isArray(_op) ? _op : undefined;
+
+  return (
+    <div className="Ddg--DetailsPanel" style={{ width: `${width * 100}vw` }}>
+      <div className="Ddg--DetailsPanel--SvcOpHeader">
+        <BreakableText text={service} />
+        {operation && <BreakableText text={`::${operation}`} />}
       </div>
-    );
-  }
+
+      <div className="Ddg--DetailsPanel--DecorationHeader">
+        <span>{stringSupplant(decorationSchema.name, { service, operation })}</span>
+        {detailLink && (
+          <Tooltip arrow={{ pointAtCenter: true }} title="More Info">
+            <a
+              className="Ddg--DetailsPanel--DetailLink"
+              href={stringSupplant(detailLink, { service, operation })}
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              <NewWindowIcon />
+            </a>
+          </Tooltip>
+        )}
+      </div>
+
+      {decorationProgressbar ? (
+        <div className="Ddg--DetailsPanel--PercentCircleWrapper">{decorationProgressbar}</div>
+      ) : (
+        <span className="Ddg--DetailsPanel--errorMsg">{decorationValue}</span>
+      )}
+
+      {state.detailsLoading && (
+        <div className="Ddg--DetailsPanel--LoadingWrapper">
+          <LoadingIndicator className="Ddg--DetailsPanel--LoadingIndicator" />
+        </div>
+      )}
+
+      {state.details && (
+        <DetailsCard
+          className={`Ddg--DetailsPanel--DetailsCard ${state.detailsErred ? 'is-error' : ''}`}
+          columnDefs={state.columnDefs}
+          details={state.details}
+          header="Details"
+        />
+      )}
+
+      <VerticalResizer max={0.8} min={0.1} onChange={onResize} position={width} rightSide />
+    </div>
+  );
 }
+
+export const UnconnectedDetailsPanel = React.memo(UnconnectedDetailsPanelImpl);
 
 export default connect(extractDecorationFromState)(UnconnectedDetailsPanel);
