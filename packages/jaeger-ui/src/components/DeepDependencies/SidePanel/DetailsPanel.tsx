@@ -117,7 +117,7 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
     }));
 
     fetchDetails();
-  }, [_op, service, decorationSchema, fetchDetails]);
+  }, [_op, service, fetchDetails]);
 
   const onResize = React.useCallback((width: number) => {
     setState(prev => ({ ...prev, width }));
