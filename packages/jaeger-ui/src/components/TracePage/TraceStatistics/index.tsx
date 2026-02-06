@@ -374,6 +374,10 @@ export default class TraceStatistics extends Component<Props, State> {
       return withoutDetail;
     };
     const groupedAndSubgroupedSpanData: ITableSpan[] = groupAndSubgroupSpanData(this.state.tableValue);
+    const defaultExpandedRowKeys = groupedAndSubgroupedSpanData
+      .filter(row => row.hasSubgroupValue && row.children && row.children.length > 0)
+      .map(row => row.key!);
+
     return (
       <div>
         <h3 className="title--TraceStatistics"> Trace Statistics</h3>
@@ -402,8 +406,8 @@ export default class TraceStatistics extends Component<Props, State> {
           rowClassName={row =>
             !row.hasSubgroupValue ? 'undefClass--TraceStatistics' : 'MainTableData--TraceStatistics'
           }
-          key={groupedAndSubgroupedSpanData.length}
-          defaultExpandAllRows
+          key={`${groupedAndSubgroupedSpanData.length}-${this.state.valueNameSelector1}-${this.state.valueNameSelector2}`}
+          defaultExpandedRowKeys={defaultExpandedRowKeys}
           sortDirections={['ascend', 'descend', 'ascend']}
         />
       </div>

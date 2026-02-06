@@ -16,15 +16,28 @@ SPDX-License-Identifier: Apache-2.0
   color: rgb(153, 153, 153);
   font-style: italic;
   cursor: default;
+  background-color: var(--surface-primary);
 }
 
 .MainTableData--TraceStatistics {
   border-top: 1px solid var(--border-strong);
+  background-color: var(--surface-primary);
 }
 
-.MainTableData--TraceStatistics:hover {
-  background: var(--surface-component-background-hover);
+.MainTableData--TraceStatistics:hover,
+.undefClass--TraceStatistics:hover {
+  background-color: var(--surface-component-background-hover);
   color: var(--text-primary);
+}
+
+/* Ensure expanded rows (tree data) also use the correct background */
+.span-view-table .ant-table-tbody > tr > td {
+  background-color: var(--surface-primary);
+}
+
+/* Ensure hover state works correctly even when Ant Design tries to apply its own background to cells */
+.span-view-table .ant-table-tbody > tr:hover > td {
+  background-color: var(--surface-component-background-hover) !important;
 }
 
 .TraceStatistics--searchMatch {
