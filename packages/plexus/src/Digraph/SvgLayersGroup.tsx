@@ -13,9 +13,9 @@ type TProps<T = {}, U = {}> = Omit<TSvgLayersGroup<T, U>, 'layerType' | 'key'> &
   graphState: TExposedGraphState<T, U>;
 };
 
-export default class SvgLayersGroup<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
-  private renderLayers() {
-    const { getClassName, layers, graphState } = this.props;
+function SvgLayersGroup<T = {}, U = {}>(props: TProps<T, U>) {
+  const { getClassName, layers, graphState } = props;
+  const renderLayers = () => {
     return layers.map(layer => {
       const { key, setOnContainer } = layer;
       if (layer.edges) {
@@ -47,13 +47,13 @@ export default class SvgLayersGroup<T = {}, U = {}> extends React.PureComponent<
         />
       );
     });
-  }
+  };
 
-  render() {
-    return (
-      <SvgLayer topLayer {...this.props} classNamePart="SvgLayersGroup">
-        {this.renderLayers()}
-      </SvgLayer>
-    );
-  }
+  return (
+    <SvgLayer topLayer {...props} classNamePart="SvgLayersGroup">
+      {renderLayers()}
+    </SvgLayer>
+  );
 }
+
+export default React.memo(SvgLayersGroup) as typeof SvgLayersGroup;
