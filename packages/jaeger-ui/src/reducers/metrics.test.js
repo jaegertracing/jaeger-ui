@@ -427,3 +427,32 @@ describe('reducers/fetchAggregatedServiceMetrics', () => {
     expect(state).toEqual(expected);
   });
 });
+it('should not crash when labels or metricPoints are missing', () => {
+  const payload = [
+    {
+      status: 'fulfilled',
+      value: {
+        name: 'service_operation_latencies',
+        metrics: [
+          {
+            // labels intentionally missing
+            metricPoints: [
+              {
+                timestamp: new Date().toISOString(),
+                gaugeValue: { doubleValue: 10 },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ];
+
+  const action = {
+    type: 'fetchAggregatedServiceMetrics_FULFILLED',
+    payload,
+  };
+
+  const reducer = require('./metrics').default;
+  expect(() => reducer(undefined, action)).not.toThrow();
+});
