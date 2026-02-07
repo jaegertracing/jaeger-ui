@@ -285,14 +285,14 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   ensureTraceFetched() {
-    const { fetchTrace, location, trace, id } = this.props;
+    const { fetchTrace, location, trace, id, history } = this.props;
+    if (id && id !== id.toLowerCase()) {
+      history.replace(getLocation(id.toLowerCase(), location.state));
+      return;
+    }
     if (!trace) {
       fetchTrace(id);
       return;
-    }
-    const { history } = this.props;
-    if (id && id !== id.toLowerCase()) {
-      history.replace(getLocation(id.toLowerCase(), location.state));
     }
   }
 
