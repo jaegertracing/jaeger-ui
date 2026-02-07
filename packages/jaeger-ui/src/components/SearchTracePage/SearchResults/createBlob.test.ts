@@ -104,7 +104,6 @@ describe('createBlob regression test', () => {
 
     // Explicitly verify circular fields are gone
     expect(serializedTrace.spans[0]).not.toHaveProperty('childSpans');
-    // @ts-ignore - access property not in type to verify it's missing at runtime
     expect(serializedTrace.spans[1]).not.toHaveProperty('subsidiarilyReferencedBy');
   });
 });
