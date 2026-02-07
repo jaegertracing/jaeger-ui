@@ -7,13 +7,16 @@ SPDX-License-Identifier: Apache-2.0
   display: flex;
   align-items: center;
   height: 100%;
+  flex-shrink: 0;
+  gap: 6px;
+  padding-right: 12px;
 }
 
 .Branding--logo {
   height: 40px;
   width: auto;
   margin-top: 4px;
-  margin-right: 6px;
+  flex-shrink: 0;
 }
 
 .Branding--name {
@@ -21,8 +24,11 @@ SPDX-License-Identifier: Apache-2.0
   font-weight: 500;
   margin-top: -4px;
   color: var(--text-inverse);
-  line-height: 1;
+  line-height: 1.2;
   letter-spacing: -0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .Branding:hover .Branding--name {
