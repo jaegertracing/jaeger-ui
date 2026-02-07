@@ -52,9 +52,10 @@ describe('OperationSchema', () => {
     expect(() => OperationSchema.parse(data)).toThrow(z.ZodError);
   });
 
-  it('rejects missing spanKind field', () => {
+  it('defaults missing spanKind field to empty string', () => {
     const data = { name: 'GET /api/users' };
-    expect(() => OperationSchema.parse(data)).toThrow(z.ZodError);
+    const result = OperationSchema.parse(data);
+    expect(result.spanKind).toBe('');
   });
 });
 
@@ -87,11 +88,12 @@ describe('OperationsResponseSchema', () => {
     expect(() => OperationsResponseSchema.parse(data)).toThrow(z.ZodError);
   });
 
-  it('rejects invalid operation objects', () => {
+  it('allows operation objects with missing spanKind', () => {
     const data = {
-      operations: [{ name: 'valid', spanKind: 'valid' }, { name: 'invalid' }],
+      operations: [{ name: 'valid', spanKind: 'valid' }, { name: 'also-valid-now' }],
     };
-    expect(() => OperationsResponseSchema.parse(data)).toThrow(z.ZodError);
+    const result = OperationsResponseSchema.parse(data);
+    expect(result.operations[1].spanKind).toBe('');
   });
 });
 

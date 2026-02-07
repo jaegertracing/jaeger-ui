@@ -27,7 +27,7 @@ type KeyValueList = Partial<{
   values: Array<KeyValue>;
 }>;
 
-const Operation = z.object({ name: z.string(), spanKind: z.string() }).passthrough();
+const Operation = z.object({ name: z.string(), spanKind: z.string().optional().default('') }).passthrough();
 const GetOperationsResponse = z.object({ operations: z.array(Operation) }).passthrough();
 const GoogleProtobufAny = z.object({ '@type': z.string() }).passthrough();
 const Status = z

@@ -20,8 +20,8 @@ const filePath = path.join(__dirname, '../packages/jaeger-ui/src/api/v3/generate
 console.log(`Post-processing ${filePath}...`);
 
 if (!fs.existsSync(filePath)) {
-  console.error(`Error: File not found at ${filePath}`);
-  process.exit(1);
+    console.error(`Error: File not found at ${filePath}`);
+    process.exit(1);
 }
 
 let content = fs.readFileSync(filePath, 'utf8');
@@ -53,16 +53,16 @@ if (zodiosImportRegex.test(content)) {
 
 // 4. Comment out Zodios usage
 content = content.replace(
-    /(const endpoints = makeApi\(\[[\s\S]*?\]\);)/, 
+    /(const endpoints = makeApi\(\[[\s\S]*?\]\);)/,
     "/*\n$1\n*/"
 );
 
 content = content.replace(
-    /(export const api = new Zodios\(endpoints\);)/, 
+    /(export const api = new Zodios\(endpoints\);)/,
     "// $1"
 );
 content = content.replace(
-    /(export function createApiClient\(baseUrl: string, options\?: ZodiosOptions\) \{[\s\S]*?\})/, 
+    /(export function createApiClient\(baseUrl: string, options\?: ZodiosOptions\) \{[\s\S]*?\})/,
     "/*\n$1\n*/"
 );
 
@@ -77,6 +77,16 @@ export { Operation as OperationSchema };
 if (!content.includes('export { GetServicesResponse as ServicesResponseSchema }')) {
     content += extraExports;
     console.log('✅ Added convenience exports');
+}
+
+// 6. Relax Operation schema spanKind
+const operationRegex = /const Operation = z\.object\(\{ name: z\.string\(\), spanKind: z\.string\(\) \}\)\.passthrough\(\);/;
+if (operationRegex.test(content)) {
+    content = content.replace(
+        operationRegex,
+        "const Operation = z.object({ name: z.string(), spanKind: z.string().optional().default('') }).passthrough();"
+    );
+    console.log('✅ Relaxed Operation schema spanKind');
 }
 
 fs.writeFileSync(filePath, content, 'utf8');

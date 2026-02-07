@@ -145,6 +145,19 @@ describe('JaegerClient', () => {
       expect(result).toEqual([]);
     });
 
+    it('successfully fetches span names when spanKind is missing', async () => {
+      const mockOperations = [{ name: 'GET /api/users' }];
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ operations: mockOperations }),
+      });
+
+      const result = await client.fetchSpanNames('test-service');
+      jest.runAllTimers();
+
+      expect(result).toEqual([{ name: 'GET /api/users', spanKind: '' }]);
+    });
+
     it('throws validation error when API returns no operations field', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
