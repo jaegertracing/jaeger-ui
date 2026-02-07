@@ -54,4 +54,4 @@ export function mapStateToProps(state: ReduxState) {
   return { embedded, pathname, search };
 }
 
-export default connect(mapStateToProps)(withRouteProps(PageImpl));
+export default connect(mapStateToProps)(PageImpl);
