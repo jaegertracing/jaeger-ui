@@ -42,7 +42,6 @@ import { localeStringComparator } from '../../utils/sort';
 
 import './index.css';
 import { ApiError } from '../../types/api-error';
-import withRouteProps from '../../utils/withRouteProps';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 
 interface IDoneState {
@@ -421,9 +420,10 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-const ConnectedDeepDependencyGraphPageImpl = withRouteProps(
-  connect(mapStateToProps, mapDispatchToProps)(DeepDependencyGraphPageImpl)
-) as React.ComponentType<Omit<TOwnProps, 'location' | 'navigate'> & THookProps>;
+const ConnectedDeepDependencyGraphPageImpl = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(DeepDependencyGraphPageImpl) as React.ComponentType<TOwnProps & THookProps>;
 
 export default function DeepDependencyGraphPage({
   baseUrl = ROUTE_PATH,
@@ -434,6 +434,7 @@ export default function DeepDependencyGraphPage({
   const location = useLocation();
   const urlState = getUrlState(location.search);
   const { service } = urlState;
+  const navigate = useNavigate();
   const { data: serverOpsData = [] } = useSpanNames(service || null, 'server');
   const serverOps = useMemo(
     () => serverOpsData.map(op => op.name).sort(localeStringComparator),
@@ -442,5 +443,13 @@ export default function DeepDependencyGraphPage({
 
   const props = { baseUrl, showSvcOpsHeader, ...restProps };
 
-  return <ConnectedDeepDependencyGraphPageImpl {...props} services={services} serverOps={serverOps} />;
+  return (
+    <ConnectedDeepDependencyGraphPageImpl
+      {...props}
+      services={services}
+      serverOps={serverOps}
+      location={location}
+      navigate={navigate}
+    />
+  );
 }
