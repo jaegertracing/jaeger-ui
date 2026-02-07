@@ -41,6 +41,7 @@ SPDX-License-Identifier: Apache-2.0
   align-items: center;
   gap: 0.75rem;
   flex-shrink: 0;
+}
 .TraceDiffHeader--traceTitle > span {
   display: inline;
   max-width: 100%;
