@@ -18,13 +18,14 @@ const DocumentTitle: React.FC<Props> = ({ title }) => {
   const prevTitleRef = React.useRef<string | null>(typeof document !== 'undefined' ? document.title : null);
 
   React.useEffect(() => {
+    const prevTitle = prevTitleRef.current;
     if (typeof title === 'string' && title !== document.title) {
       document.title = title;
     }
     return () => {
-      if (prevTitleRef.current != null) {
+      if (prevTitle != null) {
         try {
-          document.title = prevTitleRef.current;
+          document.title = prevTitle;
         } catch (e) {
           // ignore in weird test envs
         }
