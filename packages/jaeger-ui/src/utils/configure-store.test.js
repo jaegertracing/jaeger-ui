@@ -4,7 +4,7 @@
 import configureStore from './configure-store';
 
 it('configureStore() should return the redux store', () => {
-  const { store } = configureStore();
+  const store = configureStore();
 
   expect(typeof store.dispatch === 'function').toBeTruthy();
   expect(typeof store.getState === 'function').toBeTruthy();
