@@ -61,13 +61,13 @@ export default function JaegerUIApp() {
           {/* @ts-ignore */}
           <Page>
             <Routes>
-              <Route path={`${searchPath}/*`} element={<SearchTracePage />} />
-              <Route path={`${traceDiffPath}/*`} element={<TraceDiff />} />
-              <Route path={`${tracePath}/*`} element={<TracePage />} />
-              <Route path={`${dependenciesPath}/*`} element={<DependencyGraph />} />
-              <Route path={`${deepDependenciesPath}/*`} element={<DeepDependencies />} />
-              <Route path={`${qualityMetricsPath}/*`} element={<QualityMetrics />} />
-              <Route path={`${monitorATMPath}/*`} element={<MonitorATMPage />} />
+              <Route path={searchPath} element={<SearchTracePage />} />
+              <Route path={traceDiffPath} element={<TraceDiff />} />
+              <Route path={tracePath} element={<TracePage />} />
+              <Route path={dependenciesPath} element={<DependencyGraph />} />
+              <Route path={deepDependenciesPath} element={<DeepDependencies />} />
+              <Route path={qualityMetricsPath} element={<QualityMetrics />} />
+              <Route path={monitorATMPath} element={<MonitorATMPage />} />
               <Route path="/" element={<Navigate to={searchPath} replace />} />
               <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
               <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />

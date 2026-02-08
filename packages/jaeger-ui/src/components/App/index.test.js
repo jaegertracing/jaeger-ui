@@ -21,7 +21,7 @@ jest.mock('../DeepDependencies/url', () => ({ ROUTE_PATH: '/deep-dependencies' }
 jest.mock('../QualityMetrics/url', () => ({ ROUTE_PATH: '/quality-metrics' }));
 jest.mock('../SearchTracePage/url', () => ({ ROUTE_PATH: '/search' }));
 jest.mock('../TraceDiff/url', () => ({ ROUTE_PATH: '/trace-diff' }));
-jest.mock('../TracePage/url', () => ({ ROUTE_PATH: '/trace' }));
+jest.mock('../TracePage/url', () => ({ ROUTE_PATH: '/trace/:id' }));
 jest.mock('../Monitor/url', () => ({ ROUTE_PATH: '/monitor' }));
 
 jest.mock('../../api/jaeger', () => ({

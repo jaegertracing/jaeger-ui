@@ -1,6 +1,9 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Using unstable_HistoryRouter to maintain compatibility with existing
+// Redux connected-react-router integration. Will migrate to createBrowserRouter
+// in future when refactoring Redux state management.
 import { BrowserRouter, MemoryRouter, unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createMemoryHistory } from 'history';

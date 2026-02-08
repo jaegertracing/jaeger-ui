@@ -7,6 +7,9 @@
 import './site-prefix';
 
 import React from 'react';
+// Using unstable_HistoryRouter to maintain compatibility with existing
+// Redux connected-react-router integration. Will migrate to createBrowserRouter
+// in future when refactoring Redux state management.
 import { unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
 

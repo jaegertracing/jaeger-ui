@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Location } from 'history';
+import { Location } from 'react-router-dom';
 
 import { ApiError } from './api-error';
 import { TracesArchive } from './archive';
