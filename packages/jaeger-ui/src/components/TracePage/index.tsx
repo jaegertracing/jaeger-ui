@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useEffect } from 'react';
 import { InputRef } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
 import { Location, History as RouterHistory } from 'history';
@@ -487,7 +486,7 @@ const TracePage = (props: TracePageProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (traceID && traceID !== normalizedTraceID) {
       const url = getUrl(normalizedTraceID);
       navigate(`${url}${location.search}`, { replace: true, state: location.state });

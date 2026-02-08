@@ -81,4 +81,18 @@ describe('TracePage URL normalization', () => {
       );
     });
   });
+
+  it('does not redirect when trace ID is already lowercase', async () => {
+    const lowercaseTraceId = 'abc123def456';
+
+    render(
+      <MemoryRouter>
+        <TracePage params={{ id: lowercaseTraceId }} />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
+  });
 });
