@@ -172,6 +172,28 @@ describe('JaegerClient', () => {
         'Failed to fetch span names for service "my-service": 500 Internal Server Error'
       );
     });
+
+    it('handles operations without spanKind from backend', async () => {
+      // Regression test: v2.15.0 backends may omit spanKind (jaeger#7989)
+      const mockOperations = [
+        { name: 'GET /api/users' },
+        { name: 'POST /api/orders' },
+      ];
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ operations: mockOperations }),
+      });
+
+      const promise = client.fetchSpanNames('test-service');
+      jest.runAllTimers();
+      const result = await promise;
+
+      expect(result).toEqual([
+        { name: 'GET /api/users', spanKind: '' },
+        { name: 'POST /api/orders', spanKind: '' },
+      ]);
+    });
+
   });
 
   describe('fetchWithTimeout', () => {
