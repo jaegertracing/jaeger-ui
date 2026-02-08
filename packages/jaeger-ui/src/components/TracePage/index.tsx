@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import { InputRef } from 'antd';
+import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
@@ -31,7 +32,7 @@ import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
-import { getLocation, getUrl } from './url';
+import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState } from '../common/UiFindInput';
@@ -285,14 +286,9 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   ensureTraceFetched() {
-    const { fetchTrace, location, trace, id } = this.props;
+    const { fetchTrace, trace, id } = this.props;
     if (!trace) {
       fetchTrace(id);
-      return;
-    }
-    const { history } = this.props;
-    if (id && id !== id.toLowerCase()) {
-      history.replace(getLocation(id.toLowerCase(), location.state));
     }
   }
 
@@ -485,9 +481,22 @@ type TracePageProps = {
 
 const TracePage = (props: TracePageProps) => {
   const config = useConfig();
+  const traceID = props.params.id;
+  const normalizedTraceID = traceID?.toLowerCase();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  React.useEffect(() => {
+    if (traceID && traceID !== normalizedTraceID) {
+      const url = getUrl(normalizedTraceID);
+      navigate(`${url}${location.search}`, { replace: true, state: location.state });
+    }
+  }, [traceID, normalizedTraceID, navigate, location.search, location.state]);
+
   return (
     <ConnectedTracePage
       {...props}
+      params={{ ...props.params, id: normalizedTraceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
       storageCapabilities={config.storageCapabilities}
       criticalPathEnabled={config.criticalPathEnabled}
