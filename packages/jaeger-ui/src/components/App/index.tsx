@@ -47,6 +47,20 @@ const queryClient = new QueryClient({
 JaegerAPI.apiRoot = DEFAULT_API_ROOT;
 processScripts();
 
+/**
+ Route configuration extracted to prepare for migration to React Router v7 data-driven routing.
+ See issue #3313.
+ NOTE: No behavior changes intended.*/
+const APP_ROUTE_CONFIG = [
+  { path: searchPath, element: <SearchTracePage /> },
+  { path: traceDiffPath, element: <TraceDiff /> },
+  { path: tracePath, element: <TracePage /> },
+  { path: dependenciesPath, element: <DependencyGraph /> },
+  { path: deepDependenciesPath, element: <DeepDependencies /> },
+  { path: qualityMetricsPath, element: <QualityMetrics /> },
+  { path: monitorATMPath, element: <MonitorATMPage /> },
+];
+
 export default function JaegerUIApp() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -61,27 +75,11 @@ export default function JaegerUIApp() {
           {/* @ts-expect-error - TypeScript error with Redux 5/9, React 19, and complex HOCs */}
           <Page>
             <Switch>
-              <Route path={searchPath}>
-                <SearchTracePage />
-              </Route>
-              <Route path={traceDiffPath}>
-                <TraceDiff />
-              </Route>
-              <Route path={tracePath}>
-                <TracePage />
-              </Route>
-              <Route path={dependenciesPath}>
-                <DependencyGraph />
-              </Route>
-              <Route path={deepDependenciesPath}>
-                <DeepDependencies />
-              </Route>
-              <Route path={qualityMetricsPath}>
-                <QualityMetrics />
-              </Route>
-              <Route path={monitorATMPath}>
-                <MonitorATMPage />
-              </Route>
+              {APP_ROUTE_CONFIG.map(({ path, element }) => (
+                <Route key={path} path={path}>
+                  {element}
+                </Route>
+              ))}
 
               <Route exact path="/">
                 <Redirect to={searchPath} />
