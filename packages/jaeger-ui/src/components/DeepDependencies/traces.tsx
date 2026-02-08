@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Location, useNavigate } from 'react-router-dom-v5-compat';
+import { useNavigate, Location } from 'react-router-dom';
 import _get from 'lodash/get';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';

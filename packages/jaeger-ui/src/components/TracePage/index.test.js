@@ -118,7 +118,7 @@ describe('<TracePage>', () => {
     fetchTrace: jest.fn(),
     focusUiFindMatches: jest.fn(),
     id: trace.traceID,
-    history: createMemoryHistory(),
+    navigate: jest.fn(),
     location: {
       search: null,
       state: null,
@@ -147,7 +147,7 @@ describe('<TracePage>', () => {
 
       rerender(<TracePage {...defaultProps} id={notDefaultPropsId} />);
       expect(updateUiFindSpy).toHaveBeenCalledWith({
-        history: defaultProps.history,
+        navigate: defaultProps.navigate,
         location: defaultProps.location,
         trackFindFunction: track.trackFilter,
       });
@@ -337,19 +337,18 @@ describe('<TracePage>', () => {
   });
 
   it('forces lowercase id', () => {
-    const replaceMock = jest.fn();
+    const navigateMock = jest.fn();
     const props = {
       ...defaultProps,
       id: trace.traceID.toUpperCase(),
-      history: {
-        replace: replaceMock,
-      },
+      navigate: navigateMock,
     };
     render(<TracePage {...props} />);
-    expect(replaceMock).toHaveBeenCalledWith(
+    expect(navigateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         pathname: expect.stringContaining(trace.traceID),
-      })
+      }),
+      { replace: true }
     );
   });
 

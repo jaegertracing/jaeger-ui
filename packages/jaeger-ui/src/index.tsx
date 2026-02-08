@@ -7,8 +7,10 @@
 import './site-prefix';
 
 import React from 'react';
-import { Router } from 'react-router-dom';
-import { CompatRouter } from 'react-router-dom-v5-compat';
+// Using unstable_HistoryRouter to maintain compatibility with existing
+// Redux connected-react-router integration. Will migrate to createBrowserRouter
+// in future when refactoring Redux state management.
+import { unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
 
 import JaegerUIApp from './components/App';
@@ -35,19 +37,15 @@ const root = createRoot(rootElement);
 if (typeof trackingContext === 'object' && trackingContext !== null) {
   (trackingContext as any).context(() => {
     root.render(
-      <Router history={history}>
-        <CompatRouter>
-          <JaegerUIApp />
-        </CompatRouter>
-      </Router>
+      <HistoryRouter history={history as any}>
+        <JaegerUIApp />
+      </HistoryRouter>
     );
   });
 } else {
   root.render(
-    <Router history={history}>
-      <CompatRouter>
-        <JaegerUIApp />
-      </CompatRouter>
-    </Router>
+    <HistoryRouter history={history as any}>
+      <JaegerUIApp />
+    </HistoryRouter>
   );
 }

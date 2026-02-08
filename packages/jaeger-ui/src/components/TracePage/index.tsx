@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { InputRef } from 'antd';
-import { Location, History as RouterHistory } from 'history';
+import { Location, NavigateFunction } from 'react-router-dom';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
@@ -61,7 +61,7 @@ type TDispatchProps = {
 };
 
 type TOwnProps = {
-  history: RouterHistory;
+  navigate: NavigateFunction;
   location: Location<LocationState>;
   params: { id: string };
   archiveEnabled: boolean;
@@ -232,9 +232,9 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   clearSearch = () => {
-    const { history, location } = this.props;
+    const { navigate, location } = this.props;
     updateUiFind({
-      history,
+      navigate,
       location,
       trackFindFunction: trackFilter,
     });
@@ -285,14 +285,13 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   ensureTraceFetched() {
-    const { fetchTrace, location, trace, id } = this.props;
+    const { fetchTrace, location, trace, id, navigate } = this.props;
     if (!trace) {
       fetchTrace(id);
       return;
     }
-    const { history } = this.props;
     if (id && id !== id.toLowerCase()) {
-      history.replace(getLocation(id.toLowerCase(), location.state));
+      navigate(getLocation(id.toLowerCase(), location.state), { replace: true });
     }
   }
 
@@ -478,7 +477,7 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
 const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
 
 type TracePageProps = {
-  history: RouterHistory;
+  navigate: NavigateFunction;
   location: Location<LocationState>;
   params: { id: string };
 };

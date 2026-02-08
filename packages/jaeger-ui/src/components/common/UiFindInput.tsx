@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Input, InputRef } from 'antd';
 import { IoClose } from 'react-icons/io5';
-import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
+import { useNavigate, useLocation } from 'react-router-dom';
 import _debounce from 'lodash/debounce';
 import _isString from 'lodash/isString';
 import { connect } from 'react-redux';

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Provider } from 'react-redux';
-import { Route, Redirect, Switch } from 'react-router-dom';
+import { Route, Navigate, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import NotFound from './NotFound';
@@ -60,43 +60,19 @@ export default function JaegerUIApp() {
           }
           {/* @ts-expect-error - TypeScript error with Redux 5/9, React 19, and complex HOCs */}
           <Page>
-            <Switch>
-              <Route path={searchPath}>
-                <SearchTracePage />
-              </Route>
-              <Route path={traceDiffPath}>
-                <TraceDiff />
-              </Route>
-              <Route path={tracePath}>
-                <TracePage />
-              </Route>
-              <Route path={dependenciesPath}>
-                <DependencyGraph />
-              </Route>
-              <Route path={deepDependenciesPath}>
-                <DeepDependencies />
-              </Route>
-              <Route path={qualityMetricsPath}>
-                <QualityMetrics />
-              </Route>
-              <Route path={monitorATMPath}>
-                <MonitorATMPage />
-              </Route>
-
-              <Route exact path="/">
-                <Redirect to={searchPath} />
-              </Route>
-              <Route exact path={prefixUrl()}>
-                <Redirect to={searchPath} />
-              </Route>
-              <Route exact path={prefixUrl('/')}>
-                <Redirect to={searchPath} />
-              </Route>
-
-              <Route>
-                <NotFound error="Page not found" />
-              </Route>
-            </Switch>
+            <Routes>
+              <Route path={searchPath} element={<SearchTracePage />} />
+              <Route path={traceDiffPath} element={<TraceDiff />} />
+              <Route path={tracePath} element={<TracePage />} />
+              <Route path={dependenciesPath} element={<DependencyGraph />} />
+              <Route path={deepDependenciesPath} element={<DeepDependencies />} />
+              <Route path={qualityMetricsPath} element={<QualityMetrics />} />
+              <Route path={monitorATMPath} element={<MonitorATMPage />} />
+              <Route path="/" element={<Navigate to={searchPath} replace />} />
+              <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
+              <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
+              <Route path="*" element={<NotFound error="Page not found" />} />
+            </Routes>
           </Page>
         </Provider>
       </ThemeProvider>

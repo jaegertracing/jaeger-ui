@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Location } from 'history';
-import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
+import { useNavigate, useLocation, Location } from 'react-router-dom';
 import { useMemo } from 'react';
 import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
