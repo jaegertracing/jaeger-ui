@@ -254,38 +254,28 @@ describe('UiFind', () => {
   });
 
   describe('extractUiFindFromState', () => {
-    const reduxStateValue = 'state.router.location.search';
+    const windowLocationSearch = '?uiFind=test';
 
     beforeEach(() => {
       queryStringParseSpy.mockReturnValue({ uiFind });
+      delete window.location;
+      window.location = { search: windowLocationSearch };
     });
 
-    it('returns uiFind from parsed state.router.location.search', () => {
-      const result = extractUiFindFromState({
-        router: {
-          location: {
-            search: reduxStateValue,
-          },
-        },
-      });
-      expect(queryStringParseSpy).toHaveBeenCalledWith(reduxStateValue);
+    it('returns uiFind from parsed window.location.search', () => {
+      const result = extractUiFindFromState({});
+      expect(queryStringParseSpy).toHaveBeenCalledWith(windowLocationSearch);
       expect(result).toEqual({
         uiFind,
       });
     });
 
-    it('handles multiple uiFinds from parsed state.router.location.search', () => {
-      queryStringParseSpy.mockReturnValue({ uiFind: [uiFind, reduxStateValue] });
-      const result = extractUiFindFromState({
-        router: {
-          location: {
-            search: reduxStateValue,
-          },
-        },
-      });
-      expect(queryStringParseSpy).toHaveBeenCalledWith(reduxStateValue);
+    it('handles multiple uiFinds from parsed window.location.search', () => {
+      queryStringParseSpy.mockReturnValue({ uiFind: [uiFind, 'another-value'] });
+      const result = extractUiFindFromState({});
+      expect(queryStringParseSpy).toHaveBeenCalledWith(windowLocationSearch);
       expect(result).toEqual({
-        uiFind: `${uiFind} ${reduxStateValue}`,
+        uiFind: `${uiFind} another-value`,
       });
     });
   });

@@ -18,7 +18,10 @@ describe('extractDecorationFromState', () => {
     const state = {};
     const deco = Array.isArray(decoration) ? decoration[0] : decoration;
 
-    _set(state, 'router.location.search', decoration ? queryString.stringify({ decoration }) : '');
+    // Set window.location.search for the test
+    delete window.location;
+    window.location = { search: decoration ? queryString.stringify({ decoration }) : '' };
+
     if (opValue !== undefined)
       _set(state, `pathAgnosticDecorations.${deco}.withOp.${service}.${operation}`, opValue);
     if (opMax !== undefined) _set(state, `pathAgnosticDecorations.${deco}.withOpMax`, opMax);

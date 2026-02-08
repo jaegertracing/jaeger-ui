@@ -13,7 +13,6 @@ import { createRoot } from 'react-dom/client';
 
 import JaegerUIApp from './components/App';
 import { context as trackingContext } from './utils/tracking';
-import { history } from './utils/configure-store';
 
 // these need to go after the App import
 
@@ -35,19 +34,15 @@ const root = createRoot(rootElement);
 if (typeof trackingContext === 'object' && trackingContext !== null) {
   (trackingContext as any).context(() => {
     root.render(
-      <Router history={history}>
-        <CompatRouter>
-          <JaegerUIApp />
-        </CompatRouter>
-      </Router>
+      <CompatRouter>
+        <JaegerUIApp />
+      </CompatRouter>
     );
   });
 } else {
   root.render(
-    <Router history={history}>
-      <CompatRouter>
-        <JaegerUIApp />
-      </CompatRouter>
-    </Router>
+    <CompatRouter>
+      <JaegerUIApp />
+    </CompatRouter>
   );
 }

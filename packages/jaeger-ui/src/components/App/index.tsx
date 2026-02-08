@@ -50,13 +50,8 @@ export default function JaegerUIApp() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <Provider store={store as any}>
-          {
-            // the Page component is a connected component (wrapped by Redux's connect HOC)
-            // that is also wrapped by a custom withRouteProps HOC.
-            // The @ts-ignore was added because of a specific TypeScript error that occurs
-            // when mixing Redux 5/9, React 19, and complex HOCs.
-          }
-          {/* @ts-expect-error - TypeScript error with Redux 5/9, React 19, and complex HOCs */}
+          {/* the Page component is a connected component (wrapped by Redux's connect HOC)
+              that is also wrapped by a custom withRouteProps HOC. */}
           <Page>
             <Routes>
               <Route path={searchPath} element={<SearchTracePage />} />
@@ -75,6 +70,6 @@ export default function JaegerUIApp() {
           </Page>
         </Provider>
       </ThemeProvider>
-    </QueryClientProvider>
+    </QueryClientProvider >
   );
 }

@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { InputRef } from 'antd';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom-v5-compat';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
@@ -516,8 +516,8 @@ const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePag
 
 const TracePage = () => {
   const config = useConfig();
-  const params = useParams<{ id: string }>();
-  const location = useLocation<LocationState>();
+  const params = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
 
   return (

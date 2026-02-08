@@ -22,7 +22,7 @@ export default function extractDecorationFromState(
   state: ReduxState,
   { service, operation }: { service: string; operation?: string | string[] | null }
 ): TDecorationFromState {
-  const { decoration } = queryString.parse(state.router.location.search);
+  const { decoration } = queryString.parse(window.location.search);
   const decorationID = Array.isArray(decoration) ? decoration[0] : decoration;
 
   if (!decorationID) return {};

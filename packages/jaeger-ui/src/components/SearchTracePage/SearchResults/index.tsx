@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useCallback } from 'react';
 import { Select } from 'antd';
 import { Link } from 'react-router-dom';
-import { Location, useNavigate } from 'react-router-dom-v5-compat';
+import { useLocation, useNavigate } from 'react-router-dom-v5-compat';
 import queryString from 'query-string';
 
 import AltViewOptions from './AltViewOptions';
@@ -39,7 +39,6 @@ type SearchResultsProps = {
   disableComparisons: boolean;
   hideGraph: boolean;
   loading: boolean;
-  location: Location;
   maxTraceDuration: number;
   queryOfResults?: SearchQuery;
   showStandaloneLink: boolean;
@@ -127,7 +126,6 @@ export function UnconnectedSearchResults({
   disableComparisons,
   hideGraph,
   loading,
-  location,
   maxTraceDuration,
   queryOfResults,
   showStandaloneLink,
@@ -140,6 +138,7 @@ export function UnconnectedSearchResults({
   cohortAddTrace,
   cohortRemoveTrace,
 }: SearchResultsProps) {
+  const location = useLocation();
   const navigate = useNavigate();
 
   const toggleComparison = useCallback(

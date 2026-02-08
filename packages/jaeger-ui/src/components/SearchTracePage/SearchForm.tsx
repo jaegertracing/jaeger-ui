@@ -748,7 +748,7 @@ export function mapStateToProps(state: ReduxState) {
     minDuration,
     lookback,
     traceID: traceIDParams,
-  } = queryString.parse(state.router.location.search);
+  } = queryString.parse(window.location.search);
 
   const nowInMicroseconds = dayjs().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);

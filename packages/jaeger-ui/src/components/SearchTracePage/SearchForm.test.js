@@ -808,7 +808,7 @@ describe('mapStateToProps()', () => {
     store.get = oldStoreGet;
   });
 
-  describe('deriving values from `state.router.location.search`', () => {
+  describe('deriving values from `window.location.search`', () => {
     let params;
     let expected;
 
@@ -844,21 +844,24 @@ describe('mapStateToProps()', () => {
     });
 
     it('derives values when available', () => {
-      state.router.location.search = queryString.stringify(params);
+      delete window.location;
+      window.location = { search: queryString.stringify(params) };
       expect(mapStateToProps(state).initialValues).toEqual(expected);
     });
 
     it('parses `tag` values in the former format to logfmt', () => {
       delete params.tags;
       params.tag = ['error:true', 'span.kind:client'];
-      state.router.location.search = queryString.stringify(params);
+      delete window.location;
+      window.location = { search: queryString.stringify(params) };
       expect(mapStateToProps(state).initialValues).toEqual(expected);
     });
 
     it('parses single string `tag` value in the former format to logfmt', () => {
       delete params.tags;
       params.tag = 'error:true';
-      state.router.location.search = queryString.stringify(params);
+      delete window.location;
+      window.location = { search: queryString.stringify(params) };
 
       const singleTagExpected = {
         ...expected,
@@ -871,7 +874,8 @@ describe('mapStateToProps()', () => {
     it('handles tag parsing for keys without values', () => {
       delete params.tags;
       params.tag = 'invalid-no-colon';
-      state.router.location.search = queryString.stringify(params);
+      delete window.location;
+      window.location = { search: queryString.stringify(params) };
 
       const tagWithEmptyValueExpected = {
         ...expected,
@@ -884,7 +888,8 @@ describe('mapStateToProps()', () => {
     it('handles true parse errors', () => {
       delete params.tags;
 
-      state.router.location.search = queryString.stringify(params);
+      delete window.location;
+      window.location = { search: queryString.stringify(params) };
 
       const parseErrorExpected = {
         ...expected,
@@ -897,7 +902,8 @@ describe('mapStateToProps()', () => {
     it('handles empty key in tag parameter', () => {
       delete params.tags;
       params.tag = ':somevalue';
-      state.router.location.search = queryString.stringify(params);
+      delete window.location;
+      window.location = { search: queryString.stringify(params) };
 
       const parseErrorExpected = {
         ...expected,
@@ -910,7 +916,8 @@ describe('mapStateToProps()', () => {
     it('handles invalid JSON in logfmtTags', () => {
       delete params.tags;
       params.tags = '{invalid-json}';
-      state.router.location.search = queryString.stringify(params);
+      delete window.location;
+      window.location = { search: queryString.stringify(params) };
 
       const errorExpected = {
         ...expected,
@@ -922,7 +929,8 @@ describe('mapStateToProps()', () => {
 
     it('handles traceIDParams as string', () => {
       params.traceID = '123abc';
-      state.router.location.search = queryString.stringify(params);
+      delete window.location;
+      window.location = { search: queryString.stringify(params) };
 
       const traceIDExpected = {
         ...expected,
@@ -934,7 +942,8 @@ describe('mapStateToProps()', () => {
 
     it('handles traceIDParams as array', () => {
       params.traceID = ['123abc', '456def'];
-      state.router.location.search = queryString.stringify(params);
+      delete window.location;
+      window.location = { search: queryString.stringify(params) };
 
       const traceIDExpected = {
         ...expected,

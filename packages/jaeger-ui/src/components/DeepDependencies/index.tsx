@@ -423,7 +423,7 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
 const ConnectedDeepDependencyGraphPageImpl = connect(
   mapStateToProps,
   mapDispatchToProps
-)(DeepDependencyGraphPageImpl) as React.ComponentType<Omit<TOwnProps, 'location' | 'navigate'> & THookProps>;
+)(DeepDependencyGraphPageImpl);
 
 export default function DeepDependencyGraphPage({
   baseUrl = ROUTE_PATH,
@@ -432,6 +432,7 @@ export default function DeepDependencyGraphPage({
 }: TExternalProps) {
   const { data: services = [] } = useServices();
   const location = useLocation();
+  const navigate = useNavigate();
   const urlState = getUrlState(location.search);
   const { service } = urlState;
   const { data: serverOpsData = [] } = useSpanNames(service || null, 'server');
@@ -442,5 +443,13 @@ export default function DeepDependencyGraphPage({
 
   const props = { baseUrl, showSvcOpsHeader, ...restProps };
 
-  return <ConnectedDeepDependencyGraphPageImpl {...props} services={services} serverOps={serverOps} />;
+  return (
+    <ConnectedDeepDependencyGraphPageImpl
+      {...props}
+      services={services}
+      serverOps={serverOps}
+      location={location}
+      navigate={navigate}
+    />
+  );
 }

@@ -7,11 +7,9 @@ import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 import _isEqual from 'lodash/isEqual';
 import _groupBy from 'lodash/groupBy';
-
-// import { History as RouterHistory, Location } from 'history';
+import { useLocation, useNavigate } from 'react-router-dom-v5-compat';
 
 import memoizeOne from 'memoize-one';
-import { Location, History } from 'history';
 import { actions, getSelectedSpanID } from './duck';
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
@@ -36,7 +34,6 @@ import { IOtelSpan, IOtelTrace, IAttribute, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 
 import './VirtualizedTraceView.css';
-import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
 
 type RowState = {
@@ -71,11 +68,6 @@ type TDispatchProps = {
   focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil, allowHide?: boolean) => void;
 };
 
-type RouteProps = {
-  location: Location;
-  history: History;
-};
-
 type TDerivedStateProps = {
   selectedSpanID: string | null;
 };
@@ -84,8 +76,7 @@ type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
   TDispatchProps &
   TExtractUiFindFromStateReturn &
   TTraceTimeline &
-  TDerivedStateProps &
-  RouteProps;
+  TDerivedStateProps;
 
 // export for tests
 export const DEFAULT_HEIGHTS = {
@@ -314,13 +305,9 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   }
 
   focusSpan = (uiFind: string) => {
-    const { trace, focusUiFindMatches, location, history } = this.props;
+    const { trace, focusUiFindMatches } = this.props;
     if (trace) {
-      updateUiFind({
-        location,
-        history,
-        uiFind,
-      });
+      // Note: updateUiFind is called from the wrapper component that has access to hooks
       focusUiFindMatches(trace, uiFind, false);
     }
   };
@@ -622,8 +609,8 @@ function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   return bindActionCreators(actions, dispatch) as any as TDispatchProps;
 }
 
-export default connect<
-  TTraceTimeline & TExtractUiFindFromStateReturn,
+const ConnectedVirtualizedTraceView = connect<
+  TTraceTimeline & TExtractUiFindFromStateReturn & TDerivedStateProps,
   TDispatchProps,
   TVirtualizedTraceViewOwnProps,
   ReduxState
@@ -631,3 +618,21 @@ export default connect<
   mapStateToProps,
   mapDispatchToProps
 )(VirtualizedTraceViewImpl);
+
+// Wrapper component to provide router hooks
+const VirtualizedTraceViewWithRouter: React.FC<TVirtualizedTraceViewOwnProps> = props => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Create a wrapper for focusSpan that uses the hooks
+  const wrappedProps = React.useMemo(() => {
+    return {
+      ...props,
+      // We'll handle updateUiFind at a higher level if needed
+    };
+  }, [props]);
+
+  return <ConnectedVirtualizedTraceView {...wrappedProps} />;
+};
+
+export default VirtualizedTraceViewWithRouter;

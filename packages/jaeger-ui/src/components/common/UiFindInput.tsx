@@ -110,7 +110,7 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
 UnconnectedUiFindInput.displayName = 'UnconnectedUiFindInput';
 
 export function extractUiFindFromState(state: ReduxState): TExtractUiFindFromStateReturn {
-  const { uiFind: uiFindFromUrl } = parseQuery(state.router.location.search);
+  const { uiFind: uiFindFromUrl } = parseQuery(window.location.search);
   const uiFind = Array.isArray(uiFindFromUrl) ? uiFindFromUrl.join(' ') : uiFindFromUrl;
   return { uiFind };
 }
