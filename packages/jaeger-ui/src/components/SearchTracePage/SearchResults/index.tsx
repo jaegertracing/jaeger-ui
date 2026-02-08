@@ -30,7 +30,6 @@ import { IOtelTrace } from '../../../types/otel';
 
 import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
-import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
 
 type SearchResultsProps = {
@@ -282,4 +281,4 @@ export function UnconnectedSearchResults({
   );
 }
 
-export default withRouteProps(React.memo(UnconnectedSearchResults));
+export default React.memo(UnconnectedSearchResults);

@@ -18,7 +18,6 @@ import pluckTruthy from '../../utils/ts/pluckTruthy';
 
 import './TraceDiff.css';
 import parseQuery from '../../utils/parseQuery';
-import withRouteProps from '../../utils/withRouteProps';
 
 type TStateProps = {
   a: string | undefined;
@@ -168,7 +167,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps) {
     a = parts[0] || undefined;
     b = parts[1] || undefined;
   }
-  const { cohort: origCohort = [] } = parseQuery(state.router.location.search);
+  const { cohort: origCohort = [] } = parseQuery(window.location.search);
   const fullCohortSet: Set<string> = new Set(pluckTruthy([a, b].concat(origCohort)));
   const cohort: string[] = Array.from(fullCohortSet);
   const { traces } = state.trace;
@@ -190,9 +189,7 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>) {
   return { fetchMultipleTraces, forceState };
 }
 
-export default withRouteProps(
-  connect<TStateProps, TDispatchProps, TOwnProps, ReduxState>(
-    mapStateToProps,
-    mapDispatchToProps
-  )(TraceDiffImpl)
-);
+export default connect<TStateProps, TDispatchProps, TOwnProps, ReduxState>(
+  mapStateToProps,
+  mapDispatchToProps
+)(TraceDiffImpl);

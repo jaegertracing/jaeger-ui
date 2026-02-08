@@ -38,7 +38,6 @@ import TTraceTimeline from '../../../types/TTraceTimeline';
 import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
-import withRouteProps from '../../../utils/withRouteProps';
 
 type RowState = {
   isDetail: boolean;
@@ -631,4 +630,4 @@ export default connect<
 >(
   mapStateToProps,
   mapDispatchToProps
-)(withRouteProps(VirtualizedTraceViewImpl));
+)(VirtualizedTraceViewImpl);

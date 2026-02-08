@@ -37,7 +37,6 @@ import {
   trackSelectTimeframe,
   trackViewAllTraces,
 } from './index.track';
-import withRouteProps from '../../../utils/withRouteProps';
 
 import SearchableSelect from '../../common/SearchableSelect';
 import { useServices } from '../../../hooks/useTraceDiscovery';
@@ -446,4 +445,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(MonitorATMServicesViewImpl));
+export default connect(mapStateToProps, mapDispatchToProps)(MonitorATMServicesViewImpl);

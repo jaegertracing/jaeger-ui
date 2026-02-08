@@ -18,7 +18,6 @@ import { getConfigValue } from '../../utils/config/get-config';
 import { extractUiFindFromState } from '../common/UiFindInput';
 
 import './index.css';
-import withRouteProps from '../../utils/withRouteProps';
 import { getAppEnvironment } from '../../utils/constants';
 import { ApiError } from '../../types/api-error';
 import { ReduxState } from '../../types';
@@ -386,4 +385,4 @@ export function mapDispatchToProps(dispatch: Dispatch): Pick<TProps, 'fetchDepen
   return { fetchDependencies };
 }
 
-export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(DependencyGraphPageImpl));
+export default connect(mapStateToProps, mapDispatchToProps)(DependencyGraphPageImpl);

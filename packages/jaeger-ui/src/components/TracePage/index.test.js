@@ -106,7 +106,7 @@ describe('makeShortcutCallbacks()', () => {
   });
 
   it('returns callbacks that adjust the range based on the `shortcutConfig` values', () => {
-    const fakeEvent = { preventDefault: () => {} };
+    const fakeEvent = { preventDefault: () => { } };
     const callbacks = makeShortcutCallbacks(adjRange);
     Object.keys(shortcutConfig).forEach((key, i) => {
       callbacks[key](fakeEvent);
@@ -1157,7 +1157,7 @@ describe('<TracePage>', () => {
 
 describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
-    expect(mapDispatchToProps(() => {})).toEqual({
+    expect(mapDispatchToProps(() => { })).toEqual({
       acknowledgeArchive: expect.any(Function),
       archiveTrace: expect.any(Function),
       fetchTrace: expect.any(Function),
@@ -1173,7 +1173,7 @@ describe('mapStateToProps()', () => {
   const trace = {};
   const embedded = 'a-faux-embedded-config';
   const ownProps = {
-    params: { id: traceID },
+    id: traceID,
   };
   let state;
   beforeEach(() => {
@@ -1182,12 +1182,6 @@ describe('mapStateToProps()', () => {
       trace: {
         traces: {
           [traceID]: { data: trace, state: fetchedState.DONE },
-        },
-      },
-      router: {
-        location: {
-          search: '',
-          state: null,
         },
       },
       config: {
@@ -1206,18 +1200,17 @@ describe('mapStateToProps()', () => {
       id: traceID,
       detailPanelMode: 'inline',
       embedded,
-      archiveTraceState: undefined,
+      archiveTraceState: null,
       searchUrl: null,
       timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
+      uiFind: undefined,
     });
   });
 
-  it('handles falsy ownProps.match.params.id', () => {
+  it('handles falsy ownProps.id', () => {
     const props = mapStateToProps(state, {
-      params: {
-        id: '',
-      },
+      id: '',
     });
     expect(props).toEqual(
       expect.objectContaining({
@@ -1230,16 +1223,17 @@ describe('mapStateToProps()', () => {
 
   it('propagates fromSearch correctly', () => {
     const fakeUrl = 'fake-url';
-    state.router.location.state = { fromSearch: fakeUrl };
+    // searchUrl is no longer available from router state
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
       detailPanelMode: 'inline',
       embedded,
       archiveTraceState: undefined,
-      searchUrl: fakeUrl,
+      searchUrl: null,
       timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
+      uiFind: undefined,
     });
   });
 

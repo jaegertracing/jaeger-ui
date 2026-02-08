@@ -25,7 +25,6 @@ import FileLoader from './FileLoader';
 
 import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
-import withRouteProps from '../../utils/withRouteProps';
 import { trackSortByChange } from './SearchForm.track';
 import { ReduxState, FetchedTrace } from '../../types';
 import { SearchQuery } from '../../types/search';
@@ -235,8 +234,8 @@ const sortedTracesXformer = memoizeOne((traces: Trace[], sortBy: string) => {
 });
 
 export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: boolean } {
-  const { embedded, router, traceDiff } = state;
-  const query = getUrlState(router.location.search);
+  const { embedded } = state;
+  const query = getUrlState(window.location.search);
   const isHomepage = !Object.keys(query).length;
   const {
     query: queryOfResults,
@@ -246,7 +245,7 @@ export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: 
     traceError,
     loadingTraces,
   } = stateTraceXformer(state.trace);
-  const diffCohort = stateTraceDiffXformer(state.trace, traceDiff);
+  const diffCohort = stateTraceDiffXformer(state.trace, state.traceDiff);
   const errors: Array<{ message: string }> = [];
   if (traceError && typeof traceError === 'object' && 'message' in traceError) {
     errors.push({ message: traceError.message });
@@ -283,4 +282,4 @@ function mapDispatchToProps(dispatch: Dispatch): IDispatchProps {
 
 const connector = connect(mapStateToProps, mapDispatchToProps);
 
-export default withRouteProps(connector(SearchTracePageImpl));
+export default connector(SearchTracePageImpl);

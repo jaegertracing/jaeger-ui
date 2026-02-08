@@ -42,7 +42,6 @@ import { localeStringComparator } from '../../utils/sort';
 
 import './index.css';
 import { ApiError } from '../../types/api-error';
-import withRouteProps from '../../utils/withRouteProps';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 
 interface IDoneState {
@@ -421,9 +420,10 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-const ConnectedDeepDependencyGraphPageImpl = withRouteProps(
-  connect(mapStateToProps, mapDispatchToProps)(DeepDependencyGraphPageImpl)
-) as React.ComponentType<Omit<TOwnProps, 'location' | 'navigate'> & THookProps>;
+const ConnectedDeepDependencyGraphPageImpl = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(DeepDependencyGraphPageImpl) as React.ComponentType<Omit<TOwnProps, 'location' | 'navigate'> & THookProps>;
 
 export default function DeepDependencyGraphPage({
   baseUrl = ROUTE_PATH,

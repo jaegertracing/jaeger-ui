@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { InputRef } from 'antd';
-import { Location, History as RouterHistory } from 'history';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
@@ -52,7 +52,6 @@ import type { SpanDetailPanelMode, StorageCapabilities, TraceGraphConfig } from 
 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
-import withRouteProps from '../../utils/withRouteProps';
 
 type TDispatchProps = {
   acknowledgeArchive: (id: string) => void;
@@ -64,9 +63,8 @@ type TDispatchProps = {
 };
 
 type TOwnProps = {
-  history: RouterHistory;
-  location: Location<LocationState>;
-  params: { id: string };
+  history: any;
+  location: any;
   archiveEnabled: boolean;
   enableSidePanel: boolean;
   storageCapabilities: StorageCapabilities | TNil;
@@ -473,14 +471,14 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 }
 
 // export for tests
-export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
-  const { id } = ownProps.params;
-  const { archive, embedded, router } = state;
+export function mapStateToProps(state: ReduxState, ownProps: { id: string }): TReduxProps {
+  const { id } = ownProps;
+  const { archive, embedded } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
-  const { state: locationState } = router.location;
-  const searchUrl = (locationState && locationState.fromSearch) || null;
+  // searchUrl is no longer available from router state
+  const searchUrl = null;
 
   const { detailPanelMode, timelineBarsVisible } = state.traceTimeline;
 
@@ -516,17 +514,17 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
 
 const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
 
-type TracePageProps = {
-  history: RouterHistory;
-  location: Location<LocationState>;
-  params: { id: string };
-};
-
-const TracePage = (props: TracePageProps) => {
+const TracePage = () => {
   const config = useConfig();
+  const params = useParams<{ id: string }>();
+  const location = useLocation<LocationState>();
+  const navigate = useNavigate();
+
   return (
     <ConnectedTracePage
-      {...props}
+      id={params.id!}
+      history={navigate}
+      location={location}
       archiveEnabled={Boolean(config.archiveEnabled)}
       enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
       storageCapabilities={config.storageCapabilities}
@@ -538,4 +536,4 @@ const TracePage = (props: TracePageProps) => {
   );
 };
 
-export default withRouteProps(TracePage);
+export default TracePage;
