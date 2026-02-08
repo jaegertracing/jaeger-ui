@@ -73,9 +73,7 @@ describe('<TraceTagOverview>', () => {
 
     await waitFor(() => {
       expect(componentInstance.state.tableValue.length).toBeGreaterThan(0);
-      const hasHighlightedItems = componentInstance.state.tableValue.some(
-        item => item.searchColor === 'rgb(255,243,215)'
-      );
+      const hasHighlightedItems = componentInstance.state.tableValue.some(item => item.searchMatch === true);
       expect(hasHighlightedItems).toBe(true);
     });
 
@@ -128,7 +126,7 @@ describe('<TraceTagOverview>', () => {
     );
 
     await timedAct(async () => {
-      componentRef.current.handler(tableValue, tableValue, 'Service Name', 'Operation Name');
+      componentRef.current.handler(tableValue, tableValue, 'Service Name', 'Operation Name', 'count');
     }, 'call handler');
 
     const rows = screen.getAllByRole('row');
@@ -188,7 +186,7 @@ describe('<TraceTagOverview>', () => {
             {
               name: 'SELECT * FROM users',
               hasSubgroupValue: true,
-              searchColor: 'transparent',
+              searchMatch: false,
               color: '#000',
               key: '0',
               isDetail: false,
@@ -203,7 +201,6 @@ describe('<TraceTagOverview>', () => {
               selfMin: 5,
               selfMax: 75,
               percent: 80,
-              colorToPercent: '#fff',
             },
           ],
         });
@@ -248,7 +245,7 @@ describe('<TraceTagOverview>', () => {
             {
               name: 'test-name',
               hasSubgroupValue: false,
-              searchColor: 'transparent',
+              searchMatch: false,
               color: '#000',
               key: '0',
               isDetail: false,
@@ -263,7 +260,6 @@ describe('<TraceTagOverview>', () => {
               selfMin: 5,
               selfMax: 75,
               percent: 80,
-              colorToPercent: '#fff',
             },
           ],
         });
@@ -322,8 +318,7 @@ describe('<TraceTagOverview>', () => {
               count: 1,
               total: 100,
               key: '0',
-              searchColor: 'transparent',
-              colorToPercent: '#fff',
+              searchMatch: false,
             },
             {
               name: 'item2',
@@ -331,8 +326,7 @@ describe('<TraceTagOverview>', () => {
               count: 2,
               total: 200,
               key: '1',
-              searchColor: 'transparent',
-              colorToPercent: '#fff',
+              searchMatch: false,
             },
             {
               name: 'item3',
@@ -340,8 +334,7 @@ describe('<TraceTagOverview>', () => {
               count: 3,
               total: 300,
               key: '2',
-              searchColor: 'transparent',
-              colorToPercent: '#fff',
+              searchMatch: false,
             },
           ],
         });
@@ -378,7 +371,7 @@ describe('<TraceTagOverview>', () => {
         isDetail: false,
         hasSubgroupValue: true,
         parentElement: 'none',
-        searchColor: 'rgb(248,248,248)',
+        searchMatch: false,
         key: '0',
       },
       {
@@ -386,7 +379,7 @@ describe('<TraceTagOverview>', () => {
         isDetail: true,
         hasSubgroupValue: false,
         parentElement: 'parent1',
-        searchColor: 'rgb(248,248,248)',
+        searchMatch: false,
         key: '1',
       },
       {
@@ -394,7 +387,7 @@ describe('<TraceTagOverview>', () => {
         isDetail: true,
         hasSubgroupValue: false,
         parentElement: 'parent2',
-        searchColor: 'rgb(248,248,248)',
+        searchMatch: false,
         key: '2',
       },
     ];
@@ -426,7 +419,7 @@ describe('<TraceTagOverview>', () => {
         isDetail: true,
         hasSubgroupValue: false,
         parentElement: 'parentitem',
-        searchColor: 'rgb(248,248,248)',
+        searchMatch: false,
         key: '0',
       },
       {
@@ -434,7 +427,7 @@ describe('<TraceTagOverview>', () => {
         isDetail: false,
         hasSubgroupValue: true,
         parentElement: 'none',
-        searchColor: 'rgb(248,248,248)',
+        searchMatch: false,
         key: '1',
       },
       {
@@ -442,7 +435,7 @@ describe('<TraceTagOverview>', () => {
         isDetail: true,
         hasSubgroupValue: false,
         parentElement: 'searchterm',
-        searchColor: 'rgb(248,248,248)',
+        searchMatch: false,
         key: '2',
       },
     ];
@@ -450,7 +443,7 @@ describe('<TraceTagOverview>', () => {
     await waitFor(() => {
       if (componentRef.current) {
         const result = componentRef.current.searchInTable(undefined, mockTableData, 'searchterm');
-        const highlightedItems = result.filter(item => item.searchColor === 'rgb(255,243,215)');
+        const highlightedItems = result.filter(item => item.searchMatch === true);
         expect(highlightedItems.length).toBeGreaterThan(0);
       }
     });
@@ -472,7 +465,7 @@ describe('<TraceTagOverview>', () => {
         isDetail: true,
         hasSubgroupValue: true,
         parentElement: 'none',
-        searchColor: undefined,
+        searchMatch: false,
         key: '0',
       },
       {
@@ -480,7 +473,7 @@ describe('<TraceTagOverview>', () => {
         isDetail: false,
         hasSubgroupValue: false,
         parentElement: 'none',
-        searchColor: undefined,
+        searchMatch: false,
         key: '1',
       },
     ];
@@ -488,8 +481,8 @@ describe('<TraceTagOverview>', () => {
     await waitFor(() => {
       if (componentRef.current) {
         const result = componentRef.current.searchInTable(undefined, mockTableData, null);
-        expect(result[0].searchColor).toBe('rgb(248,248,248)');
-        expect(result[1].searchColor).toBe('rgb(248,248,248)');
+        expect(result[0].searchMatch).toBe(false);
+        expect(result[1].searchMatch).toBe(false);
       }
     });
   });
