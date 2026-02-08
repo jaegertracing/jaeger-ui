@@ -483,19 +483,21 @@ type TracePageProps = {
 const TracePage = (props: TracePageProps) => {
   const config = useConfig();
   const traceID = props.params.id;
+  const normalizedTraceID = traceID?.toLowerCase();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (traceID && traceID !== traceID.toLowerCase()) {
-      const url = getUrl(traceID.toLowerCase());
+    if (traceID && traceID !== normalizedTraceID) {
+      const url = getUrl(normalizedTraceID);
       navigate(`${url}${location.search}`, { replace: true, state: location.state });
     }
-  }, [traceID, navigate, location.search, location.state]);
+  }, [traceID, normalizedTraceID, navigate, location.search, location.state]);
 
   return (
     <ConnectedTracePage
       {...props}
+      params={{ ...props.params, id: normalizedTraceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
       storageCapabilities={config.storageCapabilities}
       criticalPathEnabled={config.criticalPathEnabled}
