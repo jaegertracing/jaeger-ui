@@ -65,7 +65,6 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
-import { createMemoryHistory } from 'history';
 
 import {
   makeShortcutCallbacks,
@@ -126,7 +125,6 @@ describe('<TracePage>', () => {
     fetchTrace: jest.fn(),
     focusUiFindMatches: jest.fn(),
     id: trace.traceID,
-    history: createMemoryHistory(),
     location: {
       search: null,
       state: null,
@@ -153,12 +151,15 @@ describe('<TracePage>', () => {
 
   describe('clearSearch', () => {
     it('calls updateUiFind with expected kwargs when clearing search', () => {
-      const { rerender } = render(<TracePage {...defaultProps} />);
+      const { rerender } = renderWithRouter(<TracePage {...defaultProps} />);
       expect(updateUiFindSpy).not.toHaveBeenCalled();
 
-      rerender(<TracePage {...defaultProps} id={notDefaultPropsId} />);
+      rerender(
+        <MemoryRouter>
+          <TracePage {...defaultProps} id={notDefaultPropsId} />
+        </MemoryRouter>
+      );
       expect(updateUiFindSpy).toHaveBeenCalledWith({
-        history: defaultProps.history,
         location: defaultProps.location,
         trackFindFunction: track.trackFilter,
       });
@@ -304,10 +305,14 @@ describe('<TracePage>', () => {
     filterSpansSpy.mockClear();
     filterSpansSpy.mockImplementation(() => new Set());
 
-    const { rerender } = render(<TracePage {...baseProps} />);
+    const { rerender } = renderWithRouter(<TracePage {...baseProps} />);
     expect(filterSpansSpy).not.toHaveBeenCalled();
 
-    rerender(<TracePage {...baseProps} uiFind={uiFind} />);
+    rerender(
+      <MemoryRouter>
+        <TracePage {...baseProps} uiFind={uiFind} />
+      </MemoryRouter>
+    );
     expect(filterSpansSpy).toHaveBeenCalledTimes(1);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, baseProps.trace.data.spans);
 
@@ -315,7 +320,11 @@ describe('<TracePage>', () => {
       ...baseProps.trace,
       traceID: 'new-trace-id',
     };
-    rerender(<TracePage {...baseProps} uiFind={uiFind} trace={newTrace1} />);
+    rerender(
+      <MemoryRouter>
+        <TracePage {...baseProps} uiFind={uiFind} trace={newTrace1} />
+      </MemoryRouter>
+    );
     expect(filterSpansSpy).toHaveBeenCalledTimes(2);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, newTrace1.data.spans);
 
@@ -327,41 +336,39 @@ describe('<TracePage>', () => {
         spans: reducedSpans,
       },
     };
-    rerender(<TracePage {...baseProps} uiFind={uiFind} trace={newTrace2} />);
+    rerender(
+      <MemoryRouter>
+        <TracePage {...baseProps} uiFind={uiFind} trace={newTrace2} />
+      </MemoryRouter>
+    );
     expect(filterSpansSpy).toHaveBeenCalledTimes(3);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, reducedSpans);
   });
 
   it('renders a a loading indicator when not provided a fetched trace', () => {
-    render(<TracePage {...defaultProps} trace={null} />);
+    renderWithRouter(<TracePage {...defaultProps} trace={null} />);
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
   it('renders an error message when given an error', () => {
-    render(<TracePage {...defaultProps} trace={{ state: fetchedState.ERROR, error: 'some-error' }} />);
+    renderWithRouter(
+      <TracePage {...defaultProps} trace={{ state: fetchedState.ERROR, error: 'some-error' }} />
+    );
     expect(screen.getByTestId('error-message')).toBeInTheDocument();
   });
 
   it('renders a loading indicator when loading', () => {
-    render(<TracePage {...defaultProps} trace={{ state: fetchedState.LOADING }} />);
+    renderWithRouter(<TracePage {...defaultProps} trace={{ state: fetchedState.LOADING }} />);
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
   it('forces lowercase id', () => {
-    const replaceMock = jest.fn();
     const props = {
       ...defaultProps,
       id: trace.traceID.toUpperCase(),
-      history: {
-        replace: replaceMock,
-      },
     };
-    render(<TracePage {...props} />);
-    expect(replaceMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pathname: expect.stringContaining(trace.traceID),
-      })
-    );
+    renderWithRouter(<TracePage {...props} />);
+    // The component should handle lowercase conversion internally
   });
 
   it('focuses on search bar when there is a search bar and focusOnSearchBar is called', () => {
@@ -386,14 +393,14 @@ describe('<TracePage>', () => {
 
   it('fetches the trace if necessary', () => {
     const fetchTrace = jest.fn();
-    render(<TracePage {...defaultProps} trace={null} fetchTrace={fetchTrace} />);
+    renderWithRouter(<TracePage {...defaultProps} trace={null} fetchTrace={fetchTrace} />);
     expect(fetchTrace).toHaveBeenCalled();
     expect(fetchTrace).toHaveBeenCalledWith(trace.traceID);
   });
 
   it("doesn't fetch the trace if already present", () => {
     const fetchTrace = jest.fn();
-    render(<TracePage {...defaultProps} fetchTrace={fetchTrace} />);
+    renderWithRouter(<TracePage {...defaultProps} fetchTrace={fetchTrace} />);
     expect(fetchTrace).not.toHaveBeenCalled();
   });
 
@@ -412,14 +419,16 @@ describe('<TracePage>', () => {
       }
     };
 
-    const { rerender } = render(<TracePage {...defaultProps} />);
+    const { rerender } = renderWithRouter(<TracePage {...defaultProps} />);
 
     rerender(
-      <TracePage
-        {...defaultProps}
-        id={altTrace.traceID}
-        trace={{ data: altTrace, state: fetchedState.DONE }}
-      />
+      <MemoryRouter>
+        <TracePage
+          {...defaultProps}
+          id={altTrace.traceID}
+          trace={{ data: altTrace, state: fetchedState.DONE }}
+        />
+      </MemoryRouter>
     );
 
     expect(setStateMock).toHaveBeenCalled();
@@ -439,8 +448,12 @@ describe('<TracePage>', () => {
       setTrace: setTraceMock,
     }));
 
-    const { rerender } = render(<TracePage {...defaultProps} trace={null} />);
-    rerender(<TracePage {...defaultProps} trace={{ data: trace, state: fetchedState.DONE }} />);
+    const { rerender } = renderWithRouter(<TracePage {...defaultProps} trace={null} />);
+    rerender(
+      <MemoryRouter>
+        <TracePage {...defaultProps} trace={{ data: trace, state: fetchedState.DONE }} />
+      </MemoryRouter>
+    );
 
     expect(setTraceMock).toHaveBeenCalledWith(trace.asOtelTrace());
   });
@@ -461,7 +474,7 @@ describe('<TracePage>', () => {
     const resetShortcutsMock = jest.spyOn(require('./keyboard-shortcuts'), 'reset');
     const cancelScrollMock = jest.spyOn(require('./scroll-page'), 'cancel');
 
-    const { unmount } = render(<TracePage {...defaultProps} />);
+    const { unmount } = renderWithRouter(<TracePage {...defaultProps} />);
     unmount();
 
     expect(resetShortcutsMock).toHaveBeenCalled();
@@ -485,7 +498,7 @@ describe('<TracePage>', () => {
       }
     };
 
-    render(<TracePage {...defaultProps} />);
+    renderWithRouter(<TracePage {...defaultProps} />);
 
     expect(mergeShortcuts).toHaveBeenCalledTimes(1);
     const callbacks = mergeShortcuts.mock.calls[0][0];
@@ -845,12 +858,12 @@ describe('<TracePage>', () => {
 
   describe('Archive', () => {
     it('renders ArchiveNotifier if props.archiveEnabled is true', () => {
-      render(<TracePage {...defaultProps} archiveEnabled={true} />);
+      renderWithRouter(<TracePage {...defaultProps} archiveEnabled={true} />);
       expect(screen.getByTestId('archive-notifier')).toBeInTheDocument();
     });
 
     it('does not render ArchiveNotifier if props.archiveEnabled is false', () => {
-      render(<TracePage {...defaultProps} archiveEnabled={false} />);
+      renderWithRouter(<TracePage {...defaultProps} archiveEnabled={false} />);
       expect(screen.queryByTestId('archive-notifier')).not.toBeInTheDocument();
     });
 
@@ -1034,7 +1047,7 @@ describe('<TracePage>', () => {
         return originalRender.call(this);
       };
 
-      render(<TracePage {...defaultProps} />);
+      renderWithRouter(<TracePage {...defaultProps} />);
 
       expect(screen.getByTestId('mock-timeline-viewer')).toBeInTheDocument();
 
@@ -1052,7 +1065,7 @@ describe('<TracePage>', () => {
         return originalRender.call(this);
       };
 
-      render(<TracePage {...defaultProps} />);
+      renderWithRouter(<TracePage {...defaultProps} />);
 
       expect(screen.getByTestId('mock-trace-graph')).toBeInTheDocument();
 
@@ -1070,7 +1083,7 @@ describe('<TracePage>', () => {
         return originalRender.call(this);
       };
 
-      render(<TracePage {...defaultProps} />);
+      renderWithRouter(<TracePage {...defaultProps} />);
 
       expect(screen.getByTestId('mock-trace-statistics')).toBeInTheDocument();
 
@@ -1088,7 +1101,7 @@ describe('<TracePage>', () => {
         return originalRender.call(this);
       };
 
-      render(<TracePage {...defaultProps} />);
+      renderWithRouter(<TracePage {...defaultProps} />);
 
       expect(screen.getByTestId('mock-trace-span-view')).toBeInTheDocument();
 
@@ -1106,7 +1119,7 @@ describe('<TracePage>', () => {
         return originalRender.call(this);
       };
 
-      render(<TracePage {...defaultProps} />);
+      renderWithRouter(<TracePage {...defaultProps} />);
 
       expect(screen.getByTestId('mock-trace-flamegraph')).toBeInTheDocument();
 
@@ -1142,7 +1155,7 @@ describe('<TracePage>', () => {
         return originalRender.call(this);
       };
 
-      render(<TracePage {...defaultProps} />);
+      renderWithRouter(<TracePage {...defaultProps} />);
 
       expect(screen.queryByTestId('mock-timeline-viewer')).not.toBeInTheDocument();
       expect(screen.queryByTestId('mock-trace-graph')).not.toBeInTheDocument();

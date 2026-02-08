@@ -18,6 +18,14 @@ import DiffSelection from './DiffSelection';
 import { StatusCode } from '../../../types/otel';
 
 const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => {
+  const actual = jest.requireActual('react-router-dom');
+  return {
+    ...actual,
+    useLocation: () => ({ search: '' }),
+  };
+});
+
 jest.mock('react-router-dom-v5-compat', () => {
   const actual = jest.requireActual('react-router-dom-v5-compat');
   return {

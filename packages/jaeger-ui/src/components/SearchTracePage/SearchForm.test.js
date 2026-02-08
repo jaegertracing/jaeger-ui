@@ -781,9 +781,17 @@ describe('validation', () => {
 
 describe('mapStateToProps()', () => {
   let state;
+  let originalLocation;
 
   beforeEach(() => {
-    state = { router: { location: { search: '' } } };
+    originalLocation = window.location;
+    delete window.location;
+    window.location = { search: '' };
+    state = {};
+  });
+
+  afterEach(() => {
+    window.location = originalLocation;
   });
 
   it('does not explode when the query string is empty', () => {

@@ -238,7 +238,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   clearSearch = () => {
     const { history, location } = this.props;
     updateUiFind({
-      history,
+      navigate: history,
       location,
       trackFindFunction: trackFilter,
     });
@@ -289,14 +289,14 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   ensureTraceFetched() {
-    const { fetchTrace, location, trace, id } = this.props;
+    const { fetchTrace, location, trace, id, history } = this.props;
     if (!trace) {
       fetchTrace(id);
       return;
     }
-    const { history } = this.props;
     if (id && id !== id.toLowerCase()) {
-      history.replace(getLocation(id.toLowerCase(), location.state));
+      const newLocation = getLocation(id.toLowerCase(), location.state);
+      history(newLocation, { replace: true });
     }
   }
 
