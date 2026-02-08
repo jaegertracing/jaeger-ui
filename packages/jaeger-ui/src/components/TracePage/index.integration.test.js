@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 const mockNavigate = jest.fn();
+let mockLocation = { search: '', state: null };
 
 jest.mock('react-router-dom-v5-compat', () => ({
   ...jest.requireActual('react-router-dom-v5-compat'),
   useNavigate: () => mockNavigate,
-  useLocation: () => ({ search: '', state: null }),
+  useLocation: () => mockLocation,
 }));
 
 jest.mock('../../hooks/useConfig', () => ({
@@ -39,6 +40,7 @@ import TracePage from './index';
 describe('TracePage URL normalization', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
+    mockLocation = { search: '', state: null };
   });
 
   it('normalizes uppercase trace IDs to lowercase in the URL', async () => {
@@ -54,6 +56,27 @@ describe('TracePage URL normalization', () => {
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(
         expect.stringContaining(lowercaseTraceId),
+        expect.objectContaining({ replace: true })
+      );
+    });
+  });
+
+  it('preserves query parameters during trace ID normalization', async () => {
+    const uppercaseTraceId = 'ABC123DEF456';
+    const lowercaseTraceId = uppercaseTraceId.toLowerCase();
+    const searchParams = '?uiFind=foo&x=1';
+
+    mockLocation = { search: searchParams, state: null };
+
+    render(
+      <MemoryRouter>
+        <TracePage params={{ id: uppercaseTraceId }} />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(
+        expect.stringContaining(`${lowercaseTraceId}${searchParams}`),
         expect.objectContaining({ replace: true })
       );
     });
