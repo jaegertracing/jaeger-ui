@@ -158,7 +158,9 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       renderUtils: this.renderUtils,
     };
     const { layoutPhase } = graphState;
-    return topLayers.map(layer => {
+
+    // 1. Render the standard layers (Edges, then Nodes)
+    const renderedLayers = topLayers.map(layer => {
       const { layerType, key, setOnContainer } = layer;
       if (layer.layers) {
         if (layer.layerType === ELayerType.Html) {
@@ -173,7 +175,6 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
             />
           );
         }
-        // svg group layer, the if is for TypeScript
         if (layer.layerType === ELayerType.Svg) {
           return (
             <SvgLayersGroup<T, U>
@@ -188,8 +189,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
         }
       }
       if (layer.edges) {
-        // edges standalone layer
-        const { defs, markerEndId, markerStartId, setOnEdge } = layer;
+        const { defs, markerEndId, markerStartId, setOnEdge, key, setOnContainer } = layer;
         return layoutPhase === ELayoutPhase.Done ? (
           <SvgEdgesLayer
             key={key}
@@ -201,11 +201,11 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
             markerStartId={markerStartId}
             setOnContainer={setOnContainer}
             setOnEdge={setOnEdge}
+            setOnTop={false}
           />
         ) : null;
       }
       if (layer.measurable) {
-        // standalone measurable Nodes Layer
         const { measureNode, renderNode, setOnNode } = layer;
         return (
           <MeasurableNodesLayer<T, U>
@@ -240,6 +240,29 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
       }
       throw new Error('Unrecognized layer');
     });
+
+    // 2. Create the "Foreground" layer for labels to fix the clipping bug
+    const foregroundLabels = topLayers
+      .filter(layer => !!layer.edges)
+      .map(layer => {
+        const { key, defs, markerEndId, markerStartId, setOnEdge, setOnContainer } = layer;
+        return layoutPhase === ELayoutPhase.Done ? (
+          <SvgEdgesLayer
+            key={`${key}--foreground`}
+            standalone
+            getClassName={getClassName}
+            graphState={graphState}
+            markerEndId={markerEndId}
+            markerStartId={markerStartId}
+            setOnContainer={setOnContainer}
+            setOnEdge={setOnEdge}
+            setOnTop={true}
+          />
+        ) : null;
+      });
+
+    // 3. Return everything together (Labels will be last, so they are on top!)
+    return [...renderedLayers, ...foregroundLabels];
   }
 
   private onZoomUpdated = (zoomTransform: ZoomTransform) => {

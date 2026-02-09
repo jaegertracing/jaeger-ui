@@ -15,6 +15,7 @@ type TProps<T = {}> = {
   markerStartId?: string;
   renderUtils: TRendererUtils;
   setOnEdge?: TSetProps<(edge: TLayoutEdge<T>, utils: TRendererUtils) => TAnyProps | null>;
+  setOnTop?: boolean;
 };
 
 export default class SvgEdges<T = {}> extends React.Component<TProps<T>> {
@@ -26,12 +27,14 @@ export default class SvgEdges<T = {}> extends React.Component<TProps<T>> {
       p.markerEndId !== np.markerEndId ||
       p.markerStartId !== np.markerStartId ||
       p.renderUtils !== np.renderUtils ||
+      p.setOnTop !== np.setOnTop ||
       !isSamePropSetter(p.setOnEdge, np.setOnEdge)
     );
   }
 
   render() {
-    const { getClassName, layoutEdges, markerEndId, markerStartId, renderUtils, setOnEdge } = this.props;
+    const { getClassName, layoutEdges, markerEndId, markerStartId, renderUtils, setOnEdge, setOnTop } =
+      this.props;
     return layoutEdges.map(edge => (
       <SvgEdge
         key={`${edge.edge.from}\v${edge.edge.to}`}
@@ -42,6 +45,7 @@ export default class SvgEdges<T = {}> extends React.Component<TProps<T>> {
         renderUtils={renderUtils}
         setOnEdge={setOnEdge}
         label={edge.edge.label}
+        setOnTop={setOnTop}
       />
     ));
   }

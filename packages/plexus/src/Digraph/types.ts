@@ -120,6 +120,7 @@ export type TEdgesLayer<T = Record<string, unknown>, U = Record<string, unknown>
     markerEndId?: string;
     markerStartId?: string;
     setOnEdge?: TSetProps<(edge: TLayoutEdge<U>, utils: TRendererUtils) => TAnyProps | null>;
+    setOnTop?: boolean;
   };
 
 export type TStandaloneEdgesLayer<T = Record<string, unknown>, U = Record<string, unknown>> = TEdgesLayer<

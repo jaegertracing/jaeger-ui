@@ -11,24 +11,28 @@ type TProps<T = {}, U = {}> = Omit<TStandaloneEdgesLayer<T, U>, 'edges' | 'layer
   getClassName: (name: string) => string;
   graphState: TExposedGraphState<T, U>;
   standalone?: boolean;
+  setOnTop?: boolean;
 };
 
 // Add the default black stroke on an outter <g> so CSS classes or styles
 // on the inner <g> can override it
 // TODO: A more configurable appraoch to setting a default stroke color
 const INHERIT_STROKE = { stroke: '#000' };
+const NO_STROKE = { stroke: 'none' };
 
 export default class SvgEdgesLayer<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
   render() {
-    const { getClassName, graphState, markerEndId, markerStartId, setOnEdge } = this.props;
+    const { getClassName, graphState, markerEndId, markerStartId, setOnEdge, setOnTop } = this.props;
     const { layoutEdges, renderUtils } = graphState;
 
     if (!layoutEdges) {
       return null;
     }
 
+    const wrapperStyle = setOnTop ? NO_STROKE : INHERIT_STROKE;
+
     return (
-      <SvgLayer {...this.props} classNamePart="SvgEdgesLayer" extraWrapper={INHERIT_STROKE}>
+      <SvgLayer {...this.props} classNamePart="SvgEdgesLayer" extraWrapper={wrapperStyle}>
         <SvgEdges
           getClassName={getClassName}
           layoutEdges={layoutEdges}
@@ -36,6 +40,8 @@ export default class SvgEdgesLayer<T = {}, U = {}> extends React.PureComponent<T
           markerStartId={markerStartId}
           renderUtils={renderUtils}
           setOnEdge={setOnEdge}
+          // 2. Pass it down
+          setOnTop={setOnTop}
         />
       </SvgLayer>
     );
