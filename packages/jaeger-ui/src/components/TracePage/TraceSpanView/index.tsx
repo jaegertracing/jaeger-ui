@@ -76,7 +76,7 @@ export default function TraceSpanView(props: Props) {
 
   function uniqueOperationNameOptions() {
     let operationNamesList: string[];
-    if (filters.serviceName) {
+    if (filters.serviceName && filters.serviceName.length > 0) {
       const serviceToOperationsMap = svcToOperationsMap;
       operationNamesList = filters.serviceName.flatMap(svc => serviceToOperationsMap.get(svc) || []);
     } else {
