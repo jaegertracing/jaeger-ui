@@ -1,7 +1,7 @@
 // Copyright (c) 2018 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Table, Button, Select, Form, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
@@ -23,55 +23,62 @@ type Props = {
 };
 
 export default function TraceSpanView(props: Props) {
-  const [data, setData] = useState<ReadonlyArray<IOtelSpan>>([]);
-  const [svcNamesList, setSvcNamesList] = useState<string[]>([]);
-  const [opNamesList, setOpNamesList] = useState<string[]>([]);
-  const [svcToOperationsMap, setSvcToOperationsMap] = useState<Map<string, string[]>>(new Map());
-  const [filters, setFilters] = useState<Record<FilterType, string[]>>({} as Record<FilterType, string[]>);
+  const [filters, setFilters] = useState<Record<FilterType, string[]>>({
+    serviceName: [],
+    operationName: [],
+  });
   const [filteredData, setFilteredData] = useState<readonly IOtelSpan[]>([]);
-  const [maximumDuration, setMaximumDuration] = useState<number>(0);
 
-  useEffect(() => {
+  const {
+    svcNamesList: serviceNamesList,
+    opNames: opNamesList,
+    svcToOps: svcToOperationsMap,
+    maximumDuration: maxDuration,
+    spanData: data,
+  } = useMemo(() => {
     const serviceNamesSet = new Set<string>();
     const operationNamesSet = new Set<string>();
     const serviceToOperationsMap = new Map<string, Set<string>>();
 
-    props.trace.spans.forEach(span => {
+    for (const span of props.trace.spans) {
       const serviceName = span.resource.serviceName;
       serviceNamesSet.add(serviceName);
       operationNamesSet.add(span.name);
 
       if (!serviceToOperationsMap.has(serviceName)) {
-        serviceToOperationsMap.set(serviceName, new Set<string>());
+        serviceToOperationsMap.set(serviceName, new Set());
       }
       serviceToOperationsMap.get(serviceName)!.add(span.name);
+    }
+
+    const svcNamesList = [...serviceNamesSet].sort();
+    const opNames = [...operationNamesSet].sort();
+
+    const svcToOps = new Map<string, string[]>();
+    serviceToOperationsMap.forEach((ops, svc) => {
+      svcToOps.set(svc, [...ops].sort());
     });
 
-    // Sort alphabetically for better UX
-    const serviceNamesList = [...serviceNamesSet].sort();
-    const operationNamesList = [...operationNamesSet].sort();
+    const maximumDuration = Math.max(...props.trace.spans.map(s => s.duration), 1);
+    const spanData = props.trace.spans;
 
-    // Convert operation sets to sorted arrays
-    const sortedServiceToOperationsMap = new Map<string, string[]>();
-    serviceToOperationsMap.forEach((operations, serviceName) => {
-      sortedServiceToOperationsMap.set(serviceName, [...operations].sort());
-    });
+    return {
+      svcNamesList,
+      opNames,
+      svcToOps,
+      maximumDuration,
+      spanData,
+    };
+  }, [props.trace.spans]);
 
-    // Compute max duration once for the entire trace
-    const maxDuration = Math.max(...props.trace.spans.map(s => s.duration), 1);
-
-    setData(props.trace.spans);
+  useEffect(() => {
     setFilteredData(props.trace.spans);
-    setSvcNamesList(serviceNamesList);
-    setOpNamesList(operationNamesList);
-    setSvcToOperationsMap(sortedServiceToOperationsMap);
-    setMaximumDuration(maxDuration);
-    setFilters({} as Record<FilterType, string[]>);
+    setFilters({ serviceName: [], operationName: [] });
   }, [props.trace.spans]);
 
   function handleResetFilter() {
-    setFilters({} as Record<FilterType, string[]>);
-    setFilteredData(data);
+    setFilters({ serviceName: [], operationName: [] });
+    setFilteredData(props.trace.spans);
   }
 
   function uniqueOperationNameOptions() {
@@ -90,7 +97,7 @@ export default function TraceSpanView(props: Props) {
     const newFilters = {
       ...filters,
       [filterType]: selectedValues,
-    } as Record<FilterType, string[]>;
+    };
 
     // Filter spans: a span passes if it matches all active filters
     const newFilteredData = data.filter(span => {
@@ -147,7 +154,7 @@ export default function TraceSpanView(props: Props) {
       title: 'Duration',
       sorter: (a, b) => a.duration - b.duration,
       render: (_, span) => {
-        const percentage = (span.duration / maximumDuration) * 100;
+        const percentage = (span.duration / maxDuration) * 100;
         const preciseValue = formatDuration(span.duration);
         const compactValue = formatDurationCompact(span.duration);
 
@@ -251,7 +258,7 @@ export default function TraceSpanView(props: Props) {
             }}
             data-testid="select-service"
           >
-            {svcNamesList.map(name => {
+            {serviceNamesList.map(name => {
               return (
                 <Select.Option value={name} key={name}>
                   {name}{' '}
