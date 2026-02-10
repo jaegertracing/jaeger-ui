@@ -32,8 +32,6 @@ export default function TraceSpanView(props: Props) {
   const [maximumDuration, setMaximumDuration] = useState<number>(0);
 
   useEffect(() => {
-    console.log('Changes...');
-    console.log(props);
     const serviceNamesSet = new Set<string>();
     const operationNamesSet = new Set<string>();
     const serviceToOperationsMap = new Map<string, Set<string>>();
