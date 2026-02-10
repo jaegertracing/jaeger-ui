@@ -32,6 +32,8 @@ export default function TraceSpanView(props: Props) {
   const [maximumDuration, setMaximumDuration] = useState<number>(0);
 
   useEffect(() => {
+    console.log('Changes...');
+    console.log(props);
     const serviceNamesSet = new Set<string>();
     const operationNamesSet = new Set<string>();
     const serviceToOperationsMap = new Map<string, Set<string>>();
@@ -66,6 +68,7 @@ export default function TraceSpanView(props: Props) {
     setOpNamesList(operationNamesList);
     setSvcToOperationsMap(sortedServiceToOperationsMap);
     setMaximumDuration(maxDuration);
+    setFilters({} as Record<FilterType, string[]>);
   }, [props.trace.spans]);
 
   function handleResetFilter() {
