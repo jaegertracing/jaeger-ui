@@ -15,17 +15,14 @@ import SearchableSelect from '../../common/SearchableSelect';
 
 type FilterType = 'serviceName' | 'operationName';
 
-export default function TraceSpanView({
-  trace,
-  uiFindVertexKeys,
-  uiFind,
-  useOtelTerms,
-}: {
+type Props = {
   trace: IOtelTrace;
   uiFindVertexKeys: Set<string> | TNil;
   uiFind: string | null | undefined;
   useOtelTerms: boolean;
-}) {
+};
+
+export default function TraceSpanView(props: Props) {
   const [data, setData] = useState<ReadonlyArray<IOtelSpan>>([]);
   const [svcNamesList, setSvcNamesList] = useState<string[]>([]);
   const [opNamesList, setOpNamesList] = useState<string[]>([]);
@@ -39,7 +36,7 @@ export default function TraceSpanView({
     const operationNamesSet = new Set<string>();
     const serviceToOperationsMap = new Map<string, Set<string>>();
 
-    trace.spans.forEach(span => {
+    props.trace.spans.forEach(span => {
       const serviceName = span.resource.serviceName;
       serviceNamesSet.add(serviceName);
       operationNamesSet.add(span.name);
@@ -61,15 +58,15 @@ export default function TraceSpanView({
     });
 
     // Compute max duration once for the entire trace
-    const maxDuration = Math.max(...trace.spans.map(s => s.duration), 1);
+    const maxDuration = Math.max(...props.trace.spans.map(s => s.duration), 1);
 
-    setData(trace.spans);
-    setFilteredData(trace.spans);
+    setData(props.trace.spans);
+    setFilteredData(props.trace.spans);
     setSvcNamesList(serviceNamesList);
     setOpNamesList(operationNamesList);
     setSvcToOperationsMap(sortedServiceToOperationsMap);
     setMaximumDuration(maxDuration);
-  }, []);
+  }, [props.trace.spans]);
 
   function handleResetFilter() {
     setFilters({} as Record<FilterType, string[]>);
@@ -124,7 +121,7 @@ export default function TraceSpanView({
       render: (_, span) => span.resource.serviceName,
     },
     {
-      title: useOtelTerms ? 'Span Name' : 'Operation',
+      title: props.useOtelTerms ? 'Span Name' : 'Operation',
       width: '25%',
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (_, span) => span.name,
@@ -264,7 +261,7 @@ export default function TraceSpanView({
         </Form.Item>
 
         <Form.Item
-          label={useOtelTerms ? 'Span Name' : 'Operation Name'}
+          label={props.useOtelTerms ? 'Span Name' : 'Operation Name'}
           labelCol={{ flex: '0 0 auto' }}
           wrapperCol={{ flex: '1 1 auto' }}
           style={{ flex: '1 1 300px', maxWidth: '400px', marginBottom: 0 }}
@@ -277,7 +274,7 @@ export default function TraceSpanView({
             maxTagCount={4}
             value={filters.operationName || []}
             maxTagPlaceholder={`+ ${(filters.operationName?.length || 0) - 4} Selected`}
-            placeholder={useOtelTerms ? 'Select Span Name' : 'Select Operation'}
+            placeholder={props.useOtelTerms ? 'Select Span Name' : 'Select Operation'}
             onChange={entry => {
               onFilteredChangeCustom(entry as [], 'operationName');
             }}
