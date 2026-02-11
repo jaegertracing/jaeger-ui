@@ -267,6 +267,29 @@ describe('<MonitorATMServicesView>', () => {
     expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
   });
 
+  it('fetches metrics when isATMActivated is null (initial state)', () => {
+    cleanup();
+    mockFetchAllServiceMetrics.mockClear();
+    mockFetchAggregatedServiceMetrics.mockClear();
+
+    const propsWithNullATM = {
+      ...props,
+      metrics: {
+        ...originInitialState,
+        serviceMetrics: null,
+        serviceOpsMetrics: undefined,
+        loading: false,
+        isATMActivated: null, // Initial state before any metrics fetch
+      },
+      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+    };
+    useServices.mockReturnValue({ data: ['apple'], isLoading: false });
+    renderWithRouter(<MonitorATMServicesView {...propsWithNullATM} />);
+    expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
+    expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
+  });
+
   it('ATM snapshot test (DOM)', () => {
     cleanup();
     mockFetchServices.mockResolvedValue(['apple', 'orange']);
