@@ -49,8 +49,13 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     const serviceName = getServiceName();
-    const checkboxStatus = false;
-    const colorBy = this.getValue(checkboxStatus);
+    this.state = {
+      valueNameSelector1: serviceName,
+      valueNameSelector2: null,
+      valueNameSelector3: 'Count',
+      checkboxStatus: true,
+    };
+    const colorBy = this.getValue(this.state.checkboxStatus);
     this.props.handler(
       getColumnValues(serviceName, this.props.trace, this.props.useOtelTerms),
       getColumnValues(serviceName, this.props.trace, this.props.useOtelTerms),
@@ -58,13 +63,6 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
       null,
       colorBy
     );
-
-    this.state = {
-      valueNameSelector1: serviceName,
-      valueNameSelector2: null,
-      valueNameSelector3: 'Count',
-      checkboxStatus: false,
-    };
     this.setValueNameSelector1 = this.setValueNameSelector1.bind(this);
     this.setValueNameSelector2 = this.setValueNameSelector2.bind(this);
     this.setValueNameSelector3 = this.setValueNameSelector3.bind(this);
@@ -232,7 +230,11 @@ export default class TraceStatisticsHeader extends Component<Props, State> {
           </SearchableSelect>
         </label>
         <div className="TraceStatisticsHeader--colorByWrapper">
-          <Checkbox className="TraceStatisticsHeader--checkbox" onChange={this.checkboxButton} />
+          <Checkbox
+            className="TraceStatisticsHeader--checkbox"
+            onChange={this.checkboxButton}
+            checked={this.state.checkboxStatus}
+          />
           <label className="TraceStatisticsHeader--label">
             <span className="TraceStatisticsHeader--labelText">Color by:</span>
             <SearchableSelect
