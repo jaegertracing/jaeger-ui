@@ -304,6 +304,9 @@ export default class TraceStatistics extends Component<Props, State> {
       };
     };
 
+    const activeAttribute = this.state.colorByAttribute;
+    const activeMax = Math.max(...this.state.tableValue.map(r => (r as any)[activeAttribute] as number), 1);
+
     const columns: ColumnProps<ITableSpan>[] = columnsArray.map(val => {
       const renderFunction = (cell: string | number, row: ITableSpan) => {
         if (val.attribute === 'name')
@@ -321,7 +324,7 @@ export default class TraceStatistics extends Component<Props, State> {
             </span>
           );
 
-        const includeBars = val.attribute === this.state.colorByAttribute;
+        const includeBars = val.attribute === activeAttribute;
         let displayValue: React.ReactNode = cell;
 
         if (val.valueType === 'time') {
@@ -334,10 +337,9 @@ export default class TraceStatistics extends Component<Props, State> {
         }
 
         if (includeBars) {
-          const max = Math.max(...this.state.tableValue.map(r => (r as any)[val.attribute] as number), 1);
           return (
             <div className="TraceStatistics--valueContainer">
-              <RelativeBar value={cell as number} maxValue={max} />
+              <RelativeBar value={cell as number} maxValue={activeMax} />
               <div className="TraceStatistics--valueDisplay">{displayValue}</div>
             </div>
           );

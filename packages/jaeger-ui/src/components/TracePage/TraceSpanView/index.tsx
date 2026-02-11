@@ -164,7 +164,6 @@ export default class TraceSpanView extends Component<Props, State> {
         title: 'Duration',
         sorter: (a, b) => a.duration - b.duration,
         render: (_, span) => {
-          const percentage = (span.duration / this.state.maxDuration) * 100;
           const preciseValue = formatDuration(span.duration);
           const compactValue = formatDurationCompact(span.duration);
 
