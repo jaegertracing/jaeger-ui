@@ -2,19 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import queryString from 'query-string';
-import { NavigateFunction } from 'react-router-dom-v5-compat';
-import { History as RouterHistory, Location } from 'history';
+import { NavigateFunction, Location } from 'react-router-dom';
 
 import { TNil } from '../types';
 
 export default function updateUiFind({
-  history,
   navigate,
   location,
   trackFindFunction,
   uiFind,
 }: {
-  history?: RouterHistory;
   navigate?: NavigateFunction;
   location: Location;
   trackFindFunction?: (uiFind: string | TNil) => void;
@@ -28,10 +25,5 @@ export default function updateUiFind({
       { pathname: location.pathname, search: `?${queryString.stringify(queryParams)}` },
       { replace: true }
     );
-  } else if (history) {
-    history.replace({
-      ...location,
-      search: `?${queryString.stringify(queryParams)}`,
-    });
   }
 }

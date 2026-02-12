@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
-import { MemoryRouter, Route } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import withRouteProps from './withRouteProps';
 
 jest.mock('./configure-store', () => ({
@@ -30,9 +30,7 @@ describe('withRouteProps', () => {
     const ComponentWithRouteProps = withRouteProps(WrappedComponent);
     render(
       <MemoryRouter initialEntries={['/test?param=value']}>
-        <Route path="/test">
-          <ComponentWithRouteProps />
-        </Route>
+        <ComponentWithRouteProps />
       </MemoryRouter>
     );
 

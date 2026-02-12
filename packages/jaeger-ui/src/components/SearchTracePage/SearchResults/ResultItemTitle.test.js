@@ -63,11 +63,7 @@ describe('ResultItemTitle', () => {
       const { rerender } = setup(defaultProps);
       expect(screen.getByRole('checkbox')).toBeInTheDocument();
 
-      rerender(
-        <MemoryRouter>
-          <ResultItemTitle {...defaultProps} disableComparision />
-        </MemoryRouter>
-      );
+      rerender(<ResultItemTitle {...defaultProps} disableComparision />);
       expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     });
 
@@ -75,11 +71,7 @@ describe('ResultItemTitle', () => {
       const { rerender } = setup(defaultProps);
       expect(screen.getByRole('checkbox')).not.toBeDisabled();
 
-      rerender(
-        <MemoryRouter>
-          <ResultItemTitle {...defaultProps} state={fetchedState.ERROR} />
-        </MemoryRouter>
-      );
+      rerender(<ResultItemTitle {...defaultProps} state={fetchedState.ERROR} />);
       expect(screen.getByRole('checkbox')).toBeDisabled();
     });
 
@@ -94,11 +86,7 @@ describe('ResultItemTitle', () => {
       ];
 
       scenarios.forEach(({ isInDiffCohort, state, expected }) => {
-        rerender(
-          <MemoryRouter>
-            <ResultItemTitle {...defaultProps} isInDiffCohort={isInDiffCohort} state={state} />
-          </MemoryRouter>
-        );
+        rerender(<ResultItemTitle {...defaultProps} isInDiffCohort={isInDiffCohort} state={state} />);
         const checkbox = screen.getByRole('checkbox');
         if (expected) {
           expect(checkbox).toBeChecked();
@@ -118,11 +106,7 @@ describe('ResultItemTitle', () => {
       );
 
       const newIsInDiffCohort = !defaultProps.isInDiffCohort;
-      rerender(
-        <MemoryRouter>
-          <ResultItemTitle {...defaultProps} isInDiffCohort={newIsInDiffCohort} />
-        </MemoryRouter>
-      );
+      rerender(<ResultItemTitle {...defaultProps} isInDiffCohort={newIsInDiffCohort} />);
 
       await user.click(screen.getByRole('checkbox'));
       expect(defaultProps.toggleComparison).toHaveBeenLastCalledWith(defaultProps.traceID, newIsInDiffCohort);
@@ -149,19 +133,12 @@ describe('ResultItemTitle', () => {
   describe('WrapperComponent', () => {
     it('renders <Link> when linkTo is provided', () => {
       const { rerender } = setup(defaultProps);
-      // Assert the link is present and contains the expected text.
       expect(screen.getByRole('link', { name: /traceNameValue/i })).toBeInTheDocument();
 
-      rerender(
-        <MemoryRouter>
-          <ResultItemTitle {...defaultProps} linkTo={null} />
-        </MemoryRouter>
-      );
+      rerender(<ResultItemTitle {...defaultProps} linkTo={null} />);
 
-      // Assert the link is now gone.
       expect(screen.queryByRole('link')).not.toBeInTheDocument();
 
-      // Assert the title is still visible, but now inside a <div>, not an <a>.
       const titleElement = screen.getByText(/traceNameValue/i);
       const wrapper = titleElement.closest('.ResultItemTitle--item');
       expect(wrapper).toBeInTheDocument();
@@ -174,11 +151,7 @@ describe('ResultItemTitle', () => {
       expect(screen.getByRole('link')).not.toHaveAttribute('target');
       expect(screen.getByRole('link')).not.toHaveAttribute('rel');
 
-      rerender(
-        <MemoryRouter>
-          <ResultItemTitle {...defaultProps} targetBlank />
-        </MemoryRouter>
-      );
+      rerender(<ResultItemTitle {...defaultProps} targetBlank />);
 
       const updatedLink = screen.getByRole('link');
       expect(updatedLink).toHaveAttribute('target', '_blank');
@@ -187,19 +160,11 @@ describe('ResultItemTitle', () => {
 
     it('hides formated duration when duration is not provided', () => {
       const { rerender, container } = setup(defaultProps);
-      // Duration text is visible initially.
       expect(screen.getByText(formatDuration(defaultProps.duration))).toBeInTheDocument();
 
-      rerender(
-        <MemoryRouter>
-          <ResultItemTitle {...defaultProps} duration={null} />
-        </MemoryRouter>
-      );
-      // Duration text is now hidden.
+      rerender(<ResultItemTitle {...defaultProps} duration={null} />);
       expect(screen.queryByText(formatDuration(defaultProps.duration))).not.toBeInTheDocument();
 
-      // Verify the rest of the component structure remains intact.
-      // The link, title, and trace ID should still be rendered.
       expect(screen.getByRole('link', { name: /traceNameValue/i })).toBeInTheDocument();
       expect(container.querySelector('.ResultItemTitle--idExcerpt')).toBeInTheDocument();
     });

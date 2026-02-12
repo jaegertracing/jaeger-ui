@@ -4,24 +4,24 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 import React from 'react';
-import { createMemoryHistory } from 'history';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Router } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import TraceIDSearchInput from './TraceIDSearchInput';
-import { CompatRouter } from 'react-router-dom-v5-compat';
+
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate,
+}));
 
 describe('<TraceIDSearchInput />', () => {
-  let history;
-
   beforeEach(() => {
-    history = createMemoryHistory();
+    jest.clearAllMocks();
     render(
-      <Router history={history}>
-        <CompatRouter>
-          <TraceIDSearchInput />
-        </CompatRouter>
-      </Router>
+      <BrowserRouter>
+        <TraceIDSearchInput />
+      </BrowserRouter>
     );
   });
 
@@ -35,13 +35,12 @@ describe('<TraceIDSearchInput />', () => {
     fireEvent.change(idInput, { target: { value: traceId } });
     fireEvent.submit(screen.getByTestId('TraceIDSearchInput--form'));
 
-    expect(history.length).toEqual(2);
-    expect(history.location.pathname).toEqual(`/trace/${traceId}`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${traceId}`);
   });
 
   it('does not push to history on falsy input value', () => {
     fireEvent.submit(screen.getByTestId('TraceIDSearchInput--form'));
 
-    expect(history.length).toEqual(1);
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

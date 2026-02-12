@@ -12,10 +12,8 @@ import prefixUrl from '../../utils/prefix-url';
 
 export const ROUTE_PATH = prefixUrl('/deep-dependencies');
 
-const ROUTE_MATCHER = { path: ROUTE_PATH, strict: true, exact: true };
-
 export function matches(path: string) {
-  return Boolean(matchPath(path, ROUTE_MATCHER));
+  return Boolean(matchPath(ROUTE_PATH, path));
 }
 
 export function getUrl(args?: { [key: string]: unknown; showOp?: boolean }, baseUrl: string = ROUTE_PATH) {

@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { Form, Input } from 'antd';
 import { IoSearch } from 'react-icons/io5';
-import { useNavigate } from 'react-router-dom-v5-compat';
+import { useNavigate } from 'react-router-dom';
 
 import { getUrl } from '../TracePage/url';
 

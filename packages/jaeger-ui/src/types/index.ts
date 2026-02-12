@@ -1,8 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Router } from 'react-router-dom';
-import { Location } from 'history';
+import { Location } from 'react-router-dom';
 
 import { ApiError } from './api-error';
 import { TracesArchive } from './archive';
@@ -44,7 +43,7 @@ export type ReduxState = {
     error: ApiError | TNil;
   };
   embedded: EmbeddedState;
-  router: Router & {
+  router: {
     location: Location<LocationState>;
   };
   services: {
