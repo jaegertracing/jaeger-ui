@@ -141,8 +141,6 @@ export default class TraceStatistics extends Component<Props, State> {
 
     this.handler = this.handler.bind(this);
     this.togglePopup = this.togglePopup.bind(this);
-
-    this.searchInTable(this.props.uiFindVertexKeys!, this.state.tableValue, this.props.uiFind);
   }
 
   /**
@@ -156,12 +154,8 @@ export default class TraceStatistics extends Component<Props, State> {
   }
 
   changeTableValueSearch() {
-    this.searchInTable(this.props.uiFindVertexKeys!, this.state.tableValue, this.props.uiFind);
-    // reload the componente
-    const tableValueState = this.state.tableValue;
     this.setState(prevState => ({
-      ...prevState,
-      tableValue: tableValueState,
+      tableValue: this.searchInTable(this.props.uiFindVertexKeys!, prevState.tableValue, this.props.uiFind),
     }));
   }
 
@@ -214,12 +208,8 @@ export default class TraceStatistics extends Component<Props, State> {
     uiFindVertexKeys: Set<string>,
     allTableSpans: ITableSpan[],
     uiFind: string | null | undefined
-  ) => {
-    const allTableSpansChange = allTableSpans;
-    // Initialize all entries as not matching search
-    for (let i = 0; i < allTableSpansChange.length; i++) {
-      allTableSpansChange[i].searchMatch = false;
-    }
+  ): ITableSpan[] => {
+    const allTableSpansChange = allTableSpans.map(s => ({ ...s, searchMatch: false }));
     if (typeof uiFindVertexKeys !== 'undefined') {
       uiFindVertexKeys!.forEach(function calc(value) {
         const uiFindVertexKeysSplit = value.split('\u000b');
@@ -305,7 +295,20 @@ export default class TraceStatistics extends Component<Props, State> {
     };
 
     const activeAttribute = this.state.colorByAttribute;
-    const activeMax = Math.max(...this.state.tableValue.map(r => (r as any)[activeAttribute] as number), 1);
+    let activeMax = 1;
+    if (activeAttribute) {
+      let max = 0;
+      for (const row of this.state.tableValue) {
+        const raw = (row as any)[activeAttribute];
+        const num = typeof raw === 'number' ? raw : Number(raw);
+        if (Number.isFinite(num) && num > max) {
+          max = num;
+        }
+      }
+      if (max > 0) {
+        activeMax = max;
+      }
+    }
 
     const columns: ColumnProps<ITableSpan>[] = columnsArray.map(val => {
       const renderFunction = (cell: string | number, row: ITableSpan) => {

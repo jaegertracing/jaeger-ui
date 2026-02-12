@@ -125,7 +125,6 @@ function buildOneColumn(oneColumn: ITableSpan) {
   oneColumnChange.selfMax = (Math.round((oneColumnChange.selfMax / 1000) * 100) /
     100) as IOtelSpan['duration'];
   oneColumnChange.percent = Math.round((oneColumnChange.percent / 1) * 100) / 100;
-  // oneColumnChange.colorToPercent;
   return oneColumnChange;
 }
 
