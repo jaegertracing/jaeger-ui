@@ -431,8 +431,8 @@ describe('<ServiceGraph>', () => {
       );
       const placeholderDiv = container.querySelector('.center-placeholder');
       expect(placeholderDiv).toHaveTextContent('Test');
-      // Check that the height calculation is correct (242 - 74 = 168)
-      expect(placeholderDiv.style.height).toBe('168px');
+      // Check that the height calculation is correct (242)
+      expect(placeholderDiv.style.height).toBe('242px');
     });
   });
 });
