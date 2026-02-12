@@ -74,7 +74,7 @@ function forceState(state: TTraceDiffState, { newState }: TNewStateValue) {
   return newState;
 }
 
-export default handleActions<TTraceDiffState>(
+export default handleActions<TTraceDiffState, any>(
   {
     [actionTypes.COHORT_ADD_TRACE]: guardReducer(cohortAddTrace),
     [actionTypes.COHORT_REMOVE_TRACE]: guardReducer(cohortRemoveTrace),
