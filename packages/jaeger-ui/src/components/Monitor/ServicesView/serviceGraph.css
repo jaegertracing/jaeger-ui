@@ -34,9 +34,10 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .center-placeholder {
-  vertical-align: middle;
-  text-align: center;
-  display: table-cell;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .crosshair-value {
