@@ -1,7 +1,7 @@
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Row, Col, Input, Alert, Select } from 'antd';
 import { ActionFunctionAny, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
