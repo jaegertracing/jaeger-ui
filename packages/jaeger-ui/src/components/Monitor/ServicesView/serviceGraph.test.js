@@ -53,7 +53,6 @@ window.getComputedStyle = () => ({
 });
 
 const defaultProps = {
-  width: 300,
   error: null,
   name: 'Hello Graph',
   metricsData: null,
@@ -357,7 +356,6 @@ describe('<ServiceGraph>', () => {
   describe('tooltip and legend formatting', () => {
     it('formats tooltip values correctly', () => {
       const testProps = {
-        width: 100,
         name: 'Test Graph',
         metricsData: mockMetricsData,
         loading: false,
@@ -393,7 +391,6 @@ describe('<ServiceGraph>', () => {
 
     it('formats legend values correctly', () => {
       const rendered = ServiceGraphImpl({
-        width: 100,
         name: 'Test Graph',
         metricsData: mockMetricsData,
         loading: false,
@@ -425,7 +422,7 @@ describe('<ServiceGraph>', () => {
       // The Placeholder component is used by the functional component
       // Test it via direct render instead
       const { container } = render(
-        <Placeholder name="Test Graph" width={100} height={242}>
+        <Placeholder name="Test Graph" height={242}>
           <div>Test</div>
         </Placeholder>
       );
@@ -451,7 +448,7 @@ describe('Placeholder component', () => {
   it('renders with all props', () => {
     cleanup();
     const { container } = render(
-      <Placeholder name="Test" width={300} height={200} marginClassName="test-margin">
+      <Placeholder name="Test" height={200} marginClassName="test-margin">
         <div>Test content</div>
       </Placeholder>
     );
@@ -463,7 +460,7 @@ describe('Placeholder component', () => {
   it('renders without optional marginClassName', () => {
     cleanup();
     const { container } = render(
-      <Placeholder name="Test" width={300} height={200}>
+      <Placeholder name="Test" height={200}>
         <div>Test content</div>
       </Placeholder>
     );
