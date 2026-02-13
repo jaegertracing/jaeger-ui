@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Row, Col, Input, Alert, Select } from 'antd';
-import { ActionFunction, Action } from 'redux-actions';
+import { ActionFunctionAny, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
 import _isEmpty from 'lodash/isEmpty';
 import store from 'store';
@@ -49,11 +49,7 @@ type TReduxProps = {
 type TProps = TReduxProps & TDispatchProps;
 
 type TDispatchProps = {
-  fetchAggregatedServiceMetrics: ActionFunction<
-    Action<Promise<FetchAggregatedServiceMetricsResponse>>,
-    string,
-    MetricsAPIQueryParams
-  >;
+  fetchAggregatedServiceMetrics: ActionFunctionAny<Action<Promise<FetchAggregatedServiceMetricsResponse>>>;
   fetchAllServiceMetrics: (serviceName: string, query: MetricsAPIQueryParams) => void;
 };
 
@@ -185,7 +181,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const fetchMetrics = useCallback(() => {
     const currentService = selectedService || services[0];
 
-    if (currentService && isATMActivated) {
+    if (currentService && isATMActivated !== false) {
       const newEndTime = Date.now();
       setEndTime(newEndTime);
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
