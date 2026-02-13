@@ -30,7 +30,7 @@ const initialState: MetricsReduxState = {
     opsCalls: null,
     opsErrors: null,
   },
-  isATMActivated: null,
+
   loading: false,
   operationMetricsLoading: undefined,
   serviceMetrics: null,
@@ -61,7 +61,6 @@ function fetchServiceMetricsDone(
     service_call_rate: null,
     service_error_rate: null,
   };
-  let isATMActivated = true;
 
   if (payload) {
     payload.forEach((promiseResult, i) => {
@@ -101,10 +100,6 @@ function fetchServiceMetricsDone(
       } else {
         const reason = (promiseResult as PromiseRejectedResult).reason;
 
-        if (typeof reason === 'object' && reason.httpStatus === 501) {
-          isATMActivated = false;
-        }
-
         switch (i) {
           case 0:
             serviceError.service_latencies_50 = reason;
@@ -125,7 +120,7 @@ function fetchServiceMetricsDone(
       }
     });
   }
-  return { ...state, serviceMetrics, serviceError, loading: false, isATMActivated };
+  return { ...state, serviceMetrics, serviceError, loading: false };
 }
 
 function fetchOpsMetricsStarted(state: MetricsReduxState) {

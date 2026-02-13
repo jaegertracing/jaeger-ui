@@ -116,6 +116,11 @@ describe('getConfigValue(...)', () => {
     expect(getConfigValue('dependencies.menuEnabled')).toBe(true);
   });
 
+  it('returns storageCapabilities values', () => {
+    expect(getConfigValue('storageCapabilities.archiveStorage')).toBe(false);
+    expect(getConfigValue('storageCapabilities.metricsStorage')).toBe(false);
+  });
+
   it('handles non-existent paths"', () => {
     expect(getConfigValue('not.a.real.path')).toBe(undefined);
   });

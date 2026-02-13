@@ -41,24 +41,7 @@ export type LinkPatternsConfig = {
   text: string;
 };
 
-export type MonitorEmptyStateConfig = {
-  mainTitle?: string;
-  subTitle?: string;
-  description?: string;
-  button?: {
-    text?: string;
-    onClick?: () => void;
-  };
-  info?: string;
-  alert?: {
-    message?: string;
-    type?: 'success' | 'info' | 'warning' | 'error';
-  };
-};
-
 export type MonitorConfig = {
-  menuEnabled?: boolean;
-  emptyState?: MonitorEmptyStateConfig;
   docsLink?: string;
 };
 
@@ -74,6 +57,8 @@ export type TraceGraphConfig = {
 export type StorageCapabilities = {
   // archiveStorage indicates whether the query service supports archive storage.
   archiveStorage?: boolean;
+  // metricsStorage indicates whether the query service supports metrics storage.
+  metricsStorage?: boolean;
 };
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
