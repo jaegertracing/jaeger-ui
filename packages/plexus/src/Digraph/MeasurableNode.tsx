@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { forwardRef, memo, useCallback, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, memo, Ref, ReactElement, useCallback, useImperativeHandle, useRef } from 'react';
 
 import { TMeasurableNodeRenderer, TLayerType, TRendererUtils, ELayerType } from './types';
 import { assignMergeCss, getProps } from './utils';
@@ -27,7 +27,7 @@ const SVG_HIDDEN_STYLE = { visibility: 'hidden' };
 
 const MeasurableNodeInner = <T = {},>(
   { getClassName, hidden, layerType, layoutVertex, renderNode, renderUtils, setOnNode, vertex }: TProps<T>,
-  ref: React.Ref<MeasurableNodeRef>
+  ref: Ref<MeasurableNodeRef>
 ) => {
   const htmlRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGGElement>(null);
@@ -112,7 +112,7 @@ const MeasurableNodeInner = <T = {},>(
 // forwardRef allows parent components to attach refs to this component
 // memo provides shallow prop comparison similar to the original PureComponent
 const MeasurableNode = memo(forwardRef(MeasurableNodeInner)) as <T = {}>(
-  props: TProps<T> & { ref?: React.Ref<MeasurableNodeRef> }
-) => React.ReactElement | null;
+  props: TProps<T> & { ref?: Ref<MeasurableNodeRef> }
+) => ReactElement | null;
 
 export default MeasurableNode;

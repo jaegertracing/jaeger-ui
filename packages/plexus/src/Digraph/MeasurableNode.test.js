@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { createRef } from 'react';
 import { render } from '@testing-library/react';
 import MeasurableNode from './MeasurableNode';
 import { ELayerType } from './types';
@@ -148,7 +148,7 @@ describe('MeasurableNode', () => {
 
   describe('ref methods', () => {
     it('exposes measure method via ref for HTML', () => {
-      const ref = React.createRef();
+      const ref = createRef();
       render(
         <div>
           <MeasurableNode {...defaultProps} ref={ref} layerType={ELayerType.Html} />
@@ -162,7 +162,7 @@ describe('MeasurableNode', () => {
     });
 
     it('exposes measure method via ref for SVG', () => {
-      const ref = React.createRef();
+      const ref = createRef();
       render(
         <svg>
           <MeasurableNode {...defaultProps} ref={ref} layerType={ELayerType.Svg} />
@@ -181,7 +181,7 @@ describe('MeasurableNode', () => {
     });
 
     it('exposes getRef method via ref for HTML', () => {
-      const ref = React.createRef();
+      const ref = createRef();
       render(
         <div>
           <MeasurableNode {...defaultProps} ref={ref} layerType={ELayerType.Html} />
@@ -193,7 +193,7 @@ describe('MeasurableNode', () => {
     });
 
     it('exposes getRef method via ref for SVG', () => {
-      const ref = React.createRef();
+      const ref = createRef();
       render(
         <svg>
           <MeasurableNode {...defaultProps} ref={ref} layerType={ELayerType.Svg} />
@@ -205,7 +205,7 @@ describe('MeasurableNode', () => {
     });
 
     it('measure returns zero dimensions when HTML ref is null (after unmount)', () => {
-      const ref = React.createRef();
+      const ref = createRef();
       const { unmount } = render(
         <div>
           <MeasurableNode {...defaultProps} ref={ref} layerType={ELayerType.Html} />
@@ -220,7 +220,7 @@ describe('MeasurableNode', () => {
     });
 
     it('measure returns zero dimensions when SVG ref is null (after unmount)', () => {
-      const ref = React.createRef();
+      const ref = createRef();
       const { unmount } = render(
         <svg>
           <MeasurableNode {...defaultProps} ref={ref} layerType={ELayerType.Svg} />
