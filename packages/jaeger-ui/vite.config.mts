@@ -114,7 +114,7 @@ function jaegerUiConfigPlugin() {
               }
 
               // Shallow merge: JSON on top of backend base
-              finalUiConfig = { ...backendUiConfig, ...parsedJsonConfig };
+              finalUiConfig = { ...(backendUiConfig ?? {}), ...parsedJsonConfig };
               console.log(
                 '[jaeger-ui-config] Merged config from jaeger-ui.config.json on top of backend uiConfig'
               );
