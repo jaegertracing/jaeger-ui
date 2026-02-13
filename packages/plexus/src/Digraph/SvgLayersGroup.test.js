@@ -221,29 +221,25 @@ describe('SvgLayersGroup', () => {
     });
 
     it('does not re-render when props are unchanged', () => {
-      let renderCount = 0;
-
-      // Create a mock layer renderer that tracks renders
       const trackingLayers = [
         {
           key: 'tracking-layer',
           setOnContainer: jest.fn(),
-          renderNode: jest.fn(() => {
-            renderCount++;
-            return null;
-          }),
+          renderNode: jest.fn(() => null),
         },
       ];
 
+      const callsBeforeRender = mockNodesLayerProps.length;
       const { rerender } = render(<SvgLayersGroup {...defaultProps} layers={trackingLayers} />);
 
-      const initialRenderCount = renderCount;
+      // NodesLayer should have been called once
+      expect(mockNodesLayerProps.length).toBe(callsBeforeRender + 1);
 
       // Rerender with the exact same props (same object references)
       rerender(<SvgLayersGroup {...defaultProps} layers={trackingLayers} />);
 
-      // With React.memo, the component should not re-render when props are unchanged
-      expect(renderCount).toBe(initialRenderCount);
+      // With React.memo, NodesLayer should not be called again
+      expect(mockNodesLayerProps.length).toBe(callsBeforeRender + 1);
     });
   });
 });
