@@ -9,7 +9,7 @@ import MeasurableNodesLayer from './MeasurableNodesLayer';
 import NodesLayer from './NodesLayer';
 import { classNameIsSmall, scaleProperty } from './props-factories';
 import SvgEdgesLayer from './SvgEdgesLayer';
-import SvgLayersGroup from './SvgLayersGroup';
+import MemoizedSvgLayersGroup from './SvgLayersGroup';
 import {
   ELayoutPhase,
   TExposedGraphState,
@@ -58,7 +58,7 @@ const WRAPPER_STYLE: React.CSSProperties = {
 
 let idCounter = 0;
 
-export default class Digraph<T = unknown, U = unknown> extends React.PureComponent<
+export default class Digraph<T extends {} = {}, U extends {} = {}> extends React.PureComponent<
   TDigraphProps<T, U>,
   TDigraphState<T, U>
 > {
@@ -176,7 +176,7 @@ export default class Digraph<T = unknown, U = unknown> extends React.PureCompone
         // svg group layer, the if is for TypeScript
         if (layer.layerType === ELayerType.Svg) {
           return (
-            <SvgLayersGroup<T, U>
+            <MemoizedSvgLayersGroup<T, U>
               key={key}
               getClassName={getClassName}
               defs={layer.defs}
