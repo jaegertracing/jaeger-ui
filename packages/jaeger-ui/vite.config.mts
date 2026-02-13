@@ -12,7 +12,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const proxyConfig = {
-  target: 'http://localhost:16686',
+  target: 'http://127.0.0.1:16686',
   secure: false,
   changeOrigin: true,
   ws: true,
@@ -39,11 +39,11 @@ function jaegerUiConfigPlugin() {
 
   return {
     name: 'jaeger-ui-config',
-    configureServer(server) {
+    configureServer(server: import('vite').ViteDevServer) {
       server.watcher.add([jsConfigPath, jsonConfigPath]);
-      server.watcher.on('change', path => {
-        if (path === jsConfigPath || path === jsonConfigPath) {
-          console.log(`[jaeger-ui-config] Config changed: ${path}. Triggering full reload...`);
+      server.watcher.on('change', (changedPath: string) => {
+        if (changedPath === jsConfigPath || changedPath === jsonConfigPath) {
+          console.log(`[jaeger-ui-config] Config changed: ${changedPath}. Triggering full reload...`);
           server.ws.send({ type: 'full-reload', path: '*' });
         }
       });
@@ -51,38 +51,103 @@ function jaegerUiConfigPlugin() {
     transformIndexHtml: {
       order: 'pre' as const,
       async handler(html: string) {
-        // Check for JS config first (higher priority, like in Go server)
+        let backendUiConfig: any = null;
+        let storageCapabilities: any = null;
+        let version: any = null;
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 1000);
+
+        try {
+          const fetchOptions = { signal: controller.signal };
+          const response = await fetch('http://127.0.0.1:16686/api/ui/config', fetchOptions).catch(
+            () => null
+          );
+
+          if (response?.ok) {
+            const data = await response.json();
+
+            // Extract data from unified response
+            storageCapabilities = data.storageCapabilities;
+            version = data.version;
+            backendUiConfig = data.uiConfig;
+
+            console.log('[jaeger-ui-config] Fetched config from backend /api/ui/config');
+          }
+        } catch (err) {
+          // Silent fallback for production behavior, but log for dev visibility
+          if (err instanceof Error && err.name === 'AbortError') {
+            console.log('[jaeger-ui-config] Backend fetch timed out (1s)');
+          } else {
+            console.log('[jaeger-ui-config] Backend not running or error fetching config');
+          }
+        } finally {
+          clearTimeout(timeout);
+        }
+
+        // Check for JS config first (highest priority - no merge)
         if (fs.existsSync(jsConfigPath)) {
           try {
             const jsContent = fs.readFileSync(jsConfigPath, 'utf-8');
-            // Replace the JAEGER_CONFIG_JS comment with UIConfig function
-            // This mimics the Go server behavior for .js config files
             const uiConfigFn = `function UIConfig() { ${jsContent} }`;
             html = html.replace('// JAEGER_CONFIG_JS', uiConfigFn);
-            console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.js');
-            return html;
+            console.log(
+              '[jaeger-ui-config] Loaded config from jaeger-ui.config.js (full override, no merge)'
+            );
+            // Note: Don't return early here, we still need to inject storageCapabilities and version below
           } catch (err) {
             console.error('[jaeger-ui-config] Error loading jaeger-ui.config.js:', err);
           }
-        }
+        } else {
+          // Handle JSON config merged on top of backend UI config
+          let finalUiConfig = backendUiConfig;
 
-        // Check for JSON config
-        if (fs.existsSync(jsonConfigPath)) {
-          try {
-            const jsonContent = fs.readFileSync(jsonConfigPath, 'utf-8');
-            // Validate it's valid JSON and use stringified result for injection
-            const parsedConfig = JSON.parse(jsonContent);
-            // Replace DEFAULT_CONFIG with the JSON content
-            // This mimics the Go server behavior for .json config files
+          if (fs.existsSync(jsonConfigPath)) {
+            try {
+              const jsonContent = fs.readFileSync(jsonConfigPath, 'utf-8');
+              const parsedJsonConfig = JSON.parse(jsonContent);
+
+              // Extract storageCapabilities from JSON if present
+              if (parsedJsonConfig.storageCapabilities) {
+                storageCapabilities = { ...storageCapabilities, ...parsedJsonConfig.storageCapabilities };
+                delete parsedJsonConfig.storageCapabilities;
+              }
+
+              // Shallow merge: JSON on top of backend base
+              finalUiConfig = { ...backendUiConfig, ...parsedJsonConfig };
+              console.log(
+                '[jaeger-ui-config] Merged config from jaeger-ui.config.json on top of backend uiConfig'
+              );
+            } catch (err) {
+              console.error('[jaeger-ui-config] Error loading jaeger-ui.config.json:', err);
+            }
+          } else if (backendUiConfig) {
+            console.log('[jaeger-ui-config] Using backend uiConfig as base');
+          }
+
+          // Inject final UI config into index.html
+          if (finalUiConfig) {
             html = html.replace(
               'const JAEGER_CONFIG = DEFAULT_CONFIG;',
-              `const JAEGER_CONFIG = ${JSON.stringify(parsedConfig)};`
+              `const JAEGER_CONFIG = ${JSON.stringify(finalUiConfig)};`
             );
-            console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.json');
-            return html;
-          } catch (err) {
-            console.error('[jaeger-ui-config] Error loading jaeger-ui.config.json:', err);
           }
+        }
+
+        // Inject storageCapabilities into index.html
+        if (storageCapabilities) {
+          html = html.replace(
+            'const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;',
+            `const JAEGER_STORAGE_CAPABILITIES = ${JSON.stringify(storageCapabilities)};`
+          );
+        }
+
+        // Inject version into index.html
+        if (version) {
+          html = html.replace(
+            'const JAEGER_VERSION = DEFAULT_VERSION;',
+            `const JAEGER_VERSION = ${JSON.stringify(version)};`
+          );
         }
 
         return html;
