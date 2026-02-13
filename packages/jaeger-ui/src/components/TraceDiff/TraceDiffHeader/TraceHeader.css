@@ -26,15 +26,19 @@ SPDX-License-Identifier: Apache-2.0
   min-height: 2.5em;
 }
 
-.TraceDiffHeader--traceTitle span {
-  display: inline-block;
-  max-width: calc(100% - 2em);
-  word-wrap: break-word;
+.TraceDiffHeader--traceTitle > span {
+  display: inline;
+  max-width: 100%;
   white-space: normal;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+  min-width: 0;
+  line-height: 1.4;
 }
 
-.TraceDiffHeader--traceTitle span .u-tx-muted {
-  white-space: nowrap;
+.TraceDiffHeader--traceTitle > span .u-tx-muted {
+  display: inline;
+  white-space: normal;
 }
 
 .TraceDiffHeader--traceTitle.is-error {

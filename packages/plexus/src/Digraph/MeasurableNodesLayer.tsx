@@ -27,11 +27,6 @@ type TProps<T = {}, U = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable'> &
     standalone?: boolean;
   };
 
-type TState<T> = {
-  nodeRefs: Array<React.RefObject<MeasurableNodeRef>>;
-  vertices: TVertex<T>[];
-};
-
 function createRefs<T>(length: number): Array<React.RefObject<T>> {
   const rv: Array<React.RefObject<T>> = [];
   for (let i = 0; i < length; i++) {
@@ -40,50 +35,40 @@ function createRefs<T>(length: number): Array<React.RefObject<T>> {
   return rv;
 }
 
-export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComponent<
-  TProps<T, U>,
-  TState<T>
-> {
-  static getDerivedStateFromProps<T>(nextProps: TProps<T>, prevState: TState<T>) {
-    const { vertices } = nextProps.graphState;
-    const { vertices: stVertices } = prevState;
-    if (vertices === stVertices) {
-      return null;
+function MeasurableNodesLayer<T = {}, U = {}>(props: TProps<T, U>) {
+  const {
+    getClassName,
+    graphState,
+    layerType,
+    measureNode,
+    renderNode,
+    senderKey,
+    setOnNode,
+    setSizeVertices,
+  } = props;
+
+  const { layoutPhase, layoutVertices, renderUtils, vertices } = graphState;
+
+  const [nodeRefs, setNodeRefs] = React.useState<Array<React.RefObject<MeasurableNodeRef>>>(() =>
+    createRefs<MeasurableNodeRef>(vertices.length)
+  );
+
+  const prevVerticesRef = React.useRef<TVertex<T>[]>(vertices);
+
+  React.useEffect(() => {
+    if (vertices !== prevVerticesRef.current) {
+      prevVerticesRef.current = vertices;
+      setNodeRefs(createRefs<MeasurableNodeRef>(vertices.length));
     }
-    return {
-      vertices,
-      nodeRefs: createRefs<MeasurableNodeRef>(vertices.length),
-    };
-  }
+  }, [vertices]);
 
-  constructor(props: TProps<T, U>) {
-    super(props);
-    const { graphState } = props;
-    const { vertices } = graphState;
-    this.state = {
-      vertices,
-      nodeRefs: createRefs<MeasurableNodeRef>(vertices.length),
-    };
-  }
-
-  componentDidMount() {
-    this.measureNodes();
-  }
-
-  componentDidUpdate() {
-    this.measureNodes();
-  }
-
-  private measureNodes() {
-    const { layoutPhase, vertices } = this.props.graphState;
+  const measureNodes = React.useCallback(() => {
     if (layoutPhase !== ELayoutPhase.CalcSizes) {
       return;
     }
-    const { nodeRefs } = this.state;
     if (!nodeRefs) {
       return;
     }
-    const { layerType, measureNode, senderKey, setSizeVertices } = this.props;
     let current: MeasurableNodeRef | null = null;
     const utils = measureNode && {
       layerType,
@@ -113,34 +98,32 @@ export default class MeasurableNodesLayer<T = {}, U = {}> extends React.PureComp
       }
     }
     setSizeVertices(senderKey, sizeVertices);
-  }
+  }, [layoutPhase, nodeRefs, layerType, measureNode, vertices, senderKey, setSizeVertices]);
 
-  render() {
-    const { nodeRefs } = this.state;
-    if (nodeRefs) {
-      const {
-        getClassName,
-        graphState: { layoutVertices, renderUtils, vertices },
-        layerType,
-        renderNode,
-        setOnNode,
-      } = this.props;
-      const LayerComponent = layerType === ELayerType.Html ? HtmlLayer : SvgLayer;
-      return (
-        <LayerComponent classNamePart="MeasurableNodesLayer" {...this.props}>
-          <MeasurableNodes<T>
-            nodeRefs={nodeRefs}
-            getClassName={getClassName}
-            layerType={layerType}
-            renderNode={renderNode}
-            renderUtils={renderUtils}
-            vertices={vertices}
-            layoutVertices={layoutVertices}
-            setOnNode={setOnNode}
-          />
-        </LayerComponent>
-      );
-    }
+  // measure on mount and update
+  React.useEffect(() => {
+    measureNodes();
+  }, [measureNodes]);
+
+  if (!nodeRefs) {
     return null;
   }
+
+  const LayerComponent = layerType === ELayerType.Html ? HtmlLayer : SvgLayer;
+  return (
+    <LayerComponent classNamePart="MeasurableNodesLayer" {...props}>
+      <MeasurableNodes<T>
+        nodeRefs={nodeRefs}
+        getClassName={getClassName}
+        layerType={layerType}
+        renderNode={renderNode}
+        renderUtils={renderUtils}
+        vertices={vertices}
+        layoutVertices={layoutVertices}
+        setOnNode={setOnNode}
+      />
+    </LayerComponent>
+  );
 }
+
+export default React.memo(MeasurableNodesLayer) as typeof MeasurableNodesLayer;

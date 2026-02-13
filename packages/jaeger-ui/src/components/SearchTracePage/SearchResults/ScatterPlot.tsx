@@ -107,7 +107,7 @@ export default function ScatterPlot({
     window.addEventListener('resize', updateContainerWidth);
 
     return () => window.removeEventListener('resize', updateContainerWidth);
-  }, []);
+  }, [calculateContainerWidth]);
 
   const xMin = Math.min(...data.map(d => d.x));
   const xMax = Math.max(...data.map(d => d.x));
