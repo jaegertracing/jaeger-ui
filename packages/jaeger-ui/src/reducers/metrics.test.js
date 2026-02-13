@@ -30,6 +30,9 @@ import {
   serviceOpsMetricsNoMetrics,
   serviceOpsCallsNoMetrics,
   serviceOpsErrorsNoMetrics,
+  serviceOpsLatenciesUndefinedMetrics,
+  serviceOpsCallsUndefinedMetrics,
+  serviceOpsErrorsUndefinedMetrics,
 } from './metrics.mock';
 
 const initialState = metricReducer(undefined, {});
@@ -403,6 +406,23 @@ describe('reducers/fetchAggregatedServiceMetrics', () => {
       ...initialState,
       operationMetricsLoading: false,
       serviceOpsMetrics,
+    };
+    expect(state).toEqual(expected);
+  });
+
+  it('undefined metrics', () => {
+    const state = metricReducer(initialState, {
+      type: `${fetchAggregatedServiceMetrics}_FULFILLED`,
+      payload: [
+        serviceOpsLatenciesUndefinedMetrics,
+        serviceOpsCallsUndefinedMetrics,
+        serviceOpsErrorsUndefinedMetrics,
+      ],
+    });
+
+    const expected = {
+      ...initialState,
+      operationMetricsLoading: false,
     };
     expect(state).toEqual(expected);
   });

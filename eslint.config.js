@@ -5,6 +5,7 @@ import js from '@eslint/js';
 import typescriptPlugin from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import reactPlugin from 'eslint-plugin-react';
+import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import importPlugin from 'eslint-plugin-import';
 import prettierPlugin from 'eslint-plugin-prettier';
@@ -112,6 +113,9 @@ const baseRules = {
     },
   ],
 
+  'react-hooks/rules-of-hooks': 'error',
+  'react-hooks/exhaustive-deps': 'error',
+
   'jsx-a11y/anchor-is-valid': 'off',
   'jsx-a11y/click-events-have-key-events': 'off',
   'jsx-a11y/href-no-hash': 'off',
@@ -178,6 +182,7 @@ export default [
       '**/index.d.ts',
       '**/layout.worker.bundled.js',
       '**/demo/**',
+      'packages/jaeger-ui/src/api/v3/generated-client.ts', // Auto-generated, will be used in Milestone 3.2
     ],
   },
 
@@ -197,6 +202,7 @@ export default [
     plugins: {
       '@typescript-eslint': typescriptPlugin,
       react: reactPlugin,
+      'react-hooks': reactHooksPlugin,
       'jsx-a11y': jsxA11y,
       import: importPlugin,
       prettier: prettierPlugin,
@@ -224,6 +230,7 @@ export default [
     },
     plugins: {
       react: reactPlugin,
+      'react-hooks': reactHooksPlugin,
       'jsx-a11y': jsxA11y,
       import: importPlugin,
       prettier: prettierPlugin,

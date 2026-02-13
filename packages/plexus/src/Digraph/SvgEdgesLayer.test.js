@@ -1,4 +1,4 @@
-// Copyright (c) 2026 The Jaeger Authors.
+// Copyright (c) 2026 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
@@ -158,7 +158,7 @@ describe('SvgEdgesLayer', () => {
 
   describe('React.memo behavior', () => {
     it('is wrapped with React.memo for performance', () => {
-      // Verify component is wrapped with React.memo by checking $$typeof
+      // React.memo wraps components with a special $$typeof
       expect(SvgEdgesLayer.$$typeof).toBe(Symbol.for('react.memo'));
     });
   });
