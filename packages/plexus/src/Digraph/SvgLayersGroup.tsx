@@ -58,6 +58,4 @@ const SvgLayersGroup = <T extends {}, U extends {}>(props: TProps<T, U>) => {
   );
 };
 
-const MemoizedSvgLayersGroup = React.memo(SvgLayersGroup) as typeof SvgLayersGroup;
-
-export default MemoizedSvgLayersGroup;
+export default React.memo(SvgLayersGroup) as typeof SvgLayersGroup;
