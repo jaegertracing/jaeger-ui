@@ -107,7 +107,8 @@ function jaegerUiConfigPlugin() {
 
               // Extract storageCapabilities from JSON if present
               if (parsedJsonConfig.storageCapabilities) {
-                storageCapabilities = { ...storageCapabilities, ...parsedJsonConfig.storageCapabilities };
+                const baseCapabilities = storageCapabilities ?? {};
+                storageCapabilities = { ...baseCapabilities, ...parsedJsonConfig.storageCapabilities };
                 delete parsedJsonConfig.storageCapabilities;
               }
 
