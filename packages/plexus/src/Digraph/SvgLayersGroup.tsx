@@ -13,7 +13,7 @@ type TProps<T = {}, U = {}> = Omit<TSvgLayersGroup<T, U>, 'layerType' | 'key'> &
   graphState: TExposedGraphState<T, U>;
 };
 
-const SvgLayersGroup = <T extends {}, U extends {}>(props: TProps<T, U>) => {
+const SvgLayersGroup = <T = {}, U = {}>(props: TProps<T, U>) => {
   const { getClassName, layers, graphState } = props;
 
   const renderLayers = () => {
