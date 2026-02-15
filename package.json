@@ -15,7 +15,7 @@
     "@babel/cli": "7.28.0",
     "@babel/core": "7.28.5",
     "@testing-library/dom": "^10.4.1",
-    "@types/node": "^24.0.0",
+    "@types/node": "^25.2.3",
     "@typescript-eslint/eslint-plugin": "8.50.0",
     "@typescript-eslint/parser": "8.50.0",
     "ajv": "^6.12.6",
