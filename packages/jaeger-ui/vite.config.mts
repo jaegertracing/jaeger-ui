@@ -60,7 +60,9 @@ function jaegerUiConfigPlugin() {
 
         try {
           const fetchOptions = { signal: controller.signal };
-          const response = await fetch('http://127.0.0.1:16686/api/ui/config', fetchOptions);
+          const response = await fetch('http://127.0.0.1:16686/api/ui/config', fetchOptions).catch(
+            () => null
+          );
 
           if (response?.ok) {
             const data = await response.json();
@@ -111,7 +113,7 @@ function jaegerUiConfigPlugin() {
               const parsedJsonConfig = JSON.parse(jsonContent);
 
               // Shallow merge: JSON on top of backend base
-              finalUiConfig = { ...(backendUiConfig ?? {}), ...parsedJsonConfig };
+              finalUiConfig = { ...backendUiConfig, ...parsedJsonConfig };
               console.log(
                 '[jaeger-ui-config] Merged config from jaeger-ui.config.json on top of backend uiConfig'
               );
