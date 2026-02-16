@@ -76,8 +76,13 @@ function jaegerUiConfigPlugin() {
           // Silent fallback for production behavior, but log for dev visibility
           if (err instanceof Error && err.name === 'AbortError') {
             console.log('[jaeger-ui-config] Backend fetch timed out (1s)');
+          } else if (err instanceof Error) {
+            console.log(
+              `[jaeger-ui-config] Error fetching backend config: ${err.message}`,
+              err
+            );
           } else {
-            console.log('[jaeger-ui-config] Backend not running or error fetching config');
+            console.log('[jaeger-ui-config] Unknown error fetching backend config:', err);
           }
         } finally {
           clearTimeout(timeout);
