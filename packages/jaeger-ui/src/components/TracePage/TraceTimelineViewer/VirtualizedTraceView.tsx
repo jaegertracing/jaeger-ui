@@ -206,22 +206,6 @@ const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: CriticalPathSect
   _groupBy(criticalPath, x => x.spanID)
 );
 
-// Custom comparison function for React.memo - mirrors original shouldComponentUpdate
-function arePropsEqual(prevProps: VirtualizedTraceViewProps, nextProps: VirtualizedTraceViewProps): boolean {
-  const nextPropKeys = Object.keys(nextProps) as (keyof VirtualizedTraceViewProps)[];
-  for (let i = 0; i < nextPropKeys.length; i += 1) {
-    if (nextProps[nextPropKeys[i]] !== prevProps[nextPropKeys[i]]) {
-      // Unless the only change was props.shouldScrollToFirstUiFindMatch changing to false.
-      if (nextPropKeys[i] === 'shouldScrollToFirstUiFindMatch') {
-        if (nextProps[nextPropKeys[i]]) return false; // should update
-      } else {
-        return false; // should update
-      }
-    }
-  }
-  return true; // skip update
-}
-
 // Helper functions exported for testing
 export function getRowStatesHelper(
   trace: IOtelTrace | TNil,
@@ -310,9 +294,6 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = Rea
     // Ref to store ListView instance
     const listViewRef = useRef<ListView | null>(null);
 
-    // Ref to store previous registerAccessors for comparison
-    const prevRegisterAccessorsRef = useRef(registerAccessors);
-
     // Ref to store previous trace for comparison (for setTrace effect)
     const prevTraceRef = useRef<IOtelTrace | null>(null);
 
@@ -324,7 +305,11 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = Rea
     const clippingCssClasses = memoizedGetCssClasses(currentViewRangeTime);
 
     // Memoize getViewedBounds to prevent unnecessary child re-renders
+    // Guard against null/undefined trace to avoid runtime crashes
     const viewedBoundsFunc = useMemo((): ViewedBoundsFunctionType => {
+      if (!trace) {
+        return () => ({ start: 0, end: 0 });
+      }
       const [zoomStart, zoomEnd] = currentViewRangeTime;
       return memoizedViewBoundsFunc({
         min: trace.startTime,
@@ -332,7 +317,7 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = Rea
         viewStart: zoomStart,
         viewEnd: zoomEnd,
       });
-    }, [currentViewRangeTime, trace.startTime, trace.endTime]);
+    }, [currentViewRangeTime, trace]);
 
     // Focus span handler
     const focusSpan = useCallback(
@@ -378,17 +363,17 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = Rea
       };
     }, [currentViewRangeTime, findMatchesIDs, childrenHiddenIDs, getRowStates]);
 
-    // Set list view ref and register accessors
-    const setListView = useCallback(
-      (listView: ListView | TNil) => {
-        const isChanged = listViewRef.current !== listView;
-        listViewRef.current = listView ?? null;
-        if (listView && isChanged) {
-          registerAccessors(getAccessors());
-        }
-      },
-      [registerAccessors, getAccessors]
-    );
+    // Set list view ref — stable callback to avoid React detaching/reattaching the ref
+    const setListView = useCallback((listView: ListView | TNil) => {
+      listViewRef.current = listView ?? null;
+    }, []);
+
+    // Register accessors when ListView or accessor inputs change
+    useEffect(() => {
+      if (listViewRef.current) {
+        registerAccessors(getAccessors());
+      }
+    }, [registerAccessors, getAccessors]);
 
     // Get key from index
     const getKeyFromIndex = useCallback(
@@ -671,14 +656,6 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = Rea
       }
     }, [trace, setTrace, uiFind]);
 
-    // Effect: Accessor registration (when registerAccessors changes)
-    useEffect(() => {
-      if (listViewRef.current && prevRegisterAccessorsRef.current !== registerAccessors) {
-        registerAccessors(getAccessors());
-        prevRegisterAccessorsRef.current = registerAccessors;
-      }
-    }, [registerAccessors, getAccessors]);
-
     // Effect: Scroll to first UI find match
     useEffect(() => {
       if (shouldScrollToFirstUiFindMatch) {
@@ -703,8 +680,7 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = Rea
         />
       </div>
     );
-  },
-  arePropsEqual
+  }
 );
 
 /* istanbul ignore next */
