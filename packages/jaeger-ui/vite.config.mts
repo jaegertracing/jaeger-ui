@@ -105,13 +105,6 @@ function jaegerUiConfigPlugin() {
               const jsonContent = fs.readFileSync(jsonConfigPath, 'utf-8');
               const parsedJsonConfig = JSON.parse(jsonContent);
 
-              // Extract storageCapabilities from JSON if present
-              if (parsedJsonConfig.storageCapabilities) {
-                const baseCapabilities = storageCapabilities ?? {};
-                storageCapabilities = { ...baseCapabilities, ...parsedJsonConfig.storageCapabilities };
-                delete parsedJsonConfig.storageCapabilities;
-              }
-
               // Shallow merge: JSON on top of backend base
               finalUiConfig = { ...(backendUiConfig ?? {}), ...parsedJsonConfig };
               console.log(
