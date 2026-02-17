@@ -6,7 +6,7 @@ import { render } from '@testing-library/react';
 import SvgEdgesLayer from './SvgEdgesLayer';
 
 // Mock child components
-// 使用 React.createElement 而非 JSX，因為 jest.mock 的工廠函數不允許引用外部變數
+// Use React.createElement instead of JSX because jest.mock factory functions cannot reference external variables
 jest.mock('./SvgEdges', () => {
   const React = require('react');
   const MockSvgEdges = props => {
