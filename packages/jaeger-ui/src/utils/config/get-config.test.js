@@ -121,7 +121,7 @@ describe('getConfigValue(...)', () => {
     expect(getConfigValue('storageCapabilities.metricsStorage')).toBe(false);
   });
 
-  it('handles non-existent paths"', () => {
+  it('handles non-existent paths', () => {
     expect(getConfigValue('not.a.real.path')).toBe(undefined);
   });
 });
