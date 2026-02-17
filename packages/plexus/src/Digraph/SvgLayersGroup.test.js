@@ -11,7 +11,7 @@ const mockSvgEdgesLayerProps = [];
 const mockNodesLayerProps = [];
 const mockSvgLayerProps = [];
 
-// 使用 React.createElement 而非 JSX，因為 jest.mock 的工廠函數不允許引用外部變數
+// Use React.createElement instead of JSX because jest.mock factory functions cannot reference external variables
 jest.mock('./SvgEdgesLayer', () => {
   const React = require('react');
   let callCount = 0;
@@ -19,9 +19,6 @@ jest.mock('./SvgEdgesLayer', () => {
     mockSvgEdgesLayerProps.push(props);
     callCount++;
     return React.createElement('g', { 'data-testid': `edges-layer-${callCount}` });
-  };
-  MockSvgEdgesLayer.resetCount = () => {
-    callCount = 0;
   };
   return MockSvgEdgesLayer;
 });
@@ -33,9 +30,6 @@ jest.mock('./NodesLayer', () => {
     mockNodesLayerProps.push(props);
     callCount++;
     return React.createElement('g', { 'data-testid': `nodes-layer-${callCount}` });
-  };
-  MockNodesLayer.resetCount = () => {
-    callCount = 0;
   };
   return MockNodesLayer;
 });
@@ -112,6 +106,18 @@ describe('SvgLayersGroup', () => {
     it('passes graphState to SvgLayer', () => {
       render(<SvgLayersGroup {...defaultProps} />);
       expect(mockSvgLayerProps[0].graphState).toBe(defaultProps.graphState);
+    });
+
+    it('passes defs to SvgLayer', () => {
+      const defs = [{ localId: 'def-1', renderEntry: jest.fn() }];
+      render(<SvgLayersGroup {...defaultProps} defs={defs} />);
+      expect(mockSvgLayerProps[0].defs).toBe(defs);
+    });
+
+    it('passes top-level setOnContainer to SvgLayer', () => {
+      const mockSetOnContainer = jest.fn();
+      render(<SvgLayersGroup {...defaultProps} setOnContainer={mockSetOnContainer} />);
+      expect(mockSvgLayerProps[0].setOnContainer).toBe(mockSetOnContainer);
     });
   });
 
