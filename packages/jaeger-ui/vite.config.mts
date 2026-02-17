@@ -62,9 +62,7 @@ function jaegerUiConfigPlugin() {
 
         try {
           const fetchOptions = { signal: controller.signal };
-          const response = await fetch('http://127.0.0.1:16686/api/ui/config', fetchOptions).catch(
-            () => null
-          );
+          const response = await fetch('http://127.0.0.1:16686/api/ui/config', fetchOptions);
 
           if (response?.ok) {
             const data = await response.json();
