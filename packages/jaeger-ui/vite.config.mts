@@ -8,6 +8,7 @@ import legacy from '@vitejs/plugin-legacy';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { mergeFields } from './src/constants/config-keys';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -39,6 +40,7 @@ function jaegerUiConfigPlugin() {
 
   return {
     name: 'jaeger-ui-config',
+    apply: 'serve' as const,
     configureServer(server: import('vite').ViteDevServer) {
       server.watcher.add([jsConfigPath, jsonConfigPath]);
       server.watcher.on('change', (changedPath: string) => {
@@ -112,7 +114,6 @@ function jaegerUiConfigPlugin() {
               // Shallow merge: JSON on top of backend base
               finalUiConfig = { ...backendUiConfig, ...parsedJsonConfig };
 
-              const mergeFields = ['dependencies', 'search', 'tracking', 'monitor'];
               mergeFields.forEach(key => {
                 if (
                   parsedJsonConfig &&
