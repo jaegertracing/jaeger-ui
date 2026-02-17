@@ -37,4 +37,10 @@ describe('<MonitorATMEmptyState>', () => {
     fireEvent.click(button);
     expect(mockClickHandler).toHaveBeenCalled();
   });
+
+  it('renders nothing when config is missing', () => {
+    getConfigValue.mockReturnValue(null);
+    const { container } = render(<MonitorATMEmptyState />);
+    expect(container.firstChild).toBeNull();
+  });
 });

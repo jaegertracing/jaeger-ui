@@ -79,10 +79,7 @@ function jaegerUiConfigPlugin() {
           if (err instanceof Error && err.name === 'AbortError') {
             console.log('[jaeger-ui-config] Backend fetch timed out (1s)');
           } else if (err instanceof Error) {
-            console.log(
-              `[jaeger-ui-config] Error fetching backend config: ${err.message}`,
-              err
-            );
+            console.log(`[jaeger-ui-config] Error fetching backend config: ${err.message}`, err);
           } else {
             console.log('[jaeger-ui-config] Unknown error fetching backend config:', err);
           }
@@ -114,6 +111,19 @@ function jaegerUiConfigPlugin() {
 
               // Shallow merge: JSON on top of backend base
               finalUiConfig = { ...backendUiConfig, ...parsedJsonConfig };
+
+              const mergeFields = ['dependencies', 'search', 'tracking', 'monitor'];
+              mergeFields.forEach(key => {
+                if (
+                  parsedJsonConfig &&
+                  typeof parsedJsonConfig[key] === 'object' &&
+                  parsedJsonConfig[key] !== null
+                ) {
+                  const backendValue = backendUiConfig ? backendUiConfig[key] : {};
+                  finalUiConfig[key] = { ...backendValue, ...parsedJsonConfig[key] };
+                }
+              });
+
               console.log(
                 '[jaeger-ui-config] Merged config from jaeger-ui.config.json on top of backend uiConfig'
               );
