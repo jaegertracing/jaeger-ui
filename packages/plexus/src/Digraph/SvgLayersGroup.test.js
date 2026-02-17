@@ -11,7 +11,7 @@ const mockSvgEdgesLayerProps = [];
 const mockNodesLayerProps = [];
 const mockSvgLayerProps = [];
 
-// Use React.createElement instead of JSX because jest.mock factory functions cannot reference external variables
+// jest.mock factories are hoisted above imports, so we use React.createElement instead of JSX here
 jest.mock('./SvgEdgesLayer', () => {
   const React = require('react');
   let callCount = 0;
