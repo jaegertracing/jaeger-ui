@@ -50,7 +50,7 @@ function computeLabelCoord(pathPoints: [number, number][], isSelfLoop: boolean, 
       sumY += py;
     }
     return {
-      labelX: sumX / pathPoints.length - xOffset / 2, // center the text
+      labelX: sumX / pathPoints.length - xOffset, // center the text, consistent with normal edges
       labelY: sumY / pathPoints.length,
     };
   }
