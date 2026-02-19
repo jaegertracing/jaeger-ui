@@ -37,11 +37,27 @@ function makePathD(points: [number, number][]) {
   return dArr.join(' ');
 }
 
-function computeLabelCoord(pathPoints: [number, number][], label?: string | undefined) {
+function computeLabelCoord(pathPoints: [number, number][], isSelfLoop: boolean, label?: string | undefined) {
+  const xOffset = (label?.length ?? 0) * 5;
+
+  if (isSelfLoop && pathPoints.length > 2) {
+    // For self-loops, position label at the center of the loop curve
+    // Average all path/control points to find the centroid of the oval
+    let sumX = 0;
+    let sumY = 0;
+    for (const [px, py] of pathPoints) {
+      sumX += px;
+      sumY += py;
+    }
+    return {
+      labelX: sumX / pathPoints.length - xOffset, // center the text, consistent with normal edges
+      labelY: sumY / pathPoints.length,
+    };
+  }
+
+  // Normal edge: midpoint between start and end
   const [startX, startY] = pathPoints[0];
   const [endX, endY] = pathPoints[pathPoints.length - 1];
-
-  const xOffset = (label?.length ?? 0) * 5;
   const labelX = (startX + endX) / 2 - xOffset;
   const labelY = (startY + endY) / 2;
 
@@ -65,7 +81,8 @@ export default class SvgEdge<U = {}> extends React.PureComponent<TProps<U>> {
       getProps(setOnEdge, layoutEdge, renderUtils)
     );
 
-    const { labelX, labelY } = computeLabelCoord(pathPoints, label);
+    const isSelfLoop = layoutEdge.edge.from === layoutEdge.edge.to;
+    const { labelX, labelY } = computeLabelCoord(pathPoints, isSelfLoop, label);
 
     return (
       <g>
