@@ -266,38 +266,69 @@ describe('JaegerClient', () => {
       expect(jaegerClient.fetchSpanNames).toBeInstanceOf(Function);
     });
   });
+});
 
-  describe('base path prefix', () => {
-    it('uses prefixUrl to build the API root', async () => {
-      const mockServices = ['svc-a'];
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ services: mockServices }),
-      });
+describe('JaegerClient with non-default base path', () => {
+  let mockFetch: jest.Mock;
+  let originalFetch: typeof globalThis.fetch;
 
-      const promise = client.fetchServices();
-      jest.runAllTimers();
-      await promise;
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+    mockFetch = jest.fn();
+    (global as any).fetch = mockFetch;
+    jest.useFakeTimers();
+  });
 
-      // In the default test environment the path prefix is empty so the URL is /api/v3/services.
-      // The important thing is that fetch is called with a URL that ends with /api/v3/services,
-      // confirming that prefixUrl is applied (prefix is '' by default in tests).
-      const calledUrl: string = mockFetch.mock.calls[0][0];
-      expect(calledUrl).toMatch(/\/api\/v3\/services$/);
+  afterEach(() => {
+    (global as any).fetch = originalFetch;
+    jest.useRealTimers();
+  });
+
+  it('calls services endpoint with non-default prefix in the URL', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ services: ['svc-a'] }),
     });
 
-    it('uses prefixUrl to build the operations URL', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ operations: [] }),
-      });
+    let Client: any;
+    jest.isolateModules(() => {
+      jest.mock('../../utils/prefix-url', () => (path: string) => `/jaeger${path}`);
 
-      const promise = client.fetchSpanNames('my-service');
-      jest.runAllTimers();
-      await promise;
-
-      const calledUrl: string = mockFetch.mock.calls[0][0];
-      expect(calledUrl).toMatch(/\/api\/v3\/operations\?service=my-service$/);
+      Client = require('./client').JaegerClient;
     });
+
+    const clientWithPrefix = new Client();
+    const promise = clientWithPrefix.fetchServices();
+    jest.runAllTimers();
+    await promise;
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/jaeger/api/v3/services',
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
+  });
+
+  it('calls operations endpoint with non-default prefix in the URL', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ operations: [] }),
+    });
+
+    let Client: any;
+    jest.isolateModules(() => {
+      jest.mock('../../utils/prefix-url', () => (path: string) => `/jaeger${path}`);
+
+      Client = require('./client').JaegerClient;
+    });
+
+    const clientWithPrefix = new Client();
+    const promise = clientWithPrefix.fetchSpanNames('my-service');
+    jest.runAllTimers();
+    await promise;
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/jaeger/api/v3/operations?service=my-service',
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
   });
 });
