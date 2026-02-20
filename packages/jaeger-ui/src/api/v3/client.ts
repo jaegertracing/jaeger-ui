@@ -11,7 +11,7 @@
 import { ServicesResponseSchema, OperationsResponseSchema } from './schemas';
 
 export class JaegerClient {
-  private apiRoot = '/api/v3';
+  private apiRoot = 'api/v3';
 
   /**
    * Fetch the list of services from the Jaeger API.
