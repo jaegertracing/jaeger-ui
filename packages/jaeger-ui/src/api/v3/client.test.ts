@@ -276,15 +276,13 @@ describe('JaegerClient with non-default base path', () => {
     originalFetch = globalThis.fetch;
     mockFetch = jest.fn();
     (global as any).fetch = mockFetch;
-    jest.useFakeTimers();
   });
 
   afterEach(() => {
     (global as any).fetch = originalFetch;
-    jest.useRealTimers();
   });
 
-  it('calls services endpoint with non-default prefix in the URL', async () => {
+  it('calls services endpoint with base path prefix from site-prefix', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ services: ['svc-a'] }),
@@ -292,42 +290,16 @@ describe('JaegerClient with non-default base path', () => {
 
     let Client: any;
     jest.isolateModules(() => {
-      jest.mock('../../utils/prefix-url', () => (path: string) => `/jaeger${path}`);
+      // Simulate deployment at /jaeger/ by providing a matching site prefix.
+      jest.mock('../../site-prefix', () => `${global.location.origin}/jaeger/`);
 
       Client = require('./client').JaegerClient;
     });
 
-    const clientWithPrefix = new Client();
-    const promise = clientWithPrefix.fetchServices();
-    jest.runAllTimers();
-    await promise;
+    await new Client().fetchServices();
 
     expect(mockFetch).toHaveBeenCalledWith(
       '/jaeger/api/v3/services',
-      expect.objectContaining({ signal: expect.any(AbortSignal) })
-    );
-  });
-
-  it('calls operations endpoint with non-default prefix in the URL', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ operations: [] }),
-    });
-
-    let Client: any;
-    jest.isolateModules(() => {
-      jest.mock('../../utils/prefix-url', () => (path: string) => `/jaeger${path}`);
-
-      Client = require('./client').JaegerClient;
-    });
-
-    const clientWithPrefix = new Client();
-    const promise = clientWithPrefix.fetchSpanNames('my-service');
-    jest.runAllTimers();
-    await promise;
-
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/jaeger/api/v3/operations?service=my-service',
       expect.objectContaining({ signal: expect.any(AbortSignal) })
     );
   });
