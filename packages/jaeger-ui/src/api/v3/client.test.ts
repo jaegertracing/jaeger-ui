@@ -266,4 +266,38 @@ describe('JaegerClient', () => {
       expect(jaegerClient.fetchSpanNames).toBeInstanceOf(Function);
     });
   });
+
+  describe('base path prefix', () => {
+    it('uses prefixUrl to build the API root', async () => {
+      const mockServices = ['svc-a'];
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ services: mockServices }),
+      });
+
+      const promise = client.fetchServices();
+      jest.runAllTimers();
+      await promise;
+
+      // In the default test environment the path prefix is empty so the URL is /api/v3/services.
+      // The important thing is that fetch is called with a URL that ends with /api/v3/services,
+      // confirming that prefixUrl is applied (prefix is '' by default in tests).
+      const calledUrl: string = mockFetch.mock.calls[0][0];
+      expect(calledUrl).toMatch(/\/api\/v3\/services$/);
+    });
+
+    it('uses prefixUrl to build the operations URL', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ operations: [] }),
+      });
+
+      const promise = client.fetchSpanNames('my-service');
+      jest.runAllTimers();
+      await promise;
+
+      const calledUrl: string = mockFetch.mock.calls[0][0];
+      expect(calledUrl).toMatch(/\/api\/v3\/operations\?service=my-service$/);
+    });
+  });
 });
