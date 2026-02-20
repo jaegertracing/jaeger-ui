@@ -35,7 +35,7 @@ describe('JaegerClient', () => {
 
       expect(result).toEqual(mockServices);
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/v3/services',
+        'api/v3/services',
         expect.objectContaining({ signal: expect.any(AbortSignal) })
       );
     });
@@ -111,7 +111,7 @@ describe('JaegerClient', () => {
 
       expect(result).toEqual(mockOperations);
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/v3/operations?service=test-service',
+        'api/v3/operations?service=test-service',
         expect.objectContaining({ signal: expect.any(AbortSignal) })
       );
     });
@@ -127,7 +127,7 @@ describe('JaegerClient', () => {
       await promise;
 
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/v3/operations?service=service%20with%20spaces%20%26%20special%3Dchars',
+        'api/v3/operations?service=service%20with%20spaces%20%26%20special%3Dchars',
         expect.objectContaining({ signal: expect.any(AbortSignal) })
       );
     });
