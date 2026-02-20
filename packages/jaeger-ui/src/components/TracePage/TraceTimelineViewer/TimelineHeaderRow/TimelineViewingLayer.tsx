@@ -126,7 +126,7 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
     viewRangeTimeRef.current = viewRangeTime;
     updateNextViewRangeTimeRef.current = updateNextViewRangeTime;
     updateViewRangeTimeRef.current = updateViewRangeTime;
-  });
+  }, [viewRangeTime, updateNextViewRangeTime, updateViewRangeTime]);
 
   const getDraggingBounds = useCallback((): DraggableBounds => {
     const current = rootRef.current;
@@ -213,9 +213,9 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
   const { current, cursor, reframe, shiftEnd, shiftStart } = viewRangeTime;
   const [viewStart, viewEnd] = current;
   const haveNextTimeRange = reframe != null || shiftEnd != null || shiftStart != null;
-  let cusorPosition: string | TNil;
+  let cursorPosition: string | TNil;
   if (!haveNextTimeRange && cursor != null && cursor >= viewStart && cursor <= viewEnd) {
-    cusorPosition = `${mapToViewSubRange(viewStart, viewEnd, cursor) * 100}%`;
+    cursorPosition = `${mapToViewSubRange(viewStart, viewEnd, cursor) * 100}%`;
   }
 
   return (
@@ -227,8 +227,8 @@ function TimelineViewingLayer(props: TimelineViewingLayerProps) {
       onMouseLeave={draggerReframe.handleMouseLeave}
       onMouseMove={draggerReframe.handleMouseMove}
     >
-      {cusorPosition != null && (
-        <div className="TimelineViewingLayer--cursorGuide" style={{ left: cusorPosition }} />
+      {cursorPosition != null && (
+        <div className="TimelineViewingLayer--cursorGuide" style={{ left: cursorPosition }} />
       )}
       {reframe != null && getMarkers(viewStart, viewEnd, reframe.anchor, reframe.shift, false)}
       {shiftEnd != null && getMarkers(viewStart, viewEnd, viewEnd, shiftEnd, true)}
