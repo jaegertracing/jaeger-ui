@@ -267,3 +267,40 @@ describe('JaegerClient', () => {
     });
   });
 });
+
+describe('JaegerClient with non-default base path', () => {
+  let mockFetch: jest.Mock;
+  let originalFetch: typeof globalThis.fetch;
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+    mockFetch = jest.fn();
+    (global as any).fetch = mockFetch;
+  });
+
+  afterEach(() => {
+    (global as any).fetch = originalFetch;
+  });
+
+  it('calls services endpoint with base path prefix from site-prefix', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ services: ['svc-a'] }),
+    });
+
+    let Client: any;
+    jest.isolateModules(() => {
+      // Simulate deployment at /jaeger/ by providing a matching site prefix.
+      jest.mock('../../site-prefix', () => `${global.location.origin}/jaeger/`);
+
+      Client = require('./client').JaegerClient;
+    });
+
+    await new Client().fetchServices();
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/jaeger/api/v3/services',
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
+  });
+});

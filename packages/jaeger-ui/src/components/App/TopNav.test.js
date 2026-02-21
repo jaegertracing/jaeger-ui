@@ -9,14 +9,6 @@ import { CompatRouter } from 'react-router-dom-v5-compat';
 
 import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
 
-jest.mock('../../utils/configure-store', () => ({
-  history: {
-    push: jest.fn(),
-    replace: jest.fn(),
-  },
-  store: {},
-}));
-
 jest.mock('antd', () => {
   const actual = jest.requireActual('antd');
 
