@@ -119,9 +119,9 @@ const defaultConfig: Config = {
   useOpenTelemetryTerms: false,
 };
 
-// Fields that should be merged with user-supplied config values rather than overwritten.
-type TMergeField = 'dependencies' | 'search' | 'tracking';
-export const mergeFields: readonly TMergeField[] = ['dependencies', 'search', 'tracking'];
+import { mergeFields } from './config-keys';
+
+export { mergeFields };
 
 export default deepFreeze(defaultConfig);
 
