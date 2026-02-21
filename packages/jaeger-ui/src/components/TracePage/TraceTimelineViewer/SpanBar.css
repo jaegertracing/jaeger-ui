@@ -38,8 +38,7 @@ SPDX-License-Identifier: Apache-2.0
   top: 45%;
   height: 11%;
   z-index: 2;
-  overflow: visible;
-  /* Changed from hidden to show shadow */
+  overflow: hidden;
   box-shadow:
     0 -0.5px 0 var(--critical-path-outline),
     0 0.5px 0 var(--critical-path-outline);
