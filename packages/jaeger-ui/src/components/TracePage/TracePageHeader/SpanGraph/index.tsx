@@ -1,7 +1,8 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { memo, useMemo } from 'react';
+import * as React from 'react';
+import memoizeOne from 'memoize-one';
 
 import CanvasSpanGraph from './CanvasSpanGraph';
 import TickLabels from './TickLabels';
@@ -40,37 +41,34 @@ function getItems(trace: IOtelTrace): SpanItem[] {
   return trace.spans.map(getItem);
 }
 
-const SpanGraph = ({
-  height = DEFAULT_HEIGHT,
-  trace,
-  viewRange,
-  updateNextViewRangeTime,
-  updateViewRangeTime,
-}: SpanGraphProps) => {
-  // Memoize items calculation - must be called before any conditional returns
-  // to comply with React Rules of Hooks (hooks must be called in same order every render)
-  const items = useMemo(() => (trace ? getItems(trace) : []), [trace]);
+const memoizedGetItems = memoizeOne(getItems);
 
-  if (!trace) {
-    return <div />;
-  }
+export default class SpanGraph extends React.PureComponent<SpanGraphProps> {
+  static defaultProps = {
+    height: DEFAULT_HEIGHT,
+  };
 
-  return (
-    <div className="SpanGraph ub-pb2 ub-px2">
-      <TickLabels numTicks={TIMELINE_TICK_INTERVAL} duration={trace.duration} />
-      <div className="ub-relative">
-        <CanvasSpanGraph valueWidth={trace.duration} items={items} />
-        <ViewingLayer
-          viewRange={viewRange}
-          numTicks={TIMELINE_TICK_INTERVAL}
-          height={height || DEFAULT_HEIGHT}
-          updateViewRangeTime={updateViewRangeTime}
-          updateNextViewRangeTime={updateNextViewRangeTime}
-        />
+  render() {
+    const { height, trace, viewRange, updateNextViewRangeTime, updateViewRangeTime } = this.props;
+    if (!trace) {
+      return <div />;
+    }
+
+    const items = memoizedGetItems(trace);
+    return (
+      <div className="SpanGraph ub-pb2 ub-px2">
+        <TickLabels numTicks={TIMELINE_TICK_INTERVAL} duration={trace.duration} />
+        <div className="ub-relative">
+          <CanvasSpanGraph valueWidth={trace.duration} items={items} />
+          <ViewingLayer
+            viewRange={viewRange}
+            numTicks={TIMELINE_TICK_INTERVAL}
+            height={height || DEFAULT_HEIGHT}
+            updateViewRangeTime={updateViewRangeTime}
+            updateNextViewRangeTime={updateNextViewRangeTime}
+          />
+        </div>
       </div>
-    </div>
-  );
-};
-
-// memo provides shallow comparison equivalent to PureComponent
-export default memo(SpanGraph);
+    );
+  }
+}

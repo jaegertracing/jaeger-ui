@@ -6,7 +6,7 @@ import { render } from '@testing-library/react';
 import SvgLayer from './SvgLayer';
 
 // Mock SvgDefEntry component
-// 使用 React.createElement 而非 JSX，因為 jest.mock 的工廠函數不允許引用外部變數
+// Use React.createElement instead of JSX, because jest.mock factory functions cannot reference external variables
 jest.mock('./SvgDefEntry', () => {
   const React = require('react');
   const MockSvgDefEntry = ({ localId, getClassName }) =>
