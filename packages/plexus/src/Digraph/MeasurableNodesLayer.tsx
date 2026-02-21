@@ -4,7 +4,7 @@
 import * as React from 'react';
 
 import HtmlLayer from './HtmlLayer';
-import MeasurableNode from './MeasurableNode';
+import { MeasurableNodeRef } from './MeasurableNode';
 import MeasurableNodes from './MeasurableNodes';
 import SvgLayer from './SvgLayer';
 import {
@@ -49,8 +49,8 @@ function MeasurableNodesLayer<T = {}, U = {}>(props: TProps<T, U>) {
 
   const { layoutPhase, layoutVertices, renderUtils, vertices } = graphState;
 
-  const [nodeRefs, setNodeRefs] = React.useState<Array<React.RefObject<MeasurableNode<T>>>>(() =>
-    createRefs<MeasurableNode<T>>(vertices.length)
+  const [nodeRefs, setNodeRefs] = React.useState<Array<React.RefObject<MeasurableNodeRef>>>(() =>
+    createRefs<MeasurableNodeRef>(vertices.length)
   );
 
   const prevVerticesRef = React.useRef<TVertex<T>[]>(vertices);
@@ -58,7 +58,7 @@ function MeasurableNodesLayer<T = {}, U = {}>(props: TProps<T, U>) {
   React.useEffect(() => {
     if (vertices !== prevVerticesRef.current) {
       prevVerticesRef.current = vertices;
-      setNodeRefs(createRefs<MeasurableNode<T>>(vertices.length));
+      setNodeRefs(createRefs<MeasurableNodeRef>(vertices.length));
     }
   }, [vertices]);
 
@@ -69,7 +69,7 @@ function MeasurableNodesLayer<T = {}, U = {}>(props: TProps<T, U>) {
     if (!nodeRefs) {
       return;
     }
-    let current: MeasurableNode<T> | null = null;
+    let current: MeasurableNodeRef | null = null;
     const utils = measureNode && {
       layerType,
       getWrapper: () => {
