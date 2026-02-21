@@ -125,7 +125,6 @@ function buildOneColumn(oneColumn: ITableSpan) {
   oneColumnChange.selfMax = (Math.round((oneColumnChange.selfMax / 1000) * 100) /
     100) as IOtelSpan['duration'];
   oneColumnChange.percent = Math.round((oneColumnChange.percent / 1) * 100) / 100;
-  // oneColumnChange.colorToPercent;
   return oneColumnChange;
 }
 
@@ -231,9 +230,8 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace, use
       selfMax: resultValue.selfMax,
       percent: resultValue.percent,
       color,
-      searchColor: '',
+      searchMatch: false,
       parentElement: 'none',
-      colorToPercent: 'transparent',
       traceID: '',
     };
     tableSpan = buildOneColumn(tableSpan);
@@ -273,9 +271,8 @@ function valueFirstDropdown(selectedAttributeKey: string, trace: IOtelTrace, use
         selfMax: resultValue.selfMax,
         percent: resultValue.percent,
         color: '',
-        searchColor: 'transparent',
+        searchMatch: false,
         parentElement: '',
-        colorToPercent: 'rgb(248,248,248)',
         traceID: '',
       };
       tableSpanOTHERS = buildOneColumn(tableSpanOTHERS);
@@ -343,9 +340,8 @@ function buildDetail(
       selfMax: resultValue.selfMax,
       percent: resultValue.percent,
       color,
-      searchColor: '',
+      searchMatch: false,
       parentElement: parentName,
-      colorToPercent: 'rgb(248,248,248)',
       traceID: '',
     };
     buildOneColumnValue = buildOneColumn(buildOneColumnValue);
@@ -405,9 +401,8 @@ function generateDetailRest(
           selfMax: resultValue.selfMax,
           percent: resultValue.percent,
           color: '',
-          searchColor: '',
+          searchMatch: false,
           parentElement: allColumnValues[i].name,
-          colorToPercent: 'rgb(248,248,248)',
           traceID: '',
         };
         buildOneColumnValue = buildOneColumn(buildOneColumnValue);

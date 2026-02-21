@@ -3,7 +3,7 @@
 
 import React, { Component } from 'react';
 import './index.css';
-import { Table } from 'antd';
+import { Table, Tooltip } from 'antd';
 import { ColumnProps } from 'antd/es/table';
 import { IOtelTrace } from '../../../types/otel';
 import TraceStatisticsHeader from './TraceStatisticsHeader';
@@ -11,6 +11,8 @@ import { ITableSpan } from './types';
 import { TNil } from '../../../types';
 import PopupSQL from './PopupSql';
 import { getServiceName } from './tableValues';
+import RelativeBar from '../../common/RelativeBar';
+import { formatDurationCompact } from '../../../utils/date';
 
 type Props = {
   trace: IOtelTrace;
@@ -28,77 +30,92 @@ type State = {
   wholeTable: ITableSpan[];
   valueNameSelector1: string;
   valueNameSelector2: string | null;
+  colorByAttribute: string;
 };
+
+type ColumnValueType = 'count' | 'percent' | 'time' | 'text';
 
 const columnsArray: {
   title: string;
   attribute: keyof ITableSpan;
   suffix: string;
+  valueType: ColumnValueType;
   titleDescription?: string;
 }[] = [
   {
     title: 'Group',
     attribute: 'name',
     suffix: '',
+    valueType: 'text',
   },
   {
     title: 'Count',
     attribute: 'count',
     suffix: '',
+    valueType: 'count',
     titleDescription: 'Number of spans',
   },
   {
     title: 'Total',
     attribute: 'total',
     suffix: 'ms',
+    valueType: 'time',
     titleDescription: 'Total duration of all spans',
   },
   {
     title: 'Avg',
     attribute: 'avg',
     suffix: 'ms',
+    valueType: 'time',
     titleDescription: 'Average duration of all spans',
   },
   {
     title: 'Min',
     attribute: 'min',
     suffix: 'ms',
+    valueType: 'time',
     titleDescription: 'Minimum duration across all spans',
   },
   {
     title: 'Max',
     attribute: 'max',
     suffix: 'ms',
+    valueType: 'time',
     titleDescription: 'Maximum duration across all spans',
   },
   {
     title: 'ST Total',
     attribute: 'selfTotal',
     suffix: 'ms',
+    valueType: 'time',
     titleDescription: 'Sum of Self Time (time spent in a span when it was not waiting on children)',
   },
   {
     title: 'ST Avg',
     attribute: 'selfAvg',
     suffix: 'ms',
+    valueType: 'time',
     titleDescription: 'Average Self Time (time spent in a span when it was not waiting on children)',
   },
   {
     title: 'ST Min',
     attribute: 'selfMin',
     suffix: 'ms',
+    valueType: 'time',
     titleDescription: 'Minimum Self Time (time spent in a span when it was not waiting on children)',
   },
   {
     title: 'ST Max',
     attribute: 'selfMax',
     suffix: 'ms',
+    valueType: 'time',
     titleDescription: 'Maximum Self Time (time spent in a span when it was not waiting on children)',
   },
   {
     title: 'ST in Duration',
     attribute: 'percent',
     suffix: '%',
+    valueType: 'percent',
     titleDescription: 'Percentage of ST Total vs. Total',
   },
 ];
@@ -119,12 +136,11 @@ export default class TraceStatistics extends Component<Props, State> {
       wholeTable: [],
       valueNameSelector1: getServiceName(),
       valueNameSelector2: null,
+      colorByAttribute: 'count',
     };
 
     this.handler = this.handler.bind(this);
     this.togglePopup = this.togglePopup.bind(this);
-
-    this.searchInTable(this.props.uiFindVertexKeys!, this.state.tableValue, this.props.uiFind);
   }
 
   /**
@@ -138,12 +154,8 @@ export default class TraceStatistics extends Component<Props, State> {
   }
 
   changeTableValueSearch() {
-    this.searchInTable(this.props.uiFindVertexKeys!, this.state.tableValue, this.props.uiFind);
-    // reload the componente
-    const tableValueState = this.state.tableValue;
     this.setState(prevState => ({
-      ...prevState,
-      tableValue: tableValueState,
+      tableValue: this.searchInTable(this.props.uiFindVertexKeys!, prevState.tableValue, this.props.uiFind),
     }));
   }
 
@@ -155,7 +167,8 @@ export default class TraceStatistics extends Component<Props, State> {
     tableValue: ITableSpan[],
     wholeTable: ITableSpan[],
     valueNameSelector1: string,
-    valueNameSelector2: string | null
+    valueNameSelector2: string | null,
+    colorByAttribute: string
   ) {
     this.setState(prevState => {
       return {
@@ -166,6 +179,7 @@ export default class TraceStatistics extends Component<Props, State> {
         valueNameSelector1,
         valueNameSelector2,
         wholeTable,
+        colorByAttribute,
       };
     });
   }
@@ -186,7 +200,7 @@ export default class TraceStatistics extends Component<Props, State> {
   }
 
   /**
-   * Colors found entries in the table.
+   * Marks entries in the table that match search criteria.
    * @param uiFindVertexKeys Set of found spans
    * @param allTableSpans entries that are shown
    */
@@ -194,19 +208,8 @@ export default class TraceStatistics extends Component<Props, State> {
     uiFindVertexKeys: Set<string>,
     allTableSpans: ITableSpan[],
     uiFind: string | null | undefined
-  ) => {
-    const allTableSpansChange = allTableSpans;
-    const yellowSearchCollor = 'rgb(255,243,215)';
-    const defaultGrayCollor = 'rgb(248,248,248)';
-    for (let i = 0; i < allTableSpansChange.length; i++) {
-      if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
-        allTableSpansChange[i].searchColor = 'transparent';
-      } else if (allTableSpansChange[i].hasSubgroupValue) {
-        allTableSpansChange[i].searchColor = defaultGrayCollor;
-      } else {
-        allTableSpansChange[i].searchColor = defaultGrayCollor;
-      }
-    }
+  ): ITableSpan[] => {
+    const allTableSpansChange = allTableSpans.map(s => ({ ...s, searchMatch: false }));
     if (typeof uiFindVertexKeys !== 'undefined') {
       uiFindVertexKeys!.forEach(function calc(value) {
         const uiFindVertexKeysSplit = value.split('\u000b');
@@ -217,13 +220,13 @@ export default class TraceStatistics extends Component<Props, State> {
             -1
           ) {
             if (allTableSpansChange[i].parentElement === 'none') {
-              allTableSpansChange[i].searchColor = yellowSearchCollor;
+              allTableSpansChange[i].searchMatch = true;
             } else if (
               uiFindVertexKeysSplit[uiFindVertexKeysSplit.length - 1].indexOf(
                 allTableSpansChange[i].parentElement
               ) !== -1
             ) {
-              allTableSpansChange[i].searchColor = yellowSearchCollor;
+              allTableSpansChange[i].searchMatch = true;
             }
           }
         }
@@ -232,23 +235,35 @@ export default class TraceStatistics extends Component<Props, State> {
     if (uiFind) {
       for (let i = 0; i < allTableSpansChange.length; i++) {
         if (allTableSpansChange[i].name.indexOf(uiFind!) !== -1) {
-          allTableSpansChange[i].searchColor = yellowSearchCollor;
+          allTableSpansChange[i].searchMatch = true;
 
           for (let j = 0; j < allTableSpansChange.length; j++) {
             if (allTableSpansChange[j].parentElement === allTableSpansChange[i].name) {
-              allTableSpansChange[j].searchColor = yellowSearchCollor;
+              allTableSpansChange[j].searchMatch = true;
             }
           }
           if (allTableSpansChange[i].isDetail) {
             for (let j = 0; j < allTableSpansChange.length; j++) {
               if (allTableSpansChange[i].parentElement === allTableSpansChange[j].name) {
-                allTableSpansChange[j].searchColor = yellowSearchCollor;
+                allTableSpansChange[j].searchMatch = true;
               }
             }
           }
         }
       }
     }
+
+    // Parent rows with subgroups should never be highlighted (they are transparent in logic)
+    // We only apply this if there are actually detail rows (subgroups) in the table.
+    const hasDetails = allTableSpansChange.some(s => s.isDetail);
+    if (hasDetails) {
+      for (let i = 0; i < allTableSpansChange.length; i++) {
+        if (!allTableSpansChange[i].isDetail && allTableSpansChange[i].hasSubgroupValue) {
+          allTableSpansChange[i].searchMatch = false;
+        }
+      }
+    }
+
     return allTableSpansChange;
   };
 
@@ -274,17 +289,29 @@ export default class TraceStatistics extends Component<Props, State> {
     };
 
     const onCellFunction = (record: ITableSpan) => {
-      const backgroundColor =
-        this.props.uiFind && record.searchColor !== 'transparent'
-          ? record.searchColor
-          : record.colorToPercent;
       return {
-        style: { background: backgroundColor, borderColor: backgroundColor },
+        className: this.props.uiFind && record.searchMatch ? 'TraceStatistics--searchMatch' : '',
       };
     };
 
+    const activeAttribute = this.state.colorByAttribute;
+    let activeMax = 1;
+    if (activeAttribute) {
+      let max = 0;
+      for (const row of this.state.tableValue) {
+        const raw = (row as any)[activeAttribute];
+        const num = typeof raw === 'number' ? raw : Number(raw);
+        if (Number.isFinite(num) && num > max) {
+          max = num;
+        }
+      }
+      if (max > 0) {
+        activeMax = max;
+      }
+    }
+
     const columns: ColumnProps<ITableSpan>[] = columnsArray.map(val => {
-      const renderFunction = (cell: string, row: ITableSpan) => {
+      const renderFunction = (cell: string | number, row: ITableSpan) => {
         if (val.attribute === 'name')
           return (
             <span
@@ -299,8 +326,31 @@ export default class TraceStatistics extends Component<Props, State> {
               {cell}
             </span>
           );
-        return `${cell}${val.suffix}`;
+
+        const includeBars = val.attribute === activeAttribute;
+        let displayValue: React.ReactNode = cell;
+
+        if (val.valueType === 'time') {
+          const microseconds = ((cell as number) * 1000) as any;
+          const compactValue = formatDurationCompact(microseconds);
+          const preciseValue = `${cell}${val.suffix}`;
+          displayValue = <Tooltip title={preciseValue}>{compactValue}</Tooltip>;
+        } else if (val.valueType === 'percent') {
+          displayValue = `${cell}%`;
+        }
+
+        if (includeBars) {
+          return (
+            <div className="TraceStatistics--valueContainer">
+              <RelativeBar value={cell as number} maxValue={activeMax} />
+              <div className="TraceStatistics--valueDisplay">{displayValue}</div>
+            </div>
+          );
+        }
+
+        return <div className="TraceStatistics--valueDisplay">{displayValue}</div>;
       };
+
       const ele = {
         title: val.title,
         dataIndex: val.attribute,
@@ -308,8 +358,9 @@ export default class TraceStatistics extends Component<Props, State> {
         render: renderFunction,
         onCell: onCellFunction,
         showSorterTooltip: val.attribute !== 'name' ? { title: val.titleDescription } : false,
+        align: val.attribute === 'name' ? ('left' as const) : ('right' as const),
       };
-      return val.attribute === 'count' ? { ...ele, defaultSortOrder: 'ascend' } : ele;
+      return val.attribute === 'count' ? { ...ele, defaultSortOrder: 'descend' } : ele;
     });
     /**
      * Pre-process the table data into groups and sub-groups
@@ -335,6 +386,16 @@ export default class TraceStatistics extends Component<Props, State> {
       return withoutDetail;
     };
     const groupedAndSubgroupedSpanData: ITableSpan[] = groupAndSubgroupSpanData(this.state.tableValue);
+    const defaultExpandedRowKeys = groupedAndSubgroupedSpanData
+      .filter(
+        row =>
+          row.hasSubgroupValue &&
+          row.children &&
+          row.children.length > 0 &&
+          row.children.some(child => child.hasSubgroupValue)
+      )
+      .map(row => row.key!);
+
     return (
       <div>
         <h3 className="title--TraceStatistics"> Trace Statistics</h3>
@@ -363,8 +424,8 @@ export default class TraceStatistics extends Component<Props, State> {
           rowClassName={row =>
             !row.hasSubgroupValue ? 'undefClass--TraceStatistics' : 'MainTableData--TraceStatistics'
           }
-          key={groupedAndSubgroupedSpanData.length}
-          defaultExpandAllRows
+          key={`${groupedAndSubgroupedSpanData.length}-${this.state.valueNameSelector1}-${this.state.valueNameSelector2}`}
+          defaultExpandedRowKeys={defaultExpandedRowKeys}
           sortDirections={['ascend', 'descend', 'ascend']}
         />
       </div>
