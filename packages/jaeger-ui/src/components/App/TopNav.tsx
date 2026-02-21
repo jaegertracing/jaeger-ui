@@ -64,7 +64,7 @@ if (getConfigValue('qualityMetrics.menuEnabled')) {
   });
 }
 
-if (getConfigValue('monitor.menuEnabled')) {
+if (getConfigValue('storageCapabilities.metricsStorage')) {
   NAV_LINKS.push({
     to: monitorATMUrl.getUrl(),
     matches: monitorATMUrl.matches,
