@@ -13,31 +13,32 @@ type TProps<T = {}, U = {}> = Omit<TStandaloneEdgesLayer<T, U>, 'edges' | 'layer
   standalone?: boolean;
 };
 
-// Add the default black stroke on an outter <g> so CSS classes or styles
+// Add the default black stroke on an outer <g> so CSS classes or styles
 // on the inner <g> can override it
-// TODO: A more configurable appraoch to setting a default stroke color
+// TODO: A more configurable approach to setting a default stroke color
 const INHERIT_STROKE = { stroke: '#000' };
 
-export default class SvgEdgesLayer<T = {}, U = {}> extends React.PureComponent<TProps<T, U>> {
-  render() {
-    const { getClassName, graphState, markerEndId, markerStartId, setOnEdge } = this.props;
-    const { layoutEdges, renderUtils } = graphState;
+const SvgEdgesLayer = <T = {}, U = {}>(props: TProps<T, U>) => {
+  const { getClassName, graphState, markerEndId, markerStartId, setOnEdge } = props;
+  const { layoutEdges, renderUtils } = graphState;
 
-    if (!layoutEdges) {
-      return null;
-    }
-
-    return (
-      <SvgLayer {...this.props} classNamePart="SvgEdgesLayer" extraWrapper={INHERIT_STROKE}>
-        <SvgEdges
-          getClassName={getClassName}
-          layoutEdges={layoutEdges}
-          markerEndId={markerEndId}
-          markerStartId={markerStartId}
-          renderUtils={renderUtils}
-          setOnEdge={setOnEdge}
-        />
-      </SvgLayer>
-    );
+  if (!layoutEdges) {
+    return null;
   }
-}
+
+  return (
+    <SvgLayer {...props} classNamePart="SvgEdgesLayer" extraWrapper={INHERIT_STROKE}>
+      <SvgEdges
+        getClassName={getClassName}
+        layoutEdges={layoutEdges}
+        markerEndId={markerEndId}
+        markerStartId={markerStartId}
+        renderUtils={renderUtils}
+        setOnEdge={setOnEdge}
+      />
+    </SvgLayer>
+  );
+};
+
+// React.memo provides shallow comparison equivalent to PureComponent
+export default React.memo(SvgEdgesLayer) as typeof SvgEdgesLayer;

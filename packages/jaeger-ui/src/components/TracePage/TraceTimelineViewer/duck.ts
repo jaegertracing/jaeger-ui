@@ -293,7 +293,7 @@ function removeHoverIndentGuideId(state: TTraceTimeline, { spanID }: TSpanIdValu
   return { ...state, hoverIndentGuideIds: newHoverIndentGuideIds };
 }
 
-export default handleActions(
+export default handleActions<TTraceTimeline, any>(
   {
     [actionTypes.ADD_HOVER_INDENT_GUIDE_ID]: guardReducer(addHoverIndentGuideId),
     [actionTypes.CHILDREN_TOGGLE]: guardReducer(childrenToggle),
