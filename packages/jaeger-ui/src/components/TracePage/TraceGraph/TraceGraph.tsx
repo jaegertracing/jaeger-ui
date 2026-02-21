@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, Button, Tooltip } from 'antd';
 import { IoClose, IoHelpCircleOutline } from 'react-icons/io5';
 import cx from 'classnames';
@@ -31,10 +32,6 @@ type Props = {
   uiFindVertexKeys: Set<string> | TNil;
   traceGraphConfig?: TraceGraphConfig;
   useOtelTerms: boolean;
-};
-type State = {
-  showHelp: boolean;
-  mode: string;
 };
 
 const { classNameIsSmall, scaleOpacity, scaleStrokeOpacity } = Digraph.propsFactories;
@@ -104,162 +101,163 @@ export const getHelpContent = (useOtelTerms: boolean) => (
   </div>
 );
 
-export default class TraceGraph extends React.PureComponent<Props, State> {
-  state: State;
+function TraceGraph({
+  headerHeight,
+  ev = null,
+  uiFind,
+  uiFindVertexKeys,
+  traceGraphConfig,
+  useOtelTerms,
+}: Props) {
+  const [showHelp, setShowHelp] = useState(false);
+  const [mode, setMode] = useState(MODE_SERVICE);
 
-  layoutManager: LayoutManager;
+  // Use useMemo to create the LayoutManager only once based on the config
+  const layoutManager = useMemo(
+    () =>
+      new LayoutManager({
+        totalMemory: traceGraphConfig?.layoutManagerMemory,
+        useDotEdges: true,
+        splines: 'polyline',
+      }),
+    [traceGraphConfig?.layoutManagerMemory]
+  );
 
-  static defaultProps = {
-    ev: null,
-  };
-
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      showHelp: false,
-      mode: MODE_SERVICE,
+  // Cleanup the layoutManager when the component unmounts
+  useEffect(() => {
+    return () => {
+      layoutManager.stopAndRelease();
     };
-    this.layoutManager = new LayoutManager({
-      totalMemory: props.traceGraphConfig?.layoutManagerMemory,
-      useDotEdges: true,
-      splines: 'polyline',
-    });
-  }
+  }, [layoutManager]);
 
-  componentWillUnmount() {
-    this.layoutManager.stopAndRelease();
-  }
-
-  toggleNodeMode(newMode: string) {
-    this.setState({ mode: newMode });
-  }
-
-  showHelp = () => {
-    this.setState({ showHelp: true });
+  const handleShowHelp = () => {
+    setShowHelp(true);
   };
 
-  closeSidebar = () => {
-    this.setState({ showHelp: false });
+  const handleCloseSidebar = () => {
+    setShowHelp(false);
   };
 
-  render() {
-    const { ev, headerHeight, uiFind, uiFindVertexKeys, useOtelTerms } = this.props;
-    const { showHelp, mode } = this.state;
-    if (!ev) {
-      return <h1 className="u-mt-vast u-tx-muted ub-tx-center">No trace found</h1>;
-    }
+  const toggleNodeMode = (newMode: string) => {
+    setMode(newMode);
+  };
 
-    const wrapperClassName = cx('TraceGraph--graphWrapper', { 'is-uiFind-mode': uiFind });
+  if (!ev) {
+    return <h1 className="u-mt-vast u-tx-muted ub-tx-center">No trace found</h1>;
+  }
 
-    return (
-      <div className={wrapperClassName} style={{ paddingTop: headerHeight + 47 }}>
-        <Digraph<TDagPlexusVertex<TSumSpan & TDenseSpanMembers>>
-          minimap
-          zoom
-          className="TraceGraph--dag"
-          minimapClassName="u-miniMap"
-          layoutManager={this.layoutManager}
-          measurableNodesKey="nodes"
-          layers={[
-            {
-              key: 'node-find-emphasis',
-              layerType: 'svg',
-              renderNode: getNodeFindEmphasisRenderer(uiFindVertexKeys),
-            },
-            {
-              key: 'edges',
-              edges: true,
-              layerType: 'svg',
-              defs: [{ localId: 'arrow' }],
-              markerEndId: 'arrow',
-              setOnContainer: [scaleOpacity, scaleStrokeOpacity],
-              setOnEdge: setOnEdgePath,
-            },
-            {
-              key: 'nodes-borders',
-              layerType: 'svg',
-              setOnContainer: scaleStrokeOpacity,
-              renderNode: renderNodeVectorBorder,
-            },
-            {
-              key: 'nodes',
-              layerType: 'html',
-              measurable: true,
-              renderNode: cacheAs(`trace-graph/nodes/render/${mode}`, getNodeRenderer(mode, useOtelTerms)),
-            },
-          ]}
-          setOnGraph={classNameIsSmall}
-          edges={ev.edges}
-          vertices={ev.vertices}
-        />
-        <a
-          className="TraceGraph--experimental"
-          href="https://github.com/jaegertracing/jaeger-ui/issues/293"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Experimental
-        </a>
-        <div className="TraceGraph--sidebar-container">
-          <ul className="TraceGraph--menu">
-            <li>
-              <IoHelpCircleOutline onClick={this.showHelp} data-testid="help-icon" />
-            </li>
-            <li>
-              <Tooltip placement="left" title="Service">
-                <Button
-                  className={cx('TraceGraph--btn-service', { active: mode === MODE_SERVICE })}
-                  htmlType="button"
-                  shape="circle"
-                  size="small"
-                  onClick={() => this.toggleNodeMode(MODE_SERVICE)}
-                >
-                  S
-                </Button>
-              </Tooltip>
-            </li>
-            <li>
-              <Tooltip placement="left" title="Time">
-                <Button
-                  className={cx('TraceGraph--btn-time', { active: mode === MODE_TIME })}
-                  htmlType="button"
-                  shape="circle"
-                  size="small"
-                  onClick={() => this.toggleNodeMode(MODE_TIME)}
-                >
-                  T
-                </Button>
-              </Tooltip>
-            </li>
-            <li>
-              <Tooltip placement="left" title="Selftime">
-                <Button
-                  className={cx('TraceGraph--btn-selftime', { active: mode === MODE_SELFTIME })}
-                  htmlType="button"
-                  shape="circle"
-                  size="small"
-                  onClick={() => this.toggleNodeMode(MODE_SELFTIME)}
-                >
-                  ST
-                </Button>
-              </Tooltip>
-            </li>
-          </ul>
-          {showHelp && (
-            <Card
-              title="Help"
-              bordered={false}
-              extra={
-                <a onClick={this.closeSidebar} role="button" aria-label="Close">
-                  <IoClose />
-                </a>
-              }
-            >
-              {getHelpContent(useOtelTerms)}
-            </Card>
-          )}
-        </div>
+  const wrapperClassName = cx('TraceGraph--graphWrapper', { 'is-uiFind-mode': uiFind });
+
+  return (
+    <div className={wrapperClassName} style={{ paddingTop: headerHeight + 47 }}>
+      <Digraph<TDagPlexusVertex<TSumSpan & TDenseSpanMembers>>
+        minimap
+        zoom
+        className="TraceGraph--dag"
+        minimapClassName="u-miniMap"
+        layoutManager={layoutManager}
+        measurableNodesKey="nodes"
+        layers={[
+          {
+            key: 'node-find-emphasis',
+            layerType: 'svg',
+            renderNode: getNodeFindEmphasisRenderer(uiFindVertexKeys),
+          },
+          {
+            key: 'edges',
+            edges: true,
+            layerType: 'svg',
+            defs: [{ localId: 'arrow' }],
+            markerEndId: 'arrow',
+            setOnContainer: [scaleOpacity, scaleStrokeOpacity],
+            setOnEdge: setOnEdgePath,
+          },
+          {
+            key: 'nodes-borders',
+            layerType: 'svg',
+            setOnContainer: scaleStrokeOpacity,
+            renderNode: renderNodeVectorBorder,
+          },
+          {
+            key: 'nodes',
+            layerType: 'html',
+            measurable: true,
+            renderNode: cacheAs(`trace-graph/nodes/render/${mode}`, getNodeRenderer(mode, useOtelTerms)),
+          },
+        ]}
+        setOnGraph={classNameIsSmall}
+        edges={ev.edges}
+        vertices={ev.vertices}
+      />
+      <a
+        className="TraceGraph--experimental"
+        href="https://github.com/jaegertracing/jaeger-ui/issues/293"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Experimental
+      </a>
+      <div className="TraceGraph--sidebar-container">
+        <ul className="TraceGraph--menu">
+          <li>
+            <IoHelpCircleOutline onClick={handleShowHelp} data-testid="help-icon" />
+          </li>
+          <li>
+            <Tooltip placement="left" title="Service">
+              <Button
+                className={cx('TraceGraph--btn-service', { active: mode === MODE_SERVICE })}
+                htmlType="button"
+                shape="circle"
+                size="small"
+                onClick={() => toggleNodeMode(MODE_SERVICE)}
+              >
+                S
+              </Button>
+            </Tooltip>
+          </li>
+          <li>
+            <Tooltip placement="left" title="Time">
+              <Button
+                className={cx('TraceGraph--btn-time', { active: mode === MODE_TIME })}
+                htmlType="button"
+                shape="circle"
+                size="small"
+                onClick={() => toggleNodeMode(MODE_TIME)}
+              >
+                T
+              </Button>
+            </Tooltip>
+          </li>
+          <li>
+            <Tooltip placement="left" title="Selftime">
+              <Button
+                className={cx('TraceGraph--btn-selftime', { active: mode === MODE_SELFTIME })}
+                htmlType="button"
+                shape="circle"
+                size="small"
+                onClick={() => toggleNodeMode(MODE_SELFTIME)}
+              >
+                ST
+              </Button>
+            </Tooltip>
+          </li>
+        </ul>
+        {showHelp && (
+          <Card
+            title="Help"
+            bordered={false}
+            extra={
+              <a onClick={handleCloseSidebar} role="button" aria-label="Close">
+                <IoClose />
+              </a>
+            }
+          >
+            {getHelpContent(useOtelTerms)}
+          </Card>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
 }
+
+export default React.memo(TraceGraph);
