@@ -62,7 +62,7 @@ type TDispatchProps = {
 
 type TOwnProps = {
   history: RouterHistory;
-  location: Location<LocationState>;
+  location: Location;
   params: { id: string };
   archiveEnabled: boolean;
   storageCapabilities: StorageCapabilities | TNil;
@@ -292,7 +292,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
     const { history } = this.props;
     if (id && id !== id.toLowerCase()) {
-      history.replace(getLocation(id.toLowerCase(), location.state));
+      history.replace(getLocation(id.toLowerCase(), location.state as LocationState));
     }
   }
 
@@ -377,7 +377,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
-      toSearch: (locationState && locationState.fromSearch) || null,
+      toSearch: ((locationState as any) && (locationState as any).fromSearch) || null,
       trace: data.asOtelTrace(),
       updateNextViewRangeTime: this.updateNextViewRangeTime,
       updateViewRangeTime: this.updateViewRangeTime,
