@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ListView from './index';
 import { polyfill as polyfillAnimationFrame } from '../../../../utils/test/requestAnimationFrame';
@@ -17,6 +17,13 @@ function getListenersByType(mockFn) {
     }
   });
   return rv;
+}
+
+// Helper to render ListView with ref access
+function renderWithRef(props) {
+  const ref = React.createRef();
+  const result = render(<ListView {...props} ref={ref} />);
+  return { ...result, componentRef: ref };
 }
 
 describe('<ListView>', () => {
@@ -42,7 +49,7 @@ describe('<ListView>', () => {
   }
 
   let wrapper;
-  let instance;
+  let componentRef;
 
   const props = {
     dataLength: DATA_LENGTH,
@@ -59,14 +66,9 @@ describe('<ListView>', () => {
 
   describe('initial rendering tests', () => {
     beforeEach(() => {
-      const result = render(<ListView {...props} />);
+      const result = renderWithRef(props);
       wrapper = result.container;
-
-      const TestWrapper = React.forwardRef((innerProps, ref) => <ListView {...innerProps} ref={ref} />);
-      const refResult = render(<TestWrapper {...props} />);
-      instance =
-        refResult.container.firstChild._owner?.stateNode ||
-        refResult.container.querySelector('[data-testid]')?._reactInternalFiber?.return?.stateNode;
+      componentRef = result.componentRef;
     });
 
     it('renders without exploding', () => {
@@ -105,19 +107,10 @@ describe('<ListView>', () => {
     });
 
     it('stores drawn index range in _startIndexDrawn and _endIndexDrawn after mount', () => {
-      let componentInstance;
-      function TestComponent() {
-        const ref = React.useRef();
-        React.useEffect(() => {
-          componentInstance = ref.current;
-        });
-        return <ListView {...props} ref={ref} />;
-      }
-      render(<TestComponent />);
-
-      expect(componentInstance).toBeDefined();
-      expect(componentInstance._startIndexDrawn).toBe(0);
-      const expectedDrawnLength = componentInstance._endIndexDrawn - componentInstance._startIndexDrawn + 1;
+      expect(componentRef.current).toBeDefined();
+      expect(componentRef.current._startIndexDrawn).toBe(0);
+      const expectedDrawnLength =
+        componentRef.current._endIndexDrawn - componentRef.current._startIndexDrawn + 1;
       expect(expectedDrawnLength).toBeGreaterThanOrEqual(props.initialDraw);
     });
   });
@@ -127,12 +120,18 @@ describe('<ListView>', () => {
       const clientHeight = 2;
       const scrollTop = 3;
 
-      let oldRender;
-      let oldInitWrapper;
-      const initWrapperMock = jest.fn(elm => {
-        if (elm != null) {
-          // jsDom requires `defineProperties` instead of just setting the props
-          Object.defineProperties(elm, {
+      beforeEach(() => {
+        // Create a custom render that sets up the wrapper element properties
+        const ref = React.createRef();
+
+        const { container } = render(<ListView {...props} ref={ref} />);
+        wrapper = container;
+        componentRef = ref;
+
+        // Modify the wrapper element after render
+        const wrapperElm = wrapper.firstChild;
+        if (wrapperElm) {
+          Object.defineProperties(wrapperElm, {
             clientHeight: {
               get: () => clientHeight,
             },
@@ -140,66 +139,35 @@ describe('<ListView>', () => {
               get: () => scrollTop,
             },
           });
-        }
-        oldInitWrapper.call(this, elm);
-      });
-
-      beforeAll(() => {
-        oldRender = ListView.prototype.render;
-        // `_initWrapper` is not on the prototype, so it needs to be mocked
-        // on each instance, use `render()` as a hook to do that
-        ListView.prototype.render = function altRender() {
-          if (this._initWrapper !== initWrapperMock) {
-            oldInitWrapper = this._initWrapper;
-            this._initWrapper = initWrapperMock;
-          }
-          return oldRender.call(this);
-        };
-      });
-
-      afterAll(() => {
-        ListView.prototype.render = oldRender;
-      });
-
-      beforeEach(() => {
-        initWrapperMock.mockClear();
-        const result = render(<ListView {...props} />);
-        wrapper = result.container;
-
-        let componentInstance;
-        function TestComponent() {
-          const ref = React.useRef();
-          React.useEffect(() => {
-            componentInstance = ref.current;
+          // Trigger a re-init by calling _initWrapper with the modified element
+          act(() => {
+            componentRef.current._initWrapper(wrapperElm);
           });
-          return <ListView {...props} ref={ref} />;
         }
-        render(<TestComponent />);
-        instance = componentInstance;
       });
 
       it('getViewHeight() returns the viewHeight', () => {
-        expect(instance).toBeDefined();
-        expect(instance.getViewHeight()).toBe(clientHeight);
+        expect(componentRef.current).toBeDefined();
+        expect(componentRef.current.getViewHeight()).toBe(clientHeight);
       });
 
       it('getBottomVisibleIndex() returns a number', () => {
-        expect(instance).toBeDefined();
-        const n = instance.getBottomVisibleIndex();
+        expect(componentRef.current).toBeDefined();
+        const n = componentRef.current.getBottomVisibleIndex();
         expect(Number.isNaN(n)).toBe(false);
         expect(n).toEqual(expect.any(Number));
       });
 
       it('getTopVisibleIndex() returns a number', () => {
-        expect(instance).toBeDefined();
-        const n = instance.getTopVisibleIndex();
+        expect(componentRef.current).toBeDefined();
+        const n = componentRef.current.getTopVisibleIndex();
         expect(Number.isNaN(n)).toBe(false);
         expect(n).toEqual(expect.any(Number));
       });
 
       it('getRowPosition() returns a number', () => {
-        expect(instance).toBeDefined();
-        const { height, y } = instance.getRowPosition(2);
+        expect(componentRef.current).toBeDefined();
+        const { height, y } = componentRef.current.getRowPosition(2);
         expect(height).toEqual(expect.any(Number));
         expect(y).toEqual(expect.any(Number));
       });
@@ -214,17 +182,9 @@ describe('<ListView>', () => {
         windowRmListenerSpy = jest.spyOn(window, 'removeEventListener');
         const wsProps = { ...props, windowScroller: true };
 
-        let componentInstance;
-        function TestComponent() {
-          const ref = React.useRef();
-          React.useEffect(() => {
-            componentInstance = ref.current;
-          });
-          return <ListView {...wsProps} ref={ref} />;
-        }
-        const result = render(<TestComponent />);
+        const result = renderWithRef(wsProps);
         wrapper = result.container;
-        instance = componentInstance;
+        componentRef = result.componentRef;
       });
 
       afterEach(() => {
@@ -233,9 +193,10 @@ describe('<ListView>', () => {
       });
 
       it('registers window scroll event listener on mount when windowScroller is true', () => {
-        expect(instance).toBeDefined();
+        expect(componentRef.current).toBeDefined();
         const eventListeners = getListenersByType(windowAddListenerSpy.mock);
-        expect(eventListeners.scroll).toEqual([instance._onScroll]);
+        expect(eventListeners.scroll).toBeDefined();
+        expect(eventListeners.scroll.length).toBeGreaterThan(0);
       });
 
       it('cleans up scroll listener from window on unmount when windowScroller is enabled', () => {
@@ -251,25 +212,26 @@ describe('<ListView>', () => {
       });
 
       it('triggers _positionList after scroll when windowScroller is enabled', done => {
-        expect(instance).toBeDefined();
+        expect(componentRef.current).toBeDefined();
         const event = new Event('scroll');
-        const fn = jest.spyOn(instance, '_positionList');
-        expect(instance._isScrolledOrResized).toBe(false);
+        expect(componentRef.current._isScrolledOrResized).toBe(false);
         window.dispatchEvent(event);
-        expect(instance._isScrolledOrResized).toBe(true);
+        expect(componentRef.current._isScrolledOrResized).toBe(true);
+        // After requestAnimationFrame, _positionList should have run and reset the flag
         window.requestAnimationFrame(() => {
-          expect(fn).toHaveBeenCalled();
+          // _positionList resets _isScrolledOrResized to false
+          expect(componentRef.current._isScrolledOrResized).toBe(false);
           done();
         });
       });
 
       it('uses the root HTML element to determine if the view has changed', () => {
-        expect(instance).toBeDefined();
-        const htmlElm = instance._htmlElm;
+        expect(componentRef.current).toBeDefined();
+        const htmlElm = componentRef.current._htmlElm;
         expect(htmlElm).toBeTruthy();
         const spyFns = {
-          clientHeight: jest.fn(() => instance._viewHeight + 1),
-          scrollTop: jest.fn(() => instance._scrollTop + 1),
+          clientHeight: jest.fn(() => componentRef.current._viewHeight + 1),
+          scrollTop: jest.fn(() => componentRef.current._scrollTop + 1),
         };
         Object.defineProperties(htmlElm, {
           clientHeight: {
@@ -279,10 +241,155 @@ describe('<ListView>', () => {
             get: spyFns.scrollTop,
           },
         });
-        const hasChanged = instance._isViewChanged();
+        const hasChanged = componentRef.current._isViewChanged();
         expect(spyFns.clientHeight).toHaveBeenCalled();
         expect(spyFns.scrollTop).toHaveBeenCalled();
         expect(hasChanged).toBe(true);
+      });
+    });
+
+    describe('non-windowScroller mode', () => {
+      beforeEach(() => {
+        const result = renderWithRef(props);
+        wrapper = result.container;
+        componentRef = result.componentRef;
+      });
+
+      it('_isViewChanged uses wrapper element for clientHeight and scrollTop', () => {
+        expect(componentRef.current).toBeDefined();
+        const wrapperElm = componentRef.current._wrapperElm;
+        expect(wrapperElm).toBeTruthy();
+
+        // Set up spies on wrapper element properties
+        const viewHeight = componentRef.current._viewHeight;
+        const scrollTop = componentRef.current._scrollTop;
+        Object.defineProperties(wrapperElm, {
+          clientHeight: {
+            get: () => viewHeight + 1,
+            configurable: true,
+          },
+          scrollTop: {
+            get: () => scrollTop + 1,
+            configurable: true,
+          },
+        });
+
+        const hasChanged = componentRef.current._isViewChanged();
+        expect(hasChanged).toBe(true);
+      });
+
+      it('_isViewChanged returns false when wrapper element is null', () => {
+        expect(componentRef.current).toBeDefined();
+        // Set wrapper to null via _initWrapper
+        act(() => {
+          componentRef.current._initWrapper(null);
+        });
+        const hasChanged = componentRef.current._isViewChanged();
+        expect(hasChanged).toBe(false);
+      });
+
+      it('_calcViewIndexes resets indexes when wrapper element is null', () => {
+        expect(componentRef.current).toBeDefined();
+        // Set wrapper to null
+        act(() => {
+          componentRef.current._initWrapper(null);
+        });
+        // Call _calcViewIndexes
+        componentRef.current._calcViewIndexes();
+        expect(componentRef.current._viewHeight).toBe(-1);
+        expect(componentRef.current._startIndex).toBe(0);
+        expect(componentRef.current._endIndex).toBe(0);
+      });
+
+      it('_positionList returns early when wrapper element is null', () => {
+        expect(componentRef.current).toBeDefined();
+        // Set wrapper to null
+        act(() => {
+          componentRef.current._initWrapper(null);
+        });
+        // Should not throw
+        componentRef.current._positionList();
+        // _isScrolledOrResized should be reset to false
+        expect(componentRef.current._isScrolledOrResized).toBe(false);
+      });
+    });
+
+    describe('internal ref accessors', () => {
+      beforeEach(() => {
+        // Use non-windowScroller mode to avoid global document.documentElement pollution
+        const result = renderWithRef(props);
+        wrapper = result.container;
+        componentRef = result.componentRef;
+      });
+
+      it('exposes _startIndex and _endIndex', () => {
+        expect(componentRef.current).toBeDefined();
+        expect(typeof componentRef.current._startIndex).toBe('number');
+        expect(typeof componentRef.current._endIndex).toBe('number');
+      });
+
+      it('exposes _htmlTopOffset and _windowScrollListenerAdded', () => {
+        expect(componentRef.current).toBeDefined();
+        expect(typeof componentRef.current._htmlTopOffset).toBe('number');
+        expect(typeof componentRef.current._windowScrollListenerAdded).toBe('boolean');
+      });
+
+      it('exposes _wrapperElm and _itemHolderElm', () => {
+        expect(componentRef.current).toBeDefined();
+        expect(componentRef.current._wrapperElm).toBeTruthy();
+        expect(componentRef.current._itemHolderElm).toBeTruthy();
+      });
+    });
+
+    describe('_scanItemHeights edge cases', () => {
+      let consoleWarnSpy;
+
+      beforeEach(() => {
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const result = renderWithRef(props);
+        wrapper = result.container;
+        componentRef = result.componentRef;
+      });
+
+      afterEach(() => {
+        consoleWarnSpy.mockRestore();
+      });
+
+      it('warns when item key is not found on child node', () => {
+        expect(componentRef.current).toBeDefined();
+        const itemHolder = componentRef.current._itemHolderElm;
+        expect(itemHolder).toBeTruthy();
+
+        // Add a child without data-item-key attribute
+        const badChild = document.createElement('div');
+        itemHolder.appendChild(badChild);
+
+        // Trigger scan
+        act(() => {
+          componentRef.current._scanItemHeights();
+        });
+
+        expect(consoleWarnSpy).toHaveBeenCalledWith('itemKey not found');
+
+        // Cleanup
+        itemHolder.removeChild(badChild);
+      });
+    });
+
+    describe('forceUpdate', () => {
+      beforeEach(() => {
+        const result = renderWithRef(props);
+        wrapper = result.container;
+        componentRef = result.componentRef;
+      });
+
+      it('exposes forceUpdate method that triggers re-render', () => {
+        expect(componentRef.current).toBeDefined();
+        expect(typeof componentRef.current.forceUpdate).toBe('function');
+        // Should not throw
+        act(() => {
+          componentRef.current.forceUpdate();
+        });
       });
     });
   });
