@@ -3,24 +3,20 @@
 
 import React from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import { History, Location } from 'history';
-import { history } from './configure-store';
 
 /**
  * Interface representing route-related props passed to the enhanced component.
  * @interface
- * @property {Location} location - The current location object containing information about the URL.
+ * @property {ReturnType<typeof useLocation>} location - The current location object
  * @property {string} pathname - The current URL pathname.
  * @property {string} search - The current URL search string.
  * @property {object} params - The URL parameters.
- * @property {History} history - The history object for navigation.
  */
 export type IWithRouteProps = {
-  location: Location;
+  location: ReturnType<typeof useLocation>;
   pathname: string;
   search: string;
   params: object;
-  history: History;
 };
 
 /**
@@ -38,7 +34,7 @@ export default function withRouteProps(WrappedComponent: React.ElementType) {
   return function WithRouteProps(props: IWithRouteProps | object) {
     /**
      * The current location object containing information about the URL.
-     * @type {Location}
+     * @type {ReturnType<typeof useLocation>}
      */
     const location = useLocation();
 
@@ -65,14 +61,7 @@ export default function withRouteProps(WrappedComponent: React.ElementType) {
      * @returns {React.Component} The enhanced component with additional route-related props.
      */
     return (
-      <WrappedComponent
-        {...props}
-        location={location}
-        pathname={pathname}
-        search={search}
-        params={params}
-        history={history}
-      />
+      <WrappedComponent {...props} location={location} pathname={pathname} search={search} params={params} />
     );
   };
 }
