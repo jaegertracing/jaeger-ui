@@ -76,6 +76,6 @@ SPDX-License-Identifier: Apache-2.0
 .DAG > div:last-child {
   position: fixed;
   z-index: 1000;
-  background: #fafafa;
+  background: var(--surface-primary, #fafafa);
   border: 1px solid #d0d0d0;
 }
