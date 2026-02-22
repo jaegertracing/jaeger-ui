@@ -17,45 +17,40 @@ type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNo
   vertices: TVertex<T>[];
 };
 
-export default class MeasurableNodes<T = {}> extends React.Component<TProps<T>> {
-  shouldComponentUpdate(np: TProps<T>) {
-    const p = this.props;
-    return (
-      p.renderNode !== np.renderNode ||
-      p.getClassName !== np.getClassName ||
-      p.layerType !== np.layerType ||
-      p.layoutVertices !== np.layoutVertices ||
-      p.nodeRefs !== np.nodeRefs ||
-      p.renderUtils !== np.renderUtils ||
-      p.vertices !== np.vertices ||
-      !isSamePropSetter(p.setOnNode, np.setOnNode)
-    );
-  }
-
-  render() {
-    const {
-      getClassName,
-      nodeRefs,
-      layoutVertices,
-      renderUtils,
-      vertices,
-      layerType,
-      renderNode,
-      setOnNode,
-    } = this.props;
-    return vertices.map((vertex, i) => (
-      <MeasurableNode<T>
-        key={vertex.key}
-        getClassName={getClassName}
-        ref={nodeRefs[i]}
-        hidden={!layoutVertices}
-        layerType={layerType}
-        renderNode={renderNode}
-        renderUtils={renderUtils}
-        vertex={vertex}
-        layoutVertex={layoutVertices && layoutVertices[i]}
-        setOnNode={setOnNode}
-      />
-    ));
-  }
+function MeasurableNodes<T = {}>(props: TProps<T>) {
+  const { getClassName, nodeRefs, layoutVertices, renderUtils, vertices, layerType, renderNode, setOnNode } =
+    props;
+  return vertices.map((vertex, i) => (
+    <MeasurableNode<T>
+      key={vertex.key}
+      getClassName={getClassName}
+      ref={nodeRefs[i]}
+      hidden={!layoutVertices}
+      layerType={layerType}
+      renderNode={renderNode}
+      renderUtils={renderUtils}
+      vertex={vertex}
+      layoutVertex={layoutVertices && layoutVertices[i]}
+      setOnNode={setOnNode}
+    />
+  ));
 }
+
+// Custom comparison function for React.memo
+// Returns TRUE if props are EQUAL (opposite of shouldComponentUpdate logic)
+const areEqual = <T,>(prevProps: TProps<T>, nextProps: TProps<T>) => {
+  return (
+    prevProps.renderNode === nextProps.renderNode &&
+    prevProps.getClassName === nextProps.getClassName &&
+    prevProps.layerType === nextProps.layerType &&
+    prevProps.layoutVertices === nextProps.layoutVertices &&
+    prevProps.nodeRefs === nextProps.nodeRefs &&
+    prevProps.renderUtils === nextProps.renderUtils &&
+    prevProps.vertices === nextProps.vertices &&
+    isSamePropSetter(prevProps.setOnNode, nextProps.setOnNode)
+  );
+};
+
+export default React.memo(MeasurableNodes, areEqual) as unknown as <T = {}>(
+  props: TProps<T>
+) => React.ReactElement[];
