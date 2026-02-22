@@ -131,7 +131,7 @@ export function TopNavImpl(props: Props) {
   ];
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <Menu
         theme="dark"
         items={itemsGlobalLeft?.concat(
@@ -152,7 +152,7 @@ export function TopNavImpl(props: Props) {
         mode="horizontal"
         selectable={false}
         selectedKeys={[pathname]}
-        style={{ flex: '1 1 0', minWidth: 0 }}
+        style={{ flex: '1 1 auto', minWidth: 0 }}
       />
       <Menu
         theme="dark"
@@ -162,7 +162,7 @@ export function TopNavImpl(props: Props) {
         selectable={false}
         disabledOverflow
         selectedKeys={[pathname]}
-        style={{ flex: '0 1 auto', minWidth: 0 }}
+        style={{ flex: '0 0 auto' }}
       />
     </div>
   );
