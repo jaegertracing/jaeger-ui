@@ -8,6 +8,13 @@ import '@testing-library/jest-dom';
 import TraceHeader, { Attrs, EmptyAttrs } from './TraceHeader';
 import { fetchedState } from '../../../constants';
 
+jest.mock('../../../utils/config/get-config', () => ({
+  getConfigValue: key => {
+    if (key === 'timeFormat') return '12h';
+    return undefined;
+  },
+}));
+
 describe('TraceHeader', () => {
   const renderWithProps = (passedProps = {}) => {
     const originalProps = {

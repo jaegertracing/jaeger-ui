@@ -8,6 +8,7 @@ import _duration, { DurationUnitType } from 'dayjs/plugin/duration';
 
 import { toFloatPrecision } from './number';
 import { Microseconds } from '../types/units';
+import { getTimeFormatWithSeconds, getTimeFormatWithoutSeconds } from './time-format';
 
 dayjs.extend(_duration);
 
@@ -16,7 +17,6 @@ const YESTERDAY = 'Yesterday';
 
 export const STANDARD_DATE_FORMAT = 'YYYY-MM-DD';
 export const STANDARD_TIME_FORMAT = 'HH:mm';
-export const STANDARD_DATETIME_FORMAT = 'MMMM D YYYY, HH:mm:ss.SSS';
 
 /** @constant 1ms as the number of microseconds, which is the precision of Jaeger timestamps */
 export const ONE_MILLISECOND = 1000 * 1;
@@ -87,7 +87,7 @@ export function formatDate(duration: number): string {
  * ```
  */
 export function formatTime(duration: number): string {
-  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_TIME_FORMAT);
+  return dayjs(duration / ONE_MILLISECOND).format(`${getTimeFormatWithoutSeconds()}`);
 }
 
 /**
@@ -100,7 +100,7 @@ export function formatTime(duration: number): string {
  * ```
  */
 export function formatDatetime(duration: number): string {
-  return dayjs(duration / ONE_MILLISECOND).format(STANDARD_DATETIME_FORMAT);
+  return dayjs(duration / ONE_MILLISECOND).format(`MMMM D YYYY, ${getTimeFormatWithSeconds()}.SSS`);
 }
 
 /**
