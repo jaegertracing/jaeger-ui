@@ -28,16 +28,15 @@ SPDX-License-Identifier: Apache-2.0
   background-color: var(--interactive-primary);
   color: var(--text-inverse);
   float: right;
+  max-width: 100%;
 }
 
 .SearchForm--submit:hover {
   background-color: var(--surface-primary);
-  float: right;
 }
 
 .SearchForm--submit:active {
   background-color: var(--surface-primary);
-  float: right;
 }
 
 .SearchForm--tagsHintInfo {

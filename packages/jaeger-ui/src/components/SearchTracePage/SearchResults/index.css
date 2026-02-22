@@ -19,7 +19,20 @@ SPDX-License-Identifier: Apache-2.0
   align-items: center;
   background-color: var(--surface-secondary);
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   padding: 1rem;
+}
+
+@media (max-width: 768px) {
+  .SearchResults--headerOverview {
+    gap: 0.5rem;
+  }
+
+  .SearchResults--headerOverview h2 {
+    flex-basis: 100%;
+    margin-bottom: 0.5rem;
+  }
 }
 
 .SearchResults--headerScatterPlot {
