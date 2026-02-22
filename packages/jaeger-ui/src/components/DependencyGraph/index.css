@@ -12,6 +12,11 @@ SPDX-License-Identifier: Apache-2.0
   top: 130px;
 }
 
+[data-theme='dark'] .DependencyGraph--graphWrapper,
+body[data-theme='dark'] .DependencyGraph--graphWrapper {
+  background: var(--surface-secondary);
+}
+
 .rv-force__node {
   fill: #11939a;
   cursor: pointer;
