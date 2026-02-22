@@ -100,7 +100,7 @@ describe('makeShortcutCallbacks()', () => {
   });
 
   it('returns callbacks that adjust the range based on the `shortcutConfig` values', () => {
-    const fakeEvent = { preventDefault: () => {} };
+    const fakeEvent = { preventDefault: () => { } };
     const callbacks = makeShortcutCallbacks(adjRange);
     Object.keys(shortcutConfig).forEach((key, i) => {
       callbacks[key](fakeEvent);
@@ -351,6 +351,27 @@ describe('<TracePage>', () => {
         pathname: expect.stringContaining(trace.traceID),
       })
     );
+  });
+
+  it('forces lowercase id when trace is not yet fetched', () => {
+    const replaceMock = jest.fn();
+    const fetchTraceMock = jest.fn();
+    const props = {
+      ...defaultProps,
+      id: trace.traceID.toUpperCase(),
+      trace: null,
+      fetchTrace: fetchTraceMock,
+      history: {
+        replace: replaceMock,
+      },
+    };
+    render(<TracePage {...props} />);
+    expect(replaceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: expect.stringContaining(trace.traceID),
+      })
+    );
+    expect(fetchTraceMock).not.toHaveBeenCalled();
   });
 
   it('focuses on search bar when there is a search bar and focusOnSearchBar is called', () => {
@@ -1105,7 +1126,7 @@ describe('<TracePage>', () => {
 
 describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
-    expect(mapDispatchToProps(() => {})).toEqual({
+    expect(mapDispatchToProps(() => { })).toEqual({
       acknowledgeArchive: expect.any(Function),
       archiveTrace: expect.any(Function),
       fetchTrace: expect.any(Function),
