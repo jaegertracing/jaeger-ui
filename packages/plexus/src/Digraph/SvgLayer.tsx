@@ -85,5 +85,4 @@ const SvgLayer = <T = {}, U = {}>(props: TProps<T, U>) => {
   );
 };
 
-// React.memo provides shallow comparison equivalent to PureComponent
 export default React.memo(SvgLayer) as typeof SvgLayer;

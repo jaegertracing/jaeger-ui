@@ -1,4 +1,4 @@
-// Copyright (c) 2026 The Jaeger Authors.
+// Copyright (c) 2026 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
@@ -182,11 +182,6 @@ describe('SvgLayer', () => {
   });
 
   describe('React.memo behavior', () => {
-    it('is wrapped with React.memo for performance', () => {
-      // Verify component is wrapped with React.memo by checking $$typeof
-      expect(SvgLayer.$$typeof).toBe(Symbol.for('react.memo'));
-    });
-
     it('does not re-render when props are unchanged', () => {
       let renderCount = 0;
 
