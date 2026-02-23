@@ -14,6 +14,7 @@ import * as jaegerApiActions from '../../../actions/jaeger-api';
 import OperationTableDetails from './operationDetailsTable';
 import ServiceGraph from './serviceGraph';
 import LoadingIndicator from '../../common/LoadingIndicator';
+import MonitorATMEmptyState from '../EmptyState';
 import { ReduxState } from '../../../types';
 import {
   MetricsAPIQueryParams,
@@ -126,6 +127,7 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 
 export function MonitorATMServicesViewImpl(props: TProps) {
   const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;
+  const { isATMActivated } = metrics;
   const { data: services = [], isLoading: servicesLoading } = useServices();
   const docsLink = getConfigValue('monitor.docsLink');
   const graphDivWrapper = useRef<HTMLDivElement>(null);
@@ -179,7 +181,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const fetchMetrics = useCallback(() => {
     const currentService = selectedService || services[0];
 
-    if (currentService) {
+    if (currentService && isATMActivated !== false) {
       const newEndTime = Date.now();
       setEndTime(newEndTime);
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
@@ -204,6 +206,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, [
     fetchAllServiceMetrics,
     fetchAggregatedServiceMetrics,
+    isATMActivated,
     services,
     selectedService,
     selectedSpanKind,
@@ -238,6 +241,10 @@ export function MonitorATMServicesViewImpl(props: TProps) {
 
   if (servicesLoading) {
     return <LoadingIndicator vcentered centered />;
+  }
+
+  if (metrics.isATMActivated === false) {
+    return <MonitorATMEmptyState />;
   }
 
   return (

@@ -109,6 +109,7 @@ export type MetricsReduxState = {
     opsCalls: null | ApiError;
     opsErrors: null | ApiError;
   };
+  isATMActivated: null | boolean;
   loading: boolean;
   operationMetricsLoading: undefined | boolean;
   serviceMetrics: ServiceMetrics | null;

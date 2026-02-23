@@ -41,7 +41,24 @@ export type LinkPatternsConfig = {
   text: string;
 };
 
+export type MonitorEmptyStateConfig = {
+  mainTitle?: string;
+  subTitle?: string;
+  description?: string;
+  button?: {
+    text?: string;
+    onClick?: () => void;
+  };
+  info?: string;
+  alert?: {
+    message?: string;
+    type?: 'success' | 'info' | 'warning' | 'error';
+  };
+};
+
 export type MonitorConfig = {
+  menuEnabled?: boolean;
+  emptyState?: MonitorEmptyStateConfig;
   docsLink?: string;
 };
 
