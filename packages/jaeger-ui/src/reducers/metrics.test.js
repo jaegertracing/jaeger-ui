@@ -64,7 +64,6 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
     const expected = {
       ...initialState,
-      isATMActivated: true,
       loading: false,
       serviceMetrics: {
         service_latencies: null,
@@ -97,7 +96,6 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: true,
         loading: false,
         serviceMetrics: {
           service_latencies: null,
@@ -129,7 +127,6 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: true,
         loading: false,
         serviceMetrics: serviceMetricsWithNulls,
         serviceError: {
@@ -157,7 +154,6 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: true,
         loading: false,
         serviceMetrics,
         serviceError: {
@@ -202,7 +198,6 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: true,
         loading: false,
         serviceMetrics: {
           service_latencies: null,
@@ -220,7 +215,7 @@ describe('reducers/fetchAllServiceMetrics', () => {
       expect(state).toEqual(expected);
     });
 
-    it('501 Not Implemented error', () => {
+    it('501 Not Implemented error is treated as a normal API error', () => {
       const notImplementedRejection = {
         httpStatus: 501,
       };
@@ -252,7 +247,6 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: false,
         loading: false,
         serviceMetrics: {
           service_latencies: null,

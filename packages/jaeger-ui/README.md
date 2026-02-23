@@ -25,8 +25,8 @@ When running the UI in development mode via `npm start`, you can provide custom 
      "dependencies": {
        "menuEnabled": true
      },
-     "monitor": {
-       "menuEnabled": false
+     "storageCapabilities": {
+       "metricsStorage": true
      }
    }
    ```
