@@ -631,6 +631,19 @@ export const testableHelpers = {
   generateRowStatesFromTrace,
   getCssClasses,
   mergeChildrenCriticalPath,
+  createFocusSpan:
+    (
+      trace: IOtelTrace | TNil,
+      focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil, allowHide?: boolean) => void,
+      location: Location,
+      navigate: ReturnType<typeof useNavigate>
+    ) =>
+    (uiFind: string) => {
+      if (trace) {
+        updateUiFind({ location, navigate, uiFind });
+        focusUiFindMatches(trace, uiFind, false);
+      }
+    },
 };
 
 /* istanbul ignore next */

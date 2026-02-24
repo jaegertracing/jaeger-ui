@@ -18,7 +18,6 @@ import criticalPathTest from '../CriticalPath/testCases/test2';
 
 jest.mock('./SpanTreeOffset');
 jest.mock('../../../utils/update-ui-find');
-// Mock useNavigate so focusSpan tests can assert on it
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom-v5-compat', () => ({
   ...jest.requireActual('react-router-dom-v5-compat'),
@@ -34,7 +33,15 @@ jest.mock('./ListView', () => {
       getRowPosition: jest.fn(),
       forceUpdate: jest.fn(),
     }));
-    return React.createElement('div', { 'data-testid': 'list-view' });
+
+    const items = [];
+    for (let i = 0; i < Math.min(3, props.dataLength || 0); i++) {
+      const key = props.getKeyFromIndex(i);
+      const row = props.itemRenderer(key, {}, i, {});
+      if (row) items.push(row);
+    }
+
+    return React.createElement('div', { 'data-testid': 'list-view' }, ...items);
   });
 });
 
@@ -386,14 +393,16 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
   describe('renderRow()', () => {
     it('renders a SpanBarRow when it is not a detail', () => {
-      render(<VirtualizedTraceViewImpl {...mockProps} />);
-      expect(screen.getByTestId('list-view')).toBeInTheDocument();
+      const { container } = render(<VirtualizedTraceViewImpl {...mockProps} />);
+      const spanRows = container.querySelectorAll('.span-row');
+      expect(spanRows.length).toBeGreaterThan(0);
     });
 
     it('renders a SpanDetailRow when it is a detail', () => {
       const { props } = expandRow(1);
-      render(<VirtualizedTraceViewImpl {...props} />);
-      expect(screen.getByTestId('list-view')).toBeInTheDocument();
+      const { container } = render(<VirtualizedTraceViewImpl {...props} />);
+      const detailRows = container.querySelectorAll('.detail-row');
+      expect(detailRows.length).toBeGreaterThan(0);
     });
 
     it('renders a SpanBarRow with a RPC span if the row is collapsed and a client span', () => {
@@ -404,10 +413,12 @@ describe('<VirtualizedTraceViewImpl>', () => {
       newLegacySpans[1] = { ...newLegacySpans[1], tags: serverTags };
       const altTrace = transformTraceData({ ...legacyTrace, spans: newLegacySpans }).asOtelTrace();
       const childrenHiddenIDs = new Set([altTrace.spans[0].spanID]);
-      render(
+      const { container } = render(
         <VirtualizedTraceViewImpl {...mockProps} childrenHiddenIDs={childrenHiddenIDs} trace={altTrace} />
       );
-      expect(screen.getByTestId('list-view')).toBeInTheDocument();
+
+      const spanRows = container.querySelectorAll('.span-row');
+      expect(spanRows.length).toBeGreaterThan(0);
     });
 
     it('renders a SpanBarRow with a client or producer span and no instrumented server span', () => {
@@ -427,18 +438,25 @@ describe('<VirtualizedTraceViewImpl>', () => {
           : s
       );
       const altTrace = transformTraceData({ ...legacyTrace, spans: newLegacySpans }).asOtelTrace();
-      render(<VirtualizedTraceViewImpl {...mockProps} trace={altTrace} />);
-      expect(screen.getByTestId('list-view')).toBeInTheDocument();
+      const { container } = render(<VirtualizedTraceViewImpl {...mockProps} trace={altTrace} />);
+
+      const spanRows = container.querySelectorAll('.span-row');
+      expect(spanRows.length).toBeGreaterThan(0);
     });
 
-    it('renderSpanBarRow returns null if trace is falsy', () => {
+    it('does not render rows if trace is falsy', () => {
       const { container } = render(<VirtualizedTraceViewImpl {...mockProps} trace={null} />);
-      expect(container.querySelector('.VirtualizedTraceView--row')).toBeNull();
+      const spanRows = container.querySelectorAll('.span-row');
+      const detailRows = container.querySelectorAll('.detail-row');
+
+      expect(spanRows.length).toBe(0);
+      expect(detailRows.length).toBe(0);
     });
 
-    it('renderSpanDetailRow returns null if detailState is missing', () => {
+    it('does not render detail rows if no spans are expanded', () => {
       const { container } = render(<VirtualizedTraceViewImpl {...mockProps} />);
-      expect(container.querySelector('.VirtualizedTraceView--row')).toBeNull();
+      expect(container.querySelectorAll('.span-row').length).toBeGreaterThan(0);
+      expect(container.querySelectorAll('.detail-row').length).toBe(0);
     });
   });
 
@@ -482,7 +500,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
     it('calls props.scrollToFirstVisibleSpan if shouldScrollToFirstUiFindMatch is true', () => {
       const updatedProps = { ...mockProps, shouldScrollToFirstUiFindMatch: true };
       const { rerender } = render(<VirtualizedTraceViewImpl {...mockProps} />);
-      rerender(<VirtualizedTraceViewImpl {...mockProps} shouldScrollToFirstUiFindMatch={true} />);
+      rerender(<VirtualizedTraceViewImpl {...updatedProps} />);
 
       expect(mockProps.scrollToFirstVisibleSpan).toHaveBeenCalledTimes(1);
       expect(mockProps.clearShouldScrollToFirstUiFindMatch).toHaveBeenCalledTimes(1);
@@ -490,9 +508,46 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 
   describe('focusSpan', () => {
-    it('calls updateUiFind and focusUiFindMatches', () => {
+    beforeEach(() => {
+      mockNavigate.mockClear();
+      updateUiFindSpy.mockClear();
+    });
+
+    it('does not call updateUiFind on mount', () => {
       render(<VirtualizedTraceViewImpl {...mockProps} />);
-      expect(updateUiFindSpy).not.toHaveBeenCalled(); // not called on mount
+      expect(updateUiFindSpy).not.toHaveBeenCalled();
+    });
+
+    it('createFocusSpan calls updateUiFind and focusUiFindMatches when invoked', () => {
+      const spanName = 'span1';
+      const focusSpan = testableHelpers.createFocusSpan(
+        trace,
+        focusUiFindMatchesMock,
+        mockProps.location,
+        mockNavigate
+      );
+      focusSpan(spanName);
+
+      expect(updateUiFindSpy).toHaveBeenCalledWith({
+        location: mockProps.location,
+        navigate: mockNavigate,
+        uiFind: spanName,
+      });
+      expect(focusUiFindMatchesMock).toHaveBeenCalledWith(trace, spanName, false);
+    });
+
+    it('createFocusSpan does not call updateUiFind when trace is null', () => {
+      const spanName = 'span1';
+      const focusSpan = testableHelpers.createFocusSpan(
+        null,
+        focusUiFindMatchesMock,
+        mockProps.location,
+        mockNavigate
+      );
+      focusSpan(spanName);
+
+      expect(updateUiFindSpy).not.toHaveBeenCalled();
+      expect(focusUiFindMatchesMock).not.toHaveBeenCalled();
     });
   });
 
@@ -509,6 +564,9 @@ describe('<VirtualizedTraceViewImpl>', () => {
     });
   });
   describe('linksGetter()', () => {
+    afterEach(() => {
+      linkPatterns.processedLinks.length = 0;
+    });
     it('linksGetter is expected to receive url and text for a given link pattern', () => {
       const span = trace.spans[1];
       const key = span.attributes[0].key;
