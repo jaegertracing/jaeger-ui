@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { InputRef } from 'antd';
-import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
+import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
@@ -521,16 +521,7 @@ type TracePageProps = {
 const TracePage = (props: TracePageProps) => {
   const config = useConfig();
   const traceID = props.params.id;
-  const normalizedTraceID = traceID?.toLowerCase();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  React.useEffect(() => {
-    if (traceID && traceID !== normalizedTraceID) {
-      const url = getUrl(normalizedTraceID);
-      navigate(`${url}${location.search}`, { replace: true, state: location.state });
-    }
-  }, [traceID, normalizedTraceID, navigate, location.search, location.state]);
+  const normalizedTraceID = useNormalizeTraceId(traceID);
 
   return (
     <ConnectedTracePage
