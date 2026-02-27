@@ -1,7 +1,7 @@
 // Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect } from 'react';
+import * as React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
 
 import { getUrl } from './url';
@@ -12,7 +12,7 @@ export function useNormalizeTraceId(traceID: string): string {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (traceID && traceID !== normalizedTraceID) {
       const url = getUrl(normalizedTraceID);
       navigate(`${url}${location.search}`, { replace: true, state: location.state });
