@@ -321,11 +321,9 @@ describe('<TracePage>', () => {
     rerender(<TracePage {...baseProps} uiFind={uiFind} />);
     expect(filterSpansSpy).toHaveBeenCalledTimes(1);
 
-    // Different traceID = cache miss
-    const newTrace = {
-      ...baseProps.trace,
-      traceID: 'new-trace-id',
-    };
+    // Different traceID = cache miss (must change data.traceID, not the FetchedTrace wrapper)
+    const newTraceData = { ...baseProps.trace.data, traceID: 'new-trace-id' };
+    const newTrace = { ...baseProps.trace, data: newTraceData };
     rerender(<TracePage {...baseProps} uiFind={uiFind} trace={newTrace} />);
     expect(filterSpansSpy).toHaveBeenCalledTimes(2);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, newTrace.data.spans);
