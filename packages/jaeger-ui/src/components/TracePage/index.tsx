@@ -131,6 +131,7 @@ export const TracePageImpl = React.memo(
       embedded,
       fetchTrace,
       focusUiFindMatches: focusUiFindMatchesProp,
+      history,
       id,
       location,
       storageCapabilities,
@@ -155,34 +156,21 @@ export const TracePageImpl = React.memo(
     const _searchBar = useRef<InputRef>(null);
     const traceDagEV = useRef<TEv | TNil>(null);
 
-    // State ref for imperative handle - updated during render for synchronous access
-    // This is intentional: useImperativeHandle exposes state getter that must return current values
+    // Updated during render so the `state` getter exposed via useImperativeHandle always
+    // returns a current snapshot. React does not re-invoke the handle factory on every render,
+    // so a ref is the only way to give callers synchronous access to the latest state values.
     const stateRef = useRef<TState>({ headerHeight, slimView, viewType, viewRange });
     stateRef.current = { headerHeight, slimView, viewType, viewRange };
 
-    // Props ref for memoization resolver - must be updated during render
-    // The _filterSpans memoization below uses propsRef.current in its cache key resolver.
-    // If we moved this update to useEffect, the resolver would read stale props during render,
-    // causing incorrect cache hits/misses. This is a deliberate trade-off: we update the ref
-    // during render to ensure memoization works correctly, accepting that this technically
-    // violates React's "no side effects during render" guideline.
-    const propsRef = useRef(props);
-    propsRef.current = props;
-
-    // Create memoized filterSpans function
-    // Empty dependency array is intentional: the memoize resolver uses propsRef.current
-    // which always reflects current props. Recreating the memoize function would clear
-    // its internal cache, defeating the purpose of memoization across renders.
+    // Create memoized filterSpans function.
+    // Keyed on textFilter + traceID: invalidates when the user's search text changes or
+    // when they navigate to a different trace. spans.length was previously included here
+    // to detect post-render span mutations, but that pattern no longer exists in the current
+    // data flow (transformTraceData completes synchronously before Redux stores the trace).
     const _filterSpans = useMemo(
       () =>
-        _memoize(
-          filterSpans,
-          // Do not use the memo if the filter text or trace has changed.
-          // trace.data.spans is populated after the initial render via mutation.
-          (textFilter: string | TNil) =>
-            `${textFilter} ${_get(propsRef.current.trace, 'traceID')} ${_get(propsRef.current.trace, 'data.spans.length')}`
-        ),
-      []
+        _memoize(filterSpans, (textFilter: string | TNil) => `${textFilter}|${trace?.data?.traceID ?? ''}`),
+      [trace?.data?.traceID]
     );
 
     // Create scroll manager
@@ -254,14 +242,20 @@ export const TracePageImpl = React.memo(
     }, []);
 
     const clearSearch = useCallback(() => {
-      const currentProps = propsRef.current;
       updateUiFind({
-        history: currentProps.history,
-        location: currentProps.location,
+        history,
+        location,
         trackFindFunction: trackFilter,
       });
       if (_searchBar.current) _searchBar.current.blur();
-    }, []);
+    }, [history, location]);
+
+    // Stable ref so the keyboard shortcut registered on mount always calls the latest clearSearch.
+    // Updated in useEffect (not during render) to stay within React's rules.
+    const clearSearchRef = useRef(clearSearch);
+    useEffect(() => {
+      clearSearchRef.current = clearSearch;
+    }, [clearSearch]);
 
     const focusOnSearchBar = useCallback(() => {
       if (_searchBar.current) _searchBar.current.focus();
@@ -274,42 +268,40 @@ export const TracePageImpl = React.memo(
       });
     }, []);
 
-    const setTraceView = useCallback((newViewType: ETraceViewType) => {
-      const currentProps = propsRef.current;
-      if (currentProps.trace && currentProps.trace.data && newViewType === ETraceViewType.TraceGraph) {
-        traceDagEV.current = calculateTraceDagEV(currentProps.trace.data.asOtelTrace());
-      }
-      setViewType(newViewType);
-    }, []);
+    const setTraceView = useCallback(
+      (newViewType: ETraceViewType) => {
+        if (trace && trace.data && newViewType === ETraceViewType.TraceGraph) {
+          traceDagEV.current = calculateTraceDagEV(trace.data.asOtelTrace());
+        }
+        setViewType(newViewType);
+      },
+      [trace]
+    );
 
     const archiveTrace = useCallback(() => {
-      const currentProps = propsRef.current;
-      archiveTraceProp(currentProps.id);
-    }, [archiveTraceProp]);
+      archiveTraceProp(id);
+    }, [archiveTraceProp, id]);
 
     const acknowledgeArchive = useCallback(() => {
-      const currentProps = propsRef.current;
-      acknowledgeArchiveProp(currentProps.id);
-    }, [acknowledgeArchiveProp]);
+      acknowledgeArchiveProp(id);
+    }, [acknowledgeArchiveProp, id]);
 
     const ensureTraceFetched = useCallback(() => {
-      const currentProps = propsRef.current;
-      if (!currentProps.trace) {
-        fetchTrace(currentProps.id);
+      if (!trace) {
+        fetchTrace(id);
         return;
       }
-      if (currentProps.id && currentProps.id !== currentProps.id.toLowerCase()) {
-        currentProps.history.replace(getLocation(currentProps.id.toLowerCase(), currentProps.location.state));
+      if (id && id !== id.toLowerCase()) {
+        history.replace(getLocation(id.toLowerCase(), location.state));
       }
-    }, [fetchTrace]);
+    }, [fetchTrace, id, trace, history, location.state]);
 
     const focusUiFindMatches = useCallback(() => {
-      const currentProps = propsRef.current;
-      if (currentProps.trace && currentProps.trace.data) {
+      if (trace && trace.data) {
         trackFocusMatches();
-        focusUiFindMatchesProp(currentProps.trace.data.asOtelTrace(), currentProps.uiFind);
+        focusUiFindMatchesProp(trace.data.asOtelTrace(), uiFind);
       }
-    }, [focusUiFindMatchesProp]);
+    }, [focusUiFindMatchesProp, trace, uiFind]);
 
     const nextResult = useCallback(() => {
       trackNextMatch();
@@ -336,7 +328,7 @@ export const TracePageImpl = React.memo(
       shortcutCallbacks.scrollPageUp = scrollPageUp;
       shortcutCallbacks.scrollToNextVisibleSpan = scrollToNextVisibleSpan;
       shortcutCallbacks.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
-      shortcutCallbacks.clearSearch = clearSearch;
+      shortcutCallbacks.clearSearch = () => clearSearchRef.current();
       shortcutCallbacks.searchSpans = focusOnSearchBar;
       mergeShortcuts(shortcutCallbacks);
 
@@ -351,7 +343,8 @@ export const TracePageImpl = React.memo(
         });
       };
       // Empty dependency array: mirrors original componentDidMount behavior.
-      // Callbacks are captured at mount time; subsequent changes don't require re-registration.
+      // clearSearch is accessed through clearSearchRef so the shortcut always
+      // calls the latest version without re-registering on every navigation.
     }, []);
 
     // Track previous id for componentDidUpdate logic

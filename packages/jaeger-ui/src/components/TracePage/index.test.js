@@ -297,7 +297,7 @@ describe('<TracePage>', () => {
     });
   });
 
-  it('uses uiFind, trace.traceID, and trace.data.spans.length to compute memo cache key for filterSpans', () => {
+  it('uses uiFind and trace.traceID to compute memo cache key for filterSpans', () => {
     const uiFind = 'uiFind';
     const trace = transformTraceData(traceGenerator.trace({}));
     const baseProps = {
@@ -312,29 +312,23 @@ describe('<TracePage>', () => {
     const { rerender } = render(<TracePage {...baseProps} />);
     expect(filterSpansSpy).not.toHaveBeenCalled();
 
+    // Adding uiFind triggers a cache miss and calls filterSpans
     rerender(<TracePage {...baseProps} uiFind={uiFind} />);
     expect(filterSpansSpy).toHaveBeenCalledTimes(1);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, baseProps.trace.data.spans);
 
-    const newTrace1 = {
+    // Same uiFind + same traceID = cache hit, filterSpans not called again
+    rerender(<TracePage {...baseProps} uiFind={uiFind} />);
+    expect(filterSpansSpy).toHaveBeenCalledTimes(1);
+
+    // Different traceID = cache miss
+    const newTrace = {
       ...baseProps.trace,
       traceID: 'new-trace-id',
     };
-    rerender(<TracePage {...baseProps} uiFind={uiFind} trace={newTrace1} />);
+    rerender(<TracePage {...baseProps} uiFind={uiFind} trace={newTrace} />);
     expect(filterSpansSpy).toHaveBeenCalledTimes(2);
-    expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, newTrace1.data.spans);
-
-    const reducedSpans = [...baseProps.trace.data.spans.slice(0, baseProps.trace.data.spans.length / 2)];
-    const newTrace2 = {
-      ...baseProps.trace,
-      data: {
-        ...baseProps.trace.data,
-        spans: reducedSpans,
-      },
-    };
-    rerender(<TracePage {...baseProps} uiFind={uiFind} trace={newTrace2} />);
-    expect(filterSpansSpy).toHaveBeenCalledTimes(3);
-    expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, reducedSpans);
+    expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, newTrace.data.spans);
   });
 
   it('renders a a loading indicator when not provided a fetched trace', () => {
