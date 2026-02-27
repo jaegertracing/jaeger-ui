@@ -250,13 +250,6 @@ export const TracePageImpl = React.memo(
       if (_searchBar.current) _searchBar.current.blur();
     }, [history, location]);
 
-    // Stable ref so the keyboard shortcut registered on mount always calls the latest clearSearch.
-    // Updated in useEffect (not during render) to stay within React's rules.
-    const clearSearchRef = useRef(clearSearch);
-    useEffect(() => {
-      clearSearchRef.current = clearSearch;
-    }, [clearSearch]);
-
     const focusOnSearchBar = useCallback(() => {
       if (_searchBar.current) _searchBar.current.focus();
     }, []);
@@ -313,23 +306,46 @@ export const TracePageImpl = React.memo(
       _scrollManager.current.scrollToPrevVisibleSpan();
     }, []);
 
+    // Stable ref bundle for the mount-time keyboard shortcut registration.
+    // The mount effect runs once (componentDidMount semantics) and must not re-register
+    // shortcuts on every navigation. Callbacks that can change over the component lifetime
+    // (e.g. ensureTraceFetched depends on trace/id) are accessed through this ref so the
+    // mount effect's closure never goes stale without needing to re-run the effect.
+    const shortcutHandlersRef = useRef({
+      ensureTraceFetched,
+      updateViewRangeTime,
+      _adjustViewRange,
+      focusOnSearchBar,
+      clearSearch,
+    });
+    useEffect(() => {
+      shortcutHandlersRef.current = {
+        ensureTraceFetched,
+        updateViewRangeTime,
+        _adjustViewRange,
+        focusOnSearchBar,
+        clearSearch,
+      };
+    }, [ensureTraceFetched, updateViewRangeTime, _adjustViewRange, focusOnSearchBar, clearSearch]);
+
     // componentDidMount equivalent - runs only once on mount
     useEffect(() => {
-      ensureTraceFetched();
-      updateViewRangeTime(0, 1);
+      shortcutHandlersRef.current.ensureTraceFetched();
+      shortcutHandlersRef.current.updateViewRangeTime(0, 1);
 
       resetShortcuts();
 
       const { scrollPageDown, scrollPageUp, scrollToNextVisibleSpan, scrollToPrevVisibleSpan } =
         _scrollManager.current;
-      const adjViewRange = (a: number, b: number) => _adjustViewRange(a, b, 'kbd');
+      const adjViewRange = (a: number, b: number) =>
+        shortcutHandlersRef.current._adjustViewRange(a, b, 'kbd');
       const shortcutCallbacks = makeShortcutCallbacks(adjViewRange);
       shortcutCallbacks.scrollPageDown = scrollPageDown;
       shortcutCallbacks.scrollPageUp = scrollPageUp;
       shortcutCallbacks.scrollToNextVisibleSpan = scrollToNextVisibleSpan;
       shortcutCallbacks.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
-      shortcutCallbacks.clearSearch = () => clearSearchRef.current();
-      shortcutCallbacks.searchSpans = focusOnSearchBar;
+      shortcutCallbacks.clearSearch = () => shortcutHandlersRef.current.clearSearch();
+      shortcutCallbacks.searchSpans = () => shortcutHandlersRef.current.focusOnSearchBar();
       mergeShortcuts(shortcutCallbacks);
 
       // Cleanup on unmount
@@ -342,9 +358,8 @@ export const TracePageImpl = React.memo(
           scrollTo,
         });
       };
-      // Empty dependency array: mirrors original componentDidMount behavior.
-      // clearSearch is accessed through clearSearchRef so the shortcut always
-      // calls the latest version without re-registering on every navigation.
+      // shortcutHandlersRef is a ref — its .current is read at call time, not captured.
+      // ESLint does not require refs in the dependency array.
     }, []);
 
     // Track previous id for componentDidUpdate logic
