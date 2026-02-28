@@ -204,6 +204,7 @@ export type Config = {
   themes: {
     enabled: boolean;
   };
+  timeFormat?: '12h' | '24h';
   // useOpenTelemetryTerms determines whether the UI uses legacy Jaeger terminology
   // (tags, logs, process, operation name) or OpenTelemetry terminology
   // (attributes, events, resource, name).

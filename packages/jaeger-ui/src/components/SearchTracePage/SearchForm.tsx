@@ -220,15 +220,17 @@ export function convertQueryParamsToFormDates({ start, end }: QueryParams): Form
   let queryStartDateTime: string | undefined;
   let queryEndDate: string | undefined;
   let queryEndDateTime: string | undefined;
+  const searchTimeFormat = 'HH:mm';
+  const ONE_MILLISECOND = 1000 * 1;
   if (end) {
     const endUnixNs = parseInt(end, 10);
     queryEndDate = formatDate(endUnixNs);
-    queryEndDateTime = formatTime(endUnixNs);
+    queryEndDateTime = dayjs(endUnixNs / ONE_MILLISECOND).format(searchTimeFormat);
   }
   if (start) {
     const startUnixNs = parseInt(start, 10);
     queryStartDate = formatDate(startUnixNs);
-    queryStartDateTime = formatTime(startUnixNs);
+    queryStartDateTime = dayjs(startUnixNs / ONE_MILLISECOND).format(searchTimeFormat);
   }
 
   return {
@@ -752,7 +754,8 @@ export function mapStateToProps(state: ReduxState) {
 
   const nowInMicroseconds = dayjs().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);
-  const currentTime = formatTime(nowInMicroseconds);
+  const ONE_MILLISECOND = 1000 * 1;
+  const currentTime = dayjs(nowInMicroseconds / ONE_MILLISECOND).format('HH:mm');
   const lastSearch = store.get('lastSearch') as { service?: string; operation?: string } | undefined;
   let lastSearchService: string | undefined;
   let lastSearchOperation: string | undefined;

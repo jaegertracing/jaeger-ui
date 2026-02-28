@@ -197,12 +197,12 @@ describe('format microseconds', () => {
 
   it('formatTime formats microseconds to time', () => {
     const dateInMicroseconds = dateInMilliseconds * ONE_MILLISECOND;
-    expect(formatTime(dateInMicroseconds)).toBe('10:00');
+    expect(formatTime(dateInMicroseconds)).toBe('10:00 am');
   });
 
   it('formatDateTime formats microseconds to standard date format', () => {
     const dateInMicroseconds = dateInMilliseconds * ONE_MILLISECOND;
-    expect(formatDatetime(dateInMicroseconds)).toBe('January 1 2000, 10:00:00.000');
+    expect(formatDatetime(dateInMicroseconds)).toBe('January 1 2000, 10:00:00 am.000');
   });
 
   it('formatMillisecondTime formats microseconds to milliseconds', () => {
