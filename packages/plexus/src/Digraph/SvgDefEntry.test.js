@@ -9,19 +9,22 @@ import SvgDefEntry from './SvgDefEntry';
 const mockAssignMergeCssResults = [];
 const mockGetPropsResults = [];
 
-jest.mock('./utils', () => ({
-  assignMergeCss: (...args) => {
-    const result = Object.assign({}, ...args.filter(Boolean));
-    mockAssignMergeCssResults.push({ args, result });
-    return result;
-  },
-  getProps: (...args) => {
-    mockGetPropsResults.push(args);
-    return args[0] ? { 'data-custom': 'entry-prop' } : null;
-  },
-  // getValueScaler is called at module load time, so we provide a simple mock
-  getValueScaler: () => () => 0.5,
-}));
+jest.mock('./utils', () => {
+  const actual = jest.requireActual('./utils');
+  return {
+    assignMergeCss: (...args) => {
+      const result = Object.assign({}, ...args.filter(Boolean));
+      mockAssignMergeCssResults.push({ args, result });
+      return result;
+    },
+    getProps: (...args) => {
+      mockGetPropsResults.push(args);
+      return args[0] ? { 'data-custom': 'entry-prop' } : null;
+    },
+    // Keep real getValueScaler so scaling tests exercise actual logic
+    getValueScaler: actual.getValueScaler,
+  };
+});
 
 describe('SvgDefEntry', () => {
   const createGraphState = (zoomK = 1) => ({
@@ -204,7 +207,6 @@ describe('SvgDefEntry', () => {
     });
 
     it('scales marker based on zoom transform', () => {
-      // Test with different zoom levels
       const graphState1 = createGraphState(1);
       const { container: c1 } = render(
         <svg>
@@ -227,9 +229,10 @@ describe('SvgDefEntry', () => {
       const marker2 = c2.querySelector('marker');
       const height2 = marker2.getAttribute('markerHeight');
 
-      // Both should have some height value (scaling logic is mocked)
+      // Different zoom levels should produce different marker sizes
       expect(height1).toBeTruthy();
       expect(height2).toBeTruthy();
+      expect(height1).not.toBe(height2);
     });
   });
 
@@ -272,8 +275,24 @@ describe('SvgDefEntry', () => {
   });
 
   describe('React.memo behavior', () => {
-    it('is wrapped with React.memo for performance', () => {
-      expect(SvgDefEntry.$$typeof).toBe(Symbol.for('react.memo'));
+    it('skips re-render when props are unchanged', () => {
+      const props = { ...defaultProps };
+      const { rerender } = render(
+        <svg>
+          <defs>
+            <SvgDefEntry {...props} />
+          </defs>
+        </svg>
+      );
+      const callCount = mockAssignMergeCssResults.length;
+      rerender(
+        <svg>
+          <defs>
+            <SvgDefEntry {...props} />
+          </defs>
+        </svg>
+      );
+      expect(mockAssignMergeCssResults.length).toBe(callCount);
     });
   });
 });

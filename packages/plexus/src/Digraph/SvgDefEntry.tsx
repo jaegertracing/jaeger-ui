@@ -59,5 +59,4 @@ const SvgDefEntry = <T = {}, U = {}>(props: TProps<T, U>) => {
   return renderEntry(graphState, entryProps, id);
 };
 
-// React.memo provides shallow comparison equivalent to PureComponent
 export default React.memo(SvgDefEntry) as typeof SvgDefEntry;
