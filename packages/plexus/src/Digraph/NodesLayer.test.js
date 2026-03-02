@@ -1,4 +1,4 @@
-// Copyright (c) 2026 The Jaeger Authors.
+// Copyright (c) 2026 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
@@ -11,7 +11,7 @@ const mockNodesProps = [];
 const mockHtmlLayerProps = [];
 const mockSvgLayerProps = [];
 
-// 使用 React.createElement 而非 JSX，因為 jest.mock 的工廠函數不允許引用外部變數
+// Use React.createElement instead of JSX because jest.mock factory functions cannot reference external variables
 jest.mock('./Nodes', () => {
   const React = require('react');
   const MockNodes = props => {
@@ -181,8 +181,14 @@ describe('NodesLayer', () => {
   });
 
   describe('React.memo behavior', () => {
-    it('is wrapped with React.memo for performance', () => {
-      expect(NodesLayer.$$typeof).toBe(Symbol.for('react.memo'));
+    it('skips re-render when props are unchanged', () => {
+      const props = { ...defaultProps };
+      const { rerender } = render(<NodesLayer {...props} />);
+      const nodesCallCount = mockNodesProps.length;
+      const svgCallCount = mockSvgLayerProps.length;
+      rerender(<NodesLayer {...props} />);
+      expect(mockNodesProps.length).toBe(nodesCallCount);
+      expect(mockSvgLayerProps.length).toBe(svgCallCount);
     });
   });
 });
