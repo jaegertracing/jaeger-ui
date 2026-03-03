@@ -69,6 +69,7 @@ const defaultConfig: Config = {
   traceIdDisplayLength: 7,
   storageCapabilities: {
     archiveStorage: false,
+    metricsStorage: false,
   },
   tracking: {
     gaID: null,
@@ -77,22 +78,6 @@ const defaultConfig: Config = {
   },
   linkPatterns: [],
   monitor: {
-    menuEnabled: true,
-    emptyState: {
-      mainTitle: 'Get started with Service Performance Monitoring',
-      subTitle:
-        'A high-level monitoring dashboard that helps you cut down the time to identify and resolve anomalies and issues.',
-      description:
-        'Service Performance Monitoring aggregates tracing data into RED metrics and visualizes them in service and operation level dashboards.',
-      button: {
-        text: 'Read the Documentation',
-        onClick: () => window.open('https://www.jaegertracing.io/docs/latest/spm/'),
-      },
-      alert: {
-        message: 'Service Performance Monitoring requires a Prometheus-compatible time series database.',
-        type: 'info',
-      },
-    },
     docsLink: 'https://www.jaegertracing.io/docs/latest/spm/',
   },
   disableFileUploadControl: false,
