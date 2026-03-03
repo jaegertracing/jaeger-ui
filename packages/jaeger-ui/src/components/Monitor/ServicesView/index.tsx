@@ -224,6 +224,14 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     };
   }, [updateDimensions, calcGraphXDomain]);
 
+  // Recalculate graph width once services finish loading, since the graph
+  // container ref is not mounted while the loading spinner is shown (#3539).
+  useEffect(() => {
+    if (!servicesLoading) {
+      updateDimensions();
+    }
+  }, [servicesLoading, updateDimensions]);
+
   // componentDidUpdate equivalent
   useEffect(() => {
     if (services.length !== 0) {

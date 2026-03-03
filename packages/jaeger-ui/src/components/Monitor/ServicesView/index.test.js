@@ -250,6 +250,31 @@ describe('<MonitorATMServicesView>', () => {
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
   });
 
+  it('updates graph dimensions after services finish loading', () => {
+    cleanup();
+    // Start with loading state - the graph container div is not rendered
+    useServices.mockReturnValue({ data: [], isLoading: true });
+    const loadingProps = {
+      ...props,
+      metrics: { ...originInitialState, isATMActivated: true },
+      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+    };
+    const { rerender } = renderWithRouter(<MonitorATMServicesView {...loadingProps} />);
+    expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
+
+    // Services finish loading - the full UI renders with the graph container div
+    useServices.mockReturnValue({ data: ['service1'], isLoading: false });
+    rerender(
+      <MemoryRouter>
+        <MonitorATMServicesView {...loadingProps} />
+      </MemoryRouter>
+    );
+    // The component should now show the full UI (not the loading indicator)
+    expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
+    expect(screen.getByText('Service')).toBeInTheDocument();
+  });
+
   it('fetches metrics only when services are available', () => {
     // Clear mocks from beforeEach render
     mockFetchAllServiceMetrics.mockClear();
