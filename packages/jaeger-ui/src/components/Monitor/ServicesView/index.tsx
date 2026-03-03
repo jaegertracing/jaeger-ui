@@ -1,7 +1,7 @@
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useLayoutEffect } from 'react';
 import { Row, Col, Input, Alert, Select } from 'antd';
 import { ActionFunctionAny, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
@@ -226,7 +226,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
 
   // Recalculate graph width once services finish loading, since the graph
   // container ref is not mounted while the loading spinner is shown (#3539).
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!servicesLoading) {
       updateDimensions();
     }
