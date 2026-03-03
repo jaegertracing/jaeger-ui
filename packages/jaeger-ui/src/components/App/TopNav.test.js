@@ -52,6 +52,7 @@ jest.mock('../../utils/config/get-config', () => {
         case 'deepDependencies.menuEnabled':
         case 'qualityMetrics.menuEnabled':
         case 'monitor.menuEnabled':
+        case 'storageCapabilities.metricsStorage':
         case 'themes.enabled':
           return true;
         case 'qualityMetrics.menuLabel':
