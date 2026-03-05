@@ -69,6 +69,7 @@ describe('<TimelineHeaderRow>', () => {
     onColummWidthChange: jest.fn(),
     onExpandAll: jest.fn(),
     onExpandOne: jest.fn(),
+    timelineBarsVisible: true,
     updateNextViewRangeTime: jest.fn(),
     updateViewRangeTime: jest.fn(),
     viewRangeTime: {
@@ -128,5 +129,29 @@ describe('<TimelineHeaderRow>', () => {
   it('renders the TimelineCollapser', () => {
     render(<TimelineHeaderRow {...props} />);
     expect(screen.getByTestId('timeline-collapser')).toBeInTheDocument();
+  });
+
+  describe('tree-only mode (timelineBarsVisible=false)', () => {
+    it('does not render the Ticks', () => {
+      render(<TimelineHeaderRow {...props} timelineBarsVisible={false} />);
+      expect(screen.queryByTestId('ticks')).not.toBeInTheDocument();
+    });
+
+    it('does not render the TimelineViewingLayer', () => {
+      render(<TimelineHeaderRow {...props} timelineBarsVisible={false} />);
+      expect(screen.queryByTestId('timeline-viewing-layer')).not.toBeInTheDocument();
+    });
+
+    it('does not render the VerticalResizer', () => {
+      render(<TimelineHeaderRow {...props} timelineBarsVisible={false} />);
+      expect(screen.queryByTestId('vertical-resizer')).not.toBeInTheDocument();
+    });
+
+    it('renders the name column at full width', () => {
+      const { container } = render(<TimelineHeaderRow {...props} timelineBarsVisible={false} />);
+      const cells = container.querySelectorAll('.TimelineRow--cellMock');
+      expect(cells).toHaveLength(1);
+      expect(cells[0]).toHaveAttribute('data-width', '1');
+    });
   });
 });

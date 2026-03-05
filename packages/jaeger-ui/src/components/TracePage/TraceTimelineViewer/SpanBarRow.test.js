@@ -51,6 +51,7 @@ describe('<SpanBarRow>', () => {
     isChildrenExpanded: true,
     isDetailExpanded: false,
     isMatchingFilter: false,
+    timelineBarsVisible: true,
     onDetailToggled: jest.fn(),
     onChildrenToggled: jest.fn(),
     numTicks: 5,
@@ -210,6 +211,20 @@ describe('<SpanBarRow>', () => {
     render(<SpanBarRow {...props} />);
     const svcName = screen.getByText('service-name').closest('.span-svc-name');
     expect(svcName).toHaveClass('span-svc-name', 'is-children-collapsed');
+  });
+
+  describe('tree-only mode (timelineBarsVisible=false)', () => {
+    it('does not render the span-view cell', () => {
+      render(<SpanBarRow {...defaultProps} timelineBarsVisible={false} />);
+      expect(screen.queryByTestId('span-bar')).not.toBeInTheDocument();
+    });
+
+    it('renders the span name column at full width', () => {
+      const { container } = render(<SpanBarRow {...defaultProps} timelineBarsVisible={false} />);
+      const nameCell = container.querySelector('.span-name-column');
+      expect(nameCell).toHaveStyle('flex-basis: 100%');
+      expect(nameCell).toHaveStyle('max-width: 100%');
+    });
   });
 
   it('sets longLabel and hintSide to right when viewStart <= 1 - viewEnd', () => {

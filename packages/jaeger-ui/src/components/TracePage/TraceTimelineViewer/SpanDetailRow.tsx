@@ -16,6 +16,7 @@ import './SpanDetailRow.css';
 type SpanDetailRowProps = {
   color: string;
   columnDivision: number;
+  timelineBarsVisible: boolean;
   detailState: DetailState;
   onDetailToggled: (spanID: string) => void;
   linksGetter: (attributes: ReadonlyArray<IAttribute>, index: number) => Hyperlink[];
@@ -41,6 +42,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
   const {
     color,
     columnDivision,
+    timelineBarsVisible,
     detailState,
     eventsToggle,
     resourceToggle,
@@ -56,9 +58,11 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     eventItemToggle,
     useOtelTerms,
   } = props;
+  const effectiveColumnDivision = timelineBarsVisible ? columnDivision : 0;
+
   return (
     <TimelineRow className="detail-row">
-      <TimelineRow.Cell width={columnDivision}>
+      <TimelineRow.Cell width={effectiveColumnDivision}>
         <SpanTreeOffset span={span} showChildrenIcon={false} color={color} />
         <span>
           <span
@@ -70,7 +74,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
           />
         </span>
       </TimelineRow.Cell>
-      <TimelineRow.Cell width={1 - columnDivision}>
+      <TimelineRow.Cell width={1 - effectiveColumnDivision}>
         <div className="detail-info-wrapper" style={{ borderTopColor: color }}>
           <SpanDetail
             detailState={detailState}
