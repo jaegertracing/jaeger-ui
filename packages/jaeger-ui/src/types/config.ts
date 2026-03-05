@@ -204,6 +204,21 @@ export type Config = {
   themes: {
     enabled: boolean;
   };
+  // traceTimeline controls the trace timeline viewer layout options.
+  traceTimeline?: {
+    // enableSidePanel enables the side panel layout option in the trace timeline.
+    // When false, the side panel toggle is hidden and only inline detail mode is available.
+    // Default: false (experimental, opt-in).
+    enableSidePanel?: boolean;
+
+    // defaultDetailPanelMode sets the initial detail panel mode when enableSidePanel is true
+    // and the user has not yet stored a preference in localStorage.
+    // 'inline' preserves the current behavior as the default.
+    // 'sidepanel' makes the side panel the default experience for new users.
+    // Default: 'inline'.
+    defaultDetailPanelMode?: 'inline' | 'sidepanel';
+  };
+
   // useOpenTelemetryTerms determines whether the UI uses legacy Jaeger terminology
   // (tags, logs, process, operation name) or OpenTelemetry terminology
   // (attributes, events, resource, name).

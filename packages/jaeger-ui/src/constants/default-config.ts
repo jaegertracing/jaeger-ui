@@ -116,6 +116,10 @@ const defaultConfig: Config = {
   themes: {
     enabled: true,
   },
+  traceTimeline: {
+    enableSidePanel: false,
+    defaultDetailPanelMode: 'inline',
+  },
   useOpenTelemetryTerms: false,
 };
 

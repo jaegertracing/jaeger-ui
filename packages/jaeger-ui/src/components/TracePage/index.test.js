@@ -115,6 +115,8 @@ describe('<TracePage>', () => {
   const defaultProps = {
     acknowledgeArchive: jest.fn(),
     archiveTrace: jest.fn(),
+    detailPanelMode: 'inline',
+    enableSidePanel: false,
     fetchTrace: jest.fn(),
     focusUiFindMatches: jest.fn(),
     id: trace.traceID,
@@ -123,6 +125,9 @@ describe('<TracePage>', () => {
       search: null,
       state: null,
     },
+    setDetailPanelMode: jest.fn(),
+    setTimelineVisible: jest.fn(),
+    timelineVisible: true,
     trace: { data: trace, state: fetchedState.DONE },
   };
   const notDefaultPropsId = `not ${defaultProps.id}`;
@@ -746,12 +751,11 @@ describe('<TracePage>', () => {
     });
 
     describe('isEmbedded derived props', () => {
-      it('sets showShortcutsHelp, showStandaloneLink, and showViewOptions correctly', () => {
+      it('sets showStandaloneLink and showViewOptions correctly', () => {
         const getEmbeddedState = embedded => {
           const isEmbedded = Boolean(embedded);
           return {
             isEmbedded,
-            showShortcutsHelp: !isEmbedded,
             showStandaloneLink: isEmbedded,
             showViewOptions: !isEmbedded,
           };
@@ -760,12 +764,10 @@ describe('<TracePage>', () => {
         const results = [getEmbeddedState(undefined), getEmbeddedState({ timeline: {} })];
 
         expect(results[0].isEmbedded).toBe(false);
-        expect(results[0].showShortcutsHelp).toBe(true);
         expect(results[0].showStandaloneLink).toBe(false);
         expect(results[0].showViewOptions).toBe(true);
 
         expect(results[1].isEmbedded).toBe(true);
-        expect(results[1].showShortcutsHelp).toBe(false);
         expect(results[1].showStandaloneLink).toBe(true);
         expect(results[1].showViewOptions).toBe(false);
       });
@@ -860,6 +862,32 @@ describe('<TracePage>', () => {
       instance.archiveTrace();
 
       expect(defaultProps.archiveTrace).toHaveBeenCalledWith(defaultProps.id);
+    });
+  });
+
+  describe('layout toggle handlers', () => {
+    it('calls setDetailPanelMode with sidepanel when detailPanelMode is inline', () => {
+      const instance = new TracePage({ ...defaultProps, detailPanelMode: 'inline' });
+      instance.onDetailPanelModeToggle();
+      expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('sidepanel');
+    });
+
+    it('calls setDetailPanelMode with inline when detailPanelMode is sidepanel', () => {
+      const instance = new TracePage({ ...defaultProps, detailPanelMode: 'sidepanel' });
+      instance.onDetailPanelModeToggle();
+      expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('inline');
+    });
+
+    it('calls setTimelineVisible with false when timelineVisible is true', () => {
+      const instance = new TracePage({ ...defaultProps, timelineVisible: true });
+      instance.onTimelineToggle();
+      expect(defaultProps.setTimelineVisible).toHaveBeenCalledWith(false);
+    });
+
+    it('calls setTimelineVisible with true when timelineVisible is false', () => {
+      const instance = new TracePage({ ...defaultProps, timelineVisible: false });
+      instance.onTimelineToggle();
+      expect(defaultProps.setTimelineVisible).toHaveBeenCalledWith(true);
     });
   });
 
@@ -1110,6 +1138,8 @@ describe('mapDispatchToProps()', () => {
       archiveTrace: expect.any(Function),
       fetchTrace: expect.any(Function),
       focusUiFindMatches: expect.any(Function),
+      setDetailPanelMode: expect.any(Function),
+      setTimelineVisible: expect.any(Function),
     });
   });
 });
@@ -1140,15 +1170,21 @@ describe('mapStateToProps()', () => {
         archiveEnabled: false,
       },
       archive: {},
+      traceTimeline: {
+        detailPanelMode: 'inline',
+        timelineVisible: true,
+      },
     };
   });
   it('maps state to props correctly', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
+      detailPanelMode: 'inline',
       embedded,
       archiveTraceState: undefined,
       searchUrl: null,
+      timelineVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1174,9 +1210,11 @@ describe('mapStateToProps()', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
+      detailPanelMode: 'inline',
       embedded,
       archiveTraceState: undefined,
       searchUrl: fakeUrl,
+      timelineVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1187,9 +1225,11 @@ describe('mapStateToProps()', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
+      detailPanelMode: 'inline',
       embedded,
       archiveTraceState: undefined,
       searchUrl: null,
+      timelineVisible: true,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
     });

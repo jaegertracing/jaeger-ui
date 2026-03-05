@@ -9,8 +9,14 @@ import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 import filterSpans from '../../../utils/filter-spans';
 import generateActionTypes from '../../../utils/generate-action-types';
+import getConfig from '../../../utils/config/get-config';
 import guardReducer from '../../../utils/guardReducer';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
+
+export const SPAN_NAME_COLUMN_WIDTH_MIN = 0.15;
+export const SPAN_NAME_COLUMN_WIDTH_MAX = 0.85;
+export const SIDE_PANEL_WIDTH_MIN = 0.2;
+export const SIDE_PANEL_WIDTH_MAX = 0.7;
 
 // payloads
 export type TSpanIdLogValue = { logItem: IEvent; spanID: string };
@@ -18,12 +24,16 @@ export type TSpanIdValue = { spanID: string };
 type TSpansValue = { spans: IOtelSpan[] };
 type TTraceUiFindValue = { trace: IOtelTrace; uiFind: string | TNil; allowHide?: boolean };
 export type TWidthValue = { width: number };
+export type TDetailPanelModeValue = { mode: 'inline' | 'sidepanel' };
+export type TTimelineVisibleValue = { visible: boolean };
 export type TActionTypes =
   | TSpanIdLogValue
   | TSpanIdValue
   | TSpansValue
   | TTraceUiFindValue
   | TWidthValue
+  | TDetailPanelModeValue
+  | TTimelineVisibleValue
   | object;
 
 type TTimelineViewerActions = {
@@ -36,12 +46,39 @@ function shouldDisableCollapse(allSpans: IOtelSpan[], hiddenSpansIds: Set<string
 }
 
 export function newInitialState(): TTraceTimeline {
+  const { traceTimeline } = getConfig();
+  let detailPanelMode: 'inline' | 'sidepanel' = 'inline';
+  if (traceTimeline?.enableSidePanel) {
+    const stored = localStorage.getItem('detailPanelMode');
+    if (stored === 'sidepanel') {
+      detailPanelMode = 'sidepanel';
+    } else if (traceTimeline.defaultDetailPanelMode === 'sidepanel' && stored === null) {
+      detailPanelMode = 'sidepanel';
+    }
+  }
+
+  const storedTimelineVisible = localStorage.getItem('timelineVisible');
+  const timelineVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
+
+  const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
+  const sidePanelWidth = Number.isNaN(parsedSidePanelWidth)
+    ? 0.45
+    : Math.min(Math.max(parsedSidePanelWidth, SIDE_PANEL_WIDTH_MIN), SIDE_PANEL_WIDTH_MAX);
+
+  const parsedSpanNameColumnWidth = parseFloat(localStorage.getItem('spanNameColumnWidth') ?? '');
+  const spanNameColumnWidth = Number.isNaN(parsedSpanNameColumnWidth)
+    ? 0.25
+    : Math.min(Math.max(parsedSpanNameColumnWidth, SPAN_NAME_COLUMN_WIDTH_MIN), SPAN_NAME_COLUMN_WIDTH_MAX);
+
   return {
     childrenHiddenIDs: new Set(),
     detailStates: new Map(),
+    detailPanelMode,
     hoverIndentGuideIds: new Set(),
     shouldScrollToFirstUiFindMatch: false,
-    spanNameColumnWidth: parseFloat(localStorage.getItem('spanNameColumnWidth') || '0.25'),
+    sidePanelWidth,
+    spanNameColumnWidth,
+    timelineVisible,
     traceID: null,
   };
 }
@@ -63,7 +100,10 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
   'EXPAND_ONE',
   'FOCUS_UI_FIND_MATCHES',
   'REMOVE_HOVER_INDENT_GUIDE_ID',
+  'SET_DETAIL_PANEL_MODE',
+  'SET_SIDE_PANEL_WIDTH',
   'SET_SPAN_NAME_COLUMN_WIDTH',
+  'SET_TIMELINE_VISIBLE',
   'SET_TRACE',
 ]);
 
@@ -88,7 +128,10 @@ const fullActions = createActions<TActionTypes>({
     allowHide,
   }),
   [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: (spanID: string) => ({ spanID }),
+  [actionTypes.SET_DETAIL_PANEL_MODE]: (mode: 'inline' | 'sidepanel') => ({ mode }),
+  [actionTypes.SET_SIDE_PANEL_WIDTH]: (width: number) => ({ width }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: (width: number) => ({ width }),
+  [actionTypes.SET_TIMELINE_VISIBLE]: (visible: boolean) => ({ visible }),
   [actionTypes.SET_TRACE]: (trace: IOtelTrace, uiFind: string | TNil) => ({ trace, uiFind }),
 });
 
@@ -142,17 +185,28 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
   if (traceID === state.traceID) {
     return state;
   }
-  const { spanNameColumnWidth } = state;
+  const { spanNameColumnWidth, detailPanelMode, timelineVisible, sidePanelWidth } = state;
 
   return Object.assign(
-    { ...newInitialState(), spanNameColumnWidth, traceID },
+    {
+      ...newInitialState(),
+      spanNameColumnWidth,
+      detailPanelMode,
+      timelineVisible,
+      sidePanelWidth,
+      traceID,
+    },
     uiFind ? calculateFocusedFindRowStates(uiFind, spans) : null
   );
 }
 
 function setColumnWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
-  localStorage.setItem('spanNameColumnWidth', width.toString());
-  return { ...state, spanNameColumnWidth: width };
+  const spanNameColumnWidth = Math.min(
+    Math.max(width, SPAN_NAME_COLUMN_WIDTH_MIN),
+    SPAN_NAME_COLUMN_WIDTH_MAX
+  );
+  localStorage.setItem('spanNameColumnWidth', spanNameColumnWidth.toString());
+  return { ...state, spanNameColumnWidth };
 }
 
 function childrenToggle(state: TTraceTimeline, { spanID }: TSpanIdValue): TTraceTimeline {
@@ -227,6 +281,16 @@ export function expandOne(state: TTraceTimeline, { spans }: TSpansValue) {
 }
 
 function detailToggle(state: TTraceTimeline, { spanID }: TSpanIdValue) {
+  if (state.detailPanelMode === 'sidepanel') {
+    // In side panel mode, only one span can be expanded at a time.
+    if (state.detailStates.has(spanID)) {
+      return { ...state, detailStates: new Map() };
+    }
+    const detailStates = new Map<string, DetailState>();
+    detailStates.set(spanID, new DetailState());
+    return { ...state, detailStates };
+  }
+  // Inline mode: toggle as before, multiple spans can be expanded.
   const detailStates = new Map(state.detailStates);
   if (detailStates.has(spanID)) {
     detailStates.delete(spanID);
@@ -234,6 +298,31 @@ function detailToggle(state: TTraceTimeline, { spanID }: TSpanIdValue) {
     detailStates.set(spanID, new DetailState());
   }
   return { ...state, detailStates };
+}
+
+function setDetailPanelMode(state: TTraceTimeline, { mode }: TDetailPanelModeValue): TTraceTimeline {
+  localStorage.setItem('detailPanelMode', mode);
+  let { detailStates } = state;
+  // When switching to sidepanel mode, keep at most one entry in detailStates.
+  if (mode === 'sidepanel' && detailStates.size > 1) {
+    const firstEntry = detailStates.entries().next().value;
+    detailStates = new Map();
+    if (firstEntry) {
+      detailStates.set(firstEntry[0], firstEntry[1]);
+    }
+  }
+  return { ...state, detailPanelMode: mode, detailStates };
+}
+
+function setTimelineVisible(state: TTraceTimeline, { visible }: TTimelineVisibleValue): TTraceTimeline {
+  localStorage.setItem('timelineVisible', String(visible));
+  return { ...state, timelineVisible: visible };
+}
+
+function setSidePanelWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
+  const sidePanelWidth = Math.min(Math.max(width, SIDE_PANEL_WIDTH_MIN), SIDE_PANEL_WIDTH_MAX);
+  localStorage.setItem('sidePanelWidth', sidePanelWidth.toString());
+  return { ...state, sidePanelWidth };
 }
 
 function detailSubsectionToggle(
@@ -313,7 +402,10 @@ export default handleActions<TTraceTimeline, any>(
     [actionTypes.EXPAND_ONE]: guardReducer(expandOne),
     [actionTypes.FOCUS_UI_FIND_MATCHES]: guardReducer(focusUiFindMatches),
     [actionTypes.REMOVE_HOVER_INDENT_GUIDE_ID]: guardReducer(removeHoverIndentGuideId),
+    [actionTypes.SET_DETAIL_PANEL_MODE]: guardReducer(setDetailPanelMode),
+    [actionTypes.SET_SIDE_PANEL_WIDTH]: guardReducer(setSidePanelWidth),
     [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: guardReducer(setColumnWidth),
+    [actionTypes.SET_TIMELINE_VISIBLE]: guardReducer(setTimelineVisible),
     [actionTypes.SET_TRACE]: guardReducer(setTrace),
   },
   newInitialState()

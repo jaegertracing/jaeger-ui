@@ -7,9 +7,12 @@ import TNil from './TNil';
 type TTraceTimeline = {
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
+  detailPanelMode: 'inline' | 'sidepanel';
   hoverIndentGuideIds: Set<string>;
   shouldScrollToFirstUiFindMatch: boolean;
+  sidePanelWidth: number;
   spanNameColumnWidth: number;
+  timelineVisible: boolean;
   traceID: string | TNil;
 };
 

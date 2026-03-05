@@ -4,7 +4,19 @@
 import { createStore } from 'redux';
 import _reduce from 'lodash/reduce';
 
-import reducer, { actions, newInitialState, collapseAll, collapseOne, expandAll, expandOne } from './duck';
+import reducer, {
+  actions,
+  newInitialState,
+  collapseAll,
+  collapseOne,
+  expandAll,
+  expandOne,
+  SPAN_NAME_COLUMN_WIDTH_MIN,
+  SPAN_NAME_COLUMN_WIDTH_MAX,
+  SIDE_PANEL_WIDTH_MIN,
+  SIDE_PANEL_WIDTH_MAX,
+} from './duck';
+import getConfig from '../../../utils/config/get-config';
 import DetailState from './SpanDetail/DetailState';
 import transformTraceData from '../../../model/transform-trace-data';
 import traceGenerator from '../../../demo/trace-generators';
@@ -13,6 +25,10 @@ import spanAncestorIdsSpy from '../../../utils/span-ancestor-ids';
 
 jest.mock('../../../utils/filter-spans');
 jest.mock('../../../utils/span-ancestor-ids');
+jest.mock('../../../utils/config/get-config', () => {
+  const actual = jest.requireActual('../../../utils/config/get-config');
+  return { __esModule: true, ...actual, default: jest.fn(() => ({})) };
+});
 
 describe('TraceTimelineViewer/duck', () => {
   const legacyTrace = transformTraceData(traceGenerator.trace({ numberOfSpans: 30 }));
@@ -21,7 +37,13 @@ describe('TraceTimelineViewer/duck', () => {
   let store;
 
   beforeEach(() => {
+    localStorage.clear();
+    getConfig.mockReturnValue({});
     store = createStore(reducer, newInitialState());
+  });
+
+  afterEach(() => {
+    localStorage.clear();
   });
 
   it('the initial state has no details, collapsed children or text search', () => {
@@ -32,13 +54,19 @@ describe('TraceTimelineViewer/duck', () => {
 
   it('sets the span column width', () => {
     const n = 0.5;
-    let width = store.getState().spanNameColumnWidth;
-    expect(width).toBeGreaterThanOrEqual(0);
-    expect(width).toBeLessThanOrEqual(1);
     const action = actions.setSpanNameColumnWidth(n);
     store.dispatch(action);
-    width = store.getState().spanNameColumnWidth;
-    expect(width).toBe(n);
+    expect(store.getState().spanNameColumnWidth).toBe(n);
+  });
+
+  it('clamps spanNameColumnWidth to SPAN_NAME_COLUMN_WIDTH_MIN when width is below range', () => {
+    store.dispatch(actions.setSpanNameColumnWidth(0));
+    expect(store.getState().spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MIN);
+  });
+
+  it('clamps spanNameColumnWidth to SPAN_NAME_COLUMN_WIDTH_MAX when width is above range', () => {
+    store.dispatch(actions.setSpanNameColumnWidth(1));
+    expect(store.getState().spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MAX);
   });
 
   describe('focusUiFindMatches', () => {
@@ -139,7 +167,7 @@ describe('TraceTimelineViewer/duck', () => {
       expect(store.getState()).toBe(state);
     });
 
-    it('retains only the spanNameColumnWidth when changing traceIDs', () => {
+    it('retains layout preferences (spanNameColumnWidth, detailPanelMode, timelineVisible, sidePanelWidth) when changing traceIDs', () => {
       let action;
       const width = 0.5;
       const id = 'some-id';
@@ -435,6 +463,191 @@ describe('TraceTimelineViewer/duck', () => {
     store.dispatch(actions.detailLogItemToggle(id, logItem));
     expect(store.getState().detailStates.get(id)).toEqual(toggledDetail);
     expect(store.getState().detailStates.get(secondID)).toBe(secondDetail);
+  });
+
+  describe('detailToggle in sidepanel mode', () => {
+    const spanA = trace.spans[0].spanID;
+    const spanB = trace.spans[1].spanID;
+
+    beforeEach(() => {
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+    });
+
+    it('opens detail for a span', () => {
+      store.dispatch(actions.detailToggle(spanA));
+      expect(store.getState().detailStates.size).toBe(1);
+      expect(store.getState().detailStates.has(spanA)).toBe(true);
+    });
+
+    it('closes detail when the same span is toggled again', () => {
+      store.dispatch(actions.detailToggle(spanA));
+      store.dispatch(actions.detailToggle(spanA));
+      expect(store.getState().detailStates.size).toBe(0);
+    });
+
+    it('replaces detail with a different span, keeping at most one entry', () => {
+      store.dispatch(actions.detailToggle(spanA));
+      store.dispatch(actions.detailToggle(spanB));
+      expect(store.getState().detailStates.size).toBe(1);
+      expect(store.getState().detailStates.has(spanB)).toBe(true);
+      expect(store.getState().detailStates.has(spanA)).toBe(false);
+    });
+  });
+
+  describe('setDetailPanelMode', () => {
+    const spanA = trace.spans[0].spanID;
+    const spanB = trace.spans[1].spanID;
+    const spanC = trace.spans[2].spanID;
+
+    it('switches to sidepanel mode', () => {
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+      expect(store.getState().detailPanelMode).toBe('sidepanel');
+    });
+
+    it('switches back to inline mode', () => {
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+      store.dispatch(actions.setDetailPanelMode('inline'));
+      expect(store.getState().detailPanelMode).toBe('inline');
+    });
+
+    it('truncates detailStates to at most one entry when switching to sidepanel', () => {
+      store.dispatch(actions.detailToggle(spanA));
+      store.dispatch(actions.detailToggle(spanB));
+      store.dispatch(actions.detailToggle(spanC));
+      expect(store.getState().detailStates.size).toBe(3);
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+      expect(store.getState().detailStates.size).toBe(1);
+    });
+
+    it('persists mode to localStorage', () => {
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+      expect(localStorage.getItem('detailPanelMode')).toBe('sidepanel');
+      store.dispatch(actions.setDetailPanelMode('inline'));
+      expect(localStorage.getItem('detailPanelMode')).toBe('inline');
+    });
+  });
+
+  describe('setTimelineVisible', () => {
+    it('hides the timeline', () => {
+      store.dispatch(actions.setTimelineVisible(false));
+      expect(store.getState().timelineVisible).toBe(false);
+    });
+
+    it('shows the timeline', () => {
+      store.dispatch(actions.setTimelineVisible(false));
+      store.dispatch(actions.setTimelineVisible(true));
+      expect(store.getState().timelineVisible).toBe(true);
+    });
+
+    it('persists visibility to localStorage', () => {
+      store.dispatch(actions.setTimelineVisible(false));
+      expect(localStorage.getItem('timelineVisible')).toBe('false');
+      store.dispatch(actions.setTimelineVisible(true));
+      expect(localStorage.getItem('timelineVisible')).toBe('true');
+    });
+  });
+
+  describe('setSidePanelWidth', () => {
+    it('sets the side panel width', () => {
+      store.dispatch(actions.setSidePanelWidth(0.3));
+      expect(store.getState().sidePanelWidth).toBe(0.3);
+    });
+
+    it('persists width to localStorage', () => {
+      store.dispatch(actions.setSidePanelWidth(0.3));
+      expect(localStorage.getItem('sidePanelWidth')).toBe('0.3');
+    });
+
+    it('clamps to SIDE_PANEL_WIDTH_MIN when width is below range', () => {
+      store.dispatch(actions.setSidePanelWidth(0));
+      expect(store.getState().sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MIN);
+      expect(localStorage.getItem('sidePanelWidth')).toBe(String(SIDE_PANEL_WIDTH_MIN));
+    });
+
+    it('clamps to SIDE_PANEL_WIDTH_MAX when width is above range', () => {
+      store.dispatch(actions.setSidePanelWidth(1));
+      expect(store.getState().sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MAX);
+      expect(localStorage.getItem('sidePanelWidth')).toBe(String(SIDE_PANEL_WIDTH_MAX));
+    });
+  });
+
+  describe('newInitialState detailPanelMode with enableSidePanel', () => {
+    beforeEach(() => {
+      getConfig.mockReturnValue({
+        traceTimeline: { enableSidePanel: true, defaultDetailPanelMode: 'inline' },
+      });
+    });
+
+    it('restores sidepanel mode from localStorage when enableSidePanel is true', () => {
+      localStorage.setItem('detailPanelMode', 'sidepanel');
+      expect(newInitialState().detailPanelMode).toBe('sidepanel');
+    });
+
+    it('uses defaultDetailPanelMode sidepanel when no stored preference and enableSidePanel is true', () => {
+      getConfig.mockReturnValue({
+        traceTimeline: { enableSidePanel: true, defaultDetailPanelMode: 'sidepanel' },
+      });
+      expect(newInitialState().detailPanelMode).toBe('sidepanel');
+    });
+
+    it('stays inline when stored preference is inline', () => {
+      localStorage.setItem('detailPanelMode', 'inline');
+      expect(newInitialState().detailPanelMode).toBe('inline');
+    });
+
+    it('ignores stored sidepanel preference when enableSidePanel is false', () => {
+      getConfig.mockReturnValue({ traceTimeline: { enableSidePanel: false } });
+      localStorage.setItem('detailPanelMode', 'sidepanel');
+      expect(newInitialState().detailPanelMode).toBe('inline');
+    });
+  });
+
+  describe('newInitialState localStorage parsing', () => {
+    it('restores sidePanelWidth from localStorage', () => {
+      localStorage.setItem('sidePanelWidth', '0.3');
+      const state = newInitialState();
+      expect(state.sidePanelWidth).toBe(0.3);
+    });
+
+    it('uses default sidePanelWidth of 0.45 when localStorage is empty', () => {
+      const state = newInitialState();
+      expect(state.sidePanelWidth).toBe(0.45);
+    });
+
+    it('uses default sidePanelWidth of 0.45 when stored value is invalid', () => {
+      localStorage.setItem('sidePanelWidth', 'not-a-number');
+      const state = newInitialState();
+      expect(state.sidePanelWidth).toBe(0.45);
+    });
+
+    it('clamps sidePanelWidth to SIDE_PANEL_WIDTH_MIN when stored value is below range', () => {
+      localStorage.setItem('sidePanelWidth', '0');
+      const state = newInitialState();
+      expect(state.sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MIN);
+    });
+
+    it('clamps sidePanelWidth to SIDE_PANEL_WIDTH_MAX when stored value is above range', () => {
+      localStorage.setItem('sidePanelWidth', '2');
+      const state = newInitialState();
+      expect(state.sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MAX);
+    });
+
+    it('clamps spanNameColumnWidth to SPAN_NAME_COLUMN_WIDTH_MIN when stored value is below range', () => {
+      localStorage.setItem('spanNameColumnWidth', '0');
+      const state = newInitialState();
+      expect(state.spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MIN);
+    });
+
+    it('clamps spanNameColumnWidth to SPAN_NAME_COLUMN_WIDTH_MAX when stored value is above range', () => {
+      localStorage.setItem('spanNameColumnWidth', '2');
+      const state = newInitialState();
+      expect(state.spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MAX);
+    });
+
+    it('uses default spanNameColumnWidth of 0.25 when localStorage is empty', () => {
+      const state = newInitialState();
+      expect(state.spanNameColumnWidth).toBe(0.25);
+    });
   });
 
   describe('hoverIndentGuideIds', () => {
