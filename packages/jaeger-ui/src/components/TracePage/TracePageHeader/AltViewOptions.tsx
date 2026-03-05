@@ -12,6 +12,7 @@ import {
   trackGraphView,
   trackStatisticsView,
   trackTraceSpansView,
+  trackTraceLogsView,
   trackJsonView,
   trackRawJsonView,
 } from './TracePageHeader.track';
@@ -47,6 +48,10 @@ const MENU_ITEMS = [
     viewType: ETraceViewType.TraceFlamegraph,
     label: 'Trace Flamegraph',
   },
+  {
+    viewType: ETraceViewType.TraceLogs,
+    label: 'Trace Logs',
+  },
 ];
 
 export default function AltViewOptions(props: Props) {
@@ -61,6 +66,8 @@ export default function AltViewOptions(props: Props) {
       trackStatisticsView();
     } else if (item === ETraceViewType.TraceSpansView) {
       trackTraceSpansView();
+    } else if (item === ETraceViewType.TraceLogs) {
+      trackTraceLogsView();
     }
     onTraceViewChange(item);
   };

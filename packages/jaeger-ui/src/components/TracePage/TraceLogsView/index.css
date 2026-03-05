@@ -1,0 +1,43 @@
+/* Copyright (c) 2025 The Jaeger Authors. */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+.TraceLogsView {
+  padding: 8px;
+}
+
+.TraceLogsView--title {
+  margin: 0 0 8px 0;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.TraceLogsView .ant-table {
+  font-size: 13px;
+}
+
+.TraceLogsView .event-attributes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.TraceLogsView .event-attributes .attribute-tag {
+  background: var(--surface-tertiary, #f5f5f5);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-family: monospace;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.TraceLogsView .span-id-cell {
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.TraceLogsView--empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--text-secondary, #999);
+  font-size: 14px;
+}

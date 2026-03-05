@@ -47,6 +47,7 @@ import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
+import TraceLogsView from './TraceLogsView/index';
 import { StorageCapabilities, TraceGraphConfig } from '../../types/config';
 
 import './index.css';
@@ -453,6 +454,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       );
     } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
       view = <TraceFlamegraph trace={trace} />;
+    } else if (ETraceViewType.TraceLogs === viewType && headerHeight) {
+      view = <TraceLogsView trace={data.asOtelTrace()} useOtelTerms={this.props.useOtelTerms} />;
     }
 
     return (
