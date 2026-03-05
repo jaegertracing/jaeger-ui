@@ -126,8 +126,8 @@ describe('<TracePage>', () => {
       state: null,
     },
     setDetailPanelMode: jest.fn(),
-    setTimelineBarsVisible: jest.fn(),
-    timelineBarsVisible: true,
+    setTimelineVisible: jest.fn(),
+    timelineVisible: true,
     trace: { data: trace, state: fetchedState.DONE },
   };
   const notDefaultPropsId = `not ${defaultProps.id}`;
@@ -1116,7 +1116,7 @@ describe('mapDispatchToProps()', () => {
       fetchTrace: expect.any(Function),
       focusUiFindMatches: expect.any(Function),
       setDetailPanelMode: expect.any(Function),
-      setTimelineBarsVisible: expect.any(Function),
+      setTimelineVisible: expect.any(Function),
     });
   });
 });
@@ -1149,7 +1149,7 @@ describe('mapStateToProps()', () => {
       archive: {},
       traceTimeline: {
         detailPanelMode: 'inline',
-        timelineBarsVisible: true,
+        timelineVisible: true,
       },
     };
   });
@@ -1161,7 +1161,7 @@ describe('mapStateToProps()', () => {
       embedded,
       archiveTraceState: undefined,
       searchUrl: null,
-      timelineBarsVisible: true,
+      timelineVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1191,7 +1191,7 @@ describe('mapStateToProps()', () => {
       embedded,
       archiveTraceState: undefined,
       searchUrl: fakeUrl,
-      timelineBarsVisible: true,
+      timelineVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1206,7 +1206,7 @@ describe('mapStateToProps()', () => {
       embedded,
       archiveTraceState: undefined,
       searchUrl: null,
-      timelineBarsVisible: true,
+      timelineVisible: true,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
     });

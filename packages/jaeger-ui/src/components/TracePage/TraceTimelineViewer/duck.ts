@@ -19,7 +19,7 @@ type TSpansValue = { spans: IOtelSpan[] };
 type TTraceUiFindValue = { trace: IOtelTrace; uiFind: string | TNil; allowHide?: boolean };
 export type TWidthValue = { width: number };
 export type TDetailPanelModeValue = { mode: 'inline' | 'sidepanel' };
-export type TTimelineBarsVisibleValue = { visible: boolean };
+export type TTimelineVisibleValue = { visible: boolean };
 export type TActionTypes =
   | TSpanIdLogValue
   | TSpanIdValue
@@ -27,7 +27,7 @@ export type TActionTypes =
   | TTraceUiFindValue
   | TWidthValue
   | TDetailPanelModeValue
-  | TTimelineBarsVisibleValue
+  | TTimelineVisibleValue
   | object;
 
 type TTimelineViewerActions = {
@@ -44,8 +44,8 @@ export function newInitialState(): TTraceTimeline {
   const detailPanelMode: 'inline' | 'sidepanel' =
     storedDetailPanelMode === 'sidepanel' ? 'sidepanel' : 'inline';
 
-  const storedTimelineBars = localStorage.getItem('timelineBarsVisible');
-  const timelineBarsVisible = storedTimelineBars === null ? true : storedTimelineBars !== 'false';
+  const storedTimelineVisible = localStorage.getItem('timelineVisible');
+  const timelineVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
 
   return {
     childrenHiddenIDs: new Set(),
@@ -55,7 +55,7 @@ export function newInitialState(): TTraceTimeline {
     shouldScrollToFirstUiFindMatch: false,
     sidePanelWidth: parseFloat(localStorage.getItem('sidePanelWidth') || '0.45'),
     spanNameColumnWidth: parseFloat(localStorage.getItem('spanNameColumnWidth') || '0.25'),
-    timelineBarsVisible,
+    timelineVisible,
     traceID: null,
   };
 }
@@ -80,7 +80,7 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
   'SET_DETAIL_PANEL_MODE',
   'SET_SIDE_PANEL_WIDTH',
   'SET_SPAN_NAME_COLUMN_WIDTH',
-  'SET_TIMELINE_BARS_VISIBLE',
+  'SET_TIMELINE_VISIBLE',
   'SET_TRACE',
 ]);
 
@@ -108,7 +108,7 @@ const fullActions = createActions<TActionTypes>({
   [actionTypes.SET_DETAIL_PANEL_MODE]: (mode: 'inline' | 'sidepanel') => ({ mode }),
   [actionTypes.SET_SIDE_PANEL_WIDTH]: (width: number) => ({ width }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: (width: number) => ({ width }),
-  [actionTypes.SET_TIMELINE_BARS_VISIBLE]: (visible: boolean) => ({ visible }),
+  [actionTypes.SET_TIMELINE_VISIBLE]: (visible: boolean) => ({ visible }),
   [actionTypes.SET_TRACE]: (trace: IOtelTrace, uiFind: string | TNil) => ({ trace, uiFind }),
 });
 
@@ -162,14 +162,14 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
   if (traceID === state.traceID) {
     return state;
   }
-  const { spanNameColumnWidth, detailPanelMode, timelineBarsVisible, sidePanelWidth } = state;
+  const { spanNameColumnWidth, detailPanelMode, timelineVisible, sidePanelWidth } = state;
 
   return Object.assign(
     {
       ...newInitialState(),
       spanNameColumnWidth,
       detailPanelMode,
-      timelineBarsVisible,
+      timelineVisible,
       sidePanelWidth,
       traceID,
     },
@@ -287,12 +287,9 @@ function setDetailPanelMode(state: TTraceTimeline, { mode }: TDetailPanelModeVal
   return { ...state, detailPanelMode: mode, detailStates };
 }
 
-function setTimelineBarsVisible(
-  state: TTraceTimeline,
-  { visible }: TTimelineBarsVisibleValue
-): TTraceTimeline {
-  localStorage.setItem('timelineBarsVisible', String(visible));
-  return { ...state, timelineBarsVisible: visible };
+function setTimelineVisible(state: TTraceTimeline, { visible }: TTimelineVisibleValue): TTraceTimeline {
+  localStorage.setItem('timelineVisible', String(visible));
+  return { ...state, timelineVisible: visible };
 }
 
 function setSidePanelWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
@@ -380,7 +377,7 @@ export default handleActions<TTraceTimeline, any>(
     [actionTypes.SET_DETAIL_PANEL_MODE]: guardReducer(setDetailPanelMode),
     [actionTypes.SET_SIDE_PANEL_WIDTH]: guardReducer(setSidePanelWidth),
     [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: guardReducer(setColumnWidth),
-    [actionTypes.SET_TIMELINE_BARS_VISIBLE]: guardReducer(setTimelineBarsVisible),
+    [actionTypes.SET_TIMELINE_VISIBLE]: guardReducer(setTimelineVisible),
     [actionTypes.SET_TRACE]: guardReducer(setTrace),
   },
   newInitialState()

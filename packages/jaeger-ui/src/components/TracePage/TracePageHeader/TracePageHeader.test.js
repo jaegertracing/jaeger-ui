@@ -102,7 +102,7 @@ describe('<TracePageHeader>', () => {
     onArchiveClicked: jest.fn(),
     onDetailPanelModeToggle: jest.fn(),
     onSlimViewClicked: jest.fn(),
-    onTimelineBarsToggle: jest.fn(),
+    onTimelineToggle: jest.fn(),
     onTraceViewChange: jest.fn(),
     prevResult: jest.fn(),
     resultCount: 0,
@@ -113,7 +113,7 @@ describe('<TracePageHeader>', () => {
     showViewOptions: false,
     slimView: false,
     textFilter: '',
-    timelineBarsVisible: true,
+    timelineVisible: true,
     toSearch: null,
     viewType: ETraceViewType.TraceTimelineViewer,
     updateNextViewRangeTime: jest.fn(),
@@ -218,7 +218,9 @@ describe('<TracePageHeader>', () => {
       expect(screen.queryByText('Archive Trace')).not.toBeInTheDocument();
     });
 
-    it('toggles <TraceViewSettings />', () => {
+    it('always renders <TraceViewSettings />', () => {
+      expect(screen.getByTestId('trace-view-settings')).toBeInTheDocument();
+
       wrapper.rerender(
         <MemoryRouter>
           <TracePageHeader {...defaultProps} showShortcutsHelp />
@@ -231,7 +233,7 @@ describe('<TracePageHeader>', () => {
           <TracePageHeader {...defaultProps} showShortcutsHelp={false} />
         </MemoryRouter>
       );
-      expect(screen.queryByTestId('trace-view-settings')).not.toBeInTheDocument();
+      expect(screen.getByTestId('trace-view-settings')).toBeInTheDocument();
     });
 
     it('toggles <AltViewOptions />', () => {

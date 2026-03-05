@@ -118,7 +118,7 @@ The `[⌘]` button (`KeyboardShortcutsHelp` component) is replaced with a **Sett
 
 ```
 ┌──────────────────────────┐
-│ ✓ Show Timeline          │   ← toggles timelineBarsVisible
+│ ✓ Show Timeline          │   ← toggles timelineVisible
 │   Show Span in Sidebar   │   ← toggles detailPanelMode (only when enableSidePanel config is true)
 │ ───────────────────────  │
 │   Keyboard Shortcuts     │   ← opens the existing KeyboardShortcutsHelp modal
@@ -127,7 +127,7 @@ The `[⌘]` button (`KeyboardShortcutsHelp` component) is replaced with a **Sett
 
 **Menu item details:**
 
-1. **"Show Timeline"** -- checkmark when `timelineBarsVisible === true`. Clicking toggles the value. Always present.
+1. **"Show Timeline"** -- checkmark when `timelineVisible === true`. Clicking toggles the value. Always present.
 2. **"Show Span in Sidebar"** -- checkmark when `detailPanelMode === 'sidepanel'`. Clicking toggles between `'inline'` and `'sidepanel'`. Only rendered when `enableSidePanel` config is true.
 3. **Divider** -- antd menu divider separating layout settings from other items.
 4. **"Keyboard Shortcuts"** -- clicking opens the existing `KeyboardShortcutsHelp` modal (reuse the `getHelpModal()` function and modal state). No checkmark.
@@ -147,10 +147,10 @@ The new component `TraceViewSettings` (or inline in `TracePageHeader`) replaces 
 The checkmark pattern uses antd's menu item API -- items with a check icon prefix (e.g., `IoCheckmark` from `react-icons/io5`) when active, or empty space when inactive. This matches common dropdown toggle patterns.
 
 **Props needed by TraceViewSettings:**
-- `timelineBarsVisible: boolean`
+- `timelineVisible: boolean`
 - `detailPanelMode: 'inline' | 'sidepanel'`
 - `enableSidePanel: boolean`
-- `onTimelineBarsToggle: () => void`
+- `onTimelineToggle: () => void`
 - `onDetailPanelModeToggle: () => void`
 
 These are dispatched via Redux from the `TraceTimelineViewer` duck, wired through `TracePage` → `TracePageHeader` → `TraceViewSettings`.
@@ -160,13 +160,13 @@ These are dispatched via Redux from the `TraceTimelineViewer` duck, wired throug
 ```typescript
 // Added to TTraceTimeline
 detailPanelMode: 'inline' | 'sidepanel';  // default: 'inline'
-timelineBarsVisible: boolean;               // default: true
+timelineVisible: boolean;               // default: true
 sidePanelWidth: number;                     // ratio 0-1, default: 0.45
 ```
 
 No new state is needed for tracking which span is selected -- the existing `detailStates: Map<string, DetailState>` serves this role in both modes. In side panel mode, the map has at most one entry (enforced by the reducer). The side panel reads the single entry from `detailStates` to determine which span to display.
 
-Layout preferences (`detailPanelMode`, `timelineBarsVisible`, `sidePanelWidth`) are persisted to localStorage following the existing `spanNameColumnWidth` pattern in `duck.ts`.
+Layout preferences (`detailPanelMode`, `timelineVisible`, `sidePanelWidth`) are persisted to localStorage following the existing `spanNameColumnWidth` pattern in `duck.ts`.
 
 ### Side Panel Placement
 
@@ -187,7 +187,7 @@ TraceTimelineViewer (flex row)
 
 ### Column Width Handling for Tree-Only Mode
 
-When `timelineBarsVisible === false`, components use `effectiveColumnWidth = 1.0` locally in the render path. The Redux-stored `spanNameColumnWidth` is left untouched so it restores correctly when bars are re-shown.
+When `timelineVisible === false`, components use `effectiveColumnWidth = 1.0` locally in the render path. The Redux-stored `spanNameColumnWidth` is left untouched so it restores correctly when bars are re-shown.
 
 ### Unified `DETAIL_TOGGLE` Action
 
@@ -230,8 +230,8 @@ Wire up config options, state plumbing, and UI toggle icons with no rendering ch
 **Files to modify:**
 - `types/config.ts` -- add `traceTimeline?: { enableSidePanel?: boolean; defaultDetailPanelMode?: 'inline' | 'sidepanel' }` to `Config` type
 - `constants/default-config.ts` -- add `traceTimeline: { enableSidePanel: false, defaultDetailPanelMode: 'inline' }` defaults
-- `types/TTraceTimeline.ts` -- add `detailPanelMode`, `timelineBarsVisible`, `sidePanelWidth`
-- `TraceTimelineViewer/duck.ts` -- new actions (`SET_DETAIL_PANEL_MODE`, `SET_TIMELINE_BARS_VISIBLE`, `SET_SIDE_PANEL_WIDTH`), reducers, localStorage persistence; modify `DETAIL_TOGGLE` reducer to enforce single-entry constraint on `detailStates` when in sidepanel mode; `newInitialState()` reads config for `defaultDetailPanelMode` and respects `enableSidePanel` flag
+- `types/TTraceTimeline.ts` -- add `detailPanelMode`, `timelineVisible`, `sidePanelWidth`
+- `TraceTimelineViewer/duck.ts` -- new actions (`SET_DETAIL_PANEL_MODE`, `SET_TIMELINE_VISIBLE`, `SET_SIDE_PANEL_WIDTH`), reducers, localStorage persistence; modify `DETAIL_TOGGLE` reducer to enforce single-entry constraint on `detailStates` when in sidepanel mode; `newInitialState()` reads config for `defaultDetailPanelMode` and respects `enableSidePanel` flag
 - `TracePageHeader/TraceViewSettings.tsx` (new) -- settings gear dropdown replacing `KeyboardShortcutsHelp` button; contains "Show Timeline" toggle, "Show Details in Panel" toggle (gated by `enableSidePanel`), and "Keyboard Shortcuts" menu item
 - `TracePageHeader/TracePageHeader.tsx` -- replace `<KeyboardShortcutsHelp>` with `<TraceViewSettings>`; wire new props
 - `TraceTimelineViewer/index.tsx` -- wire new Redux state/dispatch
@@ -244,11 +244,11 @@ Wire up config options, state plumbing, and UI toggle icons with no rendering ch
 Ship independently of the side panel.
 
 **Files to modify:**
-- `TraceTimelineViewer/SpanBarRow.tsx` -- new prop `timelineBarsVisible`; when false, render only name cell at full width
+- `TraceTimelineViewer/SpanBarRow.tsx` -- new prop `timelineVisible`; when false, render only name cell at full width
 - `TraceTimelineViewer/SpanBarRow.css` -- full-width styling
 - `TraceTimelineViewer/SpanDetailRow.tsx` -- full-width detail when bars hidden
 - `TraceTimelineViewer/TimelineHeaderRow/TimelineHeaderRow.tsx` -- hide ticks, viewing layer, `VerticalResizer`
-- `TraceTimelineViewer/VirtualizedTraceView.tsx` -- read and pass `timelineBarsVisible`
+- `TraceTimelineViewer/VirtualizedTraceView.tsx` -- read and pass `timelineVisible`
 - `TraceTimelineViewer/index.tsx` -- pass through to children
 
 **Outcome:** Users can toggle timeline bars on/off. Inline expansion still works. Column width preference preserved.

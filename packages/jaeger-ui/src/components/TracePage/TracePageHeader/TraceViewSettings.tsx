@@ -15,8 +15,9 @@ type Props = {
   detailPanelMode: 'inline' | 'sidepanel';
   enableSidePanel: boolean;
   onDetailPanelModeToggle: () => void;
-  onTimelineBarsToggle: () => void;
-  timelineBarsVisible: boolean;
+  onTimelineToggle: () => void;
+  showShortcutsHelp: boolean;
+  timelineVisible: boolean;
 };
 
 const { Column } = Table;
@@ -90,8 +91,9 @@ export default function TraceViewSettings(props: Props) {
     detailPanelMode,
     enableSidePanel,
     onDetailPanelModeToggle,
-    onTimelineBarsToggle,
-    timelineBarsVisible,
+    onTimelineToggle,
+    showShortcutsHelp,
+    timelineVisible,
   } = props;
 
   const [kbdModalVisible, setKbdModalVisible] = React.useState(false);
@@ -100,8 +102,8 @@ export default function TraceViewSettings(props: Props) {
     {
       key: 'timeline-bars',
       label: (
-        <a onClick={onTimelineBarsToggle} role="switch" aria-checked={timelineBarsVisible}>
-          {timelineBarsVisible ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER}
+        <a onClick={onTimelineToggle} role="switch" aria-checked={timelineVisible}>
+          {timelineVisible ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER}
           Show Timeline
         </a>
       ),
@@ -121,23 +123,25 @@ export default function TraceViewSettings(props: Props) {
     });
   }
 
-  items.push(
-    { type: 'divider' as const },
-    {
-      key: 'keyboard-shortcuts',
-      label: (
-        <a
-          onClick={() => {
-            track();
-            setKbdModalVisible(true);
-          }}
-        >
-          {CHECK_PLACEHOLDER}
-          Keyboard Shortcuts
-        </a>
-      ),
-    }
-  );
+  if (showShortcutsHelp) {
+    items.push(
+      { type: 'divider' as const },
+      {
+        key: 'keyboard-shortcuts',
+        label: (
+          <a
+            onClick={() => {
+              track();
+              setKbdModalVisible(true);
+            }}
+          >
+            {CHECK_PLACEHOLDER}
+            Keyboard Shortcuts
+          </a>
+        ),
+      }
+    );
+  }
 
   return (
     <>

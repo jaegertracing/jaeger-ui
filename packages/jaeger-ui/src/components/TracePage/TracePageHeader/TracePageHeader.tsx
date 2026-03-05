@@ -40,7 +40,7 @@ type TracePageHeaderEmbedProps = {
   onArchiveClicked: () => void;
   onDetailPanelModeToggle: () => void;
   onSlimViewClicked: () => void;
-  onTimelineBarsToggle: () => void;
+  onTimelineToggle: () => void;
   onTraceViewChange: (viewType: ETraceViewType) => void;
   prevResult: () => void;
   resultCount: number;
@@ -51,7 +51,7 @@ type TracePageHeaderEmbedProps = {
   showViewOptions: boolean;
   slimView: boolean;
   textFilter: string | TNil;
-  timelineBarsVisible: boolean;
+  timelineVisible: boolean;
   toSearch: string | null;
   trace: IOtelTrace;
   viewType: ETraceViewType;
@@ -134,7 +134,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     onArchiveClicked,
     onDetailPanelModeToggle,
     onSlimViewClicked,
-    onTimelineBarsToggle,
+    onTimelineToggle,
     onTraceViewChange,
     prevResult,
     resultCount,
@@ -145,7 +145,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     disableJsonView,
     slimView,
     textFilter,
-    timelineBarsVisible,
+    timelineVisible,
     toSearch,
     trace,
     viewType,
@@ -211,16 +211,15 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           navigable={viewType === ETraceViewType.TraceTimelineViewer}
           useOtelTerms={useOtelTerms}
         />
-        {showShortcutsHelp && (
-          <TraceViewSettings
-            className="ub-m2"
-            detailPanelMode={detailPanelMode}
-            enableSidePanel={enableSidePanel}
-            onDetailPanelModeToggle={onDetailPanelModeToggle}
-            onTimelineBarsToggle={onTimelineBarsToggle}
-            timelineBarsVisible={timelineBarsVisible}
-          />
-        )}
+        <TraceViewSettings
+          className="ub-m2"
+          detailPanelMode={detailPanelMode}
+          enableSidePanel={enableSidePanel}
+          onDetailPanelModeToggle={onDetailPanelModeToggle}
+          onTimelineToggle={onTimelineToggle}
+          showShortcutsHelp={showShortcutsHelp}
+          timelineVisible={timelineVisible}
+        />
         {showViewOptions && (
           <AltViewOptions
             disableJsonView={disableJsonView}
