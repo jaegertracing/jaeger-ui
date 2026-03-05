@@ -35,6 +35,14 @@ Install dependencies via `npm`:
 npm ci
 ```
 
+Finally:
+
+```bash
+npm run prepare
+```
+
+The last command also installs git hooks via `husky`.
+
 ## Running the application
 
 Make sure you have Jaeger running on http://localhost:16686. For example, you can run Jaeger all-in-one Docker image as described in [getting started documentation](https://www.jaegertracing.io/docs/latest/getting-started/).
