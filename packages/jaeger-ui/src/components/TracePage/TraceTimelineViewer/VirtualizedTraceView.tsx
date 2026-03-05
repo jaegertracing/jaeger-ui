@@ -449,7 +449,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailToggle,
       findMatchesIDs,
       spanNameColumnWidth,
-      timelineVisible,
+      timelineVisible: timelineBarsVisible,
       trace,
       criticalPath,
       useOtelTerms,
@@ -504,7 +504,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           isChildrenExpanded={!isCollapsed}
           isDetailExpanded={isDetailExpanded}
           isMatchingFilter={isMatchingFilter}
-          timelineBarsVisible={timelineVisible}
+          timelineBarsVisible={timelineBarsVisible}
           numTicks={NUM_TICKS}
           onDetailToggled={detailToggle}
           onChildrenToggled={childrenToggle}
@@ -536,7 +536,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailTagsToggle,
       detailToggle,
       spanNameColumnWidth,
-      timelineVisible,
+      timelineVisible: timelineBarsVisible,
       trace,
       currentViewRangeTime,
       useOtelTerms,
@@ -552,7 +552,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
         <SpanDetailRow
           color={color}
           columnDivision={spanNameColumnWidth}
-          timelineBarsVisible={timelineVisible}
+          timelineBarsVisible={timelineBarsVisible}
           onDetailToggled={detailToggle}
           detailState={detailState}
           linksGetter={this.linksGetterFromAttributes(span)}
