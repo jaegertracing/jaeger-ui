@@ -527,22 +527,22 @@ describe('TraceTimelineViewer/duck', () => {
     });
   });
 
-  describe('setTimelineVisible', () => {
+  describe('setTimelineBarsVisible', () => {
     it('hides the timeline', () => {
-      store.dispatch(actions.setTimelineVisible(false));
+      store.dispatch(actions.setTimelineBarsVisible(false));
       expect(store.getState().timelineBarsVisible).toBe(false);
     });
 
     it('shows the timeline', () => {
-      store.dispatch(actions.setTimelineVisible(false));
-      store.dispatch(actions.setTimelineVisible(true));
+      store.dispatch(actions.setTimelineBarsVisible(false));
+      store.dispatch(actions.setTimelineBarsVisible(true));
       expect(store.getState().timelineBarsVisible).toBe(true);
     });
 
     it('persists visibility to localStorage', () => {
-      store.dispatch(actions.setTimelineVisible(false));
+      store.dispatch(actions.setTimelineBarsVisible(false));
       expect(localStorage.getItem('timelineVisible')).toBe('false');
-      store.dispatch(actions.setTimelineVisible(true));
+      store.dispatch(actions.setTimelineBarsVisible(true));
       expect(localStorage.getItem('timelineVisible')).toBe('true');
     });
   });

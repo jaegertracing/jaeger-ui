@@ -126,7 +126,7 @@ describe('<TracePage>', () => {
       state: null,
     },
     setDetailPanelMode: jest.fn(),
-    setTimelineVisible: jest.fn(),
+    setTimelineBarsVisible: jest.fn(),
     timelineBarsVisible: true,
     trace: { data: trace, state: fetchedState.DONE },
   };
@@ -878,16 +878,16 @@ describe('<TracePage>', () => {
       expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('inline');
     });
 
-    it('calls setTimelineVisible with false when timelineBarsVisible is true', () => {
+    it('calls setTimelineBarsVisible with false when timelineBarsVisible is true', () => {
       const instance = new TracePage({ ...defaultProps, timelineBarsVisible: true });
       instance.onTimelineToggle();
-      expect(defaultProps.setTimelineVisible).toHaveBeenCalledWith(false);
+      expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(false);
     });
 
-    it('calls setTimelineVisible with true when timelineBarsVisible is false', () => {
+    it('calls setTimelineBarsVisible with true when timelineBarsVisible is false', () => {
       const instance = new TracePage({ ...defaultProps, timelineBarsVisible: false });
       instance.onTimelineToggle();
-      expect(defaultProps.setTimelineVisible).toHaveBeenCalledWith(true);
+      expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(true);
     });
   });
 
@@ -1139,7 +1139,7 @@ describe('mapDispatchToProps()', () => {
       fetchTrace: expect.any(Function),
       focusUiFindMatches: expect.any(Function),
       setDetailPanelMode: expect.any(Function),
-      setTimelineVisible: expect.any(Function),
+      setTimelineBarsVisible: expect.any(Function),
     });
   });
 });
