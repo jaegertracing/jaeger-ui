@@ -45,7 +45,6 @@ type TracePageHeaderEmbedProps = {
   prevResult: () => void;
   resultCount: number;
   showArchiveButton: boolean;
-  showShortcutsHelp: boolean;
   showStandaloneLink: boolean;
   disableJsonView: boolean;
   showViewOptions: boolean;
@@ -139,7 +138,6 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     prevResult,
     resultCount,
     showArchiveButton,
-    showShortcutsHelp,
     showStandaloneLink,
     showViewOptions,
     disableJsonView,
@@ -217,7 +215,6 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           enableSidePanel={enableSidePanel}
           onDetailPanelModeToggle={onDetailPanelModeToggle}
           onTimelineToggle={onTimelineToggle}
-          showShortcutsHelp={showShortcutsHelp}
           timelineVisible={timelineVisible}
         />
         {showViewOptions && (

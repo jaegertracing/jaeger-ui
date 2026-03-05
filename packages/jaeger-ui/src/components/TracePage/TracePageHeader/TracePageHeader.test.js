@@ -107,7 +107,6 @@ describe('<TracePageHeader>', () => {
     prevResult: jest.fn(),
     resultCount: 0,
     showArchiveButton: false,
-    showShortcutsHelp: false,
     showStandaloneLink: false,
     disableJsonView: false,
     showViewOptions: false,
@@ -220,20 +219,6 @@ describe('<TracePageHeader>', () => {
 
     it('always renders <TraceViewSettings />', () => {
       expect(screen.getByTestId('trace-view-settings')).toBeInTheDocument();
-
-      wrapper.rerender(
-        <MemoryRouter>
-          <TracePageHeader {...defaultProps} showShortcutsHelp />
-        </MemoryRouter>
-      );
-      expect(screen.getByTestId('trace-view-settings')).toBeInTheDocument();
-
-      wrapper.rerender(
-        <MemoryRouter>
-          <TracePageHeader {...defaultProps} showShortcutsHelp={false} />
-        </MemoryRouter>
-      );
-      expect(screen.getByTestId('trace-view-settings')).toBeInTheDocument();
     });
 
     it('toggles <AltViewOptions />', () => {
@@ -303,7 +288,6 @@ describe('<TracePageHeader>', () => {
         prevResult: jest.fn(),
         resultCount: 0,
         showArchiveButton: false,
-        showShortcutsHelp: false,
         showStandaloneLink: false,
         disableJsonView: false,
         showViewOptions: false,

@@ -751,12 +751,11 @@ describe('<TracePage>', () => {
     });
 
     describe('isEmbedded derived props', () => {
-      it('sets showShortcutsHelp, showStandaloneLink, and showViewOptions correctly', () => {
+      it('sets showStandaloneLink and showViewOptions correctly', () => {
         const getEmbeddedState = embedded => {
           const isEmbedded = Boolean(embedded);
           return {
             isEmbedded,
-            showShortcutsHelp: !isEmbedded,
             showStandaloneLink: isEmbedded,
             showViewOptions: !isEmbedded,
           };
@@ -765,12 +764,10 @@ describe('<TracePage>', () => {
         const results = [getEmbeddedState(undefined), getEmbeddedState({ timeline: {} })];
 
         expect(results[0].isEmbedded).toBe(false);
-        expect(results[0].showShortcutsHelp).toBe(true);
         expect(results[0].showStandaloneLink).toBe(false);
         expect(results[0].showViewOptions).toBe(true);
 
         expect(results[1].isEmbedded).toBe(true);
-        expect(results[1].showShortcutsHelp).toBe(false);
         expect(results[1].showStandaloneLink).toBe(true);
         expect(results[1].showViewOptions).toBe(false);
       });

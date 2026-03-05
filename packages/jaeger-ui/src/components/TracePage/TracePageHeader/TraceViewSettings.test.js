@@ -16,7 +16,6 @@ const defaultProps = {
   enableSidePanel: false,
   onDetailPanelModeToggle: jest.fn(),
   onTimelineToggle: jest.fn(),
-  showShortcutsHelp: false,
   timelineVisible: true,
 };
 
@@ -65,21 +64,14 @@ describe('<TraceViewSettings>', () => {
     expect(defaultProps.onDetailPanelModeToggle).toHaveBeenCalledTimes(1);
   });
 
-  it('does not show "Keyboard Shortcuts" when showShortcutsHelp is false', async () => {
-    render(<TraceViewSettings {...defaultProps} showShortcutsHelp={false} />);
-    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await screen.findByText('Show Timeline');
-    expect(screen.queryByText('Keyboard Shortcuts')).not.toBeInTheDocument();
-  });
-
-  it('shows "Keyboard Shortcuts" when showShortcutsHelp is true', async () => {
-    render(<TraceViewSettings {...defaultProps} showShortcutsHelp />);
+  it('always shows "Keyboard Shortcuts" in the dropdown', async () => {
+    render(<TraceViewSettings {...defaultProps} />);
     await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
     expect(await screen.findByText('Keyboard Shortcuts')).toBeInTheDocument();
   });
 
   it('opens the keyboard shortcuts modal and calls track() when "Keyboard Shortcuts" is clicked', async () => {
-    render(<TraceViewSettings {...defaultProps} showShortcutsHelp />);
+    render(<TraceViewSettings {...defaultProps} />);
     await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
     await userEvent.click(await screen.findByText('Keyboard Shortcuts'));
     expect(track).toHaveBeenCalledTimes(1);
@@ -87,13 +79,13 @@ describe('<TraceViewSettings>', () => {
   });
 
   it('returns the cached kbdTable on a second call to getHelpModal', async () => {
-    const { unmount } = render(<TraceViewSettings {...defaultProps} showShortcutsHelp />);
+    const { unmount } = render(<TraceViewSettings {...defaultProps} />);
     await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
     await userEvent.click(await screen.findByText('Keyboard Shortcuts'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     unmount();
 
-    render(<TraceViewSettings {...defaultProps} showShortcutsHelp />);
+    render(<TraceViewSettings {...defaultProps} />);
     await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
     await userEvent.click(await screen.findByText('Keyboard Shortcuts'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();

@@ -42,7 +42,7 @@ const getRowClass = (_: DataRecord, index: number) => (index % 2 > 0 ? ODD_ROW_C
 
 let kbdTable: React.ReactNode | null = null;
 
-function getHelpModal() {
+export function getHelpModal() {
   if (kbdTable) {
     return kbdTable;
   }

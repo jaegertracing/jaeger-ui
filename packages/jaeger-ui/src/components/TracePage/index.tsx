@@ -396,7 +396,6 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       resultCount: findCount,
       disableJsonView,
       showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
-      showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
       timelineVisible,
