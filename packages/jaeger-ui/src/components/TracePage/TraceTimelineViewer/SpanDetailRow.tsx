@@ -58,23 +58,23 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     eventItemToggle,
     useOtelTerms,
   } = props;
-  const effectiveColumnDivision = timelineBarsVisible ? columnDivision : 0;
-
   return (
     <TimelineRow className="detail-row">
-      <TimelineRow.Cell width={effectiveColumnDivision}>
-        <SpanTreeOffset span={span} showChildrenIcon={false} color={color} />
-        <span>
-          <span
-            className="detail-row-expanded-accent"
-            aria-checked="true"
-            onClick={_detailToggle}
-            role="switch"
-            style={{ borderColor: color }}
-          />
-        </span>
-      </TimelineRow.Cell>
-      <TimelineRow.Cell width={1 - effectiveColumnDivision}>
+      {timelineBarsVisible && (
+        <TimelineRow.Cell width={columnDivision}>
+          <SpanTreeOffset span={span} showChildrenIcon={false} color={color} />
+          <span>
+            <span
+              className="detail-row-expanded-accent"
+              aria-checked="true"
+              onClick={_detailToggle}
+              role="switch"
+              style={{ borderColor: color }}
+            />
+          </span>
+        </TimelineRow.Cell>
+      )}
+      <TimelineRow.Cell width={timelineBarsVisible ? 1 - columnDivision : 1}>
         <div className="detail-info-wrapper" style={{ borderTopColor: color }}>
           <SpanDetail
             detailState={detailState}
