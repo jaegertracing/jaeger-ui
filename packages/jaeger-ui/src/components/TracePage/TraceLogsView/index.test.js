@@ -184,7 +184,7 @@ describe('<TraceLogsView>', () => {
     render(<TraceLogsView trace={trace} useOtelTerms={false} />);
 
     expect(screen.getByText('Timestamp')).toBeInTheDocument();
-    expect(screen.getByText('Service Name')).toBeInTheDocument();
+    expect(screen.getByText('Service')).toBeInTheDocument();
     expect(screen.getByText('Operation')).toBeInTheDocument();
     expect(screen.getByText('Log')).toBeInTheDocument();
     expect(screen.getByText('Span ID')).toBeInTheDocument();
