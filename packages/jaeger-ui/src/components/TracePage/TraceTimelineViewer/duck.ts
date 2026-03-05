@@ -55,14 +55,20 @@ export function newInitialState(): TTraceTimeline {
   const storedTimelineVisible = localStorage.getItem('timelineVisible');
   const timelineVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
 
+  const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
+  const sidePanelWidth = Number.isNaN(parsedSidePanelWidth) ? 0.45 : parsedSidePanelWidth;
+
+  const parsedSpanNameColumnWidth = parseFloat(localStorage.getItem('spanNameColumnWidth') ?? '');
+  const spanNameColumnWidth = Number.isNaN(parsedSpanNameColumnWidth) ? 0.25 : parsedSpanNameColumnWidth;
+
   return {
     childrenHiddenIDs: new Set(),
     detailStates: new Map(),
     detailPanelMode,
     hoverIndentGuideIds: new Set(),
     shouldScrollToFirstUiFindMatch: false,
-    sidePanelWidth: parseFloat(localStorage.getItem('sidePanelWidth') ?? '') || 0.45,
-    spanNameColumnWidth: parseFloat(localStorage.getItem('spanNameColumnWidth') || '0.25'),
+    sidePanelWidth,
+    spanNameColumnWidth,
     timelineVisible,
     traceID: null,
   };

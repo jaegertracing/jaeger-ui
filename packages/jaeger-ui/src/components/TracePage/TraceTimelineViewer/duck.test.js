@@ -21,7 +21,12 @@ describe('TraceTimelineViewer/duck', () => {
   let store;
 
   beforeEach(() => {
+    localStorage.clear();
     store = createStore(reducer, newInitialState());
+  });
+
+  afterEach(() => {
+    localStorage.clear();
   });
 
   it('the initial state has no details, collapsed children or text search', () => {
@@ -516,6 +521,54 @@ describe('TraceTimelineViewer/duck', () => {
       expect(localStorage.getItem('timelineVisible')).toBe('false');
       store.dispatch(actions.setTimelineVisible(true));
       expect(localStorage.getItem('timelineVisible')).toBe('true');
+    });
+  });
+
+  describe('setSidePanelWidth', () => {
+    it('sets the side panel width', () => {
+      store.dispatch(actions.setSidePanelWidth(0.3));
+      expect(store.getState().sidePanelWidth).toBe(0.3);
+    });
+
+    it('persists width to localStorage', () => {
+      store.dispatch(actions.setSidePanelWidth(0.3));
+      expect(localStorage.getItem('sidePanelWidth')).toBe('0.3');
+    });
+  });
+
+  describe('newInitialState localStorage parsing', () => {
+    it('restores sidePanelWidth from localStorage', () => {
+      localStorage.setItem('sidePanelWidth', '0.3');
+      const state = newInitialState();
+      expect(state.sidePanelWidth).toBe(0.3);
+    });
+
+    it('uses default sidePanelWidth of 0.45 when localStorage is empty', () => {
+      const state = newInitialState();
+      expect(state.sidePanelWidth).toBe(0.45);
+    });
+
+    it('uses default sidePanelWidth of 0.45 when stored value is invalid', () => {
+      localStorage.setItem('sidePanelWidth', 'not-a-number');
+      const state = newInitialState();
+      expect(state.sidePanelWidth).toBe(0.45);
+    });
+
+    it('correctly restores a stored sidePanelWidth of 0', () => {
+      localStorage.setItem('sidePanelWidth', '0');
+      const state = newInitialState();
+      expect(state.sidePanelWidth).toBe(0);
+    });
+
+    it('correctly restores a stored spanNameColumnWidth of 0', () => {
+      localStorage.setItem('spanNameColumnWidth', '0');
+      const state = newInitialState();
+      expect(state.spanNameColumnWidth).toBe(0);
+    });
+
+    it('uses default spanNameColumnWidth of 0.25 when localStorage is empty', () => {
+      const state = newInitialState();
+      expect(state.spanNameColumnWidth).toBe(0.25);
     });
   });
 
