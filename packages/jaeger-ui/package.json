@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "jaeger-ui",
+  "name": "@jaegertracing/jaeger-ui",
   "version": "2.15.0",
   "main": "src/index.tsx",
   "license": "Apache-2.0",
