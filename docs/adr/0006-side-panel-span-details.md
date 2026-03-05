@@ -100,7 +100,7 @@ When `enableSidePanel` is true:
 - The side panel toggle appears in the settings menu
 - Users can switch between inline and side panel modes at runtime
 
-The `detailPanelMode` preference is always persisted to and restored from localStorage, regardless of the `enableSidePanel` flag. The `defaultDetailPanelMode` config option is reserved for future use; it is not yet wired into initialization logic.
+The `detailPanelMode` preference is persisted to localStorage and restored on the next load, but only when `enableSidePanel` is true. When disabled, `detailPanelMode` always initializes to `'inline'` regardless of any stored preference. When enabled and no stored preference exists, `defaultDetailPanelMode` from config is used as the fallback.
 
 The config flows through the existing pattern: `useConfig()` hook in `TracePage` → prop to `TraceTimelineViewer` → prop to `TimelineHeaderRow` and `VirtualizedTraceView`.
 
@@ -231,7 +231,7 @@ Wire up config options, state plumbing, and UI toggle icons with no rendering ch
 - `types/config.ts` -- add `traceTimeline?: { enableSidePanel?: boolean; defaultDetailPanelMode?: 'inline' | 'sidepanel' }` to `Config` type
 - `constants/default-config.ts` -- add `traceTimeline: { enableSidePanel: false, defaultDetailPanelMode: 'inline' }` defaults
 - `types/TTraceTimeline.ts` -- add `detailPanelMode`, `timelineVisible`, `sidePanelWidth`
-- `TraceTimelineViewer/duck.ts` -- new actions (`SET_DETAIL_PANEL_MODE`, `SET_TIMELINE_VISIBLE`, `SET_SIDE_PANEL_WIDTH`), reducers, localStorage persistence; modify `DETAIL_TOGGLE` reducer to enforce single-entry constraint on `detailStates` when in sidepanel mode; `newInitialState()` restores layout preferences from localStorage
+- `TraceTimelineViewer/duck.ts` -- new actions (`SET_DETAIL_PANEL_MODE`, `SET_TIMELINE_VISIBLE`, `SET_SIDE_PANEL_WIDTH`), reducers, localStorage persistence; modify `DETAIL_TOGGLE` reducer to enforce single-entry constraint on `detailStates` when in sidepanel mode; `newInitialState()` reads config via `getConfig()` to gate `detailPanelMode` restoration: ignored when `enableSidePanel` is false, falls back to `defaultDetailPanelMode` when enabled and no stored preference exists
 - `TracePageHeader/TraceViewSettings.tsx` (new) -- settings gear dropdown replacing `KeyboardShortcutsHelp` button; contains "Show Timeline" toggle, "Show Span in Sidebar" toggle (gated by `enableSidePanel`), and "Keyboard Shortcuts" menu item
 - `TracePageHeader/TracePageHeader.tsx` -- replace `<KeyboardShortcutsHelp>` with `<TraceViewSettings>`; wire new props
 - `TraceTimelineViewer/index.tsx` -- wire new Redux state/dispatch

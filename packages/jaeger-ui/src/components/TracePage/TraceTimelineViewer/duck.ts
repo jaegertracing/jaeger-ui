@@ -9,6 +9,7 @@ import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 import filterSpans from '../../../utils/filter-spans';
 import generateActionTypes from '../../../utils/generate-action-types';
+import getConfig from '../../../utils/config/get-config';
 import guardReducer from '../../../utils/guardReducer';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
@@ -40,9 +41,16 @@ function shouldDisableCollapse(allSpans: IOtelSpan[], hiddenSpansIds: Set<string
 }
 
 export function newInitialState(): TTraceTimeline {
-  const storedDetailPanelMode = localStorage.getItem('detailPanelMode');
-  const detailPanelMode: 'inline' | 'sidepanel' =
-    storedDetailPanelMode === 'sidepanel' ? 'sidepanel' : 'inline';
+  const { traceTimeline } = getConfig();
+  let detailPanelMode: 'inline' | 'sidepanel' = 'inline';
+  if (traceTimeline?.enableSidePanel) {
+    const stored = localStorage.getItem('detailPanelMode');
+    if (stored === 'sidepanel') {
+      detailPanelMode = 'sidepanel';
+    } else if (traceTimeline.defaultDetailPanelMode === 'sidepanel' && stored === null) {
+      detailPanelMode = 'sidepanel';
+    }
+  }
 
   const storedTimelineVisible = localStorage.getItem('timelineVisible');
   const timelineVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
