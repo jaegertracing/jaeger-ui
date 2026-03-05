@@ -1,12 +1,13 @@
 // Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useMemo } from 'react';
-import { Table, Tooltip } from 'antd';
+import React, { useMemo, useState } from 'react';
+import { Table } from 'antd';
 import { ColumnProps } from 'antd/es/table';
 import _sortBy from 'lodash/sortBy';
 import './index.css';
 
+import AccordionAttributes from '../TraceTimelineViewer/SpanDetail/AccordionAttributes';
 import { IOtelTrace, IOtelSpan, IEvent, IAttribute } from '../../../types/otel';
 import { Microseconds } from '../../../types/units';
 import { formatDuration } from '../../../utils/date';
@@ -54,6 +55,19 @@ function collectLogEntries(trace: IOtelTrace): TraceLogEntry[] {
 
 export default function TraceLogsView({ trace, useOtelTerms }: Props) {
   const logEntries = useMemo(() => collectLogEntries(trace), [trace]);
+  const [openAttributes, setOpenAttributes] = useState<Set<string>>(new Set());
+
+  const toggleAttributes = (key: string) => {
+    setOpenAttributes(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   if (logEntries.length === 0) {
     return (
@@ -66,57 +80,54 @@ export default function TraceLogsView({ trace, useOtelTerms }: Props) {
     );
   }
 
+  const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
+
   const columns: ColumnProps<TraceLogEntry>[] = [
     {
       title: 'Timestamp',
       dataIndex: 'relativeTime',
       sorter: (a: TraceLogEntry, b: TraceLogEntry) => a.relativeTime - b.relativeTime,
       defaultSortOrder: 'ascend' as const,
-      render: (relativeTime: Microseconds) => {
-        return (
-          <Tooltip title={formatDuration(relativeTime)}>
-            <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{formatDuration(relativeTime)}</span>
-          </Tooltip>
-        );
-      },
-      width: '12%',
+      render: (relativeTime: Microseconds) => (
+        <span className="TraceLogsView--mono">{formatDuration(relativeTime)}</span>
+      ),
+      width: 90,
     },
     {
       title: 'Service Name',
       dataIndex: 'serviceName',
       sorter: (a: TraceLogEntry, b: TraceLogEntry) => a.serviceName.localeCompare(b.serviceName),
-      width: '15%',
+      width: 120,
     },
     {
       title: useOtelTerms ? 'Span Name' : 'Operation',
       dataIndex: 'spanName',
       sorter: (a: TraceLogEntry, b: TraceLogEntry) => a.spanName.localeCompare(b.spanName),
-      width: '15%',
+      width: 140,
     },
     {
       title: useOtelTerms ? 'Event' : 'Log',
       dataIndex: 'eventName',
       sorter: (a: TraceLogEntry, b: TraceLogEntry) => a.eventName.localeCompare(b.eventName),
-      width: '12%',
+      width: 120,
     },
     {
-      title: 'Attributes',
+      title: attributesLabel,
       dataIndex: 'attributes',
-      render: (attributes: IAttribute[]) => {
+      render: (attributes: IAttribute[], record: TraceLogEntry) => {
         if (!attributes || attributes.length === 0) {
-          return <span>—</span>;
+          return <span className="TraceLogsView--no-attrs">—</span>;
         }
         return (
-          <div className="event-attributes">
-            {attributes.map((attr: IAttribute) => (
-              <span key={attr.key} className="attribute-tag">
-                {attr.key}={String(attr.value)}
-              </span>
-            ))}
-          </div>
+          <AccordionAttributes
+            data={attributes}
+            label={attributesLabel}
+            linksGetter={null}
+            isOpen={openAttributes.has(record.key)}
+            onToggle={() => toggleAttributes(record.key)}
+          />
         );
       },
-      width: '31%',
     },
     {
       title: 'Span ID',
@@ -126,12 +137,12 @@ export default function TraceLogsView({ trace, useOtelTerms }: Props) {
           href={prefixUrl(`/trace/${record.traceID}?uiFind=${spanID}`)}
           target={getTargetEmptyOrBlank()}
           rel="noopener noreferrer"
-          className="span-id-cell"
+          className="TraceLogsView--mono"
         >
           {spanID}
         </a>
       ),
-      width: '15%',
+      width: 130,
     },
   ];
 

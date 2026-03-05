@@ -15,24 +15,13 @@
   font-size: 13px;
 }
 
-.TraceLogsView .event-attributes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.TraceLogsView .event-attributes .attribute-tag {
-  background: var(--surface-tertiary, #f5f5f5);
-  border-radius: 3px;
-  padding: 1px 6px;
+.TraceLogsView--mono {
   font-family: monospace;
   font-size: 12px;
-  white-space: nowrap;
 }
 
-.TraceLogsView .span-id-cell {
-  font-family: monospace;
-  font-size: 12px;
+.TraceLogsView--no-attrs {
+  color: var(--text-secondary, #999);
 }
 
 .TraceLogsView--empty {

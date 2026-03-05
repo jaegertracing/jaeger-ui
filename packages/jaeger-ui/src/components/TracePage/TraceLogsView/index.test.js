@@ -106,10 +106,10 @@ describe('<TraceLogsView>', () => {
     expect(screen.getByTestId('trace-logs-view')).toBeInTheDocument();
     expect(screen.getByText('Trace Logs')).toBeInTheDocument();
 
-    // Should show all 3 log entries from 2 spans
-    expect(screen.getByText('request_started')).toBeInTheDocument();
-    expect(screen.getByText('request_finished')).toBeInTheDocument();
-    expect(screen.getByText('db_query')).toBeInTheDocument();
+    // Should show all 3 log entries from 2 spans (event names appear in both Log column and Attributes summary)
+    expect(screen.getAllByText('request_started').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('request_finished').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('db_query').length).toBeGreaterThan(0);
   });
 
   it('shows empty message when trace has no logs', () => {
@@ -127,6 +127,8 @@ describe('<TraceLogsView>', () => {
     expect(screen.getByText('Trace Events')).toBeInTheDocument();
     expect(screen.getByText('Event')).toBeInTheDocument();
     expect(screen.getByText('Span Name')).toBeInTheDocument();
+    // OTel uses 'Attributes'
+    expect(screen.getAllByText('Attributes').length).toBeGreaterThan(0);
   });
 
   it('uses legacy terminology when useOtelTerms is false', () => {
@@ -136,6 +138,8 @@ describe('<TraceLogsView>', () => {
     expect(screen.getByText('Trace Logs')).toBeInTheDocument();
     expect(screen.getByText('Log')).toBeInTheDocument();
     expect(screen.getByText('Operation')).toBeInTheDocument();
+    // Legacy uses 'Tags'
+    expect(screen.getAllByText('Tags').length).toBeGreaterThan(0);
   });
 
   it('shows empty OTel message when useOtelTerms is true and no events', () => {
@@ -156,12 +160,13 @@ describe('<TraceLogsView>', () => {
     expect(screen.getAllByText('backend').length).toBeGreaterThan(0);
   });
 
-  it('renders event attributes as tags', () => {
+  it('renders attributes using AccordionAttributes (collapsed summary)', () => {
     const trace = transformTraceData(baseTrace).asOtelTrace();
     render(<TraceLogsView trace={trace} useOtelTerms={false} />);
 
-    // db_query event has attribute query=SELECT *
-    expect(screen.getByText('query=SELECT *')).toBeInTheDocument();
+    // AccordionAttributes renders a collapsed summary showing key=value pairs
+    // The attribute keys from the log entries should appear in the summary
+    expect(screen.getAllByText('level').length).toBeGreaterThan(0);
   });
 
   it('renders span IDs as links', () => {
@@ -182,7 +187,6 @@ describe('<TraceLogsView>', () => {
     expect(screen.getByText('Service Name')).toBeInTheDocument();
     expect(screen.getByText('Operation')).toBeInTheDocument();
     expect(screen.getByText('Log')).toBeInTheDocument();
-    expect(screen.getByText('Attributes')).toBeInTheDocument();
     expect(screen.getByText('Span ID')).toBeInTheDocument();
   });
 });
