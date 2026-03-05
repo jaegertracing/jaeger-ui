@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Button, Dropdown, Modal } from 'antd';
+import { Button, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { IoSettingsOutline, IoCheckmark } from 'react-icons/io5';
 
-import { getHelpModal } from './KeyboardShortcutsHelp';
-import track from './KeyboardShortcutsHelp.track';
+import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 
-import './KeyboardShortcutsHelp.css';
 import './TraceViewSettings.css';
 
 type Props = {
@@ -61,10 +59,7 @@ export default function TraceViewSettings(props: Props) {
       key: 'keyboard-shortcuts',
       icon: CHECK_PLACEHOLDER,
       label: 'Keyboard Shortcuts',
-      onClick: () => {
-        track();
-        setKbdModalVisible(true);
-      },
+      onClick: () => setKbdModalVisible(true),
     }
   );
 
@@ -80,16 +75,7 @@ export default function TraceViewSettings(props: Props) {
           <IoSettingsOutline className="TraceViewSettings--icon" />
         </Button>
       </Dropdown>
-      <Modal
-        title="Keyboard Shortcuts"
-        open={kbdModalVisible}
-        onOk={() => setKbdModalVisible(false)}
-        onCancel={() => setKbdModalVisible(false)}
-        cancelButtonProps={{ style: { display: 'none' } }}
-        styles={{ body: { padding: 0 } }}
-      >
-        {getHelpModal()}
-      </Modal>
+      <KeyboardShortcutsHelp open={kbdModalVisible} onClose={() => setKbdModalVisible(false)} />
     </>
   );
 }

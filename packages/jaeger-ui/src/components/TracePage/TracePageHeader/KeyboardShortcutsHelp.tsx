@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Button, Modal, Table } from 'antd';
+import { Modal, Table } from 'antd';
 
 import keyboardMappings from '../keyboard-mappings';
 import track from './KeyboardShortcutsHelp.track';
@@ -10,7 +10,8 @@ import track from './KeyboardShortcutsHelp.track';
 import './KeyboardShortcutsHelp.css';
 
 type Props = {
-  className: string;
+  open: boolean;
+  onClose: () => void;
 };
 
 type DataRecord = {
@@ -42,7 +43,7 @@ const getRowClass = (_: DataRecord, index: number) => (index % 2 > 0 ? ODD_ROW_C
 
 let kbdTable: React.ReactNode | null = null;
 
-export function getHelpModal() {
+function getHelpModal() {
   if (kbdTable) {
     return kbdTable;
   }
@@ -75,35 +76,27 @@ export function getHelpModal() {
   return kbdTable;
 }
 
-export default function KeyboardShortcutsHelp({ className }: Props) {
-  const [visible, setVisible] = React.useState(false);
-
-  const onCtaClicked = () => {
-    track();
-    setVisible(true);
-  };
-
-  const onCloserClicked = () => setVisible(false);
+export default function KeyboardShortcutsHelp({ open, onClose }: Props) {
+  React.useEffect(() => {
+    if (open) {
+      track();
+    }
+  }, [open]);
 
   return (
-    <React.Fragment>
-      <Button className={className} htmlType="button" onClick={onCtaClicked}>
-        <span className="KeyboardShortcutsHelp--cta">⌘</span>
-      </Button>
-      <Modal
-        title="Keyboard Shortcuts"
-        open={visible}
-        onOk={onCloserClicked}
-        onCancel={onCloserClicked}
-        cancelButtonProps={{ style: { display: 'none' } }}
-        styles={{
-          body: {
-            padding: 0,
-          },
-        }}
-      >
-        {getHelpModal()}
-      </Modal>
-    </React.Fragment>
+    <Modal
+      title="Keyboard Shortcuts"
+      open={open}
+      onOk={onClose}
+      onCancel={onClose}
+      cancelButtonProps={{ style: { display: 'none' } }}
+      styles={{
+        body: {
+          padding: 0,
+        },
+      }}
+    >
+      {getHelpModal()}
+    </Modal>
   );
 }
