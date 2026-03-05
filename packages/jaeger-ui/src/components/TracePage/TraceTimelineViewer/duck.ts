@@ -53,7 +53,7 @@ export function newInitialState(): TTraceTimeline {
     detailPanelMode,
     hoverIndentGuideIds: new Set(),
     shouldScrollToFirstUiFindMatch: false,
-    sidePanelWidth: parseFloat(localStorage.getItem('sidePanelWidth') || '0.45'),
+    sidePanelWidth: parseFloat(localStorage.getItem('sidePanelWidth') ?? '') || 0.45,
     spanNameColumnWidth: parseFloat(localStorage.getItem('spanNameColumnWidth') || '0.25'),
     timelineVisible,
     traceID: null,

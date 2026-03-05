@@ -3,11 +3,13 @@
 
 import * as React from 'react';
 import { Button, Dropdown, Modal, Table } from 'antd';
+import type { MenuProps } from 'antd';
 import { IoSettingsOutline, IoCheckmark } from 'react-icons/io5';
 
 import keyboardMappings from '../keyboard-mappings';
 import track from './KeyboardShortcutsHelp.track';
 
+import './KeyboardShortcutsHelp.css';
 import './TraceViewSettings.css';
 
 type Props = {
@@ -98,15 +100,12 @@ export default function TraceViewSettings(props: Props) {
 
   const [kbdModalVisible, setKbdModalVisible] = React.useState(false);
 
-  const items: any[] = [
+  const items: MenuProps['items'] = [
     {
-      key: 'timeline-bars',
-      label: (
-        <a onClick={onTimelineToggle} role="switch" aria-checked={timelineVisible}>
-          {timelineVisible ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER}
-          Show Timeline
-        </a>
-      ),
+      key: 'timeline',
+      icon: timelineVisible ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
+      label: 'Show Timeline',
+      onClick: onTimelineToggle,
     },
   ];
 
@@ -114,31 +113,23 @@ export default function TraceViewSettings(props: Props) {
     const isSidePanel = detailPanelMode === 'sidepanel';
     items.push({
       key: 'detail-panel-mode',
-      label: (
-        <a onClick={onDetailPanelModeToggle} role="switch" aria-checked={isSidePanel}>
-          {isSidePanel ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER}
-          Show Details in Panel
-        </a>
-      ),
+      icon: isSidePanel ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
+      label: 'Show Details in Panel',
+      onClick: onDetailPanelModeToggle,
     });
   }
 
   if (showShortcutsHelp) {
     items.push(
-      { type: 'divider' as const },
+      { type: 'divider' },
       {
         key: 'keyboard-shortcuts',
-        label: (
-          <a
-            onClick={() => {
-              track();
-              setKbdModalVisible(true);
-            }}
-          >
-            {CHECK_PLACEHOLDER}
-            Keyboard Shortcuts
-          </a>
-        ),
+        icon: CHECK_PLACEHOLDER,
+        label: 'Keyboard Shortcuts',
+        onClick: () => {
+          track();
+          setKbdModalVisible(true);
+        },
       }
     );
   }
@@ -146,7 +137,12 @@ export default function TraceViewSettings(props: Props) {
   return (
     <>
       <Dropdown menu={{ items }} trigger={['click']}>
-        <Button className={`TraceViewSettings ${className || ''}`} htmlType="button">
+        <Button
+          className={`TraceViewSettings ${className || ''}`}
+          htmlType="button"
+          aria-label="Trace view settings"
+          title="Trace view settings"
+        >
           <IoSettingsOutline className="TraceViewSettings--icon" />
         </Button>
       </Dropdown>

@@ -139,7 +139,7 @@ describe('TraceTimelineViewer/duck', () => {
       expect(store.getState()).toBe(state);
     });
 
-    it('retains only the spanNameColumnWidth when changing traceIDs', () => {
+    it('retains layout preferences (spanNameColumnWidth, detailPanelMode, timelineVisible, sidePanelWidth) when changing traceIDs', () => {
       let action;
       const width = 0.5;
       const id = 'some-id';
@@ -435,6 +435,88 @@ describe('TraceTimelineViewer/duck', () => {
     store.dispatch(actions.detailLogItemToggle(id, logItem));
     expect(store.getState().detailStates.get(id)).toEqual(toggledDetail);
     expect(store.getState().detailStates.get(secondID)).toBe(secondDetail);
+  });
+
+  describe('detailToggle in sidepanel mode', () => {
+    const spanA = trace.spans[0].spanID;
+    const spanB = trace.spans[1].spanID;
+
+    beforeEach(() => {
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+    });
+
+    it('opens detail for a span', () => {
+      store.dispatch(actions.detailToggle(spanA));
+      expect(store.getState().detailStates.size).toBe(1);
+      expect(store.getState().detailStates.has(spanA)).toBe(true);
+    });
+
+    it('closes detail when the same span is toggled again', () => {
+      store.dispatch(actions.detailToggle(spanA));
+      store.dispatch(actions.detailToggle(spanA));
+      expect(store.getState().detailStates.size).toBe(0);
+    });
+
+    it('replaces detail with a different span, keeping at most one entry', () => {
+      store.dispatch(actions.detailToggle(spanA));
+      store.dispatch(actions.detailToggle(spanB));
+      expect(store.getState().detailStates.size).toBe(1);
+      expect(store.getState().detailStates.has(spanB)).toBe(true);
+      expect(store.getState().detailStates.has(spanA)).toBe(false);
+    });
+  });
+
+  describe('setDetailPanelMode', () => {
+    const spanA = trace.spans[0].spanID;
+    const spanB = trace.spans[1].spanID;
+    const spanC = trace.spans[2].spanID;
+
+    it('switches to sidepanel mode', () => {
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+      expect(store.getState().detailPanelMode).toBe('sidepanel');
+    });
+
+    it('switches back to inline mode', () => {
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+      store.dispatch(actions.setDetailPanelMode('inline'));
+      expect(store.getState().detailPanelMode).toBe('inline');
+    });
+
+    it('truncates detailStates to at most one entry when switching to sidepanel', () => {
+      store.dispatch(actions.detailToggle(spanA));
+      store.dispatch(actions.detailToggle(spanB));
+      store.dispatch(actions.detailToggle(spanC));
+      expect(store.getState().detailStates.size).toBe(3);
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+      expect(store.getState().detailStates.size).toBe(1);
+    });
+
+    it('persists mode to localStorage', () => {
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+      expect(localStorage.getItem('detailPanelMode')).toBe('sidepanel');
+      store.dispatch(actions.setDetailPanelMode('inline'));
+      expect(localStorage.getItem('detailPanelMode')).toBe('inline');
+    });
+  });
+
+  describe('setTimelineVisible', () => {
+    it('hides the timeline', () => {
+      store.dispatch(actions.setTimelineVisible(false));
+      expect(store.getState().timelineVisible).toBe(false);
+    });
+
+    it('shows the timeline', () => {
+      store.dispatch(actions.setTimelineVisible(false));
+      store.dispatch(actions.setTimelineVisible(true));
+      expect(store.getState().timelineVisible).toBe(true);
+    });
+
+    it('persists visibility to localStorage', () => {
+      store.dispatch(actions.setTimelineVisible(false));
+      expect(localStorage.getItem('timelineVisible')).toBe('false');
+      store.dispatch(actions.setTimelineVisible(true));
+      expect(localStorage.getItem('timelineVisible')).toBe('true');
+    });
   });
 
   describe('hoverIndentGuideIds', () => {

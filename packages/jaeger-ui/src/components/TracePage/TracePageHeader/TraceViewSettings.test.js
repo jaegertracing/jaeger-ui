@@ -1,0 +1,89 @@
+// Copyright (c) 2026 The Jaeger Authors.
+// SPDX-License-Identifier: Apache-2.0
+
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
+
+import TraceViewSettings from './TraceViewSettings';
+import track from './KeyboardShortcutsHelp.track';
+
+jest.mock('./KeyboardShortcutsHelp.track', () => jest.fn());
+jest.mock('../keyboard-mappings', () => ({}));
+
+const defaultProps = {
+  detailPanelMode: 'inline',
+  enableSidePanel: false,
+  onDetailPanelModeToggle: jest.fn(),
+  onTimelineToggle: jest.fn(),
+  showShortcutsHelp: false,
+  timelineVisible: true,
+};
+
+describe('<TraceViewSettings>', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('renders the settings gear button with accessible label', () => {
+    render(<TraceViewSettings {...defaultProps} />);
+    const button = screen.getByRole('button', { name: /trace view settings/i });
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveAttribute('title', 'Trace view settings');
+  });
+
+  it('opens dropdown on click and shows "Show Timeline" item', async () => {
+    render(<TraceViewSettings {...defaultProps} />);
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    expect(await screen.findByText('Show Timeline')).toBeInTheDocument();
+  });
+
+  it('calls onTimelineToggle when "Show Timeline" is clicked', async () => {
+    render(<TraceViewSettings {...defaultProps} />);
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    await userEvent.click(await screen.findByText('Show Timeline'));
+    expect(defaultProps.onTimelineToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not show "Show Details in Panel" when enableSidePanel is false', async () => {
+    render(<TraceViewSettings {...defaultProps} enableSidePanel={false} />);
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    await screen.findByText('Show Timeline');
+    expect(screen.queryByText('Show Details in Panel')).not.toBeInTheDocument();
+  });
+
+  it('shows "Show Details in Panel" when enableSidePanel is true', async () => {
+    render(<TraceViewSettings {...defaultProps} enableSidePanel />);
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    expect(await screen.findByText('Show Details in Panel')).toBeInTheDocument();
+  });
+
+  it('calls onDetailPanelModeToggle when "Show Details in Panel" is clicked', async () => {
+    render(<TraceViewSettings {...defaultProps} enableSidePanel />);
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    await userEvent.click(await screen.findByText('Show Details in Panel'));
+    expect(defaultProps.onDetailPanelModeToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not show "Keyboard Shortcuts" when showShortcutsHelp is false', async () => {
+    render(<TraceViewSettings {...defaultProps} showShortcutsHelp={false} />);
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    await screen.findByText('Show Timeline');
+    expect(screen.queryByText('Keyboard Shortcuts')).not.toBeInTheDocument();
+  });
+
+  it('shows "Keyboard Shortcuts" when showShortcutsHelp is true', async () => {
+    render(<TraceViewSettings {...defaultProps} showShortcutsHelp />);
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    expect(await screen.findByText('Keyboard Shortcuts')).toBeInTheDocument();
+  });
+
+  it('opens the keyboard shortcuts modal and calls track() when "Keyboard Shortcuts" is clicked', async () => {
+    render(<TraceViewSettings {...defaultProps} showShortcutsHelp />);
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    await userEvent.click(await screen.findByText('Keyboard Shortcuts'));
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+});

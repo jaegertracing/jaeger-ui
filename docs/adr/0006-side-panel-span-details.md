@@ -93,14 +93,14 @@ traceTimeline: {
 The tree-only mode toggle (hide timeline bars) does not require a feature flag since it is a simpler, lower-risk enhancement that does not change the detail viewing paradigm.
 
 When `enableSidePanel` is false:
-- The side panel toggle icon is not rendered in the `TimelineHeaderRow`
-- The Redux initial state always uses `detailPanelMode: 'inline'`
-- Any `detailPanelMode` value in localStorage is ignored
+- The side panel toggle is not shown in the settings menu
+- Only inline detail mode is available
 
 When `enableSidePanel` is true:
-- The side panel toggle icon appears in the `TimelineHeaderRow`
-- The Redux initial state reads `detailPanelMode` from localStorage, falling back to `defaultDetailPanelMode` from config
+- The side panel toggle appears in the settings menu
 - Users can switch between inline and side panel modes at runtime
+
+The `detailPanelMode` preference is always persisted to and restored from localStorage, regardless of the `enableSidePanel` flag. The `defaultDetailPanelMode` config option is reserved for future use; it is not yet wired into initialization logic.
 
 The config flows through the existing pattern: `useConfig()` hook in `TracePage` → prop to `TraceTimelineViewer` → prop to `TimelineHeaderRow` and `VirtualizedTraceView`.
 
@@ -119,7 +119,7 @@ The `[⌘]` button (`KeyboardShortcutsHelp` component) is replaced with a **Sett
 ```
 ┌──────────────────────────┐
 │ ✓ Show Timeline          │   ← toggles timelineVisible
-│   Show Span in Sidebar   │   ← toggles detailPanelMode (only when enableSidePanel config is true)
+│   Show Details in Panel  │   ← toggles detailPanelMode (only when enableSidePanel config is true)
 │ ───────────────────────  │
 │   Keyboard Shortcuts     │   ← opens the existing KeyboardShortcutsHelp modal
 └──────────────────────────┘
@@ -128,7 +128,7 @@ The `[⌘]` button (`KeyboardShortcutsHelp` component) is replaced with a **Sett
 **Menu item details:**
 
 1. **"Show Timeline"** -- checkmark when `timelineVisible === true`. Clicking toggles the value. Always present.
-2. **"Show Span in Sidebar"** -- checkmark when `detailPanelMode === 'sidepanel'`. Clicking toggles between `'inline'` and `'sidepanel'`. Only rendered when `enableSidePanel` config is true.
+2. **"Show Details in Panel"** -- checkmark when `detailPanelMode === 'sidepanel'`. Clicking toggles between `'inline'` and `'sidepanel'`. Only rendered when `enableSidePanel` config is true.
 3. **Divider** -- antd menu divider separating layout settings from other items.
 4. **"Keyboard Shortcuts"** -- clicking opens the existing `KeyboardShortcutsHelp` modal (reuse the `getHelpModal()` function and modal state). No checkmark.
 
@@ -231,7 +231,7 @@ Wire up config options, state plumbing, and UI toggle icons with no rendering ch
 - `types/config.ts` -- add `traceTimeline?: { enableSidePanel?: boolean; defaultDetailPanelMode?: 'inline' | 'sidepanel' }` to `Config` type
 - `constants/default-config.ts` -- add `traceTimeline: { enableSidePanel: false, defaultDetailPanelMode: 'inline' }` defaults
 - `types/TTraceTimeline.ts` -- add `detailPanelMode`, `timelineVisible`, `sidePanelWidth`
-- `TraceTimelineViewer/duck.ts` -- new actions (`SET_DETAIL_PANEL_MODE`, `SET_TIMELINE_VISIBLE`, `SET_SIDE_PANEL_WIDTH`), reducers, localStorage persistence; modify `DETAIL_TOGGLE` reducer to enforce single-entry constraint on `detailStates` when in sidepanel mode; `newInitialState()` reads config for `defaultDetailPanelMode` and respects `enableSidePanel` flag
+- `TraceTimelineViewer/duck.ts` -- new actions (`SET_DETAIL_PANEL_MODE`, `SET_TIMELINE_VISIBLE`, `SET_SIDE_PANEL_WIDTH`), reducers, localStorage persistence; modify `DETAIL_TOGGLE` reducer to enforce single-entry constraint on `detailStates` when in sidepanel mode; `newInitialState()` restores layout preferences from localStorage
 - `TracePageHeader/TraceViewSettings.tsx` (new) -- settings gear dropdown replacing `KeyboardShortcutsHelp` button; contains "Show Timeline" toggle, "Show Details in Panel" toggle (gated by `enableSidePanel`), and "Keyboard Shortcuts" menu item
 - `TracePageHeader/TracePageHeader.tsx` -- replace `<KeyboardShortcutsHelp>` with `<TraceViewSettings>`; wire new props
 - `TraceTimelineViewer/index.tsx` -- wire new Redux state/dispatch

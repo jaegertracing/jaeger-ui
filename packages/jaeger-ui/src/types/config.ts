@@ -211,11 +211,10 @@ export type Config = {
     // Default: false (experimental, opt-in).
     enableSidePanel?: boolean;
 
-    // defaultDetailPanelMode sets the initial detail panel mode when enableSidePanel is true.
-    // 'inline' preserves the current behavior as the default.
-    // 'sidepanel' makes the side panel the default experience.
-    // Users can still toggle between modes at runtime; this only controls the initial state.
-    // Default: 'inline'.
+    // defaultDetailPanelMode records the operator's preferred initial detail panel mode.
+    // This option is reserved for future use; it is not yet wired into the initialization logic.
+    // The current behavior always restores the last user-selected mode from localStorage,
+    // defaulting to 'inline' when no stored preference exists.
     defaultDetailPanelMode?: 'inline' | 'sidepanel';
   };
 
