@@ -118,8 +118,8 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 };
 
 function mapStateToProps(state: ReduxState) {
-  const { spanNameColumnWidth, timelineVisible } = state.traceTimeline;
-  return { spanNameColumnWidth, timelineBarsVisible: timelineVisible };
+  const { spanNameColumnWidth, timelineBarsVisible } = state.traceTimeline;
+  return { spanNameColumnWidth, timelineBarsVisible };
 }
 
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {

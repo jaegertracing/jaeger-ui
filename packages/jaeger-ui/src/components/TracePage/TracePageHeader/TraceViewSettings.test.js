@@ -16,7 +16,7 @@ const defaultProps = {
   enableSidePanel: false,
   onDetailPanelModeToggle: jest.fn(),
   onTimelineToggle: jest.fn(),
-  timelineVisible: true,
+  timelineBarsVisible: true,
 };
 
 describe('<TraceViewSettings>', () => {

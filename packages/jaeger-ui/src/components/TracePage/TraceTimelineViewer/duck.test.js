@@ -167,7 +167,7 @@ describe('TraceTimelineViewer/duck', () => {
       expect(store.getState()).toBe(state);
     });
 
-    it('retains layout preferences (spanNameColumnWidth, detailPanelMode, timelineVisible, sidePanelWidth) when changing traceIDs', () => {
+    it('retains layout preferences (spanNameColumnWidth, detailPanelMode, timelineBarsVisible, sidePanelWidth) when changing traceIDs', () => {
       let action;
       const width = 0.5;
       const id = 'some-id';
@@ -530,13 +530,13 @@ describe('TraceTimelineViewer/duck', () => {
   describe('setTimelineVisible', () => {
     it('hides the timeline', () => {
       store.dispatch(actions.setTimelineVisible(false));
-      expect(store.getState().timelineVisible).toBe(false);
+      expect(store.getState().timelineBarsVisible).toBe(false);
     });
 
     it('shows the timeline', () => {
       store.dispatch(actions.setTimelineVisible(false));
       store.dispatch(actions.setTimelineVisible(true));
-      expect(store.getState().timelineVisible).toBe(true);
+      expect(store.getState().timelineBarsVisible).toBe(true);
     });
 
     it('persists visibility to localStorage', () => {

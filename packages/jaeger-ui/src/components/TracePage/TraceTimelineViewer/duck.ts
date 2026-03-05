@@ -58,7 +58,7 @@ export function newInitialState(): TTraceTimeline {
   }
 
   const storedTimelineVisible = localStorage.getItem('timelineVisible');
-  const timelineVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
+  const timelineBarsVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
 
   const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
   const sidePanelWidth = Number.isNaN(parsedSidePanelWidth)
@@ -78,7 +78,7 @@ export function newInitialState(): TTraceTimeline {
     shouldScrollToFirstUiFindMatch: false,
     sidePanelWidth,
     spanNameColumnWidth,
-    timelineVisible,
+    timelineBarsVisible,
     traceID: null,
   };
 }
@@ -185,14 +185,14 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
   if (traceID === state.traceID) {
     return state;
   }
-  const { spanNameColumnWidth, detailPanelMode, timelineVisible, sidePanelWidth } = state;
+  const { spanNameColumnWidth, detailPanelMode, timelineBarsVisible, sidePanelWidth } = state;
 
   return Object.assign(
     {
       ...newInitialState(),
       spanNameColumnWidth,
       detailPanelMode,
-      timelineVisible,
+      timelineBarsVisible,
       sidePanelWidth,
       traceID,
     },
@@ -316,7 +316,7 @@ function setDetailPanelMode(state: TTraceTimeline, { mode }: TDetailPanelModeVal
 
 function setTimelineVisible(state: TTraceTimeline, { visible }: TTimelineVisibleValue): TTraceTimeline {
   localStorage.setItem('timelineVisible', String(visible));
-  return { ...state, timelineVisible: visible };
+  return { ...state, timelineBarsVisible: visible };
 }
 
 function setSidePanelWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
