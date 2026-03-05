@@ -119,8 +119,8 @@ The `[⌘]` button (`KeyboardShortcutsHelp` component) is replaced with a **Sett
 ```
 ┌──────────────────────────┐
 │ ✓ Show Timeline          │   ← toggles timelineBarsVisible
-│   Show Details in Panel  │   ← toggles detailPanelMode (only when enableSidePanel config is true)
-│ ────────────────────────  │
+│   Show Span in Sidebar   │   ← toggles detailPanelMode (only when enableSidePanel config is true)
+│ ───────────────────────  │
 │   Keyboard Shortcuts     │   ← opens the existing KeyboardShortcutsHelp modal
 └──────────────────────────┘
 ```
@@ -128,7 +128,7 @@ The `[⌘]` button (`KeyboardShortcutsHelp` component) is replaced with a **Sett
 **Menu item details:**
 
 1. **"Show Timeline"** -- checkmark when `timelineBarsVisible === true`. Clicking toggles the value. Always present.
-2. **"Show Details in Panel"** -- checkmark when `detailPanelMode === 'sidepanel'`. Clicking toggles between `'inline'` and `'sidepanel'`. Only rendered when `enableSidePanel` config is true.
+2. **"Show Span in Sidebar"** -- checkmark when `detailPanelMode === 'sidepanel'`. Clicking toggles between `'inline'` and `'sidepanel'`. Only rendered when `enableSidePanel` config is true.
 3. **Divider** -- antd menu divider separating layout settings from other items.
 4. **"Keyboard Shortcuts"** -- clicking opens the existing `KeyboardShortcutsHelp` modal (reuse the `getHelpModal()` function and modal state). No checkmark.
 
