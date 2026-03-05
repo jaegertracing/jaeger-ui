@@ -30,27 +30,6 @@ Run `make changelog` to generate content.
 * Refactor(plexus): convert svglayersgroup from class to functional component ([@thc1006](https://github.com/thc1006) in [#3412](https://github.com/jaegertracing/jaeger-ui/pull/3412))
 * Refactor(plexus): migrate svgedge to functional component (#3396) ([@hharshhsaini](https://github.com/hharshhsaini) in [#3527](https://github.com/jaegertracing/jaeger-ui/pull/3527))
 
-## v2.16.0 (2026-03-05)
-
-#### 🐞 Bug fixes, Minor Improvements
-
-* Rename main package to @jaegertracing/jaeger-ui ([@yurishkuro](https://github.com/yurishkuro) in [#3560](https://github.com/jaegertracing/jaeger-ui/pull/3560))
-* Fix: white hover line overflow on critical path segments ([@Parship12](https://github.com/Parship12) in [#3550](https://github.com/jaegertracing/jaeger-ui/pull/3550))
-* Fix v3 api client ignoring base path prefix ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3549](https://github.com/jaegertracing/jaeger-ui/pull/3549))
-* Fix spm metrics not fetched on initial load due to null check ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3538](https://github.com/jaegertracing/jaeger-ui/pull/3538))
-
-#### 🚧 Experimental Features
-
-* [adr-0006] phase 1: layout mode state and toggle controls ([@yurishkuro](https://github.com/yurishkuro) in [#3558](https://github.com/jaegertracing/jaeger-ui/pull/3558))
-* Adr 006: span details in side panel ([@yurishkuro](https://github.com/yurishkuro) in [#3556](https://github.com/jaegertracing/jaeger-ui/pull/3556))
-
-#### ⚙️ Refactoring
-
-* Refactor(plexus): convert nodeslayer from class to functional component ([@thc1006](https://github.com/thc1006) in [#3413](https://github.com/jaegertracing/jaeger-ui/pull/3413))
-* Refactor(plexus): convert svglayer from class to functional component ([@thc1006](https://github.com/thc1006) in [#3410](https://github.com/jaegertracing/jaeger-ui/pull/3410))
-* Refactor(plexus): convert svglayersgroup from class to functional component ([@thc1006](https://github.com/thc1006) in [#3412](https://github.com/jaegertracing/jaeger-ui/pull/3412))
-* Refactor(plexus): migrate svgedge to functional component (#3396) ([@hharshhsaini](https://github.com/hharshhsaini) in [#3527](https://github.com/jaegertracing/jaeger-ui/pull/3527))
-
 ## v2.15.0 (2026-02-06)
 
 #### ✨ New Features
