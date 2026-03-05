@@ -6,17 +6,7 @@
 NAME=$(git config user.name)
 EMAIL=$(git config user.email)
 
-# If NAME or EMAIL is missing, try to derive them from Git's author identity
-if [ -z "$NAME" ] || [ -z "$EMAIL" ]; then
-    IDENT=$(git var GIT_AUTHOR_IDENT 2>/dev/null || true)
-    if [ -n "$IDENT" ]; then
-        # IDENT format: "Name With Spaces <email@example.com> 1234567890 +0000"
-        NAME=$(printf '%s\n' "$IDENT" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*<.*//')
-        EMAIL=$(printf '%s\n' "$IDENT" | sed -n 's/.*<\([^>]*\)>.*/\1/p')
-    fi
-fi
-
-# Abort if we still don't have a valid NAME or EMAIL
+# Abort if we don't have a valid NAME or EMAIL
 if [ -z "$NAME" ] || [ -z "$EMAIL" ]; then
     echo "ERROR: Git user.name and/or user.email are not configured; cannot add DCO sign-off." >&2
     echo "Please configure them, for example:" >&2
