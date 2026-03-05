@@ -65,7 +65,7 @@
     "react-is": "19.2.0",
     "react-json-view-lite": "2.5.0",
     "react-redux": "9.2.0",
-    "react-router-dom": "5.3.4",
+    "react-router-dom": "7.13.1",
     "react-router-dom-v5-compat": "6.30.0",
     "recharts": "3.6.0",
     "redux": "5.0.1",
