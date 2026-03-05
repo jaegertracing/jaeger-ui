@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Point .git/hooks/commit-msg in your repository to this file
+
+# Get the signature line
+NAME=$(git config user.name)
+EMAIL=$(git config user.email)
+SIG="Signed-off-by: $NAME <$EMAIL>"
+
+# Check if it's already there to avoid duplicates
+if ! grep -q "$SIG" "$1"; then
+    echo "" >> "$1"
+    echo "$SIG" >> "$1"
+fi
+
