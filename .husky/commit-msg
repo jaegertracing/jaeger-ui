@@ -17,7 +17,7 @@ fi
 SIG="Signed-off-by: $NAME <$EMAIL>"
 
 # Check if it's already there to avoid duplicates
-if ! grep -q "$SIG" "$1"; then
+if ! grep -Fq -- "$SIG" "$1"; then
     # Append a newline and the signature in a portable way
     printf '\n%s\n' "$SIG" >> "$1"
 fi
