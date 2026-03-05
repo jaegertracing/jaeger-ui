@@ -1,15 +1,34 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
-# Point .git/hooks/commit-msg in your repository to this file
+# Husky commit-msg hook: installed and managed via "husky install" (e.g., from npm run prepare)
 
 # Get the signature line
 NAME=$(git config user.name)
 EMAIL=$(git config user.email)
+
+# If NAME or EMAIL is missing, try to derive them from Git's author identity
+if [ -z "$NAME" ] || [ -z "$EMAIL" ]; then
+    IDENT=$(git var GIT_AUTHOR_IDENT 2>/dev/null || true)
+    if [ -n "$IDENT" ]; then
+        # IDENT format: "Name With Spaces <email@example.com> 1234567890 +0000"
+        NAME=$(printf '%s\n' "$IDENT" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*<.*//')
+        EMAIL=$(printf '%s\n' "$IDENT" | sed -n 's/.*<\([^>]*\)>.*/\1/p')
+    fi
+fi
+
+# Abort if we still don't have a valid NAME or EMAIL
+if [ -z "$NAME" ] || [ -z "$EMAIL" ]; then
+    echo "ERROR: Git user.name and/or user.email are not configured; cannot add DCO sign-off." >&2
+    echo "Please configure them, for example:" >&2
+    echo "  git config --global user.name \"Your Name\"" >&2
+    echo "  git config --global user.email \"you@example.com\"" >&2
+    exit 1
+fi
 SIG="Signed-off-by: $NAME <$EMAIL>"
 
 # Check if it's already there to avoid duplicates
 if ! grep -q "$SIG" "$1"; then
-    echo "" >> "$1"
-    echo "$SIG" >> "$1"
+    # Append a newline and the signature in a portable way
+    printf '\n%s\n' "$SIG" >> "$1"
 fi
 
