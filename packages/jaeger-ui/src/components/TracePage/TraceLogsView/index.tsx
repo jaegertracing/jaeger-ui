@@ -94,7 +94,7 @@ export default function TraceLogsView({ trace, useOtelTerms }: Props) {
       width: 90,
     },
     {
-      title: 'Service Name',
+      title: 'Service',
       dataIndex: 'serviceName',
       sorter: (a: TraceLogEntry, b: TraceLogEntry) => a.serviceName.localeCompare(b.serviceName),
       width: 120,
