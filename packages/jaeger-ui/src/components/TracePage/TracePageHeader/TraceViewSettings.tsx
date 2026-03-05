@@ -114,7 +114,7 @@ export default function TraceViewSettings(props: Props) {
     items.push({
       key: 'detail-panel-mode',
       icon: isSidePanel ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
-      label: 'Show Details in Panel',
+      label: 'Show Span in Sidebar',
       onClick: onDetailPanelModeToggle,
     });
   }

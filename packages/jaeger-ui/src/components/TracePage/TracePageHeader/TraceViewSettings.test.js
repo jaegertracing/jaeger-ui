@@ -46,23 +46,23 @@ describe('<TraceViewSettings>', () => {
     expect(defaultProps.onTimelineToggle).toHaveBeenCalledTimes(1);
   });
 
-  it('does not show "Show Details in Panel" when enableSidePanel is false', async () => {
+  it('does not show "Show Span in Sidebar" when enableSidePanel is false', async () => {
     render(<TraceViewSettings {...defaultProps} enableSidePanel={false} />);
     await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
     await screen.findByText('Show Timeline');
-    expect(screen.queryByText('Show Details in Panel')).not.toBeInTheDocument();
+    expect(screen.queryByText('Show Span in Sidebar')).not.toBeInTheDocument();
   });
 
-  it('shows "Show Details in Panel" when enableSidePanel is true', async () => {
+  it('shows "Show Span in Sidebar" when enableSidePanel is true', async () => {
     render(<TraceViewSettings {...defaultProps} enableSidePanel />);
     await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    expect(await screen.findByText('Show Details in Panel')).toBeInTheDocument();
+    expect(await screen.findByText('Show Span in Sidebar')).toBeInTheDocument();
   });
 
-  it('calls onDetailPanelModeToggle when "Show Details in Panel" is clicked', async () => {
+  it('calls onDetailPanelModeToggle when "Show Span in Sidebar" is clicked', async () => {
     render(<TraceViewSettings {...defaultProps} enableSidePanel />);
     await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
-    await userEvent.click(await screen.findByText('Show Details in Panel'));
+    await userEvent.click(await screen.findByText('Show Span in Sidebar'));
     expect(defaultProps.onDetailPanelModeToggle).toHaveBeenCalledTimes(1);
   });
 
