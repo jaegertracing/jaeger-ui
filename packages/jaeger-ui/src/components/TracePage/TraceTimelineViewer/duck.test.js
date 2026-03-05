@@ -4,7 +4,18 @@
 import { createStore } from 'redux';
 import _reduce from 'lodash/reduce';
 
-import reducer, { actions, newInitialState, collapseAll, collapseOne, expandAll, expandOne } from './duck';
+import reducer, {
+  actions,
+  newInitialState,
+  collapseAll,
+  collapseOne,
+  expandAll,
+  expandOne,
+  SPAN_NAME_COLUMN_WIDTH_MIN,
+  SPAN_NAME_COLUMN_WIDTH_MAX,
+  SIDE_PANEL_WIDTH_MIN,
+  SIDE_PANEL_WIDTH_MAX,
+} from './duck';
 import getConfig from '../../../utils/config/get-config';
 import DetailState from './SpanDetail/DetailState';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -43,13 +54,19 @@ describe('TraceTimelineViewer/duck', () => {
 
   it('sets the span column width', () => {
     const n = 0.5;
-    let width = store.getState().spanNameColumnWidth;
-    expect(width).toBeGreaterThanOrEqual(0);
-    expect(width).toBeLessThanOrEqual(1);
     const action = actions.setSpanNameColumnWidth(n);
     store.dispatch(action);
-    width = store.getState().spanNameColumnWidth;
-    expect(width).toBe(n);
+    expect(store.getState().spanNameColumnWidth).toBe(n);
+  });
+
+  it('clamps spanNameColumnWidth to SPAN_NAME_COLUMN_WIDTH_MIN when width is below range', () => {
+    store.dispatch(actions.setSpanNameColumnWidth(0));
+    expect(store.getState().spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MIN);
+  });
+
+  it('clamps spanNameColumnWidth to SPAN_NAME_COLUMN_WIDTH_MAX when width is above range', () => {
+    store.dispatch(actions.setSpanNameColumnWidth(1));
+    expect(store.getState().spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MAX);
   });
 
   describe('focusUiFindMatches', () => {
@@ -540,6 +557,18 @@ describe('TraceTimelineViewer/duck', () => {
       store.dispatch(actions.setSidePanelWidth(0.3));
       expect(localStorage.getItem('sidePanelWidth')).toBe('0.3');
     });
+
+    it('clamps to SIDE_PANEL_WIDTH_MIN when width is below range', () => {
+      store.dispatch(actions.setSidePanelWidth(0));
+      expect(store.getState().sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MIN);
+      expect(localStorage.getItem('sidePanelWidth')).toBe(String(SIDE_PANEL_WIDTH_MIN));
+    });
+
+    it('clamps to SIDE_PANEL_WIDTH_MAX when width is above range', () => {
+      store.dispatch(actions.setSidePanelWidth(1));
+      expect(store.getState().sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MAX);
+      expect(localStorage.getItem('sidePanelWidth')).toBe(String(SIDE_PANEL_WIDTH_MAX));
+    });
   });
 
   describe('newInitialState detailPanelMode with enableSidePanel', () => {
@@ -591,16 +620,28 @@ describe('TraceTimelineViewer/duck', () => {
       expect(state.sidePanelWidth).toBe(0.45);
     });
 
-    it('correctly restores a stored sidePanelWidth of 0', () => {
+    it('clamps sidePanelWidth to SIDE_PANEL_WIDTH_MIN when stored value is below range', () => {
       localStorage.setItem('sidePanelWidth', '0');
       const state = newInitialState();
-      expect(state.sidePanelWidth).toBe(0);
+      expect(state.sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MIN);
     });
 
-    it('correctly restores a stored spanNameColumnWidth of 0', () => {
+    it('clamps sidePanelWidth to SIDE_PANEL_WIDTH_MAX when stored value is above range', () => {
+      localStorage.setItem('sidePanelWidth', '2');
+      const state = newInitialState();
+      expect(state.sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MAX);
+    });
+
+    it('clamps spanNameColumnWidth to SPAN_NAME_COLUMN_WIDTH_MIN when stored value is below range', () => {
       localStorage.setItem('spanNameColumnWidth', '0');
       const state = newInitialState();
-      expect(state.spanNameColumnWidth).toBe(0);
+      expect(state.spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MIN);
+    });
+
+    it('clamps spanNameColumnWidth to SPAN_NAME_COLUMN_WIDTH_MAX when stored value is above range', () => {
+      localStorage.setItem('spanNameColumnWidth', '2');
+      const state = newInitialState();
+      expect(state.spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MAX);
     });
 
     it('uses default spanNameColumnWidth of 0.25 when localStorage is empty', () => {

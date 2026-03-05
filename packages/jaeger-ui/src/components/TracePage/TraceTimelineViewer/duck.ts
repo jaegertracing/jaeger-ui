@@ -13,6 +13,11 @@ import getConfig from '../../../utils/config/get-config';
 import guardReducer from '../../../utils/guardReducer';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
+export const SPAN_NAME_COLUMN_WIDTH_MIN = 0.15;
+export const SPAN_NAME_COLUMN_WIDTH_MAX = 0.85;
+export const SIDE_PANEL_WIDTH_MIN = 0.2;
+export const SIDE_PANEL_WIDTH_MAX = 0.7;
+
 // payloads
 export type TSpanIdLogValue = { logItem: IEvent; spanID: string };
 export type TSpanIdValue = { spanID: string };
@@ -56,10 +61,14 @@ export function newInitialState(): TTraceTimeline {
   const timelineVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
 
   const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
-  const sidePanelWidth = Number.isNaN(parsedSidePanelWidth) ? 0.45 : parsedSidePanelWidth;
+  const sidePanelWidth = Number.isNaN(parsedSidePanelWidth)
+    ? 0.45
+    : Math.min(Math.max(parsedSidePanelWidth, SIDE_PANEL_WIDTH_MIN), SIDE_PANEL_WIDTH_MAX);
 
   const parsedSpanNameColumnWidth = parseFloat(localStorage.getItem('spanNameColumnWidth') ?? '');
-  const spanNameColumnWidth = Number.isNaN(parsedSpanNameColumnWidth) ? 0.25 : parsedSpanNameColumnWidth;
+  const spanNameColumnWidth = Number.isNaN(parsedSpanNameColumnWidth)
+    ? 0.25
+    : Math.min(Math.max(parsedSpanNameColumnWidth, SPAN_NAME_COLUMN_WIDTH_MIN), SPAN_NAME_COLUMN_WIDTH_MAX);
 
   return {
     childrenHiddenIDs: new Set(),
@@ -192,8 +201,12 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
 }
 
 function setColumnWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
-  localStorage.setItem('spanNameColumnWidth', width.toString());
-  return { ...state, spanNameColumnWidth: width };
+  const spanNameColumnWidth = Math.min(
+    Math.max(width, SPAN_NAME_COLUMN_WIDTH_MIN),
+    SPAN_NAME_COLUMN_WIDTH_MAX
+  );
+  localStorage.setItem('spanNameColumnWidth', spanNameColumnWidth.toString());
+  return { ...state, spanNameColumnWidth };
 }
 
 function childrenToggle(state: TTraceTimeline, { spanID }: TSpanIdValue): TTraceTimeline {
@@ -307,8 +320,9 @@ function setTimelineVisible(state: TTraceTimeline, { visible }: TTimelineVisible
 }
 
 function setSidePanelWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
-  localStorage.setItem('sidePanelWidth', width.toString());
-  return { ...state, sidePanelWidth: width };
+  const sidePanelWidth = Math.min(Math.max(width, SIDE_PANEL_WIDTH_MIN), SIDE_PANEL_WIDTH_MAX);
+  localStorage.setItem('sidePanelWidth', sidePanelWidth.toString());
+  return { ...state, sidePanelWidth };
 }
 
 function detailSubsectionToggle(
