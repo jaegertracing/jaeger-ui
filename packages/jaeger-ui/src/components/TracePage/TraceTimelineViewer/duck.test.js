@@ -5,6 +5,7 @@ import { createStore } from 'redux';
 import _reduce from 'lodash/reduce';
 
 import reducer, { actions, newInitialState, collapseAll, collapseOne, expandAll, expandOne } from './duck';
+import getConfig from '../../../utils/config/get-config';
 import DetailState from './SpanDetail/DetailState';
 import transformTraceData from '../../../model/transform-trace-data';
 import traceGenerator from '../../../demo/trace-generators';
@@ -13,6 +14,10 @@ import spanAncestorIdsSpy from '../../../utils/span-ancestor-ids';
 
 jest.mock('../../../utils/filter-spans');
 jest.mock('../../../utils/span-ancestor-ids');
+jest.mock('../../../utils/config/get-config', () => {
+  const actual = jest.requireActual('../../../utils/config/get-config');
+  return { __esModule: true, ...actual, default: jest.fn(() => ({})) };
+});
 
 describe('TraceTimelineViewer/duck', () => {
   const legacyTrace = transformTraceData(traceGenerator.trace({ numberOfSpans: 30 }));
@@ -22,6 +27,7 @@ describe('TraceTimelineViewer/duck', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    getConfig.mockReturnValue({});
     store = createStore(reducer, newInitialState());
   });
 
@@ -533,6 +539,37 @@ describe('TraceTimelineViewer/duck', () => {
     it('persists width to localStorage', () => {
       store.dispatch(actions.setSidePanelWidth(0.3));
       expect(localStorage.getItem('sidePanelWidth')).toBe('0.3');
+    });
+  });
+
+  describe('newInitialState detailPanelMode with enableSidePanel', () => {
+    beforeEach(() => {
+      getConfig.mockReturnValue({
+        traceTimeline: { enableSidePanel: true, defaultDetailPanelMode: 'inline' },
+      });
+    });
+
+    it('restores sidepanel mode from localStorage when enableSidePanel is true', () => {
+      localStorage.setItem('detailPanelMode', 'sidepanel');
+      expect(newInitialState().detailPanelMode).toBe('sidepanel');
+    });
+
+    it('uses defaultDetailPanelMode sidepanel when no stored preference and enableSidePanel is true', () => {
+      getConfig.mockReturnValue({
+        traceTimeline: { enableSidePanel: true, defaultDetailPanelMode: 'sidepanel' },
+      });
+      expect(newInitialState().detailPanelMode).toBe('sidepanel');
+    });
+
+    it('stays inline when stored preference is inline', () => {
+      localStorage.setItem('detailPanelMode', 'inline');
+      expect(newInitialState().detailPanelMode).toBe('inline');
+    });
+
+    it('ignores stored sidepanel preference when enableSidePanel is false', () => {
+      getConfig.mockReturnValue({ traceTimeline: { enableSidePanel: false } });
+      localStorage.setItem('detailPanelMode', 'sidepanel');
+      expect(newInitialState().detailPanelMode).toBe('inline');
     });
   });
 

@@ -868,6 +868,32 @@ describe('<TracePage>', () => {
     });
   });
 
+  describe('layout toggle handlers', () => {
+    it('calls setDetailPanelMode with sidepanel when detailPanelMode is inline', () => {
+      const instance = new TracePage({ ...defaultProps, detailPanelMode: 'inline' });
+      instance.onDetailPanelModeToggle();
+      expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('sidepanel');
+    });
+
+    it('calls setDetailPanelMode with inline when detailPanelMode is sidepanel', () => {
+      const instance = new TracePage({ ...defaultProps, detailPanelMode: 'sidepanel' });
+      instance.onDetailPanelModeToggle();
+      expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('inline');
+    });
+
+    it('calls setTimelineVisible with false when timelineVisible is true', () => {
+      const instance = new TracePage({ ...defaultProps, timelineVisible: true });
+      instance.onTimelineToggle();
+      expect(defaultProps.setTimelineVisible).toHaveBeenCalledWith(false);
+    });
+
+    it('calls setTimelineVisible with true when timelineVisible is false', () => {
+      const instance = new TracePage({ ...defaultProps, timelineVisible: false });
+      instance.onTimelineToggle();
+      expect(defaultProps.setTimelineVisible).toHaveBeenCalledWith(true);
+    });
+  });
+
   describe('manages various UI state', () => {
     let calculateTraceDagEVSpy;
 

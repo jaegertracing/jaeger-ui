@@ -85,4 +85,17 @@ describe('<TraceViewSettings>', () => {
     expect(track).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
+
+  it('returns the cached kbdTable on a second call to getHelpModal', async () => {
+    const { unmount } = render(<TraceViewSettings {...defaultProps} showShortcutsHelp />);
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    await userEvent.click(await screen.findByText('Keyboard Shortcuts'));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    unmount();
+
+    render(<TraceViewSettings {...defaultProps} showShortcutsHelp />);
+    await userEvent.click(screen.getByRole('button', { name: /trace view settings/i }));
+    await userEvent.click(await screen.findByText('Keyboard Shortcuts'));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
 });
