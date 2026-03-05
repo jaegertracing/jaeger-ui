@@ -223,7 +223,7 @@ This keeps the component tree (`SpanBarRow`, `VirtualizedTraceView`) completely 
 
 ## Implementation Roadmap
 
-### Phase 1: Configuration, Layout Mode State, and Toggle Controls
+### ✅ Phase 1: Configuration, Layout Mode State, and Toggle Controls 
 
 Wire up config options, state plumbing, and UI toggle icons with no rendering changes.
 

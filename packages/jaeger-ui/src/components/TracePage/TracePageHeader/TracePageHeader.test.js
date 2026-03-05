@@ -20,9 +20,9 @@ jest.mock('./AltViewOptions', () => {
   };
 });
 
-jest.mock('./KeyboardShortcutsHelp', () => {
-  return function MockKeyboardShortcutsHelp(props) {
-    return <div data-testid="keyboard-shortcuts-help" {...props} />;
+jest.mock('./TraceViewSettings', () => {
+  return function MockTraceViewSettings(props) {
+    return <div data-testid="trace-view-settings" {...props} />;
   };
 });
 
@@ -92,13 +92,17 @@ describe('<TracePageHeader>', () => {
     trace: trace.asOtelTrace(),
     canCollapse: false,
     clearSearch: jest.fn(),
+    detailPanelMode: 'inline',
+    enableSidePanel: false,
     focusUiFindMatches: jest.fn(),
     hideMap: false,
     hideSummary: false,
     linkToStandalone: '/standalone',
     nextResult: jest.fn(),
     onArchiveClicked: jest.fn(),
+    onDetailPanelModeToggle: jest.fn(),
     onSlimViewClicked: jest.fn(),
+    onTimelineBarsToggle: jest.fn(),
     onTraceViewChange: jest.fn(),
     prevResult: jest.fn(),
     resultCount: 0,
@@ -109,6 +113,7 @@ describe('<TracePageHeader>', () => {
     showViewOptions: false,
     slimView: false,
     textFilter: '',
+    timelineBarsVisible: true,
     toSearch: null,
     viewType: ETraceViewType.TraceTimelineViewer,
     updateNextViewRangeTime: jest.fn(),
@@ -213,20 +218,20 @@ describe('<TracePageHeader>', () => {
       expect(screen.queryByText('Archive Trace')).not.toBeInTheDocument();
     });
 
-    it('toggles <KeyboardShortcutsHelp />', () => {
+    it('toggles <TraceViewSettings />', () => {
       wrapper.rerender(
         <MemoryRouter>
           <TracePageHeader {...defaultProps} showShortcutsHelp />
         </MemoryRouter>
       );
-      expect(screen.getByTestId('keyboard-shortcuts-help')).toBeInTheDocument();
+      expect(screen.getByTestId('trace-view-settings')).toBeInTheDocument();
 
       wrapper.rerender(
         <MemoryRouter>
           <TracePageHeader {...defaultProps} showShortcutsHelp={false} />
         </MemoryRouter>
       );
-      expect(screen.queryByTestId('keyboard-shortcuts-help')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('trace-view-settings')).not.toBeInTheDocument();
     });
 
     it('toggles <AltViewOptions />', () => {

@@ -115,6 +115,8 @@ describe('<TracePage>', () => {
   const defaultProps = {
     acknowledgeArchive: jest.fn(),
     archiveTrace: jest.fn(),
+    detailPanelMode: 'inline',
+    enableSidePanel: false,
     fetchTrace: jest.fn(),
     focusUiFindMatches: jest.fn(),
     id: trace.traceID,
@@ -123,6 +125,9 @@ describe('<TracePage>', () => {
       search: null,
       state: null,
     },
+    setDetailPanelMode: jest.fn(),
+    setTimelineBarsVisible: jest.fn(),
+    timelineBarsVisible: true,
     trace: { data: trace, state: fetchedState.DONE },
   };
   const notDefaultPropsId = `not ${defaultProps.id}`;
@@ -1110,6 +1115,8 @@ describe('mapDispatchToProps()', () => {
       archiveTrace: expect.any(Function),
       fetchTrace: expect.any(Function),
       focusUiFindMatches: expect.any(Function),
+      setDetailPanelMode: expect.any(Function),
+      setTimelineBarsVisible: expect.any(Function),
     });
   });
 });
@@ -1140,15 +1147,21 @@ describe('mapStateToProps()', () => {
         archiveEnabled: false,
       },
       archive: {},
+      traceTimeline: {
+        detailPanelMode: 'inline',
+        timelineBarsVisible: true,
+      },
     };
   });
   it('maps state to props correctly', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
+      detailPanelMode: 'inline',
       embedded,
       archiveTraceState: undefined,
       searchUrl: null,
+      timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1174,9 +1187,11 @@ describe('mapStateToProps()', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
+      detailPanelMode: 'inline',
       embedded,
       archiveTraceState: undefined,
       searchUrl: fakeUrl,
+      timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1187,9 +1202,11 @@ describe('mapStateToProps()', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
+      detailPanelMode: 'inline',
       embedded,
       archiveTraceState: undefined,
       searchUrl: null,
+      timelineBarsVisible: true,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
     });
