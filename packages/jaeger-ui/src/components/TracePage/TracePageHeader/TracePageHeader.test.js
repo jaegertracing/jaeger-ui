@@ -112,7 +112,7 @@ describe('<TracePageHeader>', () => {
     showViewOptions: false,
     slimView: false,
     textFilter: '',
-    timelineVisible: true,
+    timelineBarsVisible: true,
     toSearch: null,
     viewType: ETraceViewType.TraceTimelineViewer,
     updateNextViewRangeTime: jest.fn(),
