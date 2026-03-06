@@ -57,8 +57,9 @@ export function newInitialState(): TTraceTimeline {
     }
   }
 
+  // localStorage key kept as 'timelineVisible' for backward compatibility with stored user preferences.
   const storedTimelineVisible = localStorage.getItem('timelineVisible');
-  const timelineVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
+  const timelineBarsVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
 
   const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
   const sidePanelWidth = Number.isNaN(parsedSidePanelWidth)
@@ -78,7 +79,7 @@ export function newInitialState(): TTraceTimeline {
     shouldScrollToFirstUiFindMatch: false,
     sidePanelWidth,
     spanNameColumnWidth,
-    timelineVisible,
+    timelineBarsVisible,
     traceID: null,
   };
 }
@@ -103,7 +104,7 @@ export const actionTypes = generateActionTypes('@jaeger-ui/trace-timeline-viewer
   'SET_DETAIL_PANEL_MODE',
   'SET_SIDE_PANEL_WIDTH',
   'SET_SPAN_NAME_COLUMN_WIDTH',
-  'SET_TIMELINE_VISIBLE',
+  'SET_TIMELINE_BARS_VISIBLE',
   'SET_TRACE',
 ]);
 
@@ -131,7 +132,7 @@ const fullActions = createActions<TActionTypes>({
   [actionTypes.SET_DETAIL_PANEL_MODE]: (mode: 'inline' | 'sidepanel') => ({ mode }),
   [actionTypes.SET_SIDE_PANEL_WIDTH]: (width: number) => ({ width }),
   [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: (width: number) => ({ width }),
-  [actionTypes.SET_TIMELINE_VISIBLE]: (visible: boolean) => ({ visible }),
+  [actionTypes.SET_TIMELINE_BARS_VISIBLE]: (visible: boolean) => ({ visible }),
   [actionTypes.SET_TRACE]: (trace: IOtelTrace, uiFind: string | TNil) => ({ trace, uiFind }),
 });
 
@@ -185,14 +186,14 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
   if (traceID === state.traceID) {
     return state;
   }
-  const { spanNameColumnWidth, detailPanelMode, timelineVisible, sidePanelWidth } = state;
+  const { spanNameColumnWidth, detailPanelMode, timelineBarsVisible, sidePanelWidth } = state;
 
   return Object.assign(
     {
       ...newInitialState(),
       spanNameColumnWidth,
       detailPanelMode,
-      timelineVisible,
+      timelineBarsVisible,
       sidePanelWidth,
       traceID,
     },
@@ -314,9 +315,10 @@ function setDetailPanelMode(state: TTraceTimeline, { mode }: TDetailPanelModeVal
   return { ...state, detailPanelMode: mode, detailStates };
 }
 
-function setTimelineVisible(state: TTraceTimeline, { visible }: TTimelineVisibleValue): TTraceTimeline {
+function setTimelineBarsVisible(state: TTraceTimeline, { visible }: TTimelineVisibleValue): TTraceTimeline {
+  // localStorage key kept as 'timelineVisible' for backward compatibility with stored user preferences.
   localStorage.setItem('timelineVisible', String(visible));
-  return { ...state, timelineVisible: visible };
+  return { ...state, timelineBarsVisible: visible };
 }
 
 function setSidePanelWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
@@ -405,7 +407,7 @@ export default handleActions<TTraceTimeline, any>(
     [actionTypes.SET_DETAIL_PANEL_MODE]: guardReducer(setDetailPanelMode),
     [actionTypes.SET_SIDE_PANEL_WIDTH]: guardReducer(setSidePanelWidth),
     [actionTypes.SET_SPAN_NAME_COLUMN_WIDTH]: guardReducer(setColumnWidth),
-    [actionTypes.SET_TIMELINE_VISIBLE]: guardReducer(setTimelineVisible),
+    [actionTypes.SET_TIMELINE_BARS_VISIBLE]: guardReducer(setTimelineBarsVisible),
     [actionTypes.SET_TRACE]: guardReducer(setTrace),
   },
   newInitialState()

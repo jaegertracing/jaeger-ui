@@ -41,6 +41,7 @@ describe('<SpanDetailRow>', () => {
   const props = {
     color: 'some-color',
     columnDivision: 0.5,
+    timelineBarsVisible: true,
     detailState: new DetailState(),
     onDetailToggled: jest.fn(),
     linksGetter: jest.fn(),
@@ -121,6 +122,17 @@ describe('<SpanDetailRow>', () => {
     expect(receivedProps.span).toHaveProperty('name', props.span.name);
     expect(receivedProps.attributesToggle).toBe(props.attributesToggle);
     expect(receivedProps.traceStartTime).toBe(props.traceStartTime);
+  });
+
+  describe('tree-only mode (timelineBarsVisible=false)', () => {
+    it('renders the SpanDetail at full width', () => {
+      const { container } = render(<SpanDetailRow {...props} timelineBarsVisible={false} />);
+      const cells = container.querySelectorAll('[style*="flex-basis"]');
+      // left cell = 0%, right cell (detail) = 100%
+      const fullWidthCell = Array.from(cells).find(el => el.style.flexBasis === '100%');
+      expect(fullWidthCell).toBeTruthy();
+      expect(fullWidthCell.querySelector('[data-testid="mocked-span-detail"]')).toBeInTheDocument();
+    });
   });
 
   it('adds span when calling linksGetter', () => {

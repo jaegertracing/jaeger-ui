@@ -132,8 +132,8 @@ describe('<TracePage>', () => {
       state: null,
     },
     setDetailPanelMode: jest.fn(),
-    setTimelineVisible: jest.fn(),
-    timelineVisible: true,
+    setTimelineBarsVisible: jest.fn(),
+    timelineBarsVisible: true,
     trace: { data: trace, state: fetchedState.DONE },
   };
   const notDefaultPropsId = `not ${defaultProps.id}`;
@@ -884,16 +884,16 @@ describe('<TracePage>', () => {
       expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('inline');
     });
 
-    it('calls setTimelineVisible with false when timelineVisible is true', () => {
-      const instance = new TracePage({ ...defaultProps, timelineVisible: true });
+    it('calls setTimelineBarsVisible with false when timelineBarsVisible is true', () => {
+      const instance = new TracePage({ ...defaultProps, timelineBarsVisible: true });
       instance.onTimelineToggle();
-      expect(defaultProps.setTimelineVisible).toHaveBeenCalledWith(false);
+      expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(false);
     });
 
-    it('calls setTimelineVisible with true when timelineVisible is false', () => {
-      const instance = new TracePage({ ...defaultProps, timelineVisible: false });
+    it('calls setTimelineBarsVisible with true when timelineBarsVisible is false', () => {
+      const instance = new TracePage({ ...defaultProps, timelineBarsVisible: false });
       instance.onTimelineToggle();
-      expect(defaultProps.setTimelineVisible).toHaveBeenCalledWith(true);
+      expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(true);
     });
   });
 
@@ -1163,7 +1163,7 @@ describe('mapDispatchToProps()', () => {
       fetchTrace: expect.any(Function),
       focusUiFindMatches: expect.any(Function),
       setDetailPanelMode: expect.any(Function),
-      setTimelineVisible: expect.any(Function),
+      setTimelineBarsVisible: expect.any(Function),
     });
   });
 });
@@ -1196,7 +1196,7 @@ describe('mapStateToProps()', () => {
       archive: {},
       traceTimeline: {
         detailPanelMode: 'inline',
-        timelineVisible: true,
+        timelineBarsVisible: true,
       },
     };
   });
@@ -1208,7 +1208,7 @@ describe('mapStateToProps()', () => {
       embedded,
       archiveTraceState: undefined,
       searchUrl: null,
-      timelineVisible: true,
+      timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1238,7 +1238,7 @@ describe('mapStateToProps()', () => {
       embedded,
       archiveTraceState: undefined,
       searchUrl: fakeUrl,
-      timelineVisible: true,
+      timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1253,7 +1253,7 @@ describe('mapStateToProps()', () => {
       embedded,
       archiveTraceState: undefined,
       searchUrl: null,
-      timelineVisible: true,
+      timelineBarsVisible: true,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
     });

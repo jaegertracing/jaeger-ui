@@ -16,7 +16,7 @@ type Props = {
   enableSidePanel: boolean;
   onDetailPanelModeToggle: () => void;
   onTimelineToggle: () => void;
-  timelineVisible: boolean;
+  timelineBarsVisible: boolean;
 };
 
 const CHECK_STYLE = { marginRight: 8, fontSize: 14 };
@@ -29,7 +29,7 @@ export default function TraceViewSettings(props: Props) {
     enableSidePanel,
     onDetailPanelModeToggle,
     onTimelineToggle,
-    timelineVisible,
+    timelineBarsVisible,
   } = props;
 
   const [kbdModalVisible, setKbdModalVisible] = React.useState(false);
@@ -37,7 +37,7 @@ export default function TraceViewSettings(props: Props) {
   const items: MenuProps['items'] = [
     {
       key: 'timeline',
-      icon: timelineVisible ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
+      icon: timelineBarsVisible ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
       label: 'Show Timeline',
       onClick: onTimelineToggle,
     },

@@ -12,7 +12,7 @@ type TTraceTimeline = {
   shouldScrollToFirstUiFindMatch: boolean;
   sidePanelWidth: number;
   spanNameColumnWidth: number;
-  timelineVisible: boolean;
+  timelineBarsVisible: boolean;
   traceID: string | TNil;
 };
 
