@@ -190,26 +190,21 @@ describe('<TraceLogsView>', () => {
     expect(screen.getByText('Span ID')).toBeInTheDocument();
   });
 
-  it('toggles attribute accordion open and closed on click', async () => {
+  it('toggles attribute accordion open and closed on click', () => {
     const { fireEvent } = require('@testing-library/react');
     const trace = transformTraceData(baseTrace).asOtelTrace();
     render(<TraceLogsView trace={trace} useOtelTerms={false} />);
 
-    // AccordionAttributes renders a clickable label area for toggling
-    const accordionHeaders = screen.getAllByText('Tags');
-    // Filter to find the clickable accordion headers (not the column header)
-    const clickableHeaders = accordionHeaders.filter(el => el.closest('a') || el.closest('[role="switch"]'));
-    if (clickableHeaders.length > 0) {
-      fireEvent.click(clickableHeaders[0]);
-      fireEvent.click(clickableHeaders[0]);
-    } else {
-      // Fallback: find any accordion toggle via the arrow icon
-      const arrows = document.querySelectorAll('[class*="Accordion"] a, [class*="accordion"] a');
-      if (arrows.length > 0) {
-        fireEvent.click(arrows[0]);
-        fireEvent.click(arrows[0]);
-      }
-    }
+    // AccordionAttributes renders a div with role="switch" as the clickable toggle
+    const switches = screen.getAllByRole('switch');
+    expect(switches.length).toBeGreaterThan(0);
+
+    // Click to expand (triggers toggleAttributes -> adds key to openAttributes set)
+    fireEvent.click(switches[0]);
+
+    // After expanding, the accordion should show the AttributesTable
+    // Click again to collapse (triggers toggleAttributes -> removes key from set)
+    fireEvent.click(switches[0]);
   });
 
   it('renders em dash for log entries with no attributes', () => {
