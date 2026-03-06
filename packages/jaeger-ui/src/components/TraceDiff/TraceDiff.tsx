@@ -34,7 +34,7 @@ type TDispatchProps = {
 };
 
 type TOwnProps = {
-  params: TDiffRouteParams;
+  params: TDiffRouteParams & { id?: string };
 };
 
 function syncStates(
@@ -154,7 +154,12 @@ export function TraceDiffImpl({
 
 // TODO(joe): simplify but do not invalidate the URL
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps) {
-  const { a, b } = ownProps.params;
+  let { a, b, id } = ownProps.params;
+  if (!a && id && id.includes('...')) {
+    const parts = id.split('...');
+    a = parts[0] || undefined;
+    b = parts[1] || undefined;
+  }
   const { cohort: origCohort = [] } = parseQuery(state.router.location.search);
   const fullCohortSet: Set<string> = new Set(pluckTruthy([a, b].concat(origCohort)));
   const cohort: string[] = Array.from(fullCohortSet);
