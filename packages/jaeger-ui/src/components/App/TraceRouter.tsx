@@ -6,15 +6,9 @@ import TraceDiff from '../TraceDiff';
 import TracePage from '../TracePage';
 
 /*
-Dispatches between TracePage and TraceDiff based on the :id route param.
-
-React Router v6 cannot parse the v5-style regex path used by TraceDiff
-(`/trace/:a?\.\.\.":b?`), so both trace and diff URLs are matched by the
-single `/trace/:id` route.
-
-When the captured id contains "...", the URL
-represents a diff comparison (e.g. /trace/abc...def); otherwise it is a
-single-trace view.
+React Router v6 cannot correctly match the old TraceDiff path (/trace/:a?\.\.\.":b?), so we don’t use that route anymore.
+Instead, both “single trace” and “compare two traces” URLs are matched by one route: /trace/:id.
+When the user is comparing, the id looks like abc...def.
 */
 export default function TraceRouter() {
   const { id = '' } = useParams<{ id: string }>();
