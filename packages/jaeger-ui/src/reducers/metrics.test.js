@@ -64,7 +64,7 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
     const expected = {
       ...initialState,
-      isATMActivated: true,
+
       loading: false,
       serviceMetrics: {
         service_latencies: null,
@@ -97,7 +97,7 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: true,
+
         loading: false,
         serviceMetrics: {
           service_latencies: null,
@@ -129,7 +129,7 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: true,
+
         loading: false,
         serviceMetrics: serviceMetricsWithNulls,
         serviceError: {
@@ -157,7 +157,7 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: true,
+
         loading: false,
         serviceMetrics,
         serviceError: {
@@ -202,7 +202,7 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: true,
+
         loading: false,
         serviceMetrics: {
           service_latencies: null,
@@ -252,7 +252,7 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: false,
+
         loading: false,
         serviceMetrics: {
           service_latencies: null,
