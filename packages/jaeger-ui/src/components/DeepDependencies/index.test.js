@@ -20,6 +20,7 @@ jest.mock('node-fetch', () =>
 jest.mock('react-router-dom-v5-compat', () => ({
   useNavigate: () => jest.fn(),
   useLocation: () => ({ search: '?service=test-service&operation=test-op' }),
+  useParams: () => ({}),
 }));
 
 jest.mock('../../hooks/useTraceDiscovery', () => ({

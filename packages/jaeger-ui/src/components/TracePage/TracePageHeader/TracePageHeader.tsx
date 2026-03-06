@@ -50,7 +50,7 @@ type TracePageHeaderEmbedProps = {
   showViewOptions: boolean;
   slimView: boolean;
   textFilter: string | TNil;
-  timelineVisible: boolean;
+  timelineBarsVisible: boolean;
   toSearch: string | null;
   trace: IOtelTrace;
   viewType: ETraceViewType;
@@ -143,7 +143,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     disableJsonView,
     slimView,
     textFilter,
-    timelineVisible,
+    timelineBarsVisible,
     toSearch,
     trace,
     viewType,
@@ -215,7 +215,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           enableSidePanel={enableSidePanel}
           onDetailPanelModeToggle={onDetailPanelModeToggle}
           onTimelineToggle={onTimelineToggle}
-          timelineVisible={timelineVisible}
+          timelineBarsVisible={timelineBarsVisible}
         />
         {showViewOptions && (
           <AltViewOptions

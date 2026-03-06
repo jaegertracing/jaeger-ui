@@ -16,6 +16,7 @@ import './SpanDetailRow.css';
 type SpanDetailRowProps = {
   color: string;
   columnDivision: number;
+  timelineBarsVisible: boolean;
   detailState: DetailState;
   onDetailToggled: (spanID: string) => void;
   linksGetter: (attributes: ReadonlyArray<IAttribute>, index: number) => Hyperlink[];
@@ -41,6 +42,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
   const {
     color,
     columnDivision,
+    timelineBarsVisible,
     detailState,
     eventsToggle,
     resourceToggle,
@@ -58,19 +60,21 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
   } = props;
   return (
     <TimelineRow className="detail-row">
-      <TimelineRow.Cell width={columnDivision}>
-        <SpanTreeOffset span={span} showChildrenIcon={false} color={color} />
-        <span>
-          <span
-            className="detail-row-expanded-accent"
-            aria-checked="true"
-            onClick={_detailToggle}
-            role="switch"
-            style={{ borderColor: color }}
-          />
-        </span>
-      </TimelineRow.Cell>
-      <TimelineRow.Cell width={1 - columnDivision}>
+      {timelineBarsVisible && (
+        <TimelineRow.Cell width={columnDivision}>
+          <SpanTreeOffset span={span} showChildrenIcon={false} color={color} />
+          <span>
+            <span
+              className="detail-row-expanded-accent"
+              aria-checked="true"
+              onClick={_detailToggle}
+              role="switch"
+              style={{ borderColor: color }}
+            />
+          </span>
+        </TimelineRow.Cell>
+      )}
+      <TimelineRow.Cell width={timelineBarsVisible ? 1 - columnDivision : 1}>
         <div className="detail-info-wrapper" style={{ borderTopColor: color }}>
           <SpanDetail
             detailState={detailState}

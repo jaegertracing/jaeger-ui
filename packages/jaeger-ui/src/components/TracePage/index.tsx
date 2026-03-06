@@ -47,6 +47,7 @@ import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
+import TraceLogsView from './TraceLogsView/index';
 import { StorageCapabilities, TraceGraphConfig } from '../../types/config';
 
 import './index.css';
@@ -59,7 +60,7 @@ type TDispatchProps = {
   fetchTrace: (id: string) => void;
   focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil) => void;
   setDetailPanelMode: (mode: 'inline' | 'sidepanel') => void;
-  setTimelineVisible: (visible: boolean) => void;
+  setTimelineBarsVisible: (visible: boolean) => void;
 };
 
 type TOwnProps = {
@@ -81,7 +82,7 @@ type TReduxProps = {
   embedded: null | EmbeddedState;
   id: string;
   searchUrl: null | string;
-  timelineVisible: boolean;
+  timelineBarsVisible: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
 };
@@ -325,8 +326,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   onTimelineToggle = () => {
-    const { timelineVisible, setTimelineVisible } = this.props;
-    setTimelineVisible(!timelineVisible);
+    const { timelineBarsVisible, setTimelineBarsVisible } = this.props;
+    setTimelineBarsVisible(!timelineBarsVisible);
   };
 
   render() {
@@ -340,7 +341,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       enableSidePanel,
       id,
       uiFind,
-      timelineVisible,
+      timelineBarsVisible,
       trace,
       disableJsonView,
       traceGraphConfig,
@@ -398,7 +399,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
-      timelineVisible,
+      timelineBarsVisible,
       toSearch: (locationState && locationState.fromSearch) || null,
       trace: data.asOtelTrace(),
       updateNextViewRangeTime: this.updateNextViewRangeTime,
@@ -453,6 +454,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       );
     } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
       view = <TraceFlamegraph trace={trace} />;
+    } else if (ETraceViewType.TraceLogs === viewType && headerHeight) {
+      view = <TraceLogsView trace={data.asOtelTrace()} useOtelTerms={this.props.useOtelTerms} />;
     }
 
     return (
@@ -479,7 +482,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
 
-  const { detailPanelMode, timelineVisible } = state.traceTimeline;
+  const { detailPanelMode, timelineBarsVisible } = state.traceTimeline;
 
   return {
     ...extractUiFindFromState(state),
@@ -488,7 +491,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     embedded,
     id,
     searchUrl,
-    timelineVisible,
+    timelineBarsVisible,
     trace,
   };
 }
@@ -497,7 +500,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { fetchTrace } = bindActionCreators(jaegerApiActions, dispatch);
   const { archiveTrace, acknowledge: acknowledgeArchive } = bindActionCreators(archiveActions, dispatch);
-  const { focusUiFindMatches, setDetailPanelMode, setTimelineVisible } = bindActionCreators(
+  const { focusUiFindMatches, setDetailPanelMode, setTimelineBarsVisible } = bindActionCreators(
     timelineActions,
     dispatch
   );
@@ -507,7 +510,7 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
     fetchTrace,
     focusUiFindMatches,
     setDetailPanelMode,
-    setTimelineVisible,
+    setTimelineBarsVisible,
   };
 }
 

@@ -30,6 +30,7 @@ type TProps = TDispatchProps & {
   findMatchesIDs: Set<string> | TNil;
   scrollToFirstVisibleSpan: () => void;
   spanNameColumnWidth: number;
+  timelineBarsVisible: boolean;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
@@ -59,6 +60,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     viewRange,
     trace,
     spanNameColumnWidth,
+    timelineBarsVisible,
     useOtelTerms,
     ...rest
   } = props;
@@ -99,6 +101,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
         onColummWidthChange={setSpanNameColumnWidth}
         onExpandAll={expandAll}
         onExpandOne={expandOne}
+        timelineBarsVisible={timelineBarsVisible}
         viewRangeTime={viewRange.time}
         updateNextViewRangeTime={updateNextViewRangeTime}
         updateViewRangeTime={updateViewRangeTime}
@@ -115,8 +118,8 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 };
 
 function mapStateToProps(state: ReduxState) {
-  const spanNameColumnWidth = state.traceTimeline.spanNameColumnWidth;
-  return { spanNameColumnWidth };
+  const { spanNameColumnWidth, timelineBarsVisible } = state.traceTimeline;
+  return { spanNameColumnWidth, timelineBarsVisible };
 }
 
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
