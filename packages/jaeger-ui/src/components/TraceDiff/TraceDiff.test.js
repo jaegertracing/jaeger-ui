@@ -447,6 +447,33 @@ describe('TraceDiff', () => {
       const { traceDiffState } = mapStateToProps(testReduxState, getOwnProps());
       expect(traceDiffState).toBe(testReduxState.traceDiff);
     });
+
+    describe('v6 id param parsing (params.id contains "...")', () => {
+      const makeIdProps = id => ({ params: { id } });
+
+      it('splits params.id on "..." to extract a and b, falling back to undefined for empty sides', () => {
+        const state = makeTestReduxState();
+        const { a, b } = mapStateToProps(state, makeIdProps(`${defaultA}...${defaultB}`));
+        expect(a).toBe(defaultA);
+        expect(b).toBe(defaultB);
+
+        // empty right side -> b is undefined
+        expect(mapStateToProps(state, makeIdProps(`${defaultA}...`)).b).toBeUndefined();
+        // empty left side -> a is undefined
+        expect(mapStateToProps(state, makeIdProps(`...${defaultB}`)).a).toBeUndefined();
+      });
+
+      it('skips id parsing when params.a is already set or id has no "..."', () => {
+        const state = makeTestReduxState();
+        const withA = mapStateToProps(state, { params: { a: defaultA, id: `other...${defaultB}` } });
+        expect(withA.a).toBe(defaultA);
+        expect(withA.b).toBeUndefined();
+
+        const noSep = mapStateToProps(state, makeIdProps(defaultA));
+        expect(noSep.a).toBeUndefined();
+        expect(noSep.b).toBeUndefined();
+      });
+    });
   });
 
   describe('mapDispatchToProps', () => {
