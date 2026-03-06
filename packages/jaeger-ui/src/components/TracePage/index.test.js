@@ -31,6 +31,12 @@ jest.mock('./TraceFlamegraph/index', () => {
   };
 });
 
+jest.mock('./TraceLogsView/index', () => {
+  return function MockTraceLogsView() {
+    return <div data-testid="mock-trace-logs-view">TraceLogsView</div>;
+  };
+});
+
 jest.mock('./ScrollManager', () => {
   return jest.fn().mockImplementation(() => ({
     scrollToNextVisibleSpan: jest.fn(),
@@ -1103,6 +1109,24 @@ describe('<TracePage>', () => {
       render(<TracePage {...defaultProps} />);
 
       expect(screen.getByTestId('mock-trace-flamegraph')).toBeInTheDocument();
+
+      TracePage.prototype.render = originalRender;
+    });
+
+    it('renders TraceLogsView when viewType is TraceLogs and headerHeight exists', () => {
+      const originalRender = TracePage.prototype.render;
+
+      TracePage.prototype.render = function () {
+        this._headerElm = { clientHeight: 100 };
+        this.state.headerHeight = 100;
+        this.state.viewType = ETraceViewType.TraceLogs;
+
+        return originalRender.call(this);
+      };
+
+      render(<TracePage {...defaultProps} />);
+
+      expect(screen.getByTestId('mock-trace-logs-view')).toBeInTheDocument();
 
       TracePage.prototype.render = originalRender;
     });
