@@ -82,7 +82,12 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
             />
             <Ticks numTicks={numTicks} startTime={startTime} endTime={endTime} showLabels />
           </TimelineRow.Cell>
-          <VerticalResizer position={headerNameWidth} onChange={onColummWidthChange} min={0.15} max={0.85} />
+          <VerticalResizer
+            position={headerNameWidth}
+            onChange={onColummWidthChange}
+            min={0.15}
+            max={sidePanelVisible ? 1 - sidePanelWidth : 0.85}
+          />
         </>
       )}
       {sidePanelVisible && (

@@ -69,6 +69,13 @@ describe('TraceTimelineViewer/duck', () => {
     expect(store.getState().spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MAX);
   });
 
+  it('clamps spanNameColumnWidth to leave room for side panel when in sidepanel mode', () => {
+    // Default sidePanelWidth = 0.375; in side-panel mode max = min(0.85, 1 - 0.375) = 0.625
+    store.dispatch(actions.setDetailPanelMode('sidepanel'));
+    store.dispatch(actions.setSpanNameColumnWidth(0.7));
+    expect(store.getState().spanNameColumnWidth).toBeCloseTo(0.625);
+  });
+
   describe('focusUiFindMatches', () => {
     const uiFind = 'uiFind';
     const action = actions.focusUiFindMatches(trace, uiFind);
@@ -569,6 +576,13 @@ describe('TraceTimelineViewer/duck', () => {
       expect(store.getState().sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MAX);
       expect(localStorage.getItem('sidePanelWidth')).toBe(String(SIDE_PANEL_WIDTH_MAX));
     });
+
+    it('clamps side panel width to leave room for the name column', () => {
+      // Set spanNameColumnWidth to 0.7; max sidePanelWidth = 1 - 0.7 = 0.3 (within valid range)
+      store.dispatch(actions.setSpanNameColumnWidth(0.7));
+      store.dispatch(actions.setSidePanelWidth(0.5));
+      expect(store.getState().sidePanelWidth).toBeCloseTo(0.3);
+    });
   });
 
   describe('newInitialState detailPanelMode with enableSidePanel', () => {
@@ -647,6 +661,16 @@ describe('TraceTimelineViewer/duck', () => {
       localStorage.setItem('sidePanelWidth', '0.5');
       const state = newInitialState();
       expect(state.sidePanelWidth).toBe(0.25);
+    });
+
+    it('resets both widths to defaults when spanNameColumnWidth is so large that even minimum side panel leaves no room', () => {
+      // spanNameColumnWidth=0.85, (1-0.85)/2=0.075 < SIDE_PANEL_WIDTH_MIN=0.2, so clamping
+      // sidePanelWidth to minimum still leaves sum=1.05 >= 1; both reset to defaults.
+      localStorage.setItem('spanNameColumnWidth', '0.85');
+      localStorage.setItem('sidePanelWidth', '0.5');
+      const state = newInitialState();
+      expect(state.spanNameColumnWidth).toBe(0.25);
+      expect(state.sidePanelWidth).toBe(0.375); // (1 - 0.25) / 2
     });
 
     it('clamps spanNameColumnWidth to SPAN_NAME_COLUMN_WIDTH_MIN when stored value is below range', () => {
