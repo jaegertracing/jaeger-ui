@@ -31,3 +31,7 @@ SPDX-License-Identifier: Apache-2.0
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.TimelineHeaderRow--sidePanelCell {
+  border-left: 1px solid var(--border-strong);
+}

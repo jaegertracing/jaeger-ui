@@ -1,6 +1,6 @@
 # ADR-0006: Side Panel Span Details and Tree-Only Mode for Trace Timeline
 
-**Status**: Proposed
+**Status**: In progress
 **Date**: 2026-03-04
 
 ## Context
@@ -239,7 +239,7 @@ Wire up config options, state plumbing, and UI toggle icons with no rendering ch
 
 **Outcome:** Toggle controls visible (side panel toggle gated by config), preferences persist to localStorage, no visual layout changes.
 
-### Phase 2: Tree-Only Mode (Hide Timeline Bars)
+### ✅ Phase 2: Tree-Only Mode (Hide Timeline Bars)
 
 Ship independently of the side panel.
 
@@ -253,7 +253,7 @@ Ship independently of the side panel.
 
 **Outcome:** Users can toggle timeline bars on/off. Inline expansion still works. Column width preference preserved.
 
-### Phase 3: Side Panel Container and Span Selection
+### ✅ Phase 3: Side Panel Container and Span Selection
 
 Core side panel functionality.
 

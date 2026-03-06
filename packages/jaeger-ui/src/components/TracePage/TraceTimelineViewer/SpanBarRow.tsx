@@ -24,6 +24,7 @@ type SpanBarRowProps = {
   isChildrenExpanded: boolean;
   isDetailExpanded: boolean;
   isMatchingFilter: boolean;
+  isSelected?: boolean;
   timelineBarsVisible: boolean;
   onDetailToggled: (spanID: string) => void;
   onChildrenToggled: (spanID: string) => void;
@@ -69,6 +70,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   isChildrenExpanded,
   isDetailExpanded,
   isMatchingFilter,
+  isSelected,
   timelineBarsVisible,
   numTicks,
   rpc = null,
@@ -128,6 +130,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           ${className || ''}
           ${isDetailExpanded ? 'is-expanded' : ''}
           ${isMatchingFilter ? 'is-matching-filter' : ''}
+          ${isSelected ? 'is-selected' : ''}
         `}
     >
       <TimelineRow.Cell className="span-name-column" width={effectiveColumnDivision}>

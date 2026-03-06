@@ -609,15 +609,15 @@ describe('TraceTimelineViewer/duck', () => {
       expect(state.sidePanelWidth).toBe(0.3);
     });
 
-    it('uses default sidePanelWidth of 0.45 when localStorage is empty', () => {
+    it('uses default sidePanelWidth equal to half the remaining width when localStorage is empty', () => {
       const state = newInitialState();
-      expect(state.sidePanelWidth).toBe(0.45);
+      expect(state.sidePanelWidth).toBe(0.375);
     });
 
-    it('uses default sidePanelWidth of 0.45 when stored value is invalid', () => {
+    it('uses default sidePanelWidth equal to half the remaining width when stored value is invalid', () => {
       localStorage.setItem('sidePanelWidth', 'not-a-number');
       const state = newInitialState();
-      expect(state.sidePanelWidth).toBe(0.45);
+      expect(state.sidePanelWidth).toBe(0.375);
     });
 
     it('clamps sidePanelWidth to SIDE_PANEL_WIDTH_MIN when stored value is below range', () => {
@@ -630,6 +630,23 @@ describe('TraceTimelineViewer/duck', () => {
       localStorage.setItem('sidePanelWidth', '2');
       const state = newInitialState();
       expect(state.sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MAX);
+    });
+
+    it('resets sidePanelWidth when stored values leave no room for timeline column', () => {
+      // 0.6 + 0.5 = 1.1 >= 1, triggers sanity check; default = (1 - 0.6) / 2 = 0.2 = SIDE_PANEL_WIDTH_MIN
+      localStorage.setItem('spanNameColumnWidth', '0.6');
+      localStorage.setItem('sidePanelWidth', '0.5');
+      const state = newInitialState();
+      expect(state.spanNameColumnWidth).toBe(0.6);
+      expect(state.sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MIN);
+    });
+
+    it('resets sidePanelWidth when stored values exactly sum to 1', () => {
+      // 0.5 + 0.5 = 1.0 >= 1, triggers sanity check; default = (1 - 0.5) / 2 = 0.25
+      localStorage.setItem('spanNameColumnWidth', '0.5');
+      localStorage.setItem('sidePanelWidth', '0.5');
+      const state = newInitialState();
+      expect(state.sidePanelWidth).toBe(0.25);
     });
 
     it('clamps spanNameColumnWidth to SPAN_NAME_COLUMN_WIDTH_MIN when stored value is below range', () => {

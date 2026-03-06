@@ -7,6 +7,25 @@ SPDX-License-Identifier: Apache-2.0
   border-bottom: 1px solid #bbb;
 }
 
+.TraceTimelineViewer--sidePanelLayout {
+  align-items: flex-start;
+  display: flex;
+  position: relative;
+}
+
+.TraceTimelineViewer--main {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.TraceTimelineViewer--sidePanel {
+  /* Fixed so the panel never scrolls with the timeline.
+     top and height are set via inline style after measuring the container offset. */
+  overflow-y: auto;
+  position: fixed;
+  right: 0;
+}
+
 .json-markup {
   line-height: 17px;
   font-size: 13px;

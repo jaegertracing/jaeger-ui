@@ -107,10 +107,10 @@ Run from `packages/jaeger-ui/`:
 
 ### File Headers
 
-All new files must include this copyright header with the current year:
+All new files must include this copyright header with the current year (e.g. 2026):
 
 ```typescript
-// Copyright (c) 2025 The Jaeger Authors.
+// Copyright (c) <current year> The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 ```
 

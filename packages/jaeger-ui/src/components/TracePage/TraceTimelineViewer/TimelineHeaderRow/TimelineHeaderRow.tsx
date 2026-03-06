@@ -22,6 +22,9 @@ type TimelineHeaderRowProps = {
   onColummWidthChange: (width: number) => void;
   onExpandAll: () => void;
   onExpandOne: () => void;
+  sidePanelVisible: boolean;
+  sidePanelWidth: number;
+  sidePanelLabel?: string;
   timelineBarsVisible: boolean;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
@@ -39,6 +42,9 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
     onColummWidthChange,
     onExpandAll,
     onExpandOne,
+    sidePanelVisible,
+    sidePanelWidth,
+    sidePanelLabel,
     timelineBarsVisible,
     updateViewRangeTime,
     updateNextViewRangeTime,
@@ -47,7 +53,12 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
   const [viewStart, viewEnd] = viewRangeTime.current;
   const startTime = (viewStart * duration) as IOtelSpan['startTime'];
   const endTime = (viewEnd * duration) as IOtelSpan['endTime'];
-  const effectiveNameColumnWidth = timelineBarsVisible ? nameColumnWidth : 1;
+  // When timeline column is hidden, the side panel expands to fill the freed timeline space;
+  // the service/operation column keeps its width constant.
+  const effectiveNameColumnWidth = timelineBarsVisible
+    ? nameColumnWidth
+    : 1 - (sidePanelVisible ? sidePanelWidth : 0);
+  const timelineColumnWidth = Math.max(0, 1 - nameColumnWidth - (sidePanelVisible ? sidePanelWidth : 0));
   return (
     <TimelineRow className="TimelineHeaderRow">
       <TimelineRow.Cell className="ub-flex ub-px2" width={effectiveNameColumnWidth}>
@@ -63,7 +74,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
       </TimelineRow.Cell>
       {timelineBarsVisible && (
         <>
-          <TimelineRow.Cell width={1 - nameColumnWidth}>
+          <TimelineRow.Cell width={timelineColumnWidth}>
             <TimelineViewingLayer
               boundsInvalidator={nameColumnWidth}
               updateNextViewRangeTime={updateNextViewRangeTime}
@@ -74,6 +85,11 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
           </TimelineRow.Cell>
           <VerticalResizer position={nameColumnWidth} onChange={onColummWidthChange} min={0.15} max={0.85} />
         </>
+      )}
+      {sidePanelVisible && (
+        <TimelineRow.Cell className="ub-flex ub-px2 TimelineHeaderRow--sidePanelCell" width={sidePanelWidth}>
+          <h3 className="TimelineHeaderRow--title">{sidePanelLabel ?? 'Span Details'}</h3>
+        </TimelineRow.Cell>
       )}
     </TimelineRow>
   );

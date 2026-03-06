@@ -94,7 +94,8 @@ const NUM_TICKS = 5;
 function generateRowStates(
   spans: ReadonlyArray<IOtelSpan> | TNil,
   childrenHiddenIDs: Set<string>,
-  detailStates: Map<string, DetailState | TNil>
+  detailStates: Map<string, DetailState | TNil>,
+  detailPanelMode: 'inline' | 'sidepanel'
 ): RowState[] {
   if (!spans) {
     return [];
@@ -123,7 +124,8 @@ function generateRowStates(
       isDetail: false,
       spanIndex: i,
     });
-    if (detailStates.has(spanID)) {
+    // In side panel mode, detail rows are shown in the panel, not inline.
+    if (detailPanelMode !== 'sidepanel' && detailStates.has(spanID)) {
       rowStates.push({
         span,
         isDetail: true,
@@ -137,12 +139,13 @@ function generateRowStates(
 function generateRowStatesFromTrace(
   trace: IOtelTrace | TNil,
   childrenHiddenIDs: Set<string>,
-  detailStates: Map<string, DetailState | TNil>
+  detailStates: Map<string, DetailState | TNil>,
+  detailPanelMode: 'inline' | 'sidepanel'
 ): RowState[] {
   if (!trace) {
     return [];
   }
-  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
+  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates, detailPanelMode);
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -284,8 +287,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   };
 
   getRowStates(): RowState[] {
-    const { childrenHiddenIDs, detailStates, trace } = this.props;
-    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates);
+    const { childrenHiddenIDs, detailStates, detailPanelMode, trace } = this.props;
+    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode);
   }
 
   getClippingCssClasses(): string {
@@ -445,9 +448,11 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const {
       childrenHiddenIDs,
       childrenToggle,
+      detailPanelMode,
       detailStates,
       detailToggle,
       findMatchesIDs,
+      sidePanelWidth,
       spanNameColumnWidth,
       timelineBarsVisible,
       trace,
@@ -461,10 +466,23 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
     const { spans } = trace;
 
+    // In side panel mode the main container is narrowed; scale the column division so the
+    // Service/Operation column keeps its pixel width. Clamp to 1 (not SPAN_NAME_COLUMN_WIDTH_MAX)
+    // because the 0.85 overall-layout max is irrelevant inside the already-shrunk main container.
+    const effectiveColumnDivision =
+      detailPanelMode === 'sidepanel'
+        ? Math.min(spanNameColumnWidth / (1 - sidePanelWidth), 1)
+        : spanNameColumnWidth;
+
     const color = colorGenerator.getColorByKey(serviceName);
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
+    const selectedSpanID =
+      detailPanelMode === 'sidepanel' && detailStates.size > 0
+        ? (detailStates.keys().next().value as string)
+        : null;
+    const isSelected = selectedSpanID === spanID;
     const hasOwnError = isErrorSpan(span);
     const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
     const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
@@ -500,10 +518,11 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           className={this.getClippingCssClasses()}
           color={color}
           criticalPath={criticalPathSections}
-          columnDivision={spanNameColumnWidth}
+          columnDivision={effectiveColumnDivision}
           isChildrenExpanded={!isCollapsed}
           isDetailExpanded={isDetailExpanded}
           isMatchingFilter={isMatchingFilter}
+          isSelected={isSelected}
           timelineBarsVisible={timelineBarsVisible}
           numTicks={NUM_TICKS}
           onDetailToggled={detailToggle}
@@ -533,8 +552,10 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailReferencesToggle,
       detailWarningsToggle,
       detailStates,
+      detailPanelMode,
       detailTagsToggle,
       detailToggle,
+      sidePanelWidth,
       spanNameColumnWidth,
       timelineBarsVisible,
       trace,
@@ -546,12 +567,18 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       return null;
     }
 
+    // Match the column division adjustment from renderSpanBarRow so detail rows align.
+    const effectiveColumnDivision =
+      detailPanelMode === 'sidepanel'
+        ? Math.min(spanNameColumnWidth / (1 - sidePanelWidth), 1)
+        : spanNameColumnWidth;
+
     const color = colorGenerator.getColorByKey(serviceName);
     return (
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
         <SpanDetailRow
           color={color}
-          columnDivision={spanNameColumnWidth}
+          columnDivision={effectiveColumnDivision}
           timelineBarsVisible={timelineBarsVisible}
           onDetailToggled={detailToggle}
           detailState={detailState}

@@ -7,6 +7,15 @@ SPDX-License-Identifier: Apache-2.0
   background-color: var(--trace-emphasis-highlight);
 }
 
+.span-row.is-selected .span-name-wrapper {
+  background-color: var(--interactive-primary-light);
+}
+
+.span-row.is-selected .span-view {
+  background-color: var(--interactive-primary-light);
+  outline: 1px solid var(--interactive-primary);
+}
+
 .span-name-column {
   position: relative;
   white-space: nowrap;

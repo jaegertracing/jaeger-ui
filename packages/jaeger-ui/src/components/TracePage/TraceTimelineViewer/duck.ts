@@ -61,15 +61,25 @@ export function newInitialState(): TTraceTimeline {
   const storedTimelineVisible = localStorage.getItem('timelineVisible');
   const timelineBarsVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
 
-  const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
-  const sidePanelWidth = Number.isNaN(parsedSidePanelWidth)
-    ? 0.45
-    : Math.min(Math.max(parsedSidePanelWidth, SIDE_PANEL_WIDTH_MIN), SIDE_PANEL_WIDTH_MAX);
-
   const parsedSpanNameColumnWidth = parseFloat(localStorage.getItem('spanNameColumnWidth') ?? '');
   const spanNameColumnWidth = Number.isNaN(parsedSpanNameColumnWidth)
     ? 0.25
     : Math.min(Math.max(parsedSpanNameColumnWidth, SPAN_NAME_COLUMN_WIDTH_MIN), SPAN_NAME_COLUMN_WIDTH_MAX);
+
+  const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
+  // Default: equal split between timeline and span details columns, clamped to allowed range.
+  const rawSidePanelWidth = Number.isNaN(parsedSidePanelWidth)
+    ? (1 - spanNameColumnWidth) / 2
+    : parsedSidePanelWidth;
+  let sidePanelWidth = Math.min(Math.max(rawSidePanelWidth, SIDE_PANEL_WIDTH_MIN), SIDE_PANEL_WIDTH_MAX);
+  // Sanity check: the two stored widths must leave room for the timeline column.
+  // If they don't, reset sidePanelWidth to its default (equal split of the remaining space).
+  if (spanNameColumnWidth + sidePanelWidth >= 1) {
+    sidePanelWidth = Math.min(
+      Math.max((1 - spanNameColumnWidth) / 2, SIDE_PANEL_WIDTH_MIN),
+      SIDE_PANEL_WIDTH_MAX
+    );
+  }
 
   return {
     childrenHiddenIDs: new Set(),
@@ -332,10 +342,7 @@ function detailSubsectionToggle(
   state: TTraceTimeline,
   { spanID }: TSpanIdValue
 ) {
-  const old = state.detailStates.get(spanID);
-  if (!old) {
-    return state;
-  }
+  const old = state.detailStates.get(spanID) ?? new DetailState();
   let detailState;
   if (subSection === 'tags') {
     detailState = old.toggleTags();
@@ -360,10 +367,7 @@ const detailWarningsToggle = detailSubsectionToggle.bind(null, 'warnings');
 const detailReferencesToggle = detailSubsectionToggle.bind(null, 'references');
 
 function detailLogItemToggle(state: TTraceTimeline, { spanID, logItem }: TSpanIdLogValue) {
-  const old = state.detailStates.get(spanID);
-  if (!old) {
-    return state;
-  }
+  const old = state.detailStates.get(spanID) ?? new DetailState();
   const detailState = old.toggleLogItem(logItem);
   const detailStates = new Map(state.detailStates);
   detailStates.set(spanID, detailState);
