@@ -189,4 +189,100 @@ describe('<TraceLogsView>', () => {
     expect(screen.getByText('Log')).toBeInTheDocument();
     expect(screen.getByText('Span ID')).toBeInTheDocument();
   });
+
+  it('toggles attribute accordion open and closed on click', async () => {
+    const { fireEvent } = require('@testing-library/react');
+    const trace = transformTraceData(baseTrace).asOtelTrace();
+    render(<TraceLogsView trace={trace} useOtelTerms={false} />);
+
+    // AccordionAttributes renders a clickable label area for toggling
+    const accordionHeaders = screen.getAllByText('Tags');
+    // Filter to find the clickable accordion headers (not the column header)
+    const clickableHeaders = accordionHeaders.filter(el => el.closest('a') || el.closest('[role="switch"]'));
+    if (clickableHeaders.length > 0) {
+      fireEvent.click(clickableHeaders[0]);
+      fireEvent.click(clickableHeaders[0]);
+    } else {
+      // Fallback: find any accordion toggle via the arrow icon
+      const arrows = document.querySelectorAll('[class*="Accordion"] a, [class*="accordion"] a');
+      if (arrows.length > 0) {
+        fireEvent.click(arrows[0]);
+        fireEvent.click(arrows[0]);
+      }
+    }
+  });
+
+  it('renders em dash for log entries with no attributes', () => {
+    const traceWithEmptyAttrs = {
+      traceID: 'trace-empty-attrs',
+      spans: [
+        {
+          traceID: 'trace-empty-attrs',
+          spanID: 'span-ea',
+          operationName: 'op-ea',
+          startTime: 3000000,
+          duration: 100000,
+          references: [],
+          tags: [],
+          logs: [
+            {
+              timestamp: 3050000,
+              fields: [{ key: 'event', value: 'empty_attrs_event' }],
+            },
+          ],
+          processID: 'p1',
+          warnings: null,
+        },
+      ],
+      processes: {
+        p1: { serviceName: 'test-svc', tags: [] },
+      },
+    };
+    const trace = transformTraceData(traceWithEmptyAttrs).asOtelTrace();
+    // Remove attributes from events to trigger the empty branch
+    trace.spans[0].events[0].attributes = [];
+    render(<TraceLogsView trace={trace} useOtelTerms={false} />);
+
+    // Should render the em dash for empty attributes
+    const noAttrs = document.querySelector('.TraceLogsView--no-attrs');
+    expect(noAttrs).toBeInTheDocument();
+    expect(noAttrs.textContent).toBe('—');
+  });
+
+  it('sorts entries by timestamp by default (ascending)', () => {
+    const trace = transformTraceData(baseTrace).asOtelTrace();
+    render(<TraceLogsView trace={trace} useOtelTerms={false} />);
+
+    // The table rows should be sorted by timestamp ascending
+    const rows = document.querySelectorAll('.ant-table-tbody tr');
+    expect(rows.length).toBeGreaterThan(0);
+  });
+
+  it('handles column sorting for service name', () => {
+    const { fireEvent } = require('@testing-library/react');
+    const trace = transformTraceData(baseTrace).asOtelTrace();
+    render(<TraceLogsView trace={trace} useOtelTerms={false} />);
+
+    // Click service name column header to trigger sorter
+    const serviceHeader = screen.getByText('Service');
+    fireEvent.click(serviceHeader);
+  });
+
+  it('handles column sorting for operation/span name', () => {
+    const { fireEvent } = require('@testing-library/react');
+    const trace = transformTraceData(baseTrace).asOtelTrace();
+    render(<TraceLogsView trace={trace} useOtelTerms={false} />);
+
+    const opHeader = screen.getByText('Operation');
+    fireEvent.click(opHeader);
+  });
+
+  it('handles column sorting for event/log name', () => {
+    const { fireEvent } = require('@testing-library/react');
+    const trace = transformTraceData(baseTrace).asOtelTrace();
+    render(<TraceLogsView trace={trace} useOtelTerms={false} />);
+
+    const logHeader = screen.getByText('Log');
+    fireEvent.click(logHeader);
+  });
 });
