@@ -132,23 +132,26 @@ describe('<TimelineHeaderRow>', () => {
   });
 
   describe('tree-only mode (timelineBarsVisible=false)', () => {
+    // In tree-only mode TraceTimelineViewer passes nameColumnWidth=1 (name fills the main area).
+    const barsHiddenProps = { ...props, timelineBarsVisible: false, nameColumnWidth: 1 };
+
     it('does not render the Ticks', () => {
-      render(<TimelineHeaderRow {...props} timelineBarsVisible={false} />);
+      render(<TimelineHeaderRow {...barsHiddenProps} />);
       expect(screen.queryByTestId('ticks')).not.toBeInTheDocument();
     });
 
     it('does not render the TimelineViewingLayer', () => {
-      render(<TimelineHeaderRow {...props} timelineBarsVisible={false} />);
+      render(<TimelineHeaderRow {...barsHiddenProps} />);
       expect(screen.queryByTestId('timeline-viewing-layer')).not.toBeInTheDocument();
     });
 
     it('does not render the VerticalResizer', () => {
-      render(<TimelineHeaderRow {...props} timelineBarsVisible={false} />);
+      render(<TimelineHeaderRow {...barsHiddenProps} />);
       expect(screen.queryByTestId('vertical-resizer')).not.toBeInTheDocument();
     });
 
     it('renders the name column at full width', () => {
-      const { container } = render(<TimelineHeaderRow {...props} timelineBarsVisible={false} />);
+      const { container } = render(<TimelineHeaderRow {...barsHiddenProps} />);
       const cells = container.querySelectorAll('.TimelineRow--cellMock');
       expect(cells).toHaveLength(1);
       expect(cells[0]).toHaveAttribute('data-width', '1');

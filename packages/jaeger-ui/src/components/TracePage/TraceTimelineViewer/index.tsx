@@ -108,6 +108,12 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const effectiveSidePanelWidth =
     sidePanelActive && !timelineBarsVisible ? 1 - spanNameColumnWidth : sidePanelWidth;
 
+  // Fraction of the main (non-panel) content area occupied by the name column.
+  // In side panel mode the --main container is narrowed; rescaling keeps the name column at its
+  // stored pixel width. When timeline bars are hidden the name column fills everything (= 1).
+  const panelFraction = sidePanelActive ? effectiveSidePanelWidth : 0;
+  const nameColumnWidth = timelineBarsVisible ? Math.min(spanNameColumnWidth / (1 - panelFraction), 1) : 1;
+
   // Column header label: "Trace Root" when showing the root span (explicit or fallback),
   // "Span Details" for any other selected span.
   const rootSpanID = trace.spans[0]?.spanID;
@@ -138,7 +144,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const headerRow = (
     <TimelineHeaderRow
       duration={trace.duration}
-      nameColumnWidth={spanNameColumnWidth}
+      nameColumnWidth={nameColumnWidth}
       numTicks={NUM_TICKS}
       onCollapseAll={collapseAll}
       onCollapseOne={collapseOne}
@@ -162,6 +168,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       trace={trace}
       useOtelTerms={useOtelTerms}
       currentViewRangeTime={viewRange.time.current}
+      nameColumnWidth={nameColumnWidth}
     />
   );
 

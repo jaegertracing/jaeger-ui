@@ -53,15 +53,14 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
   const [viewStart, viewEnd] = viewRangeTime.current;
   const startTime = (viewStart * duration) as IOtelSpan['startTime'];
   const endTime = (viewEnd * duration) as IOtelSpan['endTime'];
-  // When timeline column is hidden, the side panel expands to fill the freed timeline space;
-  // the service/operation column keeps its width constant.
-  const effectiveNameColumnWidth = timelineBarsVisible
-    ? nameColumnWidth
-    : 1 - (sidePanelVisible ? sidePanelWidth : 0);
-  const timelineColumnWidth = Math.max(0, 1 - nameColumnWidth - (sidePanelVisible ? sidePanelWidth : 0));
+  // nameColumnWidth is a fraction of the main (non-panel) area, computed by TraceTimelineViewer.
+  // Convert to full-page coordinates by multiplying by the main area's share.
+  const mainFraction = 1 - (sidePanelVisible ? sidePanelWidth : 0);
+  const headerNameWidth = nameColumnWidth * mainFraction;
+  const timelineColumnWidth = (1 - nameColumnWidth) * mainFraction;
   return (
     <TimelineRow className="TimelineHeaderRow">
-      <TimelineRow.Cell className="ub-flex ub-px2" width={effectiveNameColumnWidth}>
+      <TimelineRow.Cell className="ub-flex ub-px2" width={headerNameWidth}>
         <h3 className="TimelineHeaderRow--title">
           Service &amp; {props.useOtelTerms ? 'Span Name' : 'Operation'}
         </h3>
@@ -76,14 +75,14 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
         <>
           <TimelineRow.Cell width={timelineColumnWidth}>
             <TimelineViewingLayer
-              boundsInvalidator={nameColumnWidth}
+              boundsInvalidator={headerNameWidth}
               updateNextViewRangeTime={updateNextViewRangeTime}
               updateViewRangeTime={updateViewRangeTime}
               viewRangeTime={viewRangeTime}
             />
             <Ticks numTicks={numTicks} startTime={startTime} endTime={endTime} showLabels />
           </TimelineRow.Cell>
-          <VerticalResizer position={nameColumnWidth} onChange={onColummWidthChange} min={0.15} max={0.85} />
+          <VerticalResizer position={headerNameWidth} onChange={onColummWidthChange} min={0.15} max={0.85} />
         </>
       )}
       {sidePanelVisible && (
