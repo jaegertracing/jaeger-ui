@@ -7,6 +7,7 @@ import DetailState from './SpanDetail/DetailState';
 import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
+import { SpanDetailPanelMode } from '../../../types/config';
 import filterSpans from '../../../utils/filter-spans';
 import generateActionTypes from '../../../utils/generate-action-types';
 import getConfig from '../../../utils/config/get-config';
@@ -26,7 +27,7 @@ export type TSpanIdValue = { spanID: string };
 type TSpansValue = { spans: IOtelSpan[] };
 type TTraceUiFindValue = { trace: IOtelTrace; uiFind: string | TNil; allowHide?: boolean };
 export type TWidthValue = { width: number };
-export type TDetailPanelModeValue = { mode: 'inline' | 'sidepanel' };
+export type TDetailPanelModeValue = { mode: SpanDetailPanelMode };
 export type TTimelineVisibleValue = { visible: boolean };
 export type TActionTypes =
   | TSpanIdLogValue

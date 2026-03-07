@@ -297,5 +297,5 @@ Core side panel functionality.
 | `packages/jaeger-ui/src/components/TracePage/TracePageHeader/TraceViewSettings.tsx` | Settings gear dropdown (new, replaces `KeyboardShortcutsHelp`) |
 | `packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageHeader.tsx` | Page header, hosts settings dropdown |
 | `packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/index.tsx` | Reused in side panel; `eventsInitialVisibleCount` prop for side panel tuning |
-| `packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/DetailState.ts` | Expansion state; `forSidePanel()` factory for side panel defaults |
+| `packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/DetailState.ts` | Expansion state; `forDetailPanelMode(mode)` factory for mode-specific defaults |
 | `packages/jaeger-ui/src/components/common/VerticalResizer.tsx` | Reused as-is for panel divider |

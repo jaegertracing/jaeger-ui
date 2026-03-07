@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { IEvent } from '../../../../types/otel';
+import { SpanDetailPanelMode } from '../../../../types/config';
 
 /**
  * Which items of a {@link SpanDetail} component are expanded.
@@ -75,7 +76,7 @@ export default class DetailState {
   // Returns the appropriate default DetailState for the given panel mode.
   // In side-panel mode, attribute sections are expanded by default to take
   // advantage of the extra screen real estate the panel provides.
-  static forDetailPanelMode(mode: string): DetailState {
+  static forDetailPanelMode(mode: SpanDetailPanelMode): DetailState {
     const state = new DetailState();
     if (mode === 'sidepanel') {
       state.isAttributesOpen = true;

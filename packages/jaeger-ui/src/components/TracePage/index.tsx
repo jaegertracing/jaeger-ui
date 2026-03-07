@@ -48,7 +48,7 @@ import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
 import TraceLogsView from './TraceLogsView/index';
-import { StorageCapabilities, TraceGraphConfig } from '../../types/config';
+import { SpanDetailPanelMode, StorageCapabilities, TraceGraphConfig } from '../../types/config';
 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
@@ -59,7 +59,7 @@ type TDispatchProps = {
   archiveTrace: (id: string) => void;
   fetchTrace: (id: string) => void;
   focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil) => void;
-  setDetailPanelMode: (mode: 'inline' | 'sidepanel') => void;
+  setDetailPanelMode: (mode: SpanDetailPanelMode) => void;
   setTimelineBarsVisible: (visible: boolean) => void;
 };
 
@@ -78,7 +78,7 @@ type TOwnProps = {
 
 type TReduxProps = {
   archiveTraceState: TraceArchive | TNil;
-  detailPanelMode: 'inline' | 'sidepanel';
+  detailPanelMode: SpanDetailPanelMode;
   embedded: null | EmbeddedState;
   id: string;
   searchUrl: null | string;
