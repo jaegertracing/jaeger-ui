@@ -77,10 +77,15 @@ type RouteProps = {
   history: History;
 };
 
+type TDerivedStateProps = {
+  selectedSpanID: string | null;
+};
+
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
   TDispatchProps &
   TExtractUiFindFromStateReturn &
   TTraceTimeline &
+  TDerivedStateProps &
   RouteProps;
 
 // export for tests
@@ -449,11 +454,11 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const {
       childrenHiddenIDs,
       childrenToggle,
-      detailPanelMode,
       detailStates,
       detailToggle,
       findMatchesIDs,
       nameColumnWidth,
+      selectedSpanID,
       timelineBarsVisible,
       trace,
       criticalPath,
@@ -470,7 +475,6 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
-    const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;
     const isSelected = selectedSpanID === spanID;
     const hasOwnError = isErrorSpan(span);
     const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
@@ -602,10 +606,15 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 }
 
 /* istanbul ignore next */
-function mapStateToProps(state: ReduxState): TTraceTimeline & TExtractUiFindFromStateReturn {
+function mapStateToProps(
+  state: ReduxState
+): TTraceTimeline & TExtractUiFindFromStateReturn & TDerivedStateProps {
+  const { traceTimeline } = state;
+  const { detailPanelMode, detailStates } = traceTimeline;
   return {
     ...extractUiFindFromState(state),
-    ...state.traceTimeline,
+    ...traceTimeline,
+    selectedSpanID: detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null,
   };
 }
 

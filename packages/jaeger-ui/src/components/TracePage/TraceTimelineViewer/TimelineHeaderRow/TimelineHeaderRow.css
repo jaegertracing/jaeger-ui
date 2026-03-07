@@ -7,8 +7,8 @@ SPDX-License-Identifier: Apache-2.0
   background: var(--surface-tertiary);
   border-bottom: 1px solid var(--border-strong);
   color: var(--text-primary);
-  height: 38px;
-  line-height: 38px;
+  height: var(--timeline-header-row-height);
+  line-height: var(--timeline-header-row-height);
   position: fixed;
   width: 100%;
   z-index: 4;

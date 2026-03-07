@@ -53,8 +53,6 @@ type TProps = TDispatchProps & {
 };
 
 const NUM_TICKS = 5;
-// Must match the `height` rule in TimelineHeaderRow.css.
-const TIMELINE_HEADER_ROW_HEIGHT = 38;
 
 /**
  * `TraceTimelineViewer` now renders the header row because it is sensitive to
@@ -131,7 +129,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 
   // Column header label: "Trace Root" when showing the root span (explicit or fallback),
   // "Span Details" for any other selected span.
-  const rootSpanID = trace.spans[0]?.spanID;
+  const rootSpanID = trace.rootSpans[0]?.spanID;
   const sidePanelLabel =
     selectedSpanID === null || selectedSpanID === rootSpanID ? 'Trace Root' : 'Span Details';
 
@@ -150,7 +148,11 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       /* istanbul ignore next */
       if (!layoutRef.current) return;
       const { top } = layoutRef.current.getBoundingClientRect();
-      setPanelTop(top + window.scrollY + TIMELINE_HEADER_ROW_HEIGHT);
+      const headerHeight = parseInt(
+        getComputedStyle(document.documentElement).getPropertyValue('--timeline-header-row-height'),
+        10
+      );
+      setPanelTop(top + window.scrollY + headerHeight);
     };
     measure();
     window.addEventListener('resize', measure);

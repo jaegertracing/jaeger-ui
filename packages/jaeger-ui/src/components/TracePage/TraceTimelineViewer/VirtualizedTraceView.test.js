@@ -481,12 +481,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
     it('renderSpanBarRow passes isSelected=true for the span selected in side panel mode', () => {
       const selectedSpan = trace.spans[0];
-      const detailStates = new Map([[selectedSpan.spanID, new DetailState()]]);
-      const component = new VirtualizedTraceViewImpl({
-        ...mockProps,
-        detailPanelMode: 'sidepanel',
-        detailStates,
-      });
+      const component = new VirtualizedTraceViewImpl({ ...mockProps, selectedSpanID: selectedSpan.spanID });
       const result = component.renderSpanBarRow(selectedSpan, 0, 'key', {}, {});
       expect(result.props.children.props.isSelected).toBe(true);
     });

@@ -353,7 +353,18 @@ function setDetailPanelMode(state: TTraceTimeline, { mode }: TDetailPanelModeVal
       detailStates.set(firstEntry[0], firstEntry[1]);
     }
   }
-  return { ...state, detailPanelMode: mode, detailStates };
+  // When switching to sidepanel mode, ensure spanNameColumnWidth leaves room for the side panel and
+  // the minimum timeline column. A wide name column stored in inline mode would otherwise produce a
+  // zero/negative timeline column width as soon as the side panel is enabled.
+  let { spanNameColumnWidth } = state;
+  if (mode === 'sidepanel') {
+    const maxWidth = Math.min(
+      SPAN_NAME_COLUMN_WIDTH_MAX,
+      1 - state.sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH
+    );
+    spanNameColumnWidth = Math.min(spanNameColumnWidth, maxWidth);
+  }
+  return { ...state, detailPanelMode: mode, detailStates, spanNameColumnWidth };
 }
 
 function setTimelineBarsVisible(state: TTraceTimeline, { visible }: TTimelineVisibleValue): TTraceTimeline {
