@@ -7,6 +7,7 @@ import DetailState from './SpanDetail/DetailState';
 import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
+import type { SpanDetailPanelMode } from '../../../types/config';
 import filterSpans from '../../../utils/filter-spans';
 import generateActionTypes from '../../../utils/generate-action-types';
 import getConfig from '../../../utils/config/get-config';
@@ -26,7 +27,7 @@ export type TSpanIdValue = { spanID: string };
 type TSpansValue = { spans: IOtelSpan[] };
 type TTraceUiFindValue = { trace: IOtelTrace; uiFind: string | TNil; allowHide?: boolean };
 export type TWidthValue = { width: number };
-export type TDetailPanelModeValue = { mode: 'inline' | 'sidepanel' };
+export type TDetailPanelModeValue = { mode: SpanDetailPanelMode };
 export type TTimelineVisibleValue = { visible: boolean };
 export type TActionTypes =
   | TSpanIdLogValue
@@ -329,7 +330,7 @@ function detailToggle(state: TTraceTimeline, { spanID }: TSpanIdValue) {
       return { ...state, detailStates: new Map() };
     }
     const detailStates = new Map<string, DetailState>();
-    detailStates.set(spanID, new DetailState());
+    detailStates.set(spanID, DetailState.forDetailPanelMode('sidepanel'));
     return { ...state, detailStates };
   }
   // Inline mode: toggle as before, multiple spans can be expanded.
@@ -390,7 +391,7 @@ function detailSubsectionToggle(
   state: TTraceTimeline,
   { spanID }: TSpanIdValue
 ) {
-  const old = state.detailStates.get(spanID) ?? new DetailState();
+  const old = state.detailStates.get(spanID) ?? DetailState.forDetailPanelMode(state.detailPanelMode);
   let detailState;
   if (subSection === 'tags') {
     detailState = old.toggleTags();
@@ -415,7 +416,7 @@ const detailWarningsToggle = detailSubsectionToggle.bind(null, 'warnings');
 const detailReferencesToggle = detailSubsectionToggle.bind(null, 'references');
 
 function detailLogItemToggle(state: TTraceTimeline, { spanID, logItem }: TSpanIdLogValue) {
-  const old = state.detailStates.get(spanID) ?? new DetailState();
+  const old = state.detailStates.get(spanID) ?? DetailState.forDetailPanelMode(state.detailPanelMode);
   const detailState = old.toggleLogItem(logItem);
   const detailStates = new Map(state.detailStates);
   detailStates.set(spanID, detailState);

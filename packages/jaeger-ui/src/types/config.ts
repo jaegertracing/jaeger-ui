@@ -5,6 +5,8 @@ import { TPathAgnosticDecorationSchema } from '../model/path-agnostic-decoration
 import { IWebAnalyticsFunc } from './tracking';
 import { TNil } from '.';
 
+export type SpanDetailPanelMode = 'inline' | 'sidepanel';
+
 export type ConfigMenuItem = {
   label: string;
   url?: string;
@@ -216,7 +218,7 @@ export type Config = {
     // 'inline' preserves the current behavior as the default.
     // 'sidepanel' makes the side panel the default experience for new users.
     // Default: 'inline'.
-    defaultDetailPanelMode?: 'inline' | 'sidepanel';
+    defaultDetailPanelMode?: SpanDetailPanelMode;
   };
 
   // useOpenTelemetryTerms determines whether the UI uses legacy Jaeger terminology

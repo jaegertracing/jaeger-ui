@@ -77,7 +77,7 @@ export function SpanDetailSidePanelImpl(props: TProps) {
   const spanID = getSelectedSpanID(detailStates) ?? trace.rootSpans?.[0]?.spanID;
   if (!spanID) return null;
 
-  const detailState = detailStates.get(spanID) ?? new DetailState();
+  const detailState = detailStates.get(spanID) ?? DetailState.forDetailPanelMode('sidepanel');
   const span = trace.spanMap.get(spanID);
   if (!span) return null;
 
@@ -102,6 +102,7 @@ export function SpanDetailSidePanelImpl(props: TProps) {
           currentViewRangeTime={currentViewRangeTime}
           traceDuration={trace.duration}
           useOtelTerms={useOtelTerms}
+          eventsInitialVisibleCount={10}
         />
       </div>
     </div>

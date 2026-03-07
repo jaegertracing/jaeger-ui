@@ -500,6 +500,22 @@ describe('TraceTimelineViewer/duck', () => {
       expect(store.getState().detailStates.has(spanB)).toBe(true);
       expect(store.getState().detailStates.has(spanA)).toBe(false);
     });
+
+    it('creates a DetailState with attributes and resource expanded by default', () => {
+      store.dispatch(actions.detailToggle(spanA));
+      const detailState = store.getState().detailStates.get(spanA);
+      expect(detailState.isAttributesOpen).toBe(true);
+      expect(detailState.isResourceOpen).toBe(true);
+    });
+
+    it('auto-initializes with side-panel defaults when a subsection is toggled for an unknown span', () => {
+      store.dispatch(actions.detailTagsToggle(spanA));
+      const detailState = store.getState().detailStates.get(spanA);
+      // toggled from the sidepanel default (true), so should now be false
+      expect(detailState.isAttributesOpen).toBe(false);
+      // resource was not toggled, so it retains the sidepanel default
+      expect(detailState.isResourceOpen).toBe(true);
+    });
   });
 
   describe('setDetailPanelMode', () => {
