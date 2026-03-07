@@ -62,7 +62,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     <TimelineRow className="detail-row">
       {timelineBarsVisible && (
         <TimelineRow.Cell width={nameColumnWidth}>
-          <SpanTreeOffset span={span} showChildrenIcon={false} color={color} />
+          <SpanTreeOffset span={span} showChildrenIcon={false} isDetailRow color={color} />
           <span>
             <span
               className="detail-row-expanded-accent"
