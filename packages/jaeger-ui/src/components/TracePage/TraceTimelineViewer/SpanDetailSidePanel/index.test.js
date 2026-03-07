@@ -6,6 +6,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import { SpanDetailSidePanelImpl } from './index';
+import SpanDetail from '../SpanDetail';
 import DetailState from '../SpanDetail/DetailState';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
@@ -80,5 +81,18 @@ describe('<SpanDetailSidePanelImpl>', () => {
     render(<SpanDetailSidePanelImpl {...baseProps} />);
     fireEvent.click(screen.getByTestId('focus-span-button'));
     expect(baseProps.focusUiFindMatches).toHaveBeenCalledWith(baseProps.trace, 'test-find', false);
+  });
+
+  it('passes eventsInitialVisibleCount={10} to SpanDetail', () => {
+    render(<SpanDetailSidePanelImpl {...baseProps} />);
+    const props = SpanDetail.mock.lastCall[0];
+    expect(props.eventsInitialVisibleCount).toBe(10);
+  });
+
+  it('passes a side-panel default detailState with attributes and resource expanded when no span is selected', () => {
+    render(<SpanDetailSidePanelImpl {...baseProps} />);
+    const { detailState } = SpanDetail.mock.lastCall[0];
+    expect(detailState.isAttributesOpen).toBe(true);
+    expect(detailState.isResourceOpen).toBe(true);
   });
 });

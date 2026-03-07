@@ -329,7 +329,7 @@ function detailToggle(state: TTraceTimeline, { spanID }: TSpanIdValue) {
       return { ...state, detailStates: new Map() };
     }
     const detailStates = new Map<string, DetailState>();
-    detailStates.set(spanID, DetailState.forSidePanel());
+    detailStates.set(spanID, DetailState.forDetailPanelMode('sidepanel'));
     return { ...state, detailStates };
   }
   // Inline mode: toggle as before, multiple spans can be expanded.
@@ -390,7 +390,7 @@ function detailSubsectionToggle(
   state: TTraceTimeline,
   { spanID }: TSpanIdValue
 ) {
-  const old = state.detailStates.get(spanID) ?? new DetailState();
+  const old = state.detailStates.get(spanID) ?? DetailState.forDetailPanelMode(state.detailPanelMode);
   let detailState;
   if (subSection === 'tags') {
     detailState = old.toggleTags();
@@ -415,7 +415,7 @@ const detailWarningsToggle = detailSubsectionToggle.bind(null, 'warnings');
 const detailReferencesToggle = detailSubsectionToggle.bind(null, 'references');
 
 function detailLogItemToggle(state: TTraceTimeline, { spanID, logItem }: TSpanIdLogValue) {
-  const old = state.detailStates.get(spanID) ?? new DetailState();
+  const old = state.detailStates.get(spanID) ?? DetailState.forDetailPanelMode(state.detailPanelMode);
   const detailState = old.toggleLogItem(logItem);
   const detailStates = new Map(state.detailStates);
   detailStates.set(spanID, detailState);

@@ -72,12 +72,15 @@ export default class DetailState {
     return next;
   }
 
-  // Returns a DetailState pre-configured for side-panel display, where the extra
-  // screen real estate makes it useful to expand attributes sections by default.
-  static forSidePanel(): DetailState {
+  // Returns the appropriate default DetailState for the given panel mode.
+  // In side-panel mode, attribute sections are expanded by default to take
+  // advantage of the extra screen real estate the panel provides.
+  static forDetailPanelMode(mode: string): DetailState {
     const state = new DetailState();
-    state.isAttributesOpen = true;
-    state.isResourceOpen = true;
+    if (mode === 'sidepanel') {
+      state.isAttributesOpen = true;
+      state.isResourceOpen = true;
+    }
     return state;
   }
 
