@@ -21,6 +21,7 @@ SPDX-License-Identifier: Apache-2.0
 .TraceTimelineViewer--sidePanel {
   /* Fixed so the panel never scrolls with the timeline.
      top and height are set via inline style after measuring the container offset. */
+  border-left: 1px solid var(--border-default);
   overflow-y: auto;
   position: fixed;
   right: 0;

@@ -21,7 +21,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .VerticalResizer--dragger {
-  border-left: 2px solid transparent;
+  border-left: 2px solid var(--border-default);
   cursor: col-resize;
   height: calc(100vh - var(--nav-height));
   margin-left: -1px;
