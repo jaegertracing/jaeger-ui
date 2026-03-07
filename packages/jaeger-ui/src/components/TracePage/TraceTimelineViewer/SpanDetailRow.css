@@ -43,3 +43,8 @@ SPDX-License-Identifier: Apache-2.0
   border-top: 3px solid;
   padding: 0.75rem;
 }
+
+/* Extend the indent guides through the full height of the expanded detail panel */
+.detail-row .SpanTreeOffset {
+  height: 100%;
+}

@@ -88,12 +88,13 @@ describe('<SpanDetailRow>', () => {
     expect(props.onDetailToggled).toHaveBeenCalledWith(props.span.spanID);
   });
 
-  it('renders the span tree offset', () => {
+  it('renders the span tree offset with isDetailRow=true', () => {
     render(<SpanDetailRow {...props} />);
     expect(MockSpanTreeOffset).toHaveBeenCalledTimes(1);
     expect(MockSpanTreeOffset).toHaveBeenCalledWith(
       expect.objectContaining({
         span: props.span,
+        isDetailRow: true,
       })
     );
   });
