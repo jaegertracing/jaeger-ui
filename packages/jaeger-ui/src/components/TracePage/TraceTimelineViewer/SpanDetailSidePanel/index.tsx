@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 import { Location, History } from 'history';
 
-import { actions } from '../duck';
+import { actions, getSelectedSpanID } from '../duck';
 import SpanDetail from '../SpanDetail';
 import DetailState from '../SpanDetail/DetailState';
 import getLinks from '../../../../model/link-patterns';
@@ -74,8 +74,7 @@ export function SpanDetailSidePanelImpl(props: TProps) {
   // detailStates entry for the root span (since detailSubsectionToggle auto-initialises). This
   // is intentional: the root span then becomes explicitly selected and gains selection highlight,
   // while the panel label stays "Trace Root" because selectedSpanID === rootSpanID.
-  const spanID =
-    (detailStates.size > 0 ? (detailStates.keys().next().value as string) : null) ?? trace.spans[0]?.spanID;
+  const spanID = getSelectedSpanID(detailStates) ?? trace.spans[0]?.spanID;
   if (!spanID) return null;
 
   const detailState = detailStates.get(spanID) ?? new DetailState();

@@ -12,7 +12,7 @@ import _groupBy from 'lodash/groupBy';
 
 import memoizeOne from 'memoize-one';
 import { Location, History } from 'history';
-import { actions } from './duck';
+import { actions, getSelectedSpanID } from './duck';
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
@@ -470,10 +470,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
-    const selectedSpanID =
-      detailPanelMode === 'sidepanel' && detailStates.size > 0
-        ? (detailStates.keys().next().value as string)
-        : null;
+    const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;
     const isSelected = selectedSpanID === spanID;
     const hasOwnError = isErrorSpan(span);
     const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);

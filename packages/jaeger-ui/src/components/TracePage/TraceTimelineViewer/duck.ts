@@ -172,6 +172,11 @@ const fullActions = createActions<TActionTypes>({
 
 export const actions = (fullActions as any).jaegerUi.traceTimelineViewer as TTimelineViewerActions;
 
+/** Returns the currently selected span ID in side-panel mode (first key of detailStates), or null. */
+export function getSelectedSpanID(detailStates: Map<string, DetailState | TNil>): string | null {
+  return detailStates.size > 0 ? (detailStates.keys().next().value as string) : null;
+}
+
 function calculateFocusedFindRowStates(uiFind: string, spans: ReadonlyArray<IOtelSpan>, allowHide = true) {
   const spansMap = new Map();
   const childrenHiddenIDs: Set<string> = new Set();

@@ -7,6 +7,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 
 import {
   actions,
+  getSelectedSpanID,
   MIN_TIMELINE_COLUMN_WIDTH,
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
@@ -240,7 +241,7 @@ function mapStateToProps(state: ReduxState) {
     timelineBarsVisible,
     detailStates = new Map(),
   } = state.traceTimeline;
-  const selectedSpanID = detailStates.size > 0 ? (detailStates.keys().next().value as string) : null;
+  const selectedSpanID = getSelectedSpanID(detailStates);
   return { detailPanelMode, sidePanelWidth, spanNameColumnWidth, timelineBarsVisible, selectedSpanID };
 }
 
