@@ -154,6 +154,46 @@ describe('<TraceTimelineViewer>', () => {
     });
   });
 
+  describe('layout combinations', () => {
+    const combinations = [
+      { detailPanelMode: 'inline', timelineBarsVisible: true },
+      { detailPanelMode: 'inline', timelineBarsVisible: false },
+      { detailPanelMode: 'sidepanel', timelineBarsVisible: true },
+      { detailPanelMode: 'sidepanel', timelineBarsVisible: false },
+    ];
+
+    combinations.forEach(({ detailPanelMode, timelineBarsVisible }) => {
+      it(`detailPanelMode=${detailPanelMode}, timelineBarsVisible=${timelineBarsVisible}`, () => {
+        render(
+          <TraceTimelineViewerImpl
+            {...props}
+            detailPanelMode={detailPanelMode}
+            timelineBarsVisible={timelineBarsVisible}
+            selectedSpanID={null}
+          />
+        );
+
+        const sidePanelActive = detailPanelMode === 'sidepanel';
+        const resizerExpected = sidePanelActive && timelineBarsVisible;
+
+        if (sidePanelActive) {
+          expect(screen.getByTestId('span-detail-side-panel-mock')).toBeInTheDocument();
+        } else {
+          expect(screen.queryByTestId('span-detail-side-panel-mock')).not.toBeInTheDocument();
+        }
+
+        if (resizerExpected) {
+          expect(screen.getByTestId('vertical-resizer-mock')).toBeInTheDocument();
+        } else {
+          expect(screen.queryByTestId('vertical-resizer-mock')).not.toBeInTheDocument();
+        }
+
+        // VirtualizedTraceView is always rendered.
+        expect(screen.getByTestId('virtualized-trace-view-mock')).toBeInTheDocument();
+      });
+    });
+  });
+
   describe('side panel mode', () => {
     const sidePanelProps = {
       ...props,
