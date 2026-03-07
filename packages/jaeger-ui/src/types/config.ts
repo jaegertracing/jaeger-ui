@@ -210,7 +210,7 @@ export type Config = {
   traceTimeline?: {
     // enableSidePanel enables the side panel layout option in the trace timeline.
     // When false, the side panel toggle is hidden and only inline detail mode is available.
-    // Default: false (experimental, opt-in).
+    // Default: true (experimental, opt-out).
     enableSidePanel?: boolean;
 
     // defaultDetailPanelMode sets the initial detail panel mode when enableSidePanel is true
