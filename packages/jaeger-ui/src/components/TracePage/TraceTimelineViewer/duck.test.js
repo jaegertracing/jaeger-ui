@@ -11,6 +11,7 @@ import reducer, {
   collapseOne,
   expandAll,
   expandOne,
+  MIN_TIMELINE_COLUMN_WIDTH,
   SPAN_NAME_COLUMN_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
@@ -69,11 +70,11 @@ describe('TraceTimelineViewer/duck', () => {
     expect(store.getState().spanNameColumnWidth).toBe(SPAN_NAME_COLUMN_WIDTH_MAX);
   });
 
-  it('clamps spanNameColumnWidth to leave room for side panel when in sidepanel mode', () => {
-    // Default sidePanelWidth = 0.375; in side-panel mode max = min(0.85, 1 - 0.375) = 0.625
+  it('clamps spanNameColumnWidth to leave room for side panel and timeline when in sidepanel mode', () => {
+    // Default sidePanelWidth = 0.375; in side-panel mode max = min(0.85, 1 - 0.375 - MIN_TIMELINE) = 0.575
     store.dispatch(actions.setDetailPanelMode('sidepanel'));
     store.dispatch(actions.setSpanNameColumnWidth(0.7));
-    expect(store.getState().spanNameColumnWidth).toBeCloseTo(0.625);
+    expect(store.getState().spanNameColumnWidth).toBeCloseTo(0.575);
   });
 
   describe('focusUiFindMatches', () => {
@@ -577,11 +578,11 @@ describe('TraceTimelineViewer/duck', () => {
       expect(localStorage.getItem('sidePanelWidth')).toBe(String(SIDE_PANEL_WIDTH_MAX));
     });
 
-    it('clamps side panel width to leave room for the name column', () => {
-      // Set spanNameColumnWidth to 0.7; max sidePanelWidth = 1 - 0.7 = 0.3 (within valid range)
+    it('clamps side panel width to leave room for the name column and timeline', () => {
+      // spanNameColumnWidth = 0.7; max sidePanelWidth = 1 - 0.7 - MIN_TIMELINE = 0.25
       store.dispatch(actions.setSpanNameColumnWidth(0.7));
       store.dispatch(actions.setSidePanelWidth(0.5));
-      expect(store.getState().sidePanelWidth).toBeCloseTo(0.3);
+      expect(store.getState().sidePanelWidth).toBeCloseTo(0.25);
     });
   });
 

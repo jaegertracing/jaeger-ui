@@ -15,6 +15,10 @@ import './TimelineHeaderRow.css';
 
 type TimelineHeaderRowProps = {
   duration: number;
+  // nameColumnWidth is the page fraction of the name column (pre-computed by the parent).
+  // When timeline bars are hidden the side panel absorbs the timeline column; the name column
+  // keeps its stored pixel width, so nameColumnWidth equals spanNameColumnWidth in all cases
+  // except when there is no side panel and bars are hidden (then it is 1).
   nameColumnWidth: number;
   numTicks: number;
   onCollapseAll: () => void;
@@ -22,9 +26,10 @@ type TimelineHeaderRowProps = {
   onColummWidthChange: (width: number) => void;
   onExpandAll: () => void;
   onExpandOne: () => void;
+  resizerMax: number;
   sidePanelVisible: boolean;
   sidePanelWidth: number;
-  sidePanelLabel?: string;
+  sidePanelLabel: string;
   timelineBarsVisible: boolean;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
@@ -42,6 +47,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
     onColummWidthChange,
     onExpandAll,
     onExpandOne,
+    resizerMax,
     sidePanelVisible,
     sidePanelWidth,
     sidePanelLabel,
@@ -53,14 +59,10 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
   const [viewStart, viewEnd] = viewRangeTime.current;
   const startTime = (viewStart * duration) as IOtelSpan['startTime'];
   const endTime = (viewEnd * duration) as IOtelSpan['endTime'];
-  // nameColumnWidth is a fraction of the main (non-panel) area, computed by TraceTimelineViewer.
-  // Convert to full-page coordinates by multiplying by the main area's share.
-  const mainFraction = 1 - (sidePanelVisible ? sidePanelWidth : 0);
-  const headerNameWidth = nameColumnWidth * mainFraction;
-  const timelineColumnWidth = (1 - nameColumnWidth) * mainFraction;
+  const timelineColumnWidth = 1 - nameColumnWidth - (sidePanelVisible ? sidePanelWidth : 0);
   return (
     <TimelineRow className="TimelineHeaderRow">
-      <TimelineRow.Cell className="ub-flex ub-px2" width={headerNameWidth}>
+      <TimelineRow.Cell className="ub-flex ub-px2" width={nameColumnWidth}>
         <h3 className="TimelineHeaderRow--title">
           Service &amp; {props.useOtelTerms ? 'Span Name' : 'Operation'}
         </h3>
@@ -75,7 +77,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
         <>
           <TimelineRow.Cell width={timelineColumnWidth}>
             <TimelineViewingLayer
-              boundsInvalidator={headerNameWidth}
+              boundsInvalidator={nameColumnWidth}
               updateNextViewRangeTime={updateNextViewRangeTime}
               updateViewRangeTime={updateViewRangeTime}
               viewRangeTime={viewRangeTime}
@@ -83,16 +85,16 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
             <Ticks numTicks={numTicks} startTime={startTime} endTime={endTime} showLabels />
           </TimelineRow.Cell>
           <VerticalResizer
-            position={headerNameWidth}
+            position={nameColumnWidth}
             onChange={onColummWidthChange}
             min={0.15}
-            max={sidePanelVisible ? 1 - sidePanelWidth : 0.85}
+            max={resizerMax}
           />
         </>
       )}
       {sidePanelVisible && (
         <TimelineRow.Cell className="ub-flex ub-px2 TimelineHeaderRow--sidePanelCell" width={sidePanelWidth}>
-          <h3 className="TimelineHeaderRow--title">{sidePanelLabel ?? 'Span Details'}</h3>
+          <h3 className="TimelineHeaderRow--title">{sidePanelLabel}</h3>
         </TimelineRow.Cell>
       )}
     </TimelineRow>

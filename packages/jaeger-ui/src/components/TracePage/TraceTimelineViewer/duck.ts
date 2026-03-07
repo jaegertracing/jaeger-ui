@@ -17,6 +17,8 @@ export const SPAN_NAME_COLUMN_WIDTH_MIN = 0.15;
 export const SPAN_NAME_COLUMN_WIDTH_MAX = 0.85;
 export const SIDE_PANEL_WIDTH_MIN = 0.2;
 export const SIDE_PANEL_WIDTH_MAX = 0.7;
+// Minimum fraction of page width reserved for the timeline bars column when side panel is visible.
+export const MIN_TIMELINE_COLUMN_WIDTH = 0.05;
 
 // payloads
 export type TSpanIdLogValue = { logItem: IEvent; spanID: string };
@@ -218,10 +220,10 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
 }
 
 function setColumnWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
-  // In side-panel mode the name column must leave room for both the timeline and side panel.
+  // In side-panel mode the name column must leave room for both the side panel and timeline bars.
   const maxWidth =
     state.detailPanelMode === 'sidepanel'
-      ? Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - state.sidePanelWidth)
+      ? Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - state.sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH)
       : SPAN_NAME_COLUMN_WIDTH_MAX;
   const spanNameColumnWidth = Math.min(Math.max(width, SPAN_NAME_COLUMN_WIDTH_MIN), maxWidth);
   localStorage.setItem('spanNameColumnWidth', spanNameColumnWidth.toString());
@@ -340,8 +342,12 @@ function setTimelineBarsVisible(state: TTraceTimeline, { visible }: TTimelineVis
 }
 
 function setSidePanelWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
-  // The side panel must leave room for the name and timeline columns.
-  const maxWidth = Math.min(SIDE_PANEL_WIDTH_MAX, 1 - state.spanNameColumnWidth);
+  // When timeline bars are visible, reserve MIN_TIMELINE_COLUMN_WIDTH for them; otherwise the
+  // side panel can absorb all space not occupied by the name column.
+  const availableWidth = state.timelineBarsVisible
+    ? 1 - state.spanNameColumnWidth - MIN_TIMELINE_COLUMN_WIDTH
+    : 1 - state.spanNameColumnWidth;
+  const maxWidth = Math.max(SIDE_PANEL_WIDTH_MIN, Math.min(SIDE_PANEL_WIDTH_MAX, availableWidth));
   const sidePanelWidth = Math.min(Math.max(width, SIDE_PANEL_WIDTH_MIN), maxWidth);
   localStorage.setItem('sidePanelWidth', sidePanelWidth.toString());
   return { ...state, sidePanelWidth };

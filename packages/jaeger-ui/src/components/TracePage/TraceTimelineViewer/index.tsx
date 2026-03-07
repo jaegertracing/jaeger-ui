@@ -5,7 +5,13 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
-import { actions, SIDE_PANEL_WIDTH_MAX, SIDE_PANEL_WIDTH_MIN } from './duck';
+import {
+  actions,
+  MIN_TIMELINE_COLUMN_WIDTH,
+  SIDE_PANEL_WIDTH_MAX,
+  SIDE_PANEL_WIDTH_MIN,
+  SPAN_NAME_COLUMN_WIDTH_MAX,
+} from './duck';
 import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import VirtualizedTraceView from './VirtualizedTraceView';
@@ -112,7 +118,13 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   // In side panel mode the --main container is narrowed; rescaling keeps the name column at its
   // stored pixel width. When timeline bars are hidden the name column fills everything (= 1).
   const panelFraction = sidePanelActive ? effectiveSidePanelWidth : 0;
-  const nameColumnWidth = timelineBarsVisible ? Math.min(spanNameColumnWidth / (1 - panelFraction), 1) : 1;
+  const mainFraction = 1 - panelFraction;
+  const nameColumnWidth = timelineBarsVisible ? Math.min(spanNameColumnWidth / mainFraction, 1) : 1;
+  // Page-fraction width of the name column header cell and resizer position.
+  // Equals spanNameColumnWidth when bars are visible (the round-trip through mainFraction cancels).
+  // When bars are hidden with no side panel, the name column spans the full page.
+  const headerNameWidth = nameColumnWidth * mainFraction;
+  const resizerMax = sidePanelActive ? mainFraction - MIN_TIMELINE_COLUMN_WIDTH : SPAN_NAME_COLUMN_WIDTH_MAX;
 
   // Column header label: "Trace Root" when showing the root span (explicit or fallback),
   // "Span Details" for any other selected span.
@@ -132,6 +144,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   useLayoutEffect(() => {
     if (!sidePanelActive) return;
     const measure = () => {
+      /* istanbul ignore next */
       if (!layoutRef.current) return;
       const { top } = layoutRef.current.getBoundingClientRect();
       setPanelTop(top + window.scrollY + 38);
@@ -144,13 +157,14 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const headerRow = (
     <TimelineHeaderRow
       duration={trace.duration}
-      nameColumnWidth={nameColumnWidth}
+      nameColumnWidth={headerNameWidth}
       numTicks={NUM_TICKS}
       onCollapseAll={collapseAll}
       onCollapseOne={collapseOne}
       onColummWidthChange={setSpanNameColumnWidth}
       onExpandAll={expandAll}
       onExpandOne={expandOne}
+      resizerMax={resizerMax}
       sidePanelVisible={sidePanelActive}
       sidePanelWidth={effectiveSidePanelWidth}
       sidePanelLabel={sidePanelLabel}

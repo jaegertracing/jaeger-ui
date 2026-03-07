@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import { SpanDetailSidePanelImpl } from './index';
@@ -10,13 +10,19 @@ import DetailState from '../SpanDetail/DetailState';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 
-jest.mock('../SpanDetail', () => {
-  return function MockSpanDetail({ span }) {
-    return <div data-testid="span-detail-mock" data-span-id={span.spanID} />;
-  };
-});
+jest.mock('../SpanDetail', () =>
+  jest.fn(({ span, focusSpan, linksGetter }) => {
+    linksGetter([], 0);
+    return (
+      <div data-testid="span-detail-mock" data-span-id={span.spanID}>
+        <button data-testid="focus-span-button" type="button" onClick={() => focusSpan('test-find')} />
+      </div>
+    );
+  })
+);
 
 jest.mock('../../../../model/link-patterns', () => jest.fn(() => []));
+jest.mock('../../../../utils/update-ui-find', () => jest.fn());
 
 describe('<SpanDetailSidePanelImpl>', () => {
   let trace;
@@ -68,5 +74,11 @@ describe('<SpanDetailSidePanelImpl>', () => {
     const detailStates = new Map([['unknown-span-id', new DetailState()]]);
     const { container } = render(<SpanDetailSidePanelImpl {...baseProps} detailStates={detailStates} />);
     expect(container.firstChild).toBeNull();
+  });
+
+  it('calls focusUiFindMatches with the uiFind string when focusSpan is invoked', () => {
+    render(<SpanDetailSidePanelImpl {...baseProps} />);
+    fireEvent.click(screen.getByTestId('focus-span-button'));
+    expect(baseProps.focusUiFindMatches).toHaveBeenCalledWith(baseProps.trace, 'test-find', false);
   });
 });

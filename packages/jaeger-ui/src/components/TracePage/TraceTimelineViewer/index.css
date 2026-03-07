@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .TraceTimelineViewer {
-  border-bottom: 1px solid #bbb;
+  border-bottom: 1px solid var(--border-default);
 }
 
 .TraceTimelineViewer--sidePanelLayout {

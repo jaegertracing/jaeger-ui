@@ -109,21 +109,31 @@ export function SpanDetailSidePanelImpl(props: TProps) {
   );
 }
 
+/* istanbul ignore next */
 function mapStateToProps(state: ReduxState): TReduxProps {
   const { detailStates } = state.traceTimeline;
   return { detailStates };
 }
 
+/* istanbul ignore next */
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const bound = bindActionCreators(actions, dispatch) as any;
+  const {
+    detailLogItemToggle,
+    detailLogsToggle,
+    detailProcessToggle,
+    detailReferencesToggle,
+    detailTagsToggle,
+    detailWarningsToggle,
+    focusUiFindMatches,
+  } = bindActionCreators(actions, dispatch);
   return {
-    detailLogItemToggle: bound.detailLogItemToggle,
-    detailLogsToggle: bound.detailLogsToggle,
-    detailProcessToggle: bound.detailProcessToggle,
-    detailReferencesToggle: bound.detailReferencesToggle,
-    detailTagsToggle: bound.detailTagsToggle,
-    detailWarningsToggle: bound.detailWarningsToggle,
-    focusUiFindMatches: bound.focusUiFindMatches,
+    detailLogItemToggle,
+    detailLogsToggle,
+    detailProcessToggle,
+    detailReferencesToggle,
+    detailTagsToggle,
+    detailWarningsToggle,
+    focusUiFindMatches,
   };
 }
 

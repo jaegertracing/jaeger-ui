@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .span-name-wrapper:hover {
-  border-right: 1px solid #bbb;
+  border-right: 1px solid var(--border-default);
   float: left;
   min-width: calc(100% + 1px);
   overflow: visible;
@@ -65,7 +65,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .span-row.is-matching-filter:hover .span-name-wrapper {
-  background: linear-gradient(90deg, #fff5e1, #fff5e1 75%, #ffe6c9);
+  background: var(--trace-emphasis-highlight);
 }
 
 .span-row.is-expanded .span-name-wrapper {
@@ -153,6 +153,18 @@ SPDX-License-Identifier: Apache-2.0
   background: var(--trace-emphasis-highlight);
 }
 
+/* Keep selection highlight when the row is also hovered or expanded. */
+.span-row.is-selected:hover .span-name-wrapper,
+.span-row.is-selected.is-expanded .span-name-wrapper {
+  background-color: var(--interactive-primary-light);
+}
+
+.span-row.is-selected:hover .span-view,
+.span-row.is-selected.is-expanded .span-view {
+  background-color: var(--interactive-primary-light);
+  outline: 1px solid var(--interactive-primary);
+}
+
 .span-row.clipping-right .span-view::before {
   content: ' ';
   height: 100%;
@@ -164,9 +176,9 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .SpanBarRow--errorIcon {
-  background: #db2828;
+  background: var(--feedback-error);
   border-radius: 6.5px;
-  color: #fff;
+  color: var(--text-inverse);
   font-size: 0.85em;
   margin-right: 0.25rem;
   padding: 1px;
@@ -175,8 +187,8 @@ SPDX-License-Identifier: Apache-2.0
 /* Hollow variant for bubbled errors from collapsed children */
 .SpanBarRow--errorIcon--hollow {
   background: transparent;
-  border: 1.5px solid #db2828;
-  color: #db2828;
+  border: 1.5px solid var(--feedback-error);
+  color: var(--feedback-error);
   font-weight: bold;
   padding: 0px;
   /* Adjust padding since border adds 1.5px */

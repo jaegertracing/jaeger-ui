@@ -479,6 +479,18 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(result).toBeNull();
     });
 
+    it('renderSpanBarRow passes isSelected=true for the span selected in side panel mode', () => {
+      const selectedSpan = trace.spans[0];
+      const detailStates = new Map([[selectedSpan.spanID, new DetailState()]]);
+      const component = new VirtualizedTraceViewImpl({
+        ...mockProps,
+        detailPanelMode: 'sidepanel',
+        detailStates,
+      });
+      const result = component.renderSpanBarRow(selectedSpan, 0, 'key', {}, {});
+      expect(result.props.children.props.isSelected).toBe(true);
+    });
+
     it('renderSpanDetailRow returns null if detailState is missing', () => {
       const component = new VirtualizedTraceViewImpl(mockProps);
       const otelSpan = trace.spans[0];
