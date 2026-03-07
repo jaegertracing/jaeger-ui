@@ -27,6 +27,12 @@ SPDX-License-Identifier: Apache-2.0
   right: 0;
 }
 
+/* Show a permanent column divider for all VerticalResizers within the trace timeline,
+   scoped to avoid affecting other VerticalResizer usages (e.g. Deep Dependencies panel). */
+.TraceTimelineViewer .VerticalResizer--dragger {
+  border-left-color: var(--border-default);
+}
+
 .json-markup {
   line-height: 17px;
   font-size: 13px;
