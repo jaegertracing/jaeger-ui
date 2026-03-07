@@ -279,6 +279,7 @@ Core side panel functionality.
 - All four layout combinations verified with dedicated test coverage
 - Analytics tracking added for `SET_DETAIL_PANEL_MODE`, `SET_TIMELINE_BARS_VISIBLE`, and `SET_SIDE_PANEL_WIDTH`
 - Responsive guardrails (min panel width 0.2, max 0.7) were already in place from Phase 3/4
+- Confirm new functionality is working in embedded mode
 - Performance verification: implementation relies on existing memoization and virtualization; no regressions observed
 
 ## Critical Files

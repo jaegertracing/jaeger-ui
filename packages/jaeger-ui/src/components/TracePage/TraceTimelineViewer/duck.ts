@@ -346,13 +346,12 @@ function detailToggle(state: TTraceTimeline, { spanID }: TSpanIdValue) {
 function setDetailPanelMode(state: TTraceTimeline, { mode }: TDetailPanelModeValue): TTraceTimeline {
   localStorage.setItem('detailPanelMode', mode);
   let { detailStates } = state;
-  // When switching to sidepanel mode, keep at most one entry in detailStates.
-  if (mode === 'sidepanel' && detailStates.size > 1) {
-    const firstEntry = detailStates.entries().next().value;
-    detailStates = new Map();
-    if (firstEntry) {
-      detailStates.set(firstEntry[0], firstEntry[1]);
-    }
+  // When switching to sidepanel mode, keep at most one entry in detailStates and upgrade its
+  // DetailState to side-panel defaults so Attributes/Resource are expanded by default,
+  // regardless of whether the span was previously expanded in inline mode.
+  if (mode === 'sidepanel' && detailStates.size > 0) {
+    const firstKey = detailStates.keys().next().value as string;
+    detailStates = new Map([[firstKey, DetailState.forDetailPanelMode('sidepanel')]]);
   }
   // When switching to sidepanel mode, ensure spanNameColumnWidth leaves room for the side panel and
   // the minimum timeline column. A wide name column stored in inline mode would otherwise produce a

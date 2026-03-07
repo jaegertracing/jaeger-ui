@@ -543,6 +543,25 @@ describe('TraceTimelineViewer/duck', () => {
       expect(store.getState().detailStates.size).toBe(1);
     });
 
+    it('upgrades the retained inline detailState to side-panel defaults (multiple inline spans)', () => {
+      store.dispatch(actions.detailToggle(spanA));
+      store.dispatch(actions.detailToggle(spanB));
+      expect(store.getState().detailStates.get(spanA).isAttributesOpen).toBe(false);
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+      const retained = store.getState().detailStates.get(spanA);
+      expect(retained.isAttributesOpen).toBe(true);
+      expect(retained.isResourceOpen).toBe(true);
+    });
+
+    it('upgrades the retained inline detailState to side-panel defaults (single inline span)', () => {
+      store.dispatch(actions.detailToggle(spanA));
+      expect(store.getState().detailStates.get(spanA).isAttributesOpen).toBe(false);
+      store.dispatch(actions.setDetailPanelMode('sidepanel'));
+      const retained = store.getState().detailStates.get(spanA);
+      expect(retained.isAttributesOpen).toBe(true);
+      expect(retained.isResourceOpen).toBe(true);
+    });
+
     it('persists mode to localStorage', () => {
       store.dispatch(actions.setDetailPanelMode('sidepanel'));
       expect(localStorage.getItem('detailPanelMode')).toBe('sidepanel');
