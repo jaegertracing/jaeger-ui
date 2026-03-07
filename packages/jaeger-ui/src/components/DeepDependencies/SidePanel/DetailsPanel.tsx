@@ -183,9 +183,10 @@ export const UnconnectedDetailsPanel = React.memo(UnconnectedDetailsPanelImpl);
 
 const ConnectedDetailsPanel = connect(extractDecorationFromState)(UnconnectedDetailsPanel);
 
-// wrap to inject `search` from the current URL so that extractDecorationFromState
-// do not need to read state.router.location.
-function DetailsPanelWithLocation(props: React.ComponentProps<typeof ConnectedDetailsPanel>) {
+// search is always injected from useLocation(); callers cannot supply it.
+type DetailsPanelWithLocationProps = Omit<React.ComponentProps<typeof ConnectedDetailsPanel>, 'search'>;
+
+function DetailsPanelWithLocation(props: DetailsPanelWithLocationProps) {
   const { search } = useLocation();
   return <ConnectedDetailsPanel {...props} search={search} />;
 }

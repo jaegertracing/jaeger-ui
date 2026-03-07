@@ -866,8 +866,8 @@ type PropsFromRedux = ConnectedProps<typeof connector>;
 
 const ConnectedSearchForm = connector(SearchFormImpl);
 
-// the data flow is: URL -> useLocation() -> wrapper -> ownProps.search -> mapStateToProps
-function SearchFormWithLocation(props: ComponentProps<typeof ConnectedSearchForm>) {
+// search is always injected from useLocation(); callers cannot supply it.
+function SearchFormWithLocation(props: Omit<ComponentProps<typeof ConnectedSearchForm>, 'search'>) {
   const { search } = useLocation();
   return <ConnectedSearchForm {...props} search={search} />;
 }

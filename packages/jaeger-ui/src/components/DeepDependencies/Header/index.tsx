@@ -175,7 +175,7 @@ const Header: React.FC<TProps> = ({
             <IoSearch className="DdgHeader--uiFindSearchIcon" />
             <UiFindInput
               allowClear
-              forwardedRef={uiFindInput}
+              ref={uiFindInput}
               inputProps={{ className: 'DdgHeader--uiFindInput' }}
               trackFindFunction={trackFilter}
             />

@@ -402,9 +402,10 @@ const ConnectedDdgNodeContent = connect(
   mapDispatchToProps
 )(UnconnectedDdgNodeContent);
 
-// wrap to inject `search` from the current URL so that extractDecorationFromState
-// do not need to read state.router.location
-function DdgNodeContent(props: React.ComponentProps<typeof ConnectedDdgNodeContent>) {
+// search is always injected from useLocation(); callers cannot supply it.
+type DdgNodeContentProps = Omit<React.ComponentProps<typeof ConnectedDdgNodeContent>, 'search'>;
+
+function DdgNodeContent(props: DdgNodeContentProps) {
   const { search } = useLocation();
   return <ConnectedDdgNodeContent {...props} search={search} />;
 }
