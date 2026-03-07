@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event';
 import debounceMock from 'lodash/debounce';
 import '@testing-library/jest-dom';
 
-import { UnconnectedUiFindInput, extractUiFindFromState } from './UiFindInput';
+import { UnconnectedUiFindInput, extractUiFindFromState, parseUiFind } from './UiFindInput';
 import updateUiFindSpy from '../../utils/update-ui-find';
 import * as parseQuery from '../../utils/parseQuery';
 
@@ -253,40 +253,44 @@ describe('UiFind', () => {
     });
   });
 
-  describe('extractUiFindFromState', () => {
-    const reduxStateValue = 'state.router.location.search';
+  describe('parseUiFind', () => {
+    const searchString = '?uiFind=someValue';
 
     beforeEach(() => {
       queryStringParseSpy.mockReturnValue({ uiFind });
     });
 
-    it('returns uiFind from parsed state.router.location.search', () => {
-      const result = extractUiFindFromState({
-        router: {
-          location: {
-            search: reduxStateValue,
-          },
-        },
-      });
-      expect(queryStringParseSpy).toHaveBeenCalledWith(reduxStateValue);
-      expect(result).toEqual({
-        uiFind,
-      });
+    it('returns uiFind parsed from the search string', () => {
+      const result = parseUiFind(searchString);
+      expect(queryStringParseSpy).toHaveBeenCalledWith(searchString);
+      expect(result).toBe(uiFind);
     });
 
-    it('handles multiple uiFinds from parsed state.router.location.search', () => {
-      queryStringParseSpy.mockReturnValue({ uiFind: [uiFind, reduxStateValue] });
+    it('joins multiple uiFind values with a space', () => {
+      const second = 'anotherValue';
+      queryStringParseSpy.mockReturnValue({ uiFind: [uiFind, second] });
+      expect(parseUiFind(searchString)).toBe(`${uiFind} ${second}`);
+    });
+
+    it('returns undefined when uiFind is absent', () => {
+      queryStringParseSpy.mockReturnValue({});
+      expect(parseUiFind('')).toBeUndefined();
+    });
+  });
+
+  describe('extractUiFindFromState', () => {
+    const reduxStateValue = '?uiFind=fromRedux';
+
+    beforeEach(() => {
+      queryStringParseSpy.mockReturnValue({ uiFind });
+    });
+
+    it('delegates to parseUiFind using state.router.location.search', () => {
       const result = extractUiFindFromState({
-        router: {
-          location: {
-            search: reduxStateValue,
-          },
-        },
+        router: { location: { search: reduxStateValue } },
       });
       expect(queryStringParseSpy).toHaveBeenCalledWith(reduxStateValue);
-      expect(result).toEqual({
-        uiFind: `${uiFind} ${reduxStateValue}`,
-      });
+      expect(result).toEqual({ uiFind });
     });
   });
 });

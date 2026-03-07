@@ -40,9 +40,7 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
   const location = useLocation();
 
   // derive uiFind from the URL when not provided as a prop.
-  const { uiFind: uiFindFromUrl } = parseQuery(location.search);
-  const uiFindFromLocation = Array.isArray(uiFindFromUrl) ? uiFindFromUrl.join(' ') : uiFindFromUrl;
-  const prevUiFind = uiFindProp !== undefined ? uiFindProp : uiFindFromLocation;
+  const prevUiFind = uiFindProp !== undefined ? uiFindProp : parseUiFind(location.search);
   const [ownInputValue, setOwnInputValue] = useState<string | undefined>(undefined);
 
   const updateUiFindQueryParam = useMemo(
@@ -114,10 +112,13 @@ export type TExtractUiFindFromStateReturn = {
   uiFind: string | undefined;
 };
 
+export function parseUiFind(search: string): string | undefined {
+  const { uiFind } = parseQuery(search);
+  return Array.isArray(uiFind) ? uiFind.join(' ') : uiFind;
+}
+
 export function extractUiFindFromState(state: ReduxState): TExtractUiFindFromStateReturn {
-  const { uiFind: uiFindFromUrl } = parseQuery(state.router.location.search);
-  const uiFind = Array.isArray(uiFindFromUrl) ? uiFindFromUrl.join(' ') : uiFindFromUrl;
-  return { uiFind };
+  return { uiFind: parseUiFind(state.router.location.search) };
 }
 
 export default UnconnectedUiFindInput as any;
