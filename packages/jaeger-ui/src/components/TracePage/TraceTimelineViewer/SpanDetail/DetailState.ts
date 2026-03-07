@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { IEvent } from '../../../../types/otel';
-import { SpanDetailPanelMode } from '../../../../types/config';
+import type { SpanDetailPanelMode } from '../../../../types/config';
 
 /**
  * Which items of a {@link SpanDetail} component are expanded.

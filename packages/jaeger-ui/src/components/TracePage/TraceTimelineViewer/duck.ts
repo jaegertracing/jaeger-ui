@@ -7,7 +7,7 @@ import DetailState from './SpanDetail/DetailState';
 import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
-import { SpanDetailPanelMode } from '../../../types/config';
+import type { SpanDetailPanelMode } from '../../../types/config';
 import filterSpans from '../../../utils/filter-spans';
 import generateActionTypes from '../../../utils/generate-action-types';
 import getConfig from '../../../utils/config/get-config';

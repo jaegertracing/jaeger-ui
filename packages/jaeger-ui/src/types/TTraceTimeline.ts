@@ -3,7 +3,7 @@
 
 import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/DetailState';
 import TNil from './TNil';
-import { SpanDetailPanelMode } from './config';
+import type { SpanDetailPanelMode } from './config';
 
 type TTraceTimeline = {
   childrenHiddenIDs: Set<string>;

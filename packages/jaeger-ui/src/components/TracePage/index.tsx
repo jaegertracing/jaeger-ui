@@ -48,7 +48,7 @@ import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
 import TraceLogsView from './TraceLogsView/index';
-import { SpanDetailPanelMode, StorageCapabilities, TraceGraphConfig } from '../../types/config';
+import type { SpanDetailPanelMode, StorageCapabilities, TraceGraphConfig } from '../../types/config';
 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
