@@ -104,6 +104,11 @@ describe('extractDecorationFromState', () => {
     });
   });
 
+  it('defaults search to empty string when not provided, returning empty object', () => {
+    const state = makeState({ opValue: decorationValue, opMax: decorationMax });
+    expect(extractDecorationFromState(state, { service, operation })).toEqual({});
+  });
+
   it('uses first decoration if multiple exist in url', () => {
     const withoutOpValue = 'without op string value';
     const res = extractWrapper({
