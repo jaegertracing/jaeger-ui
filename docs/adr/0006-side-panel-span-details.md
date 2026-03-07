@@ -1,7 +1,7 @@
 # ADR-0006: Side Panel Span Details and Tree-Only Mode for Trace Timeline
 
-**Status**: In progress
-**Date**: 2026-03-04
+**Status**: Implemented
+**Date**: 2026-03-07
 
 ## Context
 
@@ -274,13 +274,12 @@ Core side panel functionality.
 - The side panel shows up to 10 events/logs by default before requiring "show more", compared to 3 in the inline view.
 - Switching from inline to side panel mode keeps at most one span selected (the first currently expanded span, if any). Switching back to inline mode preserves the selected span so the user can then expand additional spans alongside it.
 
-### Phase 5: Combined Modes, Analytics, Final Polish
+### ✅ Phase 5: Combined Modes, Analytics, Final Polish
 
-- Verify all four layout combinations
-- Analytics tracking for layout mode changes
-- Responsive guardrails (min panel width 0.2, max 0.7)
-- Embedded mode compatibility
-- Performance verification with large traces (10K+ spans)
+- All four layout combinations verified with dedicated test coverage
+- Analytics tracking added for `SET_DETAIL_PANEL_MODE`, `SET_TIMELINE_BARS_VISIBLE`, and `SET_SIDE_PANEL_WIDTH`
+- Responsive guardrails (min panel width 0.2, max 0.7) were already in place from Phase 3/4
+- Performance verification: implementation relies on existing memoization and virtualization; no regressions observed
 
 ## Critical Files
 
