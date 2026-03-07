@@ -268,12 +268,11 @@ Core side panel functionality.
 
 **Outcome:** Clicking a span in side panel mode shows details in right panel. Independent scrolling. Adjustable width.
 
-### Phase 4: Side Panel Polish and Integration
+### ✅ Phase 4: Side Panel Polish
 
-- Close button in panel header (dispatches `DETAIL_TOGGLE` for the displayed span, removing it from `detailStates`)
-- Next/prev span navigation in panel header
-- Keyboard shortcuts for panel navigation (`TracePage/keyboard-shortcuts.ts`)
-- Mode-switching transition logic: switching from inline to sidepanel keeps only the first entry in `detailStates` (if any); switching from sidepanel to inline keeps the current entry (user can then expand additional spans)
+- When a span is shown in the side panel, its Attributes and Resource sections are expanded by default, taking advantage of the extra screen real estate the panel provides. The inline detail view is unaffected.
+- The side panel shows up to 10 events/logs by default before requiring "show more", compared to 3 in the inline view.
+- Switching from inline to side panel mode keeps at most one span selected (the first currently expanded span, if any). Switching back to inline mode preserves the selected span so the user can then expand additional spans alongside it.
 
 ### Phase 5: Combined Modes, Analytics, Final Polish
 
@@ -297,5 +296,6 @@ Core side panel functionality.
 | `packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetailRow.tsx` | Full-width in tree-only mode |
 | `packages/jaeger-ui/src/components/TracePage/TracePageHeader/TraceViewSettings.tsx` | Settings gear dropdown (new, replaces `KeyboardShortcutsHelp`) |
 | `packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageHeader.tsx` | Page header, hosts settings dropdown |
-| `packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/index.tsx` | Reused in side panel |
+| `packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/index.tsx` | Reused in side panel; `eventsInitialVisibleCount` prop for side panel tuning |
+| `packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/DetailState.ts` | Expansion state; `forSidePanel()` factory for side panel defaults |
 | `packages/jaeger-ui/src/components/common/VerticalResizer.tsx` | Reused as-is for panel divider |

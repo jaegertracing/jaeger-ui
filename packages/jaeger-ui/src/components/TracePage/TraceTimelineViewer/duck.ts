@@ -329,7 +329,7 @@ function detailToggle(state: TTraceTimeline, { spanID }: TSpanIdValue) {
       return { ...state, detailStates: new Map() };
     }
     const detailStates = new Map<string, DetailState>();
-    detailStates.set(spanID, new DetailState());
+    detailStates.set(spanID, DetailState.forSidePanel());
     return { ...state, detailStates };
   }
   // Inline mode: toggle as before, multiple spans can be expanded.

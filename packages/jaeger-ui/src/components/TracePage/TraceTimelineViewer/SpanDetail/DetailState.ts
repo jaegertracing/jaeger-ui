@@ -72,6 +72,15 @@ export default class DetailState {
     return next;
   }
 
+  // Returns a DetailState pre-configured for side-panel display, where the extra
+  // screen real estate makes it useful to expand attributes sections by default.
+  static forSidePanel(): DetailState {
+    const state = new DetailState();
+    state.isAttributesOpen = true;
+    state.isResourceOpen = true;
+    return state;
+  }
+
   // Legacy method names for backward compatibility
   toggleTags() {
     return this.toggleAttributes();
