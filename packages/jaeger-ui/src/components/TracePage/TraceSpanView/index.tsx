@@ -27,14 +27,12 @@ export default function TraceSpanView(props: Props) {
     serviceName: [],
     operationName: [],
   });
-  const [filteredData, setFilteredData] = useState<readonly IOtelSpan[]>([]);
 
   const {
-    svcNamesList: serviceNamesList,
-    opNames: opNamesList,
-    svcToOps: svcToOperationsMap,
-    maximumDuration: maxDuration,
-    spanData: data,
+    serviceNamesList,
+    operationNamesList: opNamesList,
+    serviceToOperationsMap: svcToOperationsMap,
+    maxDuration,
   } = useMemo(() => {
     const serviceNamesSet = new Set<string>();
     const operationNamesSet = new Set<string>();
@@ -51,34 +49,61 @@ export default function TraceSpanView(props: Props) {
       serviceToOperationsMap.get(serviceName)!.add(span.name);
     }
 
-    const svcNamesList = [...serviceNamesSet].sort();
-    const opNames = [...operationNamesSet].sort();
+    // Sort alphabetically for better UX
+    const serviceNamesList = [...serviceNamesSet].sort();
+    const operationNamesList = [...operationNamesSet].sort();
 
-    const svcToOps = new Map<string, string[]>();
+    // Convert operation sets to sorted arrays
+    const sortedServiceToOperationsMap = new Map<string, string[]>();
     serviceToOperationsMap.forEach((ops, svc) => {
-      svcToOps.set(svc, [...ops].sort());
+      sortedServiceToOperationsMap.set(svc, [...ops].sort());
     });
 
-    const maximumDuration = Math.max(...props.trace.spans.map(s => s.duration), 1);
-    const spanData = props.trace.spans;
+    // Compute max duration once for the entire trace
+    let maxDuration = 1;
+    for (const span of props.trace.spans) {
+      if (span.duration > maxDuration) {
+        maxDuration = span.duration;
+      }
+    }
 
     return {
-      svcNamesList,
-      opNames,
-      svcToOps,
-      maximumDuration,
-      spanData,
+      serviceNamesList,
+      operationNamesList,
+      serviceToOperationsMap: sortedServiceToOperationsMap,
+      maxDuration,
     };
   }, [props.trace.spans]);
 
+  const filteredData = useMemo(() => {
+    if (filters.serviceName.length === 0 && filters.operationName.length === 0) {
+      return props.trace.spans;
+    }
+
+    // Filter spans: a span passes if it matches all active filters
+    return props.trace.spans.filter(span => {
+      if (filters.serviceName && filters.serviceName.length > 0) {
+        if (!filters.serviceName.includes(span.resource.serviceName)) {
+          return false;
+        }
+      }
+
+      // Check operationName filter (if active)
+      if (filters.operationName && filters.operationName.length > 0) {
+        if (!filters.operationName.includes(span.name)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [props.trace.spans, filters]);
+
   useEffect(() => {
-    setFilteredData(props.trace.spans);
     setFilters({ serviceName: [], operationName: [] });
   }, [props.trace.spans]);
 
   function handleResetFilter() {
     setFilters({ serviceName: [], operationName: [] });
-    setFilteredData(props.trace.spans);
   }
 
   function uniqueOperationNameOptions() {
@@ -99,26 +124,7 @@ export default function TraceSpanView(props: Props) {
       [filterType]: selectedValues,
     };
 
-    // Filter spans: a span passes if it matches all active filters
-    const newFilteredData = data.filter(span => {
-      if (newFilters.serviceName && newFilters.serviceName.length > 0) {
-        if (!newFilters.serviceName.includes(span.resource.serviceName)) {
-          return false;
-        }
-      }
-
-      // Check operationName filter (if active)
-      if (newFilters.operationName && newFilters.operationName.length > 0) {
-        if (!newFilters.operationName.includes(span.name)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-
     setFilters(newFilters);
-    setFilteredData(newFilteredData);
   }
 
   const columns: ColumnProps<IOtelSpan>[] = [
@@ -250,7 +256,7 @@ export default function TraceSpanView(props: Props) {
             mode="multiple"
             style={{ width: '100%' }}
             maxTagCount={4}
-            value={filters.serviceName || []}
+            value={filters.serviceName}
             maxTagPlaceholder={`+ ${(filters.serviceName?.length || 0) - 4} Selected`}
             placeholder="Select Service"
             onChange={entry => {
@@ -280,7 +286,7 @@ export default function TraceSpanView(props: Props) {
             mode="multiple"
             style={{ width: '100%' }}
             maxTagCount={4}
-            value={filters.operationName || []}
+            value={filters.operationName}
             maxTagPlaceholder={`+ ${(filters.operationName?.length || 0) - 4} Selected`}
             placeholder={props.useOtelTerms ? 'Select Span Name' : 'Select Operation'}
             onChange={entry => {
