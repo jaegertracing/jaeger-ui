@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import { Tooltip } from 'antd';
+import { useLocation } from 'react-router-dom-v5-compat';
 import _get from 'lodash/get';
 import { connect } from 'react-redux';
 
@@ -180,4 +181,13 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
 
 export const UnconnectedDetailsPanel = React.memo(UnconnectedDetailsPanelImpl);
 
-export default connect(extractDecorationFromState)(UnconnectedDetailsPanel);
+const ConnectedDetailsPanel = connect(extractDecorationFromState)(UnconnectedDetailsPanel);
+
+// wrap to inject `search` from the current URL so that extractDecorationFromState
+// do not need to read state.router.location.
+function DetailsPanelWithLocation(props: React.ComponentProps<typeof ConnectedDetailsPanel>) {
+  const { search } = useLocation();
+  return <ConnectedDetailsPanel {...props} search={search} />;
+}
+
+export default DetailsPanelWithLocation;

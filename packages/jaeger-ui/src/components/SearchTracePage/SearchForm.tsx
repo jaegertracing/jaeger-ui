@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, ComponentProps } from 'react';
 import { Input, Button, Popover, Select, Row, Col, Form, Switch } from 'antd';
 import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
@@ -11,6 +11,7 @@ import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
 import { connect, ConnectedProps } from 'react-redux';
+import { useLocation } from 'react-router-dom-v5-compat';
 import { bindActionCreators, Dispatch } from 'redux';
 import store from 'store';
 
@@ -735,7 +736,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 };
 
-export function mapStateToProps(state: ReduxState) {
+export function mapStateToProps(state: ReduxState, ownProps: { search?: string }) {
   const {
     service,
     limit,
@@ -748,7 +749,7 @@ export function mapStateToProps(state: ReduxState) {
     minDuration,
     lookback,
     traceID: traceIDParams,
-  } = queryString.parse(state.router.location.search);
+  } = queryString.parse(ownProps.search || '');
 
   const nowInMicroseconds = dayjs().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);
@@ -863,4 +864,12 @@ export function mapDispatchToProps(dispatch: Dispatch) {
 const connector = connect(mapStateToProps, mapDispatchToProps);
 type PropsFromRedux = ConnectedProps<typeof connector>;
 
-export default connector(SearchFormImpl);
+const ConnectedSearchForm = connector(SearchFormImpl);
+
+// the data flow is: URL -> useLocation() -> wrapper -> ownProps.search -> mapStateToProps
+function SearchFormWithLocation(props: ComponentProps<typeof ConnectedSearchForm>) {
+  const { search } = useLocation();
+  return <ConnectedSearchForm {...props} search={search} />;
+}
+
+export default SearchFormWithLocation;
