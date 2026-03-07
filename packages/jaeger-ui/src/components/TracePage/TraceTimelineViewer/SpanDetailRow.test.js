@@ -40,7 +40,7 @@ describe('<SpanDetailRow>', () => {
   };
   const props = {
     color: 'some-color',
-    columnDivision: 0.5,
+    nameColumnWidth: 0.5,
     timelineBarsVisible: true,
     detailState: new DetailState(),
     onDetailToggled: jest.fn(),
