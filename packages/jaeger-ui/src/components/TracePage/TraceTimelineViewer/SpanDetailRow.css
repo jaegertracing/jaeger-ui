@@ -8,6 +8,8 @@ SPDX-License-Identifier: Apache-2.0
   height: 100%;
   overflow: hidden;
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
 }
 

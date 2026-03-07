@@ -171,6 +171,47 @@ describe('SpanTreeOffset', () => {
         expect(rootGuide.querySelector('.SpanTreeOffset--horizontalLine')).toBeNull();
       });
     });
+
+    describe('self-guide in detail row (parent span)', () => {
+      it('renders a self-guide when isDetailRow is true and span has children', () => {
+        const parentWithChildren = {
+          ...ownSpan,
+          hasChildren: true,
+          childSpans: [{ spanID: 'childSpanID' }],
+        };
+        const { getByTestId } = render(
+          <UnconnectedSpanTreeOffset
+            {...props}
+            span={parentWithChildren}
+            isDetailRow
+            showChildrenIcon={false}
+          />
+        );
+        expect(getByTestId('detail-row-self-guide')).toBeInTheDocument();
+        expect(getByTestId('detail-row-self-guide')).toHaveClass('SpanTreeOffset--indentGuide');
+        expect(getByTestId('detail-row-self-guide')).not.toHaveClass('is-last');
+        expect(getByTestId('detail-row-self-guide')).not.toHaveClass('is-terminated');
+      });
+
+      it('does not render a self-guide when isDetailRow is false', () => {
+        const parentWithChildren = {
+          ...ownSpan,
+          hasChildren: true,
+          childSpans: [{ spanID: 'childSpanID' }],
+        };
+        const { queryByTestId } = render(
+          <UnconnectedSpanTreeOffset {...props} span={parentWithChildren} showChildrenIcon={false} />
+        );
+        expect(queryByTestId('detail-row-self-guide')).toBeNull();
+      });
+
+      it('does not render a self-guide when span has no children', () => {
+        const { queryByTestId } = render(
+          <UnconnectedSpanTreeOffset {...props} span={ownSpan} isDetailRow showChildrenIcon={false} />
+        );
+        expect(queryByTestId('detail-row-self-guide')).toBeNull();
+      });
+    });
   });
 
   describe('icon', () => {

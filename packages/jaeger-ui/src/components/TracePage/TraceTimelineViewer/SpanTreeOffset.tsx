@@ -154,6 +154,9 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
           </span>
         );
       })}
+      {isDetailRow && hasChildren && (
+        <span className="SpanTreeOffset--indentGuide" style={{ color }} data-testid="detail-row-self-guide" />
+      )}
       {showChildrenIcon && (
         <span
           className={cx('SpanTreeOffset--iconWrapper', {
