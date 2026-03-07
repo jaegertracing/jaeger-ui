@@ -17,6 +17,8 @@ export const SPAN_NAME_COLUMN_WIDTH_MIN = 0.15;
 export const SPAN_NAME_COLUMN_WIDTH_MAX = 0.85;
 export const SIDE_PANEL_WIDTH_MIN = 0.2;
 export const SIDE_PANEL_WIDTH_MAX = 0.7;
+// Minimum fraction of page width reserved for the timeline bars column when side panel is visible.
+export const MIN_TIMELINE_COLUMN_WIDTH = 0.05;
 
 // payloads
 export type TSpanIdLogValue = { logItem: IEvent; spanID: string };
@@ -61,15 +63,47 @@ export function newInitialState(): TTraceTimeline {
   const storedTimelineVisible = localStorage.getItem('timelineVisible');
   const timelineBarsVisible = storedTimelineVisible === null ? true : storedTimelineVisible !== 'false';
 
-  const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
-  const sidePanelWidth = Number.isNaN(parsedSidePanelWidth)
-    ? 0.45
-    : Math.min(Math.max(parsedSidePanelWidth, SIDE_PANEL_WIDTH_MIN), SIDE_PANEL_WIDTH_MAX);
-
   const parsedSpanNameColumnWidth = parseFloat(localStorage.getItem('spanNameColumnWidth') ?? '');
-  const spanNameColumnWidth = Number.isNaN(parsedSpanNameColumnWidth)
+  let spanNameColumnWidth = Number.isNaN(parsedSpanNameColumnWidth)
     ? 0.25
     : Math.min(Math.max(parsedSpanNameColumnWidth, SPAN_NAME_COLUMN_WIDTH_MIN), SPAN_NAME_COLUMN_WIDTH_MAX);
+
+  const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
+  const sidePanelWidthExplicit = !Number.isNaN(parsedSidePanelWidth);
+  // Default: equal split between timeline and span details columns, clamped to allowed range.
+  const rawSidePanelWidth = sidePanelWidthExplicit ? parsedSidePanelWidth : (1 - spanNameColumnWidth) / 2;
+  let sidePanelWidth = Math.min(Math.max(rawSidePanelWidth, SIDE_PANEL_WIDTH_MIN), SIDE_PANEL_WIDTH_MAX);
+  // Sanity check: the two stored widths must leave room for the timeline column.
+  // Only applies when sidePanelWidth was explicitly stored (not derived from spanNameColumnWidth),
+  // since the default formula always produces a consistent value before clamping.
+  // First try resetting only sidePanelWidth. If spanNameColumnWidth is so large that even the
+  // minimum side-panel width leaves no room (sum still >= 1), reset both to defaults.
+  if (sidePanelWidthExplicit && spanNameColumnWidth + sidePanelWidth >= 1) {
+    sidePanelWidth = Math.min(
+      Math.max((1 - spanNameColumnWidth) / 2, SIDE_PANEL_WIDTH_MIN),
+      SIDE_PANEL_WIDTH_MAX
+    );
+    if (spanNameColumnWidth + sidePanelWidth >= 1) {
+      spanNameColumnWidth = 0.25;
+      sidePanelWidth = (1 - spanNameColumnWidth) / 2; // 0.375, within [SIDE_PANEL_WIDTH_MIN, SIDE_PANEL_WIDTH_MAX]
+    }
+  }
+  // Second sanity check: in side-panel mode the timeline column must also have MIN_TIMELINE_COLUMN_WIDTH.
+  // This covers the case where sidePanelWidth was derived (not explicit) but was clamped up to
+  // SIDE_PANEL_WIDTH_MIN, leaving no room for the minimum timeline column.
+  if (
+    detailPanelMode === 'sidepanel' &&
+    spanNameColumnWidth + sidePanelWidth > 1 - MIN_TIMELINE_COLUMN_WIDTH
+  ) {
+    sidePanelWidth = Math.min(
+      Math.max(1 - MIN_TIMELINE_COLUMN_WIDTH - spanNameColumnWidth, SIDE_PANEL_WIDTH_MIN),
+      SIDE_PANEL_WIDTH_MAX
+    );
+    if (spanNameColumnWidth + sidePanelWidth > 1 - MIN_TIMELINE_COLUMN_WIDTH) {
+      spanNameColumnWidth = 0.25;
+      sidePanelWidth = (1 - MIN_TIMELINE_COLUMN_WIDTH - spanNameColumnWidth) / 2; // within [SIDE_PANEL_WIDTH_MIN, SIDE_PANEL_WIDTH_MAX]
+    }
+  }
 
   return {
     childrenHiddenIDs: new Set(),
@@ -138,6 +172,11 @@ const fullActions = createActions<TActionTypes>({
 
 export const actions = (fullActions as any).jaegerUi.traceTimelineViewer as TTimelineViewerActions;
 
+/** Returns the currently selected span ID in side-panel mode (first key of detailStates), or null. */
+export function getSelectedSpanID(detailStates: Map<string, DetailState | TNil>): string | null {
+  return detailStates.size > 0 ? (detailStates.keys().next().value as string) : null;
+}
+
 function calculateFocusedFindRowStates(uiFind: string, spans: ReadonlyArray<IOtelSpan>, allowHide = true) {
   const spansMap = new Map();
   const childrenHiddenIDs: Set<string> = new Set();
@@ -202,10 +241,12 @@ function setTrace(state: TTraceTimeline, { uiFind, trace }: TTraceUiFindValue) {
 }
 
 function setColumnWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
-  const spanNameColumnWidth = Math.min(
-    Math.max(width, SPAN_NAME_COLUMN_WIDTH_MIN),
-    SPAN_NAME_COLUMN_WIDTH_MAX
-  );
+  // In side-panel mode the name column must leave room for both the side panel and timeline bars.
+  const maxWidth =
+    state.detailPanelMode === 'sidepanel'
+      ? Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - state.sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH)
+      : SPAN_NAME_COLUMN_WIDTH_MAX;
+  const spanNameColumnWidth = Math.min(Math.max(width, SPAN_NAME_COLUMN_WIDTH_MIN), maxWidth);
   localStorage.setItem('spanNameColumnWidth', spanNameColumnWidth.toString());
   return { ...state, spanNameColumnWidth };
 }
@@ -312,7 +353,18 @@ function setDetailPanelMode(state: TTraceTimeline, { mode }: TDetailPanelModeVal
       detailStates.set(firstEntry[0], firstEntry[1]);
     }
   }
-  return { ...state, detailPanelMode: mode, detailStates };
+  // When switching to sidepanel mode, ensure spanNameColumnWidth leaves room for the side panel and
+  // the minimum timeline column. A wide name column stored in inline mode would otherwise produce a
+  // zero/negative timeline column width as soon as the side panel is enabled.
+  let { spanNameColumnWidth } = state;
+  if (mode === 'sidepanel') {
+    const maxWidth = Math.min(
+      SPAN_NAME_COLUMN_WIDTH_MAX,
+      1 - state.sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH
+    );
+    spanNameColumnWidth = Math.min(spanNameColumnWidth, maxWidth);
+  }
+  return { ...state, detailPanelMode: mode, detailStates, spanNameColumnWidth };
 }
 
 function setTimelineBarsVisible(state: TTraceTimeline, { visible }: TTimelineVisibleValue): TTraceTimeline {
@@ -322,7 +374,13 @@ function setTimelineBarsVisible(state: TTraceTimeline, { visible }: TTimelineVis
 }
 
 function setSidePanelWidth(state: TTraceTimeline, { width }: TWidthValue): TTraceTimeline {
-  const sidePanelWidth = Math.min(Math.max(width, SIDE_PANEL_WIDTH_MIN), SIDE_PANEL_WIDTH_MAX);
+  // When timeline bars are visible, reserve MIN_TIMELINE_COLUMN_WIDTH for them; otherwise the
+  // side panel can absorb all space not occupied by the name column.
+  const availableWidth = state.timelineBarsVisible
+    ? 1 - state.spanNameColumnWidth - MIN_TIMELINE_COLUMN_WIDTH
+    : 1 - state.spanNameColumnWidth;
+  const maxWidth = Math.max(SIDE_PANEL_WIDTH_MIN, Math.min(SIDE_PANEL_WIDTH_MAX, availableWidth));
+  const sidePanelWidth = Math.min(Math.max(width, SIDE_PANEL_WIDTH_MIN), maxWidth);
   localStorage.setItem('sidePanelWidth', sidePanelWidth.toString());
   return { ...state, sidePanelWidth };
 }
@@ -332,10 +390,7 @@ function detailSubsectionToggle(
   state: TTraceTimeline,
   { spanID }: TSpanIdValue
 ) {
-  const old = state.detailStates.get(spanID);
-  if (!old) {
-    return state;
-  }
+  const old = state.detailStates.get(spanID) ?? new DetailState();
   let detailState;
   if (subSection === 'tags') {
     detailState = old.toggleTags();
@@ -360,10 +415,7 @@ const detailWarningsToggle = detailSubsectionToggle.bind(null, 'warnings');
 const detailReferencesToggle = detailSubsectionToggle.bind(null, 'references');
 
 function detailLogItemToggle(state: TTraceTimeline, { spanID, logItem }: TSpanIdLogValue) {
-  const old = state.detailStates.get(spanID);
-  if (!old) {
-    return state;
-  }
+  const old = state.detailStates.get(spanID) ?? new DetailState();
   const detailState = old.toggleLogItem(logItem);
   const detailStates = new Map(state.detailStates);
   detailStates.set(spanID, detailState);
