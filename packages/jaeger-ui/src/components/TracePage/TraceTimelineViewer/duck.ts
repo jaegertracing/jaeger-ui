@@ -88,6 +88,22 @@ export function newInitialState(): TTraceTimeline {
       sidePanelWidth = (1 - spanNameColumnWidth) / 2; // 0.375, within [SIDE_PANEL_WIDTH_MIN, SIDE_PANEL_WIDTH_MAX]
     }
   }
+  // Second sanity check: in side-panel mode the timeline column must also have MIN_TIMELINE_COLUMN_WIDTH.
+  // This covers the case where sidePanelWidth was derived (not explicit) but was clamped up to
+  // SIDE_PANEL_WIDTH_MIN, leaving no room for the minimum timeline column.
+  if (
+    detailPanelMode === 'sidepanel' &&
+    spanNameColumnWidth + sidePanelWidth > 1 - MIN_TIMELINE_COLUMN_WIDTH
+  ) {
+    sidePanelWidth = Math.min(
+      Math.max(1 - MIN_TIMELINE_COLUMN_WIDTH - spanNameColumnWidth, SIDE_PANEL_WIDTH_MIN),
+      SIDE_PANEL_WIDTH_MAX
+    );
+    if (spanNameColumnWidth + sidePanelWidth > 1 - MIN_TIMELINE_COLUMN_WIDTH) {
+      spanNameColumnWidth = 0.25;
+      sidePanelWidth = (1 - MIN_TIMELINE_COLUMN_WIDTH - spanNameColumnWidth) / 2; // within [SIDE_PANEL_WIDTH_MIN, SIDE_PANEL_WIDTH_MAX]
+    }
+  }
 
   return {
     childrenHiddenIDs: new Set(),

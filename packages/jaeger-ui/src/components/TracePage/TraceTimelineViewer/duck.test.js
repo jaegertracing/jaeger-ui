@@ -674,6 +674,30 @@ describe('TraceTimelineViewer/duck', () => {
       expect(state.sidePanelWidth).toBe(0.375); // (1 - 0.25) / 2
     });
 
+    it('in sidepanel mode resets both widths when derived sidePanelWidth (clamped to min) violates MIN_TIMELINE_COLUMN_WIDTH', () => {
+      // spanNameColumnWidth = 0.76 (stored), sidePanelWidth not stored
+      // derived = (1 - 0.76) / 2 = 0.12, clamped to SIDE_PANEL_WIDTH_MIN = 0.2
+      // 0.76 + 0.2 = 0.96 > 1 - MIN_TIMELINE_COLUMN_WIDTH (0.95)
+      // available for side panel = 0.95 - 0.76 = 0.19 < SIDE_PANEL_WIDTH_MIN → reset both to defaults
+      getConfig.mockReturnValue({ traceTimeline: { enableSidePanel: true } });
+      localStorage.setItem('spanNameColumnWidth', '0.76');
+      localStorage.setItem('detailPanelMode', 'sidepanel');
+      const state = newInitialState();
+      expect(state.spanNameColumnWidth).toBe(0.25);
+      expect(state.sidePanelWidth).toBeCloseTo((1 - MIN_TIMELINE_COLUMN_WIDTH - 0.25) / 2);
+    });
+
+    it('in sidepanel mode preserves widths when they satisfy MIN_TIMELINE_COLUMN_WIDTH', () => {
+      // spanNameColumnWidth = 0.5, derived sidePanelWidth = (1 - 0.5) / 2 = 0.25
+      // 0.5 + 0.25 = 0.75 <= 0.95 → no violation
+      getConfig.mockReturnValue({ traceTimeline: { enableSidePanel: true } });
+      localStorage.setItem('spanNameColumnWidth', '0.5');
+      localStorage.setItem('detailPanelMode', 'sidepanel');
+      const state = newInitialState();
+      expect(state.spanNameColumnWidth).toBe(0.5);
+      expect(state.sidePanelWidth).toBe(0.25);
+    });
+
     it('clamps spanNameColumnWidth to SPAN_NAME_COLUMN_WIDTH_MIN when stored value is below range', () => {
       localStorage.setItem('spanNameColumnWidth', '0');
       const state = newInitialState();

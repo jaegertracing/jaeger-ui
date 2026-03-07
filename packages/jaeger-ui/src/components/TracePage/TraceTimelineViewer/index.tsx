@@ -52,6 +52,8 @@ type TProps = TDispatchProps & {
 };
 
 const NUM_TICKS = 5;
+// Must match the `height` rule in TimelineHeaderRow.css.
+const TIMELINE_HEADER_ROW_HEIGHT = 38;
 
 /**
  * `TraceTimelineViewer` now renders the header row because it is sensitive to
@@ -147,7 +149,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       /* istanbul ignore next */
       if (!layoutRef.current) return;
       const { top } = layoutRef.current.getBoundingClientRect();
-      setPanelTop(top + window.scrollY + 38);
+      setPanelTop(top + window.scrollY + TIMELINE_HEADER_ROW_HEIGHT);
     };
     measure();
     window.addEventListener('resize', measure);
@@ -205,7 +207,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
           {timelineBarsVisible && (
             <VerticalResizer
               position={1 - sidePanelWidth}
-              min={1 - SIDE_PANEL_WIDTH_MAX}
+              min={1 - Math.min(SIDE_PANEL_WIDTH_MAX, 1 - spanNameColumnWidth - MIN_TIMELINE_COLUMN_WIDTH)}
               max={1 - SIDE_PANEL_WIDTH_MIN}
               onChange={newPosition => setSidePanelWidth(1 - newPosition)}
             />
