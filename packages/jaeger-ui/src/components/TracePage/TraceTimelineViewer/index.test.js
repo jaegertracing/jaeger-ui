@@ -22,7 +22,7 @@ jest.mock('../../common/VerticalResizer', () => ({
   ),
 }));
 jest.mock('./TimelineHeaderRow', () => props => (
-  <div data-testid="timeline-header-row-mock">
+  <div data-testid="timeline-header-row-mock" data-side-panel-label={props.sidePanelLabel}>
     <button data-testid="collapse-all-button" type="button" onClick={props.onCollapseAll}>
       Collapse All
     </button>
@@ -91,7 +91,8 @@ describe('<TraceTimelineViewer>', () => {
   });
 
   it('mapStateToProps derives selectedSpanID from non-empty detailStates', () => {
-    const spanID = trace.spans[0].spanID;
+    // The root span is selected → selectedSpanID === rootSpanID → label should be 'Trace Root'.
+    const spanID = trace.rootSpans[0].spanID;
     renderWithRedux(<TraceTimelineViewer {...props} />, {
       initialState: {
         traceTimeline: {
@@ -103,7 +104,10 @@ describe('<TraceTimelineViewer>', () => {
         },
       },
     });
-    expect(screen.getByTestId('timeline-header-row-mock')).toBeInTheDocument();
+    // Side panel renders because detailPanelMode is 'sidepanel'.
+    expect(screen.getByTestId('span-detail-side-panel-mock')).toBeInTheDocument();
+    // selectedSpanID === rootSpanID → sidePanelLabel === 'Trace Root'.
+    expect(screen.getByTestId('timeline-header-row-mock').dataset.sidePanelLabel).toBe('Trace Root');
   });
 
   it('it sets up actions', () => {

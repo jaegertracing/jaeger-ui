@@ -156,7 +156,17 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     };
     measure();
     window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    // ResizeObserver catches layout shifts that window resize misses (e.g. slim-header toggle,
+    // archive notifier appearing), which would change the layout container's document offset.
+    /* istanbul ignore next */
+    const resizeObserver = new ResizeObserver(measure);
+    /* istanbul ignore next */
+    if (layoutRef.current) resizeObserver.observe(layoutRef.current);
+    return () => {
+      window.removeEventListener('resize', measure);
+      /* istanbul ignore next */
+      resizeObserver.disconnect();
+    };
   }, [sidePanelActive]);
 
   const headerRow = (
