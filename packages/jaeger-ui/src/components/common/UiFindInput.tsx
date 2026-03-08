@@ -7,7 +7,6 @@ import { IoClose } from 'react-icons/io5';
 import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
 import _debounce from 'lodash/debounce';
 import _isString from 'lodash/isString';
-import { connect } from 'react-redux';
 
 import updateUiFind from '../../utils/update-ui-find';
 import { TNil, ReduxState } from '../../types/index';
@@ -17,13 +16,10 @@ type TOwnProps = {
   allowClear?: boolean;
   inputProps?: Record<string, any>;
   trackFindFunction?: (str: string | TNil) => void;
+  uiFind?: string;
 };
 
-export type TExtractUiFindFromStateReturn = {
-  uiFind: string | undefined;
-};
-
-type TProps = TOwnProps & TExtractUiFindFromStateReturn;
+type TProps = TOwnProps;
 
 const defaultProps: Partial<TProps> = {
   inputProps: {},
@@ -33,8 +29,8 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
   const {
     allowClear,
     inputProps,
-    uiFind: prevUiFind,
     trackFindFunction,
+    uiFind: uiFindProp,
   } = {
     ...defaultProps,
     ...props,
@@ -42,6 +38,9 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  // derive uiFind from the URL when not provided as a prop.
+  const prevUiFind = uiFindProp !== undefined ? uiFindProp : parseUiFind(location.search);
   const [ownInputValue, setOwnInputValue] = useState<string | undefined>(undefined);
 
   const updateUiFindQueryParam = useMemo(
@@ -109,10 +108,17 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
 
 UnconnectedUiFindInput.displayName = 'UnconnectedUiFindInput';
 
-export function extractUiFindFromState(state: ReduxState): TExtractUiFindFromStateReturn {
-  const { uiFind: uiFindFromUrl } = parseQuery(state.router.location.search);
-  const uiFind = Array.isArray(uiFindFromUrl) ? uiFindFromUrl.join(' ') : uiFindFromUrl;
-  return { uiFind };
+export type TExtractUiFindFromStateReturn = {
+  uiFind: string | undefined;
+};
+
+export function parseUiFind(search: string): string | undefined {
+  const { uiFind } = parseQuery(search);
+  return Array.isArray(uiFind) ? uiFind.join(' ') : uiFind;
 }
 
-export default connect(extractUiFindFromState)(UnconnectedUiFindInput) as any;
+export function extractUiFindFromState(state: ReduxState): TExtractUiFindFromStateReturn {
+  return { uiFind: parseUiFind(state.router.location.search) };
+}
+
+export default UnconnectedUiFindInput as any;

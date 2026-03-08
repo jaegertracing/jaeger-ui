@@ -1,14 +1,30 @@
 // Copyright (c) 2020 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+// Mutable object so individual tests can control the location without re-creating the mock.
+const mockLocation = { search: '' };
+
+jest.mock('react-router-dom-v5-compat', () => ({
+  ...jest.requireActual('react-router-dom-v5-compat'),
+  useLocation: () => mockLocation,
+}));
+
+jest.mock('../../../model/path-agnostic-decorations', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({})),
+}));
+
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import _set from 'lodash/set';
+import { Provider } from 'react-redux';
 
+import extractDecorationFromState from '../../../model/path-agnostic-decorations';
 import stringSupplant from '../../../utils/stringSupplant';
 import JaegerAPI from '../../../api/jaeger';
 import { UnconnectedDetailsPanel as DetailsPanel } from './DetailsPanel';
+import DefaultDetailsPanel from './DetailsPanel';
 
 jest.mock('../../common/VerticalResizer', () => {
   return ({ onChange, position }) => (
@@ -271,6 +287,36 @@ describe('<SidePanel>', () => {
       fireEvent.click(resizer);
 
       expect(container.querySelector('.Ddg--DetailsPanel')).toHaveStyle('width: 60vw');
+    });
+  });
+
+  describe('DetailsPanelWithLocation (default export)', () => {
+    const store = {
+      getState: () => ({}),
+      dispatch: jest.fn(),
+      subscribe: jest.fn(() => jest.fn()),
+    };
+    const wrapperProps = {
+      decorationSchema: { name: 'Wrapper Test Schema' },
+      service: 'wrapper-test-svc',
+    };
+
+    beforeEach(() => {
+      extractDecorationFromState.mockClear();
+      extractDecorationFromState.mockReturnValue({});
+    });
+
+    it('injects search from useLocation() into the connected component', () => {
+      mockLocation.search = '?decoration=my-decoration-id';
+      render(
+        <Provider store={store}>
+          <DefaultDetailsPanel {...wrapperProps} />
+        </Provider>
+      );
+      expect(extractDecorationFromState).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({ search: '?decoration=my-decoration-id' })
+      );
     });
   });
 });

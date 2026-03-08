@@ -334,18 +334,11 @@ describe('TraceDiff', () => {
   });
 
   describe('mapStateToProps', () => {
-    const getOwnProps = ({ a = defaultA, b = defaultB } = {}) => ({
-      params: {
-        a,
-        b,
-      },
+    const getOwnProps = ({ a = defaultA, b = defaultB, cohortIds = defaultCohortIds } = {}) => ({
+      params: { a, b },
+      search: queryString.stringify({ cohort: cohortIds }),
     });
     const makeTestReduxState = ({ cohortIds = defaultCohortIds } = {}) => ({
-      router: {
-        location: {
-          search: queryString.stringify({ cohort: cohortIds }),
-        },
-      },
       trace: {
         traces: cohortIds.reduce((traces, id) => ({ ...traces, [id]: { id, state: fetchedState.DONE } }), {}),
       },
@@ -366,11 +359,14 @@ describe('TraceDiff', () => {
 
     it('defaults cohort to empty array if a, b, and cohort are not available', () => {
       expect(
-        mapStateToProps(makeTestReduxState({ cohortIds: [] }), getOwnProps({ a: null, b: null })).cohort
+        mapStateToProps(
+          makeTestReduxState({ cohortIds: [] }),
+          getOwnProps({ a: null, b: null, cohortIds: [] })
+        ).cohort
       ).toEqual([]);
     });
 
-    it('gets cohort from ownProps and state.router.location.search', () => {
+    it('gets cohort from ownProps.search and ownProps.params', () => {
       expect(mapStateToProps(makeTestReduxState(), getOwnProps()).cohort).toEqual([
         defaultA,
         defaultB,
@@ -389,33 +385,36 @@ describe('TraceDiff', () => {
         ...defaultCohortIds,
       ]);
 
+      const extendedCohort = [...defaultCohortIds, '', nonDefaultCohortId];
       expect(
         mapStateToProps(
-          makeTestReduxState({ cohortIds: [...defaultCohortIds, '', nonDefaultCohortId] }),
-          getOwnProps()
+          makeTestReduxState({ cohortIds: extendedCohort }),
+          getOwnProps({ cohortIds: extendedCohort })
         ).cohort
       ).toEqual([defaultA, defaultB, ...defaultCohortIds, nonDefaultCohortId]);
     });
 
     it('filters redundant values from cohort', () => {
+      const cohortWithExtra = [...defaultCohortIds, nonDefaultCohortId];
       expect(
         mapStateToProps(
-          makeTestReduxState({ cohortIds: [...defaultCohortIds, nonDefaultCohortId] }),
-          getOwnProps({ a: nonDefaultCohortId })
+          makeTestReduxState({ cohortIds: cohortWithExtra }),
+          getOwnProps({ a: nonDefaultCohortId, cohortIds: cohortWithExtra })
         ).cohort
       ).toEqual([nonDefaultCohortId, defaultB, ...defaultCohortIds]);
 
       expect(
         mapStateToProps(
-          makeTestReduxState({ cohortIds: [...defaultCohortIds, nonDefaultCohortId] }),
-          getOwnProps({ b: nonDefaultCohortId })
+          makeTestReduxState({ cohortIds: cohortWithExtra }),
+          getOwnProps({ b: nonDefaultCohortId, cohortIds: cohortWithExtra })
         ).cohort
       ).toEqual([defaultA, nonDefaultCohortId, ...defaultCohortIds]);
 
+      const cohortWithDuplicate = [...defaultCohortIds, nonDefaultCohortId, nonDefaultCohortId];
       expect(
         mapStateToProps(
-          makeTestReduxState({ cohortIds: [...defaultCohortIds, nonDefaultCohortId, nonDefaultCohortId] }),
-          getOwnProps()
+          makeTestReduxState({ cohortIds: cohortWithDuplicate }),
+          getOwnProps({ cohortIds: cohortWithDuplicate })
         ).cohort
       ).toEqual([defaultA, defaultB, ...defaultCohortIds, nonDefaultCohortId]);
     });

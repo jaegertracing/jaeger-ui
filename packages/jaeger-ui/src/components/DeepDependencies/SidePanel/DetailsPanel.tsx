@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import { Tooltip } from 'antd';
+import { useLocation } from 'react-router-dom-v5-compat';
 import _get from 'lodash/get';
 import { connect } from 'react-redux';
 
@@ -180,4 +181,14 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
 
 export const UnconnectedDetailsPanel = React.memo(UnconnectedDetailsPanelImpl);
 
-export default connect(extractDecorationFromState)(UnconnectedDetailsPanel);
+const ConnectedDetailsPanel = connect(extractDecorationFromState)(UnconnectedDetailsPanel);
+
+// search is always injected from useLocation(); callers cannot supply it.
+type DetailsPanelWithLocationProps = Omit<React.ComponentProps<typeof ConnectedDetailsPanel>, 'search'>;
+
+function DetailsPanelWithLocation(props: DetailsPanelWithLocationProps) {
+  const { search } = useLocation();
+  return <ConnectedDetailsPanel {...props} search={search} />;
+}
+
+export default DetailsPanelWithLocation;
