@@ -4,14 +4,13 @@
 import React, { useCallback } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
-import { Location, History } from 'history';
+import { useLocation, useNavigate } from 'react-router-dom-v5-compat';
 
 import { actions, getSelectedSpanID } from '../duck';
 import SpanDetail from '../SpanDetail';
 import DetailState from '../SpanDetail/DetailState';
 import getLinks from '../../../../model/link-patterns';
 import updateUiFind from '../../../../utils/update-ui-find';
-import withRouteProps from '../../../../utils/withRouteProps';
 import { TNil, ReduxState } from '../../../../types';
 import { IAttribute, IEvent, IOtelTrace } from '../../../../types/otel';
 
@@ -37,12 +36,7 @@ type TDispatchProps = {
   focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil, allowHide?: boolean) => void;
 };
 
-type RouteProps = {
-  location: Location;
-  history: History;
-};
-
-type TProps = TOwnProps & TReduxProps & TDispatchProps & RouteProps;
+type TProps = TOwnProps & TReduxProps & TDispatchProps;
 
 export function SpanDetailSidePanelImpl(props: TProps) {
   const {
@@ -57,16 +51,17 @@ export function SpanDetailSidePanelImpl(props: TProps) {
     detailTagsToggle,
     detailWarningsToggle,
     focusUiFindMatches,
-    location,
-    history,
   } = props;
+
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const focusSpan = useCallback(
     (uiFind: string) => {
-      updateUiFind({ location, history, uiFind });
+      updateUiFind({ location, navigate, uiFind });
       focusUiFindMatches(trace, uiFind, false);
     },
-    [location, history, trace, focusUiFindMatches]
+    [location, navigate, trace, focusUiFindMatches]
   );
 
   // Show the explicitly selected span, falling back to the root span when nothing is selected.
@@ -140,4 +135,4 @@ function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
 export default connect<TReduxProps, TDispatchProps, TOwnProps, ReduxState>(
   mapStateToProps,
   mapDispatchToProps
-)(withRouteProps(SpanDetailSidePanelImpl));
+)(SpanDetailSidePanelImpl);

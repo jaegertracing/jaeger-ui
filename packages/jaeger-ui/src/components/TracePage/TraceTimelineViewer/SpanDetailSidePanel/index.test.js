@@ -3,6 +3,8 @@
 
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { CompatRouter } from 'react-router-dom-v5-compat';
 import '@testing-library/jest-dom';
 
 import { SpanDetailSidePanelImpl } from './index';
@@ -43,54 +45,100 @@ describe('<SpanDetailSidePanelImpl>', () => {
       detailTagsToggle: jest.fn(),
       detailWarningsToggle: jest.fn(),
       focusUiFindMatches: jest.fn(),
-      location: { pathname: '/', search: '', hash: '', state: undefined },
-      history: { push: jest.fn() },
     };
   });
 
   it('renders without crashing', () => {
-    render(<SpanDetailSidePanelImpl {...baseProps} />);
+    render(
+      <MemoryRouter>
+        <CompatRouter>
+          <SpanDetailSidePanelImpl {...baseProps} />
+        </CompatRouter>
+      </MemoryRouter>
+    );
     expect(screen.getByTestId('span-detail-mock')).toBeInTheDocument();
   });
 
   it('shows the root span when detailStates is empty', () => {
-    render(<SpanDetailSidePanelImpl {...baseProps} />);
+    render(
+      <MemoryRouter>
+        <CompatRouter>
+          <SpanDetailSidePanelImpl {...baseProps} />
+        </CompatRouter>
+      </MemoryRouter>
+    );
     expect(screen.getByTestId('span-detail-mock').dataset.spanId).toBe(trace.spans[0].spanID);
   });
 
   it('shows the explicitly selected span when detailStates has an entry', () => {
     const secondSpan = trace.spans[1];
     const detailStates = new Map([[secondSpan.spanID, new DetailState()]]);
-    render(<SpanDetailSidePanelImpl {...baseProps} detailStates={detailStates} />);
+    render(
+      <MemoryRouter>
+        <CompatRouter>
+          <SpanDetailSidePanelImpl {...baseProps} detailStates={detailStates} />
+        </CompatRouter>
+      </MemoryRouter>
+    );
     expect(screen.getByTestId('span-detail-mock').dataset.spanId).toBe(secondSpan.spanID);
   });
 
   it('returns null when trace has no spans', () => {
     const emptyTrace = { ...trace, spans: [], spanMap: new Map() };
-    const { container } = render(<SpanDetailSidePanelImpl {...baseProps} trace={emptyTrace} />);
+    const { container } = render(
+      <MemoryRouter>
+        <CompatRouter>
+          <SpanDetailSidePanelImpl {...baseProps} trace={emptyTrace} />
+        </CompatRouter>
+      </MemoryRouter>
+    );
     expect(container.firstChild).toBeNull();
   });
 
   it('returns null when detailStates references an unknown spanID', () => {
     const detailStates = new Map([['unknown-span-id', new DetailState()]]);
-    const { container } = render(<SpanDetailSidePanelImpl {...baseProps} detailStates={detailStates} />);
+    const { container } = render(
+      <MemoryRouter>
+        <CompatRouter>
+          <SpanDetailSidePanelImpl {...baseProps} detailStates={detailStates} />
+        </CompatRouter>
+      </MemoryRouter>
+    );
     expect(container.firstChild).toBeNull();
   });
 
   it('calls focusUiFindMatches with the uiFind string when focusSpan is invoked', () => {
-    render(<SpanDetailSidePanelImpl {...baseProps} />);
+    render(
+      <MemoryRouter>
+        <CompatRouter>
+          <SpanDetailSidePanelImpl {...baseProps} />
+        </CompatRouter>
+      </MemoryRouter>
+    );
     fireEvent.click(screen.getByTestId('focus-span-button'));
     expect(baseProps.focusUiFindMatches).toHaveBeenCalledWith(baseProps.trace, 'test-find', false);
   });
 
   it('passes eventsInitialVisibleCount={10} to SpanDetail', () => {
-    render(<SpanDetailSidePanelImpl {...baseProps} />);
+    render(
+      <MemoryRouter>
+        <CompatRouter>
+          <SpanDetailSidePanelImpl {...baseProps} />
+        </CompatRouter>
+      </MemoryRouter>
+    );
     const props = SpanDetail.mock.lastCall[0];
     expect(props.eventsInitialVisibleCount).toBe(10);
   });
 
   it('passes a side-panel default detailState with attributes and resource expanded when no span is selected', () => {
-    render(<SpanDetailSidePanelImpl {...baseProps} />);
+    render(
+      <MemoryRouter>
+        <CompatRouter>
+          <SpanDetailSidePanelImpl {...baseProps} />
+        </CompatRouter>
+      </MemoryRouter>
+    );
     const { detailState } = SpanDetail.mock.lastCall[0];
     expect(detailState.isAttributesOpen).toBe(true);
     expect(detailState.isResourceOpen).toBe(true);
