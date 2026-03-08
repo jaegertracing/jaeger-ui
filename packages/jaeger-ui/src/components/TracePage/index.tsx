@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { InputRef } from 'antd';
-import { Location, History as RouterHistory } from 'history';
+import { Location, NavigateFunction, useNavigate } from 'react-router-dom-v5-compat';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
@@ -64,7 +64,7 @@ type TDispatchProps = {
 };
 
 type TOwnProps = {
-  history: RouterHistory;
+  navigate: NavigateFunction;
   location: Location<LocationState>;
   params: { id: string };
   archiveEnabled: boolean;
@@ -238,9 +238,9 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   clearSearch = () => {
-    const { history, location } = this.props;
+    const { navigate, location } = this.props;
     updateUiFind({
-      history,
+      navigate,
       location,
       trackFindFunction: trackFilter,
     });
@@ -296,9 +296,10 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       fetchTrace(id);
       return;
     }
-    const { history } = this.props;
+    const { navigate } = this.props;
     if (id && id !== id.toLowerCase()) {
-      history.replace(getLocation(id.toLowerCase(), location.state));
+      const { state, ...to } = getLocation(id.toLowerCase(), location.state);
+      navigate(to, { replace: true, state });
     }
   }
 
@@ -517,16 +518,17 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
 const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
 
 type TracePageProps = {
-  history: RouterHistory;
   location: Location<LocationState>;
   params: { id: string };
 };
 
-const TracePage = (props: TracePageProps) => {
+const TracePage = ({ history: _history, ...props }: TracePageProps & { history: any }) => {
   const config = useConfig();
+  const navigate = useNavigate();
   return (
     <ConnectedTracePage
       {...props}
+      navigate={navigate}
       archiveEnabled={Boolean(config.archiveEnabled)}
       enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
       storageCapabilities={config.storageCapabilities}
