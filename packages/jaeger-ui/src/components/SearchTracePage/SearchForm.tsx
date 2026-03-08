@@ -11,7 +11,8 @@ import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
 import { connect, ConnectedProps } from 'react-redux';
-import { useLocation } from 'react-router-dom-v5-compat';
+import { useLocation, useNavigate } from 'react-router-dom-v5-compat';
+import { getUrl as getSearchUrl } from './url';
 import { bindActionCreators, Dispatch } from 'redux';
 import store from 'store';
 
@@ -271,7 +272,7 @@ export function submitForm(
   searchTraces: SearchTracesFunction,
   adjustTime: string | null | undefined,
   adjustTimeEnabled: boolean
-): void {
+): string {
   const {
     resultsLimit,
     service,
@@ -312,7 +313,7 @@ export function submitForm(
 
   trackFormInput(resultsLimit, operation, tags || '', minDuration, maxDuration, lookback, service);
 
-  searchTraces({
+  const query: SearchQuery = {
     service,
     operation: operation !== DEFAULT_OPERATION ? operation : undefined,
     limit: resultsLimit,
@@ -322,7 +323,9 @@ export function submitForm(
     tags: convTagsLogfmt(tags) || undefined,
     minDuration: minDuration || null,
     maxDuration: maxDuration || null,
-  } as SearchQuery);
+  };
+  searchTraces(query);
+  return getSearchUrl(query as Parameters<typeof getSearchUrl>[0]);
 }
 
 interface ISearchFormImplProps {
@@ -336,7 +339,7 @@ interface ISearchFormImplProps {
     fields: ISearchFormFields,
     adjustEndTime: string | null | undefined,
     adjustTimeEnabled: boolean
-  ) => void;
+  ) => string;
 }
 
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
@@ -347,6 +350,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   initialValues,
   submitFormHandler,
 }) => {
+  const navigate = useNavigate();
   const { useOpenTelemetryTerms: useOtelTerms } = useConfig();
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
@@ -404,9 +408,10 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      submitFormHandler(formData as ISearchFormFields, searchAdjustEndTime, adjustTimeEnabled);
+      const url = submitFormHandler(formData as ISearchFormFields, searchAdjustEndTime, adjustTimeEnabled);
+      navigate(url);
     },
-    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler]
+    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate]
   );
 
   const { service: selectedService, lookback: selectedLookback } = formData;
@@ -857,7 +862,7 @@ export function mapDispatchToProps(dispatch: Dispatch) {
       fields: ISearchFormFields,
       adjustEndTime: string | null | undefined,
       adjustTimeEnabled: boolean
-    ) => submitForm(fields, searchTraces, adjustEndTime || null, adjustTimeEnabled),
+    ) => submitForm(fields, searchTraces, adjustEndTime || null, adjustTimeEnabled) as string,
   };
 }
 
