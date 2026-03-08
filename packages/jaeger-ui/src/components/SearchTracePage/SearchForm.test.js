@@ -37,6 +37,7 @@ jest.mock('../../hooks/useTraceDiscovery', () => ({
 }));
 
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom-v5-compat';
 import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { act } from 'react';
 import '@testing-library/jest-dom';
@@ -87,7 +88,7 @@ const defaultProps = {
     label: '2 Days',
     value: '2d',
   },
-  submitFormHandler: jest.fn(),
+  submitFormHandler: jest.fn().mockReturnValue('/search'),
 };
 
 describe('conversion utils', () => {
@@ -444,6 +445,10 @@ describe('submitForm()', () => {
   });
 });
 
+function renderForm(ui) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
+
 describe('<SearchForm>', () => {
   afterEach(cleanup);
   beforeEach(() => {
@@ -453,18 +458,18 @@ describe('<SearchForm>', () => {
   });
 
   it('enables operations only when a service is selected', async () => {
-    render(<SearchForm key="fresh" {...defaultProps} />);
+    renderForm(<SearchForm key="fresh" {...defaultProps} />);
 
     expect(SearchableSelect.disabled.operation).toBe(true);
     cleanup();
 
-    render(<SearchForm key="with-svc" {...defaultProps} initialValues={{ service: 'svcA' }} />);
+    renderForm(<SearchForm key="with-svc" {...defaultProps} initialValues={{ service: 'svcA' }} />);
 
     await waitFor(() => expect(SearchableSelect.disabled.operation).toBe(false));
   });
 
   it('keeps operation disabled when no service selected', () => {
-    render(<SearchForm {...defaultProps} />);
+    renderForm(<SearchForm {...defaultProps} />);
 
     expect(SearchableSelect.disabled.operation).toBe(true);
   });
@@ -481,7 +486,7 @@ describe('<SearchForm>', () => {
       },
     };
 
-    const { container } = render(<SearchForm key="custom-date" {...props} />);
+    const { container } = renderForm(<SearchForm key="custom-date" {...props} />);
 
     const startDateInput = container.querySelector('input[name="startDate"]');
     const endDateInput = container.querySelector('input[name="endDate"]');
@@ -491,7 +496,7 @@ describe('<SearchForm>', () => {
   });
 
   it('disables the submit button when a service is not selected', () => {
-    const { container } = render(
+    const { container } = renderForm(
       <SearchForm key="disabled-no-svc" {...defaultProps} initialValues={{ service: '-' }} />
     );
 
@@ -500,7 +505,7 @@ describe('<SearchForm>', () => {
   });
 
   it('disables the submit button when the form has invalid data', () => {
-    const { container } = render(
+    const { container } = renderForm(
       <SearchForm
         key="disabled-invalid"
         {...defaultProps}
@@ -514,7 +519,7 @@ describe('<SearchForm>', () => {
   });
 
   it('disables the submit button when duration is invalid', () => {
-    const { container } = render(
+    const { container } = renderForm(
       <SearchForm key="duration-val" {...defaultProps} initialValues={{ service: 'svcA' }} />
     );
 
@@ -538,7 +543,7 @@ describe('<SearchForm>', () => {
     const originalGetConfig = window.getJaegerUiConfig;
     window.getJaegerUiConfig = jest.fn(() => config);
 
-    const { container } = render(<SearchForm {...defaultProps} />);
+    const { container } = renderForm(<SearchForm {...defaultProps} />);
 
     const limitInput = container.querySelector('input[name="resultsLimit"]');
     expect(limitInput).toHaveAttribute('max');
@@ -547,7 +552,7 @@ describe('<SearchForm>', () => {
   });
 
   it('updates state when tags input changes', () => {
-    const { container } = render(<SearchForm {...defaultProps} />);
+    const { container } = renderForm(<SearchForm {...defaultProps} />);
 
     const tagsInput = container.querySelector('input[name="tags"]');
     fireEvent.change(tagsInput, { target: { value: 'new=tag' } });
@@ -556,7 +561,7 @@ describe('<SearchForm>', () => {
   });
 
   it('prevents default form submission behavior', async () => {
-    const { container } = render(
+    const { container } = renderForm(
       <SearchForm {...defaultProps} searchAdjustEndTime="1m" initialValues={{ service: 'svcA' }} />
     );
     const form = container.querySelector('form');
@@ -590,7 +595,7 @@ describe('<SearchForm>', () => {
         error: new Error('Failed to fetch services'),
       });
 
-      const { container } = render(<SearchForm {...defaultProps} />);
+      const { container } = renderForm(<SearchForm {...defaultProps} />);
 
       // Should still render the form
       expect(container.querySelector('form')).toBeInTheDocument();
@@ -612,7 +617,7 @@ describe('<SearchForm>', () => {
         error: new Error('Failed to fetch span names'),
       });
 
-      const { container } = render(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+      const { container } = renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
 
       // Should still render the form
       expect(container.querySelector('form')).toBeInTheDocument();
@@ -630,7 +635,7 @@ describe('<SearchForm>', () => {
         error: new Error('Service error'),
       });
 
-      const { container } = render(<SearchForm {...defaultProps} />);
+      const { container } = renderForm(<SearchForm {...defaultProps} />);
 
       // Form should still be present
       const form = container.querySelector('form');
@@ -654,7 +659,7 @@ describe('<SearchForm>', () => {
         error: new Error('Span names error'),
       });
 
-      const { container } = render(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+      const { container } = renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
 
       // Form should still be present
       const form = container.querySelector('form');
@@ -690,7 +695,7 @@ describe('SearchForm onChange handlers', () => {
       },
     };
 
-    const { getByTestId, container } = render(<SearchForm key="on-change" {...props} />);
+    const { getByTestId, container } = renderForm(<SearchForm key="on-change" {...props} />);
 
     // Service
     await act(async () => {
