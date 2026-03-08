@@ -28,6 +28,7 @@ type TProps = {
   childrenVisible?: boolean;
   onClick?: () => void;
   showChildrenIcon?: boolean;
+  isDetailRow?: boolean;
   span: IOtelSpan;
   color: string;
 };
@@ -36,6 +37,7 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   childrenVisible = false,
   onClick = undefined,
   showChildrenIcon = true,
+  isDetailRow = false,
   span,
   hoverIndentGuideIds,
   addHoverIndentGuideId,
@@ -131,8 +133,12 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
           <span
             key={ancestor.spanID}
             className={cx('SpanTreeOffset--indentGuide', {
-              'is-last': isLastAncestor && isLastChild,
-              'is-terminated': !isLastAncestor && shouldTerminate,
+              // In a span bar row: show top-half line to connect to the horizontal bar
+              // In a detail row: treat the same case as terminated (no line) since the
+              // branch already terminated at the span row above
+              'is-last': !isDetailRow && isLastAncestor && isLastChild,
+              'is-terminated':
+                (!isLastAncestor && shouldTerminate) || (isDetailRow && isLastAncestor && isLastChild),
             })}
             style={{
               color: guideColor,
@@ -142,12 +148,15 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
             onMouseEnter={event => handleMouseEnter(event, ancestor.spanID)}
             onMouseLeave={event => handleMouseLeave(event, ancestor.spanID)}
           >
-            {isLastAncestor && (
+            {isLastAncestor && !isDetailRow && (
               <span className="SpanTreeOffset--horizontalLine" style={{ backgroundColor: parentColor }} />
             )}
           </span>
         );
       })}
+      {isDetailRow && hasChildren && (
+        <span className="SpanTreeOffset--indentGuide" style={{ color }} data-testid="detail-row-self-guide" />
+      )}
       {showChildrenIcon && (
         <span
           className={cx('SpanTreeOffset--iconWrapper', {

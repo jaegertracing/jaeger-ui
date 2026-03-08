@@ -49,6 +49,7 @@ type RowState = {
 type TVirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
   findMatchesIDs: Set<string> | TNil;
+  nameColumnWidth: number;
   scrollToFirstVisibleSpan: () => void;
   registerAccessors: (accesors: Accessors) => void;
   trace: IOtelTrace;
@@ -75,10 +76,15 @@ type RouteProps = {
   location: Location;
 };
 
+type TDerivedStateProps = {
+  selectedSpanID: string | null;
+};
+
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
   TDispatchProps &
   TExtractUiFindFromStateReturn &
   TTraceTimeline &
+  TDerivedStateProps &
   RouteProps;
 
 // export for tests
@@ -93,7 +99,8 @@ const NUM_TICKS = 5;
 function generateRowStates(
   spans: ReadonlyArray<IOtelSpan> | TNil,
   childrenHiddenIDs: Set<string>,
-  detailStates: Map<string, DetailState | TNil>
+  detailStates: Map<string, DetailState | TNil>,
+  detailPanelMode: 'inline' | 'sidepanel'
 ): RowState[] {
   if (!spans) {
     return [];
@@ -122,7 +129,8 @@ function generateRowStates(
       isDetail: false,
       spanIndex: i,
     });
-    if (detailStates.has(spanID)) {
+    // In side panel mode, detail rows are shown in the panel, not inline.
+    if (detailPanelMode !== 'sidepanel' && detailStates.has(spanID)) {
       rowStates.push({
         span,
         isDetail: true,
@@ -136,12 +144,13 @@ function generateRowStates(
 function generateRowStatesFromTrace(
   trace: IOtelTrace | TNil,
   childrenHiddenIDs: Set<string>,
-  detailStates: Map<string, DetailState | TNil>
+  detailStates: Map<string, DetailState | TNil>,
+  detailPanelMode: 'inline' | 'sidepanel'
 ): RowState[] {
   if (!trace) {
     return [];
   }
-  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
+  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates, detailPanelMode);
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -497,7 +506,9 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = pro
       detailStates,
       detailToggle,
       findMatchesIDs,
-      spanNameColumnWidth,
+      nameColumnWidth,
+      selectedSpanID,
+      timelineBarsVisible,
       trace,
       criticalPath,
       useOtelTerms,
@@ -620,10 +631,15 @@ export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = pro
 };
 
 /* istanbul ignore next */
-function mapStateToProps(state: ReduxState): TTraceTimeline & TExtractUiFindFromStateReturn {
+function mapStateToProps(
+  state: ReduxState
+): TTraceTimeline & TExtractUiFindFromStateReturn & TDerivedStateProps {
+  const { traceTimeline } = state;
+  const { detailPanelMode, detailStates } = traceTimeline;
   return {
     ...extractUiFindFromState(state),
-    ...state.traceTimeline,
+    ...traceTimeline,
+    selectedSpanID: detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null,
   };
 }
 export const testableHelpers = {

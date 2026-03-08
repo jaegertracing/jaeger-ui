@@ -4,6 +4,7 @@
 import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
+import { useLocation } from 'react-router-dom-v5-compat';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 import { IoLocate, IoEyeOff } from 'react-icons/io5';
 import { connect } from 'react-redux';
@@ -396,6 +397,17 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-const DdgNodeContent = connect(extractDecorationFromState, mapDispatchToProps)(UnconnectedDdgNodeContent);
+const ConnectedDdgNodeContent = connect(
+  extractDecorationFromState,
+  mapDispatchToProps
+)(UnconnectedDdgNodeContent);
+
+// search is always injected from useLocation(); callers cannot supply it.
+type DdgNodeContentProps = Omit<React.ComponentProps<typeof ConnectedDdgNodeContent>, 'search'>;
+
+function DdgNodeContent(props: DdgNodeContentProps) {
+  const { search } = useLocation();
+  return <ConnectedDdgNodeContent {...props} search={search} />;
+}
 
 export default DdgNodeContent;

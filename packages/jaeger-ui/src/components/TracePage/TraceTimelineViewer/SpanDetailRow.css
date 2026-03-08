@@ -8,6 +8,8 @@ SPDX-License-Identifier: Apache-2.0
   height: 100%;
   overflow: hidden;
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
 }
 
@@ -42,4 +44,14 @@ SPDX-License-Identifier: Apache-2.0
   border: 1px solid var(--border-strong);
   border-top: 3px solid;
   padding: 0.75rem;
+}
+
+/* Extend the indent guides through the full height of the expanded detail panel.
+   position:relative + z-index ensures SpanTreeOffset stacks above the
+   absolutely-positioned detail-row-expanded-accent overlay so that indent-guide
+   hover interactions are never blocked. */
+.detail-row .SpanTreeOffset {
+  height: 100%;
+  position: relative;
+  z-index: 1;
 }

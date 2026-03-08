@@ -34,7 +34,8 @@ type TDispatchProps = {
 };
 
 type TOwnProps = {
-  params: TDiffRouteParams;
+  params: TDiffRouteParams & { id?: string };
+  search?: string;
 };
 
 function syncStates(
@@ -154,8 +155,21 @@ export function TraceDiffImpl({
 
 // TODO(joe): simplify but do not invalidate the URL
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps) {
-  const { a, b } = ownProps.params;
-  const { cohort: origCohort = [] } = parseQuery(state.router.location.search);
+  let { a, b, id } = ownProps.params;
+  /*
+  In v5, the route pattern /trace/:a?\.\.\.":b? 
+  tells the router to split the path segment at ... automatically, 
+  giving the component two separate params.
+  But in v6, that regex-style pattern is not supported, so the route never matched. 
+  We replaced it with /trace/:id, which gives a single param: params.id = '73b4e476...9c18cb9d'.
+  This code then manually splits that string on ... to get a and b
+  */
+  if (!a && id && id.includes('...')) {
+    const parts = id.split('...');
+    a = parts[0] || undefined;
+    b = parts[1] || undefined;
+  }
+  const { cohort: origCohort = [] } = parseQuery(ownProps.search || '');
   const fullCohortSet: Set<string> = new Set(pluckTruthy([a, b].concat(origCohort)));
   const cohort: string[] = Array.from(fullCohortSet);
   const { traces } = state.trace;

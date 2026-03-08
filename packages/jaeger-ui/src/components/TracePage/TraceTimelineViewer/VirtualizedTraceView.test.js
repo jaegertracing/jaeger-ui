@@ -80,6 +80,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       setTrace: jest.fn(),
       shouldScrollToFirstUiFindMatch: false,
       spanNameColumnWidth: 0.5,
+      nameColumnWidth: 0.5,
       trace,
       criticalPath,
       uiFind: 'uiFind',
