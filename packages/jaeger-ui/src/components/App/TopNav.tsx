@@ -6,7 +6,6 @@ import { Dropdown, Menu, MenuProps } from 'antd';
 import { IoChevronDown } from 'react-icons/io5';
 import _has from 'lodash/has';
 import { connect } from 'react-redux';
-import { Link } from 'react-router-dom';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
 import ThemeToggleButton from './ThemeToggleButton';
@@ -20,12 +19,11 @@ import * as monitorATMUrl from '../Monitor/url';
 import { ReduxState } from '../../types';
 import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import { getConfigValue } from '../../utils/config/get-config';
-import prefixUrl from '../../utils/prefix-url';
 
 import './TopNav.css';
-import withRouteProps, { IWithRouteProps } from '../../utils/withRouteProps';
+import { Link, useLocation } from 'react-router-dom';
 
-type Props = ReduxState & IWithRouteProps;
+type Props = ReduxState;
 
 const NAV_LINKS = [
   {
@@ -106,7 +104,9 @@ const itemsGlobalLeft: MenuProps['items'] = [
 ];
 
 export function TopNavImpl(props: Props) {
-  const { config, pathname } = props;
+  const { config } = props;
+  // Use React Router hook instead of legacy withRouteProps HOC
+  const { pathname } = useLocation();
   const menuItems = Array.isArray(config.menu) ? config.menu : [];
 
   const itemsGlobalRight: MenuProps['items'] = [
@@ -175,4 +175,4 @@ export function mapStateToProps(state: ReduxState) {
   return state;
 }
 
-export default connect(mapStateToProps)(withRouteProps(TopNavImpl));
+export default connect(mapStateToProps)(TopNavImpl);
