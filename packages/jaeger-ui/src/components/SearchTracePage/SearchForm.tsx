@@ -735,7 +735,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 };
 
-export function mapStateToProps(state: ReduxState) {
+export function mapStateToProps(state: ReduxState, ownProps?: { locationSearch?: string }) {
   const {
     service,
     limit,
@@ -748,7 +748,7 @@ export function mapStateToProps(state: ReduxState) {
     minDuration,
     lookback,
     traceID: traceIDParams,
-  } = queryString.parse(window.location.search);
+  } = queryString.parse((ownProps && ownProps.locationSearch) || window.location.search);
 
   const nowInMicroseconds = dayjs().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);

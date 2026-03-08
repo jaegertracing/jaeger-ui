@@ -18,18 +18,14 @@ import DiffSelection from './DiffSelection';
 import { StatusCode } from '../../../types/otel';
 
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => {
-  const actual = jest.requireActual('react-router-dom');
-  return {
-    ...actual,
-    useLocation: () => ({ search: '' }),
-  };
-});
+// react-router-dom useLocation uses standard context when wrapped in MemoryRouter
 
 jest.mock('react-router-dom-v5-compat', () => {
-  const actual = jest.requireActual('react-router-dom-v5-compat');
+  const actualRouterDOM = jest.requireActual('react-router-dom');
+  const actualV5Compat = jest.requireActual('react-router-dom-v5-compat');
   return {
-    ...actual,
+    ...actualV5Compat,
+    useLocation: actualRouterDOM.useLocation,
     useNavigate: () => mockNavigate,
   };
 });
@@ -138,15 +134,15 @@ const baseProps = {
 };
 
 // to wrap component with Router context (for use in rerender)
-const withRouter = ui => (
-  <MemoryRouter>
+const withRouter = (ui, route = '/') => (
+  <MemoryRouter initialEntries={[route]}>
     <CompatRouter>{ui}</CompatRouter>
   </MemoryRouter>
 );
 
 // function that automatically wraps with Router context
-const renderWithRouter = (ui, options = {}) => {
-  return render(withRouter(ui), options);
+const renderWithRouter = (ui, { route = '/' } = {}) => {
+  return render(withRouter(ui, route));
 };
 
 describe('<SearchResults>', () => {
@@ -170,7 +166,7 @@ describe('<SearchResults>', () => {
     const { rerender } = renderWithRouter(<SearchResults {...baseProps} hideGraph={false} />);
     expect(screen.getByTestId('scatterplot')).toBeInTheDocument();
 
-    rerender(<SearchResults {...baseProps} hideGraph />);
+    rerender(withRouter(<SearchResults {...baseProps} hideGraph />));
     expect(screen.queryByTestId('scatterplot')).not.toBeInTheDocument();
   });
 
@@ -180,7 +176,7 @@ describe('<SearchResults>', () => {
     );
     expect(screen.getByTestId('diffselection')).toBeInTheDocument();
 
-    rerender(<SearchResults {...baseProps} disableComparisons diffCohort={[{ id: 'a' }]} />);
+    rerender(withRouter(<SearchResults {...baseProps} disableComparisons diffCohort={[{ id: 'a' }]} />));
     expect(screen.queryByTestId('diffselection')).not.toBeInTheDocument();
   });
 
@@ -380,9 +376,7 @@ describe('<SearchResults>', () => {
       });
 
       it('updates url to view ddg and back and back again - and tracks changes', () => {
-        const { rerender } = renderWithRouter(
-          <SearchResults {...baseProps} location={{ search: otherSearch }} />
-        );
+        const { unmount } = renderWithRouter(<SearchResults {...baseProps} />, { route: otherSearch });
 
         fireEvent.click(screen.getByTestId('alt-toggle'));
         expect(mockNavigate).toHaveBeenLastCalledWith(
@@ -390,10 +384,9 @@ describe('<SearchResults>', () => {
         );
         expect(spy).toHaveBeenLastCalledWith('ddg');
 
-        rerender(
-          withRouter(
-            <SearchResults {...baseProps} location={{ search: `${otherSearch}&${searchParam}=ddg` }} />
-          )
+        unmount();
+        const res2 = render(
+          withRouter(<SearchResults {...baseProps} />, `${otherSearch}&${searchParam}=ddg`)
         );
         fireEvent.click(screen.getByTestId('alt-toggle'));
         expect(mockNavigate).toHaveBeenLastCalledWith(
@@ -401,12 +394,9 @@ describe('<SearchResults>', () => {
         );
         expect(spy).toHaveBeenLastCalledWith('traces');
 
+        res2.unmount();
         mockNavigate.mockClear();
-        rerender(
-          withRouter(
-            <SearchResults {...baseProps} location={{ search: `${otherSearch}&${searchParam}=traces` }} />
-          )
-        );
+        render(withRouter(<SearchResults {...baseProps} />, `${otherSearch}&${searchParam}=traces`));
         fireEvent.click(screen.getByTestId('alt-toggle'));
         expect(mockNavigate).toHaveBeenLastCalledWith(
           getUrl({ [otherParam]: otherValue, [searchParam]: 'ddg' })
@@ -415,13 +405,14 @@ describe('<SearchResults>', () => {
       });
 
       it('shows ddg instead of scatterplot and results', () => {
-        const { rerender } = renderWithRouter(<SearchResults {...baseProps} />);
+        const { unmount } = renderWithRouter(<SearchResults {...baseProps} />);
         expect(screen.queryByTestId('ddg')).not.toBeInTheDocument();
         expect(ResultItem.mock.calls).toHaveLength(baseTraces.length);
         expect(screen.queryByTestId('scatterplot')).toBeInTheDocument();
 
+        unmount();
         ResultItem.mockClear();
-        rerender(withRouter(<SearchResults {...baseProps} location={{ search: '?view=ddg' }} />));
+        render(withRouter(<SearchResults {...baseProps} />, '/?view=ddg'));
         expect(screen.getByTestId('ddg')).toBeInTheDocument();
         expect(ResultItem).not.toHaveBeenCalled();
         expect(screen.queryByTestId('scatterplot')).not.toBeInTheDocument();
@@ -430,17 +421,16 @@ describe('<SearchResults>', () => {
 
     describe('DownloadResults', () => {
       it('shows DownloadResults when view is not ddg', () => {
-        renderWithRouter(<SearchResults {...baseProps} location={{ search: '?view=traces' }} />);
+        renderWithRouter(<SearchResults {...baseProps} />, { route: '/?view=traces' });
         expect(screen.getByTestId('download')).toBeInTheDocument();
       });
 
       it('does not show DownloadResults when view is ddg', () => {
-        const { rerender } = renderWithRouter(
-          <SearchResults {...baseProps} location={{ search: '?view=traces' }} />
-        );
+        const { unmount } = renderWithRouter(<SearchResults {...baseProps} />, { route: '/?view=traces' });
         expect(screen.getByTestId('download')).toBeInTheDocument();
 
-        rerender(withRouter(<SearchResults {...baseProps} location={{ search: '?view=ddg' }} />));
+        unmount();
+        render(withRouter(<SearchResults {...baseProps} />, '/?view=ddg'));
         expect(screen.queryByTestId('download')).not.toBeInTheDocument();
       });
 
@@ -455,7 +445,7 @@ describe('<SearchResults>', () => {
         URL.createObjectURL = jest.fn(() => 'blob://url');
         URL.revokeObjectURL = jest.fn();
 
-        renderWithRouter(<SearchResults {...baseProps} location={{ search: '?view=traces' }} />);
+        renderWithRouter(<SearchResults {...baseProps} />, { route: '/?view=traces' });
         fireEvent.click(screen.getByTestId('download'));
 
         expect(URL.createObjectURL).toHaveBeenCalledTimes(1);

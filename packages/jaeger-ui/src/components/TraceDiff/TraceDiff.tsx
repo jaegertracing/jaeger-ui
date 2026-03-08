@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom-v5-compat';
+import { useNavigate, useParams } from 'react-router-dom-v5-compat';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
@@ -189,7 +189,12 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>) {
   return { fetchMultipleTraces, forceState };
 }
 
-export default connect<TStateProps, TDispatchProps, TOwnProps, ReduxState>(
+const ConnectedTraceDiff = connect<TStateProps, TDispatchProps, TOwnProps, ReduxState>(
   mapStateToProps,
   mapDispatchToProps
 )(TraceDiffImpl);
+
+export default function TraceDiffWrapper() {
+  const params = useParams<TDiffRouteParams>();
+  return <ConnectedTraceDiff params={params} />;
+}

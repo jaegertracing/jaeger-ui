@@ -258,8 +258,7 @@ describe('UiFind', () => {
 
     beforeEach(() => {
       queryStringParseSpy.mockReturnValue({ uiFind });
-      delete window.location;
-      window.location = { search: windowLocationSearch };
+      window.history.pushState({}, '', windowLocationSearch);
     });
 
     it('returns uiFind from parsed window.location.search', () => {

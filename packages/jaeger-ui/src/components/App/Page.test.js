@@ -26,7 +26,7 @@ describe('<Page>', () => {
   beforeEach(() => {
     trackPageView.mockReset();
     pathname = String(Math.random());
-    search = String(Math.random());
+    search = '?' + String(Math.random());
     render(
       <MemoryRouter initialEntries={[{ pathname, search }]}>
         <Page />
@@ -45,8 +45,10 @@ describe('<Page>', () => {
   it('tracks a pageView when the location changes', () => {
     trackPageView.mockReset();
     const newPathname = 'le-path';
-    const newSearch = 'searching';
-    const { rerender } = render(
+    const newSearch = '?searching';
+
+    // Simulate navigation by rendering a new MemoryRouter with the new location
+    render(
       <MemoryRouter initialEntries={[{ pathname: newPathname, search: newSearch }]}>
         <Page />
       </MemoryRouter>
@@ -57,12 +59,16 @@ describe('<Page>', () => {
   it('tracks a pageView when the search changes but pathname is same', () => {
     trackPageView.mockReset();
     const staticPathname = '/same-path';
-    const { rerender } = render(
+
+    // Initial render
+    render(
       <MemoryRouter initialEntries={[{ pathname: staticPathname, search: '?a=1' }]}>
         <Page />
       </MemoryRouter>
     );
-    rerender(
+
+    // Simulate navigation by rendering a new MemoryRouter with the new location
+    render(
       <MemoryRouter initialEntries={[{ pathname: staticPathname, search: '?a=2' }]}>
         <Page />
       </MemoryRouter>

@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import { CompatRouter } from 'react-router-dom-v5-compat';
 
@@ -118,11 +118,11 @@ describe('<TopNav>', () => {
     let component;
     beforeEach(() => {
       component = render(
-        <BrowserRouter>
+        <MemoryRouter initialEntries={['/search']}>
           <CompatRouter>
             <TopNav {...defaultProps} />
           </CompatRouter>
-        </BrowserRouter>
+        </MemoryRouter>
       );
     });
 
@@ -165,11 +165,11 @@ describe('<TopNav>', () => {
     let component;
     beforeEach(() => {
       component = render(
-        <BrowserRouter>
+        <MemoryRouter initialEntries={['/search']}>
           <CompatRouter>
             <TopNav {...defaultProps} />
           </CompatRouter>
-        </BrowserRouter>
+        </MemoryRouter>
       );
     });
 
@@ -220,11 +220,11 @@ describe('<TopNav>', () => {
 
   it('highlights the nav item matching the current pathname', () => {
     render(
-      <BrowserRouter>
+      <MemoryRouter initialEntries={['/search']}>
         <CompatRouter>
           <TopNav {...defaultProps} />
         </CompatRouter>
-      </BrowserRouter>
+      </MemoryRouter>
     );
 
     const navMenu = screen.getAllByTestId('mock-menu')[0];
@@ -233,7 +233,7 @@ describe('<TopNav>', () => {
 
   it('builds the Compare link using the trace diff cohort state', () => {
     render(
-      <BrowserRouter>
+      <MemoryRouter initialEntries={['/search']}>
         <CompatRouter>
           <TopNav
             {...{
@@ -242,7 +242,7 @@ describe('<TopNav>', () => {
             }}
           />
         </CompatRouter>
-      </BrowserRouter>
+      </MemoryRouter>
     );
 
     const compareLink = screen.getByRole('link', { name: 'Compare' });
@@ -253,11 +253,11 @@ describe('<TopNav>', () => {
 
   it('renders the Monitor navigation link when enabled', () => {
     render(
-      <BrowserRouter>
+      <MemoryRouter initialEntries={['/search']}>
         <CompatRouter>
           <TopNav {...defaultProps} />
         </CompatRouter>
-      </BrowserRouter>
+      </MemoryRouter>
     );
 
     expect(screen.getByRole('link', { name: 'Monitor' })).toBeInTheDocument();
@@ -265,11 +265,11 @@ describe('<TopNav>', () => {
 
   it('includes the Trace ID search control in the right-side menu', () => {
     render(
-      <BrowserRouter>
+      <MemoryRouter initialEntries={['/search']}>
         <CompatRouter>
           <TopNav {...defaultProps} />
         </CompatRouter>
-      </BrowserRouter>
+      </MemoryRouter>
     );
 
     expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();

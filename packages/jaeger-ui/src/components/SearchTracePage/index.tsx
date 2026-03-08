@@ -43,6 +43,7 @@ interface IEmbeddedConfig {
 
 interface ISearchTracePageImplOwnProps {
   isHomepage?: boolean;
+  locationSearch?: string;
 }
 
 // Props from mapStateToProps
@@ -89,6 +90,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     urlQueryParams,
     sortedTracesXformer,
     traces,
+    locationSearch,
   } = props;
 
   const config = useConfig();
@@ -128,7 +130,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   tabItems.push({
     label: 'Search',
     key: 'searchForm',
-    children: <SearchForm key={JSON.stringify(urlQueryParams)} />,
+    children: <SearchForm key={JSON.stringify(urlQueryParams)} locationSearch={locationSearch} />,
   });
   if (!disableFileUploadControl) {
     tabItems.push({
@@ -233,9 +235,13 @@ const sortedTracesXformer = memoizeOne((traces: Trace[], sortBy: string) => {
   return traceResults.map(t => t.asOtelTrace());
 });
 
-export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: boolean } {
+export function mapStateToProps(
+  state: ReduxState,
+  ownProps?: ISearchTracePageImplOwnProps
+): IStateProps & { isHomepage: boolean } {
   const { embedded } = state;
-  const query = getUrlState(window.location.search);
+  const searchStr = (ownProps && ownProps.locationSearch) || window.location.search;
+  const query = getUrlState(searchStr);
   const isHomepage = !Object.keys(query).length;
   const {
     query: queryOfResults,
@@ -282,4 +288,12 @@ function mapDispatchToProps(dispatch: Dispatch): IDispatchProps {
 
 const connector = connect(mapStateToProps, mapDispatchToProps);
 
-export default connector(SearchTracePageImpl);
+const ConnectedSearchTracePage = connector(SearchTracePageImpl);
+
+export default function SearchTracePageWrapper(
+  props: Omit<SearchTracePageImplProps, keyof (IStateProps & IDispatchProps)>
+) {
+  const { useLocation } = require('react-router-dom-v5-compat');
+  const location = useLocation();
+  return <ConnectedSearchTracePage {...props} locationSearch={location.search} />;
+}

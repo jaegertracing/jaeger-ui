@@ -3,14 +3,27 @@
 
 jest.mock('store');
 jest.mock('../common/SearchableSelect', () => {
-  const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, value, ...props }) => {
+  const MockSearchableSelect = ({
+    onChange,
+    'data-testid': testId,
+    disabled,
+    value,
+    defaultValue,
+    ...props
+  }) => {
     if (onChange && testId) {
       MockSearchableSelect.onChangeFns[testId] = onChange;
     }
     if (testId) {
       MockSearchableSelect.disabled[testId] = disabled;
     }
-    return <div data-testid={`mock-select-${testId}`} data-disabled={disabled} data-value={value} />;
+    return (
+      <div
+        data-testid={`mock-select-${testId}`}
+        data-disabled={disabled}
+        data-value={value || defaultValue}
+      />
+    );
   };
   MockSearchableSelect.onChangeFns = {};
   MockSearchableSelect.disabled = {};
@@ -527,6 +540,29 @@ describe('<SearchForm>', () => {
     expect(submitButton).toBeDisabled();
   });
 
+  it('uses the config for the fallback maxLookback', () => {
+    window.history.pushState({}, '', '?');
+    const maxLookback = { label: '2w', value: '2w' };
+    const config = {
+      search: {
+        maxLimit: 6789,
+        maxLookback,
+      },
+    };
+
+    const originalGetConfig = window.getJaegerUiConfig;
+    window.getJaegerUiConfig = jest.fn(() => config);
+
+    const { container } = render(
+      <SearchForm {...defaultProps} initialValues={{ lookback: maxLookback.value }} />
+    );
+
+    const lookbackSelect = container.querySelector('[data-testid="mock-select-lookback"]');
+    expect(lookbackSelect.getAttribute('data-value')).toBe(maxLookback.value);
+
+    window.getJaegerUiConfig = originalGetConfig;
+  });
+
   it('uses config.search.maxLimit', () => {
     const maxLimit = 6789;
     const config = {
@@ -784,13 +820,13 @@ describe('mapStateToProps()', () => {
   let originalLocation;
 
   beforeEach(() => {
-    originalLocation = window.location;
-    delete window.location;
-    window.location = { search: '' };
     state = {};
+    originalLocation = window.location;
+    window.history.pushState({}, '', '?');
   });
 
   afterEach(() => {
+    window.history.replaceState({}, '', '?');
     window.location = originalLocation;
   });
 
@@ -852,24 +888,21 @@ describe('mapStateToProps()', () => {
     });
 
     it('derives values when available', () => {
-      delete window.location;
-      window.location = { search: queryString.stringify(params) };
+      window.history.pushState({}, '', `?${queryString.stringify(params)}`);
       expect(mapStateToProps(state).initialValues).toEqual(expected);
     });
 
     it('parses `tag` values in the former format to logfmt', () => {
       delete params.tags;
       params.tag = ['error:true', 'span.kind:client'];
-      delete window.location;
-      window.location = { search: queryString.stringify(params) };
+      window.history.pushState({}, '', `?${queryString.stringify(params)}`);
       expect(mapStateToProps(state).initialValues).toEqual(expected);
     });
 
     it('parses single string `tag` value in the former format to logfmt', () => {
       delete params.tags;
       params.tag = 'error:true';
-      delete window.location;
-      window.location = { search: queryString.stringify(params) };
+      window.history.pushState({}, '', `?${queryString.stringify(params)}`);
 
       const singleTagExpected = {
         ...expected,
@@ -882,8 +915,7 @@ describe('mapStateToProps()', () => {
     it('handles tag parsing for keys without values', () => {
       delete params.tags;
       params.tag = 'invalid-no-colon';
-      delete window.location;
-      window.location = { search: queryString.stringify(params) };
+      window.history.pushState({}, '', `?${queryString.stringify(params)}`);
 
       const tagWithEmptyValueExpected = {
         ...expected,
@@ -895,9 +927,7 @@ describe('mapStateToProps()', () => {
 
     it('handles true parse errors', () => {
       delete params.tags;
-
-      delete window.location;
-      window.location = { search: queryString.stringify(params) };
+      window.history.pushState({}, '', `?${queryString.stringify(params)}`);
 
       const parseErrorExpected = {
         ...expected,
@@ -910,8 +940,7 @@ describe('mapStateToProps()', () => {
     it('handles empty key in tag parameter', () => {
       delete params.tags;
       params.tag = ':somevalue';
-      delete window.location;
-      window.location = { search: queryString.stringify(params) };
+      window.history.pushState({}, '', `?${queryString.stringify(params)}`);
 
       const parseErrorExpected = {
         ...expected,
@@ -924,8 +953,7 @@ describe('mapStateToProps()', () => {
     it('handles invalid JSON in logfmtTags', () => {
       delete params.tags;
       params.tags = '{invalid-json}';
-      delete window.location;
-      window.location = { search: queryString.stringify(params) };
+      window.history.pushState({}, '', `?${queryString.stringify(params)}`);
 
       const errorExpected = {
         ...expected,
@@ -937,8 +965,7 @@ describe('mapStateToProps()', () => {
 
     it('handles traceIDParams as string', () => {
       params.traceID = '123abc';
-      delete window.location;
-      window.location = { search: queryString.stringify(params) };
+      window.history.pushState({}, '', `?${queryString.stringify(params)}`);
 
       const traceIDExpected = {
         ...expected,
@@ -950,8 +977,7 @@ describe('mapStateToProps()', () => {
 
     it('handles traceIDParams as array', () => {
       params.traceID = ['123abc', '456def'];
-      delete window.location;
-      window.location = { search: queryString.stringify(params) };
+      window.history.pushState({}, '', `?${queryString.stringify(params)}`);
 
       const traceIDExpected = {
         ...expected,

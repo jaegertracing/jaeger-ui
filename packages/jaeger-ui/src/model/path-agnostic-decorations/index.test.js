@@ -18,9 +18,9 @@ describe('extractDecorationFromState', () => {
     const state = {};
     const deco = Array.isArray(decoration) ? decoration[0] : decoration;
 
-    // Set window.location.search for the test
-    delete window.location;
-    window.location = { search: decoration ? queryString.stringify({ decoration }) : '' };
+    // Set window.location.search for the test using pushState as recommended for JSDOM
+    const search = decoration ? `?${queryString.stringify({ decoration })}` : '';
+    window.history.pushState({}, '', search);
 
     if (opValue !== undefined)
       _set(state, `pathAgnosticDecorations.${deco}.withOp.${service}.${operation}`, opValue);

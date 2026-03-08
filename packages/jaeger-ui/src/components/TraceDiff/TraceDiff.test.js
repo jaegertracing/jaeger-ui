@@ -352,8 +352,7 @@ describe('TraceDiff', () => {
 
     beforeEach(() => {
       // Mock window.location.search for tests
-      delete window.location;
-      window.location = { search: '' };
+      window.history.pushState({}, '', '?');
     });
 
     it('gets a and b from ownProps', () => {
@@ -366,14 +365,14 @@ describe('TraceDiff', () => {
     });
 
     it('defaults cohort to empty array if a, b, and cohort are not available', () => {
-      window.location.search = '';
+      window.history.pushState({}, '', '?');
       expect(
         mapStateToProps(makeTestReduxState({ cohortIds: [] }), getOwnProps({ a: null, b: null })).cohort
       ).toEqual([]);
     });
 
     it('gets cohort from ownProps and window.location.search', () => {
-      window.location.search = queryString.stringify({ cohort: defaultCohortIds });
+      window.history.pushState({}, '', `?${queryString.stringify({ cohort: defaultCohortIds })}`);
       expect(mapStateToProps(makeTestReduxState(), getOwnProps()).cohort).toEqual([
         defaultA,
         defaultB,
@@ -382,7 +381,7 @@ describe('TraceDiff', () => {
     });
 
     it('filters falsy values from cohort', () => {
-      window.location.search = queryString.stringify({ cohort: defaultCohortIds });
+      window.history.pushState({}, '', `?${queryString.stringify({ cohort: defaultCohortIds })}`);
       expect(mapStateToProps(makeTestReduxState(), getOwnProps({ a: null })).cohort).toEqual([
         defaultB,
         ...defaultCohortIds,
@@ -393,9 +392,13 @@ describe('TraceDiff', () => {
         ...defaultCohortIds,
       ]);
 
-      window.location.search = queryString.stringify({
-        cohort: [...defaultCohortIds, '', nonDefaultCohortId],
-      });
+      window.history.pushState(
+        {},
+        '',
+        `?${queryString.stringify({
+          cohort: [...defaultCohortIds, '', nonDefaultCohortId],
+        })}`
+      );
       expect(
         mapStateToProps(
           makeTestReduxState({ cohortIds: [...defaultCohortIds, '', nonDefaultCohortId] }),
@@ -405,7 +408,11 @@ describe('TraceDiff', () => {
     });
 
     it('filters redundant values from cohort', () => {
-      window.location.search = queryString.stringify({ cohort: [...defaultCohortIds, nonDefaultCohortId] });
+      window.history.pushState(
+        {},
+        '',
+        `?${queryString.stringify({ cohort: [...defaultCohortIds, nonDefaultCohortId] })}`
+      );
       expect(
         mapStateToProps(
           makeTestReduxState({ cohortIds: [...defaultCohortIds, nonDefaultCohortId] }),
@@ -429,7 +436,7 @@ describe('TraceDiff', () => {
     });
 
     it('builds tracesData Map from cohort and state.trace.traces', () => {
-      window.location.search = queryString.stringify({ cohort: defaultCohortIds });
+      window.history.pushState({}, '', `?${queryString.stringify({ cohort: defaultCohortIds })}`);
       const {
         tracesData,
         cohort: { length: expectedSize },

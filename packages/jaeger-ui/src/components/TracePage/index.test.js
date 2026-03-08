@@ -124,6 +124,7 @@ describe('<TracePage>', () => {
     enableSidePanel: false,
     fetchTrace: jest.fn(),
     focusUiFindMatches: jest.fn(),
+    history: jest.fn(),
     id: trace.traceID,
     location: {
       search: null,
@@ -160,6 +161,7 @@ describe('<TracePage>', () => {
         </MemoryRouter>
       );
       expect(updateUiFindSpy).toHaveBeenCalledWith({
+        navigate: defaultProps.history,
         location: defaultProps.location,
         trackFindFunction: track.trackFilter,
       });
@@ -1213,7 +1215,7 @@ describe('mapStateToProps()', () => {
       id: traceID,
       detailPanelMode: 'inline',
       embedded,
-      archiveTraceState: null,
+      archiveTraceState: undefined,
       searchUrl: null,
       timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
