@@ -817,11 +817,9 @@ describe('validation', () => {
 
 describe('mapStateToProps()', () => {
   let state;
-  let originalLocation;
 
   beforeEach(() => {
     state = {};
-    originalLocation = window.location;
     window.history.pushState({}, '', '?');
   });
 

@@ -51,7 +51,7 @@ export default function JaegerUIApp() {
       <ThemeProvider>
         <Provider store={store as any}>
           {/* the Page component is a connected component (wrapped by Redux's connect HOC)
-              that is also wrapped by a custom withRouteProps HOC. */}
+              and uses React Router hooks (e.g., useLocation) internally for routing context. */}
           <Page>
             <Routes>
               <Route path={searchPath} element={<SearchTracePage />} />

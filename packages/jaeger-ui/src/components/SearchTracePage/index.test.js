@@ -324,7 +324,7 @@ describe('<SearchTracePageWrapper>', () => {
     };
     const { container } = render(
       <AllProvider>
-        <SearchTracePage {...props} />
+        <SearchTracePageWrapper {...props} />
       </AllProvider>
     );
     expect(container).toBeInTheDocument();

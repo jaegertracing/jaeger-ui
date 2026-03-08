@@ -619,20 +619,4 @@ const ConnectedVirtualizedTraceView = connect<
   mapDispatchToProps
 )(VirtualizedTraceViewImpl);
 
-// Wrapper component to provide router hooks
-const VirtualizedTraceViewWithRouter: React.FC<TVirtualizedTraceViewOwnProps> = props => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  // Create a wrapper for focusSpan that uses the hooks
-  const wrappedProps = React.useMemo(() => {
-    return {
-      ...props,
-      // We'll handle updateUiFind at a higher level if needed
-    };
-  }, [props]);
-
-  return <ConnectedVirtualizedTraceView {...wrappedProps} />;
-};
-
-export default VirtualizedTraceViewWithRouter;
+export default ConnectedVirtualizedTraceView;

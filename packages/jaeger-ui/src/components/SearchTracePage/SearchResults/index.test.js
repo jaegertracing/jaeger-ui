@@ -134,11 +134,14 @@ const baseProps = {
 };
 
 // to wrap component with Router context (for use in rerender)
-const withRouter = (ui, route = '/') => (
-  <MemoryRouter initialEntries={[route]}>
-    <CompatRouter>{ui}</CompatRouter>
-  </MemoryRouter>
-);
+const withRouter = (ui, route = '/') => {
+  const normalizedRoute = route.startsWith('/') ? route : `/${route}`;
+  return (
+    <MemoryRouter initialEntries={[normalizedRoute]}>
+      <CompatRouter>{ui}</CompatRouter>
+    </MemoryRouter>
+  );
+};
 
 // function that automatically wraps with Router context
 const renderWithRouter = (ui, { route = '/' } = {}) => {

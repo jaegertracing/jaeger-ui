@@ -371,6 +371,10 @@ describe('<TracePage>', () => {
     };
     renderWithRouter(<TracePage {...props} />);
     // The component should handle lowercase conversion internally
+    expect(defaultProps.history).toHaveBeenCalledWith(
+      expect.stringContaining(trace.traceID.toLowerCase()),
+      expect.objectContaining({ replace: true })
+    );
   });
 
   it('focuses on search bar when there is a search bar and focusOnSearchBar is called', () => {

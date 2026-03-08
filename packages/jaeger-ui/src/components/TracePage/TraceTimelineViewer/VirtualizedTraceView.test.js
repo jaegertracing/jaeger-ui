@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
-import VirtualizedTraceViewWithRouter, {
+import ConnectedVirtualizedTraceView, {
   DEFAULT_HEIGHTS,
   VirtualizedTraceViewImpl,
 } from './VirtualizedTraceView';
@@ -695,7 +695,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 });
 
-describe('VirtualizedTraceViewWithRouter', () => {
+describe('ConnectedVirtualizedTraceView', () => {
   it('renders correctly', () => {
     const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 })).asOtelTrace();
     const mockProps = {
@@ -708,7 +708,7 @@ describe('VirtualizedTraceViewWithRouter', () => {
       <Provider store={globalStore}>
         <MemoryRouter>
           <CompatRouter>
-            <VirtualizedTraceViewWithRouter {...mockProps} />
+            <ConnectedVirtualizedTraceView {...mockProps} />
           </CompatRouter>
         </MemoryRouter>
       </Provider>

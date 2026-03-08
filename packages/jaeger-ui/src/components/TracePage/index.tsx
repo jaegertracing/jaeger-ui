@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { InputRef } from 'antd';
-import { useLocation, useNavigate, useParams } from 'react-router-dom-v5-compat';
+import { useLocation, useNavigate, useParams, Location, NavigateFunction } from 'react-router-dom-v5-compat';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
@@ -63,8 +63,8 @@ type TDispatchProps = {
 };
 
 type TOwnProps = {
-  history: any;
-  location: any;
+  history: NavigateFunction;
+  location: Location;
   archiveEnabled: boolean;
   enableSidePanel: boolean;
   storageCapabilities: StorageCapabilities | TNil;

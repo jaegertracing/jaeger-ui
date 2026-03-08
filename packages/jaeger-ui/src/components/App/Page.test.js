@@ -15,7 +15,7 @@ import { trackPageView } from '../../utils/tracking';
 describe('mapStateToProps()', () => {
   it('maps state to props', () => {
     const state = {};
-    expect(mapStateToProps(state)).toEqual({});
+    expect(mapStateToProps(state)).toEqual({ embedded: undefined });
   });
 });
 
