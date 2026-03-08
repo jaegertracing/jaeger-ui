@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Provider } from 'react-redux';
-import { Route, Redirect, Switch } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom-v5-compat';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import NotFound from './NotFound';
@@ -15,9 +15,7 @@ import QualityMetrics from '../QualityMetrics';
 import { ROUTE_PATH as qualityMetricsPath } from '../QualityMetrics/url';
 import SearchTracePage from '../SearchTracePage';
 import { ROUTE_PATH as searchPath } from '../SearchTracePage/url';
-import TraceDiff from '../TraceDiff';
-import { ROUTE_PATH as traceDiffPath } from '../TraceDiff/url';
-import TracePage from '../TracePage';
+import TraceRouter from './TraceRouter';
 import { ROUTE_PATH as tracePath } from '../TracePage/url';
 import MonitorATMPage from '../Monitor';
 import { ROUTE_PATH as monitorATMPath } from '../Monitor/url';
@@ -58,45 +56,22 @@ export default function JaegerUIApp() {
             // The @ts-ignore was added because of a specific TypeScript error that occurs
             // when mixing Redux 5/9, React 19, and complex HOCs.
           }
-          {/* @ts-ignore */}
+          {/* @ts-expect-error - TypeScript error with Redux 5/9, React 19, and complex HOCs */}
           <Page>
-            <Switch>
-              <Route path={searchPath}>
-                <SearchTracePage />
-              </Route>
-              <Route path={traceDiffPath}>
-                <TraceDiff />
-              </Route>
-              <Route path={tracePath}>
-                <TracePage />
-              </Route>
-              <Route path={dependenciesPath}>
-                <DependencyGraph />
-              </Route>
-              <Route path={deepDependenciesPath}>
-                <DeepDependencies />
-              </Route>
-              <Route path={qualityMetricsPath}>
-                <QualityMetrics />
-              </Route>
-              <Route path={monitorATMPath}>
-                <MonitorATMPage />
-              </Route>
+            <Routes>
+              <Route path={searchPath} element={<SearchTracePage />} />
+              <Route path={tracePath} element={<TraceRouter />} />
+              <Route path={dependenciesPath} element={<DependencyGraph />} />
+              <Route path={deepDependenciesPath} element={<DeepDependencies />} />
+              <Route path={qualityMetricsPath} element={<QualityMetrics />} />
+              <Route path={monitorATMPath} element={<MonitorATMPage />} />
 
-              <Route exact path="/">
-                <Redirect to={searchPath} />
-              </Route>
-              <Route exact path={prefixUrl()}>
-                <Redirect to={searchPath} />
-              </Route>
-              <Route exact path={prefixUrl('/')}>
-                <Redirect to={searchPath} />
-              </Route>
+              <Route path="/" element={<Navigate to={searchPath} replace />} />
+              <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
+              <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
 
-              <Route>
-                <NotFound error="Page not found" />
-              </Route>
-            </Switch>
+              <Route path="*" element={<NotFound error="Page not found" />} />
+            </Routes>
           </Page>
         </Provider>
       </ThemeProvider>

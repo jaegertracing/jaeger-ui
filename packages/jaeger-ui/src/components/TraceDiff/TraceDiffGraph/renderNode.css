@@ -4,9 +4,9 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .DiffNode {
-  background: #bbb;
-  border: 1px solid #777;
-  box-shadow: 0 0px 3px 1px rgba(0, 0, 0, 0.2);
+  background: var(--surface-component-background);
+  border: var(--border-default);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   white-space: nowrap;
 }

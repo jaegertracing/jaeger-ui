@@ -4,8 +4,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom';
-import { CompatRouter } from 'react-router-dom-v5-compat';
+import { MemoryRouter } from 'react-router-dom-v5-compat';
 
 jest.mock('./NotFound', () => () => <div data-testid="not-found" />);
 jest.mock('./Page', () => ({ children }) => <div data-testid="page">{children}</div>);
@@ -13,16 +12,16 @@ jest.mock('../DependencyGraph', () => () => <div data-testid="dependency-graph" 
 jest.mock('../DeepDependencies', () => () => <div data-testid="deep-dependencies" />);
 jest.mock('../QualityMetrics', () => () => <div data-testid="quality-metrics" />);
 jest.mock('../SearchTracePage', () => () => <div data-testid="search-trace" />);
-jest.mock('../TraceDiff', () => () => <div data-testid="trace-diff" />);
-jest.mock('../TracePage', () => () => <div data-testid="trace-page" />);
+jest.mock('../TraceDiff', () => ({ __esModule: true, default: () => <div data-testid="trace-diff" /> }));
+jest.mock('../TracePage', () => ({ __esModule: true, default: () => <div data-testid="trace-page" /> }));
 jest.mock('../Monitor', () => () => <div data-testid="monitor" />);
 
 jest.mock('../DependencyGraph/url', () => ({ ROUTE_PATH: '/dependencies' }));
 jest.mock('../DeepDependencies/url', () => ({ ROUTE_PATH: '/deep-dependencies' }));
 jest.mock('../QualityMetrics/url', () => ({ ROUTE_PATH: '/quality-metrics' }));
 jest.mock('../SearchTracePage/url', () => ({ ROUTE_PATH: '/search' }));
-jest.mock('../TraceDiff/url', () => ({ ROUTE_PATH: '/trace-diff' }));
-jest.mock('../TracePage/url', () => ({ ROUTE_PATH: '/trace' }));
+jest.mock('../TraceDiff/url', () => ({ ROUTE_PATH: '/trace-diff', getUrl: jest.fn(), matches: jest.fn() }));
+jest.mock('../TracePage/url', () => ({ ROUTE_PATH: '/trace/:id' }));
 jest.mock('../Monitor/url', () => ({ ROUTE_PATH: '/monitor' }));
 
 jest.mock('../../api/jaeger', () => ({
@@ -78,9 +77,7 @@ const renderWithPath = pathname => {
   mockHistory = createMockHistory(pathname);
   return render(
     <MemoryRouter initialEntries={[pathname]}>
-      <CompatRouter>
-        <JaegerUIApp />
-      </CompatRouter>
+      <JaegerUIApp />
     </MemoryRouter>
   );
 };
@@ -108,7 +105,8 @@ describe('JaegerUIApp', () => {
 
   const routes = [
     ['/search', 'search-trace'],
-    ['/trace-diff', 'trace-diff'],
+    // TraceDiff is now routed under /trace/:id - when id contains "...", TraceRouter renders TraceDiff
+    ['/trace/abc...def', 'trace-diff'],
     ['/trace/123', 'trace-page'],
     ['/dependencies', 'dependency-graph'],
     ['/deep-dependencies', 'deep-dependencies'],
@@ -130,7 +128,7 @@ describe('JaegerUIApp', () => {
 
   it('should handle root path redirect', () => {
     // Test that when accessing root path, the SearchTracePage component is rendered
-    // This verifies that the Redirect component is working correctly
+    // This verifies that the Navigate component is working correctly
     const { getByTestId } = renderWithPath('/');
     expect(getByTestId('search-trace')).toBeInTheDocument();
   });
@@ -146,10 +144,8 @@ describe('JaegerUIApp', () => {
   it('should not re-initialize on component re-renders (module-level init is one-time)', () => {
     const { rerender } = renderWithPath('/search');
     rerender(
-      <MemoryRouter initialEntries={['/trace-diff']}>
-        <CompatRouter>
-          <JaegerUIApp />
-        </CompatRouter>
+      <MemoryRouter initialEntries={['/trace/abc...def']}>
+        <JaegerUIApp />
       </MemoryRouter>
     );
     // processScripts was called once at module load, not on each render

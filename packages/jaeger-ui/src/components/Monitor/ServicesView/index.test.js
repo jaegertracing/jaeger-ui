@@ -47,6 +47,9 @@ jest.mock('../../../hooks/useTraceDiscovery', () => ({
   useServices: jest.fn(() => ({ data: ['service1', 'service2'], isLoading: false })),
 }));
 
+// Store the default mock implementation for reset in afterEach
+const defaultUseServicesImpl = () => ({ data: ['service1', 'service2'], isLoading: false });
+
 jest.mock('lodash/debounce', () => fn => fn);
 
 jest.mock('../../common/LoadingIndicator', () => {
@@ -164,6 +167,9 @@ describe('<MonitorATMServicesView>', () => {
   afterEach(() => {
     wrapper = null;
     jest.clearAllMocks();
+    // Reset useServices mock to default implementation to avoid test order-dependence
+    useServices.mockReset();
+    useServices.mockImplementation(defaultUseServicesImpl);
     cleanup();
   });
 
@@ -245,6 +251,28 @@ describe('<MonitorATMServicesView>', () => {
   });
 
   it('fetches metrics only when services are available', () => {
+    // Clear mocks from beforeEach render
+    mockFetchAllServiceMetrics.mockClear();
+    mockFetchAggregatedServiceMetrics.mockClear();
+
+    // Render with no services
+    const propsNoServices = {
+      ...props,
+      metrics: {
+        ...originInitialState,
+        serviceMetrics,
+        serviceOpsMetrics,
+        loading: false,
+        isATMActivated: true,
+      },
+      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+    };
+    useServices.mockReturnValue({ data: [], isLoading: false });
+    cleanup();
+    renderWithRouter(<MonitorATMServicesView {...propsNoServices} />);
+
+    // Should not fetch when no services
     expect(mockFetchAllServiceMetrics).not.toHaveBeenCalled();
     expect(mockFetchAggregatedServiceMetrics).not.toHaveBeenCalled();
 
@@ -263,6 +291,29 @@ describe('<MonitorATMServicesView>', () => {
     };
     useServices.mockReturnValue({ data: ['apple'], isLoading: false });
     renderWithRouter(<MonitorATMServicesView {...propsWithServices} />);
+    expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
+    expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
+  });
+
+  it('fetches metrics when isATMActivated is null (initial state)', () => {
+    cleanup();
+    mockFetchAllServiceMetrics.mockClear();
+    mockFetchAggregatedServiceMetrics.mockClear();
+
+    const propsWithNullATM = {
+      ...props,
+      metrics: {
+        ...originInitialState,
+        serviceMetrics: null,
+        serviceOpsMetrics: undefined,
+        loading: false,
+        isATMActivated: null, // Initial state before any metrics fetch
+      },
+      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+    };
+    useServices.mockReturnValue({ data: ['apple'], isLoading: false });
+    renderWithRouter(<MonitorATMServicesView {...propsWithNullATM} />);
     expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
     expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
   });

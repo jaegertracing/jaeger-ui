@@ -781,13 +781,14 @@ describe('validation', () => {
 
 describe('mapStateToProps()', () => {
   let state;
+  const callMapStateToProps = (search = '') => mapStateToProps(state, { search });
 
   beforeEach(() => {
-    state = { router: { location: { search: '' } } };
+    state = {};
   });
 
   it('does not explode when the query string is empty', () => {
-    expect(() => mapStateToProps(state)).not.toThrow();
+    expect(() => callMapStateToProps('')).not.toThrow();
   });
 
   // tests the green path
@@ -802,13 +803,13 @@ describe('mapStateToProps()', () => {
       },
     };
     store.get = () => ({ operation: op, service: svc });
-    const { service, operation } = mapStateToProps(state).initialValues;
+    const { service, operation } = callMapStateToProps().initialValues;
     expect(operation).toBe(op);
     expect(service).toBe(svc);
     store.get = oldStoreGet;
   });
 
-  describe('deriving values from `state.router.location.search`', () => {
+  describe('deriving values from the URL search string (ownProps.search)', () => {
     let params;
     let expected;
 
@@ -844,104 +845,96 @@ describe('mapStateToProps()', () => {
     });
 
     it('derives values when available', () => {
-      state.router.location.search = queryString.stringify(params);
-      expect(mapStateToProps(state).initialValues).toEqual(expected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(expected);
     });
 
     it('parses `tag` values in the former format to logfmt', () => {
       delete params.tags;
       params.tag = ['error:true', 'span.kind:client'];
-      state.router.location.search = queryString.stringify(params);
-      expect(mapStateToProps(state).initialValues).toEqual(expected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(expected);
     });
 
     it('parses single string `tag` value in the former format to logfmt', () => {
       delete params.tags;
       params.tag = 'error:true';
-      state.router.location.search = queryString.stringify(params);
 
       const singleTagExpected = {
         ...expected,
         tags: 'error=true',
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(singleTagExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(singleTagExpected);
     });
 
     it('handles tag parsing for keys without values', () => {
       delete params.tags;
       params.tag = 'invalid-no-colon';
-      state.router.location.search = queryString.stringify(params);
 
       const tagWithEmptyValueExpected = {
         ...expected,
         tags: 'invalid-no-colon=""',
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(tagWithEmptyValueExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(
+        tagWithEmptyValueExpected
+      );
     });
 
     it('handles true parse errors', () => {
       delete params.tags;
-
-      state.router.location.search = queryString.stringify(params);
 
       const parseErrorExpected = {
         ...expected,
         tags: undefined,
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(parseErrorExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(parseErrorExpected);
     });
 
     it('handles empty key in tag parameter', () => {
       delete params.tags;
       params.tag = ':somevalue';
-      state.router.location.search = queryString.stringify(params);
 
       const parseErrorExpected = {
         ...expected,
         tags: 'Parse Error',
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(parseErrorExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(parseErrorExpected);
     });
 
     it('handles invalid JSON in logfmtTags', () => {
       delete params.tags;
       params.tags = '{invalid-json}';
-      state.router.location.search = queryString.stringify(params);
 
       const errorExpected = {
         ...expected,
         tags: 'Parse Error',
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(errorExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(errorExpected);
     });
 
     it('handles traceIDParams as string', () => {
       params.traceID = '123abc';
-      state.router.location.search = queryString.stringify(params);
 
       const traceIDExpected = {
         ...expected,
         traceIDs: '123abc',
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(traceIDExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(traceIDExpected);
     });
 
     it('handles traceIDParams as array', () => {
       params.traceID = ['123abc', '456def'];
-      state.router.location.search = queryString.stringify(params);
 
       const traceIDExpected = {
         ...expected,
         traceIDs: '123abc,456def',
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(traceIDExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(traceIDExpected);
     });
   });
 
@@ -952,8 +945,7 @@ describe('mapStateToProps()', () => {
       return Math.abs(a - b);
     }
     const dateParams = makeDateParams(0);
-    const { startDate, startDateTime, endDate, endDateTime, ...values } =
-      mapStateToProps(state).initialValues;
+    const { startDate, startDateTime, endDate, endDateTime, ...values } = callMapStateToProps().initialValues;
 
     expect(values).toEqual({
       service: '-',

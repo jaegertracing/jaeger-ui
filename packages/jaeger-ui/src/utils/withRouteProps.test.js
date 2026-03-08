@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
-import { MemoryRouter, Route } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom-v5-compat';
 import withRouteProps from './withRouteProps';
 
 describe('withRouteProps', () => {
@@ -12,9 +12,9 @@ describe('withRouteProps', () => {
     const ComponentWithRouteProps = withRouteProps(WrappedComponent);
     render(
       <MemoryRouter initialEntries={['/test?param=value']}>
-        <Route path="/test">
-          <ComponentWithRouteProps />
-        </Route>
+        <Routes>
+          <Route path="/test" element={<ComponentWithRouteProps />} />
+        </Routes>
       </MemoryRouter>
     );
 

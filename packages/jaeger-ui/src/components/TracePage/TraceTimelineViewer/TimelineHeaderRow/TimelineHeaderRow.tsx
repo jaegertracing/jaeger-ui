@@ -15,6 +15,10 @@ import './TimelineHeaderRow.css';
 
 type TimelineHeaderRowProps = {
   duration: number;
+  // nameColumnWidth is the page fraction of the name column (pre-computed by the parent).
+  // When timeline bars are hidden the side panel absorbs the timeline column; the name column
+  // keeps its stored pixel width, so nameColumnWidth equals spanNameColumnWidth in all cases
+  // except when there is no side panel and bars are hidden (then it is 1).
   nameColumnWidth: number;
   numTicks: number;
   onCollapseAll: () => void;
@@ -22,6 +26,11 @@ type TimelineHeaderRowProps = {
   onColummWidthChange: (width: number) => void;
   onExpandAll: () => void;
   onExpandOne: () => void;
+  resizerMax: number;
+  sidePanelVisible: boolean;
+  sidePanelWidth: number;
+  sidePanelLabel: string;
+  timelineBarsVisible: boolean;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRangeTime: IViewRangeTime;
@@ -38,6 +47,11 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
     onColummWidthChange,
     onExpandAll,
     onExpandOne,
+    resizerMax,
+    sidePanelVisible,
+    sidePanelWidth,
+    sidePanelLabel,
+    timelineBarsVisible,
     updateViewRangeTime,
     updateNextViewRangeTime,
     viewRangeTime,
@@ -45,6 +59,7 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
   const [viewStart, viewEnd] = viewRangeTime.current;
   const startTime = (viewStart * duration) as IOtelSpan['startTime'];
   const endTime = (viewEnd * duration) as IOtelSpan['endTime'];
+  const timelineColumnWidth = 1 - nameColumnWidth - (sidePanelVisible ? sidePanelWidth : 0);
   return (
     <TimelineRow className="TimelineHeaderRow">
       <TimelineRow.Cell className="ub-flex ub-px2" width={nameColumnWidth}>
@@ -58,16 +73,30 @@ export default function TimelineHeaderRow(props: TimelineHeaderRowProps) {
           onExpandOne={onExpandOne}
         />
       </TimelineRow.Cell>
-      <TimelineRow.Cell width={1 - nameColumnWidth}>
-        <TimelineViewingLayer
-          boundsInvalidator={nameColumnWidth}
-          updateNextViewRangeTime={updateNextViewRangeTime}
-          updateViewRangeTime={updateViewRangeTime}
-          viewRangeTime={viewRangeTime}
-        />
-        <Ticks numTicks={numTicks} startTime={startTime} endTime={endTime} showLabels />
-      </TimelineRow.Cell>
-      <VerticalResizer position={nameColumnWidth} onChange={onColummWidthChange} min={0.15} max={0.85} />
+      {timelineBarsVisible && (
+        <>
+          <TimelineRow.Cell width={timelineColumnWidth}>
+            <TimelineViewingLayer
+              boundsInvalidator={nameColumnWidth}
+              updateNextViewRangeTime={updateNextViewRangeTime}
+              updateViewRangeTime={updateViewRangeTime}
+              viewRangeTime={viewRangeTime}
+            />
+            <Ticks numTicks={numTicks} startTime={startTime} endTime={endTime} showLabels />
+          </TimelineRow.Cell>
+          <VerticalResizer
+            position={nameColumnWidth}
+            onChange={onColummWidthChange}
+            min={0.15}
+            max={resizerMax}
+          />
+        </>
+      )}
+      {sidePanelVisible && (
+        <TimelineRow.Cell className="ub-flex ub-px2 TimelineHeaderRow--sidePanelCell" width={sidePanelWidth}>
+          <h3 className="TimelineHeaderRow--title">{sidePanelLabel}</h3>
+        </TimelineRow.Cell>
+      )}
     </TimelineRow>
   );
 }

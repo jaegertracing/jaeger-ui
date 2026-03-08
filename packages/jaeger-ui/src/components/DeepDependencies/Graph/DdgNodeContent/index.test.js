@@ -8,11 +8,25 @@ jest.mock('./calc-positioning', () => () => ({
   svcMarginTop: 10,
 }));
 
+// Mutable object so individual tests can control the location without re-creating the mock.
+const mockLocation = { search: '' };
+
+jest.mock('react-router-dom-v5-compat', () => ({
+  ...jest.requireActual('react-router-dom-v5-compat'),
+  useLocation: () => mockLocation,
+}));
+
+jest.mock('../../../../model/path-agnostic-decorations', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({})),
+}));
+
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-
-import {
+import { Provider } from 'react-redux';
+import extractDecorationFromState from '../../../../model/path-agnostic-decorations';
+import DdgNodeContentWrapper, {
   getNodeRenderer,
   measureNode,
   mapDispatchToProps,
@@ -674,6 +688,32 @@ describe('<DdgNodeContent>', () => {
         });
         expect(window.open).toHaveBeenCalledWith(`mock-search-url-${traceId}`, '_blank');
       });
+    });
+  });
+
+  describe('DdgNodeContentWrapper (default export)', () => {
+    const store = {
+      getState: () => ({}),
+      dispatch: jest.fn(),
+      subscribe: jest.fn(() => jest.fn()),
+    };
+
+    beforeEach(() => {
+      extractDecorationFromState.mockClear();
+      extractDecorationFromState.mockReturnValue({});
+    });
+
+    it('injects search from useLocation() into the connected component', () => {
+      mockLocation.search = '?decoration=some-id';
+      render(
+        <Provider store={store}>
+          <DdgNodeContentWrapper {...props} />
+        </Provider>
+      );
+      expect(extractDecorationFromState).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({ search: '?decoration=some-id' })
+      );
     });
   });
 });
