@@ -23,7 +23,7 @@ import '@testing-library/jest-dom';
 import store from 'store';
 
 import { Provider } from 'react-redux';
-import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
+import SearchTracePageWrapper, { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
 import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import { MOST_RECENT, MOST_SPANS } from '../../model/order-by';
@@ -308,5 +308,25 @@ describe('mapStateToProps()', () => {
       loadingTraces: false,
       errors: null,
     });
+  });
+});
+
+describe('<SearchTracePageWrapper>', () => {
+  it('renders successfully', () => {
+    const traces = [{ traceID: 'a', spans: [], processes: {} }];
+    const props = {
+      traces,
+      traceResultsToDownload: traces,
+      diffCohort: [],
+      maxTraceDuration: 100,
+      sortedTracesXformer: jest.fn(),
+      searchTraces: jest.fn(),
+    };
+    const { container } = render(
+      <AllProvider>
+        <SearchTracePage {...props} />
+      </AllProvider>
+    );
+    expect(container).toBeInTheDocument();
   });
 });

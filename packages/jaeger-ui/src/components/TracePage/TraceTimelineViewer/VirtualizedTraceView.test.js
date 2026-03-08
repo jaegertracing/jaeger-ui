@@ -7,7 +7,14 @@ import '@testing-library/jest-dom';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
-import { DEFAULT_HEIGHTS, VirtualizedTraceViewImpl } from './VirtualizedTraceView';
+import VirtualizedTraceViewWithRouter, {
+  DEFAULT_HEIGHTS,
+  VirtualizedTraceViewImpl,
+} from './VirtualizedTraceView';
+import { MemoryRouter } from 'react-router-dom';
+import { CompatRouter } from 'react-router-dom-v5-compat';
+import { Provider } from 'react-redux';
+import { store as globalStore } from '../../../utils/configure-store';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 import updateUiFindSpy from '../../../utils/update-ui-find';
@@ -685,5 +692,27 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const event = { detail: { spanID: 'test-span-123' } };
       expect(() => component._handleDetailMeasure(event)).not.toThrow();
     });
+  });
+});
+
+describe('VirtualizedTraceViewWithRouter', () => {
+  it('renders correctly', () => {
+    const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 })).asOtelTrace();
+    const mockProps = {
+      trace,
+      currentViewRangeTime: [0, 1],
+      detailStates: new Map(),
+      childrenHiddenIDs: new Set(),
+    };
+    const { container } = render(
+      <Provider store={globalStore}>
+        <MemoryRouter>
+          <CompatRouter>
+            <VirtualizedTraceViewWithRouter {...mockProps} />
+          </CompatRouter>
+        </MemoryRouter>
+      </Provider>
+    );
+    expect(container).toBeInTheDocument();
   });
 });
