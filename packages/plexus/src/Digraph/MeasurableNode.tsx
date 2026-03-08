@@ -1,11 +1,12 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as React from 'react';
+import React, { forwardRef, memo, Ref, ReactElement, useCallback, useImperativeHandle, useRef } from 'react';
 
 import { TMeasurableNodeRenderer, TLayerType, TRendererUtils, ELayerType } from './types';
 import { assignMergeCss, getProps } from './utils';
 import { TLayoutVertex, TVertex } from '../types';
+import { TOneOfTwo } from '../types/TOneOf';
 
 type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNode'> & {
   getClassName: (name: string) => string;
@@ -16,14 +17,23 @@ type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNo
   vertex: TVertex<T>;
 };
 
+// Public interface exposed via ref
+export interface MeasurableNodeRef {
+  measure: () => { height: number; width: number };
+  getRef: () => TOneOfTwo<{ htmlWrapper: HTMLDivElement | null }, { svgWrapper: SVGGElement | null }>;
+}
+
 const SVG_HIDDEN_STYLE = { visibility: 'hidden' };
 
-export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T>> {
-  htmlRef = React.createRef<HTMLDivElement>();
-  svgRef = React.createRef<SVGGElement>();
+const MeasurableNodeInner = <T = {},>(
+  { getClassName, hidden, layerType, layoutVertex, renderNode, renderUtils, setOnNode, vertex }: TProps<T>,
+  ref: Ref<MeasurableNodeRef>
+) => {
+  const htmlRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGGElement>(null);
 
-  private measureHtml() {
-    const { current } = this.htmlRef;
+  const measureHtml = useCallback(() => {
+    const current = htmlRef.current;
     if (!current) {
       return { height: 0, width: 0 };
     }
@@ -31,19 +41,34 @@ export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T
       height: current.offsetHeight,
       width: current.offsetWidth,
     };
-  }
+  }, []);
 
-  private measureSvg() {
-    const { current } = this.svgRef;
+  const measureSvg = useCallback(() => {
+    const current = svgRef.current;
     if (!current) {
       return { height: 0, width: 0 };
     }
     const { height, width } = current.getBBox();
     return { height, width };
-  }
+  }, []);
 
-  private renderHtml() {
-    const { getClassName, hidden, renderNode, renderUtils, setOnNode, vertex, layoutVertex } = this.props;
+  // useImperativeHandle allows parent components to call measure() and getRef() on this component,
+  // which is necessary for the layout algorithm to measure node dimensions before positioning.
+  useImperativeHandle(
+    ref,
+    () => ({
+      measure: () => (layerType === ELayerType.Html ? measureHtml() : measureSvg()),
+      getRef: (): TOneOfTwo<{ htmlWrapper: HTMLDivElement | null }, { svgWrapper: SVGGElement | null }> => {
+        if (layerType === ELayerType.Html) {
+          return { htmlWrapper: htmlRef.current };
+        }
+        return { svgWrapper: svgRef.current };
+      },
+    }),
+    [layerType, measureHtml, measureSvg]
+  );
+
+  if (layerType === ELayerType.Html) {
     const { height = null, left = null, top = null, width = null } = layoutVertex || {};
     const props = assignMergeCss(
       {
@@ -61,46 +86,33 @@ export default class MeasurableNode<T = {}> extends React.PureComponent<TProps<T
       getProps(setOnNode, vertex, renderUtils, layoutVertex)
     );
     return (
-      <div ref={this.htmlRef} {...props}>
+      <div ref={htmlRef} {...props}>
         {renderNode(vertex, renderUtils, layoutVertex)}
       </div>
     );
   }
 
-  private renderSvg() {
-    const { getClassName, hidden, renderNode, renderUtils, setOnNode, vertex, layoutVertex } = this.props;
-    const { left = null, top = null } = layoutVertex || {};
-    const props = assignMergeCss(
-      {
-        className: getClassName('MeasurableSvgNode'),
-        transform: left == null || top == null ? undefined : `translate(${left.toFixed()}, ${top.toFixed()})`,
-        style: hidden ? SVG_HIDDEN_STYLE : null,
-      },
-      getProps(setOnNode, vertex, renderUtils, layoutVertex)
-    );
-    return (
-      <g ref={this.svgRef} {...props}>
-        {renderNode(vertex, renderUtils, layoutVertex)}
-      </g>
-    );
-  }
+  // SVG layer type
+  const { left = null, top = null } = layoutVertex || {};
+  const props = assignMergeCss(
+    {
+      className: getClassName('MeasurableSvgNode'),
+      transform: left == null || top == null ? undefined : `translate(${left.toFixed()}, ${top.toFixed()})`,
+      style: hidden ? SVG_HIDDEN_STYLE : null,
+    },
+    getProps(setOnNode, vertex, renderUtils, layoutVertex)
+  );
+  return (
+    <g ref={svgRef} {...props}>
+      {renderNode(vertex, renderUtils, layoutVertex)}
+    </g>
+  );
+};
 
-  getRef() {
-    if (this.props.layerType === ELayerType.Html) {
-      return { htmlWrapper: this.htmlRef.current, svgWrapper: undefined };
-    }
-    return { svgWrapper: this.svgRef.current, htmlWrapper: undefined };
-  }
+// forwardRef allows parent components to attach refs to this component
+// memo provides shallow prop comparison similar to the original PureComponent
+const MeasurableNode = memo(forwardRef(MeasurableNodeInner)) as <T = {}>(
+  props: TProps<T> & { ref?: Ref<MeasurableNodeRef> }
+) => ReactElement | null;
 
-  measure() {
-    return this.props.layerType === ELayerType.Html ? this.measureHtml() : this.measureSvg();
-  }
-
-  render() {
-    const { layerType } = this.props;
-    if (layerType === ELayerType.Html) {
-      return this.renderHtml();
-    }
-    return this.renderSvg();
-  }
-}
+export default MeasurableNode;
