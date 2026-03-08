@@ -11,6 +11,10 @@ import monitorImg from './media/monitor.png';
 const MonitorATMEmptyState: React.FC = () => {
   const config: MonitorEmptyStateConfig = getConfigValue('monitor.emptyState');
 
+  if (!config) {
+    return null;
+  }
+
   return (
     <Col>
       <Row justify="center">
