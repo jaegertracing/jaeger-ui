@@ -1,4 +1,4 @@
-// Copyright (c) 2025 The Jaeger Authors.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 const mockNavigate = jest.fn();
@@ -10,6 +10,8 @@ jest.mock('react-router-dom-v5-compat', () => ({
   useLocation: () => mockLocation,
 }));
 
+// Simplified mock sufficient for testing normalization logic;
+// URL prefix handling is tested separately in url/index.test.js
 jest.mock('./url', () => ({
   getUrl: (id: string) => `/trace/${id}`,
 }));

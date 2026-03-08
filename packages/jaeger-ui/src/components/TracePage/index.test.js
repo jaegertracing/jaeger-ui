@@ -347,15 +347,15 @@ describe('<TracePage>', () => {
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
-  it('forces lowercase id', () => {
-    // The URL normalization is now handled by the TracePage functional wrapper component.
-    // Since TracePageImpl (class component) is tested directly here, this test verifies
-    // that the class component doesn't error with uppercase IDs.
+  it('renders without error when given uppercase id', () => {
+    // URL normalization is handled by the useNormalizeTraceId hook in the wrapper.
+    // This test verifies TracePageImpl renders successfully with uppercase IDs.
     const props = {
       ...defaultProps,
       id: trace.traceID.toUpperCase(),
     };
     expect(() => render(<TracePage {...props} />)).not.toThrow();
+    expect(document.querySelector('.Tracepage--headerSection')).toBeInTheDocument();
   });
 
   it('focuses on search bar when there is a search bar and focusOnSearchBar is called', () => {

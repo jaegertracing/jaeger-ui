@@ -1,4 +1,4 @@
-// Copyright (c) 2025 The Jaeger Authors.
+// Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
@@ -17,7 +17,8 @@ export function useNormalizeTraceId(traceID: string): string {
       const url = getUrl(normalizedTraceID);
       navigate(`${url}${location.search}`, { replace: true, state: location.state });
     }
-  }, [traceID, normalizedTraceID, navigate, location.search, location.state]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [traceID, normalizedTraceID]);
 
   return normalizedTraceID;
 }
