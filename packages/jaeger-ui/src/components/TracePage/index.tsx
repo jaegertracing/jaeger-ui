@@ -296,7 +296,10 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     }
     if (id && id !== id.toLowerCase()) {
       const newLocation = getLocation(id.toLowerCase(), location.state);
-      history(newLocation, { replace: true });
+      history(`${newLocation.pathname}${newLocation.search || ''}`, {
+        replace: true,
+        state: newLocation.state,
+      });
     }
   }
 

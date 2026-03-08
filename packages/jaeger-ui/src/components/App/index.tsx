@@ -70,6 +70,6 @@ export default function JaegerUIApp() {
           </Page>
         </Provider>
       </ThemeProvider>
-    </QueryClientProvider >
+    </QueryClientProvider>
   );
 }

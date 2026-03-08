@@ -827,7 +827,6 @@ describe('mapStateToProps()', () => {
 
   afterEach(() => {
     window.history.replaceState({}, '', '?');
-    window.location = originalLocation;
   });
 
   it('does not explode when the query string is empty', () => {

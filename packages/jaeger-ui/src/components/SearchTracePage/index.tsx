@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom-v5-compat';
 import { Col, Row, Tabs } from 'antd';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
@@ -293,7 +294,6 @@ const ConnectedSearchTracePage = connector(SearchTracePageImpl);
 export default function SearchTracePageWrapper(
   props: Omit<SearchTracePageImplProps, keyof (IStateProps & IDispatchProps)>
 ) {
-  const { useLocation } = require('react-router-dom-v5-compat');
   const location = useLocation();
   return <ConnectedSearchTracePage {...props} locationSearch={location.search} />;
 }

@@ -105,7 +105,7 @@ describe('makeShortcutCallbacks()', () => {
   });
 
   it('returns callbacks that adjust the range based on the `shortcutConfig` values', () => {
-    const fakeEvent = { preventDefault: () => { } };
+    const fakeEvent = { preventDefault: () => {} };
     const callbacks = makeShortcutCallbacks(adjRange);
     Object.keys(shortcutConfig).forEach((key, i) => {
       callbacks[key](fakeEvent);
@@ -1172,7 +1172,7 @@ describe('<TracePage>', () => {
 
 describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
-    expect(mapDispatchToProps(() => { })).toEqual({
+    expect(mapDispatchToProps(() => {})).toEqual({
       acknowledgeArchive: expect.any(Function),
       archiveTrace: expect.any(Function),
       fetchTrace: expect.any(Function),
