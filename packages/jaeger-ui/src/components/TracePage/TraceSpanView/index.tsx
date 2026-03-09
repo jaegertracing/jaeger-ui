@@ -50,8 +50,8 @@ export default function TraceSpanView(props: Props) {
 
     // Convert operation sets to sorted arrays
     const sortedServiceToOperationsMap = new Map<string, string[]>();
-    serviceToOperationsMap.forEach((ops, svc) => {
-      sortedServiceToOperationsMap.set(svc, [...ops].sort());
+    serviceToOperationsMap.forEach((operations, serviceName) => {
+      sortedServiceToOperationsMap.set(serviceName, [...operations].sort());
     });
 
     // Compute max duration once for the entire trace
