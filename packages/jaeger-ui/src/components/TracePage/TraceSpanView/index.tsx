@@ -1,7 +1,7 @@
 // Copyright (c) 2018 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Table, Button, Select, Form, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
@@ -88,15 +88,6 @@ export default function TraceSpanView(props: Props) {
       return true;
     });
   }, [props.trace.spans, filters]);
-
-  const isInitialMount = useRef(true);
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    setFilters({ serviceName: [], operationName: [] });
-  }, [props.trace.spans]);
 
   function handleResetFilter() {
     setFilters({ serviceName: [], operationName: [] });
