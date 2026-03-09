@@ -1,7 +1,7 @@
 // Copyright (c) 2018 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Table, Button, Select, Form, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
@@ -44,7 +44,7 @@ export default function TraceSpanView(props: Props) {
       operationNamesSet.add(span.name);
 
       if (!serviceToOperationsMap.has(serviceName)) {
-        serviceToOperationsMap.set(serviceName, new Set());
+        serviceToOperationsMap.set(serviceName, new Set<string>());
       }
       serviceToOperationsMap.get(serviceName)!.add(span.name);
     }
