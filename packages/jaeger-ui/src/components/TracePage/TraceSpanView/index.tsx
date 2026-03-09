@@ -98,10 +98,6 @@ export default function TraceSpanView(props: Props) {
     });
   }, [props.trace.spans, filters]);
 
-  useEffect(() => {
-    setFilters({ serviceName: [], operationName: [] });
-  }, [props.trace.spans]);
-
   function handleResetFilter() {
     setFilters({ serviceName: [], operationName: [] });
   }
