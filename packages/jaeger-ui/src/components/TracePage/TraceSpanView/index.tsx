@@ -28,12 +28,7 @@ export default function TraceSpanView(props: Props) {
     operationName: [],
   });
 
-  const {
-    serviceNamesList,
-    operationNamesList: opNamesList,
-    serviceToOperationsMap: svcToOperationsMap,
-    maxDuration,
-  } = useMemo(() => {
+  const { serviceNamesList, operationNamesList, serviceToOperationsMap, maxDuration } = useMemo(() => {
     const serviceNamesSet = new Set<string>();
     const operationNamesSet = new Set<string>();
     const serviceToOperationsMap = new Map<string, Set<string>>();
@@ -103,14 +98,13 @@ export default function TraceSpanView(props: Props) {
   }
 
   function uniqueOperationNameOptions() {
-    let operationNamesList: string[];
+    let filteredOpNames: string[];
     if (filters.serviceName && filters.serviceName.length > 0) {
-      const serviceToOperationsMap = svcToOperationsMap;
-      operationNamesList = filters.serviceName.flatMap(svc => serviceToOperationsMap.get(svc) || []);
+      filteredOpNames = filters.serviceName.flatMap(svc => serviceToOperationsMap.get(svc) || []);
     } else {
-      operationNamesList = opNamesList;
+      filteredOpNames = operationNamesList;
     }
-    return [...new Set(operationNamesList)]; // take distinct values
+    return [...new Set(filteredOpNames)]; // take distinct values
   }
 
   function onFilteredChangeCustom(selectedValues: string[], filterType: FilterType) {
