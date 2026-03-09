@@ -1,7 +1,7 @@
 // Copyright (c) 2018 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Table, Button, Select, Form, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { ColumnProps } from 'antd/es/table';
@@ -77,21 +77,26 @@ export default function TraceSpanView(props: Props) {
 
     // Filter spans: a span passes if it matches all active filters
     return props.trace.spans.filter(span => {
-      if (filters.serviceName && filters.serviceName.length > 0) {
-        if (!filters.serviceName.includes(span.resource.serviceName)) {
-          return false;
-        }
+      if (filters.serviceName.length > 0 && !filters.serviceName.includes(span.resource.serviceName)) {
+        return false;
       }
 
       // Check operationName filter (if active)
-      if (filters.operationName && filters.operationName.length > 0) {
-        if (!filters.operationName.includes(span.name)) {
-          return false;
-        }
+      if (filters.operationName.length > 0 && !filters.operationName.includes(span.name)) {
+        return false;
       }
       return true;
     });
   }, [props.trace.spans, filters]);
+
+  const isInitialMount = useRef(true);
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    setFilters({ serviceName: [], operationName: [] });
+  }, [props.trace.spans]);
 
   function handleResetFilter() {
     setFilters({ serviceName: [], operationName: [] });
@@ -99,7 +104,7 @@ export default function TraceSpanView(props: Props) {
 
   function uniqueOperationNameOptions() {
     let filteredOpNames: string[];
-    if (filters.serviceName && filters.serviceName.length > 0) {
+    if (filters.serviceName.length > 0) {
       filteredOpNames = filters.serviceName.flatMap(svc => serviceToOperationsMap.get(svc) || []);
     } else {
       filteredOpNames = operationNamesList;
@@ -247,10 +252,10 @@ export default function TraceSpanView(props: Props) {
             style={{ width: '100%' }}
             maxTagCount={4}
             value={filters.serviceName}
-            maxTagPlaceholder={`+ ${(filters.serviceName?.length || 0) - 4} Selected`}
+            maxTagPlaceholder={`+ ${filters.serviceName.length - 4} Selected`}
             placeholder="Select Service"
-            onChange={entry => {
-              onFilteredChangeCustom(entry as [], 'serviceName');
+            onChange={(entry: string[]) => {
+              onFilteredChangeCustom(entry, 'serviceName');
             }}
             data-testid="select-service"
           >
@@ -277,10 +282,10 @@ export default function TraceSpanView(props: Props) {
             style={{ width: '100%' }}
             maxTagCount={4}
             value={filters.operationName}
-            maxTagPlaceholder={`+ ${(filters.operationName?.length || 0) - 4} Selected`}
+            maxTagPlaceholder={`+ ${filters.operationName.length - 4} Selected`}
             placeholder={props.useOtelTerms ? 'Select Span Name' : 'Select Operation'}
-            onChange={entry => {
-              onFilteredChangeCustom(entry as [], 'operationName');
+            onChange={(entry: string[]) => {
+              onFilteredChangeCustom(entry, 'operationName');
             }}
             data-testid="select-operation"
           >
