@@ -347,21 +347,15 @@ describe('<TracePage>', () => {
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
-  it('forces lowercase id', () => {
-    const replaceMock = jest.fn();
+  it('renders without error when given uppercase id', () => {
+    // URL normalization is handled by the useNormalizeTraceId hook in the wrapper.
+    // This test verifies TracePageImpl renders successfully with uppercase IDs.
     const props = {
       ...defaultProps,
       id: trace.traceID.toUpperCase(),
-      history: {
-        replace: replaceMock,
-      },
     };
-    render(<TracePage {...props} />);
-    expect(replaceMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pathname: expect.stringContaining(trace.traceID),
-      })
-    );
+    expect(() => render(<TracePage {...props} />)).not.toThrow();
+    expect(document.querySelector('.Tracepage--headerSection')).toBeInTheDocument();
   });
 
   it('focuses on search bar when there is a search bar and focusOnSearchBar is called', () => {
