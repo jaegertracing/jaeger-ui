@@ -35,6 +35,7 @@ type SpanDetailProps = {
   currentViewRangeTime: [number, number];
   traceDuration: number;
   useOtelTerms: boolean;
+  eventsInitialVisibleCount?: number;
 };
 
 export default function SpanDetail(props: SpanDetailProps) {
@@ -53,6 +54,7 @@ export default function SpanDetail(props: SpanDetailProps) {
     currentViewRangeTime,
     traceDuration,
     useOtelTerms,
+    eventsInitialVisibleCount,
   } = props;
 
   const { isAttributesOpen, isResourceOpen, events: eventsState, isWarningsOpen, isLinksOpen } = detailState;
@@ -129,6 +131,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             traceDuration={traceDuration}
             spanID={span.spanID}
             useOtelTerms={useOtelTerms}
+            initialVisibleCount={eventsInitialVisibleCount}
           />
         )}
         {warnings && warnings.length > 0 && (

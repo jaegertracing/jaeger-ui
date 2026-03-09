@@ -39,6 +39,15 @@ function jaegerUiConfigPlugin() {
 
   return {
     name: 'jaeger-ui-config',
+    configureServer(server) {
+      server.watcher.add([jsConfigPath, jsonConfigPath]);
+      server.watcher.on('change', path => {
+        if (path === jsConfigPath || path === jsonConfigPath) {
+          console.log(`[jaeger-ui-config] Config changed: ${path}. Triggering full reload...`);
+          server.ws.send({ type: 'full-reload', path: '*' });
+        }
+      });
+    },
     transformIndexHtml: {
       order: 'pre' as const,
       async handler(html: string) {

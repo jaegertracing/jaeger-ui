@@ -107,10 +107,10 @@ Run from `packages/jaeger-ui/`:
 
 ### File Headers
 
-All new files must include this copyright header with the current year:
+All new files must include this copyright header with the current year (e.g. 2026):
 
 ```typescript
-// Copyright (c) 2025 The Jaeger Authors.
+// Copyright (c) <current year> The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 ```
 
@@ -173,6 +173,18 @@ ComponentName/
 - Follow [good commit message](https://chris.beams.io/posts/git-commit/) guidelines
 - Keep subject line under 50 characters
 - Use imperative mood in subject line
+
+## Working with GitHub CLI (`gh`)
+
+To effectively gather context from Pull Requests, especially for review comments:
+
+### Fetching Review Comments
+
+Use the GitHub API with pagination to retrieve all comments in a raw JSON format. This is often more reliable than `gh pr view` for automated analysis.
+
+```bash
+gh api repos/jaegertracing/jaeger-ui/pulls/:number/comments --paginate --jq '.[].body'
+```
 
 ## Additional Notes
 

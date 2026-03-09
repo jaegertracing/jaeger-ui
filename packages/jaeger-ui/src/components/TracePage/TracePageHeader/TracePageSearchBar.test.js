@@ -12,11 +12,12 @@ jest.mock('../index.track', () => ({
 }));
 
 jest.mock('../../common/UiFindInput', () => {
-  return function MockUiFindInput({ inputProps, forwardedRef, trackFindFunction }) {
+  const React = jest.requireActual('react');
+  return React.forwardRef(function MockUiFindInput({ inputProps, trackFindFunction }, ref) {
     return (
       <div data-testid="ui-find-input-wrapper">
         <input
-          ref={forwardedRef}
+          ref={ref}
           data-testid="ui-find-input"
           data-test={inputProps['data-test']}
           className={inputProps.className}
@@ -27,7 +28,7 @@ jest.mock('../../common/UiFindInput', () => {
         {inputProps.suffix}
       </div>
     );
-  };
+  });
 });
 
 const defaultProps = {

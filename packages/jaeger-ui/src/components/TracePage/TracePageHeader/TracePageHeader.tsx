@@ -10,8 +10,8 @@ import { Link } from 'react-router-dom';
 
 import DocumentTitle from '../../../utils/documentTitle';
 import AltViewOptions from './AltViewOptions';
-import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import SpanGraph from './SpanGraph';
+import TraceViewSettings from './TraceViewSettings';
 import TracePageSearchBar from './TracePageSearchBar';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from '../types';
 import LabeledList from '../../common/LabeledList';
@@ -30,23 +30,27 @@ import TraceId from '../../common/TraceId';
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
   clearSearch: () => void;
+  detailPanelMode: 'inline' | 'sidepanel';
+  enableSidePanel: boolean;
   focusUiFindMatches: () => void;
   hideMap: boolean;
   hideSummary: boolean;
   linkToStandalone: string;
   nextResult: () => void;
   onArchiveClicked: () => void;
+  onDetailPanelModeToggle: () => void;
   onSlimViewClicked: () => void;
+  onTimelineToggle: () => void;
   onTraceViewChange: (viewType: ETraceViewType) => void;
   prevResult: () => void;
   resultCount: number;
   showArchiveButton: boolean;
-  showShortcutsHelp: boolean;
   showStandaloneLink: boolean;
   disableJsonView: boolean;
   showViewOptions: boolean;
   slimView: boolean;
   textFilter: string | TNil;
+  timelineBarsVisible: boolean;
   toSearch: string | null;
   trace: IOtelTrace;
   viewType: ETraceViewType;
@@ -118,6 +122,8 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
   const {
     canCollapse,
     clearSearch,
+    detailPanelMode,
+    enableSidePanel,
     focusUiFindMatches,
     forwardedRef,
     hideMap,
@@ -125,17 +131,19 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     linkToStandalone,
     nextResult,
     onArchiveClicked,
+    onDetailPanelModeToggle,
     onSlimViewClicked,
+    onTimelineToggle,
     onTraceViewChange,
     prevResult,
     resultCount,
     showArchiveButton,
-    showShortcutsHelp,
     showStandaloneLink,
     showViewOptions,
     disableJsonView,
     slimView,
     textFilter,
+    timelineBarsVisible,
     toSearch,
     trace,
     viewType,
@@ -201,7 +209,14 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           navigable={viewType === ETraceViewType.TraceTimelineViewer}
           useOtelTerms={useOtelTerms}
         />
-        {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
+        <TraceViewSettings
+          className="ub-m2"
+          detailPanelMode={detailPanelMode}
+          enableSidePanel={enableSidePanel}
+          onDetailPanelModeToggle={onDetailPanelModeToggle}
+          onTimelineToggle={onTimelineToggle}
+          timelineBarsVisible={timelineBarsVisible}
+        />
         {showViewOptions && (
           <AltViewOptions
             disableJsonView={disableJsonView}

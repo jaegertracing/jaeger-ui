@@ -64,29 +64,22 @@ jest.mock('./LayoutSettings', () => {
 
 jest.mock('../../common/UiFindInput', () => {
   const mockReact = jest.requireActual('react');
-  return function MockUiFindInput(props) {
+  return mockReact.forwardRef(function MockUiFindInput(props, ref) {
     const inputRef = mockReact.useRef(null);
 
     mockReact.useEffect(() => {
-      if (props.forwardedRef) {
-        props.forwardedRef.current = {
-          focus: () => {
-            if (inputRef.current) {
-              inputRef.current.focus();
-            }
-          },
-          blur: () => {
-            if (inputRef.current) {
-              inputRef.current.blur();
-            }
-          },
-          select: () => {
-            if (inputRef.current) {
-              inputRef.current.select();
-            }
-          },
+      if (ref) {
+        const current = {
+          focus: () => inputRef.current && inputRef.current.focus(),
+          blur: () => inputRef.current && inputRef.current.blur(),
+          select: () => inputRef.current && inputRef.current.select(),
           input: inputRef.current,
         };
+        if (typeof ref === 'function') {
+          ref(current);
+        } else {
+          ref.current = current;
+        }
       }
     });
 
@@ -95,7 +88,7 @@ jest.mock('../../common/UiFindInput', () => {
       'data-testid': 'ui-find-input',
       ...props.inputProps,
     });
-  };
+  });
 });
 
 describe('<Header>', () => {

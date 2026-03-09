@@ -4,7 +4,14 @@
 import sitePrefix from '../site-prefix';
 import { getAppEnvironment } from './constants';
 
-const origin = getAppEnvironment() === 'test' ? global.location.origin : window.location.origin;
+const origin =
+  getAppEnvironment() === 'test'
+    ? global.location
+      ? global.location.origin
+      : ''
+    : typeof window !== 'undefined'
+      ? window.location.origin
+      : '';
 
 /**
  * Generate the URL prefix from `sitePrefix` and use it for all subsequent calls

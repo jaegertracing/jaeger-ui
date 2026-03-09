@@ -4,6 +4,6 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .BreakableText {
-  display: inline-block;
-  white-space: pre;
+  display: inline;
+  white-space: pre-wrap;
 }

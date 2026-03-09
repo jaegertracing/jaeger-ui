@@ -232,7 +232,6 @@ describe('AppThemeProvider', () => {
     const { result } = renderHook(() => useThemeMode(), { wrapper: AppThemeProvider });
 
     const originalDocument = (global as any).document;
-    // @ts-ignore
     delete (global as any).document;
 
     try {

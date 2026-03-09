@@ -49,6 +49,7 @@ describe('AltViewOptions', () => {
   let trackRawJsonView;
   let trackStatisticsView;
   let trackTraceSpansView;
+  let trackTraceLogsView;
 
   const props = {
     viewType: ETraceViewType.TraceTimelineViewer,
@@ -64,6 +65,7 @@ describe('AltViewOptions', () => {
     trackRawJsonView = jest.spyOn(track, 'trackRawJsonView');
     trackStatisticsView = jest.spyOn(track, 'trackStatisticsView');
     trackTraceSpansView = jest.spyOn(track, 'trackTraceSpansView');
+    trackTraceLogsView = jest.spyOn(track, 'trackTraceLogsView');
   });
 
   afterEach(() => {
@@ -101,6 +103,7 @@ describe('AltViewOptions', () => {
     expect(screen.getByTestId('menu-item-TraceStatistics')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-TraceSpansView')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-TraceFlamegraph')).toBeInTheDocument();
+    expect(screen.getByTestId('menu-item-TraceLogs')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-trace-json')).toBeInTheDocument();
     expect(screen.getByTestId('menu-item-trace-json-unadjusted')).toBeInTheDocument();
   });
@@ -167,6 +170,17 @@ describe('AltViewOptions', () => {
     expect(trackGraphView).not.toHaveBeenCalled();
     expect(trackStatisticsView).not.toHaveBeenCalled();
     expect(trackTraceSpansView).not.toHaveBeenCalled();
+    expect(trackTraceLogsView).not.toHaveBeenCalled();
+  });
+
+  it('tracks and changes view for Trace Logs', () => {
+    renderComponent({ viewType: ETraceViewType.TraceTimelineViewer });
+    const menuItem = screen.getByTestId('menu-item-TraceLogs');
+
+    fireEvent.click(menuItem);
+
+    expect(props.onTraceViewChange).toHaveBeenCalledWith(ETraceViewType.TraceLogs);
+    expect(trackTraceLogsView).toHaveBeenCalledTimes(1);
   });
 
   it('renders JSON links with correct URLs', () => {
@@ -198,6 +212,7 @@ describe('AltViewOptions', () => {
     rerenderWithViewType(ETraceViewType.TraceStatistics, 'Trace Statistics');
     rerenderWithViewType(ETraceViewType.TraceSpansView, 'Trace Spans Table');
     rerenderWithViewType(ETraceViewType.TraceFlamegraph, 'Trace Flamegraph');
+    rerenderWithViewType(ETraceViewType.TraceLogs, 'Trace Logs');
   });
 
   it('excludes current view from dropdown options for all view types', () => {
@@ -207,6 +222,7 @@ describe('AltViewOptions', () => {
       { type: ETraceViewType.TraceStatistics, testId: 'menu-item-TraceStatistics' },
       { type: ETraceViewType.TraceSpansView, testId: 'menu-item-TraceSpansView' },
       { type: ETraceViewType.TraceFlamegraph, testId: 'menu-item-TraceFlamegraph' },
+      { type: ETraceViewType.TraceLogs, testId: 'menu-item-TraceLogs' },
     ];
 
     viewTypes.forEach(({ type, testId }) => {

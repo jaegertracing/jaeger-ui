@@ -31,6 +31,12 @@ jest.mock('./TraceFlamegraph/index', () => {
   };
 });
 
+jest.mock('./TraceLogsView/index', () => {
+  return function MockTraceLogsView() {
+    return <div data-testid="mock-trace-logs-view">TraceLogsView</div>;
+  };
+});
+
 jest.mock('./ScrollManager', () => {
   return jest.fn().mockImplementation(() => ({
     scrollToNextVisibleSpan: jest.fn(),
@@ -122,6 +128,8 @@ describe('<TracePage>', () => {
   const defaultProps = {
     acknowledgeArchive: jest.fn(),
     archiveTrace: jest.fn(),
+    detailPanelMode: 'inline',
+    enableSidePanel: false,
     fetchTrace: jest.fn(),
     focusUiFindMatches: jest.fn(),
     id: trace.traceID,
@@ -130,6 +138,9 @@ describe('<TracePage>', () => {
       search: null,
       state: null,
     },
+    setDetailPanelMode: jest.fn(),
+    setTimelineBarsVisible: jest.fn(),
+    timelineBarsVisible: true,
     trace: { data: trace, state: fetchedState.DONE },
   };
   const notDefaultPropsId = `not ${defaultProps.id}`;
@@ -344,21 +355,15 @@ describe('<TracePage>', () => {
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
-  it('forces lowercase id', () => {
-    const replaceMock = jest.fn();
+  it('renders without error when given uppercase id', () => {
+    // URL normalization is handled by the useNormalizeTraceId hook in the wrapper.
+    // This test verifies TracePageImpl renders successfully with uppercase IDs.
     const props = {
       ...defaultProps,
       id: trace.traceID.toUpperCase(),
-      history: {
-        replace: replaceMock,
-      },
     };
-    render(<TracePage {...props} />);
-    expect(replaceMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pathname: expect.stringContaining(trace.traceID),
-      })
-    );
+    expect(() => render(<TracePage {...props} />)).not.toThrow();
+    expect(document.querySelector('.Tracepage--headerSection')).toBeInTheDocument();
   });
 
   it('focuses on search bar when there is a search bar and focusOnSearchBar is called', () => {
@@ -714,12 +719,11 @@ describe('<TracePage>', () => {
     });
 
     describe('isEmbedded derived props', () => {
-      it('sets showShortcutsHelp, showStandaloneLink, and showViewOptions correctly', () => {
+      it('sets showStandaloneLink and showViewOptions correctly', () => {
         const getEmbeddedState = embedded => {
           const isEmbedded = Boolean(embedded);
           return {
             isEmbedded,
-            showShortcutsHelp: !isEmbedded,
             showStandaloneLink: isEmbedded,
             showViewOptions: !isEmbedded,
           };
@@ -728,12 +732,10 @@ describe('<TracePage>', () => {
         const results = [getEmbeddedState(undefined), getEmbeddedState({ timeline: {} })];
 
         expect(results[0].isEmbedded).toBe(false);
-        expect(results[0].showShortcutsHelp).toBe(true);
         expect(results[0].showStandaloneLink).toBe(false);
         expect(results[0].showViewOptions).toBe(true);
 
         expect(results[1].isEmbedded).toBe(true);
-        expect(results[1].showShortcutsHelp).toBe(false);
         expect(results[1].showStandaloneLink).toBe(true);
         expect(results[1].showViewOptions).toBe(false);
       });
@@ -834,6 +836,64 @@ describe('<TracePage>', () => {
       });
 
       expect(defaultProps.archiveTrace).toHaveBeenCalledWith(defaultProps.id);
+    });
+  });
+
+  describe('layout toggle handlers', () => {
+    it('calls setDetailPanelMode with sidepanel when detailPanelMode is inline', () => {
+      const setDetailPanelMode = jest.fn();
+      const { componentRef } = renderWithRef({
+        ...defaultProps,
+        detailPanelMode: 'inline',
+        setDetailPanelMode,
+      });
+
+      act(() => {
+        componentRef.current.onDetailPanelModeToggle();
+      });
+      expect(setDetailPanelMode).toHaveBeenCalledWith('sidepanel');
+    });
+
+    it('calls setDetailPanelMode with inline when detailPanelMode is sidepanel', () => {
+      const setDetailPanelMode = jest.fn();
+      const { componentRef } = renderWithRef({
+        ...defaultProps,
+        detailPanelMode: 'sidepanel',
+        setDetailPanelMode,
+      });
+
+      act(() => {
+        componentRef.current.onDetailPanelModeToggle();
+      });
+      expect(setDetailPanelMode).toHaveBeenCalledWith('inline');
+    });
+
+    it('calls setTimelineBarsVisible with false when timelineBarsVisible is true', () => {
+      const setTimelineBarsVisible = jest.fn();
+      const { componentRef } = renderWithRef({
+        ...defaultProps,
+        timelineBarsVisible: true,
+        setTimelineBarsVisible,
+      });
+
+      act(() => {
+        componentRef.current.onTimelineToggle();
+      });
+      expect(setTimelineBarsVisible).toHaveBeenCalledWith(false);
+    });
+
+    it('calls setTimelineBarsVisible with true when timelineBarsVisible is false', () => {
+      const setTimelineBarsVisible = jest.fn();
+      const { componentRef } = renderWithRef({
+        ...defaultProps,
+        timelineBarsVisible: false,
+        setTimelineBarsVisible,
+      });
+
+      act(() => {
+        componentRef.current.onTimelineToggle();
+      });
+      expect(setTimelineBarsVisible).toHaveBeenCalledWith(true);
     });
   });
 
@@ -1019,6 +1079,19 @@ describe('<TracePage>', () => {
       expect(screen.getByTestId('mock-trace-flamegraph')).toBeInTheDocument();
     });
 
+    it('renders TraceLogsView when viewType is TraceLogs and headerHeight exists', () => {
+      const { componentRef } = renderWithRef(defaultProps);
+
+      act(() => {
+        componentRef.current.setState({
+          headerHeight: 100,
+          viewType: ETraceViewType.TraceLogs,
+        });
+      });
+
+      expect(screen.getByTestId('mock-trace-logs-view')).toBeInTheDocument();
+    });
+
     it('does not render view content when headerHeight is null', () => {
       const { componentRef } = renderWithRef(defaultProps);
 
@@ -1045,6 +1118,8 @@ describe('mapDispatchToProps()', () => {
       archiveTrace: expect.any(Function),
       fetchTrace: expect.any(Function),
       focusUiFindMatches: expect.any(Function),
+      setDetailPanelMode: expect.any(Function),
+      setTimelineBarsVisible: expect.any(Function),
     });
   });
 });
@@ -1075,16 +1150,21 @@ describe('mapStateToProps()', () => {
         archiveEnabled: false,
       },
       archive: {},
+      traceTimeline: {
+        detailPanelMode: 'inline',
+        timelineBarsVisible: true,
+      },
     };
   });
   it('maps state to props correctly', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
+      detailPanelMode: 'inline',
       embedded,
-      archiveEnabled: false,
       archiveTraceState: undefined,
       searchUrl: null,
+      timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1110,10 +1190,11 @@ describe('mapStateToProps()', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
+      detailPanelMode: 'inline',
       embedded,
-      archiveEnabled: false,
       archiveTraceState: undefined,
       searchUrl: fakeUrl,
+      timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1124,13 +1205,13 @@ describe('mapStateToProps()', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
+      detailPanelMode: 'inline',
       embedded,
-      archiveEnabled: false,
       archiveTraceState: undefined,
       searchUrl: null,
+      timelineBarsVisible: true,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
-      traceGraphConfig: { layoutManagerMemory: fakeMemory },
     });
   });
 });

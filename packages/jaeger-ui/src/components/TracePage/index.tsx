@@ -4,6 +4,7 @@
 import * as React from 'react';
 import { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { InputRef } from 'antd';
+import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
@@ -27,11 +28,12 @@ import calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import TraceGraph from './TraceGraph/TraceGraph';
 import { TEv } from './TraceGraph/types';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
+import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
-import { getLocation, getUrl } from './url';
+import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState } from '../common/UiFindInput';
@@ -47,7 +49,8 @@ import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
-import { StorageCapabilities, TraceGraphConfig } from '../../types/config';
+import TraceLogsView from './TraceLogsView/index';
+import type { SpanDetailPanelMode, StorageCapabilities, TraceGraphConfig } from '../../types/config';
 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
@@ -58,27 +61,32 @@ type TDispatchProps = {
   archiveTrace: (id: string) => void;
   fetchTrace: (id: string) => void;
   focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil) => void;
+  setDetailPanelMode: (mode: SpanDetailPanelMode) => void;
+  setTimelineBarsVisible: (visible: boolean) => void;
 };
 
 type TOwnProps = {
   history: RouterHistory;
   location: Location<LocationState>;
   params: { id: string };
+  archiveEnabled: boolean;
+  enableSidePanel: boolean;
+  storageCapabilities: StorageCapabilities | TNil;
+  criticalPathEnabled: boolean;
+  disableJsonView: boolean;
+  traceGraphConfig?: TraceGraphConfig;
+  useOtelTerms: boolean;
 };
 
 type TReduxProps = {
-  archiveEnabled: boolean;
-  storageCapabilities: StorageCapabilities | TNil;
   archiveTraceState: TraceArchive | TNil;
-  criticalPathEnabled: boolean;
+  detailPanelMode: SpanDetailPanelMode;
   embedded: null | EmbeddedState;
   id: string;
   searchUrl: null | string;
-  disableJsonView: boolean;
+  timelineBarsVisible: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
-  traceGraphConfig?: TraceGraphConfig;
-  useOtelTerms: boolean;
 };
 
 type TProps = TDispatchProps & TOwnProps & TReduxProps;
@@ -127,14 +135,19 @@ export const TracePageImpl = React.memo(
       archiveTrace: archiveTraceProp,
       archiveTraceState,
       criticalPathEnabled,
+      detailPanelMode,
       disableJsonView,
       embedded,
+      enableSidePanel,
       fetchTrace,
       focusUiFindMatches: focusUiFindMatchesProp,
       history,
       id,
       location,
+      setDetailPanelMode,
+      setTimelineBarsVisible,
       storageCapabilities,
+      timelineBarsVisible,
       trace,
       traceGraphConfig,
       uiFind,
@@ -282,12 +295,8 @@ export const TracePageImpl = React.memo(
     const ensureTraceFetched = useCallback(() => {
       if (!trace) {
         fetchTrace(id);
-        return;
       }
-      if (id && id !== id.toLowerCase()) {
-        history.replace(getLocation(id.toLowerCase(), location.state));
-      }
-    }, [fetchTrace, id, trace, history, location.state]);
+    }, [fetchTrace, id, trace]);
 
     const focusUiFindMatches = useCallback(() => {
       if (trace && trace.data) {
@@ -305,6 +314,14 @@ export const TracePageImpl = React.memo(
       trackPrevMatch();
       _scrollManager.current.scrollToPrevVisibleSpan();
     }, []);
+
+    const onDetailPanelModeToggle = useCallback(() => {
+      setDetailPanelMode(detailPanelMode === 'inline' ? 'sidepanel' : 'inline');
+    }, [detailPanelMode, setDetailPanelMode]);
+
+    const onTimelineToggle = useCallback(() => {
+      setTimelineBarsVisible(!timelineBarsVisible);
+    }, [timelineBarsVisible, setTimelineBarsVisible]);
 
     // Stable ref bundle for the mount-time keyboard shortcut registration.
     // The mount effect runs once (componentDidMount semantics) and must not re-register
@@ -423,6 +440,8 @@ export const TracePageImpl = React.memo(
         focusUiFindMatches,
         nextResult,
         prevResult,
+        onDetailPanelModeToggle,
+        onTimelineToggle,
       };
       return handle;
     }, [
@@ -440,6 +459,8 @@ export const TracePageImpl = React.memo(
       focusUiFindMatches,
       nextResult,
       prevResult,
+      onDetailPanelModeToggle,
+      onTimelineToggle,
       _filterSpans,
     ]);
 
@@ -477,6 +498,8 @@ export const TracePageImpl = React.memo(
       viewRange,
       canCollapse: !embedded || !embedded.timeline.hideSummary || !embedded.timeline.hideMinimap,
       clearSearch,
+      detailPanelMode,
+      enableSidePanel,
       hideMap: Boolean(
         viewType !== ETraceViewType.TraceTimelineViewer || (embedded && embedded.timeline.hideMinimap)
       ),
@@ -484,16 +507,18 @@ export const TracePageImpl = React.memo(
       linkToStandalone: getUrl(id),
       nextResult,
       onArchiveClicked: archiveTrace,
+      onDetailPanelModeToggle,
       onSlimViewClicked: toggleSlimView,
+      onTimelineToggle,
       onTraceViewChange: setTraceView,
       prevResult,
       ref: _searchBar,
       resultCount: findCount,
       disableJsonView,
       showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
-      showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
+      timelineBarsVisible,
       toSearch: (locationState && locationState.fromSearch) || null,
       trace: data.asOtelTrace(),
       updateNextViewRangeTime,
@@ -548,6 +573,8 @@ export const TracePageImpl = React.memo(
       );
     } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
       view = <TraceFlamegraph trace={trace} />;
+    } else if (ETraceViewType.TraceLogs === viewType && headerHeight) {
+      view = <TraceLogsView trace={data.asOtelTrace()} useOtelTerms={useOtelTerms} />;
     }
 
     return (
@@ -567,30 +594,24 @@ export const TracePageImpl = React.memo(
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { id } = ownProps.params;
-  const { archive, config, embedded, router } = state;
+  const { archive, embedded, router } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
-  const archiveEnabled = Boolean(config.archiveEnabled);
-  const storageCapabilities = config.storageCapabilities;
-  const { disableJsonView, criticalPathEnabled } = config;
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
-  const { traceGraph: traceGraphConfig } = config;
+
+  const { detailPanelMode, timelineBarsVisible } = state.traceTimeline;
 
   return {
     ...extractUiFindFromState(state),
-    archiveEnabled,
-    storageCapabilities,
     archiveTraceState,
-    criticalPathEnabled,
+    detailPanelMode,
     embedded,
     id,
     searchUrl,
-    disableJsonView,
+    timelineBarsVisible,
     trace,
-    traceGraphConfig,
-    useOtelTerms: config.useOpenTelemetryTerms,
   };
 }
 
@@ -598,8 +619,46 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { fetchTrace } = bindActionCreators(jaegerApiActions, dispatch);
   const { archiveTrace, acknowledge: acknowledgeArchive } = bindActionCreators(archiveActions, dispatch);
-  const { focusUiFindMatches } = bindActionCreators(timelineActions, dispatch);
-  return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
+  const { focusUiFindMatches, setDetailPanelMode, setTimelineBarsVisible } = bindActionCreators(
+    timelineActions,
+    dispatch
+  );
+  return {
+    acknowledgeArchive,
+    archiveTrace,
+    fetchTrace,
+    focusUiFindMatches,
+    setDetailPanelMode,
+    setTimelineBarsVisible,
+  };
 }
 
-export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(TracePageImpl));
+const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
+
+type TracePageProps = {
+  history: RouterHistory;
+  location: Location<LocationState>;
+  params: { id: string };
+};
+
+const TracePage = (props: TracePageProps) => {
+  const config = useConfig();
+  const traceID = props.params.id;
+  const normalizedTraceID = useNormalizeTraceId(traceID);
+
+  return (
+    <ConnectedTracePage
+      {...props}
+      params={{ ...props.params, id: normalizedTraceID }}
+      archiveEnabled={Boolean(config.archiveEnabled)}
+      enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
+      storageCapabilities={config.storageCapabilities}
+      criticalPathEnabled={config.criticalPathEnabled}
+      disableJsonView={config.disableJsonView}
+      traceGraphConfig={config.traceGraph}
+      useOtelTerms={config.useOpenTelemetryTerms}
+    />
+  );
+};
+
+export default withRouteProps(TracePage);
