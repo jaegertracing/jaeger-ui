@@ -69,6 +69,7 @@ const defaultConfig: Config = {
   traceIdDisplayLength: 7,
   storageCapabilities: {
     archiveStorage: false,
+    metricsStorage: false,
   },
   tracking: {
     gaID: null,

@@ -61,7 +61,7 @@ describe('getConfig()', () => {
 
     it('merges the defaultConfig with the embedded config and storage capabilities', () => {
       embedded = { novel: 'prop' };
-      capabilities = { archiveStorage: true };
+      capabilities = { archiveStorage: true, metricsStorage: false };
       expect(getConfig()).toEqual({ ...defaultConfig, ...embedded, storageCapabilities: capabilities });
     });
 
