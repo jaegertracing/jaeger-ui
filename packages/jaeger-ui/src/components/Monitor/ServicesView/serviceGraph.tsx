@@ -250,15 +250,16 @@ export function ServiceGraphImpl({
 
   const formatYAxisTickWrapper = (value: number): string => formatYAxisTick(value, name, yAxisTickFormat);
 
-  const tooltipFormatter = (value: number | undefined, uname: string | undefined) => {
+  const tooltipFormatter = (value: number | string | undefined, uname: string | undefined) => {
     if (value === undefined) {
       return ['N/A'];
     }
+    const numValue = typeof value === 'string' ? Number(value) : value;
     if (!showLegend) {
-      return [formatYAxisTickWrapper(value)];
+      return [formatYAxisTickWrapper(numValue)];
     }
     const formattedName = uname !== undefined ? Number(uname) * 100 : 0;
-    return [formatYAxisTickWrapper(value), `P${formattedName}`];
+    return [formatYAxisTickWrapper(numValue), `P${formattedName}`];
   };
 
   return (
@@ -295,8 +296,8 @@ export function ServiceGraphImpl({
 
           <Tooltip
             contentStyle={{ fontSize: '0.625rem' }}
-            labelFormatter={(value: number) => new Date(value).toLocaleString()}
-            formatter={tooltipFormatter}
+            labelFormatter={((value: string | number) => new Date(Number(value)).toLocaleString()) as never}
+            formatter={tooltipFormatter as never}
           />
 
           {showLegend && (

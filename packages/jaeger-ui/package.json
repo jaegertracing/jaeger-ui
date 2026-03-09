@@ -67,7 +67,7 @@
     "react-redux": "9.2.0",
     "react-router-dom": "5.3.4",
     "react-router-dom-v5-compat": "6.30.0",
-    "recharts": "3.6.0",
+    "recharts": "3.8.0",
     "redux": "5.0.1",
     "redux-actions": "3.0.3",
     "redux-first-history": "5.2.0",
