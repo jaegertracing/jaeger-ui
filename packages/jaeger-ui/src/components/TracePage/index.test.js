@@ -590,10 +590,10 @@ describe('<TracePage>', () => {
       });
 
       it('hides summary if embedded indicates it should be', () => {
-        // This test verifies the hideSummary logic
-        const embedded = { timeline: { hideSummary: true } };
-        const hideSummary = Boolean(embedded && embedded.timeline.hideSummary);
-        expect(hideSummary).toBe(true);
+        renderWithRouter(<TracePage {...defaultProps} embedded={{ timeline: { hideSummary: true } }} />);
+
+        const summary = document.querySelector('.TracePageHeader--overviewItems');
+        expect(summary).not.toBeInTheDocument();
       });
     });
 
@@ -639,14 +639,10 @@ describe('<TracePage>', () => {
     });
 
     describe('resultCount', () => {
-      let getUiFindVertexKeysSpy;
-
-      beforeAll(() => {
-        getUiFindVertexKeysSpy = jest.spyOn(getUiFindVertexKeys, 'getUiFindVertexKeys');
-      });
+      let getUiFindVertexKeysMock;
 
       beforeEach(() => {
-        getUiFindVertexKeysSpy.mockReset();
+        getUiFindVertexKeysMock = jest.fn();
         filterSpansSpy.mockReset();
       });
 
@@ -681,7 +677,7 @@ describe('<TracePage>', () => {
           mockSet.add(`vertex-${i}`);
         }
 
-        getUiFindVertexKeysSpy.mockReturnValue(mockSet);
+        getUiFindVertexKeysMock.mockReturnValue(mockSet);
 
         const props = {
           ...defaultProps,
@@ -693,7 +689,7 @@ describe('<TracePage>', () => {
 
         if (viewType === ETraceViewType.TraceGraph && props.uiFind) {
           const vertices = [];
-          const graphFindMatches = getUiFindVertexKeysSpy(props.uiFind, vertices);
+          const graphFindMatches = getUiFindVertexKeysMock(props.uiFind, vertices);
           resultCount = graphFindMatches ? graphFindMatches.size : 0;
         }
 

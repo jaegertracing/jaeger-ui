@@ -99,6 +99,33 @@ type TState = {
 };
 
 // export for tests
+export type TracePageHandle = {
+  readonly state: TState;
+  setState: (newState: Partial<TState> | ((prev: TState) => Partial<TState>), callback?: () => void) => void;
+  _headerElm: React.MutableRefObject<HTMLElement | null>;
+  _searchBar: React.RefObject<InputRef | null>;
+  _scrollManager: ScrollManager;
+  _filterSpans: typeof filterSpans;
+  readonly traceDagEV: TEv | TNil;
+  _adjustViewRange: (startChange: number, endChange: number, trackSrc: string) => void;
+  setHeaderHeight: (elm: HTMLElement | TNil) => void;
+  clearSearch: () => void;
+  focusOnSearchBar: () => void;
+  updateViewRangeTime: TUpdateViewRangeTimeFunction;
+  updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
+  toggleSlimView: () => void;
+  setTraceView: (viewType: ETraceViewType) => void;
+  archiveTrace: () => void;
+  acknowledgeArchive: () => void;
+  ensureTraceFetched: () => void;
+  focusUiFindMatches: () => void;
+  nextResult: () => void;
+  prevResult: () => void;
+  onDetailPanelModeToggle: () => void;
+  onTimelineToggle: () => void;
+};
+
+// export for tests
 export const VIEW_MIN_RANGE = 0.01;
 const VIEW_CHANGE_BASE = 0.005;
 const VIEW_CHANGE_FAST = 0.05;
@@ -128,7 +155,7 @@ export function makeShortcutCallbacks(adjRange: (start: number, end: number) => 
 
 // export for tests
 export const TracePageImpl = React.memo(
-  forwardRef<unknown, TProps>(function TracePageImpl(props, ref) {
+  forwardRef<TracePageHandle, TProps>(function TracePageImpl(props, ref) {
     const {
       acknowledgeArchive: acknowledgeArchiveProp,
       archiveEnabled,
