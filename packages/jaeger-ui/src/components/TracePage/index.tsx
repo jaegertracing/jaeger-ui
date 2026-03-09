@@ -346,8 +346,9 @@ export const TracePageImpl = React.memo(
     }, [ensureTraceFetched, updateViewRangeTime, _adjustViewRange, focusOnSearchBar, clearSearch]);
 
     // componentDidMount equivalent - runs only once on mount
+    // ensureTraceFetched is handled by the update effect which also fires on mount,
+    // so we only need to initialize the view range here.
     useEffect(() => {
-      shortcutHandlersRef.current.ensureTraceFetched();
       shortcutHandlersRef.current.updateViewRangeTime(0, 1);
 
       resetShortcuts();
