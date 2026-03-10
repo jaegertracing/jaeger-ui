@@ -13,6 +13,8 @@ SPDX-License-Identifier: Apache-2.0
   border: 1px solid #d7d7d7;
   padding: 14px 12px 12px 12px;
   border-radius: 4px;
+  display: flex;
+  flex-direction: column;
 }
 
 .graph-header {
@@ -34,9 +36,11 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .center-placeholder {
-  vertical-align: middle;
-  text-align: center;
-  display: table-cell;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
 }
 
 .crosshair-value {

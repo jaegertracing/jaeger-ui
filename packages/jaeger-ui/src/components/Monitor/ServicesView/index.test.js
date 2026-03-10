@@ -417,20 +417,7 @@ describe('<MonitorATMServicesView>', () => {
     expect(screen.getByText('Span Kind')).toBeInTheDocument();
   });
 
-  it('ComponentWillUnmount remove listener', () => {
-    const remover = jest.spyOn(global, 'removeEventListener').mockImplementation(() => {});
-    const { unmount } = renderWithRouter(
-      <MonitorATMServicesView
-        {...props}
-        fetchAllServiceMetrics={mockFetchAllServiceMetrics}
-        fetchAggregatedServiceMetrics={mockFetchAggregatedServiceMetrics}
-      />
-    );
-    unmount();
-    expect(remover).toHaveBeenCalled();
-  });
-
-  it('resize window test', () => {
+  it('renders correctly without resize listener', () => {
     const testProps = {
       ...props,
       fetchServices: mockFetchServices,
@@ -439,7 +426,6 @@ describe('<MonitorATMServicesView>', () => {
     };
     renderWithRouter(<MonitorATMServicesView {...testProps} />);
 
-    global.dispatchEvent(new Event('resize'));
     const spanKindSelectors = screen.getAllByTestId('span-kind-selector');
     expect(spanKindSelectors.length).toBeGreaterThan(0);
     expect(spanKindSelectors[0]).toBeInTheDocument();
