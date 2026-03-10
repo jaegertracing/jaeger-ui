@@ -167,10 +167,11 @@ describe('<MonitorATMServicesView>', () => {
   afterEach(() => {
     wrapper = null;
     jest.clearAllMocks();
-    // Reset useServices mock to default implementation to avoid test order-dependence
     useServices.mockReset();
     useServices.mockImplementation(defaultUseServicesImpl);
     cleanup();
+    const getConfigValueMock = require('../../../utils/config/get-config').getConfigValue;
+    getConfigValueMock.mockImplementation(() => 'https://www.jaegertracing.io/docs/latest/spm/');
   });
 
   it('does not explode', () => {
@@ -233,7 +234,6 @@ describe('<MonitorATMServicesView>', () => {
 
   it('Render ATM not configured page', () => {
     const getConfigValueMock = require('../../../utils/config/get-config').getConfigValue;
-    const originalMock = getConfigValueMock.getMockImplementation();
     getConfigValueMock.mockImplementation(key => {
       if (key === 'storageCapabilities.metricsStorage') return false;
       return 'https://www.jaegertracing.io/docs/latest/spm/';
@@ -253,11 +253,6 @@ describe('<MonitorATMServicesView>', () => {
     useServices.mockReturnValue({ data: [], isLoading: false });
     renderWithRouter(<MonitorATMServicesView {...emptyProps} />);
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
-
-    // Restore mock for subsequent tests
-    if (originalMock) {
-      getConfigValueMock.mockImplementation(originalMock);
-    }
   });
 
   it('fetches metrics only when services are available', () => {
