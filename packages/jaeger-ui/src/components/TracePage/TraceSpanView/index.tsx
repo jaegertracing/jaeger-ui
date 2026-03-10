@@ -105,12 +105,10 @@ export default function TraceSpanView(props: Props) {
 
   function onFilteredChangeCustom(selectedValues: string[], filterType: FilterType) {
     // Update the filter state
-    const newFilters = {
-      ...filters,
+    setFilters(prevFilters => ({
+      ...prevFilters,
       [filterType]: selectedValues,
-    };
-
-    setFilters(newFilters);
+    }));
   }
 
   const columns: ColumnProps<IOtelSpan>[] = [
