@@ -17,6 +17,10 @@ function getUiConfig() {
   return getter();
 }
 
+// getCapabilities reads storage capabilities injected by the query-service backend
+// via window.getJaegerStorageCapabilities (search-replaced into index.html).
+// In development, the Vite plugin replicates this injection from jaeger-ui.config.json.
+// Falls back to the default config when the function is not present.
 function getCapabilities() {
   const getter = window.getJaegerStorageCapabilities;
   const capabilities = typeof getter === 'function' ? getter() : null;
@@ -26,6 +30,13 @@ function getCapabilities() {
 /**
  * Merge the embedded config from the query service (if present) with the
  * default config from `../../constants/default-config`.
+ *
+ * The final config is assembled from three sources, in increasing priority:
+ *   1. defaultConfig  — compile-time defaults
+ *   2. getJaegerUiConfig()  — injected into index.html by query-service (or Vite plugin in dev)
+ *   3. getJaegerStorageCapabilities()  — injected separately by query-service; always wins for
+ *      storageCapabilities so the backend's authoritative knowledge of its own capabilities
+ *      cannot be overridden by the UI config file.
  */
 const getConfig = memoizeOne(function getConfig(): Config {
   const capabilities = getCapabilities();
@@ -45,6 +56,8 @@ const getConfig = memoizeOne(function getConfig(): Config {
       rv[key] = { ...defaultConfig[key], ...embedded[key] };
     }
   });
+  // storageCapabilities always comes from getJaegerStorageCapabilities(), overriding anything
+  // that may be present in the UI config, so the backend remains authoritative.
   return { ...rv, storageCapabilities: capabilities };
 });
 
