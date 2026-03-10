@@ -23,7 +23,7 @@ jest.mock('../../utils/config/get-config', () => ({
     return 'https://www.jaegertracing.io/docs/latest/spm/';
   }),
   __esModule: true,
-  default: jest.fn(),
+  default: jest.fn(() => ({ qualityMetrics: { apiEndpoint: '/api/quality-metrics' } })),
 }));
 // Mock the 'store' npm package
 jest.mock('store');
