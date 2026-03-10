@@ -127,39 +127,30 @@ describe('<MonitorATMPage>', () => {
       if (path === 'storageCapabilities.metricsStorage') return false;
       return 'https://www.jaegertracing.io/docs/latest/spm/';
     });
-    const emptyStateStore = createStore(rootReducer, initialState);
+    try {
+      const emptyStateStore = createStore(rootReducer, initialState);
 
-    // Render with the modified store
-    render(
-      <Provider store={emptyStateStore}>
-        <MemoryRouter>
-          <CompatRouter>
-            <MonitorATMPage />
-          </CompatRouter>
-        </MemoryRouter>
-      </Provider>
-    );
+      render(
+        <Provider store={emptyStateStore}>
+          <MemoryRouter>
+            <CompatRouter>
+              <MonitorATMPage />
+            </CompatRouter>
+          </MemoryRouter>
+        </Provider>
+      );
 
-    // Assert EmptyState component is rendered (e.g., by checking for its unique elements)
-    // Using the image alt text as a likely unique identifier
-    expect(screen.getByAltText('jaeger-monitor-tab-preview')).toBeInTheDocument();
-
-    // Assert main UI elements are NOT rendered
-    // Use exact match for 'Service' heading to avoid matching EmptyState content
-    expect(screen.queryByRole('heading', { name: /^Service$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /Latency/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
-
-    // fetchServices is called unconditionally in componentDidMount
-
-    // Metrics fetches should NOT happen when metricsStorage is disabled
-    expect(mockedJaegerApiActions.fetchAllServiceMetrics).not.toHaveBeenCalled();
-    expect(mockedJaegerApiActions.fetchAggregatedServiceMetrics).not.toHaveBeenCalled();
-
-    // Restore the mock
-    getConfigValue.mockImplementation(path => {
-      if (path === 'storageCapabilities.metricsStorage') return true;
-      return 'https://www.jaegertracing.io/docs/latest/spm/';
-    });
+      expect(screen.getByAltText('jaeger-monitor-tab-preview')).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /^Service$/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /Latency/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+      expect(mockedJaegerApiActions.fetchAllServiceMetrics).not.toHaveBeenCalled();
+      expect(mockedJaegerApiActions.fetchAggregatedServiceMetrics).not.toHaveBeenCalled();
+    } finally {
+      getConfigValue.mockImplementation(path => {
+        if (path === 'storageCapabilities.metricsStorage') return true;
+        return 'https://www.jaegertracing.io/docs/latest/spm/';
+      });
+    }
   });
 });

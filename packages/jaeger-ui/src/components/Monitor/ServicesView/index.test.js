@@ -240,24 +240,27 @@ describe('<MonitorATMServicesView>', () => {
       if (path === 'storageCapabilities.metricsStorage') return false;
       return 'https://www.jaegertracing.io/docs/latest/spm/';
     });
-    const emptyProps = {
-      ...props,
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-      },
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
-    useServices.mockReturnValue({ data: [], isLoading: false });
-    renderWithRouter(<MonitorATMServicesView {...emptyProps} />);
-    expect(screen.getByTestId('empty-state')).toBeInTheDocument();
-    mockGetConfigValue.mockImplementation(path => {
-      if (path === 'storageCapabilities.metricsStorage') return true;
-      return 'https://www.jaegertracing.io/docs/latest/spm/';
-    });
+    try {
+      const emptyProps = {
+        ...props,
+        metrics: {
+          ...originInitialState,
+          serviceMetrics,
+          serviceOpsMetrics,
+          loading: false,
+        },
+        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+      };
+      useServices.mockReturnValue({ data: [], isLoading: false });
+      renderWithRouter(<MonitorATMServicesView {...emptyProps} />);
+      expect(screen.getByTestId('empty-state')).toBeInTheDocument();
+    } finally {
+      mockGetConfigValue.mockImplementation(path => {
+        if (path === 'storageCapabilities.metricsStorage') return true;
+        return 'https://www.jaegertracing.io/docs/latest/spm/';
+      });
+    }
   });
 
   it('fetches metrics only when services are available', () => {
