@@ -3,7 +3,7 @@
 
 import _isEqual from 'lodash/isEqual';
 
-import { getConfigValue } from '../utils/config/get-config';
+import getConfig from '../utils/config/get-config';
 import { getTraceEmoji, getTraceName, getTracePageTitle } from './trace-viewer';
 import { KeyValuePair, Span, SpanData, SpanReference, Trace, TraceData } from '../types/trace';
 import { IOtelTrace } from '../types/otel';
@@ -107,7 +107,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.subsidiarilyReferencedBy = [];
 
     const tagsInfo = deduplicateTags(span.tags);
-    span.tags = orderTags(tagsInfo.tags, getConfigValue('topTagPrefixes'));
+    span.tags = orderTags(tagsInfo.tags, getConfig().topTagPrefixes);
     span.warnings = span.warnings || [];
     if (tagsInfo.warnings && tagsInfo.warnings.length > 0) {
       (span.warnings as string[]).push(...tagsInfo.warnings);

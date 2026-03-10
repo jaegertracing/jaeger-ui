@@ -5,23 +5,28 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import MonitorATMEmptyState from '.';
-import { getConfigValue } from '../../../utils/config/get-config';
+import getConfig from '../../../utils/config/get-config';
 
 jest.mock('../../../utils/config/get-config', () => ({
-  getConfigValue: jest.fn(),
+  __esModule: true,
+  default: jest.fn(),
 }));
 
 describe('<MonitorATMEmptyState>', () => {
   const mockClickHandler = jest.fn();
 
   beforeEach(() => {
-    getConfigValue.mockReturnValue({
-      mainTitle: 'Get started with Service Performance Monitoring',
-      subTitle: 'subtitle',
-      description: 'description',
-      button: {
-        text: 'Click Me',
-        onClick: mockClickHandler,
+    getConfig.mockReturnValue({
+      monitor: {
+        emptyState: {
+          mainTitle: 'Get started with Service Performance Monitoring',
+          subTitle: 'subtitle',
+          description: 'description',
+          button: {
+            text: 'Click Me',
+            onClick: mockClickHandler,
+          },
+        },
       },
     });
 

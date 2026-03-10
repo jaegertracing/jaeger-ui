@@ -29,7 +29,7 @@ import prefixUrl from '../../../utils/prefix-url';
 import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 
 import './index.css';
-import { getConfigValue } from '../../../utils/config/get-config';
+import getConfig from '../../../utils/config/get-config';
 import {
   trackSearchOperation,
   trackSelectService,
@@ -128,7 +128,7 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 export function MonitorATMServicesViewImpl(props: TProps) {
   const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;
   const { data: services = [], isLoading: servicesLoading } = useServices();
-  const docsLink = getConfigValue('monitor.docsLink');
+  const docsLink = getConfig().monitor?.docsLink;
   const graphDivWrapper = useRef<HTMLDivElement>(null);
   const [endTime, setEndTime] = useState<number>(Date.now());
   const [graphWidth, setGraphWidth] = useState<number>(300);

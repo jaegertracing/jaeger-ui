@@ -14,7 +14,7 @@ import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from '../../constants';
-import { getConfigValue } from '../../utils/config/get-config';
+import getConfig from '../../utils/config/get-config';
 import { extractUiFindFromState } from '../common/UiFindInput';
 
 import './index.css';
@@ -29,7 +29,7 @@ export const GRAPH_TYPES = {
 };
 export const sampleDatasetTypes = ['Backend', 'Small Graph', 'Large Graph'];
 
-const dagMaxNumServices = getConfigValue('dependencies.dagMaxNumServices') || FALLBACK_DAG_MAX_NUM_SERVICES;
+const dagMaxNumServices = getConfig().dependencies?.dagMaxNumServices || FALLBACK_DAG_MAX_NUM_SERVICES;
 
 type TServiceCall = {
   parent: string;

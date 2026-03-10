@@ -29,9 +29,11 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
 }));
 
 jest.mock('../../../utils/config/get-config', () => ({
-  getConfigValue: jest.fn(() => 'https://www.jaegertracing.io/docs/latest/spm/'),
   __esModule: true,
   default: jest.fn(() => ({
+    monitor: {
+      docsLink: 'https://www.jaegertracing.io/docs/latest/spm/',
+    },
     qualityMetrics: {
       apiEndpoint: '/api/quality-metrics',
     },
