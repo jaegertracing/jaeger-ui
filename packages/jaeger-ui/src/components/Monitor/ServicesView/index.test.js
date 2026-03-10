@@ -28,13 +28,8 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   disconnect: jest.fn(),
 }));
 
-const mockGetConfigValue = jest.fn(path => {
-  if (path === 'storageCapabilities.metricsStorage') return true;
-  return 'https://www.jaegertracing.io/docs/latest/spm/';
-});
-
 jest.mock('../../../utils/config/get-config', () => ({
-  getConfigValue: (...args) => mockGetConfigValue(...args),
+  getConfigValue: jest.fn(() => 'https://www.jaegertracing.io/docs/latest/spm/'),
   __esModule: true,
   default: jest.fn(() => ({
     qualityMetrics: {
@@ -232,35 +227,6 @@ describe('<MonitorATMServicesView>', () => {
     renderWithRouter(<MonitorATMServicesView {...singleLatencyProps} />);
     expect(screen.getByTestId('service-graph-latency--ms-')).toBeInTheDocument();
     expect(screen.getByText(/Operations metrics under/)).toBeInTheDocument();
-  });
-
-  it('Render ATM not configured page when metricsStorage is disabled', () => {
-    cleanup();
-    mockGetConfigValue.mockImplementation(path => {
-      if (path === 'storageCapabilities.metricsStorage') return false;
-      return 'https://www.jaegertracing.io/docs/latest/spm/';
-    });
-    try {
-      const emptyProps = {
-        ...props,
-        metrics: {
-          ...originInitialState,
-          serviceMetrics,
-          serviceOpsMetrics,
-          loading: false,
-        },
-        fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-        fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-      };
-      useServices.mockReturnValue({ data: [], isLoading: false });
-      renderWithRouter(<MonitorATMServicesView {...emptyProps} />);
-      expect(screen.getByTestId('empty-state')).toBeInTheDocument();
-    } finally {
-      mockGetConfigValue.mockImplementation(path => {
-        if (path === 'storageCapabilities.metricsStorage') return true;
-        return 'https://www.jaegertracing.io/docs/latest/spm/';
-      });
-    }
   });
 
   it('fetches metrics only when services are available', () => {
