@@ -17,6 +17,15 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 jest.mock('../../actions/jaeger-api');
 // Mock the 'store' npm package
 jest.mock('store');
+jest.mock('../../utils/config/get-config', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    qualityMetrics: {
+      apiEndpoint: '/api/quality-metrics',
+    },
+  })),
+  getConfigValue: jest.fn(() => 'https://www.jaegertracing.io/docs/latest/spm/'),
+}));
 
 // Mock useServices hook with stable data reference to prevent infinite loops
 jest.mock('../../hooks/useTraceDiscovery', () => {
@@ -110,7 +119,12 @@ describe('<MonitorATMPage>', () => {
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
-  it('renders EmptyState when isATMActivated is false', () => {
+  it('renders EmptyState when storageCapabilities.metricsStorage is false', () => {
+    const getConfigValueMock = require('../../utils/config/get-config').getConfigValue;
+    getConfigValueMock.mockImplementation(key => {
+      if (key === 'storageCapabilities.metricsStorage') return false;
+      return true;
+    });
     // Create a specific state for this test where ATM is not activated
     const emptyStateInitialState = {
       ...initialState, // Spread the common initial state
@@ -145,5 +159,8 @@ describe('<MonitorATMPage>', () => {
     // Metrics fetches should NOT happen if services array is initially empty
     expect(mockedJaegerApiActions.fetchAllServiceMetrics).not.toHaveBeenCalled();
     expect(mockedJaegerApiActions.fetchAggregatedServiceMetrics).not.toHaveBeenCalled();
+
+    // Restore mock for subsequent tests
+    getConfigValueMock.mockImplementation(() => 'https://www.jaegertracing.io/docs/latest/spm/');
   });
 });

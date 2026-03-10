@@ -131,7 +131,7 @@ jest.mock('antd', () => {
 
 const state = {
   services: {},
-  metrics: { ...originInitialState, isATMActivated: true },
+  metrics: { ...originInitialState },
   selectedService: undefined,
 };
 
@@ -232,6 +232,11 @@ describe('<MonitorATMServicesView>', () => {
   });
 
   it('Render ATM not configured page', () => {
+    const getConfigValueMock = require('../../../utils/config/get-config').getConfigValue;
+    getConfigValueMock.mockImplementation(key => {
+      if (key === 'storageCapabilities.metricsStorage') return false;
+      return true;
+    });
     cleanup();
     const emptyProps = {
       ...props,
@@ -240,7 +245,6 @@ describe('<MonitorATMServicesView>', () => {
         serviceMetrics,
         serviceOpsMetrics,
         loading: false,
-        isATMActivated: false,
       },
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
@@ -248,6 +252,9 @@ describe('<MonitorATMServicesView>', () => {
     useServices.mockReturnValue({ data: [], isLoading: false });
     renderWithRouter(<MonitorATMServicesView {...emptyProps} />);
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
+
+    // Restore mock for subsequent tests
+    getConfigValueMock.mockImplementation(() => 'https://www.jaegertracing.io/docs/latest/spm/');
   });
 
   it('fetches metrics only when services are available', () => {
@@ -727,7 +734,7 @@ describe('<MonitorATMServicesView>', () => {
         fetchAllServiceMetrics: fetchAll,
         fetchAggregatedServiceMetrics: fetchAgg,
         services: [],
-        metrics: { ...originInitialState, isATMActivated: true },
+        metrics: { ...originInitialState },
       };
 
       useServices.mockReturnValue({ data: [], isLoading: false });
@@ -762,7 +769,7 @@ describe('<MonitorATMServicesView> on page switch', () => {
     services: {
       services: [],
     },
-    metrics: { ...originInitialState, isATMActivated: true },
+    metrics: { ...originInitialState },
     selectedService: undefined,
   };
 
@@ -796,7 +803,7 @@ describe('<MonitorATMServicesView> on page switch', () => {
 describe('mapStateToProps()', () => {
   it('refines state to generate the props', () => {
     expect(mapStateToProps(state)).toEqual({
-      metrics: { ...originInitialState, isATMActivated: true },
+      metrics: { ...originInitialState },
     });
   });
 });
