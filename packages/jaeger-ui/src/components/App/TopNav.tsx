@@ -60,7 +60,7 @@ if (getConfig().qualityMetrics?.menuEnabled) {
   NAV_LINKS.push({
     to: qualityMetrics.getUrl(),
     matches: qualityMetrics.matches,
-    text: getConfig().qualityMetrics?.menuLabel,
+    text: getConfig().qualityMetrics?.menuLabel ?? '',
   });
 }
 

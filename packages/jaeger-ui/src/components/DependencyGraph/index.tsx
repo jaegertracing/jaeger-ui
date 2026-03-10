@@ -29,7 +29,7 @@ export const GRAPH_TYPES = {
 };
 export const sampleDatasetTypes = ['Backend', 'Small Graph', 'Large Graph'];
 
-const dagMaxNumServices = getConfig().dependencies?.dagMaxNumServices || FALLBACK_DAG_MAX_NUM_SERVICES;
+const dagMaxNumServices = getConfig().dependencies?.dagMaxNumServices ?? FALLBACK_DAG_MAX_NUM_SERVICES;
 
 type TServiceCall = {
   parent: string;

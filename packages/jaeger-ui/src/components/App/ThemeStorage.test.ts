@@ -29,7 +29,7 @@ describe('ThemeStorage', () => {
   beforeEach(() => {
     window.localStorage.clear();
     setupMatchMedia(false);
-    (getConfig as jest.Mock).mockReturnValue({ themes: { enabled: true } });
+    (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: true } });
   });
 
   describe('readStoredTheme', () => {
@@ -133,7 +133,7 @@ describe('ThemeStorage', () => {
 
   describe('getInitialTheme', () => {
     it('returns default mode when themes are disabled', () => {
-      (getConfig as jest.Mock).mockReturnValue({ themes: { enabled: false } });
+      (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: false } });
       window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
       expect(getInitialTheme()).toBe('light');
     });

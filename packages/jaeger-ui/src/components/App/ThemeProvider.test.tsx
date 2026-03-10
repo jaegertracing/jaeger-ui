@@ -50,7 +50,7 @@ describe('AppThemeProvider', () => {
     window.localStorage.clear();
     delete document.body.dataset.theme;
     setupMatchMedia(false);
-    (getConfig as jest.Mock).mockReturnValue({ themes: { enabled: true } });
+    (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: true } });
   });
 
   it('initializes using the stored preference when present', () => {
@@ -125,7 +125,7 @@ describe('AppThemeProvider', () => {
   });
 
   it('ignores stored preference when themes are disabled', () => {
-    (getConfig as jest.Mock).mockReturnValue({ themes: { enabled: false } });
+    (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: false } });
     window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
 
     render(
