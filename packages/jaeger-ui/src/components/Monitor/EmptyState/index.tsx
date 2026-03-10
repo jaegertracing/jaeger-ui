@@ -5,11 +5,11 @@ import * as React from 'react';
 import { Row, Col, Button, Alert } from 'antd';
 import './index.css';
 import { MonitorEmptyStateConfig } from '../../../types/config';
-import { getConfigValue } from '../../../utils/config/get-config';
+import getConfig from '../../../utils/config/get-config';
 import monitorImg from './media/monitor.png';
 
 const MonitorATMEmptyState: React.FC = () => {
-  const config: MonitorEmptyStateConfig = getConfigValue('monitor.emptyState');
+  const config: MonitorEmptyStateConfig = getConfig().monitor?.emptyState ?? {};
 
   return (
     <Col>

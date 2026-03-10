@@ -702,7 +702,7 @@ describe('DeepDependencyGraphPage', () => {
         let getSearchUrlSpy;
 
         beforeAll(() => {
-          getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue');
+          getConfigValueSpy = jest.spyOn(getConfig, 'default');
           getSearchUrlSpy = jest.spyOn(getSearchUrl, 'getUrl');
         });
 
@@ -738,7 +738,7 @@ describe('DeepDependencyGraphPage', () => {
           const expectedHeader = 'There are no dependencies';
           const { operation, service } = props.urlState;
           const lookback = 'test look back';
-          getConfigValueSpy.mockReturnValue(lookback);
+          getConfigValueSpy.mockReturnValue({ search: { maxLookback: { value: lookback } } });
           const mockUrl = 'test search url';
           getSearchUrlSpy.mockReturnValue(mockUrl);
 

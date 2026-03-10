@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import _get from 'lodash/get';
 import memoizeOne from 'memoize-one';
 
 import { Config } from '../../types/config';
@@ -62,7 +61,3 @@ const getConfig = memoizeOne(function getConfig(): Config {
 });
 
 export default getConfig;
-
-export function getConfigValue(path: string) {
-  return _get(getConfig(), path);
-}

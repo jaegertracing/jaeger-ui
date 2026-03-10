@@ -3,7 +3,7 @@
 
 jest.mock('./process-deprecation');
 
-import getConfig, { getConfigValue } from './get-config';
+import getConfig from './get-config';
 import processDeprecation from './process-deprecation';
 import defaultConfig, { deprecations, mergeFields } from '../../constants/default-config';
 
@@ -148,15 +148,5 @@ describe('getConfig()', () => {
       getConfig();
       expect(processDeprecation.mock.calls.length).toBe(deprecations.length);
     });
-  });
-});
-
-describe('getConfigValue(...)', () => {
-  it('returns embedded paths, e.g. "a.b"', () => {
-    expect(getConfigValue('dependencies.menuEnabled')).toBe(true);
-  });
-
-  it('handles non-existent paths"', () => {
-    expect(getConfigValue('not.a.real.path')).toBe(undefined);
   });
 });
