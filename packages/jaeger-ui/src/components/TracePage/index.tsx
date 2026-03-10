@@ -442,7 +442,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
       view = (
         <TraceSpanView
-          key={data.asOtelTrace().traceID}
+          key={`${data.asOtelTrace().traceID}-${data.asOtelTrace().rootSpans.length}`}
           trace={data.asOtelTrace()}
           uiFindVertexKeys={spanFindMatches}
           uiFind={uiFind}
