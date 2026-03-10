@@ -127,7 +127,6 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 
 export function MonitorATMServicesViewImpl(props: TProps) {
   const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;
-  const { isATMActivated } = metrics;
   const { data: services = [], isLoading: servicesLoading } = useServices();
   const docsLink = getConfigValue('monitor.docsLink');
   const metricsStorageEnabled: boolean = getConfigValue('storageCapabilities.metricsStorage');
@@ -182,7 +181,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const fetchMetrics = useCallback(() => {
     const currentService = selectedService || services[0];
 
-    if (currentService && isATMActivated !== false && metricsStorageEnabled) {
+    if (currentService && metricsStorageEnabled) {
       const newEndTime = Date.now();
       setEndTime(newEndTime);
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
@@ -207,7 +206,6 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, [
     fetchAllServiceMetrics,
     fetchAggregatedServiceMetrics,
-    isATMActivated,
     metricsStorageEnabled,
     services,
     selectedService,
@@ -245,7 +243,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     return <LoadingIndicator vcentered centered />;
   }
 
-  if (!metricsStorageEnabled || metrics.isATMActivated === false) {
+  if (!metricsStorageEnabled) {
     return <MonitorATMEmptyState />;
   }
 

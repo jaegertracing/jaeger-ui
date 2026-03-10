@@ -16,6 +16,15 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 // --- Mock Modules ---
 // Mock the actions module
 jest.mock('../../actions/jaeger-api');
+
+jest.mock('../../utils/config/get-config', () => ({
+  getConfigValue: jest.fn(path => {
+    if (path === 'storageCapabilities.metricsStorage') return true;
+    return 'https://www.jaegertracing.io/docs/latest/spm/';
+  }),
+  __esModule: true,
+  default: jest.fn(),
+}));
 // Mock the 'store' npm package
 jest.mock('store');
 
@@ -40,7 +49,6 @@ const initialState = {
   metrics: {
     loading: false,
     operationMetricsLoading: false,
-    isATMActivated: true, // Prevent rendering EmptyState initially
     opsError: { opsCalls: null, opsErrors: null, opsLatencies: null },
     serviceOpsMetrics: [],
     serviceMetrics: { service_latencies: null, service_error_rate: null, service_call_rate: null },
@@ -113,16 +121,13 @@ describe('<MonitorATMPage>', () => {
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
-  it('renders EmptyState when isATMActivated is false', () => {
-    // Create a specific state for this test where ATM is not activated
-    const emptyStateInitialState = {
-      ...initialState, // Spread the common initial state
-      metrics: {
-        ...initialState.metrics, // Spread the common metrics state
-        isATMActivated: false, // Override to false
-      },
-    };
-    const emptyStateStore = createStore(rootReducer, emptyStateInitialState);
+  it('renders EmptyState when metricsStorage is disabled in config', () => {
+    const { getConfigValue } = require('../../utils/config/get-config');
+    getConfigValue.mockImplementation(path => {
+      if (path === 'storageCapabilities.metricsStorage') return false;
+      return 'https://www.jaegertracing.io/docs/latest/spm/';
+    });
+    const emptyStateStore = createStore(rootReducer, initialState);
 
     // Render with the modified store
     render(
@@ -147,8 +152,14 @@ describe('<MonitorATMPage>', () => {
 
     // fetchServices is called unconditionally in componentDidMount
 
-    // Metrics fetches should NOT happen if services array is initially empty
+    // Metrics fetches should NOT happen when metricsStorage is disabled
     expect(mockedJaegerApiActions.fetchAllServiceMetrics).not.toHaveBeenCalled();
     expect(mockedJaegerApiActions.fetchAggregatedServiceMetrics).not.toHaveBeenCalled();
+
+    // Restore the mock
+    getConfigValue.mockImplementation(path => {
+      if (path === 'storageCapabilities.metricsStorage') return true;
+      return 'https://www.jaegertracing.io/docs/latest/spm/';
+    });
   });
 });
