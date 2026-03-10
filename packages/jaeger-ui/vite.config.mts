@@ -86,7 +86,7 @@ function jaegerUiConfigPlugin() {
             if (parsedConfig.storageCapabilities) {
               html = html.replace(
                 'const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;',
-                `const JAEGER_STORAGE_CAPABILITIES = ${JSON.stringify(parsedConfig.storageCapabilities)};`
+                `const JAEGER_STORAGE_CAPABILITIES = { ...DEFAULT_STORAGE_CAPABILITIES, ...${JSON.stringify(parsedConfig.storageCapabilities)} };`
               );
             }
 
