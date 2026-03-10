@@ -26,7 +26,7 @@ export function deduplicateTags(spanTags: ReadonlyArray<KeyValuePair>) {
 }
 
 // exported for tests
-export function orderTags(spanTags: KeyValuePair[], topPrefixes?: string[]) {
+export function orderTags(spanTags: KeyValuePair[], topPrefixes?: readonly string[]) {
   const orderedTags: KeyValuePair[] = spanTags.slice();
   const tp = (topPrefixes || []).map((p: string) => p.toLowerCase());
 
@@ -107,7 +107,7 @@ export default function transformTraceData(data: TraceData & { spans: SpanData[]
     span.subsidiarilyReferencedBy = [];
 
     const tagsInfo = deduplicateTags(span.tags);
-    span.tags = orderTags(tagsInfo.tags, getConfig().topTagPrefixes as string[] | undefined);
+    span.tags = orderTags(tagsInfo.tags, getConfig().topTagPrefixes);
     span.warnings = span.warnings || [];
     if (tagsInfo.warnings && tagsInfo.warnings.length > 0) {
       (span.warnings as string[]).push(...tagsInfo.warnings);

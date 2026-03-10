@@ -18,12 +18,11 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 jest.mock('../../actions/jaeger-api');
 
 jest.mock('../../utils/config/get-config', () => ({
-  getConfigValue: jest.fn(path => {
-    if (path === 'storageCapabilities.metricsStorage') return true;
-    return 'https://www.jaegertracing.io/docs/latest/spm/';
-  }),
   __esModule: true,
-  default: jest.fn(() => ({ qualityMetrics: { apiEndpoint: '/api/quality-metrics' } })),
+  default: jest.fn(() => ({
+    qualityMetrics: { apiEndpoint: '/api/quality-metrics' },
+    storageCapabilities: { metricsStorage: true },
+  })),
 }));
 // Mock the 'store' npm package
 jest.mock('store');
@@ -122,11 +121,11 @@ describe('<MonitorATMPage>', () => {
   });
 
   it('renders EmptyState when metricsStorage is disabled in config', () => {
-    const { getConfigValue } = require('../../utils/config/get-config');
-    getConfigValue.mockImplementation(path => {
-      if (path === 'storageCapabilities.metricsStorage') return false;
-      return 'https://www.jaegertracing.io/docs/latest/spm/';
-    });
+    const getConfig = require('../../utils/config/get-config').default;
+    getConfig.mockImplementation(() => ({
+      qualityMetrics: { apiEndpoint: '/api/quality-metrics' },
+      storageCapabilities: { metricsStorage: false },
+    }));
     try {
       const emptyStateStore = createStore(rootReducer, initialState);
 
@@ -147,10 +146,10 @@ describe('<MonitorATMPage>', () => {
       expect(mockedJaegerApiActions.fetchAllServiceMetrics).not.toHaveBeenCalled();
       expect(mockedJaegerApiActions.fetchAggregatedServiceMetrics).not.toHaveBeenCalled();
     } finally {
-      getConfigValue.mockImplementation(path => {
-        if (path === 'storageCapabilities.metricsStorage') return true;
-        return 'https://www.jaegertracing.io/docs/latest/spm/';
-      });
+      getConfig.mockImplementation(() => ({
+        qualityMetrics: { apiEndpoint: '/api/quality-metrics' },
+        storageCapabilities: { metricsStorage: true },
+      }));
     }
   });
 });
