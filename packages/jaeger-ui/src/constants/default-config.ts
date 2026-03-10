@@ -125,8 +125,8 @@ const defaultConfig: Config = {
 };
 
 // Fields that should be merged with user-supplied config values rather than overwritten.
-type TMergeField = 'dependencies' | 'search' | 'tracking';
-export const mergeFields: readonly TMergeField[] = ['dependencies', 'search', 'tracking'];
+type TMergeField = 'dependencies' | 'monitor' | 'search' | 'tracking';
+export const mergeFields: readonly TMergeField[] = ['dependencies', 'monitor', 'search', 'tracking'];
 
 export default deepFreeze(defaultConfig);
 

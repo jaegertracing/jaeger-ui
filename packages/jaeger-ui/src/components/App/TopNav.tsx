@@ -64,7 +64,10 @@ if (getConfigValue('qualityMetrics.menuEnabled')) {
   });
 }
 
-if (getConfigValue('storageCapabilities.metricsStorage')) {
+// We keep the menu item for Monitor in the top nav visible if config says so.
+// If the storage capability indicates that metrics storage is not supported,
+// the page will show a landing page with instructions on how to set up SPM.
+if (getConfigValue('monitor.menuEnabled')) {
   NAV_LINKS.push({
     to: monitorATMUrl.getUrl(),
     matches: monitorATMUrl.matches,
