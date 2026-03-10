@@ -129,6 +129,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;
   const { data: services = [], isLoading: servicesLoading } = useServices();
   const docsLink = getConfigValue('monitor.docsLink');
+  const isMetricsStorageEnabled = getConfigValue('storageCapabilities.metricsStorage') !== false;
   const graphDivWrapper = useRef<HTMLDivElement>(null);
   const [endTime, setEndTime] = useState<number>(Date.now());
   const [graphWidth, setGraphWidth] = useState<number>(300);
@@ -180,7 +181,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const fetchMetrics = useCallback(() => {
     const currentService = selectedService || services[0];
 
-    if (currentService && getConfigValue('storageCapabilities.metricsStorage') !== false) {
+    if (currentService && isMetricsStorageEnabled) {
       const newEndTime = Date.now();
       setEndTime(newEndTime);
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
@@ -209,6 +210,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     selectedService,
     selectedSpanKind,
     selectedTimeFrame,
+    isMetricsStorageEnabled,
   ]);
 
   // componentDidMount equivalent
@@ -241,8 +243,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     return <LoadingIndicator vcentered centered />;
   }
 
-  const isMetricsStorageEnabled = getConfigValue('storageCapabilities.metricsStorage');
-  if (isMetricsStorageEnabled === false) {
+  if (!isMetricsStorageEnabled) {
     return <MonitorATMEmptyState />;
   }
 

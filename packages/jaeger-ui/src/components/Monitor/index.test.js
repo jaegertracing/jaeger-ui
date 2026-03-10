@@ -121,9 +121,10 @@ describe('<MonitorATMPage>', () => {
 
   it('renders EmptyState when storageCapabilities.metricsStorage is false', () => {
     const getConfigValueMock = require('../../utils/config/get-config').getConfigValue;
+    const originalMock = getConfigValueMock.getMockImplementation();
     getConfigValueMock.mockImplementation(key => {
       if (key === 'storageCapabilities.metricsStorage') return false;
-      return true;
+      return 'https://www.jaegertracing.io/docs/latest/spm/';
     });
     // Create a specific state for this test where ATM is not activated
     const emptyStateInitialState = {
@@ -161,6 +162,8 @@ describe('<MonitorATMPage>', () => {
     expect(mockedJaegerApiActions.fetchAggregatedServiceMetrics).not.toHaveBeenCalled();
 
     // Restore mock for subsequent tests
-    getConfigValueMock.mockImplementation(() => 'https://www.jaegertracing.io/docs/latest/spm/');
+    if (originalMock) {
+      getConfigValueMock.mockImplementation(originalMock);
+    }
   });
 });

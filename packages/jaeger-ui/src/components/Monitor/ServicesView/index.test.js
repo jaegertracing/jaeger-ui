@@ -233,9 +233,10 @@ describe('<MonitorATMServicesView>', () => {
 
   it('Render ATM not configured page', () => {
     const getConfigValueMock = require('../../../utils/config/get-config').getConfigValue;
+    const originalMock = getConfigValueMock.getMockImplementation();
     getConfigValueMock.mockImplementation(key => {
       if (key === 'storageCapabilities.metricsStorage') return false;
-      return true;
+      return 'https://www.jaegertracing.io/docs/latest/spm/';
     });
     cleanup();
     const emptyProps = {
@@ -254,7 +255,9 @@ describe('<MonitorATMServicesView>', () => {
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
 
     // Restore mock for subsequent tests
-    getConfigValueMock.mockImplementation(() => 'https://www.jaegertracing.io/docs/latest/spm/');
+    if (originalMock) {
+      getConfigValueMock.mockImplementation(originalMock);
+    }
   });
 
   it('fetches metrics only when services are available', () => {
