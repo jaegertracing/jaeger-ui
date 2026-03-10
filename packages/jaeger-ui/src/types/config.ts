@@ -76,6 +76,8 @@ export type TraceGraphConfig = {
 export type StorageCapabilities = {
   // archiveStorage indicates whether the query service supports archive storage.
   archiveStorage?: boolean;
+  // metricsStorage indicates whether the query service supports metrics storage (for Monitor/SPM tab).
+  metricsStorage?: boolean;
 };
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
