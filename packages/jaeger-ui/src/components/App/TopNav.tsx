@@ -64,7 +64,10 @@ if (getConfigValue('qualityMetrics.menuEnabled')) {
   });
 }
 
-if (getConfigValue('storageCapabilities.metricsStorage')) {
+// Show the Monitor item in the top nav when enabled in configuration.
+// The Monitor page itself inspects storage capabilities and, if metrics
+// storage is not supported, shows a landing page with setup instructions.
+if (getConfigValue('monitor.menuEnabled')) {
   NAV_LINKS.push({
     to: monitorATMUrl.getUrl(),
     matches: monitorATMUrl.matches,

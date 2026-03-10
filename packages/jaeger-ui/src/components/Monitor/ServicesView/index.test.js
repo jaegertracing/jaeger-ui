@@ -131,7 +131,7 @@ jest.mock('antd', () => {
 
 const state = {
   services: {},
-  metrics: { ...originInitialState, isATMActivated: true },
+  metrics: { ...originInitialState },
   selectedService: undefined,
 };
 
@@ -200,7 +200,6 @@ describe('<MonitorATMServicesView>', () => {
         serviceMetrics,
         serviceOpsMetrics,
         loading: false,
-        isATMActivated: true,
       },
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
@@ -220,7 +219,6 @@ describe('<MonitorATMServicesView>', () => {
         serviceMetrics: serviceMetricsWithOneServiceLatency,
         serviceOpsMetrics,
         loading: false,
-        isATMActivated: true,
       },
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
@@ -229,25 +227,6 @@ describe('<MonitorATMServicesView>', () => {
     renderWithRouter(<MonitorATMServicesView {...singleLatencyProps} />);
     expect(screen.getByTestId('service-graph-latency--ms-')).toBeInTheDocument();
     expect(screen.getByText(/Operations metrics under/)).toBeInTheDocument();
-  });
-
-  it('Render ATM not configured page', () => {
-    cleanup();
-    const emptyProps = {
-      ...props,
-      metrics: {
-        ...originInitialState,
-        serviceMetrics,
-        serviceOpsMetrics,
-        loading: false,
-        isATMActivated: false,
-      },
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
-    useServices.mockReturnValue({ data: [], isLoading: false });
-    renderWithRouter(<MonitorATMServicesView {...emptyProps} />);
-    expect(screen.getByTestId('empty-state')).toBeInTheDocument();
   });
 
   it('fetches metrics only when services are available', () => {
@@ -263,7 +242,6 @@ describe('<MonitorATMServicesView>', () => {
         serviceMetrics,
         serviceOpsMetrics,
         loading: false,
-        isATMActivated: true,
       },
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
@@ -284,36 +262,12 @@ describe('<MonitorATMServicesView>', () => {
         serviceMetrics,
         serviceOpsMetrics,
         loading: false,
-        isATMActivated: true,
       },
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
     };
     useServices.mockReturnValue({ data: ['apple'], isLoading: false });
     renderWithRouter(<MonitorATMServicesView {...propsWithServices} />);
-    expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
-    expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
-  });
-
-  it('fetches metrics when isATMActivated is null (initial state)', () => {
-    cleanup();
-    mockFetchAllServiceMetrics.mockClear();
-    mockFetchAggregatedServiceMetrics.mockClear();
-
-    const propsWithNullATM = {
-      ...props,
-      metrics: {
-        ...originInitialState,
-        serviceMetrics: null,
-        serviceOpsMetrics: undefined,
-        loading: false,
-        isATMActivated: null, // Initial state before any metrics fetch
-      },
-      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
-    };
-    useServices.mockReturnValue({ data: ['apple'], isLoading: false });
-    renderWithRouter(<MonitorATMServicesView {...propsWithNullATM} />);
     expect(mockFetchAllServiceMetrics).toHaveBeenCalled();
     expect(mockFetchAggregatedServiceMetrics).toHaveBeenCalled();
   });
@@ -328,7 +282,6 @@ describe('<MonitorATMServicesView>', () => {
         serviceMetrics,
         serviceOpsMetrics,
         loading: false,
-        isATMActivated: true,
       },
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
       fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
@@ -352,7 +305,6 @@ describe('<MonitorATMServicesView>', () => {
         },
         serviceOpsMetrics,
         loading: false,
-        isATMActivated: true,
       },
       fetchServices: mockFetchServices,
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
@@ -381,7 +333,6 @@ describe('<MonitorATMServicesView>', () => {
       },
       serviceOpsMetrics,
       loading: false,
-      isATMActivated: true,
     };
 
     const errorRateProps = {
@@ -406,7 +357,6 @@ describe('<MonitorATMServicesView>', () => {
         serviceMetrics: serviceMetricsWithOneServiceLatency,
         serviceOpsMetrics,
         loading: false,
-        isATMActivated: true,
       },
       fetchServices: mockFetchServices,
       fetchAllServiceMetrics: mockFetchAllServiceMetrics,
@@ -479,7 +429,6 @@ describe('<MonitorATMServicesView>', () => {
           serviceMetrics,
           serviceOpsMetrics,
           loading: false,
-          isATMActivated: true,
         },
         fetchAllServiceMetrics: mockFetchAllServiceMetrics,
         fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
@@ -510,7 +459,6 @@ describe('<MonitorATMServicesView>', () => {
           serviceMetrics,
           serviceOpsMetrics,
           loading: false,
-          isATMActivated: true,
         },
         fetchAllServiceMetrics: mockFetchAllServiceMetrics,
         fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
@@ -541,7 +489,6 @@ describe('<MonitorATMServicesView>', () => {
           serviceMetrics,
           serviceOpsMetrics,
           loading: false,
-          isATMActivated: true,
         },
         fetchAllServiceMetrics: mockFetchAllServiceMetrics,
         fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
@@ -570,7 +517,6 @@ describe('<MonitorATMServicesView>', () => {
           serviceMetrics,
           serviceOpsMetrics,
           loading: false,
-          isATMActivated: true,
         },
         fetchAllServiceMetrics: mockFetchAllServiceMetrics,
         fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
@@ -595,7 +541,6 @@ describe('<MonitorATMServicesView>', () => {
           serviceMetrics,
           serviceOpsMetrics,
           loading: false,
-          isATMActivated: true,
         },
         fetchAllServiceMetrics: mockFetchAllServiceMetrics,
         fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
@@ -630,7 +575,6 @@ describe('<MonitorATMServicesView>', () => {
           serviceMetrics,
           serviceOpsMetrics,
           loading: false,
-          isATMActivated: true,
           serviceError: {
             ...originInitialState.serviceError,
             service_latencies_50: new Error('some API error'),
@@ -653,7 +597,6 @@ describe('<MonitorATMServicesView>', () => {
           serviceMetrics,
           serviceOpsMetrics,
           loading: false,
-          isATMActivated: true,
           serviceError: {
             ...originInitialState.serviceError,
             service_latencies_50: new Error('some API error'),
@@ -676,7 +619,6 @@ describe('<MonitorATMServicesView>', () => {
           serviceMetrics,
           serviceOpsMetrics,
           loading: false,
-          isATMActivated: true,
           serviceError: {
             service_latencies_50: new Error('some API error'),
             service_latencies_75: new Error('some API error'),
@@ -703,7 +645,6 @@ describe('<MonitorATMServicesView>', () => {
           serviceOpsMetrics,
           serviceMetrics,
           loading: false,
-          isATMActivated: true,
         },
 
         fetchAllServiceMetrics: mockFetchAllServiceMetrics,
@@ -727,7 +668,7 @@ describe('<MonitorATMServicesView>', () => {
         fetchAllServiceMetrics: fetchAll,
         fetchAggregatedServiceMetrics: fetchAgg,
         services: [],
-        metrics: { ...originInitialState, isATMActivated: true },
+        metrics: { ...originInitialState },
       };
 
       useServices.mockReturnValue({ data: [], isLoading: false });
@@ -762,7 +703,7 @@ describe('<MonitorATMServicesView> on page switch', () => {
     services: {
       services: [],
     },
-    metrics: { ...originInitialState, isATMActivated: true },
+    metrics: { ...originInitialState },
     selectedService: undefined,
   };
 
@@ -796,7 +737,7 @@ describe('<MonitorATMServicesView> on page switch', () => {
 describe('mapStateToProps()', () => {
   it('refines state to generate the props', () => {
     expect(mapStateToProps(state)).toEqual({
-      metrics: { ...originInitialState, isATMActivated: true },
+      metrics: { ...originInitialState },
     });
   });
 });

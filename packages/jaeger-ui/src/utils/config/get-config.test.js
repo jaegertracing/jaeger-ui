@@ -42,6 +42,46 @@ describe('getConfig()', () => {
     });
   });
 
+  describe('storageCapabilities', () => {
+    beforeEach(() => {
+      // Reset memoization before each test
+      getConfig.apply({}, []);
+    });
+
+    it('uses storageCapabilities from getJaegerStorageCapabilities when injected', () => {
+      // This is the normal production path: the backend (or Vite plugin in dev) injects
+      // storageCapabilities via window.getJaegerStorageCapabilities, independently of
+      // the main UI config.
+      window.getJaegerUiConfig = jest.fn(() => ({}));
+      window.getJaegerStorageCapabilities = jest.fn(() => ({
+        archiveStorage: true,
+        metricsStorage: true,
+      }));
+      expect(getConfig().storageCapabilities).toEqual({ archiveStorage: true, metricsStorage: true });
+    });
+
+    it('falls back to defaultConfig.storageCapabilities when getJaegerStorageCapabilities is not injected', () => {
+      // When neither the backend nor the Vite plugin has injected the capabilities function,
+      // the default (metricsStorage: false) is used.
+      window.getJaegerUiConfig = jest.fn(() => ({}));
+      window.getJaegerStorageCapabilities = undefined;
+      expect(getConfig().storageCapabilities).toEqual(defaultConfig.storageCapabilities);
+    });
+
+    it('getJaegerStorageCapabilities takes precedence over storageCapabilities in the UI config', () => {
+      // storageCapabilities in the main UI config object is always overridden by
+      // getJaegerStorageCapabilities so the backend remains authoritative.
+      window.getJaegerUiConfig = jest.fn(() => ({
+        storageCapabilities: { archiveStorage: true, metricsStorage: true },
+      }));
+      window.getJaegerStorageCapabilities = jest.fn(() => ({
+        archiveStorage: false,
+        metricsStorage: false,
+      }));
+      expect(getConfig().storageCapabilities).toEqual({ archiveStorage: false, metricsStorage: false });
+    });
+  });
+
   describe('index functions are injected by backend', () => {
     let embedded;
     let capabilities;
