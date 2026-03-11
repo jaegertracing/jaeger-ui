@@ -74,10 +74,28 @@ export class JaegerClient {
       if (!response.ok) {
         let errorDetail = response.statusText;
         try {
-          const errorBody = await response.json();
+          const errorBody: unknown = await response.json();
           // Safely check if errors is an array before mapping
-          if (errorBody?.errors && Array.isArray(errorBody.errors) && errorBody.errors.length > 0) {
-            errorDetail = errorBody.errors.map((e: any) => e.msg).join(', ');
+          if (errorBody && typeof errorBody === 'object') {
+            const errors = (errorBody as { errors?: unknown }).errors;
+            if (Array.isArray(errors) && errors.length > 0) {
+              const messages = errors
+                .map(errorItem => {
+                  if (
+                    errorItem &&
+                    typeof errorItem === 'object' &&
+                    'msg' in errorItem &&
+                    typeof (errorItem as { msg: unknown }).msg === 'string'
+                  ) {
+                    return (errorItem as { msg: string }).msg;
+                  }
+                  return null;
+                })
+                .filter((msg): msg is string => msg !== null);
+              if (messages.length > 0) {
+                errorDetail = messages.join(', ');
+              }
+            }
           }
         } catch {
           /* Fallback to statusText if body isn't JSON */
