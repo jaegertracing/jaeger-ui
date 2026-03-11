@@ -19,7 +19,7 @@ import * as diffUrl from '../TraceDiff/url';
 import * as monitorATMUrl from '../Monitor/url';
 import { ReduxState } from '../../types';
 import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
-import { getConfigValue } from '../../utils/config/get-config';
+import getConfig from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
 
 import './TopNav.css';
@@ -40,7 +40,7 @@ const NAV_LINKS = [
   },
 ];
 
-if (getConfigValue('dependencies.menuEnabled')) {
+if (getConfig().dependencies?.menuEnabled) {
   NAV_LINKS.push({
     to: dependencyGraph.getUrl(),
     matches: dependencyGraph.matches,
@@ -48,7 +48,7 @@ if (getConfigValue('dependencies.menuEnabled')) {
   });
 }
 
-if (getConfigValue('deepDependencies.menuEnabled')) {
+if (getConfig().deepDependencies?.menuEnabled) {
   NAV_LINKS.push({
     to: deepDependencies.getUrl(),
     matches: deepDependencies.matches,
@@ -56,15 +56,15 @@ if (getConfigValue('deepDependencies.menuEnabled')) {
   });
 }
 
-if (getConfigValue('qualityMetrics.menuEnabled')) {
+if (getConfig().qualityMetrics?.menuEnabled) {
   NAV_LINKS.push({
     to: qualityMetrics.getUrl(),
     matches: qualityMetrics.matches,
-    text: getConfigValue('qualityMetrics.menuLabel'),
+    text: getConfig().qualityMetrics?.menuLabel ?? '',
   });
 }
 
-if (getConfigValue('monitor.menuEnabled')) {
+if (getConfig().storageCapabilities?.metricsStorage) {
   NAV_LINKS.push({
     to: monitorATMUrl.getUrl(),
     matches: monitorATMUrl.matches,
@@ -120,7 +120,7 @@ export function TopNavImpl(props: Props) {
       }
       return { label: <CustomNavDropdown key={m.label} {...m} />, key: m.label };
     }),
-    ...(getConfigValue('themes.enabled')
+    ...(getConfig().themes?.enabled
       ? [
           {
             label: <ThemeToggleButton />,

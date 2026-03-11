@@ -40,7 +40,7 @@ describe('<SpanDetailRow>', () => {
   };
   const props = {
     color: 'some-color',
-    columnDivision: 0.5,
+    nameColumnWidth: 0.5,
     timelineBarsVisible: true,
     detailState: new DetailState(),
     onDetailToggled: jest.fn(),
@@ -88,12 +88,13 @@ describe('<SpanDetailRow>', () => {
     expect(props.onDetailToggled).toHaveBeenCalledWith(props.span.spanID);
   });
 
-  it('renders the span tree offset', () => {
+  it('renders the span tree offset with isDetailRow=true', () => {
     render(<SpanDetailRow {...props} />);
     expect(MockSpanTreeOffset).toHaveBeenCalledTimes(1);
     expect(MockSpanTreeOffset).toHaveBeenCalledWith(
       expect.objectContaining({
         span: props.span,
+        isDetailRow: true,
       })
     );
   });

@@ -58,6 +58,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       setTrace: jest.fn(),
       shouldScrollToFirstUiFindMatch: false,
       spanNameColumnWidth: 0.5,
+      nameColumnWidth: 0.5,
       trace,
       criticalPath,
       uiFind: 'uiFind',
@@ -476,6 +477,13 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const otelSpan = trace.spans[0];
       const result = component.renderSpanBarRow(otelSpan, 0, 'key', {}, {});
       expect(result).toBeNull();
+    });
+
+    it('renderSpanBarRow passes isSelected=true for the span selected in side panel mode', () => {
+      const selectedSpan = trace.spans[0];
+      const component = new VirtualizedTraceViewImpl({ ...mockProps, selectedSpanID: selectedSpan.spanID });
+      const result = component.renderSpanBarRow(selectedSpan, 0, 'key', {}, {});
+      expect(result.props.children.props.isSelected).toBe(true);
     });
 
     it('renderSpanDetailRow returns null if detailState is missing', () => {

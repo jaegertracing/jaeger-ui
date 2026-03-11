@@ -56,7 +56,7 @@ describe('<SpanDetailRow> icon behavior', () => {
 
   const props = {
     color: 'some-color',
-    columnDivision: 0.5,
+    nameColumnWidth: 0.5,
     detailState: new DetailState(),
     onDetailToggled: jest.fn(),
     linksGetter: jest.fn(),

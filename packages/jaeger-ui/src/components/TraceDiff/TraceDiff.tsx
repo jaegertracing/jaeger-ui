@@ -35,6 +35,7 @@ type TDispatchProps = {
 
 type TOwnProps = {
   params: TDiffRouteParams & { id?: string };
+  search?: string;
 };
 
 function syncStates(
@@ -168,7 +169,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps) {
     a = parts[0] || undefined;
     b = parts[1] || undefined;
   }
-  const { cohort: origCohort = [] } = parseQuery(state.router.location.search);
+  const { cohort: origCohort = [] } = parseQuery(ownProps.search || '');
   const fullCohortSet: Set<string> = new Set(pluckTruthy([a, b].concat(origCohort)));
   const cohort: string[] = Array.from(fullCohortSet);
   const { traces } = state.trace;

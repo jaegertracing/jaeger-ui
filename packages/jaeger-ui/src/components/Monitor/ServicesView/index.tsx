@@ -14,7 +14,7 @@ import * as jaegerApiActions from '../../../actions/jaeger-api';
 import OperationTableDetails from './operationDetailsTable';
 import ServiceGraph from './serviceGraph';
 import LoadingIndicator from '../../common/LoadingIndicator';
-import MonitorATMEmptyState from '../EmptyState';
+
 import { ReduxState } from '../../../types';
 import {
   MetricsAPIQueryParams,
@@ -29,7 +29,7 @@ import prefixUrl from '../../../utils/prefix-url';
 import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 
 import './index.css';
-import { getConfigValue } from '../../../utils/config/get-config';
+import getConfig from '../../../utils/config/get-config';
 import {
   trackSearchOperation,
   trackSelectService,
@@ -127,9 +127,8 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 
 export function MonitorATMServicesViewImpl(props: TProps) {
   const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;
-  const { isATMActivated } = metrics;
   const { data: services = [], isLoading: servicesLoading } = useServices();
-  const docsLink = getConfigValue('monitor.docsLink');
+  const docsLink = getConfig().monitor?.docsLink;
   const graphDivWrapper = useRef<HTMLDivElement>(null);
   const [endTime, setEndTime] = useState<number>(Date.now());
   const [graphWidth, setGraphWidth] = useState<number>(300);
@@ -181,7 +180,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const fetchMetrics = useCallback(() => {
     const currentService = selectedService || services[0];
 
-    if (currentService && isATMActivated !== false) {
+    if (currentService) {
       const newEndTime = Date.now();
       setEndTime(newEndTime);
       store.set('lastAtmSearchSpanKind', selectedSpanKind);
@@ -206,7 +205,6 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, [
     fetchAllServiceMetrics,
     fetchAggregatedServiceMetrics,
-    isATMActivated,
     services,
     selectedService,
     selectedSpanKind,
@@ -241,10 +239,6 @@ export function MonitorATMServicesViewImpl(props: TProps) {
 
   if (servicesLoading) {
     return <LoadingIndicator vcentered centered />;
-  }
-
-  if (metrics.isATMActivated === false) {
-    return <MonitorATMEmptyState />;
   }
 
   return (

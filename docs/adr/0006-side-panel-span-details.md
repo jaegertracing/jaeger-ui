@@ -1,7 +1,7 @@
 # ADR-0006: Side Panel Span Details and Tree-Only Mode for Trace Timeline
 
-**Status**: Proposed
-**Date**: 2026-03-04
+**Status**: Implemented
+**Date**: 2026-03-07
 
 ## Context
 
@@ -239,7 +239,7 @@ Wire up config options, state plumbing, and UI toggle icons with no rendering ch
 
 **Outcome:** Toggle controls visible (side panel toggle gated by config), preferences persist to localStorage, no visual layout changes.
 
-### Phase 2: Tree-Only Mode (Hide Timeline Bars)
+### ✅ Phase 2: Tree-Only Mode (Hide Timeline Bars)
 
 Ship independently of the side panel.
 
@@ -253,7 +253,7 @@ Ship independently of the side panel.
 
 **Outcome:** Users can toggle timeline bars on/off. Inline expansion still works. Column width preference preserved.
 
-### Phase 3: Side Panel Container and Span Selection
+### ✅ Phase 3: Side Panel Container and Span Selection
 
 Core side panel functionality.
 
@@ -268,20 +268,19 @@ Core side panel functionality.
 
 **Outcome:** Clicking a span in side panel mode shows details in right panel. Independent scrolling. Adjustable width.
 
-### Phase 4: Side Panel Polish and Integration
+### ✅ Phase 4: Side Panel Polish
 
-- Close button in panel header (dispatches `DETAIL_TOGGLE` for the displayed span, removing it from `detailStates`)
-- Next/prev span navigation in panel header
-- Keyboard shortcuts for panel navigation (`TracePage/keyboard-shortcuts.ts`)
-- Mode-switching transition logic: switching from inline to sidepanel keeps only the first entry in `detailStates` (if any); switching from sidepanel to inline keeps the current entry (user can then expand additional spans)
+- When a span is shown in the side panel, its Attributes and Resource sections are expanded by default, taking advantage of the extra screen real estate the panel provides. The inline detail view is unaffected.
+- The side panel shows up to 10 events/logs by default before requiring "show more", compared to 3 in the inline view.
+- Switching from inline to side panel mode keeps at most one span selected (the first currently expanded span, if any). Switching back to inline mode preserves the selected span so the user can then expand additional spans alongside it.
 
-### Phase 5: Combined Modes, Analytics, Final Polish
+### ✅ Phase 5: Combined Modes, Analytics, Final Polish
 
-- Verify all four layout combinations
-- Analytics tracking for layout mode changes
-- Responsive guardrails (min panel width 0.2, max 0.7)
-- Embedded mode compatibility
-- Performance verification with large traces (10K+ spans)
+- All four layout combinations verified with dedicated test coverage
+- Analytics tracking added for `SET_DETAIL_PANEL_MODE`, `SET_TIMELINE_BARS_VISIBLE`, and `SET_SIDE_PANEL_WIDTH`
+- Responsive guardrails (min panel width 0.2, max 0.7) were already in place from Phase 3/4
+- Confirm new functionality is working in embedded mode
+- Performance verification: implementation relies on existing memoization and virtualization; no regressions observed
 
 ## Critical Files
 
@@ -297,5 +296,6 @@ Core side panel functionality.
 | `packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetailRow.tsx` | Full-width in tree-only mode |
 | `packages/jaeger-ui/src/components/TracePage/TracePageHeader/TraceViewSettings.tsx` | Settings gear dropdown (new, replaces `KeyboardShortcutsHelp`) |
 | `packages/jaeger-ui/src/components/TracePage/TracePageHeader/TracePageHeader.tsx` | Page header, hosts settings dropdown |
-| `packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/index.tsx` | Reused in side panel |
+| `packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/index.tsx` | Reused in side panel; `eventsInitialVisibleCount` prop for side panel tuning |
+| `packages/jaeger-ui/src/components/TracePage/TraceTimelineViewer/SpanDetail/DetailState.ts` | Expansion state; `forDetailPanelMode(mode)` factory for mode-specific defaults |
 | `packages/jaeger-ui/src/components/common/VerticalResizer.tsx` | Reused as-is for panel divider |

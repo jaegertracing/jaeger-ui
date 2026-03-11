@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import { InputRef } from 'antd';
+import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
@@ -31,7 +32,7 @@ import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
-import { getLocation, getUrl } from './url';
+import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState } from '../common/UiFindInput';
@@ -48,7 +49,7 @@ import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
 import TraceLogsView from './TraceLogsView/index';
-import { StorageCapabilities, TraceGraphConfig } from '../../types/config';
+import type { SpanDetailPanelMode, StorageCapabilities, TraceGraphConfig } from '../../types/config';
 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
@@ -59,7 +60,7 @@ type TDispatchProps = {
   archiveTrace: (id: string) => void;
   fetchTrace: (id: string) => void;
   focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil) => void;
-  setDetailPanelMode: (mode: 'inline' | 'sidepanel') => void;
+  setDetailPanelMode: (mode: SpanDetailPanelMode) => void;
   setTimelineBarsVisible: (visible: boolean) => void;
 };
 
@@ -78,7 +79,7 @@ type TOwnProps = {
 
 type TReduxProps = {
   archiveTraceState: TraceArchive | TNil;
-  detailPanelMode: 'inline' | 'sidepanel';
+  detailPanelMode: SpanDetailPanelMode;
   embedded: null | EmbeddedState;
   id: string;
   searchUrl: null | string;
@@ -291,14 +292,9 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   ensureTraceFetched() {
-    const { fetchTrace, location, trace, id } = this.props;
+    const { fetchTrace, trace, id } = this.props;
     if (!trace) {
       fetchTrace(id);
-      return;
-    }
-    const { history } = this.props;
-    if (id && id !== id.toLowerCase()) {
-      history.replace(getLocation(id.toLowerCase(), location.state));
     }
   }
 
@@ -524,9 +520,13 @@ type TracePageProps = {
 
 const TracePage = (props: TracePageProps) => {
   const config = useConfig();
+  const traceID = props.params.id;
+  const normalizedTraceID = useNormalizeTraceId(traceID);
+
   return (
     <ConnectedTracePage
       {...props}
+      params={{ ...props.params, id: normalizedTraceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
       enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
       storageCapabilities={config.storageCapabilities}

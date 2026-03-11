@@ -5,6 +5,8 @@ import { TPathAgnosticDecorationSchema } from '../model/path-agnostic-decoration
 import { IWebAnalyticsFunc } from './tracking';
 import { TNil } from '.';
 
+export type SpanDetailPanelMode = 'inline' | 'sidepanel';
+
 export type ConfigMenuItem = {
   label: string;
   url?: string;
@@ -74,6 +76,8 @@ export type TraceGraphConfig = {
 export type StorageCapabilities = {
   // archiveStorage indicates whether the query service supports archive storage.
   archiveStorage?: boolean;
+  // metricsStorage indicates whether the query service supports metrics storage (for Monitor/SPM tab).
+  metricsStorage?: boolean;
 };
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
@@ -208,7 +212,7 @@ export type Config = {
   traceTimeline?: {
     // enableSidePanel enables the side panel layout option in the trace timeline.
     // When false, the side panel toggle is hidden and only inline detail mode is available.
-    // Default: false (experimental, opt-in).
+    // Default: true (experimental, opt-out).
     enableSidePanel?: boolean;
 
     // defaultDetailPanelMode sets the initial detail panel mode when enableSidePanel is true
@@ -216,7 +220,7 @@ export type Config = {
     // 'inline' preserves the current behavior as the default.
     // 'sidepanel' makes the side panel the default experience for new users.
     // Default: 'inline'.
-    defaultDetailPanelMode?: 'inline' | 'sidepanel';
+    defaultDetailPanelMode?: SpanDetailPanelMode;
   };
 
   // useOpenTelemetryTerms determines whether the UI uses legacy Jaeger terminology

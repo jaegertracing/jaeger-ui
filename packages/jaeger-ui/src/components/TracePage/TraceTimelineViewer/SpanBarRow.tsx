@@ -20,10 +20,11 @@ type SpanBarRowProps = {
   className?: string;
   color: string;
   criticalPath: CriticalPathSection[];
-  columnDivision: number;
+  nameColumnWidth: number;
   isChildrenExpanded: boolean;
   isDetailExpanded: boolean;
   isMatchingFilter: boolean;
+  isSelected?: boolean;
   timelineBarsVisible: boolean;
   onDetailToggled: (spanID: string) => void;
   onChildrenToggled: (spanID: string) => void;
@@ -65,10 +66,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   className = '',
   color,
   criticalPath,
-  columnDivision,
+  nameColumnWidth,
   isChildrenExpanded,
   isDetailExpanded,
   isMatchingFilter,
+  isSelected,
   timelineBarsVisible,
   numTicks,
   rpc = null,
@@ -119,8 +121,6 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   const hasLinks = span.links && span.links.length > 0;
   const hasInboundLinks = span.inboundLinks && span.inboundLinks.length > 0;
 
-  const effectiveColumnDivision = timelineBarsVisible ? columnDivision : 1;
-
   return (
     <TimelineRow
       className={`
@@ -128,9 +128,10 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           ${className || ''}
           ${isDetailExpanded ? 'is-expanded' : ''}
           ${isMatchingFilter ? 'is-matching-filter' : ''}
+          ${isSelected ? 'is-selected' : ''}
         `}
     >
-      <TimelineRow.Cell className="span-name-column" width={effectiveColumnDivision}>
+      <TimelineRow.Cell className="span-name-column" width={nameColumnWidth}>
         <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
@@ -201,7 +202,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
         <TimelineRow.Cell
           className="span-view"
           style={{ cursor: 'pointer' }}
-          width={1 - columnDivision}
+          width={1 - nameColumnWidth}
           onClick={_detailToggle}
         >
           <Ticks numTicks={numTicks} />
