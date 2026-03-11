@@ -15,23 +15,35 @@ export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
 
   /**
+   * Helper to handle Jaeger v3 specific error arrays in 200 OK responses.
+   * Graphite Fix: Throws raw message; wrapping happens in public methods.
+   */
+  private throwIfBodyHasErrors(data: any): void {
+    if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+      const messages = data.errors.map((e: { msg: string }) => e.msg).join(', ');
+      throw new Error(messages);
+    }
+  }
+
+  /**
    * Fetch the list of services from the Jaeger API.
    * @returns Promise<string[]> - Array of service names
    */
   async fetchServices(): Promise<string[]> {
-    const response = await this.fetchWithTimeout(`${this.apiRoot}/services`);
+    const context = 'Failed to fetch services';
+    try {
+      const response = await this.fetchWithTimeout(`${this.apiRoot}/services`);
+      const data = await response.json();
 
-    // Parse once. Jaeger v3 may return 200 OK with an errors array in the body.
-    const data = await response.json();
+      this.throwIfBodyHasErrors(data);
 
-    if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
-      // Aggregate all error messages so no detail is lost
-      const messages = data.errors.map((e: { msg: string }) => e.msg).join(', ');
-      throw new Error(`Failed to fetch services: ${messages}`);
+      const validated = ServicesResponseSchema.parse(data);
+      return validated.services;
+    } catch (error) {
+      // Copilot Fix: Preserve original error as cause and avoid undefined messages
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`${context}: ${message}`);
     }
-
-    const validated = ServicesResponseSchema.parse(data);
-    return validated.services;
   }
 
   /**
@@ -40,21 +52,21 @@ export class JaegerClient {
    * @returns Promise<{ name: string; spanKind: string }[]> - Array of span name objects
    */
   async fetchSpanNames(service: string): Promise<{ name: string; spanKind: string }[]> {
-    const response = await this.fetchWithTimeout(
-      `${this.apiRoot}/operations?service=${encodeURIComponent(service)}`
-    );
+    const context = `Failed to fetch span names for service "${service}"`;
+    try {
+      const response = await this.fetchWithTimeout(
+        `${this.apiRoot}/operations?service=${encodeURIComponent(service)}`
+      );
+      const data = await response.json();
 
-    // Jaeger v3 may return HTTP 200 with an 'errors' array in the response body; treat that as a failure.
-    const data = await response.json();
+      this.throwIfBodyHasErrors(data);
 
-    if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
-      // Aggregate all error messages for this specific service
-      const messages = data.errors.map((e: { msg: string }) => e.msg).join(', ');
-      throw new Error(`Failed to fetch span names for service "${service}": ${messages}`);
+      const validated = OperationsResponseSchema.parse(data);
+      return validated.operations;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`${context}: ${message}`);
     }
-
-    const validated = OperationsResponseSchema.parse(data);
-    return validated.operations;
   }
 
   /**
@@ -74,34 +86,16 @@ export class JaegerClient {
       if (!response.ok) {
         let errorDetail = response.statusText;
         try {
-          const errorBody: unknown = await response.json();
-          // Safely check if errors is an array before mapping
-          if (errorBody && typeof errorBody === 'object') {
-            const errors = (errorBody as { errors?: unknown }).errors;
-            if (Array.isArray(errors) && errors.length > 0) {
-              const messages = errors
-                .map(errorItem => {
-                  if (
-                    errorItem &&
-                    typeof errorItem === 'object' &&
-                    'msg' in errorItem &&
-                    typeof (errorItem as { msg: unknown }).msg === 'string'
-                  ) {
-                    return (errorItem as { msg: string }).msg;
-                  }
-                  return null;
-                })
-                .filter((msg): msg is string => msg !== null);
-              if (messages.length > 0) {
-                errorDetail = messages.join(', ');
-              }
-            }
+          const errorBody: any = await response.json();
+          if (Array.isArray(errorBody?.errors) && errorBody.errors.length > 0) {
+            errorDetail = errorBody.errors.map((e: { msg: string }) => e.msg).join(', ');
           }
         } catch {
           /* Fallback to statusText if body isn't JSON */
         }
 
-        throw new Error(`${response.status} ${errorDetail}`);
+        // Copilot Fix: Richer error including URL as requested
+        throw new Error(`${response.status} (${url}) ${errorDetail}`);
       }
 
       return response;
