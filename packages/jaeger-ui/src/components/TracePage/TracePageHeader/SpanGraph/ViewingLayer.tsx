@@ -60,12 +60,8 @@ function getNextViewLayout(start: number, position: number) {
   };
 }
 
-/**
- * Interface for the imperative handle exposed by ViewingLayer.
- * Used for testing purposes.
- */
-export interface ViewingLayerHandle {
-  _root: Element | TNil;
+export type ViewingLayerHandle = {
+  _getRoot: () => Element | TNil;
   _setRoot: (elm: SVGElement | TNil) => void;
   _getDraggingBounds: (tag: string | TNil) => DraggableBounds;
   _handleReframeMouseMove: (update: DraggingUpdate) => void;
@@ -78,7 +74,7 @@ export interface ViewingLayerHandle {
   _getMarkers: (from: number, to: number, isShift: boolean) => React.ReactNode[];
   state: { preventCursorLine: boolean };
   setState: (state: { preventCursorLine: boolean }) => void;
-}
+};
 
 /**
  * `ViewingLayer` is rendered on top of the Canvas rendering of the minimap and
@@ -263,6 +259,13 @@ const ViewingLayer = React.memo(
       tag: dragTypes.SHIFT_END,
     });
 
+    const draggerReframe = draggerReframeRef.current;
+    const draggerStart = draggerStartRef.current;
+    const draggerEnd = draggerEndRef.current;
+    if (!draggerReframe || !draggerStart || !draggerEnd) {
+      throw new Error('invalid state');
+    }
+
     // Cleanup on unmount
     useEffect(() => {
       return () => {
@@ -276,7 +279,7 @@ const ViewingLayer = React.memo(
     useImperativeHandle(
       ref,
       () => ({
-        _root: rootRef.current,
+        _getRoot: () => rootRef.current,
         _setRoot: setRoot,
         _getDraggingBounds: getDraggingBounds,
         _handleReframeMouseMove: handleReframeMouseMove,
@@ -332,9 +335,9 @@ const ViewingLayer = React.memo(
           height={height}
           className="ViewingLayer--graph"
           ref={setRoot}
-          onMouseDown={draggerReframeRef.current.handleMouseDown}
-          onMouseLeave={draggerReframeRef.current.handleMouseLeave}
-          onMouseMove={draggerReframeRef.current.handleMouseMove}
+          onMouseDown={draggerReframe.handleMouseDown}
+          onMouseLeave={draggerReframe.handleMouseLeave}
+          onMouseMove={draggerReframe.handleMouseMove}
         >
           {leftInactive > 0 && (
             <rect x={0} y={0} height="100%" width={`${leftInactive}%`} className="ViewingLayer--inactive" />
@@ -363,17 +366,17 @@ const ViewingLayer = React.memo(
           {shiftEnd != null && getMarkers(viewEnd, shiftEnd, true)}
           <Scrubber
             isDragging={shiftStart != null}
-            onMouseDown={draggerStartRef.current.handleMouseDown}
-            onMouseEnter={draggerStartRef.current.handleMouseEnter}
-            onMouseLeave={draggerStartRef.current.handleMouseLeave}
+            onMouseDown={draggerStart.handleMouseDown}
+            onMouseEnter={draggerStart.handleMouseEnter}
+            onMouseLeave={draggerStart.handleMouseLeave}
             position={viewStart || 0}
           />
           <Scrubber
             isDragging={shiftEnd != null}
             position={viewEnd || 1}
-            onMouseDown={draggerEndRef.current.handleMouseDown}
-            onMouseEnter={draggerEndRef.current.handleMouseEnter}
-            onMouseLeave={draggerEndRef.current.handleMouseLeave}
+            onMouseDown={draggerEnd.handleMouseDown}
+            onMouseEnter={draggerEnd.handleMouseEnter}
+            onMouseLeave={draggerEnd.handleMouseLeave}
           />
           {reframe != null && getMarkers(reframe.anchor, reframe.shift, false)}
         </svg>
