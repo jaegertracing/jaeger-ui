@@ -20,12 +20,16 @@ export class JaegerClient {
    */
   async fetchServices(): Promise<string[]> {
     const response = await this.fetchWithTimeout(`${this.apiRoot}/services`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch services: ${response.status} ${response.statusText}`);
-    }
+
+    // Parse once. Jaeger v3 may return 200 OK with an errors array in the body.
     const data = await response.json();
 
-    // Runtime validation with Zod
+    if (data?.errors?.length > 0) {
+      // Aggregate all error messages so no detail is lost
+      const messages = data.errors.map((e: any) => e.msg).join(', ');
+      throw new Error(`[fetchServices] ${messages}`);
+    }
+
     const validated = ServicesResponseSchema.parse(data);
     return validated.services;
   }
@@ -39,12 +43,17 @@ export class JaegerClient {
     const response = await this.fetchWithTimeout(
       `${this.apiRoot}/operations?service=${encodeURIComponent(service)}`
     );
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch span names for service "${service}": ${response.status} ${response.statusText}`
-      );
-    }
+
+    // In your current code, it only throws if !response.ok
+    // But we need to check the JSON body for "hidden" errors
     const data = await response.json();
+
+    // ADD THIS: The "Melonps" logic to handle 200 OK with error bodies
+    if (data?.errors?.length > 0) {
+      // Aggregate all error messages for this specific service
+      const messages = data.errors.map((e: any) => e.msg).join(', ');
+      throw new Error(`[fetchSpanNames] Failed for "${service}": ${messages}`);
+    }
 
     // Runtime validation with Zod
     const validated = OperationsResponseSchema.parse(data);
@@ -64,6 +73,22 @@ export class JaegerClient {
 
     try {
       const response = await fetch(url, { signal: controller.signal });
+
+      if (!response.ok) {
+        let errorDetail = response.statusText;
+        try {
+          // Attempt to extract the specific backend error (e.g., "trace not found")
+          const errorBody = await response.json();
+          if (errorBody?.errors?.length > 0) {
+            errorDetail = errorBody.errors.map((e: any) => e.msg).join(', ');
+          }
+        } catch {
+          // If the body isn't JSON, we just use the default statusText
+        }
+
+        throw new Error(`HTTP ${response.status}: ${errorDetail}`);
+      }
+
       return response;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
