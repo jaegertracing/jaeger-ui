@@ -24,10 +24,10 @@ export class JaegerClient {
     // Parse once. Jaeger v3 may return 200 OK with an errors array in the body.
     const data = await response.json();
 
-    if (data?.errors?.length > 0) {
+    if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
       // Aggregate all error messages so no detail is lost
-      const messages = data.errors.map((e: any) => e.msg).join(', ');
-      throw new Error(`[fetchServices] ${messages}`);
+      const messages = data.errors.map((e: { msg: string }) => e.msg).join(', ');
+      throw new Error(`Failed to fetch services: ${messages}`);
     }
 
     const validated = ServicesResponseSchema.parse(data);
@@ -44,18 +44,15 @@ export class JaegerClient {
       `${this.apiRoot}/operations?service=${encodeURIComponent(service)}`
     );
 
-    // In your current code, it only throws if !response.ok
-    // But we need to check the JSON body for "hidden" errors
+    // Jaeger v3 may return HTTP 200 with an 'errors' array in the response body; treat that as a failure.
     const data = await response.json();
 
-    // ADD THIS: The "Melonps" logic to handle 200 OK with error bodies
-    if (data?.errors?.length > 0) {
+    if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
       // Aggregate all error messages for this specific service
-      const messages = data.errors.map((e: any) => e.msg).join(', ');
-      throw new Error(`[fetchSpanNames] Failed for "${service}": ${messages}`);
+      const messages = data.errors.map((e: { msg: string }) => e.msg).join(', ');
+      throw new Error(`Failed to fetch span names for service "${service}": ${messages}`);
     }
 
-    // Runtime validation with Zod
     const validated = OperationsResponseSchema.parse(data);
     return validated.operations;
   }
@@ -77,16 +74,16 @@ export class JaegerClient {
       if (!response.ok) {
         let errorDetail = response.statusText;
         try {
-          // Attempt to extract the specific backend error (e.g., "trace not found")
           const errorBody = await response.json();
-          if (errorBody?.errors?.length > 0) {
+          // Safely check if errors is an array before mapping
+          if (errorBody?.errors && Array.isArray(errorBody.errors) && errorBody.errors.length > 0) {
             errorDetail = errorBody.errors.map((e: any) => e.msg).join(', ');
           }
         } catch {
-          // If the body isn't JSON, we just use the default statusText
+          /* Fallback to statusText if body isn't JSON */
         }
 
-        throw new Error(`HTTP ${response.status}: ${errorDetail}`);
+        throw new Error(`${response.status} ${errorDetail}`);
       }
 
       return response;
