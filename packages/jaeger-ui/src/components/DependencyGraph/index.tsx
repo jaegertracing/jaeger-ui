@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import memoizeOne from 'memoize-one';
@@ -44,14 +44,6 @@ type TProps = {
   loading: boolean;
   error: ApiError | null | undefined;
   uiFind?: string;
-};
-
-type TState = {
-  selectedService: string | null;
-  selectedLayout: string | null;
-  selectedDepth: number | null;
-  debouncedDepth: number | null;
-  selectedSampleDatasetType: string;
 };
 
 const createSampleDataManager = () => {
@@ -184,7 +176,7 @@ export function DependencyGraphPageImpl(props: TProps) {
   selectedLayoutRef.current = selectedLayout;
 
   const dependenciesRef = useRef(dependencies);
-  const updateLayout = () => {
+  const updateLayout = useCallback(() => {
     const dataset: TServiceCall[] = getSampleData().length > 0 ? getSampleData() : dependenciesRef.current;
     const layout: 'dot' | 'sfdp' = dataset.length > dagMaxNumServices ? 'sfdp' : 'dot';
     if (layout !== selectedLayoutRef.current) {
@@ -193,12 +185,18 @@ export function DependencyGraphPageImpl(props: TProps) {
       setSelectedDepth(5);
       setDebouncedDepth(5);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDependencies();
     updateLayout();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchDependencies, updateLayout]);
+
+  useEffect(() => {
+    const debounced = debouncedDepthChange.current;
+    return () => {
+      debounced.cancel();
+    };
   }, []);
 
   useEffect(() => {
@@ -206,7 +204,7 @@ export function DependencyGraphPageImpl(props: TProps) {
       dependenciesRef.current = dependencies;
       updateLayout();
     }
-  }, [dependencies]);
+  }, [dependencies, updateLayout]);
 
   const handleServiceSelect = (service: string | null) => setSelectedService(service);
   const handleLayoutSelect = (layout: string) => setSelectedLayout(layout);
