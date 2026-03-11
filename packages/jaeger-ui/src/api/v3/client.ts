@@ -16,7 +16,8 @@ export class JaegerClient {
 
   /**
    * Helper to handle Jaeger v3 specific error arrays in 200 OK responses.
-   * Graphite Fix: Throws raw message; wrapping happens in public methods.
+   * Throws an Error when the response body contains a non-empty `errors` array,
+   * surfacing the raw concatenated error messages so public methods can wrap them with context.
    */
   private throwIfBodyHasErrors(data: any): void {
     if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
