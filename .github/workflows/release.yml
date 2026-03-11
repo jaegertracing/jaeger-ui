@@ -25,6 +25,7 @@ jobs:
         run: |
           NPM_VERSION=$(node -p "require('./package.json').engines.npm.replace(/[^0-9.]/g, '')")
           npm install -g npm@$NPM_VERSION
+      - run: npm --version
       - run: npm ci
       - run: npm run lint
       - run: npm run build
