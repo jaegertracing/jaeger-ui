@@ -24,6 +24,10 @@ jobs:
         with:
           cache: npm
           node-version-file: 'package.json'
+      - name: Upgrade npm
+        run: |
+          NPM_VERSION=$(node -p "require('./package.json').engines.npm.replace(/[^0-9.]/g, '')")
+          npm install -g npm@$NPM_VERSION
       - run: npm ci
       - name: Run depcheck
         run: npm run depcheck
