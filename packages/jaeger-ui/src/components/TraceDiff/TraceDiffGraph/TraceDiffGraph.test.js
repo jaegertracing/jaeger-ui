@@ -69,7 +69,7 @@ describe('TraceDiffGraph', () => {
   let windowOpenSpy;
 
   beforeEach(() => {
-    getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue');
+    getConfigValueSpy = jest.spyOn(getConfig, 'default');
     windowOpenSpy = jest.spyOn(window, 'open').mockImplementation(() => {});
   });
 
@@ -216,18 +216,17 @@ describe('TraceDiffGraph', () => {
     it('opens help link when config value exists', () => {
       const helpLink = 'https://example.com/help';
 
-      getConfigValueSpy.mockReturnValue(helpLink);
+      getConfigValueSpy.mockReturnValue({ traceDiff: { helpLink } });
 
       const { getByTestId } = renderWithRouter(<TraceDiffGraph {...baseProps} a={undefined} b={undefined} />);
       const helpButton = getByTestId('learn-how-button');
       helpButton.click();
 
-      expect(getConfigValueSpy).toHaveBeenCalledWith('traceDiff.helpLink');
       expect(windowOpenSpy).toHaveBeenCalledWith(helpLink, expect.any(String));
     });
 
     it('does not open window when help link config is not set', () => {
-      getConfigValueSpy.mockReturnValue(null);
+      getConfigValueSpy.mockReturnValue({});
 
       const { getByTestId } = renderWithRouter(<TraceDiffGraph {...baseProps} a={undefined} b={undefined} />);
       const helpButton = getByTestId('learn-how-button');

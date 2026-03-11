@@ -129,12 +129,30 @@ function jaegerUiConfigPlugin() {
 
         if (fs.existsSync(jsonConfigPath)) {
           try {
-            const localConfig = JSON.parse(fs.readFileSync(jsonConfigPath, 'utf-8'));
+            const localConfigContent = fs.readFileSync(jsonConfigPath, 'utf-8');
+            // Validate it's valid JSON
+            const localConfig = JSON.parse(localConfigContent);
+
+            // Merge dynamic backend config with local overrides
             const mergedConfig = { ...(backendConfig?.uiConfig ?? {}), ...localConfig };
+
+            // Inject the full UI config — mimics the Go server behavior for .json config files.
             html = html.replace(
               'const JAEGER_CONFIG = DEFAULT_CONFIG;',
               `const JAEGER_CONFIG = ${JSON.stringify(mergedConfig)};`
             );
+
+            // Inject storageCapabilities if present in the config file.
+            // The Go server injects this separately via its own search-replace on
+            // JAEGER_STORAGE_CAPABILITIES; the Vite plugin must replicate that here so that
+            // setting storageCapabilities in jaeger-ui.config.json works in dev mode too.
+            if (localConfig.storageCapabilities) {
+              html = html.replace(
+                'const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;',
+                `const JAEGER_STORAGE_CAPABILITIES = { ...DEFAULT_STORAGE_CAPABILITIES, ...${JSON.stringify(localConfig.storageCapabilities)} };`
+              );
+            }
+
             const source = backendConfig?.uiConfig
               ? 'backend + jaeger-ui.config.json'
               : 'jaeger-ui.config.json';

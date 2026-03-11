@@ -20,10 +20,12 @@ type SpanBarRowProps = {
   className?: string;
   color: string;
   criticalPath: CriticalPathSection[];
-  columnDivision: number;
+  nameColumnWidth: number;
   isChildrenExpanded: boolean;
   isDetailExpanded: boolean;
   isMatchingFilter: boolean;
+  isSelected?: boolean;
+  timelineBarsVisible: boolean;
   onDetailToggled: (spanID: string) => void;
   onChildrenToggled: (spanID: string) => void;
   numTicks: number;
@@ -64,10 +66,12 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   className = '',
   color,
   criticalPath,
-  columnDivision,
+  nameColumnWidth,
   isChildrenExpanded,
   isDetailExpanded,
   isMatchingFilter,
+  isSelected,
+  timelineBarsVisible,
   numTicks,
   rpc = null,
   noInstrumentedServer,
@@ -124,9 +128,10 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           ${className || ''}
           ${isDetailExpanded ? 'is-expanded' : ''}
           ${isMatchingFilter ? 'is-matching-filter' : ''}
+          ${isSelected ? 'is-selected' : ''}
         `}
     >
-      <TimelineRow.Cell className="span-name-column" width={columnDivision}>
+      <TimelineRow.Cell className="span-name-column" width={nameColumnWidth}>
         <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
@@ -193,29 +198,31 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           )}
         </div>
       </TimelineRow.Cell>
-      <TimelineRow.Cell
-        className="span-view"
-        style={{ cursor: 'pointer' }}
-        width={1 - columnDivision}
-        onClick={_detailToggle}
-      >
-        <Ticks numTicks={numTicks} />
-        <SpanBar
-          criticalPath={criticalPath}
-          rpc={rpc}
-          viewStart={viewStart}
-          viewEnd={viewEnd}
-          getViewedBounds={getViewedBounds}
-          color={color}
-          shortLabel={label}
-          longLabel={longLabel}
-          hintSide={hintSide}
-          traceStartTime={traceStartTime}
-          span={span}
-          traceDuration={traceDuration}
-          useOtelTerms={useOtelTerms}
-        />
-      </TimelineRow.Cell>
+      {timelineBarsVisible && (
+        <TimelineRow.Cell
+          className="span-view"
+          style={{ cursor: 'pointer' }}
+          width={1 - nameColumnWidth}
+          onClick={_detailToggle}
+        >
+          <Ticks numTicks={numTicks} />
+          <SpanBar
+            criticalPath={criticalPath}
+            rpc={rpc}
+            viewStart={viewStart}
+            viewEnd={viewEnd}
+            getViewedBounds={getViewedBounds}
+            color={color}
+            shortLabel={label}
+            longLabel={longLabel}
+            hintSide={hintSide}
+            traceStartTime={traceStartTime}
+            span={span}
+            traceDuration={traceDuration}
+            useOtelTerms={useOtelTerms}
+          />
+        </TimelineRow.Cell>
+      )}
     </TimelineRow>
   );
 };

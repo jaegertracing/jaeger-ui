@@ -47,10 +47,11 @@ describe('<SpanBarRow>', () => {
     className: 'a-class-name',
     color: 'color-a',
     criticalPath: [],
-    columnDivision: 0.5,
+    nameColumnWidth: 0.5,
     isChildrenExpanded: true,
     isDetailExpanded: false,
     isMatchingFilter: false,
+    timelineBarsVisible: true,
     onDetailToggled: jest.fn(),
     onChildrenToggled: jest.fn(),
     numTicks: 5,
@@ -210,6 +211,23 @@ describe('<SpanBarRow>', () => {
     render(<SpanBarRow {...props} />);
     const svcName = screen.getByText('service-name').closest('.span-svc-name');
     expect(svcName).toHaveClass('span-svc-name', 'is-children-collapsed');
+  });
+
+  describe('tree-only mode (timelineBarsVisible=false)', () => {
+    // TraceTimelineViewer passes nameColumnWidth=1 when timeline bars are hidden.
+    const barsHiddenProps = { ...defaultProps, timelineBarsVisible: false, nameColumnWidth: 1 };
+
+    it('does not render the span-view cell', () => {
+      render(<SpanBarRow {...barsHiddenProps} />);
+      expect(screen.queryByTestId('span-bar')).not.toBeInTheDocument();
+    });
+
+    it('renders the span name column at full width', () => {
+      const { container } = render(<SpanBarRow {...barsHiddenProps} />);
+      const nameCell = container.querySelector('.span-name-column');
+      expect(nameCell).toHaveStyle('flex-basis: 100%');
+      expect(nameCell).toHaveStyle('max-width: 100%');
+    });
   });
 
   it('sets longLabel and hintSide to right when viewStart <= 1 - viewEnd', () => {

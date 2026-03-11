@@ -12,7 +12,7 @@ import _groupBy from 'lodash/groupBy';
 
 import memoizeOne from 'memoize-one';
 import { Location, History } from 'history';
-import { actions } from './duck';
+import { actions, getSelectedSpanID } from './duck';
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
@@ -49,6 +49,7 @@ type RowState = {
 type TVirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
   findMatchesIDs: Set<string> | TNil;
+  nameColumnWidth: number;
   scrollToFirstVisibleSpan: () => void;
   registerAccessors: (accesors: Accessors) => void;
   trace: IOtelTrace;
@@ -76,10 +77,15 @@ type RouteProps = {
   history: History;
 };
 
+type TDerivedStateProps = {
+  selectedSpanID: string | null;
+};
+
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
   TDispatchProps &
   TExtractUiFindFromStateReturn &
   TTraceTimeline &
+  TDerivedStateProps &
   RouteProps;
 
 // export for tests
@@ -94,7 +100,8 @@ const NUM_TICKS = 5;
 function generateRowStates(
   spans: ReadonlyArray<IOtelSpan> | TNil,
   childrenHiddenIDs: Set<string>,
-  detailStates: Map<string, DetailState | TNil>
+  detailStates: Map<string, DetailState | TNil>,
+  detailPanelMode: 'inline' | 'sidepanel'
 ): RowState[] {
   if (!spans) {
     return [];
@@ -123,7 +130,8 @@ function generateRowStates(
       isDetail: false,
       spanIndex: i,
     });
-    if (detailStates.has(spanID)) {
+    // In side panel mode, detail rows are shown in the panel, not inline.
+    if (detailPanelMode !== 'sidepanel' && detailStates.has(spanID)) {
       rowStates.push({
         span,
         isDetail: true,
@@ -137,12 +145,13 @@ function generateRowStates(
 function generateRowStatesFromTrace(
   trace: IOtelTrace | TNil,
   childrenHiddenIDs: Set<string>,
-  detailStates: Map<string, DetailState | TNil>
+  detailStates: Map<string, DetailState | TNil>,
+  detailPanelMode: 'inline' | 'sidepanel'
 ): RowState[] {
   if (!trace) {
     return [];
   }
-  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates);
+  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates, detailPanelMode);
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -284,8 +293,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   };
 
   getRowStates(): RowState[] {
-    const { childrenHiddenIDs, detailStates, trace } = this.props;
-    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates);
+    const { childrenHiddenIDs, detailStates, detailPanelMode, trace } = this.props;
+    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode);
   }
 
   getClippingCssClasses(): string {
@@ -448,7 +457,9 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailStates,
       detailToggle,
       findMatchesIDs,
-      spanNameColumnWidth,
+      nameColumnWidth,
+      selectedSpanID,
+      timelineBarsVisible,
       trace,
       criticalPath,
       useOtelTerms,
@@ -464,6 +475,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isCollapsed = childrenHiddenIDs.has(spanID);
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
+    const isSelected = selectedSpanID === spanID;
     const hasOwnError = isErrorSpan(span);
     const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
     const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
@@ -499,10 +511,12 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           className={this.getClippingCssClasses()}
           color={color}
           criticalPath={criticalPathSections}
-          columnDivision={spanNameColumnWidth}
+          nameColumnWidth={nameColumnWidth}
           isChildrenExpanded={!isCollapsed}
           isDetailExpanded={isDetailExpanded}
           isMatchingFilter={isMatchingFilter}
+          isSelected={isSelected}
+          timelineBarsVisible={timelineBarsVisible}
           numTicks={NUM_TICKS}
           onDetailToggled={detailToggle}
           onChildrenToggled={childrenToggle}
@@ -533,7 +547,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailStates,
       detailTagsToggle,
       detailToggle,
-      spanNameColumnWidth,
+      nameColumnWidth,
+      timelineBarsVisible,
       trace,
       currentViewRangeTime,
       useOtelTerms,
@@ -548,7 +563,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
         <SpanDetailRow
           color={color}
-          columnDivision={spanNameColumnWidth}
+          nameColumnWidth={nameColumnWidth}
+          timelineBarsVisible={timelineBarsVisible}
           onDetailToggled={detailToggle}
           detailState={detailState}
           linksGetter={this.linksGetterFromAttributes(span)}
@@ -590,10 +606,15 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 }
 
 /* istanbul ignore next */
-function mapStateToProps(state: ReduxState): TTraceTimeline & TExtractUiFindFromStateReturn {
+function mapStateToProps(
+  state: ReduxState
+): TTraceTimeline & TExtractUiFindFromStateReturn & TDerivedStateProps {
+  const { traceTimeline } = state;
+  const { detailPanelMode, detailStates } = traceTimeline;
   return {
     ...extractUiFindFromState(state),
-    ...state.traceTimeline,
+    ...traceTimeline,
+    selectedSpanID: detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null,
   };
 }
 

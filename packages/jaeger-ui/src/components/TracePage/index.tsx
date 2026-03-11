@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import { InputRef } from 'antd';
+import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
@@ -31,7 +32,7 @@ import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
-import { getLocation, getUrl } from './url';
+import { getUrl } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState } from '../common/UiFindInput';
@@ -47,7 +48,8 @@ import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
 import TraceSpanView from './TraceSpanView/index';
 import TraceFlamegraph from './TraceFlamegraph/index';
-import { StorageCapabilities, TraceGraphConfig } from '../../types/config';
+import TraceLogsView from './TraceLogsView/index';
+import type { SpanDetailPanelMode, StorageCapabilities, TraceGraphConfig } from '../../types/config';
 
 import './index.css';
 import memoizedTraceCriticalPath from './CriticalPath/index';
@@ -58,6 +60,8 @@ type TDispatchProps = {
   archiveTrace: (id: string) => void;
   fetchTrace: (id: string) => void;
   focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil) => void;
+  setDetailPanelMode: (mode: SpanDetailPanelMode) => void;
+  setTimelineBarsVisible: (visible: boolean) => void;
 };
 
 type TOwnProps = {
@@ -65,6 +69,7 @@ type TOwnProps = {
   location: Location<LocationState>;
   params: { id: string };
   archiveEnabled: boolean;
+  enableSidePanel: boolean;
   storageCapabilities: StorageCapabilities | TNil;
   criticalPathEnabled: boolean;
   disableJsonView: boolean;
@@ -74,9 +79,11 @@ type TOwnProps = {
 
 type TReduxProps = {
   archiveTraceState: TraceArchive | TNil;
+  detailPanelMode: SpanDetailPanelMode;
   embedded: null | EmbeddedState;
   id: string;
   searchUrl: null | string;
+  timelineBarsVisible: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
 };
@@ -285,14 +292,9 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   };
 
   ensureTraceFetched() {
-    const { fetchTrace, location, trace, id } = this.props;
+    const { fetchTrace, trace, id } = this.props;
     if (!trace) {
       fetchTrace(id);
-      return;
-    }
-    const { history } = this.props;
-    if (id && id !== id.toLowerCase()) {
-      history.replace(getLocation(id.toLowerCase(), location.state));
     }
   }
 
@@ -314,15 +316,28 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     this._scrollManager.scrollToPrevVisibleSpan();
   };
 
+  onDetailPanelModeToggle = () => {
+    const { detailPanelMode, setDetailPanelMode } = this.props;
+    setDetailPanelMode(detailPanelMode === 'inline' ? 'sidepanel' : 'inline');
+  };
+
+  onTimelineToggle = () => {
+    const { timelineBarsVisible, setTimelineBarsVisible } = this.props;
+    setTimelineBarsVisible(!timelineBarsVisible);
+  };
+
   render() {
     const {
       archiveEnabled,
       storageCapabilities,
       archiveTraceState,
       criticalPathEnabled,
+      detailPanelMode,
       embedded,
+      enableSidePanel,
       id,
       uiFind,
+      timelineBarsVisible,
       trace,
       disableJsonView,
       traceGraphConfig,
@@ -360,6 +375,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       viewRange,
       canCollapse: !embedded || !embedded.timeline.hideSummary || !embedded.timeline.hideMinimap,
       clearSearch: this.clearSearch,
+      detailPanelMode,
+      enableSidePanel,
       hideMap: Boolean(
         viewType !== ETraceViewType.TraceTimelineViewer || (embedded && embedded.timeline.hideMinimap)
       ),
@@ -367,16 +384,18 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       linkToStandalone: getUrl(id),
       nextResult: this.nextResult,
       onArchiveClicked: this.archiveTrace,
+      onDetailPanelModeToggle: this.onDetailPanelModeToggle,
       onSlimViewClicked: this.toggleSlimView,
+      onTimelineToggle: this.onTimelineToggle,
       onTraceViewChange: this.setTraceView,
       prevResult: this.prevResult,
       ref: this._searchBar,
       resultCount: findCount,
       disableJsonView,
       showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
-      showShortcutsHelp: !isEmbedded,
       showStandaloneLink: isEmbedded,
       showViewOptions: !isEmbedded,
+      timelineBarsVisible,
       toSearch: (locationState && locationState.fromSearch) || null,
       trace: data.asOtelTrace(),
       updateNextViewRangeTime: this.updateNextViewRangeTime,
@@ -431,6 +450,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       );
     } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
       view = <TraceFlamegraph trace={trace} />;
+    } else if (ETraceViewType.TraceLogs === viewType && headerHeight) {
+      view = <TraceLogsView trace={data.asOtelTrace()} useOtelTerms={this.props.useOtelTerms} />;
     }
 
     return (
@@ -457,12 +478,16 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const { state: locationState } = router.location;
   const searchUrl = (locationState && locationState.fromSearch) || null;
 
+  const { detailPanelMode, timelineBarsVisible } = state.traceTimeline;
+
   return {
     ...extractUiFindFromState(state),
     archiveTraceState,
+    detailPanelMode,
     embedded,
     id,
     searchUrl,
+    timelineBarsVisible,
     trace,
   };
 }
@@ -471,8 +496,18 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { fetchTrace } = bindActionCreators(jaegerApiActions, dispatch);
   const { archiveTrace, acknowledge: acknowledgeArchive } = bindActionCreators(archiveActions, dispatch);
-  const { focusUiFindMatches } = bindActionCreators(timelineActions, dispatch);
-  return { acknowledgeArchive, archiveTrace, fetchTrace, focusUiFindMatches };
+  const { focusUiFindMatches, setDetailPanelMode, setTimelineBarsVisible } = bindActionCreators(
+    timelineActions,
+    dispatch
+  );
+  return {
+    acknowledgeArchive,
+    archiveTrace,
+    fetchTrace,
+    focusUiFindMatches,
+    setDetailPanelMode,
+    setTimelineBarsVisible,
+  };
 }
 
 const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
@@ -485,10 +520,15 @@ type TracePageProps = {
 
 const TracePage = (props: TracePageProps) => {
   const config = useConfig();
+  const traceID = props.params.id;
+  const normalizedTraceID = useNormalizeTraceId(traceID);
+
   return (
     <ConnectedTracePage
       {...props}
+      params={{ ...props.params, id: normalizedTraceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
+      enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
       storageCapabilities={config.storageCapabilities}
       criticalPathEnabled={config.criticalPathEnabled}
       disableJsonView={config.disableJsonView}

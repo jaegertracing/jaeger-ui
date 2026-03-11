@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, ComponentProps } from 'react';
 import { Input, Button, Popover, Select, Row, Col, Form, Switch } from 'antd';
 import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
@@ -11,6 +11,8 @@ import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
 import { connect, ConnectedProps } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom-v5-compat';
+import { getUrl as getSearchUrl } from './url';
 import { bindActionCreators, Dispatch } from 'redux';
 import store from 'store';
 
@@ -19,7 +21,7 @@ import { trackFormInput } from './SearchForm.track';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
-import { getConfigValue } from '../../utils/config/get-config';
+import getConfig from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
@@ -270,7 +272,7 @@ export function submitForm(
   searchTraces: SearchTracesFunction,
   adjustTime: string | null | undefined,
   adjustTimeEnabled: boolean
-): void {
+): string {
   const {
     resultsLimit,
     service,
@@ -311,7 +313,7 @@ export function submitForm(
 
   trackFormInput(resultsLimit, operation, tags || '', minDuration, maxDuration, lookback, service);
 
-  searchTraces({
+  const query: SearchQuery = {
     service,
     operation: operation !== DEFAULT_OPERATION ? operation : undefined,
     limit: resultsLimit,
@@ -321,7 +323,9 @@ export function submitForm(
     tags: convTagsLogfmt(tags) || undefined,
     minDuration: minDuration || null,
     maxDuration: maxDuration || null,
-  } as SearchQuery);
+  };
+  searchTraces(query);
+  return getSearchUrl(query as Parameters<typeof getSearchUrl>[0]);
 }
 
 interface ISearchFormImplProps {
@@ -335,7 +339,7 @@ interface ISearchFormImplProps {
     fields: ISearchFormFields,
     adjustEndTime: string | null | undefined,
     adjustTimeEnabled: boolean
-  ) => void;
+  ) => string;
 }
 
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
@@ -346,6 +350,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   initialValues,
   submitFormHandler,
 }) => {
+  const navigate = useNavigate();
   const { useOpenTelemetryTerms: useOtelTerms } = useConfig();
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
@@ -403,9 +408,10 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      submitFormHandler(formData as ISearchFormFields, searchAdjustEndTime, adjustTimeEnabled);
+      const url = submitFormHandler(formData as ISearchFormFields, searchAdjustEndTime, adjustTimeEnabled);
+      navigate(url);
     },
-    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler]
+    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate]
   );
 
   const { service: selectedService, lookback: selectedLookback } = formData;
@@ -718,7 +724,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder="Limit Results"
           type="number"
           min={1}
-          max={getConfigValue('search.maxLimit')}
+          max={getConfig().search?.maxLimit}
           onChange={e => handleChange({ resultsLimit: e.target.value })}
         />
       </FormItem>
@@ -735,7 +741,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 };
 
-export function mapStateToProps(state: ReduxState) {
+export function mapStateToProps(state: ReduxState, ownProps: { search?: string }) {
   const {
     service,
     limit,
@@ -748,7 +754,7 @@ export function mapStateToProps(state: ReduxState) {
     minDuration,
     lookback,
     traceID: traceIDParams,
-  } = queryString.parse(state.router.location.search);
+  } = queryString.parse(ownProps.search || '');
 
   const nowInMicroseconds = dayjs().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);
@@ -856,11 +862,19 @@ export function mapDispatchToProps(dispatch: Dispatch) {
       fields: ISearchFormFields,
       adjustEndTime: string | null | undefined,
       adjustTimeEnabled: boolean
-    ) => submitForm(fields, searchTraces, adjustEndTime || null, adjustTimeEnabled),
+    ) => submitForm(fields, searchTraces, adjustEndTime || null, adjustTimeEnabled) as string,
   };
 }
 
 const connector = connect(mapStateToProps, mapDispatchToProps);
 type PropsFromRedux = ConnectedProps<typeof connector>;
 
-export default connector(SearchFormImpl);
+const ConnectedSearchForm = connector(SearchFormImpl);
+
+// search is always injected from useLocation(); callers cannot supply it.
+function SearchFormWithLocation(props: Omit<ComponentProps<typeof ConnectedSearchForm>, 'search'>) {
+  const { search } = useLocation();
+  return <ConnectedSearchForm {...props} search={search} />;
+}
+
+export default SearchFormWithLocation;
