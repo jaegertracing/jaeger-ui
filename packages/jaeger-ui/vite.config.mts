@@ -39,30 +39,51 @@ function jaegerUiConfigPlugin() {
   let cachedBackendConfig: Record<string, any> | null | undefined = undefined;
   let cacheTimestamp = 0;
   const CACHE_TTL_MS = 30_000;
+  // Abort the backend config fetch if it takes longer than this to avoid
+  // blocking transformIndexHtml (and therefore page loads) indefinitely on a
+  // stalled proxy, long TLS handshake, or slow network.
+  const FETCH_TIMEOUT_MS = 3_000;
+  // In-flight promise shared across concurrent callers so only one fetch runs
+  // at a time — prevents a timed-out sibling from overwriting a successful result.
+  let inflightFetch: Promise<Record<string, any> | null> | null = null;
 
   async function fetchBackendConfig() {
     const now = Date.now();
     if (cachedBackendConfig !== undefined && now - cacheTimestamp < CACHE_TTL_MS) {
       return cachedBackendConfig;
     }
-    try {
-      const response = await fetch(`${proxyConfig.target}/api/ui/config`);
-      if (response.ok) {
-        cachedBackendConfig = await response.json();
-        cacheTimestamp = Date.now();
-        console.log('[jaeger-ui-config] Fetched config from backend');
-      } else {
-        // Non-2xx response (e.g. 404 if endpoint not yet implemented) — treat as unavailable
+    // If a fetch is already in-flight, all concurrent callers await the same promise.
+    if (inflightFetch) {
+      return inflightFetch;
+    }
+    inflightFetch = (async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+      try {
+        const response = await fetch(`${proxyConfig.target}/api/ui/config`, {
+          signal: controller.signal,
+        });
+        if (response.ok) {
+          cachedBackendConfig = await response.json();
+          cacheTimestamp = Date.now();
+          console.log('[jaeger-ui-config] Fetched config from backend');
+        } else {
+          // Non-2xx response (e.g. 404 if endpoint not yet implemented) — treat as unavailable
+          cachedBackendConfig = null;
+          cacheTimestamp = Date.now();
+        }
+      } catch {
+        // Backend not running, request timed out, or aborted — cache the negative
+        // result so we don't retry on every page load while the backend is down.
         cachedBackendConfig = null;
         cacheTimestamp = Date.now();
+      } finally {
+        clearTimeout(timeoutId);
+        inflightFetch = null;
       }
-    } catch {
-      // Backend not running or timed out — cache the negative result so we
-      // don't retry on every page load while the backend is down.
-      cachedBackendConfig = null;
-      cacheTimestamp = Date.now();
-    }
-    return cachedBackendConfig;
+      return cachedBackendConfig ?? null;
+    })();
+    return inflightFetch;
   }
 
   function readLocalConfig(): Record<string, any> | null {
