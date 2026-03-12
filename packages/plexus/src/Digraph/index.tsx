@@ -281,6 +281,14 @@ function Digraph<T = unknown, U = unknown>(props: TDigraphProps<T, U>) {
     if (zoomManager && current) {
       zoomManager.setElement(current);
     }
+    // Cleanup: detach all d3-zoom listeners when zoomManager changes (e.g. zoom
+    // prop toggled false) or when the component unmounts, so prior handlers do
+    // not remain active on the DOM element.
+    return () => {
+      if (zoomManager) {
+        zoomManager.dispose();
+      }
+    };
   }, [zoomManager]);
 
   // Render
