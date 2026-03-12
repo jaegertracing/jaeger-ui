@@ -39,14 +39,22 @@ function jaegerUiConfigPlugin() {
   let cachedBackendConfig: Record<string, any> | null | undefined = undefined;
   let cacheTimestamp = 0;
   const CACHE_TTL_MS = 30_000;
+  // Abort the backend config fetch if it takes longer than this to avoid
+  // blocking transformIndexHtml (and therefore page loads) indefinitely on a
+  // stalled proxy, long TLS handshake, or slow network.
+  const FETCH_TIMEOUT_MS = 3_000;
 
   async function fetchBackendConfig() {
     const now = Date.now();
     if (cachedBackendConfig !== undefined && now - cacheTimestamp < CACHE_TTL_MS) {
       return cachedBackendConfig;
     }
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
-      const response = await fetch(`${proxyConfig.target}/api/ui/config`);
+      const response = await fetch(`${proxyConfig.target}/api/ui/config`, {
+        signal: controller.signal,
+      });
       if (response.ok) {
         cachedBackendConfig = await response.json();
         cacheTimestamp = Date.now();
@@ -57,10 +65,12 @@ function jaegerUiConfigPlugin() {
         cacheTimestamp = Date.now();
       }
     } catch {
-      // Backend not running or timed out — cache the negative result so we
-      // don't retry on every page load while the backend is down.
+      // Backend not running, request timed out, or aborted — cache the negative
+      // result so we don't retry on every page load while the backend is down.
       cachedBackendConfig = null;
       cacheTimestamp = Date.now();
+    } finally {
+      clearTimeout(timeoutId);
     }
     return cachedBackendConfig;
   }
