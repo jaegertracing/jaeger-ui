@@ -122,14 +122,11 @@ function Digraph<T = unknown, U = unknown>(props: TDigraphProps<T, U>) {
   const zoomManagerRef = React.useRef<ZoomManager | null>(zoomManager);
   zoomManagerRef.current = zoomManager;
 
-  // Memoized values
-  const makeClassNameFactory = React.useMemo(() => {
-    return (prefix: string) => (name: string) => `${prefix} ${prefix}-Digraph--${name}`;
-  }, []);
-
-  const getClassName = React.useMemo(() => {
-    return makeClassNameFactory(classNamePrefix);
-  }, [classNamePrefix, makeClassNameFactory]);
+  // Single useMemo: derive className factory directly from classNamePrefix
+  const getClassName = React.useMemo(
+    () => (name: string) => `${classNamePrefix} ${classNamePrefix}-Digraph--${name}`,
+    [classNamePrefix]
+  );
 
   const getGlobalId = React.useCallback((name: string) => `${baseId}--${name}`, [baseId]);
 
@@ -176,11 +173,17 @@ function Digraph<T = unknown, U = unknown>(props: TDigraphProps<T, U>) {
       setState(prev => ({ ...prev, sizeVertices, layoutPhase: ELayoutPhase.CalcPositions }));
       const { layout } = layoutManager.getLayout(edges, sizeVertices);
       layout.then(onLayoutDone);
+      // TODO: In the future, it may be useful to draw the nodes in the correct
+      // position before the edges are drawn — i.e. layout before CalcPositions
+      // is done. To do this, vertices with a size from sizeVertices would need
+      // to be drawn at their current position (0, 0 initially).
     },
     [edges, layoutManager, measurableNodesKey, onLayoutDone]
   );
 
-  const renderLayers = React.useCallback(() => {
+  // Plain function — no useCallback needed since it depends on state/renderUtils/topLayers
+  // which change on every layout phase update and zoom event, so memoization provides no benefit.
+  function renderLayers() {
     const { sizeVertices: _, ...partialGraphState } = state;
     const graphState = {
       ...partialGraphState,
@@ -270,7 +273,7 @@ function Digraph<T = unknown, U = unknown>(props: TDigraphProps<T, U>) {
       }
       throw new Error('Unrecognized layer');
     });
-  }, [state, renderUtils, topLayers, getClassName, setSizeVertices]);
+  }
 
   // Effects
   React.useEffect(() => {
@@ -296,7 +299,8 @@ function Digraph<T = unknown, U = unknown>(props: TDigraphProps<T, U>) {
       <div style={builtinStyle} ref={rootRef}>
         {renderLayers()}
       </div>
-      {minimapEnabled && zoomEnabled && zoomManager && (
+      {/* zoomManager is non-null iff zoomEnabled is true, so the zoomEnabled check is redundant */}
+      {minimapEnabled && zoomManager && (
         <MiniMap className={minimapClassName} classNamePrefix={classNamePrefix} {...zoomManager.getProps()} />
       )}
     </div>
@@ -308,6 +312,10 @@ type TDigraphComponent = typeof Digraph & {
   scaleProperty: typeof scaleProperty;
 };
 
+// React.memo erases generic type parameters <T, U> — callers using
+// <Digraph<MyNode, MyEdge> .../> will lose type safety. This is a known
+// React limitation with generic components and React.memo. The cast is
+// intentional; the underlying function still enforces types correctly.
 const DigraphMemo = React.memo(Digraph) as unknown as TDigraphComponent;
 
 // Attach static properties to the memoized component
