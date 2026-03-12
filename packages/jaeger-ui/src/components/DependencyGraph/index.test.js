@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import * as constants from '../../utils/constants';
 
@@ -227,21 +227,33 @@ describe('<DependencyGraph>', () => {
       expect(lastDAGOptionsProps.selectedLayout).toBe('sfdp');
     });
 
-    it('debounces depth changes', async () => {
-      jest.useFakeTimers();
-      const depth = 3;
-      act(() => {
-        lastDAGOptionsProps.onDepthChange(depth);
-      });
-      expect(lastDAGOptionsProps.selectedDepth).toBe(depth);
-      expect(lastDAGProps.selectedDepth).toBe(5);
-
-      act(() => {
-        jest.advanceTimersByTime(1000);
+    describe('timer-dependent behaviors', () => {
+      beforeEach(() => {
+        cleanup();
+        jest.useFakeTimers();
+        renderComponent();
       });
 
-      expect(lastDAGProps.selectedDepth).toBe(depth);
-      jest.useRealTimers();
+      afterEach(() => {
+        // Clean up and restore real timers
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();
+      });
+
+      it('debounces depth changes', () => {
+        const depth = 3;
+        act(() => {
+          lastDAGOptionsProps.onDepthChange(depth);
+        });
+        expect(lastDAGOptionsProps.selectedDepth).toBe(depth);
+        expect(lastDAGProps.selectedDepth).toBe(5);
+
+        act(() => {
+          jest.advanceTimersByTime(1000);
+        });
+
+        expect(lastDAGProps.selectedDepth).toBe(depth);
+      });
     });
 
     it('handles sample dataset type change', async () => {

@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import memoizeOne from 'memoize-one';
@@ -155,21 +155,29 @@ export function DependencyGraphPageImpl(props: TProps) {
   const [selectedDepth, setSelectedDepth] = useState<number | null>(5);
   const [debouncedDepth, setDebouncedDepth] = useState<number | null>(5);
   const [selectedSampleDatasetType, setSelectedSampleDatasetType] = useState<string>('Backend');
-  const debouncedDepthChange = useRef(debounce((value: number | null) => setDebouncedDepth(value), 1000));
 
-  const getMemoizedGraphData = useRef(
-    memoizeOne((deps: TServiceCall[], svc: string | null, depth: number | null) =>
-      formatServiceCalls(deps ?? [], svc, depth)
-    )
+  const getMemoizedGraphData = useMemo(
+    () =>
+      memoizeOne((deps: TServiceCall[], svc: string | null, depth: number | null) =>
+        formatServiceCalls(deps ?? [], svc, depth)
+      ),
+    []
   );
 
-  const getMemoizedMatchCount = useRef(
-    memoizeOne((graphDataNodes: TVertex[], uiFindStr: string | undefined) => {
-      if (!uiFindStr) return 0;
-      return graphDataNodes.filter((node: TVertex) =>
-        node.key.toLowerCase().includes(uiFindStr.toLowerCase())
-      ).length;
-    })
+  const getMemoizedMatchCount = useMemo(
+    () =>
+      memoizeOne((graphDataNodes: TVertex[], uiFindStr: string | undefined) => {
+        if (!uiFindStr) return 0;
+        return graphDataNodes.filter((node: TVertex) =>
+          node.key.toLowerCase().includes(uiFindStr.toLowerCase())
+        ).length;
+      }),
+    []
+  );
+
+  const debouncedDepthChange = useMemo(
+    () => debounce((value: number | null) => setDebouncedDepth(value), 1000),
+    []
   );
 
   const selectedLayoutRef = useRef(selectedLayout);
@@ -193,11 +201,10 @@ export function DependencyGraphPageImpl(props: TProps) {
   }, [fetchDependencies, updateLayout]);
 
   useEffect(() => {
-    const debounced = debouncedDepthChange.current;
     return () => {
-      debounced.cancel();
+      debouncedDepthChange.cancel();
     };
-  }, []);
+  }, [debouncedDepthChange]);
 
   useEffect(() => {
     if (dependenciesRef.current !== dependencies) {
@@ -208,13 +215,14 @@ export function DependencyGraphPageImpl(props: TProps) {
 
   const handleServiceSelect = (service: string | null) => setSelectedService(service);
   const handleLayoutSelect = (layout: string) => setSelectedLayout(layout);
-  const handleDepthChange = (value: number | null) => {
-    if (value === null || value === undefined) {
-      setSelectedDepth(value);
-      setDebouncedDepth(value);
-    } else if (Number.isInteger(value) && value >= 0) {
-      setSelectedDepth(value);
-      debouncedDepthChange.current(value);
+  const handleDepthChange = (value: number | null | undefined) => {
+    const normalizedValue = value === undefined ? null : value;
+    if (normalizedValue === null) {
+      setSelectedDepth(normalizedValue);
+      setDebouncedDepth(normalizedValue);
+    } else if (Number.isInteger(normalizedValue) && normalizedValue >= 0) {
+      setSelectedDepth(normalizedValue);
+      debouncedDepthChange(normalizedValue);
     } else {
       setSelectedDepth(0);
       setDebouncedDepth(0);
@@ -258,9 +266,8 @@ export function DependencyGraphPageImpl(props: TProps) {
   }
 
   const isHierarchicalDisabled = dependencies.length > dagMaxNumServices;
-  const graphData = getMemoizedGraphData.current(dependencies, selectedService, debouncedDepth);
-
-  const matchCount = getMemoizedMatchCount.current(graphData.nodes, uiFind);
+  const graphData = getMemoizedGraphData(dependencies, selectedService, debouncedDepth);
+  const matchCount = getMemoizedMatchCount(graphData.nodes, uiFind);
 
   return (
     <div>
