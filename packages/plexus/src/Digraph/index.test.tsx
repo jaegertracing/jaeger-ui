@@ -4,7 +4,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import Digraph from './index';
-import { ELayoutPhase } from './types';
 
 // Minimal layer for tests that don't need measurable nodes
 const renderNodeLayer = {
@@ -33,13 +32,15 @@ describe('Digraph', () => {
     expect(container).toBeTruthy();
   });
 
-  it('sets layoutPhase to CalcSizes when edges and vertices are provided', () => {
+  it('sets layoutPhase to CalcSizes and triggers layout when edges and vertices are provided', () => {
     // When both edges and vertices are non-empty, the component initialises
-    // with layoutPhase = CalcSizes so it can measure node sizes immediately.
+    // with layoutPhase = CalcSizes and immediately requests layout via getLayout.
     const vertices = [{ vertex: { key: 'a' } }, { vertex: { key: 'b' } }] as any;
     const edges = [{ from: 'a', to: 'b' }] as any;
 
-    const setSizeVertices = jest.fn();
+    const getLayout = jest.fn(() => ({
+      layout: Promise.resolve({ edges: [], graph: { width: 100, height: 100 }, vertices: [] }),
+    }));
     const measurableLayer = {
       key: 'nodes',
       measurable: true,
@@ -50,18 +51,18 @@ describe('Digraph', () => {
       setOnContainer: undefined,
     } as any;
 
-    // Should not throw — component enters CalcSizes phase
-    expect(() =>
-      render(
-        <Digraph
-          edges={edges}
-          layers={[measurableLayer]}
-          layoutManager={mockLayoutManager}
-          measurableNodesKey="nodes"
-          vertices={vertices}
-        />
-      )
-    ).not.toThrow();
+    render(
+      <Digraph
+        edges={edges}
+        layers={[measurableLayer]}
+        layoutManager={{ getLayout } as any}
+        measurableNodesKey="nodes"
+        vertices={vertices}
+      />
+    );
+
+    // Verifies the component actually entered CalcSizes and requested layout
+    expect(getLayout).toHaveBeenCalledWith(edges, expect.any(Array));
   });
 
   it('throws when setSizeVertices receives a mismatched senderKey', () => {
