@@ -75,23 +75,6 @@ export default class ZoomManager {
     this.resetZoom();
   }
 
-  /**
-   * Detach all d3-zoom event listeners from the bound element and clear
-   * internal references. Call this when the component unmounts or when
-   * zoom is disabled, so that prior listeners do not remain active on the DOM.
-   */
-  public dispose() {
-    if (this.selection) {
-      // Removes all listeners in the zoom event namespace (.zoom covers
-      // start, zoom, and end events registered by d3-zoom's call()).
-      this.selection.on('.zoom', null);
-    }
-    this.selection = null;
-    this.elem = null;
-    this.contentSize = null;
-    this.currentTransform = zoomIdentity;
-  }
-
   public setContentSize(size: TSize) {
     if (
       !this.contentSize ||
