@@ -25,7 +25,8 @@ const proxyConfig = {
  * version, and uiConfig from the running backend during HTML transformation.
  *
  * Config precedence (highest to lowest):
- *   - storageCapabilities / version: always from backend (/api/ui/config)
+ *   - storageCapabilities: backend (/api/ui/config) when available, falls back to jaeger-ui.config.json
+ *   - version: from backend when available, otherwise not injected
  *   - uiConfig: backend as base, overlaid by jaeger-ui.config.json or .js
  *
  * Falls back silently to defaults if backend is not running.
