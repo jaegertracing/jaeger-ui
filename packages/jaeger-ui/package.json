@@ -91,7 +91,7 @@
       "./test/jest-per-test-setup.js"
     ],
     "collectCoverageFrom": [
-      "src/**/*.{js,jsx,ts,tsx}",
+      "src/**/*.{js,jsx,ts,tsx,mts}",
       "!src/**/*.d.ts",
       "!src/setup*.js",
       "!src/utils/DraggableManager/demo/*.tsx",
@@ -105,7 +105,7 @@
     ],
     "transform": {
       "\\.(css|png)$": "./test/generic-file-transform.js",
-      "\\.([jt]sx?|svg)$": "./test/babel-transform.js"
+      "\\.([jt]sx?|svg|mts)$": "./test/babel-transform.js"
     },
     "transformIgnorePatterns": [
       "[/\\\\\\\\]node_modules[/\\\\\\\\](?!redux-actions).+\\\\.(js|jsx|mjs|cjs|ts|tsx)$"

@@ -20,30 +20,79 @@ const proxyConfig = {
 };
 
 /**
- * Vite plugin to inject local UI config during development.
- * This mimics the behavior of the Go query-service which injects config into index.html.
+ * Vite plugin to inject UI config during development.
+ * Extends the existing local-file override mechanism to also fetch capabilities,
+ * version, and uiConfig from the running backend during HTML transformation.
  *
- * Supports two config file formats:
- * 1. jaeger-ui.config.js - JavaScript file that exports a config object (or function returning one)
- * 2. jaeger-ui.config.json - JSON file with config object
+ * Config precedence (highest to lowest):
+ *   - storageCapabilities: backend (/api/ui/config) when available, falls back to jaeger-ui.config.json
+ *   - version: from backend when available, otherwise not injected
+ *   - uiConfig: backend as base, overlaid by jaeger-ui.config.json or .js
  *
- * The plugin only runs in development mode (npm start).
- *
- * Security note: These config files are local to the developer's machine and are
- * excluded from git via .gitignore. The content is injected into the HTML during
- * development only, similar to how the Go query-service injects config in production.
+ * Falls back silently to defaults if backend is not running.
  */
 function jaegerUiConfigPlugin() {
   const jsConfigPath = path.resolve(__dirname, 'jaeger-ui.config.js');
   const jsonConfigPath = path.resolve(__dirname, 'jaeger-ui.config.json');
 
+  // undefined = never attempted; null = attempted but backend unavailable; object = success
+  let cachedBackendConfig: Record<string, any> | null | undefined = undefined;
+  let cacheTimestamp = 0;
+  const CACHE_TTL_MS = 30_000;
+
+  async function fetchBackendConfig() {
+    const now = Date.now();
+    if (cachedBackendConfig !== undefined && now - cacheTimestamp < CACHE_TTL_MS) {
+      return cachedBackendConfig;
+    }
+    try {
+      const response = await fetch(`${proxyConfig.target}/api/ui/config`);
+      if (response.ok) {
+        cachedBackendConfig = await response.json();
+        cacheTimestamp = Date.now();
+        console.log('[jaeger-ui-config] Fetched config from backend');
+      } else {
+        // Non-2xx response (e.g. 404 if endpoint not yet implemented) — treat as unavailable
+        cachedBackendConfig = null;
+        cacheTimestamp = Date.now();
+      }
+    } catch {
+      // Backend not running or timed out — cache the negative result so we
+      // don't retry on every page load while the backend is down.
+      cachedBackendConfig = null;
+      cacheTimestamp = Date.now();
+    }
+    return cachedBackendConfig;
+  }
+
+  function readLocalConfig(): Record<string, any> | null {
+    // JS config takes full control of uiConfig (higher priority)
+    if (fs.existsSync(jsConfigPath)) {
+      try {
+        return { __jsConfig: fs.readFileSync(jsConfigPath, 'utf-8') };
+      } catch (err) {
+        console.warn('[jaeger-ui-config] Failed to read jaeger-ui.config.js:', err);
+      }
+    }
+    // JSON config merges on top of backend uiConfig
+    if (fs.existsSync(jsonConfigPath)) {
+      try {
+        return JSON.parse(fs.readFileSync(jsonConfigPath, 'utf-8'));
+      } catch (err) {
+        console.warn('[jaeger-ui-config] Failed to parse jaeger-ui.config.json:', err);
+      }
+    }
+    return null;
+  }
+
   return {
     name: 'jaeger-ui-config',
-    configureServer(server) {
+    apply: 'serve' as const, // Only run during dev server — not during vite build
+    configureServer(server: any) {
       server.watcher.add([jsConfigPath, jsonConfigPath]);
-      server.watcher.on('change', path => {
-        if (path === jsConfigPath || path === jsonConfigPath) {
-          console.log(`[jaeger-ui-config] Config changed: ${path}. Triggering full reload...`);
+      server.watcher.on('change', (changedPath: string) => {
+        if (changedPath === jsConfigPath || changedPath === jsonConfigPath) {
+          console.log(`[jaeger-ui-config] Config changed: ${changedPath}. Triggering full reload...`);
           server.ws.send({ type: 'full-reload', path: '*' });
         }
       });
@@ -51,49 +100,50 @@ function jaegerUiConfigPlugin() {
     transformIndexHtml: {
       order: 'pre' as const,
       async handler(html: string) {
-        // Check for JS config first (higher priority, like in Go server)
-        if (fs.existsSync(jsConfigPath)) {
-          try {
-            const jsContent = fs.readFileSync(jsConfigPath, 'utf-8');
-            // Replace the JAEGER_CONFIG_JS comment with UIConfig function
-            // This mimics the Go server behavior for .js config files
-            const uiConfigFn = `function UIConfig() { ${jsContent} }`;
-            html = html.replace('// JAEGER_CONFIG_JS', uiConfigFn);
-            console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.js');
-            return html;
-          } catch (err) {
-            console.error('[jaeger-ui-config] Error loading jaeger-ui.config.js:', err);
-          }
+        const backendConfig = await fetchBackendConfig();
+        const localConfig = readLocalConfig();
+
+        // 1. Inject capabilities: backend takes precedence when present,
+        //    fall back to local jaeger-ui.config.json when backend is unavailable.
+        const storageCapabilities = backendConfig?.storageCapabilities ?? localConfig?.storageCapabilities;
+        if (storageCapabilities) {
+          html = html.replace(
+            'const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;',
+            `const JAEGER_STORAGE_CAPABILITIES = ${JSON.stringify(storageCapabilities)};`
+          );
         }
 
-        // Check for JSON config
-        if (fs.existsSync(jsonConfigPath)) {
-          try {
-            const jsonContent = fs.readFileSync(jsonConfigPath, 'utf-8');
-            // Validate it's valid JSON and use stringified result for injection
-            const parsedConfig = JSON.parse(jsonContent);
+        // 2. Inject version from backend (no local override)
+        if (backendConfig?.version) {
+          html = html.replace(
+            'const JAEGER_VERSION = DEFAULT_VERSION;',
+            `const JAEGER_VERSION = ${JSON.stringify(backendConfig.version)};`
+          );
+        }
 
-            // Inject the full UI config — mimics the Go server behavior for .json config files.
+        // 3. Inject UI config: local overrides merged on top of backend config
+        if (localConfig?.__jsConfig) {
+          // JS config takes full control (existing behaviour, unchanged)
+          const uiConfigFn = `function UIConfig() { ${localConfig.__jsConfig} }`;
+          html = html.replace('// JAEGER_CONFIG_JS', uiConfigFn);
+          console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.js');
+        } else {
+          const mergedUiConfig = {
+            ...(backendConfig?.uiConfig ?? {}),
+            ...(localConfig ?? {}),
+          };
+          if (Object.keys(mergedUiConfig).length > 0) {
             html = html.replace(
               'const JAEGER_CONFIG = DEFAULT_CONFIG;',
-              `const JAEGER_CONFIG = ${JSON.stringify(parsedConfig)};`
+              `const JAEGER_CONFIG = ${JSON.stringify(mergedUiConfig)};`
             );
-
-            // Inject storageCapabilities if present in the config file.
-            // The Go server injects this separately via its own search-replace on
-            // JAEGER_STORAGE_CAPABILITIES; the Vite plugin must replicate that here so that
-            // setting storageCapabilities in jaeger-ui.config.json works in dev mode too.
-            if (parsedConfig.storageCapabilities) {
-              html = html.replace(
-                'const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;',
-                `const JAEGER_STORAGE_CAPABILITIES = { ...DEFAULT_STORAGE_CAPABILITIES, ...${JSON.stringify(parsedConfig.storageCapabilities)} };`
-              );
-            }
-
-            console.log('[jaeger-ui-config] Loaded config from jaeger-ui.config.json');
-            return html;
-          } catch (err) {
-            console.error('[jaeger-ui-config] Error loading jaeger-ui.config.json:', err);
+            const source =
+              backendConfig?.uiConfig && localConfig
+                ? 'backend + jaeger-ui.config.json'
+                : backendConfig?.uiConfig
+                  ? 'backend'
+                  : 'jaeger-ui.config.json';
+            console.log(`[jaeger-ui-config] Loaded config from ${source}`);
           }
         }
 
