@@ -102,11 +102,13 @@ function jaegerUiConfigPlugin() {
         const backendConfig = await fetchBackendConfig();
         const localConfig = readLocalConfig();
 
-        // 1. Inject capabilities from backend (no local override — reflects actual storage config)
-        if (backendConfig?.storageCapabilities) {
+        // 1. Inject capabilities: backend takes precedence when present,
+        //    fall back to local jaeger-ui.config.json when backend is unavailable.
+        const storageCapabilities = backendConfig?.storageCapabilities ?? localConfig?.storageCapabilities;
+        if (storageCapabilities) {
           html = html.replace(
             'const JAEGER_STORAGE_CAPABILITIES = DEFAULT_STORAGE_CAPABILITIES;',
-            `const JAEGER_STORAGE_CAPABILITIES = ${JSON.stringify(backendConfig.storageCapabilities)};`
+            `const JAEGER_STORAGE_CAPABILITIES = ${JSON.stringify(storageCapabilities)};`
           );
         }
 
