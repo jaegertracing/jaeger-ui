@@ -88,6 +88,8 @@ export default class ZoomManager {
     }
     this.selection = null;
     this.elem = null;
+    this.contentSize = null;
+    this.currentTransform = zoomIdentity;
   }
 
   public setContentSize(size: TSize) {

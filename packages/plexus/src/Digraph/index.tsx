@@ -181,8 +181,9 @@ function Digraph<T = unknown, U = unknown>(props: TDigraphProps<T, U>) {
     [edges, layoutManager, measurableNodesKey, onLayoutDone]
   );
 
-  // Plain function — no useCallback needed since it depends on state/renderUtils/topLayers
-  // which change on every layout phase update and zoom event, so memoization provides no benefit.
+  // Plain function \u2014 no useCallback needed; it is only used during render
+  // and memoizing it would not provide meaningful benefits here since `state`
+  // changes on every layout phase update and zoom event.
   function renderLayers() {
     const { sizeVertices: _, ...partialGraphState } = state;
     const graphState = {

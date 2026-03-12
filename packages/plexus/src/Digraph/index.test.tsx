@@ -11,10 +11,12 @@ const renderNodeLayer = {
   renderNode: () => <div />,
 } as any;
 
-// Shared mock layoutManager
+// Shared mock layoutManager — uses a never-resolving promise so Digraph's
+// .then(onLayoutDone) never fires during tests that don't assert final layout,
+// avoiding "not wrapped in act()" warnings from async state updates.
 const mockLayoutManager = {
   getLayout: () => ({
-    layout: Promise.resolve({ edges: [], graph: { width: 100, height: 100 }, vertices: [] }),
+    layout: new Promise<never>(() => {}),
   }),
 } as any;
 
@@ -39,7 +41,9 @@ describe('Digraph', () => {
     const edges = [{ from: 'a', to: 'b' }] as any;
 
     const getLayout = jest.fn(() => ({
-      layout: Promise.resolve({ edges: [], graph: { width: 100, height: 100 }, vertices: [] }),
+      // Never-resolving promise: we only assert getLayout was called,
+      // not the async onLayoutDone path, so we avoid act() warnings.
+      layout: new Promise<never>(() => {}),
     }));
     const measurableLayer = {
       key: 'nodes',
@@ -105,7 +109,9 @@ describe('Digraph', () => {
         minimap
       />
     );
-    // MiniMap renders an svg element when zoom+minimap are active
-    expect(container.querySelector('svg')).not.toBeNull();
+    // Assert the MiniMap root element is rendered when zoom+minimap are active.
+    // Use the specific .plexus-MiniMap class rather than a generic svg selector
+    // to avoid false positives from other SVG elements in the tree.
+    expect(container.querySelector('.plexus-MiniMap')).not.toBeNull();
   });
 });
