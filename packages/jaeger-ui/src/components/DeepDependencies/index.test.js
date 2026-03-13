@@ -86,6 +86,12 @@ jest.mock('../common/LoadingIndicator', () => {
 });
 
 describe('DeepDependencyGraphPage', () => {
+  beforeEach(() => {
+    latestHeaderProps = {};
+    latestGraphProps = {};
+    latestSidePanelProps = {};
+  });
+
   describe('DeepDependencyGraphPageImpl', () => {
     const vertexKey = 'test vertex key';
     const propsWithoutGraph = {
@@ -241,14 +247,6 @@ describe('DeepDependencyGraphPage', () => {
           props.graph.getVertexVisiblePathElems.mockClear();
         });
 
-        it('no-ops if props does not have graph', () => {
-          const { graph: graphCallbacks } = renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
-          // Without graph, Graph component is not rendered, so no focusPathsThroughVertex callback
-          // The component renders "Unknown graphState" state — no graph callbacks to call, no-op confirmed
-          expect(getUrlSpy).not.toHaveBeenCalled();
-          expect(trackFocusPathsSpy).not.toHaveBeenCalled();
-        });
-
         it('updates url state and tracks focus paths', () => {
           const indices = [4, 8, 15, 16, 23, 42];
           const elems = [
@@ -282,13 +280,6 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       describe('hideVertex', () => {
-        it('no-ops if props does not have graph (Graph not rendered)', () => {
-          renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
-          // Graph child not rendered when graph is absent — no-op confirmed
-          expect(getUrlSpy).not.toHaveBeenCalled();
-          expect(trackHideSpy).not.toHaveBeenCalled();
-        });
-
         it('no-ops if graph.getVisWithoutVertex returns undefined', () => {
           const graphWithVertices = {
             ...props.graph,
@@ -471,13 +462,6 @@ describe('DeepDependencyGraphPage', () => {
             url.ROUTE_PATH
           );
         });
-
-        it('no-ops if not given graph', () => {
-          const callCount = getUrlSpy.mock.calls.length;
-          const { header } = renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
-          header.showVertices(vertices);
-          expect(getUrlSpy.mock.calls.length).toBe(callCount);
-        });
       });
 
       describe('toggleShowOperations', () => {
@@ -509,14 +493,6 @@ describe('DeepDependencyGraphPage', () => {
 
         beforeEach(() => {
           trackShowSpy.mockClear();
-        });
-
-        it('no-ops if props does not have graph (Graph not rendered)', () => {
-          renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
-          // Graph child not mounted — updateGenerationVisibility never called
-          expect(getUrlSpy).not.toHaveBeenCalled();
-          expect(trackHideSpy).not.toHaveBeenCalled();
-          expect(trackShowSpy).not.toHaveBeenCalled();
         });
 
         it('no-ops if graph.getVisWithUpdatedGeneration returns undefined', () => {
@@ -660,13 +636,6 @@ describe('DeepDependencyGraphPage', () => {
           start: 0,
         });
       });
-
-      it('no-ops if not given graph or service', () => {
-        // No graph: Graph component not rendered, setViewModifier never accessible
-        renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
-        expect(props.addViewModifier).not.toHaveBeenCalled();
-        expect(props.removeViewModifierFromIndices).not.toHaveBeenCalled();
-      });
     });
 
     describe('getGenerationVisibility', () => {
@@ -688,27 +657,6 @@ describe('DeepDependencyGraphPage', () => {
           props.urlState.visEncoding
         );
       });
-
-      it('returns null if props does not have graph', () => {
-        // We must mount it with a graph to render Graph, then re-render without graph
-        // to test the stabilized callback's behavior when graph becomes falsy.
-        const graphWithVertices = {
-          ...props.graph,
-          getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
-        };
-        const { rerender } = render(
-          <DeepDependencyGraphPageImpl {...props} graph={graphWithVertices} graphState={props.graphState} />
-        );
-
-        // Capture the callback while Graph is present
-        const stableCallback = latestGraphProps.getGenerationVisibility;
-
-        // Remove the graph
-        rerender(<DeepDependencyGraphPageImpl {...props} graph={undefined} graphState={props.graphState} />);
-
-        // The callback should now return null because graph is closure-bound or re-evaluated as undefined
-        expect(stableCallback(vertexKey, direction)).toBeNull();
-      });
     });
 
     describe('getVisiblePathElems', () => {
@@ -727,25 +675,6 @@ describe('DeepDependencyGraphPage', () => {
           vertexKey,
           props.urlState.visEncoding
         );
-      });
-
-      it('returns undefined if props does not have graph', () => {
-        const graphWithVertices = {
-          ...props.graph,
-          getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
-        };
-        const { rerender } = render(
-          <DeepDependencyGraphPageImpl {...props} graph={graphWithVertices} graphState={props.graphState} />
-        );
-
-        // Capture the callback while Graph is present
-        const stableCallback = latestGraphProps.getVisiblePathElems;
-
-        // Remove the graph
-        rerender(<DeepDependencyGraphPageImpl {...props} graph={undefined} graphState={props.graphState} />);
-
-        // The callback should now return undefined because graph is closure-bound or re-evaluated as undefined
-        expect(stableCallback(vertexKey)).toBeUndefined();
       });
     });
 

@@ -134,8 +134,7 @@ export function DeepDependencyGraphPageImpl({
 
   const focusPathsThroughVertex = useCallback(
     (vertexKey: string) => {
-      if (!graph) return;
-      const elems = graph.getVertexVisiblePathElems(vertexKey, urlState.visEncoding);
+      const elems = graph!.getVertexVisiblePathElems(vertexKey, urlState.visEncoding);
       if (!elems) return;
       trackFocusPaths();
       const indices = ([] as number[]).concat(
@@ -147,29 +146,19 @@ export function DeepDependencyGraphPageImpl({
   );
 
   const getGenerationVisibility = useCallback(
-    (vertexKey: string, direction: EDirection): ECheckedStatus | null => {
-      if (graph) {
-        return graph.getGenerationVisibility(vertexKey, direction, urlState.visEncoding);
-      }
-      return null;
-    },
+    (vertexKey: string, direction: EDirection): ECheckedStatus | null =>
+      graph!.getGenerationVisibility(vertexKey, direction, urlState.visEncoding),
     [graph, urlState.visEncoding]
   );
 
   const getVisiblePathElems = useCallback(
-    (key: string) => {
-      if (graph) {
-        return graph.getVertexVisiblePathElems(key, urlState.visEncoding);
-      }
-      return undefined;
-    },
+    (key: string) => graph!.getVertexVisiblePathElems(key, urlState.visEncoding),
     [graph, urlState.visEncoding]
   );
 
   const hideVertex = useCallback(
     (vertexKey: string) => {
-      if (!graph) return;
-      const visEncoding = graph.getVisWithoutVertex(vertexKey, urlState.visEncoding);
+      const visEncoding = graph!.getVisWithoutVertex(vertexKey, urlState.visEncoding);
       if (!visEncoding) return;
       trackHide();
       updateUrlState({ visEncoding });
@@ -220,10 +209,10 @@ export function DeepDependencyGraphPageImpl({
     (visibilityIndices: number[], viewModifier: EViewModifier, enable: boolean) => {
       const fn = enable ? addViewModifier : removeViewModifierFromIndices;
       const { service, operation } = urlState;
-      if (!fn || !graph || !service) return;
+      if (!fn || !service) return;
       fn({ operation, service, viewModifier, visibilityIndices, end: 0, start: 0 });
     },
-    [addViewModifier, graph, removeViewModifierFromIndices, urlState]
+    [addViewModifier, removeViewModifierFromIndices, urlState]
   );
 
   const selectVertex = useCallback((vertex?: TDdgVertex) => {
@@ -232,8 +221,7 @@ export function DeepDependencyGraphPageImpl({
 
   const showVertices = useCallback(
     (vertexKeys: string[]) => {
-      if (!graph) return;
-      updateUrlState({ visEncoding: graph.getVisWithVertices(vertexKeys, urlState.visEncoding) });
+      updateUrlState({ visEncoding: graph!.getVisWithVertices(vertexKeys, urlState.visEncoding) });
     },
     [graph, updateUrlState, urlState.visEncoding]
   );
@@ -245,8 +233,7 @@ export function DeepDependencyGraphPageImpl({
 
   const updateGenerationVisibility = useCallback(
     (vertexKey: string, direction: EDirection) => {
-      if (!graph) return;
-      const result = graph.getVisWithUpdatedGeneration(vertexKey, direction, urlState.visEncoding);
+      const result = graph!.getVisWithUpdatedGeneration(vertexKey, direction, urlState.visEncoding);
       if (!result) return;
       const { visEncoding, update } = result;
       if (update === ECheckedStatus.Empty) trackHide(direction);
@@ -428,7 +415,7 @@ const MemoizedDeepDependencyGraphPageImpl = React.memo(DeepDependencyGraphPageIm
 
 const ConnectedDeepDependencyGraphPageImpl = withRouteProps(
   connect(mapStateToProps, mapDispatchToProps)(MemoizedDeepDependencyGraphPageImpl)
-) as React.ComponentType<Omit<TOwnProps, 'location' | 'navigate'> & THookProps>;
+) as React.ComponentType<Omit<TOwnProps, 'location'> & THookProps>;
 
 export default function DeepDependencyGraphPage({
   baseUrl = ROUTE_PATH,
@@ -437,6 +424,7 @@ export default function DeepDependencyGraphPage({
 }: TExternalProps) {
   const { data: services = [] } = useServices();
   const location = useLocation();
+  const navigate = useNavigate();
   const urlState = getUrlState(location.search);
   const { service } = urlState;
   const { data: serverOpsData = [] } = useSpanNames(service || null, 'server');
@@ -445,7 +433,7 @@ export default function DeepDependencyGraphPage({
     [serverOpsData]
   );
 
-  const props = { baseUrl, showSvcOpsHeader, ...restProps };
+  const props = { baseUrl, showSvcOpsHeader, navigate, ...restProps };
 
   return <ConnectedDeepDependencyGraphPageImpl {...props} services={services} serverOps={serverOps} />;
 }
