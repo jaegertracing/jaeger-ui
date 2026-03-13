@@ -150,10 +150,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     this._headerElm = null;
     this._filterSpans = _memoize(
       filterSpans,
-      // Do not use the memo if the filter text or trace has changed.
-      // trace.data.spans is populated after the initial render via mutation.
-      textFilter =>
-        `${textFilter} ${_get(this.props.trace, 'traceID')} ${_get(this.props.trace, 'data.spans.length')}`
+      // Invalidate when the user's search text or the displayed trace changes.
+      textFilter => `${textFilter} ${this.props.id}`
     );
     this._scrollManager = new ScrollManager(trace && trace.data ? trace.data.asOtelTrace() : undefined, {
       scrollBy,
