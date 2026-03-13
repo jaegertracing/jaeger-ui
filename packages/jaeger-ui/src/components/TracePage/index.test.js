@@ -1201,7 +1201,6 @@ describe('mapStateToProps()', () => {
       detailPanelMode: 'inline',
       embedded,
       archiveTraceState: undefined,
-      searchUrl: null,
       timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
@@ -1222,21 +1221,6 @@ describe('mapStateToProps()', () => {
     );
   });
 
-  it('propagates fromSearch correctly', () => {
-    const fakeUrl = 'fake-url';
-    state.router.location.state = { fromSearch: fakeUrl };
-    const props = mapStateToProps(state, ownProps);
-    expect(props).toEqual({
-      id: traceID,
-      detailPanelMode: 'inline',
-      embedded,
-      archiveTraceState: undefined,
-      searchUrl: fakeUrl,
-      timelineBarsVisible: true,
-      trace: { data: {}, state: fetchedState.DONE },
-    });
-  });
-
   it('propagates layoutManagerMemory correctly', () => {
     const fakeMemory = 123;
     state.config.traceGraph = { layoutManagerMemory: fakeMemory };
@@ -1246,7 +1230,6 @@ describe('mapStateToProps()', () => {
       detailPanelMode: 'inline',
       embedded,
       archiveTraceState: undefined,
-      searchUrl: null,
       timelineBarsVisible: true,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
