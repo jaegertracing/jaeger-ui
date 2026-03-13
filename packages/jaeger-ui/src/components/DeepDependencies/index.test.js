@@ -462,6 +462,12 @@ describe('DeepDependencyGraphPage', () => {
             url.ROUTE_PATH
           );
         });
+        it('no-ops if not given graph', () => {
+          const callCount = getUrlSpy.mock.calls.length;
+          const { header } = renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
+          header.showVertices(vertices);
+          expect(getUrlSpy.mock.calls.length).toBe(callCount);
+        });
       });
 
       describe('toggleShowOperations', () => {

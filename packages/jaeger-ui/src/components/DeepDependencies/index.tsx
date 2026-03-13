@@ -109,22 +109,26 @@ export function DeepDependencyGraphPageImpl({
   // Replaces constructor + componentDidUpdate: fetch model when service/operation/graphState changes.
   // Only fetches when graphState is absent and a service is specified.
   useEffect(() => {
-    const { service, operation } = urlState;
-    if (!graphState && service && fetchDeepDependencyGraph) {
-      fetchDeepDependencyGraph({ service, operation, start: 0, end: 0 });
+    if (!graphState && urlState.service && fetchDeepDependencyGraph) {
+      fetchDeepDependencyGraph({
+        service: urlState.service,
+        operation: urlState.operation,
+        start: 0,
+        end: 0,
+      });
     }
-  }, [fetchDeepDependencyGraph, graphState, urlState]);
+  }, [fetchDeepDependencyGraph, graphState, urlState.operation, urlState.service]);
 
   // Central URL navigation helper. Memoized so child handlers only change when
   // navigation-relevant props change (baseUrl, urlState, graphState hash, etc.).
+  const graphHash = _get(graphState, 'model.hash');
   const updateUrlState = useCallback(
     (newValues: Partial<TDdgSparseUrlState>) => {
       const getUrlArg = { uiFind, ...urlState, ...newValues, ...extraUrlArgs };
-      const hash = _get(graphState, 'model.hash');
-      if (hash) getUrlArg.hash = hash;
+      if (graphHash) getUrlArg.hash = graphHash;
       navigate(getUrl(getUrlArg, baseUrl));
     },
-    [baseUrl, extraUrlArgs, graphState, navigate, uiFind, urlState]
+    [baseUrl, extraUrlArgs, graphHash, navigate, uiFind, urlState]
   );
 
   const clearOperation = useCallback(() => {
@@ -221,7 +225,8 @@ export function DeepDependencyGraphPageImpl({
 
   const showVertices = useCallback(
     (vertexKeys: string[]) => {
-      updateUrlState({ visEncoding: graph!.getVisWithVertices(vertexKeys, urlState.visEncoding) });
+      if (!graph) return;
+      updateUrlState({ visEncoding: graph.getVisWithVertices(vertexKeys, urlState.visEncoding) });
     },
     [graph, updateUrlState, urlState.visEncoding]
   );
