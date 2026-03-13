@@ -4,7 +4,6 @@
 import * as React from 'react';
 import { Tooltip } from 'antd';
 import { useLocation } from 'react-router-dom-v5-compat';
-import _get from 'lodash/get';
 import { connect } from 'react-redux';
 
 import BreakableText from '../../common/BreakableText';
@@ -67,14 +66,23 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
     JaegerAPI.fetchDecoration(fetchUrl)
       .then((res: unknown) => {
         let detailsErred = false;
-        let details = _get(res, getDetailPath as string);
+        let details: TDetails | undefined = (getDetailPath as string)
+          .split('.')
+          .reduce<unknown>((obj, key) => (obj as Record<string, unknown>)?.[key], res) as
+          | TDetails
+          | undefined;
 
         if (details === undefined) {
           details = `\`${getDetailPath}\` not found in response`;
           detailsErred = true;
         }
 
-        const columnDefs: TColumnDefs = getDefPath ? _get(res, getDefPath, []) : [];
+        const columnDefs: TColumnDefs = getDefPath
+          ? ((getDefPath
+              .split('.')
+              .reduce<unknown>((obj, key) => (obj as Record<string, unknown>)?.[key], res) as TColumnDefs) ??
+            [])
+          : [];
 
         setState(prev => ({
           ...prev,

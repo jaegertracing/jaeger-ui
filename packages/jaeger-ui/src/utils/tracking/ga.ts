@@ -1,7 +1,6 @@
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import _get from 'lodash/get';
 import {
   IErrorData,
   IErrorContext,
@@ -269,10 +268,10 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
   const isTest = appEnv === 'test';
   const isDebugMode =
     (isDev && isTruish(shouldDebugGoogleAnalytics())) ||
-    isTruish(parseQuery(_get(window, 'location.search'))['ga-debug']);
-  const gaID = _get(config, 'tracking.gaID');
-  const isErrorsEnabled = isDebugMode || Boolean(_get(config, 'tracking.trackErrors'));
-  const cookiesToDimensions = _get(config, 'tracking.cookiesToDimensions');
+    isTruish(parseQuery(window.location?.search)['ga-debug']);
+  const gaID = config.tracking?.gaID;
+  const isErrorsEnabled = isDebugMode || Boolean(config.tracking?.trackErrors);
+  const cookiesToDimensions = config.tracking?.cookiesToDimensions;
   const context = isErrorsEnabled ? true : null;
   const EVENT_LENGTHS = {
     action: 499,

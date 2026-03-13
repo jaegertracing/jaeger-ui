@@ -3,7 +3,6 @@
 
 import React, { useMemo } from 'react';
 import cx from 'classnames';
-import _get from 'lodash/get';
 import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
@@ -66,7 +65,7 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   const handleMouseLeave = (event: React.MouseEvent<HTMLSpanElement>, ancestorId: string) => {
     if (
       !(event.relatedTarget instanceof HTMLSpanElement) ||
-      _get(event, 'relatedTarget.dataset.ancestorId') !== ancestorId
+      (event.relatedTarget as HTMLSpanElement)?.dataset?.ancestorId !== ancestorId
     ) {
       removeHoverIndentGuideId(ancestorId);
     }
@@ -83,7 +82,7 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   const handleMouseEnter = (event: React.MouseEvent<HTMLSpanElement>, ancestorId: string) => {
     if (
       !(event.relatedTarget instanceof HTMLSpanElement) ||
-      _get(event, 'relatedTarget.dataset.ancestorId') !== ancestorId
+      (event.relatedTarget as HTMLSpanElement)?.dataset?.ancestorId !== ancestorId
     ) {
       addHoverIndentGuideId(ancestorId);
     }

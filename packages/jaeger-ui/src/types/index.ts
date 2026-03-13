@@ -13,6 +13,7 @@ import TDdgState from './TDdgState';
 import tNil from './TNil';
 import iWebAnalytics from './tracking';
 import { Trace } from './trace';
+import TPathAgnosticDecorationsState from './TPathAgnosticDecorationsState';
 import TTraceDiffState from './TTraceDiffState';
 import TTraceTimeline from './TTraceTimeline';
 import { MetricsReduxState } from './metrics';
@@ -44,6 +45,7 @@ export type ReduxState = {
     error: ApiError | TNil;
   };
   embedded: EmbeddedState;
+  pathAgnosticDecorations: TPathAgnosticDecorationsState;
   router: Router & {
     location: Location<LocationState>;
   };

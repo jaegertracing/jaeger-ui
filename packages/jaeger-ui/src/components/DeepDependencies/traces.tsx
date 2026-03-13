@@ -3,7 +3,6 @@
 
 import * as React from 'react';
 import { Location, useNavigate } from 'react-router-dom-v5-compat';
-import _get from 'lodash/get';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { connect } from 'react-redux';
@@ -59,7 +58,10 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     graph,
     graphState,
     showOp,
-    urlState: sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
+    urlState: sanitizeUrlState(
+      urlState,
+      graphState && 'model' in graphState ? graphState.model.hash : undefined
+    ),
     ...extractUiFindFromState(state),
   };
 }

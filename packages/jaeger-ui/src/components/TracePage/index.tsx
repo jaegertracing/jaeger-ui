@@ -6,7 +6,6 @@ import { InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
-import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
@@ -354,10 +353,10 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     let spanFindMatches: Set<string> | null | undefined;
     if (uiFind) {
       if (viewType === ETraceViewType.TraceGraph) {
-        graphFindMatches = getUiFindVertexKeys(uiFind, _get(this.traceDagEV, 'vertices', []));
+        graphFindMatches = getUiFindVertexKeys(uiFind, this.traceDagEV?.vertices ?? []);
         findCount = graphFindMatches ? graphFindMatches.size : 0;
       } else {
-        spanFindMatches = this._filterSpans(uiFind, _get(trace, 'data.spans'));
+        spanFindMatches = this._filterSpans(uiFind, trace?.data?.spans);
         findCount = spanFindMatches ? spanFindMatches.size : 0;
       }
     }
