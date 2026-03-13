@@ -67,14 +67,17 @@ function UnconnectedDetailsPanelImpl(props: TProps) {
     JaegerAPI.fetchDecoration(fetchUrl)
       .then((res: unknown) => {
         let detailsErred = false;
-        let details = _get(res, getDetailPath as string);
+        let details = _get(res, getDetailPath) as TDetails | undefined;
 
         if (details === undefined) {
           details = `\`${getDetailPath}\` not found in response`;
           detailsErred = true;
         }
 
-        const columnDefs: TColumnDefs = getDefPath ? _get(res, getDefPath, []) : [];
+        const maybeColumnDefs = getDefPath ? _get(res, getDefPath) : undefined;
+        const columnDefs: TColumnDefs = (
+          Array.isArray(maybeColumnDefs) ? maybeColumnDefs : []
+        ) as TColumnDefs;
 
         setState(prev => ({
           ...prev,

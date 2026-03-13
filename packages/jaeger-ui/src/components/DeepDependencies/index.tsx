@@ -5,7 +5,6 @@ import * as React from 'react';
 import { Location } from 'history';
 import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
 import { useMemo } from 'react';
-import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
@@ -89,6 +88,13 @@ export type TProps = TDispatchProps & TReduxProps & TOwnProps & THookProps;
 
 type TState = {
   selectedVertex?: TDdgVertex;
+};
+
+const getGraphStateHash = (graphState?: TDdgStateEntry | string) => {
+  if (!graphState || typeof graphState !== 'object' || !('model' in graphState)) {
+    return undefined;
+  }
+  return (graphState as IDoneState).model.hash;
 };
 
 // export for tests
@@ -235,7 +241,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
   updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
     const { baseUrl, extraUrlArgs, graphState, navigate, uiFind, urlState } = this.props;
     const getUrlArg = { uiFind, ...urlState, ...newValues, ...extraUrlArgs };
-    const hash = _get(graphState, 'model.hash');
+    const hash = getGraphStateHash(graphState);
     if (hash) getUrlArg.hash = hash;
     navigate(getUrl(getUrlArg, baseUrl));
   };
@@ -394,7 +400,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
   let graphState: TDdgStateEntry | undefined;
   if (service) {
-    graphState = _get(state.ddg, getStateEntryKey({ service, operation, start: 0, end: 0 }));
+    graphState = state.ddg?.[getStateEntryKey({ service, operation, start: 0, end: 0 })];
   }
   let graph: GraphModel | undefined;
   if (graphState && graphState.state === fetchedState.DONE) {
@@ -404,7 +410,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     graph,
     graphState,
     showOp,
-    urlState: sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
+    urlState: sanitizeUrlState(urlState, getGraphStateHash(graphState)),
     ...extractUiFindFromState(state),
   };
 }

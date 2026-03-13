@@ -16,6 +16,7 @@ import { Trace } from './trace';
 import TTraceDiffState from './TTraceDiffState';
 import TTraceTimeline from './TTraceTimeline';
 import { MetricsReduxState } from './metrics';
+import TPathAgnosticDecorationsState from './TPathAgnosticDecorationsState';
 
 export type TNil = tNil;
 export type IWebAnalytics = iWebAnalytics;
@@ -66,4 +67,5 @@ export type ReduxState = {
   traceDiff: TTraceDiffState;
   traceTimeline: TTraceTimeline;
   metrics: MetricsReduxState;
+  pathAgnosticDecorations: TPathAgnosticDecorationsState;
 };

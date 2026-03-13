@@ -269,9 +269,9 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
   const isTest = appEnv === 'test';
   const isDebugMode =
     (isDev && isTruish(shouldDebugGoogleAnalytics())) ||
-    isTruish(parseQuery(_get(window, 'location.search'))['ga-debug']);
-  const gaID = _get(config, 'tracking.gaID');
-  const isErrorsEnabled = isDebugMode || Boolean(_get(config, 'tracking.trackErrors'));
+    isTruish(parseQuery(window.location?.search || '')['ga-debug']);
+  const gaID = config.tracking?.gaID;
+  const isErrorsEnabled = isDebugMode || Boolean(config.tracking?.trackErrors);
   const cookiesToDimensions = _get(config, 'tracking.cookiesToDimensions');
   const context = isErrorsEnabled ? true : null;
   const EVENT_LENGTHS = {

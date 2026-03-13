@@ -1,6 +1,6 @@
 // Copyright (c) 2020 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
-import getValueAtPath from '../utils/object/get-value-at-path';
+import _get from 'lodash/get';
 import _memoize from 'lodash/memoize';
 import _set from 'lodash/set';
 import memoize from 'lru-memoize';
@@ -76,7 +76,7 @@ export function getDecoration(
 
   promise
     .then(res => {
-      const value = getValueAtPath(res, getPath);
+      const value = _get(res, getPath);
       return value === undefined ? `\`${getPath}\` not found in response` : value;
     })
     .catch(err => {
