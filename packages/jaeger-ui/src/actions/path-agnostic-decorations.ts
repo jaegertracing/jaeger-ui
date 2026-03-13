@@ -1,5 +1,6 @@
 // Copyright (c) 2020 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
+
 import _get from 'lodash/get';
 import _memoize from 'lodash/memoize';
 import _set from 'lodash/set';
@@ -76,8 +77,7 @@ export function getDecoration(
 
   promise
     .then(res => {
-      const value = _get(res, getPath);
-      return value === undefined ? `\`${getPath}\` not found in response` : value;
+      return _get(res, getPath, `\`${getPath}\` not found in response`);
     })
     .catch(err => {
       return `Unable to fetch decoration: ${err.message || err}`;
