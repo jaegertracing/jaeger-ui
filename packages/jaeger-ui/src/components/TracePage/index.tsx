@@ -7,7 +7,6 @@ import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { Location, History as RouterHistory } from 'history';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
-import _mapValues from 'lodash/mapValues';
 import _memoize from 'lodash/memoize';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
@@ -15,13 +14,9 @@ import { bindActionCreators, Dispatch } from 'redux';
 import ArchiveNotifier from './ArchiveNotifier';
 import { actions as archiveActions } from './ArchiveNotifier/duck';
 import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
-import {
-  CombokeysHandler,
-  merge as mergeShortcuts,
-  reset as resetShortcuts,
-  ShortcutCallbacks,
-} from './keyboard-shortcuts';
-import { cancel as cancelScroll, scrollBy, scrollTo } from './scroll-page';
+import { setupTracePageShortcuts } from './keyboard-setup';
+import { reset as resetShortcuts } from './keyboard-shortcuts';
+import { scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
 import calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import TraceGraph from './TraceGraph/TraceGraph';
@@ -98,31 +93,9 @@ type TState = {
 
 // export for tests
 export const VIEW_MIN_RANGE = 0.01;
-const VIEW_CHANGE_BASE = 0.005;
-const VIEW_CHANGE_FAST = 0.05;
 
-// export for tests
-export const shortcutConfig: { [name: string]: [number, number] } = {
-  panLeft: [-VIEW_CHANGE_BASE, -VIEW_CHANGE_BASE],
-  panLeftFast: [-VIEW_CHANGE_FAST, -VIEW_CHANGE_FAST],
-  panRight: [VIEW_CHANGE_BASE, VIEW_CHANGE_BASE],
-  panRightFast: [VIEW_CHANGE_FAST, VIEW_CHANGE_FAST],
-  zoomIn: [VIEW_CHANGE_BASE, -VIEW_CHANGE_BASE],
-  zoomInFast: [VIEW_CHANGE_FAST, -VIEW_CHANGE_FAST],
-  zoomOut: [-VIEW_CHANGE_BASE, VIEW_CHANGE_BASE],
-  zoomOutFast: [-VIEW_CHANGE_FAST, VIEW_CHANGE_FAST],
-};
-
-// export for tests
-export function makeShortcutCallbacks(adjRange: (start: number, end: number) => void): ShortcutCallbacks {
-  function getHandler([startChange, endChange]: [number, number]): CombokeysHandler {
-    return function combokeyHandler(event: React.KeyboardEvent<HTMLElement>) {
-      event.preventDefault();
-      adjRange(startChange, endChange);
-    };
-  }
-  return _mapValues(shortcutConfig, getHandler);
-}
+// Re-export from keyboard-setup for backward compatibility with tests
+export { shortcutConfig, makeShortcutCallbacks } from './keyboard-setup';
 
 // export for tests
 export class TracePageImpl extends React.PureComponent<TProps, TState> {
@@ -132,6 +105,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   _filterSpans: typeof filterSpans;
   _searchBar = React.createRef<InputRef>();
   _scrollManager: ScrollManager;
+  _cleanupShortcuts: (() => void) | null = null;
   traceDagEV: TEv | TNil;
 
   constructor(props: TProps) {
@@ -167,17 +141,12 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     if (!this._scrollManager) {
       throw new Error('Invalid state - scrollManager is unset');
     }
-    const { scrollPageDown, scrollPageUp, scrollToNextVisibleSpan, scrollToPrevVisibleSpan } =
-      this._scrollManager;
-    const adjViewRange = (a: number, b: number) => this._adjustViewRange(a, b, 'kbd');
-    const shortcutCallbacks = makeShortcutCallbacks(adjViewRange);
-    shortcutCallbacks.scrollPageDown = scrollPageDown;
-    shortcutCallbacks.scrollPageUp = scrollPageUp;
-    shortcutCallbacks.scrollToNextVisibleSpan = scrollToNextVisibleSpan;
-    shortcutCallbacks.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
-    shortcutCallbacks.clearSearch = this.clearSearch;
-    shortcutCallbacks.searchSpans = this.focusOnSearchBar;
-    mergeShortcuts(shortcutCallbacks);
+    this._cleanupShortcuts = setupTracePageShortcuts({
+      scrollManager: this._scrollManager,
+      adjustViewRange: (a, b, src) => this._adjustViewRange(a, b, src),
+      clearSearch: this.clearSearch,
+      focusOnSearchBar: this.focusOnSearchBar,
+    });
   }
 
   componentDidUpdate({ id: prevID }: TProps) {
@@ -197,8 +166,9 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   }
 
   componentWillUnmount() {
-    resetShortcuts();
-    cancelScroll();
+    if (this._cleanupShortcuts) {
+      this._cleanupShortcuts();
+    }
     this._scrollManager.destroy();
     this._scrollManager = new ScrollManager(undefined, {
       scrollBy,
