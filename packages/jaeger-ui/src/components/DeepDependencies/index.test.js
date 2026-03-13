@@ -690,11 +690,24 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('returns null if props does not have graph', () => {
-        // Graph not rendered without graph prop — getGenerationVisibility defaults to null
-        renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
-        // No graph callbacks available — the null return is embedded in the closure
-        // Verified by confirming Graph is not rendered
-        expect(screen.queryByTestId('graph')).not.toBeInTheDocument();
+        // We must mount it with a graph to render Graph, then re-render without graph
+        // to test the stabilized callback's behavior when graph becomes falsy.
+        const graphWithVertices = {
+          ...props.graph,
+          getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+        };
+        const { rerender } = render(
+          <DeepDependencyGraphPageImpl {...props} graph={graphWithVertices} graphState={props.graphState} />
+        );
+
+        // Capture the callback while Graph is present
+        const stableCallback = latestGraphProps.getGenerationVisibility;
+
+        // Remove the graph
+        rerender(<DeepDependencyGraphPageImpl {...props} graph={undefined} graphState={props.graphState} />);
+
+        // The callback should now return null because graph is closure-bound or re-evaluated as undefined
+        expect(stableCallback(vertexKey, direction)).toBeNull();
       });
     });
 
@@ -717,8 +730,22 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('returns undefined if props does not have graph', () => {
-        renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
-        expect(screen.queryByTestId('graph')).not.toBeInTheDocument();
+        const graphWithVertices = {
+          ...props.graph,
+          getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+        };
+        const { rerender } = render(
+          <DeepDependencyGraphPageImpl {...props} graph={graphWithVertices} graphState={props.graphState} />
+        );
+
+        // Capture the callback while Graph is present
+        const stableCallback = latestGraphProps.getVisiblePathElems;
+
+        // Remove the graph
+        rerender(<DeepDependencyGraphPageImpl {...props} graph={undefined} graphState={props.graphState} />);
+
+        // The callback should now return undefined because graph is closure-bound or re-evaluated as undefined
+        expect(stableCallback(vertexKey)).toBeUndefined();
       });
     });
 
