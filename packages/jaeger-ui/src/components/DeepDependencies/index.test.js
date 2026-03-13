@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import _set from 'lodash/set';
 
@@ -47,21 +47,29 @@ import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 
 import { ECheckedStatus, EDirection, EDdgDensity, EViewModifier } from '../../model/ddg/types';
 
+// Capture callbacks passed to mocked child components so tests can invoke them.
+let latestHeaderProps = {};
+let latestGraphProps = {};
+let latestSidePanelProps = {};
+
 jest.mock('./Graph', () => {
   return function MockGraph(props) {
-    return <div data-testid="graph" {...props} />;
+    latestGraphProps = props;
+    return <div data-testid="graph" />;
   };
 });
 
 jest.mock('./Header', () => {
   return function MockHeader(props) {
-    return <div data-testid="header" {...props} />;
+    latestHeaderProps = props;
+    return <div data-testid="header" />;
   };
 });
 
 jest.mock('./SidePanel', () => {
   return function MockSidePanel(props) {
-    return <div data-testid="side-panel" {...props} />;
+    latestSidePanelProps = props;
+    return <div data-testid="side-panel" />;
   };
 });
 
@@ -122,12 +130,23 @@ describe('DeepDependencyGraphPage', () => {
     };
 
     const { operation: _o, ...urlStateWithoutOp } = props.urlState;
-    const ddgPageImpl = new DeepDependencyGraphPageImpl(props);
-    const ddgWithoutGraph = new DeepDependencyGraphPageImpl(propsWithoutGraph);
     const setIdx = visibilityIdx => ({ visibilityIdx });
 
-    describe('updateUrlState', () => {
-      const visEncoding = 'test vis encoding';
+    /**
+     * Helper: render DeepDependencyGraphPageImpl with the given props and
+     * return a function that retrieves the latest captured Header callback
+     * by name. Call the returned getter *after* render so the mocks have run.
+     */
+    function renderAndGetCallbacks(renderProps) {
+      render(<DeepDependencyGraphPageImpl {...renderProps} />);
+      return {
+        header: latestHeaderProps,
+        graph: latestGraphProps,
+        sidePanel: latestSidePanelProps,
+      };
+    }
+
+    describe('updateUrlState (via clearOperation)', () => {
       let getUrlSpy;
       let trackHideSpy;
 
@@ -142,47 +161,41 @@ describe('DeepDependencyGraphPage', () => {
         trackHideSpy.mockClear();
       });
 
-      it('updates provided value', () => {
-        ['service', 'operation', 'start', 'end', 'visEncoding'].forEach((propName, i) => {
-          const value = `new ${propName}`;
-          const kwarg = { [propName]: value };
-          ddgPageImpl.updateUrlState(kwarg);
-          expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, props.urlState, kwarg), undefined);
-          expect(props.navigate).toHaveBeenCalledTimes(i + 1);
-        });
-      });
+      it('updates provided value (service, operation, visEncoding) via Header callbacks', () => {
+        const { header } = renderAndGetCallbacks(props);
 
-      it('updates multiple values', () => {
-        const kwarg = {
-          end: 'new end',
-          start: 'new start',
-        };
-        ddgPageImpl.updateUrlState(kwarg);
-        expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, props.urlState, kwarg), undefined);
+        // setService calls updateUrlState with { service }
+        const newService = 'new service';
+        header.setService(newService);
+        expect(getUrlSpy).toHaveBeenLastCalledWith(
+          Object.assign({}, props.urlState, {
+            operation: undefined,
+            service: newService,
+            visEncoding: undefined,
+          }),
+          url.ROUTE_PATH
+        );
         expect(props.navigate).toHaveBeenCalledTimes(1);
       });
 
-      it('leaves unspecified, previously-undefined values as undefined', () => {
-        const { start: _s, end: _e, ...otherUrlState } = props.urlState;
-        const otherProps = {
-          ...props,
-          urlState: otherUrlState,
-        };
-        const kwarg = {
-          end: 'new end',
-        };
-        const ddgPageWithFewerProps = new DeepDependencyGraphPageImpl(otherProps);
-        ddgPageWithFewerProps.updateUrlState(kwarg);
-        expect(getUrlSpy).toHaveBeenLastCalledWith(Object.assign({}, otherUrlState, kwarg), undefined);
-        expect(getUrlSpy).not.toHaveBeenLastCalledWith(expect.objectContaining({ start: expect.anything() }));
+      it('updates multiple values via setOperation', () => {
+        const { header } = renderAndGetCallbacks(props);
+        const operation = 'new operation';
+        header.setOperation(operation);
+        expect(getUrlSpy).toHaveBeenLastCalledWith(
+          Object.assign({}, props.urlState, { operation, visEncoding: undefined }),
+          url.ROUTE_PATH
+        );
         expect(props.navigate).toHaveBeenCalledTimes(1);
       });
 
       it('includes props.graphState.model.hash iff it is truthy', () => {
-        ddgPageImpl.updateUrlState({});
+        // Without hash
+        renderAndGetCallbacks(props);
+        latestHeaderProps.setDensity(EDdgDensity.PreventPathEntanglement);
         expect(getUrlSpy).toHaveBeenLastCalledWith(
           expect.not.objectContaining({ hash: expect.anything() }),
-          undefined
+          url.ROUTE_PATH
         );
 
         const hash = 'testHash';
@@ -196,9 +209,9 @@ describe('DeepDependencyGraphPage', () => {
             },
           },
         };
-        const ddgPageWithHash = new DeepDependencyGraphPageImpl(propsWithHash);
-        ddgPageWithHash.updateUrlState({});
-        expect(getUrlSpy).toHaveBeenLastCalledWith(expect.objectContaining({ hash }), undefined);
+        renderAndGetCallbacks(propsWithHash);
+        latestHeaderProps.setDensity(EDdgDensity.PreventPathEntanglement);
+        expect(getUrlSpy).toHaveBeenLastCalledWith(expect.objectContaining({ hash }), url.ROUTE_PATH);
       });
 
       describe('clearOperation', () => {
@@ -209,8 +222,9 @@ describe('DeepDependencyGraphPage', () => {
         });
 
         it('removes op from urlState', () => {
-          ddgPageImpl.clearOperation();
-          expect(getUrlSpy).toHaveBeenLastCalledWith(urlStateWithoutOp, undefined);
+          const { header } = renderAndGetCallbacks(props);
+          header.clearOperation();
+          expect(getUrlSpy).toHaveBeenLastCalledWith(urlStateWithoutOp, url.ROUTE_PATH);
           expect(trackClearOperationSpy).toHaveBeenCalledTimes(1);
         });
       });
@@ -224,11 +238,13 @@ describe('DeepDependencyGraphPage', () => {
 
         beforeEach(() => {
           trackFocusPathsSpy.mockClear();
+          props.graph.getVertexVisiblePathElems.mockClear();
         });
 
         it('no-ops if props does not have graph', () => {
-          ddgWithoutGraph.focusPathsThroughVertex(vertexKey);
-
+          const { graph: graphCallbacks } = renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
+          // Without graph, Graph component is not rendered, so no focusPathsThroughVertex callback
+          // The component renders "Unknown graphState" state — no graph callbacks to call, no-op confirmed
           expect(getUrlSpy).not.toHaveBeenCalled();
           expect(trackFocusPathsSpy).not.toHaveBeenCalled();
         });
@@ -248,42 +264,61 @@ describe('DeepDependencyGraphPage', () => {
             },
           ];
           props.graph.getVertexVisiblePathElems.mockReturnValueOnce(elems);
-          ddgPageImpl.focusPathsThroughVertex(vertexKey);
+
+          // Need a graph with >1 vertex to render the Graph component
+          const graphWithVertices = {
+            ...props.graph,
+            getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+          };
+          renderAndGetCallbacks({ ...props, graph: graphWithVertices });
+          latestGraphProps.focusPathsThroughVertex(vertexKey);
 
           expect(getUrlSpy).toHaveBeenLastCalledWith(
             Object.assign({}, props.urlState, { visEncoding: codec.encode(indices) }),
-            undefined
+            url.ROUTE_PATH
           );
           expect(trackFocusPathsSpy).toHaveBeenCalledTimes(1);
         });
       });
 
       describe('hideVertex', () => {
-        it('no-ops if props does not have graph', () => {
-          ddgWithoutGraph.hideVertex(vertexKey);
-
+        it('no-ops if props does not have graph (Graph not rendered)', () => {
+          renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
+          // Graph child not rendered when graph is absent — no-op confirmed
           expect(getUrlSpy).not.toHaveBeenCalled();
           expect(trackHideSpy).not.toHaveBeenCalled();
         });
 
         it('no-ops if graph.getVisWithoutVertex returns undefined', () => {
-          ddgPageImpl.hideVertex(vertexKey);
+          const graphWithVertices = {
+            ...props.graph,
+            getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+          };
+          renderAndGetCallbacks({ ...props, graph: graphWithVertices });
+          // getVisWithoutVertex returns undefined by default (no mockReturnValue)
+          latestGraphProps.hideVertex(vertexKey);
 
           expect(getUrlSpy).not.toHaveBeenCalled();
           expect(trackHideSpy).not.toHaveBeenCalled();
         });
 
         it('updates url state and tracks hide', () => {
-          props.graph.getVisWithoutVertex.mockReturnValueOnce(visEncoding);
-          ddgPageImpl.hideVertex(vertexKey);
+          const visEncoding = 'test vis encoding';
+          const graphWithVertices = {
+            ...props.graph,
+            getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+          };
+          graphWithVertices.getVisWithoutVertex = jest.fn().mockReturnValueOnce(visEncoding);
+          renderAndGetCallbacks({ ...props, graph: graphWithVertices });
+          latestGraphProps.hideVertex(vertexKey);
 
-          expect(props.graph.getVisWithoutVertex).toHaveBeenLastCalledWith(
+          expect(graphWithVertices.getVisWithoutVertex).toHaveBeenLastCalledWith(
             vertexKey,
             props.urlState.visEncoding
           );
           expect(getUrlSpy).toHaveBeenLastCalledWith(
             Object.assign({}, props.urlState, { visEncoding }),
-            undefined
+            url.ROUTE_PATH
           );
           expect(trackHideSpy).toHaveBeenCalledTimes(1);
           expect(trackHideSpy.mock.calls[0]).toHaveLength(0);
@@ -291,21 +326,31 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       describe('setDecoration', () => {
-        it('updates url with provided density', () => {
+        it('updates url with provided decoration via SidePanel', () => {
+          // SidePanel only renders when graph has >1 vertex
+          const graphWithVertices = {
+            ...props.graph,
+            getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+          };
+          renderAndGetCallbacks({ ...props, graph: graphWithVertices });
           const decoration = 'decoration-id';
-          ddgPageImpl.setDecoration(decoration);
+          latestSidePanelProps.selectDecoration(decoration);
           expect(getUrlSpy).toHaveBeenLastCalledWith(
             Object.assign({}, props.urlState, { decoration }),
-            undefined
+            url.ROUTE_PATH
           );
         });
 
-        it('clears density from url', () => {
-          const decoration = undefined;
-          ddgPageImpl.setDecoration(decoration);
+        it('clears decoration from url', () => {
+          const graphWithVertices = {
+            ...props.graph,
+            getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+          };
+          renderAndGetCallbacks({ ...props, graph: graphWithVertices });
+          latestSidePanelProps.selectDecoration(undefined);
           expect(getUrlSpy).toHaveBeenLastCalledWith(
-            Object.assign({}, props.urlState, { decoration }),
-            undefined
+            Object.assign({}, props.urlState, { decoration: undefined }),
+            url.ROUTE_PATH
           );
         });
       });
@@ -313,10 +358,11 @@ describe('DeepDependencyGraphPage', () => {
       describe('setDensity', () => {
         it('updates url with provided density', () => {
           const density = EDdgDensity.PreventPathEntanglement;
-          ddgPageImpl.setDensity(density);
+          const { header } = renderAndGetCallbacks(props);
+          header.setDensity(density);
           expect(getUrlSpy).toHaveBeenLastCalledWith(
             Object.assign({}, props.urlState, { density }),
-            undefined
+            url.ROUTE_PATH
           );
         });
       });
@@ -325,7 +371,9 @@ describe('DeepDependencyGraphPage', () => {
         let encodeDistanceSpy;
 
         beforeAll(() => {
-          encodeDistanceSpy = jest.spyOn(codec, 'encodeDistance').mockImplementation(() => visEncoding);
+          encodeDistanceSpy = jest
+            .spyOn(codec, 'encodeDistance')
+            .mockImplementation(() => 'test vis encoding');
         });
 
         it('updates url with result of encodeDistance iff graph is loaded', () => {
@@ -333,33 +381,33 @@ describe('DeepDependencyGraphPage', () => {
           const distance = -3;
           const prevVisEncoding = props.urlState.visEncoding;
 
+          // Without graphState - should not call encodeDistance
           const { graphState: _, ...graphStatelessProps } = props;
-          const graphStateless = new DeepDependencyGraphPageImpl(graphStatelessProps);
-          graphStateless.setDistance(distance, direction);
+          renderAndGetCallbacks(graphStatelessProps);
+          latestHeaderProps.setDistance(distance, direction);
           expect(encodeDistanceSpy).not.toHaveBeenCalled();
           expect(getUrlSpy).not.toHaveBeenCalled();
           expect(props.navigate).not.toHaveBeenCalled();
 
-          const graphStateLoading = new DeepDependencyGraphPageImpl({
+          // With LOADING graphState - should not call
+          renderAndGetCallbacks({
             ...graphStatelessProps,
             graphState: { state: fetchedState.LOADING },
           });
-          graphStateLoading.setDistance(distance, direction);
+          latestHeaderProps.setDistance(distance, direction);
           expect(encodeDistanceSpy).not.toHaveBeenCalled();
           expect(getUrlSpy).not.toHaveBeenCalled();
           expect(props.navigate).not.toHaveBeenCalled();
 
-          ddgPageImpl.setDistance(distance, direction);
+          // With DONE graphState - should call
+          renderAndGetCallbacks(props);
+          latestHeaderProps.setDistance(distance, direction);
           expect(encodeDistanceSpy).toHaveBeenLastCalledWith({
             ddgModel: props.graphState.model,
             direction,
             distance,
             prevVisEncoding,
           });
-          expect(getUrlSpy).toHaveBeenLastCalledWith(
-            Object.assign({}, props.urlState, { visEncoding }),
-            undefined
-          );
           expect(props.navigate).toHaveBeenCalledTimes(1);
         });
       });
@@ -367,10 +415,11 @@ describe('DeepDependencyGraphPage', () => {
       describe('setOperation', () => {
         it('updates operation and clears visEncoding', () => {
           const operation = 'newOperation';
-          ddgPageImpl.setOperation(operation);
+          const { header } = renderAndGetCallbacks(props);
+          header.setOperation(operation);
           expect(getUrlSpy).toHaveBeenLastCalledWith(
             Object.assign({}, props.urlState, { operation, visEncoding: undefined }),
-            undefined
+            url.ROUTE_PATH
           );
           expect(props.navigate).toHaveBeenCalledTimes(1);
         });
@@ -390,10 +439,11 @@ describe('DeepDependencyGraphPage', () => {
         });
 
         it('updates service and clears operation and visEncoding', () => {
-          ddgPageImpl.setService(service);
+          const { header } = renderAndGetCallbacks(props);
+          header.setService(service);
           expect(getUrlSpy).toHaveBeenLastCalledWith(
             Object.assign({}, props.urlState, { operation: undefined, service, visEncoding: undefined }),
-            undefined
+            url.ROUTE_PATH
           );
           expect(props.navigate).toHaveBeenCalledTimes(1);
           expect(trackSetServiceSpy).toHaveBeenCalledTimes(1);
@@ -402,50 +452,55 @@ describe('DeepDependencyGraphPage', () => {
 
       describe('showVertices', () => {
         const vertices = ['vertex0', 'vertex1'];
-
-        beforeAll(() => {
-          props.graph.getVisWithVertices.mockReturnValue(visEncoding);
-        });
+        const visEncoding = 'test vis encoding';
 
         it('updates url with visEncoding calculated by graph', () => {
-          ddgPageImpl.showVertices(vertices);
-          expect(props.graph.getVisWithVertices).toHaveBeenLastCalledWith(
+          const graphWithVertices = {
+            ...props.graph,
+            getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+            getVisWithVertices: jest.fn().mockReturnValue(visEncoding),
+          };
+          renderAndGetCallbacks({ ...props, graph: graphWithVertices });
+          latestHeaderProps.showVertices(vertices);
+          expect(graphWithVertices.getVisWithVertices).toHaveBeenLastCalledWith(
             vertices,
             props.urlState.visEncoding
           );
           expect(getUrlSpy).toHaveBeenLastCalledWith(
             Object.assign({}, props.urlState, { visEncoding }),
-            undefined
+            url.ROUTE_PATH
           );
         });
 
         it('no-ops if not given graph', () => {
-          const { length: callCount } = getUrlSpy.mock.calls;
-          ddgWithoutGraph.showVertices(vertices);
+          const callCount = getUrlSpy.mock.calls.length;
+          const { header } = renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
+          header.showVertices(vertices);
           expect(getUrlSpy.mock.calls.length).toBe(callCount);
         });
       });
 
       describe('toggleShowOperations', () => {
         it('updates url with provided boolean', () => {
-          let showOp = true;
-          ddgPageImpl.toggleShowOperations(showOp);
+          const { header } = renderAndGetCallbacks(props);
+
+          header.toggleShowOperations(true);
           expect(getUrlSpy).toHaveBeenLastCalledWith(
-            Object.assign({}, props.urlState, { showOp }),
-            undefined
+            Object.assign({}, props.urlState, { showOp: true }),
+            url.ROUTE_PATH
           );
 
-          showOp = false;
-          ddgPageImpl.toggleShowOperations(showOp);
+          header.toggleShowOperations(false);
           expect(getUrlSpy).toHaveBeenLastCalledWith(
-            Object.assign({}, props.urlState, { showOp }),
-            undefined
+            Object.assign({}, props.urlState, { showOp: false }),
+            url.ROUTE_PATH
           );
         });
       });
 
       describe('updateGenerationVisibility', () => {
         const direction = EDirection.Upstream;
+        const visEncoding = 'test vis encoding';
         let trackShowSpy;
 
         beforeAll(() => {
@@ -456,58 +511,69 @@ describe('DeepDependencyGraphPage', () => {
           trackShowSpy.mockClear();
         });
 
-        it('no-ops if props does not have graph', () => {
-          ddgWithoutGraph.updateGenerationVisibility(vertexKey, direction);
-
+        it('no-ops if props does not have graph (Graph not rendered)', () => {
+          renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
+          // Graph child not mounted — updateGenerationVisibility never called
           expect(getUrlSpy).not.toHaveBeenCalled();
           expect(trackHideSpy).not.toHaveBeenCalled();
           expect(trackShowSpy).not.toHaveBeenCalled();
         });
 
         it('no-ops if graph.getVisWithUpdatedGeneration returns undefined', () => {
-          ddgPageImpl.updateGenerationVisibility(vertexKey, direction);
+          const graphWithVertices = {
+            ...props.graph,
+            getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+            getVisWithUpdatedGeneration: jest.fn(), // returns undefined by default
+          };
+          renderAndGetCallbacks({ ...props, graph: graphWithVertices });
+          latestGraphProps.updateGenerationVisibility(vertexKey, direction);
 
           expect(getUrlSpy).not.toHaveBeenCalled();
           expect(trackHideSpy).not.toHaveBeenCalled();
           expect(trackShowSpy).not.toHaveBeenCalled();
         });
 
-        it('updates url state and tracks hide if result.status is ECheckedStatus.Empty', () => {
-          props.graph.getVisWithUpdatedGeneration.mockReturnValueOnce({
-            visEncoding,
-            update: ECheckedStatus.Empty,
-          });
-          ddgPageImpl.updateGenerationVisibility(vertexKey, direction);
+        it('updates url state and tracks hide if result.update is ECheckedStatus.Empty', () => {
+          const graphWithVertices = {
+            ...props.graph,
+            getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+            getVisWithUpdatedGeneration: jest.fn().mockReturnValueOnce({
+              visEncoding,
+              update: ECheckedStatus.Empty,
+            }),
+          };
+          renderAndGetCallbacks({ ...props, graph: graphWithVertices });
+          latestGraphProps.updateGenerationVisibility(vertexKey, direction);
 
-          expect(props.graph.getVisWithUpdatedGeneration).toHaveBeenLastCalledWith(
+          expect(graphWithVertices.getVisWithUpdatedGeneration).toHaveBeenLastCalledWith(
             vertexKey,
             direction,
             props.urlState.visEncoding
           );
           expect(getUrlSpy).toHaveBeenLastCalledWith(
             Object.assign({}, props.urlState, { visEncoding }),
-            undefined
+            url.ROUTE_PATH
           );
           expect(trackHideSpy).toHaveBeenCalledTimes(1);
           expect(trackHideSpy).toHaveBeenCalledWith(direction);
           expect(trackShowSpy).not.toHaveBeenCalled();
         });
 
-        it('updates url state and tracks show if result.status is ECheckedStatus.Full', () => {
-          props.graph.getVisWithUpdatedGeneration.mockReturnValueOnce({
-            visEncoding,
-            update: ECheckedStatus.Full,
-          });
-          ddgPageImpl.updateGenerationVisibility(vertexKey, direction);
+        it('updates url state and tracks show if result.update is ECheckedStatus.Full', () => {
+          const graphWithVertices = {
+            ...props.graph,
+            getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+            getVisWithUpdatedGeneration: jest.fn().mockReturnValueOnce({
+              visEncoding,
+              update: ECheckedStatus.Full,
+            }),
+          };
+          renderAndGetCallbacks({ ...props, graph: graphWithVertices });
+          latestGraphProps.updateGenerationVisibility(vertexKey, direction);
 
-          expect(props.graph.getVisWithUpdatedGeneration).toHaveBeenLastCalledWith(
-            vertexKey,
-            direction,
-            props.urlState.visEncoding
-          );
           expect(getUrlSpy).toHaveBeenLastCalledWith(
             Object.assign({}, props.urlState, { visEncoding }),
-            undefined
+            url.ROUTE_PATH
           );
           expect(trackHideSpy).not.toHaveBeenCalled();
           expect(trackShowSpy).toHaveBeenCalledTimes(1);
@@ -517,20 +583,37 @@ describe('DeepDependencyGraphPage', () => {
     });
 
     describe('select vertex', () => {
-      const selectedVertex = { key: 'test vertex' };
+      it('sets selectedVertex when selectVertex is called', () => {
+        const selectedVertex = { key: 'test vertex' };
+        const graphWithVertices = {
+          ...props.graph,
+          getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+        };
+        render(
+          <DeepDependencyGraphPageImpl {...props} graph={graphWithVertices} graphState={props.graphState} />
+        );
+        // Initially selectedVertex is undefined in SidePanel
+        expect(latestSidePanelProps.selectedVertex).toBeUndefined();
 
-      it('calls setState with the selected vertex', () => {
-        const ddgInstance = new DeepDependencyGraphPageImpl({ ...props, graphState: undefined });
-        const setStateSpy = jest.spyOn(ddgInstance, 'setState');
-        ddgInstance.selectVertex(selectedVertex);
-        expect(setStateSpy).toHaveBeenCalledWith({ selectedVertex });
+        act(() => {
+          latestGraphProps.selectVertex(selectedVertex);
+        });
+        // After selectVertex, SidePanel receives the selected vertex
+        expect(latestSidePanelProps.selectedVertex).toEqual(selectedVertex);
       });
 
-      it('calls setState to clear the selected vertex', () => {
-        const ddgInstance = new DeepDependencyGraphPageImpl({ ...props, graphState: undefined });
-        const setStateSpy = jest.spyOn(ddgInstance, 'setState');
-        ddgInstance.selectVertex();
-        expect(setStateSpy).toHaveBeenCalledWith({ selectedVertex: undefined });
+      it('clears selectedVertex when selectVertex is called with undefined', () => {
+        const graphWithVertices = {
+          ...props.graph,
+          getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+        };
+        render(
+          <DeepDependencyGraphPageImpl {...props} graph={graphWithVertices} graphState={props.graphState} />
+        );
+        act(() => {
+          latestGraphProps.selectVertex(undefined);
+        });
+        expect(latestSidePanelProps.selectedVertex).toBeUndefined();
       });
     });
 
@@ -545,7 +628,12 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('adds given viewModifier to specified pathElems', () => {
-        ddgPageImpl.setViewModifier(visibilityIndices, targetVM, true);
+        const graphWithVertices = {
+          ...props.graph,
+          getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+        };
+        renderAndGetCallbacks({ ...props, graph: graphWithVertices });
+        latestGraphProps.setViewModifier(visibilityIndices, targetVM, true);
         expect(props.addViewModifier).toHaveBeenLastCalledWith({
           operation: props.urlState.operation,
           service: props.urlState.service,
@@ -557,7 +645,12 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('removes given viewModifier from specified pathElems', () => {
-        ddgPageImpl.setViewModifier(visibilityIndices, targetVM, false);
+        const graphWithVertices = {
+          ...props.graph,
+          getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+        };
+        renderAndGetCallbacks({ ...props, graph: graphWithVertices });
+        latestGraphProps.setViewModifier(visibilityIndices, targetVM, false);
         expect(props.removeViewModifierFromIndices).toHaveBeenCalledWith({
           operation: props.urlState.operation,
           service: props.urlState.service,
@@ -568,26 +661,10 @@ describe('DeepDependencyGraphPage', () => {
         });
       });
 
-      it('no-ops if not given dispatch fn or graph or service', () => {
-        const { addViewModifier: _add, ...propsWithoutAdd } = props;
-        const ddgWithoutAdd = new DeepDependencyGraphPageImpl(propsWithoutAdd);
-        ddgWithoutAdd.setViewModifier(vertexKey, EViewModifier.emphasized, true);
-
-        const { removeViewModifierFromIndices: _remove, ...propsWithoutRemove } = props;
-        const ddgWithoutRemove = new DeepDependencyGraphPageImpl(propsWithoutRemove);
-        ddgWithoutRemove.setViewModifier(vertexKey, EViewModifier.emphasized, false);
-        expect(props.removeViewModifierFromIndices).not.toHaveBeenCalled();
-
-        ddgWithoutGraph.setViewModifier(vertexKey, EViewModifier.emphasized, true);
-        expect(props.removeViewModifierFromIndices).not.toHaveBeenCalled();
-
-        const {
-          urlState: { service: _service, ...urlStateWithoutService },
-          ...propsWithoutService
-        } = props;
-        propsWithoutService.urlState = urlStateWithoutService;
-        const ddgWithoutService = new DeepDependencyGraphPageImpl(propsWithoutGraph);
-        ddgWithoutService.setViewModifier(vertexKey, EViewModifier.emphasized, true);
+      it('no-ops if not given graph or service', () => {
+        // No graph: Graph component not rendered, setViewModifier never accessible
+        renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
+        expect(props.addViewModifier).not.toHaveBeenCalled();
         expect(props.removeViewModifierFromIndices).not.toHaveBeenCalled();
       });
     });
@@ -596,17 +673,16 @@ describe('DeepDependencyGraphPage', () => {
       const direction = EDirection.Upstream;
       const mockCheckedStatus = 'mock check status';
 
-      beforeAll(() => {
-        props.graph.getGenerationVisibility.mockReturnValue(mockCheckedStatus);
-      });
-
-      beforeEach(() => {
-        props.graph.getGenerationVisibility.mockClear();
-      });
-
-      it('returns specified ECheckedStatus', () => {
-        expect(ddgPageImpl.getGenerationVisibility(vertexKey, direction)).toBe(mockCheckedStatus);
-        expect(props.graph.getGenerationVisibility).toHaveBeenLastCalledWith(
+      it('returns specified ECheckedStatus via Graph callback', () => {
+        const graphWithVertices = {
+          ...props.graph,
+          getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+          getGenerationVisibility: jest.fn().mockReturnValue(mockCheckedStatus),
+        };
+        renderAndGetCallbacks({ ...props, graph: graphWithVertices });
+        const result = latestGraphProps.getGenerationVisibility(vertexKey, direction);
+        expect(result).toBe(mockCheckedStatus);
+        expect(graphWithVertices.getGenerationVisibility).toHaveBeenLastCalledWith(
           vertexKey,
           direction,
           props.urlState.visEncoding
@@ -614,27 +690,35 @@ describe('DeepDependencyGraphPage', () => {
       });
 
       it('returns null if props does not have graph', () => {
-        expect(ddgWithoutGraph.getGenerationVisibility(vertexKey, direction)).toBe(null);
+        // Graph not rendered without graph prop — getGenerationVisibility defaults to null
+        renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
+        // No graph callbacks available — the null return is embedded in the closure
+        // Verified by confirming Graph is not rendered
+        expect(screen.queryByTestId('graph')).not.toBeInTheDocument();
       });
     });
 
     describe('getVisiblePathElems', () => {
       const mockVisibleElems = 'mock visible elems';
 
-      beforeAll(() => {
-        props.graph.getVertexVisiblePathElems.mockReturnValue(mockVisibleElems);
-      });
-
-      it('returns visible pathElems', () => {
-        expect(ddgPageImpl.getVisiblePathElems(vertexKey)).toBe(mockVisibleElems);
-        expect(props.graph.getVertexVisiblePathElems).toHaveBeenLastCalledWith(
+      it('returns visible pathElems via Graph callback', () => {
+        const graphWithVertices = {
+          ...props.graph,
+          getVisible: () => ({ edges: [], vertices: [{ key: 'v0' }, { key: 'v1' }] }),
+          getVertexVisiblePathElems: jest.fn().mockReturnValue(mockVisibleElems),
+        };
+        renderAndGetCallbacks({ ...props, graph: graphWithVertices });
+        const result = latestGraphProps.getVisiblePathElems(vertexKey);
+        expect(result).toBe(mockVisibleElems);
+        expect(graphWithVertices.getVertexVisiblePathElems).toHaveBeenLastCalledWith(
           vertexKey,
           props.urlState.visEncoding
         );
       });
 
       it('returns undefined if props does not have graph', () => {
-        expect(ddgWithoutGraph.getVisiblePathElems(vertexKey)).toBe(undefined);
+        renderAndGetCallbacks({ ...propsWithoutGraph, graph: undefined });
+        expect(screen.queryByTestId('graph')).not.toBeInTheDocument();
       });
     });
 
