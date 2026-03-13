@@ -3,7 +3,6 @@
 
 import * as React from 'react';
 import { Button, InputRef, Tooltip } from 'antd';
-import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
 import { IoArrowBack, IoFileTrayFull, IoChevronForward, IoWarning } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
@@ -90,7 +89,7 @@ export const HEADER_ITEMS = [
   {
     key: 'depth',
     label: 'Depth',
-    renderer: (trace: IOtelTrace) => _get(_maxBy(trace.spans as any[], 'depth'), 'depth', 0) + 1,
+    renderer: (trace: IOtelTrace) => (_maxBy(trace.spans as any[], 'depth')?.depth ?? 0) + 1,
   },
   {
     key: 'span-count',

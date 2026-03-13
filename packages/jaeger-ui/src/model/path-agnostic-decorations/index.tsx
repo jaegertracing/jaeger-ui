@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import _get from 'lodash/get';
 import queryString from 'query-string';
 
 import CircularProgressbar from '../../components/common/CircularProgressbar';
@@ -31,11 +30,12 @@ export default function extractDecorationFromState(
 
   if (!decorationID) return {};
 
-  let decorationValue = _get(state, `pathAgnosticDecorations.${decorationID}.withOp.${service}.${operation}`);
-  let decorationMax = _get(state, `pathAgnosticDecorations.${decorationID}.withOpMax`);
+  const operationKey = String(operation);
+  let decorationValue = state.pathAgnosticDecorations?.[decorationID]?.withOp?.[service]?.[operationKey];
+  let decorationMax = state.pathAgnosticDecorations?.[decorationID]?.withOpMax;
   if (!decorationValue) {
-    decorationValue = _get(state, `pathAgnosticDecorations.${decorationID}.withoutOp.${service}`);
-    decorationMax = _get(state, `pathAgnosticDecorations.${decorationID}.withoutOpMax`);
+    decorationValue = state.pathAgnosticDecorations?.[decorationID]?.withoutOp?.[service];
+    decorationMax = state.pathAgnosticDecorations?.[decorationID]?.withoutOpMax;
   }
 
   const decorationProgressbar =
