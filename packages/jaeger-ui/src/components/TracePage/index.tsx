@@ -82,7 +82,6 @@ type TReduxProps = {
   detailPanelMode: SpanDetailPanelMode;
   embedded: null | EmbeddedState;
   id: string;
-  searchUrl: null | string;
   timelineBarsVisible: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
@@ -469,12 +468,10 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { id } = ownProps.params;
-  const { archive, embedded, router } = state;
+  const { archive, embedded } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
-  const { state: locationState } = router.location;
-  const searchUrl = (locationState && locationState.fromSearch) || null;
 
   const { detailPanelMode, timelineBarsVisible } = state.traceTimeline;
 
@@ -484,7 +481,6 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     detailPanelMode,
     embedded,
     id,
-    searchUrl,
     timelineBarsVisible,
     trace,
   };
