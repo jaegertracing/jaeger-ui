@@ -1209,6 +1209,8 @@ describe('mapStateToProps()', () => {
       archiveTraceState: undefined,
       timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
+      archiveEnabled: false,
+      enableSidePanel: false,
     });
   });
 
@@ -1239,6 +1241,9 @@ describe('mapStateToProps()', () => {
       timelineBarsVisible: true,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
+      archiveEnabled: false,
+      enableSidePanel: false,
+      traceGraphConfig: { layoutManagerMemory: fakeMemory },
     });
   });
 });

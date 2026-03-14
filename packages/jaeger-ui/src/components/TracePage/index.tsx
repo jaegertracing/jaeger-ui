@@ -27,7 +27,6 @@ import calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import TraceGraph from './TraceGraph/TraceGraph';
 import { TEv } from './TraceGraph/types';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
-import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
@@ -68,13 +67,6 @@ type TOwnProps = {
   history: RouterHistory;
   location: Location<LocationState>;
   params: { id: string };
-  archiveEnabled: boolean;
-  enableSidePanel: boolean;
-  storageCapabilities: StorageCapabilities | TNil;
-  criticalPathEnabled: boolean;
-  disableJsonView: boolean;
-  traceGraphConfig?: TraceGraphConfig;
-  useOtelTerms: boolean;
 };
 
 type TReduxProps = {
@@ -85,6 +77,13 @@ type TReduxProps = {
   timelineBarsVisible: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
+  archiveEnabled: boolean;
+  enableSidePanel: boolean;
+  storageCapabilities: StorageCapabilities | TNil;
+  criticalPathEnabled: boolean;
+  disableJsonView: boolean;
+  traceGraphConfig?: TraceGraphConfig;
+  useOtelTerms: boolean;
 };
 
 type TProps = TDispatchProps & TOwnProps & TReduxProps;
@@ -468,7 +467,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { id } = ownProps.params;
-  const { archive, embedded } = state;
+  const { archive, config, embedded } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
@@ -483,6 +482,13 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     id,
     timelineBarsVisible,
     trace,
+    archiveEnabled: Boolean(config.archiveEnabled),
+    enableSidePanel: Boolean(config.traceTimeline?.enableSidePanel),
+    storageCapabilities: config.storageCapabilities,
+    criticalPathEnabled: config.criticalPathEnabled,
+    disableJsonView: config.disableJsonView,
+    traceGraphConfig: config.traceGraph,
+    useOtelTerms: config.useOpenTelemetryTerms,
   };
 }
 
@@ -513,23 +519,9 @@ type TracePageProps = {
 };
 
 const TracePage = (props: TracePageProps) => {
-  const config = useConfig();
-  const traceID = props.params.id;
-  const normalizedTraceID = useNormalizeTraceId(traceID);
+  const normalizedTraceID = useNormalizeTraceId(props.params.id);
 
-  return (
-    <ConnectedTracePage
-      {...props}
-      params={{ ...props.params, id: normalizedTraceID }}
-      archiveEnabled={Boolean(config.archiveEnabled)}
-      enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
-      storageCapabilities={config.storageCapabilities}
-      criticalPathEnabled={config.criticalPathEnabled}
-      disableJsonView={config.disableJsonView}
-      traceGraphConfig={config.traceGraph}
-      useOtelTerms={config.useOpenTelemetryTerms}
-    />
-  );
+  return <ConnectedTracePage {...props} params={{ ...props.params, id: normalizedTraceID }} />;
 };
 
 export default withRouteProps(TracePage);
