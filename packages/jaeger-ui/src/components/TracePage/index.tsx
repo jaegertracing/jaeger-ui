@@ -163,21 +163,7 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
   componentDidMount() {
     this.ensureTraceFetched();
     this.updateViewRangeTime(0, 1);
-    /* istanbul ignore if */
-    if (!this._scrollManager) {
-      throw new Error('Invalid state - scrollManager is unset');
-    }
-    const { scrollPageDown, scrollPageUp, scrollToNextVisibleSpan, scrollToPrevVisibleSpan } =
-      this._scrollManager;
-    const adjViewRange = (a: number, b: number) => this._adjustViewRange(a, b, 'kbd');
-    const shortcutCallbacks = makeShortcutCallbacks(adjViewRange);
-    shortcutCallbacks.scrollPageDown = scrollPageDown;
-    shortcutCallbacks.scrollPageUp = scrollPageUp;
-    shortcutCallbacks.scrollToNextVisibleSpan = scrollToNextVisibleSpan;
-    shortcutCallbacks.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
-    shortcutCallbacks.clearSearch = this.clearSearch;
-    shortcutCallbacks.searchSpans = this.focusOnSearchBar;
-    mergeShortcuts(shortcutCallbacks);
+    this._setupKeyboardShortcuts();
   }
 
   componentDidUpdate({ id: prevID }: TProps) {
@@ -204,6 +190,24 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
       scrollBy,
       scrollTo,
     });
+  }
+
+  _setupKeyboardShortcuts() {
+    /* istanbul ignore if */
+    if (!this._scrollManager) {
+      throw new Error('Invalid state - scrollManager is unset');
+    }
+    const { scrollPageDown, scrollPageUp, scrollToNextVisibleSpan, scrollToPrevVisibleSpan } =
+      this._scrollManager;
+    const adjViewRange = (a: number, b: number) => this._adjustViewRange(a, b, 'kbd');
+    const shortcutCallbacks = makeShortcutCallbacks(adjViewRange);
+    shortcutCallbacks.scrollPageDown = scrollPageDown;
+    shortcutCallbacks.scrollPageUp = scrollPageUp;
+    shortcutCallbacks.scrollToNextVisibleSpan = scrollToNextVisibleSpan;
+    shortcutCallbacks.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
+    shortcutCallbacks.clearSearch = this.clearSearch;
+    shortcutCallbacks.searchSpans = this.focusOnSearchBar;
+    mergeShortcuts(shortcutCallbacks);
   }
 
   _adjustViewRange(startChange: number, endChange: number, trackSrc: string) {
