@@ -82,7 +82,6 @@ type TReduxProps = {
   detailPanelMode: SpanDetailPanelMode;
   embedded: null | EmbeddedState;
   id: string;
-  searchUrl: null | string;
   timelineBarsVisible: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
@@ -151,10 +150,8 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
     this._headerElm = null;
     this._filterSpans = _memoize(
       filterSpans,
-      // Do not use the memo if the filter text or trace has changed.
-      // trace.data.spans is populated after the initial render via mutation.
-      textFilter =>
-        `${textFilter} ${_get(this.props.trace, 'traceID')} ${_get(this.props.trace, 'data.spans.length')}`
+      // Invalidate when the user's search text or the displayed trace changes.
+      textFilter => `${textFilter} ${this.props.id}`
     );
     this._scrollManager = new ScrollManager(trace && trace.data ? trace.data.asOtelTrace() : undefined, {
       scrollBy,
@@ -472,12 +469,10 @@ export class TracePageImpl extends React.PureComponent<TProps, TState> {
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { id } = ownProps.params;
-  const { archive, embedded, router } = state;
+  const { archive, embedded } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
-  const { state: locationState } = router.location;
-  const searchUrl = (locationState && locationState.fromSearch) || null;
 
   const { detailPanelMode, timelineBarsVisible } = state.traceTimeline;
 
@@ -487,7 +482,6 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     detailPanelMode,
     embedded,
     id,
-    searchUrl,
     timelineBarsVisible,
     trace,
   };

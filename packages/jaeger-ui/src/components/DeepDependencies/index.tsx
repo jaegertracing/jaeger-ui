@@ -34,7 +34,7 @@ import {
   TDdgVertex,
 } from '../../model/ddg/types';
 import { encode, encodeDistance } from '../../model/ddg/visibility-codec';
-import { getConfigValue } from '../../utils/config/get-config';
+import getConfig from '../../utils/config/get-config';
 import { ReduxState } from '../../types';
 import { TDdgStateEntry } from '../../types/TDdgState';
 
@@ -316,7 +316,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
           </>
         );
       } else {
-        const lookback = getConfigValue('search.maxLookback.value');
+        const lookback = getConfig().search?.maxLookback?.value;
         const checkLink = getSearchUrl({
           lookback,
           minDuration: '0ms',

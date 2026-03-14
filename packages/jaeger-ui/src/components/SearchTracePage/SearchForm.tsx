@@ -21,7 +21,7 @@ import { trackFormInput } from './SearchForm.track';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
-import { getConfigValue } from '../../utils/config/get-config';
+import getConfig from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
@@ -724,7 +724,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder="Limit Results"
           type="number"
           min={1}
-          max={getConfigValue('search.maxLimit')}
+          max={getConfig().search?.maxLimit}
           onChange={e => handleChange({ resultsLimit: e.target.value })}
         />
       </FormItem>

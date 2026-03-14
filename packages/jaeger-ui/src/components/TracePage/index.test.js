@@ -292,7 +292,7 @@ describe('<TracePage>', () => {
     });
   });
 
-  it('uses uiFind, trace.traceID, and trace.data.spans.length to compute memo cache key for filterSpans', () => {
+  it('uses uiFind and props.id to compute memo cache key for filterSpans', () => {
     const uiFind = 'uiFind';
     const trace = transformTraceData(traceGenerator.trace({}));
     const baseProps = {
@@ -307,18 +307,25 @@ describe('<TracePage>', () => {
     const { rerender } = render(<TracePage {...baseProps} />);
     expect(filterSpansSpy).not.toHaveBeenCalled();
 
+    // Adding uiFind triggers filterSpans
     rerender(<TracePage {...baseProps} uiFind={uiFind} />);
     expect(filterSpansSpy).toHaveBeenCalledTimes(1);
     expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, baseProps.trace.data.spans);
 
-    const newTrace1 = {
-      ...baseProps.trace,
-      traceID: 'new-trace-id',
+    // Changing the trace id invalidates the cache
+    const otherTrace = transformTraceData(traceGenerator.trace({}));
+    const newProps = {
+      ...baseProps,
+      id: 'different-trace-id',
+      trace: { data: otherTrace, state: fetchedState.DONE },
     };
-    rerender(<TracePage {...baseProps} uiFind={uiFind} trace={newTrace1} />);
+    rerender(<TracePage {...newProps} uiFind={uiFind} />);
     expect(filterSpansSpy).toHaveBeenCalledTimes(2);
-    expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, newTrace1.data.spans);
+    expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, otherTrace.spans);
 
+    // Same id with different spans should use cached result
+    // (spans.length is not part of the cache key because
+    // transformTraceData completes synchronously before Redux stores the trace)
     const reducedSpans = [...baseProps.trace.data.spans.slice(0, baseProps.trace.data.spans.length / 2)];
     const newTrace2 = {
       ...baseProps.trace,
@@ -328,8 +335,7 @@ describe('<TracePage>', () => {
       },
     };
     rerender(<TracePage {...baseProps} uiFind={uiFind} trace={newTrace2} />);
-    expect(filterSpansSpy).toHaveBeenCalledTimes(3);
-    expect(filterSpansSpy).toHaveBeenLastCalledWith(uiFind, reducedSpans);
+    expect(filterSpansSpy).toHaveBeenCalledTimes(2);
   });
 
   it('renders a a loading indicator when not provided a fetched trace', () => {
@@ -1201,7 +1207,6 @@ describe('mapStateToProps()', () => {
       detailPanelMode: 'inline',
       embedded,
       archiveTraceState: undefined,
-      searchUrl: null,
       timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
@@ -1222,21 +1227,6 @@ describe('mapStateToProps()', () => {
     );
   });
 
-  it('propagates fromSearch correctly', () => {
-    const fakeUrl = 'fake-url';
-    state.router.location.state = { fromSearch: fakeUrl };
-    const props = mapStateToProps(state, ownProps);
-    expect(props).toEqual({
-      id: traceID,
-      detailPanelMode: 'inline',
-      embedded,
-      archiveTraceState: undefined,
-      searchUrl: fakeUrl,
-      timelineBarsVisible: true,
-      trace: { data: {}, state: fetchedState.DONE },
-    });
-  });
-
   it('propagates layoutManagerMemory correctly', () => {
     const fakeMemory = 123;
     state.config.traceGraph = { layoutManagerMemory: fakeMemory };
@@ -1246,7 +1236,6 @@ describe('mapStateToProps()', () => {
       detailPanelMode: 'inline',
       embedded,
       archiveTraceState: undefined,
-      searchUrl: null,
       timelineBarsVisible: true,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
