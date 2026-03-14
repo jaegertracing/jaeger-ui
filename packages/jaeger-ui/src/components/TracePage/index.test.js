@@ -474,15 +474,12 @@ describe('<TracePage>', () => {
 
     const adjustViewRangeMock = jest.fn();
 
-    const originalComponentDidMount = TracePage.prototype.componentDidMount;
+    const originalSetupKeyboardShortcuts = TracePage.prototype._setupKeyboardShortcuts;
     const originalAdjustViewRange = TracePage.prototype._adjustViewRange;
 
-    TracePage.prototype.componentDidMount = function () {
+    TracePage.prototype._setupKeyboardShortcuts = function () {
       this._adjustViewRange = adjustViewRangeMock;
-
-      if (originalComponentDidMount) {
-        originalComponentDidMount.call(this);
-      }
+      originalSetupKeyboardShortcuts.call(this);
     };
 
     render(<TracePage {...defaultProps} />);
@@ -501,7 +498,7 @@ describe('<TracePage>', () => {
       'kbd'
     );
 
-    TracePage.prototype.componentDidMount = originalComponentDidMount;
+    TracePage.prototype._setupKeyboardShortcuts = originalSetupKeyboardShortcuts;
     TracePage.prototype._adjustViewRange = originalAdjustViewRange;
   });
 
