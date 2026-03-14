@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import _get from 'lodash/get';
 import _has from 'lodash/has';
 import _set from 'lodash/set';
 import _unset from 'lodash/unset';
@@ -29,9 +30,7 @@ export default function processDeprecation(config: object, deprecation: IDepreca
     let isIgnored = false;
     if (!_has(config, currentKey)) {
       // the new key is not set so transfer the value at the old key
-      const value = formerKey
-        .split('.')
-        .reduce<unknown>((obj, key) => (obj as Record<string, unknown>)?.[key], config);
+      const value = _get(config, formerKey);
       _set(config, currentKey, value);
       isTransfered = true;
     } else {
