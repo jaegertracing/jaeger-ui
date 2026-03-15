@@ -8,11 +8,10 @@ import { bindActionCreators, Dispatch } from 'redux';
 import _isEqual from 'lodash/isEqual';
 import _groupBy from 'lodash/groupBy';
 
-// import { History as RouterHistory, Location } from 'history';
-
 import memoizeOne from 'memoize-one';
-import { Location, History } from 'history';
-import { actions, getSelectedSpanID } from './duck';
+import { Location } from 'history';
+
+import { actions } from './duck';
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
@@ -39,6 +38,7 @@ import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
 import withRouteProps from '../../../utils/withRouteProps';
+import { useNavigate } from 'react-router-dom-v5-compat';
 
 type RowState = {
   isDetail: boolean;
@@ -74,7 +74,6 @@ type TDispatchProps = {
 
 type RouteProps = {
   location: Location;
-  history: History;
 };
 
 type TDerivedStateProps = {
@@ -215,95 +214,148 @@ const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: CriticalPathSect
 );
 
 // export from tests
-export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
-  listView: ListView | TNil;
-  constructor(props: VirtualizedTraceViewProps) {
-    super(props);
-    const { setTrace, trace, uiFind } = props;
+
+export const VirtualizedTraceViewImpl: React.FC<VirtualizedTraceViewProps> = props => {
+  const {
+    setTrace,
+    trace,
+    uiFind,
+    registerAccessors,
+    shouldScrollToFirstUiFindMatch,
+    clearShouldScrollToFirstUiFindMatch,
+    scrollToFirstVisibleSpan,
+    focusUiFindMatches,
+    location,
+    currentViewRangeTime,
+    childrenHiddenIDs,
+    childrenToggle,
+    detailStates,
+    detailToggle,
+    findMatchesIDs,
+    spanNameColumnWidth,
+    criticalPath,
+    useOtelTerms,
+  } = props;
+
+  const listViewRef = React.useRef<ListView | null>(null);
+
+  React.useEffect(() => {
     setTrace(trace, uiFind);
-  }
+  }, [setTrace, trace, uiFind]);
 
-  componentDidMount(): void {
-    window.addEventListener('jaeger:list-resize', this._handleListResize);
-    window.addEventListener('jaeger:detail-measure', this._handleDetailMeasure as any);
-  }
-
-  shouldComponentUpdate(nextProps: VirtualizedTraceViewProps) {
-    // If any prop updates, VirtualizedTraceViewImpl should update.
-    const nextPropKeys = Object.keys(nextProps) as (keyof VirtualizedTraceViewProps)[];
-    for (let i = 0; i < nextPropKeys.length; i += 1) {
-      if (nextProps[nextPropKeys[i]] !== this.props[nextPropKeys[i]]) {
-        // Unless the only change was props.shouldScrollToFirstUiFindMatch changing to false.
-        if (nextPropKeys[i] === 'shouldScrollToFirstUiFindMatch') {
-          if (nextProps[nextPropKeys[i]]) return true;
-        } else {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  componentDidUpdate(prevProps: Readonly<VirtualizedTraceViewProps>) {
-    const { registerAccessors, trace } = prevProps;
-    const {
-      shouldScrollToFirstUiFindMatch,
-      clearShouldScrollToFirstUiFindMatch,
-      scrollToFirstVisibleSpan,
-      registerAccessors: nextRegisterAccessors,
-      setTrace,
-      trace: nextTrace,
-      uiFind,
-    } = this.props;
-
-    if (trace !== nextTrace) {
-      setTrace(nextTrace, uiFind);
-    }
-
-    if (this.listView && registerAccessors !== nextRegisterAccessors) {
-      nextRegisterAccessors(this.getAccessors());
-    }
-
+  React.useEffect(() => {
     if (shouldScrollToFirstUiFindMatch) {
       scrollToFirstVisibleSpan();
       clearShouldScrollToFirstUiFindMatch();
     }
-  }
+  }, [shouldScrollToFirstUiFindMatch, scrollToFirstVisibleSpan, clearShouldScrollToFirstUiFindMatch]);
 
-  componentWillUnmount(): void {
-    window.removeEventListener('jaeger:list-resize', this._handleListResize);
-    window.removeEventListener('jaeger:detail-measure', this._handleDetailMeasure as any);
-  }
-
-  _handleListResize = () => {
-    if (this.listView) {
-      // Force ListView to update and re-scan item heights
-      this.listView.forceUpdate();
+  const handleListResize = React.useCallback(() => {
+    if (listViewRef.current) {
+      listViewRef.current.forceUpdate();
     }
-  };
+  }, []);
 
-  _handleDetailMeasure = (evt: { detail?: { spanID?: string } }) => {
-    const spanID = evt && evt.detail && evt.detail.spanID;
-    if (!this.listView || !spanID) {
-      this._handleListResize();
-      return;
+  const handleDetailMeasure = React.useCallback(
+    (evt: { detail?: { spanID?: string } }) => {
+      const spanID = evt?.detail?.spanID;
+
+      if (!listViewRef.current || !spanID) {
+        handleListResize();
+        return;
+      }
+
+      listViewRef.current.forceUpdate();
+    },
+    [handleListResize]
+  );
+
+  React.useEffect(() => {
+    window.addEventListener('jaeger:list-resize', handleListResize);
+    window.addEventListener('jaeger:detail-measure', handleDetailMeasure as any);
+
+    return () => {
+      window.removeEventListener('jaeger:list-resize', handleListResize);
+      window.removeEventListener('jaeger:detail-measure', handleDetailMeasure as any);
+    };
+  }, [handleListResize, handleDetailMeasure]);
+
+  const getRowStates = React.useCallback((): RowState[] => {
+    return memoizedGenerateRowStates(props.trace, props.childrenHiddenIDs, props.detailStates);
+  }, [props.childrenHiddenIDs, props.detailStates, props.trace]);
+
+  const getRowHeight = React.useCallback(
+    (index: number) => {
+      const { span, isDetail } = getRowStates()[index];
+
+      if (!isDetail) {
+        return DEFAULT_HEIGHTS.bar;
+      }
+
+      if (Array.isArray(span.events) && span.events.length) {
+        return DEFAULT_HEIGHTS.detailWithLogs;
+      }
+
+      return DEFAULT_HEIGHTS.detail;
+    },
+    [getRowStates]
+  );
+
+  const linksGetter = React.useCallback(
+    (span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number) => {
+      if (!props.trace) return [];
+      return getLinks(span, items, itemIndex, props.trace);
+    },
+    [props.trace]
+  );
+
+  const linksGetterFromAttributes = React.useCallback(
+    (span: IOtelSpan) => (attributes: ReadonlyArray<IAttribute>, index: number) => {
+      return linksGetter(span, attributes, index);
+    },
+    [linksGetter]
+  );
+
+  const eventItemToggleAdapter = React.useCallback(
+    (detailLogItemToggle: (spanID: string, log: IEvent) => void) => (spanID: string, event: IEvent) => {
+      detailLogItemToggle(spanID, event);
+    },
+    []
+  );
+
+  const navigate = useNavigate();
+
+  const focusSpan = React.useCallback(
+    (uiFind: string) => {
+      if (trace) {
+        updateUiFind({
+          location,
+          navigate,
+          uiFind,
+        });
+        focusUiFindMatches(trace, uiFind, false);
+      }
+    },
+    [trace, focusUiFindMatches, location, navigate]
+  );
+
+  const getCriticalPathSections = React.useCallback(
+    (isCollapsed: boolean, trace: IOtelTrace, spanID: string, criticalPath: CriticalPathSection[]) => {
+      if (isCollapsed) {
+        return mergeChildrenCriticalPath(trace, spanID, criticalPath);
+      }
+
+      const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
+      return spanID in pathBySpanID ? pathBySpanID[spanID] : [];
+    },
+    []
+  );
+
+  const getViewedBounds = React.useCallback((): ViewedBoundsFunctionType => {
+    if (!trace) {
+      return () => ({ start: 0, end: 0 });
     }
-    // Force the list to re-scan heights
-    this.listView.forceUpdate();
-  };
 
-  getRowStates(): RowState[] {
-    const { childrenHiddenIDs, detailStates, detailPanelMode, trace } = this.props;
-    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode);
-  }
-
-  getClippingCssClasses(): string {
-    const { currentViewRangeTime } = this.props;
-    return memoizedGetCssClasses(currentViewRangeTime);
-  }
-
-  getViewedBounds(): ViewedBoundsFunctionType {
-    const { currentViewRangeTime, trace } = this.props;
     const [zoomStart, zoomEnd] = currentViewRangeTime;
 
     return memoizedViewBoundsFunc({
@@ -312,146 +364,143 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       viewStart: zoomStart,
       viewEnd: zoomEnd,
     });
-  }
+  }, [currentViewRangeTime, trace]);
 
-  focusSpan = (uiFind: string) => {
-    const { trace, focusUiFindMatches, location, history } = this.props;
-    if (trace) {
-      updateUiFind({
-        location,
-        history,
-        uiFind,
-      });
-      focusUiFindMatches(trace, uiFind, false);
-    }
-  };
+  const getClippingCssClasses = React.useCallback((): string => {
+    return memoizedGetCssClasses(currentViewRangeTime);
+  }, [currentViewRangeTime]);
 
-  getAccessors() {
-    const lv = this.listView;
-    if (!lv) {
-      throw new Error('ListView unavailable');
-    }
-    return {
-      getViewRange: this.getViewRange,
-      getSearchedSpanIDs: this.getSearchedSpanIDs,
-      getCollapsedChildren: this.getCollapsedChildren,
-      getViewHeight: lv.getViewHeight,
-      getBottomRowIndexVisible: lv.getBottomVisibleIndex,
-      getTopRowIndexVisible: lv.getTopVisibleIndex,
-      getRowPosition: lv.getRowPosition,
-      mapRowIndexToSpanIndex: this.mapRowIndexToSpanIndex,
-      mapSpanIndexToRowIndex: this.mapSpanIndexToRowIndex,
-    };
-  }
+  const renderSpanDetailRow = React.useCallback(
+    (span: IOtelSpan, key: string, style: React.CSSProperties, attrs: object) => {
+      const { spanID } = span;
+      const { serviceName } = span.resource;
 
-  getViewRange = () => this.props.currentViewRangeTime;
-
-  getSearchedSpanIDs = () => this.props.findMatchesIDs;
-
-  getCollapsedChildren = () => this.props.childrenHiddenIDs;
-
-  mapRowIndexToSpanIndex = (index: number) => this.getRowStates()[index].spanIndex;
-
-  mapSpanIndexToRowIndex = (index: number) => {
-    const max = this.getRowStates().length;
-    for (let i = 0; i < max; i++) {
-      const { spanIndex } = this.getRowStates()[i];
-      if (spanIndex === index) {
-        return i;
+      const detailState = props.detailStates.get(spanID);
+      if (!props.trace || !detailState) {
+        return null;
       }
-    }
-    throw new Error(`unable to find row for span index: ${index}`);
-  };
 
-  setListView = (listView: ListView | TNil) => {
-    const isChanged = this.listView !== listView;
-    this.listView = listView;
-    if (listView && isChanged) {
-      this.props.registerAccessors(this.getAccessors());
-    }
-  };
+      const color = colorGenerator.getColorByKey(serviceName);
 
-  // use long form syntax to avert flow error
-  // https://github.com/facebook/flow/issues/3076#issuecomment-290944051
-  getKeyFromIndex = (index: number) => {
-    const { isDetail, span } = this.getRowStates()[index];
-    return `${span.spanID}--${isDetail ? 'detail' : 'bar'}`;
-  };
+      return (
+        <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
+          <SpanDetailRow
+            color={color}
+            columnDivision={props.spanNameColumnWidth}
+            onDetailToggled={props.detailToggle}
+            detailState={detailState}
+            linksGetter={linksGetterFromAttributes(span)}
+            eventItemToggle={eventItemToggleAdapter(props.detailLogItemToggle)}
+            eventsToggle={props.detailLogsToggle}
+            resourceToggle={props.detailProcessToggle}
+            linksToggle={props.detailReferencesToggle}
+            warningsToggle={props.detailWarningsToggle}
+            span={span}
+            attributesToggle={props.detailTagsToggle}
+            traceStartTime={props.trace.startTime}
+            focusSpan={focusSpan}
+            currentViewRangeTime={props.currentViewRangeTime}
+            traceDuration={props.trace.duration}
+            useOtelTerms={props.useOtelTerms}
+          />
+        </div>
+      );
+    },
+    [
+      props.detailLogItemToggle,
+      props.detailLogsToggle,
+      props.detailProcessToggle,
+      props.detailReferencesToggle,
+      props.detailWarningsToggle,
+      props.detailStates,
+      props.detailTagsToggle,
+      props.detailToggle,
+      props.spanNameColumnWidth,
+      props.trace,
+      props.currentViewRangeTime,
+      props.useOtelTerms,
+      linksGetterFromAttributes,
+      eventItemToggleAdapter,
+      focusSpan,
+    ]
+  );
 
-  getIndexFromKey = (key: string) => {
-    const parts = key.split('--');
-    const _spanID = parts[0];
-    const _isDetail = parts[1] === 'detail';
-    const max = this.getRowStates().length;
-    for (let i = 0; i < max; i++) {
-      const { span, isDetail } = this.getRowStates()[i];
-      if (span.spanID === _spanID && isDetail === _isDetail) {
-        return i;
+  const renderSpanBarRow = React.useCallback(
+    (span: IOtelSpan, spanIndex: number, key: string, style: React.CSSProperties, attrs: object) => {
+      const { spanID } = span;
+      const { serviceName } = span.resource;
+
+      if (!trace) {
+        return null;
       }
-    }
-    return -1;
-  };
 
-  getRowHeight = (index: number) => {
-    const { span, isDetail } = this.getRowStates()[index];
-    if (!isDetail) {
-      return DEFAULT_HEIGHTS.bar;
-    }
-    if (Array.isArray(span.events) && span.events.length) {
-      return DEFAULT_HEIGHTS.detailWithLogs;
-    }
-    return DEFAULT_HEIGHTS.detail;
-  };
+      const { spans } = trace;
 
-  linksGetter = (span: IOtelSpan, items: ReadonlyArray<IAttribute>, itemIndex: number) => {
-    const { trace } = this.props;
-    if (!trace) return [];
-    return getLinks(span, items, itemIndex, trace);
-  };
+      const color = colorGenerator.getColorByKey(serviceName);
+      const isCollapsed = childrenHiddenIDs.has(spanID);
+      const isDetailExpanded = detailStates.has(spanID);
+      const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
+      const hasOwnError = isErrorSpan(span);
+      const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
 
-  // Adapter for OTEL components that need links from attributes
-  linksGetterFromAttributes = (span: IOtelSpan) => (attributes: ReadonlyArray<IAttribute>, index: number) => {
-    return this.linksGetter(span, attributes, index);
-  };
+      const criticalPathSections = getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
 
-  // Adapter for OTEL event toggle to legacy log toggle
-  eventItemToggleAdapter =
-    (detailLogItemToggle: (spanID: string, log: IEvent) => void) => (spanID: string, event: IEvent) => {
-      // Pass the IEvent directly.
-      detailLogItemToggle(spanID, event);
-    };
+      let rpc = null;
 
-  renderRow = (key: string, style: React.CSSProperties, index: number, attrs: object) => {
-    const { isDetail, span, spanIndex } = this.getRowStates()[index];
-    return isDetail
-      ? this.renderSpanDetailRow(span, key, style, attrs)
-      : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
-  };
+      if (isCollapsed) {
+        const rpcSpan = findServerChildSpan(spans.slice(spanIndex));
+        if (rpcSpan) {
+          const rpcViewBounds = getViewedBounds()(rpcSpan.startTime, rpcSpan.endTime);
 
-  getCriticalPathSections(
-    isCollapsed: boolean,
-    trace: IOtelTrace,
-    spanID: string,
-    criticalPath: CriticalPathSection[]
-  ) {
-    if (isCollapsed) {
-      return mergeChildrenCriticalPath(trace, spanID, criticalPath);
-    }
+          rpc = {
+            color: colorGenerator.getColorByKey(rpcSpan.resource.serviceName),
+            operationName: rpcSpan.name,
+            serviceName: rpcSpan.resource.serviceName,
+            viewEnd: rpcViewBounds.end,
+            viewStart: rpcViewBounds.start,
+          };
+        }
+      }
 
-    const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
-    return spanID in pathBySpanID ? pathBySpanID[spanID] : [];
-  }
+      const peerServiceAttr = span.attributes.find(attr => attr.key === PEER_SERVICE);
 
-  renderSpanBarRow(
-    span: IOtelSpan,
-    spanIndex: number,
-    key: string,
-    style: React.CSSProperties,
-    attrs: object
-  ) {
-    const { spanID } = span;
-    const { serviceName } = span.resource;
-    const {
+      let noInstrumentedServer = null;
+
+      if (!span.hasChildren && peerServiceAttr && (isKindClient(span) || isKindProducer(span))) {
+        noInstrumentedServer = {
+          serviceName: String(peerServiceAttr.value),
+          color: colorGenerator.getColorByKey(String(peerServiceAttr.value)),
+        };
+      }
+
+      return (
+        <div className="VirtualizedTraceView--row" key={key} style={style} {...attrs}>
+          <SpanBarRow
+            className={getClippingCssClasses()}
+            color={color}
+            criticalPath={criticalPathSections}
+            columnDivision={spanNameColumnWidth}
+            isChildrenExpanded={!isCollapsed}
+            isDetailExpanded={isDetailExpanded}
+            isMatchingFilter={isMatchingFilter}
+            numTicks={NUM_TICKS}
+            onDetailToggled={detailToggle}
+            onChildrenToggled={childrenToggle}
+            rpc={rpc}
+            noInstrumentedServer={noInstrumentedServer}
+            hasOwnError={hasOwnError}
+            hasChildError={hasChildError}
+            getViewedBounds={getViewedBounds()}
+            traceStartTime={trace.startTime}
+            span={span}
+            focusSpan={focusSpan}
+            traceDuration={trace.duration}
+            useOtelTerms={useOtelTerms}
+          />
+        </div>
+      );
+    },
+    [
       childrenHiddenIDs,
       childrenToggle,
       detailStates,
@@ -463,147 +512,123 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       trace,
       criticalPath,
       useOtelTerms,
-    } = this.props;
-    // to avert flow error
-    if (!trace) {
-      return null;
-    }
+      getCriticalPathSections,
+      getViewedBounds,
+      getClippingCssClasses,
+      focusSpan,
+    ]
+  );
 
-    const { spans } = trace;
+  const renderRow = React.useCallback(
+    (key: string, style: React.CSSProperties, index: number, attrs: object) => {
+      const { isDetail, span, spanIndex } = getRowStates()[index];
 
-    const color = colorGenerator.getColorByKey(serviceName);
-    const isCollapsed = childrenHiddenIDs.has(spanID);
-    const isDetailExpanded = detailStates.has(spanID);
-    const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
-    const isSelected = selectedSpanID === spanID;
-    const hasOwnError = isErrorSpan(span);
-    const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
-    const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
-    // Check for direct child "server" span if the span is a "client" span.
-    let rpc = null;
-    if (isCollapsed) {
-      const rpcSpan = findServerChildSpan(spans.slice(spanIndex));
-      if (rpcSpan) {
-        const rpcViewBounds = this.getViewedBounds()(rpcSpan.startTime, rpcSpan.endTime);
-        rpc = {
-          color: colorGenerator.getColorByKey(rpcSpan.resource.serviceName),
-          operationName: rpcSpan.name,
-          serviceName: rpcSpan.resource.serviceName,
-          viewEnd: rpcViewBounds.end,
-          viewStart: rpcViewBounds.start,
-        };
+      return isDetail
+        ? renderSpanDetailRow(span, key, style, attrs)
+        : renderSpanBarRow(span, spanIndex, key, style, attrs);
+    },
+    [getRowStates, renderSpanDetailRow, renderSpanBarRow]
+  );
+
+  const getKeyFromIndex = React.useCallback(
+    (index: number) => {
+      const { isDetail, span } = getRowStates()[index];
+      return `${span.spanID}--${isDetail ? 'detail' : 'bar'}`;
+    },
+    [getRowStates]
+  );
+
+  const getIndexFromKey = React.useCallback(
+    (key: string) => {
+      const parts = key.split('--');
+      const _spanID = parts[0];
+      const _isDetail = parts[1] === 'detail';
+      const rowStates = getRowStates();
+      const max = rowStates.length;
+      for (let i = 0; i < max; i++) {
+        const { span, isDetail } = rowStates[i];
+        if (span.spanID === _spanID && isDetail === _isDetail) {
+          return i;
+        }
       }
+      return -1;
+    },
+    [getRowStates]
+  );
+
+  const mapRowIndexToSpanIndex = React.useCallback(
+    (index: number) => getRowStates()[index].spanIndex,
+    [getRowStates]
+  );
+
+  const mapSpanIndexToRowIndex = React.useCallback(
+    (index: number) => {
+      const rowStates = getRowStates();
+      const max = rowStates.length;
+      for (let i = 0; i < max; i++) {
+        const { spanIndex } = rowStates[i];
+        if (spanIndex === index) {
+          return i;
+        }
+      }
+      throw new Error(`unable to find row for span index: ${index}`);
+    },
+    [getRowStates]
+  );
+
+  const getViewRange = React.useCallback(() => props.currentViewRangeTime, [props.currentViewRangeTime]);
+
+  const getSearchedSpanIDs = React.useCallback(() => props.findMatchesIDs, [props.findMatchesIDs]);
+
+  const getCollapsedChildren = React.useCallback(() => props.childrenHiddenIDs, [props.childrenHiddenIDs]);
+
+  const getAccessors = React.useCallback(() => {
+    const lv = listViewRef.current;
+    if (!lv) {
+      throw new Error('ListView unavailable');
     }
-    const peerServiceAttr = span.attributes.find(attr => attr.key === PEER_SERVICE);
-    // Leaf, kind == client and has peer.service tag, is likely a client span that does a request
-    // to an uninstrumented/external service
-    let noInstrumentedServer = null;
-    if (!span.hasChildren && peerServiceAttr && (isKindClient(span) || isKindProducer(span))) {
-      noInstrumentedServer = {
-        serviceName: String(peerServiceAttr.value),
-        color: colorGenerator.getColorByKey(String(peerServiceAttr.value)),
-      };
+    return {
+      getViewRange,
+      getSearchedSpanIDs,
+      getCollapsedChildren,
+      getViewHeight: lv.getViewHeight,
+      getBottomRowIndexVisible: lv.getBottomVisibleIndex,
+      getTopRowIndexVisible: lv.getTopVisibleIndex,
+      getRowPosition: lv.getRowPosition,
+      mapRowIndexToSpanIndex,
+      mapSpanIndexToRowIndex,
+    };
+  }, [
+    getViewRange,
+    getSearchedSpanIDs,
+    getCollapsedChildren,
+    mapRowIndexToSpanIndex,
+    mapSpanIndexToRowIndex,
+  ]);
+
+  React.useEffect(() => {
+    if (listViewRef.current && registerAccessors) {
+      registerAccessors(getAccessors());
     }
+  }, [registerAccessors, getAccessors]);
 
-    return (
-      <div className="VirtualizedTraceView--row" key={key} style={style} {...attrs}>
-        <SpanBarRow
-          className={this.getClippingCssClasses()}
-          color={color}
-          criticalPath={criticalPathSections}
-          nameColumnWidth={nameColumnWidth}
-          isChildrenExpanded={!isCollapsed}
-          isDetailExpanded={isDetailExpanded}
-          isMatchingFilter={isMatchingFilter}
-          isSelected={isSelected}
-          timelineBarsVisible={timelineBarsVisible}
-          numTicks={NUM_TICKS}
-          onDetailToggled={detailToggle}
-          onChildrenToggled={childrenToggle}
-          rpc={rpc}
-          noInstrumentedServer={noInstrumentedServer}
-          hasOwnError={hasOwnError}
-          hasChildError={hasChildError}
-          getViewedBounds={this.getViewedBounds()}
-          traceStartTime={trace.startTime}
-          span={span}
-          focusSpan={this.focusSpan}
-          traceDuration={trace.duration}
-          useOtelTerms={useOtelTerms}
-        />
-      </div>
-    );
-  }
-
-  renderSpanDetailRow(span: IOtelSpan, key: string, style: React.CSSProperties, attrs: object) {
-    const { spanID } = span;
-    const { serviceName } = span.resource;
-    const {
-      detailLogItemToggle,
-      detailLogsToggle,
-      detailProcessToggle,
-      detailReferencesToggle,
-      detailWarningsToggle,
-      detailStates,
-      detailTagsToggle,
-      detailToggle,
-      nameColumnWidth,
-      timelineBarsVisible,
-      trace,
-      currentViewRangeTime,
-      useOtelTerms,
-    } = this.props;
-    const detailState = detailStates.get(spanID);
-    if (!trace || !detailState) {
-      return null;
-    }
-
-    const color = colorGenerator.getColorByKey(serviceName);
-    return (
-      <div className="VirtualizedTraceView--row" key={key} style={{ ...style, zIndex: 1 }} {...attrs}>
-        <SpanDetailRow
-          color={color}
-          nameColumnWidth={nameColumnWidth}
-          timelineBarsVisible={timelineBarsVisible}
-          onDetailToggled={detailToggle}
-          detailState={detailState}
-          linksGetter={this.linksGetterFromAttributes(span)}
-          eventItemToggle={this.eventItemToggleAdapter(detailLogItemToggle)}
-          eventsToggle={detailLogsToggle}
-          resourceToggle={detailProcessToggle}
-          linksToggle={detailReferencesToggle}
-          warningsToggle={detailWarningsToggle}
-          span={span}
-          attributesToggle={detailTagsToggle}
-          traceStartTime={trace.startTime}
-          focusSpan={this.focusSpan}
-          currentViewRangeTime={currentViewRangeTime}
-          traceDuration={trace.duration}
-          useOtelTerms={useOtelTerms}
-        />
-      </div>
-    );
-  }
-
-  render() {
-    return (
-      <div className="VirtualizedTraceView--spans">
-        <ListView
-          ref={this.setListView}
-          dataLength={this.getRowStates().length}
-          itemHeightGetter={this.getRowHeight}
-          itemRenderer={this.renderRow}
-          viewBuffer={300}
-          viewBufferMin={100}
-          itemsWrapperClassName="VirtualizedTraceView--rowsWrapper"
-          getKeyFromIndex={this.getKeyFromIndex}
-          getIndexFromKey={this.getIndexFromKey}
-          windowScroller
-        />
-      </div>
-    );
-  }
-}
+  return (
+    <div className="VirtualizedTraceView--spans">
+      <ListView
+        ref={listViewRef}
+        dataLength={getRowStates().length}
+        itemHeightGetter={getRowHeight}
+        itemRenderer={renderRow}
+        viewBuffer={300}
+        viewBufferMin={100}
+        itemsWrapperClassName="VirtualizedTraceView--rowsWrapper"
+        getKeyFromIndex={getKeyFromIndex}
+        getIndexFromKey={getIndexFromKey}
+        windowScroller
+      />
+    </div>
+  );
+};
 
 /* istanbul ignore next */
 function mapStateToProps(
@@ -617,6 +642,25 @@ function mapStateToProps(
     selectedSpanID: detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null,
   };
 }
+export const testableHelpers = {
+  generateRowStates,
+  generateRowStatesFromTrace,
+  getCssClasses,
+  mergeChildrenCriticalPath,
+  createFocusSpan:
+    (
+      trace: IOtelTrace | TNil,
+      focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil, allowHide?: boolean) => void,
+      location: Location,
+      navigate: ReturnType<typeof useNavigate>
+    ) =>
+    (uiFind: string) => {
+      if (trace) {
+        updateUiFind({ location, navigate, uiFind });
+        focusUiFindMatches(trace, uiFind, false);
+      }
+    },
+};
 
 /* istanbul ignore next */
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
