@@ -279,17 +279,13 @@ describe('UiFind', () => {
   });
 
   describe('extractUiFindFromState', () => {
-    const reduxStateValue = '?uiFind=fromRedux';
-
     beforeEach(() => {
       queryStringParseSpy.mockReturnValue({ uiFind });
     });
 
-    it('delegates to parseUiFind using state.router.location.search', () => {
-      const result = extractUiFindFromState({
-        router: { location: { search: reduxStateValue } },
-      });
-      expect(queryStringParseSpy).toHaveBeenCalledWith(reduxStateValue);
+    it('delegates to parseUiFind using window.location.search', () => {
+      const result = extractUiFindFromState({});
+      expect(queryStringParseSpy).toHaveBeenCalledWith(window.location.search);
       expect(result).toEqual({ uiFind });
     });
   });

@@ -279,7 +279,6 @@ describe('mapStateToProps()', () => {
       error: null,
     };
     const state = {
-      router: { location: { search: '' } },
       trace: stateTrace,
       traceDiff: {
         cohort: [trace.traceID],
@@ -290,7 +289,9 @@ describe('mapStateToProps()', () => {
       },
     };
 
-    const { maxTraceDuration, traceResultsToDownload, diffCohort, traces, ...rest } = mapStateToProps(state);
+    const { maxTraceDuration, traceResultsToDownload, diffCohort, traces, ...rest } = mapStateToProps(state, {
+      search: '',
+    });
     expect(traces).toHaveLength(stateTrace.search.results.length);
     expect(traces[0].traceID).toBe(trace.traceID);
     expect(traceResultsToDownload[0].traceID).toBe(trace.traceID);
