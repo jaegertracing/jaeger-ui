@@ -117,8 +117,8 @@ export function parseUiFind(search: string): string | undefined {
   return Array.isArray(uiFind) ? uiFind.join(' ') : uiFind;
 }
 
-export function extractUiFindFromState(state: ReduxState): TExtractUiFindFromStateReturn {
-  return { uiFind: parseUiFind(state.router.location.search) };
+export function extractUiFindFromState(_state: ReduxState): TExtractUiFindFromStateReturn {
+  return { uiFind: parseUiFind(window.location.search) };
 }
 
 export default UnconnectedUiFindInput as any;
