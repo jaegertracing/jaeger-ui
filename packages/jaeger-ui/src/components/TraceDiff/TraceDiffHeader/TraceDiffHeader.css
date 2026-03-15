@@ -21,6 +21,7 @@ SPDX-License-Identifier: Apache-2.0
   width: 50px;
   background: var(--surface-tertiary);
   border-right: 1px solid var(--border-default);
+  white-space: nowrap;
 }
 
 .TraceDiffHeader--label {
@@ -28,6 +29,8 @@ SPDX-License-Identifier: Apache-2.0
   font-size: 24px;
   font-weight: 600;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .TraceDiffHeader--traceSection {
