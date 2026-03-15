@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
 import { render, fireEvent, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
@@ -47,46 +46,26 @@ describe('<TimelineViewingLayer>', () => {
     expect(container.querySelector('.TimelineViewingLayer')).toBeInTheDocument();
   });
 
-  it('sets _root to the root DOM node', () => {
+  it('sets ref to the root DOM node', () => {
     const { container } = render(<TimelineViewingLayer {...props} />);
     const timelineLayer = container.querySelector('.TimelineViewingLayer');
     expect(timelineLayer).toBeDefined();
   });
 
   describe('uses DraggableManager', () => {
-    it('initializes the DraggableManager', () => {
-      const comp = new TimelineViewingLayer(props);
-      expect(comp._draggerReframe).toBeDefined();
-    });
-
-    it('returns the dragging bounds from _getDraggingBounds()', () => {
-      const comp = new TimelineViewingLayer(props);
-      comp._root.current = document.createElement('div');
-      comp._root.current.getBoundingClientRect = () => ({ left: 10, width: 100 });
-      expect(comp._getDraggingBounds()).toEqual({ clientXLeft: 10, width: 100 });
-    });
-
-    it('throws error on call to _getDraggingBounds() on unmounted component', () => {
-      const comp = new TimelineViewingLayer(props);
-      comp._root.current = null;
-      expect(() => comp._getDraggingBounds()).toThrow(
-        'Component must be mounted in order to determine DraggableBounds'
-      );
-    });
-
-    it('updates viewRange.time.cursor via _draggerReframe._onMouseMove', () => {
+    it('updates viewRange.time.cursor via mouse move', () => {
       const { container } = render(<TimelineViewingLayer {...props} />);
       fireEvent.mouseMove(container.querySelector('.TimelineViewingLayer'), { clientX: 60 });
       expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({ cursor: expect.any(Number) });
     });
 
-    it('resets viewRange.time.cursor via _draggerReframe._onMouseLeave', () => {
+    it('resets viewRange.time.cursor via mouse leave', () => {
       const { container } = render(<TimelineViewingLayer {...props} />);
       fireEvent.mouseLeave(container.querySelector('.TimelineViewingLayer'));
       expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({ cursor: undefined });
     });
 
-    it('handles drag start via _draggerReframe._onDragStart', () => {
+    it('handles drag start via mouse down', () => {
       const { container } = render(<TimelineViewingLayer {...props} />);
       fireEvent.mouseDown(container.querySelector('.TimelineViewingLayer'), { clientX: 60 });
       expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({
@@ -97,7 +76,7 @@ describe('<TimelineViewingLayer>', () => {
       });
     });
 
-    it('handles drag move via _draggerReframe._onDragMove', () => {
+    it('handles drag move', () => {
       const anchor = 0.25;
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: 0.5 } };
       const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
@@ -110,7 +89,7 @@ describe('<TimelineViewingLayer>', () => {
       });
     });
 
-    it('handles drag end via _draggerReframe._onDragEnd', () => {
+    it('handles drag end', () => {
       const anchor = 0.75;
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: 0.5 } };
       const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
