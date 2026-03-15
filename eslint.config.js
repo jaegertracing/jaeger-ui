@@ -80,7 +80,7 @@ const commonSettings = {
 };
 
 const baseRules = {
-  'prettier/prettier': ['error'],
+  'prettier/prettier': ['error', { endOfLine: 'auto' }],
   'no-unused-vars': 'off',
   'no-redeclare': 'off',
   'no-shadow': 'off',
