@@ -246,14 +246,6 @@ export function TracePageImpl(props: TProps) {
   }, []);
 
   useEffect(() => {
-    if (!trace) {
-      fetchTrace(id);
-    }
-    updateViewRangeTime(0, 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     scrollManagerRef.current.setTrace(trace && trace.data ? trace.data.asOtelTrace() : undefined);
   }, [trace]);
 
@@ -267,6 +259,7 @@ export function TracePageImpl(props: TProps) {
       clearSearch();
     } else if (!trace) {
       fetchTrace(id);
+      updateViewRangeTime(0, 1);
     }
   }, [id, trace, fetchTrace, updateViewRangeTime, clearSearch]);
 
