@@ -5,7 +5,6 @@ import * as React from 'react';
 import { Location } from 'history';
 import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
 import { useMemo } from 'react';
-import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
@@ -235,7 +234,10 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
   updateUrlState = (newValues: Partial<TDdgSparseUrlState>) => {
     const { baseUrl, extraUrlArgs, graphState, navigate, uiFind, urlState } = this.props;
     const getUrlArg = { uiFind, ...urlState, ...newValues, ...extraUrlArgs };
-    const hash = _get(graphState, 'model.hash');
+    const hash =
+      graphState && graphState.state === fetchedState.DONE
+        ? (graphState as IDoneState).model.hash
+        : undefined;
     if (hash) getUrlArg.hash = hash;
     navigate(getUrl(getUrlArg, baseUrl));
   };
@@ -394,7 +396,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
   let graphState: TDdgStateEntry | undefined;
   if (service) {
-    graphState = _get(state.ddg, getStateEntryKey({ service, operation, start: 0, end: 0 }));
+    graphState = state.ddg?.[getStateEntryKey({ service, operation, start: 0, end: 0 })];
   }
   let graph: GraphModel | undefined;
   if (graphState && graphState.state === fetchedState.DONE) {
@@ -404,7 +406,10 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     graph,
     graphState,
     showOp,
-    urlState: sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
+    urlState: sanitizeUrlState(
+      urlState,
+      graphState && graphState.state === fetchedState.DONE ? (graphState as IDoneState).model.hash : undefined
+    ),
     ...extractUiFindFromState(state),
   };
 }

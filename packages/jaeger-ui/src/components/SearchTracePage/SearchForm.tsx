@@ -3,7 +3,6 @@
 
 import React, { useState, useCallback, useMemo, ComponentProps } from 'react';
 import { Input, Button, Popover, Select, Row, Col, Form, Switch } from 'antd';
-import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import dayjs from 'dayjs';
@@ -848,8 +847,8 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
       maxDuration: (maxDuration as string | undefined) || undefined,
       traceIDs: traceIDs || null,
     },
-    searchMaxLookback: _get(state, 'config.search.maxLookback'),
-    searchAdjustEndTime: _get(state, 'config.search.adjustEndTime'),
+    searchMaxLookback: state.config?.search?.maxLookback,
+    searchAdjustEndTime: state.config?.search?.adjustEndTime,
     submitting: state.trace?.search?.state === fetchedState.LOADING,
   };
 }

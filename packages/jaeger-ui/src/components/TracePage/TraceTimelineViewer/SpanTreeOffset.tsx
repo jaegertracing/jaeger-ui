@@ -3,7 +3,6 @@
 
 import React, { useMemo } from 'react';
 import cx from 'classnames';
-import _get from 'lodash/get';
 import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
@@ -64,10 +63,8 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
    * @param {string} ancestorId - The span id that the user was hovering over.
    */
   const handleMouseLeave = (event: React.MouseEvent<HTMLSpanElement>, ancestorId: string) => {
-    if (
-      !(event.relatedTarget instanceof HTMLSpanElement) ||
-      _get(event, 'relatedTarget.dataset.ancestorId') !== ancestorId
-    ) {
+    const rt = event.relatedTarget;
+    if (!(rt instanceof HTMLSpanElement) || rt.dataset.ancestorId !== ancestorId) {
       removeHoverIndentGuideId(ancestorId);
     }
   };
@@ -81,10 +78,8 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
    * @param {string} ancestorId - The span id that the user is now hovering over.
    */
   const handleMouseEnter = (event: React.MouseEvent<HTMLSpanElement>, ancestorId: string) => {
-    if (
-      !(event.relatedTarget instanceof HTMLSpanElement) ||
-      _get(event, 'relatedTarget.dataset.ancestorId') !== ancestorId
-    ) {
+    const rt = event.relatedTarget;
+    if (!(rt instanceof HTMLSpanElement) || rt.dataset.ancestorId !== ancestorId) {
       addHoverIndentGuideId(ancestorId);
     }
   };
