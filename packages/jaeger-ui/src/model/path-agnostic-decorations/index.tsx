@@ -30,7 +30,7 @@ export default function extractDecorationFromState(
 
   if (!decorationID) return {};
 
-  const decorationState = state.pathAgnosticDecorations?.[decorationID];
+  const decorationState = state.pathAgnosticDecorations[decorationID];
   let decorationValue = decorationState?.withOp?.[service]?.[operation as string];
   let decorationMax = decorationState?.withOpMax;
   if (!decorationValue) {
