@@ -22,8 +22,8 @@ describe('calculateTraceDagEV', () => {
   it('calculates TraceGraph', () => {
     const traceDag = calculateTraceDagEV(transformedTrace.asOtelTrace());
     const { vertices: nodes } = traceDag;
-    expect(nodes.length).toBe(9);
-    assertData(nodes, 'service1', 'op1', 1, 0, 390, 39, 224);
+    expect(nodes.length).toBe(10);
+    assertData(nodes, 'service1', 'op1', 1, 0, 390, 39, 209);
     // accumulate data (count,times)
     assertData(nodes, 'service1', 'op2', 2, 1, 70, 7, 70);
     // self-time is substracted from child
@@ -36,6 +36,22 @@ describe('calculateTraceDagEV', () => {
     // fork-join self-times are calculated correctly (self-time drange)
     assertData(nodes, 'service1', 'op6', 1, 0, 10, 1, 1);
     assertData(nodes, 'service1', 'op7', 2, 0, 17, 1.7, 17);
+    // DAG span with multiple references (CHILD_OF to span-1 + FOLLOWS_FROM to span-6)
+    assertData(nodes, 'service1', 'op8', 1, 0, 15, 1.5, 15);
+  });
+
+  it('includes additional DAG edges from span links', () => {
+    const traceDag = calculateTraceDagEV(transformedTrace.asOtelTrace());
+    const { edges } = traceDag;
+    // span-8 (op8) has a FOLLOWS_FROM to span-6 (op4), creating an additional edge
+    // These should be rendered as non-blocking (dashed) edges
+    const additionalEdges = edges.filter(e => {
+      // Find edges pointing to the op8 node that are not from the parent (op1 node)
+      const toStr = String(e.to);
+      const fromStr = String(e.from);
+      return toStr.includes('op8') && fromStr.includes('op4');
+    });
+    expect(additionalEdges.length).toBe(1);
   });
 });
 
