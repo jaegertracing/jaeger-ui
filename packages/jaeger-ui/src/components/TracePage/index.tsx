@@ -214,6 +214,11 @@ export function TracePageImpl(props: TProps) {
     if (searchBarRef.current) searchBarRef.current.focus();
   }, []);
 
+  const clearSearchRef = useRef(clearSearch);
+  clearSearchRef.current = clearSearch;
+  const focusOnSearchBarRef = useRef(focusOnSearchBar);
+  focusOnSearchBarRef.current = focusOnSearchBar;
+
   const adjustViewRange = useCallback(
     (startChange: number, endChange: number, trackSrc: string) => {
       const [viewStart, viewEnd] = viewRangeRef.current.time.current;
@@ -233,8 +238,8 @@ export function TracePageImpl(props: TProps) {
     shortcutCallbacks.scrollPageUp = scrollPageUp;
     shortcutCallbacks.scrollToNextVisibleSpan = scrollToNextVisibleSpan;
     shortcutCallbacks.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
-    shortcutCallbacks.clearSearch = clearSearch;
-    shortcutCallbacks.searchSpans = focusOnSearchBar;
+    shortcutCallbacks.clearSearch = () => clearSearchRef.current();
+    shortcutCallbacks.searchSpans = () => focusOnSearchBarRef.current();
     mergeShortcuts(shortcutCallbacks);
 
     return () => {
@@ -242,12 +247,16 @@ export function TracePageImpl(props: TProps) {
       cancelScroll();
       sm.destroy();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [adjustViewRange]);
 
   useEffect(() => {
     scrollManagerRef.current.setTrace(trace && trace.data ? trace.data.asOtelTrace() : undefined);
   }, [trace]);
+
+  // Mount: reset view range to full (matches class component componentDidMount behavior)
+  useEffect(() => {
+    updateViewRangeTime(0, 1);
+  }, [updateViewRangeTime]);
 
   useEffect(() => {
     if (prevIdRef.current !== id) {
@@ -263,21 +272,21 @@ export function TracePageImpl(props: TProps) {
     }
   }, [id, trace, fetchTrace, updateViewRangeTime, clearSearch]);
 
-  useEffect(() => {
-    const elm = headerElmRef.current;
-    if (elm) {
-      if (headerHeight !== elm.clientHeight) {
-        setHeaderHeight(elm.clientHeight);
-      }
-    } else if (headerHeight) {
-      setHeaderHeight(null);
-    }
-  }, [headerHeight]);
+  const headerResizeObserverRef = useRef<ResizeObserver | TNil>(null);
 
   const headerRefCallback = useCallback((elm: HTMLElement | TNil) => {
+    if (headerResizeObserverRef.current) {
+      headerResizeObserverRef.current.disconnect();
+      headerResizeObserverRef.current = null;
+    }
     headerElmRef.current = elm;
     if (elm) {
       setHeaderHeight(elm.clientHeight);
+      const resizeObserver = new ResizeObserver(() => {
+        setHeaderHeight(elm.clientHeight);
+      });
+      resizeObserver.observe(elm);
+      headerResizeObserverRef.current = resizeObserver;
     } else {
       setHeaderHeight(null);
     }
