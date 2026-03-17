@@ -117,7 +117,10 @@ export function parseUiFind(search: string): string | undefined {
   return Array.isArray(uiFind) ? uiFind.join(' ') : uiFind;
 }
 
-export function extractUiFindFromState(_state: ReduxState): TExtractUiFindFromStateReturn {
+// This is used by various components to extract uiFind from the URL.
+// The "fromState" part of the name is a legacy leftover from when
+// this was reading from Redux state.
+export function extractUiFindFromState(_unused: any = null): TExtractUiFindFromStateReturn {
   return { uiFind: parseUiFind(window.location.search) };
 }
 
