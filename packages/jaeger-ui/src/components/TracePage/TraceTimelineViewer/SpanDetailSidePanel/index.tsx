@@ -4,7 +4,8 @@
 import React, { useCallback } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
-import { Location, History } from 'history';
+import { Location } from 'history';
+import { NavigateFunction } from 'react-router-dom-v5-compat';
 
 import { actions, getSelectedSpanID } from '../duck';
 import SpanDetail from '../SpanDetail';
@@ -39,7 +40,7 @@ type TDispatchProps = {
 
 type RouteProps = {
   location: Location;
-  history: History;
+  navigate: NavigateFunction;
 };
 
 type TProps = TOwnProps & TReduxProps & TDispatchProps & RouteProps;
@@ -58,15 +59,15 @@ export function SpanDetailSidePanelImpl(props: TProps) {
     detailWarningsToggle,
     focusUiFindMatches,
     location,
-    history,
+    navigate,
   } = props;
 
   const focusSpan = useCallback(
     (uiFind: string) => {
-      updateUiFind({ location, history, uiFind });
+      updateUiFind({ location, navigate, uiFind });
       focusUiFindMatches(trace, uiFind, false);
     },
-    [location, history, trace, focusUiFindMatches]
+    [location, navigate, trace, focusUiFindMatches]
   );
 
   // Show the explicitly selected span, falling back to the root span when nothing is selected.

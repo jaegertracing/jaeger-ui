@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { useLocation, useParams } from 'react-router-dom-v5-compat';
-import { History, Location } from 'history';
-import { history } from './configure-store';
+import { useLocation, useNavigate, useParams, NavigateFunction } from 'react-router-dom-v5-compat';
+import { Location } from 'history';
 
 /**
  * Interface representing route-related props passed to the enhanced component.
@@ -13,14 +12,14 @@ import { history } from './configure-store';
  * @property {string} pathname - The current URL pathname.
  * @property {string} search - The current URL search string.
  * @property {object} params - The URL parameters.
- * @property {History} history - The history object for navigation.
+ * @property {NavigateFunction} navigate - The navigate function for programmatic navigation.
  */
 export type IWithRouteProps = {
   location: Location;
   pathname: string;
   search: string;
   params: object;
-  history: History;
+  navigate: NavigateFunction;
 };
 
 /**
@@ -49,6 +48,12 @@ export default function withRouteProps(WrappedComponent: React.ElementType) {
     const params = useParams();
 
     /**
+     * The navigate function for programmatic navigation.
+     * @type {NavigateFunction}
+     */
+    const navigate = useNavigate();
+
+    /**
      * The current URL pathname.
      * @type {string}
      */
@@ -71,7 +76,7 @@ export default function withRouteProps(WrappedComponent: React.ElementType) {
         pathname={pathname}
         search={search}
         params={params}
-        history={history}
+        navigate={navigate}
       />
     );
   };

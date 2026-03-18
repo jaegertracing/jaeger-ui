@@ -56,6 +56,10 @@ jest.mock('./keyboard-shortcuts');
 jest.mock('./scroll-page');
 jest.mock('../../utils/filter-spans');
 jest.mock('../../utils/update-ui-find');
+jest.mock('react-router-dom-v5-compat', () => {
+  const navigate = jest.fn();
+  return { useNavigate: () => navigate };
+});
 jest.mock('./TracePageHeader/SpanGraph', () => () => <div data-testid="span-graph">SpanGraph</div>);
 jest.mock('./TracePageHeader/TracePageHeader.track');
 jest.mock('./TracePageHeader/TracePageSearchBar', () => () => <div data-testid="search-bar">SearchBar</div>);
@@ -91,7 +95,6 @@ import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
-import { createMemoryHistory } from 'history';
 
 import {
   computeAdjustedRange,
@@ -153,7 +156,6 @@ describe('<TracePage>', () => {
     fetchTrace: jest.fn(),
     focusUiFindMatches: jest.fn(),
     id: trace.traceID,
-    history: createMemoryHistory(),
     location: {
       search: null,
       state: null,
@@ -186,7 +188,7 @@ describe('<TracePage>', () => {
 
       rerender(<TracePage {...defaultProps} id={notDefaultPropsId} />);
       expect(updateUiFindSpy).toHaveBeenCalledWith({
-        history: defaultProps.history,
+        navigate: expect.any(Function),
         location: defaultProps.location,
         trackFindFunction: track.trackFilter,
       });
