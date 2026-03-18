@@ -207,11 +207,11 @@ export function TracePageImpl(props: TProps) {
 
   const clearSearch = useCallback(() => {
     updateUiFind({ history, location, trackFindFunction: trackFilter });
-    if (searchBarRef.current) searchBarRef.current.blur();
+    searchBarRef.current?.blur();
   }, [history, location]);
 
   const focusOnSearchBar = useCallback(() => {
-    if (searchBarRef.current) searchBarRef.current.focus();
+    searchBarRef.current?.focus();
   }, []);
 
   const clearSearchRef = useRef(clearSearch);
@@ -252,11 +252,6 @@ export function TracePageImpl(props: TProps) {
   useEffect(() => {
     scrollManagerRef.current.setTrace(trace && trace.data ? trace.data.asOtelTrace() : undefined);
   }, [trace]);
-
-  // Mount: reset view range to full (matches class component componentDidMount behavior)
-  useEffect(() => {
-    updateViewRangeTime(0, 1);
-  }, [updateViewRangeTime]);
 
   useEffect(() => {
     if (prevIdRef.current !== id) {
