@@ -250,7 +250,7 @@ export function TracePageImpl(props: TProps) {
   }, [adjustViewRange]);
 
   useEffect(() => {
-    scrollManagerRef.current.setTrace(trace && trace.data ? trace.data.asOtelTrace() : undefined);
+    scrollManagerRef.current.setTrace(trace?.data?.asOtelTrace());
   }, [trace]);
 
   useEffect(() => {
