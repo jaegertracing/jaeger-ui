@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
 import { Location, History as RouterHistory } from 'history';
@@ -173,9 +173,16 @@ export function TracePageImpl(props: TProps) {
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
 
+  const traceDagEV = useMemo(
+    () =>
+      viewType === ETraceViewType.TraceGraph && trace?.data
+        ? calculateTraceDagEV(trace.data.asOtelTrace())
+        : null,
+    [trace, viewType]
+  );
+
   const searchBarRef = useRef<InputRef>(null);
   const headerElmRef = useRef<HTMLElement | TNil>(null);
-  const traceDagEVRef = useRef<TEv | TNil>(null);
   const viewRangeRef = useRef(viewRange);
   viewRangeRef.current = viewRange;
   const prevIdRef = useRef(id);
@@ -240,6 +247,7 @@ export function TracePageImpl(props: TProps) {
     shortcutCallbacks.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
     shortcutCallbacks.clearSearch = () => clearSearchRef.current();
     shortcutCallbacks.searchSpans = () => focusOnSearchBarRef.current();
+    resetShortcuts();
     mergeShortcuts(shortcutCallbacks);
 
     return () => {
@@ -277,11 +285,13 @@ export function TracePageImpl(props: TProps) {
     headerElmRef.current = elm;
     if (elm) {
       setHeaderHeight(elm.clientHeight);
-      const resizeObserver = new ResizeObserver(() => {
-        setHeaderHeight(elm.clientHeight);
-      });
-      resizeObserver.observe(elm);
-      headerResizeObserverRef.current = resizeObserver;
+      if (typeof ResizeObserver !== 'undefined') {
+        const resizeObserver = new ResizeObserver(() => {
+          setHeaderHeight(elm.clientHeight);
+        });
+        resizeObserver.observe(elm);
+        headerResizeObserverRef.current = resizeObserver;
+      }
     } else {
       setHeaderHeight(null);
     }
@@ -294,15 +304,9 @@ export function TracePageImpl(props: TProps) {
     });
   }, []);
 
-  const setTraceView = useCallback(
-    (newViewType: ETraceViewType) => {
-      if (trace && trace.data && newViewType === ETraceViewType.TraceGraph) {
-        traceDagEVRef.current = calculateTraceDagEV(trace.data.asOtelTrace());
-      }
-      setViewType(newViewType);
-    },
-    [trace]
-  );
+  const setTraceView = useCallback((newViewType: ETraceViewType) => {
+    setViewType(newViewType);
+  }, []);
 
   const archiveTrace = useCallback(() => {
     archiveTraceProp(id);
@@ -350,7 +354,7 @@ export function TracePageImpl(props: TProps) {
   let spanFindMatches: Set<string> | null | undefined;
   if (uiFind) {
     if (viewType === ETraceViewType.TraceGraph) {
-      graphFindMatches = getUiFindVertexKeys(uiFind, _get(traceDagEVRef.current, 'vertices', []));
+      graphFindMatches = getUiFindVertexKeys(uiFind, _get(traceDagEV, 'vertices', []));
       findCount = graphFindMatches ? graphFindMatches.size : 0;
     } else {
       spanFindMatches = filterSpansMemo(uiFind, _get(trace, 'data.spans'));
@@ -418,7 +422,7 @@ export function TracePageImpl(props: TProps) {
     view = (
       <TraceGraph
         headerHeight={headerHeight}
-        ev={traceDagEVRef.current}
+        ev={traceDagEV}
         uiFind={uiFind}
         uiFindVertexKeys={graphFindMatches}
         traceGraphConfig={traceGraphConfig}
