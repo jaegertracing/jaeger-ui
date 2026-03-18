@@ -8,6 +8,7 @@ import { ColumnProps } from 'antd/es/table';
 import './index.css';
 import { TNil } from '../../../types';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
+import RelativeBar from '../../common/RelativeBar';
 import { formatDuration, formatDurationCompact } from '../../../utils/date';
 import prefixUrl from '../../../utils/prefix-url';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -163,7 +164,6 @@ export default class TraceSpanView extends Component<Props, State> {
         title: 'Duration',
         sorter: (a, b) => a.duration - b.duration,
         render: (_, span) => {
-          const percentage = (span.duration / this.state.maxDuration) * 100;
           const preciseValue = formatDuration(span.duration);
           const compactValue = formatDurationCompact(span.duration);
 
@@ -177,26 +177,7 @@ export default class TraceSpanView extends Component<Props, State> {
                   width: '100%',
                 }}
               >
-                <div
-                  className="duration-bar-background"
-                  style={{
-                    flexGrow: 1,
-                    height: '6px',
-                    background: 'var(--surface-tertiary)',
-                    marginRight: '12px',
-                    position: 'relative',
-                    borderRadius: '2px',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${Math.max(percentage, 2)}%`,
-                      height: '100%',
-                      background: 'var(--interactive-primary)',
-                      borderRadius: '2px',
-                    }}
-                  />
-                </div>
+                <RelativeBar value={span.duration} maxValue={this.state.maxDuration} />
                 <div
                   style={{
                     whiteSpace: 'nowrap',
