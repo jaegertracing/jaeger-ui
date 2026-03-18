@@ -1,7 +1,7 @@
 // Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { getConfigValue } from '../../utils/config/get-config';
+import getConfig from '../../utils/config/get-config';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -50,7 +50,7 @@ export function writeStoredTheme(mode: ThemeMode, targetWindow?: Window | null) 
 }
 
 export function getInitialTheme(): ThemeMode {
-  if (!getConfigValue('themes.enabled')) {
+  if (!getConfig().themes?.enabled) {
     return DEFAULT_MODE;
   }
   const stored = readStoredTheme();

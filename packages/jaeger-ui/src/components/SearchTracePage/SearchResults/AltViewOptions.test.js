@@ -25,7 +25,7 @@ describe('AltViewOptions', () => {
   beforeAll(() => {
     getUrlSpy = jest.spyOn(url, 'getUrl');
     getUrlStateSpy = jest.spyOn(url, 'getUrlState');
-    getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue');
+    getConfigValueSpy = jest.spyOn(getConfig, 'default');
     trackConversionsSpy = jest.spyOn(trackingModule, 'trackConversions');
     openSpy = jest.spyOn(window, 'open').mockImplementation();
   });
@@ -51,7 +51,7 @@ describe('AltViewOptions', () => {
     expect(screen.getByText('Deep Dependency Graph')).toBeInTheDocument();
     expect(screen.queryByText('View All Dependencies')).not.toBeInTheDocument();
 
-    getConfigValueSpy.mockReturnValue(true);
+    getConfigValueSpy.mockReturnValue({ deepDependencies: { menuEnabled: true } });
     rerender(<AltViewOptions {...props} traceResultsView={false} />);
     expect(screen.getByText('Trace Results')).toBeInTheDocument();
     expect(screen.getByText('View All Dependencies')).toBeInTheDocument();
@@ -65,7 +65,7 @@ describe('AltViewOptions', () => {
     const mockUrl = 'test url';
     const mockUrlState = { service: 'serviceName', showOp: true };
 
-    getConfigValueSpy.mockReturnValue(true);
+    getConfigValueSpy.mockReturnValue({ deepDependencies: { menuEnabled: true } });
     getUrlSpy.mockReturnValue(mockUrl);
     getUrlStateSpy.mockReturnValue(mockUrlState);
 

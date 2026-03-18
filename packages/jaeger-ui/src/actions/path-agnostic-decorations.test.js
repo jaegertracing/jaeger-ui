@@ -11,7 +11,7 @@ import JaegerAPI from '../api/jaeger';
 jest.mock('lru-memoize', () => () => x => x);
 
 describe('getDecoration', () => {
-  let getConfigValueSpy;
+  let getConfigSpy;
   let fetchDecorationSpy;
   let resolves;
   let rejects;
@@ -36,26 +36,28 @@ describe('getDecoration', () => {
   };
 
   beforeAll(() => {
-    getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue').mockReturnValue([
-      {
-        id: withOpID,
-        summaryUrl,
-        opSummaryUrl,
-        summaryPath,
-        opSummaryPath,
-      },
-      {
-        id: partialID,
-        summaryUrl,
-        opSummaryUrl,
-        summaryPath,
-      },
-      {
-        id: withoutOpID,
-        summaryUrl,
-        summaryPath,
-      },
-    ]);
+    getConfigSpy = jest.spyOn(getConfig, 'default').mockReturnValue({
+      pathAgnosticDecorations: [
+        {
+          id: withOpID,
+          summaryUrl,
+          opSummaryUrl,
+          summaryPath,
+          opSummaryPath,
+        },
+        {
+          id: partialID,
+          summaryUrl,
+          opSummaryUrl,
+          summaryPath,
+        },
+        {
+          id: withoutOpID,
+          summaryUrl,
+          summaryPath,
+        },
+      ],
+    });
     fetchDecorationSpy = jest.spyOn(JaegerAPI, 'fetchDecoration').mockImplementation(
       () =>
         new Promise((res, rej) => {
@@ -79,7 +81,7 @@ describe('getDecoration', () => {
   });
 
   it('returns undefined if no schemas exist in config', () => {
-    getConfigValueSpy.mockReturnValueOnce();
+    getConfigSpy.mockReturnValueOnce({});
     expect(getDecoration('foo', service, operation)).toBeUndefined();
   });
 

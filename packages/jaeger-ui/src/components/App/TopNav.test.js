@@ -42,24 +42,16 @@ jest.mock('../../utils/config/get-config', () => {
   return {
     __esModule: true,
     default: jest.fn(() => ({
+      dependencies: { menuEnabled: true },
+      deepDependencies: { menuEnabled: true },
       qualityMetrics: {
+        menuEnabled: true,
+        menuLabel: 'Quality',
         apiEndpoint: '/quality-metrics',
       },
+      storageCapabilities: { metricsStorage: true },
+      themes: { enabled: true },
     })),
-    getConfigValue: jest.fn(key => {
-      switch (key) {
-        case 'dependencies.menuEnabled':
-        case 'deepDependencies.menuEnabled':
-        case 'qualityMetrics.menuEnabled':
-        case 'monitor.menuEnabled':
-        case 'themes.enabled':
-          return true;
-        case 'qualityMetrics.menuLabel':
-          return 'Quality';
-        default:
-          return false;
-      }
-    }),
   };
 });
 

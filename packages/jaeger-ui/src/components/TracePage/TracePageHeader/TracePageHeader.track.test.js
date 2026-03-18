@@ -55,6 +55,12 @@ describe('TracePageHeader.track', () => {
       fn: 'trackTraceSpansView',
     },
     {
+      action: track.ACTION_TRACE_LOGS_VIEW,
+      category: track.CATEGORY_ALT_VIEW,
+      msg: 'tracks a GA event for viewing trace logs',
+      fn: 'trackTraceLogsView',
+    },
+    {
       action: OPEN,
       arg: false,
       category: track.CATEGORY_SLIM_HEADER,

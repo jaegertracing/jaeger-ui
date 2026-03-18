@@ -5,10 +5,11 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { TraceId } from './TraceId';
-import { getConfigValue } from '../../utils/config/get-config';
+import getConfig from '../../utils/config/get-config';
 
 jest.mock('../../utils/config/get-config', () => ({
-  getConfigValue: jest.fn(),
+  __esModule: true,
+  default: jest.fn(),
 }));
 
 describe('TraceIdDisplayLength', () => {
@@ -30,7 +31,7 @@ describe('TraceIdDisplayLength', () => {
 
   describe('TraceIdDisplayLength Component', () => {
     it('renders the default traceIdLength 7', () => {
-      getConfigValue.mockReturnValue(undefined);
+      getConfig.mockReturnValue({});
       renderComponent();
 
       const displayed = MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH);
@@ -40,7 +41,7 @@ describe('TraceIdDisplayLength', () => {
 
     it('renders the config length when provided', () => {
       const configuredLength = 5;
-      getConfigValue.mockReturnValue(configuredLength);
+      getConfig.mockReturnValue({ traceIdDisplayLength: configuredLength });
       renderComponent();
 
       const displayed = MOCK_TRACE_ID.slice(0, configuredLength);
@@ -53,7 +54,7 @@ describe('TraceIdDisplayLength', () => {
     it('renders the full traceId when it is shorter then configured length', () => {
       const shortTraceId = '12345';
       const configuredLength = 10;
-      getConfigValue.mockReturnValue(configuredLength);
+      getConfig.mockReturnValue({ traceIdDisplayLength: configuredLength });
 
       renderComponent({ traceId: shortTraceId });
       expect(screen.getByText(shortTraceId)).toBeInTheDocument();
@@ -67,7 +68,7 @@ describe('TraceIdDisplayLength', () => {
 
   describe('Style handling', () => {
     it('applies custom className when provided', () => {
-      getConfigValue.mockReturnValue(undefined);
+      getConfig.mockReturnValue({});
       renderComponent({ className: CUSTOM_CLASS });
 
       const el = screen.getByText(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH));
@@ -83,12 +84,12 @@ describe('TraceIdDisplayLength', () => {
     });
 
     it('adds a length-based class depending on the configuration', () => {
-      getConfigValue.mockReturnValue(DEFAULT_LENGTH);
+      getConfig.mockReturnValue({ traceIdDisplayLength: DEFAULT_LENGTH });
       renderComponent();
       expect(screen.getByText(MOCK_TRACE_ID.slice(0, DEFAULT_LENGTH))).toHaveClass('TraceIDLength--short');
 
       const longLength = MOCK_TRACE_ID.length;
-      getConfigValue.mockReturnValue(longLength);
+      getConfig.mockReturnValue({ traceIdDisplayLength: longLength });
       renderComponent();
 
       const all = screen.getAllByText(MOCK_TRACE_ID.slice(0, 7));

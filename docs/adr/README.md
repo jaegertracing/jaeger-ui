@@ -13,3 +13,4 @@ An Architecture Decision Record (ADR) is a document that captures an important a
 - [ADR-0003: Span Color Palette for Trace Visualization](./0003-span-color-palette.md) - Selection and architecture for a theme-aware, 20-color qualitative palette for span visualization
 - [ADR-0004: State Management Strategy for Jaeger UI](./0004-state-management-strategy.md) - Long-term architectural strategy for state management, recommending Zustand and TanStack Query
 - [ADR-0005: Current State Management Architecture](./0005-current-state-management-architecture.md) - Documentation of the existing multi-layered state management (Redux, TanStack Query, URL, Local Storage)
+- [ADR-0006: Side Panel Span Details and Tree-Only Mode](./0006-side-panel-span-details.md) - Optional side panel layout for span details with independent scrolling, and tree-only mode to hide timeline bars

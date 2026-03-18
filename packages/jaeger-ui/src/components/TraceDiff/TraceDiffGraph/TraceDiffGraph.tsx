@@ -6,7 +6,7 @@ import { cacheAs, Digraph, LayoutManager } from '@jaegertracing/plexus';
 import cx from 'classnames';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { getConfigValue } from '../../../utils/config/get-config';
+import getConfig from '../../../utils/config/get-config';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import prefixUrl from '../../../utils/prefix-url';
 
@@ -66,7 +66,7 @@ export const UnconnectedTraceDiffGraph: React.FC<Props> = React.memo(props => {
               className="TraceDiffGraph--helpButton"
               data-testid="learn-how-button"
               onClick={() => {
-                const helpLink = getConfigValue('traceDiff.helpLink');
+                const helpLink = getConfig().traceDiff?.helpLink;
                 if (helpLink) {
                   window.open(helpLink, getTargetEmptyOrBlank());
                 }
