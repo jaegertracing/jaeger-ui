@@ -5,7 +5,8 @@ import * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
-import { Location, History as RouterHistory } from 'history';
+import { Location } from 'history';
+import { useNavigate } from 'react-router-dom-v5-compat';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
@@ -66,7 +67,6 @@ type TDispatchProps = {
 };
 
 type TOwnProps = {
-  history: RouterHistory;
   location: Location<LocationState>;
   params: { id: string };
   archiveEnabled: boolean;
@@ -155,7 +155,6 @@ export function TracePageImpl(props: TProps) {
     enableSidePanel,
     fetchTrace,
     focusUiFindMatches: focusUiFindMatchesProp,
-    history,
     id,
     location,
     setDetailPanelMode,
@@ -167,6 +166,8 @@ export function TracePageImpl(props: TProps) {
     uiFind,
     useOtelTerms,
   } = props;
+
+  const navigate = useNavigate();
 
   const [headerHeight, setHeaderHeight] = useState<number | TNil>(null);
   const [slimView, setSlimView] = useState(() => Boolean(embedded && embedded.timeline.collapseTitle));
@@ -213,9 +214,9 @@ export function TracePageImpl(props: TProps) {
   }, []);
 
   const clearSearch = useCallback(() => {
-    updateUiFind({ history, location, trackFindFunction: trackFilter });
+    updateUiFind({ navigate, location, trackFindFunction: trackFilter });
     searchBarRef.current?.blur();
-  }, [history, location]);
+  }, [navigate, location]);
 
   const focusOnSearchBar = useCallback(() => {
     searchBarRef.current?.focus();
@@ -508,7 +509,6 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
 const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
 
 type TracePageProps = {
-  history: RouterHistory;
   location: Location<LocationState>;
   params: { id: string };
 };
