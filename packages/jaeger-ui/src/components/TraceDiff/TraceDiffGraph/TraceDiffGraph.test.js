@@ -4,18 +4,25 @@
 import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter as CompatMemoryRouter } from 'react-router-dom-v5-compat';
 import '@testing-library/jest-dom';
 
+import TraceDiffGraphDefault from './TraceDiffGraph';
 import { UnconnectedTraceDiffGraph as TraceDiffGraph } from './TraceDiffGraph';
 import { fetchedState } from '../../../constants';
 import * as getConfig from '../../../utils/config/get-config';
 import transformTraceData from '../../../model/transform-trace-data';
 
-jest.mock('../../common/UiFindInput', () => props => (
-  <div data-testid="ui-find-input" {...props.inputProps}>
-    UiFindInput {props.inputProps?.suffix}
-  </div>
-));
+jest.mock('../../common/UiFindInput', () => ({
+  __esModule: true,
+  default: props => (
+    <div data-testid="ui-find-input" {...props.inputProps}>
+      UiFindInput {props.inputProps?.suffix}
+    </div>
+  ),
+  parseUiFind: jest.requireActual('../../common/UiFindInput').parseUiFind,
+  extractUiFindFromState: jest.requireActual('../../common/UiFindInput').extractUiFindFromState,
+}));
 jest.mock('../../common/ErrorMessage', () => props => <div data-testid="error-message">{props.error}</div>);
 jest.mock('../../common/LoadingIndicator', () => () => <div data-testid="loading-indicator">Loading...</div>);
 
@@ -210,6 +217,27 @@ describe('TraceDiffGraph', () => {
 
     renderWithRouter(<TraceDiffGraph a={matchedTrace} b={matchedTrace} uiFind="GET" />);
     expect(screen.getByTestId('ui-find-input')).toHaveAttribute('suffix', '1');
+  });
+
+  describe('default export (TraceDiffGraph wrapper)', () => {
+    it('derives uiFind from the URL search params and passes it to the graph', () => {
+      render(
+        <CompatMemoryRouter initialEntries={['/?uiFind=service-a']}>
+          <TraceDiffGraphDefault a={baseProps.a} b={baseProps.b} />
+        </CompatMemoryRouter>
+      );
+      // suffix is '0' (match count string) because uiFind is non-empty but fixture has no spans to match
+      expect(screen.getByTestId('ui-find-input')).toHaveAttribute('suffix', '0');
+    });
+
+    it('does not set suffix when URL has no uiFind param', () => {
+      render(
+        <CompatMemoryRouter initialEntries={['/']}>
+          <TraceDiffGraphDefault a={baseProps.a} b={baseProps.b} />
+        </CompatMemoryRouter>
+      );
+      expect(screen.getByTestId('ui-find-input')).not.toHaveAttribute('suffix');
+    });
   });
 
   describe('empty state help button', () => {
