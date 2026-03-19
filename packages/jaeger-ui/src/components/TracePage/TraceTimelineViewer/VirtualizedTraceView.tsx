@@ -9,8 +9,7 @@ import _isEqual from 'lodash/isEqual';
 import _groupBy from 'lodash/groupBy';
 
 import memoizeOne from 'memoize-one';
-import { Location } from 'history';
-import { NavigateFunction } from 'react-router-dom-v5-compat';
+import { Location, NavigateFunction } from 'react-router-dom-v5-compat';
 import { actions, getSelectedSpanID } from './duck';
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
