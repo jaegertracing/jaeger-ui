@@ -6,6 +6,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import memoizeOne from 'memoize-one';
 import debounce from 'lodash/debounce';
+import { useLocation } from 'react-router-dom-v5-compat';
 import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
 
 import DAG from './DAG';
@@ -15,7 +16,7 @@ import LoadingIndicator from '../common/LoadingIndicator';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { FALLBACK_DAG_MAX_NUM_SERVICES } from '../../constants';
 import getConfig from '../../utils/config/get-config';
-import { extractUiFindFromState } from '../common/UiFindInput';
+import { parseUiFind } from '../common/UiFindInput';
 
 import './index.css';
 import { getAppEnvironment } from '../../utils/constants';
@@ -43,7 +44,6 @@ type TProps = {
   links: TEdge[] | null;
   loading: boolean;
   error: ApiError | null | undefined;
-  uiFind?: string;
 };
 
 const createSampleDataManager = () => {
@@ -149,7 +149,9 @@ const { getSampleData, loadSampleData } = createSampleDataManager();
 
 // export for tests
 export function DependencyGraphPageImpl(props: TProps) {
-  const { nodes, links, error, loading, dependencies, uiFind, fetchDependencies } = props;
+  const { nodes, links, error, loading, dependencies, fetchDependencies } = props;
+  const { search } = useLocation();
+  const uiFind = parseUiFind(search);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedLayout, setSelectedLayout] = useState<string | null>(null);
   const [selectedDepth, setSelectedDepth] = useState<number | null>(5);
@@ -371,7 +373,6 @@ export function mapStateToProps(state: ReduxState): Omit<TProps, 'fetchDependenc
     nodes,
     links,
     dependencies: dataset,
-    ...extractUiFindFromState(state),
   };
 }
 

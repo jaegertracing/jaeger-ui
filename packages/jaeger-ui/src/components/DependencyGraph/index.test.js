@@ -3,6 +3,7 @@
 
 import { render, screen, act, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom-v5-compat';
 import * as constants from '../../utils/constants';
 
 import { DependencyGraphPageImpl as DependencyGraph, mapDispatchToProps, mapStateToProps } from './index';
@@ -52,17 +53,16 @@ const state = {
     error: null,
     loading: false,
   },
-  router: {
-    location: {
-      search: '',
-    },
-  },
 };
 
 const props = mapStateToProps(state);
 
 const renderComponent = (extraProps = {}) =>
-  render(<DependencyGraph {...props} fetchDependencies={() => {}} {...extraProps} />);
+  render(
+    <MemoryRouter>
+      <DependencyGraph {...props} fetchDependencies={() => {}} {...extraProps} />
+    </MemoryRouter>
+  );
 
 describe('<DependencyGraph>', () => {
   beforeEach(() => {
@@ -77,7 +77,11 @@ describe('<DependencyGraph>', () => {
     const { rerender } = renderComponent();
     expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
 
-    rerender(<DependencyGraph {...props} fetchDependencies={() => {}} loading />);
+    rerender(
+      <MemoryRouter>
+        <DependencyGraph {...props} fetchDependencies={() => {}} loading />
+      </MemoryRouter>
+    );
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 
@@ -86,7 +90,11 @@ describe('<DependencyGraph>', () => {
     const { rerender } = renderComponent();
     expect(screen.queryByTestId('error-message')).not.toBeInTheDocument();
 
-    rerender(<DependencyGraph {...props} fetchDependencies={() => {}} error={error} />);
+    rerender(
+      <MemoryRouter>
+        <DependencyGraph {...props} fetchDependencies={() => {}} error={error} />
+      </MemoryRouter>
+    );
     expect(screen.getByTestId('error-message')).toBeInTheDocument();
   });
 
@@ -132,7 +140,11 @@ describe('<DependencyGraph>', () => {
       expect(lastDAGOptionsProps.selectedLayout).toBe('dot');
 
       act(() => {
-        rerender(<DependencyGraph {...props} fetchDependencies={() => {}} dependencies={manyDependencies} />);
+        rerender(
+          <MemoryRouter>
+            <DependencyGraph {...props} fetchDependencies={() => {}} dependencies={manyDependencies} />
+          </MemoryRouter>
+        );
       });
 
       expect(lastDAGOptionsProps.selectedLayout).toBe('sfdp');
@@ -163,7 +175,11 @@ describe('<DependencyGraph>', () => {
 
       const { rerender } = renderComponent({ dependencies });
       act(() => {
-        rerender(<DependencyGraph {...props} fetchDependencies={() => {}} dependencies={dependencies} />);
+        rerender(
+          <MemoryRouter>
+            <DependencyGraph {...props} fetchDependencies={() => {}} dependencies={dependencies} />
+          </MemoryRouter>
+        );
       });
       expect(lastDAGOptionsProps.selectedLayout).toBe('dot');
     });
@@ -275,38 +291,35 @@ describe('<DependencyGraph>', () => {
       });
     });
 
-    it('passes computed match count to DAGOptions based on uiFind and dependencies', () => {
+    it('passes computed match count to DAGOptions based on uiFind from URL and dependencies', () => {
       const sampleDependencies = [
         { parent: 'serviceA', child: 'serviceB', callCount: 10 },
         { parent: 'serviceB', child: 'anotherService', callCount: 5 },
         { parent: 'serviceA', child: 'anotherService', callCount: 2 },
       ];
 
-      const uiFindTerm = 'service';
-      const expectedMatchCount = 3;
-
-      const { rerender } = renderComponent({ dependencies: sampleDependencies, uiFind: uiFindTerm });
-      expect(lastDAGOptionsProps.matchCount).toBe(expectedMatchCount);
-
-      const uiFindTerm2 = 'another';
-      const expectedMatchCount2 = 1;
-      rerender(
-        <DependencyGraph
-          {...props}
-          fetchDependencies={() => {}}
-          dependencies={sampleDependencies}
-          uiFind={uiFindTerm2}
-        />
+      render(
+        <MemoryRouter initialEntries={['/?uiFind=service']}>
+          <DependencyGraph {...props} fetchDependencies={() => {}} dependencies={sampleDependencies} />
+        </MemoryRouter>
       );
-      expect(lastDAGOptionsProps.matchCount).toBe(expectedMatchCount2);
+      expect(lastDAGOptionsProps.matchCount).toBe(3);
 
-      rerender(
-        <DependencyGraph
-          {...props}
-          fetchDependencies={() => {}}
-          dependencies={sampleDependencies}
-          uiFind={undefined}
-        />
+      cleanup();
+
+      render(
+        <MemoryRouter initialEntries={['/?uiFind=another']}>
+          <DependencyGraph {...props} fetchDependencies={() => {}} dependencies={sampleDependencies} />
+        </MemoryRouter>
+      );
+      expect(lastDAGOptionsProps.matchCount).toBe(1);
+
+      cleanup();
+
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <DependencyGraph {...props} fetchDependencies={() => {}} dependencies={sampleDependencies} />
+        </MemoryRouter>
       );
       expect(lastDAGOptionsProps.matchCount).toBe(0);
     });
@@ -319,7 +332,6 @@ describe('<DependencyGraph>', () => {
       links: [{ from: 'dummyNode', to: 'dummyNode', label: '1' }],
       loading: false,
       error: null,
-      uiFind: undefined,
       dependencies: [],
     };
 
@@ -345,7 +357,11 @@ describe('<DependencyGraph>', () => {
     it('should include direct children when parent is selected', () => {
       const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
 
-      render(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      render(
+        <MemoryRouter>
+          <DependencyGraph {...baseProps} dependencies={testDependencies} />
+        </MemoryRouter>
+      );
       selectServiceAndDepth('A', 1);
 
       expect(lastDAGProps.data.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
@@ -355,7 +371,11 @@ describe('<DependencyGraph>', () => {
     it('should include direct parents when child is selected', () => {
       const testDependencies = [{ parent: 'A', child: 'B', callCount: 1 }];
 
-      render(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      render(
+        <MemoryRouter>
+          <DependencyGraph {...baseProps} dependencies={testDependencies} />
+        </MemoryRouter>
+      );
       selectServiceAndDepth('B', 1);
 
       expect(lastDAGProps.data.nodes).toEqual(expect.arrayContaining([{ key: 'A' }, { key: 'B' }]));
@@ -368,7 +388,11 @@ describe('<DependencyGraph>', () => {
         { parent: 'B', child: 'A', callCount: 1 },
       ];
 
-      render(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      render(
+        <MemoryRouter>
+          <DependencyGraph {...baseProps} dependencies={testDependencies} />
+        </MemoryRouter>
+      );
       selectServiceAndDepth('A', 2);
 
       expect(lastDAGProps.data.nodes).toHaveLength(2);
@@ -383,7 +407,11 @@ describe('<DependencyGraph>', () => {
         { parent: 'B', child: 'A', callCount: 1 },
       ];
 
-      render(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      render(
+        <MemoryRouter>
+          <DependencyGraph {...baseProps} dependencies={testDependencies} />
+        </MemoryRouter>
+      );
       selectServiceAndDepth('B', 2);
 
       expect(lastDAGProps.data.nodes).toHaveLength(2);
@@ -398,7 +426,11 @@ describe('<DependencyGraph>', () => {
         { parent: 'C', child: 'D', callCount: 1 },
       ];
 
-      render(<DependencyGraph {...baseProps} dependencies={testDependencies} />);
+      render(
+        <MemoryRouter>
+          <DependencyGraph {...baseProps} dependencies={testDependencies} />
+        </MemoryRouter>
+      );
       selectServiceAndDepth('A', 1);
 
       expect(lastDAGProps.data.nodes).toHaveLength(2);
