@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom-v5-compat';
 
 import ErrorMessage from '../common/ErrorMessage';
 import prefixUrl from '../../utils/prefix-url';

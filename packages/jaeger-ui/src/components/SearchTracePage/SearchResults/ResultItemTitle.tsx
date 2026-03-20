@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { Checkbox } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom-v5-compat';
 
 import TraceId from '../../common/TraceId';
 import TraceName from '../../common/TraceName';
