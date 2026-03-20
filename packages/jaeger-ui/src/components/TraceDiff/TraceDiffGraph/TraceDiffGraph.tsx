@@ -4,8 +4,7 @@
 import React, { useMemo, useEffect } from 'react';
 import { cacheAs, Digraph, LayoutManager } from '@jaegertracing/plexus';
 import cx from 'classnames';
-import { useLocation } from 'react-router-dom-v5-compat';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom-v5-compat';
 import getConfig from '../../../utils/config/get-config';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import prefixUrl from '../../../utils/prefix-url';

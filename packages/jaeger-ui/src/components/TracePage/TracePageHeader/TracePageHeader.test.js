@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom-v5-compat';
 import '@testing-library/jest-dom';
 import TracePageHeaderWithRef, {
   TracePageHeaderFn as TracePageHeader,

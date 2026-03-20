@@ -4,7 +4,7 @@
 import React from 'react';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom-v5-compat';
 import '@testing-library/jest-dom';
 import {
   MonitorATMServicesViewImpl as MonitorATMServicesView,

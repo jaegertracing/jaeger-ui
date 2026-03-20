@@ -6,7 +6,7 @@ import { Button, InputRef, Tooltip } from 'antd';
 import _get from 'lodash/get';
 import _maxBy from 'lodash/maxBy';
 import { IoArrowBack, IoFileTrayFull, IoChevronForward, IoWarning } from 'react-icons/io5';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom-v5-compat';
 
 import DocumentTitle from '../../../utils/documentTitle';
 import AltViewOptions from './AltViewOptions';

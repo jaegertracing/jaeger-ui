@@ -3,8 +3,7 @@
 
 import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { MemoryRouter as CompatMemoryRouter } from 'react-router-dom-v5-compat';
+import { MemoryRouter } from 'react-router-dom-v5-compat';
 import '@testing-library/jest-dom';
 
 import TraceDiffGraphDefault from './TraceDiffGraph';
@@ -222,9 +221,9 @@ describe('TraceDiffGraph', () => {
   describe('default export (TraceDiffGraph wrapper)', () => {
     it('derives uiFind from the URL search params and passes it to the graph', () => {
       render(
-        <CompatMemoryRouter initialEntries={['/?uiFind=service-a']}>
+        <MemoryRouter initialEntries={['/?uiFind=service-a']}>
           <TraceDiffGraphDefault a={baseProps.a} b={baseProps.b} />
-        </CompatMemoryRouter>
+        </MemoryRouter>
       );
       // suffix is '0' (match count string) because uiFind is non-empty but fixture has no spans to match
       expect(screen.getByTestId('ui-find-input')).toHaveAttribute('suffix', '0');
@@ -232,9 +231,9 @@ describe('TraceDiffGraph', () => {
 
     it('does not set suffix when URL has no uiFind param', () => {
       render(
-        <CompatMemoryRouter initialEntries={['/']}>
+        <MemoryRouter initialEntries={['/']}>
           <TraceDiffGraphDefault a={baseProps.a} b={baseProps.b} />
-        </CompatMemoryRouter>
+        </MemoryRouter>
       );
       expect(screen.getByTestId('ui-find-input')).not.toHaveAttribute('suffix');
     });

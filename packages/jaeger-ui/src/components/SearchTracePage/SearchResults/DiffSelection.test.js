@@ -4,7 +4,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom-v5-compat';
 
 import DiffSelection from './DiffSelection';
 import { fetchedState } from '../../../constants';
