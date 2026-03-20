@@ -21,7 +21,7 @@ export function matches(path: string) {
     return false;
   }
   // Single-trace and compare both use `/trace/:id`; only compare URLs contain "..." in the segment.
-  return path.includes('...');
+  return match.params?.id?.includes('...') ?? false;
 }
 
 export function getUrl(state: TTraceDiffState) {
