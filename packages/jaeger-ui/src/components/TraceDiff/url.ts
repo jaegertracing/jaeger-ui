@@ -13,10 +13,15 @@ export type TDiffRouteParams = {
   b?: string | undefined;
 };
 
-export const ROUTE_PATH = prefixUrl('/trace/:a?\\.\\.\\.:b?');
+export const ROUTE_PATH = prefixUrl('/trace/:id');
 
 export function matches(path: string) {
-  return Boolean(matchPath(ROUTE_PATH, path));
+  const match = matchPath(ROUTE_PATH, path);
+  if (!match) {
+    return false;
+  }
+  // Single-trace and compare both use `/trace/:id`; only compare URLs contain "..." in the segment.
+  return path.includes('...');
 }
 
 export function getUrl(state: TTraceDiffState) {
