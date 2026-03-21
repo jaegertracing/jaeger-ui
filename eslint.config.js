@@ -2,12 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import js from '@eslint/js';
-import { fixupPluginRules } from '@eslint/compat';
 import typescriptPlugin from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
-import reactPlugin from 'eslint-plugin-react';
-import reactHooksPlugin from 'eslint-plugin-react-hooks';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
+import reactXPlugin from 'eslint-plugin-react-x';
 import importPlugin from 'eslint-plugin-import-x';
 import prettierPlugin from 'eslint-plugin-prettier';
 import jestPlugin from 'eslint-plugin-jest';
@@ -75,9 +72,6 @@ const commonSettings = {
       extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
     },
   },
-  react: {
-    version: 'detect',
-  },
 };
 
 const baseRules = {
@@ -90,41 +84,8 @@ const baseRules = {
   'no-undef': 'off',
   'no-console': 'off',
 
-  'react/jsx-uses-react': 'error',
-  'react/jsx-uses-vars': 'error',
-  'react/jsx-filename-extension': 'off',
-  'react/prop-types': 'off',
-  'react/sort-comp': [
-    'error',
-    {
-      order: [
-        'type-annotations',
-        'defaultProps',
-        'statics',
-        'state',
-        'propTypes',
-        'static-methods',
-        'instance-variables',
-        'constructor',
-        'lifecycle',
-        'everything-else',
-        '/^on.+$/',
-        'render',
-      ],
-    },
-  ],
-
-  'react-hooks/rules-of-hooks': 'error',
-  'react-hooks/exhaustive-deps': 'error',
-
-  'jsx-a11y/anchor-is-valid': 'off',
-  'jsx-a11y/click-events-have-key-events': 'off',
-  'jsx-a11y/href-no-hash': 'off',
-  'jsx-a11y/interactive-supports-focus': 'off',
-  'jsx-a11y/label-has-associated-control': 'off',
-  'jsx-a11y/label-has-for': 'off',
-  'jsx-a11y/mouse-events-have-key-events': 'off',
-  'jsx-a11y/no-static-element-interactions': 'warn',
+  'react-x/rules-of-hooks': 'error',
+  'react-x/exhaustive-deps': 'error',
 
   'import-x/extensions': 'off',
   'import-x/no-extraneous-dependencies': 'off',
@@ -135,15 +96,6 @@ const baseRules = {
 };
 
 const typescriptRules = {
-  // Disabled: Modern TypeScript style guides don't require I prefix for interfaces
-  // '@typescript-eslint/naming-convention': [
-  //   'error',
-  //   {
-  //     selector: 'interface',
-  //     format: ['PascalCase'],
-  //     prefix: ['I'],
-  //   },
-  // ],
   '@typescript-eslint/no-this-alias': 'off',
   '@typescript-eslint/no-use-before-define': 'warn',
   '@typescript-eslint/no-redeclare': 'warn',
@@ -201,9 +153,7 @@ export default [
     },
     plugins: {
       '@typescript-eslint': typescriptPlugin,
-      react: fixupPluginRules(reactPlugin),
-      'react-hooks': fixupPluginRules(reactHooksPlugin),
-      'jsx-a11y': fixupPluginRules(jsxA11y),
+      'react-x': reactXPlugin,
       'import-x': importPlugin,
       prettier: prettierPlugin,
       jest: jestPlugin,
@@ -229,9 +179,7 @@ export default [
       globals: commonGlobals,
     },
     plugins: {
-      react: fixupPluginRules(reactPlugin),
-      'react-hooks': fixupPluginRules(reactHooksPlugin),
-      'jsx-a11y': fixupPluginRules(jsxA11y),
+      'react-x': reactXPlugin,
       'import-x': importPlugin,
       prettier: prettierPlugin,
       jest: jestPlugin,

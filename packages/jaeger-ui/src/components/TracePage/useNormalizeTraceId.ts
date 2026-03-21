@@ -17,7 +17,7 @@ export function useNormalizeTraceId(traceID: string): string {
       const url = getUrl(normalizedTraceID);
       navigate(`${url}${location.search}`, { replace: true, state: location.state });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-x/exhaustive-deps
   }, [traceID, normalizedTraceID]);
 
   return normalizedTraceID;
