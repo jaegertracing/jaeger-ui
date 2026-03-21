@@ -4,6 +4,8 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .QualityMetrics {
+  background: var(--surface-primary);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   height: calc(100vh - var(--nav-height));

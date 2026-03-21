@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useState, useCallback, useMemo, ComponentProps } from 'react';
-import { Input, Button, Popover, Select, Row, Col, Form, Switch } from 'antd';
+import { Input, Button, Tooltip, Select, Row, Col, Form, Switch } from 'antd';
 import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
@@ -11,7 +11,8 @@ import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
 import { connect, ConnectedProps } from 'react-redux';
-import { useLocation } from 'react-router-dom-v5-compat';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getUrl as getSearchUrl } from './url';
 import { bindActionCreators, Dispatch } from 'redux';
 import store from 'store';
 
@@ -20,7 +21,7 @@ import { trackFormInput } from './SearchForm.track';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
-import { getConfigValue } from '../../utils/config/get-config';
+import getConfig from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
@@ -271,7 +272,7 @@ export function submitForm(
   searchTraces: SearchTracesFunction,
   adjustTime: string | null | undefined,
   adjustTimeEnabled: boolean
-): void {
+): string {
   const {
     resultsLimit,
     service,
@@ -312,7 +313,7 @@ export function submitForm(
 
   trackFormInput(resultsLimit, operation, tags || '', minDuration, maxDuration, lookback, service);
 
-  searchTraces({
+  const query: SearchQuery = {
     service,
     operation: operation !== DEFAULT_OPERATION ? operation : undefined,
     limit: resultsLimit,
@@ -322,7 +323,9 @@ export function submitForm(
     tags: convTagsLogfmt(tags) || undefined,
     minDuration: minDuration || null,
     maxDuration: maxDuration || null,
-  } as SearchQuery);
+  };
+  searchTraces(query);
+  return getSearchUrl(query as Parameters<typeof getSearchUrl>[0]);
 }
 
 interface ISearchFormImplProps {
@@ -336,7 +339,7 @@ interface ISearchFormImplProps {
     fields: ISearchFormFields,
     adjustEndTime: string | null | undefined,
     adjustTimeEnabled: boolean
-  ) => void;
+  ) => string;
 }
 
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
@@ -347,6 +350,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   initialValues,
   submitFormHandler,
 }) => {
+  const navigate = useNavigate();
   const { useOpenTelemetryTerms: useOtelTerms } = useConfig();
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
@@ -404,9 +408,10 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      submitFormHandler(formData as ISearchFormFields, searchAdjustEndTime, adjustTimeEnabled);
+      const url = submitFormHandler(formData as ISearchFormFields, searchAdjustEndTime, adjustTimeEnabled);
+      navigate(url);
     },
-    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler]
+    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate]
   );
 
   const { service: selectedService, lookback: selectedLookback } = formData;
@@ -475,20 +480,18 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
         label={
           <div>
             {useOtelTerms ? 'Attributes' : 'Tags'}{' '}
-            <Popover
+            <Tooltip
               placement="topLeft"
-              trigger="click"
+              styles={{ root: { maxWidth: 450 } }}
               title={
-                <h3 key="title" className="SearchForm--tagsHintTitle">
-                  Values should be in the{' '}
-                  <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
-                    logfmt
-                  </a>{' '}
-                  format.
-                </h3>
-              }
-              content={
                 <div>
+                  <h3 key="title" className="SearchForm--tagsHintTitle">
+                    Values should be in the{' '}
+                    <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
+                      logfmt
+                    </a>{' '}
+                    format.
+                  </h3>
                   <ul key="info" className="SearchForm--tagsHintInfo">
                     <li>Use space for AND conjunctions.</li>
                     <li>
@@ -521,7 +524,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
                         http.url=&quot;http://0.0.0.0:8081/customer\\?customer=123&quot;
                       </code>
                       <div>
-                        Note: when using Elasticsearch/OpenSearch the{' '}
+                        Note ^: when using Elasticsearch or OpenSearch storage the{' '}
                         <a
                           href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
                           rel="noopener noreferrer"
@@ -530,7 +533,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
                           regex-reserved
                         </a>{' '}
                         character <code className="SearchForm--tagsHintEg">&quot;?&quot;</code> must be
-                        escaped with <code className="SearchForm--tagsHintEg">&quot;\\&quot;</code>.
+                        escaped with <code className="SearchForm--tagsHintEg">&quot;\\?&quot;</code>.
                       </div>
                     </li>
                   </ul>
@@ -538,7 +541,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               }
             >
               <IoHelp className="SearchForm--hintTrigger" />
-            </Popover>
+            </Tooltip>
           </div>
         }
       >
@@ -563,10 +566,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               onChange={handleAdjustTimeToggle}
               disabled={submitting}
             />
-            <Popover
+            <Tooltip
               placement="topLeft"
-              trigger="click"
-              content={
+              title={
                 <div className="SearchForm--lookbackHint">
                   When enabled, search end time is adjusted back by {searchAdjustEndTime} to exclude very
                   recent traces that may still be receiving spans.
@@ -574,7 +576,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               }
             >
               <IoHelp className="SearchForm--hintTrigger" />
-            </Popover>
+            </Tooltip>
           </div>
         )}
       </div>
@@ -597,17 +599,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           label={
             <div>
               Start Time{' '}
-              <Popover
-                placement="topLeft"
-                trigger="click"
-                content={
-                  <h3 key="title" className="SearchForm--tagsHintTitle">
-                    Times are expressed in {tz}
-                  </h3>
-                }
-              >
+              <Tooltip placement="topLeft" title={`Times are expressed in ${tz}`}>
                 <IoHelp className="SearchForm--hintTrigger" />
-              </Popover>
+              </Tooltip>
             </div>
           }
         >
@@ -640,17 +634,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           label={
             <div>
               End Time{' '}
-              <Popover
-                placement="topLeft"
-                trigger="click"
-                content={
-                  <h3 key="title" className="SearchForm--tagsHintTitle">
-                    Times are expressed in {tz}
-                  </h3>
-                }
-              >
+              <Tooltip placement="topLeft" title={`Times are expressed in ${tz}`}>
                 <IoHelp className="SearchForm--hintTrigger" />
-              </Popover>
+              </Tooltip>
             </div>
           }
         >
@@ -719,7 +705,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder="Limit Results"
           type="number"
           min={1}
-          max={getConfigValue('search.maxLimit')}
+          max={getConfig().search?.maxLimit}
           onChange={e => handleChange({ resultsLimit: e.target.value })}
         />
       </FormItem>
@@ -857,7 +843,7 @@ export function mapDispatchToProps(dispatch: Dispatch) {
       fields: ISearchFormFields,
       adjustEndTime: string | null | undefined,
       adjustTimeEnabled: boolean
-    ) => submitForm(fields, searchTraces, adjustEndTime || null, adjustTimeEnabled),
+    ) => submitForm(fields, searchTraces, adjustEndTime || null, adjustTimeEnabled) as string,
   };
 }
 

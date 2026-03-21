@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Layout } from 'antd';
 import cx from 'classnames';
 import { connect } from 'react-redux';
-import { useLocation } from 'react-router-dom-v5-compat';
+import { useLocation } from 'react-router-dom';
 
 import TopNav from './TopNav';
 import { ReduxState } from '../../types';

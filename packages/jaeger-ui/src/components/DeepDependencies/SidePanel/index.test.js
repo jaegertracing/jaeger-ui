@@ -47,7 +47,9 @@ describe('<SidePanel>', () => {
   let trackDecorationViewDetailsSpy;
 
   beforeAll(() => {
-    getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue').mockReturnValue(mockConfig);
+    getConfigValueSpy = jest
+      .spyOn(getConfig, 'default')
+      .mockReturnValue({ pathAgnosticDecorations: mockConfig });
     trackDecorationSelectedSpy = jest.spyOn(track, 'trackDecorationSelected');
     trackDecorationViewDetailsSpy = jest.spyOn(track, 'trackDecorationViewDetails');
   });
@@ -85,7 +87,7 @@ describe('<SidePanel>', () => {
 
   describe('render', () => {
     it('renders null if there are no decorations', () => {
-      getConfigValueSpy.mockReturnValueOnce(undefined);
+      getConfigValueSpy.mockReturnValueOnce({});
       const { container } = render(<SidePanel />);
       expect(container.firstChild).toBeNull();
     });

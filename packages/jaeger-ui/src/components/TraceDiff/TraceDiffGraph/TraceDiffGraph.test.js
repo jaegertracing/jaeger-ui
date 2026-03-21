@@ -6,16 +6,22 @@ import { render, screen, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
+import TraceDiffGraphDefault from './TraceDiffGraph';
 import { UnconnectedTraceDiffGraph as TraceDiffGraph } from './TraceDiffGraph';
 import { fetchedState } from '../../../constants';
 import * as getConfig from '../../../utils/config/get-config';
 import transformTraceData from '../../../model/transform-trace-data';
 
-jest.mock('../../common/UiFindInput', () => props => (
-  <div data-testid="ui-find-input" {...props.inputProps}>
-    UiFindInput {props.inputProps?.suffix}
-  </div>
-));
+jest.mock('../../common/UiFindInput', () => ({
+  __esModule: true,
+  default: props => (
+    <div data-testid="ui-find-input" {...props.inputProps}>
+      UiFindInput {props.inputProps?.suffix}
+    </div>
+  ),
+  parseUiFind: jest.requireActual('../../common/UiFindInput').parseUiFind,
+  extractUiFindFromState: jest.requireActual('../../common/UiFindInput').extractUiFindFromState,
+}));
 jest.mock('../../common/ErrorMessage', () => props => <div data-testid="error-message">{props.error}</div>);
 jest.mock('../../common/LoadingIndicator', () => () => <div data-testid="loading-indicator">Loading...</div>);
 
@@ -69,7 +75,7 @@ describe('TraceDiffGraph', () => {
   let windowOpenSpy;
 
   beforeEach(() => {
-    getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue');
+    getConfigValueSpy = jest.spyOn(getConfig, 'default');
     windowOpenSpy = jest.spyOn(window, 'open').mockImplementation(() => {});
   });
 
@@ -212,22 +218,42 @@ describe('TraceDiffGraph', () => {
     expect(screen.getByTestId('ui-find-input')).toHaveAttribute('suffix', '1');
   });
 
+  describe('default export (TraceDiffGraph wrapper)', () => {
+    it('derives uiFind from the URL search params and passes it to the graph', () => {
+      render(
+        <MemoryRouter initialEntries={['/?uiFind=service-a']}>
+          <TraceDiffGraphDefault a={baseProps.a} b={baseProps.b} />
+        </MemoryRouter>
+      );
+      // suffix is '0' (match count string) because uiFind is non-empty but fixture has no spans to match
+      expect(screen.getByTestId('ui-find-input')).toHaveAttribute('suffix', '0');
+    });
+
+    it('does not set suffix when URL has no uiFind param', () => {
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <TraceDiffGraphDefault a={baseProps.a} b={baseProps.b} />
+        </MemoryRouter>
+      );
+      expect(screen.getByTestId('ui-find-input')).not.toHaveAttribute('suffix');
+    });
+  });
+
   describe('empty state help button', () => {
     it('opens help link when config value exists', () => {
       const helpLink = 'https://example.com/help';
 
-      getConfigValueSpy.mockReturnValue(helpLink);
+      getConfigValueSpy.mockReturnValue({ traceDiff: { helpLink } });
 
       const { getByTestId } = renderWithRouter(<TraceDiffGraph {...baseProps} a={undefined} b={undefined} />);
       const helpButton = getByTestId('learn-how-button');
       helpButton.click();
 
-      expect(getConfigValueSpy).toHaveBeenCalledWith('traceDiff.helpLink');
       expect(windowOpenSpy).toHaveBeenCalledWith(helpLink, expect.any(String));
     });
 
     it('does not open window when help link config is not set', () => {
-      getConfigValueSpy.mockReturnValue(null);
+      getConfigValueSpy.mockReturnValue({});
 
       const { getByTestId } = renderWithRouter(<TraceDiffGraph {...baseProps} a={undefined} b={undefined} />);
       const helpButton = getByTestId('learn-how-button');

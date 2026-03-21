@@ -18,8 +18,8 @@ jest.mock('../../utils/update-ui-find');
 const mockNavigate = jest.fn();
 const mockLocation = { search: '', pathname: '/test' };
 
-jest.mock('react-router-dom-v5-compat', () => ({
-  ...jest.requireActual('react-router-dom-v5-compat'),
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
 }));
@@ -279,17 +279,13 @@ describe('UiFind', () => {
   });
 
   describe('extractUiFindFromState', () => {
-    const reduxStateValue = '?uiFind=fromRedux';
-
     beforeEach(() => {
       queryStringParseSpy.mockReturnValue({ uiFind });
     });
 
-    it('delegates to parseUiFind using state.router.location.search', () => {
-      const result = extractUiFindFromState({
-        router: { location: { search: reduxStateValue } },
-      });
-      expect(queryStringParseSpy).toHaveBeenCalledWith(reduxStateValue);
+    it('delegates to parseUiFind using window.location.search', () => {
+      const result = extractUiFindFromState({});
+      expect(queryStringParseSpy).toHaveBeenCalledWith(window.location.search);
       expect(result).toEqual({ uiFind });
     });
   });

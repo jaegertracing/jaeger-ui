@@ -9,7 +9,7 @@ import { createActions, ActionFunctionAny, Action } from 'redux-actions';
 
 import JaegerAPI from '../api/jaeger';
 import { TNewData, TPathAgnosticDecorationSchema } from '../model/path-agnostic-decorations/types';
-import { getConfigValue } from '../utils/config/get-config';
+import getConfig from '../utils/config/get-config';
 import generateActionTypes from '../utils/generate-action-types';
 import stringSupplant from '../utils/stringSupplant';
 
@@ -19,7 +19,7 @@ const fetchDecoration = memoize(10)((url: string) => JaegerAPI.fetchDecoration(u
 export const actionTypes = generateActionTypes('@jaeger-ui/PATH_AGNOSTIC_DECORATIONS', ['GET_DECORATION']);
 
 export const getDecorationSchema = _memoize((id: string): TPathAgnosticDecorationSchema | undefined => {
-  const schemas = getConfigValue('pathAgnosticDecorations') as TPathAgnosticDecorationSchema[] | undefined;
+  const schemas = getConfig().pathAgnosticDecorations;
   if (!schemas) return undefined;
   return schemas.find(s => s.id === id);
 });

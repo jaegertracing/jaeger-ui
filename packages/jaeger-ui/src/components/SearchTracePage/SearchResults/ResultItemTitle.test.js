@@ -11,9 +11,11 @@ import ResultItemTitle from './ResultItemTitle';
 import { fetchedState } from '../../../constants';
 import { formatDuration } from '../../../utils/date';
 
+const RouterWrapper = ({ children }) => <MemoryRouter>{children}</MemoryRouter>;
+
 const setup = props => {
   const view = render(<ResultItemTitle {...props} />, {
-    wrapper: ({ children }) => <MemoryRouter>{children}</MemoryRouter>,
+    wrapper: RouterWrapper,
   });
   return {
     ...view,
@@ -63,11 +65,7 @@ describe('ResultItemTitle', () => {
       const { rerender } = setup(defaultProps);
       expect(screen.getByRole('checkbox')).toBeInTheDocument();
 
-      rerender(
-        <MemoryRouter>
-          <ResultItemTitle {...defaultProps} disableComparision />
-        </MemoryRouter>
-      );
+      rerender(<ResultItemTitle {...defaultProps} disableComparision />);
       expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     });
 
@@ -75,11 +73,7 @@ describe('ResultItemTitle', () => {
       const { rerender } = setup(defaultProps);
       expect(screen.getByRole('checkbox')).not.toBeDisabled();
 
-      rerender(
-        <MemoryRouter>
-          <ResultItemTitle {...defaultProps} state={fetchedState.ERROR} />
-        </MemoryRouter>
-      );
+      rerender(<ResultItemTitle {...defaultProps} state={fetchedState.ERROR} />);
       expect(screen.getByRole('checkbox')).toBeDisabled();
     });
 
@@ -94,11 +88,7 @@ describe('ResultItemTitle', () => {
       ];
 
       scenarios.forEach(({ isInDiffCohort, state, expected }) => {
-        rerender(
-          <MemoryRouter>
-            <ResultItemTitle {...defaultProps} isInDiffCohort={isInDiffCohort} state={state} />
-          </MemoryRouter>
-        );
+        rerender(<ResultItemTitle {...defaultProps} isInDiffCohort={isInDiffCohort} state={state} />);
         const checkbox = screen.getByRole('checkbox');
         if (expected) {
           expect(checkbox).toBeChecked();
@@ -118,11 +108,7 @@ describe('ResultItemTitle', () => {
       );
 
       const newIsInDiffCohort = !defaultProps.isInDiffCohort;
-      rerender(
-        <MemoryRouter>
-          <ResultItemTitle {...defaultProps} isInDiffCohort={newIsInDiffCohort} />
-        </MemoryRouter>
-      );
+      rerender(<ResultItemTitle {...defaultProps} isInDiffCohort={newIsInDiffCohort} />);
 
       await user.click(screen.getByRole('checkbox'));
       expect(defaultProps.toggleComparison).toHaveBeenLastCalledWith(defaultProps.traceID, newIsInDiffCohort);
@@ -152,11 +138,7 @@ describe('ResultItemTitle', () => {
       // Assert the link is present and contains the expected text.
       expect(screen.getByRole('link', { name: /traceNameValue/i })).toBeInTheDocument();
 
-      rerender(
-        <MemoryRouter>
-          <ResultItemTitle {...defaultProps} linkTo={null} />
-        </MemoryRouter>
-      );
+      rerender(<ResultItemTitle {...defaultProps} linkTo={null} />);
 
       // Assert the link is now gone.
       expect(screen.queryByRole('link')).not.toBeInTheDocument();
@@ -174,11 +156,7 @@ describe('ResultItemTitle', () => {
       expect(screen.getByRole('link')).not.toHaveAttribute('target');
       expect(screen.getByRole('link')).not.toHaveAttribute('rel');
 
-      rerender(
-        <MemoryRouter>
-          <ResultItemTitle {...defaultProps} targetBlank />
-        </MemoryRouter>
-      );
+      rerender(<ResultItemTitle {...defaultProps} targetBlank />);
 
       const updatedLink = screen.getByRole('link');
       expect(updatedLink).toHaveAttribute('target', '_blank');
@@ -190,11 +168,7 @@ describe('ResultItemTitle', () => {
       // Duration text is visible initially.
       expect(screen.getByText(formatDuration(defaultProps.duration))).toBeInTheDocument();
 
-      rerender(
-        <MemoryRouter>
-          <ResultItemTitle {...defaultProps} duration={null} />
-        </MemoryRouter>
-      );
+      rerender(<ResultItemTitle {...defaultProps} duration={null} />);
       // Duration text is now hidden.
       expect(screen.queryByText(formatDuration(defaultProps.duration))).not.toBeInTheDocument();
 

@@ -1,8 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { BrowserRouter, MemoryRouter } from 'react-router-dom';
-import { CompatRouter } from 'react-router-dom-v5-compat';
+import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 jest.mock('../../api/v3/client', () => ({
@@ -42,13 +41,9 @@ const queryClient = new QueryClient({
 
 const AllProvider = ({ children }) => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <Provider store={globalStore}>
-        <MemoryRouter>
-          <CompatRouter>{children}</CompatRouter>
-        </MemoryRouter>
-      </Provider>
-    </BrowserRouter>
+    <MemoryRouter>
+      <Provider store={globalStore}>{children}</Provider>
+    </MemoryRouter>
   </QueryClientProvider>
 );
 
@@ -244,15 +239,11 @@ describe('<SearchTracePage>', () => {
 
     const { container } = render(
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
+        <MemoryRouter>
           <Provider store={customStore}>
-            <MemoryRouter>
-              <CompatRouter>
-                <SearchTracePage {...props} />
-              </CompatRouter>
-            </MemoryRouter>
+            <SearchTracePage {...props} />
           </Provider>
-        </BrowserRouter>
+        </MemoryRouter>
       </QueryClientProvider>
     );
     expect(container.querySelector('[data-node-key="fileLoader"]')).not.toBeInTheDocument();
@@ -279,7 +270,6 @@ describe('mapStateToProps()', () => {
       error: null,
     };
     const state = {
-      router: { location: { search: '' } },
       trace: stateTrace,
       traceDiff: {
         cohort: [trace.traceID],
@@ -290,7 +280,9 @@ describe('mapStateToProps()', () => {
       },
     };
 
-    const { maxTraceDuration, traceResultsToDownload, diffCohort, traces, ...rest } = mapStateToProps(state);
+    const { maxTraceDuration, traceResultsToDownload, diffCohort, traces, ...rest } = mapStateToProps(state, {
+      search: '',
+    });
     expect(traces).toHaveLength(stateTrace.search.results.length);
     expect(traces[0].traceID).toBe(trace.traceID);
     expect(traceResultsToDownload[0].traceID).toBe(trace.traceID);
