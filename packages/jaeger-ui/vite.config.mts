@@ -236,8 +236,9 @@ export default defineConfig({
   resolve: {
     alias: {
       // allow hot reload of Plexus code -- https://github.com/jaegertracing/jaeger-ui/pull/2089
-      '@jaegertracing/plexus': path.resolve(__dirname, '../plexus/src'),
+      // More-specific alias must come first; Vite matches the first prefix that applies.
       '@jaegertracing/plexus/demo': path.resolve(__dirname, '../plexus/demo/src/index'),
+      '@jaegertracing/plexus': path.resolve(__dirname, '../plexus/src'),
     },
   },
 });
