@@ -15,8 +15,5 @@ docs/
 CHANGELOG.md
 RELEASE.md
 
-# TODO: these could be re-enabled for auto-formatting
-.github/
-
 # TODO: remove this after merging https://github.com/jaegertracing/jaeger-ui/pull/3646
 packages/plexus/src/LayoutManager/layout.worker.bundled.js
