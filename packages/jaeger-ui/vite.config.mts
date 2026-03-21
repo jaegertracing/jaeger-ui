@@ -237,6 +237,7 @@ export default defineConfig({
     alias: {
       // allow hot reload of Plexus code -- https://github.com/jaegertracing/jaeger-ui/pull/2089
       '@jaegertracing/plexus': path.resolve(__dirname, '../plexus/src'),
+      '@jaegertracing/plexus/demo': path.resolve(__dirname, '../plexus/demo/src/index'),
     },
   },
 });
