@@ -56,7 +56,7 @@
     "react-dom": "19.2.0"
   },
   "dependencies": {
-    "@viz-js/viz": "3.24.0",
+    "@viz-js/viz": "3.25.0",
     "d3-selection": "3.0.0",
     "d3-zoom": "3.0.0",
     "memoize-one": "6.0.0",
