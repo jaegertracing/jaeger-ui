@@ -175,9 +175,9 @@ describe('<TracePageHeader>', () => {
   it('renders the incomplete item when the trace has orphan spans', () => {
     const incompleteTrace = Object.create(defaultProps.trace);
     Object.defineProperty(incompleteTrace, 'orphanSpanCount', { value: 3 });
-    renderWithRouter(<TracePageHeader {...defaultProps} trace={incompleteTrace} />);
+    const { getByTestId } = renderWithRouter(<TracePageHeader {...defaultProps} trace={incompleteTrace} />);
 
-    const incompleteItem = screen.getAllByTestId('header-item-incomplete').at(-1);
+    const incompleteItem = getByTestId('header-item-incomplete');
     expect(incompleteItem).toBeInTheDocument();
     expect(incompleteItem).toHaveTextContent('Incomplete');
   });

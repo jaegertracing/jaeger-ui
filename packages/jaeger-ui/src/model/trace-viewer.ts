@@ -74,8 +74,8 @@ export function getIncompleteTraceTooltip(orphanCount: number): string {
   const verb = orphanCount !== 1 ? 'have' : 'has';
   return (
     `This trace may be incomplete: ${orphanCount} ${noun} ${verb} missing parent ${noun}. ` +
-    `This can happen if you load the trace while it is still being collected -- ` +
-    `in this case reloading this page might help.`
+    `This can happen if the trace is still being collected when you view it. ` +
+    `Try again later by opening or reloading the trace to see whether more spans are available.`
   );
 }
 
