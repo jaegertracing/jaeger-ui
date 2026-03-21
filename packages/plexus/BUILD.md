@@ -4,13 +4,7 @@
 
 The package is implemented in TypeScript and must be compiled to JavaScript.
 
-There are three build scenarios and one pre-step common to all of them.
-
-Pre-step:
-
-- Bundle `./src/LayoutManager/layout.worker.tsx` to a UMD module which can initialize a `WebWorker` from a `Blob` URL
-
-Build scenarios:
+There are three build scenarios:
 
 - Production ES modules
   - **This is the project's default export as `./lib/index.js`.** This build is not bundled and therefore does not use Webpack.
@@ -18,7 +12,7 @@ Build scenarios:
 - Webpack dev server
   - Runs `./demo/src/index.tsx` which has a few example graphs.
 
-The pre-step, which they all require, is to bundle `./src/LayoutManager/layout.worker.tsx` via the `worker-loader` Webpack loader.
+The layout worker (`./src/LayoutManager/layout.worker.ts`) is loaded as a Web Worker using the native `new Worker(new URL(...))` pattern, which is supported by both Vite and Webpack 5 without any additional loaders.
 
 ## Babel
 
@@ -44,30 +38,6 @@ This only applies to the ES module production build, output to `./lib`.
 
 Note: `./tsconfig.json` does not extend `../../tsconfig.json`.
 
-## Pre-step: `layout.worker`
-
-`./src/LayoutManager/layout.worker.tsx` is intended to be loaded as a `WebWorker`. To be able to load it as a `Worker` without requiring an extra JS file, Webpack and the [`worker-loader`](https://github.com/webpack-contrib/worker-loader) loader are used to bundle it into a UMD module, `./src/LayoutManager/layout.worker.bundled.js`.
-
-Within the UMD module, `layout.worker.tsx` (and everything bundled into it) is turned into a `Blob` URL that's used to initialize a `WebWorker`.
-
-The resultant UMD module can be initialized as a class:
-
-```ts
-import LayoutWorker from './layout.worker.bundled';
-
-const leWorker = new LayoutWorker();
-
-leWorker.postMessage(...);
-```
-
-> It's all fun and games until type checking loses an eye.
-
-To make sure we don't end up with an implicit `any`, `layout.worker.bundled.d.ts` provides a type declaration:
-
-```ts
-class LayoutWorker extends Worker { ... }
-```
-
 ## `package.json`
 
 ### Scripts
@@ -80,8 +50,6 @@ The `_tasks/*` scripts are not intended to be run, directly.
 
 - `_tasks/clean/*`
   - Remove generated files
-- `_tasks/bundle-worker`
-  - Generates the `layout.worker` UMD bundle
 - `_tasks/build/*`
   - Generates the production ES and UMD builds
 - `_tasks/dev-server`
