@@ -76,12 +76,14 @@ describe('ThemeStorage', () => {
 
     it('falls back gracefully when the global window is unavailable', () => {
       const originalWindow = window;
-      (global as typeof global & { window?: Window }).window = undefined;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).window = undefined;
 
       try {
         expect(readStoredTheme()).toBeNull();
       } finally {
-        (global as typeof global & { window?: Window }).window = originalWindow;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (global as any).window = originalWindow;
       }
     });
   });
@@ -121,12 +123,14 @@ describe('ThemeStorage', () => {
 
     it('falls back gracefully when the global window is unavailable', () => {
       const originalWindow = window;
-      (global as typeof global & { window?: Window }).window = undefined;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).window = undefined;
 
       try {
         expect(() => writeStoredTheme('dark')).not.toThrow();
       } finally {
-        (global as typeof global & { window?: Window }).window = originalWindow;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (global as any).window = originalWindow;
       }
     });
   });

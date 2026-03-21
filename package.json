@@ -15,6 +15,7 @@
   "devDependencies": {
     "@babel/cli": "7.28.0",
     "@babel/core": "7.29.0",
+    "@noble/hashes": "1.8.0",
     "@testing-library/dom": "^10.4.1",
     "@typescript-eslint/eslint-plugin": "8.57.1",
     "@typescript-eslint/parser": "8.57.1",
@@ -45,7 +46,10 @@
     "yaml": "2.8.0",
     "svgo": "2.8.2",
     "rollup": "4.59.0",
-    "qs": "6.14.2"
+    "qs": "6.14.2",
+    "@exodus/bytes": {
+      "@noble/hashes": "$@noble/hashes"
+    }
   },
   "workspaces": [
     "packages/plexus",
