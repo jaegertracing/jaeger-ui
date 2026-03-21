@@ -36,6 +36,13 @@ describe('LabeledList', () => {
     expect(dividers.length).toBe(defaultItems.length - 1);
   });
 
+  it('omits the label element when label is null', () => {
+    const items = [{ key: 'no-label', label: null, value: 'Some Value' }];
+    const { container } = render(<LabeledList items={items} />);
+    expect(screen.getByText('Some Value')).toBeInTheDocument();
+    expect(container.querySelectorAll('.LabeledList--label').length).toBe(0);
+  });
+
   it('renders correctly with a single item (no divider)', () => {
     const oneItem = [{ key: 'only', label: 'Only Label', value: 'Only Value' }];
     const { container } = render(<LabeledList items={oneItem} />);

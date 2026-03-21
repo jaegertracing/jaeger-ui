@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Col, Divider, Row, Tag } from 'antd';
+import { Col, Divider, Row, Tag, Tooltip } from 'antd';
 import { Link } from 'react-router-dom-v5-compat';
 
 import _sortBy from 'lodash/sortBy';
@@ -16,6 +16,7 @@ import * as markers from './ResultItem.markers';
 import ResultItemTitle from './ResultItemTitle';
 import colorGenerator from '../../../utils/color-generator';
 import { formatRelativeDate } from '../../../utils/date';
+import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
 import { IOtelTrace, StatusCode } from '../../../types/otel';
 
@@ -91,14 +92,12 @@ export default function ResultItem({
               </Tag>
             )}
             {orphanSpanCount > 0 && (
-              <Tag
-                className="ub-m1"
-                color="orange"
-                title={`This trace has ${orphanSpanCount} span(s) with missing parent spans. The trace may be incomplete.`}
-              >
-                <IoWarning className="ResultItem--warningIcon" />
-                Incomplete
-              </Tag>
+              <Tooltip title={getIncompleteTraceTooltip(orphanSpanCount)}>
+                <Tag className="ub-m1" color="orange">
+                  <IoWarning className="ResultItem--warningIcon" />
+                  Incomplete
+                </Tag>
+              </Tooltip>
             )}
           </Col>
           <Col span={16} className="ub-p2">

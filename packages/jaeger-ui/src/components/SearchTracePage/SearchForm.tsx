@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useState, useCallback, useMemo, ComponentProps } from 'react';
-import { Input, Button, Popover, Select, Row, Col, Form, Switch } from 'antd';
+import { Input, Button, Tooltip, Select, Row, Col, Form, Switch } from 'antd';
 import _get from 'lodash/get';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
@@ -480,20 +480,18 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
         label={
           <div>
             {useOtelTerms ? 'Attributes' : 'Tags'}{' '}
-            <Popover
+            <Tooltip
               placement="topLeft"
-              trigger="click"
+              styles={{ root: { maxWidth: 450 } }}
               title={
-                <h3 key="title" className="SearchForm--tagsHintTitle">
-                  Values should be in the{' '}
-                  <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
-                    logfmt
-                  </a>{' '}
-                  format.
-                </h3>
-              }
-              content={
                 <div>
+                  <h3 key="title" className="SearchForm--tagsHintTitle">
+                    Values should be in the{' '}
+                    <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
+                      logfmt
+                    </a>{' '}
+                    format.
+                  </h3>
                   <ul key="info" className="SearchForm--tagsHintInfo">
                     <li>Use space for AND conjunctions.</li>
                     <li>
@@ -526,7 +524,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
                         http.url=&quot;http://0.0.0.0:8081/customer\\?customer=123&quot;
                       </code>
                       <div>
-                        Note: when using Elasticsearch/OpenSearch the{' '}
+                        Note ^: when using Elasticsearch or OpenSearch storage the{' '}
                         <a
                           href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
                           rel="noopener noreferrer"
@@ -535,7 +533,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
                           regex-reserved
                         </a>{' '}
                         character <code className="SearchForm--tagsHintEg">&quot;?&quot;</code> must be
-                        escaped with <code className="SearchForm--tagsHintEg">&quot;\\&quot;</code>.
+                        escaped with <code className="SearchForm--tagsHintEg">&quot;\\?&quot;</code>.
                       </div>
                     </li>
                   </ul>
@@ -543,7 +541,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               }
             >
               <IoHelp className="SearchForm--hintTrigger" />
-            </Popover>
+            </Tooltip>
           </div>
         }
       >
@@ -568,10 +566,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               onChange={handleAdjustTimeToggle}
               disabled={submitting}
             />
-            <Popover
+            <Tooltip
               placement="topLeft"
-              trigger="click"
-              content={
+              title={
                 <div className="SearchForm--lookbackHint">
                   When enabled, search end time is adjusted back by {searchAdjustEndTime} to exclude very
                   recent traces that may still be receiving spans.
@@ -579,7 +576,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               }
             >
               <IoHelp className="SearchForm--hintTrigger" />
-            </Popover>
+            </Tooltip>
           </div>
         )}
       </div>
@@ -602,17 +599,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           label={
             <div>
               Start Time{' '}
-              <Popover
-                placement="topLeft"
-                trigger="click"
-                content={
-                  <h3 key="title" className="SearchForm--tagsHintTitle">
-                    Times are expressed in {tz}
-                  </h3>
-                }
-              >
+              <Tooltip placement="topLeft" title={`Times are expressed in ${tz}`}>
                 <IoHelp className="SearchForm--hintTrigger" />
-              </Popover>
+              </Tooltip>
             </div>
           }
         >
@@ -645,17 +634,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           label={
             <div>
               End Time{' '}
-              <Popover
-                placement="topLeft"
-                trigger="click"
-                content={
-                  <h3 key="title" className="SearchForm--tagsHintTitle">
-                    Times are expressed in {tz}
-                  </h3>
-                }
-              >
+              <Tooltip placement="topLeft" title={`Times are expressed in ${tz}`}>
                 <IoHelp className="SearchForm--hintTrigger" />
-              </Popover>
+              </Tooltip>
             </div>
           }
         >
