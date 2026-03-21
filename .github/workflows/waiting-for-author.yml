@@ -1,4 +1,4 @@
-name: "Waiting for Author"
+name: 'Waiting for Author'
 
 on:
   pull_request_target:

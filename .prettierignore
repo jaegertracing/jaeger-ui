@@ -14,6 +14,3 @@ scripts/draft-release.py
 docs/
 CHANGELOG.md
 RELEASE.md
-
-# TODO: these could be re-enabled for auto-formatting
-.github/

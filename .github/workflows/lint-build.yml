@@ -1,4 +1,4 @@
-name: "Lint and Build"
+name: 'Lint and Build'
 
 on:
   merge_group:
@@ -40,23 +40,23 @@ jobs:
   validate-3rd-party-configs:
     runs-on: ubuntu-latest
     steps:
-    - uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
-      with:
-        egress-policy: audit
+      - uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+        with:
+          egress-policy: audit
 
-    - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-      with:
-        submodules: false
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          submodules: false
 
-    - name: validate Forking Renovate Bot config
-      run: |
-        docker run \
-          -v $PWD/renovate.json:/usr/src/app/renovate.json \
-          ghcr.io/renovatebot/renovate:latest \
-          renovate-config-validator
+      - name: validate Forking Renovate Bot config
+        run: |
+          docker run \
+            -v $PWD/renovate.json:/usr/src/app/renovate.json \
+            ghcr.io/renovatebot/renovate:latest \
+            renovate-config-validator
 
-    - name: validate Codecov config
-      run: |
-        RESPONSE=$(curl -s --data-binary @.codecov.yml https://codecov.io/validate)
-        echo "$RESPONSE"
-        echo "$RESPONSE" | grep -q "Valid"
+      - name: validate Codecov config
+        run: |
+          RESPONSE=$(curl -s --data-binary @.codecov.yml https://codecov.io/validate)
+          echo "$RESPONSE"
+          echo "$RESPONSE" | grep -q "Valid"
