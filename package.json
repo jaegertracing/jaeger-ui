@@ -22,7 +22,7 @@
     "ajv": "^8.0.0",
     "cross-env": "10.1.0",
     "depcheck": "1.4.7",
-    "eslint": "9.39.1",
+    "eslint": "10.1.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-jest": "29.15.0",
