@@ -12,15 +12,12 @@ scripts/release-notes.py
 scripts/draft-release.py
 
 # Ignore some docs because prettier has different ideas about its formatting.
+docs/
 CHANGELOG.md
 RELEASE.md
 
-# TODO: Remove the entries below and run `npm run prettier` to format these files.
-# They were not covered by the previous explicit glob patterns and need a separate
-# formatting pass to avoid mixing unrelated changes into the current PR.
-.codecov.yml
+# TODO: these could be re-enabled for auto-formatting
 .github/
-docs/
-packages/jaeger-ui/.babelrc
-packages/jaeger-ui/index.html
-scripts/postprocess-schemas.cjs
+
+# TODO: remove this after merging https://github.com/jaegertracing/jaeger-ui/pull/3646
+packages/plexus/src/LayoutManager/layout.worker.bundled.js
