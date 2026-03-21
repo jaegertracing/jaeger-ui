@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { Tooltip } from 'antd';
-import { useLocation } from 'react-router-dom-v5-compat';
+import { useLocation } from 'react-router-dom';
 import _get from 'lodash/get';
 import { connect } from 'react-redux';
 

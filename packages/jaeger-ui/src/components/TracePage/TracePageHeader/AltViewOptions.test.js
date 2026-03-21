@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { BrowserRouter } from 'react-router-dom-v5-compat';
+import { BrowserRouter } from 'react-router-dom';
 import AltViewOptions from './AltViewOptions';
 import * as track from './TracePageHeader.track';
 import { ETraceViewType } from '../types';

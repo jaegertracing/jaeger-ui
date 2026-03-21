@@ -6,7 +6,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import memoizeOne from 'memoize-one';
 import debounce from 'lodash/debounce';
-import { useLocation } from 'react-router-dom-v5-compat';
+import { useLocation } from 'react-router-dom';
 import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
 
 import DAG from './DAG';

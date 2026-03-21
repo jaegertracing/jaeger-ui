@@ -4,7 +4,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter, Route, Routes } from 'react-router-dom-v5-compat';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import TraceRouter from './TraceRouter';
 
 jest.mock('../TraceDiff', () => ({ __esModule: true, default: () => <div data-testid="trace-diff" /> }));

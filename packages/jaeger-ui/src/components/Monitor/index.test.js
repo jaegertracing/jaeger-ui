@@ -3,7 +3,6 @@
 
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { CompatRouter } from 'react-router-dom-v5-compat';
 import { Provider } from 'react-redux';
 import { createStore, combineReducers } from 'redux';
 import { render, screen } from '@testing-library/react';
@@ -90,9 +89,7 @@ describe('<MonitorATMPage>', () => {
     const { container } = render(
       <Provider store={mockStore}>
         <MemoryRouter>
-          <CompatRouter>
-            <MonitorATMPage />
-          </CompatRouter>
+          <MonitorATMPage />
         </MemoryRouter>
       </Provider>
     );
@@ -132,9 +129,7 @@ describe('<MonitorATMPage>', () => {
       render(
         <Provider store={emptyStateStore}>
           <MemoryRouter>
-            <CompatRouter>
-              <MonitorATMPage />
-            </CompatRouter>
+            <MonitorATMPage />
           </MemoryRouter>
         </Provider>
       );

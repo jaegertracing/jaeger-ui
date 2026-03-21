@@ -37,7 +37,7 @@ jest.mock('../../hooks/useTraceDiscovery', () => ({
 }));
 
 import React from 'react';
-import { MemoryRouter } from 'react-router-dom-v5-compat';
+import { MemoryRouter } from 'react-router-dom';
 import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { act } from 'react';
 import '@testing-library/jest-dom';

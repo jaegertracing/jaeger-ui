@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom-v5-compat';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import TraceDiffGraphDefault from './TraceDiffGraph';

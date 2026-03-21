@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Provider } from 'react-redux';
-import { Route, Routes, Navigate } from 'react-router-dom-v5-compat';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import NotFound from './NotFound';

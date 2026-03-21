@@ -9,7 +9,7 @@ import _isEmpty from 'lodash/isEmpty';
 import store from 'store';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
-import { Link } from 'react-router-dom-v5-compat';
+import { Link } from 'react-router-dom';
 import * as jaegerApiActions from '../../../actions/jaeger-api';
 import OperationTableDetails from './operationDetailsTable';
 import ServiceGraph from './serviceGraph';

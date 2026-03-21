@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { useLocation, useNavigate, useParams, NavigateFunction } from 'react-router-dom-v5-compat';
-import { Location } from 'react-router-dom-v5-compat';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import type { Location, NavigateFunction } from 'react-router-dom';
 
 /**
  * Interface representing route-related props passed to the enhanced component.

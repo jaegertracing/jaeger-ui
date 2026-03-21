@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { Dropdown, Button } from 'antd';
 import { IoChevronDown } from 'react-icons/io5';
-import { Link } from 'react-router-dom-v5-compat';
+import { Link } from 'react-router-dom';
 import './AltViewOptions.css';
 
 import {

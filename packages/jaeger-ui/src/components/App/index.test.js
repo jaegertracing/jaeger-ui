@@ -4,7 +4,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom-v5-compat';
+import { MemoryRouter } from 'react-router-dom';
 
 jest.mock('./NotFound', () => () => <div data-testid="not-found" />);
 jest.mock('./Page', () => ({ children }) => <div data-testid="page">{children}</div>);

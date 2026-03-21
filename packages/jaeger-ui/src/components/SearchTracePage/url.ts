@@ -3,7 +3,7 @@
 
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
-import { matchPath } from 'react-router-dom-v5-compat';
+import { matchPath } from 'react-router-dom';
 
 import prefixUrl from '../../utils/prefix-url';
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';

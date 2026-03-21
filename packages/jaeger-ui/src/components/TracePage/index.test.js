@@ -56,9 +56,12 @@ jest.mock('./keyboard-shortcuts');
 jest.mock('./scroll-page');
 jest.mock('../../utils/filter-spans');
 jest.mock('../../utils/update-ui-find');
-jest.mock('react-router-dom-v5-compat', () => {
+jest.mock('react-router-dom', () => {
   const navigate = jest.fn();
-  return { useNavigate: () => navigate };
+  return {
+    ...jest.requireActual('react-router-dom'),
+    useNavigate: () => navigate,
+  };
 });
 jest.mock('./TracePageHeader/SpanGraph', () => () => <div data-testid="span-graph">SpanGraph</div>);
 jest.mock('./TracePageHeader/TracePageHeader.track');
