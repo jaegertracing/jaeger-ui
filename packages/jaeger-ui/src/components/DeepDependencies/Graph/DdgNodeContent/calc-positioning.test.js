@@ -227,4 +227,17 @@ describe('calcPositioning', () => {
       expect(measureOp).not.toHaveBeenCalled();
     });
   });
+
+  describe('security', () => {
+    it('treats input strings containing HTML tags as plain text', () => {
+      const svcSpan = _initSvcSpan();
+      const xssString = '<img src=x onerror=alert(1)>';
+      svcMeasurements = genWidths([1]);
+
+      calcPositioning(xssString);
+
+      expect(svcSpan.textContent).toBe(xssString);
+      expect(svcSpan.innerHTML).not.toContain('<img');
+    });
+  });
 });
