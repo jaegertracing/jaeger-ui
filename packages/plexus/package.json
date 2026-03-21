@@ -46,7 +46,7 @@
     "rimraf": "6.1.0",
     "style-loader": "4.0.0",
     "webpack": "5.105.4",
-    "webpack-cli": "6.0.1",
+    "webpack-cli": "7.0.2",
     "webpack-dev-server": "5.2.3",
     "webpack-node-externals": "3.0.0",
     "worker-loader": "3.0.8"
