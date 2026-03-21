@@ -25,7 +25,7 @@
     "@types/react-router-dom": "5.3.3",
     "@types/redux-actions": "2.6.5",
     "@vitejs/plugin-legacy": "7.2.1",
-    "@vitejs/plugin-react": "5.1.1",
+    "@vitejs/plugin-react": "5.2.0",
     "babel-jest": "30.3.0",
     "babel-plugin-inline-react-svg": "2.0.2",
     "babel-plugin-react-remove-properties": "0.3.1",
