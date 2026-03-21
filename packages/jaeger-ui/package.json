@@ -26,7 +26,6 @@
     "@vitejs/plugin-legacy": "8.0.0",
     "@vitejs/plugin-react": "6.0.1",
     "babel-jest": "30.3.0",
-    "babel-plugin-inline-react-svg": "2.0.2",
     "babel-plugin-react-remove-properties": "0.3.1",
     "jest": "30.3.0",
     "jest-environment-jsdom": "30.3.0",
@@ -100,8 +99,8 @@
       "jest-junit"
     ],
     "transform": {
-      "\\.(css|png)$": "./test/generic-file-transform.js",
-      "\\.([jt]sx?|svg)$": "./test/babel-transform.js"
+      "\\.(css|png|svg)$": "./test/generic-file-transform.js",
+      "\\.([jt]sx?)$": "./test/babel-transform.js"
     },
     "transformIgnorePatterns": [
       "[/\\\\\\\\]node_modules[/\\\\\\\\](?!redux-actions).+\\\\.(js|jsx|mjs|cjs|ts|tsx)$"

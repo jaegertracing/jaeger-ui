@@ -36,18 +36,13 @@ const babelConfiguration = {
     ['@babel/preset-react', { development: !process.env.CI, runtime: 'automatic' }],
     '@babel/preset-typescript',
   ],
-  plugins: [
-    'babel-plugin-inline-react-svg',
-    ['@babel/plugin-transform-modules-commonjs', { allowTopLevelThis: true }],
-    importMetaTransform,
-  ],
+  plugins: [['@babel/plugin-transform-modules-commonjs', { allowTopLevelThis: true }], importMetaTransform],
 };
 
 // Export configuration for depcheck (without the function)
 const babelConfigurationForDepcheck = {
   presets: babelConfiguration.presets,
   plugins: [
-    'babel-plugin-inline-react-svg',
     ['@babel/plugin-transform-modules-commonjs', { allowTopLevelThis: true }],
     // Note: custom function plugins are excluded for depcheck compatibility
   ],

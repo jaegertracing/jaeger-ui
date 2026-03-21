@@ -16,7 +16,6 @@ const babelConfiguration = {
     '@babel/preset-typescript',
   ],
   plugins: [
-    'babel-plugin-inline-react-svg',
     ['@babel/plugin-transform-modules-commonjs', { allowTopLevelThis: true }],
     '@babel/plugin-transform-private-methods',
   ],
