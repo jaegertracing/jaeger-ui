@@ -15,7 +15,7 @@
   "devDependencies": {
     "@babel/cli": "7.28.0",
     "@babel/core": "7.29.0",
-    "@noble/hashes": "1.8.0",
+    "@noble/hashes": "2.0.1",
     "@testing-library/dom": "^10.4.1",
     "@typescript-eslint/eslint-plugin": "8.57.1",
     "@typescript-eslint/parser": "8.57.1",
