@@ -3,8 +3,6 @@
 
 import * as React from 'react';
 
-import { createRoot } from 'react-dom/client';
-
 import largeDag, { getNodeLabel as getLargeNodeLabel, TLargeNode } from './data-large';
 import { edges as dagEdges, vertices as dagVertices } from './data-dag';
 import { colored as colorData, getColorNodeLabel, setOnColorEdge, setOnColorNode } from './data-small';
@@ -161,7 +159,7 @@ function renderNodeVectorBorder(lv: TLayoutVertex<any>) {
   );
 }
 
-class Demo extends React.PureComponent<{}, TState> {
+export default class Demo extends React.PureComponent<{}, TState> {
   state: TState = {
     hoveredEdge: null,
   };
@@ -610,5 +608,3 @@ class Demo extends React.PureComponent<{}, TState> {
     );
   }
 }
-
-createRoot(document.querySelector('#root')!).render(<Demo />);
