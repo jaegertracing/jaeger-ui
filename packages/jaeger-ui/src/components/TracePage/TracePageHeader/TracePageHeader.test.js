@@ -172,6 +172,19 @@ describe('<TracePageHeader>', () => {
     });
   });
 
+  it('renders the incomplete item when the trace has orphan spans', () => {
+    const incompleteTrace = { ...defaultProps.trace, orphanSpanCount: 3 };
+    renderWithRouter(<TracePageHeader {...defaultProps} trace={incompleteTrace} />);
+
+    const incompleteItem = screen.getAllByTestId('header-item-incomplete').at(-1);
+    expect(incompleteItem).toBeInTheDocument();
+    expect(incompleteItem).toHaveTextContent('Incomplete');
+  });
+
+  it('does not render the incomplete item when the trace has no orphan spans', () => {
+    expect(screen.queryByTestId('header-item-incomplete')).not.toBeInTheDocument();
+  });
+
   it('renders a <SpanGraph>', () => {
     const spanGraphs = screen.getAllByTestId('span-graph');
     expect(spanGraphs).toHaveLength(1);
