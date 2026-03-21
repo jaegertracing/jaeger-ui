@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { Popover } from 'antd';
 import cx from 'classnames';
-import { useLocation } from 'react-router-dom-v5-compat';
+import { useLocation } from 'react-router-dom';
 import { TLayoutVertex } from '@jaegertracing/plexus/lib/types';
 import { IoLocate, IoEyeOff } from 'react-icons/io5';
 import { connect } from 'react-redux';

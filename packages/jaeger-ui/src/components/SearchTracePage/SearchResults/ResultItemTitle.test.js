@@ -5,18 +5,13 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { CompatRouter } from 'react-router-dom-v5-compat';
 import '@testing-library/jest-dom';
 
 import ResultItemTitle from './ResultItemTitle';
 import { fetchedState } from '../../../constants';
 import { formatDuration } from '../../../utils/date';
 
-const RouterWrapper = ({ children }) => (
-  <MemoryRouter>
-    <CompatRouter>{children}</CompatRouter>
-  </MemoryRouter>
-);
+const RouterWrapper = ({ children }) => <MemoryRouter>{children}</MemoryRouter>;
 
 const setup = props => {
   const view = render(<ResultItemTitle {...props} />, {

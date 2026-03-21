@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import queryString from 'query-string';
-import { matchPath } from 'react-router-dom-v5-compat';
+import { matchPath } from 'react-router-dom';
 
 import getValidState from './getValidState';
 import TTraceDiffState from '../../types/TTraceDiffState';

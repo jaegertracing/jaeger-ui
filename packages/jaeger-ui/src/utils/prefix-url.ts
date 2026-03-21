@@ -32,6 +32,10 @@ export function getPathPrefix(orig?: string, sitePref?: string) {
 
 const pathPrefix = getPathPrefix(origin, sitePrefix);
 
+export function getRouterBasename(): string {
+  return pathPrefix;
+}
+
 /**
  * Add the path prefix to the  URL. See [site-prefix.js](../site-prefix.js) and
  * the `<base>` tag in [index.html](../../public/index.html) for details.

@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { Col, Divider, Row, Tag, Tooltip } from 'antd';
-import { Link } from 'react-router-dom-v5-compat';
+import { Link } from 'react-router-dom';
 
 import _sortBy from 'lodash/sortBy';
 import dayjs from 'dayjs';

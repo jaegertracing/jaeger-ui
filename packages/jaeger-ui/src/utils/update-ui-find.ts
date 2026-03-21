@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import queryString from 'query-string';
-import { NavigateFunction } from 'react-router-dom-v5-compat';
-import { Location } from 'react-router-dom-v5-compat';
+import type { Location, NavigateFunction } from 'react-router-dom';
 
 import { TNil } from '../types';
 

@@ -18,8 +18,8 @@ jest.mock('../../utils/update-ui-find');
 const mockNavigate = jest.fn();
 const mockLocation = { search: '', pathname: '/test' };
 
-jest.mock('react-router-dom-v5-compat', () => ({
-  ...jest.requireActual('react-router-dom-v5-compat'),
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
 }));

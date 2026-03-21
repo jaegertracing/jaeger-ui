@@ -1,11 +1,11 @@
 // Copyright (c) 2020 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as reactRouterDomCompat from 'react-router-dom-v5-compat';
+import * as reactRouterDomCompat from 'react-router-dom';
 
 import { ROUTE_PATH, matches, getUrl, getUrlState } from './url';
 
-jest.mock('react-router-dom-v5-compat', () => ({
+jest.mock('react-router-dom', () => ({
   matchPath: jest.fn(),
 }));
 

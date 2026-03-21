@@ -4,7 +4,7 @@
 import React, { useCallback } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
-import { Location, NavigateFunction } from 'react-router-dom-v5-compat';
+import type { Location, NavigateFunction } from 'react-router-dom';
 
 import { actions, getSelectedSpanID } from '../duck';
 import SpanDetail from '../SpanDetail';

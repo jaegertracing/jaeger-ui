@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { Link } from 'react-router-dom-v5-compat';
+import { Link } from 'react-router-dom';
 import prefixUrl from '../../utils/prefix-url';
 import JaegerLogo from '../../img/jaeger-logo.svg';
 

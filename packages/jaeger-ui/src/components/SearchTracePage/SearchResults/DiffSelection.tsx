@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { Button } from 'antd';
-import { Link } from 'react-router-dom-v5-compat';
+import { Link } from 'react-router-dom';
 
 import ResultItemTitle from './ResultItemTitle';
 import { getUrl } from '../../TraceDiff/url';
