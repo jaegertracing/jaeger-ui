@@ -2,7 +2,7 @@
   "compileOnSave": true,
   "compilerOptions": {
     "target": "es2016",
-    "lib": ["es2017", "dom", "dom.iterable", "webworker"],
+    "lib": ["es2022", "dom", "dom.iterable", "webworker"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
