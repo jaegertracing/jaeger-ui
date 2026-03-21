@@ -11,7 +11,6 @@ import { createRoot } from 'react-dom/client';
 
 import JaegerUIApp from './components/App';
 import { context as trackingContext } from './utils/tracking';
-import { getRouterBasename } from './utils/prefix-url';
 
 // these need to go after the App import
 
@@ -22,7 +21,6 @@ import 'u-basscss/css/padding.css';
 import 'u-basscss/css/position.css';
 import 'u-basscss/css/typography.css';
 
-const basename = getRouterBasename() || undefined;
 const UI_ROOT_ID = 'jaeger-ui-root';
 const rootElement = document.getElementById(UI_ROOT_ID);
 if (!rootElement) {
@@ -34,14 +32,14 @@ const root = createRoot(rootElement);
 if (typeof trackingContext === 'object' && trackingContext !== null) {
   (trackingContext as any).context(() => {
     root.render(
-      <BrowserRouter basename={basename}>
+      <BrowserRouter>
         <JaegerUIApp />
       </BrowserRouter>
     );
   });
 } else {
   root.render(
-    <BrowserRouter basename={basename}>
+    <BrowserRouter>
       <JaegerUIApp />
     </BrowserRouter>
   );
