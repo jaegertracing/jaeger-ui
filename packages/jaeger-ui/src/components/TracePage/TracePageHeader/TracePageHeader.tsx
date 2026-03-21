@@ -100,7 +100,7 @@ export const HEADER_ITEMS = [
   },
   {
     key: 'incomplete',
-    label: '',
+    label: null,
     renderer: (trace: IOtelTrace) => {
       const orphanCount = trace.orphanSpanCount ?? 0;
       if (orphanCount === 0) return null;
