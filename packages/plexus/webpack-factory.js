@@ -11,7 +11,6 @@ const babelConfigPath = require.resolve('./babel.config');
 // Note: Do not allow *.ts files
 const extensions = ['.js', '.json', '.tsx', '.ts'];
 const extensionsRx = /\.(js|json|tsx|ts)$/;
-const extensionsWorkerRx = /\.worker\.(js|json|tsx|ts)$/;
 
 // Base Webpack configuration shared across all modes
 function makeBaseConfig() {
@@ -160,40 +159,6 @@ function makeCommonProdConfig() {
   };
 }
 
-// Configuration for workers (e.g., layout.worker.tsx)
-function makeWorkerConfig() {
-  const layoutDir = join(__dirname, 'src/LayoutManager');
-  const config = {
-    experiments: {
-      outputModule: true,
-    },
-    output: {
-      path: layoutDir,
-      publicPath: '/',
-      filename: '[name].bundled.js',
-      libraryTarget: 'module',
-    },
-    entry: {
-      'layout.worker': join(layoutDir, 'layout.worker.ts'),
-    },
-  };
-  const rules = [
-    {
-      test: extensionsWorkerRx,
-      use: [
-        {
-          loader: 'worker-loader',
-          options: {
-            inline: 'no-fallback',
-            filename: '[name].js',
-          },
-        },
-      ],
-    },
-  ];
-  return { config, rules };
-}
-
 // UMD build for distribution (e.g., library export)
 function makeUmdConfig() {
   const config = {
@@ -215,7 +180,6 @@ function makeUmdConfig() {
 // Factory mapping for different build modes
 const FACTORIES = {
   development: makeDevConfig,
-  'layout-worker': makeWorkerConfig,
   umd: makeUmdConfig,
 };
 

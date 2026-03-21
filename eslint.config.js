@@ -180,7 +180,6 @@ export default [
       '**/tsconfig.tsbuildinfo',
       '**/index.tsbuildinfo',
       '**/index.d.ts',
-      '**/layout.worker.bundled.js',
       '**/demo/**',
       'packages/jaeger-ui/src/api/v3/generated-client.ts', // Auto-generated, will be used in Milestone 3.2
     ],
