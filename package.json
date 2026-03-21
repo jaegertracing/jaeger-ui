@@ -31,7 +31,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-testing-library": "7.16.1",
     "husky": "9.1.0",
-    "jsdom": "27.4.0",
+    "jsdom": "29.0.1",
     "lint-staged": "16.4.0",
     "npm-run-all2": "8.0.1",
     "openapi-zod-client": "1.18.3",
