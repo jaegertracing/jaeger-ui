@@ -25,7 +25,7 @@ export default function LabeledList(props: LabeledListProps) {
         return (
           <React.Fragment key={key}>
             <li className="LabeledList--item">
-              {label && <span className="LabeledList--label">{label}</span>}
+              {label != null && <span className="LabeledList--label">{label}</span>}
               <strong>{value}</strong>
             </li>
             {divider}

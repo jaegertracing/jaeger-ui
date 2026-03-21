@@ -38,11 +38,9 @@ describe('LabeledList', () => {
 
   it('omits the label element when label is null', () => {
     const items = [{ key: 'no-label', label: null, value: 'Some Value' }];
-    render(<LabeledList items={items} />);
+    const { container } = render(<LabeledList items={items} />);
     expect(screen.getByText('Some Value')).toBeInTheDocument();
-    expect(screen.queryByText('LabeledList--label')).not.toBeInTheDocument();
-    const labelSpans = document.querySelectorAll('.LabeledList--label');
-    expect(labelSpans.length).toBe(0);
+    expect(container.querySelectorAll('.LabeledList--label').length).toBe(0);
   });
 
   it('renders correctly with a single item (no divider)', () => {
