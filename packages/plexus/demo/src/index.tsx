@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import largeDag, { getNodeLabel as getLargeNodeLabel, TLargeNode } from './data-large';
 import { edges as dagEdges, vertices as dagVertices } from './data-dag';
@@ -611,4 +611,4 @@ class Demo extends React.PureComponent<{}, TState> {
   }
 }
 
-render(<Demo />, document.querySelector('#root'));
+createRoot(document.querySelector('#root')!).render(<Demo />);
