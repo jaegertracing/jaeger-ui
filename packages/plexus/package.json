@@ -60,7 +60,7 @@
     "d3-selection": "3.0.0",
     "d3-zoom": "3.0.0",
     "memoize-one": "6.0.0",
-    "react-icons": "5.5.0"
+    "react-icons": "5.6.0"
   },
   "scripts": {
     "_tasks/build/lib/js": "babel src --extensions '.tsx,.js,.ts' --out-dir lib",
