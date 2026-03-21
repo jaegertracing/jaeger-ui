@@ -482,7 +482,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
             {useOtelTerms ? 'Attributes' : 'Tags'}{' '}
             <Tooltip
               placement="topLeft"
-              overlayStyle={{ maxWidth: 450 }}
+              styles={{ root: { maxWidth: 450 } }}
               title={
                 <div>
                   <h3 key="title" className="SearchForm--tagsHintTitle">
@@ -566,10 +566,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               onChange={handleAdjustTimeToggle}
               disabled={submitting}
             />
-            <Popover
+            <Tooltip
               placement="topLeft"
-              trigger="click"
-              content={
+              title={
                 <div className="SearchForm--lookbackHint">
                   When enabled, search end time is adjusted back by {searchAdjustEndTime} to exclude very
                   recent traces that may still be receiving spans.
@@ -577,7 +576,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               }
             >
               <IoHelp className="SearchForm--hintTrigger" />
-            </Popover>
+            </Tooltip>
           </div>
         )}
       </div>
@@ -600,17 +599,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           label={
             <div>
               Start Time{' '}
-              <Popover
-                placement="topLeft"
-                trigger="click"
-                content={
-                  <h3 key="title" className="SearchForm--tagsHintTitle">
-                    Times are expressed in {tz}
-                  </h3>
-                }
-              >
+              <Tooltip placement="topLeft" title={`Times are expressed in ${tz}`}>
                 <IoHelp className="SearchForm--hintTrigger" />
-              </Popover>
+              </Tooltip>
             </div>
           }
         >
@@ -643,17 +634,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           label={
             <div>
               End Time{' '}
-              <Popover
-                placement="topLeft"
-                trigger="click"
-                content={
-                  <h3 key="title" className="SearchForm--tagsHintTitle">
-                    Times are expressed in {tz}
-                  </h3>
-                }
-              >
+              <Tooltip placement="topLeft" title={`Times are expressed in ${tz}`}>
                 <IoHelp className="SearchForm--hintTrigger" />
-              </Popover>
+              </Tooltip>
             </div>
           }
         >
