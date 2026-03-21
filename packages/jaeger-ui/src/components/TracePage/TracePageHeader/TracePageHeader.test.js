@@ -158,16 +158,32 @@ describe('<TracePageHeader>', () => {
 
   it('renders the header items', () => {
     HEADER_ITEMS.forEach((item, i) => {
+      const renderedValue = item.renderer(defaultProps.trace);
+      if (renderedValue === null) return;
+
       const headerItem = screen.getByTestId(`header-item-${item.key}`);
       expect(headerItem).toHaveClass('horizontal');
       expect(headerItem).toHaveClass('item');
       expect(headerItem).toHaveTextContent(item.label);
 
-      const renderedValue = item.renderer(defaultProps.trace);
       if (typeof renderedValue === 'string' || typeof renderedValue === 'number') {
         expect(headerItem).toHaveTextContent(renderedValue.toString());
       }
     });
+  });
+
+  it('renders the incomplete item when the trace has orphan spans', () => {
+    const incompleteTrace = Object.create(defaultProps.trace);
+    Object.defineProperty(incompleteTrace, 'orphanSpanCount', { value: 3 });
+    const { getByTestId } = renderWithRouter(<TracePageHeader {...defaultProps} trace={incompleteTrace} />);
+
+    const incompleteItem = getByTestId('header-item-incomplete');
+    expect(incompleteItem).toBeInTheDocument();
+    expect(incompleteItem).toHaveTextContent('Incomplete');
+  });
+
+  it('does not render the incomplete item when the trace has no orphan spans', () => {
+    expect(screen.queryByTestId('header-item-incomplete')).not.toBeInTheDocument();
   });
 
   it('renders a <SpanGraph>', () => {

@@ -62,9 +62,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       trace,
       criticalPath,
       uiFind: 'uiFind',
-      history: {
-        replace: jest.fn(),
-      },
+      navigate: jest.fn(),
       location: {
         search: null,
       },
@@ -592,7 +590,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       instance.focusSpan(spanName);
 
       expect(updateUiFindSpy).toHaveBeenLastCalledWith({
-        history: mockProps.history,
+        navigate: mockProps.navigate,
         location: mockProps.location,
         uiFind: spanName,
       });

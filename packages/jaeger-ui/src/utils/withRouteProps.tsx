@@ -45,6 +45,12 @@ export default function withRouteProps(WrappedComponent: React.ElementType) {
     const params = useParams();
 
     /**
+     * The navigate function for programmatic navigation.
+     * @type {NavigateFunction}
+     */
+    const navigate = useNavigate();
+
+    /**
      * The current URL pathname.
      * @type {string}
      */

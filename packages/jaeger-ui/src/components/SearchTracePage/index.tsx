@@ -234,9 +234,12 @@ const sortedTracesXformer = memoizeOne((traces: Trace[], sortBy: string) => {
   return traceResults.map(t => t.asOtelTrace());
 });
 
-export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: boolean } {
-  const { embedded, router, traceDiff } = state;
-  const query = getUrlState(router.location.search);
+export function mapStateToProps(
+  state: ReduxState,
+  ownProps: { search?: string }
+): IStateProps & { isHomepage: boolean } {
+  const { embedded, traceDiff } = state;
+  const query = getUrlState(ownProps.search || '');
   const isHomepage = !Object.keys(query).length;
   const {
     query: queryOfResults,

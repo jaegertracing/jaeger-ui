@@ -4,9 +4,8 @@
 import React, { useMemo, useEffect } from 'react';
 import { cacheAs, Digraph, LayoutManager } from '@jaegertracing/plexus';
 import cx from 'classnames';
-import { connect } from 'react-redux';
-import { Link } from 'react-router-dom';
-import { getConfigValue } from '../../../utils/config/get-config';
+import { Link, useLocation } from 'react-router-dom';
+import getConfig from '../../../utils/config/get-config';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import prefixUrl from '../../../utils/prefix-url';
 
@@ -14,7 +13,7 @@ import renderNode, { getNodeEmphasisRenderer } from './renderNode';
 import { getUiFindVertexKeys, getEdgesAndVertices } from './traceDiffGraphUtils';
 import ErrorMessage from '../../common/ErrorMessage';
 import LoadingIndicator from '../../common/LoadingIndicator';
-import UiFindInput, { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
+import UiFindInput, { parseUiFind, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import { fetchedState } from '../../../constants';
 import { FetchedTrace, TNil } from '../../../types';
 
@@ -66,7 +65,7 @@ export const UnconnectedTraceDiffGraph: React.FC<Props> = React.memo(props => {
               className="TraceDiffGraph--helpButton"
               data-testid="learn-how-button"
               onClick={() => {
-                const helpLink = getConfigValue('traceDiff.helpLink');
+                const helpLink = getConfig().traceDiff?.helpLink;
                 if (helpLink) {
                   window.open(helpLink, getTargetEmptyOrBlank());
                 }
@@ -158,4 +157,9 @@ export const UnconnectedTraceDiffGraph: React.FC<Props> = React.memo(props => {
   );
 });
 
-export default connect(extractUiFindFromState)(UnconnectedTraceDiffGraph);
+type TExternalProps = Omit<Props, 'uiFind'>;
+
+export default function TraceDiffGraph(props: TExternalProps) {
+  const { search } = useLocation();
+  return <UnconnectedTraceDiffGraph {...props} uiFind={parseUiFind(search)} />;
+}

@@ -5,7 +5,6 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
-import { CompatRouter } from 'react-router-dom-v5-compat';
 
 import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
 
@@ -42,24 +41,16 @@ jest.mock('../../utils/config/get-config', () => {
   return {
     __esModule: true,
     default: jest.fn(() => ({
+      dependencies: { menuEnabled: true },
+      deepDependencies: { menuEnabled: true },
       qualityMetrics: {
+        menuEnabled: true,
+        menuLabel: 'Quality',
         apiEndpoint: '/quality-metrics',
       },
+      storageCapabilities: { metricsStorage: true },
+      themes: { enabled: true },
     })),
-    getConfigValue: jest.fn(key => {
-      switch (key) {
-        case 'dependencies.menuEnabled':
-        case 'deepDependencies.menuEnabled':
-        case 'qualityMetrics.menuEnabled':
-        case 'monitor.menuEnabled':
-        case 'themes.enabled':
-          return true;
-        case 'qualityMetrics.menuLabel':
-          return 'Quality';
-        default:
-          return false;
-      }
-    }),
   };
 });
 
@@ -119,9 +110,7 @@ describe('<TopNav>', () => {
     beforeEach(() => {
       component = render(
         <BrowserRouter>
-          <CompatRouter>
-            <TopNav {...defaultProps} />
-          </CompatRouter>
+          <TopNav {...defaultProps} />
         </BrowserRouter>
       );
     });
@@ -166,9 +155,7 @@ describe('<TopNav>', () => {
     beforeEach(() => {
       component = render(
         <BrowserRouter>
-          <CompatRouter>
-            <TopNav {...defaultProps} />
-          </CompatRouter>
+          <TopNav {...defaultProps} />
         </BrowserRouter>
       );
     });
@@ -221,9 +208,7 @@ describe('<TopNav>', () => {
   it('highlights the nav item matching the current pathname', () => {
     render(
       <BrowserRouter>
-        <CompatRouter>
-          <TopNav {...defaultProps} />
-        </CompatRouter>
+        <TopNav {...defaultProps} />
       </BrowserRouter>
     );
 
@@ -234,14 +219,12 @@ describe('<TopNav>', () => {
   it('builds the Compare link using the trace diff cohort state', () => {
     render(
       <BrowserRouter>
-        <CompatRouter>
-          <TopNav
-            {...{
-              ...defaultProps,
-              traceDiff: { cohort: ['trace-a', 'trace-b'] },
-            }}
-          />
-        </CompatRouter>
+        <TopNav
+          {...{
+            ...defaultProps,
+            traceDiff: { cohort: ['trace-a', 'trace-b'] },
+          }}
+        />
       </BrowserRouter>
     );
 
@@ -254,9 +237,7 @@ describe('<TopNav>', () => {
   it('renders the Monitor navigation link when enabled', () => {
     render(
       <BrowserRouter>
-        <CompatRouter>
-          <TopNav {...defaultProps} />
-        </CompatRouter>
+        <TopNav {...defaultProps} />
       </BrowserRouter>
     );
 
@@ -266,9 +247,7 @@ describe('<TopNav>', () => {
   it('includes the Trace ID search control in the right-side menu', () => {
     render(
       <BrowserRouter>
-        <CompatRouter>
-          <TopNav {...defaultProps} />
-        </CompatRouter>
+        <TopNav {...defaultProps} />
       </BrowserRouter>
     );
 

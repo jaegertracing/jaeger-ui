@@ -7,7 +7,7 @@ jest.mock('../../utils/tracking');
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom-v5-compat';
+import { MemoryRouter } from 'react-router-dom';
 
 import { mapStateToProps, PageImpl as Page } from './Page';
 import { trackPageView } from '../../utils/tracking';
