@@ -75,6 +75,7 @@ The above command will run a web server on `http://localhost:5173` that will ser
 | `npm run lint`   | Lint the project (eslint, prettier, typescript)                       |
 | `npm run fmt`    | Apply Prettier source code formatting                                 |
 | `npm run build`  | Runs production build. Outputs files to `packages/jaeger-ui/build`.   |
+| `make bundle-stats` | Runs production build and outputs `packages/jaeger-ui/build/bundle-stats.csv` with per-package size breakdown (estimated post-minification bytes). |
 
 ## Code Coverage
 
