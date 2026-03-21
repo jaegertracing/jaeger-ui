@@ -70,10 +70,10 @@ export function getTracePageTitle(spans: ReadonlyArray<Span>): string {
 }
 
 export function getIncompleteTraceTooltip(orphanCount: number): string {
-  const spans = `${orphanCount} span${orphanCount !== 1 ? 's' : ''}`;
+  const noun = orphanCount !== 1 ? 'spans' : 'span';
   const verb = orphanCount !== 1 ? 'have' : 'has';
   return (
-    `This trace may be incomplete: ${spans} ${verb} missing parent span(s). ` +
+    `This trace may be incomplete: ${orphanCount} ${noun} ${verb} missing parent ${noun}. ` +
     `This can happen if you load the trace while it is still being collected -- ` +
     `in this case reloading this page might help.`
   );
