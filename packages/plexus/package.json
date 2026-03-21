@@ -30,7 +30,6 @@
     "@typescript-eslint/parser": "8.57.1",
     "babel-jest": "30.3.0",
     "babel-loader": "10.1.1",
-    "babel-plugin-inline-react-svg": "2.0.2",
     "babel-plugin-transform-react-remove-prop-types": "0.4.24",
     "clean-webpack-plugin": "4.0.0",
     "css-loader": "7.1.0",
@@ -85,8 +84,8 @@
       "!src/demo/**/*"
     ],
     "transform": {
-      "\\.(css|png)$": "./test/generic-file-transform.js",
-      "\\.([jt]sx?|svg)$": "./test/babel-transform.js"
+      "\\.(css|png|svg)$": "./test/generic-file-transform.js",
+      "\\.([jt]sx?)$": "./test/babel-transform.js"
     },
     "transformIgnorePatterns": [
       "[/\\\\\\\\]node_modules[/\\\\\\\\](?!(@jaegertracing|d3-zoom|d3-selection)).+\\\\.(js|jsx|mjs|cjs|ts|tsx)$"
