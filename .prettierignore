@@ -1,5 +1,11 @@
+# Build outputs
+packages/*/lib/
+packages/*/dist/
+packages/*/build/
+
 # Ignore generated files
 packages/jaeger-ui/index.d.ts
+packages/jaeger-ui/src/api/v3/generated-client.ts
 
 # Ignore downloaded scripts
 scripts/release-notes.py
@@ -8,3 +14,13 @@ scripts/draft-release.py
 # Ignore some docs because prettier has different ideas about its formatting.
 CHANGELOG.md
 RELEASE.md
+
+# TODO: Remove the entries below and run `npm run prettier` to format these files.
+# They were not covered by the previous explicit glob patterns and need a separate
+# formatting pass to avoid mixing unrelated changes into the current PR.
+.codecov.yml
+.github/
+docs/
+packages/jaeger-ui/.babelrc
+packages/jaeger-ui/index.html
+scripts/postprocess-schemas.cjs
