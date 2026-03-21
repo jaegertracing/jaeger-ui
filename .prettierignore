@@ -5,7 +5,6 @@ packages/*/build/
 
 # Ignore generated files
 packages/jaeger-ui/index.d.ts
-packages/jaeger-ui/src/api/v3/generated-client.ts
 
 # Ignore downloaded scripts
 scripts/release-notes.py
