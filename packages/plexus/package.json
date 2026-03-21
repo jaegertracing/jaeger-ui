@@ -32,10 +32,7 @@
     "babel-loader": "10.1.1",
     "babel-plugin-transform-react-remove-prop-types": "0.4.24",
     "clean-webpack-plugin": "4.0.0",
-    "css-loader": "7.1.0",
     "eslint-config-prettier": "10.1.8",
-    "html-loader": "5.1.0",
-    "html-webpack-plugin": "5.6.0",
     "identity-obj-proxy": "3.0.0",
     "jest": "30.3.0",
     "jest-environment-jsdom": "30.3.0",
@@ -43,10 +40,8 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "rimraf": "6.1.0",
-    "style-loader": "4.0.0",
     "webpack": "5.105.4",
     "webpack-cli": "7.0.2",
-    "webpack-dev-server": "5.2.3",
     "webpack-node-externals": "3.0.0"
   },
   "peerDependencies": {
@@ -65,11 +60,9 @@
     "_tasks/build/lib/types": "../../node_modules/.bin/tsc --build --force",
     "_tasks/build/umd": "webpack --mode $NODE_ENV --config webpack.umd.config.js",
     "_tasks/clean/dirs": "rimraf lib dist",
-    "_tasks/dev-server": "webpack-dev-server --mode $NODE_ENV --config webpack.dev.config.js",
     "build": "NODE_ENV=production npm-run-all -ln --serial _tasks/clean/* --parallel _tasks/build/**",
     "coverage": "jest --coverage --passWithNoTests",
     "prepublishOnly": "npm run build",
-    "start": "NODE_ENV='development' npm-run-all -ln _tasks/dev-server",
     "test": "jest --silent --color --maxWorkers=50%"
   },
   "jest": {

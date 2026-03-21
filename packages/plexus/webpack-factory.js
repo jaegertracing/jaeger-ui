@@ -3,7 +3,6 @@
 
 const { join } = require('path');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const nodeExternals = require('webpack-node-externals');
 
 const babelConfigPath = require.resolve('./babel.config');
@@ -50,104 +49,6 @@ function makeBaseConfig() {
   };
 }
 
-// Development-specific configuration with dev server and source maps
-function makeDevConfig() {
-  const entry = {
-    index: join(__dirname, 'demo/src/index'),
-    simple: join(__dirname, 'demo/src/SimpleGraph'),
-    'ux-edges': join(__dirname, 'demo/src/UxEdges'),
-  };
-  const config = {
-    entry,
-    mode: 'development',
-    devtool: 'cheap-module-source-map',
-    output: {
-      path: join(__dirname, 'build'),
-      publicPath: '/',
-      filename: 'assets/[name].js',
-    },
-    stats: 'normal',
-    devServer: {
-      port: 5000,
-      historyApiFallback: true,
-      hot: true,
-      client: {
-        overlay: true,
-      },
-      static: {
-        directory: join(__dirname, 'demo'),
-      },
-    },
-    plugins: Object.keys(entry).map(
-      name =>
-        new HtmlWebpackPlugin({
-          template: join(__dirname, 'demo/template.ejs'),
-          appMountId: 'root',
-          lang: 'en',
-          meta: {
-            viewport: 'width=device-width, initial-scale=1',
-          },
-          filename: `${name}.html`,
-          chunks: [name],
-          title: `Plexus - Demo`,
-        })
-    ),
-  };
-
-  const rules = [
-    {
-      test: /\.html$/,
-      use: [
-        {
-          loader: 'html-loader',
-          options: {
-            sources: {
-              list: [
-                {
-                  tag: 'img',
-                  attribute: 'src',
-                  type: 'src',
-                },
-                {
-                  tag: 'link',
-                  attribute: 'href',
-                  type: 'src',
-                },
-              ],
-            },
-          },
-        },
-      ],
-    },
-    {
-      test: /\.css$/,
-      exclude: [/\.module\.css$/],
-      use: ['style-loader', 'css-loader'],
-    },
-    {
-      test: /\.module\.css$/,
-      use: [
-        'style-loader',
-        {
-          loader: 'css-loader',
-          options: {
-            modules: true,
-          },
-        },
-      ],
-    },
-    {
-      test: /\.(eot|ttf|woff|woff2|ico|png|jpg|jpeg|gif|svg|webp)$/,
-      type: 'asset',
-      generator: {
-        filename: 'assets/[name][ext]',
-      },
-    },
-  ];
-
-  return { config, rules };
-}
-
 // Common production optimizations
 function makeCommonProdConfig() {
   return {
@@ -179,7 +80,6 @@ function makeUmdConfig() {
 
 // Factory mapping for different build modes
 const FACTORIES = {
-  development: makeDevConfig,
   umd: makeUmdConfig,
 };
 
