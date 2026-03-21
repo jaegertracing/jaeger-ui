@@ -33,7 +33,7 @@
     "jest-environment-jsdom": "30.3.0",
     "jest-junit": "16.0.0",
     "less": "4.6.4",
-    "terser": "5.44.1",
+    "terser": "5.46.1",
     "vite": "7.3.0"
   },
   "dependencies": {
