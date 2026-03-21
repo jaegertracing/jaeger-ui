@@ -12,11 +12,13 @@ There are three build scenarios:
 - Webpack dev server
   - Runs `./demo/src/index.tsx` which has a few example graphs.
 
-The layout worker (`./src/LayoutManager/layout.worker.ts`) is loaded as a Web Worker using the native `new Worker(new URL(...))` pattern, which is supported by both Vite and Webpack 5 without any additional loaders.
+The layout worker (`./src/LayoutManager/layout.worker.ts`) is loaded as a Web Worker using the native `new Worker(new URL('./layout.worker.ts', import.meta.url))` pattern in `Coordinator.ts`. Both Vite and Webpack 5 recognize this pattern at build time, automatically bundling the worker and its dependencies (e.g. `@viz-js/viz`) into a separate chunk. No additional loaders are required.
+
+In jaeger-ui, the Vite config aliases `@jaegertracing/plexus` to the source directory, so Vite processes the `.ts` worker file directly. In the compiled ES module output (`./lib`), the worker file is emitted as `./lib/LayoutManager/layout.worker.js` and consumers' build tools are expected to handle the worker bundling.
 
 ## Babel
 
-Babel is used to transpile the TypeScript for all scenarios and the pre-step. See `babel.config.js` for specifics.
+Babel is used to transpile the TypeScript for all scenarios. See `babel.config.js` for specifics.
 
 The production ES module build is not bundled and therefore does not use Webpack.
 
@@ -24,7 +26,6 @@ The production ES module build is not bundled and therefore does not use Webpack
 
 Webpack is used to:
 
-- Bundle `./src/LayoutManager/layout.worker.tsx` so we can have a `WebWorker` without forcing folks to deal with an additional JavaScript asset
 - Bundle the production UMD module
 - Run the Webpack dev server during development
 
