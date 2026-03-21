@@ -4,13 +4,11 @@
 
 The package is implemented in TypeScript and must be compiled to JavaScript.
 
-There are three build scenarios:
+There are two build scenarios:
 
 - Production ES modules
   - **This is the project's default export as `./lib/index.js`.** This build is not bundled and therefore does not use Webpack.
 - Production UMD module
-- Webpack dev server
-  - Runs `./demo/src/index.tsx` which has a few example graphs.
 
 The layout worker (`./src/LayoutManager/layout.worker.ts`) is loaded as a Web Worker using the native `new Worker(new URL('./layout.worker.ts', import.meta.url))` pattern in `Coordinator.ts`. Both Vite and Webpack 5 recognize this pattern at build time, automatically bundling the worker and its dependencies (e.g. `@viz-js/viz`) into a separate chunk. No additional loaders are required.
 
@@ -24,12 +22,7 @@ The production ES module build is not bundled and therefore does not use Webpack
 
 ## Webpack
 
-Webpack is used to:
-
-- Bundle the production UMD module
-- Run the Webpack dev server during development
-
-`./webpack-factory.js` is used to generate the Webpack configurations for each scenario.
+Webpack is used to bundle the production UMD module. `./webpack-factory.js` is used to generate the Webpack configuration.
 
 ## TypeScript `--emitDeclarationOnly`
 
@@ -45,7 +38,6 @@ Note: `./tsconfig.json` does not extend `../../tsconfig.json`.
 
 - `build` — Generates the UMD bundle and ES module production builds
 - `prepublishOnly` — Executed after `npm install` is run in the project root; runs the `build` script
-- `start` — Starts the Webpack dev server and watches all files, including `layout.worker`
 
 The `_tasks/*` scripts are not intended to be run, directly.
 
@@ -53,8 +45,6 @@ The `_tasks/*` scripts are not intended to be run, directly.
   - Remove generated files
 - `_tasks/build/*`
   - Generates the production ES and UMD builds
-- `_tasks/dev-server`
-  - Starts the Webpack dev server
 
 ### Dependencies (dev and otherwise)
 

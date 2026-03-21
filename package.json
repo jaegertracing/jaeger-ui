@@ -46,7 +46,6 @@
     "yaml": "2.8.0",
     "svgo": "4.0.1",
     "rollup": "4.59.0",
-    "qs": "6.14.2",
     "@exodus/bytes": {
       "@noble/hashes": "$@noble/hashes"
     }
