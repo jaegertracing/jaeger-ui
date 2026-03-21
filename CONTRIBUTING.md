@@ -67,14 +67,15 @@ The above command will run a web server on `http://localhost:5173` that will ser
 
 ## Development Commands
 
-| Command          | Description                                                           |
-| ---------------- | --------------------------------------------------------------------- |
-| `npm start`      | Starts development server with hot reloading and api proxy.           |
-| `npm test`       | Run all the tests                                                     |
+| Command | Description |
+| --- | --- |
+| `npm start` | Starts development server with hot reloading and api proxy. |
+| `npm test` | Run all the tests |
 | `npm test $file` | Run tests for a specific file, e.g. `npm test src/api/jaeger.test.js` |
-| `npm run lint`   | Lint the project (eslint, prettier, typescript)                       |
-| `npm run fmt`    | Apply Prettier source code formatting                                 |
-| `npm run build`  | Runs production build. Outputs files to `packages/jaeger-ui/build`.   |
+| `npm run lint` | Lint the project (eslint, prettier, typescript) |
+| `npm run fmt` | Apply Prettier source code formatting |
+| `npm run build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
+| `make bundle-stats` | Runs production build and outputs `packages/jaeger-ui/build/bundle-stats.csv` with per-package size breakdown (estimated post-minification bytes). |
 
 ## Code Coverage
 
