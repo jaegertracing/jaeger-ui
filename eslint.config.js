@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import js from '@eslint/js';
+import { fixupPluginRules } from '@eslint/compat';
 import typescriptPlugin from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
-import importPlugin from 'eslint-plugin-import';
+import importPlugin from 'eslint-plugin-import-x';
 import prettierPlugin from 'eslint-plugin-prettier';
 import jestPlugin from 'eslint-plugin-jest';
 import { fileURLToPath } from 'url';
@@ -69,7 +70,7 @@ const commonGlobals = {
 };
 
 const commonSettings = {
-  'import/resolver': {
+  'import-x/resolver': {
     node: {
       extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
     },
@@ -125,8 +126,8 @@ const baseRules = {
   'jsx-a11y/mouse-events-have-key-events': 'off',
   'jsx-a11y/no-static-element-interactions': 'warn',
 
-  'import/extensions': 'off',
-  'import/no-extraneous-dependencies': 'off',
+  'import-x/extensions': 'off',
+  'import-x/no-extraneous-dependencies': 'off',
 
   'jest/no-disabled-tests': 'warn',
   'jest/no-focused-tests': 'error',
@@ -200,10 +201,10 @@ export default [
     },
     plugins: {
       '@typescript-eslint': typescriptPlugin,
-      react: reactPlugin,
-      'react-hooks': reactHooksPlugin,
-      'jsx-a11y': jsxA11y,
-      import: importPlugin,
+      react: fixupPluginRules(reactPlugin),
+      'react-hooks': fixupPluginRules(reactHooksPlugin),
+      'jsx-a11y': fixupPluginRules(jsxA11y),
+      'import-x': importPlugin,
       prettier: prettierPlugin,
       jest: jestPlugin,
     },
@@ -228,10 +229,10 @@ export default [
       globals: commonGlobals,
     },
     plugins: {
-      react: reactPlugin,
-      'react-hooks': reactHooksPlugin,
-      'jsx-a11y': jsxA11y,
-      import: importPlugin,
+      react: fixupPluginRules(reactPlugin),
+      'react-hooks': fixupPluginRules(reactHooksPlugin),
+      'jsx-a11y': fixupPluginRules(jsxA11y),
+      'import-x': importPlugin,
       prettier: prettierPlugin,
       jest: jestPlugin,
     },

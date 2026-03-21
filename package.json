@@ -15,6 +15,8 @@
   "devDependencies": {
     "@babel/cli": "7.28.0",
     "@babel/core": "7.29.0",
+    "@eslint/compat": "2.0.3",
+    "@eslint/js": "10.0.1",
     "@noble/hashes": "2.0.1",
     "@testing-library/dom": "^10.4.1",
     "@typescript-eslint/eslint-plugin": "8.57.1",
@@ -24,7 +26,7 @@
     "depcheck": "1.4.7",
     "eslint": "10.1.0",
     "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-import-x": "4.16.2",
     "eslint-plugin-jest": "29.15.0",
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-prettier": "5.5.4",
