@@ -21,6 +21,7 @@ import { TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { formatDatetime, formatDuration } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
+import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
@@ -95,24 +96,22 @@ export const HEADER_ITEMS = [
   {
     key: 'span-count',
     label: 'Total Spans',
+    renderer: (trace: IOtelTrace) => trace.spans.length,
+  },
+  {
+    key: 'incomplete',
+    label: '',
     renderer: (trace: IOtelTrace) => {
       const orphanCount = trace.orphanSpanCount ?? 0;
-      const tooltipText = `This trace may be incomplete. ${orphanCount} span${orphanCount !== 1 ? 's' : ''} ${orphanCount !== 1 ? 'have' : 'has'} missing parent span(s).`;
+      if (orphanCount === 0) return null;
+      const tooltipText = getIncompleteTraceTooltip(orphanCount);
       return (
-        <span>
-          {trace.spans.length}
-          {orphanCount > 0 && (
-            <>
-              {' '}
-              <Tooltip title={tooltipText}>
-                <span className="TracePageHeader--incompleteTag">
-                  <IoWarning className="TracePageHeader--incompleteIcon" />
-                  Incomplete
-                </span>
-              </Tooltip>
-            </>
-          )}
-        </span>
+        <Tooltip title={tooltipText}>
+          <span className="TracePageHeader--incompleteTag">
+            <IoWarning className="TracePageHeader--incompleteIcon" />
+            Incomplete
+          </span>
+        </Tooltip>
       );
     },
   },
@@ -165,7 +164,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     HEADER_ITEMS.map(item => {
       const { renderer, ...rest } = item;
       return { ...rest, value: renderer(trace) };
-    });
+    }).filter(item => item.value !== null);
 
   const traceShortID = trace.traceID.slice(0, 7);
 

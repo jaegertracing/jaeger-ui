@@ -102,13 +102,12 @@ SPDX-License-Identifier: Apache-2.0
 .TracePageHeader--incompleteTag {
   color: var(--feedback-warning);
   cursor: help;
-  font-size: 0.85em;
   font-weight: 500;
-  margin-left: 0.5em;
 }
 
 .TracePageHeader--incompleteIcon {
-  font-size: 1.1em;
+  font-size: 1em;
   margin-right: 0.25em;
+  margin-top: -0.2em;
   vertical-align: middle;
 }
