@@ -47,7 +47,7 @@ jobs:
             jaeger-ui-bundle-size
 
       - name: Compare bundle sizes
-        if: steps.cache-bundle-size.outputs.cache-matched-key != ''
+        if: steps.cache-bundle-size.outputs.cache-matched-key != '' && github.ref != 'refs/heads/main'
         run: |
           OLD_BUNDLE_SIZE=$(cat bundle_size.txt)
           NEW_BUNDLE_SIZE=$(cat new_bundle_size.txt)
