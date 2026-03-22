@@ -7,9 +7,51 @@ html {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.PlexusDemo {
+  margin: 0 2rem;
+  height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.PlexusDemo--title {
+  margin: 0.5rem 0;
+  flex-shrink: 0;
+}
+
+.PlexusDemo--tabs {
+  flex: 1;
+  min-height: 0;
+}
+
+.PlexusDemo--tabs .ant-tabs-content {
+  height: 100%;
+}
+
+.PlexusDemo--tabs .ant-tabs-tabpane {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.PlexusDemo--sizeToggle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.PlexusDemo--sizeHint {
+  color: #666;
+  font-size: 0.85em;
+  font-style: italic;
+}
+
 .demo-row {
   display: flex;
   flex-wrap: nowrap;
+  margin-bottom: 1rem;
 }
 
 .demo-row > :first-child {
@@ -20,14 +62,19 @@ html {
   border: 1px solid #bbb;
   cursor: move;
   overflow: hidden;
-  height: 700px;
-  width: 700px;
   position: relative;
 }
 
 .DemoGraph.is-small {
   height: 250px;
   width: 350px;
+}
+
+.DemoGraph.is-fluid {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 1rem;
 }
 
 .DemoGraph--dag {

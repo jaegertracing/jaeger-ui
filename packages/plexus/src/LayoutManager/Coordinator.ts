@@ -106,9 +106,7 @@ export default class Coordinator {
   }
 
   _initWorker() {
-    const worker = new Worker(new URL('./layout.worker.ts', import.meta.url), {
-      type: 'module',
-    }) as TLayoutWorker;
+    const worker = new Worker(new URL('./layout.worker.ts', import.meta.url)) as TLayoutWorker;
     worker.id = this.nextWorkerId;
     this.nextWorkerId++;
     worker.onerror = this._handleVizWorkerError;
