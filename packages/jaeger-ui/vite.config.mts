@@ -30,8 +30,8 @@ const proxyConfig = {
  * modules proportionally. This gives a good approximation of each module's real
  * contribution to the final (minified, pre-gzip) bundle.
  *
- * Uses only the stable Rollup generateBundle/closeBundle hooks, compatible with
- * both Vite 7 (Rollup 4) and Vite 8 (Rollup 5).
+ * Uses only the stable generateBundle/closeBundle plugin hooks, compatible with
+ * both Vite 7 (Rollup) and Vite 8 (Rolldown).
  */
 function bundleStatsPlugin(outDir: string) {
   // Accumulated per-module data: module path → { renderedLength, chunkFileName }
