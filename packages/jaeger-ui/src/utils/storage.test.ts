@@ -25,6 +25,11 @@ describe('storage.getString', () => {
   it('returns defaultValue for missing key', () => {
     expect(storage.getString('missing', 'fallback')).toBe('fallback');
   });
+
+  it('returns raw string when JSON.parse fails', () => {
+    localStorage.setItem('k', 'not-json');
+    expect(storage.getString('k')).toBe('not-json');
+  });
 });
 
 describe('storage.getNumber', () => {
@@ -68,6 +73,11 @@ describe('storage.getJSON', () => {
   it('returns undefined for missing key', () => {
     expect(storage.getJSON('missing')).toBeUndefined();
   });
+
+  it('returns undefined for non-JSON value', () => {
+    localStorage.setItem('k', 'not-json');
+    expect(storage.getJSON('k')).toBeUndefined();
+  });
 });
 
 describe('storage.set', () => {
@@ -75,11 +85,11 @@ describe('storage.set', () => {
     storage.set('k', { x: 'y' });
     expect(localStorage.getItem('k')).toBe('{"x":"y"}');
   });
-});
 
-describe('raw string fallback', () => {
-  it('returns raw string when JSON.parse fails', () => {
-    localStorage.setItem('k', 'not-json');
-    expect(storage.getString('k')).toBe('not-json');
+  it('removes key when value is undefined', () => {
+    storage.set('k', 'value');
+    expect(localStorage.getItem('k')).not.toBeNull();
+    storage.set('k', undefined);
+    expect(localStorage.getItem('k')).toBeNull();
   });
 });

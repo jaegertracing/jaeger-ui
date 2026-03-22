@@ -205,7 +205,7 @@ export default defineConfig({
         const originalWarn = config.logger.warn;
         config.logger.warn = (msg, ...args) => {
           if (typeof msg === 'string' && msg.includes("'global' is not recognized")) return;
-          originalWarn(msg, ...args);
+          originalWarn.call(config.logger, msg, ...args);
         };
       },
     },

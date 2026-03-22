@@ -6,18 +6,18 @@
  * Replaces the 'store' npm package.
  */
 
-function getRaw(key: string): string | undefined {
+function getRaw(key: string): unknown {
+  let value: string | null;
   try {
-    const value = localStorage.getItem(key);
-    if (value === null) return undefined;
-    // Try to parse JSON; if parsing fails, fall back to the raw string.
-    try {
-      return JSON.parse(value);
-    } catch {
-      return value;
-    }
+    value = localStorage.getItem(key);
   } catch {
     return undefined;
+  }
+  if (value === null) return undefined;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
   }
 }
 
@@ -43,15 +43,25 @@ function getBool(key: string, defaultValue?: boolean): boolean | undefined {
 }
 
 function getJSON<T = unknown>(key: string): T | undefined {
-  const v = getRaw(key);
-  return v !== undefined ? (v as T) : undefined;
+  try {
+    const value = localStorage.getItem(key);
+    if (value === null) return undefined;
+    return JSON.parse(value) as T;
+  } catch {
+    return undefined;
+  }
 }
 
 function set(key: string, value: unknown): void {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    const serialized = JSON.stringify(value);
+    if (serialized === undefined) {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, serialized);
+    }
   } catch {
-    // Ignore quota errors
+    // Ignore quota errors or non-serializable values
   }
 }
 

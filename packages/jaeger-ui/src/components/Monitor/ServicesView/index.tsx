@@ -138,9 +138,10 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const [selectedService, setSelectedService] = useState<string | undefined>(
     store.getString('lastAtmSearchService')
   );
-  const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(
-    (store.getString('lastAtmSearchSpanKind') as spanKinds | undefined) || 'server'
-  );
+  const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(() => {
+    const stored = store.getString('lastAtmSearchSpanKind');
+    return spanKindOptions.some(opt => opt.value === stored) ? (stored as spanKinds) : 'server';
+  });
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(
     store.getNumber('lastAtmSearchTimeframe', oneHourInMilliSeconds)
   );
