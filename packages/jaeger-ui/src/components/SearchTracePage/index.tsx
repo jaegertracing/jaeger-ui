@@ -6,7 +6,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Col, Row, Tabs } from 'antd';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
-import store from 'store';
 import memoizeOne from 'memoize-one';
 
 import { useConfig } from '../../hooks/useConfig';

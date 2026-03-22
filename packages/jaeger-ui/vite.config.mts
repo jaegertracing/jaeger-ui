@@ -197,6 +197,18 @@ export default defineConfig({
   plugins: [
     process.env.BUNDLE_STATS && bundleStatsPlugin(path.resolve(__dirname, 'build')),
     jaegerUiConfigPlugin(),
+    // Suppress LightningCSS warning about ::global() pseudo-element emitted by CSS modules.
+    // This is a known issue: LightningCSS doesn't recognize the CSS modules :global() syntax.
+    {
+      name: 'suppress-lightningcss-global-warning',
+      configResolved(config) {
+        const originalWarn = config.logger.warn;
+        config.logger.warn = (msg, ...args) => {
+          if (typeof msg === 'string' && msg.includes("'global' is not recognized")) return;
+          originalWarn.call(config.logger, msg, ...args);
+        };
+      },
+    },
     react({
       babel: {
         babelrc: true,

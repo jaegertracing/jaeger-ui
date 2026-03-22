@@ -7,7 +7,7 @@ import { Provider } from 'react-redux';
 import { createStore, combineReducers } from 'redux';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import store from 'store';
+import store from '../../utils/storage';
 import MonitorATMPage from '.';
 import metricsReducer from '../../reducers/metrics';
 import * as jaegerApiActions from '../../actions/jaeger-api';
@@ -23,8 +23,17 @@ jest.mock('../../utils/config/get-config', () => ({
     storageCapabilities: { metricsStorage: true },
   })),
 }));
-// Mock the 'store' npm package
-jest.mock('store');
+// Mock the storage utility
+jest.mock('../../utils/storage', () => ({
+  __esModule: true,
+  default: {
+    getString: jest.fn(),
+    getNumber: jest.fn(),
+    getBool: jest.fn(),
+    getJSON: jest.fn(),
+    set: jest.fn(),
+  },
+}));
 
 // Mock useServices hook with stable data reference to prevent infinite loops
 jest.mock('../../hooks/useTraceDiscovery', () => {
@@ -76,12 +85,13 @@ describe('<MonitorATMPage>', () => {
     }));
 
     // Configure store mocks
-    mockedStorage.get.mockImplementation(key => {
+    mockedStorage.getString.mockImplementation(key => {
       if (key === 'lastAtmSearchService') return '';
       if (key === 'lastAtmSearchSpanKind') return 'server';
-      if (key === 'lastAtmSearchTimeframe') return 3600000;
-      return null;
+      return undefined;
     });
+    mockedStorage.getNumber.mockImplementation((_key, defaultValue) => defaultValue);
+    mockedStorage.getBool.mockImplementation((_key, defaultValue) => defaultValue);
     mockedStorage.set.mockImplementation(() => {});
   });
 

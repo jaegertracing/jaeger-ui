@@ -19,8 +19,6 @@ jest.mock('../../hooks/useTraceDiscovery', () => ({
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import store from 'store';
-
 import { Provider } from 'react-redux';
 import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
 import { fetchedState } from '../../constants';
