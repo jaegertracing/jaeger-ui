@@ -262,7 +262,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
     const uiFindMatches = graph && graph.getVisibleUiFindMatches(uiFind, visEncoding);
     const hiddenUiFindMatches = graph && graph.getHiddenUiFindMatches(uiFind, visEncoding);
 
-    let content: React.ReactElement | null = null;
+    let content: React.ReactElement | null;
     let wrapperClassName = '';
     if (!graphState) {
       content = <h1>Enter query above</h1>;
