@@ -24,7 +24,16 @@ jest.mock('../../utils/config/get-config', () => ({
   })),
 }));
 // Mock the storage utility
-jest.mock('../../utils/storage');
+jest.mock('../../utils/storage', () => ({
+  __esModule: true,
+  default: {
+    getString: jest.fn(),
+    getNumber: jest.fn(),
+    getBool: jest.fn(),
+    getJSON: jest.fn(),
+    set: jest.fn(),
+  },
+}));
 
 // Mock useServices hook with stable data reference to prevent infinite loops
 jest.mock('../../hooks/useTraceDiscovery', () => {
