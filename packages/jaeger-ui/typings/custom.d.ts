@@ -6,7 +6,6 @@ declare const global: {
   location: Location;
 };
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 declare interface Window {
   // For setting the site-prefix
   __webpack_public_path__: string;
@@ -34,4 +33,13 @@ declare module 'chance';
 declare module 'isomorphic-fetch';
 declare module '*.png' {
   export default '' as string;
+}
+
+// Vite alias – TypeScript path resolution for the plexus demo entry point.
+// The @jaegertracing/plexus/demo alias is configured in vite.config.mts;
+// declare the module here so tsc-lint can resolve it.
+declare module '@jaegertracing/plexus/demo' {
+  import type { ComponentType } from 'react';
+  const Demo: ComponentType<Record<string, never>>;
+  export default Demo;
 }

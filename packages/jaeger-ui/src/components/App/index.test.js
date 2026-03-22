@@ -24,6 +24,9 @@ jest.mock('../TraceDiff/url', () => ({ ROUTE_PATH: '/trace-diff', getUrl: jest.f
 jest.mock('../TracePage/url', () => ({ ROUTE_PATH: '/trace/:id' }));
 jest.mock('../Monitor/url', () => ({ ROUTE_PATH: '/monitor' }));
 
+jest.mock('../PlexusDemo', () => ({ __esModule: true, default: () => <div data-testid="plexus-demo" /> }));
+jest.mock('../PlexusDemo/url', () => ({ ROUTE_PATH: '/plexus-demo' }));
+
 jest.mock('../../api/jaeger', () => ({
   __esModule: true,
   default: { apiRoot: null },
@@ -150,5 +153,12 @@ describe('JaegerUIApp', () => {
     );
     // processScripts was called once at module load, not on each render
     expect(processScripts).toHaveBeenCalledTimes(1);
+  });
+
+  it('should render NotFound for /plexus-demo in non-DEV mode (route is disabled)', () => {
+    // process.env.DEV is falsy in the test environment, so PlexusDemoPage is null
+    // and the route is not registered; the wildcard catches it as NotFound.
+    const { getByTestId } = renderWithPath('/plexus-demo');
+    expect(getByTestId('not-found')).toBeInTheDocument();
   });
 });
