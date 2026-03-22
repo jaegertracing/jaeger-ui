@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@babel/plugin-syntax-dynamic-import": "7.8.3",
+    "antd": "6.3.1",
     "@babel/plugin-transform-class-properties": "7.28.6",
     "@babel/plugin-transform-private-methods": "7.28.6",
     "@babel/preset-env": "7.29.2",
