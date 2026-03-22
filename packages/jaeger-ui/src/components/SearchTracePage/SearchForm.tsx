@@ -386,8 +386,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 
   const [adjustTimeEnabled, setAdjustTimeEnabled] = useState<boolean>(() => {
-    const storedAdjustTimeEnabled = store.get(ADJUST_TIME_ENABLED_KEY) as boolean | undefined;
-    return storedAdjustTimeEnabled !== undefined ? storedAdjustTimeEnabled : Boolean(searchAdjustEndTime);
+    return store.getBool(ADJUST_TIME_ENABLED_KEY, Boolean(searchAdjustEndTime));
   });
 
   const handleChange = useCallback((fieldData: Partial<ISearchFormFields>) => {
@@ -740,7 +739,7 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
   const nowInMicroseconds = dayjs().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);
   const currentTime = formatTime(nowInMicroseconds);
-  const lastSearch = store.get('lastSearch') as { service?: string; operation?: string } | undefined;
+  const lastSearch = store.getJSON<{ service?: string; operation?: string }>('lastSearch');
   let lastSearchService: string | undefined;
   let lastSearchOperation: string | undefined;
 

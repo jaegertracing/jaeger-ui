@@ -136,13 +136,13 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const [searchOps, setSearchOps] = useState<string>('');
   const [graphXDomain, setGraphXDomain] = useState<number[]>([]);
   const [selectedService, setSelectedService] = useState<string | undefined>(
-    store.get('lastAtmSearchService') as string | undefined
+    store.getString('lastAtmSearchService')
   );
   const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(
-    (store.get('lastAtmSearchSpanKind') as spanKinds | undefined) || 'server'
+    (store.getString('lastAtmSearchSpanKind') as spanKinds | undefined) || 'server'
   );
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(
-    (store.get('lastAtmSearchTimeframe') as number | undefined) || oneHourInMilliSeconds
+    store.getNumber('lastAtmSearchTimeframe', oneHourInMilliSeconds)
   );
 
   const calcGraphXDomain = useCallback(() => {
@@ -157,7 +157,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, []);
 
   const getSelectedService = useCallback(() => {
-    return selectedService || (store.get('lastAtmSearchService') as string | undefined) || services[0];
+    return selectedService || store.getString('lastAtmSearchService') || services[0];
   }, [services, selectedService]);
 
   const handleServiceChange = useCallback((value: string) => {

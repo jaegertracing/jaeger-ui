@@ -76,12 +76,13 @@ describe('<MonitorATMPage>', () => {
     }));
 
     // Configure store mocks
-    mockedStorage.get.mockImplementation(key => {
+    mockedStorage.getString.mockImplementation(key => {
       if (key === 'lastAtmSearchService') return '';
       if (key === 'lastAtmSearchSpanKind') return 'server';
-      if (key === 'lastAtmSearchTimeframe') return 3600000;
-      return null;
+      return undefined;
     });
+    mockedStorage.getNumber.mockImplementation((_key, defaultValue) => defaultValue);
+    mockedStorage.getBool.mockImplementation((_key, defaultValue) => defaultValue);
     mockedStorage.set.mockImplementation(() => {});
   });
 

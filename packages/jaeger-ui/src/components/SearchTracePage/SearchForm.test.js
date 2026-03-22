@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('store');
 jest.mock('../common/SearchableSelect', () => {
   const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, value, ...props }) => {
     if (onChange && testId) {

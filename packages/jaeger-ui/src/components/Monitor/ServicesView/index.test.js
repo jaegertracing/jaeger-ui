@@ -40,9 +40,15 @@ jest.mock('../../../utils/config/get-config', () => ({
   })),
 }));
 
-jest.mock('store', () => ({
-  get: jest.fn(),
-  set: jest.fn(),
+jest.mock('../../../utils/storage', () => ({
+  __esModule: true,
+  default: {
+    getString: jest.fn(),
+    getNumber: jest.fn(),
+    getBool: jest.fn(),
+    getJSON: jest.fn(),
+    set: jest.fn(),
+  },
 }));
 
 jest.mock('../../../hooks/useTraceDiscovery', () => ({
