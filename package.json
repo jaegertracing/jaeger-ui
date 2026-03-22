@@ -44,7 +44,7 @@
     "react-dom": "19.2.0",
     "yaml": "2.8.0",
     "svgo": "4.0.1",
-    "rollup": "4.59.0",
+    "rollup": "4.60.0",
     "@exodus/bytes": {
       "@noble/hashes": "$@noble/hashes"
     }
