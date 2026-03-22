@@ -6,7 +6,7 @@ import { Row, Col, Input, Alert, Select } from 'antd';
 import { ActionFunctionAny, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
 import _isEmpty from 'lodash/isEmpty';
-import store from 'store';
+import store from '../../../utils/storage';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 import { Link } from 'react-router-dom';
@@ -136,13 +136,13 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const [searchOps, setSearchOps] = useState<string>('');
   const [graphXDomain, setGraphXDomain] = useState<number[]>([]);
   const [selectedService, setSelectedService] = useState<string | undefined>(
-    store.get('lastAtmSearchService')
+    store.get('lastAtmSearchService') as string | undefined
   );
   const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(
-    store.get('lastAtmSearchSpanKind') || 'server'
+    (store.get('lastAtmSearchSpanKind') as spanKinds | undefined) || 'server'
   );
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(
-    store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds
+    (store.get('lastAtmSearchTimeframe') as number | undefined) || oneHourInMilliSeconds
   );
 
   const calcGraphXDomain = useCallback(() => {
@@ -157,7 +157,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   }, []);
 
   const getSelectedService = useCallback(() => {
-    return selectedService || store.get('lastAtmSearchService') || services[0];
+    return selectedService || (store.get('lastAtmSearchService') as string | undefined) || services[0];
   }, [services, selectedService]);
 
   const handleServiceChange = useCallback((value: string) => {

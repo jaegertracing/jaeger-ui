@@ -14,7 +14,7 @@ import { connect, ConnectedProps } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getUrl as getSearchUrl } from './url';
 import { bindActionCreators, Dispatch } from 'redux';
-import store from 'store';
+import store from '../../utils/storage';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
@@ -386,7 +386,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 
   const [adjustTimeEnabled, setAdjustTimeEnabled] = useState<boolean>(() => {
-    const storedAdjustTimeEnabled = store.get(ADJUST_TIME_ENABLED_KEY);
+    const storedAdjustTimeEnabled = store.get(ADJUST_TIME_ENABLED_KEY) as boolean | undefined;
     return storedAdjustTimeEnabled !== undefined ? storedAdjustTimeEnabled : Boolean(searchAdjustEndTime);
   });
 

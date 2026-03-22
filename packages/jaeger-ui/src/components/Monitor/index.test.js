@@ -7,7 +7,7 @@ import { Provider } from 'react-redux';
 import { createStore, combineReducers } from 'redux';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import store from 'store';
+import store from '../../utils/storage';
 import MonitorATMPage from '.';
 import metricsReducer from '../../reducers/metrics';
 import * as jaegerApiActions from '../../actions/jaeger-api';
@@ -23,8 +23,8 @@ jest.mock('../../utils/config/get-config', () => ({
     storageCapabilities: { metricsStorage: true },
   })),
 }));
-// Mock the 'store' npm package
-jest.mock('store');
+// Mock the storage utility
+jest.mock('../../utils/storage');
 
 // Mock useServices hook with stable data reference to prevent infinite loops
 jest.mock('../../hooks/useTraceDiscovery', () => {

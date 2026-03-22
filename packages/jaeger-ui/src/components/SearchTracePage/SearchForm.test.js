@@ -43,7 +43,6 @@ import { act } from 'react';
 import '@testing-library/jest-dom';
 import dayjs from 'dayjs';
 import queryString from 'query-string';
-import store from 'store';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import SearchableSelect from '../common/SearchableSelect';
 
@@ -790,6 +789,7 @@ describe('mapStateToProps()', () => {
 
   beforeEach(() => {
     state = {};
+    localStorage.clear();
   });
 
   it('does not explode when the query string is empty', () => {
@@ -798,7 +798,6 @@ describe('mapStateToProps()', () => {
 
   // tests the green path
   it('service and operation fallback to values in `store` when the values are valid', () => {
-    const oldStoreGet = store.get;
     const op = 'some-op';
     const svc = 'some-svc';
     state.services = {
@@ -807,11 +806,10 @@ describe('mapStateToProps()', () => {
         [svc]: [op, 'some other opertion'],
       },
     };
-    store.get = () => ({ operation: op, service: svc });
+    localStorage.setItem('lastSearch', JSON.stringify({ operation: op, service: svc }));
     const { service, operation } = callMapStateToProps().initialValues;
     expect(operation).toBe(op);
     expect(service).toBe(svc);
-    store.get = oldStoreGet;
   });
 
   describe('deriving values from the URL search string (ownProps.search)', () => {
