@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import React from 'react';
 import { Provider } from 'react-redux';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -19,6 +20,7 @@ import TraceRouter from './TraceRouter';
 import { ROUTE_PATH as tracePath } from '../TracePage/url';
 import MonitorATMPage from '../Monitor';
 import { ROUTE_PATH as monitorATMPath } from '../Monitor/url';
+import { ROUTE_PATH as plexusDemoPath } from '../PlexusDemo/url';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import processScripts from '../../utils/config/process-scripts';
 import prefixUrl from '../../utils/prefix-url';
@@ -45,6 +47,11 @@ const queryClient = new QueryClient({
 JaegerAPI.apiRoot = DEFAULT_API_ROOT;
 processScripts();
 
+// Only include the Plexus demo in development builds.
+// Vite replaces import.meta.env.DEV with false in production, which causes Rollup
+// to tree-shake the dynamic import and exclude the demo files from the prod bundle.
+const PlexusDemoPage = import.meta.env.DEV ? React.lazy(() => import('../PlexusDemo')) : null;
+
 export default function JaegerUIApp() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -65,6 +72,16 @@ export default function JaegerUIApp() {
               <Route path={deepDependenciesPath} element={<DeepDependencies />} />
               <Route path={qualityMetricsPath} element={<QualityMetrics />} />
               <Route path={monitorATMPath} element={<MonitorATMPage />} />
+              {PlexusDemoPage && (
+                <Route
+                  path={plexusDemoPath}
+                  element={
+                    <React.Suspense fallback={null}>
+                      <PlexusDemoPage />
+                    </React.Suspense>
+                  }
+                />
+              )}
 
               <Route path="/" element={<Navigate to={searchPath} replace />} />
               <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
