@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import calcPositioning, { _initSvcSpan, _initOpSpan } from './calc-positioning';
-import { FONT_SIZE, LINE_HEIGHT, OP_PADDING_TOP } from './constants';
+import { FONT_SIZE, LINE_HEIGHT, OP_PADDING_TOP, WORD_RX } from './constants';
 
 describe('initializing measuring spans', () => {
   afterEach(() => {
@@ -232,12 +232,27 @@ describe('calcPositioning', () => {
     it('treats input strings containing HTML tags as plain text', () => {
       const svcSpan = _initSvcSpan();
       const xssString = '<img src=x onerror=alert(1)>';
-      svcMeasurements = genWidths([1]);
+      const wordCount = xssString.match(WORD_RX)?.length || 1;
+      const capturedHtml = [];
+      const originalImplementation = measureSvc.getMockImplementation();
+      svcMeasurements = genWidths(new Array(wordCount).fill(1));
 
-      calcPositioning(xssString);
+      measureSvc.mockImplementation(() => {
+        capturedHtml.push(svcSpan.innerHTML);
+        return originalImplementation();
+      });
 
-      expect(svcSpan.textContent).toBe(xssString);
-      expect(svcSpan.innerHTML).not.toContain('<img');
+      try {
+        calcPositioning(xssString);
+      } finally {
+        measureSvc.mockImplementation(originalImplementation);
+      }
+
+      expect(capturedHtml).toHaveLength(wordCount);
+      capturedHtml.forEach(html => {
+        expect(html).not.toContain('<img');
+      });
+      expect(capturedHtml.some(html => html.includes('&lt;img'))).toBe(true);
     });
   });
 });
