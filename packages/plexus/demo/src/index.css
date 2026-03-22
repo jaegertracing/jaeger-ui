@@ -3,11 +3,8 @@ Copyright (c) 2019 Uber Technologies, Inc.
 SPDX-License-Identifier: Apache-2.0
 */
 
-html {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 .PlexusDemo {
+  font-family: Arial, Helvetica, sans-serif;
   margin: 0 2rem;
   height: calc(100vh - 48px);
   display: flex;
