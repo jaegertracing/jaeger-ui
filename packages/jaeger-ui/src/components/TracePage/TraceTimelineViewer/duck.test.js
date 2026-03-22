@@ -11,6 +11,7 @@ import reducer, {
   collapseOne,
   expandAll,
   expandOne,
+  getSelectedSpanID,
   MIN_TIMELINE_COLUMN_WIDTH,
   SPAN_NAME_COLUMN_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
@@ -789,6 +790,25 @@ describe('TraceTimelineViewer/duck', () => {
       const action = actions.removeHoverIndentGuideId(existingSpanId);
       store.dispatch(action);
       expect(store.getState().hoverIndentGuideIds).toEqual(new Set([secondExistingSpanId]));
+    });
+  });
+
+  describe('getSelectedSpanID', () => {
+    it('returns null when detailStates is empty', () => {
+      expect(getSelectedSpanID(new Map())).toBeNull();
+    });
+
+    it('returns the span ID when detailStates has one entry', () => {
+      const detailStates = new Map([['span-a', null]]);
+      expect(getSelectedSpanID(detailStates)).toBe('span-a');
+    });
+
+    it('returns the first span ID when detailStates has multiple entries', () => {
+      const detailStates = new Map([
+        ['span-a', null],
+        ['span-b', null],
+      ]);
+      expect(getSelectedSpanID(detailStates)).toBe('span-a');
     });
   });
 });
