@@ -10,6 +10,9 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
+    // "node" was deprecated in TypeScript 6.0 (TS5101). "bundler" (TS 5.0+) matches
+    // how Vite resolves modules: it understands package.json "exports"/"imports" fields
+    // and ESM conditions, unlike the legacy "node" algorithm which only read "main".
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,

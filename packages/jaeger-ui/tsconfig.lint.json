@@ -16,7 +16,15 @@
     "isolatedModules": false,
     "composite": true,
     "outFile": "index.d.ts",
+    // "outFile" is deprecated in TypeScript 6.0 (will be removed in TS7). It is still
+    // needed here to support project references with composite: true (see header comment).
+    // "ignoreDeprecations" is the official TS migration path to silence the TS5101 error
+    // while keeping the feature; revisit when upgrading to TypeScript 7.
     "ignoreDeprecations": "6.0",
+    // TypeScript 6.0 changed the default for "types": when absent, no @types/* packages
+    // are auto-included as globals (previously all packages under node_modules/@types
+    // were included). This lint compilation covers test files that use Node.js globals
+    // (require() in jest.isolateModules, NodeJS.Timeout), so @types/node is required.
     "types": ["node"]
   },
   "files": [

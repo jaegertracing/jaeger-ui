@@ -19,6 +19,12 @@
     "outDir": "lib",
     "rootDir": "src",
     "composite": true,
+    // TypeScript 6.0 changed the default for "types": when absent, no @types/* packages
+    // are auto-included as globals (previously all packages under node_modules/@types
+    // were included). Test files in this package use Jest globals (describe, it, expect)
+    // from @types/jest. Unlike jaeger-ui (where import '@testing-library/jest-dom' pulls
+    // in jest types transitively), plexus test files have no such import, so jest must
+    // be listed explicitly here.
     "types": ["jest"]
   },
   "include": [
