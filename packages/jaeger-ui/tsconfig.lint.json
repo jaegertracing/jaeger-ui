@@ -15,7 +15,9 @@
   "compilerOptions": {
     "isolatedModules": false,
     "composite": true,
-    "outFile": "index.d.ts"
+    "outFile": "index.d.ts",
+    "ignoreDeprecations": "6.0",
+    "types": ["node"]
   },
   "files": [
     "src/components/App/index.tsx",

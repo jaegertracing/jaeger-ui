@@ -18,7 +18,8 @@
     "jsx": "preserve",
     "outDir": "lib",
     "rootDir": "src",
-    "composite": true
+    "composite": true,
+    "types": ["jest"]
   },
   "include": [
     "src",
