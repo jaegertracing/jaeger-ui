@@ -6,7 +6,7 @@ import { render } from '@testing-library/react';
 import queryString from 'query-string';
 import '@testing-library/jest-dom';
 
-jest.mock('react-router-dom-v5-compat', () => ({
+jest.mock('react-router-dom', () => ({
   useNavigate: () => jest.fn(),
 }));
 

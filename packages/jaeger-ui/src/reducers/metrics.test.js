@@ -30,6 +30,9 @@ import {
   serviceOpsMetricsNoMetrics,
   serviceOpsCallsNoMetrics,
   serviceOpsErrorsNoMetrics,
+  serviceOpsLatenciesUndefinedMetrics,
+  serviceOpsCallsUndefinedMetrics,
+  serviceOpsErrorsUndefinedMetrics,
 } from './metrics.mock';
 
 const initialState = metricReducer(undefined, {});
@@ -61,7 +64,6 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
     const expected = {
       ...initialState,
-      isATMActivated: true,
       loading: false,
       serviceMetrics: {
         service_latencies: null,
@@ -94,7 +96,6 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: true,
         loading: false,
         serviceMetrics: {
           service_latencies: null,
@@ -126,7 +127,6 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: true,
         loading: false,
         serviceMetrics: serviceMetricsWithNulls,
         serviceError: {
@@ -154,7 +154,6 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: true,
         loading: false,
         serviceMetrics,
         serviceError: {
@@ -199,7 +198,6 @@ describe('reducers/fetchAllServiceMetrics', () => {
 
       const expected = {
         ...initialState,
-        isATMActivated: true,
         loading: false,
         serviceMetrics: {
           service_latencies: null,
@@ -212,56 +210,6 @@ describe('reducers/fetchAllServiceMetrics', () => {
           service_latencies_95: 'Error',
           service_call_rate: 'Error',
           service_error_rate: 'Error',
-        },
-      };
-      expect(state).toEqual(expected);
-    });
-
-    it('501 Not Implemented error', () => {
-      const notImplementedRejection = {
-        httpStatus: 501,
-      };
-      const state = metricReducer(initialState, {
-        type: `${fetchAllServiceMetrics}_FULFILLED`,
-        payload: [
-          {
-            status: 'rejected',
-            reason: notImplementedRejection,
-          },
-          {
-            status: 'rejected',
-            reason: notImplementedRejection,
-          },
-          {
-            status: 'rejected',
-            reason: notImplementedRejection,
-          },
-          {
-            status: 'rejected',
-            reason: notImplementedRejection,
-          },
-          {
-            status: 'rejected',
-            reason: notImplementedRejection,
-          },
-        ],
-      });
-
-      const expected = {
-        ...initialState,
-        isATMActivated: false,
-        loading: false,
-        serviceMetrics: {
-          service_latencies: null,
-          service_call_rate: null,
-          service_error_rate: null,
-        },
-        serviceError: {
-          service_latencies_50: notImplementedRejection,
-          service_latencies_75: notImplementedRejection,
-          service_latencies_95: notImplementedRejection,
-          service_call_rate: notImplementedRejection,
-          service_error_rate: notImplementedRejection,
         },
       };
       expect(state).toEqual(expected);
@@ -403,6 +351,23 @@ describe('reducers/fetchAggregatedServiceMetrics', () => {
       ...initialState,
       operationMetricsLoading: false,
       serviceOpsMetrics,
+    };
+    expect(state).toEqual(expected);
+  });
+
+  it('undefined metrics', () => {
+    const state = metricReducer(initialState, {
+      type: `${fetchAggregatedServiceMetrics}_FULFILLED`,
+      payload: [
+        serviceOpsLatenciesUndefinedMetrics,
+        serviceOpsCallsUndefinedMetrics,
+        serviceOpsErrorsUndefinedMetrics,
+      ],
+    });
+
+    const expected = {
+      ...initialState,
+      operationMetricsLoading: false,
     };
     expect(state).toEqual(expected);
   });

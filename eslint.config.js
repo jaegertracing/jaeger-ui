@@ -4,9 +4,8 @@
 import js from '@eslint/js';
 import typescriptPlugin from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
-import reactPlugin from 'eslint-plugin-react';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
-import importPlugin from 'eslint-plugin-import';
+import reactXPlugin from 'eslint-plugin-react-x';
+import importPlugin from 'eslint-plugin-import-x';
 import prettierPlugin from 'eslint-plugin-prettier';
 import jestPlugin from 'eslint-plugin-jest';
 import { fileURLToPath } from 'url';
@@ -68,13 +67,10 @@ const commonGlobals = {
 };
 
 const commonSettings = {
-  'import/resolver': {
+  'import-x/resolver': {
     node: {
       extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
     },
-  },
-  react: {
-    version: 'detect',
   },
 };
 
@@ -88,41 +84,11 @@ const baseRules = {
   'no-undef': 'off',
   'no-console': 'off',
 
-  'react/jsx-uses-react': 'error',
-  'react/jsx-uses-vars': 'error',
-  'react/jsx-filename-extension': 'off',
-  'react/prop-types': 'off',
-  'react/sort-comp': [
-    'error',
-    {
-      order: [
-        'type-annotations',
-        'defaultProps',
-        'statics',
-        'state',
-        'propTypes',
-        'static-methods',
-        'instance-variables',
-        'constructor',
-        'lifecycle',
-        'everything-else',
-        '/^on.+$/',
-        'render',
-      ],
-    },
-  ],
+  'react-x/rules-of-hooks': 'error',
+  'react-x/exhaustive-deps': 'error',
 
-  'jsx-a11y/anchor-is-valid': 'off',
-  'jsx-a11y/click-events-have-key-events': 'off',
-  'jsx-a11y/href-no-hash': 'off',
-  'jsx-a11y/interactive-supports-focus': 'off',
-  'jsx-a11y/label-has-associated-control': 'off',
-  'jsx-a11y/label-has-for': 'off',
-  'jsx-a11y/mouse-events-have-key-events': 'off',
-  'jsx-a11y/no-static-element-interactions': 'warn',
-
-  'import/extensions': 'off',
-  'import/no-extraneous-dependencies': 'off',
+  'import-x/extensions': 'off',
+  'import-x/no-extraneous-dependencies': 'off',
 
   'jest/no-disabled-tests': 'warn',
   'jest/no-focused-tests': 'error',
@@ -130,15 +96,6 @@ const baseRules = {
 };
 
 const typescriptRules = {
-  // Disabled: Modern TypeScript style guides don't require I prefix for interfaces
-  // '@typescript-eslint/naming-convention': [
-  //   'error',
-  //   {
-  //     selector: 'interface',
-  //     format: ['PascalCase'],
-  //     prefix: ['I'],
-  //   },
-  // ],
   '@typescript-eslint/no-this-alias': 'off',
   '@typescript-eslint/no-use-before-define': 'warn',
   '@typescript-eslint/no-redeclare': 'warn',
@@ -176,8 +133,8 @@ export default [
       '**/tsconfig.tsbuildinfo',
       '**/index.tsbuildinfo',
       '**/index.d.ts',
-      '**/layout.worker.bundled.js',
       '**/demo/**',
+      'packages/jaeger-ui/src/api/v3/generated-client.ts', // Auto-generated, will be used in Milestone 3.2
     ],
   },
 
@@ -196,9 +153,8 @@ export default [
     },
     plugins: {
       '@typescript-eslint': typescriptPlugin,
-      react: reactPlugin,
-      'jsx-a11y': jsxA11y,
-      import: importPlugin,
+      'react-x': reactXPlugin,
+      'import-x': importPlugin,
       prettier: prettierPlugin,
       jest: jestPlugin,
     },
@@ -223,9 +179,8 @@ export default [
       globals: commonGlobals,
     },
     plugins: {
-      react: reactPlugin,
-      'jsx-a11y': jsxA11y,
-      import: importPlugin,
+      'react-x': reactXPlugin,
+      'import-x': importPlugin,
       prettier: prettierPlugin,
       jest: jestPlugin,
     },

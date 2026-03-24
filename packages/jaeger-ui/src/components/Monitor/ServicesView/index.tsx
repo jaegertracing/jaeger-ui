@@ -3,18 +3,18 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Row, Col, Input, Alert, Select } from 'antd';
-import { ActionFunction, Action } from 'redux-actions';
+import { ActionFunctionAny, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
 import _isEmpty from 'lodash/isEmpty';
-import store from 'store';
+import store from '../../../utils/storage';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 import { Link } from 'react-router-dom';
 import * as jaegerApiActions from '../../../actions/jaeger-api';
-import ServiceGraph from './serviceGraph';
 import OperationTableDetails from './operationDetailsTable';
+import ServiceGraph from './serviceGraph';
 import LoadingIndicator from '../../common/LoadingIndicator';
-import MonitorATMEmptyState from '../EmptyState';
+
 import { ReduxState } from '../../../types';
 import {
   MetricsAPIQueryParams,
@@ -29,7 +29,7 @@ import prefixUrl from '../../../utils/prefix-url';
 import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 
 import './index.css';
-import { getConfigValue } from '../../../utils/config/get-config';
+import getConfig from '../../../utils/config/get-config';
 import {
   trackSearchOperation,
   trackSelectService,
@@ -38,23 +38,18 @@ import {
   trackViewAllTraces,
 } from './index.track';
 import withRouteProps from '../../../utils/withRouteProps';
+
 import SearchableSelect from '../../common/SearchableSelect';
+import { useServices } from '../../../hooks/useTraceDiscovery';
 
 type TReduxProps = {
-  services: string[];
-  servicesLoading: boolean;
   metrics: MetricsReduxState;
 };
 
 type TProps = TReduxProps & TDispatchProps;
 
 type TDispatchProps = {
-  fetchServices: ActionFunction<Action<Promise<string[]>>>;
-  fetchAggregatedServiceMetrics: ActionFunction<
-    Action<Promise<FetchAggregatedServiceMetricsResponse>>,
-    string,
-    MetricsAPIQueryParams
-  >;
+  fetchAggregatedServiceMetrics: ActionFunctionAny<Action<Promise<FetchAggregatedServiceMetricsResponse>>>;
   fetchAllServiceMetrics: (serviceName: string, query: MetricsAPIQueryParams) => void;
 };
 
@@ -129,20 +124,26 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 };
 
 // export for tests
-export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
-  const docsLink = getConfigValue('monitor.docsLink');
+
+export function MonitorATMServicesViewImpl(props: TProps) {
+  const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;
+  const { data: services = [], isLoading: servicesLoading } = useServices();
+  const docsLink = getConfig().monitor?.docsLink;
   const graphDivWrapper = useRef<HTMLDivElement>(null);
   const [endTime, setEndTime] = useState<number>(Date.now());
   const [graphWidth, setGraphWidth] = useState<number>(300);
   const [serviceOpsMetrics, setServiceOpsMetrics] = useState<ServiceOpsMetrics[] | undefined>(undefined);
   const [searchOps, setSearchOps] = useState<string>('');
   const [graphXDomain, setGraphXDomain] = useState<number[]>([]);
-  const [selectedService, setSelectedService] = useState<string>(store.get('lastAtmSearchService') || '');
-  const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(
-    store.get('lastAtmSearchSpanKind') || 'server'
+  const [selectedService, setSelectedService] = useState<string | undefined>(
+    store.getString('lastAtmSearchService')
   );
+  const [selectedSpanKind, setSelectedSpanKind] = useState<spanKinds>(() => {
+    const stored = store.getString('lastAtmSearchSpanKind');
+    return spanKindOptions.some(opt => opt.value === stored) ? (stored as spanKinds) : 'server';
+  });
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(
-    store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds
+    store.getNumber('lastAtmSearchTimeframe', oneHourInMilliSeconds)
   );
 
   const calcGraphXDomain = useCallback(() => {
@@ -157,9 +158,8 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   }, []);
 
   const getSelectedService = useCallback(() => {
-    const { services } = props;
-    return selectedService || store.get('lastAtmSearchService') || services[0];
-  }, [props.services, selectedService]);
+    return selectedService || store.getString('lastAtmSearchService') || services[0];
+  }, [services, selectedService]);
 
   const handleServiceChange = useCallback((value: string) => {
     setSelectedService(value);
@@ -179,7 +179,6 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
   }, []);
 
   const fetchMetrics = useCallback(() => {
-    const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, services } = props;
     const currentService = selectedService || services[0];
 
     if (currentService) {
@@ -205,9 +204,9 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
       setSearchOps('');
     }
   }, [
-    props.fetchAllServiceMetrics,
-    props.fetchAggregatedServiceMetrics,
-    props.services,
+    fetchAllServiceMetrics,
+    fetchAggregatedServiceMetrics,
+    services,
     selectedService,
     selectedSpanKind,
     selectedTimeFrame,
@@ -215,8 +214,6 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
 
   // componentDidMount equivalent
   useEffect(() => {
-    const { fetchServices } = props;
-    fetchServices();
     window.addEventListener('resize', updateDimensions);
     updateDimensions();
     calcGraphXDomain();
@@ -228,31 +225,21 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
 
   // componentDidUpdate equivalent
   useEffect(() => {
-    const { services } = props;
     if (services.length !== 0) {
       fetchMetrics();
     }
-  }, [props.services]);
+  }, [services, fetchMetrics]);
 
   useEffect(() => {
     calcGraphXDomain();
   }, [selectedTimeFrame, calcGraphXDomain]);
 
-  useEffect(() => {
-    fetchMetrics();
-  }, [selectedService, selectedSpanKind, selectedTimeFrame]);
-
-  const { services, metrics, servicesLoading } = props;
   const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
   const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
   const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
 
   if (servicesLoading) {
     return <LoadingIndicator vcentered centered />;
-  }
-
-  if (metrics.isATMActivated === false) {
-    return <MonitorATMEmptyState />;
   }
 
   return (
@@ -432,25 +419,22 @@ export const MonitorATMServicesViewImpl: React.FC<TProps> = props => {
       </div>
     </>
   );
-};
+}
 
 export function mapStateToProps(state: ReduxState): TReduxProps {
-  const { services, metrics } = state;
+  const { metrics } = state;
   return {
-    services: services.services || [],
-    servicesLoading: services.loading,
     metrics,
   };
 }
 
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchServices, fetchAllServiceMetrics, fetchAggregatedServiceMetrics } = bindActionCreators(
+  const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics } = bindActionCreators(
     jaegerApiActions,
     dispatch
   );
 
   return {
-    fetchServices: fetchServices as unknown as TDispatchProps['fetchServices'],
     fetchAllServiceMetrics: fetchAllServiceMetrics as unknown as TDispatchProps['fetchAllServiceMetrics'],
     fetchAggregatedServiceMetrics:
       fetchAggregatedServiceMetrics as unknown as TDispatchProps['fetchAggregatedServiceMetrics'],

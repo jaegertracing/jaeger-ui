@@ -7,10 +7,11 @@ import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-li
 
 import AppThemeProvider, { useThemeMode } from './ThemeProvider';
 import { THEME_STORAGE_KEY } from './ThemeStorage';
-import { getConfigValue } from '../../utils/config/get-config';
+import getConfig from '../../utils/config/get-config';
 
 jest.mock('../../utils/config/get-config', () => ({
-  getConfigValue: jest.fn(),
+  __esModule: true,
+  default: jest.fn(),
 }));
 
 function setupMatchMedia(matches = false) {
@@ -49,12 +50,7 @@ describe('AppThemeProvider', () => {
     window.localStorage.clear();
     delete document.body.dataset.theme;
     setupMatchMedia(false);
-    (getConfigValue as jest.Mock).mockImplementation(key => {
-      if (key === 'themes.enabled') {
-        return true;
-      }
-      return undefined;
-    });
+    (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: true } });
   });
 
   it('initializes using the stored preference when present', () => {
@@ -129,7 +125,7 @@ describe('AppThemeProvider', () => {
   });
 
   it('ignores stored preference when themes are disabled', () => {
-    (getConfigValue as jest.Mock).mockReturnValue(false);
+    (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: false } });
     window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
 
     render(
@@ -232,7 +228,6 @@ describe('AppThemeProvider', () => {
     const { result } = renderHook(() => useThemeMode(), { wrapper: AppThemeProvider });
 
     const originalDocument = (global as any).document;
-    // @ts-ignore
     delete (global as any).document;
 
     try {

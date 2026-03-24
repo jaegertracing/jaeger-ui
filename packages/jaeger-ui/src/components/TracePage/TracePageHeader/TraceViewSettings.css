@@ -1,0 +1,15 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.TraceViewSettings {
+  margin: 0 0.5rem;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+}
+
+.TraceViewSettings--icon {
+  font-size: 1.2rem;
+}

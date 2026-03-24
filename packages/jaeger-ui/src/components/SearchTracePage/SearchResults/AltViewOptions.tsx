@@ -6,7 +6,7 @@ import { Button } from 'antd';
 
 import { trackConversions, EAltViewActions } from './index.track';
 import { getUrl, getUrlState } from '../../DeepDependencies/url';
-import { getConfigValue } from '../../../utils/config/get-config';
+import getConfig from '../../../utils/config/get-config';
 
 type Props = {
   onDdgViewClicked: () => void;
@@ -26,7 +26,7 @@ export default function AltViewOptions(props: Props) {
       {traceResultsView ? 'Deep Dependency Graph' : 'Trace Results'}
     </Button>
   );
-  if (traceResultsView || !getConfigValue('deepDependencies.menuEnabled')) return toggleBtn;
+  if (traceResultsView || !getConfig().deepDependencies?.menuEnabled) return toggleBtn;
   return (
     <>
       {toggleBtn}

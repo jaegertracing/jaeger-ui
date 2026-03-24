@@ -126,9 +126,9 @@ export function fetchDeepDependencyGraphErred(
   };
 }
 
-export default handleActions(
+export default handleActions<TDdgState, any>(
   {
-    [`${fetchDeepDependencyGraph}_PENDING`]: fetchDeepDependencyGraphStarted,
+    [`${fetchDeepDependencyGraph}_PENDING`]: fetchDeepDependencyGraphStarted as any,
     [`${fetchDeepDependencyGraph}_FULFILLED`]: guardReducerWithMeta<TDdgState, TDdgPayload, TDdgActionMeta>(
       fetchDeepDependencyGraphDone
     ),

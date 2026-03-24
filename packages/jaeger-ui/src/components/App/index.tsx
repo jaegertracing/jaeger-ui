@@ -1,8 +1,10 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import React from 'react';
 import { Provider } from 'react-redux';
-import { Route, Redirect, Switch } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import NotFound from './NotFound';
 import Page from './Page';
@@ -14,12 +16,11 @@ import QualityMetrics from '../QualityMetrics';
 import { ROUTE_PATH as qualityMetricsPath } from '../QualityMetrics/url';
 import SearchTracePage from '../SearchTracePage';
 import { ROUTE_PATH as searchPath } from '../SearchTracePage/url';
-import TraceDiff from '../TraceDiff';
-import { ROUTE_PATH as traceDiffPath } from '../TraceDiff/url';
-import TracePage from '../TracePage';
+import TraceRouter from './TraceRouter';
 import { ROUTE_PATH as tracePath } from '../TracePage/url';
 import MonitorATMPage from '../Monitor';
 import { ROUTE_PATH as monitorATMPath } from '../Monitor/url';
+import { ROUTE_PATH as plexusDemoPath } from '../PlexusDemo/url';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import processScripts from '../../utils/config/process-scripts';
 import prefixUrl from '../../utils/prefix-url';
@@ -31,62 +32,66 @@ import './index.css';
 import { store } from '../../utils/configure-store';
 import ThemeProvider from './ThemeProvider';
 
+// Create a React Query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
+
 // Initialize API configuration and process configuration scripts at module level
 // to ensure they run once when the application is loaded, before any components are rendered
 JaegerAPI.apiRoot = DEFAULT_API_ROOT;
 processScripts();
 
+// Only include the Plexus demo in development builds.
+// Vite replaces import.meta.env.DEV with false in production, which causes Rollup
+// to tree-shake the dynamic import and exclude the demo files from the prod bundle.
+const PlexusDemoPage = import.meta.env.DEV ? React.lazy(() => import('../PlexusDemo')) : null;
+
 export default function JaegerUIApp() {
   return (
-    <ThemeProvider>
-      <Provider store={store as any}>
-        {
-          // the Page component is a connected component (wrapped by Redux's connect HOC)
-          // that is also wrapped by a custom withRouteProps HOC.
-          // The @ts-ignore was added because of a specific TypeScript error that occurs
-          // when mixing Redux 5/9, React 19, and complex HOCs.
-        }
-        {/* @ts-ignore */}
-        <Page>
-          <Switch>
-            <Route path={searchPath}>
-              <SearchTracePage />
-            </Route>
-            <Route path={traceDiffPath}>
-              <TraceDiff />
-            </Route>
-            <Route path={tracePath}>
-              <TracePage />
-            </Route>
-            <Route path={dependenciesPath}>
-              <DependencyGraph />
-            </Route>
-            <Route path={deepDependenciesPath}>
-              <DeepDependencies />
-            </Route>
-            <Route path={qualityMetricsPath}>
-              <QualityMetrics />
-            </Route>
-            <Route path={monitorATMPath}>
-              <MonitorATMPage />
-            </Route>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <Provider store={store as any}>
+          {
+            // the Page component is a connected component (wrapped by Redux's connect HOC)
+            // that is also wrapped by a custom withRouteProps HOC.
+            // The @ts-ignore was added because of a specific TypeScript error that occurs
+            // when mixing Redux 5/9, React 19, and complex HOCs.
+          }
+          {/* @ts-expect-error - TypeScript error with Redux 5/9, React 19, and complex HOCs */}
+          <Page>
+            <Routes>
+              <Route path={searchPath} element={<SearchTracePage />} />
+              <Route path={tracePath} element={<TraceRouter />} />
+              <Route path={dependenciesPath} element={<DependencyGraph />} />
+              <Route path={deepDependenciesPath} element={<DeepDependencies />} />
+              <Route path={qualityMetricsPath} element={<QualityMetrics />} />
+              <Route path={monitorATMPath} element={<MonitorATMPage />} />
+              {PlexusDemoPage && (
+                <Route
+                  path={plexusDemoPath}
+                  element={
+                    <React.Suspense fallback={null}>
+                      <PlexusDemoPage />
+                    </React.Suspense>
+                  }
+                />
+              )}
 
-            <Route exact path="/">
-              <Redirect to={searchPath} />
-            </Route>
-            <Route exact path={prefixUrl()}>
-              <Redirect to={searchPath} />
-            </Route>
-            <Route exact path={prefixUrl('/')}>
-              <Redirect to={searchPath} />
-            </Route>
+              <Route path="/" element={<Navigate to={searchPath} replace />} />
+              <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
+              <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
 
-            <Route>
-              <NotFound error="Page not found" />
-            </Route>
-          </Switch>
-        </Page>
-      </Provider>
-    </ThemeProvider>
+              <Route path="*" element={<NotFound error="Page not found" />} />
+            </Routes>
+          </Page>
+        </Provider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }

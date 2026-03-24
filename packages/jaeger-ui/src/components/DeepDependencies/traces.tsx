@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Location, useNavigate } from 'react-router-dom-v5-compat';
+import { useNavigate } from 'react-router-dom';
+import type { Location } from 'react-router-dom';
 import _get from 'lodash/get';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
@@ -79,11 +80,15 @@ export const TracesDdgImpl: React.FC<TracesDdgImplProps> = React.memo(props => {
   const extraArgs = { end, start, limit, lookback, maxDuration, minDuration, view };
 
   return (
+    // Note: services and serverOps are intentionally empty arrays because this traces view
+    // sets showSvcOpsHeader=false, hiding the service/operation selector UI elements.
     <DeepDependencyGraphPageImpl
       baseUrl={ROUTE_PATH}
       extraUrlArgs={extraArgs}
       showSvcOpsHeader={false}
       navigate={navigate}
+      services={[]}
+      serverOps={[]}
       {...props}
     />
   );

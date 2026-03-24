@@ -1,3 +1,8 @@
+# Build outputs
+packages/*/lib/
+packages/*/dist/
+packages/*/build/
+
 # Ignore generated files
 packages/jaeger-ui/index.d.ts
 
@@ -6,5 +11,6 @@ scripts/release-notes.py
 scripts/draft-release.py
 
 # Ignore some docs because prettier has different ideas about its formatting.
+docs/
 CHANGELOG.md
 RELEASE.md

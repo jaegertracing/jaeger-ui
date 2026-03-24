@@ -7,74 +7,82 @@ jest.mock('../../utils/tracking');
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom';
 
 import { mapStateToProps, PageImpl as Page } from './Page';
 import { trackPageView } from '../../utils/tracking';
 
+const renderWithPath = (props, path = '/test?search=value') =>
+  render(
+    <MemoryRouter initialEntries={[path]}>
+      <Page {...props} />
+    </MemoryRouter>
+  );
+
 describe('mapStateToProps()', () => {
-  it('maps state to props', () => {
-    const pathname = 'a-pathname';
-    const search = 'a-search';
-    const state = {
-      router: { location: { pathname, search } },
-    };
-    expect(mapStateToProps(state)).toEqual({ pathname, search });
+  it('maps embedded state to props', () => {
+    const state = { embedded: true };
+    expect(mapStateToProps(state)).toEqual({ embedded: true });
+  });
+
+  it('does not include pathname or search (now from useLocation)', () => {
+    const result = mapStateToProps({ embedded: false });
+    expect(result).not.toHaveProperty('pathname');
+    expect(result).not.toHaveProperty('search');
   });
 });
 
 describe('<Page>', () => {
-  let props;
-
   beforeEach(() => {
     trackPageView.mockReset();
-    props = {
-      pathname: String(Math.random()),
-      search: String(Math.random()),
-    };
-    render(<Page {...props} />);
   });
 
   it('renders without exploding', () => {
+    renderWithPath({});
     expect(screen.getByRole('banner')).toBeInTheDocument();
   });
 
-  it('tracks an initial page-view', () => {
-    const { pathname, search } = props;
-    expect(trackPageView).toHaveBeenCalledWith(pathname, search);
+  it('tracks an initial page-view using location from useLocation()', () => {
+    renderWithPath({}, '/my-path?q=1');
+    expect(trackPageView).toHaveBeenCalledWith('/my-path', '?q=1');
   });
 
   it('tracks a pageView when the location changes', () => {
+    const { rerender } = renderWithPath({}, '/first?a=1');
     trackPageView.mockReset();
-    const newProps = { pathname: 'le-path', search: 'searching' };
-    const { rerender } = render(<Page {...props} />);
-    rerender(<Page {...newProps} />);
-    expect(trackPageView).toHaveBeenCalledWith(newProps.pathname, newProps.search);
+    // Use a different key to force the MemoryRouter to remount with the new initialEntries.
+    rerender(
+      <MemoryRouter key="router-2" initialEntries={['/second?b=2']}>
+        <Page />
+      </MemoryRouter>
+    );
+    expect(trackPageView).toHaveBeenCalledWith('/second', '?b=2');
   });
 
   it('tracks a pageView when the search changes but pathname is same', () => {
+    const { rerender } = renderWithPath({}, '/same-path?a=1');
     trackPageView.mockReset();
-    const staticPathname = '/same-path';
-    const { rerender } = render(<Page pathname={staticPathname} search="?a=1" />);
-    rerender(<Page pathname={staticPathname} search="?a=2" />);
-    expect(trackPageView).toHaveBeenCalledWith(staticPathname, '?a=2');
+    rerender(
+      <MemoryRouter key="router-2" initialEntries={['/same-path?a=2']}>
+        <Page />
+      </MemoryRouter>
+    );
+    expect(trackPageView).toHaveBeenCalledWith('/same-path', '?a=2');
   });
 
   describe('Page embedded', () => {
     beforeEach(() => {
       trackPageView.mockReset();
-      props = {
-        pathname: String(Math.random()),
-        search: 'hideGraph',
-      };
-      render(<Page embedded {...props} />);
+      renderWithPath({ embedded: true });
     });
 
     it('renders without exploding', () => {
-      expect(screen.getByRole('banner')).toBeInTheDocument();
+      // in embedded mode the Header/banner is hidden; check the content area instead.
+      expect(screen.getByRole('main')).toBeInTheDocument();
     });
 
     it('does not render Header', () => {
-      expect(screen.queryByText('Header')).toBeNull();
+      expect(screen.queryByRole('banner')).not.toBeInTheDocument();
     });
   });
 });

@@ -4,24 +4,26 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 import React from 'react';
-import { createMemoryHistory } from 'history';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Router } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import TraceIDSearchInput from './TraceIDSearchInput';
-import { CompatRouter } from 'react-router-dom-v5-compat';
+
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => {
+  return {
+    ...jest.requireActual('react-router-dom'),
+    useNavigate: () => mockNavigate,
+  };
+});
 
 describe('<TraceIDSearchInput />', () => {
-  let history;
-
   beforeEach(() => {
-    history = createMemoryHistory();
+    mockNavigate.mockReset();
     render(
-      <Router history={history}>
-        <CompatRouter>
-          <TraceIDSearchInput />
-        </CompatRouter>
-      </Router>
+      <MemoryRouter>
+        <TraceIDSearchInput />
+      </MemoryRouter>
     );
   });
 
@@ -29,19 +31,19 @@ describe('<TraceIDSearchInput />', () => {
     expect(screen.getByTestId('idInput')).toBeInTheDocument();
   });
 
-  it('pushes input id to history', () => {
+  it('navigates to trace page when input is provided', () => {
     const traceId = 'MOCK-TRACE-ID';
     const idInput = screen.getByPlaceholderText('Lookup by Trace ID...');
     fireEvent.change(idInput, { target: { value: traceId } });
     fireEvent.submit(screen.getByTestId('TraceIDSearchInput--form'));
 
-    expect(history.length).toEqual(2);
-    expect(history.location.pathname).toEqual(`/trace/${traceId}`);
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith(`/trace/${traceId}`);
   });
 
-  it('does not push to history on falsy input value', () => {
+  it('does not navigate when input is empty', () => {
     fireEvent.submit(screen.getByTestId('TraceIDSearchInput--form'));
 
-    expect(history.length).toEqual(1);
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

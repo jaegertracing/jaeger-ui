@@ -71,7 +71,7 @@ export default function AccordionEvents({
       window.requestAnimationFrame(emit);
     }
     setTimeout(emit, 50);
-  }, []);
+  }, [spanID]);
 
   // Observe height changes in the content area to notify virtualized list to reflow
   React.useEffect(() => {

@@ -69,6 +69,8 @@ describe('<TimelineHeaderRow>', () => {
     onColummWidthChange: jest.fn(),
     onExpandAll: jest.fn(),
     onExpandOne: jest.fn(),
+    resizerMax: 0.85,
+    timelineBarsVisible: true,
     updateNextViewRangeTime: jest.fn(),
     updateViewRangeTime: jest.fn(),
     viewRangeTime: {
@@ -92,6 +94,11 @@ describe('<TimelineHeaderRow>', () => {
   it('renders the title', () => {
     render(<TimelineHeaderRow {...props} />);
     expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Service & Operation');
+  });
+
+  it('renders "Span Name" in the title when useOtelTerms is true', () => {
+    render(<TimelineHeaderRow {...props} useOtelTerms />);
+    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Service & Span Name');
   });
 
   it('renders the TimelineViewingLayer', () => {
@@ -125,8 +132,62 @@ describe('<TimelineHeaderRow>', () => {
     expect(resizer).toHaveAttribute('data-max', '0.85');
   });
 
+  describe('side panel visible', () => {
+    const sidePanelWidth = 0.3;
+    const sidePanelProps = {
+      ...props,
+      sidePanelVisible: true,
+      sidePanelWidth,
+      sidePanelLabel: 'Span Details',
+      resizerMax: 1 - sidePanelWidth,
+    };
+
+    it('renders the side panel header cell', () => {
+      render(<TimelineHeaderRow {...sidePanelProps} />);
+      expect(screen.getByText('Span Details')).toBeInTheDocument();
+    });
+
+    it('renders a custom side panel label when provided', () => {
+      render(<TimelineHeaderRow {...sidePanelProps} sidePanelLabel="Trace Root" />);
+      expect(screen.getByText('Trace Root')).toBeInTheDocument();
+    });
+
+    it('sets resizer max to 1 - sidePanelWidth', () => {
+      render(<TimelineHeaderRow {...sidePanelProps} />);
+      const resizer = screen.getByTestId('vertical-resizer');
+      expect(resizer).toHaveAttribute('data-max', String(1 - sidePanelWidth));
+    });
+  });
+
   it('renders the TimelineCollapser', () => {
     render(<TimelineHeaderRow {...props} />);
     expect(screen.getByTestId('timeline-collapser')).toBeInTheDocument();
+  });
+
+  describe('tree-only mode (timelineBarsVisible=false)', () => {
+    // In tree-only mode TraceTimelineViewer passes nameColumnWidth=1 (name fills the main area).
+    const barsHiddenProps = { ...props, timelineBarsVisible: false, nameColumnWidth: 1 };
+
+    it('does not render the Ticks', () => {
+      render(<TimelineHeaderRow {...barsHiddenProps} />);
+      expect(screen.queryByTestId('ticks')).not.toBeInTheDocument();
+    });
+
+    it('does not render the TimelineViewingLayer', () => {
+      render(<TimelineHeaderRow {...barsHiddenProps} />);
+      expect(screen.queryByTestId('timeline-viewing-layer')).not.toBeInTheDocument();
+    });
+
+    it('does not render the VerticalResizer', () => {
+      render(<TimelineHeaderRow {...barsHiddenProps} />);
+      expect(screen.queryByTestId('vertical-resizer')).not.toBeInTheDocument();
+    });
+
+    it('renders the name column at full width', () => {
+      const { container } = render(<TimelineHeaderRow {...barsHiddenProps} />);
+      const cells = container.querySelectorAll('.TimelineRow--cellMock');
+      expect(cells).toHaveLength(1);
+      expect(cells[0]).toHaveAttribute('data-width', '1');
+    });
   });
 });

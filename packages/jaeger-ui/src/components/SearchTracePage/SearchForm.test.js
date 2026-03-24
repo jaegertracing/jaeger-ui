@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('store');
 jest.mock('../common/SearchableSelect', () => {
   const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, value, ...props }) => {
     if (onChange && testId) {
@@ -16,14 +15,33 @@ jest.mock('../common/SearchableSelect', () => {
   MockSearchableSelect.disabled = {};
   return MockSearchableSelect;
 });
+jest.mock('../../hooks/useConfig', () => ({
+  useConfig: () => ({
+    useOpenTelemetryTerms: false,
+  }),
+}));
+jest.mock('../../hooks/useTraceDiscovery', () => ({
+  useServices: jest.fn(() => ({
+    data: ['svcA', 'svcB'],
+    isLoading: false,
+    error: null,
+  })),
+  useSpanNames: jest.fn(() => ({
+    data: [
+      { name: 'A', spanKind: 'server' },
+      { name: 'B', spanKind: 'client' },
+    ],
+    isLoading: false,
+  })),
+}));
 
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { act } from 'react';
 import '@testing-library/jest-dom';
 import dayjs from 'dayjs';
 import queryString from 'query-string';
-import store from 'store';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import SearchableSelect from '../common/SearchableSelect';
 
@@ -68,12 +86,7 @@ const defaultProps = {
     label: '2 Days',
     value: '2d',
   },
-  services: [
-    { name: 'svcA', operations: ['A', 'B'] },
-    { name: 'svcB', operations: ['A', 'B'] },
-  ],
-  changeServiceHandler: jest.fn(),
-  submitFormHandler: jest.fn(),
+  submitFormHandler: jest.fn().mockReturnValue('/search'),
 };
 
 describe('conversion utils', () => {
@@ -430,6 +443,10 @@ describe('submitForm()', () => {
   });
 });
 
+function renderForm(ui) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
+
 describe('<SearchForm>', () => {
   afterEach(cleanup);
   beforeEach(() => {
@@ -439,28 +456,20 @@ describe('<SearchForm>', () => {
   });
 
   it('enables operations only when a service is selected', async () => {
-    render(<SearchForm key="fresh" {...defaultProps} />);
+    renderForm(<SearchForm key="fresh" {...defaultProps} />);
 
     expect(SearchableSelect.disabled.operation).toBe(true);
     cleanup();
 
-    render(<SearchForm key="with-svc" {...defaultProps} initialValues={{ service: 'svcA' }} />);
+    renderForm(<SearchForm key="with-svc" {...defaultProps} initialValues={{ service: 'svcA' }} />);
 
     await waitFor(() => expect(SearchableSelect.disabled.operation).toBe(false));
   });
 
   it('keeps operation disabled when no service selected', () => {
-    render(<SearchForm {...defaultProps} />);
+    renderForm(<SearchForm {...defaultProps} />);
 
     expect(SearchableSelect.disabled.operation).toBe(true);
-  });
-
-  it('enables operation when unknown service selected', () => {
-    render(<SearchForm {...defaultProps} />);
-    const serviceOnChange = SearchableSelect.onChangeFns.service;
-    serviceOnChange('svcC');
-
-    expect(defaultProps.changeServiceHandler).toHaveBeenCalledWith('svcC');
   });
 
   it('shows custom date inputs when lookback is set to "custom"', () => {
@@ -475,7 +484,7 @@ describe('<SearchForm>', () => {
       },
     };
 
-    const { container } = render(<SearchForm key="custom-date" {...props} />);
+    const { container } = renderForm(<SearchForm key="custom-date" {...props} />);
 
     const startDateInput = container.querySelector('input[name="startDate"]');
     const endDateInput = container.querySelector('input[name="endDate"]');
@@ -485,7 +494,7 @@ describe('<SearchForm>', () => {
   });
 
   it('disables the submit button when a service is not selected', () => {
-    const { container } = render(
+    const { container } = renderForm(
       <SearchForm key="disabled-no-svc" {...defaultProps} initialValues={{ service: '-' }} />
     );
 
@@ -494,7 +503,7 @@ describe('<SearchForm>', () => {
   });
 
   it('disables the submit button when the form has invalid data', () => {
-    const { container } = render(
+    const { container } = renderForm(
       <SearchForm
         key="disabled-invalid"
         {...defaultProps}
@@ -508,7 +517,7 @@ describe('<SearchForm>', () => {
   });
 
   it('disables the submit button when duration is invalid', () => {
-    const { container } = render(
+    const { container } = renderForm(
       <SearchForm key="duration-val" {...defaultProps} initialValues={{ service: 'svcA' }} />
     );
 
@@ -532,7 +541,7 @@ describe('<SearchForm>', () => {
     const originalGetConfig = window.getJaegerUiConfig;
     window.getJaegerUiConfig = jest.fn(() => config);
 
-    const { container } = render(<SearchForm {...defaultProps} />);
+    const { container } = renderForm(<SearchForm {...defaultProps} />);
 
     const limitInput = container.querySelector('input[name="resultsLimit"]');
     expect(limitInput).toHaveAttribute('max');
@@ -541,7 +550,7 @@ describe('<SearchForm>', () => {
   });
 
   it('updates state when tags input changes', () => {
-    const { container } = render(<SearchForm {...defaultProps} />);
+    const { container } = renderForm(<SearchForm {...defaultProps} />);
 
     const tagsInput = container.querySelector('input[name="tags"]');
     fireEvent.change(tagsInput, { target: { value: 'new=tag' } });
@@ -550,7 +559,7 @@ describe('<SearchForm>', () => {
   });
 
   it('prevents default form submission behavior', async () => {
-    const { container } = render(
+    const { container } = renderForm(
       <SearchForm {...defaultProps} searchAdjustEndTime="1m" initialValues={{ service: 'svcA' }} />
     );
     const form = container.querySelector('form');
@@ -568,6 +577,98 @@ describe('<SearchForm>', () => {
       '1m',
       expect.any(Boolean)
     );
+  });
+
+  describe('error handling', () => {
+    const { useServices, useSpanNames } = require('../../hooks/useTraceDiscovery');
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('displays error message when services fetch fails', () => {
+      useServices.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('Failed to fetch services'),
+      });
+
+      const { container } = renderForm(<SearchForm {...defaultProps} />);
+
+      // Should still render the form
+      expect(container.querySelector('form')).toBeInTheDocument();
+
+      // Should display error message for services
+      expect(container.textContent).toContain('Error loading services: Failed to fetch services');
+    });
+
+    it('displays error message when span names fetch fails', async () => {
+      useServices.mockReturnValue({
+        data: ['svcA', 'svcB'],
+        isLoading: false,
+        error: null,
+      });
+
+      useSpanNames.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('Failed to fetch span names'),
+      });
+
+      const { container } = renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+
+      // Should still render the form
+      expect(container.querySelector('form')).toBeInTheDocument();
+
+      // Should display error message for operations
+      await waitFor(() => {
+        expect(container.textContent).toContain('Error loading operations: Failed to fetch span names');
+      });
+    });
+
+    it('form remains functional when services error occurs', () => {
+      useServices.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('Service error'),
+      });
+
+      const { container } = renderForm(<SearchForm {...defaultProps} />);
+
+      // Form should still be present
+      const form = container.querySelector('form');
+      expect(form).toBeInTheDocument();
+
+      // Submit button should be disabled (no service selected due to error)
+      const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+      expect(submitButton).toBeDisabled();
+    });
+
+    it('form remains functional when span names error occurs', async () => {
+      useServices.mockReturnValue({
+        data: ['svcA', 'svcB'],
+        isLoading: false,
+        error: null,
+      });
+
+      useSpanNames.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('Span names error'),
+      });
+
+      const { container } = renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
+
+      // Form should still be present
+      const form = container.querySelector('form');
+      expect(form).toBeInTheDocument();
+
+      // Submit button should still work (can search without selecting specific operation)
+      await waitFor(() => {
+        const submitButton = container.querySelector(`[data-test="${markers.SUBMIT_BTN}"]`);
+        expect(submitButton).not.toBeDisabled();
+      });
+    });
   });
 });
 
@@ -592,13 +693,12 @@ describe('SearchForm onChange handlers', () => {
       },
     };
 
-    const { getByTestId, container } = render(<SearchForm key="on-change" {...props} />);
+    const { getByTestId, container } = renderForm(<SearchForm key="on-change" {...props} />);
 
     // Service
     await act(async () => {
       SearchableSelect.onChangeFns.service('testService');
     });
-    expect(defaultProps.changeServiceHandler).toHaveBeenCalledWith('testService');
     await waitFor(() =>
       expect(getByTestId('mock-select-service').getAttribute('data-value')).toBe('testService')
     );
@@ -684,18 +784,19 @@ describe('validation', () => {
 
 describe('mapStateToProps()', () => {
   let state;
+  const callMapStateToProps = (search = '') => mapStateToProps(state, { search });
 
   beforeEach(() => {
-    state = { router: { location: { search: '' } } };
+    state = {};
+    localStorage.clear();
   });
 
   it('does not explode when the query string is empty', () => {
-    expect(() => mapStateToProps(state)).not.toThrow();
+    expect(() => callMapStateToProps('')).not.toThrow();
   });
 
   // tests the green path
   it('service and operation fallback to values in `store` when the values are valid', () => {
-    const oldStoreGet = store.get;
     const op = 'some-op';
     const svc = 'some-svc';
     state.services = {
@@ -704,14 +805,13 @@ describe('mapStateToProps()', () => {
         [svc]: [op, 'some other opertion'],
       },
     };
-    store.get = () => ({ operation: op, service: svc });
-    const { service, operation } = mapStateToProps(state).initialValues;
+    localStorage.setItem('lastSearch', JSON.stringify({ operation: op, service: svc }));
+    const { service, operation } = callMapStateToProps().initialValues;
     expect(operation).toBe(op);
     expect(service).toBe(svc);
-    store.get = oldStoreGet;
   });
 
-  describe('deriving values from `state.router.location.search`', () => {
+  describe('deriving values from the URL search string (ownProps.search)', () => {
     let params;
     let expected;
 
@@ -747,104 +847,96 @@ describe('mapStateToProps()', () => {
     });
 
     it('derives values when available', () => {
-      state.router.location.search = queryString.stringify(params);
-      expect(mapStateToProps(state).initialValues).toEqual(expected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(expected);
     });
 
     it('parses `tag` values in the former format to logfmt', () => {
       delete params.tags;
       params.tag = ['error:true', 'span.kind:client'];
-      state.router.location.search = queryString.stringify(params);
-      expect(mapStateToProps(state).initialValues).toEqual(expected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(expected);
     });
 
     it('parses single string `tag` value in the former format to logfmt', () => {
       delete params.tags;
       params.tag = 'error:true';
-      state.router.location.search = queryString.stringify(params);
 
       const singleTagExpected = {
         ...expected,
         tags: 'error=true',
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(singleTagExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(singleTagExpected);
     });
 
     it('handles tag parsing for keys without values', () => {
       delete params.tags;
       params.tag = 'invalid-no-colon';
-      state.router.location.search = queryString.stringify(params);
 
       const tagWithEmptyValueExpected = {
         ...expected,
         tags: 'invalid-no-colon=""',
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(tagWithEmptyValueExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(
+        tagWithEmptyValueExpected
+      );
     });
 
     it('handles true parse errors', () => {
       delete params.tags;
-
-      state.router.location.search = queryString.stringify(params);
 
       const parseErrorExpected = {
         ...expected,
         tags: undefined,
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(parseErrorExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(parseErrorExpected);
     });
 
     it('handles empty key in tag parameter', () => {
       delete params.tags;
       params.tag = ':somevalue';
-      state.router.location.search = queryString.stringify(params);
 
       const parseErrorExpected = {
         ...expected,
         tags: 'Parse Error',
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(parseErrorExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(parseErrorExpected);
     });
 
     it('handles invalid JSON in logfmtTags', () => {
       delete params.tags;
       params.tags = '{invalid-json}';
-      state.router.location.search = queryString.stringify(params);
 
       const errorExpected = {
         ...expected,
         tags: 'Parse Error',
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(errorExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(errorExpected);
     });
 
     it('handles traceIDParams as string', () => {
       params.traceID = '123abc';
-      state.router.location.search = queryString.stringify(params);
 
       const traceIDExpected = {
         ...expected,
         traceIDs: '123abc',
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(traceIDExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(traceIDExpected);
     });
 
     it('handles traceIDParams as array', () => {
       params.traceID = ['123abc', '456def'];
-      state.router.location.search = queryString.stringify(params);
 
       const traceIDExpected = {
         ...expected,
         traceIDs: '123abc,456def',
       };
 
-      expect(mapStateToProps(state).initialValues).toEqual(traceIDExpected);
+      expect(callMapStateToProps(queryString.stringify(params)).initialValues).toEqual(traceIDExpected);
     });
   });
 
@@ -855,8 +947,7 @@ describe('mapStateToProps()', () => {
       return Math.abs(a - b);
     }
     const dateParams = makeDateParams(0);
-    const { startDate, startDateTime, endDate, endDateTime, ...values } =
-      mapStateToProps(state).initialValues;
+    const { startDate, startDateTime, endDate, endDateTime, ...values } = callMapStateToProps().initialValues;
 
     expect(values).toEqual({
       service: '-',
@@ -919,21 +1010,7 @@ describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
     expect(mapDispatchToProps(() => {})).toEqual({
       searchTraces: expect.any(Function),
-      changeServiceHandler: expect.any(Function),
       submitFormHandler: expect.any(Function),
-    });
-  });
-
-  it('should dispatch changeServiceHandler correctly', () => {
-    const dispatch = jest.fn();
-    const { changeServiceHandler } = mapDispatchToProps(dispatch);
-    const service = 'test-service';
-
-    changeServiceHandler(service);
-
-    expect(dispatch).toHaveBeenCalledWith({
-      type: CHANGE_SERVICE_ACTION_TYPE,
-      payload: service,
     });
   });
 });

@@ -10,8 +10,8 @@ import { Link } from 'react-router-dom';
 
 import DocumentTitle from '../../../utils/documentTitle';
 import AltViewOptions from './AltViewOptions';
-import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import SpanGraph from './SpanGraph';
+import TraceViewSettings from './TraceViewSettings';
 import TracePageSearchBar from './TracePageSearchBar';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from '../types';
 import LabeledList from '../../common/LabeledList';
@@ -21,6 +21,7 @@ import { TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { formatDatetime, formatDuration } from '../../../utils/date';
 import { getTraceLinks } from '../../../model/link-patterns';
+import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
 import './TracePageHeader.css';
 import ExternalLinks from '../../common/ExternalLinks';
@@ -30,23 +31,27 @@ import TraceId from '../../common/TraceId';
 type TracePageHeaderEmbedProps = {
   canCollapse: boolean;
   clearSearch: () => void;
+  detailPanelMode: 'inline' | 'sidepanel';
+  enableSidePanel: boolean;
   focusUiFindMatches: () => void;
   hideMap: boolean;
   hideSummary: boolean;
   linkToStandalone: string;
   nextResult: () => void;
   onArchiveClicked: () => void;
+  onDetailPanelModeToggle: () => void;
   onSlimViewClicked: () => void;
+  onTimelineToggle: () => void;
   onTraceViewChange: (viewType: ETraceViewType) => void;
   prevResult: () => void;
   resultCount: number;
   showArchiveButton: boolean;
-  showShortcutsHelp: boolean;
   showStandaloneLink: boolean;
   disableJsonView: boolean;
   showViewOptions: boolean;
   slimView: boolean;
   textFilter: string | TNil;
+  timelineBarsVisible: boolean;
   toSearch: string | null;
   trace: IOtelTrace;
   viewType: ETraceViewType;
@@ -91,24 +96,22 @@ export const HEADER_ITEMS = [
   {
     key: 'span-count',
     label: 'Total Spans',
+    renderer: (trace: IOtelTrace) => trace.spans.length,
+  },
+  {
+    key: 'incomplete',
+    label: null,
     renderer: (trace: IOtelTrace) => {
       const orphanCount = trace.orphanSpanCount ?? 0;
-      const tooltipText = `This trace may be incomplete. ${orphanCount} span${orphanCount !== 1 ? 's' : ''} ${orphanCount !== 1 ? 'have' : 'has'} missing parent span(s).`;
+      if (orphanCount === 0) return null;
+      const tooltipText = getIncompleteTraceTooltip(orphanCount);
       return (
-        <span>
-          {trace.spans.length}
-          {orphanCount > 0 && (
-            <>
-              {' '}
-              <Tooltip title={tooltipText}>
-                <span className="TracePageHeader--incompleteTag">
-                  <IoWarning className="TracePageHeader--incompleteIcon" />
-                  Incomplete
-                </span>
-              </Tooltip>
-            </>
-          )}
-        </span>
+        <Tooltip title={tooltipText}>
+          <span className="TracePageHeader--incompleteTag">
+            <IoWarning className="TracePageHeader--incompleteIcon" />
+            Incomplete
+          </span>
+        </Tooltip>
       );
     },
   },
@@ -118,6 +121,8 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
   const {
     canCollapse,
     clearSearch,
+    detailPanelMode,
+    enableSidePanel,
     focusUiFindMatches,
     forwardedRef,
     hideMap,
@@ -125,17 +130,19 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     linkToStandalone,
     nextResult,
     onArchiveClicked,
+    onDetailPanelModeToggle,
     onSlimViewClicked,
+    onTimelineToggle,
     onTraceViewChange,
     prevResult,
     resultCount,
     showArchiveButton,
-    showShortcutsHelp,
     showStandaloneLink,
     showViewOptions,
     disableJsonView,
     slimView,
     textFilter,
+    timelineBarsVisible,
     toSearch,
     trace,
     viewType,
@@ -157,7 +164,7 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     HEADER_ITEMS.map(item => {
       const { renderer, ...rest } = item;
       return { ...rest, value: renderer(trace) };
-    });
+    }).filter(item => item.value !== null);
 
   const traceShortID = trace.traceID.slice(0, 7);
 
@@ -201,7 +208,14 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           navigable={viewType === ETraceViewType.TraceTimelineViewer}
           useOtelTerms={useOtelTerms}
         />
-        {showShortcutsHelp && <KeyboardShortcutsHelp className="ub-m2" />}
+        <TraceViewSettings
+          className="ub-m2"
+          detailPanelMode={detailPanelMode}
+          enableSidePanel={enableSidePanel}
+          onDetailPanelModeToggle={onDetailPanelModeToggle}
+          onTimelineToggle={onTimelineToggle}
+          timelineBarsVisible={timelineBarsVisible}
+        />
         {showViewOptions && (
           <AltViewOptions
             disableJsonView={disableJsonView}

@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { THEME_STORAGE_KEY, readStoredTheme, writeStoredTheme, getInitialTheme } from './ThemeStorage';
-import { getConfigValue } from '../../utils/config/get-config';
+import getConfig from '../../utils/config/get-config';
 
 jest.mock('../../utils/config/get-config', () => ({
-  getConfigValue: jest.fn(),
+  __esModule: true,
+  default: jest.fn(),
 }));
 
 function setupMatchMedia(matches = false) {
@@ -28,12 +29,7 @@ describe('ThemeStorage', () => {
   beforeEach(() => {
     window.localStorage.clear();
     setupMatchMedia(false);
-    (getConfigValue as jest.Mock).mockImplementation(key => {
-      if (key === 'themes.enabled') {
-        return true;
-      }
-      return undefined;
-    });
+    (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: true } });
   });
 
   describe('readStoredTheme', () => {
@@ -80,12 +76,14 @@ describe('ThemeStorage', () => {
 
     it('falls back gracefully when the global window is unavailable', () => {
       const originalWindow = window;
-      (global as typeof global & { window?: Window }).window = undefined;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).window = undefined;
 
       try {
         expect(readStoredTheme()).toBeNull();
       } finally {
-        (global as typeof global & { window?: Window }).window = originalWindow;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (global as any).window = originalWindow;
       }
     });
   });
@@ -125,19 +123,21 @@ describe('ThemeStorage', () => {
 
     it('falls back gracefully when the global window is unavailable', () => {
       const originalWindow = window;
-      (global as typeof global & { window?: Window }).window = undefined;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global as any).window = undefined;
 
       try {
         expect(() => writeStoredTheme('dark')).not.toThrow();
       } finally {
-        (global as typeof global & { window?: Window }).window = originalWindow;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (global as any).window = originalWindow;
       }
     });
   });
 
   describe('getInitialTheme', () => {
     it('returns default mode when themes are disabled', () => {
-      (getConfigValue as jest.Mock).mockReturnValue(false);
+      (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: false } });
       window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
       expect(getInitialTheme()).toBe('light');
     });
