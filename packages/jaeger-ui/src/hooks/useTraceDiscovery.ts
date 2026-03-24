@@ -3,6 +3,7 @@
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
+import { queryKeys } from '../query/query-keys';
 
 /**
  * React Query hook to fetch the list of services from the Jaeger API.
@@ -10,7 +11,7 @@ import { jaegerClient } from '../api/v3/client';
  */
 export function useServices(): UseQueryResult<string[]> {
   return useQuery({
-    queryKey: ['services'],
+    queryKey: queryKeys.services(),
     queryFn: () => jaegerClient.fetchServices(),
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
@@ -28,7 +29,7 @@ export function useSpanNames(
   spanKind?: string
 ): UseQueryResult<{ name: string; spanKind: string }[]> {
   return useQuery({
-    queryKey: ['spanNames', service],
+    queryKey: queryKeys.spanNames(service),
     queryFn: () => jaegerClient.fetchSpanNames(service!),
     enabled: !!service, // Only fetch when service is selected
     staleTime: 60 * 1000, // 1 minute
