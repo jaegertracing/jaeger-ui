@@ -1,18 +1,18 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// What it does: Exports createStoreConnector, a function that wraps a class component
-// so it receives props from a Zustand store (by subscribing to the store and re-rendering when it changes).
-
-// Why: React hooks (useStore()) only work in function components.
-// Jaeger UI still has class components (e.g. parts of the trace timeline).
-// This bridge is the migration path until those are converted to functions.
+// Exports createStoreConnector: injects Zustand state into legacy class components
+// (hooks only work in function components). The connector is a function component
+// that uses useStoreWithEqualityFn + shallow so React integrates with the store
+// correctly and re-renders only when the selected slice changes.
 
 import React from 'react';
+import { shallow } from 'zustand/shallow';
+import { useStoreWithEqualityFn } from 'zustand/traditional';
 import type { StoreApi, UseBoundStore } from 'zustand';
 
 export function createStoreConnector<T, P extends Record<string, unknown>>(
-  useStore: UseBoundStore<StoreApi<T>>,
+  boundStore: UseBoundStore<StoreApi<T>>,
   selector: (state: T) => P
 ) {
   return function withStore<C extends React.ComponentType<P & Record<string, unknown>>>(
@@ -20,27 +20,14 @@ export function createStoreConnector<T, P extends Record<string, unknown>>(
   ): React.ComponentType<Omit<React.ComponentProps<C>, keyof P>> {
     const Wrapped = Component as React.ComponentType<Record<string, unknown>>;
 
-    return class StoreConnector extends React.Component<Omit<React.ComponentProps<C>, keyof P>> {
-      private unsubscribe?: () => void;
+    function StoreConnector(props: Omit<React.ComponentProps<C>, keyof P>) {
+      const slice = useStoreWithEqualityFn(boundStore, selector, shallow);
+      return <Wrapped {...(props as Record<string, unknown>)} {...slice} />;
+    }
 
-      state: { slice: P } = {
-        slice: selector(useStore.getState()),
-      };
+    const name = Wrapped.displayName || Wrapped.name || 'Component';
+    StoreConnector.displayName = `WithStore(${name})`;
 
-      componentDidMount() {
-        this.unsubscribe = useStore.subscribe(nextState => {
-          this.setState({ slice: selector(nextState) });
-        });
-      }
-
-      componentWillUnmount() {
-        this.unsubscribe?.();
-      }
-
-      render() {
-        const { slice } = this.state;
-        return <Wrapped {...(this.props as Record<string, unknown>)} {...slice} />;
-      }
-    };
+    return StoreConnector as React.ComponentType<Omit<React.ComponentProps<C>, keyof P>>;
   };
 }
