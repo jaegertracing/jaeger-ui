@@ -1,11 +1,6 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Exports createStoreConnector: injects Zustand state into legacy class components
-// (hooks only work in function components). The connector is a function component
-// that uses useStoreWithEqualityFn + shallow so React integrates with the store
-// correctly and re-renders only when the selected slice changes.
-
 import React from 'react';
 import { shallow } from 'zustand/shallow';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
