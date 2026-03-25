@@ -4,8 +4,7 @@
 import React from 'react';
 import { Provider } from 'react-redux';
 import { Route, Routes, Navigate } from 'react-router-dom';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { appQueryClient } from '../../query/app-query-client';
+import { AppQueryClientProvider } from '../../query/app-query-client';
 
 import NotFound from './NotFound';
 import Page from './Page';
@@ -45,7 +44,7 @@ const PlexusDemoPage = import.meta.env.DEV ? React.lazy(() => import('../PlexusD
 
 export default function JaegerUIApp() {
   return (
-    <QueryClientProvider client={appQueryClient}>
+    <AppQueryClientProvider>
       <ThemeProvider>
         <Provider store={store as any}>
           {
@@ -83,6 +82,6 @@ export default function JaegerUIApp() {
           </Page>
         </Provider>
       </ThemeProvider>
-    </QueryClientProvider>
+    </AppQueryClientProvider>
   );
 }
