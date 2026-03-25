@@ -7,10 +7,10 @@ import { useStoreWithEqualityFn } from 'zustand/traditional';
 import type { StoreApi, UseBoundStore } from 'zustand';
 
 /**
- * A Higher-Order Component (HOC) factory that bridges Zustand state to legacy 
+ * A Higher-Order Component (HOC) factory that bridges Zustand state to legacy
  * class components by injecting selected state slices as props.
  *
- * This utility allows incremental migration from Redux to Zustand without 
+ * This utility allows incremental migration from Redux to Zustand without
  * refactoring existing class components into functional components.
  *
  * @template T - The full state type of the Zustand store.
