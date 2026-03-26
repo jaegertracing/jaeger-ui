@@ -152,7 +152,7 @@ export function TopNavImpl(props: Props) {
         mode="horizontal"
         selectable={false}
         selectedKeys={[pathname]}
-        style={{ flex: '1 1 0', minWidth: 0 }}
+        style={{ flex: '1 1 0', minWidth: '3rem' }}
       />
       <Menu
         theme="dark"

@@ -141,13 +141,13 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   return (
     <Row className="SearchTracePage--row">
       {!embedded && (
-        <Col span={6} className="SearchTracePage--column">
+        <Col xs={24} lg={6} className="SearchTracePage--column">
           <div className="SearchTracePage--find">
             <Tabs size="large" items={tabItems} />
           </div>
         </Col>
       )}
-      <Col span={!embedded ? 18 : 24} className="SearchTracePage--column">
+      <Col xs={24} lg={!embedded ? 18 : 24} className="SearchTracePage--column">
         {showErrors && (
           <div className="js-test-error-message">
             <h2>There was an error loading traces: </h2>
