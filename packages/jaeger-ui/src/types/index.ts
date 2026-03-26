@@ -41,13 +41,6 @@ export type ReduxState = {
     error: ApiError | TNil;
   };
   embedded: EmbeddedState;
-  services: {
-    services: string[] | TNil;
-    serverOpsForService: Record<string, string[]>;
-    operationsForService: Record<string, string[]>;
-    loading: boolean;
-    error: ApiError | TNil;
-  };
   trace: {
     traces: Record<string, FetchedTrace>;
     search: {
