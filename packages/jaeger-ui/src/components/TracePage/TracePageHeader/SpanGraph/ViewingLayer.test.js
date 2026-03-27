@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ViewingLayer, { dragTypes } from './ViewingLayer';
 import { EUpdateTypes } from '../../../../utils/DraggableManager';
@@ -39,7 +39,7 @@ describe('<SpanGraph>', () => {
     });
 
     it('throws if _root is not set', () => {
-      ref.current._root = null;
+      ref.current._setRoot(null);
       expect(() => ref.current._getDraggingBounds(dragTypes.REFRAME)).toThrow();
     });
 
@@ -161,13 +161,17 @@ describe('<SpanGraph>', () => {
     });
 
     describe('scrubber', () => {
-      it('prevents the cursor from being drawn on scrubber mouseover', () => {
-        fireEvent.mouseEnter(container.querySelectorAll('[data-testid="scrubber"]')[0]);
+      it('prevents the cursor from being drawn on scrubber mouseover', async () => {
+        await act(async () => {
+          ref.current._handleScrubberEnterLeave({ type: EUpdateTypes.MouseEnter });
+        });
         expect(ref.current.state.preventCursorLine).toBe(true);
       });
 
-      it('prevents the cursor from being drawn on scrubber mouseleave', () => {
-        fireEvent.mouseLeave(container.querySelectorAll('[data-testid="scrubber"]')[0]);
+      it('prevents the cursor from being drawn on scrubber mouseleave', async () => {
+        await act(async () => {
+          ref.current._handleScrubberEnterLeave({ type: EUpdateTypes.MouseLeave });
+        });
         expect(ref.current.state.preventCursorLine).toBe(false);
       });
 
@@ -195,7 +199,7 @@ describe('<SpanGraph>', () => {
         });
       });
 
-      it('updates the view on drag end', () => {
+      it('updates the view on drag end', async () => {
         const [start, end] = props.viewRange.time.current;
         const cases = [
           {
@@ -207,13 +211,17 @@ describe('<SpanGraph>', () => {
             expectArgs: [start, 0.5, 'minimap'],
           },
         ];
-        cases.forEach(({ update, expectArgs }) => {
-          ref.current.setState({ preventCursorLine: true });
-          ref.current._handleScrubberDragEnd(update);
+        for (const { update, expectArgs } of cases) {
+          await act(async () => {
+            ref.current.setState({ preventCursorLine: true });
+          });
+          await act(async () => {
+            ref.current._handleScrubberDragEnd(update);
+          });
           expect(ref.current.state.preventCursorLine).toBe(false);
           expect(update.manager.resetBounds).toHaveBeenCalled();
           expect(props.updateViewRangeTime).toHaveBeenLastCalledWith(...expectArgs);
-        });
+        }
       });
     });
   });
