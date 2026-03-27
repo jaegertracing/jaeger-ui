@@ -10,6 +10,7 @@ SPDX-License-Identifier: Apache-2.0
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
 }
 
 .Dropdown--icon-container:hover {
@@ -35,4 +36,42 @@ SPDX-License-Identifier: Apache-2.0
 
 .Menu--item.ant-menu-item-selected .ant-menu-title-content a {
   color: #fff;
+}
+
+/* Prevent text overlap on resize */
+.Menu--item.ant-menu {
+  overflow: hidden;
+  gap: 4px;
+}
+
+.Menu--item .ant-menu-item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
+  margin-inline: 2px;
+}
+
+.Menu--item .ant-menu-title-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ensure the right menu doesn't shrink too much */
+.ant-menu-horizontal {
+  border-bottom: none;
+  gap: 8px;
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+  .Dropdown--icon-container {
+    margin-right: 15px;
+  }
+
+  .Menu--item .ant-menu-item {
+    padding-inline: 8px;
+  }
 }
