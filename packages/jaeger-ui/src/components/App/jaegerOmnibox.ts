@@ -10,7 +10,8 @@ export function isTraceIdLookupQuery(raw: string): boolean {
   if (!s) {
     return false;
   }
-  const hexSeg = /^[0-9a-fA-F]{8,32}$/;
+  /* 1–32 hex chars: matches partial / short trace IDs (e.g. abc123) like TraceRouter, not only ULID-length IDs. */
+  const hexSeg = /^[0-9a-fA-F]{1,32}$/;
   if (s.includes('...')) {
     const parts = s.split('...');
     if (parts.length !== 2) {
@@ -25,4 +26,8 @@ export function isTraceIdLookupQuery(raw: string): boolean {
     return hexSeg.test(a) && hexSeg.test(b);
   }
   return hexSeg.test(s);
+}
+
+export function isCompareTraceRouteId(id: string): boolean {
+  return id.includes('...') && isTraceIdLookupQuery(id);
 }

@@ -52,7 +52,7 @@ describe('JaegerTopSearch', () => {
     getJaegerCopilotRuntimeUrl.mockReset();
   });
 
-  it('treats multiple ... segments as a single trace id, not compare', async () => {
+  it('navigates to /trace/:id for multiple ... as a single id (TraceRouter shows TracePage, not TraceDiff)', async () => {
     const user = userEvent.setup();
     renderAt('/search', undefined);
     const input = screen.getByTestId('jaegerOmnibox');

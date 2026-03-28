@@ -43,17 +43,22 @@ function JaegerAssistantChatBootstrap(): null {
     if (lastHandledBootstrapId.current === bootstrapId) {
       return;
     }
-    lastHandledBootstrapId.current = bootstrapId;
     const text = pendingMessage;
+    const id = bootstrapId;
     const timer = window.setTimeout(() => {
+      lastHandledBootstrapId.current = id;
       void appendMessage(
         new TextMessage({
           role: MessageRole.User,
           content: text,
         })
-      ).then(() => {
-        consumePending();
-      });
+      )
+        .catch(() => {
+          lastHandledBootstrapId.current = 0;
+        })
+        .finally(() => {
+          consumePending();
+        });
     }, 0);
     return () => window.clearTimeout(timer);
   }, [appendMessage, bootstrapId, consumePending, isOpen, pendingMessage]);

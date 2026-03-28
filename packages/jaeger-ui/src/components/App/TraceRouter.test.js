@@ -20,6 +20,8 @@ const renderAt = path => {
   );
 };
 
+const validComparePath = '/trace/76f3d9a7eb1d924e5a9a1a0774be2c4c...39412b1dd0e6b5df4a19e14584e52286';
+
 describe('TraceRouter', () => {
   describe('renders TracePage', () => {
     it('for a plain 32-char hex trace ID', () => {
@@ -36,38 +38,37 @@ describe('TraceRouter', () => {
       const { queryByTestId } = renderAt('/trace/1624652f84191155db89a8d7e664f40b');
       expect(queryByTestId('trace-diff')).not.toBeInTheDocument();
     });
-  });
 
-  describe('renders TraceDiff', () => {
-    it('when id contains "..." separator between two trace IDs', () => {
-      const { getByTestId } = renderAt(
-        '/trace/76f3d9a7eb1d924e5a9a1a0774be2c4c...39412b1dd0e6b5df4a19e14584e52286'
-      );
-      expect(getByTestId('trace-diff')).toBeInTheDocument();
+    it('for an id with multiple ... (invalid compare) so it matches TracePage', () => {
+      const { getByTestId } = renderAt('/trace/a1b2c3d4...b2c3d4e5...c3d4e5f6');
+      expect(getByTestId('trace-page')).toBeInTheDocument();
     });
 
     it('when id has only a left-hand trace ID (b is empty)', () => {
       const { getByTestId } = renderAt('/trace/76f3d9a7eb1d924e5a9a1a0774be2c4c...');
-      expect(getByTestId('trace-diff')).toBeInTheDocument();
+      expect(getByTestId('trace-page')).toBeInTheDocument();
     });
 
     it('when id has only a right-hand trace ID (a is empty)', () => {
       const { getByTestId } = renderAt('/trace/...39412b1dd0e6b5df4a19e14584e52286');
-      expect(getByTestId('trace-diff')).toBeInTheDocument();
+      expect(getByTestId('trace-page')).toBeInTheDocument();
     });
 
-    it('does not render TracePage for a diff URL', () => {
-      const { queryByTestId } = renderAt(
-        '/trace/76f3d9a7eb1d924e5a9a1a0774be2c4c...39412b1dd0e6b5df4a19e14584e52286'
-      );
-      expect(queryByTestId('trace-page')).not.toBeInTheDocument();
+    it('treats "..." alone (both IDs empty) as TracePage', () => {
+      const { getByTestId } = renderAt('/trace/...');
+      expect(getByTestId('trace-page')).toBeInTheDocument();
     });
   });
 
-  describe('edge cases', () => {
-    it('treats "..." alone (both IDs empty) as a TraceDiff URL', () => {
-      const { getByTestId } = renderAt('/trace/...');
+  describe('renders TraceDiff', () => {
+    it('when id is a valid compare segment (two hex IDs separated by ...)', () => {
+      const { getByTestId } = renderAt(validComparePath);
       expect(getByTestId('trace-diff')).toBeInTheDocument();
+    });
+
+    it('does not render TracePage for a valid diff URL', () => {
+      const { queryByTestId } = renderAt(validComparePath);
+      expect(queryByTestId('trace-page')).not.toBeInTheDocument();
     });
   });
 });

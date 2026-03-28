@@ -26,13 +26,16 @@ type TProps = {
 
 const { Header, Content } = Layout;
 
-const PageLayoutBody: React.FC<TProps> = ({ children, embedded }) => {
+function useTrackPageView() {
   const { pathname, search } = useLocation();
-  const { isOpen: assistantOpen } = useJaegerAssistant();
-
   React.useEffect(() => {
     trackPageView(pathname, search);
   }, [pathname, search]);
+}
+
+/** Embedded mode: no assistant/Copilot providers, no hooks from assistant context. */
+const PageLayoutEmbedded: React.FC<TProps> = ({ children, embedded }) => {
+  useTrackPageView();
 
   const contentCls = cx({
     'Page--content': true,
@@ -40,16 +43,26 @@ const PageLayoutBody: React.FC<TProps> = ({ children, embedded }) => {
     'Page--content--workspaceMain': !embedded,
   });
 
-  if (embedded) {
-    return (
-      <div>
-        <DocumentTitle title="Jaeger UI" />
-        <Layout>
-          <Content className={contentCls}>{children}</Content>
-        </Layout>
-      </div>
-    );
-  }
+  return (
+    <div>
+      <DocumentTitle title="Jaeger UI" />
+      <Layout>
+        <Content className={contentCls}>{children}</Content>
+      </Layout>
+    </div>
+  );
+};
+
+/** Full app shell with top nav and assistant (requires JaegerAssistantProvider ancestor). */
+const PageLayoutMain: React.FC<TProps> = ({ children, embedded }) => {
+  useTrackPageView();
+  const { isOpen: assistantOpen } = useJaegerAssistant();
+
+  const contentCls = cx({
+    'Page--content': true,
+    'Page--content--no-embedded': !embedded,
+    'Page--content--workspaceMain': !embedded,
+  });
 
   return (
     <div className="Page--shell" data-jaeger-assistant-open={assistantOpen ? 'true' : undefined}>
@@ -68,13 +81,16 @@ const PageLayoutBody: React.FC<TProps> = ({ children, embedded }) => {
 };
 
 // export for tests
-export const PageImpl: React.FC<TProps> = props => (
-  <JaegerCopilotProvider>
-    <JaegerAssistantProvider>
-      <PageLayoutBody {...props} />
-    </JaegerAssistantProvider>
-  </JaegerCopilotProvider>
-);
+export const PageImpl: React.FC<TProps> = props =>
+  props.embedded ? (
+    <PageLayoutEmbedded {...props} />
+  ) : (
+    <JaegerCopilotProvider>
+      <JaegerAssistantProvider>
+        <PageLayoutMain {...props} />
+      </JaegerAssistantProvider>
+    </JaegerCopilotProvider>
+  );
 
 // export for tests
 export function mapStateToProps(state: ReduxState) {

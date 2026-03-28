@@ -33,9 +33,13 @@ describe('TraceDiff/url', () => {
       expect(matches('/trace/abc123')).toBe(false);
     });
 
-    it('returns true when matchPath matches and path is a compare URL (contains ...)', () => {
-      matchPathSpy.mockReturnValueOnce({ params: { id: 'a...b' } });
-      expect(matches('/trace/a...b')).toBe(true);
+    it('returns true when matchPath matches and id is a valid compare segment (two hex IDs)', () => {
+      matchPathSpy.mockReturnValueOnce({
+        params: { id: '76f3d9a7eb1d924e5a9a1a0774be2c4c...39412b1dd0e6b5df4a19e14584e52286' },
+      });
+      expect(matches('/trace/76f3d9a7eb1d924e5a9a1a0774be2c4c...39412b1dd0e6b5df4a19e14584e52286')).toBe(
+        true
+      );
     });
   });
 

@@ -4,6 +4,7 @@
 import queryString from 'query-string';
 import { matchPath } from 'react-router-dom';
 
+import { isCompareTraceRouteId } from '../App/jaegerOmnibox';
 import getValidState from './getValidState';
 import TTraceDiffState from '../../types/TTraceDiffState';
 import prefixUrl from '../../utils/prefix-url';
@@ -20,8 +21,8 @@ export function matches(path: string) {
   if (!match) {
     return false;
   }
-  // Single-trace and compare both use `/trace/:id`; only compare URLs contain "..." in the segment.
-  return match.params?.id?.includes('...') ?? false;
+  const id = match.params?.id;
+  return typeof id === 'string' && isCompareTraceRouteId(id);
 }
 
 export function getUrl(state: TTraceDiffState) {

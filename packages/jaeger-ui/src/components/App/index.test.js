@@ -108,8 +108,8 @@ describe('JaegerUIApp', () => {
 
   const routes = [
     ['/search', 'search-trace'],
-    // TraceDiff is now routed under /trace/:id - when id contains "...", TraceRouter renders TraceDiff
-    ['/trace/abc...def', 'trace-diff'],
+    // TraceDiff when :id is a valid compare segment (two hex IDs separated by ...)
+    ['/trace/76f3d9a7eb1d924e5a9a1a0774be2c4c...39412b1dd0e6b5df4a19e14584e52286', 'trace-diff'],
     ['/trace/123', 'trace-page'],
     ['/dependencies', 'dependency-graph'],
     ['/deep-dependencies', 'deep-dependencies'],

@@ -189,12 +189,14 @@ function jaegerUiConfigPlugin() {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  // Expose CRA-style REACT_APP_* on import.meta.env (default Vite client prefix is VITE_ only).
-  envPrefix: ['VITE_', 'REACT_APP_'],
   define: {
     __REACT_APP_GA_DEBUG__: JSON.stringify(process.env.REACT_APP_GA_DEBUG || ''),
     __REACT_APP_VSN_STATE__: JSON.stringify(process.env.REACT_APP_VSN_STATE || ''),
     __APP_ENVIRONMENT__: JSON.stringify(process.env.NODE_ENV || 'development'),
+    // Single allowlisted CRA-style env for Copilot (avoid envPrefix: ['REACT_APP_'], which exposes all REACT_APP_*).
+    'import.meta.env.REACT_APP_JAEGER_COPILOT_RUNTIME_URL': JSON.stringify(
+      process.env.REACT_APP_JAEGER_COPILOT_RUNTIME_URL ?? ''
+    ),
   },
   plugins: [
     process.env.BUNDLE_STATS && bundleStatsPlugin(path.resolve(__dirname, 'build')),
