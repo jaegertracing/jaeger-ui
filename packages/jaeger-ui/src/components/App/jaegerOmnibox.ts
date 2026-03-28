@@ -13,10 +13,15 @@ export function isTraceIdLookupQuery(raw: string): boolean {
   const hexSeg = /^[0-9a-fA-F]{8,32}$/;
   if (s.includes('...')) {
     const parts = s.split('...');
-    if (parts.length !== 2 || parts[0] === '' || parts[1] === '') {
+    if (parts.length !== 2) {
       return false;
     }
-    const [a, b] = parts;
+    const [rawA, rawB] = parts;
+    const a = rawA.trim();
+    const b = rawB.trim();
+    if (!a || !b) {
+      return false;
+    }
     return hexSeg.test(a) && hexSeg.test(b);
   }
   return hexSeg.test(s);
