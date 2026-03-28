@@ -12,7 +12,14 @@ describe('getJaegerCopilotRuntimeUrl', () => {
 
   it('returns trimmed URL when REACT_APP_JAEGER_COPILOT_RUNTIME_URL is set', () => {
     process.env.REACT_APP_JAEGER_COPILOT_RUNTIME_URL = '  https://copilot.example/api  ';
+    delete process.env.VITE_JAEGER_COPILOT_RUNTIME_URL;
     expect(getJaegerCopilotRuntimeUrl()).toBe('https://copilot.example/api');
+  });
+
+  it('returns trimmed URL when VITE_JAEGER_COPILOT_RUNTIME_URL is set', () => {
+    delete process.env.REACT_APP_JAEGER_COPILOT_RUNTIME_URL;
+    process.env.VITE_JAEGER_COPILOT_RUNTIME_URL = '  https://vite-copilot.example/api  ';
+    expect(getJaegerCopilotRuntimeUrl()).toBe('https://vite-copilot.example/api');
   });
 
   it('returns undefined when the env var is missing or blank in production-like mode', () => {

@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .Page--shell[data-jaeger-assistant-open='true'] {
-  --jaeger-ui-assistant-inset: min(420px, 38vw);
+  --jaeger-ui-assistant-inset: clamp(280px, 38vw, 420px);
 }
 
 .Page--shell {

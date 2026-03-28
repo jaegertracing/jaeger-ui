@@ -22,15 +22,19 @@ import './JaegerTopSearch.css';
 function navigateTraceOrCompare(value: string, navigate: NavigateFunction) {
   const s = value.trim();
   if (s.includes('...')) {
-    const [a, b] = s.split('...');
-    navigate(
-      getCompareUrl({
-        a: a.toLowerCase(),
-        b: b.toLowerCase(),
-        cohort: [],
-      })
-    );
-    return;
+    const parts = s.split('...');
+    const a = parts[0]?.trim() ?? '';
+    const b = parts[1]?.trim() ?? '';
+    if (parts.length === 2 && a !== '' && b !== '') {
+      navigate(
+        getCompareUrl({
+          a: a.toLowerCase(),
+          b: b.toLowerCase(),
+          cohort: [],
+        })
+      );
+      return;
+    }
   }
   navigate(getTraceUrl(s.toLowerCase()));
 }

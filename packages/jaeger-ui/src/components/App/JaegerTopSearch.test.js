@@ -5,7 +5,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 
 jest.mock('./copilot-runtime', () => ({
   getJaegerCopilotRuntimeUrl: jest.fn(),
@@ -25,6 +25,11 @@ function AssistantStateProbe() {
   );
 }
 
+function PathnameProbe() {
+  const { pathname } = useLocation();
+  return <span data-testid="pathname-probe">{pathname}</span>;
+}
+
 function renderAt(path, runtimeUrl) {
   getJaegerCopilotRuntimeUrl.mockReturnValue(runtimeUrl);
   return render(
@@ -32,6 +37,7 @@ function renderAt(path, runtimeUrl) {
       <JaegerAssistantProvider>
         <JaegerTopSearch />
         <AssistantStateProbe />
+        <PathnameProbe />
         <Routes>
           <Route path="/search" element={<div data-testid="search-page" />} />
           <Route path="/trace/:id" element={<div data-testid="trace-page" />} />
@@ -44,6 +50,18 @@ function renderAt(path, runtimeUrl) {
 describe('JaegerTopSearch', () => {
   beforeEach(() => {
     getJaegerCopilotRuntimeUrl.mockReset();
+  });
+
+  it('treats multiple ... segments as a single trace id, not compare', async () => {
+    const user = userEvent.setup();
+    renderAt('/search', undefined);
+    const input = screen.getByTestId('jaegerOmnibox');
+    await user.type(input, 'a1b2c3d4...b2c3d4e5...c3d4e5f6');
+    await user.keyboard('{Enter}');
+    expect(await screen.findByTestId('trace-page')).toBeInTheDocument();
+    expect(screen.getByTestId('pathname-probe').textContent.toLowerCase()).toContain(
+      'a1b2c3d4...b2c3d4e5...c3d4e5f6'
+    );
   });
 
   it('navigates to a trace when given a hex trace id and assistant runtime is off', async () => {
@@ -62,6 +80,7 @@ describe('JaegerTopSearch', () => {
     await user.type(input, 'a1b2c3d4...b2c3d4e5');
     await user.keyboard('{Enter}');
     expect(await screen.findByTestId('trace-page')).toBeInTheDocument();
+    expect(screen.getByTestId('pathname-probe').textContent).toContain('...');
   });
 
   it('navigates to trace when runtime is on but input looks like a trace id', async () => {

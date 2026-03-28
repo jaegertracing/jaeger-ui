@@ -5,6 +5,9 @@
 
 interface ImportMetaEnv {
   readonly REACT_APP_JAEGER_COPILOT_RUNTIME_URL?: string;
+  readonly VITE_JAEGER_COPILOT_RUNTIME_URL?: string;
+  /** When false, Vite build aliases CopilotKit to shims (used by bundle-size CI). */
+  readonly VITE_JAEGER_ASSISTANT?: string;
 }
 
 interface ImportMeta {
