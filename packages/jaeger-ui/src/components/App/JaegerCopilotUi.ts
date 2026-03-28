@@ -25,16 +25,23 @@ export default function JaegerCopilotUi(): null {
   const rawId = traceMatch?.params?.id;
   const traceSegment = typeof rawId === 'string' ? rawId : undefined;
 
-  const isCompareView = Boolean(traceSegment?.includes('...'));
-  const singleTraceId = !isCompareView ? traceSegment : undefined;
   const compareIds = useMemo(() => {
-    if (!traceSegment || !isCompareView) {
+    if (!traceSegment) {
       return null;
     }
-    const [a, b] = traceSegment.split('...');
-    return { traceIdA: a || '', traceIdB: b || '' };
-  }, [isCompareView, traceSegment]);
+    const parts = traceSegment.split('...');
+    if (parts.length !== 2) {
+      return null;
+    }
+    const [a, b] = parts;
+    if (!a || !b) {
+      return null;
+    }
+    return { traceIdA: a, traceIdB: b };
+  }, [traceSegment]);
 
+  const isCompareView = Boolean(compareIds);
+  const singleTraceId = !isCompareView ? traceSegment : undefined;
   useCopilotReadable(
     {
       description:
