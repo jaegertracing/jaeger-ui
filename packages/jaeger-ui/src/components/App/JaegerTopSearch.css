@@ -1,0 +1,58 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.JaegerTopSearch-root {
+  box-sizing: border-box;
+  width: 240px;
+  max-width: min(520px, calc(100vw - 48px));
+  flex-shrink: 0;
+  transition: width 0.22s ease;
+}
+
+.JaegerTopSearch-root--expanded {
+  width: min(400px, calc(100vw - 120px));
+}
+
+.JaegerTopSearch--form {
+  line-height: inherit;
+  width: 100%;
+  margin: 0;
+}
+
+.JaegerTopSearch--input.ant-input-affix-wrapper {
+  width: 100%;
+  max-width: none;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.JaegerTopSearch--input.ant-input-affix-wrapper:hover,
+.JaegerTopSearch--input.ant-input-affix-wrapper:focus,
+.JaegerTopSearch--input.ant-input-affix-wrapper-focused {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.JaegerTopSearch--input .ant-input {
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.JaegerTopSearch--input .ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.JaegerTopSearch--input .ant-input-prefix {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.JaegerTopSearch--input .ant-input-clear-icon {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.JaegerTopSearch--input .ant-input-clear-icon:hover {
+  color: rgba(255, 255, 255, 0.85);
+}

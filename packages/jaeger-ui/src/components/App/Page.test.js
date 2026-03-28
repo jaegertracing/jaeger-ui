@@ -2,6 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 jest.mock('./TopNav', () => () => <div />);
+jest.mock('./JaegerCopilotProvider', () => ({
+  __esModule: true,
+  default: ({ children }) => children,
+}));
+jest.mock('./JaegerAssistantPanel', () => ({
+  __esModule: true,
+  default: () => null,
+}));
 jest.mock('../../utils/tracking');
 
 import React from 'react';

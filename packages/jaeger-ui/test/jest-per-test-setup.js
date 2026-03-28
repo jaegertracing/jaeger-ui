@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { TextEncoder } from 'util';
+import { TextDecoder, TextEncoder } from 'util';
 import { polyfill as rafPolyfill } from '../src/utils/test/requestAnimationFrame';
 import '@testing-library/jest-dom';
 
@@ -9,6 +9,7 @@ import '@testing-library/jest-dom';
 rafPolyfill();
 // Jest 28+ makes use of the TextEncoder API, which is not provided by JSDOM
 global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 // Ant Design v6 uses ResizeObserver which is not available in jsdom
 global.ResizeObserver = jest.fn().mockImplementation(() => ({

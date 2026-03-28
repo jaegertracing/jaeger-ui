@@ -1,6 +1,14 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+jest.mock('./JaegerTopSearch', () => {
+  const React = require('react');
+  return {
+    __esModule: true,
+    default: () => <div data-testid="JaegerTopSearch-mock" />,
+  };
+});
+
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
@@ -244,14 +252,14 @@ describe('<TopNav>', () => {
     expect(screen.getByRole('link', { name: 'Monitor' })).toBeInTheDocument();
   });
 
-  it('includes the Trace ID search control in the right-side menu', () => {
+  it('includes the Jaeger top search omnibox in the right-side menu', () => {
     render(
       <BrowserRouter>
         <TopNav {...defaultProps} />
       </BrowserRouter>
     );
 
-    expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
+    expect(screen.getByTestId('JaegerTopSearch-mock')).toBeInTheDocument();
   });
 });
 

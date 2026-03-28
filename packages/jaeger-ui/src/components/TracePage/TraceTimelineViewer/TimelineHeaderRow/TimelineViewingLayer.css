@@ -50,7 +50,7 @@ SPDX-License-Identifier: Apache-2.0
   cursor: col-resize;
   left: 0;
   position: fixed;
-  right: 0;
+  right: var(--jaeger-ui-assistant-inset, 0px);
   top: 0;
   user-select: none;
 }

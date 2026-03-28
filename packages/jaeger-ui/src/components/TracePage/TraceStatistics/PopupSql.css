@@ -5,11 +5,11 @@ SPDX-License-Identifier: Apache-2.0
 
 .PopupSQL {
   position: fixed;
-  width: 100%;
+  width: auto;
   height: 100%;
   top: 0;
   left: 0;
-  right: 0;
+  right: var(--jaeger-ui-assistant-inset, 0px);
   bottom: 0;
   margin: auto;
   background-color: rgba(0, 0, 0, 0.5);

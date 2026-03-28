@@ -10,7 +10,9 @@ SPDX-License-Identifier: Apache-2.0
   height: var(--timeline-header-row-height);
   line-height: var(--timeline-header-row-height);
   position: fixed;
-  width: 100%;
+  left: 0;
+  right: var(--jaeger-ui-assistant-inset, 0px);
+  width: auto;
   z-index: 4;
 }
 

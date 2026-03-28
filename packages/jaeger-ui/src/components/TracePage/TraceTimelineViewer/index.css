@@ -24,7 +24,7 @@ SPDX-License-Identifier: Apache-2.0
   border-left: 1px solid var(--border-default);
   overflow-y: auto;
   position: fixed;
-  right: 0;
+  right: var(--jaeger-ui-assistant-inset, 0px);
 }
 
 /* Show a permanent column divider for all VerticalResizers within the trace timeline,

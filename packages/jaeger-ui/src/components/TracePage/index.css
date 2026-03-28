@@ -6,6 +6,8 @@ SPDX-License-Identifier: Apache-2.0
 .Tracepage--headerSection {
   background: var(--surface-primary);
   position: fixed;
-  width: 100%;
+  left: 0;
+  right: var(--jaeger-ui-assistant-inset, 0px);
+  width: auto;
   z-index: 3;
 }

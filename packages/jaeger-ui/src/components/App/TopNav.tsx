@@ -8,7 +8,7 @@ import _has from 'lodash/has';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 
-import TraceIDSearchInput from './TraceIDSearchInput';
+import JaegerTopSearch from './JaegerTopSearch';
 import ThemeToggleButton from './ThemeToggleButton';
 import Branding from './Branding';
 import * as dependencyGraph from '../DependencyGraph/url';
@@ -20,7 +20,6 @@ import * as monitorATMUrl from '../Monitor/url';
 import { ReduxState } from '../../types';
 import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import getConfig from '../../utils/config/get-config';
-import prefixUrl from '../../utils/prefix-url';
 
 import './TopNav.css';
 import withRouteProps, { IWithRouteProps } from '../../utils/withRouteProps';
@@ -111,8 +110,13 @@ export function TopNavImpl(props: Props) {
 
   const itemsGlobalRight: MenuProps['items'] = [
     {
-      label: <TraceIDSearchInput />,
-      key: 'TraceIDSearchInput',
+      label: (
+        <div className="TopNav--search">
+          <JaegerTopSearch />
+        </div>
+      ),
+      key: 'jaegerTopSearch',
+      className: 'TopNav-menuItem--search',
     },
     ...menuItems.map(m => {
       if (isItem(m)) {

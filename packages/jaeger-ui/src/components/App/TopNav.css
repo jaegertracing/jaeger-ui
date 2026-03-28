@@ -36,3 +36,23 @@ SPDX-License-Identifier: Apache-2.0
 .Menu--item.ant-menu-item-selected .ant-menu-title-content a {
   color: #fff;
 }
+
+.TopNav--search {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 0;
+  max-width: min(100vw - 24px, 560px);
+  overflow: visible;
+}
+
+.ant-menu-item.TopNav-menuItem--search,
+.ant-menu-overflow-item.TopNav-menuItem--search {
+  overflow: visible;
+}
+
+.ant-menu-item.TopNav-menuItem--search .ant-menu-title-content,
+.ant-menu-overflow-item.TopNav-menuItem--search .ant-menu-title-content {
+  overflow: visible;
+  max-width: none;
+}
