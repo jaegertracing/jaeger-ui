@@ -87,39 +87,54 @@ describe('fileReader.readJsonFile', () => {
     return expect(p).resolves.toMatchObject(expectedOutput);
   });
 
-  it('handles FileReader error', () => {
-    const file = new File([''], 'error.json');
-    const mockReader = { readAsText: jest.fn(), onerror: null, error: new Error('Read error') };
-
-    jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
-    const promise = readJsonFile({ file });
-
-    mockReader.onerror();
-
-    return expect(promise).rejects.toThrow(/Read error/);
+  it('rejects multi-line JSON with a malformed line', () => {
+    const fileContent = '{"a":1}\n{"b":';
+    const file = new File([fileContent], 'multi-error.json', { type: 'application/json' });
+    const p = readJsonFile({ file });
+    return expect(p).rejects.toThrow(/Error parsing JSON at line 2:/);
   });
 
-  it('handles FileReader abort', () => {
-    const file = new File([''], 'abort.json');
-    const mockReader = { readAsText: jest.fn(), onabort: null };
+  describe('FileReader mocking', () => {
+    let fileReaderSpy;
 
-    jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
-    const promise = readJsonFile({ file });
+    afterEach(() => {
+      fileReaderSpy.mockRestore();
+    });
 
-    mockReader.onabort();
+    it('handles FileReader error', () => {
+      const file = new File([''], 'error.json');
+      const mockReader = { readAsText: jest.fn(), onerror: null, error: new Error('Read error') };
 
-    return expect(promise).rejects.toThrow(/aborted/);
-  });
+      fileReaderSpy = jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
+      const promise = readJsonFile({ file });
 
-  it('rejects if FileReader result is not a string', () => {
-    const file = new File(['{ "test": true }'], 'dummy.json');
-    const mockReader = { readAsText: jest.fn(), onload: null, result: {} };
+      mockReader.onerror();
 
-    jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
-    const promise = readJsonFile({ file });
+      return expect(promise).rejects.toThrow(/Read error/);
+    });
 
-    mockReader.onload();
+    it('handles FileReader abort', () => {
+      const file = new File([''], 'abort.json');
+      const mockReader = { readAsText: jest.fn(), onabort: null };
 
-    return expect(promise).rejects.toThrow(/Invalid result type/);
+      fileReaderSpy = jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
+      const promise = readJsonFile({ file });
+
+      mockReader.onabort();
+
+      return expect(promise).rejects.toThrow(/aborted/);
+    });
+
+    it('rejects if FileReader result is not a string', () => {
+      const file = new File(['{ "test": true }'], 'dummy.json');
+      const mockReader = { readAsText: jest.fn(), onload: null, result: {} };
+
+      fileReaderSpy = jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
+      const promise = readJsonFile({ file });
+
+      mockReader.onload();
+
+      return expect(promise).rejects.toThrow(/Invalid result type/);
+    });
   });
 });
