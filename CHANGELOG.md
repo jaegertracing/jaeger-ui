@@ -9,6 +9,70 @@ Run `make changelog` to generate content.
 
 </details>
 
+## v2.17.0 (2026-03-30)
+
+#### ✨ New Features
+
+* Allow viewing span details in a side panel instead of inline view ([@yurishkuro](https://github.com/yurishkuro) in [#3578](https://github.com/jaegertracing/jaeger-ui/pull/3578))
+* [feature]: add trace logs view to aggregate all span events ([@SoumyaRaikwar](https://github.com/SoumyaRaikwar) in [#3563](https://github.com/jaegertracing/jaeger-ui/pull/3563))
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* 🔒 [security fix] replace innerhtml with textcontent to mitigate xss risk ([@jkowall](https://github.com/jkowall) in [#3651](https://github.com/jaegertracing/jaeger-ui/pull/3651))
+* Add plexus demo route to main ui (dev only, `/plexus-demo`) ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3656](https://github.com/jaegertracing/jaeger-ui/pull/3656))
+* Fix plexus demo ([@yurishkuro](https://github.com/yurishkuro) in [#3654](https://github.com/jaegertracing/jaeger-ui/pull/3654))
+* Clean-up display of incomplete icon, text, and tooltip ([@yurishkuro](https://github.com/yurishkuro) in [#3619](https://github.com/jaegertracing/jaeger-ui/pull/3619))
+* Revert "refactor(plexus): migrate digraph to functional component" ([@yurishkuro](https://github.com/yurishkuro) in [#3600](https://github.com/jaegertracing/jaeger-ui/pull/3600))
+* Revert "chore: fetch backend config dynamically in dev mode (#3541)" ([@yurishkuro](https://github.com/yurishkuro) in [#3599](https://github.com/jaegertracing/jaeger-ui/pull/3599))
+* Fix: dark mode is not working correctly on the quality metrics page ([@gulshank0](https://github.com/gulshank0) in [#3583](https://github.com/jaegertracing/jaeger-ui/pull/3583))
+* Fix: normalize uppercase trace ids to lowercase in url ([@samar-703](https://github.com/samar-703) in [#3485](https://github.com/jaegertracing/jaeger-ui/pull/3485))
+* Fix: tracediff slot b search populates slot a instead ([@samar-703](https://github.com/samar-703) in [#3473](https://github.com/jaegertracing/jaeger-ui/pull/3473))
+* Fix detail-row hierarchy: missing vertical bars for parent spans and white background regression ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3572](https://github.com/jaegertracing/jaeger-ui/pull/3572))
+* Fix: system architecture (dag) dark mode visibility ([@Parship12](https://github.com/Parship12) in [#3568](https://github.com/jaegertracing/jaeger-ui/pull/3568))
+
+#### 🚧 Experimental Features
+
+* [adr-0006] phase 5: combined modes, analytics, final polish ([@yurishkuro](https://github.com/yurishkuro) in [#3577](https://github.com/jaegertracing/jaeger-ui/pull/3577))
+* [adr-0006] phase 4: side panel polish ([@yurishkuro](https://github.com/yurishkuro) in [#3576](https://github.com/jaegertracing/jaeger-ui/pull/3576))
+* [adr-0006] phase 3: side panel container and span selection ([@yurishkuro](https://github.com/yurishkuro) in [#3569](https://github.com/jaegertracing/jaeger-ui/pull/3569))
+* [adr-0006] phase 2: tree-only mode (hide timeline) ([@yurishkuro](https://github.com/yurishkuro) in [#3562](https://github.com/jaegertracing/jaeger-ui/pull/3562))
+
+#### 👷 CI Improvements
+
+* Do not fail bundle size workflow on main branch ([@yurishkuro](https://github.com/yurishkuro) in [#3653](https://github.com/jaegertracing/jaeger-ui/pull/3653))
+* Use .prettierignore instead of explicit opt-in ([@yurishkuro](https://github.com/yurishkuro) in [#3647](https://github.com/jaegertracing/jaeger-ui/pull/3647))
+* Pin npm version ([@yurishkuro](https://github.com/yurishkuro) in [#3596](https://github.com/jaegertracing/jaeger-ui/pull/3596))
+
+#### ⚙️ Refactoring
+
+* Feat: add zustand and query foundation for state migration ([@Parship12](https://github.com/Parship12) in [#3662](https://github.com/jaegertracing/jaeger-ui/pull/3662))
+* Fix: replace remaining tooltip arrow prop ([@YoungHypo](https://github.com/YoungHypo) in [#3663](https://github.com/jaegertracing/jaeger-ui/pull/3663))
+* Remove `store` npm dependency and suppress lightningcss warning ([@yurishkuro](https://github.com/yurishkuro) in [#3659](https://github.com/jaegertracing/jaeger-ui/pull/3659))
+* Remove deprecated `worker-loader` in favor of webpack 5 / vite built-in worker support ([@yurishkuro](https://github.com/yurishkuro) in [#3646](https://github.com/jaegertracing/jaeger-ui/pull/3646))
+* Final part: migrate to react-router-dom v7 & drop compat layer & history ([@Parship12](https://github.com/Parship12) in [#3645](https://github.com/jaegertracing/jaeger-ui/pull/3645))
+* Part of phase 4 & 5: migrate the v5 matchpath call signature to v6/v7 matchpath signature ([@Parship12](https://github.com/Parship12) in [#3617](https://github.com/jaegertracing/jaeger-ui/pull/3617))
+* Part of phase 4 & 5: migrate link to react-router-dom-v5-compat ([@Parship12](https://github.com/Parship12) in [#3618](https://github.com/jaegertracing/jaeger-ui/pull/3618))
+* Part of phase 4: remove redux-first-history and decouple router state from redux ([@Parship12](https://github.com/Parship12) in [#3616](https://github.com/jaegertracing/jaeger-ui/pull/3616))
+* Cleanup for phase 4: remove history.replace() and historyupdatemiddleware ([@Parship12](https://github.com/Parship12) in [#3615](https://github.com/jaegertracing/jaeger-ui/pull/3615))
+* Final part of phase 3.2 (task 1): refactor(tracepage): convert class component to functional ([@Parship12](https://github.com/Parship12) in [#3613](https://github.com/jaegertracing/jaeger-ui/pull/3613))
+* Phase 3 leftovers: remove state.router.location usages (cleanup) ([@Parship12](https://github.com/Parship12) in [#3614](https://github.com/jaegertracing/jaeger-ui/pull/3614))
+* Part of phase 3.2 (task 1): factor out keyboard shortcut setup into a separate function in the tracepage ([@Parship12](https://github.com/Parship12) in [#3609](https://github.com/jaegertracing/jaeger-ui/pull/3609))
+* Fix(tracepage): fix stale filterspans cache key and remove dead code ([@thc1006](https://github.com/thc1006) in [#3592](https://github.com/jaegertracing/jaeger-ui/pull/3592))
+* Part of phase 3.2 (task 2): remove dead searchurl prop ([@Parship12](https://github.com/Parship12) in [#3603](https://github.com/jaegertracing/jaeger-ui/pull/3603))
+* Phase 3.2 (task 2): refactor(dependencygraph): convert class component to functional ([@Parship12](https://github.com/Parship12) in [#3591](https://github.com/jaegertracing/jaeger-ui/pull/3591))
+* Refactor(plexus): migrate digraph to functional component ([@hharshhsaini](https://github.com/hharshhsaini) in [#3534](https://github.com/jaegertracing/jaeger-ui/pull/3534))
+* Chore: fetch backend config dynamically in dev mode (#3541) ([@hharshhsaini](https://github.com/hharshhsaini) in [#3561](https://github.com/jaegertracing/jaeger-ui/pull/3561))
+* Refactor(plexus): migrate node to functional component (#3392) ([@hharshhsaini](https://github.com/hharshhsaini) in [#3531](https://github.com/jaegertracing/jaeger-ui/pull/3531))
+* Refactor(plexus): migrate svgedges to functional component (#3397) ([@hharshhsaini](https://github.com/hharshhsaini) in [#3518](https://github.com/jaegertracing/jaeger-ui/pull/3518))
+* Chore: replace `getconfigvalue` with direct `getconfig()` property access ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3589](https://github.com/jaegertracing/jaeger-ui/pull/3589))
+* Fix(monitor): use storagecapabilities config as authoritative signal for spm availability ([@yurishkuro](https://github.com/yurishkuro) in [#3587](https://github.com/jaegertracing/jaeger-ui/pull/3587))
+* Refactor: control monitor tab visibility via storage capabilities of the backend ([@hharshhsaini](https://github.com/hharshhsaini) in [#3554](https://github.com/jaegertracing/jaeger-ui/pull/3554))
+* Phase 3.2 (task 3): remove historyupdatemiddleware from redux & move navigate(url) into searchform ([@Parship12](https://github.com/Parship12) in [#3582](https://github.com/jaegertracing/jaeger-ui/pull/3582))
+* Phase 3.1: replace state.router.location with uselocation() ([@Parship12](https://github.com/Parship12) in [#3574](https://github.com/jaegertracing/jaeger-ui/pull/3574))
+* Refactor(plexus): migrate measurablenodes to functional component ([@hharshhsaini](https://github.com/hharshhsaini) in [#3533](https://github.com/jaegertracing/jaeger-ui/pull/3533))
+* Phase 1: migrate route definitions to react router v6 syntax ([@Parship12](https://github.com/Parship12) in [#3565](https://github.com/jaegertracing/jaeger-ui/pull/3565))
+* Refactor(plexus): migrate svgdefentry to functional component (#3395) ([@hharshhsaini](https://github.com/hharshhsaini) in [#3528](https://github.com/jaegertracing/jaeger-ui/pull/3528))
+
 ## v2.16.0 (2026-03-05)
 
 #### 🐞 Bug fixes, Minor Improvements
