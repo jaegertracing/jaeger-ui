@@ -18,7 +18,7 @@ Run `make changelog` to generate content.
 
 #### 🐞 Bug fixes, Minor Improvements
 
-* 🔒 [security fix] replace innerhtml with textcontent to mitigate xss risk ([@jkowall](https://github.com/jkowall) in [#3651](https://github.com/jaegertracing/jaeger-ui/pull/3651))
+* 🔒 [security fix] replace innerHTML with textContent to mitigate XSS risk ([@jkowall](https://github.com/jkowall) in [#3651](https://github.com/jaegertracing/jaeger-ui/pull/3651))
 * Add plexus demo route to main ui (dev only, `/plexus-demo`) ([@Copilot](https://github.com/apps/copilot-swe-agent) in [#3656](https://github.com/jaegertracing/jaeger-ui/pull/3656))
 * Fix plexus demo ([@yurishkuro](https://github.com/yurishkuro) in [#3654](https://github.com/jaegertracing/jaeger-ui/pull/3654))
 * Clean-up display of incomplete icon, text, and tooltip ([@yurishkuro](https://github.com/yurishkuro) in [#3619](https://github.com/jaegertracing/jaeger-ui/pull/3619))
