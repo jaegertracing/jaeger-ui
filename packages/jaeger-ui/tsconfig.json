@@ -4,7 +4,11 @@
 {
   "extends": "../../tsconfig",
   "compilerOptions": {
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "@jaegertracing/plexus": ["../plexus/src/index.ts"],
+      "@jaegertracing/plexus/lib/*": ["../plexus/src/*"]
+    }
   },
   "include": ["src/**/*.tsx", "src/**/*.ts", "src/**/*.json", "typings"]
 }
