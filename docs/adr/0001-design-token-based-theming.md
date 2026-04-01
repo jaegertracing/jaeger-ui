@@ -37,7 +37,7 @@ Adopt a design token-based theming system implemented with CSS custom properties
 ### Core Principles
 
 1. **Semantic tokens over hardcoded values**: Colors, spacing, shadows, etc. are accessed via tokens.
-2. **Single source of truth**: Token definitions live centrally in `components/common/vars.css`.
+2. **Single source of truth**: Token definitions live centrally in `packages/jaeger-ui/src/components/common/vars.css`.
 3. **Component/theme decoupling**: Components read tokens and do not include theme logic.
 4. **Ant Design integration**: Tokens are derived from Ant Design's CSS custom properties, so Ant Design's theme algorithm automatically drives theming for both custom and library components.
 5. **Progressive enhancement**: Migrate incrementally; no large breaking change.
@@ -46,16 +46,16 @@ Adopt a design token-based theming system implemented with CSS custom properties
 
 - **Ant Design ConfigProvider** (`ThemeProvider.tsx`)
   - Configures antd with light/dark algorithm
-  - Ant Design emits `--ant-color-*` CSS custom properties
   - Manages theme state and persists preference to localStorage
+  - `ThemeTokenSync` bridges antd's JS theme tokens to global `--ant-*` CSS custom properties (via `theme.useToken()` → `document.documentElement.style`), making them reliably available to `vars.css` including in portals
 - **Semantic Token Layer** (`vars.css`)
   - Maps `--ant-color-*` to semantic tokens (`--surface-primary`, `--text-primary`, `--border-default`, etc.)
   - Defines additional tokens not covered by antd (shadows, span colors, syntax highlighting, etc.)
   - Dark mode overrides for tokens that need explicit adjustment
 - **Component Layer** (`*.css`)
-  - Uses `var(--token-name)` exclusively
+  - Should use `var(--token-name)` for colors
   - No theme-specific selectors
-  - No hardcoded colors
+  - Avoids introducing new hardcoded colors; some legacy CSS still contains hardcoded colors pending migration (see [Component Migration Status](#component-migration-status))
 
 ## Implementation
 
