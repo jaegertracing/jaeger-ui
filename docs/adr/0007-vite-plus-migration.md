@@ -1,6 +1,6 @@
 # ADR 0007: Migrate to Vite+ (Full Vite Toolchain)
 
-**Status**: Proposed
+**Status**: Partially Implemented
 **Last Updated**: 2026-04-01
 
 ---
@@ -68,7 +68,7 @@ monorepo:
 
 Migrate both packages to a full Vite+ toolchain:
 
-1. **Drop the `packages/plexus` library build entirely** — remove Webpack, Babel CLI, and all associated
+1. ✅ **Drop the `packages/plexus` library build entirely** — remove Webpack, Babel CLI, and all associated
    config. Type-checking is retained via the root `tsc --build` project reference.
 2. Replace Jest + Babel in both packages with **Vitest**.
 3. Delete all Babel configuration files and Babel-related dev dependencies.
@@ -80,53 +80,48 @@ Migrate both packages to a full Vite+ toolchain:
 
 ## Detailed Change Plan
 
-### 1. `packages/plexus` — Drop the Library Build
+### ✅ 1. `packages/plexus` — Drop the Library Build
 
 `@jaegertracing/plexus` is no longer published to npm. The only consumer is `jaeger-ui`, which resolves
 the package via a workspace source alias (`@jaegertracing/plexus` → `../plexus/src`) and never touches
 the built `lib/` or `dist/` artifacts. The entire build pipeline — Babel CLI, Webpack, rimraf — exists
 solely to produce output that no one uses.
 
-**Recommendation**: delete the build entirely. Type-checking is already provided by the root `tsc --build`
-project reference, so no new tooling is needed.
+**Implemented**: The build is deleted. Type-checking is retained via the root `tsc --build` project
+reference.
 
-#### 1a. Update `packages/plexus/package.json`
+#### ✅ 1a. Update `packages/plexus/package.json`
 
-- **Remove** from `devDependencies`:
+- ✅ **Removed** from `devDependencies`:
   - `webpack`, `webpack-cli`, `webpack-node-externals`, `clean-webpack-plugin`, `babel-loader`
   - `babel-plugin-transform-react-remove-prop-types`
-  - `@babel/plugin-syntax-dynamic-import`, `@babel/plugin-transform-class-properties`, `@babel/plugin-transform-private-methods`
-  - `@babel/preset-env`, `@babel/preset-react`, `@babel/preset-typescript`
-  - `rimraf` (Vite clears output dirs automatically)
-  - `npm-run-all2` (build becomes a single `vite build` command)
+  - `@babel/plugin-syntax-dynamic-import`, `@babel/plugin-transform-class-properties`
+  - `rimraf`, `npm-run-all2`
 
-- **Remove `scripts`**: `build`, `prepublishOnly`, and all `_tasks/*` entries. The root
-  `npm run build` uses `--workspaces`, so plexus needs either no `build` script (requires changing
-  the root invocation to `--if-present`) or a no-op. The simplest approach: change the plexus
-  `build` script to `tsc --noEmit` so the root build still exercises type-checking for plexus.
+- ✅ **Replaced `build` script** (5-step Babel+Webpack pipeline) with `tsc --noEmit`. Removed
+  `prepublishOnly` and all `_tasks/*` scripts.
 
-  ```json
-  {
-    "scripts": {
-      "build": "tsc --noEmit"
-    }
-  }
-  ```
+- ✅ **Removed `files`** array — dead weight for an unpublished package.
 
-- **Remove `files`, `main`, `prepublishOnly`** from `package.json` — dead weight for an unpublished
-  package.
+- **`main` field intentionally kept**: `"main": "lib/index.js"` is still required so that
+  `tsc --build` (via the root project reference) can locate the emitted declarations for jaeger-ui's
+  type resolution. Removing it would break `tsc-lint`. Cleaning this up — along with removing the
+  emit from `packages/plexus/tsconfig.json` — is deferred to PR E (tsconfig consolidation), which
+  will replace the `main`-based resolution with a direct `paths` mapping or `types` field pointing
+  at the source.
 
-- **Delete files**:
+- ✅ **Deleted files**:
   - `packages/plexus/babel.config.js`
   - `packages/plexus/webpack.umd.config.js`
   - `packages/plexus/webpack-factory.js`
 
-- **Update `scripts/generateDepcheckrcPlexus.js`**: This script currently imports
-  `packages/plexus/babel.config.js` and `packages/plexus/test/babel-transform.js` at lines 7–8 to
-  introspect the Babel preset/plugin list and build the depcheck ignore list. Once Babel is removed from
-  plexus, those imports will break. The script must be updated to either: (a) list the formerly-Babel
-  packages statically in the `otherPackages` array for one release cycle then remove them, or (b) be
-  deleted entirely if depcheck is reconfigured to not need the generated ignore list.
+- ✅ **Updated `scripts/generateDepcheckrcPlexus.js`**: Removed the `babel.config.js` import and
+  the code that processed it. The script now introspects only `test/babel-transform.js` for the
+  test-related packages that depcheck cannot detect statically.
+
+- ✅ **Updated root `package.json` `prepare` script**: Removed the `npm run --workspace
+  @jaegertracing/plexus prepublishOnly` call, which would fail since `prepublishOnly` no longer
+  exists.
 
 #### Prop-types removal
 
@@ -507,7 +502,7 @@ blocking unknowns can be opened and merged **right now**, independently of the r
 
 | PR | Description | Blocking unknowns | Can ship |
 |----|-------------|-------------------|----------|
-| A  | Drop plexus library build (Webpack + Babel CLI + related scripts) | None | Immediately |
+| ✅ A | Drop plexus library build (Webpack + Babel CLI + related scripts) | None | Done |
 | B  | Delete legacy ESLint configs from both packages | None | Immediately |
 | C  | Migrate plexus test runner to Vitest | Unknown 3, 4 | After investigation |
 | D  | Migrate jaeger-ui test runner to Vitest; remove root-level Babel deps | Unknown 2, 3, 4, 5 | After investigation |
@@ -560,4 +555,4 @@ weight in place. Rejected.
 - [Vitest migration guide from Jest](https://vitest.dev/guide/migration.html)
 - `packages/jaeger-ui/test/babel-transform.js` — documents the `import.meta` workaround that this migration
   eliminates
-- `packages/plexus/webpack-factory.js` — the Webpack config that this migration replaces
+- `packages/plexus/webpack-factory.js` — the Webpack config that this migration replaced (now deleted)
