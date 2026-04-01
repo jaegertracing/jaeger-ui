@@ -102,6 +102,10 @@
       "\\.(css|png|svg)$": "./test/generic-file-transform.js",
       "\\.([jt]sx?)$": "./test/babel-transform.js"
     },
+    "moduleNameMapper": {
+      "^@jaegertracing/plexus$": "<rootDir>/../../packages/plexus/src/index.ts",
+      "^@jaegertracing/plexus/lib/(.*)$": "<rootDir>/../../packages/plexus/src/$1"
+    },
     "transformIgnorePatterns": [
       "[/\\\\\\\\]node_modules[/\\\\\\\\](?!redux-actions).+\\\\.(js|jsx|mjs|cjs|ts|tsx)$"
     ],

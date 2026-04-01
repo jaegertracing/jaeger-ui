@@ -17,6 +17,7 @@
     "composite": true,
     "outFile": "index.d.ts"
   },
+  "references": [{ "path": "../plexus/tsconfig.json" }],
   "files": [
     "src/components/App/index.tsx",
     "src/components/DependencyGraph/index.tsx",
