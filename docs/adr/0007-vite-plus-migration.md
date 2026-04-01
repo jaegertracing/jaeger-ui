@@ -44,9 +44,9 @@ This creates several pain points:
    `@babel/plugin-*` packages as dev dependencies.
 
 4. **Two tsconfig files for jaeger-ui**: `tsconfig.json` (used by Vite, requires `isolatedModules: true`)
-   and `tsconfig.lint.json` (used by `tsc --build`, requires `isolatedModules: false` and `composite: true`).
-   The split exists because Vite and `tsc --build` have incompatible requirements (see the comment in
-   `tsconfig.lint.json`). Vitest eliminates `isolatedModules` as a build-time constraint.
+   and `tsconfig.lint.json` (used by `tsc -p` for type-checking, uses `isolatedModules: false` and
+   `noEmit: true`). The split exists because Vite requires `isolatedModules: true` but full cross-file
+   type checking requires `false`. Vitest eliminates `isolatedModules` as a build-time constraint.
 
 5. **Legacy ESLint config in plexus**: `packages/plexus/.eslintrc.js` uses the legacy eslintrc format, which
    is deprecated. The root `eslint.config.js` already uses the modern flat config format.
@@ -279,28 +279,31 @@ Existing snapshot files should be re-generated once to confirm they are identica
 
 ---
 
-### 3. ESLint Config Consolidation
+### ✅ 3. ESLint Config Consolidation
 
-#### Current state
+**Implemented in full.** All three legacy ESLint config files are deleted; the root `eslint.config.js`
+now covers both packages without replacements.
 
-`packages/plexus/.eslintrc.js` uses legacy `eslintrc` format. The root `eslint.config.js` already uses flat
+#### Previous state
+
+`packages/plexus/.eslintrc.js` used legacy `eslintrc` format. The root `eslint.config.js` already used flat
 config. ESLint 10 still supports legacy configs via automatic config lookup, but the `.eslintrc.*` format is
 deprecated and will be removed.
 
-#### Change
+#### Changes made
 
-Delete `packages/plexus/.eslintrc.js` and add a `packages/plexus/eslint.config.js` in flat config format,
-or extend the root config to cover plexus explicitly. The minimal addition to the root `eslint.config.js` is
-pointing the TypeScript parser at `packages/plexus/tsconfig.json` (already done via the glob pattern
-`'./packages/*/tsconfig.json'` in `parserOptions.project`).
+- Deleted `packages/plexus/.eslintrc.js` — it only set `@typescript-eslint/recommended` and `prettier` for
+  TS files, both already provided by the root flat config via the `'./packages/*/tsconfig.json'` glob.
+- Deleted `packages/jaeger-ui/.eslintrc.js` — it declared globals for Vite `define` constants already
+  present in `commonGlobals` in the root flat config.
+- Deleted `packages/jaeger-ui/src/demo/.eslintrc` — obsolete demo override with no active effect.
+- Extended the root `eslint.config.js` TypeScript pattern from `**/*.{ts,tsx}` to `**/*.{ts,tsx,mts}` so
+  `vite.config.mts` is linted under the same TypeScript rules.
+- Added a `project: false` override for `packages/*/vite.config.mts` (not included in any tsconfig project).
+- Removed stale `/* eslint-disable import/no-extraneous-dependencies */` from `vite.config.mts` (plugin is
+  now named `import-x/`, and the rule is already `'off'` globally).
 
-If plexus needs package-specific overrides (it currently only sets `@typescript-eslint/recommended` and
-`prettier` for TS files, which the root config already provides), the `.eslintrc.js` can simply be deleted
-with no replacement.
-
-Similarly, `packages/jaeger-ui/.eslintrc.js` declares globals for Vite `define` constants — these are
-already declared in the root `eslint.config.js` `commonGlobals`. The `packages/jaeger-ui/.eslintrc.js` can
-be deleted.
+Result: 0 ESLint errors (250 pre-existing warnings, all `@typescript-eslint/no-explicit-any` or similar).
 
 ---
 
@@ -311,15 +314,17 @@ be deleted.
 The reason `packages/jaeger-ui/tsconfig.lint.json` exists is that:
 
 - Vite requires `isolatedModules: true` for correct behavior.
-- `tsc --build` (project references) requires `composite: true` and `isolatedModules: false`.
+- Full cross-file type checking (e.g. const enums, exhaustive narrowing) requires `isolatedModules: false`.
 
-With Vitest, the test runner uses Vite's transform pipeline. `isolatedModules` is no longer a Vite runtime
-constraint for the testing workflow. However, the root `tsconfig.json` uses project references for `tsc
---build`, which still applies.
+`tsc-lint` runs `tsc -p packages/jaeger-ui/tsconfig.lint.json` (with `noEmit: true`) rather than using
+project references (`tsc --build`). Project references were dropped because `composite: true` conflicts with
+`noEmit: true` and cross-package `paths` mappings.
 
-**Possible simplification**: Move `composite: true` and `outFile: "index.d.ts"` into the main
-`packages/jaeger-ui/tsconfig.json` and remove `tsconfig.lint.json`. The root `tsconfig.json` reference would
-point directly to `packages/jaeger-ui/tsconfig.json`.
+With Vitest, `isolatedModules` is no longer a Vite runtime constraint for the testing workflow. This opens
+the door to collapsing the two tsconfig files into one.
+
+**Possible simplification**: Remove `tsconfig.lint.json` entirely and run `tsc -p tsconfig.json --noEmit`
+for type-checking, after adding `isolatedModules: false` (or removing it) from the main tsconfig.
 
 This needs to be validated — see [Unknown 1](#unknown-1-tsconfig-consolidation----removing-tsconfiglintjson).
 
@@ -379,12 +384,12 @@ options).
 
 **Experiment**:
 1. In a branch, merge `tsconfig.lint.json` settings into `packages/jaeger-ui/tsconfig.json`.
-2. Update the root `tsconfig.json` reference from `packages/jaeger-ui/tsconfig.lint.json` to
-   `packages/jaeger-ui/tsconfig.json`.
+2. Update `tsc-lint` in root `package.json` to point directly at `packages/jaeger-ui/tsconfig.json`.
 3. Run `npm run tsc-lint` and `npm run build` in `jaeger-ui` and confirm both pass.
 4. Run `npm start` and confirm the Vite dev server does not log tsconfig-related warnings.
 
-**Success criteria**: `tsc --build` at the root succeeds with one tsconfig per package.
+**Success criteria**: `tsc -p packages/jaeger-ui/tsconfig.json --noEmit` succeeds with one tsconfig per
+package; Vite build is unaffected.
 
 ---
 
@@ -508,7 +513,7 @@ blocking unknowns can be opened and merged **right now**, independently of the r
 | PR | Description | Blocking unknowns | Can ship |
 |----|-------------|-------------------|----------|
 | ✅ A | Drop plexus library build; simplify plexus tsconfig; paths-based type resolution | None | Done |
-| B  | Delete legacy ESLint configs from both packages | None | Immediately |
+| ✅ B | Delete legacy ESLint configs from both packages | None | Done |
 | C  | Migrate plexus test runner to Vitest | Unknown 3, 4 | After investigation |
 | D  | Migrate jaeger-ui test runner to Vitest; remove root-level Babel deps | Unknown 2, 3, 4, 5 | After investigation |
 | E  | Consolidate `jaeger-ui` tsconfigs | Unknown 1 | After investigation |

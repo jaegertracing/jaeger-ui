@@ -140,7 +140,7 @@ export default [
 
   // TypeScript (.ts/.tsx)
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['**/*.{ts,tsx,mts}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -162,6 +162,14 @@ export default [
     rules: {
       ...baseRules,
       ...typescriptRules,
+    },
+  },
+
+  // Build tool configs not included in any tsconfig project — disable type-aware linting
+  {
+    files: ['packages/*/vite.config.mts'],
+    languageOptions: {
+      parserOptions: { project: false },
     },
   },
 

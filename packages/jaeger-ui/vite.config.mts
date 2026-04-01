@@ -1,7 +1,6 @@
 // Copyright (c) 2023 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-/* eslint-disable import/no-extraneous-dependencies */
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';

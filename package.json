@@ -68,7 +68,7 @@
     "generate:api-types": "openapi-zod-client https://raw.githubusercontent.com/jaegertracing/jaeger-idl/refs/heads/main/swagger/api_v3/query_service.openapi.yaml --output packages/jaeger-ui/src/api/v3/generated-client.ts --with-alias && node scripts/postprocess-schemas.cjs && prettier --write packages/jaeger-ui/src/api/v3/generated-client.ts",
     "test": "npm run --workspaces test --",
     "tsc-lint": "tsc -p packages/jaeger-ui/tsconfig.lint.json && tsc -p packages/plexus/tsconfig.json",
-    "tsc-lint-debug": "tsc -p packages/jaeger-ui/tsconfig.lint.json --listFiles",
+    "tsc-lint-debug": "tsc -p packages/jaeger-ui/tsconfig.lint.json --listFiles && tsc -p packages/plexus/tsconfig.json --listFiles",
     "start": "cd packages/jaeger-ui && npm run start",
     "update-snapshots": "cd packages/jaeger-ui && npm test -- -u"
   },

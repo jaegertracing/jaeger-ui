@@ -1,5 +1,6 @@
 {
   "name": "@jaegertracing/plexus",
+  "private": true,
   "license": "Apache-2.0",
   "version": "0.2.0",
   "description": "Directed Graph React component",
@@ -21,10 +22,7 @@
     "@types/jest": "30.0.0",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
-    "@typescript-eslint/eslint-plugin": "8.58.0",
-    "@typescript-eslint/parser": "8.58.0",
     "babel-jest": "30.3.0",
-    "eslint-config-prettier": "10.1.8",
     "identity-obj-proxy": "3.0.0",
     "jest": "30.3.0",
     "jest-environment-jsdom": "30.3.0",
