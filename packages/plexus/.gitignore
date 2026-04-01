@@ -2,6 +2,3 @@ dist
 lib
 
 tsconfig.tsbuildinfo
-
-# Prevent accidentally committing emitted .d.ts files from src/
-src/**/*.d.ts
