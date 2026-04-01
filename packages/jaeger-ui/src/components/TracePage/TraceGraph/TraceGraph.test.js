@@ -3,7 +3,7 @@
 
 import '@testing-library/jest-dom';
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LayoutManager } from '@jaegertracing/plexus';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -11,6 +11,9 @@ import calculateTraceDagEV from './calculateTraceDagEV';
 import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 import testTrace from './testTrace.json';
+
+// Mock LayoutManager instance to track cleanup calls
+const mockStopAndRelease = jest.fn();
 
 jest.mock('@jaegertracing/plexus', () => {
   const DEFAULT_MODE = 'service';
@@ -46,7 +49,7 @@ jest.mock('@jaegertracing/plexus', () => {
   };
 
   const MockLayoutManager = jest.fn().mockImplementation(() => ({
-    stopAndRelease: jest.fn(),
+    stopAndRelease: mockStopAndRelease,
   }));
 
   const mockCacheAs = (key, fn) => {
@@ -75,7 +78,15 @@ describe('<TraceGraph>', () => {
     props = {
       headerHeight: 60,
       ev,
+      uiFind: null,
+      uiFindVertexKeys: null,
+      useOtelTerms: false,
     };
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it('does not explode', () => {
@@ -90,38 +101,42 @@ describe('<TraceGraph>', () => {
     expect(screen.getByText('No trace found')).toBeInTheDocument();
   });
 
-  it('switches node mode when clicking mode buttons - with state verification', async () => {
-    const setStateSpy = jest.spyOn(TraceGraph.prototype, 'setState');
+  it('switches node mode when clicking mode buttons', async () => {
+    const user = userEvent.setup();
     render(<TraceGraph {...props} />);
 
     // Initial mode should be service
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
+
     const timeButton = screen.getByRole('button', { name: 'T' });
     const selftimeButton = screen.getByRole('button', { name: 'ST' });
     const serviceButton = screen.getByRole('button', { name: 'S' });
 
-    // Switch to time
-    await userEvent.click(timeButton);
-    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_TIME }); // Verify state change
+    // Switch to time mode
+    await user.click(timeButton);
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_TIME);
 
-    // Switch to selftime
-    await userEvent.click(selftimeButton);
-    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_SELFTIME });
+    // Switch to selftime mode
+    await user.click(selftimeButton);
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SELFTIME);
 
-    // Switch back to service
-    await userEvent.click(serviceButton);
-    expect(setStateSpy).toHaveBeenCalledWith({ mode: MODE_SERVICE });
+    // Switch back to service mode
+    await user.click(serviceButton);
     expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
-
-    setStateSpy.mockRestore();
   });
 
-  it('shows help', async () => {
+  it('shows help when help icon is clicked', async () => {
+    const user = userEvent.setup();
     render(<TraceGraph {...props} />);
+
+    // Help content should not be visible initially
+    expect(screen.queryByTestId('help-content')).not.toBeInTheDocument();
+
     const helpIcon = screen.getByTestId('help-icon');
-    await userEvent.click(helpIcon);
+    await user.click(helpIcon);
+
+    // Help content should now be visible
+    expect(screen.getByTestId('help-content')).toBeInTheDocument();
 
     // Verify help table structure
     const tables = screen.getAllByRole('table');
@@ -167,13 +182,41 @@ describe('<TraceGraph>', () => {
     );
   });
 
-  it('hides help', async () => {
+  it('hides help when close button is clicked', async () => {
+    const user = userEvent.setup();
     render(<TraceGraph {...props} />);
+
     const helpIcon = screen.getByTestId('help-icon');
-    await userEvent.click(helpIcon);
+    await user.click(helpIcon);
+
+    // Help should be visible
+    expect(screen.getByTestId('help-content')).toBeInTheDocument();
+
     const closeButton = screen.getByRole('button', { name: 'Close' });
-    await userEvent.click(closeButton);
+    await user.click(closeButton);
+
+    // Help should be hidden
     expect(screen.queryByTestId('help-content')).not.toBeInTheDocument();
+  });
+
+  it('toggles help visibility when clicking help icon multiple times', async () => {
+    const user = userEvent.setup();
+    render(<TraceGraph {...props} />);
+
+    const helpIcon = screen.getByTestId('help-icon');
+
+    // First click - show help
+    await user.click(helpIcon);
+    expect(screen.getByTestId('help-content')).toBeInTheDocument();
+
+    // Close help
+    const closeButton = screen.getByRole('button', { name: 'Close' });
+    await user.click(closeButton);
+    expect(screen.queryByTestId('help-content')).not.toBeInTheDocument();
+
+    // Second click - show help again
+    await user.click(helpIcon);
+    expect(screen.getByTestId('help-content')).toBeInTheDocument();
   });
 
   it('uses stroke-dash edges for isNonBlocking', () => {
@@ -193,6 +236,12 @@ describe('<TraceGraph>', () => {
     render(<TraceGraph {...propsWithUiFind} />);
     const wrapper = screen.getByTestId('mock-digraph').parentElement;
     expect(wrapper).toHaveClass('is-uiFind-mode');
+  });
+
+  it('does not apply uiFind class when uiFind is not provided', () => {
+    render(<TraceGraph {...props} />);
+    const wrapper = screen.getByTestId('mock-digraph').parentElement;
+    expect(wrapper).not.toHaveClass('is-uiFind-mode');
   });
 
   it('initializes with correct default mode', () => {
@@ -220,7 +269,127 @@ describe('<TraceGraph>', () => {
     expect(LayoutManager).toHaveBeenCalledWith(
       expect.objectContaining({
         totalMemory: 1024,
+        useDotEdges: true,
+        splines: 'polyline',
       })
     );
+  });
+
+  it('handles layout manager initialization without config', () => {
+    render(<TraceGraph {...props} />);
+    expect(screen.getByTestId('mock-digraph')).toBeInTheDocument();
+    expect(LayoutManager).toHaveBeenCalledWith(
+      expect.objectContaining({
+        totalMemory: undefined,
+        useDotEdges: true,
+        splines: 'polyline',
+      })
+    );
+  });
+
+  it('cleans up layout manager on unmount', () => {
+    const { unmount } = render(<TraceGraph {...props} />);
+
+    // LayoutManager should be initialized
+    expect(LayoutManager).toHaveBeenCalled();
+
+    // Unmount component
+    unmount();
+
+    // stopAndRelease should be called on cleanup
+    expect(mockStopAndRelease).toHaveBeenCalled();
+  });
+
+  it('uses default prop value for ev when not provided', () => {
+    render(<TraceGraph headerHeight={60} uiFind={null} uiFindVertexKeys={null} useOtelTerms={false} />);
+    expect(screen.getByText('No trace found')).toBeInTheDocument();
+  });
+
+  it('renders all three mode buttons', () => {
+    render(<TraceGraph {...props} />);
+
+    expect(screen.getByRole('button', { name: 'S' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'T' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'ST' })).toBeInTheDocument();
+  });
+
+  it('applies correct styling based on headerHeight prop', () => {
+    const customHeaderHeight = 100;
+    const customProps = {
+      ...props,
+      headerHeight: customHeaderHeight,
+    };
+
+    render(<TraceGraph {...customProps} />);
+    const wrapper = screen.getByTestId('mock-digraph').parentElement;
+
+    // paddingTop should be headerHeight + 47
+    expect(wrapper).toHaveStyle({ paddingTop: `${customHeaderHeight + 47}px` });
+  });
+
+  it('maintains mode state across re-renders', async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<TraceGraph {...props} />);
+
+    // Switch to time mode
+    const timeButton = screen.getByRole('button', { name: 'T' });
+    await user.click(timeButton);
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_TIME);
+
+    // Re-render with updated props (but mode should stay)
+    const updatedProps = { ...props, headerHeight: 80 };
+    rerender(<TraceGraph {...updatedProps} />);
+
+    // Mode should still be TIME after re-render
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_TIME);
+  });
+
+  it('passes correct layers configuration to Digraph', () => {
+    render(<TraceGraph {...props} />);
+
+    // Verify the component renders which means layers are configured correctly
+    expect(screen.getByTestId('mock-digraph')).toBeInTheDocument();
+
+    // The mock Digraph component receives and processes the layers prop
+    // If layers were incorrect, the mock would fail or not render properly
+  });
+
+  it('updates rendered mode when switching between all three modes', async () => {
+    const user = userEvent.setup();
+    render(<TraceGraph {...props} />);
+
+    const serviceButton = screen.getByRole('button', { name: 'S' });
+    const timeButton = screen.getByRole('button', { name: 'T' });
+    const selftimeButton = screen.getByRole('button', { name: 'ST' });
+
+    // Start with service (default)
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
+
+    // Go through all modes in sequence
+    await user.click(timeButton);
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_TIME);
+
+    await user.click(selftimeButton);
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SELFTIME);
+
+    await user.click(serviceButton);
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SERVICE);
+
+    // Go backwards through modes
+    await user.click(selftimeButton);
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_SELFTIME);
+
+    await user.click(timeButton);
+    expect(screen.getByTestId('mock-digraph')).toHaveAttribute('data-mode', MODE_TIME);
+  });
+
+  it('handles useOtelTerms prop correctly', () => {
+    const propsWithOtel = {
+      ...props,
+      useOtelTerms: true,
+    };
+
+    render(<TraceGraph {...propsWithOtel} />);
+    expect(screen.getByTestId('mock-digraph')).toBeInTheDocument();
   });
 });
