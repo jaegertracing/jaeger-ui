@@ -69,7 +69,7 @@ monorepo:
 Migrate both packages to a full Vite+ toolchain:
 
 1. ✅ **Drop the `packages/plexus` library build entirely** — remove Webpack, Babel CLI, and all associated
-   config. Type-checking is retained via the root `tsc --build` project reference.
+   config. Type declarations are resolved from source via `paths`; `tsc-lint` runs `tsc -p` per package.
 2. Replace Jest + Babel in both packages with **Vitest**.
 3. Delete all Babel configuration files and Babel-related dev dependencies.
 4. Migrate `packages/plexus/.eslintrc.js` to the flat config format (consolidate into root `eslint.config.js`
@@ -87,13 +87,12 @@ the package via a workspace source alias (`@jaegertracing/plexus` → `../plexus
 the built `lib/` or `dist/` artifacts. The entire build pipeline — Babel CLI, Webpack, rimraf — exists
 solely to produce output that no one uses.
 
-**Implemented**: The build is deleted. Type-checking is retained via the root `tsc --build` project
-reference.
+**Implemented in full.** Webpack and Babel CLI are deleted; the `plexus` tsconfig is a pure type-check
+config; `tsc-lint` resolves plexus types directly from source via `paths`.
 
 #### ✅ 1a. Update `packages/plexus/package.json`
 
-- ✅ **Removed** from `devDependencies` (build-only packages — had no effect on the jaeger-ui
-  production bundle, which resolves plexus via the workspace source alias and never invokes these):
+- ✅ **Removed** from `devDependencies` (build-only packages):
   - `webpack`, `webpack-cli`, `webpack-node-externals`, `clean-webpack-plugin`, `babel-loader`
   - `babel-plugin-transform-react-remove-prop-types`
   - `@babel/plugin-syntax-dynamic-import`, `@babel/plugin-transform-class-properties`
@@ -101,68 +100,62 @@ reference.
 
 - **Remaining Babel deps** (`@babel/preset-env`, `@babel/preset-react`, `@babel/preset-typescript`,
   `@babel/plugin-transform-private-methods`, `babel-jest`) are used solely by the Jest test runner
-  via `packages/plexus/test/babel-transform.js`. They are unaffected by PR A and will be removed
-  in PR C when the plexus test runner is migrated to Vitest.
+  via `packages/plexus/test/babel-transform.js`. They will be removed in PR C when the plexus test
+  runner is migrated to Vitest.
 
 - ✅ **Replaced `build` script** (5-step Babel+Webpack pipeline) with `tsc --noEmit`. Removed
   `prepublishOnly` and all `_tasks/*` scripts.
 
 - ✅ **Removed `files`** array — dead weight for an unpublished package.
 
-- **`main` field intentionally kept**: `"main": "lib/index.js"` is still required so that
-  `tsc --build` (via the root project reference) can locate the emitted declarations for jaeger-ui's
-  type resolution. Removing it would break `tsc-lint`. Cleaning this up — along with removing the
-  emit from `packages/plexus/tsconfig.json` — is deferred to PR E (tsconfig consolidation), which
-  will replace the `main`-based resolution with a direct `paths` mapping or `types` field pointing
-  at the source.
-
 - ✅ **Deleted files**:
   - `packages/plexus/babel.config.js`
   - `packages/plexus/webpack.umd.config.js`
   - `packages/plexus/webpack-factory.js`
 
-- ✅ **Updated `scripts/generateDepcheckrcPlexus.js`**: Removed the `babel.config.js` import and
-  the code that processed it. The script now introspects only `test/babel-transform.js` for the
-  test-related packages that depcheck cannot detect statically.
+- ✅ **Updated `scripts/generateDepcheckrcPlexus.js`**: removed the `babel.config.js` import and
+  the code that processed it.
 
-- ✅ **Updated root `package.json` `prepare` script**: Removed the `npm run --workspace
-  @jaegertracing/plexus prepublishOnly` call, which would fail since `prepublishOnly` no longer
-  exists.
+- ✅ **Updated root `package.json` `prepare` script**: removed the `prepublishOnly` invocation.
 
-#### Prop-types removal
+#### ✅ Prop-types removal (non-issue)
 
-`packages/plexus/babel.config.js` applies `babel-plugin-transform-react-remove-prop-types` with
-`removeImport: true`. Since the library build is dropped, this only matters for the production
-`jaeger-ui` bundle. The `jaeger-ui` Vite config (`vite.config.mts`) does not currently apply this
-plugin, which means plexus `propTypes` declarations — if any exist — are already reaching the
-production bundle. Audit plexus source files for `propTypes` usage; if none are found the question is
-moot. If they are found, the fix belongs in `jaeger-ui`'s `vite.config.mts`, not in plexus.
+`packages/plexus/babel.config.js` applied `babel-plugin-transform-react-remove-prop-types`. Audit
+found **no `propTypes` declarations** anywhere in `packages/plexus/src/`. The plugin was a no-op.
+No action needed.
 
-#### 1b. Update `packages/plexus/tsconfig.json`
+#### ✅ 1b. Update `packages/plexus/tsconfig.json`
 
-With no build emitting declarations, the tsconfig no longer needs `emitDeclarationOnly`, `outDir`, or
-`rootDir`. It becomes a pure type-check config. `composite: true` is still required by the root project
-reference:
+The tsconfig is now a pure type-check config — `emitDeclarationOnly`, `outDir`, `rootDir`, `composite`,
+and `declaration` are all removed. `noEmit: true` replaces them.
+
+The prerequisite for this change was eliminating jaeger-ui's dependency on `lib/*.d.ts` for module
+resolution. This is done via `paths` in `packages/jaeger-ui/tsconfig.json`:
 
 ```json
-{
-  "compilerOptions": {
-    "target": "es2016",
-    "lib": ["es2017", "dom", "dom.iterable", "webworker"],
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "composite": true,
-    "jsx": "react-jsx"
-  },
-  "include": ["src", "./typings"]
+"paths": {
+  "@jaegertracing/plexus": ["../plexus/src/index.ts"],
+  "@jaegertracing/plexus/lib/*": ["../plexus/src/*"]
 }
 ```
+
+With this mapping, `@jaegertracing/plexus/lib/types` → `packages/plexus/src/types/index.ts` at
+type-check time, and `lib/` never needs to exist. The Jest `moduleNameMapper` in
+`packages/jaeger-ui/package.json` applies the equivalent mapping at test time.
+
+`tsc-lint` is updated to run `tsc -p` for each package directly instead of `tsc --build` (project
+references required `composite: true` which conflicts with `noEmit: true` and cross-package `paths`):
+
+```json
+"tsc-lint": "tsc -p packages/jaeger-ui/tsconfig.lint.json && tsc -p packages/plexus/tsconfig.json"
+```
+
+`packages/jaeger-ui/tsconfig.lint.json` is also simplified — `composite`, `outFile`, and the plexus
+`references` entry are all removed. `noEmit: true` is added. The file now only overrides
+`isolatedModules: false` (Vite requires `true`; full cross-file type checking requires `false`).
+
+`"main": "lib/index.js"` in `packages/plexus/package.json` is now dead weight (nothing reads it) and
+will be cleaned up in PR E along with other package.json housekeeping.
 
 ---
 
@@ -514,7 +507,7 @@ blocking unknowns can be opened and merged **right now**, independently of the r
 
 | PR | Description | Blocking unknowns | Can ship |
 |----|-------------|-------------------|----------|
-| ✅ A | Drop plexus library build (Webpack + Babel CLI + related scripts) | None | Done |
+| ✅ A | Drop plexus library build; simplify plexus tsconfig; paths-based type resolution | None | Done |
 | B  | Delete legacy ESLint configs from both packages | None | Immediately |
 | C  | Migrate plexus test runner to Vitest | Unknown 3, 4 | After investigation |
 | D  | Migrate jaeger-ui test runner to Vitest; remove root-level Babel deps | Unknown 2, 3, 4, 5 | After investigation |
