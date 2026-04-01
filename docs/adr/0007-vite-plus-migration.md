@@ -9,8 +9,9 @@
 
 Replace the current fragmented toolchain with **Vite+** (`vp` CLI, [viteplus.dev](https://viteplus.dev)) —
 a unified, native-performance toolchain that covers building (Rolldown), linting (Oxlint), formatting
-(Oxfmt), and testing (Vitest). This eliminates Webpack, Babel, ESLint, Prettier, and Jest in favour of a
-single dependency with built-in TypeScript support that is not blocked by `@typescript-eslint` release lag.
+(Oxfmt), and testing (Vitest). Once fully rolled out, this migration will replace Webpack, Babel, ESLint,
+Prettier, and Jest with a single dependency that has built-in TypeScript support and is not blocked by
+`@typescript-eslint` release lag.
 
 ---
 

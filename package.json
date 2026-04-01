@@ -40,7 +40,7 @@
     "prettier": "3.8.1",
     "rxjs-compat": "6.6.7",
     "typescript": "5.9.3",
-    "vite-plus": "^0.1.15"
+    "vite-plus": "0.1.15"
   },
   "overrides": {
     "react": "19.2.0",
