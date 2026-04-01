@@ -7,84 +7,86 @@
 
 ## TL;DR
 
-Replace the current hybrid build toolchain (Vite for `jaeger-ui`, Webpack + Babel for `plexus`, Jest + Babel
-for testing in both packages) with a unified Vite-based toolchain across the entire monorepo. This eliminates
-Webpack, the Babel CLI, all Babel presets/plugins, and migrates from Jest to Vitest — resulting in fewer
-dependencies, faster builds and tests, and a single mental model for all tooling.
+Replace the current fragmented toolchain with **Vite+** (`vp` CLI, [viteplus.dev](https://viteplus.dev)) —
+a unified, native-performance toolchain that covers building (Rolldown), linting (Oxlint), formatting
+(Oxfmt), and testing (Vitest). This eliminates Webpack, Babel, ESLint, Prettier, and Jest in favour of a
+single dependency with built-in TypeScript support that is not blocked by `@typescript-eslint` release lag.
 
 ---
 
 ## Context & Problem
 
-### Current State
+### Current State (after PRs A and B)
 
-The monorepo uses two distinct build toolchains that co-exist uneasily:
+| Concern          | `packages/jaeger-ui`               | `packages/plexus`                  |
+| ---------------- | ---------------------------------- | ---------------------------------- |
+| Dev server       | Vite 8                             | n/a                                |
+| Production build | Vite 8 (Rolldown engine)           | ✅ dropped                         |
+| Testing          | Jest 30 + `babel-jest`             | Jest 30 + `babel-jest`             |
+| TypeScript       | `tsc` (type-check only, 2 configs) | `tsc` (noEmit, source only)        |
+| Linting          | ESLint 10 (flat config)            | ESLint 10 (flat config)            |
+| Formatting       | Prettier                           | Prettier                           |
 
-| Concern          | `packages/jaeger-ui`                    | `packages/plexus`                        |
-| ---------------- | --------------------------------------- | ---------------------------------------- |
-| Dev server       | Vite 8                                  | n/a                                      |
-| Production build | Vite 8 (Rolldown engine)                | Babel CLI (`lib/`) + Webpack 5 (`dist/`) — unused |
-| Testing          | Jest 30 + `babel-jest` transformer      | Jest 30 + `babel-jest` transformer       |
-| TypeScript       | `tsc` (type-check only, two tsconfigs)  | `tsc` (declarations + type-check)        |
-| ESLint           | Legacy `.eslintrc.js` + root flat config | Legacy `.eslintrc.js`                    |
+### Pain Points
 
-This creates several pain points:
+1. **Node-based linting/formatting is slow**: ESLint + Prettier on a codebase this size takes tens of
+   seconds in CI. Oxlint (Rust-based, part of Vite+) is 50–100× faster, reducing lint time to under
+   a second.
 
-1. **Two transform pipelines for tests**: Babel is maintained purely for Jest. It diverges from Vite's
-   esbuild/oxc pipeline, so code that works at runtime can subtly differ from what is tested.
+2. **TypeScript upgrade blocked by `@typescript-eslint`**: `@typescript-eslint/parser` must be updated
+   to support each new TypeScript release and typically lags by weeks to months. Oxlint has built-in
+   TypeScript support via oxc — no separate parser, no peer-dependency lag. This directly unblocks
+   upgrading to TypeScript 6 / TypeScript 7 (Project Corsa).
 
-2. **ESM workaround in tests**: `redux-actions` 3.x is ESM-only and uses `import.meta.NODE_ENV`. Jest runs
-   in CommonJS mode, requiring a custom Babel plugin (`importMetaTransform` in
-   `packages/jaeger-ui/test/babel-transform.js`) to rewrite `import.meta` to `process` at test time. This is
-   a fragile hack that would not be needed under a native ESM test runner.
-
-3. **Webpack in plexus**: `packages/plexus` builds a UMD bundle via Webpack 5 and its lib via Babel CLI.
-   Both are separate tools from Vite, adding `webpack`, `webpack-cli`, `webpack-node-externals`,
-   `clean-webpack-plugin`, `babel-loader`, `babel-plugin-transform-react-remove-prop-types`, and multiple
-   `@babel/plugin-*` packages as dev dependencies.
-
-4. **Two tsconfig files for jaeger-ui**: `tsconfig.json` (used by Vite, requires `isolatedModules: true`)
+3. **Two tsconfig files for jaeger-ui**: `tsconfig.json` (used by Vite, requires `isolatedModules: true`)
    and `tsconfig.lint.json` (used by `tsc -p` for type-checking, uses `isolatedModules: false` and
    `noEmit: true`). The split exists because Vite requires `isolatedModules: true` but full cross-file
-   type checking requires `false`. Vitest eliminates `isolatedModules` as a build-time constraint.
+   type checking requires `false`. Vitest eliminates `isolatedModules` as a constraint.
 
-5. **Legacy ESLint config in plexus**: `packages/plexus/.eslintrc.js` uses the legacy eslintrc format, which
-   is deprecated. The root `eslint.config.js` already uses the modern flat config format.
+4. **Jest + Babel test runner diverges from the build pipeline**: Jest uses `babel-jest` + a custom Babel
+   plugin to work around `import.meta.NODE_ENV` in ESM-only packages (see
+   `packages/jaeger-ui/test/babel-transform.js`). Vitest runs through the same Vite transform pipeline
+   as the production build, eliminating this class of workaround.
 
 ### Why "Vite+"?
 
-"Vite+" refers to adopting Vite as the single tool for building, testing, and dev-serving across the entire
-monorepo:
+"Vite+" refers specifically to the `vp` CLI from [viteplus.dev](https://viteplus.dev) — a batteries-included
+toolchain that wraps:
 
-- The `plexus` **library build is dropped entirely**. `@jaegertracing/plexus` is no longer published to npm;
-  the only consumer is `jaeger-ui` via a workspace source alias. There is nothing to build.
-- **Vitest** replaces Jest + Babel for testing in both packages. Vitest shares Vite's transform pipeline, so
-  the test environment matches the production build environment exactly.
-- All Babel infrastructure is eliminated.
+- **Vite / Rolldown** — dev server and production builds (already in use)
+- **Oxlint** — replaces ESLint; built-in rules for TypeScript, React hooks, and more
+- **Oxfmt** — replaces Prettier; native formatting
+- **Vitest** — replaces Jest; shares the Vite transform pipeline
+
+The key advantage over assembling these tools individually is that Vite+ internalises plugin compatibility,
+so TypeScript upgrades do not require waiting for `@typescript-eslint` to catch up.
 
 ---
 
 ## Decision
 
-Migrate both packages to a full Vite+ toolchain:
+Migrate the monorepo to Vite+ in phases:
 
-1. ✅ **Drop the `packages/plexus` library build entirely** — remove Webpack, Babel CLI, and all associated
-   config. Type declarations are resolved from source via `paths`; `tsc-lint` runs `tsc -p` per package.
-2. Replace Jest + Babel in both packages with **Vitest**.
-3. Delete all Babel configuration files and Babel-related dev dependencies.
-4. Migrate `packages/plexus/.eslintrc.js` to the flat config format (consolidate into root `eslint.config.js`
-   or a per-package `eslint.config.js`).
-5. Simplify the `packages/jaeger-ui` tsconfig situation (potentially collapsing two files into one).
+1. ✅ **Drop the `packages/plexus` library build** — Webpack, Babel CLI, and all associated config removed.
+2. ✅ **Consolidate legacy ESLint configs** — delete per-package `.eslintrc.*` files; root `eslint.config.js`
+   now covers both packages. This is preparatory cleanup before replacing ESLint with Oxlint.
+3. **Replace ESLint with Oxlint** — unblocks TypeScript 6/7 upgrade.
+4. **Replace Prettier with Oxfmt** — independent of 3; no urgency.
+5. **Upgrade TypeScript** — once `@typescript-eslint` is no longer in the dependency tree.
+6. **Consolidate jaeger-ui tsconfigs** — collapse `tsconfig.lint.json` into `tsconfig.json` (easier after
+   Vitest removes the `isolatedModules` constraint).
+7. **Replace Jest + Babel with Vitest** — deferred; significant migration effort, but the correct
+   long-term direction.
 
 ---
 
 ## Detailed Change Plan
 
-### ✅ 1. `packages/plexus` — Drop the Library Build
+### ✅ 1. `packages/plexus` — Drop the Library Build ([#3677](https://github.com/jaegertracing/jaeger-ui/pull/3677), [#3680](https://github.com/jaegertracing/jaeger-ui/pull/3680))
 
 `@jaegertracing/plexus` is no longer published to npm. The only consumer is `jaeger-ui`, which resolves
 the package via a workspace source alias (`@jaegertracing/plexus` → `../plexus/src`) and never touches
-the built `lib/` or `dist/` artifacts. The entire build pipeline — Babel CLI, Webpack, rimraf — exists
+the built `lib/` or `dist/` artifacts. The entire build pipeline — Babel CLI, Webpack, rimraf — existed
 solely to produce output that no one uses.
 
 **Implemented in full.** Webpack and Babel CLI are deleted; the `plexus` tsconfig is a pure type-check
@@ -100,13 +102,15 @@ config; `tsc-lint` resolves plexus types directly from source via `paths`.
 
 - **Remaining Babel deps** (`@babel/preset-env`, `@babel/preset-react`, `@babel/preset-typescript`,
   `@babel/plugin-transform-private-methods`, `babel-jest`) are used solely by the Jest test runner
-  via `packages/plexus/test/babel-transform.js`. They will be removed in PR C when the plexus test
+  via `packages/plexus/test/babel-transform.js`. They will be removed in PR F when the plexus test
   runner is migrated to Vitest.
 
 - ✅ **Replaced `build` script** (5-step Babel+Webpack pipeline) with `tsc --noEmit`. Removed
   `prepublishOnly` and all `_tasks/*` scripts.
 
 - ✅ **Removed `files`** array — dead weight for an unpublished package.
+
+- ✅ **Added `private: true`** — prevents accidental publish to npm.
 
 - ✅ **Deleted files**:
   - `packages/plexus/babel.config.js`
@@ -155,145 +159,20 @@ references required `composite: true` which conflicts with `noEmit: true` and cr
 `isolatedModules: false` (Vite requires `true`; full cross-file type checking requires `false`).
 
 `"main": "lib/index.js"` in `packages/plexus/package.json` is now dead weight (nothing reads it) and
-will be cleaned up in PR E along with other package.json housekeeping.
+will be cleaned up in PR E along with tsconfig housekeeping.
 
 ---
 
-### 2. Both Packages — Replace Jest + Babel with Vitest
-
-#### 2a. Add Vitest configuration
-
-Vitest is configured inside the package's `vite.config.ts`. A `vitest.config.ts` is an alternative if
-keeping the Vite dev/build config separate is preferred (valid for `jaeger-ui`).
-
-**`packages/jaeger-ui/vitest.config.ts`** (or merged into `vite.config.mts` under `test:`):
-
-```typescript
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
-
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    environment: 'jsdom',
-    globals: true, // makes describe/it/expect available without import
-    setupFiles: ['./test/vitest-setup.ts'],
-    coverage: {
-      provider: 'v8',
-      include: ['src/**/*.{ts,tsx}'],
-      exclude: [
-        'src/**/*.d.ts',
-        'src/setup*.js',
-        'src/utils/DraggableManager/demo/**',
-        'src/utils/test/**',
-        'src/demo/**',
-        'src/types/**',
-      ],
-    },
-  },
-  define: {
-    __REACT_APP_GA_DEBUG__: JSON.stringify(''),
-    __REACT_APP_VSN_STATE__: JSON.stringify(''),
-    __APP_ENVIRONMENT__: JSON.stringify('test'),
-  },
-});
-```
-
-#### 2b. Migrate test setup files
-
-The existing `packages/jaeger-ui/test/jest-per-test-setup.js` mostly maps directly to Vitest. Key
-differences:
-
-- Replace `jest.fn()` with `vi.fn()` (or enable `globals: true` to keep `jest` as alias — Vitest supports
-  this via `globals: true` + `@vitest/globals`).
-- `@testing-library/jest-dom` is compatible with Vitest when imported via
-  `'@testing-library/jest-dom/vitest'`.
-- The `globalSetup` file (`test/jest.global-setup.js`) sets `process.env.TZ = 'UTC'`. This maps to Vitest's
-  `globalSetup` option.
-- The `importMetaTransform` Babel plugin in `test/babel-transform.js` is entirely eliminated — Vitest runs
-  native ESM and `import.meta` is valid in the test environment.
-
-Rename `test/jest-per-test-setup.js` → `test/vitest-setup.ts` and update it:
-
-```typescript
-import { vi, afterEach } from 'vitest';
-import '@testing-library/jest-dom/vitest';
-import { polyfill as rafPolyfill } from '../src/utils/test/requestAnimationFrame';
-
-rafPolyfill();
-// ... rest of setup unchanged, replacing jest.fn() with vi.fn()
-```
-
-#### 2c. Snapshot tests
-
-Vitest uses `@vitest/snapshot` which is compatible with Jest's snapshot format (same `.snap` file syntax).
-Existing snapshot files should be re-generated once to confirm they are identical. The root-level
-`update-snapshots` script becomes:
-
-```json
-"update-snapshots": "cd packages/jaeger-ui && npx vitest run --update"
-```
-
-#### 2d. Update `packages/jaeger-ui/package.json`
-
-- **Remove** from `devDependencies`:
-  - `babel-jest`, `babel-plugin-react-remove-properties`
-  - `@babel/preset-env`, `@babel/preset-react`, `@babel/preset-typescript`
-  - `jest`, `jest-environment-jsdom`, `jest-junit`
-  - `@types/jest`
-
-- **Add** to `devDependencies`:
-  - `vitest`
-  - `@vitest/coverage-v8`
-  - `@vitest/ui` (optional, for interactive test UI)
-
-- **Update `scripts`**:
-
-  ```json
-  {
-    "scripts": {
-      "test": "vitest run --reporter=verbose",
-      "test-ci": "CI=1 vitest run --reporter=verbose",
-      "coverage": "vitest run --coverage"
-    }
-  }
-  ```
-
-- **Remove** the `jest` config block from `package.json` entirely.
-
-- **Delete files**:
-  - `packages/jaeger-ui/test/babel-transform.js`
-  - `packages/jaeger-ui/test/generic-file-transform.js` (replaced by Vite's built-in asset handling)
-  - `packages/jaeger-ui/test/jest.global-setup.js` (merged into vitest config `globalSetup`)
-
-#### 2e. Root-level `package.json` changes
-
-- Remove from `devDependencies`:
-  - `@babel/cli`, `@babel/core` (no longer needed anywhere)
-  - `babel-jest` (not in root but verify no root-level usage)
-
-- The root `test` script remains:
-  ```json
-  "test": "npm run --workspaces test --"
-  ```
-
----
-
-### ✅ 3. ESLint Config Consolidation
+### ✅ 2. ESLint Config Consolidation — preparatory cleanup ([#3681](https://github.com/jaegertracing/jaeger-ui/pull/3681))
 
 **Implemented in full.** All three legacy ESLint config files are deleted; the root `eslint.config.js`
-now covers both packages without replacements.
-
-#### Previous state
-
-`packages/plexus/.eslintrc.js` used legacy `eslintrc` format. The root `eslint.config.js` already used flat
-config. ESLint 10 still supports legacy configs via automatic config lookup, but the `.eslintrc.*` format is
-deprecated and will be removed.
+now covers both packages. This is a preparatory step — the consolidated flat config will be the thing
+replaced by Oxlint in PR C.
 
 #### Changes made
 
-- Deleted `packages/plexus/.eslintrc.js` — it only set `@typescript-eslint/recommended` and `prettier` for
-  TS files, both already provided by the root flat config via the `'./packages/*/tsconfig.json'` glob.
+- Deleted `packages/plexus/.eslintrc.js` — it only set `@typescript-eslint/recommended` and `prettier`
+  for TS files, both already provided by the root flat config via the `'./packages/*/tsconfig.json'` glob.
 - Deleted `packages/jaeger-ui/.eslintrc.js` — it declared globals for Vite `define` constants already
   present in `commonGlobals` in the root flat config.
 - Deleted `packages/jaeger-ui/src/demo/.eslintrc` — obsolete demo override with no active effect.
@@ -302,12 +181,54 @@ deprecated and will be removed.
 - Added a `project: false` override for `packages/*/vite.config.mts` (not included in any tsconfig project).
 - Removed stale `/* eslint-disable import/no-extraneous-dependencies */` from `vite.config.mts` (plugin is
   now named `import-x/`, and the rule is already `'off'` globally).
+- Removed `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`, `eslint-config-prettier` from
+  `packages/plexus/package.json` — these were only referenced by the deleted `.eslintrc.js`.
 
 Result: 0 ESLint errors (250 pre-existing warnings, all `@typescript-eslint/no-explicit-any` or similar).
 
 ---
 
-### 4. TypeScript Config Simplification
+### 3. Replace ESLint with Oxlint (PR C1)
+
+Oxlint is the linting component of the Vite+ toolchain. It is Rust-based and has no dependency on
+`@typescript-eslint`, directly unblocking TypeScript 6/7 upgrades.
+
+Key considerations:
+
+- Oxlint supports 600+ ESLint-compatible rules including React hooks rules (`rules-of-hooks`,
+  `exhaustive-deps`). Rule-by-rule audit needed to confirm parity with the current active ruleset.
+- `eslint-disable` inline comments in source files will need to be migrated or removed.
+- CI `lint` script and `lint-staged` hooks will need updating.
+
+See [Unknown 2](#unknown-2-oxlint-rule-coverage) for the rule coverage investigation.
+
+---
+
+### 4. Replace Prettier with Oxfmt (PR C2)
+
+Oxfmt is the formatting component of the Vite+ toolchain. It is Prettier-compatible (same output for
+most cases). This PR is independent of C1 and D — Prettier has no version-lag problem, so there is no
+urgency. Can be done any time.
+
+Key considerations:
+
+- Existing `prettier` config in root `package.json` maps to Oxfmt config; verify output parity.
+- `husky` pre-commit hooks and `lint-staged` config will need updating.
+- CI `prettier-lint` script will need updating.
+
+---
+
+### 5. Upgrade TypeScript (PR D)
+
+Once `@typescript-eslint/parser` and `@typescript-eslint/eslint-plugin` are removed from the dependency
+tree (after PR C), TypeScript can be upgraded freely without waiting for plugin compatibility.
+
+Target: TypeScript 6.x (current blocking dependency is `@typescript-eslint`).
+Stretch: TypeScript 7 (Project Corsa) — native Go-based type checker; Vite+ is designed for this.
+
+---
+
+### 6. TypeScript Config Simplification (PR E)
 
 #### Current dual-tsconfig in `jaeger-ui`
 
@@ -330,13 +251,13 @@ This needs to be validated — see [Unknown 1](#unknown-1-tsconfig-consolidation
 
 ---
 
-### 5. CI Workflow Changes
+### 7. CI Workflow Changes
 
 #### `.github/workflows/lint-build.yml`
 
-No structural changes needed. The `npm run build` command continues to invoke Vite for both packages. The
-`depcheck` step will need its configuration updated to remove references to Webpack/Babel packages that are
-being deleted. Check `scripts/run-depcheck.sh` for any hardcoded Babel/Webpack allowlists.
+The `lint` script will change from `eslint` + `prettier` to `vp check` (or separate `oxlint` + `oxfmt`
+invocations). The `depcheck` step will need its configuration updated to remove references to ESLint/Prettier
+packages being deleted.
 
 #### `.github/workflows/unit-tests.yml`
 
@@ -354,22 +275,37 @@ No changes to the workflow YAML itself are expected; the Codecov upload step con
 
 #### `.github/workflows/check_bundle.yml`
 
-No changes needed — this workflow runs `npm run build` and measures `du -sb packages/jaeger-ui/build`, both
-of which are unaffected by switching the test runner.
+No changes needed — this workflow runs `npm run build` and measures `du -sb packages/jaeger-ui/build`,
+both of which are unaffected by switching the lint/test tooling.
 
 ---
 
-### 6. Documentation Changes
+### 8. Both Packages — Replace Jest + Babel with Vitest (PR F)
+
+**Deferred.** The migration is the correct long-term direction but carries significant effort:
+
+- `jest.fn()` → `vi.fn()` across the test suite
+- `@testing-library/jest-dom` import path changes
+- `importMetaTransform` Babel plugin in `test/babel-transform.js` is eliminated (Vitest runs native ESM)
+- Snapshot files may need regeneration
+- See Unknowns 3–6 for the investigation plan
+
+Both packages continue to use Jest 30 + `babel-jest` until PR F is ready.
+
+---
+
+### 9. Documentation Changes (PR G)
 
 - Update `CLAUDE.md`:
-  - Replace references to `babel-transform.js` and `jest` configuration in the Testing section.
+  - Replace ESLint/Prettier commands with `vp check` equivalents.
+  - Replace Jest/`npm test` references with Vitest commands.
   - Replace `npm test -- --testPathPattern=<pattern>` with `npx vitest run <pattern>`.
   - Replace `npm run update-snapshots` guidance.
 
 - Update `README.md` (if it mentions Jest or Babel in the dev setup section).
 
 - Delete or archive `packages/jaeger-ui/test/babel-transform.js` (it has a detailed comment explaining the
-  `import.meta` workaround — preserve this context in the ADR or a commit message for future reference).
+  `import.meta` workaround — preserve context in the ADR or a commit message).
 
 ---
 
@@ -377,10 +313,9 @@ of which are unaffected by switching the test runner.
 
 ### Unknown 1: tsconfig consolidation — removing `tsconfig.lint.json`
 
-**Risk**: `composite: true` requires `declaration: true` (or `emitDeclarationOnly: true`) and a defined
-`outDir`/`outFile`. Folding these into `tsconfig.json` may conflict with Vite's own tsconfig interpretation
-(Vite reads `tsconfig.json` for path aliases and plugin resolution, and may warn on unexpected compiler
-options).
+**Risk**: Folding `isolatedModules: false` into `tsconfig.json` may conflict with Vite's own tsconfig
+interpretation (Vite reads `tsconfig.json` for path aliases and plugin resolution, and may warn on
+unexpected compiler options).
 
 **Experiment**:
 1. In a branch, merge `tsconfig.lint.json` settings into `packages/jaeger-ui/tsconfig.json`.
@@ -393,10 +328,26 @@ package; Vite build is unaffected.
 
 ---
 
-### Unknown 2: Vitest snapshot compatibility
+### Unknown 2: Oxlint rule coverage
 
-**Risk**: Vitest's snapshot serializer may produce subtly different output for component snapshots compared to
-Jest's `jest-snapshot`. Existing `.snap` files may need to be regenerated even if functionally equivalent.
+**Risk**: Oxlint may not have direct equivalents for all currently active ESLint rules. The most critical
+rules to verify are `react-x/rules-of-hooks` and `react-x/exhaustive-deps`.
+
+**Experiment**:
+1. Audit the active rules in root `eslint.config.js` (those set to `error` or `warn`, not `off`).
+2. For each active rule, confirm the Oxlint equivalent rule name and that it is available in the Vite+
+   version in use.
+3. Run `oxlint` on the codebase and compare findings against current ESLint warnings.
+
+**Success criteria**: All currently-enforced rules have Oxlint equivalents, or a deliberate decision is
+made to drop each one that does not.
+
+---
+
+### Unknown 3: Vitest snapshot compatibility
+
+**Risk**: Vitest's snapshot serializer may produce subtly different output for component snapshots compared
+to Jest's `jest-snapshot`. Existing `.snap` files may need to be regenerated even if functionally equivalent.
 
 **Experiment**:
 1. Run `vitest run` and observe which snapshot tests fail with "1 snapshot obsolete" vs actual content
@@ -408,7 +359,7 @@ semantic regressions. After update, all snapshot tests pass.
 
 ---
 
-### Unknown 3: Vitest jsdom API coverage for existing test setup
+### Unknown 4: Vitest jsdom API coverage for existing test setup
 
 **Risk**: The `packages/jaeger-ui/test/jest-per-test-setup.js` mocks several browser APIs (`ResizeObserver`,
 `MessageChannel`, `matchMedia`, `requestAnimationFrame`) using `jest.fn()`. Under Vitest these need to be
@@ -426,7 +377,7 @@ workers; Vitest's `globalSetup` does the same but the process isolation model di
 
 ---
 
-### Unknown 4: `transformIgnorePatterns` equivalents in Vitest
+### Unknown 5: `transformIgnorePatterns` equivalents in Vitest
 
 **Risk**: Jest required explicit `transformIgnorePatterns` to process ESM-only packages in `node_modules`
 (`redux-actions`, `d3-zoom`, `d3-selection`, `@jaegertracing/plexus`). Vitest's Vite transform pipeline
@@ -443,13 +394,11 @@ Babel workaround for `redux-actions` is confirmed unnecessary.
 
 ---
 
-### Unknown 5: `@vitejs/plugin-legacy` interaction with Vitest
+### Unknown 6: `@vitejs/plugin-legacy` interaction with Vitest
 
 **Risk**: `packages/jaeger-ui/vite.config.mts` currently uses `@vitejs/plugin-legacy` to emit a legacy
-browser bundle. This plugin does not apply to library builds, and the Vitest environment ignores it. No change
-is needed for plexus (library mode doesn't use `plugin-legacy`). However, it is worth verifying whether
-`plugin-legacy` interacts with Vitest in unexpected ways during the migration (e.g., it hooks into
-`transformIndexHtml` which has no equivalent in Vitest).
+browser bundle. Vitest ignores `transformIndexHtml` hooks so the plugin should be harmless, but this needs
+confirming.
 
 **Experiment**: Run `vitest run` with the existing `vite.config.mts` (which includes `plugin-legacy`) and
 confirm no errors or unexpected HTML injection.
@@ -458,111 +407,81 @@ confirm no errors or unexpected HTML injection.
 
 ## Consequences
 
-### Positive
+### Positive (full migration)
 
-- **Fewer dependencies**: Eliminates `webpack`, `webpack-cli`, `webpack-node-externals`, `clean-webpack-plugin`,
-  `babel-loader`, `@babel/core`, `@babel/cli`, `@babel/preset-env`, `@babel/preset-react`,
-  `@babel/preset-typescript`, `babel-jest`, `jest`, `jest-environment-jsdom`, `jest-junit`, and
-  several Babel plugins. Estimated reduction: ~20–25 direct dev dependencies.
-
-- **Single transform pipeline**: Tests run through the same esbuild/oxc pipeline as the production build,
-  eliminating the class of bug where a Babel-specific transform masks a runtime error.
-
-- **Faster test execution**: Vitest uses worker threads and Vite's fast transform (esbuild) instead of Jest's
-  Babel pipeline. Initial benchmarks on comparable React projects show 2–5× faster cold starts.
-
-- **ESM-native testing**: `import.meta`, top-level `await`, and ESM-only packages work without workarounds.
-  The custom `importMetaTransform` Babel plugin is deleted.
-
-- **Simpler plexus**: The entire plexus build pipeline (Babel CLI, Webpack, rimraf, npm-run-all) is
-  deleted rather than replaced. Zero tools instead of three.
-
-- **Web worker handled correctly without any extra tooling**: `layout.worker.ts` is already built by
-  Vite's app-mode transform (visible as `build/static/layout.worker-*.js` in the jaeger-ui output).
-  Vite handles the `new Worker(new URL('./layout.worker.ts', import.meta.url), ...)` pattern natively.
-  Webpack and Babel CLI also processed the worker file, but into unused `lib/` and `dist/` artifacts.
-  Dropping those pipelines has no effect on the worker in production.
+- **Single dependency**: Replace `eslint`, `prettier`, `typescript-eslint`, `babel`, `jest` and ~25 related
+  packages with `viteplus`.
+- **Native performance**: Oxlint reduces lint time from ~30–60 s to under 1 s. Rolldown build times drop
+  significantly vs Webpack.
+- **No TypeScript upgrade lag**: Oxlint has built-in TypeScript support via oxc; TypeScript 6/7 upgrades
+  are no longer blocked by `@typescript-eslint` release schedule.
+- **Unified transform pipeline**: Vitest runs tests through the same Vite/Rolldown pipeline as the
+  production build, eliminating the `importMetaTransform` Babel hack.
+- **Already mostly done**: The plexus build pipeline is gone (PR A), legacy ESLint configs are gone (PR B).
 
 ### Negative / Risks
 
-- **Migration effort**: Vitest is not 100% API-compatible with Jest. While the surface API (`describe`, `it`,
-  `expect`, `vi` vs `jest`) is very similar, some Jest-specific matchers, module mocking patterns, or timer
-  APIs may require updates.
-
-- **Snapshot churn**: All snapshot files will likely need regeneration, creating a large but mechanical diff.
-
-- **Loss of `jest-junit` XML reports**: CI currently produces JUnit-format XML for test result reporting. The
-  Vitest equivalent is `@vitest/reporters` with `junit` reporter. This must be configured before removing
-  `jest-junit`.
+- **Migration effort**: Vitest migration requires updating the test suite API, potentially regenerating
+  snapshots, and validating Unknowns 3–6.
+- **Oxlint rule parity**: Some ESLint rules may not have direct Oxlint equivalents — needs investigation
+  (Unknown 2).
 
 ---
 
 ## Migration Order
 
-### Phases vs PRs
-
-The Decision section lists 5 concern areas (phases). These map to more PRs because some phases split
-naturally across packages (one PR per package is easier to review), and some have no unknowns and can
-ship immediately while others must wait for investigation.
-
 ### PR → Unknown dependency table
-
-Each PR is safe to merge into `main` on its own once its blocking unknowns are resolved. PRs with no
-blocking unknowns can be opened and merged **right now**, independently of the rest of the migration.
 
 | PR | Description | Blocking unknowns | Can ship |
 |----|-------------|-------------------|----------|
-| ✅ A | Drop plexus library build; simplify plexus tsconfig; paths-based type resolution | None | Done |
-| ✅ B | Delete legacy ESLint configs from both packages | None | Done |
-| C  | Migrate plexus test runner to Vitest | Unknown 3, 4 | After investigation |
-| D  | Migrate jaeger-ui test runner to Vitest; remove root-level Babel deps | Unknown 2, 3, 4, 5 | After investigation |
-| E  | Consolidate `jaeger-ui` tsconfigs | Unknown 1 | After investigation |
-| F  | Update docs and CI | None | After C + D land |
+| ✅ A | Drop plexus library build; simplify plexus tsconfig; paths-based type resolution ([#3677](https://github.com/jaegertracing/jaeger-ui/pull/3677), [#3680](https://github.com/jaegertracing/jaeger-ui/pull/3680)) | None | Done |
+| ✅ B | Delete legacy ESLint configs from both packages — prep for Oxlint ([#3681](https://github.com/jaegertracing/jaeger-ui/pull/3681)) | None | Done |
+| C1 | Replace ESLint with Oxlint | Unknown 2 | After investigation |
+| C2 | Replace Prettier with Oxfmt | None | Independently, any time |
+| D  | Upgrade TypeScript (6 / 7) | None | After C1 |
+| E  | Consolidate `jaeger-ui` tsconfigs | Unknown 1 | After investigation (easier after F) |
+| F  | Migrate Jest → Vitest in both packages; remove Babel test deps | Unknowns 3, 4, 5, 6 | Deferred |
+| G  | Update CLAUDE.md, README, CI workflows | None | After F |
 
-PRs A and B deliver standalone value regardless of whether the Vitest migration ever happens. They
-remove dead weight (the plexus build nobody uses, the deprecated ESLint config format) with no
-prerequisite work. The Vitest PRs (C, D) can be investigated and developed in parallel with A and B
-landing on `main`.
-
-**Root-level Babel cleanup caveat**: The root `package.json` `@babel/cli` and `@babel/core` entries
-can only be removed once **both** C and D have landed. Fold that cleanup into PR D.
+PR C1 is the next concrete step — it unblocks D (TypeScript upgrade) and delivers the biggest CI speedup.
+PR C2 (Oxfmt) can be done any time independently. PRs C1 and D deliver substantial value independently
+of the Vitest migration.
 
 ### Investigation strategy
 
-Unknowns 2–5 all relate to the Vitest migration and can be validated together in a single throwaway
-branch: port the test setup for one package, run the full suite, and observe failures. Unknown 1
-(tsconfig) is independent and can be tested separately with a one-line `tsconfig.json` edit.
+- **Unknown 2** (Oxlint rules): Can be validated in a branch by running `oxlint` alongside ESLint and
+  comparing output. C2 (Oxfmt) has no unknowns and can proceed independently at any time.
+- **Unknown 1** (tsconfig): A single branch experiment — merge the two tsconfig files and run `tsc-lint`
+  + Vite build.
+- **Unknowns 3–6** (Vitest): Validate together in a single throwaway branch by porting the test setup for
+  one package and running the full suite.
 
 ---
 
 ## Alternatives Considered
 
-### Keep Jest, drop Webpack only
+### Keep ESLint + Prettier permanently
 
-Migrating just the plexus build to Vite library mode while keeping Jest + Babel for testing would reduce
-the number of Babel packages but would leave the most complex part of the Babel setup (the Jest transformer
-and the `import.meta` workaround) in place. This is a half-measure that still requires maintaining two
-transform pipelines. Rejected in favour of a complete migration.
+Rejected. `@typescript-eslint` creates a recurring TypeScript upgrade blocker. Oxlint removes this
+entirely while providing faster feedback.
 
 ### Use `@swc/jest` instead of Vitest
 
-SWC-based Jest transformers (`@swc/jest`) are faster than Babel-based ones and would eliminate the Babel
-dependency without switching test frameworks. However, they still run in Jest's CommonJS-by-default
-environment, keeping the `import.meta` problem. SWC also adds its own configuration surface. Rejected because
-Vitest's native ESM support and Vite integration are a cleaner solution.
+SWC-based Jest transformers are faster than Babel-based ones and would eliminate the separate Babel
+test config. However, they still run in Jest's CommonJS-by-default environment, keeping the `import.meta`
+problem. Not pursued as a stepping stone — Vitest is the right destination.
 
-### Use `jest-vite` / `vitest` for jaeger-ui only, keep webpack for plexus
+### Use Vite library mode for plexus instead of dropping the build
 
 Plexus is consumed only within this monorepo via a workspace source alias. There is no external consumer
-of the built artifacts, making the Webpack + Babel CLI build purely overhead. This option would leave dead
-weight in place. Rejected.
+of the built artifacts, making any build pipeline purely overhead. Dropping the build entirely (PR A) is
+simpler than replacing Webpack with Vite library mode.
 
 ---
 
 ## References
 
-- [Vitest documentation](https://vitest.dev/)
-- [Vitest migration guide from Jest](https://vitest.dev/guide/migration.html)
-- `packages/jaeger-ui/test/babel-transform.js` — documents the `import.meta` workaround that this migration
+- [Vite+ documentation](https://viteplus.dev)
+- `packages/jaeger-ui/test/babel-transform.js` — documents the `import.meta` workaround that Vitest
   eliminates
 - `packages/plexus/webpack-factory.js` — the Webpack config that this migration replaced (now deleted)
