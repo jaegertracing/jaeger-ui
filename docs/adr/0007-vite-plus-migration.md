@@ -92,11 +92,17 @@ reference.
 
 #### ✅ 1a. Update `packages/plexus/package.json`
 
-- ✅ **Removed** from `devDependencies`:
+- ✅ **Removed** from `devDependencies` (build-only packages — had no effect on the jaeger-ui
+  production bundle, which resolves plexus via the workspace source alias and never invokes these):
   - `webpack`, `webpack-cli`, `webpack-node-externals`, `clean-webpack-plugin`, `babel-loader`
   - `babel-plugin-transform-react-remove-prop-types`
   - `@babel/plugin-syntax-dynamic-import`, `@babel/plugin-transform-class-properties`
   - `rimraf`, `npm-run-all2`
+
+- **Remaining Babel deps** (`@babel/preset-env`, `@babel/preset-react`, `@babel/preset-typescript`,
+  `@babel/plugin-transform-private-methods`, `babel-jest`) are used solely by the Jest test runner
+  via `packages/plexus/test/babel-transform.js`. They are unaffected by PR A and will be removed
+  in PR C when the plexus test runner is migrated to Vitest.
 
 - ✅ **Replaced `build` script** (5-step Babel+Webpack pipeline) with `tsc --noEmit`. Removed
   `prepublishOnly` and all `_tasks/*` scripts.
@@ -472,6 +478,12 @@ confirm no errors or unexpected HTML injection.
 
 - **Simpler plexus**: The entire plexus build pipeline (Babel CLI, Webpack, rimraf, npm-run-all) is
   deleted rather than replaced. Zero tools instead of three.
+
+- **Web worker handled correctly without any extra tooling**: `layout.worker.ts` is already built by
+  Vite's app-mode transform (visible as `build/static/layout.worker-*.js` in the jaeger-ui output).
+  Vite handles the `new Worker(new URL('./layout.worker.ts', import.meta.url), ...)` pattern natively.
+  Webpack and Babel CLI also processed the worker file, but into unused `lib/` and `dist/` artifacts.
+  Dropping those pipelines has no effect on the worker in production.
 
 ### Negative / Risks
 
