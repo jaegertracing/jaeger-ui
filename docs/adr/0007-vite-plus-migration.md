@@ -193,14 +193,38 @@ Result: 0 ESLint errors (250 pre-existing warnings, all `@typescript-eslint/no-e
 Oxlint is the linting component of the Vite+ toolchain. It is Rust-based and has no dependency on
 `@typescript-eslint`, directly unblocking TypeScript 6/7 upgrades.
 
-Key considerations:
+#### Approach: run Oxlint in parallel before replacing ESLint
 
-- Oxlint supports 600+ ESLint-compatible rules including React hooks rules (`rules-of-hooks`,
-  `exhaustive-deps`). Rule-by-rule audit needed to confirm parity with the current active ruleset.
-- `eslint-disable` inline comments in source files will need to be migrated or removed.
-- CI `lint` script and `lint-staged` hooks will need updating.
+Rather than replacing ESLint in a single step, PR C1 is split into two phases:
 
-See [Unknown 2](#unknown-2-oxlint-rule-coverage) for the rule coverage investigation.
+**Phase 1 — parallel run (this PR):**
+- Add `oxlint` to root devDependencies.
+- Add an `oxlint` config (`.oxlintrc.json`) that mirrors the currently active ESLint rules.
+- Add an `npm run oxlint` script that runs non-blocking alongside `npm run eslint` in CI.
+- Compare Oxlint and ESLint output side by side.
+
+**Phase 2 — cutover (follow-up PR, once Phase 1 validates parity):**
+- Remove `eslint`, `eslint-plugin-*`, `@typescript-eslint/*` from devDependencies.
+- Remove `eslint.config.js`.
+- Update CI `lint` script, `lint-staged`, and `husky` hooks to use Oxlint only.
+- Update TypeScript to 6.x (PR D).
+
+#### Success criteria for Phase 1
+
+1. **Rule coverage**: every rule currently set to `error` or `warn` in `eslint.config.js` has a
+   documented Oxlint equivalent — or a deliberate decision to drop it with written justification.
+2. **Warning count parity**: Oxlint warning count is within the same order of magnitude as ESLint's
+   current ~250 warnings. A significantly lower count is a signal that rules are missing, not that
+   the code improved. The bulk of current warnings are `@typescript-eslint/no-explicit-any`;
+   the Oxlint equivalent `typescript/no-explicit-any` must fire on the same sites.
+3. **Error parity**: the rules currently set to `error` — `react-x/rules-of-hooks`,
+   `react-x/exhaustive-deps`, `jest/no-focused-tests`, `jest/no-identical-title`,
+   `@typescript-eslint/no-empty-object-type` — must all be caught by Oxlint equivalents.
+4. **No significant false positives**: Oxlint should not flag substantially more than ESLint;
+   a much higher count signals the config needs tuning before cutover.
+5. **Performance**: Oxlint completes in under 1 second (verify the claimed 50–100× speedup).
+
+See [Unknown 2](#unknown-2-oxlint-rule-coverage) for the rule mapping table.
 
 ---
 
@@ -330,17 +354,40 @@ package; Vite build is unaffected.
 
 ### Unknown 2: Oxlint rule coverage
 
-**Risk**: Oxlint may not have direct equivalents for all currently active ESLint rules. The most critical
-rules to verify are `react-x/rules-of-hooks` and `react-x/exhaustive-deps`.
+**Risk**: Oxlint may not have direct equivalents for all currently active ESLint rules.
 
-**Experiment**:
-1. Audit the active rules in root `eslint.config.js` (those set to `error` or `warn`, not `off`).
-2. For each active rule, confirm the Oxlint equivalent rule name and that it is available in the Vite+
-   version in use.
-3. Run `oxlint` on the codebase and compare findings against current ESLint warnings.
+**Active ESLint rules to map** (from `eslint.config.js`, excluding `'off'` entries):
 
-**Success criteria**: All currently-enforced rules have Oxlint equivalents, or a deliberate decision is
-made to drop each one that does not.
+| ESLint rule | Severity | Oxlint equivalent | Status |
+|-------------|----------|-------------------|--------|
+| `react-x/rules-of-hooks` | error | `react-x/rules-of-hooks` (via jsPlugin) | ✅ |
+| `react-x/exhaustive-deps` | error | `react-x/exhaustive-deps` (via jsPlugin) | ✅ |
+| `jest/no-focused-tests` | error | `jest/no-focused-tests` | ✅ |
+| `jest/no-identical-title` | error | `jest/no-identical-title` | ✅ |
+| `jest/no-disabled-tests` | warn | `jest/no-disabled-tests` | ✅ |
+| `@typescript-eslint/no-explicit-any` | warn | `typescript/no-explicit-any` | ✅ ~211 hits (vs ~250 in ESLint) |
+| `@typescript-eslint/no-unused-vars` | warn | `no-unused-vars` | ✅ |
+| `@typescript-eslint/no-use-before-define` | warn | `no-use-before-define` | ✅ |
+| `@typescript-eslint/no-redeclare` | warn | `no-redeclare` | ✅ |
+| `@typescript-eslint/no-shadow` | warn | `no-shadow` | ✅ |
+| `@typescript-eslint/no-require-imports` | warn | `typescript/no-require-imports` | ✅ |
+| `@typescript-eslint/no-restricted-types` | warn | `typescript/no-restricted-types` | ✅ |
+| `@typescript-eslint/no-unsafe-function-type` | warn | `typescript/no-unsafe-function-type` | ✅ |
+| `@typescript-eslint/no-wrapper-object-types` | warn | `typescript/no-wrapper-object-types` | ✅ |
+| `@typescript-eslint/ban-ts-comment` | warn | `typescript/ban-ts-comment` | ✅ |
+| `@typescript-eslint/no-useless-constructor` | warn | `no-useless-constructor` | ✅ |
+| `@typescript-eslint/no-empty-object-type` | error | `typescript/no-empty-object-type` | ✅ |
+| `prettier/prettier` | error | dropped — Oxfmt handles formatting (PR C2) | — |
+
+**Parallel run results** (Phase 1 complete):
+- ESLint: 0 errors, 250 warnings
+- Oxlint: 0 errors, 394 warnings (144 extra from `correctness: warn` — mostly jest correctness
+  rules like `no-conditional-expect`, `expect-expect`, `valid-title` that ESLint wasn't checking)
+- One `no-control-regex` false positive in `vite.config.mts` suppressed with an inline disable comment
+  (`\0` is intentional — strips Rolldown's null-byte module prefix)
+- `.cjs` files added to ignore patterns (were never linted by ESLint either)
+
+**Success criteria**: All met. Ready to proceed to Phase 2 (cutover) in a follow-up PR.
 
 ---
 
