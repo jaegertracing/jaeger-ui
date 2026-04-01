@@ -188,7 +188,7 @@ Result: 0 ESLint errors (250 pre-existing warnings, all `@typescript-eslint/no-e
 
 ---
 
-### 3. Replace ESLint with Oxlint (PR C1)
+### 3. Replace ESLint with Oxlint (PR C1 — [#3682](https://github.com/jaegertracing/jaeger-ui/pull/3682))
 
 Oxlint is the linting component of the Vite+ toolchain. It is Rust-based and has no dependency on
 `@typescript-eslint`, directly unblocking TypeScript 6/7 upgrades.
@@ -483,7 +483,7 @@ confirm no errors or unexpected HTML injection.
 |----|-------------|-------------------|----------|
 | ✅ A | Drop plexus library build; simplify plexus tsconfig; paths-based type resolution ([#3677](https://github.com/jaegertracing/jaeger-ui/pull/3677), [#3680](https://github.com/jaegertracing/jaeger-ui/pull/3680)) | None | Done |
 | ✅ B | Delete legacy ESLint configs from both packages — prep for Oxlint ([#3681](https://github.com/jaegertracing/jaeger-ui/pull/3681)) | None | Done |
-| C1 | Replace ESLint with Oxlint | Unknown 2 | After investigation |
+| C1 | Replace ESLint with Oxlint ([#3682](https://github.com/jaegertracing/jaeger-ui/pull/3682)) | Unknown 2 | Phase 1 in review |
 | C2 | Replace Prettier with Oxfmt | None | Independently, any time |
 | D  | Upgrade TypeScript (6 / 7) | None | After C1 |
 | E  | Consolidate `jaeger-ui` tsconfigs | Unknown 1 | After investigation (easier after F) |
