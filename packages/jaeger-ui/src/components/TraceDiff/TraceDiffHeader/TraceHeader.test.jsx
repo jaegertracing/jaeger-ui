@@ -57,7 +57,7 @@ describe('TraceHeader', () => {
     expect(() => screen.getByTestId('TraceDiffHeader--traceAttributes')).toThrow();
   });
 
-  it('renders "Select a Trace..." when props.traceID is not provided ', () => {
+  it('renders "Select a Trace..." when props.traceID is not provided', () => {
     renderWithProps({
       traceID: null,
     });

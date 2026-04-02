@@ -319,7 +319,7 @@ describe('<TracePage>', () => {
     // Same id with different spans should use cached result
     // (spans.length is not part of the cache key because
     // transformTraceData completes synchronously before Redux stores the trace)
-    const reducedSpans = [...baseProps.trace.data.spans.slice(0, baseProps.trace.data.spans.length / 2)];
+    const reducedSpans = baseProps.trace.data.spans.slice(0, baseProps.trace.data.spans.length / 2);
     const newTrace2 = {
       ...baseProps.trace,
       data: {

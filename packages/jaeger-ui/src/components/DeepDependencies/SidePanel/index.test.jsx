@@ -246,7 +246,7 @@ describe('<SidePanel>', () => {
     });
   });
 
-  describe('info button ', () => {
+  describe('info button', () => {
     let modalInfoSpy;
 
     beforeAll(() => {

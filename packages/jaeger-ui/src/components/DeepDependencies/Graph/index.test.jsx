@@ -39,7 +39,7 @@ jest.mock('./getNodeRenderers', () =>
 jest.mock('./getSetOnEdge', () => jest.fn(() => jest.fn()));
 
 describe('<Graph />', () => {
-  const vertices = [...new Array(10)].map((_, i) => ({ key: `key${i}` }));
+  const vertices = new Array(10).fill().map((_, i) => ({ key: `key${i}` }));
   const edges = [
     {
       from: vertices[0].key,

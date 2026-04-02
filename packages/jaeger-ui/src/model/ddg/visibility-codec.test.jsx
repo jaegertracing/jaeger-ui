@@ -6,7 +6,7 @@ import { focalPayloadElem, longSimplePath, shortPath, simplePath, wrap } from '.
 import transformDdgData from './transformDdgData';
 
 describe('visibility-codec', () => {
-  const sampleLargestDecoded = [...new Array(31)].map((_undef, i) => i);
+  const sampleLargestDecoded = new Array(31).fill().map((_undef, i) => i);
   const sampleLargestEncoded = 'zik0zj';
   const sampleRepeatedDecoded = [0, 1, 31, 32, 124, 156, 187];
   const sampleRepeatedEncoded = '3~2.~2.1.2~2';
