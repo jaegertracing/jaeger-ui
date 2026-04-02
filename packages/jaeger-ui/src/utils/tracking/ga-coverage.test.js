@@ -109,6 +109,7 @@ describe('GA Coverage', () => {
     captureException(error);
 
     // Verify GA event exception (last one)
+    // window.dataLayer has many events now. Find the last one matching final error.
     const exceptionEvents = window.dataLayer.filter(e => e[0] === 'event' && e[1] === 'exception');
     const lastException = exceptionEvents[exceptionEvents.length - 1];
     expect(lastException).toBeDefined();
@@ -121,6 +122,10 @@ describe('GA Coverage', () => {
     expect(lastEvent).toBeDefined();
 
     const eventLabel = lastEvent[2].event_label;
+    // Expect truncation. Start crumbs (nav, fetch) might be pushed out by buffer logic (20 limit).
+    // But we filled with 25 errors. So only errors remain.
+    // So checking for [svc] is invalid now as it was shifted out.
+    // Max length 499.
     expect(eventLabel.length).toBeLessThanOrEqual(499);
     expect(eventLabel).toContain('filling up the breadcrumbs buffer');
     expect(eventLabel).not.toContain('[svc]');
