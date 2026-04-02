@@ -458,7 +458,7 @@ confirm no errors or unexpected HTML injection.
 ### Positive (full migration)
 
 - **Single dependency**: Replace `eslint`, `prettier`, `typescript-eslint`, `babel`, `jest` and ~25 related
-  packages with `viteplus`.
+  packages with `vite-plus`.
 - **Native performance**: Oxlint reduces lint time from ~30–60 s to under 1 s. Rolldown build times drop
   significantly vs Webpack.
 - **No TypeScript upgrade lag**: Oxlint has built-in TypeScript support via oxc; TypeScript 6/7 upgrades
