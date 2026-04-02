@@ -76,7 +76,7 @@ Migrate the monorepo to Vite+ in phases:
 4. ✅ **Replace Prettier with Oxfmt** — `prettier` removed; `oxfmt --migrate=prettier` migrated the config.
 5. ✅ **Upgrade TypeScript** — upgraded to 6.0.2; `moduleResolution` switched to `"bundler"`.
 6. ✅ **Consolidate jaeger-ui tsconfigs** — `tsconfig.lint.json` deleted; `tsconfig.json` is the single config.
-7. ✅ **Replace Jest + Babel with Vitest** — plexus done ([#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690)); jaeger-ui done (H1 rename, H2 prep, H3 switch: 226 test files, 2603 tests passing).
+7. ✅ **Replace Jest + Babel with Vitest** — plexus done ([#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690)); jaeger-ui done ([#3695](https://github.com/jaegertracing/jaeger-ui/pull/3695): H1 rename, H2 prep, H3 switch: 226 test files, 2603 tests passing).
 
 ---
 
@@ -303,8 +303,7 @@ both of which are unaffected by switching the lint/test tooling.
 
 ### 8. Both Packages — Replace Jest + Babel with Vitest (PR F)
 
-**Partially done.** `packages/plexus` migrated to Vitest in [#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690).
-`packages/jaeger-ui` remains on Jest + Babel and is the next step.
+**Done.** `packages/plexus` migrated in [#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690); `packages/jaeger-ui` migrated in [#3695](https://github.com/jaegertracing/jaeger-ui/pull/3695) (226 test files, 2603 tests).
 
 #### plexus migration (✅ complete in [#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690))
 
@@ -598,20 +597,19 @@ confirm no errors or unexpected HTML injection.
 | ✅ C2 | Replace Prettier with Oxfmt ([#3686](https://github.com/jaegertracing/jaeger-ui/pull/3686)) | None | Done |
 | ✅ D  | Upgrade TypeScript to 6.0.2 ([#3688](https://github.com/jaegertracing/jaeger-ui/pull/3688)) | None | Done |
 | ✅ E  | Consolidate `jaeger-ui` tsconfigs; remove `main` from plexus package.json ([#3689](https://github.com/jaegertracing/jaeger-ui/pull/3689)) | Unknown 1 | Done |
-| 🔶 F | Migrate Jest → Vitest in both packages; remove Babel test deps ([#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690) plexus ✅, jaeger-ui pending) | Unknowns 3, 4, 5, 6 | Partial |
+| ✅ F | Migrate Jest → Vitest in both packages; remove Babel test deps ([#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690) plexus, [#3695](https://github.com/jaegertracing/jaeger-ui/pull/3695) jaeger-ui) | Unknowns 3, 4, 5, 6 | Done |
 | ✅ H1 | Rename `.test.js` → `.test.jsx` in jaeger-ui (121 files, pure rename) ([#3691](https://github.com/jaegertracing/jaeger-ui/pull/3691)) | None | Done |
 | ✅ H2a | Replace `require()` in test bodies with static `import` ([#3692](https://github.com/jaegertracing/jaeger-ui/pull/3692)) | None | Done |
 | ✅ H2b | Replace arrow function constructors with regular functions (6 files) ([#3693](https://github.com/jaegertracing/jaeger-ui/pull/3693)) | None | Done |
 | ✅ H2c | Introduce `mockDefault` helper in affected mock factories ([#3694](https://github.com/jaegertracing/jaeger-ui/pull/3694)) | None | Done |
-| H3 | Vitest switch for jaeger-ui | Unknowns 3, 4, 5, 6 | After H2a–c |
+| ✅ H3 | Vitest switch for jaeger-ui ([#3695](https://github.com/jaegertracing/jaeger-ui/pull/3695)) | Unknowns 3, 4, 5, 6 | Done |
 | G  | Update CLAUDE.md, README, CI workflows | None | After H3 |
 
 ### Investigation strategy
 
 - **Unknown 2** (Oxlint rules): ✅ Resolved — parallel run completed; rule coverage confirmed; ESLint removed.
 - **Unknown 1** (tsconfig): ✅ Resolved — tsconfig files merged; `tsc-lint` and Vite build both pass.
-- **Unknowns 3–6** (Vitest): Partially validated via plexus migration (PR F / #3690). Unknowns 4 and 5
-  confirmed non-issues for plexus. Unknowns 3 and 6 remain open for jaeger-ui (snapshots and plugin-legacy).
+- **Unknowns 3–6** (Vitest): ✅ Fully resolved via plexus (#3690) and jaeger-ui (#3695) migrations. All four unknowns were non-issues in practice.
 
 ---
 
