@@ -250,16 +250,18 @@ describe('<ListView>', () => {
         expect(eventListeners.scroll.length).toBeGreaterThan(0);
       });
 
-      it('triggers _positionList after scroll when windowScroller is enabled', done => {
+      it('triggers _positionList after scroll when windowScroller is enabled', () => {
         expect(instance).toBeDefined();
         const event = new Event('scroll');
         const fn = jest.spyOn(instance, '_positionList');
         expect(instance._isScrolledOrResized).toBe(false);
         window.dispatchEvent(event);
         expect(instance._isScrolledOrResized).toBe(true);
-        window.requestAnimationFrame(() => {
-          expect(fn).toHaveBeenCalled();
-          done();
+        return new Promise(resolve => {
+          window.requestAnimationFrame(() => {
+            expect(fn).toHaveBeenCalled();
+            resolve();
+          });
         });
       });
 
