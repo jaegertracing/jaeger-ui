@@ -6,10 +6,10 @@ import { render } from '@testing-library/react';
 import Nodes from './Nodes';
 import { ELayerType } from './types';
 
-// 追蹤傳給 mock 元件的 props
+// Track props passed to mock component
 const mockNodeProps = [];
 
-// vi.mock factory 不能用 JSX（_jsx 會 out of scope），必須用 React.createElement
+// vi.mock factory cannot use JSX (_jsx would be out of scope), must use React.createElement
 vi.mock('./Node', () => {
   const React = require('react');
   const MockNode = props => {
