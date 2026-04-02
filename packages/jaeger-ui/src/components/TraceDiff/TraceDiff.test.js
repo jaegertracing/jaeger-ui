@@ -21,7 +21,7 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-/* 
+/*
 With v5+, redux no longer supports `bindActionCreators` to be configured.
 `configurable: true` has to be supported by the compilers for it to be configured.
 It has to be explicitly told using `__esModule` to babel for compiling it with that property.

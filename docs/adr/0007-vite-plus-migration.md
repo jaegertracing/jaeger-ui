@@ -17,7 +17,7 @@ Prettier, and Jest with a single dependency that has built-in TypeScript support
 
 ## Context & Problem
 
-### Current State (after PRs A and B)
+### Current State (after PRs A, B, C1, C2)
 
 | Concern          | `packages/jaeger-ui`               | `packages/plexus`                  |
 | ---------------- | ---------------------------------- | ---------------------------------- |
@@ -25,8 +25,8 @@ Prettier, and Jest with a single dependency that has built-in TypeScript support
 | Production build | Vite 8 (Rolldown engine)           | ✅ dropped                         |
 | Testing          | Jest 30 + `babel-jest`             | Jest 30 + `babel-jest`             |
 | TypeScript       | `tsc` (type-check only, 2 configs) | `tsc` (noEmit, source only)        |
-| Linting          | ESLint 10 (flat config)            | ESLint 10 (flat config)            |
-| Formatting       | Prettier                           | Prettier                           |
+| Linting          | ✅ Oxlint (via `vp lint`)          | ✅ Oxlint (via `vp lint`)          |
+| Formatting       | ✅ Oxfmt (via `vp fmt`)            | ✅ Oxfmt (via `vp fmt`)            |
 
 ### Pain Points
 
@@ -72,7 +72,7 @@ Migrate the monorepo to Vite+ in phases:
 2. ✅ **Consolidate legacy ESLint configs** — delete per-package `.eslintrc.*` files; root `eslint.config.js`
    now covers both packages. This is preparatory cleanup before replacing ESLint with Oxlint.
 3. ✅ **Replace ESLint with Oxlint** — `@typescript-eslint` removed; TypeScript 6/7 upgrade now unblocked.
-4. **Replace Prettier with Oxfmt** — independent of 3; no urgency.
+4. ✅ **Replace Prettier with Oxfmt** — `prettier` removed; `oxfmt --migrate=prettier` migrated the config.
 5. **Upgrade TypeScript** — `@typescript-eslint` is gone; can proceed now.
 6. **Consolidate jaeger-ui tsconfigs** — collapse `tsconfig.lint.json` into `tsconfig.json` (easier after
    Vitest removes the `isolatedModules` constraint).
@@ -229,17 +229,17 @@ See [Unknown 2](#unknown-2-oxlint-rule-coverage) for the rule mapping table.
 
 ---
 
-### 4. Replace Prettier with Oxfmt (PR C2)
+### ✅ 4. Replace Prettier with Oxfmt (PR C2)
 
-Oxfmt is the formatting component of the Vite+ toolchain. It is Prettier-compatible (same output for
-most cases). This PR is independent of C1 and D — Prettier has no version-lag problem, so there is no
-urgency. Can be done any time.
+**Implemented in full.**
 
-Key considerations:
-
-- Existing `prettier` config in root `package.json` maps to Oxfmt config; verify output parity.
-- `husky` pre-commit hooks and `lint-staged` config will need updating.
-- CI `prettier-lint` script will need updating.
+- Ran `oxfmt --migrate=prettier` to generate `.oxfmtrc.json` from the existing `prettier` config in `package.json`. All options mapped 1:1 (`arrowParens`, `printWidth`, `proseWrap`, `singleQuote`, `trailingComma`). Ignore patterns migrated from `.prettierignore` → `ignorePatterns` in `.oxfmtrc.json`.
+- Removed `prettier` from `devDependencies`.
+- Removed `prettier` config block from `package.json`.
+- Deleted `.prettierignore` (replaced by `ignorePatterns` in `.oxfmtrc.json`).
+- Updated scripts: `prettier` → `vp fmt`, `prettier-lint` → `fmt-lint` (using `vp fmt --check`).
+- Updated `lint-staged` to use `vp fmt` instead of `prettier --write`.
+- Output parity: only 1 file had a difference (trailing space in a comment line in `TraceDiff.test.js`) — fixed.
 
 ---
 

@@ -5,7 +5,7 @@
 When you have completed a task, run the following commands:
 
 ```bash
-npm run prettier
+npm run fmt
 npm run lint
 npm test
 npm run build
@@ -59,16 +59,16 @@ npm ci         # Install dependencies (use 'ci' for clean install)
 
 You have permissions to run the following command. DO NOT ask for confirmation to run them.
 
-| Command                 | Description                                                    |
-| ----------------------- | -------------------------------------------------------------- |
-| `npm start`             | Start development server with hot reload (runs jaeger-ui)      |
-| `npm run build`         | Build all packages for production                              |
-| `npm run lint`          | Run all linters (prettier, typescript, eslint, license checks) |
-| `npm run eslint`        | Run ESLint on all packages                                     |
-| `npm run prettier`      | Format code with Prettier                                      |
-| `npm run prettier-lint` | Check formatting without making changes                        |
-| `npm run tsc-lint`      | Run TypeScript type checking                                   |
-| `npm test`              | Run all tests across packages                                  |
+| Command            | Description                                                 |
+| ------------------ | ----------------------------------------------------------- |
+| `npm start`        | Start development server with hot reload (runs jaeger-ui)   |
+| `npm run build`    | Build all packages for production                           |
+| `npm run lint`     | Run all linters (oxfmt, typescript, oxlint, license checks) |
+| `npm run oxlint`   | Run Oxlint on all packages                                  |
+| `npm run fmt`      | Format code with Oxfmt                                      |
+| `npm run fmt-lint` | Check formatting without making changes                     |
+| `npm run tsc-lint` | Run TypeScript type checking                                |
+| `npm test`         | Run all tests across packages                               |
 
 ### Package-Specific Commands
 
@@ -92,7 +92,7 @@ Run from `packages/jaeger-ui/`:
 
 ### Code Style
 
-- Use Prettier for formatting (`npm run prettier`)
+- Use Oxfmt for formatting (`npm run fmt`)
 - Follow [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript)
 - Use single quotes for strings
 - Trailing commas in ES5 style

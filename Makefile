@@ -22,7 +22,7 @@ bundle-stats:
 
 .PHONY: fmt
 fmt:
-	npm run prettier
+	npm run fmt
 
 .PHONY: lint
 lint:
