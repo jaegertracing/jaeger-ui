@@ -13,14 +13,12 @@ import * as getConfig from '../../../utils/config/get-config';
 import transformTraceData from '../../../model/transform-trace-data';
 
 vi.mock('../../common/UiFindInput', async () => ({
-  __esModule: true,
+  ...(await vi.importActual('../../common/UiFindInput')),
   default: props => (
     <div data-testid="ui-find-input" {...props.inputProps}>
       UiFindInput {props.inputProps?.suffix}
     </div>
   ),
-  parseUiFind: (await vi.importActual('../../common/UiFindInput')).parseUiFind,
-  extractUiFindFromState: (await vi.importActual('../../common/UiFindInput')).extractUiFindFromState,
 }));
 vi.mock('../../common/ErrorMessage', async () =>
   mockDefault(props => <div data-testid="error-message">{props.error}</div>)
