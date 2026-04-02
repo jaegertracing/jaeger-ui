@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TraceLogsView from './index';
 import transformTraceData from '../../../model/transform-trace-data';
@@ -191,7 +191,6 @@ describe('<TraceLogsView>', () => {
   });
 
   it('toggles attribute accordion open and closed on click', () => {
-    const { fireEvent } = require('@testing-library/react');
     const trace = transformTraceData(baseTrace).asOtelTrace();
     render(<TraceLogsView trace={trace} useOtelTerms={false} />);
 
@@ -254,7 +253,6 @@ describe('<TraceLogsView>', () => {
   });
 
   it('handles column sorting for service name', () => {
-    const { fireEvent } = require('@testing-library/react');
     const trace = transformTraceData(baseTrace).asOtelTrace();
     render(<TraceLogsView trace={trace} useOtelTerms={false} />);
 
@@ -264,7 +262,6 @@ describe('<TraceLogsView>', () => {
   });
 
   it('handles column sorting for operation/span name', () => {
-    const { fireEvent } = require('@testing-library/react');
     const trace = transformTraceData(baseTrace).asOtelTrace();
     render(<TraceLogsView trace={trace} useOtelTerms={false} />);
 
@@ -273,7 +270,6 @@ describe('<TraceLogsView>', () => {
   });
 
   it('handles column sorting for event/log name', () => {
-    const { fireEvent } = require('@testing-library/react');
     const trace = transformTraceData(baseTrace).asOtelTrace();
     render(<TraceLogsView trace={trace} useOtelTerms={false} />);
 

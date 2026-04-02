@@ -20,6 +20,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
+import { createStore } from 'redux';
 import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
 import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
@@ -227,7 +228,7 @@ describe('<SearchTracePage>', () => {
 
   it('hides Upload tab if it is disabled via config', () => {
     // Create a custom store with disableFileUploadControl: true
-    const customStore = require('redux').createStore(() => ({
+    const customStore = createStore(() => ({
       ...globalStore.getState(),
       config: {
         ...globalStore.getState().config,

@@ -5,6 +5,10 @@ import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import _set from 'lodash/set';
+import { MemoryRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 jest.mock('node-fetch', () =>
   jest.fn(() =>
@@ -980,14 +984,6 @@ describe('DeepDependencyGraphPage', () => {
   });
 
   describe('DeepDependencyGraphPage (default export wrapper)', () => {
-    const { MemoryRouter } = require('react-router-dom');
-
-    const { Provider } = require('react-redux');
-
-    const { createStore } = require('redux');
-
-    const { QueryClient, QueryClientProvider } = require('@tanstack/react-query');
-
     const mockReduxStore = createStore(() => ({
       ddg: {},
       router: { location: { search: '?service=test-service' } },
