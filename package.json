@@ -29,7 +29,7 @@
     "npm-run-all2": "8.0.1",
     "openapi-zod-client": "1.18.3",
     "rxjs-compat": "6.6.7",
-    "typescript": "5.9.3",
+    "typescript": "6.0.2",
     "vite-plus": "0.1.15"
   },
   "overrides": {

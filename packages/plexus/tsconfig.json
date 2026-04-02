@@ -14,7 +14,8 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": ["jest"]
   },
   "include": [
     "src",

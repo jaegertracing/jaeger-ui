@@ -189,7 +189,7 @@ Result: 0 ESLint errors (250 pre-existing warnings, all `@typescript-eslint/no-e
 
 ---
 
-### 3. Replace ESLint with Oxlint (PR C1 — [#3682](https://github.com/jaegertracing/jaeger-ui/pull/3682), [#3684](https://github.com/jaegertracing/jaeger-ui/pull/3684))
+### ✅ 3. Replace ESLint with Oxlint (PR C1 — [#3682](https://github.com/jaegertracing/jaeger-ui/pull/3682), [#3684](https://github.com/jaegertracing/jaeger-ui/pull/3684))
 
 Oxlint is the linting component of the Vite+ toolchain. It is Rust-based and has no dependency on
 `@typescript-eslint`, directly unblocking TypeScript 6/7 upgrades.
@@ -198,13 +198,13 @@ Oxlint is the linting component of the Vite+ toolchain. It is Rust-based and has
 
 Rather than replacing ESLint in a single step, PR C1 is split into two phases:
 
-**Phase 1 — parallel run (this PR):**
+** ✅ Phase 1 — parallel run (this PR):**
 - Add `vite-plus` to root devDependencies (which brings Oxlint transitively).
 - Add an `oxlint` config (`.oxlintrc.json`) that mirrors the currently active ESLint rules.
 - Add an `npm run oxlint` script that runs non-blocking alongside `npm run eslint` in CI.
 - Compare Oxlint and ESLint output side by side.
 
-**Phase 2 — cutover ([#3684](https://github.com/jaegertracing/jaeger-ui/pull/3684), once Phase 1 validates parity):**
+** ✅ Phase 2 — cutover ([#3684](https://github.com/jaegertracing/jaeger-ui/pull/3684), once Phase 1 validates parity):**
 - Remove `eslint`, `eslint-plugin-*`, `@typescript-eslint/*` from devDependencies.
 - Remove `eslint.config.js`.
 - Update CI `lint` script, `lint-staged`, and `husky` hooks to use Oxlint only.
