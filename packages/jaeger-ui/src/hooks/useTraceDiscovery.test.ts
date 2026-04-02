@@ -223,7 +223,7 @@ describe('useTraceDiscovery', () => {
     it('refetches when service parameter changes', async () => {
       const mockOps1 = [{ name: 'op1', spanKind: 'server' }];
       const mockOps2 = [{ name: 'op2', spanKind: 'client' }];
-      (jaegerClient.fetchSpanNames as jest.Mock)
+      (jaegerClient.fetchSpanNames as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce(mockOps1)
         .mockResolvedValueOnce(mockOps2);
 
