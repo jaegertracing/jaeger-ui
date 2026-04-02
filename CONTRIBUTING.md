@@ -140,7 +140,7 @@ We use [Oxfmt](https://viteplus.dev) for code formatting (part of the Vite+ tool
 
 Most issues will be caught by the linter, which can be applied via `npm run oxlint`.
 
-Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as noted in our `.eslintrc`.
+Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as noted in our `.oxlintrc.json`.
 
 ## File Headers
 
