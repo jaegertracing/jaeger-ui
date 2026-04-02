@@ -11,8 +11,7 @@ vi.mock('../index.track', async () => ({
   trackFilter: jest.fn(),
 }));
 
-vi.mock('../../common/UiFindInput', async () => {
-  const React = await vi.importActual('react');
+vi.mock('../../common/UiFindInput', () => {
   return mockDefault(
     React.forwardRef(function MockUiFindInput({ inputProps, trackFindFunction }, ref) {
       return (

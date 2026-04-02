@@ -11,11 +11,9 @@ import testTrace from '../TraceStatistics/tableValuesTestTrace/testTrace.json';
 
 const trace = transformTraceData(testTrace).asOtelTrace();
 
-vi.mock('../../common/SearchableSelect', async () => {
-  const mockReact = await vi.importActual('react');
-
+vi.mock('../../common/SearchableSelect', () => {
   return mockDefault(({ 'data-testid': testId, onChange, value, children }) => {
-    const options = mockReact.Children.toArray(children).map(child => ({
+    const options = React.Children.toArray(children).map(child => ({
       value: child.props.value,
       label: child.props.children[0],
     }));

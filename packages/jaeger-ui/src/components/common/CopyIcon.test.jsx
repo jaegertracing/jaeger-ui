@@ -14,12 +14,11 @@ vi.mock('copy-to-clipboard');
 // synchronously and removes from DOM on close — no CSS animations in jsdom.
 vi.mock('antd', async () => {
   const actual = await vi.importActual('antd');
-  const { cloneElement, useState, Fragment } = await vi.importActual('react');
 
   function MockTooltip({ children, onOpenChange, title }) {
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = React.useState(false);
 
-    const enhanced = cloneElement(children, {
+    const enhanced = React.cloneElement(children, {
       onMouseEnter: () => {
         setOpen(true);
         onOpenChange?.(true);
@@ -31,11 +30,10 @@ vi.mock('antd', async () => {
     });
 
     return (
-      // eslint-disable-next-line react/jsx-no-useless-fragment
-      <Fragment>
+      <>
         {enhanced}
         {open && <div role="tooltip">{title}</div>}
-      </Fragment>
+      </>
     );
   }
 

@@ -9,8 +9,7 @@ import { KeyboardKey as EKey } from '../../../constants/keyboard-keys';
 
 import FilteredList from './index';
 
-vi.mock('@tanstack/react-virtual', async () => {
-  const React = await vi.importActual('react');
+vi.mock('@tanstack/react-virtual', () => {
   return {
     useVirtualizer: ({ count }) => {
       const items = [];
@@ -31,8 +30,7 @@ vi.mock('@tanstack/react-virtual', async () => {
   };
 });
 
-vi.mock('./ListItem', async () => {
-  const React = await vi.importActual('react');
+vi.mock('./ListItem', () => {
   return mockDefault(({ index, data }) => {
     const { options, setValue, selectedValue, addValues, removeValues, multi } = data;
     const option = options[index];

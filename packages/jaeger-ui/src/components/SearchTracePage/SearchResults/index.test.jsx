@@ -25,7 +25,7 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-vi.mock('./AltViewOptions', async () =>
+vi.mock('./AltViewOptions', () =>
   mockDefault(
     jest.fn(({ onDdgViewClicked }) => (
       <button type="button" data-testid="alt-toggle" onClick={onDdgViewClicked}>
@@ -35,19 +35,17 @@ vi.mock('./AltViewOptions', async () =>
   )
 );
 
-vi.mock('./DiffSelection', async () =>
+vi.mock('./DiffSelection', () =>
   mockDefault(jest.fn(({ traces }) => <div data-testid="diffselection">{traces.length}</div>))
 );
 
-vi.mock('./ResultItem', async () =>
+vi.mock('./ResultItem', () =>
   mockDefault(jest.fn(({ trace }) => <div data-testid={`result-${trace.traceID}`} />))
 );
 
-vi.mock('./ScatterPlot', async () =>
-  mockDefault(jest.fn(props => <div data-testid="scatterplot" {...props} />))
-);
+vi.mock('./ScatterPlot', () => mockDefault(jest.fn(props => <div data-testid="scatterplot" {...props} />)));
 
-vi.mock('./DownloadResults', async () =>
+vi.mock('./DownloadResults', () =>
   mockDefault(
     jest.fn(({ onDownloadResultsClicked }) => (
       <button type="button" data-testid="download" onClick={onDownloadResultsClicked}>
@@ -57,20 +55,17 @@ vi.mock('./DownloadResults', async () =>
   )
 );
 
-vi.mock('../../DeepDependencies/traces', async () => mockDefault(jest.fn(() => <div data-testid="ddg" />)));
+vi.mock('../../DeepDependencies/traces', () => mockDefault(jest.fn(() => <div data-testid="ddg" />)));
 
-vi.mock('../../common/LoadingIndicator', async () =>
-  mockDefault(jest.fn(() => <div data-testid="loading" />))
-);
+vi.mock('../../common/LoadingIndicator', () => mockDefault(jest.fn(() => <div data-testid="loading" />)));
 
-vi.mock('../../common/NewWindowIcon', async () =>
+vi.mock('../../common/NewWindowIcon', () =>
   mockDefault(jest.fn(() => <span data-testid="new-window-icon" />))
 );
 
-vi.mock('../../common/SearchableSelect', async () => {
-  const mockReact = await vi.importActual('react');
+vi.mock('../../common/SearchableSelect', () => {
   return mockDefault(function MockSearchableSelect({ value, onChange, children, ...rest }) {
-    const options = mockReact.Children.map(children, child => (
+    const options = React.Children.map(children, child => (
       <option key={child.props.value} value={child.props.value}>
         {child.props.children}
       </option>
