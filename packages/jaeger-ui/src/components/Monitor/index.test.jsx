@@ -11,6 +11,7 @@ import store from '../../utils/storage';
 import MonitorATMPage from '.';
 import metricsReducer from '../../reducers/metrics';
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import getConfig from '../../utils/config/get-config';
 
 // --- Mock Modules ---
 // Mock the actions module
@@ -128,7 +129,6 @@ describe('<MonitorATMPage>', () => {
   });
 
   it('renders EmptyState when metricsStorage is disabled in config', () => {
-    const getConfig = require('../../utils/config/get-config').default;
     getConfig.mockImplementation(() => ({
       qualityMetrics: { apiEndpoint: '/api/quality-metrics' },
       storageCapabilities: { metricsStorage: false },

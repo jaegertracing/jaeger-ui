@@ -1,6 +1,36 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import React from 'react';
+import { render, screen, act } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom';
+
+import {
+  computeAdjustedRange,
+  makeShortcutCallbacks,
+  mapDispatchToProps,
+  mapStateToProps,
+  shortcutConfig,
+  TracePageImpl as TracePage,
+  VIEW_MIN_RANGE,
+} from './index';
+import * as track from './index.track';
+import * as keyboardShortcutsMod from './keyboard-shortcuts';
+import { reset as resetShortcuts, merge as mergeShortcuts } from './keyboard-shortcuts';
+import * as scrollPageMod from './scroll-page';
+import { cancel as cancelScroll } from './scroll-page';
+import * as calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
+import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
+import * as getUiFindVertexKeys from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
+import { fetchedState } from '../../constants';
+import traceGenerator from '../../demo/trace-generators';
+import transformTraceData from '../../model/transform-trace-data';
+import filterSpansSpy from '../../utils/filter-spans';
+import updateUiFindSpy from '../../utils/update-ui-find';
+import { ETraceViewType } from './types';
+import ScrollManager from './ScrollManager';
+
 let capturedHeaderProps = {};
 let capturedArchiveNotifierProps = {};
 
@@ -79,10 +109,10 @@ jest.mock('./ArchiveNotifier', () => props => {
 });
 
 jest.mock('./TracePageHeader', () => {
-  const React = require('react');
+  const { forwardRef } = require('react');
   return {
     __esModule: true,
-    default: React.forwardRef(function MockTracePageHeader(props, ref) {
+    default: forwardRef(function MockTracePageHeader(props, ref) {
       capturedHeaderProps = { ...props, ref };
       return (
         <div className="TracePageHeader">
@@ -93,34 +123,6 @@ jest.mock('./TracePageHeader', () => {
     }),
   };
 });
-
-import React from 'react';
-import { render, screen, act } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom';
-
-import {
-  computeAdjustedRange,
-  makeShortcutCallbacks,
-  mapDispatchToProps,
-  mapStateToProps,
-  shortcutConfig,
-  TracePageImpl as TracePage,
-  VIEW_MIN_RANGE,
-} from './index';
-import * as track from './index.track';
-import { reset as resetShortcuts, merge as mergeShortcuts } from './keyboard-shortcuts';
-import { cancel as cancelScroll } from './scroll-page';
-import * as calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
-import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
-import * as getUiFindVertexKeys from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
-import { fetchedState } from '../../constants';
-import traceGenerator from '../../demo/trace-generators';
-import transformTraceData from '../../model/transform-trace-data';
-import filterSpansSpy from '../../utils/filter-spans';
-import updateUiFindSpy from '../../utils/update-ui-find';
-import { ETraceViewType } from './types';
-import ScrollManager from './ScrollManager';
 
 const renderWithRouter = (ui, { route = '/' } = {}) => {
   return render(<MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>);
@@ -438,8 +440,8 @@ describe('<TracePage>', () => {
 
     ScrollManager.mockImplementation(() => scrollManagerMock);
 
-    const resetShortcutsMock = jest.spyOn(require('./keyboard-shortcuts'), 'reset');
-    const cancelScrollMock = jest.spyOn(require('./scroll-page'), 'cancel');
+    const resetShortcutsMock = jest.spyOn(keyboardShortcutsMod, 'reset');
+    const cancelScrollMock = jest.spyOn(scrollPageMod, 'cancel');
 
     const { unmount } = render(<TracePage {...defaultProps} />);
     unmount();

@@ -4,7 +4,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { convertJaegerTraceToProfile } from '@pyroscope/flamegraph';
+import { convertJaegerTraceToProfile, FlamegraphRenderer } from '@pyroscope/flamegraph';
 import TraceFlamegraph from './index';
 import testTrace from './testTrace.json';
 
@@ -21,10 +21,6 @@ jest.mock('@pyroscope/flamegraph', () => {
     )),
   };
 });
-
-// Re-import FlamegraphRenderer after mocking
-
-const { FlamegraphRenderer } = require('@pyroscope/flamegraph');
 
 const profile = convertJaegerTraceToProfile(testTrace.data);
 
