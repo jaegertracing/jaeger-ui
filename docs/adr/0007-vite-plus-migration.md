@@ -491,8 +491,8 @@ confirm no errors or unexpected HTML injection.
 | ✅ A | Drop plexus library build; simplify plexus tsconfig; paths-based type resolution ([#3677](https://github.com/jaegertracing/jaeger-ui/pull/3677), [#3680](https://github.com/jaegertracing/jaeger-ui/pull/3680)) | None | Done |
 | ✅ B | Delete legacy ESLint configs from both packages — prep for Oxlint ([#3681](https://github.com/jaegertracing/jaeger-ui/pull/3681)) | None | Done |
 | ✅ C1 | Replace ESLint with Oxlint ([#3682](https://github.com/jaegertracing/jaeger-ui/pull/3682)) | Unknown 2 | Done |
-| C2 | Replace Prettier with Oxfmt | None | Independently, any time |
-| D  | Upgrade TypeScript (6 / 7) | None | Now unblocked |
+| ✅ C2 | Replace Prettier with Oxfmt | None | Independently, any time |
+| ✅ D  | Upgrade TypeScript (6 / 7) | None | Now unblocked |
 | E  | Consolidate `jaeger-ui` tsconfigs | Unknown 1 | After investigation (easier after F) |
 | F  | Migrate Jest → Vitest in both packages; remove Babel test deps | Unknowns 3, 4, 5, 6 | Deferred |
 | G  | Update CLAUDE.md, README, CI workflows | None | After F |
