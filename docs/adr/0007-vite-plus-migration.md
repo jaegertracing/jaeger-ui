@@ -168,7 +168,7 @@ references required `composite: true` which conflicts with `noEmit: true` and cr
 now covers both packages. This is a preparatory step — the consolidated flat config will be the thing
 replaced by Oxlint in PR C.
 
-#### Changes made
+#### ✅ Changes made
 
 - Deleted `packages/plexus/.eslintrc.js` — it only set `@typescript-eslint/recommended` and `prettier`
   for TS files, both already provided by the root flat config via the `'./packages/*/tsconfig.json'` glob.
@@ -192,7 +192,7 @@ Result: 0 ESLint errors (250 pre-existing warnings, all `@typescript-eslint/no-e
 Oxlint is the linting component of the Vite+ toolchain. It is Rust-based and has no dependency on
 `@typescript-eslint`, directly unblocking TypeScript 6/7 upgrades.
 
-#### Approach: run Oxlint in parallel before replacing ESLint
+#### ✅ Approach: run Oxlint in parallel before replacing ESLint
 
 Rather than replacing ESLint in a single step, PR C1 is split into two phases:
 
@@ -208,7 +208,7 @@ Rather than replacing ESLint in a single step, PR C1 is split into two phases:
 - Update CI `lint` script, `lint-staged`, and `husky` hooks to use Oxlint only.
 - Update TypeScript to 6.x (PR D).
 
-#### Success criteria for Phase 1
+#### ✅ Success criteria for Phase 1
 
 1. **Rule coverage**: every rule currently set to `error` or `warn` in `eslint.config.js` has a
    documented Oxlint equivalent — or a deliberate decision to drop it with written justification.
@@ -328,7 +328,7 @@ both of which are unaffected by switching the lint/test tooling.
     available in hoisted factory scope.
 - Deleted `test/babel-transform.js` and `test/generic-file-transform.js` (no longer needed).
 
-#### Lessons learned (applicable to jaeger-ui migration)
+#### ✅ Lessons learned (applicable to jaeger-ui migration)
 
 | Situation | Vitest behaviour | Action required |
 |-----------|-----------------|-----------------|
@@ -349,7 +349,7 @@ deleted.
 
 ---
 
-### 9. `packages/jaeger-ui` — Migrate Jest → Vitest (PRs H1–H3)
+### ✅ 9. `packages/jaeger-ui` — Migrate Jest → Vitest (PRs H1–H3)
 
 The jaeger-ui package has 207 test files (~2600 tests). Migration is split into three incremental PRs
 so each is reviewable in isolation and CI catches regressions early.
