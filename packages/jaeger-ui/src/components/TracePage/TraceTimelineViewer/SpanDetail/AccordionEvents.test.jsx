@@ -8,7 +8,7 @@ import '@testing-library/jest-dom';
 import AccordionEvents from './AccordionEvents';
 
 const mockAccordionAttributes = jest.fn();
-jest.mock('./AccordionAttributes', () =>
+vi.mock('./AccordionAttributes', () =>
   mockDefault(props => {
     mockAccordionAttributes(props);
     return (
@@ -198,7 +198,9 @@ describe('<AccordionEvents>', () => {
         throw new Error('disconnect error');
       }),
     };
-    window.ResizeObserver = jest.fn(() => mockResizeObserver);
+    window.ResizeObserver = jest.fn(function () {
+      return mockResizeObserver;
+    });
 
     const { unmount: unmount1 } = render(<AccordionEvents {...defaultProps} isOpen />);
     expect(mockResizeObserver.observe).toHaveBeenCalled();
@@ -211,7 +213,9 @@ describe('<AccordionEvents>', () => {
         throw new Error('mutation disconnect error');
       }),
     };
-    window.MutationObserver = jest.fn(() => mockMutationObserver);
+    window.MutationObserver = jest.fn(function () {
+      return mockMutationObserver;
+    });
 
     const { unmount: unmount2 } = render(<AccordionEvents {...defaultProps} isOpen />);
     expect(() => unmount2()).not.toThrow();

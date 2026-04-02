@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 import { TraceId } from './TraceId';
 import getConfig from '../../utils/config/get-config';
 
-jest.mock('../../utils/config/get-config', () => ({
+vi.mock('../../utils/config/get-config', () => ({
   __esModule: true,
   default: jest.fn(),
 }));

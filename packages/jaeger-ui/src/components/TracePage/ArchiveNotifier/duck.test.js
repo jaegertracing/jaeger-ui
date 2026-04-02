@@ -5,7 +5,7 @@ import configureStore from '../../../utils/configure-store';
 import JaegerAPI from '../../../api/jaeger';
 import reducer, { actions } from './duck';
 
-jest.mock('../../../api/jaeger', () => {
+vi.mock('../../../api/jaeger', () => {
   return {
     __esModule: true,
     default: {

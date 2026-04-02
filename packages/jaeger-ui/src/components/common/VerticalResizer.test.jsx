@@ -14,11 +14,13 @@ const mockDragManager = {
   resetBounds: jest.fn(),
 };
 
-jest.mock('../../utils/DraggableManager', () => {
-  return jest.fn().mockImplementation(config => {
-    draggableManagerConfig = config;
-    return mockDragManager;
-  });
+vi.mock('../../utils/DraggableManager', () => {
+  return mockDefault(
+    jest.fn().mockImplementation(function (config) {
+      draggableManagerConfig = config;
+      return mockDragManager;
+    })
+  );
 });
 
 describe('<VerticalResizer>', () => {

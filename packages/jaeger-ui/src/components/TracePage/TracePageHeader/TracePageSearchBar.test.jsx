@@ -7,28 +7,29 @@ import '@testing-library/jest-dom';
 import * as markers from './TracePageSearchBar.markers';
 import DefaultTracePageSearchBar, { TracePageSearchBarFn as TracePageSearchBar } from './TracePageSearchBar';
 
-jest.mock('../index.track', () => ({
+vi.mock('../index.track', async () => ({
   trackFilter: jest.fn(),
 }));
 
-jest.mock('../../common/UiFindInput', () => {
-  const React = jest.requireActual('react');
-  return React.forwardRef(function MockUiFindInput({ inputProps, trackFindFunction }, ref) {
-    return (
-      <div data-testid="ui-find-input-wrapper">
-        <input
-          ref={ref}
-          data-testid="ui-find-input"
-          data-test={inputProps['data-test']}
-          className={inputProps.className}
-          name={inputProps.name}
-          onChange={() => trackFindFunction && trackFindFunction()}
-          placeholder="Search..."
-        />
-        {inputProps.suffix}
-      </div>
-    );
-  });
+vi.mock('../../common/UiFindInput', () => {
+  return mockDefault(
+    React.forwardRef(function MockUiFindInput({ inputProps, trackFindFunction }, ref) {
+      return (
+        <div data-testid="ui-find-input-wrapper">
+          <input
+            ref={ref}
+            data-testid="ui-find-input"
+            data-test={inputProps['data-test']}
+            className={inputProps.className}
+            name={inputProps.name}
+            onChange={() => trackFindFunction && trackFindFunction()}
+            placeholder="Search..."
+          />
+          {inputProps.suffix}
+        </div>
+      );
+    })
+  );
 });
 
 const defaultProps = {

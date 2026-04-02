@@ -11,7 +11,7 @@ import DetailState from '../SpanDetail/DetailState';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 
-jest.mock('../SpanDetail', () =>
+vi.mock('../SpanDetail', () =>
   mockDefault(
     jest.fn(({ span, focusSpan, linksGetter }) => {
       linksGetter([], 0);
@@ -24,8 +24,8 @@ jest.mock('../SpanDetail', () =>
   )
 );
 
-jest.mock('../../../../model/link-patterns', () => mockDefault(jest.fn(() => [])));
-jest.mock('../../../../utils/update-ui-find', () => mockDefault(jest.fn()));
+vi.mock('../../../../model/link-patterns', () => mockDefault(jest.fn(() => [])));
+vi.mock('../../../../utils/update-ui-find', () => mockDefault(jest.fn()));
 
 describe('<SpanDetailSidePanelImpl>', () => {
   let trace;

@@ -4,31 +4,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { babelConfigurationForDepcheck } from '../packages/jaeger-ui/test/babel-transform.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const packageNames = [
-  ...babelConfigurationForDepcheck.presets.flatMap(preset => {
-    if (Array.isArray(preset)) {
-      return [preset[0]];
-    }
-    return [preset];
-  }),
-  ...babelConfigurationForDepcheck.plugins.flatMap(plugin => {
-    if (Array.isArray(plugin)) {
-      return [plugin[0]];
-    }
-    return [plugin];
-  }),
-];
-
-const otherPackages = ['jest-environment-jsdom', '@types/jest'];
+// Packages used only at build/test time that depcheck cannot detect automatically.
+const otherPackages = ['@vitest/coverage-v8', 'identity-obj-proxy'];
 
 // Use the selected targetPackage for generating depcheckrcContent
 const depcheckrcContent = {
-  ignores: [...packageNames, ...otherPackages],
+  ignores: [...otherPackages],
   'ignore-dirs': ['build'],
 };
 

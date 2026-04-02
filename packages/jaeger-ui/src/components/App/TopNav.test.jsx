@@ -8,8 +8,8 @@ import '@testing-library/jest-dom';
 
 import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
 
-jest.mock('antd', () => {
-  const actual = jest.requireActual('antd');
+vi.mock('antd', async () => {
+  const actual = await vi.importActual('antd');
 
   const Menu = ({ items = [], selectedKeys = [] }) => (
     <nav data-testid="mock-menu" data-selectedkeys={JSON.stringify(selectedKeys)}>
@@ -37,7 +37,7 @@ jest.mock('antd', () => {
   return { ...actual, Menu, Dropdown };
 });
 
-jest.mock('../../utils/config/get-config', () => {
+vi.mock('../../utils/config/get-config', async () => {
   return {
     __esModule: true,
     default: jest.fn(() => ({
@@ -120,7 +120,7 @@ describe('<TopNav>', () => {
     });
 
     it('renders the "Jaeger" link', () => {
-      const items = screen.getByRole('link', { name: /jaeger logo jaeger/i });
+      const items = screen.getByRole('link', { name: /jaeger logo ?jaeger/i });
       expect(items).toBeInTheDocument();
     });
 

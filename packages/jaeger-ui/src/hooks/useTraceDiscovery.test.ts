@@ -7,10 +7,10 @@ import React from 'react';
 import { useServices, useSpanNames } from './useTraceDiscovery';
 import { jaegerClient } from '../api/v3/client';
 
-jest.mock('../api/v3/client', () => ({
+vi.mock('../api/v3/client', () => ({
   jaegerClient: {
-    fetchServices: jest.fn(),
-    fetchSpanNames: jest.fn(),
+    fetchServices: vi.fn(),
+    fetchSpanNames: vi.fn(),
   },
 }));
 
@@ -34,7 +34,7 @@ describe('useTraceDiscovery', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -43,7 +43,7 @@ describe('useTraceDiscovery', () => {
 
   describe('useServices', () => {
     it('returns loading state initially', () => {
-      (jaegerClient.fetchServices as jest.Mock).mockImplementation(
+      (jaegerClient.fetchServices as ReturnType<typeof vi.fn>).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
 
@@ -57,7 +57,7 @@ describe('useTraceDiscovery', () => {
 
     it('successfully fetches and returns services data', async () => {
       const mockServices = ['service-a', 'service-b', 'service-c'];
-      (jaegerClient.fetchServices as jest.Mock).mockResolvedValue(mockServices);
+      (jaegerClient.fetchServices as ReturnType<typeof vi.fn>).mockResolvedValue(mockServices);
 
       const { result } = renderHook(() => useServices(), {
         wrapper: createWrapper(),
@@ -73,7 +73,7 @@ describe('useTraceDiscovery', () => {
 
     it('uses correct query key', async () => {
       const mockServices = ['service-a'];
-      (jaegerClient.fetchServices as jest.Mock).mockResolvedValue(mockServices);
+      (jaegerClient.fetchServices as ReturnType<typeof vi.fn>).mockResolvedValue(mockServices);
 
       const { result } = renderHook(() => useServices(), {
         wrapper: createWrapper(),
@@ -90,7 +90,7 @@ describe('useTraceDiscovery', () => {
 
     it('handles errors from fetchServices', async () => {
       const mockError = new Error('Failed to fetch services');
-      (jaegerClient.fetchServices as jest.Mock).mockRejectedValue(mockError);
+      (jaegerClient.fetchServices as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       const { result } = renderHook(() => useServices(), {
         wrapper: createWrapper(),
@@ -105,7 +105,7 @@ describe('useTraceDiscovery', () => {
     });
 
     it('returns empty array when API returns empty services', async () => {
-      (jaegerClient.fetchServices as jest.Mock).mockResolvedValue([]);
+      (jaegerClient.fetchServices as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
       const { result } = renderHook(() => useServices(), {
         wrapper: createWrapper(),
@@ -121,7 +121,7 @@ describe('useTraceDiscovery', () => {
 
   describe('useSpanNames', () => {
     it('returns loading state initially when service is provided', () => {
-      (jaegerClient.fetchSpanNames as jest.Mock).mockImplementation(
+      (jaegerClient.fetchSpanNames as ReturnType<typeof vi.fn>).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
 
@@ -138,7 +138,7 @@ describe('useTraceDiscovery', () => {
         { name: 'GET /api/users', spanKind: 'server' },
         { name: 'POST /api/orders', spanKind: 'server' },
       ];
-      (jaegerClient.fetchSpanNames as jest.Mock).mockResolvedValue(mockOperations);
+      (jaegerClient.fetchSpanNames as ReturnType<typeof vi.fn>).mockResolvedValue(mockOperations);
 
       const { result } = renderHook(() => useSpanNames('my-service'), {
         wrapper: createWrapper(),
@@ -155,7 +155,7 @@ describe('useTraceDiscovery', () => {
 
     it('uses correct query key with service parameter', async () => {
       const mockOperations = [{ name: 'op1', spanKind: 'server' }];
-      (jaegerClient.fetchSpanNames as jest.Mock).mockResolvedValue(mockOperations);
+      (jaegerClient.fetchSpanNames as ReturnType<typeof vi.fn>).mockResolvedValue(mockOperations);
 
       const { result } = renderHook(() => useSpanNames('test-service'), {
         wrapper: createWrapper(),
@@ -192,7 +192,7 @@ describe('useTraceDiscovery', () => {
 
     it('handles errors from fetchSpanNames', async () => {
       const mockError = new Error('Failed to fetch span names');
-      (jaegerClient.fetchSpanNames as jest.Mock).mockRejectedValue(mockError);
+      (jaegerClient.fetchSpanNames as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       const { result } = renderHook(() => useSpanNames('test-service'), {
         wrapper: createWrapper(),
@@ -207,7 +207,7 @@ describe('useTraceDiscovery', () => {
     });
 
     it('returns empty array when API returns empty operations', async () => {
-      (jaegerClient.fetchSpanNames as jest.Mock).mockResolvedValue([]);
+      (jaegerClient.fetchSpanNames as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
       const { result } = renderHook(() => useSpanNames('empty-service'), {
         wrapper: createWrapper(),
@@ -223,7 +223,7 @@ describe('useTraceDiscovery', () => {
     it('refetches when service parameter changes', async () => {
       const mockOps1 = [{ name: 'op1', spanKind: 'server' }];
       const mockOps2 = [{ name: 'op2', spanKind: 'client' }];
-      (jaegerClient.fetchSpanNames as jest.Mock)
+      (jaegerClient.fetchSpanNames as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce(mockOps1)
         .mockResolvedValueOnce(mockOps2);
 
@@ -250,7 +250,7 @@ describe('useTraceDiscovery', () => {
 
     it('stops fetching when service becomes null', async () => {
       const mockOps = [{ name: 'op1', spanKind: 'server' }];
-      (jaegerClient.fetchSpanNames as jest.Mock).mockResolvedValue(mockOps);
+      (jaegerClient.fetchSpanNames as ReturnType<typeof vi.fn>).mockResolvedValue(mockOps);
 
       const { result, rerender } = renderHook(({ service }) => useSpanNames(service), {
         wrapper: createWrapper(),
@@ -262,7 +262,7 @@ describe('useTraceDiscovery', () => {
       });
       expect(result.current.data).toEqual(mockOps);
 
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       rerender({ service: null });
 
@@ -276,7 +276,7 @@ describe('useTraceDiscovery', () => {
         { name: 'op2', spanKind: 'client' },
         { name: 'op3', spanKind: 'server' },
       ];
-      (jaegerClient.fetchSpanNames as jest.Mock).mockResolvedValue(mockOps);
+      (jaegerClient.fetchSpanNames as ReturnType<typeof vi.fn>).mockResolvedValue(mockOps);
 
       const { result } = renderHook(() => useSpanNames('service-1', 'server'), {
         wrapper: createWrapper(),
@@ -298,7 +298,7 @@ describe('useTraceDiscovery', () => {
         { name: 'op1', spanKind: 'server' },
         { name: 'op2', spanKind: 'client' },
       ];
-      (jaegerClient.fetchSpanNames as jest.Mock).mockResolvedValue(mockOps);
+      (jaegerClient.fetchSpanNames as ReturnType<typeof vi.fn>).mockResolvedValue(mockOps);
 
       const { result } = renderHook(() => useSpanNames('service-1'), {
         wrapper: createWrapper(),

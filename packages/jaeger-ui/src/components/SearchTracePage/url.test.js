@@ -6,7 +6,7 @@ import * as reactRouterDomCompat from 'react-router-dom';
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 import { ROUTE_PATH, getUrl, getUrlState, isSameQuery, matches } from './url';
 
-jest.mock('react-router-dom', () => ({
+vi.mock('react-router-dom', () => ({
   matchPath: jest.fn(),
 }));
 
