@@ -14,7 +14,6 @@ describe('AltViewOptions', () => {
   let getConfigValueSpy;
   let getUrlSpy;
   let getUrlStateSpy;
-  let openSpy;
   let trackConversionsSpy;
 
   const props = {
@@ -27,15 +26,10 @@ describe('AltViewOptions', () => {
     getUrlStateSpy = jest.spyOn(url, 'getUrlState');
     getConfigValueSpy = jest.spyOn(getConfig, 'default');
     trackConversionsSpy = jest.spyOn(trackingModule, 'trackConversions');
-    openSpy = jest.spyOn(window, 'open').mockImplementation();
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  afterAll(() => {
-    openSpy.mockRestore();
   });
 
   it('renders correct label', () => {
@@ -72,12 +66,12 @@ describe('AltViewOptions', () => {
     render(<AltViewOptions {...props} traceResultsView={false} />);
     fireEvent.click(screen.getByText('View All Dependencies'));
     expect(getUrlSpy).toHaveBeenLastCalledWith(mockUrlState);
-    expect(openSpy).toHaveBeenLastCalledWith(mockUrl, '_self');
+    expect(window.open).toHaveBeenLastCalledWith(mockUrl, '_self');
 
     fireEvent.click(screen.getByText('View All Dependencies'), { ctrlKey: true });
-    expect(openSpy).toHaveBeenLastCalledWith(mockUrl, '_blank');
+    expect(window.open).toHaveBeenLastCalledWith(mockUrl, '_blank');
 
     fireEvent.click(screen.getByText('View All Dependencies'), { metaKey: true });
-    expect(openSpy).toHaveBeenLastCalledWith(mockUrl, '_blank');
+    expect(window.open).toHaveBeenLastCalledWith(mockUrl, '_blank');
   });
 });

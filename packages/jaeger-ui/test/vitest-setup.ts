@@ -57,6 +57,21 @@ global.ResizeObserver = vi.fn().mockImplementation(function () {
   buildDate: '',
 });
 
+// Suppress jsdom "Not implemented" warnings for APIs called by third-party
+// code (Ant Design, link components) but never meaningfully exercised in
+// unit tests.  window.open is reset per-test so spies work correctly.
+window.open = vi.fn();
+beforeEach(() => {
+  window.open = vi.fn();
+});
+window.getComputedStyle = new Proxy(window.getComputedStyle, {
+  apply(target, thisArg, args) {
+    // jsdom logs "Not implemented" when a pseudo-element is passed; swallow it.
+    if (args[1]) return { getPropertyValue: () => '' } as CSSStyleDeclaration;
+    return Reflect.apply(target, thisArg, args);
+  },
+});
+
 // Provide a matchMedia() stub as some Ant Design components attempt to use this
 window.matchMedia = vi.fn().mockImplementation((query: string) => ({
   matches: false,
