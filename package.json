@@ -28,7 +28,6 @@
     "lint-staged": "16.4.0",
     "npm-run-all2": "8.0.1",
     "openapi-zod-client": "1.18.3",
-    "prettier": "3.8.1",
     "rxjs-compat": "6.6.7",
     "typescript": "5.9.3",
     "vite-plus": "0.1.15"
@@ -54,36 +53,44 @@
     "coverage": "npm run --workspaces coverage",
     "depcheck": "./scripts/run-depcheck.sh",
     "oxlint": "vp lint packages/ scripts/",
-    "fmt": "npm run prettier",
-    "lint": "npm-run-all -ln --parallel prettier-lint tsc-lint oxlint check-license check-copyright-year check-tsx-naming check-overrides",
+    "fmt": "vp fmt",
+    "lint": "npm-run-all -ln --parallel fmt-lint tsc-lint oxlint check-license check-copyright-year check-tsx-naming check-overrides",
     "prepare": "husky",
-    "prettier": "prettier --write .",
-    "prettier-lint": "prettier --check . || (echo '*** ❌ PLEASE RUN npm run prettier AND RESUBMIT ***' && false)",
-    "generate:api-types": "openapi-zod-client https://raw.githubusercontent.com/jaegertracing/jaeger-idl/refs/heads/main/swagger/api_v3/query_service.openapi.yaml --output packages/jaeger-ui/src/api/v3/generated-client.ts --with-alias && node scripts/postprocess-schemas.cjs && prettier --write packages/jaeger-ui/src/api/v3/generated-client.ts",
+    "fmt-lint": "vp fmt --check || (echo '*** ❌ PLEASE RUN make fmt AND RESUBMIT ***' && false)",
+    "generate:api-types": "openapi-zod-client https://raw.githubusercontent.com/jaegertracing/jaeger-idl/refs/heads/main/swagger/api_v3/query_service.openapi.yaml --output packages/jaeger-ui/src/api/v3/generated-client.ts --with-alias && node scripts/postprocess-schemas.cjs && vp fmt packages/jaeger-ui/src/api/v3/generated-client.ts",
     "test": "npm run --workspaces test --",
     "tsc-lint": "tsc -p packages/jaeger-ui/tsconfig.lint.json && tsc -p packages/plexus/tsconfig.json",
     "tsc-lint-debug": "tsc -p packages/jaeger-ui/tsconfig.lint.json --listFiles && tsc -p packages/plexus/tsconfig.json --listFiles",
     "start": "cd packages/jaeger-ui && npm run start",
     "update-snapshots": "cd packages/jaeger-ui && npm test -- -u"
   },
-  "prettier": {
-    "arrowParens": "avoid",
-    "printWidth": 110,
-    "proseWrap": "never",
-    "singleQuote": true,
-    "trailingComma": "es5"
-  },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mts}": [
       "vp lint --fix",
-      "prettier --write"
+      "vp fmt"
     ],
     "*.{json,css}": [
-      "prettier --write"
+      "vp fmt --no-error-on-unmatched-pattern"
     ]
   },
   "dependencies": {
     "@tanstack/react-virtual": "3.13.12",
     "react-side-effect": "2.1.2"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-android-arm64": "1.0.0-rc.12",
+    "@rolldown/binding-darwin-arm64": "1.0.0-rc.12",
+    "@rolldown/binding-darwin-x64": "1.0.0-rc.12",
+    "@rolldown/binding-freebsd-x64": "1.0.0-rc.12",
+    "@rolldown/binding-linux-arm-gnueabihf": "1.0.0-rc.12",
+    "@rolldown/binding-linux-arm64-gnu": "1.0.0-rc.12",
+    "@rolldown/binding-linux-arm64-musl": "1.0.0-rc.12",
+    "@rolldown/binding-linux-ppc64-gnu": "1.0.0-rc.12",
+    "@rolldown/binding-linux-s390x-gnu": "1.0.0-rc.12",
+    "@rolldown/binding-linux-x64-gnu": "1.0.0-rc.12",
+    "@rolldown/binding-linux-x64-musl": "1.0.0-rc.12",
+    "@rolldown/binding-openharmony-arm64": "1.0.0-rc.12",
+    "@rolldown/binding-win32-arm64-msvc": "1.0.0-rc.12",
+    "@rolldown/binding-win32-x64-msvc": "1.0.0-rc.12"
   }
 }
