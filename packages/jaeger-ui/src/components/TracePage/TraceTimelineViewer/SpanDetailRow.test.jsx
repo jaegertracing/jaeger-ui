@@ -12,13 +12,11 @@ import SpanTreeOffset from './SpanTreeOffset';
 
 const MockSpanDetail = jest.fn(() => <div data-testid="mocked-span-detail" />);
 vi.mock('./SpanDetail', () => ({
-  __esModule: true,
   default: props => MockSpanDetail(props),
 }));
 
 const MockSpanTreeOffset = jest.fn(() => <div data-testid="mocked-span-tree-offset" />);
 vi.mock('./SpanTreeOffset', () => ({
-  __esModule: true,
   default: props => MockSpanTreeOffset(props),
 }));
 

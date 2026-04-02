@@ -10,7 +10,6 @@ vi.mock('react-router-dom', async () => ({
 }));
 
 vi.mock('../../../model/path-agnostic-decorations', async () => ({
-  __esModule: true,
   default: jest.fn(() => ({})),
 }));
 

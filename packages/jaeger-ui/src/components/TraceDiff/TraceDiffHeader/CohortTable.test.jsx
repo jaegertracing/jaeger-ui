@@ -10,12 +10,10 @@ import { fetchedState } from '../../../constants';
 import * as dateUtils from '../../../utils/date';
 
 vi.mock('./TraceTimelineLink', () => ({
-  __esModule: true,
   default: props => <div data-testid="trace-timeline-link" data-trace-id={props.traceID} />,
 }));
 
 vi.mock('../../common/RelativeDate', () => ({
-  __esModule: true,
   default: props => (
     <div
       data-testid="relative-date"
@@ -27,7 +25,6 @@ vi.mock('../../common/RelativeDate', () => ({
 }));
 
 vi.mock('../../common/TraceName', () => ({
-  __esModule: true,
   default: props => (
     <div
       data-testid="trace-name"

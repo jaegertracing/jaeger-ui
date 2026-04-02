@@ -21,12 +21,8 @@ vi.mock('react-router-dom', async () => ({
   useNavigate: () => mockNavigate,
 }));
 
-/*
-With v5+, redux no longer supports `bindActionCreators` to be configured.
-`configurable: true` has to be supported by the compilers for it to be configured.
-It has to be explicitly told using `__esModule` to babel for compiling it with that property.
-*/
-vi.mock('redux', async () => ({ __esModule: true, ...(await vi.importActual('redux')) }));
+// Mock redux so its exports are configurable and can be spied on with vi.spyOn.
+vi.mock('redux', async () => ({ ...(await vi.importActual('redux')) }));
 vi.mock('./TraceDiffHeader', async () => {
   return mockDefault(function MockTraceDiffHeader(props) {
     return (

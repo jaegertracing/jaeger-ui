@@ -17,20 +17,17 @@ vi.mock('../TimelineRow', () => {
     </div>
   );
   return {
-    __esModule: true,
     default: TimelineRowMock,
   };
 });
 
 vi.mock('../../../common/VerticalResizer', () => ({
-  __esModule: true,
   default: ({ position, min, max }) => (
     <div data-testid="vertical-resizer" data-position={position} data-min={min} data-max={max} />
   ),
 }));
 
 vi.mock('./TimelineViewingLayer', () => ({
-  __esModule: true,
   default: ({ boundsInvalidator, viewRangeTime }) => (
     <div
       data-testid="timeline-viewing-layer"
@@ -41,7 +38,6 @@ vi.mock('./TimelineViewingLayer', () => ({
 }));
 
 vi.mock('../Ticks', () => ({
-  __esModule: true,
   default: ({ numTicks, startTime, endTime, showLabels }) => (
     <div
       data-testid="ticks"
@@ -54,7 +50,6 @@ vi.mock('../Ticks', () => ({
 }));
 
 vi.mock('./TimelineCollapser', () => ({
-  __esModule: true,
   default: () => <div data-testid="timeline-collapser" />,
 }));
 

@@ -9,10 +9,7 @@ import AppThemeProvider, { useThemeMode } from './ThemeProvider';
 import { THEME_STORAGE_KEY } from './ThemeStorage';
 import getConfig from '../../utils/config/get-config';
 
-vi.mock('../../utils/config/get-config', () => ({
-  __esModule: true,
-  default: vi.fn(),
-}));
+vi.mock('../../utils/config/get-config', () => mockDefault(vi.fn()));
 
 function setupMatchMedia(matches = false) {
   Object.defineProperty(window, 'matchMedia', {

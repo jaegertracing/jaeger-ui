@@ -7,7 +7,6 @@ import reducer, { actions } from './duck';
 
 vi.mock('../../../api/jaeger', () => {
   return {
-    __esModule: true,
     default: {
       archiveTrace: jest.fn(),
     },

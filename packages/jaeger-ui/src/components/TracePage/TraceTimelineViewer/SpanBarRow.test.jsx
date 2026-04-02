@@ -9,7 +9,6 @@ import SpanBarRow from './SpanBarRow';
 import SpanBar from './SpanBar';
 
 vi.mock('./SpanTreeOffset', () => ({
-  __esModule: true,
   default: jest.fn(({ span, childrenVisible, onClick }) => (
     <div data-testid="span-tree-offset" onClick={onClick}>
       SpanTreeOffset: {span.spanID} - {childrenVisible ? 'expanded' : 'collapsed'}
@@ -18,7 +17,6 @@ vi.mock('./SpanTreeOffset', () => ({
 }));
 
 vi.mock('./ReferencesButton', () => ({
-  __esModule: true,
   default: jest.fn(({ tooltipText, links, children }) => (
     <button
       type="button"
@@ -32,7 +30,6 @@ vi.mock('./ReferencesButton', () => ({
 }));
 
 vi.mock('./SpanBar', () => ({
-  __esModule: true,
   default: jest.fn(() => <div data-testid="span-bar">SpanBar</div>),
 }));
 
