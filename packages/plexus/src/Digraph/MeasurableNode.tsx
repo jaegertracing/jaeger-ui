@@ -2,7 +2,7 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { forwardRef, memo, Ref, ReactElement, useCallback, useImperativeHandle, useRef } from 'react';
+import * as React from 'react';
 
 import { TMeasurableNodeRenderer, TLayerType, TRendererUtils, ELayerType } from './types';
 import { assignMergeCss, getProps } from './utils';
@@ -28,12 +28,12 @@ const SVG_HIDDEN_STYLE = { visibility: 'hidden' };
 
 const MeasurableNodeInner = <T = {}>(
   { getClassName, hidden, layerType, layoutVertex, renderNode, renderUtils, setOnNode, vertex }: TProps<T>,
-  ref: Ref<MeasurableNodeRef>
+  ref: React.Ref<MeasurableNodeRef>
 ) => {
-  const htmlRef = useRef<HTMLDivElement>(null);
-  const svgRef = useRef<SVGGElement>(null);
+  const htmlRef = React.useRef<HTMLDivElement>(null);
+  const svgRef = React.useRef<SVGGElement>(null);
 
-  const measureHtml = useCallback(() => {
+  const measureHtml = React.useCallback(() => {
     const current = htmlRef.current;
     if (!current) {
       return { height: 0, width: 0 };
@@ -44,7 +44,7 @@ const MeasurableNodeInner = <T = {}>(
     };
   }, []);
 
-  const measureSvg = useCallback(() => {
+  const measureSvg = React.useCallback(() => {
     const current = svgRef.current;
     if (!current) {
       return { height: 0, width: 0 };
@@ -54,7 +54,7 @@ const MeasurableNodeInner = <T = {}>(
   }, []);
 
   // The layout algorithm calls measure() via ref to get node dimensions before positioning
-  useImperativeHandle(
+  React.useImperativeHandle(
     ref,
     () => ({
       measure: () => (layerType === ELayerType.Html ? measureHtml() : measureSvg()),
@@ -109,8 +109,8 @@ const MeasurableNodeInner = <T = {}>(
 };
 
 // forwardRef lets parent components attach refs; memo provides shallow comparison (same as PureComponent)
-const MeasurableNode = memo(forwardRef(MeasurableNodeInner)) as <T = {}>(
-  props: TProps<T> & { ref?: Ref<MeasurableNodeRef> }
-) => ReactElement | null;
+const MeasurableNode = React.memo(React.forwardRef(MeasurableNodeInner)) as <T = {}>(
+  props: TProps<T> & { ref?: React.Ref<MeasurableNodeRef> }
+) => React.ReactElement | null;
 
 export default MeasurableNode;

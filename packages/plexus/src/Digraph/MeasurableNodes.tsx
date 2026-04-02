@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 
-import MeasurableNode, { MeasurableNodeRef } from './MeasurableNode';
+import MeasurableNode, { type MeasurableNodeRef } from './MeasurableNode';
 import { TMeasurableNodeRenderer, TLayerType, TRendererUtils } from './types';
 import { isSamePropSetter } from './utils';
 import { TLayoutVertex, TVertex } from '../types';

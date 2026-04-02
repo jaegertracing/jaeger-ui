@@ -164,7 +164,7 @@ describe('MeasurableNode', () => {
       );
       expect(ref.current).toBeDefined();
       expect(typeof ref.current.measure).toBe('function');
-      // getBBox 在 JSDOM 中不存在，需要 mock
+      // getBBox is not available in JSDOM, need to mock it
       const svgRef = ref.current.getRef().svgWrapper;
       if (svgRef) {
         svgRef.getBBox = vi.fn(() => ({ height: 100, width: 200 }));
