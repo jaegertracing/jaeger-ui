@@ -15,7 +15,7 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["jest"]
+    "types": ["vitest/globals"]
   },
   "include": [
     "src",

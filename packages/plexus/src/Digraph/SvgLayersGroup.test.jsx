@@ -12,7 +12,7 @@ const mockNodesLayerProps = [];
 const mockSvgLayerProps = [];
 
 // jest.mock factories are hoisted above imports, so we use React.createElement instead of JSX here
-jest.mock('./SvgEdgesLayer', () => {
+vi.mock('./SvgEdgesLayer', () => {
   const React = require('react');
   let callCount = 0;
   const MockSvgEdgesLayer = props => {
@@ -20,10 +20,10 @@ jest.mock('./SvgEdgesLayer', () => {
     callCount++;
     return React.createElement('g', { 'data-testid': `edges-layer-${callCount}` });
   };
-  return MockSvgEdgesLayer;
+  return { default: MockSvgEdgesLayer };
 });
 
-jest.mock('./NodesLayer', () => {
+vi.mock('./NodesLayer', () => {
   const React = require('react');
   let callCount = 0;
   const MockNodesLayer = props => {
@@ -31,10 +31,10 @@ jest.mock('./NodesLayer', () => {
     callCount++;
     return React.createElement('g', { 'data-testid': `nodes-layer-${callCount}` });
   };
-  return MockNodesLayer;
+  return { default: MockNodesLayer };
 });
 
-jest.mock('./SvgLayer', () => {
+vi.mock('./SvgLayer', () => {
   const React = require('react');
   const MockSvgLayer = ({ children, classNamePart, topLayer, ...rest }) => {
     mockSvgLayerProps.push({ classNamePart, topLayer, ...rest });
@@ -44,7 +44,7 @@ jest.mock('./SvgLayer', () => {
       children
     );
   };
-  return MockSvgLayer;
+  return { default: MockSvgLayer };
 });
 
 describe('SvgLayersGroup', () => {

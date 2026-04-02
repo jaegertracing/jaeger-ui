@@ -12,16 +12,16 @@ const mockHtmlLayerProps = [];
 const mockSvgLayerProps = [];
 
 // Use React.createElement instead of JSX because jest.mock factory functions cannot reference external variables
-jest.mock('./Nodes', () => {
+vi.mock('./Nodes', () => {
   const React = require('react');
   const MockNodes = props => {
     mockNodesProps.push(props);
     return React.createElement('g', { 'data-testid': 'nodes' });
   };
-  return MockNodes;
+  return { default: MockNodes };
 });
 
-jest.mock('./HtmlLayer', () => {
+vi.mock('./HtmlLayer', () => {
   const React = require('react');
   const MockHtmlLayer = ({ children, classNamePart, ...rest }) => {
     mockHtmlLayerProps.push({ classNamePart, ...rest });
@@ -31,10 +31,10 @@ jest.mock('./HtmlLayer', () => {
       children
     );
   };
-  return MockHtmlLayer;
+  return { default: MockHtmlLayer };
 });
 
-jest.mock('./SvgLayer', () => {
+vi.mock('./SvgLayer', () => {
   const React = require('react');
   const MockSvgLayer = ({ children, classNamePart, ...rest }) => {
     mockSvgLayerProps.push({ classNamePart, ...rest });
@@ -44,7 +44,7 @@ jest.mock('./SvgLayer', () => {
       children
     );
   };
-  return MockSvgLayer;
+  return { default: MockSvgLayer };
 });
 
 describe('NodesLayer', () => {

@@ -7,17 +7,19 @@ import SvgLayer from './SvgLayer';
 
 // Mock SvgDefEntry component
 // Use React.createElement instead of JSX, because jest.mock factory functions cannot reference external variables
-jest.mock('./SvgDefEntry', () => {
+vi.mock('./SvgDefEntry', () => {
   const React = require('react');
   const MockSvgDefEntry = ({ localId, getClassName }) =>
     React.createElement('marker', { id: localId, 'data-testid': `def-${localId}` });
-  return MockSvgDefEntry;
+  return { default: MockSvgDefEntry };
 });
 
 // Mock ZoomManager
-jest.mock('../zoom/ZoomManager', () => ({
-  getZoomAttr: transform =>
-    transform ? `translate(${transform.x.toFixed()},${transform.y.toFixed()}) scale(${transform.k})` : null,
+vi.mock('../zoom/ZoomManager', () => ({
+  default: {
+    getZoomAttr: transform =>
+      transform ? `translate(${transform.x.toFixed()},${transform.y.toFixed()}) scale(${transform.k})` : null,
+  },
 }));
 
 describe('SvgLayer', () => {

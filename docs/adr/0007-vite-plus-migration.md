@@ -1,7 +1,7 @@
 # ADR 0007: Migrate to Vite+ (Full Vite Toolchain)
 
 **Status**: Partially Implemented
-**Last Updated**: 2026-04-01
+**Last Updated**: 2026-04-02
 
 ---
 
@@ -17,13 +17,13 @@ Prettier, and Jest with a single dependency that has built-in TypeScript support
 
 ## Context & Problem
 
-### Current State (after PRs A, B, C1, C2, D, E)
+### Current State (after PRs A, B, C1, C2, D, E, F-plexus)
 
 | Concern          | `packages/jaeger-ui`               | `packages/plexus`                  |
 | ---------------- | ---------------------------------- | ---------------------------------- |
 | Dev server       | Vite 8                             | n/a                                |
 | Production build | Vite 8 (Rolldown engine)           | ✅ dropped                         |
-| Testing          | Jest 30 + `babel-jest`             | Jest 30 + `babel-jest`             |
+| Testing          | Jest 30 + `babel-jest`             | ✅ Vitest 4                        |
 | TypeScript       | `tsc` (type-check only, 1 config)  | `tsc` (noEmit, source only)        |
 | Linting          | ✅ Oxlint (via `vp lint`)          | ✅ Oxlint (via `vp lint`)          |
 | Formatting       | ✅ Oxfmt (via `vp fmt`)            | ✅ Oxfmt (via `vp fmt`)            |
@@ -76,8 +76,7 @@ Migrate the monorepo to Vite+ in phases:
 4. ✅ **Replace Prettier with Oxfmt** — `prettier` removed; `oxfmt --migrate=prettier` migrated the config.
 5. ✅ **Upgrade TypeScript** — upgraded to 6.0.2; `moduleResolution` switched to `"bundler"`.
 6. ✅ **Consolidate jaeger-ui tsconfigs** — `tsconfig.lint.json` deleted; `tsconfig.json` is the single config.
-7. **Replace Jest + Babel with Vitest** — deferred; significant migration effort, but the correct
-   long-term direction.
+7. 🔶 **Replace Jest + Babel with Vitest** — plexus done ([#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690)); jaeger-ui pending.
 
 ---
 
@@ -254,7 +253,7 @@ Upgraded TypeScript from 5.9.3 to 6.0.2. Two fixes required:
   `"exports"` field in `package.json`. `"bundler"` accurately reflects how Vite resolves modules.
 - `packages/plexus/tsconfig.json`: added `"types": ["jest"]` because TypeScript 6.0 tightened
   `@types` auto-discovery under `moduleResolution: "bundler"` — Jest globals were no longer found
-  automatically.
+  automatically. (Later changed to `"types": ["vitest/globals"]` in PR F when plexus migrated to Vitest.)
 
 ---
 
@@ -304,15 +303,54 @@ both of which are unaffected by switching the lint/test tooling.
 
 ### 8. Both Packages — Replace Jest + Babel with Vitest (PR F)
 
-**Deferred.** The migration is the correct long-term direction but carries significant effort:
+**Partially done.** `packages/plexus` migrated to Vitest in [#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690).
+`packages/jaeger-ui` remains on Jest + Babel and is the next step.
 
-- `jest.fn()` → `vi.fn()` across the test suite
-- `@testing-library/jest-dom` import path changes
-- `importMetaTransform` Babel plugin in `test/babel-transform.js` is eliminated (Vitest runs native ESM)
-- Snapshot files may need regeneration
-- See Unknowns 3–6 for the investigation plan
+#### plexus migration (✅ complete in [#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690))
 
-Both packages continue to use Jest 30 + `babel-jest` until PR F is ready.
+- Added `vitest`, `@vitest/coverage-v8`, `jsdom` to devDependencies; removed `jest`, `babel-jest`,
+  `jest-environment-jsdom`, all `@babel/*` packages, `@types/jest`.
+- Added `packages/plexus/vitest.config.ts` with `environment: 'jsdom'`, `globals: true`,
+  `moduleNameMapper` for CSS, and coverage settings.
+- Replaced `packages/plexus/test/jest-per-test-setup.js` with `test/vitest-setup.ts`:
+  - Imports `@testing-library/jest-dom/vitest` for matcher compatibility.
+  - Sets `(global as any).jest = vi` so existing `jest.fn()` / `jest.clearAllMocks()` calls in test
+    files continue to work **without rewriting them**.
+- `jest.mock(` calls (4 test files + demo) renamed to `vi.mock(` — the one API that cannot be aliased
+  because Vitest's transform hoists `vi.mock(` patterns statically before imports, whereas `jest.mock(`
+  is left in place and never hoisted.
+- Six test files renamed `.test.js` → `.test.jsx` so Vite/esbuild parses their JSX syntax correctly.
+- Mock factory functions updated for Vitest ESM:
+  - All default-exported modules must be returned as `{ default: MockComponent }` inside factory bodies.
+  - `jest.requireActual()` replaced with `async vi.importActual()` (async in Vitest).
+  - Constructor mocks passed to `vi.fn()` must use regular `function` expressions, not arrow functions
+    (Vitest 4.x rejects arrow functions called with `new`).
+  - `vi.fn()` (not the `jest` alias) must be used inside `vi.mock()` factory bodies — the alias is not
+    available in hoisted factory scope.
+- Deleted `test/babel-transform.js` and `test/generic-file-transform.js` (no longer needed).
+
+#### Lessons learned (applicable to jaeger-ui migration)
+
+| Situation | Vitest behaviour | Action required |
+|-----------|-----------------|-----------------|
+| `jest.fn()`, `jest.clearAllMocks()`, etc. | Not available by default | Alias: `global.jest = vi` in setup file |
+| `jest.mock()` / `jest.unmock()` | Not hoisted by transform | Rename to `vi.mock()` / `vi.unmock()` |
+| `jest.requireActual(mod)` | Synchronous, CommonJS | Replace with `await vi.importActual(mod)` (async factory) |
+| Default-export mocks | Factory can return component directly | Must return `{ default: MockComponent }` |
+| Constructor mocks via `mockImplementation` | Arrow functions fail with `new` | Use regular `function() { return {...}; }` |
+| `vi.fn()` inside `vi.mock()` factory | `jest` alias not in scope | Use `vi.fn()` explicitly |
+| JSX in `.js` test files | Vite/esbuild skips JSX transform for `.js` | Rename to `.jsx` |
+| `require()` inside test scope | Unavailable in ESM | Use top-level ES `import` |
+
+#### jaeger-ui migration (pending)
+
+The same strategy applies but at much larger scale (226 test files, ~2600 tests). Additional concerns:
+
+- `packages/jaeger-ui/test/jest-per-test-setup.js` mocks browser APIs (`ResizeObserver`, `matchMedia`,
+  `requestAnimationFrame`) with `jest.fn()` — covered by the `global.jest = vi` alias.
+- `importMetaTransform` Babel plugin in `test/babel-transform.js` is eliminated (Vitest runs native ESM).
+- Snapshot files may need regeneration — see Unknown 3.
+- `transformIgnorePatterns` for ESM packages (`redux-actions`, `d3-*`) become unnecessary — see Unknown 5.
 
 ---
 
@@ -341,7 +379,7 @@ transpilation, so the tsconfig value has no effect on builds or the dev server.
 
 ---
 
-### Unknown 2: Oxlint rule coverage
+### ✅ Unknown 2: Oxlint rule coverage
 
 **Risk**: Oxlint may not have direct equivalents for all currently active ESLint rules.
 
@@ -382,6 +420,9 @@ transpilation, so the tsconfig value has no effect on builds or the dev server.
 
 ### Unknown 3: Vitest snapshot compatibility
 
+**Status**: Not yet validated for `jaeger-ui`. Plexus has no snapshot tests, so this unknown remains
+open for the `jaeger-ui` migration.
+
 **Risk**: Vitest's snapshot serializer may produce subtly different output for component snapshots compared
 to Jest's `jest-snapshot`. Existing `.snap` files may need to be regenerated even if functionally equivalent.
 
@@ -397,16 +438,23 @@ semantic regressions. After update, all snapshot tests pass.
 
 ### Unknown 4: Vitest jsdom API coverage for existing test setup
 
+**Status**: Partially resolved via plexus migration. The `global.jest = vi` alias strategy works —
+confirmed in plexus where `jest.fn()` / `jest.clearAllMocks()` calls continue to work without renaming.
+`@testing-library/jest-dom/vitest` import path is confirmed correct. Remaining jaeger-ui-specific
+concerns (browser API mocks, `process.env.TZ`, globalSetup isolation) still need validation.
+
 **Risk**: The `packages/jaeger-ui/test/jest-per-test-setup.js` mocks several browser APIs (`ResizeObserver`,
-`MessageChannel`, `matchMedia`, `requestAnimationFrame`) using `jest.fn()`. Under Vitest these need to be
-replaced with `vi.fn()`. The `@testing-library/jest-dom` matchers need the Vitest-compatible import path.
+`MessageChannel`, `matchMedia`, `requestAnimationFrame`) using `jest.fn()`. Under Vitest these will be
+covered by the `global.jest = vi` alias. The `@testing-library/jest-dom` matchers need the
+Vitest-compatible import path (`@testing-library/jest-dom/vitest`).
 
 Additionally, the `globalSetup` mechanism differs: Jest's `globalSetup` runs in the Node context before
 workers; Vitest's `globalSetup` does the same but the process isolation model differs.
 
 **Experiment**:
-1. Port the setup file to `vi.*` APIs and run a representative subset of tests (e.g., Ant Design component
-   tests, Redux-connected components) to confirm that mocks behave identically.
+1. Port the setup file to use `global.jest = vi` alias (not a full `vi.*` rewrite) and run a representative
+   subset of tests (e.g., Ant Design component tests, Redux-connected components) to confirm that mocks
+   behave identically.
 2. Verify `process.env.TZ = 'UTC'` propagates correctly under Vitest's globalSetup.
 
 **Success criteria**: All previously-passing tests pass under Vitest without mock-related failures.
@@ -414,6 +462,10 @@ workers; Vitest's `globalSetup` does the same but the process isolation model di
 ---
 
 ### Unknown 5: `transformIgnorePatterns` equivalents in Vitest
+
+**Status**: Confirmed non-issue for plexus (no ESM-only `node_modules` deps). Jaeger-ui still needs
+validation for `redux-actions`, `d3-zoom`, `d3-selection`, but the expectation remains that Vitest's
+native ESM pipeline makes `transformIgnorePatterns` unnecessary.
 
 **Risk**: Jest required explicit `transformIgnorePatterns` to process ESM-only packages in `node_modules`
 (`redux-actions`, `d3-zoom`, `d3-selection`, `@jaegertracing/plexus`). Vitest's Vite transform pipeline
@@ -431,6 +483,8 @@ Babel workaround for `redux-actions` is confirmed unnecessary.
 ---
 
 ### Unknown 6: `@vitejs/plugin-legacy` interaction with Vitest
+
+**Status**: Not yet validated. Applies only to `jaeger-ui`.
 
 **Risk**: `packages/jaeger-ui/vite.config.mts` currently uses `@vitejs/plugin-legacy` to emit a legacy
 browser bundle. Vitest ignores `transformIndexHtml` hooks so the plugin should be harmless, but this needs
@@ -476,15 +530,15 @@ confirm no errors or unexpected HTML injection.
 | ✅ C2 | Replace Prettier with Oxfmt ([#3686](https://github.com/jaegertracing/jaeger-ui/pull/3686)) | None | Done |
 | ✅ D  | Upgrade TypeScript to 6.0.2 ([#3688](https://github.com/jaegertracing/jaeger-ui/pull/3688)) | None | Done |
 | ✅ E  | Consolidate `jaeger-ui` tsconfigs; remove `main` from plexus package.json ([#3689](https://github.com/jaegertracing/jaeger-ui/pull/3689)) | Unknown 1 | Done |
-| F  | Migrate Jest → Vitest in both packages; remove Babel test deps | Unknowns 3, 4, 5, 6 | Deferred |
+| 🔶 F | Migrate Jest → Vitest in both packages; remove Babel test deps ([#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690) plexus ✅, jaeger-ui pending) | Unknowns 3, 4, 5, 6 | Partial |
 | G  | Update CLAUDE.md, README, CI workflows | None | After F |
 
 ### Investigation strategy
 
 - **Unknown 2** (Oxlint rules): ✅ Resolved — parallel run completed; rule coverage confirmed; ESLint removed.
 - **Unknown 1** (tsconfig): ✅ Resolved — tsconfig files merged; `tsc-lint` and Vite build both pass.
-- **Unknowns 3–6** (Vitest): Validate together in a single throwaway branch by porting the test setup for
-  one package and running the full suite.
+- **Unknowns 3–6** (Vitest): Partially validated via plexus migration (PR F / #3690). Unknowns 4 and 5
+  confirmed non-issues for plexus. Unknowns 3 and 6 remain open for jaeger-ui (snapshots and plugin-legacy).
 
 ---
 

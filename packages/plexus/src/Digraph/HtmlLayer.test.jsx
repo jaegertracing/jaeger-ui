@@ -9,16 +9,16 @@ import HtmlLayer from './HtmlLayer';
 import ZoomManager from '../zoom/ZoomManager';
 import { ELayoutPhase } from './types';
 
-jest.mock('./utils', () => {
-  const actual = jest.requireActual('./utils');
+vi.mock('./utils', async () => {
+  const actual = await vi.importActual('./utils');
   return {
     ...actual,
     getProps: jest.fn(() => ({})),
   };
 });
 
-jest.mock('../zoom/ZoomManager', () => ({
-  getZoomStyle: jest.fn(() => ({ transform: 'scale(1)' })),
+vi.mock('../zoom/ZoomManager', () => ({
+  default: { getZoomStyle: vi.fn(() => ({ transform: 'scale(1)' })) },
 }));
 
 const getClassName = name => `test-${name}`;

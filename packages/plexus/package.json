@@ -10,23 +10,17 @@
     "directory": "packages/plexus"
   },
   "devDependencies": {
-    "@babel/plugin-transform-private-methods": "7.28.6",
-    "antd": "6.3.1",
-    "@babel/preset-env": "7.29.2",
-    "@babel/preset-react": "7.28.5",
-    "@babel/preset-typescript": "7.28.5",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "^16.3.1",
     "@types/d3-zoom": "3.0.8",
-    "@types/jest": "30.0.0",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
-    "babel-jest": "30.3.0",
+    "@vitest/coverage-v8": "4.1.2",
+    "antd": "6.3.1",
     "identity-obj-proxy": "3.0.0",
-    "jest": "30.3.0",
-    "jest-environment-jsdom": "30.3.0",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "vitest": "4.1.2"
   },
   "peerDependencies": {
     "react": "19.2.0",
@@ -41,33 +35,7 @@
   },
   "scripts": {
     "build": "tsc --noEmit",
-    "coverage": "jest --coverage --passWithNoTests",
-    "test": "jest --silent --color --maxWorkers=50%"
-  },
-  "jest": {
-    "testEnvironment": "jsdom",
-    "setupFilesAfterEnv": [
-      "./test/jest-per-test-setup.js"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.{js,jsx,ts,tsx}",
-      "!src/**/*.d.ts",
-      "!src/**/*.test.{js,jsx,ts,tsx}",
-      "!src/demo/**/*"
-    ],
-    "transform": {
-      "\\.(css|png|svg)$": "./test/generic-file-transform.js",
-      "\\.([jt]sx?)$": "./test/babel-transform.js"
-    },
-    "transformIgnorePatterns": [
-      "[/\\\\\\\\]node_modules[/\\\\\\\\](?!(@jaegertracing|d3-zoom|d3-selection)).+\\\\.(js|jsx|mjs|cjs|ts|tsx)$"
-    ],
-    "moduleNameMapper": {
-      "\\.(css|less)$": "identity-obj-proxy"
-    },
-    "testMatch": [
-      "**/__tests__/**/*.?([mc])[jt]s?(x)",
-      "**/?(*.)+(spec|test).?([mc])[jt]s?(x)"
-    ]
+    "coverage": "vitest run --coverage",
+    "test": "vitest run"
   }
 }
