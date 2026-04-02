@@ -301,7 +301,7 @@ both of which are unaffected by switching the lint/test tooling.
 
 ---
 
-### 8. Both Packages — Replace Jest + Babel with Vitest (PR F)
+### ✅ 8. Both Packages — Replace Jest + Babel with Vitest (PR F)
 
 **Done.** `packages/plexus` migrated in [#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690); `packages/jaeger-ui` migrated in [#3695](https://github.com/jaegertracing/jaeger-ui/pull/3695) (226 test files, 2603 tests).
 
