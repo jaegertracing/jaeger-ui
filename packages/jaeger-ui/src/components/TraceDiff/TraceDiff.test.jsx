@@ -257,11 +257,9 @@ describe('TraceDiff', () => {
   describe('TraceDiff--graphWrapper top offset', () => {
     it('applies top offset to graph wrapper based on header height', () => {
       const originalResizeObserver = window.ResizeObserver;
-      window.ResizeObserver = jest.fn().mockImplementation(() => ({
-        observe: jest.fn(),
-        unobserve: jest.fn(),
-        disconnect: jest.fn(),
-      }));
+      window.ResizeObserver = jest.fn().mockImplementation(function () {
+        return { observe: jest.fn(), unobserve: jest.fn(), disconnect: jest.fn() };
+      });
 
       const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
       Element.prototype.getBoundingClientRect = jest.fn().mockImplementation(function () {

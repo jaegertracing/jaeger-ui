@@ -364,15 +364,27 @@ so each is reviewable in isolation and CI catches regressions early.
 121 of the 207 test files contained JSX but had a `.js` extension. Vite/esbuild does not parse JSX in
 `.js` files, so these must be renamed before the Vitest switch. Pure `git mv` with zero logic changes.
 
-#### PR H2a — Replace `require()` in test bodies with static `import` (~12 files)
+#### ✅ PR H2a — Replace `require()` in test bodies with static `import` ([#3692](https://github.com/jaegertracing/jaeger-ui/pull/3692))
 
-`require()` is unavailable in Vitest's native ESM test scope. Moving these to top-level `import`
-statements is valid under Jest (Babel transpiles them to CJS) and necessary for Vitest.
+`require()` is unavailable in Vitest's native ESM test scope. Converted 9 files.
 
-#### PR H2b — Replace arrow function constructors with regular functions (~16 files)
+Three files were **excluded** — they use `require()` after `jest.resetModules()` or inside runtime
+`jest.mock()` calls within `it` blocks (not hoisted). These use a module re-isolation pattern that
+requires `vi.resetModules()` + `await import()` and will be handled in H3:
+- `utils/prefix-url.test.js`
+- `utils/tracking/ga-coverage.test.js`
+- `prefix-url-coverage.test.js`
+
+#### ✅ PR H2b — Replace arrow function constructors with regular functions ([#3693](https://github.com/jaegertracing/jaeger-ui/pull/3693))
 
 `mockImplementation(() => ({...}))` fails when the mock is called with `new` in Vitest 4.x.
-Replacing with `mockImplementation(function() { return {...}; })` is safe under Jest too.
+Replaced with `mockImplementation(function() { return {...}; })` — safe under Jest too.
+
+Six files had constructor mocks (identified by checking which `mockImplementation` targets are
+called with `new` in production code): `readJsonFile.test.js` (FileReader ×3),
+`Monitor/ServicesView/index.test.jsx` (ResizeObserver), `TraceDiff/TraceDiff.test.jsx` (ResizeObserver),
+`DeepDependencies/Graph/index.test.jsx` (LayoutManager), `TracePage/index.test.jsx` (ScrollManager ×3),
+`TracePage/TraceGraph/TraceGraph.test.jsx` (MockLayoutManager).
 
 #### PR H2c — Introduce `mockDefault` helper in affected mock factories
 
@@ -585,8 +597,8 @@ confirm no errors or unexpected HTML injection.
 | ✅ E  | Consolidate `jaeger-ui` tsconfigs; remove `main` from plexus package.json ([#3689](https://github.com/jaegertracing/jaeger-ui/pull/3689)) | Unknown 1 | Done |
 | 🔶 F | Migrate Jest → Vitest in both packages; remove Babel test deps ([#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690) plexus ✅, jaeger-ui pending) | Unknowns 3, 4, 5, 6 | Partial |
 | ✅ H1 | Rename `.test.js` → `.test.jsx` in jaeger-ui (121 files, pure rename) ([#3691](https://github.com/jaegertracing/jaeger-ui/pull/3691)) | None | Done |
-| H2a | Replace `require()` in test bodies with static `import` (~12 files) | None | After H1 |
-| H2b | Replace arrow function constructors with regular functions (~16 files) | None | After H1 |
+| ✅ H2a | Replace `require()` in test bodies with static `import` ([#3692](https://github.com/jaegertracing/jaeger-ui/pull/3692)) | None | Done |
+| ✅ H2b | Replace arrow function constructors with regular functions (6 files) ([#3693](https://github.com/jaegertracing/jaeger-ui/pull/3693)) | None | Done |
 | H2c | Introduce `mockDefault` helper in affected mock factories | None | After H1 |
 | H3 | Vitest switch for jaeger-ui | Unknowns 3, 4, 5, 6 | After H2a–c |
 | G  | Update CLAUDE.md, README, CI workflows | None | After H3 |

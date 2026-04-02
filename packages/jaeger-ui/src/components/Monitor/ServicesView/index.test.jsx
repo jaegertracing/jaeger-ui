@@ -22,11 +22,9 @@ import {
 } from '../../../reducers/metrics.mock';
 import * as track from './index.track';
 
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
-}));
+global.ResizeObserver = jest.fn().mockImplementation(function () {
+  return { observe: jest.fn(), unobserve: jest.fn(), disconnect: jest.fn() };
+});
 
 jest.mock('../../../utils/config/get-config', () => ({
   __esModule: true,
