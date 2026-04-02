@@ -55,7 +55,7 @@ Prettier, and Jest with a single dependency that has built-in TypeScript support
 toolchain that wraps:
 
 - **Vite / Rolldown** — dev server and production builds (already in use)
-- **Oxlint** — replaces ESLint; built-in rules for TypeScript, React hooks, and more
+- **Oxlint** — replaces ESLint; native TypeScript rules, plus React hooks via `eslint-plugin-react-x` (jsPlugin)
 - **Oxfmt** — replaces Prettier; native formatting
 - **Vitest** — replaces Jest; shares the Vite transform pipeline
 
@@ -199,7 +199,7 @@ Oxlint is the linting component of the Vite+ toolchain. It is Rust-based and has
 Rather than replacing ESLint in a single step, PR C1 is split into two phases:
 
 **Phase 1 — parallel run (this PR):**
-- Add `oxlint` to root devDependencies.
+- Add `vite-plus` to root devDependencies (which brings Oxlint transitively).
 - Add an `oxlint` config (`.oxlintrc.json`) that mirrors the currently active ESLint rules.
 - Add an `npm run oxlint` script that runs non-blocking alongside `npm run eslint` in CI.
 - Compare Oxlint and ESLint output side by side.
