@@ -17,7 +17,6 @@
     "@babel/core": "7.29.0",
     "@emnapi/core": "^1.9.1",
     "@emnapi/runtime": "^1.9.1",
-    "@napi-rs/wasm-runtime": "1.1.2",
     "@noble/hashes": "2.0.1",
     "@testing-library/dom": "^10.4.1",
     "ajv": "^8.0.0",
@@ -77,5 +76,21 @@
   "dependencies": {
     "@tanstack/react-virtual": "3.13.12",
     "react-side-effect": "2.1.2"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-android-arm64": "1.0.0-rc.12",
+    "@rolldown/binding-darwin-arm64": "1.0.0-rc.12",
+    "@rolldown/binding-darwin-x64": "1.0.0-rc.12",
+    "@rolldown/binding-freebsd-x64": "1.0.0-rc.12",
+    "@rolldown/binding-linux-arm-gnueabihf": "1.0.0-rc.12",
+    "@rolldown/binding-linux-arm64-gnu": "1.0.0-rc.12",
+    "@rolldown/binding-linux-arm64-musl": "1.0.0-rc.12",
+    "@rolldown/binding-linux-ppc64-gnu": "1.0.0-rc.12",
+    "@rolldown/binding-linux-s390x-gnu": "1.0.0-rc.12",
+    "@rolldown/binding-linux-x64-gnu": "1.0.0-rc.12",
+    "@rolldown/binding-linux-x64-musl": "1.0.0-rc.12",
+    "@rolldown/binding-openharmony-arm64": "1.0.0-rc.12",
+    "@rolldown/binding-win32-arm64-msvc": "1.0.0-rc.12",
+    "@rolldown/binding-win32-x64-msvc": "1.0.0-rc.12"
   }
 }
