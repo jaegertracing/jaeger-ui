@@ -211,7 +211,7 @@ const TraceStatistics = forwardRef<TraceStatisticsHandle, Props>(function TraceS
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [popupContent, setPopupContent] = useState<string>('');
   const [wholeTable, setWholeTable] = useState<ITableSpan[]>([]);
-  const [valueNameSelector1, setValueNameSelector1] = useState<string>(getServiceName());
+  const [valueNameSelector1, setValueNameSelector1] = useState<string>(() => getServiceName());
   const [valueNameSelector2, setValueNameSelector2] = useState<string | null>(null);
 
   // Ref to track current state for imperative handle
