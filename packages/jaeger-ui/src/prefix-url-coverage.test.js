@@ -23,6 +23,10 @@ describe('prefix-url coverage', () => {
     // remove global.location
     delete global.location;
 
+    // We expect origin to be ''
+    // sitePrefix is '/p/'
+    // getPathPrefix('', '/p/') -> '/p'
+
     const { default: pUrl } = await import('./utils/prefix-url');
     expect(pUrl('/x')).toBe('/p/x');
   });
