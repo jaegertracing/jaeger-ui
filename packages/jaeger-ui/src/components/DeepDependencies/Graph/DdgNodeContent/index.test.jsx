@@ -18,10 +18,7 @@ vi.mock('react-router-dom', async () => ({
   useLocation: () => mockLocation,
 }));
 
-vi.mock('../../../../model/path-agnostic-decorations', async () => ({
-  __esModule: true,
-  default: jest.fn(() => ({})),
-}));
+vi.mock('../../../../model/path-agnostic-decorations', () => mockDefault(jest.fn(() => ({}))));
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
