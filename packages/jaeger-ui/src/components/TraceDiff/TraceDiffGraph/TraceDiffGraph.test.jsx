@@ -22,8 +22,12 @@ jest.mock('../../common/UiFindInput', () => ({
   parseUiFind: jest.requireActual('../../common/UiFindInput').parseUiFind,
   extractUiFindFromState: jest.requireActual('../../common/UiFindInput').extractUiFindFromState,
 }));
-jest.mock('../../common/ErrorMessage', () => props => <div data-testid="error-message">{props.error}</div>);
-jest.mock('../../common/LoadingIndicator', () => () => <div data-testid="loading-indicator">Loading...</div>);
+jest.mock('../../common/ErrorMessage', () =>
+  mockDefault(props => <div data-testid="error-message">{props.error}</div>)
+);
+jest.mock('../../common/LoadingIndicator', () =>
+  mockDefault(() => <div data-testid="loading-indicator">Loading...</div>)
+);
 
 afterEach(cleanup);
 

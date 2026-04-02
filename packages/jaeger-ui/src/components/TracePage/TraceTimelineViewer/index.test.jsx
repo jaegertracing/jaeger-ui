@@ -11,8 +11,12 @@ import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 
-jest.mock('./VirtualizedTraceView', () => () => <div data-testid="virtualized-trace-view-mock" />);
-jest.mock('./SpanDetailSidePanel', () => () => <div data-testid="span-detail-side-panel-mock" />);
+jest.mock('./VirtualizedTraceView', () =>
+  mockDefault(() => <div data-testid="virtualized-trace-view-mock" />)
+);
+jest.mock('./SpanDetailSidePanel', () =>
+  mockDefault(() => <div data-testid="span-detail-side-panel-mock" />)
+);
 jest.mock('../../common/VerticalResizer', () => ({
   __esModule: true,
   default: ({ onChange }) => (
@@ -21,22 +25,24 @@ jest.mock('../../common/VerticalResizer', () => ({
     </div>
   ),
 }));
-jest.mock('./TimelineHeaderRow', () => props => (
-  <div data-testid="timeline-header-row-mock" data-side-panel-label={props.sidePanelLabel}>
-    <button data-testid="collapse-all-button" type="button" onClick={props.onCollapseAll}>
-      Collapse All
-    </button>
-    <button data-testid="expand-all-button" type="button" onClick={props.onExpandAll}>
-      Expand All
-    </button>
-    <button data-testid="collapse-one-button" type="button" onClick={props.onCollapseOne}>
-      Collapse One
-    </button>
-    <button data-testid="expand-one-button" type="button" onClick={props.onExpandOne}>
-      Expand One
-    </button>
-  </div>
-));
+jest.mock('./TimelineHeaderRow', () =>
+  mockDefault(props => (
+    <div data-testid="timeline-header-row-mock" data-side-panel-label={props.sidePanelLabel}>
+      <button data-testid="collapse-all-button" type="button" onClick={props.onCollapseAll}>
+        Collapse All
+      </button>
+      <button data-testid="expand-all-button" type="button" onClick={props.onExpandAll}>
+        Expand All
+      </button>
+      <button data-testid="collapse-one-button" type="button" onClick={props.onCollapseOne}>
+        Collapse One
+      </button>
+      <button data-testid="expand-one-button" type="button" onClick={props.onExpandOne}>
+        Expand One
+      </button>
+    </div>
+  ))
+);
 
 describe('<TraceTimelineViewer>', () => {
   const legacyTrace = transformTraceData(traceGenerator.trace({ numberOfSpans: 5 }));

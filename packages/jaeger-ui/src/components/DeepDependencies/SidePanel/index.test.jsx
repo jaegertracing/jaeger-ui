@@ -18,7 +18,7 @@ jest.mock('antd', () => ({
   Table: () => <div data-testid="mock-table">Table Mock</div>,
 }));
 
-jest.mock('./DetailsPanel', () => jest.fn(() => <div data-testid="details-panel" />));
+jest.mock('./DetailsPanel', () => mockDefault(jest.fn(() => <div data-testid="details-panel" />)));
 
 describe('<SidePanel>', () => {
   let getConfigValueSpy;

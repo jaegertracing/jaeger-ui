@@ -26,38 +26,46 @@ jest.mock('react-router-dom', () => {
 });
 
 jest.mock('./AltViewOptions', () =>
-  jest.fn(({ onDdgViewClicked }) => (
-    <button type="button" data-testid="alt-toggle" onClick={onDdgViewClicked}>
-      toggle
-    </button>
-  ))
+  mockDefault(
+    jest.fn(({ onDdgViewClicked }) => (
+      <button type="button" data-testid="alt-toggle" onClick={onDdgViewClicked}>
+        toggle
+      </button>
+    ))
+  )
 );
 
 jest.mock('./DiffSelection', () =>
-  jest.fn(({ traces }) => <div data-testid="diffselection">{traces.length}</div>)
+  mockDefault(jest.fn(({ traces }) => <div data-testid="diffselection">{traces.length}</div>))
 );
 
-jest.mock('./ResultItem', () => jest.fn(({ trace }) => <div data-testid={`result-${trace.traceID}`} />));
+jest.mock('./ResultItem', () =>
+  mockDefault(jest.fn(({ trace }) => <div data-testid={`result-${trace.traceID}`} />))
+);
 
-jest.mock('./ScatterPlot', () => jest.fn(props => <div data-testid="scatterplot" {...props} />));
+jest.mock('./ScatterPlot', () => mockDefault(jest.fn(props => <div data-testid="scatterplot" {...props} />)));
 
 jest.mock('./DownloadResults', () =>
-  jest.fn(({ onDownloadResultsClicked }) => (
-    <button type="button" data-testid="download" onClick={onDownloadResultsClicked}>
-      download
-    </button>
-  ))
+  mockDefault(
+    jest.fn(({ onDownloadResultsClicked }) => (
+      <button type="button" data-testid="download" onClick={onDownloadResultsClicked}>
+        download
+      </button>
+    ))
+  )
 );
 
-jest.mock('../../DeepDependencies/traces', () => jest.fn(() => <div data-testid="ddg" />));
+jest.mock('../../DeepDependencies/traces', () => mockDefault(jest.fn(() => <div data-testid="ddg" />)));
 
-jest.mock('../../common/LoadingIndicator', () => jest.fn(() => <div data-testid="loading" />));
+jest.mock('../../common/LoadingIndicator', () => mockDefault(jest.fn(() => <div data-testid="loading" />)));
 
-jest.mock('../../common/NewWindowIcon', () => jest.fn(() => <span data-testid="new-window-icon" />));
+jest.mock('../../common/NewWindowIcon', () =>
+  mockDefault(jest.fn(() => <span data-testid="new-window-icon" />))
+);
 
 jest.mock('../../common/SearchableSelect', () => {
   const mockReact = jest.requireActual('react');
-  return function MockSearchableSelect({ value, onChange, children, ...rest }) {
+  return mockDefault(function MockSearchableSelect({ value, onChange, children, ...rest }) {
     const options = mockReact.Children.map(children, child => (
       <option key={child.props.value} value={child.props.value}>
         {child.props.children}
@@ -73,7 +81,7 @@ jest.mock('../../common/SearchableSelect', () => {
         {options}
       </select>
     );
-  };
+  });
 });
 
 afterEach(() => {

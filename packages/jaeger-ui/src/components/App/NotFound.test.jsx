@@ -7,10 +7,10 @@ import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import NotFound from './NotFound';
 
-jest.mock('../../utils/prefix-url', () => () => '/');
-jest.mock('../common/ErrorMessage', () => ({ error }) => (
-  <div data-testid="error-message">{error?.message}</div>
-));
+jest.mock('../../utils/prefix-url', () => mockDefault(() => '/'));
+jest.mock('../common/ErrorMessage', () =>
+  mockDefault(({ error }) => <div data-testid="error-message">{error?.message}</div>)
+);
 
 describe('NotFound tests', () => {
   it('renders error title and home link without error', () => {

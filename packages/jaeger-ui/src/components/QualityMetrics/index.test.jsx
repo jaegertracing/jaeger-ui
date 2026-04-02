@@ -38,47 +38,45 @@ jest.mock('./Header', () => {
     headerMock.setLookback = props.setLookback;
     return <div data-testid="header">Header Component</div>;
   });
-  return mockHeader;
+  return mockDefault(mockHeader);
 });
 
 jest.mock('../common/LoadingIndicator', () => {
-  return function MockLoadingIndicator() {
+  return mockDefault(function MockLoadingIndicator() {
     return <div data-testid="loading-indicator">Loading...</div>;
-  };
+  });
 });
 
 jest.mock('./BannerText', () => {
-  return function MockBannerText({ bannerText }) {
+  return mockDefault(function MockBannerText({ bannerText }) {
     return <div data-testid="banner-text">{bannerText}</div>;
-  };
+  });
 });
 
 jest.mock('./ScoreCard', () => {
-  return function MockScoreCard({ score }) {
+  return mockDefault(function MockScoreCard({ score }) {
     return (
       <div data-testid="score-card" data-key={score.key}>
         {score.key}
       </div>
     );
-  };
+  });
 });
 
 jest.mock('./MetricCard', () => {
-  return function MockMetricCard({ metric }) {
+  return mockDefault(function MockMetricCard({ metric }) {
     return (
       <div data-testid="metric-card" data-name={metric.name}>
         {metric.name}
       </div>
     );
-  };
+  });
 });
 
-jest.mock(
-  '../common/ExamplesLink',
-  () =>
-    function MockExamplesLink() {
-      return <div>ExamplesLink Component</div>;
-    }
+jest.mock('../common/ExamplesLink', () =>
+  mockDefault(function MockExamplesLink() {
+    return <div>ExamplesLink Component</div>;
+  })
 );
 
 describe('QualityMetrics', () => {

@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('./TopNav', () => () => <div />);
+jest.mock('./TopNav', () => mockDefault(() => <div />));
 jest.mock('../../utils/tracking');
 
 import React from 'react';
