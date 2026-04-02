@@ -9,7 +9,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // @vitest/coverage-v8 is only referenced via the --coverage CLI flag, not in source files.
-const ignoredPackages = ['@vitest/coverage-v8'];
+// identity-obj-proxy is referenced as a string value in vitest.config.ts moduleNameMapper.
+const ignoredPackages = ['@vitest/coverage-v8', 'identity-obj-proxy'];
 
 // Use the selected targetPackage for generating depcheckrcContent
 const depcheckrcContent = {
