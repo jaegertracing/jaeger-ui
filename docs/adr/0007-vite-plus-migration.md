@@ -604,6 +604,7 @@ confirm no errors or unexpected HTML injection.
 | ✅ H2c | Introduce `mockDefault` helper in affected mock factories ([#3694](https://github.com/jaegertracing/jaeger-ui/pull/3694)) | None | Done |
 | ✅ H3 | Vitest switch for jaeger-ui ([#3695](https://github.com/jaegertracing/jaeger-ui/pull/3695)) | Unknowns 3, 4, 5, 6 | Done |
 | G  | Update CLAUDE.md, README, CI workflows | None | After H3 |
+| I1 | Remove `__esModule: true` from remaining mock factories ([#3696](https://github.com/jaegertracing/jaeger-ui/issues/3696)) — this is a Jest CJS interop flag that Vitest ignores; replace with `mockDefault()` | None | Future cleanup |
 
 ### Investigation strategy
 
