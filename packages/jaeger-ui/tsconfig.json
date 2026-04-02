@@ -5,10 +5,22 @@
   "extends": "../../tsconfig",
   "compilerOptions": {
     "jsx": "react-jsx",
+    "isolatedModules": false,
+    "noEmit": true,
     "paths": {
       "@jaegertracing/plexus": ["../plexus/src/index.ts"],
       "@jaegertracing/plexus/lib/*": ["../plexus/src/*"]
     }
   },
-  "include": ["src/**/*.tsx", "src/**/*.ts", "src/**/*.json", "typings"]
+  "include": ["src/**/*.tsx", "src/**/*.ts", "src/**/*.json", "typings"],
+  "files": [
+    "src/components/App/index.tsx",
+    "src/components/DependencyGraph/index.tsx",
+    "src/components/SearchTracePage/index.tsx",
+    "src/components/SearchTracePage/SearchForm.tsx",
+    "src/components/SearchTracePage/SearchResults/ScatterPlot.tsx",
+    "src/components/DependencyGraph/sample_data/large.json",
+    "src/components/DependencyGraph/sample_data/small.json",
+    "package.json"
+  ]
 }

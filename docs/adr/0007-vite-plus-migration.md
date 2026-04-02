@@ -17,14 +17,14 @@ Prettier, and Jest with a single dependency that has built-in TypeScript support
 
 ## Context & Problem
 
-### Current State (after PRs A, B, C1, C2)
+### Current State (after PRs A, B, C1, C2, D, E)
 
 | Concern          | `packages/jaeger-ui`               | `packages/plexus`                  |
 | ---------------- | ---------------------------------- | ---------------------------------- |
 | Dev server       | Vite 8                             | n/a                                |
 | Production build | Vite 8 (Rolldown engine)           | ✅ dropped                         |
 | Testing          | Jest 30 + `babel-jest`             | Jest 30 + `babel-jest`             |
-| TypeScript       | `tsc` (type-check only, 2 configs) | `tsc` (noEmit, source only)        |
+| TypeScript       | `tsc` (type-check only, 1 config)  | `tsc` (noEmit, source only)        |
 | Linting          | ✅ Oxlint (via `vp lint`)          | ✅ Oxlint (via `vp lint`)          |
 | Formatting       | ✅ Oxfmt (via `vp fmt`)            | ✅ Oxfmt (via `vp fmt`)            |
 
@@ -74,8 +74,7 @@ Migrate the monorepo to Vite+ in phases:
 3. ✅ **Replace ESLint with Oxlint** — `@typescript-eslint` removed; TypeScript 6/7 upgrade now unblocked.
 4. ✅ **Replace Prettier with Oxfmt** — `prettier` removed; `oxfmt --migrate=prettier` migrated the config.
 5. ✅ **Upgrade TypeScript** — upgraded to 6.0.2; `moduleResolution` switched to `"bundler"`.
-6. **Consolidate jaeger-ui tsconfigs** — collapse `tsconfig.lint.json` into `tsconfig.json` (easier after
-   Vitest removes the `isolatedModules` constraint).
+6. ✅ **Consolidate jaeger-ui tsconfigs** — `tsconfig.lint.json` deleted; `tsconfig.json` is the single config.
 7. **Replace Jest + Babel with Vitest** — deferred; significant migration effort, but the correct
    long-term direction.
 
@@ -259,26 +258,18 @@ Upgraded TypeScript from 5.9.3 to 6.0.2. Two fixes required:
 
 ---
 
-### 6. TypeScript Config Simplification (PR E)
+### ✅ 6. TypeScript Config Simplification (PR E)
 
-#### Current dual-tsconfig in `jaeger-ui`
+**Implemented.** `packages/jaeger-ui/tsconfig.lint.json` is deleted. Its settings (`isolatedModules: false`,
+`noEmit: true`, `files` list) are merged directly into `packages/jaeger-ui/tsconfig.json`. The `tsc-lint`
+script now points at `tsconfig.json` for both packages.
 
-The reason `packages/jaeger-ui/tsconfig.lint.json` exists is that:
+Key finding: Vite does not enforce or care about `isolatedModules` in tsconfig at build time — it uses
+esbuild for transpilation, not tsc. Setting `isolatedModules: false` in `tsconfig.json` has no effect on
+the build or dev server. The concern in Unknown 1 was unfounded.
 
-- Vite requires `isolatedModules: true` for correct behavior.
-- Full cross-file type checking (e.g. const enums, exhaustive narrowing) requires `isolatedModules: false`.
-
-`tsc-lint` runs `tsc -p packages/jaeger-ui/tsconfig.lint.json` (with `noEmit: true`) rather than using
-project references (`tsc --build`). Project references were dropped because `composite: true` conflicts with
-`noEmit: true` and cross-package `paths` mappings.
-
-With Vitest, `isolatedModules` is no longer a Vite runtime constraint for the testing workflow. This opens
-the door to collapsing the two tsconfig files into one.
-
-**Possible simplification**: Remove `tsconfig.lint.json` entirely and run `tsc -p tsconfig.json --noEmit`
-for type-checking, after adding `isolatedModules: false` (or removing it) from the main tsconfig.
-
-This needs to be validated — see [Unknown 1](#unknown-1-tsconfig-consolidation----removing-tsconfiglintjson).
+Also removed the stale `"main": "lib/index.js"` field from `packages/plexus/package.json` (dead weight
+since the library build was dropped in PR A).
 
 ---
 
@@ -342,20 +333,11 @@ Both packages continue to use Jest 30 + `babel-jest` until PR F is ready.
 
 ## Unknowns and Experiments
 
-### Unknown 1: tsconfig consolidation — removing `tsconfig.lint.json`
+### ✅ Unknown 1: tsconfig consolidation — removing `tsconfig.lint.json`
 
-**Risk**: Folding `isolatedModules: false` into `tsconfig.json` may conflict with Vite's own tsconfig
-interpretation (Vite reads `tsconfig.json` for path aliases and plugin resolution, and may warn on
-unexpected compiler options).
-
-**Experiment**:
-1. In a branch, merge `tsconfig.lint.json` settings into `packages/jaeger-ui/tsconfig.json`.
-2. Update `tsc-lint` in root `package.json` to point directly at `packages/jaeger-ui/tsconfig.json`.
-3. Run `npm run tsc-lint` and `npm run build` in `jaeger-ui` and confirm both pass.
-4. Run `npm start` and confirm the Vite dev server does not log tsconfig-related warnings.
-
-**Success criteria**: `tsc -p packages/jaeger-ui/tsconfig.json --noEmit` succeeds with one tsconfig per
-package; Vite build is unaffected.
+**Resolved.** `isolatedModules: false` and `noEmit: true` merged into `tsconfig.json`. Vite build and
+`tsc-lint` both pass. Vite does not enforce or interpret `isolatedModules` — it uses esbuild for
+transpilation, so the tsconfig value has no effect on builds or the dev server.
 
 ---
 
@@ -490,20 +472,16 @@ confirm no errors or unexpected HTML injection.
 |----|-------------|-------------------|----------|
 | ✅ A | Drop plexus library build; simplify plexus tsconfig; paths-based type resolution ([#3677](https://github.com/jaegertracing/jaeger-ui/pull/3677), [#3680](https://github.com/jaegertracing/jaeger-ui/pull/3680)) | None | Done |
 | ✅ B | Delete legacy ESLint configs from both packages — prep for Oxlint ([#3681](https://github.com/jaegertracing/jaeger-ui/pull/3681)) | None | Done |
-| ✅ C1 | Replace ESLint with Oxlint ([#3682](https://github.com/jaegertracing/jaeger-ui/pull/3682)) | Unknown 2 | Done |
-| ✅ C2 | Replace Prettier with Oxfmt | None | Independently, any time |
-| ✅ D  | Upgrade TypeScript (6 / 7) | None | Now unblocked |
-| E  | Consolidate `jaeger-ui` tsconfigs | Unknown 1 | After investigation (easier after F) |
+| ✅ C1 | Replace ESLint with Oxlint ([#3682](https://github.com/jaegertracing/jaeger-ui/pull/3682), [#3684](https://github.com/jaegertracing/jaeger-ui/pull/3684)) | Unknown 2 | Done |
+| ✅ C2 | Replace Prettier with Oxfmt ([#3686](https://github.com/jaegertracing/jaeger-ui/pull/3686)) | None | Done |
+| ✅ D  | Upgrade TypeScript to 6.0.2 ([#3688](https://github.com/jaegertracing/jaeger-ui/pull/3688)) | None | Done |
+| ✅ E  | Consolidate `jaeger-ui` tsconfigs; remove `main` from plexus package.json | Unknown 1 | Done |
 | F  | Migrate Jest → Vitest in both packages; remove Babel test deps | Unknowns 3, 4, 5, 6 | Deferred |
 | G  | Update CLAUDE.md, README, CI workflows | None | After F |
 
-PR D (TypeScript upgrade) is now unblocked — `@typescript-eslint` has been removed.
-PR C2 (Oxfmt) can be done any time independently.
-
 ### Investigation strategy
 
-- **Unknown 2** (Oxlint rules): Can be validated in a branch by running `oxlint` alongside ESLint and
-  comparing output. C2 (Oxfmt) has no unknowns and can proceed independently at any time.
+- **Unknown 2** (Oxlint rules): ✅ Resolved — parallel run completed; rule coverage confirmed; ESLint removed.
 - **Unknown 1** (tsconfig): A single branch experiment — merge the two tsconfig files and run `tsc-lint`
   + Vite build.
 - **Unknowns 3–6** (Vitest): Validate together in a single throwaway branch by porting the test setup for
