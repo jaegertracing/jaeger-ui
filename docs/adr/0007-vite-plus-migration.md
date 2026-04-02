@@ -258,7 +258,7 @@ Upgraded TypeScript from 5.9.3 to 6.0.2. Two fixes required:
 
 ---
 
-### ✅ 6. TypeScript Config Simplification (PR E)
+### ✅ 6. TypeScript Config Simplification (PR E — [#3689](https://github.com/jaegertracing/jaeger-ui/pull/3689))
 
 **Implemented.** `packages/jaeger-ui/tsconfig.lint.json` is deleted. Its settings (`isolatedModules: false`,
 `noEmit: true`, `files` list) are merged directly into `packages/jaeger-ui/tsconfig.json`. The `tsc-lint`
@@ -475,7 +475,7 @@ confirm no errors or unexpected HTML injection.
 | ✅ C1 | Replace ESLint with Oxlint ([#3682](https://github.com/jaegertracing/jaeger-ui/pull/3682), [#3684](https://github.com/jaegertracing/jaeger-ui/pull/3684)) | Unknown 2 | Done |
 | ✅ C2 | Replace Prettier with Oxfmt ([#3686](https://github.com/jaegertracing/jaeger-ui/pull/3686)) | None | Done |
 | ✅ D  | Upgrade TypeScript to 6.0.2 ([#3688](https://github.com/jaegertracing/jaeger-ui/pull/3688)) | None | Done |
-| ✅ E  | Consolidate `jaeger-ui` tsconfigs; remove `main` from plexus package.json | Unknown 1 | Done |
+| ✅ E  | Consolidate `jaeger-ui` tsconfigs; remove `main` from plexus package.json ([#3689](https://github.com/jaegertracing/jaeger-ui/pull/3689)) | Unknown 1 | Done |
 | F  | Migrate Jest → Vitest in both packages; remove Babel test deps | Unknowns 3, 4, 5, 6 | Deferred |
 | G  | Update CLAUDE.md, README, CI workflows | None | After F |
 
