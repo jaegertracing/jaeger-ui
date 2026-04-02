@@ -63,6 +63,14 @@ describe('prefixUrl non-test environment', () => {
     vi.doMock('../site-prefix', () => ({ default: 'http://example.com/prefix/' }));
 
     const { default: pUrl } = await import('./prefix-url');
+    // window.location is 'http://localhost' usually in JSDOM
+    // Our logic uses window.location.origin
+    // sitePrefix is http://example.com/prefix/
+    // origin is http://localhost
+    // regex replaces origin from sitePrefix?
+    // wait, getPathPrefix(origin, sitePrefix)
+    // If origin (localhost) is NOT in sitePrefix (example.com), regex ^origin doesn't match.
+    // So pathPrefix = sitePrefix.
     expect(pUrl('/foo')).toBe('http://example.com/prefix/foo');
   });
 
@@ -77,6 +85,9 @@ describe('prefixUrl non-test environment', () => {
 
     const { default: pUrl } = await import('./prefix-url');
 
+    // origin should be ''
+    // sitePrefix is '/prefix/'
+    // getPathPrefix('', '/prefix/') -> '/prefix' (slash removed?)
     expect(pUrl('/bar')).toBe('/prefix/bar');
 
     global.window = originalWindow;

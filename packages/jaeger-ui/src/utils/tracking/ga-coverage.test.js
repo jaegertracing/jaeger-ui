@@ -125,9 +125,13 @@ describe('GA Coverage', () => {
     // Expect truncation. Start crumbs (nav, fetch) might be pushed out by buffer logic (20 limit).
     // But we filled with 25 errors. So only errors remain.
     // So checking for [svc] is invalid now as it was shifted out.
+
+    // Check that label IS truncated (length check? or content check?)
     // Max length 499.
     expect(eventLabel.length).toBeLessThanOrEqual(499);
+    // It should contain the last error messages
     expect(eventLabel).toContain('filling up the breadcrumbs buffer');
+    // It should NOT contain [svc] (shifted out)
     expect(eventLabel).not.toContain('[svc]');
   });
 
