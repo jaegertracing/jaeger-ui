@@ -10,7 +10,7 @@ import TraceDiffHeader from './TraceDiffHeader';
 import { fetchedState } from '../../../constants';
 
 jest.mock('./CohortTable', () => {
-  return function MockCohortTable({ selectTrace }) {
+  return mockDefault(function MockCohortTable({ selectTrace }) {
     return (
       <div data-testid="cohort-table">
         <button type="button" onClick={() => selectTrace('test-id')}>
@@ -18,13 +18,13 @@ jest.mock('./CohortTable', () => {
         </button>
       </div>
     );
-  };
+  });
 });
 
-jest.mock('./TraceHeader', () => () => <div data-testid="trace-header">TraceHeader</div>);
+jest.mock('./TraceHeader', () => mockDefault(() => <div data-testid="trace-header">TraceHeader</div>));
 
 jest.mock('./TraceIdInput', () => {
-  return function MockTraceIdInput({ selectTrace }) {
+  return mockDefault(function MockTraceIdInput({ selectTrace }) {
     return (
       <div data-testid="trace-id-input">
         <button type="button" onClick={() => selectTrace('test-id')}>
@@ -32,7 +32,7 @@ jest.mock('./TraceIdInput', () => {
         </button>
       </div>
     );
-  };
+  });
 });
 
 describe('TraceDiffHeader', () => {

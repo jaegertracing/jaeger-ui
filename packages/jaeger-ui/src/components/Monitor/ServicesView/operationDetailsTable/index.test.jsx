@@ -8,16 +8,16 @@ import OperationTableDetails from '.';
 import { originInitialState, serviceOpsMetrics } from '../../../../reducers/metrics.mock';
 import * as track from './index.track';
 
-jest.mock('../../../../utils/prefix-url', () => jest.fn(url => url));
+jest.mock('../../../../utils/prefix-url', () => mockDefault(jest.fn(url => url)));
 
 jest.mock('../../../common/LoadingIndicator', () => {
-  return function MockLoadingIndicator(props) {
+  return mockDefault(function MockLoadingIndicator(props) {
     return (
       <div data-testid="loading-indicator" {...props}>
         Loading...
       </div>
     );
-  };
+  });
 });
 
 const props = {

@@ -53,33 +53,33 @@ import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 import { ECheckedStatus, EDirection, EDdgDensity, EViewModifier } from '../../model/ddg/types';
 
 jest.mock('./Graph', () => {
-  return function MockGraph(props) {
+  return mockDefault(function MockGraph(props) {
     return <div data-testid="graph" {...props} />;
-  };
+  });
 });
 
 jest.mock('./Header', () => {
-  return function MockHeader(props) {
+  return mockDefault(function MockHeader(props) {
     return <div data-testid="header" {...props} />;
-  };
+  });
 });
 
 jest.mock('./SidePanel', () => {
-  return function MockSidePanel(props) {
+  return mockDefault(function MockSidePanel(props) {
     return <div data-testid="side-panel" {...props} />;
-  };
+  });
 });
 
 jest.mock('../common/ErrorMessage', () => {
-  return function MockErrorMessage(props) {
+  return mockDefault(function MockErrorMessage(props) {
     return <div data-testid="error-message" error={JSON.stringify(props.error)} />;
-  };
+  });
 });
 
 jest.mock('../common/LoadingIndicator', () => {
-  return function MockLoadingIndicator(props) {
+  return mockDefault(function MockLoadingIndicator(props) {
     return <div data-testid="loading-indicator" {...props} />;
-  };
+  });
 });
 
 describe('DeepDependencyGraphPage', () => {

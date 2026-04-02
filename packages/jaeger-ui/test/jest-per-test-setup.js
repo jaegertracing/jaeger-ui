@@ -65,3 +65,6 @@ window.matchMedia = jest.fn().mockImplementation(query => ({
 global.__APP_ENVIRONMENT__ = 'test';
 global.__REACT_APP_GA_DEBUG__ = '';
 global.__REACT_APP_VSN_STATE__ = '';
+
+// H2c: identity for default-export mocks; change body to `{ default: mod }` in H3
+global.mockDefault = mod => mod;

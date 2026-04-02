@@ -386,23 +386,26 @@ called with `new` in production code): `readJsonFile.test.js` (FileReader ×3),
 `DeepDependencies/Graph/index.test.jsx` (LayoutManager), `TracePage/index.test.jsx` (ScrollManager ×3),
 `TracePage/TraceGraph/TraceGraph.test.jsx` (MockLayoutManager).
 
-#### PR H2c — Introduce `mockDefault` helper in affected mock factories
+#### ✅ PR H2c — Introduce `mockDefault` helper in affected mock factories ([#3694](https://github.com/jaegertracing/jaeger-ui/pull/3694))
 
 In Vitest ESM, `vi.mock()` factories must return `{ default: MockComponent }` for default-exported
-modules; Jest CJS interop does not require this. Instead of leaving the full rewrite to H3, introduce
-a helper that makes the flip a one-line change:
+modules; Jest CJS interop does not require this. A helper is introduced so the flip in H3 is a
+single-line change rather than touching every factory:
 
 ```js
-// H2c: add to each affected file — Jest passes mod through unchanged
-function mockDefault(mod) { return mod; }
-jest.mock('./Foo', () => mockDefault(MockFoo));
+// test/jest-per-test-setup.js  (H3: change body to `{ default: mod }`)
+global.mockDefault = mod => mod;
 ```
 
-In H3, change only the function body to `return { default: mod }`. Jest hoists `jest.mock()` factories
-before imports but specifically allows variables whose names start with `mock` in factory scope —
-naming the helper `mockDefault` satisfies this constraint.
+All ~33 `jest.mock()` factories that return a function/component directly have been wrapped:
 
-Alternatively, attach it to `global` in the per-test-setup file for a single-location flip in H3.
+```js
+jest.mock('./Foo', () => mockDefault(function MockFoo() { return <JSX/>; }));
+jest.mock('./Bar', () => mockDefault(() => <JSX/>));
+jest.mock('./Baz', () => mockDefault(jest.fn(() => <JSX/>)));
+```
+
+In H3, only `jest-per-test-setup.js` changes: `mod => mod` → `mod => ({ default: mod })`.
 
 #### PR H3 — The actual switch
 
@@ -599,7 +602,7 @@ confirm no errors or unexpected HTML injection.
 | ✅ H1 | Rename `.test.js` → `.test.jsx` in jaeger-ui (121 files, pure rename) ([#3691](https://github.com/jaegertracing/jaeger-ui/pull/3691)) | None | Done |
 | ✅ H2a | Replace `require()` in test bodies with static `import` ([#3692](https://github.com/jaegertracing/jaeger-ui/pull/3692)) | None | Done |
 | ✅ H2b | Replace arrow function constructors with regular functions (6 files) ([#3693](https://github.com/jaegertracing/jaeger-ui/pull/3693)) | None | Done |
-| H2c | Introduce `mockDefault` helper in affected mock factories | None | After H1 |
+| ✅ H2c | Introduce `mockDefault` helper in affected mock factories ([#3694](https://github.com/jaegertracing/jaeger-ui/pull/3694)) | None | Done |
 | H3 | Vitest switch for jaeger-ui | Unknowns 3, 4, 5, 6 | After H2a–c |
 | G  | Update CLAUDE.md, README, CI workflows | None | After H3 |
 

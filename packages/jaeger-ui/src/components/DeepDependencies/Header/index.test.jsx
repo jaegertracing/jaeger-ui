@@ -10,14 +10,14 @@ import * as track from '../index.track';
 
 jest.mock('./HopsSelector', () => {
   const mockReact = jest.requireActual('react');
-  return function MockHopsSelector(props) {
+  return mockDefault(function MockHopsSelector(props) {
     return mockReact.createElement('div', { 'data-testid': 'hops-selector', ...props });
-  };
+  });
 });
 
 jest.mock('../../common/SearchableSelect', () => {
   const mockReact = jest.requireActual('react');
-  return function MockSearchableSelect(props) {
+  return mockDefault(function MockSearchableSelect(props) {
     const { value, onChange, allowClear, onClear, placeholder, children, className, status } = props;
     // Extract options from children
     const options = mockReact.Children.toArray(children)
@@ -52,43 +52,45 @@ jest.mock('../../common/SearchableSelect', () => {
         value &&
         mockReact.createElement('button', { onClick: onClear, 'data-testid': 'clear-button' }, 'Clear')
     );
-  };
+  });
 });
 
 jest.mock('./LayoutSettings', () => {
   const mockReact = jest.requireActual('react');
-  return function MockLayoutSettings(props) {
+  return mockDefault(function MockLayoutSettings(props) {
     return mockReact.createElement('div', { 'data-testid': 'layout-settings', ...props });
-  };
+  });
 });
 
 jest.mock('../../common/UiFindInput', () => {
   const mockReact = jest.requireActual('react');
-  return mockReact.forwardRef(function MockUiFindInput(props, ref) {
-    const inputRef = mockReact.useRef(null);
+  return mockDefault(
+    mockReact.forwardRef(function MockUiFindInput(props, ref) {
+      const inputRef = mockReact.useRef(null);
 
-    mockReact.useEffect(() => {
-      if (ref) {
-        const current = {
-          focus: () => inputRef.current && inputRef.current.focus(),
-          blur: () => inputRef.current && inputRef.current.blur(),
-          select: () => inputRef.current && inputRef.current.select(),
-          input: inputRef.current,
-        };
-        if (typeof ref === 'function') {
-          ref(current);
-        } else {
-          ref.current = current;
+      mockReact.useEffect(() => {
+        if (ref) {
+          const current = {
+            focus: () => inputRef.current && inputRef.current.focus(),
+            blur: () => inputRef.current && inputRef.current.blur(),
+            select: () => inputRef.current && inputRef.current.select(),
+            input: inputRef.current,
+          };
+          if (typeof ref === 'function') {
+            ref(current);
+          } else {
+            ref.current = current;
+          }
         }
-      }
-    });
+      });
 
-    return mockReact.createElement('input', {
-      ref: inputRef,
-      'data-testid': 'ui-find-input',
-      ...props.inputProps,
-    });
-  });
+      return mockReact.createElement('input', {
+        ref: inputRef,
+        'data-testid': 'ui-find-input',
+        ...props.inputProps,
+      });
+    })
+  );
 });
 
 describe('<Header>', () => {

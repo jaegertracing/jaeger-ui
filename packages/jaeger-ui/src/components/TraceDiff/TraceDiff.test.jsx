@@ -28,7 +28,7 @@ It has to be explicitly told using `__esModule` to babel for compiling it with t
 */
 jest.mock('redux', () => ({ __esModule: true, ...jest.requireActual('redux') }));
 jest.mock('./TraceDiffHeader', () => {
-  return function MockTraceDiffHeader(props) {
+  return mockDefault(function MockTraceDiffHeader(props) {
     return (
       <div data-testid="trace-diff-header">
         <button type="button" data-testid="diff-set-a-btn" onClick={() => props.diffSetA('newAValue')}>
@@ -45,13 +45,13 @@ jest.mock('./TraceDiffHeader', () => {
         </button>
       </div>
     );
-  };
+  });
 });
 
 jest.mock('./TraceDiffGraph', () => {
-  return function MockTraceDiffGraph() {
+  return mockDefault(function MockTraceDiffGraph() {
     return <div data-testid="trace-diff-graph">Graph</div>;
-  };
+  });
 });
 
 describe('TraceDiff', () => {

@@ -56,22 +56,22 @@ jest.mock('../../../hooks/useTraceDiscovery', () => ({
 // Store the default mock implementation for reset in afterEach
 const defaultUseServicesImpl = () => ({ data: ['service1', 'service2'], isLoading: false });
 
-jest.mock('lodash/debounce', () => fn => fn);
+jest.mock('lodash/debounce', () => mockDefault(fn => fn));
 
 jest.mock('../../common/LoadingIndicator', () => {
-  return function LoadingIndicator() {
+  return mockDefault(function LoadingIndicator() {
     return <div data-testid="loading-indicator">Loading...</div>;
-  };
+  });
 });
 
 jest.mock('../EmptyState', () => {
-  return function MonitorATMEmptyState() {
+  return mockDefault(function MonitorATMEmptyState() {
     return <div data-testid="empty-state">ATM not configured</div>;
-  };
+  });
 });
 
 jest.mock('./serviceGraph', () => {
-  return function ServiceGraph({ yAxisTickFormat, name, error }) {
+  return mockDefault(function ServiceGraph({ yAxisTickFormat, name, error }) {
     const testValue = yAxisTickFormat ? yAxisTickFormat(1000) : null;
     return (
       <div data-testid={`service-graph-${name?.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
@@ -80,11 +80,11 @@ jest.mock('./serviceGraph', () => {
         {error && <span data-testid="graph-error">Error occurred</span>}
       </div>
     );
-  };
+  });
 });
 
 jest.mock('./operationDetailsTable', () => {
-  return function OperationTableDetails({ loading, error, data }) {
+  return mockDefault(function OperationTableDetails({ loading, error, data }) {
     return (
       <div data-testid="operation-table">
         {loading && <span data-testid="table-loading">Loading operations...</span>}
@@ -92,11 +92,18 @@ jest.mock('./operationDetailsTable', () => {
         {data && <span data-testid="table-data">Operations data loaded</span>}
       </div>
     );
-  };
+  });
 });
 
 jest.mock('../../common/SearchableSelect', () => {
-  return function SearchableSelect({ children, value, onChange, placeholder, disabled, className }) {
+  return mockDefault(function SearchableSelect({
+    children,
+    value,
+    onChange,
+    placeholder,
+    disabled,
+    className,
+  }) {
     return (
       <select
         data-testid={className}
@@ -114,7 +121,7 @@ jest.mock('../../common/SearchableSelect', () => {
         {children}
       </select>
     );
-  };
+  });
 });
 
 jest.mock('antd', () => {

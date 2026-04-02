@@ -12,18 +12,20 @@ import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 
 jest.mock('../SpanDetail', () =>
-  jest.fn(({ span, focusSpan, linksGetter }) => {
-    linksGetter([], 0);
-    return (
-      <div data-testid="span-detail-mock" data-span-id={span.spanID}>
-        <button data-testid="focus-span-button" type="button" onClick={() => focusSpan('test-find')} />
-      </div>
-    );
-  })
+  mockDefault(
+    jest.fn(({ span, focusSpan, linksGetter }) => {
+      linksGetter([], 0);
+      return (
+        <div data-testid="span-detail-mock" data-span-id={span.spanID}>
+          <button data-testid="focus-span-button" type="button" onClick={() => focusSpan('test-find')} />
+        </div>
+      );
+    })
+  )
 );
 
-jest.mock('../../../../model/link-patterns', () => jest.fn(() => []));
-jest.mock('../../../../utils/update-ui-find', () => jest.fn());
+jest.mock('../../../../model/link-patterns', () => mockDefault(jest.fn(() => [])));
+jest.mock('../../../../utils/update-ui-find', () => mockDefault(jest.fn()));
 
 describe('<SpanDetailSidePanelImpl>', () => {
   let trace;

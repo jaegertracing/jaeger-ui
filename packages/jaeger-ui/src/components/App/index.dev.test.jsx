@@ -11,15 +11,15 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
-jest.mock('./NotFound', () => () => <div data-testid="not-found" />);
-jest.mock('./Page', () => ({ children }) => <div data-testid="page">{children}</div>);
-jest.mock('../DependencyGraph', () => () => <div data-testid="dependency-graph" />);
-jest.mock('../DeepDependencies', () => () => <div data-testid="deep-dependencies" />);
-jest.mock('../QualityMetrics', () => () => <div data-testid="quality-metrics" />);
-jest.mock('../SearchTracePage', () => () => <div data-testid="search-trace" />);
+jest.mock('./NotFound', () => mockDefault(() => <div data-testid="not-found" />));
+jest.mock('./Page', () => mockDefault(({ children }) => <div data-testid="page">{children}</div>));
+jest.mock('../DependencyGraph', () => mockDefault(() => <div data-testid="dependency-graph" />));
+jest.mock('../DeepDependencies', () => mockDefault(() => <div data-testid="deep-dependencies" />));
+jest.mock('../QualityMetrics', () => mockDefault(() => <div data-testid="quality-metrics" />));
+jest.mock('../SearchTracePage', () => mockDefault(() => <div data-testid="search-trace" />));
 jest.mock('../TraceDiff', () => ({ __esModule: true, default: () => <div data-testid="trace-diff" /> }));
 jest.mock('../TracePage', () => ({ __esModule: true, default: () => <div data-testid="trace-page" /> }));
-jest.mock('../Monitor', () => () => <div data-testid="monitor" />);
+jest.mock('../Monitor', () => mockDefault(() => <div data-testid="monitor" />));
 jest.mock('../PlexusDemo', () => ({ __esModule: true, default: () => <div data-testid="plexus-demo" /> }));
 
 jest.mock('../DependencyGraph/url', () => ({ ROUTE_PATH: '/dependencies' }));
@@ -36,8 +36,8 @@ jest.mock('../../api/jaeger', () => ({
   default: { apiRoot: null },
   DEFAULT_API_ROOT: 'http://localhost:16686/api',
 }));
-jest.mock('../../utils/config/process-scripts', () => jest.fn());
-jest.mock('../../utils/prefix-url', () => jest.fn(() => '/prefix'));
+jest.mock('../../utils/config/process-scripts', () => mockDefault(jest.fn()));
+jest.mock('../../utils/prefix-url', () => mockDefault(jest.fn(() => '/prefix')));
 jest.mock('../../utils/configure-store', () => ({
   store: {
     getState: jest.fn(() => ({})),

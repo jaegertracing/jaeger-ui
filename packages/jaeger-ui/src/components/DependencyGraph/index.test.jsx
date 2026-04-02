@@ -12,29 +12,29 @@ let lastDAGOptionsProps = {};
 let lastDAGProps = {};
 
 jest.mock('./DAG', () => {
-  return function MockDAG(props) {
+  return mockDefault(function MockDAG(props) {
     lastDAGProps = props;
     return <div data-testid="dag-component" />;
-  };
+  });
 });
 
 jest.mock('./DAGOptions', () => {
-  return function MockDAGOptions(props) {
+  return mockDefault(function MockDAGOptions(props) {
     lastDAGOptionsProps = props;
     return <div data-testid="dag-options" />;
-  };
+  });
 });
 
 jest.mock('../common/LoadingIndicator', () => {
-  return function MockLoadingIndicator(props) {
+  return mockDefault(function MockLoadingIndicator(props) {
     return <div data-testid="loading-indicator" {...props} />;
-  };
+  });
 });
 
 jest.mock('../common/ErrorMessage', () => {
-  return function MockErrorMessage(props) {
+  return mockDefault(function MockErrorMessage(props) {
     return <div data-testid="error-message" {...props} />;
-  };
+  });
 });
 
 const childId = 'boomya';

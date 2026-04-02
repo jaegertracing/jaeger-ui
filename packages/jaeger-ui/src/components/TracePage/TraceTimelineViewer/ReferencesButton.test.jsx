@@ -23,10 +23,12 @@ jest.mock('../url/ReferenceLink', () => {
     </a>
   );
   MockReferenceLink.displayName = 'ReferenceLink';
-  return MockReferenceLink;
+  return mockDefault(MockReferenceLink);
 });
 
-jest.mock('../../common/NewWindowIcon', () => () => <span data-testid="new-window-icon">↗</span>);
+jest.mock('../../common/NewWindowIcon', () =>
+  mockDefault(() => <span data-testid="new-window-icon">↗</span>)
+);
 
 describe('<ReferencesButton>', () => {
   const trace = transformTraceData(traceGenerator.trace({ numberOfSpans: 10 }));

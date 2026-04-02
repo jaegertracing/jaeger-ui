@@ -8,14 +8,16 @@ import '@testing-library/jest-dom';
 import AccordionEvents from './AccordionEvents';
 
 const mockAccordionAttributes = jest.fn();
-jest.mock('./AccordionAttributes', () => props => {
-  mockAccordionAttributes(props);
-  return (
-    <div data-testid="event-item" onClick={props.onToggle}>
-      LogItem
-    </div>
-  );
-});
+jest.mock('./AccordionAttributes', () =>
+  mockDefault(props => {
+    mockAccordionAttributes(props);
+    return (
+      <div data-testid="event-item" onClick={props.onToggle}>
+        LogItem
+      </div>
+    );
+  })
+);
 
 describe('<AccordionEvents>', () => {
   const events = [
