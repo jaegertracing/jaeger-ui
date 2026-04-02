@@ -71,14 +71,16 @@ jest.mock('./TraceLogsView/index', () => {
 });
 
 jest.mock('./ScrollManager', () => {
-  return jest.fn().mockImplementation(() => ({
-    scrollToNextVisibleSpan: jest.fn(),
-    scrollToPrevVisibleSpan: jest.fn(),
-    setTrace: jest.fn(),
-    destroy: jest.fn(),
-    setAccessors: jest.fn(),
-    scrollToFirstVisibleSpan: jest.fn(),
-  }));
+  return jest.fn().mockImplementation(function () {
+    return {
+      scrollToNextVisibleSpan: jest.fn(),
+      scrollToPrevVisibleSpan: jest.fn(),
+      setTrace: jest.fn(),
+      destroy: jest.fn(),
+      setAccessors: jest.fn(),
+      scrollToFirstVisibleSpan: jest.fn(),
+    };
+  });
 });
 
 jest.mock('./index.track');
@@ -412,14 +414,16 @@ describe('<TracePage>', () => {
   it('calls scrollManager.setTrace when trace data changes', () => {
     const setTraceMock = jest.fn();
 
-    ScrollManager.mockImplementation(() => ({
-      scrollToNextVisibleSpan: jest.fn(),
-      scrollToPrevVisibleSpan: jest.fn(),
-      setAccessors: jest.fn(),
-      scrollToFirstVisibleSpan: jest.fn(),
-      destroy: jest.fn(),
-      setTrace: setTraceMock,
-    }));
+    ScrollManager.mockImplementation(function () {
+      return {
+        scrollToNextVisibleSpan: jest.fn(),
+        scrollToPrevVisibleSpan: jest.fn(),
+        setAccessors: jest.fn(),
+        scrollToFirstVisibleSpan: jest.fn(),
+        destroy: jest.fn(),
+        setTrace: setTraceMock,
+      };
+    });
 
     const { rerender } = render(<TracePage {...defaultProps} trace={null} />);
     rerender(<TracePage {...defaultProps} trace={{ data: trace, state: fetchedState.DONE }} />);
@@ -438,7 +442,9 @@ describe('<TracePage>', () => {
       setTrace: jest.fn(),
     };
 
-    ScrollManager.mockImplementation(() => scrollManagerMock);
+    ScrollManager.mockImplementation(function () {
+      return scrollManagerMock;
+    });
 
     const resetShortcutsMock = jest.spyOn(keyboardShortcutsMod, 'reset');
     const cancelScrollMock = jest.spyOn(scrollPageMod, 'cancel');

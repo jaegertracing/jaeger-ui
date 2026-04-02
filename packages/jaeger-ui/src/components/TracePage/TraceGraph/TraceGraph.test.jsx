@@ -45,9 +45,9 @@ jest.mock('@jaegertracing/plexus', () => {
     scaleStrokeOpacity: () => ({ strokeOpacity: 1 }),
   };
 
-  const MockLayoutManager = jest.fn().mockImplementation(() => ({
-    stopAndRelease: jest.fn(),
-  }));
+  const MockLayoutManager = jest.fn().mockImplementation(function () {
+    return { stopAndRelease: jest.fn() };
+  });
 
   const mockCacheAs = (key, fn) => {
     const cachedFn = (...args) => fn(...args);
