@@ -341,7 +341,7 @@ transpilation, so the tsconfig value has no effect on builds or the dev server.
 
 ---
 
-### Unknown 2: Oxlint rule coverage
+### ✅ Unknown 2: Oxlint rule coverage
 
 **Risk**: Oxlint may not have direct equivalents for all currently active ESLint rules.
 

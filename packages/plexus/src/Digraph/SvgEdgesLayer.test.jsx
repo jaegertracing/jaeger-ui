@@ -4,20 +4,22 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import SvgEdgesLayer from './SvgEdgesLayer';
+import SvgEdges from './SvgEdges';
+import SvgLayer from './SvgLayer';
 
 // Mock child components
 // jest.mock factories are hoisted above imports, so we use React.createElement instead of JSX here
-jest.mock('./SvgEdges', () => {
+vi.mock('./SvgEdges', () => {
   const React = require('react');
   const MockSvgEdges = props => {
     MockSvgEdges.lastProps = props;
     return React.createElement('g', { 'data-testid': 'svg-edges' });
   };
   MockSvgEdges.lastProps = null;
-  return MockSvgEdges;
+  return { default: MockSvgEdges };
 });
 
-jest.mock('./SvgLayer', () => {
+vi.mock('./SvgLayer', () => {
   const React = require('react');
   const MockSvgLayer = ({ children, classNamePart, extraWrapper, ...rest }) => {
     MockSvgLayer.lastProps = { classNamePart, extraWrapper, ...rest };
@@ -28,13 +30,10 @@ jest.mock('./SvgLayer', () => {
     );
   };
   MockSvgLayer.lastProps = null;
-  return MockSvgLayer;
+  return { default: MockSvgLayer };
 });
 
 describe('SvgEdgesLayer', () => {
-  const SvgEdges = require('./SvgEdges');
-  const SvgLayer = require('./SvgLayer');
-
   const createLayoutEdge = (from, to) => ({
     edge: { from, to },
     pathPoints: [
