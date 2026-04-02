@@ -10,14 +10,14 @@ import { useThemeMode } from './ThemeProvider';
 vi.mock('./ThemeProvider');
 
 describe('ThemeToggleButton', () => {
-  const mockToggle = jest.fn();
+  const mockToggle = vi.fn();
 
   beforeEach(() => {
     mockToggle.mockClear();
   });
 
   it('shows sun icon when current mode is dark', () => {
-    (useThemeMode as jest.Mock).mockReturnValue({ mode: 'dark', toggleMode: mockToggle });
+    (useThemeMode as ReturnType<typeof vi.fn>).mockReturnValue({ mode: 'dark', toggleMode: mockToggle });
 
     render(<ThemeToggleButton />);
 
@@ -27,7 +27,7 @@ describe('ThemeToggleButton', () => {
   });
 
   it('shows moon icon when current mode is light', () => {
-    (useThemeMode as jest.Mock).mockReturnValue({ mode: 'light', toggleMode: mockToggle });
+    (useThemeMode as ReturnType<typeof vi.fn>).mockReturnValue({ mode: 'light', toggleMode: mockToggle });
 
     render(<ThemeToggleButton />);
 
@@ -37,7 +37,7 @@ describe('ThemeToggleButton', () => {
   });
 
   it('toggles the theme when the button is clicked', () => {
-    (useThemeMode as jest.Mock).mockReturnValue({ mode: 'light', toggleMode: mockToggle });
+    (useThemeMode as ReturnType<typeof vi.fn>).mockReturnValue({ mode: 'light', toggleMode: mockToggle });
     render(<ThemeToggleButton />);
 
     const button = screen.getByRole('button', { name: /toggle color mode/i });

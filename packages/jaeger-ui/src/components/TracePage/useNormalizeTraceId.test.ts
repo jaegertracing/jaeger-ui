@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 let mockLocation: { search: string; state: unknown } = { search: '', state: null };
 
 vi.mock('react-router-dom', async () => ({

@@ -8,16 +8,16 @@ import { ThemeTokenSync } from './ThemeTokenSync';
 
 vi.mock('antd', () => ({
   theme: {
-    useToken: jest.fn(),
+    useToken: vi.fn(),
   },
 }));
 
 describe('ThemeTokenSync', () => {
-  let setPropertySpy: jest.SpyInstance;
+  let setPropertySpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    setPropertySpy = jest.spyOn(document.documentElement.style, 'setProperty');
+    vi.clearAllMocks();
+    setPropertySpy = vi.spyOn(document.documentElement.style, 'setProperty');
   });
 
   afterEach(() => {
@@ -32,7 +32,7 @@ describe('ThemeTokenSync', () => {
       borderRadius: 4,
     };
 
-    (theme.useToken as jest.Mock).mockReturnValue({ token: mockTokens });
+    (theme.useToken as ReturnType<typeof vi.fn>).mockReturnValue({ token: mockTokens });
 
     render(<ThemeTokenSync />);
 
@@ -48,7 +48,7 @@ describe('ThemeTokenSync', () => {
       someLongCamelCaseToken: 'value',
     };
 
-    (theme.useToken as jest.Mock).mockReturnValue({ token: mockTokens });
+    (theme.useToken as ReturnType<typeof vi.fn>).mockReturnValue({ token: mockTokens });
 
     render(<ThemeTokenSync />);
 
@@ -65,7 +65,7 @@ describe('ThemeTokenSync', () => {
       invalidUndefined: undefined,
     };
 
-    (theme.useToken as jest.Mock).mockReturnValue({ token: mockTokens });
+    (theme.useToken as ReturnType<typeof vi.fn>).mockReturnValue({ token: mockTokens });
 
     render(<ThemeTokenSync />);
 
@@ -79,14 +79,14 @@ describe('ThemeTokenSync', () => {
     const { rerender } = render(<ThemeTokenSync />);
 
     const tokens1 = { colorPrimary: 'blue' };
-    (theme.useToken as jest.Mock).mockReturnValue({ token: tokens1 });
+    (theme.useToken as ReturnType<typeof vi.fn>).mockReturnValue({ token: tokens1 });
     rerender(<ThemeTokenSync />);
     expect(setPropertySpy).toHaveBeenCalledWith('--ant-color-primary', 'blue');
 
     setPropertySpy.mockClear();
 
     const tokens2 = { colorPrimary: 'red' };
-    (theme.useToken as jest.Mock).mockReturnValue({ token: tokens2 });
+    (theme.useToken as ReturnType<typeof vi.fn>).mockReturnValue({ token: tokens2 });
     rerender(<ThemeTokenSync />);
     expect(setPropertySpy).toHaveBeenCalledWith('--ant-color-primary', 'red');
   });

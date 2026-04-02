@@ -238,9 +238,10 @@ describe('AppThemeProvider', () => {
       // Ant Design's CSS injection (useCacheToken) also accesses document when
       // re-rendering; the ReferenceError here comes from antd internals, not our
       // ThemeProvider code.  Our useEffect is already guarded with
-      // `typeof document !== 'undefined'`.  We intentionally swallow the antd
-      // error so the test verifies our guard is present without failing on
-      // third-party code that cannot be made document-free.
+      // `typeof document !== 'undefined'`.  We intentionally swallow ALL errors:
+      // React 19 may wrap the original ReferenceError in an AggregateError or
+      // rethrow it through internal error-reporting machinery, making a precise
+      // `instanceof ReferenceError` check unreliable in practice.
     } finally {
       (global as any).document = originalDocument;
     }

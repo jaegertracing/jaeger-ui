@@ -6,21 +6,21 @@ import getConfig from '../../utils/config/get-config';
 
 vi.mock('../../utils/config/get-config', () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: vi.fn(),
 }));
 
 function setupMatchMedia(matches = false) {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: jest.fn().mockImplementation(query => ({
+    value: vi.fn().mockImplementation(query => ({
       matches,
       media: query,
       onchange: null,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
     })),
   });
 }
@@ -29,7 +29,7 @@ describe('ThemeStorage', () => {
   beforeEach(() => {
     window.localStorage.clear();
     setupMatchMedia(false);
-    (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: true } });
+    (getConfig as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ themes: { enabled: true } });
   });
 
   describe('readStoredTheme', () => {
@@ -49,7 +49,7 @@ describe('ThemeStorage', () => {
 
     it('returns null and suppresses error when global window is blocked/unavailable', () => {
       const originalGetItem = window.localStorage.getItem;
-      window.localStorage.getItem = jest.fn(() => {
+      window.localStorage.getItem = vi.fn(() => {
         throw new Error('blocked');
       });
 
@@ -61,7 +61,7 @@ describe('ThemeStorage', () => {
     });
 
     it('honors injected window override', () => {
-      const getItem = jest.fn(() => 'dark');
+      const getItem = vi.fn(() => 'dark');
       const fakeWindow = {
         localStorage: { getItem },
       } as unknown as Window;
@@ -96,7 +96,7 @@ describe('ThemeStorage', () => {
 
     it('suppresses errors when localStorage is full or blocked', () => {
       const originalSetItem = window.localStorage.setItem;
-      window.localStorage.setItem = jest.fn(() => {
+      window.localStorage.setItem = vi.fn(() => {
         throw new Error('quota exceeded');
       });
 
@@ -108,7 +108,7 @@ describe('ThemeStorage', () => {
     });
 
     it('honors injected window override', () => {
-      const setItem = jest.fn();
+      const setItem = vi.fn();
       const fakeWindow = {
         localStorage: { setItem },
       } as unknown as Window;
@@ -137,7 +137,7 @@ describe('ThemeStorage', () => {
 
   describe('getInitialTheme', () => {
     it('returns default mode when themes are disabled', () => {
-      (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: false } });
+      (getConfig as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ themes: { enabled: false } });
       window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
       expect(getInitialTheme()).toBe('light');
     });
