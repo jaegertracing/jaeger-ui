@@ -105,7 +105,9 @@ describe('fileReader.readJsonFile', () => {
       const file = new File([''], 'error.json');
       const mockReader = { readAsText: jest.fn(), onerror: null, error: new Error('Read error') };
 
-      fileReaderSpy = jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
+      fileReaderSpy = jest.spyOn(window, 'FileReader').mockImplementation(function () {
+        return mockReader;
+      });
       const promise = readJsonFile({ file });
 
       mockReader.onerror();
@@ -117,7 +119,9 @@ describe('fileReader.readJsonFile', () => {
       const file = new File([''], 'abort.json');
       const mockReader = { readAsText: jest.fn(), onabort: null };
 
-      fileReaderSpy = jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
+      fileReaderSpy = jest.spyOn(window, 'FileReader').mockImplementation(function () {
+        return mockReader;
+      });
       const promise = readJsonFile({ file });
 
       mockReader.onabort();
@@ -129,7 +133,9 @@ describe('fileReader.readJsonFile', () => {
       const file = new File(['{ "test": true }'], 'dummy.json');
       const mockReader = { readAsText: jest.fn(), onload: null, result: {} };
 
-      fileReaderSpy = jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
+      fileReaderSpy = jest.spyOn(window, 'FileReader').mockImplementation(function () {
+        return mockReader;
+      });
       const promise = readJsonFile({ file });
 
       mockReader.onload();

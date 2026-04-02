@@ -18,9 +18,9 @@ jest.mock('@jaegertracing/plexus', () => ({
       },
     }
   ),
-  LayoutManager: jest.fn().mockImplementation(() => ({
-    stopAndRelease: jest.fn(),
-  })),
+  LayoutManager: jest.fn().mockImplementation(function () {
+    return { stopAndRelease: jest.fn() };
+  }),
 }));
 
 jest.mock('./DdgNodeContent', () => ({
