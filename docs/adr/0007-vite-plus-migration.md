@@ -73,7 +73,7 @@ Migrate the monorepo to Vite+ in phases:
    now covers both packages. This is preparatory cleanup before replacing ESLint with Oxlint.
 3. ✅ **Replace ESLint with Oxlint** — `@typescript-eslint` removed; TypeScript 6/7 upgrade now unblocked.
 4. ✅ **Replace Prettier with Oxfmt** — `prettier` removed; `oxfmt --migrate=prettier` migrated the config.
-5. **Upgrade TypeScript** — `@typescript-eslint` is gone; can proceed now.
+5. ✅ **Upgrade TypeScript** — upgraded to 6.0.2; `moduleResolution` switched to `"bundler"`.
 6. **Consolidate jaeger-ui tsconfigs** — collapse `tsconfig.lint.json` into `tsconfig.json` (easier after
    Vitest removes the `isolatedModules` constraint).
 7. **Replace Jest + Babel with Vitest** — deferred; significant migration effort, but the correct
@@ -189,7 +189,7 @@ Result: 0 ESLint errors (250 pre-existing warnings, all `@typescript-eslint/no-e
 
 ---
 
-### ✅ 3. Replace ESLint with Oxlint (PR C1 — [#3682](https://github.com/jaegertracing/jaeger-ui/pull/3682), [#3684](https://github.com/jaegertracing/jaeger-ui/pull/3684))
+### ✅ 3. Replace ESLint with Oxlint (PRs C1)
 
 Oxlint is the linting component of the Vite+ toolchain. It is Rust-based and has no dependency on
 `@typescript-eslint`, directly unblocking TypeScript 6/7 upgrades.
@@ -198,7 +198,7 @@ Oxlint is the linting component of the Vite+ toolchain. It is Rust-based and has
 
 Rather than replacing ESLint in a single step, PR C1 is split into two phases:
 
-** ✅ Phase 1 — parallel run (this PR):**
+** ✅ Phase 1 — parallel run ([#3682](https://github.com/jaegertracing/jaeger-ui/pull/3682)):**
 - Add `vite-plus` to root devDependencies (which brings Oxlint transitively).
 - Add an `oxlint` config (`.oxlintrc.json`) that mirrors the currently active ESLint rules.
 - Add an `npm run oxlint` script that runs non-blocking alongside `npm run eslint` in CI.
@@ -243,13 +243,19 @@ See [Unknown 2](#unknown-2-oxlint-rule-coverage) for the rule mapping table.
 
 ---
 
-### 5. Upgrade TypeScript (PR D)
+### ✅ 5. Upgrade TypeScript (PR D — [#3688](https://github.com/jaegertracing/jaeger-ui/pull/3688))
 
 Once `@typescript-eslint/parser` and `@typescript-eslint/eslint-plugin` are removed from the dependency
 tree (after PR C), TypeScript can be upgraded freely without waiting for plugin compatibility.
 
-Target: TypeScript 6.x (current blocking dependency is `@typescript-eslint`).
-Stretch: TypeScript 7 (Project Corsa) — native Go-based type checker; Vite+ is designed for this.
+Upgraded TypeScript from 5.9.3 to 6.0.2. Two fixes required:
+
+- Root `tsconfig.json`: changed `"moduleResolution": "node"` → `"moduleResolution": "bundler"`.
+  TypeScript 6.0 deprecates `"node"` (alias `"node10"`) as it does not support the modern
+  `"exports"` field in `package.json`. `"bundler"` accurately reflects how Vite resolves modules.
+- `packages/plexus/tsconfig.json`: added `"types": ["jest"]` because TypeScript 6.0 tightened
+  `@types` auto-discovery under `moduleResolution: "bundler"` — Jest globals were no longer found
+  automatically.
 
 ---
 
