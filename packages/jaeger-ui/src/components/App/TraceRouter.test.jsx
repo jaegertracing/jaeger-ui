@@ -7,8 +7,8 @@ import '@testing-library/jest-dom';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import TraceRouter from './TraceRouter';
 
-jest.mock('../TraceDiff', () => ({ __esModule: true, default: () => <div data-testid="trace-diff" /> }));
-jest.mock('../TracePage', () => ({ __esModule: true, default: () => <div data-testid="trace-page" /> }));
+vi.mock('../TraceDiff', () => ({ __esModule: true, default: () => <div data-testid="trace-diff" /> }));
+vi.mock('../TracePage', () => ({ __esModule: true, default: () => <div data-testid="trace-page" /> }));
 
 const renderAt = path => {
   return render(

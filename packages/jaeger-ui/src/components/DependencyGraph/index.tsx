@@ -145,7 +145,8 @@ const formatServiceCalls = (
   };
 };
 
-const { getSampleData, loadSampleData } = createSampleDataManager();
+// export for tests
+export const { getSampleData, loadSampleData } = createSampleDataManager();
 
 // export for tests
 export function DependencyGraphPageImpl(props: TProps) {

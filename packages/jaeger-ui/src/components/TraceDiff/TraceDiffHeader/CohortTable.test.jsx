@@ -9,12 +9,12 @@ import CohortTable from './CohortTable';
 import { fetchedState } from '../../../constants';
 import * as dateUtils from '../../../utils/date';
 
-jest.mock('./TraceTimelineLink', () => ({
+vi.mock('./TraceTimelineLink', () => ({
   __esModule: true,
   default: props => <div data-testid="trace-timeline-link" data-trace-id={props.traceID} />,
 }));
 
-jest.mock('../../common/RelativeDate', () => ({
+vi.mock('../../common/RelativeDate', () => ({
   __esModule: true,
   default: props => (
     <div
@@ -26,7 +26,7 @@ jest.mock('../../common/RelativeDate', () => ({
   ),
 }));
 
-jest.mock('../../common/TraceName', () => ({
+vi.mock('../../common/TraceName', () => ({
   __esModule: true,
   default: props => (
     <div

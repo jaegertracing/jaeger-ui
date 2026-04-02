@@ -16,8 +16,8 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
 
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', async () => ({
+  ...(await vi.importActual('react-router-dom')),
   useNavigate: () => mockNavigate,
 }));
 
@@ -26,8 +26,8 @@ With v5+, redux no longer supports `bindActionCreators` to be configured.
 `configurable: true` has to be supported by the compilers for it to be configured.
 It has to be explicitly told using `__esModule` to babel for compiling it with that property.
 */
-jest.mock('redux', () => ({ __esModule: true, ...jest.requireActual('redux') }));
-jest.mock('./TraceDiffHeader', () => {
+vi.mock('redux', async () => ({ __esModule: true, ...(await vi.importActual('redux')) }));
+vi.mock('./TraceDiffHeader', async () => {
   return mockDefault(function MockTraceDiffHeader(props) {
     return (
       <div data-testid="trace-diff-header">
@@ -48,7 +48,7 @@ jest.mock('./TraceDiffHeader', () => {
   });
 });
 
-jest.mock('./TraceDiffGraph', () => {
+vi.mock('./TraceDiffGraph', async () => {
   return mockDefault(function MockTraceDiffGraph() {
     return <div data-testid="trace-diff-graph">Graph</div>;
   });

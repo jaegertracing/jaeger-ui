@@ -10,8 +10,8 @@ import { EDdgDensity } from '../../../../model/ddg/types';
 
 const mockPopover = jest.fn();
 
-jest.mock('antd', () => {
-  const antd = jest.requireActual('antd');
+vi.mock('antd', async () => {
+  const antd = await vi.importActual('antd');
   return {
     ...antd,
     Popover: props => {

@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 import ViewingLayer, { dragTypes } from './ViewingLayer';
 import { EUpdateTypes } from '../../../../utils/DraggableManager';
 
-jest.mock('./Scrubber', () => mockDefault(props => <div data-testid="scrubber" {...props} />));
+vi.mock('./Scrubber', () => mockDefault(props => <div data-testid="scrubber" {...props} />));
 
 function getViewRange(viewStart, viewEnd) {
   return { time: { current: [viewStart, viewEnd] } };

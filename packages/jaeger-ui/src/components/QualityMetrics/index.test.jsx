@@ -18,8 +18,8 @@ const queryClient = new QueryClient({
 
 const mockNavigate = jest.fn();
 const mockLocation = { search: '?service=test-service&lookback=48' };
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', async () => ({
+  ...(await vi.importActual('react-router-dom')),
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
 }));
@@ -30,7 +30,7 @@ const headerMock = {
   setLookback: null,
 };
 
-jest.mock('./Header', () => {
+vi.mock('./Header', async () => {
   const mockHeader = jest.fn(props => {
     mockHeader.mockProps = props;
     headerMock.props = props;
@@ -41,19 +41,19 @@ jest.mock('./Header', () => {
   return mockDefault(mockHeader);
 });
 
-jest.mock('../common/LoadingIndicator', () => {
+vi.mock('../common/LoadingIndicator', async () => {
   return mockDefault(function MockLoadingIndicator() {
     return <div data-testid="loading-indicator">Loading...</div>;
   });
 });
 
-jest.mock('./BannerText', () => {
+vi.mock('./BannerText', async () => {
   return mockDefault(function MockBannerText({ bannerText }) {
     return <div data-testid="banner-text">{bannerText}</div>;
   });
 });
 
-jest.mock('./ScoreCard', () => {
+vi.mock('./ScoreCard', async () => {
   return mockDefault(function MockScoreCard({ score }) {
     return (
       <div data-testid="score-card" data-key={score.key}>
@@ -63,7 +63,7 @@ jest.mock('./ScoreCard', () => {
   });
 });
 
-jest.mock('./MetricCard', () => {
+vi.mock('./MetricCard', async () => {
   return mockDefault(function MockMetricCard({ metric }) {
     return (
       <div data-testid="metric-card" data-name={metric.name}>
@@ -73,7 +73,7 @@ jest.mock('./MetricCard', () => {
   });
 });
 
-jest.mock('../common/ExamplesLink', () =>
+vi.mock('../common/ExamplesLink', async () =>
   mockDefault(function MockExamplesLink() {
     return <div>ExamplesLink Component</div>;
   })

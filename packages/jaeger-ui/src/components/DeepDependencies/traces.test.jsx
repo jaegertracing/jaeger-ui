@@ -6,7 +6,7 @@ import { render } from '@testing-library/react';
 import queryString from 'query-string';
 import '@testing-library/jest-dom';
 
-jest.mock('react-router-dom', () => ({
+vi.mock('react-router-dom', () => ({
   useNavigate: () => jest.fn(),
 }));
 
@@ -18,7 +18,7 @@ import * as GraphModel from '../../model/ddg/GraphModel';
 import * as transformDdgData from '../../model/ddg/transformDdgData';
 import * as transformTracesToPaths from '../../model/ddg/transformTracesToPaths';
 
-jest.mock('.', () => ({
+vi.mock('.', () => ({
   DeepDependencyGraphPageImpl: jest.fn(() => <div data-testid="ddg-impl" />),
 }));
 

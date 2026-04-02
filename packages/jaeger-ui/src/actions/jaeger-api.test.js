@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('node-fetch', () =>
+vi.mock('node-fetch', () =>
   mockDefault(() =>
     Promise.resolve({
       status: 200,
@@ -19,16 +19,18 @@ import * as jaegerApiActions from './jaeger-api';
 import JaegerAPI from '../api/jaeger';
 
 // Mock the JaegerAPI module
-jest.mock('../api/jaeger', () => ({
-  fetchTrace: jest.fn(() => Promise.resolve()),
-  searchTraces: jest.fn(() => Promise.resolve()),
-  archiveTrace: jest.fn(() => Promise.resolve()),
-  fetchServices: jest.fn(() => Promise.resolve()),
-  fetchServiceOperations: jest.fn(() => Promise.resolve()),
-  fetchServiceServerOps: jest.fn(() => Promise.resolve()),
-  fetchDeepDependencyGraph: jest.fn(() => Promise.resolve()),
-  fetchDependencies: jest.fn(() => Promise.resolve()),
-  fetchMetrics: jest.fn(() => Promise.resolve()),
+vi.mock('../api/jaeger', () => ({
+  default: {
+    fetchTrace: jest.fn(() => Promise.resolve()),
+    searchTraces: jest.fn(() => Promise.resolve()),
+    archiveTrace: jest.fn(() => Promise.resolve()),
+    fetchServices: jest.fn(() => Promise.resolve()),
+    fetchServiceOperations: jest.fn(() => Promise.resolve()),
+    fetchServiceServerOps: jest.fn(() => Promise.resolve()),
+    fetchDeepDependencyGraph: jest.fn(() => Promise.resolve()),
+    fetchDependencies: jest.fn(() => Promise.resolve()),
+    fetchMetrics: jest.fn(() => Promise.resolve()),
+  },
 }));
 
 describe('actions/jaeger-api', () => {

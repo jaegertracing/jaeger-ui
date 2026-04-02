@@ -7,8 +7,8 @@ import '@testing-library/jest-dom';
 
 import FileLoader from './FileLoader';
 
-jest.mock('antd', () => {
-  const antd = jest.requireActual('antd');
+vi.mock('antd', async () => {
+  const antd = await vi.importActual('antd');
   const { Upload } = antd;
   const MockedDragger = ({ beforeUpload, children, ...props }) => {
     global.mockBeforeUpload = beforeUpload;

@@ -26,7 +26,7 @@ global.ResizeObserver = jest.fn().mockImplementation(function () {
   return { observe: jest.fn(), unobserve: jest.fn(), disconnect: jest.fn() };
 });
 
-jest.mock('../../../utils/config/get-config', () => ({
+vi.mock('../../../utils/config/get-config', async () => ({
   __esModule: true,
   default: jest.fn(() => ({
     monitor: {
@@ -38,7 +38,7 @@ jest.mock('../../../utils/config/get-config', () => ({
   })),
 }));
 
-jest.mock('../../../utils/storage', () => ({
+vi.mock('../../../utils/storage', async () => ({
   __esModule: true,
   default: {
     getString: jest.fn(),
@@ -49,28 +49,28 @@ jest.mock('../../../utils/storage', () => ({
   },
 }));
 
-jest.mock('../../../hooks/useTraceDiscovery', () => ({
+vi.mock('../../../hooks/useTraceDiscovery', async () => ({
   useServices: jest.fn(() => ({ data: ['service1', 'service2'], isLoading: false })),
 }));
 
 // Store the default mock implementation for reset in afterEach
 const defaultUseServicesImpl = () => ({ data: ['service1', 'service2'], isLoading: false });
 
-jest.mock('lodash/debounce', () => mockDefault(fn => fn));
+vi.mock('lodash/debounce', async () => mockDefault(fn => fn));
 
-jest.mock('../../common/LoadingIndicator', () => {
+vi.mock('../../common/LoadingIndicator', async () => {
   return mockDefault(function LoadingIndicator() {
     return <div data-testid="loading-indicator">Loading...</div>;
   });
 });
 
-jest.mock('../EmptyState', () => {
+vi.mock('../EmptyState', async () => {
   return mockDefault(function MonitorATMEmptyState() {
     return <div data-testid="empty-state">ATM not configured</div>;
   });
 });
 
-jest.mock('./serviceGraph', () => {
+vi.mock('./serviceGraph', async () => {
   return mockDefault(function ServiceGraph({ yAxisTickFormat, name, error }) {
     const testValue = yAxisTickFormat ? yAxisTickFormat(1000) : null;
     return (
@@ -83,7 +83,7 @@ jest.mock('./serviceGraph', () => {
   });
 });
 
-jest.mock('./operationDetailsTable', () => {
+vi.mock('./operationDetailsTable', async () => {
   return mockDefault(function OperationTableDetails({ loading, error, data }) {
     return (
       <div data-testid="operation-table">
@@ -95,7 +95,7 @@ jest.mock('./operationDetailsTable', () => {
   });
 });
 
-jest.mock('../../common/SearchableSelect', () => {
+vi.mock('../../common/SearchableSelect', async () => {
   return mockDefault(function SearchableSelect({
     children,
     value,
@@ -124,8 +124,8 @@ jest.mock('../../common/SearchableSelect', () => {
   });
 });
 
-jest.mock('antd', () => {
-  const actualAntd = jest.requireActual('antd');
+vi.mock('antd', async () => {
+  const actualAntd = await vi.importActual('antd');
   return {
     ...actualAntd,
     Input: {

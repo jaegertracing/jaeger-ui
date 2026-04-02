@@ -15,7 +15,9 @@ describe('processScripts', () => {
   const configScripts = texts.map(text => ({ text, type: 'inline' }));
   let scriptElems;
 
-  beforeAll(() => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    scriptElems = [];
     createTextNodeSpy.mockImplementation(text => mockValue(text, createTextNodeSpy.mock.calls.length));
     createElementSpy.mockImplementation(text => {
       const script = {
@@ -25,12 +27,7 @@ describe('processScripts', () => {
       scriptElems.push(script);
       return script;
     });
-    appendScriptSpy.mockImplementation();
-  });
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    scriptElems = [];
+    appendScriptSpy.mockImplementation(() => {});
   });
 
   it('adds inline scripts', () => {

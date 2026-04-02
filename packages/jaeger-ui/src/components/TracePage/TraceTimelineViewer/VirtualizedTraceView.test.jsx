@@ -16,11 +16,11 @@ import memoizedTraceCriticalPath from '../CriticalPath/index';
 
 import criticalPathTest from '../CriticalPath/testCases/test2';
 
-jest.mock('./SpanTreeOffset');
-jest.mock('../../../utils/update-ui-find');
+vi.mock('./SpanTreeOffset');
+vi.mock('../../../utils/update-ui-find');
 
-jest.mock('./ListView', () => {
-  return jest.fn(props => <div data-testid="list-view" />);
+vi.mock('./ListView', () => {
+  return mockDefault(jest.fn(() => <div data-testid="list-view" />));
 });
 
 describe('<VirtualizedTraceViewImpl>', () => {

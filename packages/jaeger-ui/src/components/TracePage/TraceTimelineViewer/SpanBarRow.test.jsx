@@ -8,7 +8,7 @@ import '@testing-library/jest-dom';
 import SpanBarRow from './SpanBarRow';
 import SpanBar from './SpanBar';
 
-jest.mock('./SpanTreeOffset', () => ({
+vi.mock('./SpanTreeOffset', () => ({
   __esModule: true,
   default: jest.fn(({ span, childrenVisible, onClick }) => (
     <div data-testid="span-tree-offset" onClick={onClick}>
@@ -17,7 +17,7 @@ jest.mock('./SpanTreeOffset', () => ({
   )),
 }));
 
-jest.mock('./ReferencesButton', () => ({
+vi.mock('./ReferencesButton', () => ({
   __esModule: true,
   default: jest.fn(({ tooltipText, links, children }) => (
     <button
@@ -31,12 +31,12 @@ jest.mock('./ReferencesButton', () => ({
   )),
 }));
 
-jest.mock('./SpanBar', () => ({
+vi.mock('./SpanBar', () => ({
   __esModule: true,
   default: jest.fn(() => <div data-testid="span-bar">SpanBar</div>),
 }));
 
-jest.mock('./utils', () => ({
+vi.mock('./utils', () => ({
   formatDuration: jest.fn(d => `formatted-${d}`),
   ViewedBoundsFunctionType: {},
 }));

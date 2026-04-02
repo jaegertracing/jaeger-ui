@@ -8,7 +8,7 @@ import '@testing-library/jest-dom';
 import { mapDispatchToProps, mapStateToProps, UnconnectedSpanTreeOffset } from './SpanTreeOffset';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
-jest.mock('../../../utils/span-ancestor-ids');
+vi.mock('../../../utils/span-ancestor-ids');
 
 describe('SpanTreeOffset', () => {
   const ownSpanID = 'ownSpanID';

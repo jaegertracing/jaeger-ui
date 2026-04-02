@@ -11,13 +11,9 @@ import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 
-jest.mock('./VirtualizedTraceView', () =>
-  mockDefault(() => <div data-testid="virtualized-trace-view-mock" />)
-);
-jest.mock('./SpanDetailSidePanel', () =>
-  mockDefault(() => <div data-testid="span-detail-side-panel-mock" />)
-);
-jest.mock('../../common/VerticalResizer', () => ({
+vi.mock('./VirtualizedTraceView', () => mockDefault(() => <div data-testid="virtualized-trace-view-mock" />));
+vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
+vi.mock('../../common/VerticalResizer', () => ({
   __esModule: true,
   default: ({ onChange }) => (
     <div data-testid="vertical-resizer-mock">
@@ -25,7 +21,7 @@ jest.mock('../../common/VerticalResizer', () => ({
     </div>
   ),
 }));
-jest.mock('./TimelineHeaderRow', () =>
+vi.mock('./TimelineHeaderRow', () =>
   mockDefault(props => (
     <div data-testid="timeline-header-row-mock" data-side-panel-label={props.sidePanelLabel}>
       <button data-testid="collapse-all-button" type="button" onClick={props.onCollapseAll}>

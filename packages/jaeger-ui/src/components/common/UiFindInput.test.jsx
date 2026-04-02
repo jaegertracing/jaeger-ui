@@ -11,15 +11,15 @@ import { UnconnectedUiFindInput, extractUiFindFromState, parseUiFind } from './U
 import updateUiFindSpy from '../../utils/update-ui-find';
 import * as parseQuery from '../../utils/parseQuery';
 
-jest.mock('lodash/debounce');
+vi.mock('lodash/debounce');
 
-jest.mock('../../utils/update-ui-find');
+vi.mock('../../utils/update-ui-find');
 
 const mockNavigate = jest.fn();
 const mockLocation = { search: '', pathname: '/test' };
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', async () => ({
+  ...(await vi.importActual('react-router-dom')),
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
 }));

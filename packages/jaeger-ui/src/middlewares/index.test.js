@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('node-fetch', () =>
+vi.mock('node-fetch', () =>
   mockDefault(() =>
     Promise.resolve({
       status: 200,

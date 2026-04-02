@@ -8,19 +8,17 @@ import '@testing-library/jest-dom';
 import Header from './index';
 import * as track from '../index.track';
 
-jest.mock('./HopsSelector', () => {
-  const mockReact = jest.requireActual('react');
+vi.mock('./HopsSelector', () => {
   return mockDefault(function MockHopsSelector(props) {
-    return mockReact.createElement('div', { 'data-testid': 'hops-selector', ...props });
+    return React.createElement('div', { 'data-testid': 'hops-selector', ...props });
   });
 });
 
-jest.mock('../../common/SearchableSelect', () => {
-  const mockReact = jest.requireActual('react');
+vi.mock('../../common/SearchableSelect', () => {
   return mockDefault(function MockSearchableSelect(props) {
     const { value, onChange, allowClear, onClear, placeholder, children, className, status } = props;
     // Extract options from children
-    const options = mockReact.Children.toArray(children)
+    const options = React.Children.toArray(children)
       .map(child => {
         if (child.props && child.props.value !== undefined) {
           return { value: child.props.value, label: child.props.children };
@@ -29,10 +27,10 @@ jest.mock('../../common/SearchableSelect', () => {
       })
       .filter(Boolean);
 
-    return mockReact.createElement(
+    return React.createElement(
       'div',
       { 'data-testid': `searchable-select`, className, 'data-status': status },
-      mockReact.createElement(
+      React.createElement(
         'select',
         {
           value: value || '',
@@ -43,32 +41,30 @@ jest.mock('../../common/SearchableSelect', () => {
           },
           'data-testid': 'select-input',
         },
-        mockReact.createElement('option', { value: '' }, placeholder),
+        React.createElement('option', { value: '' }, placeholder),
         options.map(option =>
-          mockReact.createElement('option', { key: option.value, value: option.value }, option.label)
+          React.createElement('option', { key: option.value, value: option.value }, option.label)
         )
       ),
       allowClear &&
         value &&
-        mockReact.createElement('button', { onClick: onClear, 'data-testid': 'clear-button' }, 'Clear')
+        React.createElement('button', { onClick: onClear, 'data-testid': 'clear-button' }, 'Clear')
     );
   });
 });
 
-jest.mock('./LayoutSettings', () => {
-  const mockReact = jest.requireActual('react');
+vi.mock('./LayoutSettings', () => {
   return mockDefault(function MockLayoutSettings(props) {
-    return mockReact.createElement('div', { 'data-testid': 'layout-settings', ...props });
+    return React.createElement('div', { 'data-testid': 'layout-settings', ...props });
   });
 });
 
-jest.mock('../../common/UiFindInput', () => {
-  const mockReact = jest.requireActual('react');
+vi.mock('../../common/UiFindInput', () => {
   return mockDefault(
-    mockReact.forwardRef(function MockUiFindInput(props, ref) {
-      const inputRef = mockReact.useRef(null);
+    React.forwardRef(function MockUiFindInput(props, ref) {
+      const inputRef = React.useRef(null);
 
-      mockReact.useEffect(() => {
+      React.useEffect(() => {
         if (ref) {
           const current = {
             focus: () => inputRef.current && inputRef.current.focus(),
@@ -84,7 +80,7 @@ jest.mock('../../common/UiFindInput', () => {
         }
       });
 
-      return mockReact.createElement('input', {
+      return React.createElement('input', {
         ref: inputRef,
         'data-testid': 'ui-find-input',
         ...props.inputProps,

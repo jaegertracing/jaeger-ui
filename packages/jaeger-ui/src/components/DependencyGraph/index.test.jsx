@@ -6,32 +6,37 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import * as constants from '../../utils/constants';
 
-import { DependencyGraphPageImpl as DependencyGraph, mapDispatchToProps, mapStateToProps } from './index';
+import {
+  DependencyGraphPageImpl as DependencyGraph,
+  mapDispatchToProps,
+  mapStateToProps,
+  loadSampleData,
+} from './index';
 
 let lastDAGOptionsProps = {};
 let lastDAGProps = {};
 
-jest.mock('./DAG', () => {
+vi.mock('./DAG', () => {
   return mockDefault(function MockDAG(props) {
     lastDAGProps = props;
     return <div data-testid="dag-component" />;
   });
 });
 
-jest.mock('./DAGOptions', () => {
+vi.mock('./DAGOptions', () => {
   return mockDefault(function MockDAGOptions(props) {
     lastDAGOptionsProps = props;
     return <div data-testid="dag-options" />;
   });
 });
 
-jest.mock('../common/LoadingIndicator', () => {
+vi.mock('../common/LoadingIndicator', () => {
   return mockDefault(function MockLoadingIndicator(props) {
     return <div data-testid="loading-indicator" {...props} />;
   });
 });
 
-jest.mock('../common/ErrorMessage', () => {
+vi.mock('../common/ErrorMessage', () => {
   return mockDefault(function MockErrorMessage(props) {
     return <div data-testid="error-message" {...props} />;
   });
@@ -107,6 +112,15 @@ describe('<DependencyGraph>', () => {
     beforeEach(() => {
       jest.resetAllMocks();
       jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
+    });
+
+    afterEach(async () => {
+      // Reset the module-level sampleDAGDataset closure. loadSampleData() with a
+      // non-matching type runs synchronously and sets the dataset to []. This is
+      // needed because loadSampleData('Small Graph') uses a dynamic import that
+      // resolves asynchronously and can overwrite a prior null-reset, leaving
+      // stale data visible to later tests (e.g. mapStateToProps).
+      await loadSampleData('');
     });
 
     it('initializes with default values', () => {

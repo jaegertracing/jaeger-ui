@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('../common/SearchableSelect', () => {
+vi.mock('../common/SearchableSelect', () => {
   const MockSearchableSelect = ({ onChange, 'data-testid': testId, disabled, value, ...props }) => {
     if (onChange && testId) {
       MockSearchableSelect.onChangeFns[testId] = onChange;
@@ -13,14 +13,14 @@ jest.mock('../common/SearchableSelect', () => {
   };
   MockSearchableSelect.onChangeFns = {};
   MockSearchableSelect.disabled = {};
-  return MockSearchableSelect;
+  return mockDefault(MockSearchableSelect);
 });
-jest.mock('../../hooks/useConfig', () => ({
+vi.mock('../../hooks/useConfig', () => ({
   useConfig: () => ({
     useOpenTelemetryTerms: false,
   }),
 }));
-jest.mock('../../hooks/useTraceDiscovery', () => ({
+vi.mock('../../hooks/useTraceDiscovery', () => ({
   useServices: jest.fn(() => ({
     data: ['svcA', 'svcB'],
     isLoading: false,

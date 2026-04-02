@@ -11,14 +11,14 @@ import * as track from './index.track';
 import * as getConfig from '../../../utils/config/get-config';
 import DetailsPanel from './DetailsPanel';
 
-jest.mock('antd', () => ({
+vi.mock('antd', () => ({
   Modal: {
     info: jest.fn(),
   },
   Table: () => <div data-testid="mock-table">Table Mock</div>,
 }));
 
-jest.mock('./DetailsPanel', () => mockDefault(jest.fn(() => <div data-testid="details-panel" />)));
+vi.mock('./DetailsPanel', () => mockDefault(jest.fn(() => <div data-testid="details-panel" />)));
 
 describe('<SidePanel>', () => {
   let getConfigValueSpy;

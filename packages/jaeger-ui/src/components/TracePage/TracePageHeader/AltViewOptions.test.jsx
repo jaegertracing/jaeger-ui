@@ -9,8 +9,8 @@ import AltViewOptions from './AltViewOptions';
 import * as track from './TracePageHeader.track';
 import { ETraceViewType } from '../types';
 
-jest.mock('antd', () => {
-  const originalModule = jest.requireActual('antd');
+vi.mock('antd', async () => {
+  const originalModule = await vi.importActual('antd');
   return {
     ...originalModule,
     Dropdown: ({ children, menu }) => (

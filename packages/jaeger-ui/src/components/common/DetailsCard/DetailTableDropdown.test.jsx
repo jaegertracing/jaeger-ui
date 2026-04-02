@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 import DetailTableDropdown from './DetailTableDropdown';
 import FilteredList from '../FilteredList';
 
-jest.mock('../FilteredList', () => mockDefault(jest.fn(() => <div data-testid="FilteredList" />)));
+vi.mock('../FilteredList', () => mockDefault(jest.fn(() => <div data-testid="FilteredList" />)));
 
 describe('DetailTableDropdown', () => {
   const optionsArray = ['foo', 'bar', 'baz'];
