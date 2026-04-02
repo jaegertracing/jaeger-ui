@@ -89,7 +89,6 @@
     {
       "files": ["**/*.{ts,tsx,mts}"],
       "rules": {
-        "prettier/prettier": ["error"],
         "no-unused-vars": "warn",
         "no-redeclare": "warn",
         "no-shadow": "warn",
@@ -123,7 +122,7 @@
         "typescript/no-inferrable-types": "off",
         "typescript/no-var-requires": "off"
       },
-      "jsPlugins": ["eslint-plugin-prettier", "eslint-plugin-react-x"],
+      "jsPlugins": ["eslint-plugin-react-x"],
       "globals": {
         "process": "readonly",
         "Buffer": "readonly",
@@ -183,7 +182,6 @@
     {
       "files": ["**/*.{js,jsx}"],
       "rules": {
-        "prettier/prettier": ["error"],
         "no-unused-vars": "off",
         "no-redeclare": "off",
         "no-shadow": "off",
@@ -198,7 +196,7 @@
         "jest/no-identical-title": "error",
         "import/extensions": "off"
       },
-      "jsPlugins": ["eslint-plugin-prettier", "eslint-plugin-react-x"],
+      "jsPlugins": ["eslint-plugin-react-x"],
       "globals": {
         "process": "readonly",
         "Buffer": "readonly",
