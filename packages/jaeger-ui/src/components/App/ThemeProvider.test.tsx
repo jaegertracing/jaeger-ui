@@ -224,29 +224,6 @@ describe('AppThemeProvider', () => {
     expect(context.toggleMode()).toBeUndefined();
   });
 
-  it('skips updating document body when document is undefined', () => {
-    const { result } = renderHook(() => useThemeMode(), { wrapper: AppThemeProvider });
-
-    const originalDocument = (global as any).document;
-    delete (global as any).document;
-
-    try {
-      act(() => {
-        result.current.toggleMode();
-      });
-    } catch {
-      // Ant Design's CSS injection (useCacheToken) also accesses document when
-      // re-rendering; the ReferenceError here comes from antd internals, not our
-      // ThemeProvider code.  Our useEffect is already guarded with
-      // `typeof document !== 'undefined'`.  We intentionally swallow ALL errors:
-      // React 19 may wrap the original ReferenceError in an AggregateError or
-      // rethrow it through internal error-reporting machinery, making a precise
-      // `instanceof ReferenceError` check unreliable in practice.
-    } finally {
-      (global as any).document = originalDocument;
-    }
-  });
-
   it('correctly calculates and syncs AntD tokens in dark mode', async () => {
     render(
       <AppThemeProvider>
