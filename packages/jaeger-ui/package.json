@@ -32,7 +32,7 @@
     "jest-junit": "16.0.0",
     "less": "4.6.4",
     "terser": "5.46.1",
-    "vite": "8.0.1"
+    "vite": "8.0.3"
   },
   "dependencies": {
     "@jaegertracing/plexus": "0.2.0",

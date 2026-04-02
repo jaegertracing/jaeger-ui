@@ -15,6 +15,8 @@
   "devDependencies": {
     "@babel/cli": "7.28.0",
     "@babel/core": "7.29.0",
+    "@emnapi/core": "^1.9.1",
+    "@emnapi/runtime": "^1.9.1",
     "@eslint/js": "10.0.1",
     "@noble/hashes": "2.0.1",
     "@testing-library/dom": "^10.4.1",
@@ -37,7 +39,8 @@
     "openapi-zod-client": "1.18.3",
     "prettier": "3.8.1",
     "rxjs-compat": "6.6.7",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vite-plus": "0.1.15"
   },
   "overrides": {
     "react": "19.2.0",
@@ -60,8 +63,9 @@
     "coverage": "npm run --workspaces coverage",
     "depcheck": "./scripts/run-depcheck.sh",
     "eslint": "eslint --cache 'scripts/*.{js,jsx,ts,tsx}' 'packages/*/src/**/*.{js,jsx,ts,tsx}' 'packages/*/*.{js,jsx,ts,tsx,mts}'",
+    "oxlint": "vp lint packages/ scripts/",
     "fmt": "npm run prettier",
-    "lint": "npm-run-all -ln --parallel prettier-lint tsc-lint eslint check-license check-copyright-year check-tsx-naming check-overrides",
+    "lint": "npm-run-all -ln --parallel prettier-lint tsc-lint eslint oxlint check-license check-copyright-year check-tsx-naming check-overrides",
     "prepare": "husky",
     "prettier": "prettier --write .",
     "prettier-lint": "prettier --check . || (echo '*** ❌ PLEASE RUN npm run prettier AND RESUBMIT ***' && false)",

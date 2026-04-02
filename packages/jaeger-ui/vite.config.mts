@@ -62,7 +62,7 @@ function bundleStatsPlugin(outDir: string) {
       // Aggregate sizes by package name.
       const packageSizes = new Map<string, number>();
       for (const [rawMod, { rendered, chunk }] of moduleData) {
-        const mod = rawMod.replace(/\0/g, '');
+        const mod = rawMod.replaceAll('\0', ''); // strips Rolldown's null-byte module prefix
         const chunkTotal = chunkTotals.get(chunk);
         if (!chunkTotal) continue;
         const chunkPath = path.resolve(outDir, chunk);
