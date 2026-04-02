@@ -79,10 +79,10 @@ jest.mock('./ArchiveNotifier', () => props => {
 });
 
 jest.mock('./TracePageHeader', () => {
-  const React = require('react');
+  const { forwardRef } = require('react');
   return {
     __esModule: true,
-    default: React.forwardRef(function MockTracePageHeader(props, ref) {
+    default: forwardRef(function MockTracePageHeader(props, ref) {
       capturedHeaderProps = { ...props, ref };
       return (
         <div className="TracePageHeader">
@@ -109,7 +109,9 @@ import {
   VIEW_MIN_RANGE,
 } from './index';
 import * as track from './index.track';
+import * as keyboardShortcutsMod from './keyboard-shortcuts';
 import { reset as resetShortcuts, merge as mergeShortcuts } from './keyboard-shortcuts';
+import * as scrollPageMod from './scroll-page';
 import { cancel as cancelScroll } from './scroll-page';
 import * as calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
@@ -438,8 +440,8 @@ describe('<TracePage>', () => {
 
     ScrollManager.mockImplementation(() => scrollManagerMock);
 
-    const resetShortcutsMock = jest.spyOn(require('./keyboard-shortcuts'), 'reset');
-    const cancelScrollMock = jest.spyOn(require('./scroll-page'), 'cancel');
+    const resetShortcutsMock = jest.spyOn(keyboardShortcutsMod, 'reset');
+    const cancelScrollMock = jest.spyOn(scrollPageMod, 'cancel');
 
     const { unmount } = render(<TracePage {...defaultProps} />);
     unmount();
