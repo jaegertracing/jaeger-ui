@@ -229,7 +229,7 @@ See [Unknown 2](#unknown-2-oxlint-rule-coverage) for the rule mapping table.
 
 ---
 
-### ✅ 4. Replace Prettier with Oxfmt (PR C2)
+### ✅ 4. Replace Prettier with Oxfmt (PR C2 — [#3686](https://github.com/jaegertracing/jaeger-ui/pull/3686))
 
 **Implemented in full.**
 
