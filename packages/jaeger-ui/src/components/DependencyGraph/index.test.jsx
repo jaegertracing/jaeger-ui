@@ -6,7 +6,12 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import * as constants from '../../utils/constants';
 
-import { DependencyGraphPageImpl as DependencyGraph, mapDispatchToProps, mapStateToProps } from './index';
+import {
+  DependencyGraphPageImpl as DependencyGraph,
+  mapDispatchToProps,
+  mapStateToProps,
+  loadSampleData,
+} from './index';
 
 let lastDAGOptionsProps = {};
 let lastDAGProps = {};
@@ -107,6 +112,15 @@ describe('<DependencyGraph>', () => {
     beforeEach(() => {
       jest.resetAllMocks();
       jest.spyOn(constants, 'getAppEnvironment').mockReturnValue('development');
+    });
+
+    afterEach(async () => {
+      // Reset the module-level sampleDAGDataset closure. loadSampleData() with a
+      // non-matching type runs synchronously and sets the dataset to []. This is
+      // needed because loadSampleData('Small Graph') uses a dynamic import that
+      // resolves asynchronously and can overwrite a prior null-reset, leaving
+      // stale data visible to later tests (e.g. mapStateToProps).
+      await loadSampleData('');
     });
 
     it('initializes with default values', () => {
