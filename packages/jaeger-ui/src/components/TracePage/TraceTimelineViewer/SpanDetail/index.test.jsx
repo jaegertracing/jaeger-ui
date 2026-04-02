@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('../utils');
+vi.mock('../utils');
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -14,7 +14,7 @@ import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 
-jest.mock('./AccordionAttributes', () => {
+vi.mock('./AccordionAttributes', () => {
   return mockDefault(function MockAccordionAttributes({ label, onToggle }) {
     return (
       <div data-testid={`accordian-keyvalues-${label.toLowerCase()}`}>
@@ -26,7 +26,7 @@ jest.mock('./AccordionAttributes', () => {
   });
 });
 
-jest.mock('./AccordionEvents', () => {
+vi.mock('./AccordionEvents', () => {
   return mockDefault(function MockAccordionEvents({ onToggle, onItemToggle }) {
     return (
       <div data-testid="accordian-logs">
@@ -41,7 +41,7 @@ jest.mock('./AccordionEvents', () => {
   });
 });
 
-jest.mock('./AccordionLinks', () => {
+vi.mock('./AccordionLinks', () => {
   return mockDefault(function MockAccordionLinks({ onToggle }) {
     return (
       <div data-testid="accordion-links">
@@ -53,7 +53,7 @@ jest.mock('./AccordionLinks', () => {
   });
 });
 
-jest.mock('./AccordionText', () => {
+vi.mock('./AccordionText', () => {
   return mockDefault(function MockAccordionText({ onToggle }) {
     return (
       <div data-testid="accordian-warnings">
@@ -65,7 +65,7 @@ jest.mock('./AccordionText', () => {
   });
 });
 
-jest.mock('../../../common/LabeledList', () => {
+vi.mock('../../../common/LabeledList', () => {
   return mockDefault(function MockLabeledList({ items }) {
     return (
       <div data-testid="labeled-list">
@@ -79,7 +79,7 @@ jest.mock('../../../common/LabeledList', () => {
   });
 });
 
-jest.mock('../../../common/CopyIcon', () => {
+vi.mock('../../../common/CopyIcon', () => {
   return mockDefault(function MockCopyIcon({ copyText }) {
     return (
       <button type="button" data-testid="copy-icon" data-copy-text={copyText}>

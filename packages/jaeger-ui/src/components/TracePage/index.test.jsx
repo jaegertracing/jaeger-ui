@@ -34,43 +34,43 @@ import ScrollManager from './ScrollManager';
 let capturedHeaderProps = {};
 let capturedArchiveNotifierProps = {};
 
-jest.mock('./TraceTimelineViewer', () => {
+vi.mock('./TraceTimelineViewer', async () => {
   return mockDefault(function MockTraceTimelineViewer() {
     return <div data-testid="mock-timeline-viewer">TraceTimelineViewer</div>;
   });
 });
 
-jest.mock('./TraceGraph/TraceGraph', () => {
+vi.mock('./TraceGraph/TraceGraph', async () => {
   return mockDefault(function MockTraceGraph() {
     return <div data-testid="mock-trace-graph">TraceGraph</div>;
   });
 });
 
-jest.mock('./TraceStatistics/index', () => {
+vi.mock('./TraceStatistics/index', async () => {
   return mockDefault(function MockTraceStatistics() {
     return <div data-testid="mock-trace-statistics">TraceStatistics</div>;
   });
 });
 
-jest.mock('./TraceSpanView/index', () => {
+vi.mock('./TraceSpanView/index', async () => {
   return mockDefault(function MockTraceSpanView() {
     return <div data-testid="mock-trace-span-view">TraceSpanView</div>;
   });
 });
 
-jest.mock('./TraceFlamegraph/index', () => {
+vi.mock('./TraceFlamegraph/index', async () => {
   return mockDefault(function MockTraceFlamegraph() {
     return <div data-testid="mock-trace-flamegraph">TraceFlamegraph</div>;
   });
 });
 
-jest.mock('./TraceLogsView/index', () => {
+vi.mock('./TraceLogsView/index', async () => {
   return mockDefault(function MockTraceLogsView() {
     return <div data-testid="mock-trace-logs-view">TraceLogsView</div>;
   });
 });
 
-jest.mock('./ScrollManager', () => {
+vi.mock('./ScrollManager', async () => {
   return mockDefault(
     jest.fn().mockImplementation(function () {
       return {
@@ -85,42 +85,44 @@ jest.mock('./ScrollManager', () => {
   );
 });
 
-jest.mock('./index.track');
-jest.mock('./keyboard-shortcuts');
-jest.mock('./scroll-page');
-jest.mock('../../utils/filter-spans');
-jest.mock('../../utils/update-ui-find');
-jest.mock('react-router-dom', () => {
+vi.mock('./index.track');
+vi.mock('./keyboard-shortcuts');
+vi.mock('./scroll-page');
+vi.mock('../../utils/filter-spans');
+vi.mock('../../utils/update-ui-find');
+vi.mock('react-router-dom', async () => {
   const navigate = jest.fn();
   return {
-    ...jest.requireActual('react-router-dom'),
+    ...(await vi.importActual('react-router-dom')),
     useNavigate: () => navigate,
   };
 });
-jest.mock('./TracePageHeader/SpanGraph', () =>
+vi.mock('./TracePageHeader/SpanGraph', async () =>
   mockDefault(() => <div data-testid="span-graph">SpanGraph</div>)
 );
-jest.mock('./TracePageHeader/TracePageHeader.track');
-jest.mock('./TracePageHeader/TracePageSearchBar', () =>
+vi.mock('./TracePageHeader/TracePageHeader.track');
+vi.mock('./TracePageHeader/TracePageSearchBar', async () =>
   mockDefault(() => <div data-testid="search-bar">SearchBar</div>)
 );
-jest.mock('./CriticalPath/index');
-jest.mock('./TraceGraph/calculateTraceDagEV', () => ({
+vi.mock('./CriticalPath/index');
+vi.mock('./TraceGraph/calculateTraceDagEV', async () => ({
   __esModule: true,
   default: jest.fn(() => ({})),
 }));
-jest.mock('../common/ErrorMessage', () => mockDefault(() => <div data-testid="error-message">Error</div>));
-jest.mock('../common/LoadingIndicator', () =>
+vi.mock('../common/ErrorMessage', async () =>
+  mockDefault(() => <div data-testid="error-message">Error</div>)
+);
+vi.mock('../common/LoadingIndicator', async () =>
   mockDefault(() => <div data-testid="loading-indicator">Loading</div>)
 );
-jest.mock('./ArchiveNotifier', () =>
+vi.mock('./ArchiveNotifier', async () =>
   mockDefault(props => {
     capturedArchiveNotifierProps = props;
     return <div data-testid="archive-notifier">ArchiveNotifier</div>;
   })
 );
 
-jest.mock('./TracePageHeader', () => {
+vi.mock('./TracePageHeader', async () => {
   const { forwardRef } = require('react');
   return {
     __esModule: true,

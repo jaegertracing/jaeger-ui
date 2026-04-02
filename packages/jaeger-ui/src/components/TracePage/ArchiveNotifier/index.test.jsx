@@ -9,8 +9,8 @@ import ArchiveNotifier from './index';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import { Details, Message } from '../../common/ErrorMessage';
 
-jest.mock('antd', () => {
-  const originalModule = jest.requireActual('antd');
+vi.mock('antd', async () => {
+  const originalModule = await vi.importActual('antd');
 
   return {
     __esModule: true, // Use it when dealing with esModules

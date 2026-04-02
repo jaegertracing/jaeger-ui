@@ -8,15 +8,15 @@ import '@testing-library/jest-dom';
 import Header from './index';
 import * as track from '../index.track';
 
-jest.mock('./HopsSelector', () => {
-  const mockReact = jest.requireActual('react');
+vi.mock('./HopsSelector', async () => {
+  const mockReact = await vi.importActual('react');
   return mockDefault(function MockHopsSelector(props) {
     return mockReact.createElement('div', { 'data-testid': 'hops-selector', ...props });
   });
 });
 
-jest.mock('../../common/SearchableSelect', () => {
-  const mockReact = jest.requireActual('react');
+vi.mock('../../common/SearchableSelect', async () => {
+  const mockReact = await vi.importActual('react');
   return mockDefault(function MockSearchableSelect(props) {
     const { value, onChange, allowClear, onClear, placeholder, children, className, status } = props;
     // Extract options from children
@@ -55,15 +55,15 @@ jest.mock('../../common/SearchableSelect', () => {
   });
 });
 
-jest.mock('./LayoutSettings', () => {
-  const mockReact = jest.requireActual('react');
+vi.mock('./LayoutSettings', async () => {
+  const mockReact = await vi.importActual('react');
   return mockDefault(function MockLayoutSettings(props) {
     return mockReact.createElement('div', { 'data-testid': 'layout-settings', ...props });
   });
 });
 
-jest.mock('../../common/UiFindInput', () => {
-  const mockReact = jest.requireActual('react');
+vi.mock('../../common/UiFindInput', async () => {
+  const mockReact = await vi.importActual('react');
   return mockDefault(
     mockReact.forwardRef(function MockUiFindInput(props, ref) {
       const inputRef = mockReact.useRef(null);

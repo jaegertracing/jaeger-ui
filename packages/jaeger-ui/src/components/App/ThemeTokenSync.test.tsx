@@ -6,7 +6,7 @@ import { render } from '@testing-library/react';
 import { theme } from 'antd';
 import { ThemeTokenSync } from './ThemeTokenSync';
 
-jest.mock('antd', () => ({
+vi.mock('antd', () => ({
   theme: {
     useToken: jest.fn(),
   },

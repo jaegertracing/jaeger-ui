@@ -16,7 +16,7 @@ import SpanDetailRow from './SpanDetailRow';
 import DetailState from './SpanDetail/DetailState';
 
 // Mock only SpanDetail, NOT SpanTreeOffset - we want to test real SpanTreeOffset behavior
-jest.mock('./SpanDetail', () => ({
+vi.mock('./SpanDetail', () => ({
   __esModule: true,
   default: () => <div data-testid="mocked-span-detail" />,
 }));

@@ -5,28 +5,25 @@ describe('prefix-url coverage', () => {
   let originalLocation;
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     originalLocation = global.location;
   });
 
   afterEach(() => {
     global.location = originalLocation;
+    vi.restoreAllMocks();
   });
 
-  it('handles test environment without global.location', () => {
-    jest.mock('./utils/constants', () => ({
+  it('handles test environment without global.location', async () => {
+    vi.doMock('./utils/constants', () => ({
       getAppEnvironment: () => 'test',
     }));
-    jest.mock('./site-prefix', () => '/p/');
+    vi.doMock('./site-prefix', () => ({ default: '/p/' }));
 
     // remove global.location
     delete global.location;
 
-    // We expect origin to be ''
-    // sitePrefix is '/p/'
-    // getPathPrefix('', '/p/') -> '/p'
-
-    const { default: pUrl } = require('./utils/prefix-url');
+    const { default: pUrl } = await import('./utils/prefix-url');
     expect(pUrl('/x')).toBe('/p/x');
   });
 });

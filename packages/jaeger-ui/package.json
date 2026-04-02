@@ -11,28 +11,23 @@
     "directory": "packages/jaeger-ui"
   },
   "devDependencies": {
-    "@babel/preset-env": "7.29.2",
-    "@babel/preset-react": "7.28.5",
-    "@babel/preset-typescript": "7.28.5",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.0",
     "@testing-library/user-event": "14.6.1",
     "@types/deep-freeze": "0.1.5",
-    "@types/jest": "30.0.0",
     "@types/lodash": "4.17.21",
     "@types/object-hash": "3.0.6",
     "@types/react": "19.2.7",
     "@types/redux-actions": "2.6.5",
     "@vitejs/plugin-legacy": "8.0.0",
     "@vitejs/plugin-react": "6.0.1",
-    "babel-jest": "30.3.0",
+    "@vitest/coverage-v8": "4.1.2",
     "babel-plugin-react-remove-properties": "0.3.1",
-    "jest": "30.3.0",
-    "jest-environment-jsdom": "30.3.0",
-    "jest-junit": "16.0.0",
+    "identity-obj-proxy": "3.0.0",
     "less": "4.6.4",
     "terser": "5.46.1",
-    "vite": "8.0.3"
+    "vite": "8.0.3",
+    "vitest": "4.1.2"
   },
   "dependencies": {
     "@jaegertracing/plexus": "0.2.0",
@@ -74,45 +69,10 @@
   },
   "scripts": {
     "build": "NODE_ENV=production REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite build",
-    "coverage": "npm run test-ci -- --coverage",
+    "coverage": "vitest run --coverage",
     "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite",
     "start": "vite",
-    "test": "jest --silent --color --maxWorkers=50%",
-    "test-ci": "CI=1 jest --silent --color --maxWorkers=4"
-  },
-  "jest": {
-    "globalSetup": "./test/jest.global-setup.js",
-    "setupFilesAfterEnv": [
-      "./test/jest-per-test-setup.js"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.{js,jsx,ts,tsx}",
-      "!src/**/*.d.ts",
-      "!src/setup*.js",
-      "!src/utils/DraggableManager/demo/*.tsx",
-      "!src/utils/test/**/*.js",
-      "!src/demo/**/*.js",
-      "!src/types/*"
-    ],
-    "reporters": [
-      "default",
-      "jest-junit"
-    ],
-    "transform": {
-      "\\.(css|png|svg)$": "./test/generic-file-transform.js",
-      "\\.([jt]sx?)$": "./test/babel-transform.js"
-    },
-    "moduleNameMapper": {
-      "^@jaegertracing/plexus$": "<rootDir>/../../packages/plexus/src/index.ts",
-      "^@jaegertracing/plexus/lib/(.*)$": "<rootDir>/../../packages/plexus/src/$1"
-    },
-    "transformIgnorePatterns": [
-      "[/\\\\\\\\]node_modules[/\\\\\\\\](?!redux-actions).+\\\\.(js|jsx|mjs|cjs|ts|tsx)$"
-    ],
-    "testEnvironment": "jsdom",
-    "snapshotFormat": {
-      "escapeString": true,
-      "printBasicPrototype": true
-    }
+    "test": "vitest run",
+    "test-ci": "CI=1 vitest run --reporter=verbose"
   }
 }

@@ -17,7 +17,7 @@ const mockNoopWebAnalytics = {
   trackError: jest.fn(),
 };
 
-jest.mock('./ga', () => ({
+vi.mock('./ga', () => ({
   __esModule: true,
   default: () => {
     return mockGA;
@@ -26,7 +26,7 @@ jest.mock('./ga', () => ({
 let internalVersionShort;
 let internalVersionLong;
 
-jest.mock('./noopWebAnalytics', () => ({
+vi.mock('./noopWebAnalytics', () => ({
   __esModule: true,
   default: (config, versionShort, versionLong) => {
     internalVersionShort = versionShort;

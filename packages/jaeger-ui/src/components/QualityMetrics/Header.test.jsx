@@ -8,7 +8,7 @@ import debounceMock from 'lodash/debounce';
 
 import Header from './Header';
 
-jest.mock('lodash/debounce');
+vi.mock('lodash/debounce');
 
 describe('Header', () => {
   const lookback = 4;

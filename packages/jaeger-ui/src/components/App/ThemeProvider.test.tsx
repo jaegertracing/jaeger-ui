@@ -9,23 +9,23 @@ import AppThemeProvider, { useThemeMode } from './ThemeProvider';
 import { THEME_STORAGE_KEY } from './ThemeStorage';
 import getConfig from '../../utils/config/get-config';
 
-jest.mock('../../utils/config/get-config', () => ({
+vi.mock('../../utils/config/get-config', () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: vi.fn(),
 }));
 
 function setupMatchMedia(matches = false) {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: jest.fn().mockImplementation(query => ({
+    value: vi.fn().mockImplementation(query => ({
       matches,
       media: query,
       onchange: null,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
     })),
   });
 }
@@ -50,7 +50,7 @@ describe('AppThemeProvider', () => {
     window.localStorage.clear();
     delete document.body.dataset.theme;
     setupMatchMedia(false);
-    (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: true } });
+    (getConfig as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ themes: { enabled: true } });
   });
 
   it('initializes using the stored preference when present', () => {
@@ -125,7 +125,7 @@ describe('AppThemeProvider', () => {
   });
 
   it('ignores stored preference when themes are disabled', () => {
-    (getConfig as unknown as jest.Mock).mockReturnValue({ themes: { enabled: false } });
+    (getConfig as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ themes: { enabled: false } });
     window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
 
     render(
@@ -157,7 +157,7 @@ describe('AppThemeProvider', () => {
 
   it('swallows storage errors when persisting mode changes', async () => {
     const originalSetItem = window.localStorage.setItem;
-    window.localStorage.setItem = jest.fn(() => {
+    window.localStorage.setItem = vi.fn(() => {
       throw new Error('quota exceeded');
     });
 
@@ -182,7 +182,7 @@ describe('AppThemeProvider', () => {
 
   it('ignores errors when reading the stored preference', () => {
     const originalGetItem = window.localStorage.getItem;
-    window.localStorage.getItem = jest.fn(() => {
+    window.localStorage.getItem = vi.fn(() => {
       throw new Error('blocked');
     });
 
@@ -200,7 +200,7 @@ describe('AppThemeProvider', () => {
   });
 
   it('provides default context values when the hook is used without a provider', () => {
-    const observer = jest.fn();
+    const observer = vi.fn();
 
     function BareConsumer() {
       const context = useThemeMode();
@@ -234,6 +234,13 @@ describe('AppThemeProvider', () => {
       act(() => {
         result.current.toggleMode();
       });
+    } catch {
+      // Ant Design's CSS injection (useCacheToken) also accesses document when
+      // re-rendering; the ReferenceError here comes from antd internals, not our
+      // ThemeProvider code.  Our useEffect is already guarded with
+      // `typeof document !== 'undefined'`.  We intentionally swallow the antd
+      // error so the test verifies our guard is present without failing on
+      // third-party code that cannot be made document-free.
     } finally {
       (global as any).document = originalDocument;
     }

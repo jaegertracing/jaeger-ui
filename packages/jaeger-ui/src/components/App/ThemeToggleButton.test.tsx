@@ -7,7 +7,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ThemeToggleButton from './ThemeToggleButton';
 import { useThemeMode } from './ThemeProvider';
 
-jest.mock('./ThemeProvider');
+vi.mock('./ThemeProvider');
 
 describe('ThemeToggleButton', () => {
   const mockToggle = jest.fn();

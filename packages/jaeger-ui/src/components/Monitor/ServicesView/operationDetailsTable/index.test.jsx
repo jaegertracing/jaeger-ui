@@ -8,9 +8,9 @@ import OperationTableDetails from '.';
 import { originInitialState, serviceOpsMetrics } from '../../../../reducers/metrics.mock';
 import * as track from './index.track';
 
-jest.mock('../../../../utils/prefix-url', () => mockDefault(jest.fn(url => url)));
+vi.mock('../../../../utils/prefix-url', () => mockDefault(jest.fn(url => url)));
 
-jest.mock('../../../common/LoadingIndicator', () => {
+vi.mock('../../../common/LoadingIndicator', () => {
   return mockDefault(function MockLoadingIndicator(props) {
     return (
       <div data-testid="loading-indicator" {...props}>

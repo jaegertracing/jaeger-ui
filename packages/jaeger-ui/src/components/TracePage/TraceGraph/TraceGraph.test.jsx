@@ -12,7 +12,7 @@ import TraceGraph, { setOnEdgePath } from './TraceGraph';
 import { MODE_SERVICE, MODE_TIME, MODE_SELFTIME } from './OpNode';
 import testTrace from './testTrace.json';
 
-jest.mock('@jaegertracing/plexus', () => {
+vi.mock('@jaegertracing/plexus', () => {
   const DEFAULT_MODE = 'service';
 
   const MockDigraph = ({ children, layers, ...props }) => {

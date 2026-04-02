@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('../site-prefix', () => `${global.location.origin}/a/site/prefix/`);
+vi.mock('../site-prefix', () => ({ default: `${global.location.origin}/a/site/prefix/` }));
 
 import prefixUrl, { getPathPrefix } from './prefix-url';
 
@@ -49,46 +49,33 @@ describe('getPathPrefix()', () => {
 
 describe('prefixUrl non-test environment', () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
   });
 
-  it('uses window.location in non-test environment', () => {
-    jest.mock('./constants', () => ({
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('uses window.location in non-test environment', async () => {
+    vi.doMock('./constants', () => ({
       getAppEnvironment: () => 'production',
     }));
-    // We cannot easily mock site-prefix here because it runs on import.
-    // However, jests module system allows us to isolate.
+    vi.doMock('../site-prefix', () => ({ default: 'http://example.com/prefix/' }));
 
-    // We need to define site-prefix mock to avoid error
-    jest.mock('../site-prefix', () => 'http://example.com/prefix/');
-
-    const { default: pUrl } = require('./prefix-url');
-    // window.location is 'http://localhost' usually in JSDOM
-    // Our logic uses window.location.origin
-    // sitePrefix is http://example.com/prefix/
-    // origin is http://localhost
-    // regex replaces origin from sitePrefix?
-    // wait, getPathPrefix(origin, sitePrefix)
-    // If origin (localhost) is NOT in sitePrefix (example.com), regex ^origin doesn't match.
-    // So pathPrefix = sitePrefix.
-
+    const { default: pUrl } = await import('./prefix-url');
     expect(pUrl('/foo')).toBe('http://example.com/prefix/foo');
   });
 
-  it('handles missing window gracefully', () => {
-    jest.mock('./constants', () => ({
+  it('handles missing window gracefully', async () => {
+    vi.doMock('./constants', () => ({
       getAppEnvironment: () => 'production',
     }));
-    jest.mock('../site-prefix', () => '/prefix/');
+    vi.doMock('../site-prefix', () => ({ default: '/prefix/' }));
 
     const originalWindow = global.window;
     delete global.window;
 
-    const { default: pUrl } = require('./prefix-url');
-
-    // origin should be ''
-    // sitePrefix is '/prefix/'
-    // getPathPrefix('', '/prefix/') -> '/prefix' (slash removed?)
+    const { default: pUrl } = await import('./prefix-url');
 
     expect(pUrl('/bar')).toBe('/prefix/bar');
 

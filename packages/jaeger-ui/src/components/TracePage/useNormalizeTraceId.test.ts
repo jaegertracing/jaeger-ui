@@ -4,15 +4,15 @@
 const mockNavigate = jest.fn();
 let mockLocation: { search: string; state: unknown } = { search: '', state: null };
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', async () => ({
+  ...(await vi.importActual('react-router-dom')),
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
 }));
 
 // Simplified mock sufficient for testing normalization logic;
 // URL prefix handling is tested separately in url/index.test.js
-jest.mock('./url', () => ({
+vi.mock('./url', async () => ({
   getUrl: (id: string) => `/trace/${id}`,
 }));
 

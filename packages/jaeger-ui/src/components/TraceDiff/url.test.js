@@ -5,7 +5,7 @@ import * as reactRouterDomCompat from 'react-router-dom';
 
 import { ROUTE_PATH, matches, getUrl } from './url';
 
-jest.mock('react-router-dom', () => ({
+vi.mock('react-router-dom', () => ({
   matchPath: jest.fn(),
 }));
 

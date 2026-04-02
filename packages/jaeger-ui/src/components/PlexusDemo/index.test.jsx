@@ -10,9 +10,9 @@ import PlexusDemo from './index';
 // package build and avoids Web Worker creation in jsdom.
 // { virtual: true } is required because the module is resolved by a Vite alias
 // at build time but does not exist as a real path in node_modules.
-// Note: jest.mock() is always hoisted before imports, so the import above
+// Note: vi.mock() is always hoisted before imports, so the import above
 // picks up the mocked version regardless of source order.
-jest.mock(
+vi.mock(
   '@jaegertracing/plexus/demo',
   () => ({
     __esModule: true,

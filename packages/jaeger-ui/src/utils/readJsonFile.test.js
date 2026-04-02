@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from 'fs';
+import path from 'path';
 import lodash from 'lodash';
 import readJsonFile from './readJsonFile';
 import JaegerAPI from '../api/jaeger';
@@ -11,13 +12,13 @@ let jaegerTrace;
 let OTLPTraceMulti;
 let jaegerTraceMulti;
 
+const fixturesDir = path.resolve(import.meta.dirname, 'fixtures');
+
 beforeAll(() => {
-  OTLPTrace = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-in.json', 'utf-8'));
-  jaegerTrace = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-out.json', 'utf-8'));
-  OTLPTraceMulti = JSON.parse(
-    fs.readFileSync('src/utils/fixtures/otlp2jaeger-multi-in-combined.json', 'utf-8')
-  );
-  jaegerTraceMulti = JSON.parse(fs.readFileSync('src/utils/fixtures/oltp2jaeger-multi-out.json', 'utf-8'));
+  OTLPTrace = JSON.parse(fs.readFileSync(`${fixturesDir}/otlp2jaeger-in.json`, 'utf-8'));
+  jaegerTrace = JSON.parse(fs.readFileSync(`${fixturesDir}/otlp2jaeger-out.json`, 'utf-8'));
+  OTLPTraceMulti = JSON.parse(fs.readFileSync(`${fixturesDir}/otlp2jaeger-multi-in-combined.json`, 'utf-8'));
+  jaegerTraceMulti = JSON.parse(fs.readFileSync(`${fixturesDir}/oltp2jaeger-multi-out.json`, 'utf-8'));
 });
 
 jest.spyOn(JaegerAPI, 'transformOTLP').mockImplementation(APICallRequest => {
@@ -67,7 +68,9 @@ describe('fileReader.readJsonFile', () => {
   });
 
   it('rejects an OTLP trace', () => {
-    const inObj = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-in-error.json', 'utf-8'));
+    const inObj = JSON.parse(
+      fs.readFileSync(path.resolve(fixturesDir, 'otlp2jaeger-in-error.json'), 'utf-8')
+    );
     const file = new File([JSON.stringify(inObj)], 'foo.json');
     const p = readJsonFile({ file });
     return expect(p).rejects.toMatchObject(expect.any(Error));
@@ -81,7 +84,7 @@ describe('fileReader.readJsonFile', () => {
 
   it('loads JSON-per-line data', () => {
     const expectedOutput = jaegerTraceMulti;
-    const fileContent = fs.readFileSync('src/utils/fixtures/otlp2jaeger-multi-in.json.txt', 'utf-8');
+    const fileContent = fs.readFileSync(path.resolve(fixturesDir, 'otlp2jaeger-multi-in.json.txt'), 'utf-8');
     const file = new File([fileContent], 'multi.json', { type: 'application/json' });
     const p = readJsonFile({ file });
     return expect(p).resolves.toMatchObject(expectedOutput);

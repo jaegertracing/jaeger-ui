@@ -7,7 +7,7 @@ import React from 'react';
 import { useServices, useSpanNames } from './useTraceDiscovery';
 import { jaegerClient } from '../api/v3/client';
 
-jest.mock('../api/v3/client', () => ({
+vi.mock('../api/v3/client', () => ({
   jaegerClient: {
     fetchServices: jest.fn(),
     fetchSpanNames: jest.fn(),

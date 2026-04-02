@@ -32,6 +32,7 @@ export function ThemeTokenSync(): null {
   const { token } = theme.useToken();
 
   useEffect(() => {
+    if (typeof document === 'undefined') return;
     const root = document.documentElement;
 
     // Helper to convert camelCase to kebab-case

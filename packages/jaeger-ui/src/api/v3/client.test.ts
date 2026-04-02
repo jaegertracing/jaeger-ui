@@ -288,15 +288,13 @@ describe('JaegerClient with non-default base path', () => {
       json: async () => ({ services: ['svc-a'] }),
     });
 
-    let Client: any;
-    jest.isolateModules(() => {
-      // Simulate deployment at /jaeger/ by providing a matching site prefix.
-      jest.mock('../../site-prefix', () => `${global.location.origin}/jaeger/`);
+    // Simulate deployment at /jaeger/ by providing a matching site prefix.
+    vi.resetModules();
+    vi.doMock('../../site-prefix', () => ({ default: `${global.location.origin}/jaeger/` }));
+    const { JaegerClient: IsolatedClient } = await import('./client');
 
-      Client = require('./client').JaegerClient;
-    });
-
-    await new Client().fetchServices();
+    await new IsolatedClient().fetchServices();
+    vi.restoreAllMocks();
 
     expect(mockFetch).toHaveBeenCalledWith(
       '/jaeger/api/v3/services',

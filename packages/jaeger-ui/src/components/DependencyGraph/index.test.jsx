@@ -11,27 +11,27 @@ import { DependencyGraphPageImpl as DependencyGraph, mapDispatchToProps, mapStat
 let lastDAGOptionsProps = {};
 let lastDAGProps = {};
 
-jest.mock('./DAG', () => {
+vi.mock('./DAG', () => {
   return mockDefault(function MockDAG(props) {
     lastDAGProps = props;
     return <div data-testid="dag-component" />;
   });
 });
 
-jest.mock('./DAGOptions', () => {
+vi.mock('./DAGOptions', () => {
   return mockDefault(function MockDAGOptions(props) {
     lastDAGOptionsProps = props;
     return <div data-testid="dag-options" />;
   });
 });
 
-jest.mock('../common/LoadingIndicator', () => {
+vi.mock('../common/LoadingIndicator', () => {
   return mockDefault(function MockLoadingIndicator(props) {
     return <div data-testid="loading-indicator" {...props} />;
   });
 });
 
-jest.mock('../common/ErrorMessage', () => {
+vi.mock('../common/ErrorMessage', () => {
   return mockDefault(function MockErrorMessage(props) {
     return <div data-testid="error-message" {...props} />;
   });

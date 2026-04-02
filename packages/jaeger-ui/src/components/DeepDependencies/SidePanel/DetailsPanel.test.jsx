@@ -4,12 +4,12 @@
 // Mutable object so individual tests can control the location without re-creating the mock.
 const mockLocation = { search: '' };
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', async () => ({
+  ...(await vi.importActual('react-router-dom')),
   useLocation: () => mockLocation,
 }));
 
-jest.mock('../../../model/path-agnostic-decorations', () => ({
+vi.mock('../../../model/path-agnostic-decorations', async () => ({
   __esModule: true,
   default: jest.fn(() => ({})),
 }));
@@ -26,8 +26,8 @@ import JaegerAPI from '../../../api/jaeger';
 import { UnconnectedDetailsPanel as DetailsPanel } from './DetailsPanel';
 import DefaultDetailsPanel from './DetailsPanel';
 
-jest.mock('../../common/VerticalResizer', () => {
-  return ({ onChange, position }) => (
+vi.mock('../../common/VerticalResizer', async () => {
+  return mockDefault(({ onChange, position }) => (
     <button
       type="button"
       data-testid="vertical-resizer"
@@ -36,15 +36,15 @@ jest.mock('../../common/VerticalResizer', () => {
     >
       Mock Resizer
     </button>
-  );
+  ));
 });
 
-jest.mock('../../common/DetailsCard', () => {
-  return ({ className, details }) => (
+vi.mock('../../common/DetailsCard', async () => {
+  return mockDefault(({ className, details }) => (
     <div data-testid="details-card" className={className}>
       {typeof details === 'string' ? details : JSON.stringify(details)}
     </div>
-  );
+  ));
 });
 
 describe('<SidePanel>', () => {

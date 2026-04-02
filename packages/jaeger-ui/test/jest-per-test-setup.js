@@ -66,5 +66,16 @@ global.__APP_ENVIRONMENT__ = 'test';
 global.__REACT_APP_GA_DEBUG__ = '';
 global.__REACT_APP_VSN_STATE__ = '';
 
-// H2c: identity for default-export mocks; change body to `{ default: mod }` in H3
+// mockDefault wraps a mock component/function so that jest.mock() factories for default-exported
+// modules are easy to make ESM-compatible in Vitest (H3 of the Vite+ migration).
+//
+// Under Jest (CommonJS interop), a factory that returns a function directly is treated as the
+// module itself, so mockDefault is a no-op here: `mod => mod`.
+//
+// Under Vitest (native ESM), the factory return value is the module namespace object, so the
+// default export must be keyed under `default`. In H3 this body will change to:
+//   mod => ({ default: mod })
+// which is the only change needed — every call site is already wrapped.
+//
+// See docs/adr/0007-vite-plus-migration.md §9 (PR H2c / H3) for details.
 global.mockDefault = mod => mod;

@@ -76,7 +76,7 @@ Migrate the monorepo to Vite+ in phases:
 4. ✅ **Replace Prettier with Oxfmt** — `prettier` removed; `oxfmt --migrate=prettier` migrated the config.
 5. ✅ **Upgrade TypeScript** — upgraded to 6.0.2; `moduleResolution` switched to `"bundler"`.
 6. ✅ **Consolidate jaeger-ui tsconfigs** — `tsconfig.lint.json` deleted; `tsconfig.json` is the single config.
-7. 🔶 **Replace Jest + Babel with Vitest** — plexus done ([#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690)); jaeger-ui in several incremental PRs (H1 rename, H2 prep, H3 switch).
+7. ✅ **Replace Jest + Babel with Vitest** — plexus done ([#3690](https://github.com/jaegertracing/jaeger-ui/pull/3690)); jaeger-ui done (H1 rename, H2 prep, H3 switch: 226 test files, 2603 tests passing).
 
 ---
 

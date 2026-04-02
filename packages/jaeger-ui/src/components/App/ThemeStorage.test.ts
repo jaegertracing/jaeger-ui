@@ -4,7 +4,7 @@
 import { THEME_STORAGE_KEY, readStoredTheme, writeStoredTheme, getInitialTheme } from './ThemeStorage';
 import getConfig from '../../utils/config/get-config';
 
-jest.mock('../../utils/config/get-config', () => ({
+vi.mock('../../utils/config/get-config', () => ({
   __esModule: true,
   default: jest.fn(),
 }));

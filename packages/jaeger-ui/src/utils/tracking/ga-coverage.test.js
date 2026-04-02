@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Mock dependencies
-jest.mock('../constants', () => ({
-  getAppEnvironment: jest.fn(() => 'production'),
-  shouldDebugGoogleAnalytics: jest.fn(() => true),
+vi.mock('../constants', () => ({
+  getAppEnvironment: vi.fn(() => 'production'),
+  shouldDebugGoogleAnalytics: vi.fn(() => true),
 }));
 
-jest.mock('../prefix-url', () => s => s);
+vi.mock('../prefix-url', () => ({ default: s => s }));
 
 describe('GA Coverage', () => {
   let originalFetch;
@@ -16,29 +16,28 @@ describe('GA Coverage', () => {
   let trackNavigation;
   let captureException;
 
-  beforeEach(() => {
-    jest.resetModules();
+  beforeEach(async () => {
+    vi.resetModules();
 
     window.dataLayer = [];
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     originalFetch = window.fetch;
-    mockFetch = jest.fn().mockResolvedValue({ status: 200, json: () => ({}) });
+    mockFetch = vi.fn().mockResolvedValue({ status: 200, json: () => ({}) });
     window.fetch = mockFetch;
 
-    // Require modules after reset
-    GA = require('./ga').default;
-    const ec = require('./error-capture');
+    vi.doMock('../../site-prefix', () => ({ default: '/prefix/' }));
+
+    // Re-import modules after reset so they pick up fresh module state
+    const gaModule = await import('./ga');
+    GA = gaModule.default;
+    const ec = await import('./error-capture');
     trackNavigation = ec.trackNavigation;
     captureException = ec.captureException;
-
-    // Mock site-prefix via doMock since it might be cached?
-    // jest.mock persists across resetModules if defined outside?
-    // It's safer to rely on the top level mock or define it here if needed.
-    jest.doMock('../../site-prefix', () => '/prefix/');
   });
 
   afterEach(() => {
     window.fetch = originalFetch;
+    vi.restoreAllMocks();
   });
 
   const config = {
@@ -110,7 +109,6 @@ describe('GA Coverage', () => {
     captureException(error);
 
     // Verify GA event exception (last one)
-    // window.dataLayer has many events now. Find the last one matching final error.
     const exceptionEvents = window.dataLayer.filter(e => e[0] === 'event' && e[1] === 'exception');
     const lastException = exceptionEvents[exceptionEvents.length - 1];
     expect(lastException).toBeDefined();
@@ -123,16 +121,8 @@ describe('GA Coverage', () => {
     expect(lastEvent).toBeDefined();
 
     const eventLabel = lastEvent[2].event_label;
-    // Expect truncation. Start crumbs (nav, fetch) might be pushed out by buffer logic (20 limit).
-    // But we filled with 25 errors. So only errors remain.
-    // So checking for [svc] is invalid now as it was shifted out.
-
-    // Check that label IS truncated (length check? or content check?)
-    // Max length 499.
     expect(eventLabel.length).toBeLessThanOrEqual(499);
-    // It should contain the last error messages
     expect(eventLabel).toContain('filling up the breadcrumbs buffer');
-    // It should NOT contain [svc] (shifted out)
     expect(eventLabel).not.toContain('[svc]');
   });
 

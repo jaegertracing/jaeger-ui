@@ -4,14 +4,14 @@
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-jest.mock('../../api/v3/client', () => ({
+vi.mock('../../api/v3/client', () => ({
   jaegerClient: {
     fetchServices: jest.fn(() => Promise.resolve([])),
     fetchSpanNames: jest.fn(() => Promise.resolve([])),
   },
 }));
 
-jest.mock('../../hooks/useTraceDiscovery', () => ({
+vi.mock('../../hooks/useTraceDiscovery', () => ({
   useServices: jest.fn(() => ({ data: [], isLoading: false })),
   useSpanNames: jest.fn(() => ({ data: [], isLoading: false })),
 }));

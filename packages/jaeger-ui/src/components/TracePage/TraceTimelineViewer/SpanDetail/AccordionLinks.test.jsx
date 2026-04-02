@@ -6,7 +6,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AccordionLinks, { References } from './AccordionLinks';
 
-jest.mock('../../url/ReferenceLink', () => {
+vi.mock('../../url/ReferenceLink', () => {
   return mockDefault(function MockReferenceLink({ children, link }) {
     return (
       <div data-testid="reference-link" data-span-id={link.spanID}>

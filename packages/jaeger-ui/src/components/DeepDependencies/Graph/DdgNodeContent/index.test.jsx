@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('./calc-positioning', () =>
+vi.mock('./calc-positioning', async () =>
   mockDefault(() => ({
     radius: 50,
     svcWidth: 20,
@@ -13,12 +13,12 @@ jest.mock('./calc-positioning', () =>
 // Mutable object so individual tests can control the location without re-creating the mock.
 const mockLocation = { search: '' };
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', async () => ({
+  ...(await vi.importActual('react-router-dom')),
   useLocation: () => mockLocation,
 }));
 
-jest.mock('../../../../model/path-agnostic-decorations', () => ({
+vi.mock('../../../../model/path-agnostic-decorations', async () => ({
   __esModule: true,
   default: jest.fn(() => ({})),
 }));

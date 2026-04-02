@@ -7,8 +7,8 @@ import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import NotFound from './NotFound';
 
-jest.mock('../../utils/prefix-url', () => mockDefault(() => '/'));
-jest.mock('../common/ErrorMessage', () =>
+vi.mock('../../utils/prefix-url', () => mockDefault(() => '/'));
+vi.mock('../common/ErrorMessage', () =>
   mockDefault(({ error }) => <div data-testid="error-message">{error?.message}</div>)
 );
 

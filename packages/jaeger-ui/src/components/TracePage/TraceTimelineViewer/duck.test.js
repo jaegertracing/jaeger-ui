@@ -25,10 +25,10 @@ import traceGenerator from '../../../demo/trace-generators';
 import filterSpansSpy from '../../../utils/filter-spans';
 import spanAncestorIdsSpy from '../../../utils/span-ancestor-ids';
 
-jest.mock('../../../utils/filter-spans');
-jest.mock('../../../utils/span-ancestor-ids');
-jest.mock('../../../utils/config/get-config', () => {
-  const actual = jest.requireActual('../../../utils/config/get-config');
+vi.mock('../../../utils/filter-spans');
+vi.mock('../../../utils/span-ancestor-ids');
+vi.mock('../../../utils/config/get-config', async () => {
+  const actual = await vi.importActual('../../../utils/config/get-config');
   return { __esModule: true, ...actual, default: jest.fn(() => ({})) };
 });
 

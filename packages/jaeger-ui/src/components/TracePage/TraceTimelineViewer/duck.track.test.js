@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('../../../utils/tracking');
+vi.mock('../../../utils/tracking');
 
 import _set from 'lodash/set';
 import _cloneDeep from 'lodash/cloneDeep';

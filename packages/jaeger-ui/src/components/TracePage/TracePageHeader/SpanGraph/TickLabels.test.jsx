@@ -9,7 +9,7 @@ import TickLabels from './TickLabels';
 import { formatDuration } from '../../../../utils/date';
 
 // Mock the formatDuration function
-jest.mock('../../../../utils/date', () => ({
+vi.mock('../../../../utils/date', () => ({
   formatDuration: jest.fn(duration => `formatted:${duration}`),
 }));
 
