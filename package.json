@@ -17,6 +17,7 @@
     "@babel/core": "7.29.0",
     "@emnapi/core": "^1.9.1",
     "@emnapi/runtime": "^1.9.1",
+    "@napi-rs/wasm-runtime": "1.1.2",
     "@noble/hashes": "2.0.1",
     "@testing-library/dom": "^10.4.1",
     "ajv": "^8.0.0",
@@ -70,7 +71,7 @@
       "vp fmt"
     ],
     "*.{json,css}": [
-      "vp fmt"
+      "vp fmt --no-error-on-unmatched-pattern"
     ]
   },
   "dependencies": {
