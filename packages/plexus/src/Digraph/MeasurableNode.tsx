@@ -1,4 +1,4 @@
-// Copyright (c) 2026 The Jaeger Authors.
+// Copyright (c) 2026 The Jaeger Authors
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -18,7 +18,7 @@ type TProps<T = {}> = Omit<TMeasurableNodeRenderer<T>, 'measurable' | 'measureNo
   vertex: TVertex<T>;
 };
 
-// 透過 ref 暴露的公開介面
+// Public interface exposed via ref
 export interface MeasurableNodeRef {
   measure: () => { height: number; width: number };
   getRef: () => TOneOfTwo<{ htmlWrapper: HTMLDivElement | null }, { svgWrapper: SVGGElement | null }>;
@@ -53,7 +53,7 @@ const MeasurableNodeInner = <T = {}>(
     return { height, width };
   }, []);
 
-  // 佈局演算法需要透過 ref 呼叫 measure() 來取得節點尺寸，再進行定位
+  // The layout algorithm calls measure() via ref to get node dimensions before positioning
   useImperativeHandle(
     ref,
     () => ({
@@ -108,7 +108,7 @@ const MeasurableNodeInner = <T = {}>(
   );
 };
 
-// forwardRef 讓父元件可以掛 ref，memo 提供淺比較（等同原本的 PureComponent）
+// forwardRef lets parent components attach refs; memo provides shallow comparison (same as PureComponent)
 const MeasurableNode = memo(forwardRef(MeasurableNodeInner)) as <T = {}>(
   props: TProps<T> & { ref?: Ref<MeasurableNodeRef> }
 ) => ReactElement | null;
