@@ -572,7 +572,7 @@ describe('<MonitorATMServicesView>', () => {
       expect(searchInput.value).toBe('');
     });
 
-    it('Error in serviceLatencies ', () => {
+    it('Error in serviceLatencies', () => {
       cleanup();
       const errorProps = {
         ...props,

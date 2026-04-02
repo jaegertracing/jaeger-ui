@@ -85,7 +85,7 @@ describe('<TraceTimelineViewer>', () => {
     KeyboardShortcuts.merge.mockRestore();
   });
 
-  it('it does not explode', () => {
+  it('does not explode', () => {
     render(<TraceTimelineViewerImpl {...props} />);
     renderWithRedux(<TraceTimelineViewer {...props} />);
   });
@@ -110,7 +110,7 @@ describe('<TraceTimelineViewer>', () => {
     expect(screen.getByTestId('timeline-header-row-mock').dataset.sidePanelLabel).toBe('Trace Root');
   });
 
-  it('it sets up actions', () => {
+  it('sets up actions', () => {
     render(<TraceTimelineViewerImpl {...props} />);
 
     fireEvent.click(screen.getByTestId('collapse-all-button'));
@@ -129,7 +129,7 @@ describe('<TraceTimelineViewer>', () => {
     expect(props.expandOne).toHaveBeenCalledWith(props.trace.spans);
   });
 
-  it('it should call mergeShortcuts with the correct callbacks on mount', () => {
+  it('should call mergeShortcuts with the correct callbacks on mount', () => {
     render(<TraceTimelineViewerImpl {...props} />);
     expect(KeyboardShortcuts.merge).toHaveBeenCalledWith({
       collapseAll: expect.any(Function),
@@ -139,7 +139,7 @@ describe('<TraceTimelineViewer>', () => {
     });
   });
 
-  it('it should call mergeShortcuts when callback props change', () => {
+  it('should call mergeShortcuts when callback props change', () => {
     const { rerender } = render(<TraceTimelineViewerImpl {...props} />);
     KeyboardShortcuts.merge.mockClear();
 
