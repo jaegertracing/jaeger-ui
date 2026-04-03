@@ -1,6 +1,6 @@
 # ADR 0007: Migrate to Vite+ (Full Vite Toolchain)
 
-**Status**: Partially Implemented
+**Status**: Implemented
 **Last Updated**: 2026-04-02
 
 ---
@@ -17,7 +17,7 @@ Prettier, and Jest with a single dependency that has built-in TypeScript support
 
 ## Context & Problem
 
-### Current State (after PRs A–H3; only PR G remains)
+### Current State (fully implemented)
 
 | Concern          | `packages/jaeger-ui`               | `packages/plexus`                  |
 | ---------------- | ---------------------------------- | ---------------------------------- |
@@ -272,32 +272,22 @@ since the library build was dropped in PR A).
 
 ---
 
-### 7. CI Workflow Changes
+### ✅ 7. CI Workflow Changes
 
-#### `.github/workflows/lint-build.yml`
+#### ✅ `.github/workflows/lint-build.yml`
 
-The `lint` script will change from `eslint` + `prettier` to `vp check` (or separate `oxlint` + `oxfmt`
-invocations). The `depcheck` step will need its configuration updated to remove references to ESLint/Prettier
-packages being deleted.
+No YAML changes needed — `npm run lint` already runs Oxfmt checks via `vp fmt --check` and Oxlint via
+`vp lint ...`; the `depcheck` script (`scripts/generateDepcheckrcJaegerUI.js`) was updated in H3 to
+remove Jest/Babel references.
 
-#### `.github/workflows/unit-tests.yml`
+#### ✅ `.github/workflows/unit-tests.yml`
 
-`npm run coverage` invokes the per-workspace `coverage` scripts. Under Vitest this becomes `vitest run
---coverage`. The coverage output format (Codecov lcov) is specified in the Vitest config:
+No changes needed. `npm run coverage` invokes `vitest run --coverage`; Codecov upload consumes
+`coverage/lcov.info` which Vitest produces in the same location as Jest did.
 
-```typescript
-coverage: {
-  reporter: ['text', 'lcov'],
-}
-```
+#### ✅ `.github/workflows/check_bundle.yml`
 
-No changes to the workflow YAML itself are expected; the Codecov upload step consumes
-`coverage/lcov.info` which Vitest produces in the same location as Jest.
-
-#### `.github/workflows/check_bundle.yml`
-
-No changes needed — this workflow runs `npm run build` and measures `du -sb packages/jaeger-ui/build`,
-both of which are unaffected by switching the lint/test tooling.
+No changes needed — workflow runs `npm run build` and measures bundle size, unaffected by tooling switch.
 
 ---
 
@@ -417,18 +407,13 @@ Changes that can only land together with the Vitest infrastructure switch:
 
 ---
 
-### 10. Documentation Changes (PR G)
+### ✅ 10. Documentation Changes (PR G)
 
-- Update `CLAUDE.md`:
-  - Replace ESLint/Prettier commands with `vp check` equivalents.
-  - Replace Jest/`npm test` references with Vitest commands.
-  - Replace `npm test -- --testPathPattern=<pattern>` with `npx vitest run <pattern>`.
-  - Replace `npm run update-snapshots` guidance.
-
-- Update `README.md` (if it mentions Jest or Babel in the dev setup section).
-
-- Delete or archive `packages/jaeger-ui/test/babel-transform.js` (it has a detailed comment explaining the
-  `import.meta` workaround — preserve context in the ADR or a commit message).
+- ✅ Updated `CLAUDE.md`: Vitest commands, correct test-file syntax, snapshot update command, warning
+  about running from repo root vs package dir.
+- ✅ `README.md`: no Jest/Babel references found; no changes needed.
+- ✅ Deleted `packages/jaeger-ui/test/babel-transform.js` (in H3) and the remaining orphaned Jest
+  helpers `jest.global-setup.js` and `generic-file-transform.js` (in G).
 
 ---
 
@@ -553,7 +538,7 @@ pipeline. The `import.meta` Babel workaround is confirmed eliminated.
 | ✅ H2b | Replace arrow function constructors with regular functions (6 files) ([#3693](https://github.com/jaegertracing/jaeger-ui/pull/3693)) | None | Done |
 | ✅ H2c | Introduce `mockDefault` helper in affected mock factories ([#3694](https://github.com/jaegertracing/jaeger-ui/pull/3694)) | None | Done |
 | ✅ H3 | Vitest switch for jaeger-ui ([#3695](https://github.com/jaegertracing/jaeger-ui/pull/3695)) | Unknowns 3, 4, 5, 6 | Done |
-| G  | Update CLAUDE.md, README, CI workflows | None | After H3 |
+| ✅ G  | Update CLAUDE.md, delete orphaned Jest test helpers, CI workflows confirmed clean | None | Done |
 | ✅ I1 | Remove `__esModule: true` from mock factories; drop redundant `mockDefault(jest.fn())` factories ([#3699](https://github.com/jaegertracing/jaeger-ui/pull/3699)) | None | Done |
 
 ### Investigation strategy
@@ -588,6 +573,6 @@ simpler than replacing Webpack with Vite library mode.
 ## References
 
 - [Vite+ documentation](https://viteplus.dev)
-- `packages/jaeger-ui/test/babel-transform.js` — documents the `import.meta` workaround that Vitest
-  eliminates
+- `packages/jaeger-ui/test/babel-transform.js` — documented the `import.meta` workaround that Vitest
+  eliminates; deleted in H3
 - `packages/plexus/webpack-factory.js` — the Webpack config that this migration replaced (now deleted)
