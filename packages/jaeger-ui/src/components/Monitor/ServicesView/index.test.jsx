@@ -27,7 +27,6 @@ global.ResizeObserver = jest.fn().mockImplementation(function () {
 });
 
 vi.mock('../../../utils/config/get-config', async () => ({
-  __esModule: true,
   default: jest.fn(() => ({
     monitor: {
       docsLink: 'https://www.jaegertracing.io/docs/latest/spm/',
@@ -39,7 +38,6 @@ vi.mock('../../../utils/config/get-config', async () => ({
 }));
 
 vi.mock('../../../utils/storage', async () => ({
-  __esModule: true,
   default: {
     getString: jest.fn(),
     getNumber: jest.fn(),

@@ -12,8 +12,8 @@ vi.mock('../DependencyGraph', () => mockDefault(() => <div data-testid="dependen
 vi.mock('../DeepDependencies', () => mockDefault(() => <div data-testid="deep-dependencies" />));
 vi.mock('../QualityMetrics', () => mockDefault(() => <div data-testid="quality-metrics" />));
 vi.mock('../SearchTracePage', () => mockDefault(() => <div data-testid="search-trace" />));
-vi.mock('../TraceDiff', () => ({ __esModule: true, default: () => <div data-testid="trace-diff" /> }));
-vi.mock('../TracePage', () => ({ __esModule: true, default: () => <div data-testid="trace-page" /> }));
+vi.mock('../TraceDiff', () => mockDefault(() => <div data-testid="trace-diff" />));
+vi.mock('../TracePage', () => mockDefault(() => <div data-testid="trace-page" />));
 vi.mock('../Monitor', () => mockDefault(() => <div data-testid="monitor" />));
 
 vi.mock('../DependencyGraph/url', () => ({ ROUTE_PATH: '/dependencies' }));
@@ -24,16 +24,15 @@ vi.mock('../TraceDiff/url', () => ({ ROUTE_PATH: '/trace-diff', getUrl: jest.fn(
 vi.mock('../TracePage/url', () => ({ ROUTE_PATH: '/trace/:id' }));
 vi.mock('../Monitor/url', () => ({ ROUTE_PATH: '/monitor' }));
 
-vi.mock('../PlexusDemo', () => ({ __esModule: true, default: () => <div data-testid="plexus-demo" /> }));
+vi.mock('../PlexusDemo', () => mockDefault(() => <div data-testid="plexus-demo" />));
 vi.mock('../PlexusDemo/url', () => ({ ROUTE_PATH: '/plexus-demo' }));
 
 vi.mock('../../api/jaeger', () => ({
-  __esModule: true,
   default: { apiRoot: null },
   DEFAULT_API_ROOT: 'http://localhost:16686/api',
 }));
 
-vi.mock('../../utils/config/process-scripts', () => mockDefault(jest.fn()));
+vi.mock('../../utils/config/process-scripts');
 vi.mock('../../utils/prefix-url', () => mockDefault(jest.fn(() => '/prefix')));
 
 const createMockHistory = (pathname = '/') => ({

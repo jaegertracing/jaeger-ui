@@ -15,7 +15,6 @@ import PlexusDemo from './index';
 vi.mock(
   '@jaegertracing/plexus/demo',
   () => ({
-    __esModule: true,
     default: function PlexusDemoStub() {
       return <div data-testid="plexus-demo-content">Plexus Demo</div>;
     },

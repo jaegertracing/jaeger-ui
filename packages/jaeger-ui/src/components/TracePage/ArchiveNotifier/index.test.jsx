@@ -13,7 +13,6 @@ vi.mock('antd', async () => {
   const originalModule = await vi.importActual('antd');
 
   return {
-    __esModule: true, // Use it when dealing with esModules
     ...originalModule,
     notification: {
       destroy: jest.fn(),

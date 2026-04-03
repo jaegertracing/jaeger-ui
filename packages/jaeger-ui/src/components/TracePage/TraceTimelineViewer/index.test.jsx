@@ -14,7 +14,6 @@ import transformTraceData from '../../../model/transform-trace-data';
 vi.mock('./VirtualizedTraceView', () => mockDefault(() => <div data-testid="virtualized-trace-view-mock" />));
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
 vi.mock('../../common/VerticalResizer', () => ({
-  __esModule: true,
   default: ({ onChange }) => (
     <div data-testid="vertical-resizer-mock">
       <button data-testid="vertical-resizer-change" type="button" onClick={() => onChange && onChange(0.7)} />

@@ -29,7 +29,7 @@ vi.mock('../../../utils/filter-spans');
 vi.mock('../../../utils/span-ancestor-ids');
 vi.mock('../../../utils/config/get-config', async () => {
   const actual = await vi.importActual('../../../utils/config/get-config');
-  return { __esModule: true, ...actual, default: jest.fn(() => ({})) };
+  return { ...actual, default: jest.fn(() => ({})) };
 });
 
 describe('TraceTimelineViewer/duck', () => {

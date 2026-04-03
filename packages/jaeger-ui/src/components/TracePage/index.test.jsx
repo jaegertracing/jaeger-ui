@@ -106,7 +106,6 @@ vi.mock('./TracePageHeader/TracePageSearchBar', async () =>
 );
 vi.mock('./CriticalPath/index');
 vi.mock('./TraceGraph/calculateTraceDagEV', async () => ({
-  __esModule: true,
   default: jest.fn(() => ({})),
 }));
 vi.mock('../common/ErrorMessage', async () =>
@@ -125,7 +124,6 @@ vi.mock('./ArchiveNotifier', async () =>
 vi.mock('./TracePageHeader', async () => {
   const { forwardRef } = require('react');
   return {
-    __esModule: true,
     default: forwardRef(function MockTracePageHeader(props, ref) {
       capturedHeaderProps = { ...props, ref };
       return (

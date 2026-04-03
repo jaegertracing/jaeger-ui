@@ -39,7 +39,6 @@ vi.mock('antd', async () => {
 
 vi.mock('../../utils/config/get-config', async () => {
   return {
-    __esModule: true,
     default: jest.fn(() => ({
       dependencies: { menuEnabled: true },
       deepDependencies: { menuEnabled: true },

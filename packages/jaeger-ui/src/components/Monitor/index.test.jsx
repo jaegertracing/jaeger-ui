@@ -18,7 +18,6 @@ import getConfig from '../../utils/config/get-config';
 vi.mock('../../actions/jaeger-api');
 
 vi.mock('../../utils/config/get-config', () => ({
-  __esModule: true,
   default: jest.fn(() => ({
     qualityMetrics: { apiEndpoint: '/api/quality-metrics' },
     storageCapabilities: { metricsStorage: true },
@@ -26,7 +25,6 @@ vi.mock('../../utils/config/get-config', () => ({
 }));
 // Mock the storage utility
 vi.mock('../../utils/storage', () => ({
-  __esModule: true,
   default: {
     getString: jest.fn(),
     getNumber: jest.fn(),

@@ -4,10 +4,7 @@
 import { THEME_STORAGE_KEY, readStoredTheme, writeStoredTheme, getInitialTheme } from './ThemeStorage';
 import getConfig from '../../utils/config/get-config';
 
-vi.mock('../../utils/config/get-config', () => ({
-  __esModule: true,
-  default: vi.fn(),
-}));
+vi.mock('../../utils/config/get-config', () => mockDefault(vi.fn()));
 
 function setupMatchMedia(matches = false) {
   Object.defineProperty(window, 'matchMedia', {
