@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 import { TraceId } from './TraceId';
 import getConfig from '../../utils/config/get-config';
 
-vi.mock('../../utils/config/get-config', () => mockDefault(jest.fn()));
+vi.mock('../../utils/config/get-config');
 
 describe('TraceIdDisplayLength', () => {
   const DEFAULT_LENGTH = 7;

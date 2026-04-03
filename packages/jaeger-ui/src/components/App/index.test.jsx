@@ -32,7 +32,7 @@ vi.mock('../../api/jaeger', () => ({
   DEFAULT_API_ROOT: 'http://localhost:16686/api',
 }));
 
-vi.mock('../../utils/config/process-scripts', () => mockDefault(jest.fn()));
+vi.mock('../../utils/config/process-scripts');
 vi.mock('../../utils/prefix-url', () => mockDefault(jest.fn(() => '/prefix')));
 
 const createMockHistory = (pathname = '/') => ({

@@ -8,7 +8,7 @@ import '@testing-library/jest-dom';
 import TraceViewSettings from './TraceViewSettings';
 import track from './KeyboardShortcutsHelp.track';
 
-vi.mock('./KeyboardShortcutsHelp.track', () => mockDefault(jest.fn()));
+vi.mock('./KeyboardShortcutsHelp.track');
 vi.mock('../keyboard-mappings', () => mockDefault({}));
 
 const defaultProps = {

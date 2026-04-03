@@ -25,7 +25,7 @@ vi.mock('../SpanDetail', () =>
 );
 
 vi.mock('../../../../model/link-patterns', () => mockDefault(jest.fn(() => [])));
-vi.mock('../../../../utils/update-ui-find', () => mockDefault(jest.fn()));
+vi.mock('../../../../utils/update-ui-find');
 
 describe('<SpanDetailSidePanelImpl>', () => {
   let trace;

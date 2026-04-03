@@ -35,7 +35,7 @@ vi.mock('../../api/jaeger', () => ({
   default: { apiRoot: null },
   DEFAULT_API_ROOT: 'http://localhost:16686/api',
 }));
-vi.mock('../../utils/config/process-scripts', () => mockDefault(jest.fn()));
+vi.mock('../../utils/config/process-scripts');
 vi.mock('../../utils/prefix-url', () => mockDefault(jest.fn(() => '/prefix')));
 vi.mock('../../utils/configure-store', () => ({
   store: {
