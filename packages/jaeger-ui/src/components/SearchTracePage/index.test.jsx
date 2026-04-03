@@ -21,7 +21,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
-import { SearchTracePageImpl as SearchTracePage, mapStateToProps } from './index';
+import { SearchTracePageImpl as SearchTracePage, mapStateToProps, stateTraceDiffXformer } from './index';
 import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import { MOST_RECENT, MOST_SPANS } from '../../model/order-by';
@@ -29,6 +29,7 @@ import transformTraceData from '../../model/transform-trace-data';
 import { store as globalStore } from '../../utils/configure-store';
 import { jaegerClient } from '../../api/v3/client';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
+import { useTraceDiffStore } from '../../stores/trace-diff-store';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,14 +66,15 @@ describe('<SearchTracePage>', () => {
       queryOfResults: null, // null on initial page load
       traces,
       traceResultsToDownload,
-      diffCohort: [],
+      traceForDiff: { traces: {}, search: { results: [], query: null } },
       isHomepage: false,
       maxTraceDuration: 100,
       numberOfTraceResults: traces.length,
       sortedTracesXformer: jest.fn(),
       urlQueryParams: { service: 'svc-a' },
-      // actions
       searchTraces: jest.fn(),
+      fetchMultipleTraces: jest.fn(),
+      loadJsonTraces: jest.fn(),
     };
   };
 
@@ -250,6 +252,10 @@ describe('<SearchTracePage>', () => {
 });
 
 describe('mapStateToProps()', () => {
+  beforeEach(() => {
+    useTraceDiffStore.setState({ cohort: [], a: null, b: null });
+  });
+
   it('converts state to the necessary props', () => {
     const trace = transformTraceData(traceGenerator.trace({}));
     const stateTrace = {
@@ -270,23 +276,27 @@ describe('mapStateToProps()', () => {
     };
     const state = {
       trace: stateTrace,
-      traceDiff: {
-        cohort: [trace.traceID],
-      },
       services: stateServices,
       config: {
         disableFileUploadControl: false,
       },
     };
 
-    const { maxTraceDuration, traceResultsToDownload, diffCohort, traces, ...rest } = mapStateToProps(state, {
-      search: '',
-    });
+    useTraceDiffStore.setState({ cohort: [trace.traceID], a: null, b: null });
+
+    const { maxTraceDuration, traceResultsToDownload, traceForDiff, traces, ...rest } = mapStateToProps(
+      state,
+      {
+        search: '',
+      }
+    );
     expect(traces).toHaveLength(stateTrace.search.results.length);
     expect(traces[0].traceID).toBe(trace.traceID);
     expect(traceResultsToDownload[0].traceID).toBe(trace.traceID);
     expect(maxTraceDuration).toBe(trace.duration);
-    expect(diffCohort).toHaveLength(state.traceDiff.cohort.length);
+    expect(traceForDiff).toBe(stateTrace);
+    const diffCohort = stateTraceDiffXformer(stateTrace, { cohort: useTraceDiffStore.getState().cohort });
+    expect(diffCohort).toHaveLength(1);
     expect(diffCohort[0].id).toBe(trace.traceID);
     expect(diffCohort[0].data.traceID).toBe(trace.traceID);
 
