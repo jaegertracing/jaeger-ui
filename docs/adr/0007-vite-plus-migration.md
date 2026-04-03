@@ -276,8 +276,9 @@ since the library build was dropped in PR A).
 
 #### ✅ `.github/workflows/lint-build.yml`
 
-No YAML changes needed — `npm run lint` already invokes Oxlint + Oxfmt via `vp check`; the `depcheck`
-script (`scripts/generateDepcheckrcJaegerUI.js`) was updated in H3 to remove Jest/Babel references.
+No YAML changes needed — `npm run lint` already runs Oxfmt checks via `vp fmt --check` and Oxlint via
+`vp lint ...`; the `depcheck` script (`scripts/generateDepcheckrcJaegerUI.js`) was updated in H3 to
+remove Jest/Babel references.
 
 #### ✅ `.github/workflows/unit-tests.yml`
 
