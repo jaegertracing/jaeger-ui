@@ -118,7 +118,7 @@ All new files must include this copyright header with the current year (e.g. 202
 - Uses **Vitest** (not Jest) with jsdom environment
 - React Testing Library for component testing
 - Tests are co-located with source files (`*.test.js` or `*.test.tsx`)
-- Update snapshots: `npm run update-snapshots` (from repository root), but do not use snapshots for any new tests, only existing legacy tests
+- Update snapshots: `npm run update-snapshots` (from repository root) or `npx vitest run -u` (from `packages/jaeger-ui`), but do not use snapshots for any new tests, only existing legacy tests
 
 ### Running Tests
 
