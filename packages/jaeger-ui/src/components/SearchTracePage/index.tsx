@@ -73,7 +73,7 @@ type SearchTracePageImplProps = ISearchTracePageImplOwnProps & IStateProps & IDi
 // export for tests
 export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   const {
-    traceForDiff,
+    tracesInRedux,
     embedded,
     errors,
     fetchMultipleTraces,
@@ -96,7 +96,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     }))
   );
   const cohort = useTraceDiffStore(s => s.cohort);
-  const diffCohort = useMemo(() => stateTraceDiffXformer(traceForDiff, { cohort }), [traceForDiff, cohort]);
+  const diffCohort = useMemo(() => stateTraceDiffXformer(tracesInRedux, { cohort }), [tracesInRedux, cohort]);
 
   const config = useConfig();
   const { disableFileUploadControl } = config;
@@ -263,7 +263,7 @@ export function mapStateToProps(
   // as we no longer use Redux for services (PR 3329).
   return {
     queryOfResults: queryOfResults as IQueryOfResults | null,
-    traceForDiff: state.trace,
+    tracesInRedux: state.trace,
     embedded,
     isHomepage,
     loadingTraces,
