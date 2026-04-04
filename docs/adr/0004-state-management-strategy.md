@@ -9,7 +9,7 @@
 
 Jaeger UI loads **very large, mostly immutable** traces (often 5,000–50,000+ spans). That workload needs **selective subscriptions** for UI state and a **dedicated cache** for server data—not a single global store that encourages wide re-renders.
 
-**Decision**: Adopt **Zustand** for **client / UI state** and **TanStack Query** for **server state**, alongside **@tanstack/react-virtual** for the timeline. **Redux is phased out** as slices migrate.
+**Decision**: Adopt **Zustand** for **client / UI state** and **TanStack Query** for **server state**. **`@tanstack/react-virtual`** is part of the stack (e.g. `FilteredList`); the trace timeline today uses a **custom virtualized `ListView`** (`TraceTimelineViewer/ListView`), not TanStack Virtual—future alignment is optional. **Redux is phased out** as slices migrate.
 
 **Rejected for this codebase**:
 
@@ -43,10 +43,23 @@ Redux (classic `redux-actions` + `connect`) still holds **both** API-backed data
 | **Config** | Keep behind `useConfig()` (implementation may move off Redux) | Feature flags from `getJaegerUiConfig()` |
 | **Deep-linkable view** | URL (+ React Router) | Search params, trace id, compare segment, `uiFind` where applicable |
 
-### Constraints
+### Alternatives considered (summary)
 
-- **Class components** remain in places (e.g. parts of trace timeline, DDG). Use **`getState` / `subscribe`** or a small **HOC** (`createStoreConnector` in `utils/zustand-class-bridge.tsx`) until components are converted.
-- **Virtualization** of span rows is mandatory for large traces; state choices must not fight that model.
+We weighed three directions instead of “keep classic Redux forever”:
+
+| Approach | Summary |
+| -------- | ------- |
+| **React Context** | Works for small, stable trees. As the **primary** global store for timeline-adjacent UI, a single context value change (e.g. hover or selection) can re-render large subtrees unless you split into many memoized contexts—high design cost for uncertain gain at tens of thousands of spans. |
+| **Redux / Redux Toolkit only** | Solid and familiar; RTK improves ergonomics. Still tends toward more boilerplate and bundle surface than Zustand for the UI-heavy slices we intend to peel off first. |
+| **Zustand + TanStack Query** (chosen) | Query owns **server-shaped** data (cache, stale, dedupe). Zustand owns **UI** state with **selective subscriptions** so consumers re-render only when their slice changes—aligned with “load trace once, interact heavily.” |
+
+This section is intentionally brief. A longer evaluation (criterion-by-criterion grades, Context deep dive, appendix code) lived in earlier drafts of this ADR; the **outcome** is unchanged.
+
+### Migration and implementation constraints
+
+- **Class components** remain (e.g. `TraceTimelineViewer/ListView`, parts of Deep Dependencies). They cannot use `useStore()` directly. Prefer **`createStoreConnector`** in `utils/zustand-class-bridge.tsx` (a function wrapper uses `useStoreWithEqualityFn` + `shallow` and injects props into the class child), or imperative **`getState` / `subscribe`** when a HOC is awkward.
+- **Virtualization** of span rows is **mandatory** at scale; state updates must not force full-tree re-renders. Today the timeline uses the custom **`ListView`**; **`@tanstack/react-virtual`** is already used elsewhere and can be adopted more widely over time without blocking this ADR.
+- **`ReduxState`** should stay aligned with `combineReducers` (including slices such as `pathAgnosticDecorations`) to avoid silent type drift.
 
 ---
 
@@ -56,6 +69,15 @@ Redux (classic `redux-actions` + `connect`) still holds **both** API-backed data
 2. **Migrate incrementally**: one slice or vertical slice per phase; Redux stays until its last consumer is removed.
 3. **Heavy derived work** (e.g. critical path): prefer **`useMemo` / module helpers** next to the trace reference, not a fat global store—unless profiling proves otherwise.
 4. **Do not** adopt Context as the primary global store for timeline-scale UI state.
+
+---
+
+## Out of scope
+
+- **Up-front normalization** of entire trace graphs in the client (e.g. span maps keyed by id) unless profiling shows clear lookup or memory wins.
+- **Big-bang** conversion of all class components; convert opportunistically alongside state migration.
+- **Real-time multi-user** or streaming ingestion in the UI—Jaeger’s model here is **historical snapshots**, not collaborative live editing.
+- Replacing **URL + React Router** as the source of truth for deep-linkable views; this ADR assumes those stay primary where they already apply.
 
 ---
 
