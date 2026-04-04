@@ -66,7 +66,7 @@ describe('<SearchTracePage>', () => {
       queryOfResults: null, // null on initial page load
       traces,
       traceResultsToDownload,
-      traceForDiff: { traces: {}, search: { results: [], query: null } },
+      tracesInRedux: { traces: {}, search: { results: [], query: null } },
       isHomepage: false,
       maxTraceDuration: 100,
       numberOfTraceResults: traces.length,
@@ -284,7 +284,7 @@ describe('mapStateToProps()', () => {
 
     useTraceDiffStore.setState({ cohort: [trace.traceID], a: null, b: null });
 
-    const { maxTraceDuration, traceResultsToDownload, traceForDiff, traces, ...rest } = mapStateToProps(
+    const { maxTraceDuration, traceResultsToDownload, tracesInRedux, traces, ...rest } = mapStateToProps(
       state,
       {
         search: '',
@@ -294,7 +294,7 @@ describe('mapStateToProps()', () => {
     expect(traces[0].traceID).toBe(trace.traceID);
     expect(traceResultsToDownload[0].traceID).toBe(trace.traceID);
     expect(maxTraceDuration).toBe(trace.duration);
-    expect(traceForDiff).toBe(stateTrace);
+    expect(tracesInRedux).toEqual(stateTrace);
     const diffCohort = stateTraceDiffXformer(stateTrace, { cohort: useTraceDiffStore.getState().cohort });
     expect(diffCohort).toHaveLength(1);
     expect(diffCohort[0].id).toBe(trace.traceID);
