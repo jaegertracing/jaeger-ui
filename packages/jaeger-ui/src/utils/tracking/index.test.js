@@ -17,8 +17,7 @@ const mockNoopWebAnalytics = {
   trackError: jest.fn(),
 };
 
-jest.mock('./ga', () => ({
-  __esModule: true,
+vi.mock('./ga', () => ({
   default: () => {
     return mockGA;
   },
@@ -26,8 +25,7 @@ jest.mock('./ga', () => ({
 let internalVersionShort;
 let internalVersionLong;
 
-jest.mock('./noopWebAnalytics', () => ({
-  __esModule: true,
+vi.mock('./noopWebAnalytics', () => ({
   default: (config, versionShort, versionLong) => {
     internalVersionShort = versionShort;
     internalVersionLong = versionLong;
@@ -44,7 +42,6 @@ describe('generic analytics tracking', () => {
   it('no web analytic test', () => {
     jest.doMock('../config/get-config', () => {
       return {
-        __esModule: true,
         default: () => ({}),
       };
     });
@@ -66,7 +63,6 @@ describe('generic analytics tracking', () => {
   it('Google Analytics test', () => {
     jest.doMock('../config/get-config', () => {
       return {
-        __esModule: true,
         default: () => ({
           tracking: {
             gaID: 'UA123',
@@ -96,7 +92,6 @@ describe('generic analytics tracking', () => {
 
     jest.doMock('../config/get-config', () => {
       return {
-        __esModule: true,
         default: () => ({
           tracking: {
             gaID: 'UA123',
@@ -118,7 +113,6 @@ describe('generic analytics tracking', () => {
 
     jest.doMock('../config/get-config', () => {
       return {
-        __esModule: true,
         default: () => ({}),
       };
     });
@@ -141,7 +135,6 @@ describe('generic analytics tracking', () => {
     const rawVersion = `{"remote":"github.com/jaegertracing/jaeger-ui","objName":"${vShot}","changed":{"hasChanged":false,"files":0,"insertions":0,"deletions":0,"untracked":0,"pretty":""},"refName":"main","pretty":"${vLong}"}`;
     jest.doMock('../config/get-config', () => {
       return {
-        __esModule: true,
         default: () => ({}),
       };
     });
@@ -165,7 +158,6 @@ describe('generic analytics tracking', () => {
     const rawVersion = `{"remote":"github.com/jaegertracing/jaeger-ui","objName":"${vShotCommitSHA}","changed":{"hasChanged":true,"files":2,"insertions":20,"deletions":3,"untracked":1,"pretty":"${vShotChanges}"},"refName":"main","pretty":"${vLong}"}`;
     jest.doMock('../config/get-config', () => {
       return {
-        __esModule: true,
         default: () => ({}),
       };
     });

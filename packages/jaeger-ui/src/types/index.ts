@@ -1,9 +1,6 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Router } from 'react-router-dom';
-import { Location } from 'history';
-
 import { ApiError } from './api-error';
 import { TracesArchive } from './archive';
 import { Config } from './config';
@@ -44,16 +41,6 @@ export type ReduxState = {
     error: ApiError | TNil;
   };
   embedded: EmbeddedState;
-  router: Router & {
-    location: Location<LocationState>;
-  };
-  services: {
-    services: string[] | TNil;
-    serverOpsForService: Record<string, string[]>;
-    operationsForService: Record<string, string[]>;
-    loading: boolean;
-    error: ApiError | TNil;
-  };
   trace: {
     traces: Record<string, FetchedTrace>;
     search: {

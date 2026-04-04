@@ -1,9 +1,10 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import React from 'react';
 import { Provider } from 'react-redux';
-import { Route, Routes, Navigate } from 'react-router-dom-v5-compat';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Route, Routes, Navigate } from 'react-router-dom';
+import { AppQueryClientProvider } from '../../query/app-query-client';
 
 import NotFound from './NotFound';
 import Page from './Page';
@@ -19,6 +20,7 @@ import TraceRouter from './TraceRouter';
 import { ROUTE_PATH as tracePath } from '../TracePage/url';
 import MonitorATMPage from '../Monitor';
 import { ROUTE_PATH as monitorATMPath } from '../Monitor/url';
+import { ROUTE_PATH as plexusDemoPath } from '../PlexusDemo/url';
 import JaegerAPI, { DEFAULT_API_ROOT } from '../../api/jaeger';
 import processScripts from '../../utils/config/process-scripts';
 import prefixUrl from '../../utils/prefix-url';
@@ -30,24 +32,19 @@ import './index.css';
 import { store } from '../../utils/configure-store';
 import ThemeProvider from './ThemeProvider';
 
-// Create a React Query client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
-    },
-  },
-});
-
 // Initialize API configuration and process configuration scripts at module level
 // to ensure they run once when the application is loaded, before any components are rendered
 JaegerAPI.apiRoot = DEFAULT_API_ROOT;
 processScripts();
 
+// Only include the Plexus demo in development builds.
+// Vite replaces import.meta.env.DEV with false in production, which causes Rollup
+// to tree-shake the dynamic import and exclude the demo files from the prod bundle.
+const PlexusDemoPage = import.meta.env.DEV ? React.lazy(() => import('../PlexusDemo')) : null;
+
 export default function JaegerUIApp() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <AppQueryClientProvider>
       <ThemeProvider>
         <Provider store={store as any}>
           {
@@ -65,6 +62,16 @@ export default function JaegerUIApp() {
               <Route path={deepDependenciesPath} element={<DeepDependencies />} />
               <Route path={qualityMetricsPath} element={<QualityMetrics />} />
               <Route path={monitorATMPath} element={<MonitorATMPage />} />
+              {PlexusDemoPage && (
+                <Route
+                  path={plexusDemoPath}
+                  element={
+                    <React.Suspense fallback={null}>
+                      <PlexusDemoPage />
+                    </React.Suspense>
+                  }
+                />
+              )}
 
               <Route path="/" element={<Navigate to={searchPath} replace />} />
               <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
@@ -75,6 +82,6 @@ export default function JaegerUIApp() {
           </Page>
         </Provider>
       </ThemeProvider>
-    </QueryClientProvider>
+    </AppQueryClientProvider>
   );
 }

@@ -8,10 +8,8 @@ import { bindActionCreators, Dispatch } from 'redux';
 import _isEqual from 'lodash/isEqual';
 import _groupBy from 'lodash/groupBy';
 
-// import { History as RouterHistory, Location } from 'history';
-
 import memoizeOne from 'memoize-one';
-import { Location, History } from 'history';
+import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions, getSelectedSpanID } from './duck';
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
@@ -74,7 +72,7 @@ type TDispatchProps = {
 
 type RouteProps = {
   location: Location;
-  history: History;
+  navigate: NavigateFunction;
 };
 
 type TDerivedStateProps = {
@@ -315,11 +313,11 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   }
 
   focusSpan = (uiFind: string) => {
-    const { trace, focusUiFindMatches, location, history } = this.props;
+    const { trace, focusUiFindMatches, location, navigate } = this.props;
     if (trace) {
       updateUiFind({
         location,
-        history,
+        navigate,
         uiFind,
       });
       focusUiFindMatches(trace, uiFind, false);

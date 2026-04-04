@@ -27,9 +27,8 @@ export type Accessors = {
 };
 
 interface IScroller {
-  scrollTo: (rowIndex: number) => void;
-  // TODO arg names throughout
-  scrollBy: (rowIndex: number, opt?: boolean) => void;
+  scrollTo: (y: number) => void;
+  scrollBy: (yDelta: number, appendToLast?: boolean) => void;
 }
 
 /**

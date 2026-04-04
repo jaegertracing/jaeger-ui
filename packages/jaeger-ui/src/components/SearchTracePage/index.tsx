@@ -6,7 +6,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Col, Row, Tabs } from 'antd';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
-import store from 'store';
 import memoizeOne from 'memoize-one';
 
 import { useConfig } from '../../hooks/useConfig';
@@ -111,7 +110,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     }
     // Intentionally run only on mount, we only want to trigger the initial search
     // and fetch diff traces once when the component loads, not on every state change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-x/exhaustive-deps
   }, []);
 
   const handleSortChange = useCallback((newSortBy: string) => {
@@ -142,13 +141,13 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   return (
     <Row className="SearchTracePage--row">
       {!embedded && (
-        <Col span={6} className="SearchTracePage--column">
+        <Col xs={24} sm={6} className="SearchTracePage--column">
           <div className="SearchTracePage--find">
             <Tabs size="large" items={tabItems} />
           </div>
         </Col>
       )}
-      <Col span={!embedded ? 18 : 24} className="SearchTracePage--column">
+      <Col xs={24} sm={!embedded ? 18 : 24} className="SearchTracePage--column">
         {showErrors && (
           <div className="js-test-error-message">
             <h2>There was an error loading traces: </h2>
@@ -234,9 +233,12 @@ const sortedTracesXformer = memoizeOne((traces: Trace[], sortBy: string) => {
   return traceResults.map(t => t.asOtelTrace());
 });
 
-export function mapStateToProps(state: ReduxState): IStateProps & { isHomepage: boolean } {
-  const { embedded, router, traceDiff } = state;
-  const query = getUrlState(router.location.search);
+export function mapStateToProps(
+  state: ReduxState,
+  ownProps: { search?: string }
+): IStateProps & { isHomepage: boolean } {
+  const { embedded, traceDiff } = state;
+  const query = getUrlState(ownProps.search || '');
   const isHomepage = !Object.keys(query).length;
   const {
     query: queryOfResults,

@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { InputRef } from 'antd';
 import { useNormalizeTraceId } from './useNormalizeTraceId';
-import { Location, History as RouterHistory } from 'history';
+import { useNavigate } from 'react-router-dom';
+import type { Location } from 'react-router-dom';
 import _clamp from 'lodash/clamp';
 import _get from 'lodash/get';
 import _mapValues from 'lodash/mapValues';
@@ -65,7 +67,6 @@ type TDispatchProps = {
 };
 
 type TOwnProps = {
-  history: RouterHistory;
   location: Location<LocationState>;
   params: { id: string };
   archiveEnabled: boolean;
@@ -82,7 +83,6 @@ type TReduxProps = {
   detailPanelMode: SpanDetailPanelMode;
   embedded: null | EmbeddedState;
   id: string;
-  searchUrl: null | string;
   timelineBarsVisible: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
@@ -90,17 +90,33 @@ type TReduxProps = {
 
 type TProps = TDispatchProps & TOwnProps & TReduxProps;
 
-type TState = {
-  headerHeight: number | TNil;
-  slimView: boolean;
-  viewType: ETraceViewType;
-  viewRange: IViewRange;
-};
-
 // export for tests
 export const VIEW_MIN_RANGE = 0.01;
 const VIEW_CHANGE_BASE = 0.005;
 const VIEW_CHANGE_FAST = 0.05;
+
+// export for tests
+export function computeAdjustedRange(
+  viewStart: number,
+  viewEnd: number,
+  startChange: number,
+  endChange: number
+): [number, number] {
+  let start = _clamp(viewStart + startChange, 0, 0.99);
+  let end = _clamp(viewEnd + endChange, 0.01, 1);
+  if (end - start < VIEW_MIN_RANGE) {
+    if (startChange < 0 && endChange < 0) {
+      end = start + VIEW_MIN_RANGE;
+    } else if (startChange > 0 && endChange > 0) {
+      end = start + VIEW_MIN_RANGE;
+    } else {
+      const center = viewStart + (viewEnd - viewStart) / 2;
+      start = center - VIEW_MIN_RANGE / 2;
+      end = center + VIEW_MIN_RANGE / 2;
+    }
+  }
+  return [start, end];
+}
 
 // export for tests
 export const shortcutConfig: { [name: string]: [number, number] } = {
@@ -126,357 +142,338 @@ export function makeShortcutCallbacks(adjRange: (start: number, end: number) => 
 }
 
 // export for tests
-export class TracePageImpl extends React.PureComponent<TProps, TState> {
-  state: TState;
+export function TracePageImpl(props: TProps) {
+  const {
+    acknowledgeArchive: acknowledgeArchiveProp,
+    archiveEnabled,
+    archiveTrace: archiveTraceProp,
+    archiveTraceState,
+    criticalPathEnabled,
+    detailPanelMode,
+    disableJsonView,
+    embedded,
+    enableSidePanel,
+    fetchTrace,
+    focusUiFindMatches: focusUiFindMatchesProp,
+    id,
+    location,
+    setDetailPanelMode,
+    setTimelineBarsVisible,
+    storageCapabilities,
+    timelineBarsVisible,
+    trace,
+    traceGraphConfig,
+    uiFind,
+    useOtelTerms,
+  } = props;
 
-  _headerElm: HTMLElement | TNil;
-  _filterSpans: typeof filterSpans;
-  _searchBar = React.createRef<InputRef>();
-  _scrollManager: ScrollManager;
-  traceDagEV: TEv | TNil;
+  const navigate = useNavigate();
 
-  constructor(props: TProps) {
-    super(props);
-    const { embedded, trace } = props;
-    this.state = {
-      headerHeight: null,
-      slimView: Boolean(embedded && embedded.timeline.collapseTitle),
-      viewType: ETraceViewType.TraceTimelineViewer,
-      viewRange: {
-        time: {
-          current: [0, 1],
-        },
-      },
-    };
-    this._headerElm = null;
-    this._filterSpans = _memoize(
-      filterSpans,
-      // Do not use the memo if the filter text or trace has changed.
-      // trace.data.spans is populated after the initial render via mutation.
-      textFilter =>
-        `${textFilter} ${_get(this.props.trace, 'traceID')} ${_get(this.props.trace, 'data.spans.length')}`
-    );
-    this._scrollManager = new ScrollManager(trace && trace.data ? trace.data.asOtelTrace() : undefined, {
-      scrollBy,
-      scrollTo,
-    });
-    resetShortcuts();
-  }
+  const [headerHeight, setHeaderHeight] = useState<number | TNil>(null);
+  const [slimView, setSlimView] = useState(() => Boolean(embedded && embedded.timeline.collapseTitle));
+  const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
+  const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
 
-  componentDidMount() {
-    this.ensureTraceFetched();
-    this.updateViewRangeTime(0, 1);
-    /* istanbul ignore if */
-    if (!this._scrollManager) {
-      throw new Error('Invalid state - scrollManager is unset');
-    }
-    const { scrollPageDown, scrollPageUp, scrollToNextVisibleSpan, scrollToPrevVisibleSpan } =
-      this._scrollManager;
-    const adjViewRange = (a: number, b: number) => this._adjustViewRange(a, b, 'kbd');
+  const traceDagEV = useMemo(
+    () =>
+      viewType === ETraceViewType.TraceGraph && trace?.data
+        ? calculateTraceDagEV(trace.data.asOtelTrace())
+        : null,
+    [trace, viewType]
+  );
+
+  const searchBarRef = useRef<InputRef>(null);
+  const headerElmRef = useRef<HTMLElement | TNil>(null);
+  const viewRangeRef = useRef(viewRange);
+  viewRangeRef.current = viewRange;
+  const prevIdRef = useRef(id);
+  const idRef = useRef(id);
+  idRef.current = id;
+
+  const filterSpansMemo = useRef(
+    _memoize(filterSpans, (textFilter: string) => `${textFilter} ${idRef.current}`)
+  ).current;
+
+  const scrollManagerRef = useRef<ScrollManager>(
+    new ScrollManager(trace && trace.data ? trace.data.asOtelTrace() : undefined, { scrollBy, scrollTo })
+  );
+
+  const updateViewRangeTime: TUpdateViewRangeTimeFunction = useCallback(
+    (start: number, end: number, trackSrc?: string) => {
+      if (trackSrc) {
+        trackRange(trackSrc, [start, end], viewRangeRef.current.time.current);
+      }
+      const current: [number, number] = [start, end];
+      setViewRange(prev => ({ ...prev, time: { current } }));
+    },
+    []
+  );
+
+  const updateNextViewRangeTime = useCallback((update: ViewRangeTimeUpdate) => {
+    setViewRange(prev => ({ ...prev, time: { ...prev.time, ...update } }));
+  }, []);
+
+  const clearSearch = useCallback(() => {
+    updateUiFind({ navigate, location, trackFindFunction: trackFilter });
+    searchBarRef.current?.blur();
+  }, [navigate, location]);
+
+  const focusOnSearchBar = useCallback(() => {
+    searchBarRef.current?.focus();
+  }, []);
+
+  const clearSearchRef = useRef(clearSearch);
+  clearSearchRef.current = clearSearch;
+  const focusOnSearchBarRef = useRef(focusOnSearchBar);
+  focusOnSearchBarRef.current = focusOnSearchBar;
+
+  const adjustViewRange = useCallback(
+    (startChange: number, endChange: number, trackSrc: string) => {
+      const [viewStart, viewEnd] = viewRangeRef.current.time.current;
+      const [start, end] = computeAdjustedRange(viewStart, viewEnd, startChange, endChange);
+      updateViewRangeTime(start, end, trackSrc);
+    },
+    [updateViewRangeTime]
+  );
+
+  // Mount: setup keyboard shortcuts, initial fetch, initial view range
+  useEffect(() => {
+    const sm = scrollManagerRef.current;
+    const { scrollPageDown, scrollPageUp, scrollToNextVisibleSpan, scrollToPrevVisibleSpan } = sm;
+    const adjViewRange = (a: number, b: number) => adjustViewRange(a, b, 'kbd');
     const shortcutCallbacks = makeShortcutCallbacks(adjViewRange);
     shortcutCallbacks.scrollPageDown = scrollPageDown;
     shortcutCallbacks.scrollPageUp = scrollPageUp;
     shortcutCallbacks.scrollToNextVisibleSpan = scrollToNextVisibleSpan;
     shortcutCallbacks.scrollToPrevVisibleSpan = scrollToPrevVisibleSpan;
-    shortcutCallbacks.clearSearch = this.clearSearch;
-    shortcutCallbacks.searchSpans = this.focusOnSearchBar;
-    mergeShortcuts(shortcutCallbacks);
-  }
-
-  componentDidUpdate({ id: prevID }: TProps) {
-    const { id, trace } = this.props;
-
-    this._scrollManager.setTrace(trace && trace.data ? trace.data.asOtelTrace() : undefined);
-
-    this.setHeaderHeight(this._headerElm);
-    if (!trace) {
-      this.ensureTraceFetched();
-      return;
-    }
-    if (prevID !== id) {
-      this.updateViewRangeTime(0, 1);
-      this.clearSearch();
-    }
-  }
-
-  componentWillUnmount() {
+    shortcutCallbacks.clearSearch = () => clearSearchRef.current();
+    shortcutCallbacks.searchSpans = () => focusOnSearchBarRef.current();
     resetShortcuts();
-    cancelScroll();
-    this._scrollManager.destroy();
-    this._scrollManager = new ScrollManager(undefined, {
-      scrollBy,
-      scrollTo,
-    });
-  }
+    mergeShortcuts(shortcutCallbacks);
 
-  _adjustViewRange(startChange: number, endChange: number, trackSrc: string) {
-    const [viewStart, viewEnd] = this.state.viewRange.time.current;
-    let start = _clamp(viewStart + startChange, 0, 0.99);
-    let end = _clamp(viewEnd + endChange, 0.01, 1);
-    if (end - start < VIEW_MIN_RANGE) {
-      if (startChange < 0 && endChange < 0) {
-        end = start + VIEW_MIN_RANGE;
-      } else if (startChange > 0 && endChange > 0) {
-        end = start + VIEW_MIN_RANGE;
-      } else {
-        const center = viewStart + (viewEnd - viewStart) / 2;
-        start = center - VIEW_MIN_RANGE / 2;
-        end = center + VIEW_MIN_RANGE / 2;
+    return () => {
+      resetShortcuts();
+      cancelScroll();
+      sm.destroy();
+    };
+  }, [adjustViewRange]);
+
+  useEffect(() => {
+    scrollManagerRef.current.setTrace(trace?.data?.asOtelTrace());
+  }, [trace]);
+
+  useEffect(() => {
+    if (prevIdRef.current !== id) {
+      prevIdRef.current = id;
+      if (!trace) {
+        fetchTrace(id);
       }
-    }
-    this.updateViewRangeTime(start, end, trackSrc);
-  }
-
-  setHeaderHeight = (elm: HTMLElement | TNil) => {
-    this._headerElm = elm;
-    if (elm) {
-      if (this.state.headerHeight !== elm.clientHeight) {
-        this.setState({ headerHeight: elm.clientHeight });
-      }
-    } else if (this.state.headerHeight) {
-      this.setState({ headerHeight: null });
-    }
-  };
-
-  clearSearch = () => {
-    const { history, location } = this.props;
-    updateUiFind({
-      history,
-      location,
-      trackFindFunction: trackFilter,
-    });
-    if (this._searchBar.current) this._searchBar.current.blur();
-  };
-
-  focusOnSearchBar = () => {
-    if (this._searchBar.current) this._searchBar.current.focus();
-  };
-
-  updateViewRangeTime: TUpdateViewRangeTimeFunction = (start: number, end: number, trackSrc?: string) => {
-    if (trackSrc) {
-      trackRange(trackSrc, [start, end], this.state.viewRange.time.current);
-    }
-    const current: [number, number] = [start, end];
-    const time = { current };
-    this.setState((state: TState) => ({ viewRange: { ...state.viewRange, time } }));
-  };
-
-  updateNextViewRangeTime = (update: ViewRangeTimeUpdate) => {
-    this.setState((state: TState) => {
-      const time = { ...state.viewRange.time, ...update };
-      return { viewRange: { ...state.viewRange, time } };
-    });
-  };
-
-  toggleSlimView = () => {
-    const { slimView } = this.state;
-    trackSlimHeaderToggle(!slimView);
-    this.setState({ slimView: !slimView });
-  };
-
-  setTraceView = (viewType: ETraceViewType) => {
-    if (this.props.trace && this.props.trace.data && viewType === ETraceViewType.TraceGraph) {
-      this.traceDagEV = calculateTraceDagEV(this.props.trace.data.asOtelTrace());
-    }
-    this.setState({ viewType });
-  };
-
-  archiveTrace = () => {
-    const { id, archiveTrace } = this.props;
-    archiveTrace(id);
-  };
-
-  acknowledgeArchive = () => {
-    const { id, acknowledgeArchive } = this.props;
-    acknowledgeArchive(id);
-  };
-
-  ensureTraceFetched() {
-    const { fetchTrace, trace, id } = this.props;
-    if (!trace) {
+      updateViewRangeTime(0, 1);
+      clearSearch();
+    } else if (!trace) {
       fetchTrace(id);
+      updateViewRangeTime(0, 1);
     }
-  }
+  }, [id, trace, fetchTrace, updateViewRangeTime, clearSearch]);
 
-  focusUiFindMatches = () => {
-    const { trace, focusUiFindMatches, uiFind } = this.props;
+  const headerResizeObserverRef = useRef<ResizeObserver | TNil>(null);
+
+  const headerRefCallback = useCallback((elm: HTMLElement | TNil) => {
+    if (headerResizeObserverRef.current) {
+      headerResizeObserverRef.current.disconnect();
+      headerResizeObserverRef.current = null;
+    }
+    headerElmRef.current = elm;
+    if (elm) {
+      setHeaderHeight(elm.clientHeight);
+      if (typeof ResizeObserver !== 'undefined') {
+        const resizeObserver = new ResizeObserver(() => {
+          setHeaderHeight(elm.clientHeight);
+        });
+        resizeObserver.observe(elm);
+        headerResizeObserverRef.current = resizeObserver;
+      }
+    } else {
+      setHeaderHeight(null);
+    }
+  }, []);
+
+  const toggleSlimView = useCallback(() => {
+    setSlimView(prev => {
+      trackSlimHeaderToggle(!prev);
+      return !prev;
+    });
+  }, []);
+
+  const setTraceView = useCallback((newViewType: ETraceViewType) => {
+    setViewType(newViewType);
+  }, []);
+
+  const archiveTrace = useCallback(() => {
+    archiveTraceProp(id);
+  }, [archiveTraceProp, id]);
+
+  const acknowledgeArchive = useCallback(() => {
+    acknowledgeArchiveProp(id);
+  }, [acknowledgeArchiveProp, id]);
+
+  const focusUiFindMatches = useCallback(() => {
     if (trace && trace.data) {
       trackFocusMatches();
-      focusUiFindMatches(trace.data.asOtelTrace(), uiFind);
+      focusUiFindMatchesProp(trace.data.asOtelTrace(), uiFind);
     }
-  };
+  }, [focusUiFindMatchesProp, trace, uiFind]);
 
-  nextResult = () => {
+  const nextResult = useCallback(() => {
     trackNextMatch();
-    this._scrollManager.scrollToNextVisibleSpan();
-  };
+    scrollManagerRef.current.scrollToNextVisibleSpan();
+  }, []);
 
-  prevResult = () => {
+  const prevResult = useCallback(() => {
     trackPrevMatch();
-    this._scrollManager.scrollToPrevVisibleSpan();
-  };
+    scrollManagerRef.current.scrollToPrevVisibleSpan();
+  }, []);
 
-  onDetailPanelModeToggle = () => {
-    const { detailPanelMode, setDetailPanelMode } = this.props;
+  const onDetailPanelModeToggle = useCallback(() => {
     setDetailPanelMode(detailPanelMode === 'inline' ? 'sidepanel' : 'inline');
-  };
+  }, [detailPanelMode, setDetailPanelMode]);
 
-  onTimelineToggle = () => {
-    const { timelineBarsVisible, setTimelineBarsVisible } = this.props;
+  const onTimelineToggle = useCallback(() => {
     setTimelineBarsVisible(!timelineBarsVisible);
+  }, [setTimelineBarsVisible, timelineBarsVisible]);
+
+  if (!trace || trace.state === fetchedState.LOADING) {
+    return <LoadingIndicator className="u-mt-vast" centered />;
+  }
+  const { data } = trace;
+  if (trace.state === fetchedState.ERROR || !data) {
+    return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
+  }
+
+  let findCount = 0;
+  let graphFindMatches: Set<string> | null | undefined;
+  let spanFindMatches: Set<string> | null | undefined;
+  if (uiFind) {
+    if (viewType === ETraceViewType.TraceGraph) {
+      graphFindMatches = getUiFindVertexKeys(uiFind, _get(traceDagEV, 'vertices', []));
+      findCount = graphFindMatches ? graphFindMatches.size : 0;
+    } else {
+      spanFindMatches = filterSpansMemo(uiFind, _get(trace, 'data.spans'));
+      findCount = spanFindMatches ? spanFindMatches.size : 0;
+    }
+  }
+
+  const locationState = location.state;
+  const isEmbedded = Boolean(embedded);
+  const hasArchiveStorage = Boolean(storageCapabilities?.archiveStorage);
+  const headerProps = {
+    focusUiFindMatches,
+    slimView,
+    textFilter: uiFind,
+    viewType,
+    viewRange,
+    canCollapse: !embedded || !embedded.timeline.hideSummary || !embedded.timeline.hideMinimap,
+    clearSearch,
+    detailPanelMode,
+    enableSidePanel,
+    hideMap: Boolean(
+      viewType !== ETraceViewType.TraceTimelineViewer || (embedded && embedded.timeline.hideMinimap)
+    ),
+    hideSummary: Boolean(embedded && embedded.timeline.hideSummary),
+    linkToStandalone: getUrl(id),
+    nextResult,
+    onArchiveClicked: archiveTrace,
+    onDetailPanelModeToggle,
+    onSlimViewClicked: toggleSlimView,
+    onTimelineToggle,
+    onTraceViewChange: setTraceView,
+    prevResult,
+    ref: searchBarRef,
+    resultCount: findCount,
+    disableJsonView,
+    showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
+    showStandaloneLink: isEmbedded,
+    showViewOptions: !isEmbedded,
+    timelineBarsVisible,
+    toSearch: (locationState && locationState.fromSearch) || null,
+    trace: data.asOtelTrace(),
+    updateNextViewRangeTime,
+    updateViewRangeTime,
+    useOtelTerms,
   };
 
-  render() {
-    const {
-      archiveEnabled,
-      storageCapabilities,
-      archiveTraceState,
-      criticalPathEnabled,
-      detailPanelMode,
-      embedded,
-      enableSidePanel,
-      id,
-      uiFind,
-      timelineBarsVisible,
-      trace,
-      disableJsonView,
-      traceGraphConfig,
-      location: { state: locationState },
-    } = this.props;
-    const { slimView, viewType, headerHeight, viewRange } = this.state;
-    if (!trace || trace.state === fetchedState.LOADING) {
-      return <LoadingIndicator className="u-mt-vast" centered />;
-    }
-    const { data } = trace;
-    if (trace.state === fetchedState.ERROR || !data) {
-      return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
-    }
-
-    let findCount = 0;
-    let graphFindMatches: Set<string> | null | undefined;
-    let spanFindMatches: Set<string> | null | undefined;
-    if (uiFind) {
-      if (viewType === ETraceViewType.TraceGraph) {
-        graphFindMatches = getUiFindVertexKeys(uiFind, _get(this.traceDagEV, 'vertices', []));
-        findCount = graphFindMatches ? graphFindMatches.size : 0;
-      } else {
-        spanFindMatches = this._filterSpans(uiFind, _get(trace, 'data.spans'));
-        findCount = spanFindMatches ? spanFindMatches.size : 0;
-      }
-    }
-
-    const isEmbedded = Boolean(embedded);
-    const hasArchiveStorage = Boolean(storageCapabilities?.archiveStorage);
-    const headerProps = {
-      focusUiFindMatches: this.focusUiFindMatches,
-      slimView,
-      textFilter: uiFind,
-      viewType,
-      viewRange,
-      canCollapse: !embedded || !embedded.timeline.hideSummary || !embedded.timeline.hideMinimap,
-      clearSearch: this.clearSearch,
-      detailPanelMode,
-      enableSidePanel,
-      hideMap: Boolean(
-        viewType !== ETraceViewType.TraceTimelineViewer || (embedded && embedded.timeline.hideMinimap)
-      ),
-      hideSummary: Boolean(embedded && embedded.timeline.hideSummary),
-      linkToStandalone: getUrl(id),
-      nextResult: this.nextResult,
-      onArchiveClicked: this.archiveTrace,
-      onDetailPanelModeToggle: this.onDetailPanelModeToggle,
-      onSlimViewClicked: this.toggleSlimView,
-      onTimelineToggle: this.onTimelineToggle,
-      onTraceViewChange: this.setTraceView,
-      prevResult: this.prevResult,
-      ref: this._searchBar,
-      resultCount: findCount,
-      disableJsonView,
-      showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
-      showStandaloneLink: isEmbedded,
-      showViewOptions: !isEmbedded,
-      timelineBarsVisible,
-      toSearch: (locationState && locationState.fromSearch) || null,
-      trace: data.asOtelTrace(),
-      updateNextViewRangeTime: this.updateNextViewRangeTime,
-      updateViewRangeTime: this.updateViewRangeTime,
-      useOtelTerms: this.props.useOtelTerms,
-    };
-
-    let view;
-    const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data.asOtelTrace()) : [];
-    if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
-      view = (
-        <TraceTimelineViewer
-          registerAccessors={this._scrollManager.setAccessors}
-          scrollToFirstVisibleSpan={this._scrollManager.scrollToFirstVisibleSpan}
-          findMatchesIDs={spanFindMatches}
-          trace={data.asOtelTrace()}
-          criticalPath={criticalPath}
-          updateNextViewRangeTime={this.updateNextViewRangeTime}
-          updateViewRangeTime={this.updateViewRangeTime}
-          viewRange={viewRange}
-          useOtelTerms={this.props.useOtelTerms}
-        />
-      );
-    } else if (ETraceViewType.TraceGraph === viewType && headerHeight) {
-      view = (
-        <TraceGraph
-          headerHeight={headerHeight}
-          ev={this.traceDagEV}
-          uiFind={uiFind}
-          uiFindVertexKeys={graphFindMatches}
-          traceGraphConfig={traceGraphConfig}
-          useOtelTerms={this.props.useOtelTerms}
-        />
-      );
-    } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
-      view = (
-        <TraceStatistics
-          trace={data.asOtelTrace()}
-          uiFindVertexKeys={spanFindMatches}
-          uiFind={uiFind}
-          useOtelTerms={this.props.useOtelTerms}
-        />
-      );
-    } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
-      view = (
-        <TraceSpanView
-          trace={data.asOtelTrace()}
-          uiFindVertexKeys={spanFindMatches}
-          uiFind={uiFind}
-          useOtelTerms={this.props.useOtelTerms}
-        />
-      );
-    } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
-      view = <TraceFlamegraph trace={trace} />;
-    } else if (ETraceViewType.TraceLogs === viewType && headerHeight) {
-      view = <TraceLogsView trace={data.asOtelTrace()} useOtelTerms={this.props.useOtelTerms} />;
-    }
-
-    return (
-      <div>
-        {archiveEnabled && (
-          <ArchiveNotifier acknowledge={this.acknowledgeArchive} archivedState={archiveTraceState} />
-        )}
-        <div className="Tracepage--headerSection" ref={this.setHeaderHeight}>
-          <TracePageHeader {...headerProps} />
-        </div>
-        {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
-      </div>
+  const sm = scrollManagerRef.current;
+  let view;
+  const criticalPath = criticalPathEnabled ? memoizedTraceCriticalPath(data.asOtelTrace()) : [];
+  if (ETraceViewType.TraceTimelineViewer === viewType && headerHeight) {
+    view = (
+      <TraceTimelineViewer
+        registerAccessors={sm.setAccessors}
+        scrollToFirstVisibleSpan={sm.scrollToFirstVisibleSpan}
+        findMatchesIDs={spanFindMatches}
+        trace={data.asOtelTrace()}
+        criticalPath={criticalPath}
+        updateNextViewRangeTime={updateNextViewRangeTime}
+        updateViewRangeTime={updateViewRangeTime}
+        viewRange={viewRange}
+        useOtelTerms={useOtelTerms}
+      />
     );
+  } else if (ETraceViewType.TraceGraph === viewType && headerHeight) {
+    view = (
+      <TraceGraph
+        headerHeight={headerHeight}
+        ev={traceDagEV}
+        uiFind={uiFind}
+        uiFindVertexKeys={graphFindMatches}
+        traceGraphConfig={traceGraphConfig}
+        useOtelTerms={useOtelTerms}
+      />
+    );
+  } else if (ETraceViewType.TraceStatistics === viewType && headerHeight) {
+    view = (
+      <TraceStatistics
+        trace={data.asOtelTrace()}
+        uiFindVertexKeys={spanFindMatches}
+        uiFind={uiFind}
+        useOtelTerms={useOtelTerms}
+      />
+    );
+  } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
+    view = (
+      <TraceSpanView
+        trace={data.asOtelTrace()}
+        uiFindVertexKeys={spanFindMatches}
+        uiFind={uiFind}
+        useOtelTerms={useOtelTerms}
+      />
+    );
+  } else if (ETraceViewType.TraceFlamegraph === viewType && headerHeight) {
+    view = <TraceFlamegraph trace={trace} />;
+  } else if (ETraceViewType.TraceLogs === viewType && headerHeight) {
+    view = <TraceLogsView trace={data.asOtelTrace()} useOtelTerms={useOtelTerms} />;
   }
+
+  return (
+    <div>
+      {archiveEnabled && (
+        <ArchiveNotifier acknowledge={acknowledgeArchive} archivedState={archiveTraceState} />
+      )}
+      <div className="Tracepage--headerSection" ref={headerRefCallback}>
+        <TracePageHeader {...headerProps} />
+      </div>
+      {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}
+    </div>
+  );
 }
 
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { id } = ownProps.params;
-  const { archive, embedded, router } = state;
+  const { archive, embedded } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
   const archiveTraceState = id ? archive[id] : null;
-  const { state: locationState } = router.location;
-  const searchUrl = (locationState && locationState.fromSearch) || null;
 
   const { detailPanelMode, timelineBarsVisible } = state.traceTimeline;
 
@@ -486,7 +483,6 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     detailPanelMode,
     embedded,
     id,
-    searchUrl,
     timelineBarsVisible,
     trace,
   };
@@ -513,7 +509,6 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
 const ConnectedTracePage = connect(mapStateToProps, mapDispatchToProps)(TracePageImpl);
 
 type TracePageProps = {
-  history: RouterHistory;
   location: Location<LocationState>;
   params: { id: string };
 };

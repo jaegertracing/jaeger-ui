@@ -4,37 +4,25 @@
 
 The package is implemented in TypeScript and must be compiled to JavaScript.
 
-There are three build scenarios and one pre-step common to all of them.
-
-Pre-step:
-
-- Bundle `./src/LayoutManager/layout.worker.tsx` to a UMD module which can initialize a `WebWorker` from a `Blob` URL
-
-Build scenarios:
+There are two build scenarios:
 
 - Production ES modules
   - **This is the project's default export as `./lib/index.js`.** This build is not bundled and therefore does not use Webpack.
 - Production UMD module
-- Webpack dev server
-  - Runs `./demo/src/index.tsx` which has a few example graphs.
 
-The pre-step, which they all require, is to bundle `./src/LayoutManager/layout.worker.tsx` via the `worker-loader` Webpack loader.
+The layout worker (`./src/LayoutManager/layout.worker.ts`) is loaded as a Web Worker using the native `new Worker(new URL('./layout.worker.ts', import.meta.url))` pattern in `Coordinator.ts`. Both Vite and Webpack 5 recognize this pattern at build time, automatically bundling the worker and its dependencies (e.g. `@viz-js/viz`) into a separate chunk. No additional loaders are required.
+
+In jaeger-ui, the Vite config aliases `@jaegertracing/plexus` to the source directory, so Vite processes the `.ts` worker file directly. In the compiled ES module output (`./lib`), the worker file is emitted as `./lib/LayoutManager/layout.worker.js` and consumers' build tools are expected to handle the worker bundling.
 
 ## Babel
 
-Babel is used to transpile the TypeScript for all scenarios and the pre-step. See `babel.config.js` for specifics.
+Babel is used to transpile the TypeScript for all scenarios. See `babel.config.js` for specifics.
 
 The production ES module build is not bundled and therefore does not use Webpack.
 
 ## Webpack
 
-Webpack is used to:
-
-- Bundle `./src/LayoutManager/layout.worker.tsx` so we can have a `WebWorker` without forcing folks to deal with an additional JavaScript asset
-- Bundle the production UMD module
-- Run the Webpack dev server during development
-
-`./webpack-factory.js` is used to generate the Webpack configurations for each scenario.
+Webpack is used to bundle the production UMD module. `./webpack-factory.js` is used to generate the Webpack configuration.
 
 ## TypeScript `--emitDeclarationOnly`
 
@@ -44,48 +32,19 @@ This only applies to the ES module production build, output to `./lib`.
 
 Note: `./tsconfig.json` does not extend `../../tsconfig.json`.
 
-## Pre-step: `layout.worker`
-
-`./src/LayoutManager/layout.worker.tsx` is intended to be loaded as a `WebWorker`. To be able to load it as a `Worker` without requiring an extra JS file, Webpack and the [`worker-loader`](https://github.com/webpack-contrib/worker-loader) loader are used to bundle it into a UMD module, `./src/LayoutManager/layout.worker.bundled.js`.
-
-Within the UMD module, `layout.worker.tsx` (and everything bundled into it) is turned into a `Blob` URL that's used to initialize a `WebWorker`.
-
-The resultant UMD module can be initialized as a class:
-
-```ts
-import LayoutWorker from './layout.worker.bundled';
-
-const leWorker = new LayoutWorker();
-
-leWorker.postMessage(...);
-```
-
-> It's all fun and games until type checking loses an eye.
-
-To make sure we don't end up with an implicit `any`, `layout.worker.bundled.d.ts` provides a type declaration:
-
-```ts
-class LayoutWorker extends Worker { ... }
-```
-
 ## `package.json`
 
 ### Scripts
 
 - `build` — Generates the UMD bundle and ES module production builds
 - `prepublishOnly` — Executed after `npm install` is run in the project root; runs the `build` script
-- `start` — Starts the Webpack dev server and watches all files, including `layout.worker`
 
 The `_tasks/*` scripts are not intended to be run, directly.
 
 - `_tasks/clean/*`
   - Remove generated files
-- `_tasks/bundle-worker`
-  - Generates the `layout.worker` UMD bundle
 - `_tasks/build/*`
   - Generates the production ES and UMD builds
-- `_tasks/dev-server`
-  - Starts the Webpack dev server
 
 ### Dependencies (dev and otherwise)
 

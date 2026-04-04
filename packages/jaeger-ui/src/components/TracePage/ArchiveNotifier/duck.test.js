@@ -1,14 +1,12 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { createMemoryHistory } from 'history';
 import configureStore from '../../../utils/configure-store';
 import JaegerAPI from '../../../api/jaeger';
 import reducer, { actions } from './duck';
 
-jest.mock('../../../api/jaeger', () => {
+vi.mock('../../../api/jaeger', () => {
   return {
-    __esModule: true,
     default: {
       archiveTrace: jest.fn(),
     },
@@ -127,7 +125,7 @@ describe('ArchiveNotifier/duck', () => {
     let store;
 
     beforeEach(() => {
-      store = configureStore(createMemoryHistory());
+      store = configureStore();
       JaegerAPI.archiveTrace.mockReturnValue(Promise.resolve({ id: 'TEST-TRACE-ID' }));
     });
 
