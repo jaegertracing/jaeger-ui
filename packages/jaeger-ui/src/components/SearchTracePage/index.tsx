@@ -49,7 +49,8 @@ interface ISearchTracePageImplOwnProps {
 // Props from mapStateToProps
 interface IStateProps {
   queryOfResults: IQueryOfResults | null;
-  traceForDiff: ReduxState['trace'];
+  // passed as-is from Redux; cohort lookup happens in the component where Zustand is accessible
+  tracesInRedux: ReduxState['trace'];
   embedded?: IEmbeddedConfig;
   loadingTraces: boolean;
   traces: Trace[];
