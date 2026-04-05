@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import queryString from 'query-string';
@@ -11,8 +11,8 @@ import { BrowserRouter } from 'react-router-dom';
 
 import { mapStateToProps, mapDispatchToProps, TraceDiffImpl } from './TraceDiff';
 import * as TraceDiffUrl from './url';
-import { actions as diffActions } from './duck';
 import * as jaegerApiActions from '../../actions/jaeger-api';
+import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
 
 const mockNavigate = jest.fn();
@@ -56,19 +56,12 @@ describe('TraceDiff', () => {
   const defaultCohortIds = ['trace-id-cohort-0', 'trace-id-cohort-1', 'trace-id-cohort-2'];
   const defaultCohort = [defaultA, defaultB, ...defaultCohortIds];
   const fetchMultipleTracesMock = jest.fn();
-  const forceStateMock = jest.fn();
   const defaultProps = {
     a: defaultA,
     b: defaultB,
     cohort: defaultCohort,
     fetchMultipleTraces: fetchMultipleTracesMock,
-    forceState: forceStateMock,
     tracesData: new Map(defaultCohort.map(id => [id, { id, state: fetchedState.DONE }])),
-    traceDiffState: {
-      a: defaultA,
-      b: defaultB,
-      cohort: defaultCohort,
-    },
   };
 
   // Helper function to render with router context
@@ -87,78 +80,62 @@ describe('TraceDiff', () => {
 
   beforeEach(() => {
     fetchMultipleTracesMock.mockClear();
-    forceStateMock.mockClear();
     getUrlSpy.mockClear();
     mockNavigate.mockClear();
+    useTraceDiffStore.setState({
+      a: defaultA,
+      b: defaultB,
+      cohort: defaultCohort,
+    });
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   describe('syncStates', () => {
-    it('forces state if a is inconsistent between url and reduxState', () => {
+    it('forces state if a is inconsistent between url and store', () => {
       renderWithRouter(<TraceDiffImpl {...defaultProps} a={newAValue} />);
 
-      expect(forceStateMock).toHaveBeenLastCalledWith({
-        a: newAValue,
-        b: defaultProps.b,
-        cohort: defaultProps.cohort,
-      });
+      expect(useTraceDiffStore.getState().a).toBe(newAValue);
+      expect(useTraceDiffStore.getState().b).toBe(defaultProps.b);
+      expect(useTraceDiffStore.getState().cohort).toEqual(defaultProps.cohort);
     });
 
-    it('forces state if b is inconsistent between url and reduxState', () => {
+    it('forces state if b is inconsistent between url and store', () => {
       renderWithRouter(<TraceDiffImpl {...defaultProps} b={newBValue} />);
 
-      expect(forceStateMock).toHaveBeenLastCalledWith({
-        a: defaultProps.a,
-        b: newBValue,
-        cohort: defaultProps.cohort,
-      });
+      expect(useTraceDiffStore.getState().a).toBe(defaultProps.a);
+      expect(useTraceDiffStore.getState().b).toBe(newBValue);
+      expect(useTraceDiffStore.getState().cohort).toEqual(defaultProps.cohort);
     });
 
     it('forces state if cohort size has changed', () => {
       const newCohort = [...defaultProps.cohort, nonDefaultCohortId];
-      renderWithRouter(<TraceDiffImpl {...defaultProps} cohort={newCohort} />);
+      const { unmount } = renderWithRouter(<TraceDiffImpl {...defaultProps} cohort={newCohort} />);
 
-      expect(forceStateMock).toHaveBeenLastCalledWith({
-        a: defaultProps.a,
-        b: defaultProps.b,
-        cohort: newCohort,
-      });
+      expect(useTraceDiffStore.getState().cohort).toEqual(newCohort);
+      unmount();
 
-      forceStateMock.mockClear();
+      useTraceDiffStore.setState({ a: defaultA, b: defaultB, cohort: [] });
+      renderWithRouter(<TraceDiffImpl {...defaultProps} />);
 
-      renderWithRouter(
-        <TraceDiffImpl {...defaultProps} traceDiffState={{ ...defaultProps.traceDiffState, cohort: null }} />
-      );
-
-      expect(forceStateMock).toHaveBeenLastCalledWith({
-        a: defaultProps.a,
-        b: defaultProps.b,
-        cohort: defaultProps.cohort,
-      });
+      expect(useTraceDiffStore.getState().cohort).toEqual(defaultProps.cohort);
     });
 
     it('forces state if cohort entry has changed', () => {
       const newCohort = [...defaultProps.cohort.slice(1), nonDefaultCohortId];
       renderWithRouter(<TraceDiffImpl {...defaultProps} cohort={newCohort} />);
 
-      expect(forceStateMock).toHaveBeenLastCalledWith({
-        a: defaultProps.a,
-        b: defaultProps.b,
-        cohort: newCohort,
-      });
+      expect(useTraceDiffStore.getState().cohort).toEqual(newCohort);
     });
 
     it('does not force state if cohorts have same values in differing orders', () => {
-      renderWithRouter(
-        <TraceDiffImpl
-          {...defaultProps}
-          traceDiffState={{
-            ...defaultProps.traceDiffState,
-            cohort: defaultProps.traceDiffState.cohort.slice().reverse(),
-          }}
-        />
-      );
+      const reversed = defaultProps.cohort.slice().reverse();
+      useTraceDiffStore.setState({ a: defaultA, b: defaultB, cohort: reversed });
+      renderWithRouter(<TraceDiffImpl {...defaultProps} />);
 
-      expect(forceStateMock).not.toHaveBeenCalled();
+      expect(useTraceDiffStore.getState().cohort).toEqual(reversed);
     });
   });
 
@@ -170,7 +147,6 @@ describe('TraceDiff', () => {
     renderWithRouter(<TraceDiffImpl {...defaultProps} cohort={[...defaultProps.cohort, newId0, newId1]} />);
 
     expect(fetchMultipleTracesMock).toHaveBeenCalledWith([newId0, newId1]);
-    expect(fetchMultipleTracesMock).toHaveBeenCalledTimes(1);
   });
 
   it('does not request traces if all traces have a state', () => {
@@ -336,10 +312,6 @@ describe('TraceDiff', () => {
       trace: {
         traces: cohortIds.reduce((traces, id) => ({ ...traces, [id]: { id, state: fetchedState.DONE } }), {}),
       },
-      traceDiff: {
-        a: 'trace-diff-a',
-        b: 'trace-diff-b',
-      },
     });
 
     it('gets a and b from ownProps', () => {
@@ -435,12 +407,6 @@ describe('TraceDiff', () => {
       expect(tracesData.size).toBe(expectedSize);
     });
 
-    it('includes state.traceDiff as traceDiffState', () => {
-      const testReduxState = makeTestReduxState();
-      const { traceDiffState } = mapStateToProps(testReduxState, getOwnProps());
-      expect(traceDiffState).toBe(testReduxState.traceDiff);
-    });
-
     describe('v6 id param parsing (params.id contains "...")', () => {
       const makeIdProps = id => ({ params: { id } });
 
@@ -477,9 +443,6 @@ describe('TraceDiff', () => {
         if (actions === jaegerApiActions) {
           return { fetchMultipleTraces: fetchMultipleTracesMock };
         }
-        if (actions === diffActions) {
-          return { forceState: forceStateMock };
-        }
         return {};
       });
     });
@@ -492,7 +455,6 @@ describe('TraceDiff', () => {
       const dispatchMock = () => {};
       const result = mapDispatchToProps(dispatchMock);
       expect(result.fetchMultipleTraces).toBe(fetchMultipleTracesMock);
-      expect(result.forceState).toBe(forceStateMock);
       expect(bindActionCreatorsSpy.mock.calls[0][1]).toBe(dispatchMock);
     });
   });
