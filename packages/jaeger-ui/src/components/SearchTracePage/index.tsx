@@ -89,6 +89,21 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     traces,
   } = props;
 
+  // On Search: when we click “add to compare” / remove, we write that list
+  // straight into the store. So the list is not only updated when the
+  // tracediff is open - search updates it itself.
+  //
+  // On compare page: the browser URL is what we trust for that view.
+  // When that screen loads, we compare URL vs store and, if they differ,
+  // we copy the URL into the store so everything matches.
+  //
+  // So in normal use: search fills the list from clicks; compare corrects
+  // the list from the URL when we open it. TopNav reads the store to build
+  // the Compare link - same list search is using. Having both URL
+  // and store can sound like two sources of truth. The idea is: URL wins
+  // when we are on compare; while we are on Search, the list in the store
+  // is whatever we set with the ui actions, not something that only updates
+  // when we open the compare page.
   const { cohortAddTrace, cohortRemoveTrace } = useTraceDiffStore(
     useShallow(s => ({
       cohortAddTrace: s.cohortAddTrace,
