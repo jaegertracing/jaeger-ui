@@ -20,7 +20,6 @@
     "@types/object-hash": "3.0.6",
     "@types/react": "19.2.7",
     "@types/redux-actions": "2.6.5",
-    "@vitejs/plugin-legacy": "8.0.0",
     "@vitejs/plugin-react": "6.0.1",
     "@vitest/coverage-v8": "4.1.2",
     "babel-plugin-react-remove-properties": "0.3.1",
