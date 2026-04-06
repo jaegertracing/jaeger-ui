@@ -10,7 +10,6 @@ import TDdgState from './TDdgState';
 import tNil from './TNil';
 import iWebAnalytics from './tracking';
 import { Trace } from './trace';
-import TTraceDiffState from './TTraceDiffState';
 import TTraceTimeline from './TTraceTimeline';
 import { MetricsReduxState } from './metrics';
 
@@ -50,7 +49,6 @@ export type ReduxState = {
       query?: SearchQuery;
     };
   };
-  traceDiff: TTraceDiffState;
   traceTimeline: TTraceTimeline;
   metrics: MetricsReduxState;
 };

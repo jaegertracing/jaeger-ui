@@ -7,6 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
+import { useTraceDiffStore } from '../../stores/trace-diff-store';
 
 vi.mock('antd', async () => {
   const actual = await vi.importActual('antd');
@@ -54,6 +55,10 @@ vi.mock('../../utils/config/get-config', async () => {
 });
 
 describe('<TopNav>', () => {
+  beforeEach(() => {
+    useTraceDiffStore.setState({ a: null, b: null, cohort: [] });
+  });
+
   const labelGitHub = 'GitHub';
   const githubUrl = 'https://github.com/uber/jaeger';
   const blogUrl = 'https://medium.com/jaegertracing/';
@@ -101,7 +106,6 @@ describe('<TopNav>', () => {
       location: { pathname: '/search' },
     },
     pathname: '/search',
-    traceDiff: {},
   };
 
   describe('renders the default menu options', () => {
@@ -216,14 +220,14 @@ describe('<TopNav>', () => {
   });
 
   it('builds the Compare link using the trace diff cohort state', () => {
+    useTraceDiffStore.setState({
+      a: 'trace-a',
+      b: 'trace-b',
+      cohort: ['trace-a', 'trace-b'],
+    });
     render(
       <BrowserRouter>
-        <TopNav
-          {...{
-            ...defaultProps,
-            traceDiff: { cohort: ['trace-a', 'trace-b'] },
-          }}
-        />
+        <TopNav {...defaultProps} />
       </BrowserRouter>
     );
 
