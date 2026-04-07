@@ -4,7 +4,7 @@
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 
 import {
   computeAdjustedRange,
@@ -17,9 +17,8 @@ import {
 } from './index';
 import * as track from './index.track';
 import * as keyboardShortcutsMod from './keyboard-shortcuts';
-import { reset as resetShortcuts, merge as mergeShortcuts } from './keyboard-shortcuts';
+import { merge as mergeShortcuts } from './keyboard-shortcuts';
 import * as scrollPageMod from './scroll-page';
-import { cancel as cancelScroll } from './scroll-page';
 import * as calculateTraceDagEV from './TraceGraph/calculateTraceDagEV';
 import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import * as getUiFindVertexKeys from '../TraceDiff/TraceDiffGraph/traceDiffGraphUtils';
@@ -90,13 +89,10 @@ vi.mock('./keyboard-shortcuts');
 vi.mock('./scroll-page');
 vi.mock('../../utils/filter-spans');
 vi.mock('../../utils/update-ui-find');
-vi.mock('react-router-dom', async () => {
-  const navigate = jest.fn();
-  return {
-    ...(await vi.importActual('react-router-dom')),
-    useNavigate: () => navigate,
-  };
-});
+const mockNavigate = jest.fn();
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+}));
 vi.mock('./TracePageHeader/SpanGraph', async () =>
   mockDefault(() => <div data-testid="span-graph">SpanGraph</div>)
 );
@@ -588,7 +584,7 @@ describe('<TracePage>', () => {
     describe('showArchiveButton', () => {
       it('shows archive button based on conditions', () => {
         const getShowArchiveButton = (embedded, archiveEnabled, storageCapabilities) => {
-          const hasStorage = storageCapabilities && storageCapabilities.archiveStorage;
+          const hasStorage = storageCapabilities?.archiveStorage;
           return !embedded && archiveEnabled && hasStorage;
         };
 

@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import queryString from 'query-string';
 import * as redux from 'redux';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 
 import { mapStateToProps, mapDispatchToProps, TraceDiffImpl } from './TraceDiff';
 import * as TraceDiffUrl from './url';
@@ -16,8 +16,7 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
 
 const mockNavigate = jest.fn();
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual('react-router-dom')),
+vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
@@ -73,7 +72,7 @@ describe('TraceDiff', () => {
 
   // Helper function to render with router context
   const renderWithRouter = component => {
-    return render(<BrowserRouter>{component}</BrowserRouter>);
+    return render(<MemoryRouter>{component}</MemoryRouter>);
   };
   const newAValue = 'newAValue';
   const newBValue = 'newBValue';

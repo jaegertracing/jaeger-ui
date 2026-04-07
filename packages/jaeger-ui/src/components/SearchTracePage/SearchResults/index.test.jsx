@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import '@testing-library/jest-dom';
 
 import { createBlob, UnconnectedSearchResults as SearchResults, SelectSort } from '.';
@@ -17,13 +17,18 @@ import DiffSelection from './DiffSelection';
 import { StatusCode } from '../../../types/otel';
 
 const mockNavigate = jest.fn();
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+  Link: props => {
+    const to = props.to;
+    const href = typeof to === 'string' ? to : `${to?.pathname || ''}${to?.search || ''}`;
+    return (
+      <a href={href} {...props}>
+        {props.children}
+      </a>
+    );
+  },
+}));
 
 vi.mock('./AltViewOptions', () =>
   mockDefault(

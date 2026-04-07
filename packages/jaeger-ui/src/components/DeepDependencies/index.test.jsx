@@ -23,12 +23,13 @@ vi.mock('isomorphic-fetch', () =>
   )
 );
 
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual('react-router-dom')),
-  useNavigate: () => vi.fn(),
-  useLocation: () => ({ search: '?service=test-service&operation=test-op' }),
-  useParams: () => ({}),
-}));
+import * as ReactRouterDom from 'react-router-dom';
+
+vi.spyOn(ReactRouterDom, 'useNavigate').mockReturnValue(vi.fn());
+vi.spyOn(ReactRouterDom, 'useLocation').mockReturnValue({
+  search: '?service=test-service&operation=test-op',
+});
+vi.spyOn(ReactRouterDom, 'useParams').mockReturnValue({});
 
 vi.mock('../../hooks/useTraceDiscovery', async () => ({
   useServices: vi.fn(() => ({ data: ['svc1', 'svc2'], isLoading: false })),

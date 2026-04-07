@@ -18,8 +18,7 @@ vi.mock('../../utils/update-ui-find');
 const mockNavigate = jest.fn();
 const mockLocation = { search: '', pathname: '/test' };
 
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual('react-router-dom')),
+vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
 }));
@@ -148,7 +147,7 @@ describe('UiFind', () => {
 
       // Verify that updateUiFind was not called with the same value
       const calls = updateUiFindSpy.mock.calls;
-      const calledWithUnchanged = calls.some(([args]) => args && args.uiFind === uiFind);
+      const calledWithUnchanged = calls.some(([args]) => args?.uiFind === uiFind);
       expect(calledWithUnchanged).toBe(false);
 
       // Verify the input value matches props.uiFind
@@ -285,7 +284,7 @@ describe('UiFind', () => {
 
     it('delegates to parseUiFind using window.location.search', () => {
       const result = extractUiFindFromState({});
-      expect(queryStringParseSpy).toHaveBeenCalledWith(window.location.search);
+      expect(queryStringParseSpy).toHaveBeenCalledWith(globalThis.location.search);
       expect(result).toEqual({ uiFind });
     });
   });

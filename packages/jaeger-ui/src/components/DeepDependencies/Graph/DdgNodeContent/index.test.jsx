@@ -10,20 +10,13 @@ vi.mock('./calc-positioning', async () =>
   }))
 );
 
-// Mutable object so individual tests can control the location without re-creating the mock.
-const mockLocation = { search: '' };
-
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual('react-router-dom')),
-  useLocation: () => mockLocation,
-}));
-
 vi.mock('../../../../model/path-agnostic-decorations', () => mockDefault(jest.fn(() => ({}))));
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
+import { MemoryRouter } from 'react-router-dom';
 import extractDecorationFromState from '../../../../model/path-agnostic-decorations';
 import DdgNodeContentWrapper, {
   getNodeRenderer,
@@ -703,10 +696,11 @@ describe('<DdgNodeContent>', () => {
     });
 
     it('injects search from useLocation() into the connected component', () => {
-      mockLocation.search = '?decoration=some-id';
       render(
         <Provider store={store}>
-          <DdgNodeContentWrapper {...props} />
+          <MemoryRouter initialEntries={['/?decoration=some-id']}>
+            <DdgNodeContentWrapper {...props} />
+          </MemoryRouter>
         </Provider>
       );
       expect(extractDecorationFromState).toHaveBeenCalledWith(

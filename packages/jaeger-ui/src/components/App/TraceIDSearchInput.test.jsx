@@ -6,16 +6,13 @@ SPDX-License-Identifier: Apache-2.0
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import TraceIDSearchInput from './TraceIDSearchInput';
 
 const mockNavigate = jest.fn();
-vi.mock('react-router-dom', async () => {
-  return {
-    ...(await vi.importActual('react-router-dom')),
-    useNavigate: () => mockNavigate,
-  };
-});
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+}));
 
 describe('<TraceIDSearchInput />', () => {
   beforeEach(() => {

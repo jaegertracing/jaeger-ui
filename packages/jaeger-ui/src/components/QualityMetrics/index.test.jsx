@@ -18,8 +18,8 @@ const queryClient = new QueryClient({
 
 const mockNavigate = jest.fn();
 const mockLocation = { search: '?service=test-service&lookback=48' };
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual('react-router-dom')),
+
+vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
 }));

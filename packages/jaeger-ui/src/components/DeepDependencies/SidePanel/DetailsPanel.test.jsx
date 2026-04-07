@@ -1,14 +1,6 @@
 // Copyright (c) 2020 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Mutable object so individual tests can control the location without re-creating the mock.
-const mockLocation = { search: '' };
-
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual('react-router-dom')),
-  useLocation: () => mockLocation,
-}));
-
 vi.mock('../../../model/path-agnostic-decorations', async () => ({
   default: jest.fn(() => ({})),
 }));
@@ -17,6 +9,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import _set from 'lodash/set';
+import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 
 import extractDecorationFromState from '../../../model/path-agnostic-decorations';
@@ -306,10 +299,11 @@ describe('<SidePanel>', () => {
     });
 
     it('injects search from useLocation() into the connected component', () => {
-      mockLocation.search = '?decoration=my-decoration-id';
       render(
         <Provider store={store}>
-          <DefaultDetailsPanel {...wrapperProps} />
+          <MemoryRouter initialEntries={['/?decoration=my-decoration-id']}>
+            <DefaultDetailsPanel {...wrapperProps} />
+          </MemoryRouter>
         </Provider>
       );
       expect(extractDecorationFromState).toHaveBeenCalledWith(
