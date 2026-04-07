@@ -880,7 +880,7 @@ function SpanRow({ spanId, trace }: { spanId: string; trace: Trace }) {
 
 ## Migration Path
 
-The **target architecture** (layers, data flow, and where each kind of state should live) is documented in **[ADR 0008: Target state management architecture](./0008-state-management-implementation-plan.md)**. That document is updated as the codebase catches up, so it remains the canonical "how we do things" reference. **This section** is the **migration checklist**: what to deliver, in what order, and how to verify or roll back.
+The **target architecture** (layers, data flow, and where each kind of state should live) is documented in **[ADR 0008: Target state management architecture](./0008-target-state-management-architecture.md)**. That document is updated as the codebase catches up, so it remains the canonical "how we do things" reference. **This section** is the **migration checklist**: what to deliver, in what order, and how to verify or roll back.
 
 ---
 
