@@ -5,7 +5,7 @@ import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import _set from 'lodash/set';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -23,13 +23,11 @@ vi.mock('isomorphic-fetch', () =>
   )
 );
 
-import * as ReactRouterDom from 'react-router-dom';
-
-vi.spyOn(ReactRouterDom, 'useNavigate').mockReturnValue(vi.fn());
-vi.spyOn(ReactRouterDom, 'useLocation').mockReturnValue({
-  search: '?service=test-service&operation=test-op',
-});
-vi.spyOn(ReactRouterDom, 'useParams').mockReturnValue({});
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => vi.fn(),
+  useLocation: () => ({ search: '?service=test-service&operation=test-op' }),
+  useParams: () => ({}),
+}));
 
 vi.mock('../../hooks/useTraceDiscovery', async () => ({
   useServices: vi.fn(() => ({ data: ['svc1', 'svc2'], isLoading: false })),
