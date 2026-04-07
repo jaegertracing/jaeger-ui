@@ -1,171 +1,216 @@
-# ADR 0008: State management migration - implementation plan
+# ADR 0008: Target state management architecture
 
-**Status**: In progress  
-**Last Updated**: 2026-04-04
+**Status**: In progress (evolves with the codebase)  
+**Last Updated**: 2026-04-07
 
 ---
 
-## Relationship to [ADR 0004](./0004-state-management-strategy.md)
+## Relationship to other ADRs
 
-This document **implements** the strategy in **[ADR 0004: State management strategy](./0004-state-management-strategy.md)**. Read 0004 for:
+| Document | Role |
+| :--- | :--- |
+| **[ADR 0004](./0004-state-management-strategy.md)** | **Decision and migration**: why we chose Zustand + TanStack Query, alternatives considered, and the **phased migration checklist** (Phase 0–4) with rollback and testing notes. |
+| **[ADR 0005](./0005-current-state-management-architecture.md)** | **Transition snapshot**: how Redux, Query, URL, and local state interact **today** while migration is incomplete. |
+| **This ADR (0008)** | **Target architecture**: where each kind of state **should** live when migration is complete, and how data flows between layers. Update this document as the codebase catches up so it stays the canonical "how we do things" reference. |
 
-- **Why** we chose Zustand + TanStack Query and phased out classic Redux.
-- **Product context** (large immutable traces, virtualization, open-source ergonomics).
-- **Alternatives considered** (Context vs Redux/RTK vs Zustand + Query) and **out-of-scope** boundaries.
-
-ADR 0008 does **not** repeat that rationale; it only lists **what to do, in what order**, and how to **roll back** or **verify** progress. If a phase conflicts with 0004, **0004 wins** until 0004 is superseded.
+If this ADR conflicts with **0004** on strategic direction, **0004 wins** until it is superseded. Execution order and checkmarks belong in **0004 → Migration Path**, not here.
 
 ---
 
 ## TL;DR
 
-Phased migration: **Phase 0** foundations → **Phase 1** move UI slices to Zustand → **Phase 2** move server fetches to TanStack Query → **Phase 3** derived selectors → **Phase 4** remove Redux. Details below; strategic framing remains in [ADR 0004](./0004-state-management-strategy.md).
+| Layer | Owns | Does NOT own | Key files |
+| :--- | :--- | :--- | :--- |
+| **TanStack Query** | Server responses: traces, search results, services, metrics, DDG graph payloads, dependencies | Interaction state; layout settings | `src/query/app-query-client.tsx`, `src/hooks/`, `src/api/v3/` |
+| **Zustand** | Shared client UI state: span collapse/expand, open detail panels, column widths, compare cohort, DDG view modifiers, embedded flags | Primary trace JSON; URL-derived navigation params | `src/stores/` (target location) |
+| **URL** | Current view: trace id, search params, `uiFind`, compare params; anything that should survive a copy-paste link | Large objects; transient hover / focus state | `src/utils/url.ts`, per-page `url.ts` modules |
+| **Local storage** | User preferences that survive sessions: theme, last search service/operation, column widths, detail-panel mode | Server data; application state | `store` utility, direct `localStorage` for per-preference keys |
+| **`useState` / `useMemo`** | Transient leaf UI (hover, draft inputs) and heavy derivations (critical path, stats) keyed to a trace reference | Global sharing; URL persistence | Colocated in component files |
+
+**Redux is absent** in the target. During migration, see **[ADR 0005](./0005-current-state-management-architecture.md)** for the current hybrid wiring.
 
 ---
 
-## Principles
+## Architecture overview
 
-These rules are carried over from [ADR 0004](./0004-state-management-strategy.md) so implementers do not have to jump between documents for every decision:
+The diagram below shows the **target** data flow by actual page/component. Until migration completes, Redux sits between many of these boxes - see **0005** for the current picture.
 
-1. **Standardize on Zustand + TanStack Query** for new and migrated code ([ADR 0004](./0004-state-management-strategy.md) - decision).
-2. **Migrate incrementally**: one slice or vertical slice per phase; Redux stays until its last consumer is removed.
-3. **Heavy derived work** (e.g. critical path): prefer **`useMemo` / module helpers** next to the trace reference, not a fat global store—unless profiling proves otherwise.
-4. **Do not** adopt Context as the primary global store for timeline-scale UI state.
+```mermaid
+flowchart LR
+  URL["URL"]
+  LS["Local storage"]
+  Pages["Pages &\ncomponents"]
+  Query["TanStack Query\n(server state)"]
+  Zustand["Zustand stores\n(client UI state)"]
+  Local["useState / useMemo\n(local / derived)"]
+  API["Jaeger API"]
 
----
+  URL -->|"parse on navigation"| Pages
+  LS  -->|"hydrate preferences"| Pages
+  Pages -->|"write back"| URL
 
-## Detailed change plan
+  Pages <-->|"useQuery hooks"| Query
+  Query <-->|"fetch / cache"| API
 
-Phases are **ordered by dependency and risk**. Sub-phases (**a**, **b**, …) are **incremental deliverables** (ideally one focused change-set each). Checkmarks reflect progress in this repository at **Last Updated**; update them when work merges.
+  Pages <-->|"fine-grained selectors"| Zustand
 
-### Phase 0 - Foundations
+  Pages --- Local
+```
 
-**Goal**: Dependencies, shared Query defaults, typing hygiene, and a class-component path to Zustand.
+### Trace page: data movement in detail
 
-#### ✅ 0a. Shared TanStack Query client
+How `TracePage` works once server state lives fully in Query and timeline UI in Zustand:
 
-- Implement in `packages/jaeger-ui/src/query/app-query-client.tsx`: `createAppQueryClient()`, a singleton `QueryClient`, and `AppQueryClientProvider` wrapping the app shell from `components/App/index.tsx`. Shared defaults include `staleTime` and `retry` for queries.
-- **Follow-up (optional)**: central **query key** constants or helpers. Discovery hooks still use **inline** `queryKey` arrays in `hooks/useTraceDiscovery.ts` (`['services']`, `['spanNames', service]`); extracting them keeps new hooks consistent.
+```mermaid
+flowchart TD
+  Router["URL / Router\n/trace/:traceId?uiFind=…"]
+  Query["TanStack Query\n(fetches & caches trace)"]
+  API["Jaeger API"]
+  Page["TracePage\n(derives facade, criticalPath)"]
+  Store["traceTimeline store\n(expand, collapse, widths)"]
 
-#### ✅ 0b. Zustand + class bridge
-
-- Add **Zustand**; implement **`createStoreConnector`** for legacy class components that cannot use hooks.
-
-#### ✅ 0c. Type alignment
-
-- Remove stale `ReduxState` fields that are not in the real `combineReducers` shape (e.g. legacy `services` slice type if absent from the store).
-
----
-
-### Phase 1 - Zustand for client UI state (Redux still holds server data)
-
-**Goal**: Move **view / interaction** slices off Redux; keep fetches on Redux or Query until Phase 2.
-
-#### ⬜ 1a. Trace compare (`traceDiff`)
-
-- **Store**: `stores/trace-diff-store.ts` (`useTraceDiffStore`).
-- **Removed** from Redux: `traceDiff` reducer.
-- **Wiring**: `TraceDiff.tsx`, `SearchTracePage` (cohort actions + derived `diffCohort`), `TopNav` (Compare URL).
-
-#### ⬜ 1b. Archive notifier (`archive` duck)
-
-- Zustand (or colocated store) for archive UX; `TracePage` stops dispatching archive actions via Redux.
-
-#### ⬜ 1c. Trace timeline UI (`traceTimeline` duck)
-
-- Largest and most performance-sensitive slice; **split across multiple PRs** (e.g. layout/prefs vs collapse/detail vs `uiFind`-related behavior).
-- Rewire or replace Redux **tracking middleware** hooks that listen to timeline action types.
-
-#### ⬜ 1d. Deep Dependencies **client-only** modifiers
-
-- Move **view modifier** actions from Redux `ddg` slice into Zustand (or a dedicated small store).
-- Leave **DDG graph fetch** on Redux until Phase **2d** (or migrate together if one PR is cleaner).
-
-#### ⬜ 1e. Embedded / `Page` / `TopNav` flags
-
-- Migrate `embedded` (and related props) where they are pure UI; keep URL-derived initialization behavior.
-
-#### ⬜ 1f. `config` Redux slice
-
-- Already static for many apps; keep **`useConfig()`** as the public API and move implementation from Redux to a module or tiny store when Redux is removed.
+  Router -->|"traceId + uiFind"| Page
+  Page -->|"useTraceQuery"| Query
+  Query -->|"cache miss → fetch"| API
+  API -->|"OTLP trace"| Query
+  Query -->|"stable trace reference"| Page
+  Page <-->|"toggle / setWidth"| Store
+  Page -->|"navigate(uiFind)"| Router
+```
 
 ---
 
-### Phase 2 - TanStack Query for server state
+## URL state: mapping pattern
 
-**Goal**: Replace “dispatch → promise middleware → reducer” with **query/mutation** hooks and cache keys. Coordinate with [ADR 0002](./0002-otlp-api-v3-migration.md) / `api/v3` where applicable.
+Every navigable page follows a consistent two-file pattern for reading and writing URL state.
 
-#### ⬜ 2a. Single trace load
+### Pattern
 
-- `TracePage` + `useOtelTrace` path: `useQuery` keyed by trace id; `staleTime` effectively infinite for immutable traces.
+```
+src/components/<Page>/
+└── url.ts          ← getUrl(state) + getUrlState(search) helpers
+```
 
-#### ⬜ 2b. Search + multi-trace fetch
+`getUrlState(search: string)` parses the query string into a typed object. `getUrl(state)` serialises it back. Components never build URLs by hand.
 
-- `searchTraces`, `fetchMultipleTraces`, `trace.search` / `rawTraces`: query key from serialized search params; handle **JSON file upload** as a separate path.
+### Read: URL → component state
 
-#### ⬜ 2c. Dependencies page
+```tsx
+// Inside SearchTracePage
+const { search } = useLocation();                // raw query string
+const urlState = getUrlState(search);            // typed { service, operation, tags, … }
 
-- `fetchDependencies` + `dependencies` reducer replaced by a query hook.
+// Passing `search` as the React key forces a full remount (and re-read)
+// when the URL changes, so the form always reflects the URL.
+<SearchForm key={search} defaultValue={urlState} />
+```
 
-#### ⬜ 2d. Deep Dependencies graph fetch
+### Write: user action → URL
 
-- `fetchDeepDependencyGraph` as Query; Zustand (Phase **1d**) holds modifiers.
+```tsx
+// User picks a service in the form
+function onServiceChange(service: string) {
+  const next = getUrl({ ...urlState, service });
+  navigate(next);                                // URL becomes source of truth
+}
+```
 
-#### ⬜ 2e. Monitor metrics
+### What gets encoded per page
 
-- `metrics` reducer → one or more query hooks mirroring current loading/error shapes.
+| Page | URL params | Notes |
+| :--- | :--- | :--- |
+| **Search** | `service`, `operation`, `tags`, `start`, `end`, `limit`, `lookback`, `traceID[]`, `span[]` | Fully round-trips; `span[]` encodes `spanId@traceId` for linked spans |
+| **Trace view** | `traceId` (route segment), `uiFind` (query) | Column widths, expand state **not** in URL (local storage / Zustand) |
+| **Trace diff** | `cohort[]`, `a`, `b` (query params) | Parsed from URL into `traceDiff` store on mount |
+| **Deep Dependencies** | `service`, `operation`, `start`, `end`, `visEncoding`, `showOperations` | All view modifiers in URL; DDG store holds same shape during session |
+| **Monitor** | `service` | Minimal; page fetches metrics from Query on mount |
 
-#### ⬜ 2f. Path-agnostic decorations
+### Class components
 
-- `pathAgnosticDecorations` reducer → Query + optional small local/Zustand UI.
-
----
-
-### Phase 3 - Derived state and selectors
-
-#### ⬜ 3a. OTLP selectors / facades
-
-- `selectOtelTrace` / `useOtelTrace` read from **Query data** + `OtelTraceFacade` (or equivalent), not Redux `trace.traces`.
-
-#### ⬜ 3b. Heavy computations
-
-- Keep critical path / stats as **memoized derivations** next to the trace; avoid stuffing them into global UI stores unless measured wins justify it.
-
----
-
-### Phase 4 - Remove Redux
-
-#### ⬜ 4a. Audit
-
-- Eliminate `react-redux` `connect`, `useSelector`, `configure-store`, and unused actions/reducers.
-
-#### ⬜ 4b. Dependencies
-
-- Remove `redux`, `react-redux`, `redux-actions`, `redux-promise-middleware` when nothing imports them.
-
-#### ⬜ 4c. Tests & docs
-
-- Replace Redux `Provider` test wrappers with Query + Zustand test patterns.
-- Update [ADR 0005](./0005-current-state-management-architecture.md) and contributor docs to describe the **post-Redux** layout.
+Legacy class components receive URL-derived props via the project's `withRouteProps` HOC (`src/utils/withRouteProps.tsx`), which wraps React Router v7's `useLocation`, `useParams`, and `useNavigate` hooks and injects them as props (`location`, `search`, `params`, `navigate`). The same HOC pattern applies for Zustand: `createStoreConnector` in `utils/zustand-class-bridge.tsx` wraps a class component to inject store state as props.
 
 ---
 
-## Rollback
+## Zustand stores: target state shapes
 
-Phases are designed to be **reverted independently**: e.g. reintroduce a Redux slice and `connect` for a feature if a migration PR must be backed out. This matches the incremental migration approach described in [ADR 0004](./0004-state-management-strategy.md).
+The tables below document the **intended** store shapes. For migration steps — which Redux ducks these replace and which components need rewiring — see **[ADR 0004 → Phase 1](./0004-state-management-strategy.md#phase-1--zustand-for-client-ui-state)**.
+
+### `useTraceTimelineStore`
+
+| Field | Type | Description | Persisted to |
+| :--- | :--- | :--- | :--- |
+| `traceID` | `string \| null` | Currently loaded trace; reset resets interaction state | - |
+| `childrenHiddenIDs` | `Set<string>` | Span IDs whose children are collapsed | - |
+| `detailStates` | `Map<string, DetailState>` | Open detail panels per span ID | - |
+| `hoverIndentGuideIds` | `Set<string>` | Span IDs with active indent-guide hover highlight | - |
+| `spanNameColumnWidth` | `number` | Fraction of timeline width for the name column (0.15–0.85) | `localStorage['spanNameColumnWidth']` |
+| `sidePanelWidth` | `number` | Fraction for side-panel column (0.2–0.7) | `localStorage['sidePanelWidth']` |
+| `detailPanelMode` | `'inline' \| 'sidepanel'` | Whether span details appear inline or in a side panel | `localStorage['detailPanelMode']` |
+| `timelineBarsVisible` | `boolean` | Whether the Gantt bars column is shown | `localStorage['timelineVisible']` |
+| `shouldScrollToFirstUiFindMatch` | `boolean` | One-shot flag; set after `uiFind` focus, cleared by the list | - |
+
+**Key behaviour**: when `traceID` changes, all ephemeral fields (`childrenHiddenIDs`, `detailStates`, `hoverIndentGuideIds`, `shouldScrollToFirstUiFindMatch`) reset; persistent layout fields (`spanNameColumnWidth`, `sidePanelWidth`, `detailPanelMode`, `timelineBarsVisible`) carry over across traces.
+
+### `useTraceDiffStore`
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `cohort` | `string[]` | Ordered list of trace IDs selected for comparison |
+| `a` | `string \| null` | Trace ID pinned to the left (A) pane |
+| `b` | `string \| null` | Trace ID pinned to the right (B) pane |
+
+Actions: `addToCohort(traceId)`, `removeFromCohort(traceId)`, `setA(traceId)`, `setB(traceId)`. Removing a trace from the cohort also clears `a` or `b` if they match.
+
+### `useDdgModifiersStore`
+
+Holds **view modifier flags** only. The DDG graph JSON (nodes + edges) lives in TanStack Query (`useDDGQuery`).
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `showOperations` | `boolean` | Toggle operation-level nodes |
+| `visEncoding` | `string \| null` | Visual encoding preset key |
+| `density` | `'summary' \| 'full'` | Node density |
+
+### `useEmbeddedStore`
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `isEmbedded` | `boolean` | Hide full-app chrome when running inside an iframe |
+| `disableLogFinder` | `boolean` | Suppress log search UI |
+| *(other chrome flags)* | `boolean` | Derived from query param `embed` on app boot |
+
+---
+
+## Where do I put new state? (target)
+
+1. **Fetched from the server or cached by HTTP semantics?** → **TanStack Query** - create a hook in `src/hooks/` and a client method in `src/api/v3/`.
+2. **Shared UI that is not URL-derived and not server data?** → **Zustand** - add to an existing store (prefer) or create a focused new one in `src/stores/`.
+3. **Should survive refresh and live in the URL?** → **URL** - use the page's `url.ts` `getUrl` / `getUrlState` helpers; never construct URLs inline.
+4. **Must survive a session across browser tabs?** → **Local storage** - use the existing `store` utility or `localStorage` for simple string keys.
+5. **Only this component needs it, or it is a pure function of a trace reference?** → **`useState` / `useMemo`** - keep it colocated; avoid globalising heavy derivations.
+6. **App configuration or feature flags?** → Keep a stable hook surface (e.g. **`useConfig()`**); implementation may be a Zustand slice or module constant - do **not** spread raw Redux selectors or global singletons in components.
+
+---
+
+## Principles (from ADR 0004)
+
+1. **Standardize on Zustand + TanStack Query** for new and migrated code.
+2. **Prefer colocated heavy derivations** (`useMemo`, pure module helpers) over global stores for trace-sized computations.
+3. **Selective subscriptions**: Zustand selectors must be fine-grained so virtualized rows do not re-render on unrelated store changes.
+
+---
+
+## Rollback and verification
+
+Rollback strategy and phase-level testing are defined next to the migration checklist in **[ADR 0004 — Migration Path](./0004-state-management-strategy.md#migration-path)**. This ADR does not duplicate them.
 
 ---
 
 ## References
 
-### ADRs
-
-- **[ADR 0004: State management strategy](./0004-state-management-strategy.md)** — strategic decision, motivation, and alternatives; **parent** of this implementation plan.
-- [ADR 0002: OTLP / API v3](./0002-otlp-api-v3-migration.md) — server API direction; Phase 2 aligns with `api/v3` where applicable.
-- [ADR 0005: Current state management architecture](./0005-current-state-management-architecture.md) — how Redux, Query, URL, and local state interact **during** the transition.
-
-### External
-
+- **[ADR 0004: State management strategy](./0004-state-management-strategy.md)** - decision, comparison, and migration checklist.
+- **[ADR 0002: OTLP / API v3](./0002-otlp-api-v3-migration.md)** - server API direction; Query hooks align with `api/v3`.
+- **[ADR 0005: Current state management architecture](./0005-current-state-management-architecture.md)** - current wiring, valid during migration.
 - [Zustand](https://github.com/pmndrs/zustand)
 - [TanStack Query](https://tanstack.com/query/latest)
 - [TanStack Virtual](https://tanstack.com/virtual/latest)
