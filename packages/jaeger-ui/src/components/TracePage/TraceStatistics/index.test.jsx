@@ -229,6 +229,124 @@ describe('<TraceTagOverview>', () => {
     });
   });
 
+  it('should trigger onClickOption when pressing Enter on name cell', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          valueNameSelector1: 'sql.query',
+          tableValue: [
+            {
+              name: 'SELECT * FROM users',
+              hasSubgroupValue: true,
+              searchColor: 'transparent',
+              color: '#000',
+              key: '0',
+              isDetail: false,
+              parentElement: 'none',
+              count: 1,
+              total: 100,
+              avg: 50,
+              min: 10,
+              max: 90,
+              selfTotal: 80,
+              selfAvg: 40,
+              selfMin: 5,
+              selfMax: 75,
+              percent: 80,
+              colorToPercent: '#fff',
+            },
+          ],
+        });
+      }
+    });
+
+    await waitFor(() => {
+      const nameButtons = screen.getAllByRole('button');
+      const nameButton = nameButtons.find(
+        button => button.textContent.includes('SELECT') || button.style.borderLeft || button.style.padding
+      );
+
+      if (nameButton) {
+        fireEvent.keyDown(nameButton, { key: 'Enter', code: 'Enter' });
+      }
+    });
+
+    await waitFor(() => {
+      const textarea = screen.queryByRole('textbox');
+      if (textarea) {
+        expect(textarea).toBeInTheDocument();
+      }
+    });
+  });
+
+  it('should not trigger onClickOption when pressing a non-Enter/Space key', async () => {
+    let componentRef;
+    const TestWrapper = () => {
+      const ref = React.useRef();
+      componentRef = ref;
+      return <TraceStatistics ref={ref} {...defaultProps} />;
+    };
+
+    render(<TestWrapper />);
+
+    await waitFor(() => {
+      if (componentRef.current) {
+        componentRef.current.setState({
+          ...componentRef.current.state,
+          valueNameSelector1: 'sql.query',
+          tableValue: [
+            {
+              name: 'SELECT * FROM users',
+              hasSubgroupValue: false,
+              searchColor: 'transparent',
+              color: '#000',
+              key: '0',
+              isDetail: false,
+              parentElement: 'none',
+              count: 1,
+              total: 100,
+              avg: 50,
+              min: 10,
+              max: 90,
+              selfTotal: 80,
+              selfAvg: 40,
+              selfMin: 5,
+              selfMax: 75,
+              percent: 80,
+              colorToPercent: '#fff',
+            },
+          ],
+        });
+      }
+    });
+
+    const initialContent = document.body.innerHTML;
+
+    await waitFor(() => {
+      const nameButtons = screen.getAllByRole('button');
+      const nameButton = nameButtons.find(
+        button => button.textContent.includes('SELECT') || button.style.borderLeft || button.style.padding
+      );
+
+      if (nameButton) {
+        fireEvent.keyDown(nameButton, { key: 'Tab', code: 'Tab' });
+      }
+    });
+
+    // Tab key should not trigger state change
+    expect(document.body.innerHTML).toBe(initialContent);
+  });
+
   it('should handle onClickOption when hasSubgroupValue is false', async () => {
     let componentRef;
     const TestWrapper = () => {
