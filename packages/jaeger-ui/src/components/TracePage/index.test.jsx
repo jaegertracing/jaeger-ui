@@ -121,14 +121,14 @@ vi.mock('./ArchiveNotifier', async () =>
   })
 );
 
-const { mockSubmitArchiveTrace, mockAcknowledge } = vi.hoisted(() => ({
-  mockSubmitArchiveTrace: jest.fn(),
+const { mockSubmitTraceToArchive, mockAcknowledge } = vi.hoisted(() => ({
+  mockSubmitTraceToArchive: jest.fn(),
   mockAcknowledge: jest.fn(),
 }));
 
 vi.mock('../../stores/archive-store', () => ({
   useArchiveStore: jest.fn(selector =>
-    selector({ archives: {}, submitArchiveTrace: mockSubmitArchiveTrace, acknowledge: mockAcknowledge })
+    selector({ archives: {}, submitTraceToArchive: mockSubmitTraceToArchive, acknowledge: mockAcknowledge })
   ),
 }));
 
@@ -803,10 +803,10 @@ describe('<TracePage>', () => {
       expect(mockAcknowledge).toHaveBeenCalledWith(defaultProps.id);
     });
 
-    it('calls store.submitArchiveTrace when archiveTrace is called', () => {
+    it('calls store.submitTraceToArchive when archiveTrace is called', () => {
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onArchiveClicked();
-      expect(mockSubmitArchiveTrace).toHaveBeenCalledWith(defaultProps.id);
+      expect(mockSubmitTraceToArchive).toHaveBeenCalledWith(defaultProps.id);
     });
   });
 

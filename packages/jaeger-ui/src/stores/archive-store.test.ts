@@ -18,34 +18,34 @@ describe('archive-store', () => {
     mockArchiveTrace.mockReset();
   });
 
-  describe('submitArchiveTrace', () => {
-    it('sets isLoading then isArchived on success', async () => {
+  describe('submitTraceToArchive', () => {
+    it('sets isArchiving then isArchived on success', async () => {
       mockArchiveTrace.mockResolvedValue({});
 
       const states: object[] = [];
       const unsub = useArchiveStore.subscribe(s => states.push({ ...s.archives }));
 
-      await useArchiveStore.getState().submitArchiveTrace('trace-1');
+      await useArchiveStore.getState().submitTraceToArchive('trace-1');
       unsub();
 
       expect(states).toEqual([
-        { 'trace-1': { isLoading: true } },
+        { 'trace-1': { isArchiving: true } },
         { 'trace-1': { isArchived: true, isAcknowledged: false } },
       ]);
     });
 
-    it('sets isLoading then error state on failure', async () => {
+    it('sets isArchiving then error state on failure', async () => {
       const err = new Error('API error');
       mockArchiveTrace.mockRejectedValue(err);
 
       const states: object[] = [];
       const unsub = useArchiveStore.subscribe(s => states.push({ ...s.archives }));
 
-      await useArchiveStore.getState().submitArchiveTrace('trace-1');
+      await useArchiveStore.getState().submitTraceToArchive('trace-1');
       unsub();
 
       expect(states).toEqual([
-        { 'trace-1': { isLoading: true } },
+        { 'trace-1': { isArchiving: true } },
         {
           'trace-1': {
             error: { message: 'API error' },
@@ -60,7 +60,7 @@ describe('archive-store', () => {
     it('normalizes string rejections to ApiError string', async () => {
       mockArchiveTrace.mockRejectedValue('plain string failure');
 
-      await useArchiveStore.getState().submitArchiveTrace('trace-1');
+      await useArchiveStore.getState().submitTraceToArchive('trace-1');
 
       expect(useArchiveStore.getState().archives['trace-1']).toEqual({
         error: 'plain string failure',
@@ -74,7 +74,7 @@ describe('archive-store', () => {
       const payload = { message: 'from API client', httpStatus: 500, httpStatusText: 'Internal Error' };
       mockArchiveTrace.mockRejectedValue(payload);
 
-      await useArchiveStore.getState().submitArchiveTrace('trace-1');
+      await useArchiveStore.getState().submitTraceToArchive('trace-1');
 
       expect(useArchiveStore.getState().archives['trace-1']).toEqual({
         error: payload,
@@ -93,7 +93,7 @@ describe('archive-store', () => {
     ])('normalizes %s rejection via String fallback', async (_label, rejected, expectedError) => {
       mockArchiveTrace.mockRejectedValue(rejected);
 
-      await useArchiveStore.getState().submitArchiveTrace('trace-1');
+      await useArchiveStore.getState().submitTraceToArchive('trace-1');
 
       expect(useArchiveStore.getState().archives['trace-1']).toEqual({
         error: expectedError,
@@ -107,7 +107,7 @@ describe('archive-store', () => {
       mockArchiveTrace.mockResolvedValue({});
       useArchiveStore.setState({ archives: { 'trace-other': { isArchived: true, isAcknowledged: true } } });
 
-      await useArchiveStore.getState().submitArchiveTrace('trace-1');
+      await useArchiveStore.getState().submitTraceToArchive('trace-1');
 
       const { archives } = useArchiveStore.getState();
       expect(archives['trace-other']).toEqual({ isArchived: true, isAcknowledged: true });
@@ -146,8 +146,8 @@ describe('archive-store', () => {
       });
     });
 
-    it('does not update state when trace is still loading', () => {
-      useArchiveStore.setState({ archives: { 'trace-1': { isLoading: true } } });
+    it('does not update state when trace is still archiving', () => {
+      useArchiveStore.setState({ archives: { 'trace-1': { isArchiving: true } } });
       const before = useArchiveStore.getState().archives;
 
       useArchiveStore.getState().acknowledge('trace-1');

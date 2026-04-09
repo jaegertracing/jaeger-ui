@@ -3,38 +3,22 @@
 
 import { create } from 'zustand';
 import JaegerAPI from '../api/jaeger';
-import { ApiError } from '../types/api-error';
-import { TraceArchive } from '../types/archive';
-
-function toApiError(caught: unknown): ApiError {
-  if (typeof caught === 'string') {
-    return caught;
-  }
-  if (caught instanceof Error) {
-    return { message: caught.message };
-  }
-  if (
-    caught !== null &&
-    typeof caught === 'object' &&
-    'message' in caught &&
-    typeof (caught as { message: unknown }).message === 'string'
-  ) {
-    return caught as ApiError;
-  }
-  return { message: String(caught) };
-}
+import { toApiError } from '../types/api-error';
+import { ErrorTraceArchive, LoadingTraceArchive, TraceArchive } from '../types/archive';
 
 export type ArchiveStore = {
   archives: Record<string, TraceArchive>;
-  submitArchiveTrace: (traceId: string) => Promise<void>;
+  submitTraceToArchive: (traceId: string) => Promise<void>;
   acknowledge: (traceId: string) => void;
 };
 
 export const useArchiveStore = create<ArchiveStore>((set, _get) => ({
   archives: {},
 
-  submitArchiveTrace: async (traceId: string) => {
-    set(s => ({ archives: { ...s.archives, [traceId]: { isLoading: true } } }));
+  submitTraceToArchive: async (traceId: string) => {
+    set(s => ({
+      archives: { ...s.archives, [traceId]: { isArchiving: true } satisfies LoadingTraceArchive },
+    }));
     try {
       await JaegerAPI.archiveTrace(traceId);
       set(s => ({
@@ -49,16 +33,18 @@ export const useArchiveStore = create<ArchiveStore>((set, _get) => ({
             isArchived: false,
             isError: true,
             isAcknowledged: false,
-          },
+          } satisfies ErrorTraceArchive,
         },
       }));
     }
   },
 
+  // Marks the archive outcome as dismissed: called when the user closes the result
+  // notification, preventing it from reappearing on re-render.
   acknowledge: (traceId: string) => {
     set(s => {
       const traceArchive = s.archives[traceId];
-      if (!traceArchive || ('isLoading' in traceArchive && traceArchive.isLoading)) {
+      if (!traceArchive || ('isArchiving' in traceArchive && traceArchive.isArchiving)) {
         return s;
       }
       return {

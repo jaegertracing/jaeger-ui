@@ -163,7 +163,7 @@ export function TracePageImpl(props: TProps) {
   const navigate = useNavigate();
 
   const archiveTraceState = useArchiveStore(s => (id ? (s.archives[id] ?? null) : null));
-  const submitArchiveTraceFn = useArchiveStore(s => s.submitArchiveTrace);
+  const submitTraceToArchiveFn = useArchiveStore(s => s.submitTraceToArchive);
   const acknowledgeArchiveFn = useArchiveStore(s => s.acknowledge);
 
   const [headerHeight, setHeaderHeight] = useState<number | TNil>(null);
@@ -307,8 +307,8 @@ export function TracePageImpl(props: TProps) {
   }, []);
 
   const archiveTrace = useCallback(() => {
-    submitArchiveTraceFn(id);
-  }, [submitArchiveTraceFn, id]);
+    submitTraceToArchiveFn(id);
+  }, [submitTraceToArchiveFn, id]);
 
   const acknowledgeArchive = useCallback(() => {
     acknowledgeArchiveFn(id);

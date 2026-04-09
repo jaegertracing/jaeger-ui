@@ -27,7 +27,7 @@ function getNextNotifiedState(props: Props): ENotifiedState | null {
   if (!archivedState) {
     return null;
   }
-  if ('isLoading' in archivedState && archivedState.isLoading) {
+  if ('isArchiving' in archivedState && archivedState.isArchiving) {
     return ENotifiedState.Progress;
   }
   return 'isAcknowledged' in archivedState && archivedState.isAcknowledged ? null : ENotifiedState.Outcome;
