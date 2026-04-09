@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ApiError } from './api-error';
-import { TracesArchive } from './archive';
 import { Config } from './config';
 import { EmbeddedState } from './embedded';
 import { SearchQuery } from './search';
@@ -30,7 +29,6 @@ export type LocationState = {
 };
 
 export type ReduxState = {
-  archive: TracesArchive;
   type: string;
   config: Config;
   ddg: TDdgState;

@@ -926,7 +926,7 @@ The duck currently stores:
 - `SearchTracePage` - cohort add/remove actions replace Redux dispatch.
 - `TopNav` - "Compare" button writes to store; URL still initializes store on mount.
 
-#### ⬜ 1b. Archive notifier (`archive` duck)
+#### ✅ 1b. Archive notifier (`archive` duck)
 
 **Redux removed**: `src/components/TracePage/ArchiveNotifier/duck.ts`
 
