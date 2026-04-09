@@ -46,8 +46,28 @@ describe('archive-store', () => {
 
       expect(states).toEqual([
         { 'trace-1': { isLoading: true } },
-        { 'trace-1': { error: err, isArchived: false, isError: true, isAcknowledged: false } },
+        {
+          'trace-1': {
+            error: { message: 'API error' },
+            isArchived: false,
+            isError: true,
+            isAcknowledged: false,
+          },
+        },
       ]);
+    });
+
+    it('normalizes string rejections to ApiError string', async () => {
+      mockArchiveTrace.mockRejectedValue('plain string failure');
+
+      await useArchiveStore.getState().submitArchiveTrace('trace-1');
+
+      expect(useArchiveStore.getState().archives['trace-1']).toEqual({
+        error: 'plain string failure',
+        isArchived: false,
+        isError: true,
+        isAcknowledged: false,
+      });
     });
 
     it('preserves existing archive entries for other traces', async () => {
@@ -77,17 +97,16 @@ describe('archive-store', () => {
     });
 
     it('sets isAcknowledged to true on an error archive', () => {
-      const err = new Error('fail');
       useArchiveStore.setState({
         archives: {
-          'trace-1': { error: err, isArchived: false, isError: true, isAcknowledged: false },
+          'trace-1': { error: { message: 'fail' }, isArchived: false, isError: true, isAcknowledged: false },
         },
       });
 
       useArchiveStore.getState().acknowledge('trace-1');
 
       expect(useArchiveStore.getState().archives['trace-1']).toEqual({
-        error: err,
+        error: { message: 'fail' },
         isArchived: false,
         isError: true,
         isAcknowledged: true,

@@ -6,6 +6,24 @@ import JaegerAPI from '../api/jaeger';
 import { ApiError } from '../types/api-error';
 import { TraceArchive } from '../types/archive';
 
+function toApiError(caught: unknown): ApiError {
+  if (typeof caught === 'string') {
+    return caught;
+  }
+  if (caught instanceof Error) {
+    return { message: caught.message };
+  }
+  if (
+    caught !== null &&
+    typeof caught === 'object' &&
+    'message' in caught &&
+    typeof (caught as { message: unknown }).message === 'string'
+  ) {
+    return caught as ApiError;
+  }
+  return { message: String(caught) };
+}
+
 export type ArchiveStore = {
   archives: Record<string, TraceArchive>;
   submitArchiveTrace: (traceId: string) => Promise<void>;
@@ -22,11 +40,16 @@ export const useArchiveStore = create<ArchiveStore>((set, _get) => ({
       set(s => ({
         archives: { ...s.archives, [traceId]: { isArchived: true, isAcknowledged: false } },
       }));
-    } catch (error) {
+    } catch (caught) {
       set(s => ({
         archives: {
           ...s.archives,
-          [traceId]: { error: error as ApiError, isArchived: false, isError: true, isAcknowledged: false },
+          [traceId]: {
+            error: toApiError(caught),
+            isArchived: false,
+            isError: true,
+            isAcknowledged: false,
+          },
         },
       }));
     }
