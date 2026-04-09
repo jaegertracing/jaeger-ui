@@ -121,6 +121,17 @@ vi.mock('./ArchiveNotifier', async () =>
   })
 );
 
+const { mockSubmitArchiveTrace, mockAcknowledge } = vi.hoisted(() => ({
+  mockSubmitArchiveTrace: jest.fn(),
+  mockAcknowledge: jest.fn(),
+}));
+
+vi.mock('../../stores/archive-store', () => ({
+  useArchiveStore: jest.fn(selector =>
+    selector({ archives: {}, submitArchiveTrace: mockSubmitArchiveTrace, acknowledge: mockAcknowledge })
+  ),
+}));
+
 vi.mock('./TracePageHeader', async () => {
   const { forwardRef } = require('react');
   return {
@@ -166,8 +177,6 @@ describe('makeShortcutCallbacks()', () => {
 describe('<TracePage>', () => {
   const trace = transformTraceData(traceGenerator.trace({}));
   const defaultProps = {
-    acknowledgeArchive: jest.fn(),
-    archiveTrace: jest.fn(),
     detailPanelMode: 'inline',
     enableSidePanel: false,
     fetchTrace: jest.fn(),
@@ -193,8 +202,6 @@ describe('<TracePage>', () => {
     ScrollManager.mockClear();
     capturedHeaderProps = {};
     capturedArchiveNotifierProps = {};
-    defaultProps.acknowledgeArchive.mockClear();
-    defaultProps.archiveTrace.mockClear();
     defaultProps.focusUiFindMatches.mockClear();
   });
 
@@ -790,16 +797,16 @@ describe('<TracePage>', () => {
       expect(screen.queryByTestId('archive-notifier')).not.toBeInTheDocument();
     });
 
-    it('calls props.acknowledgeArchive when ArchiveNotifier acknowledges', () => {
+    it('calls store.acknowledge when ArchiveNotifier acknowledges', () => {
       render(<TracePage {...defaultProps} archiveEnabled />);
       capturedArchiveNotifierProps.acknowledge();
-      expect(defaultProps.acknowledgeArchive).toHaveBeenCalledWith(defaultProps.id);
+      expect(mockAcknowledge).toHaveBeenCalledWith(defaultProps.id);
     });
 
-    it('calls props.archiveTrace when archiveTrace is called', () => {
+    it('calls store.submitArchiveTrace when archiveTrace is called', () => {
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onArchiveClicked();
-      expect(defaultProps.archiveTrace).toHaveBeenCalledWith(defaultProps.id);
+      expect(mockSubmitArchiveTrace).toHaveBeenCalledWith(defaultProps.id);
     });
   });
 
@@ -993,8 +1000,6 @@ describe('<TracePage>', () => {
 describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
     expect(mapDispatchToProps(() => {})).toEqual({
-      acknowledgeArchive: expect.any(Function),
-      archiveTrace: expect.any(Function),
       fetchTrace: expect.any(Function),
       focusUiFindMatches: expect.any(Function),
       setDetailPanelMode: expect.any(Function),
@@ -1028,7 +1033,6 @@ describe('mapStateToProps()', () => {
       config: {
         archiveEnabled: false,
       },
-      archive: {},
       traceTimeline: {
         detailPanelMode: 'inline',
         timelineBarsVisible: true,
@@ -1041,7 +1045,6 @@ describe('mapStateToProps()', () => {
       id: traceID,
       detailPanelMode: 'inline',
       embedded,
-      archiveTraceState: undefined,
       timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
@@ -1055,7 +1058,6 @@ describe('mapStateToProps()', () => {
     });
     expect(props).toEqual(
       expect.objectContaining({
-        archiveTraceState: null,
         id: '',
         trace: null,
       })
@@ -1070,7 +1072,6 @@ describe('mapStateToProps()', () => {
       id: traceID,
       detailPanelMode: 'inline',
       embedded,
-      archiveTraceState: undefined,
       timelineBarsVisible: true,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
