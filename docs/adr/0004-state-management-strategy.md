@@ -880,238 +880,277 @@ function SpanRow({ spanId, trace }: { spanId: string; trace: Trace }) {
 
 ## Migration Path
 
-### Phase 1: Introduce Zustand Alongside Redux (2-3 weeks)
+The **target architecture** (layers, data flow, and where each kind of state should live) is documented in **[ADR 0008: Target state management architecture](./0008-target-state-management-architecture.md)**. That document is updated as the codebase catches up, so it remains the canonical "how we do things" reference. **This section** is the **migration checklist**: what to deliver, in what order, and how to verify or roll back.
 
-**Goal**: Prove the pattern with low-risk features.
+---
 
-1. **Install Dependencies**:
-   ```bash
-   npm install zustand @tanstack/react-query
-   ```
+### Phase 0 - Foundations
 
-2. **Create Initial Stores**:
-   - `stores/useUIStore.ts` - View mode, expand/collapse, hover state
-   - `stores/useFiltersStore.ts` - Filter preferences
-   - `stores/usePreferencesStore.ts` - Dark mode, timezone, etc.
+**Goal**: Install dependencies, set up shared infrastructure, and establish the class-component bridge before touching any feature slice.
 
-3. **Migrate Low-Risk Features**:
-   - **Dark Mode** (currently in Redux) → Zustand persisted store
-   - **Expand/Collapse State** → Zustand (transient, doesn't need Redux)
-   - **Hover State** → Zustand (definitely doesn't need Redux)
+#### ✅ 0a. Shared TanStack Query client
 
-4. **Coexistence Pattern**:
-   ```typescript
-   // Functional components can use hooks
-   function TracePage() {
-     // Old: Redux
-     const trace = useSelector(selectTrace);
-     
-     // New: Zustand
-     const expandedSpans = useUIStore((state) => state.expandedSpans);
-     
-     // ...
-   }
-   
-   // Class components use connect() HOC (Redux) or Zustand HOC
-   import { connect } from 'react-redux';
-   import { createStoreConnector } from './utils/zustandClassBridge';
-   
-   class LegacyTraceView extends React.Component {
-     render() {
-       const { trace, expandedSpans } = this.props;
-       // ...
-     }
-   }
-   
-   // Option A: Keep using Redux connect() for now
-   export default connect(
-     (state) => ({ trace: state.trace.data })
-   )(LegacyTraceView);
-   
-   // Option B: Create Zustand HOC bridge
-   const withUIStore = createStoreConnector(useUIStore, (state) => ({
-     expandedSpans: state.expandedSpans,
-     toggleSpan: state.toggleSpan,
-   }));
-   
-   export default withUIStore(LegacyTraceView);
-   ```
+- Implement `src/query/app-query-client.tsx`: `createAppQueryClient()`, a singleton `QueryClient`, and `AppQueryClientProvider`.
+- Wire `AppQueryClientProvider` around the app shell in `components/App/index.tsx`.
+- Shared defaults: `staleTime` and `retry`. Traces use `staleTime: Infinity` (immutable once loaded).
+- **Follow-up (optional)**: centralise query key constants to avoid key divergence between hooks. Discovery hooks currently use inline arrays in `src/hooks/useTraceDiscovery.ts` (`['services']`, `['spanNames', service]`).
 
-5. **Create Zustand Class Component Bridge** (utils/zustandClassBridge.ts):
-   ```typescript
-   // Helper to connect Zustand stores to class components
-   import React from 'react';
-   import type { StoreApi, UseBoundStore } from 'zustand';
-   
-   export function createStoreConnector<T, P>(
-     useStore: UseBoundStore<StoreApi<T>>,
-     selector: (state: T) => P
-   ) {
-     return function withStore<C extends React.ComponentType<P & any>>(
-       Component: C
-     ): React.ComponentType<Omit<React.ComponentProps<C>, keyof P>> {
-       return class StoreConnector extends React.Component<
-         Omit<React.ComponentProps<C>, keyof P>
-       > {
-         private unsubscribe?: () => void;
-         
-         state = {
-           storeState: selector(useStore.getState()),
-         };
-         
-         componentDidMount() {
-           this.unsubscribe = useStore.subscribe((state) => {
-             this.setState({ storeState: selector(state) });
-           });
-         }
-         
-         componentWillUnmount() {
-           this.unsubscribe?.();
-         }
-         
-         render() {
-           return <Component {...this.props} {...this.state.storeState} />;
-         }
-       };
-     };
-   }
-   ```
+#### ✅ 0b. Zustand + class-component bridge
 
-6. **Strategy for Class Components**:
-   - **Short-term**: For class components that are actively maintained, create Zustand HOC bridges
-   - **Medium-term**: Prioritize converting frequently-modified class components to functional components
-   - **Long-term**: Convert all remaining class components as part of broader React modernization
-   - **Keep Redux**: Optionally keep Redux `connect()` for class components that are rarely touched
+- Add `zustand` dependency.
+- Implement `createStoreConnector` in `src/utils/zustand-class-bridge.tsx` — an HOC that subscribes a class component to a Zustand store via `useStore.subscribe()` / `useStore.getState()`.
 
-     // ...
-   }
-   ```
+#### ✅ 0c. Type alignment
 
-### Phase 2: Introduce React Query for Data Fetching (3-4 weeks)
+- Remove stale `ReduxState` fields absent from the real `combineReducers` shape.
 
-**Goal**: Separate server state from Redux. This aligns with **ADR-0002 Phase 3**, where we switch to the `/api/v3/` OTLP endpoints. Instead of implementing new Redux reducers for OTLP data, we will use React Query directly.
+---
 
-1. **Setup React Query**:
-   ```typescript
-   // app/providers.tsx
-   import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-   
-   const queryClient = new QueryClient({
-     defaultOptions: {
-       queries: {
-         staleTime: 5 * 60 * 1000,
-         gcTime: 30 * 60 * 1000,
-       },
-     },
-   });
-   
-   export function Providers({ children }) {
-     return (
-       <QueryClientProvider client={queryClient}>
-         {children}
-       </QueryClientProvider>
-     );
-   }
-   ```
+### Phase 1 - Zustand for client UI state
 
-2. **Create Query Hooks**:
-   ```typescript
-   // hooks/useTraceQuery.ts
-   export function useTraceQuery(traceId: string) {
-     return useQuery({
-       queryKey: ['trace', traceId],
-       queryFn: () => fetchTrace(traceId),
-       staleTime: Infinity, // Traces never change
-     });
-   }
-   ```
+**Goal**: Move view/interaction slices off Redux. Server-data fetches remain on Redux until Phase 2.
 
-3. **Migrate Data Fetching** (one page at a time):
-   - `TracePage` → Use `useTraceQuery` instead of Redux thunk
-   - `SearchPage` → Use `useSearchTracesQuery`
-   - Keep computed/derived state in Redux during transition
+#### ✅ 1a. Trace compare (`traceDiff` duck)
 
-### Phase 3: Migrate Derived State (4-6 weeks)
+**Redux removed**: `src/components/TraceDiff/duck.ts`
 
-**Goal**: Move computed state (critical path, statistics) from Redux to Zustand or local state.
-
-**Options**:
-
-**Option A: Zustand with Computed Middleware**
+The duck currently stores:
 ```typescript
-import { create } from 'zustand';
-import { computed } from 'zustand-computed';
-
-const useTraceStore = create(
-  computed(
-    (set) => ({
-      trace: null,
-      setTrace: (trace) => set({ trace }),
-    }),
-    (state) => ({
-      // Computed values (memoized automatically)
-      criticalPath: state.trace ? computeCriticalPath(state.trace) : null,
-      statistics: state.trace ? computeStatistics(state.trace) : null,
-    })
-  )
-);
+{ cohort: string[], a: string | null, b: string | null }
 ```
 
-**Option B: Local Computation with useMemo** (Preferred for heavy computations)
+**New Zustand store** (`src/stores/trace-diff-store.ts`)
+
+**Components to rewire**:
+- `TraceDiff.tsx` - read `a`, `b` from store instead of Redux selector.
+- `SearchTracePage` - cohort add/remove actions replace Redux dispatch.
+- `TopNav` - "Compare" button writes to store; URL still initializes store on mount.
+
+#### ⬜ 1b. Archive notifier (`archive` duck)
+
+**Redux removed**: `src/components/TracePage/ArchiveNotifier/duck.ts`
+
+The archive duck holds loading/error state for the archive mutation, consumed only by `ArchiveNotifier` and `TracePage`. This can be a small colocated Zustand store or promoted to a shared store if `TracePage` needs it.
+
+**New store** (`src/components/TracePage/ArchiveNotifier/archive-store.ts` or `src/stores/`):
 ```typescript
-function TracePage() {
-  const { data: trace } = useTraceQuery(traceId);
-  
-  // ✅ Compute on-demand, memoized
-  const criticalPath = useMemo(
-    () => trace ? computeCriticalPath(trace) : null,
-    [trace]
-  );
-  
-  const statistics = useMemo(
-    () => trace ? computeStatistics(trace) : null,
-    [trace]
-  );
-  
-  return <TraceView trace={trace} criticalPath={criticalPath} />;
+type IArchiveState = {
+  isLoading: boolean;
+  isAcknowledged: boolean;
+  error: string | null;
+  submitArchiveTrace: (traceId: string) => Promise<void>;
+  acknowledge: () => void;
+};
+```
+
+**Components to rewire**: `ArchiveNotifier.tsx`, `TracePage` - stop dispatching Redux archive actions.
+
+#### ⬜ 1c. Trace timeline UI (`traceTimeline` duck)
+
+**Redux removed**: `src/components/TracePage/TraceTimelineViewer/duck.ts`
+
+This is the **largest and most performance-sensitive** slice. Split across multiple PRs.
+
+**New Zustand store** (`src/stores/trace-timeline-store.ts`):
+
+| Field | Type | Description | Persisted to |
+| :--- | :--- | :--- | :--- |
+| `traceID` | `string \| null` | Currently loaded trace; changing it resets ephemeral fields | - |
+| `childrenHiddenIDs` | `Set<string>` | Span IDs whose children are collapsed | - |
+| `detailStates` | `Map<string, DetailState>` | Open detail panels per span ID | - |
+| `hoverIndentGuideIds` | `Set<string>` | Span IDs with active indent-guide hover highlight | - |
+| `spanNameColumnWidth` | `number` (0.15–0.85) | Fraction of timeline width for the name column | `localStorage['spanNameColumnWidth']` |
+| `sidePanelWidth` | `number` (0.2–0.7) | Fraction for the side-panel column | `localStorage['sidePanelWidth']` |
+| `detailPanelMode` | `'inline' \| 'sidepanel'` | Span detail display mode | `localStorage['detailPanelMode']` |
+| `timelineBarsVisible` | `boolean` | Whether Gantt bars are shown | `localStorage['timelineVisible']` |
+| `shouldScrollToFirstUiFindMatch` | `boolean` | One-shot scroll flag; cleared by the list after use | — |
+
+**Key behaviour**: when `traceID` changes, reset `childrenHiddenIDs`, `detailStates`, `hoverIndentGuideIds`, `shouldScrollToFirstUiFindMatch`; carry over layout fields.
+
+**Selectors must be fine-grained** - each row component subscribes only to the span IDs it cares about (e.g. `childrenHiddenIDs.has(spanId)`) so virtualized rows do not re-render on unrelated changes.
+
+**Suggested PR split**:
+1. Layout prefs: `spanNameColumnWidth`, `sidePanelWidth`, `detailPanelMode`, `timelineBarsVisible`.
+2. Collapse/expand + detail: `childrenHiddenIDs`, `detailStates`, `shouldScrollToFirstUiFindMatch`.
+3. Hover: `hoverIndentGuideIds`.
+4. Rewire Redux **tracking middleware** hooks that currently listen to timeline action types.
+
+**Components to rewire**: `TraceTimelineViewer`, `SpanBarRow`, `SpanDetailRow`, `TimelineHeaderRow`.
+
+#### ⬜ 1d. Deep Dependencies view modifiers (`ddg` duck - client-only fields)
+
+**Redux removed**: view-modifier fields from `src/reducers/ddg.ts`. Leave the graph-payload fetch until Phase 2e.
+
+**New Zustand store** (`src/stores/ddg-modifiers-store.ts`):
+```typescript
+type IDdgModifiersState = {
+  showOperations: boolean;
+  visEncoding: string | null;
+  density: 'summary' | 'full';
+  setShowOperations: (v: boolean) => void;
+  setVisEncoding: (v: string | null) => void;
+  setDensity: (v: 'summary' | 'full') => void;
+};
+```
+
+**Components to rewire**: `DeepDependenciesPage`, `DdgNodeContent`, `HopsSelector`.
+
+#### ⬜ 1e. Embedded / `Page` / `TopNav` flags
+
+**Redux removed**: `src/reducers/embedded.ts`
+
+The `embedded` reducer holds chrome flags parsed from the `?embed` query param on app boot.
+
+**New store** (`src/stores/embedded-store.ts`) **or module constant** (if flags never change after boot):
+```typescript
+type IEmbeddedState = {
+  isEmbedded: boolean;
+  disableLogFinder: boolean;
+  // …other chrome flags
+};
+```
+
+Initialize from the `?embed` URL param at startup; keep URL as the source of truth on first load.
+
+**Components to rewire**: `TopNav`, `Page`, `SearchTracePage` - all currently read `embedded` from Redux.
+
+#### ⬜ 1f. `config` Redux slice
+
+**Redux removed**: `src/reducers/config.ts`
+
+Keep `useConfig()` as the stable **public API** throughout - only the backing implementation changes. Replace Redux selector with a Zustand store or a module-level constant (config is static after app boot).
+
+---
+
+### Phase 2 - TanStack Query for server state
+
+**Goal**: Replace "dispatch → promise middleware → reducer → selector" with query hooks and a cache key. Coordinate with [ADR 0002](./0002-otlp-api-v3-migration.md) / `api/v3` where applicable.
+
+#### ⬜ 2a. Single trace load
+
+**Redux removed**: `trace` reducer fields: `traces` map, per-trace loading/error state.
+
+**New hook** (`src/hooks/useTraceQuery.ts`):
+```typescript
+export function useTraceQuery(traceId: string) {
+  return useQuery({
+    queryKey: ['trace', traceId],
+    queryFn: () => jaegerClient.fetchTrace(traceId),
+    staleTime: Infinity, // traces are immutable once loaded
+  });
 }
 ```
 
-**Recommendation**: Use Option B (local `useMemo`) for heavy computations like critical path. Zustand for lightweight UI state only.
+**Components to rewire**: `TracePage`, `TraceDiff` (both `a` and `b` traces).
 
-### Phase 4: Deprecate Redux (2-3 weeks)
+#### ⬜ 2b. Search + multi-trace fetch
 
-**Goal**: Remove Redux entirely.
+**Redux removed**: `trace.search`, `trace.rawTraces`.
 
-1. **Verify All Migrated**:
-   - Audit codebase for `useSelector`/`useDispatch` usage
-   - Ensure all Redux slices have Zustand equivalents
+**New hook**:
+```typescript
+export function useSearchTracesQuery(params: SearchQuery) {
+  return useQuery({
+    queryKey: ['search', params],   // cached per unique query
+    queryFn: () => jaegerClient.searchTraces(params),
+  });
+}
+```
 
-2. **Remove Redux**:
-   ```bash
-   npm uninstall react-redux @reduxjs/toolkit
-   ```
+Handle **JSON file upload** as a separate path: insert synthetic data into the QueryClient cache rather than an HTTP fetch.
 
-3. **Delete Files**:
-   - `store/` directory
-   - Redux-related actions, reducers, selectors
+**Components to rewire**: `SearchTracePage`, `ResultsTable`.
 
-4. **Update Documentation**:
-   - Update `CONTRIBUTING.md` with Zustand patterns
-   - Add state management architecture diagram
+#### ⬜ 2c. Services and operations discovery
 
-### Rollback Plan
+**Redux removed**: `services` reducer.
 
-Each phase is independently reversible:
+Discovery hooks are **partially present** in `src/hooks/useTraceDiscovery.ts` (`['services']`, `['spanNames', service]`). Centralise query key constants to avoid divergence when new hooks are added.
 
-- **Phase 1**: Remove Zustand stores, keep Redux as-is
-- **Phase 2**: Remove React Query hooks, restore Redux thunks
-- **Phase 3**: Revert computation logic to Redux selectors
-- **Phase 4**: Reinstall Redux (though unlikely to need this)
+#### ⬜ 2d. Dependencies page
+
+**Redux removed**: `src/reducers/dependencies.ts`.
+
+**New hook** (`src/hooks/useDependenciesQuery.ts`):
+```typescript
+queryKey: ['dependencies', { start, end, lookback }]
+```
+
+#### ⬜ 2e. Deep Dependencies graph fetch
+
+**Redux removed**: graph-payload fields in `src/reducers/ddg.ts` (view modifiers already moved in Phase 1d).
+
+**New hook**: `queryKey: ['ddg', service, operation, start, end]`; Zustand store (Phase 1d) holds the modifier flags.
+
+#### ⬜ 2f. Monitor metrics
+
+**Redux removed**: `src/reducers/metrics.ts`.
+
+**New hooks**: one hook per metric dimension, mirroring current loading/error shapes.
+
+#### ⬜ 2g. Path-agnostic decorations
+
+**Redux removed**: `src/reducers/path-agnostic-decorations.ts`.
+
+**New hook** + optional small Zustand store for decoration UI state.
+
+---
+
+### Phase 3 - Derived state and selectors
+
+#### ⬜ 3a. OTLP selectors / facades
+
+`selectOtelTrace` / `useOtelTrace` must read from **Query data** (not `state.trace.traces`). The `OtelTraceFacade` adapter wraps the raw OTLP payload into the shape `TraceTimelineViewer` expects.
+
+#### ⬜ 3b. Heavy computations
+
+Move critical-path and statistics out of Redux selectors into **`useMemo`** next to the trace reference:
+
+```typescript
+function TracePage({ traceId }) {
+  const { data: trace } = useTraceQuery(traceId);
+  const criticalPath = useMemo(() => trace ? computeCriticalPath(trace) : null, [trace]);
+  const stats        = useMemo(() => trace ? computeTraceStats(trace) : null, [trace]);
+}
+```
+
+Only promote to a Zustand store if profiling proves the `useMemo` pattern causes measurable re-render overhead.
+
+---
+
+### Phase 4 - Remove Redux
+
+#### ⬜ 4a. Audit
+
+Grep for `useSelector`, `useDispatch`, `connect(`, `configureStore`, and all imports from `redux-actions` / `redux-promise-middleware`. Every hit must have a migration plan before proceeding.
+
+#### ⬜ 4b. Remove packages
+
+```bash
+npm uninstall redux react-redux redux-actions redux-promise-middleware
+```
+
+Delete:
+- `src/reducers/` (all files migrated in Phases 1–2)
+- `src/actions/` (replaced by Zustand actions or Query mutation calls)
+- Duck files (`duck.ts` in component directories)
+- `src/configure-store.ts`
+
+#### ⬜ 4c. Tests and documentation
+
+- Replace Redux `<Provider>` test wrappers with `AppQueryClientProvider` + Zustand test patterns.
+- Update or retire [ADR 0005](./0005-current-state-management-architecture.md) once Redux is no longer part of the runtime.
+- Update contributor documentation.
+
+---
+
+### Rollback
+
+Each phase is independently reversible: reintroduce the Redux slice and restore `connect` for any feature where a migration PR must be backed out. Phases do not need to complete atomically.
 
 ### Testing Strategy
 
-1. **Unit Tests**: Update component tests to use Zustand/React Query mocks
+1. **Unit tests**: Mock Zustand stores and the Query client instead of Redux `Provider + store`.
 2. **Integration Tests**: Verify entire trace viewing flow works
 3. **Performance Tests**: Benchmark 5,000+ span traces before/after
 4. **Visual Regression**: Screenshot tests to catch UI regressions
