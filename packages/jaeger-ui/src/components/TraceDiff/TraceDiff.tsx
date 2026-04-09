@@ -44,7 +44,7 @@ function syncStates(
 ) {
   const { a: urlA, b: urlB } = urlValues;
   const { a: reduxA, b: reduxB } = reduxValues;
-  if (urlA !== reduxA || urlB !== reduxB) {
+  if ((urlA ?? null) !== (reduxA ?? null) || (urlB ?? null) !== (reduxB ?? null)) {
     forceState(urlValues);
     return;
   }
