@@ -70,6 +70,39 @@ describe('archive-store', () => {
       });
     });
 
+    it('normalizes plain object rejections with string message (non-Error)', async () => {
+      const payload = { message: 'from API client', httpStatus: 500, httpStatusText: 'Internal Error' };
+      mockArchiveTrace.mockRejectedValue(payload);
+
+      await useArchiveStore.getState().submitArchiveTrace('trace-1');
+
+      expect(useArchiveStore.getState().archives['trace-1']).toEqual({
+        error: payload,
+        isArchived: false,
+        isError: true,
+        isAcknowledged: false,
+      });
+    });
+
+    it.each([
+      ['null', null, { message: 'null' }],
+      ['undefined', undefined, { message: 'undefined' }],
+      ['number', 42, { message: '42' }],
+      ['empty object', {}, { message: '[object Object]' }],
+      ['object with non-string message', { message: 99 }, { message: '[object Object]' }],
+    ])('normalizes %s rejection via String fallback', async (_label, rejected, expectedError) => {
+      mockArchiveTrace.mockRejectedValue(rejected);
+
+      await useArchiveStore.getState().submitArchiveTrace('trace-1');
+
+      expect(useArchiveStore.getState().archives['trace-1']).toEqual({
+        error: expectedError,
+        isArchived: false,
+        isError: true,
+        isAcknowledged: false,
+      });
+    });
+
     it('preserves existing archive entries for other traces', async () => {
       mockArchiveTrace.mockResolvedValue({});
       useArchiveStore.setState({ archives: { 'trace-other': { isArchived: true, isAcknowledged: true } } });
