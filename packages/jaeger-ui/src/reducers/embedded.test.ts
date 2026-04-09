@@ -13,11 +13,11 @@ const mockGetEmbeddedState = vi.mocked(getEmbeddedState);
 describe('embeddedConfig', () => {
   beforeEach(() => {
     mockGetEmbeddedState.mockReset();
-    Object.defineProperty(window, 'location', {
-      value: { search: '' },
-      writable: true,
-      configurable: true,
-    });
+    vi.stubGlobal('location', { search: '' });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('returns the existing state unchanged when state is defined', () => {
@@ -32,8 +32,6 @@ describe('embeddedConfig', () => {
   });
 
   it('returns null when state is undefined and window.location.search is empty', () => {
-    window.location = { search: '' } as Location;
-
     expect(embeddedConfig(undefined)).toBeNull();
     expect(mockGetEmbeddedState).not.toHaveBeenCalled();
   });
@@ -45,7 +43,7 @@ describe('embeddedConfig', () => {
       searchHideGraph: true,
       timeline: { collapseTitle: false, hideMinimap: false, hideSummary: false },
     };
-    window.location = { search } as Location;
+    vi.stubGlobal('location', { search });
     mockGetEmbeddedState.mockReturnValue(embeddedState);
 
     expect(embeddedConfig(undefined)).toBe(embeddedState);
@@ -53,7 +51,7 @@ describe('embeddedConfig', () => {
   });
 
   it('returns null when getEmbeddedState returns null (unrecognised embed version)', () => {
-    window.location = { search: '?uiEmbed=v999' } as Location;
+    vi.stubGlobal('location', { search: '?uiEmbed=v999' });
     mockGetEmbeddedState.mockReturnValue(null);
 
     expect(embeddedConfig(undefined)).toBeNull();
