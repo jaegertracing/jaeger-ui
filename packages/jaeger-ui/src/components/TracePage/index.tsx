@@ -16,6 +16,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { useArchiveStore } from '../../stores/archive-store';
+import { useTraceTimelineStore } from '../../stores/trace-timeline-store';
 import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
 import {
   CombokeysHandler,
@@ -76,10 +77,8 @@ type TOwnProps = {
 };
 
 type TReduxProps = {
-  detailPanelMode: SpanDetailPanelMode;
   embedded: null | EmbeddedState;
   id: string;
-  timelineBarsVisible: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
 };
@@ -142,7 +141,6 @@ export function TracePageImpl(props: TProps) {
   const {
     archiveEnabled,
     criticalPathEnabled,
-    detailPanelMode,
     disableJsonView,
     embedded,
     enableSidePanel,
@@ -150,15 +148,36 @@ export function TracePageImpl(props: TProps) {
     focusUiFindMatches: focusUiFindMatchesProp,
     id,
     location,
-    setDetailPanelMode,
-    setTimelineBarsVisible,
+    setDetailPanelMode: reduxSetDetailPanelMode,
+    setTimelineBarsVisible: reduxSetTimelineBarsVisible,
     storageCapabilities,
-    timelineBarsVisible,
     trace,
     traceGraphConfig,
     uiFind,
     useOtelTerms,
   } = props;
+
+  // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
+  const detailPanelMode = useTraceTimelineStore(s => s.detailPanelMode);
+  const timelineBarsVisible = useTraceTimelineStore(s => s.timelineBarsVisible);
+  const zustandSetDetailPanelMode = useTraceTimelineStore(s => s.setDetailPanelMode);
+  const zustandSetTimelineBarsVisible = useTraceTimelineStore(s => s.setTimelineBarsVisible);
+
+  const setDetailPanelMode = useCallback(
+    (mode: SpanDetailPanelMode) => {
+      zustandSetDetailPanelMode(mode);
+      reduxSetDetailPanelMode(mode);
+    },
+    [zustandSetDetailPanelMode, reduxSetDetailPanelMode]
+  );
+
+  const setTimelineBarsVisible = useCallback(
+    (visible: boolean) => {
+      zustandSetTimelineBarsVisible(visible);
+      reduxSetTimelineBarsVisible(visible);
+    },
+    [zustandSetTimelineBarsVisible, reduxSetTimelineBarsVisible]
+  );
 
   const navigate = useNavigate();
 
@@ -471,14 +490,10 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
 
-  const { detailPanelMode, timelineBarsVisible } = state.traceTimeline;
-
   return {
     ...extractUiFindFromState(state),
-    detailPanelMode,
     embedded,
     id,
-    timelineBarsVisible,
     trace,
   };
 }
