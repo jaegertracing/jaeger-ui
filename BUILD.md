@@ -4,9 +4,9 @@
 
 ### Dependencies (dev and otherwise)
 
-#### `@typescript-eslint/eslint-plugin`
+#### `eslint-plugin-react-x`
 
-ESLint is being used to lint the repo, as a whole. Within `./packages/plexus` (for now), [`@typescript-eslint/eslint-plugin`](https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin) is used to apply ESLint to TypeScript. This application is localized to plexus via configuring `./packages/plexus/.eslintrc.js` for TypeScript, which means the change in settings is only applied to subdirectories of `./packages/plexus`. This package works really well, but there are quite a few issues it doesn't catch. For that, we use the TypeScript compiler.
+Used by Oxlint (via `jsPlugins`) to enforce React hooks rules (`react-x/rules-of-hooks`, `react-x/exhaustive-deps`). Oxlint does not have a native implementation of hooks rules and delegates to this ESLint plugin.
 
 #### `typescript`
 
@@ -20,28 +20,28 @@ In `./packages/plexus`, `typescript` is used to generate type declarations for t
 
 `npm run build` executes the build in each of `./packages/*` sub-packages.
 
-#### `eslint`
+#### `oxlint`
 
-This applies ESLint to the repo, as a whole. The TypeScript linting has a distinct configuration, which is a descendent of `./.eslintrc.js`. See [TypeScript](#typescript), above.
+Runs Oxlint (via `vp lint`) on all packages and scripts. Oxlint is the linting component of Vite+; it replaces ESLint.
 
 #### `lint`
 
-This is an amalgamation of linting scripts that run to make sure things are all-good. It's run in CI (travis) and as part of a pre-commit hook.
+This is an amalgamation of linting scripts that run to make sure things are all-good. It's run in CI and as part of a pre-commit hook.
 
-- `prettier-lint`
+- `fmt-lint`
 - `tsc-lint`
-- `eslint`
+- `oxlint`
 - `check-license`
 
 #### `prepare`
 
-Runs after the top-level `npm install`. This ensures `./packages/plexus` builds and is available to `./packages/jaeger-ui`.
+Runs after the top-level `npm install`. Sets up husky pre-commit hooks.
 
-#### `prettier`, `prettier-lint`
+#### `fmt`, `fmt-lint`
 
-`prettier` formats the code.
+`fmt` formats the code using Oxfmt (via `vp fmt`).
 
-`prettier-lint` runs `bin-prettier` in the `--list-different` mode, which only outputs filenames if they would be changed by prettier formatting. If any such files are encountered, the program exits with a non-zero code. This is handy for blocking CI and pre-commits.
+`fmt-lint` checks formatting without writing changes. If any files would be reformatted, the program exits with a non-zero code. This blocks CI and pre-commits.
 
 #### `tsc-lint`, `tsc-lint-debug`
 
@@ -65,11 +65,13 @@ Tests for React components in `./packages/jaeger-ui` make extensive use of Jest'
 
 Runs the `lint` and `test` scripts.
 
-## `.eslintrc.js`
+## `.oxlintrc.json`
 
-Pretty basic.
+Oxlint configuration. Mirrors the previously active ESLint rules; see `docs/adr/0007-vite-plus-migration.md` for the rule mapping table.
 
-Note: This configuration is extended by `./packages/plexus/.eslintrc.js`.
+## `.oxfmtrc.json`
+
+Oxfmt configuration. Migrated from the `prettier` config block in `package.json` using `oxfmt --migrate=prettier`.
 
 ## `.github/workflows`
 

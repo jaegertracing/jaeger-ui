@@ -6,7 +6,7 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 // Mock antd components to avoid full antd rendering in jsdom.
-jest.mock('antd', () => {
+vi.mock('antd', () => {
   const React = require('react');
   function MockTabs({ items }: { items: { key: string; label: string; children: React.ReactNode }[] }) {
     return React.createElement(
@@ -39,27 +39,29 @@ jest.mock('antd', () => {
 //     that are unavailable in jsdom
 // We only test that the Demo's static HTML structure (section headings) is
 // present, not the actual graph rendering.
-jest.mock('../../src', () => {
+vi.mock('../../src', () => {
   const React = require('react');
 
   function MockDigraph() {
     return React.createElement('div', { 'data-testid': 'digraph-stub' });
   }
   MockDigraph.propsFactories = {
-    classNameIsSmall: jest.fn(),
-    scaleStrokeOpacity: jest.fn(),
-    scaleStrokeOpacityStrong: jest.fn(),
-    scaleStrokeOpacityStrongest: jest.fn(),
+    classNameIsSmall: vi.fn(),
+    scaleStrokeOpacity: vi.fn(),
+    scaleStrokeOpacityStrong: vi.fn(),
+    scaleStrokeOpacityStrongest: vi.fn(),
   };
 
   return {
-    LayoutManager: jest.fn().mockImplementation(() => ({
-      getLayout: jest.fn(() => ({
-        layout: new Promise(() => {}),
-        positions: new Promise(() => {}),
-      })),
-      stopAndRelease: jest.fn(),
-    })),
+    LayoutManager: vi.fn(function () {
+      return {
+        getLayout: vi.fn(() => ({
+          layout: new Promise(() => {}),
+          positions: new Promise(() => {}),
+        })),
+        stopAndRelease: vi.fn(),
+      };
+    }),
     Digraph: MockDigraph,
   };
 });

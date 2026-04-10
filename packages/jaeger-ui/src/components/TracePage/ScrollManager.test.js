@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('./scroll-page');
+vi.mock('./scroll-page');
 
 import { scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';

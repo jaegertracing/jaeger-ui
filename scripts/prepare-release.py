@@ -128,13 +128,12 @@ def update_package_json(version, dry_run=False):
             json.dump(data, f, indent=2)
             f.write('\n') # Add trailing newline
 
-def run_prettier(dry_run=False):
+def run_fmt(dry_run=False):
     if dry_run:
-        print("[Dry Run] Would run 'npm run prettier'")
+        print("[Dry Run] Would run 'npm run fmt'")
     else:
-        print("Running prettier...")
-        # Run prettier on the modify files to ensure correct formatting
-        run_command(["npm", "run", "prettier", "--", "packages/jaeger-ui/package.json"])
+        print("Running fmt on the modified files to ensure correct formatting...")
+        run_command(["npm", "run", "fmt", "--", "packages/jaeger-ui/package.json"])
 
 def git_commit_and_pr(version, branch_name):
     print("Committing changes...")
@@ -165,7 +164,7 @@ def main():
     notes = generate_release_notes()
     update_changelog(version, notes, dry_run=args.dry_run)
     update_package_json(version, dry_run=args.dry_run)
-    run_prettier(dry_run=args.dry_run)
+    run_fmt(dry_run=args.dry_run)
     
     if args.dry_run:
         print("Dry run finished. No changes were made.")

@@ -8,7 +8,7 @@ import * as getConfig from '../utils/config/get-config';
 import stringSupplant from '../utils/stringSupplant';
 import JaegerAPI from '../api/jaeger';
 
-jest.mock('lru-memoize', () => () => x => x);
+vi.mock('lru-memoize', () => mockDefault(() => x => x));
 
 describe('getDecoration', () => {
   let getConfigSpy;

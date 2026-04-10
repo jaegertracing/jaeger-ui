@@ -2,7 +2,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Col, Row, Tabs } from 'antd';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
@@ -17,7 +17,6 @@ import * as jaegerApiActions from '../../actions/jaeger-api';
 import * as fileReaderActions from '../../actions/file-reader-api';
 import * as orderBy from '../../model/order-by';
 import ErrorMessage from '../common/ErrorMessage';
-import { actions as traceDiffActions } from '../TraceDiff/duck';
 import { fetchedState } from '../../constants';
 import { sortTraces } from '../../model/search';
 import FileLoader from './FileLoader';
@@ -26,7 +25,9 @@ import './index.css';
 import JaegerLogo from '../../img/jaeger-logo.svg';
 import withRouteProps from '../../utils/withRouteProps';
 import { trackSortByChange } from './SearchForm.track';
-import { ReduxState, FetchedTrace } from '../../types';
+import { useTraceDiffStore } from '../../stores/trace-diff-store';
+import { useShallow } from 'zustand/react/shallow';
+import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
 import { Trace } from '../../types/trace';
 import { IOtelTrace } from '../../types/otel';
@@ -48,7 +49,8 @@ interface ISearchTracePageImplOwnProps {
 // Props from mapStateToProps
 interface IStateProps {
   queryOfResults: IQueryOfResults | null;
-  diffCohort: FetchedTrace[];
+  // passed as-is from Redux; cohort lookup happens in the component where Zustand is accessible
+  tracesInRedux: ReduxState['trace'];
   embedded?: IEmbeddedConfig;
   loadingTraces: boolean;
   traces: Trace[];
@@ -61,8 +63,6 @@ interface IStateProps {
 
 // Props from mapDispatchToProps
 interface IDispatchProps {
-  cohortAddTrace: (traceId: string) => void;
-  cohortRemoveTrace: (traceId: string) => void;
   fetchMultipleTraces: (traceIds: string[]) => void;
   searchTraces: (query: TUrlState) => void;
   loadJsonTraces: (fileList: { file: File }) => void;
@@ -73,9 +73,7 @@ type SearchTracePageImplProps = ISearchTracePageImplOwnProps & IStateProps & IDi
 // export for tests
 export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   const {
-    cohortAddTrace,
-    cohortRemoveTrace,
-    diffCohort,
+    tracesInRedux,
     embedded,
     errors,
     fetchMultipleTraces,
@@ -90,6 +88,30 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     sortedTracesXformer,
     traces,
   } = props;
+
+  // On Search: when we click “add to compare” / remove, we write that list
+  // straight into the store. So the list is not only updated when the
+  // tracediff is open - search updates it itself.
+  //
+  // On compare page: the browser URL is what we trust for that view.
+  // When that screen loads, we compare URL vs store and, if they differ,
+  // we copy the URL into the store so everything matches.
+  //
+  // So in normal use: search fills the list from clicks; compare corrects
+  // the list from the URL when we open it. TopNav reads the store to build
+  // the Compare link - same list search is using. Having both URL
+  // and store can sound like two sources of truth. The idea is: URL wins
+  // when we are on compare; while we are on Search, the list in the store
+  // is whatever we set with the ui actions, not something that only updates
+  // when we open the compare page.
+  const { cohortAddTrace, cohortRemoveTrace } = useTraceDiffStore(
+    useShallow(s => ({
+      cohortAddTrace: s.cohortAddTrace,
+      cohortRemoveTrace: s.cohortRemoveTrace,
+    }))
+  );
+  const cohort = useTraceDiffStore(s => s.cohort);
+  const diffCohort = useMemo(() => stateTraceDiffXformer(tracesInRedux, { cohort }), [tracesInRedux, cohort]);
 
   const config = useConfig();
   const { disableFileUploadControl } = config;
@@ -141,13 +163,13 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   return (
     <Row className="SearchTracePage--row">
       {!embedded && (
-        <Col span={6} className="SearchTracePage--column">
+        <Col xs={24} sm={6} className="SearchTracePage--column">
           <div className="SearchTracePage--find">
             <Tabs size="large" items={tabItems} />
           </div>
         </Col>
       )}
-      <Col span={!embedded ? 18 : 24} className="SearchTracePage--column">
+      <Col xs={24} sm={!embedded ? 18 : 24} className="SearchTracePage--column">
         {showErrors && (
           <div className="js-test-error-message">
             <h2>There was an error loading traces: </h2>
@@ -218,7 +240,7 @@ const stateTraceXformer = memoizeOne((stateTrace: ReduxState['trace']) => {
   return { traces, rawTraces, maxDuration, traceError, loadingTraces, query };
 });
 
-const stateTraceDiffXformer = memoizeOne(
+export const stateTraceDiffXformer = memoizeOne(
   (stateTrace: ReduxState['trace'], stateTraceDiff: IStateTraceDiff) => {
     const { traces } = stateTrace;
     const { cohort } = stateTraceDiff;
@@ -237,7 +259,7 @@ export function mapStateToProps(
   state: ReduxState,
   ownProps: { search?: string }
 ): IStateProps & { isHomepage: boolean } {
-  const { embedded, traceDiff } = state;
+  const { embedded } = state;
   const query = getUrlState(ownProps.search || '');
   const isHomepage = !Object.keys(query).length;
   const {
@@ -248,7 +270,6 @@ export function mapStateToProps(
     traceError,
     loadingTraces,
   } = stateTraceXformer(state.trace);
-  const diffCohort = stateTraceDiffXformer(state.trace, traceDiff);
   const errors: Array<{ message: string }> = [];
   if (traceError && typeof traceError === 'object' && 'message' in traceError) {
     errors.push({ message: traceError.message });
@@ -257,7 +278,7 @@ export function mapStateToProps(
   // as we no longer use Redux for services (PR 3329).
   return {
     queryOfResults: queryOfResults as IQueryOfResults | null,
-    diffCohort,
+    tracesInRedux: state.trace,
     embedded,
     isHomepage,
     loadingTraces,
@@ -273,10 +294,7 @@ export function mapStateToProps(
 function mapDispatchToProps(dispatch: Dispatch): IDispatchProps {
   const { fetchMultipleTraces, searchTraces } = bindActionCreators(jaegerApiActions, dispatch);
   const { loadJsonTraces } = bindActionCreators(fileReaderActions, dispatch);
-  const { cohortAddTrace, cohortRemoveTrace } = bindActionCreators(traceDiffActions, dispatch);
   return {
-    cohortAddTrace,
-    cohortRemoveTrace,
     fetchMultipleTraces,
     searchTraces,
     loadJsonTraces,

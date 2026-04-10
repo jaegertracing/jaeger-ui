@@ -3,7 +3,7 @@
 
 import { ApiError } from './api-error';
 
-export type LoadingTraceArchive = { isLoading: true };
+export type LoadingTraceArchive = { isArchiving: true };
 export type SuccessfulTraceArchive = { isAcknowledged: false; isArchived: true };
 export type ErrorTraceArchive = { error: ApiError; isAcknowledged: false; isArchived: false; isError: true };
 export type AcknowledgedTraceArchive = Omit<SuccessfulTraceArchive | ErrorTraceArchive, 'isAcknowledged'> & {

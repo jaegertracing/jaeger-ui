@@ -1,10 +1,8 @@
 // Copyright (c) 2023 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-/* eslint-disable import/no-extraneous-dependencies */
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import legacy from '@vitejs/plugin-legacy';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -63,7 +61,7 @@ function bundleStatsPlugin(outDir: string) {
       // Aggregate sizes by package name.
       const packageSizes = new Map<string, number>();
       for (const [rawMod, { rendered, chunk }] of moduleData) {
-        const mod = rawMod.replace(/\0/g, '');
+        const mod = rawMod.replaceAll('\0', ''); // strips Rolldown's null-byte module prefix
         const chunkTotal = chunkTotals.get(chunk);
         if (!chunkTotal) continue;
         const chunkPath = path.resolve(outDir, chunk);
@@ -213,9 +211,6 @@ export default defineConfig({
       babel: {
         babelrc: true,
       },
-    }),
-    legacy({
-      targets: ['>0.5%', 'not dead', 'not ie <= 11', 'not op_mini all'],
     }),
   ],
   css: {

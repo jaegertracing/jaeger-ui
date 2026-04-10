@@ -10,7 +10,7 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "declaration": true,
@@ -18,13 +18,5 @@
     "jsx": "react-jsx"
   },
   "include": [],
-  "files": [],
-  "references": [
-    {
-      "path": "packages/jaeger-ui/tsconfig.lint.json"
-    },
-    {
-      "path": "packages/plexus/tsconfig.json"
-    }
-  ]
+  "files": []
 }

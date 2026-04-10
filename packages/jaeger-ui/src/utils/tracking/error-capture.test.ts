@@ -12,27 +12,27 @@ import {
 
 describe('error-capture', () => {
   let originalFetch: typeof window.fetch;
-  let addEventListenerSpy: jest.SpyInstance;
-  let mockFetch: jest.Mock;
+  let addEventListenerSpy: ReturnType<typeof vi.spyOn>;
+  let mockFetch: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     originalFetch = window.fetch;
     // Mock fetch to avoid network requests
-    mockFetch = jest.fn().mockReturnValue(
+    mockFetch = vi.fn().mockReturnValue(
       Promise.resolve({
         status: 200,
         json: () => Promise.resolve({}),
       } as Response)
     );
-    window.fetch = mockFetch;
+    window.fetch = mockFetch as unknown as typeof window.fetch;
 
-    addEventListenerSpy = jest.spyOn(window, 'addEventListener');
+    addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     resetState();
   });
 
   afterEach(() => {
     window.fetch = originalFetch;
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     // Ideally we would reset the module state here, but we can't easily do that with ES modules without jest.resetModules() and dynamic imports.
     // However, since we are testing the "singleton" behavior, we might need a way to reset it if we want to test "first init" vs "second init" purely.
     // For now, we will rely on the fact that we can't easily reset the internal boolean, so we have to structure tests accordingly
@@ -95,8 +95,8 @@ describe('error-capture', () => {
     });
 
     it('updates config on subsequent calls', () => {
-      const mockOnError = jest.fn();
-      init({ onError: mockOnError });
+      const mockOnError = vi.fn();
+      init({ onError: mockOnError as any });
 
       captureException(new Error('test'));
       expect(mockOnError).toHaveBeenCalled();
@@ -133,8 +133,8 @@ describe('error-capture', () => {
 
   describe('captureException', () => {
     it('captures string errors', () => {
-      const mockOnError = jest.fn();
-      init({ onError: mockOnError });
+      const mockOnError = vi.fn();
+      init({ onError: mockOnError as any });
       captureException('string error');
       expect(mockOnError).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'Error', message: 'string error' }),
@@ -143,8 +143,8 @@ describe('error-capture', () => {
     });
 
     it('captures Error objects', () => {
-      const mockOnError = jest.fn();
-      init({ onError: mockOnError });
+      const mockOnError = vi.fn();
+      init({ onError: mockOnError as any });
       const err = new Error('obj error');
       captureException(err);
       expect(mockOnError).toHaveBeenCalledWith(
@@ -160,8 +160,8 @@ describe('error-capture', () => {
     });
 
     it('ignores 501 errors from metrics API', () => {
-      const mockOnError = jest.fn();
-      init({ onError: mockOnError });
+      const mockOnError = vi.fn();
+      init({ onError: mockOnError as any });
       const err: any = new Error('HTTP Error: metrics querying is currently disabled');
       err.httpStatus = 501;
       captureException(err);
@@ -170,8 +170,8 @@ describe('error-capture', () => {
     });
 
     it('captures non-501 HTTP errors normally', () => {
-      const mockOnError = jest.fn();
-      init({ onError: mockOnError });
+      const mockOnError = vi.fn();
+      init({ onError: mockOnError as any });
       const err: any = new Error('HTTP Error: Not Found');
       err.httpStatus = 404;
       captureException(err);
@@ -184,11 +184,11 @@ describe('error-capture', () => {
   });
 
   describe('Breadcrumbs', () => {
-    let mockOnError: jest.Mock;
+    let mockOnError: ReturnType<typeof vi.fn>;
 
     beforeEach(() => {
-      mockOnError = jest.fn();
-      init({ onError: mockOnError });
+      mockOnError = vi.fn();
+      init({ onError: mockOnError as any });
       // Reset breadcrumbs if possible? No export.
       // But invalidating init doesn't reset them.
     });
