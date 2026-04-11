@@ -322,6 +322,40 @@ describe('useTraceTimelineStore', () => {
     });
   });
 
+  describe('expandOne', () => {
+    it('expands the shallowest collapsed parent level', () => {
+      const spans = [
+        makeSpan({ spanID: 'root', depth: 0, hasChildren: true }),
+        makeSpan({ spanID: 'child-parent', depth: 1, hasChildren: true }),
+        makeSpan({ spanID: 'leaf', depth: 2 }),
+      ];
+      useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['root', 'child-parent']) });
+      useTraceTimelineStore.getState().expandOne(spans);
+      const { childrenHiddenIDs } = useTraceTimelineStore.getState();
+      expect(childrenHiddenIDs.has('root')).toBe(false);
+      expect(childrenHiddenIDs.has('child-parent')).toBe(true);
+    });
+
+    it('expands each level on successive calls', () => {
+      const spans = [
+        makeSpan({ spanID: 'root', depth: 0, hasChildren: true }),
+        makeSpan({ spanID: 'child-parent', depth: 1, hasChildren: true }),
+        makeSpan({ spanID: 'leaf', depth: 2 }),
+      ];
+      useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['root', 'child-parent']) });
+      useTraceTimelineStore.getState().expandOne(spans);
+      useTraceTimelineStore.getState().expandOne(spans);
+      expect(useTraceTimelineStore.getState().childrenHiddenIDs.size).toBe(0);
+    });
+
+    it('is a no-op when nothing is collapsed', () => {
+      const spans = [makeSpan({ spanID: 'root', depth: 0, hasChildren: true })];
+      const stateBefore = useTraceTimelineStore.getState();
+      useTraceTimelineStore.getState().expandOne(spans);
+      expect(useTraceTimelineStore.getState()).toBe(stateBefore);
+    });
+  });
+
   describe('collapseAll', () => {
     it('hides all parent spans', () => {
       const spans = [makeSpan({ spanID: 'parent', hasChildren: true }), makeSpan({ spanID: 'child' })];
@@ -335,6 +369,48 @@ describe('useTraceTimelineStore', () => {
       useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['parent']) });
       useTraceTimelineStore.getState().collapseAll(spans);
       expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('parent')).toBe(true);
+    });
+  });
+
+  describe('collapseOne', () => {
+    it('collapses only the deepest uncollapsed parent level', () => {
+      const spans = [
+        makeSpan({ spanID: 'root', depth: 0, hasChildren: true }),
+        makeSpan({ spanID: 'child-parent', depth: 1, hasChildren: true }),
+        makeSpan({ spanID: 'leaf', depth: 2 }),
+      ];
+      useTraceTimelineStore.getState().collapseOne(spans);
+      const { childrenHiddenIDs } = useTraceTimelineStore.getState();
+      expect(childrenHiddenIDs.has('child-parent')).toBe(true);
+      expect(childrenHiddenIDs.has('root')).toBe(false);
+      expect(childrenHiddenIDs.has('leaf')).toBe(false);
+    });
+
+    it('collapses the next shallower level on a successive call', () => {
+      const spans = [
+        makeSpan({ spanID: 'root', depth: 0, hasChildren: true }),
+        makeSpan({ spanID: 'child-parent', depth: 1, hasChildren: true }),
+        makeSpan({ spanID: 'leaf', depth: 2 }),
+      ];
+      useTraceTimelineStore.getState().collapseOne(spans);
+      useTraceTimelineStore.getState().collapseOne(spans);
+      const { childrenHiddenIDs } = useTraceTimelineStore.getState();
+      expect(childrenHiddenIDs.has('child-parent')).toBe(true);
+      expect(childrenHiddenIDs.has('root')).toBe(true);
+      expect(childrenHiddenIDs.has('leaf')).toBe(false);
+    });
+
+    it('is a no-op when all parents are already collapsed', () => {
+      const spans = [
+        makeSpan({ spanID: 'root', depth: 0, hasChildren: true }),
+        makeSpan({ spanID: 'child-parent', depth: 1, hasChildren: true }),
+      ];
+      useTraceTimelineStore.setState({
+        childrenHiddenIDs: new Set(['root', 'child-parent']),
+      });
+      const stateBefore = useTraceTimelineStore.getState();
+      useTraceTimelineStore.getState().collapseOne(spans);
+      expect(useTraceTimelineStore.getState()).toBe(stateBefore);
     });
   });
 
@@ -451,24 +527,33 @@ describe('calculateFocusedFindRowStates', () => {
     vi.mocked(spanAncestorIds).mockReset();
   });
 
-  it('returns empty state when no spans match', () => {
+  it('only hides parent spans (hasChildren=true) when no match', () => {
     vi.mocked(filterSpans).mockReturnValue(new Set());
     vi.mocked(spanAncestorIds).mockReturnValue([]);
-    const spans = [makeSpan({ spanID: 'a' })];
+    const spans = [makeSpan({ spanID: 'parent', hasChildren: true }), makeSpan({ spanID: 'leaf' })];
     const result = calculateFocusedFindRowStates('noMatch', spans);
-    expect(result.childrenHiddenIDs.size).toBe(1);
+    // Only the parent should be in childrenHiddenIDs, not the leaf.
+    expect(result.childrenHiddenIDs.has('parent')).toBe(true);
+    expect(result.childrenHiddenIDs.has('leaf')).toBe(false);
     expect(result.detailStates.size).toBe(0);
     expect(result.shouldScrollToFirstUiFindMatch).toBe(false);
   });
 
-  it('expands matching spans and scrolls to first match', () => {
-    vi.mocked(filterSpans).mockReturnValue(new Set(['a']));
+  it('expands ancestors of matching spans and scrolls to first match', () => {
+    vi.mocked(filterSpans).mockReturnValue(new Set(['leaf']));
     vi.mocked(spanAncestorIds).mockReturnValue(['root']);
-    const spans = [makeSpan({ spanID: 'root' }), makeSpan({ spanID: 'a' })];
+    const spans = [makeSpan({ spanID: 'root', hasChildren: true }), makeSpan({ spanID: 'leaf' })];
     const result = calculateFocusedFindRowStates('find', spans);
     expect(result.shouldScrollToFirstUiFindMatch).toBe(true);
-    expect(result.detailStates.has('a')).toBe(true);
+    expect(result.detailStates.has('leaf')).toBe(true);
     expect(result.childrenHiddenIDs.has('root')).toBe(false);
+  });
+
+  it('does not throw when filterSpans returns an ID not in the spans array', () => {
+    vi.mocked(filterSpans).mockReturnValue(new Set(['unknown-id']));
+    vi.mocked(spanAncestorIds).mockReturnValue([]);
+    const spans = [makeSpan({ spanID: 'only-span' })];
+    expect(() => calculateFocusedFindRowStates('find', spans)).not.toThrow();
   });
 });
 

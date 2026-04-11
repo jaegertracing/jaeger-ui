@@ -17,8 +17,7 @@ export const SIDE_PANEL_WIDTH_MAX = 0.7;
 export const MIN_TIMELINE_COLUMN_WIDTH = 0.05;
 
 function shouldDisableCollapse(allSpans: ReadonlyArray<IOtelSpan>, hiddenSpansIds: Set<string>): boolean {
-  const allParentSpans = allSpans.filter(s => s.hasChildren);
-  return allParentSpans.length === hiddenSpansIds.size;
+  return allSpans.filter(s => s.hasChildren).every(p => hiddenSpansIds.has(p.spanID));
 }
 
 type FocusedFindRowStates = {
@@ -39,7 +38,7 @@ export function calculateFocusedFindRowStates(
 
   spans.forEach(span => {
     spansMap.set(span.spanID, span);
-    if (allowHide) {
+    if (allowHide && span.hasChildren) {
       childrenHiddenIDs.add(span.spanID);
     }
   });
@@ -49,7 +48,9 @@ export function calculateFocusedFindRowStates(
     matchedSpanIds.forEach(spanID => {
       const span = spansMap.get(spanID);
       detailStates.set(spanID, new DetailState());
-      spanAncestorIds(span).forEach(ancestorID => childrenHiddenIDs.delete(ancestorID));
+      if (span) {
+        spanAncestorIds(span).forEach(ancestorID => childrenHiddenIDs.delete(ancestorID));
+      }
     });
     shouldScrollToFirstUiFindMatch = true;
   }
