@@ -3,8 +3,11 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/DetailState';
 import {
+  calculateFocusedFindRowStates,
   getInitialLayoutState,
+  getSelectedSpanID,
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
@@ -15,8 +18,12 @@ import {
 vi.mock('../utils/config/get-config', () => ({
   default: vi.fn(() => ({})),
 }));
+vi.mock('../utils/filter-spans');
+vi.mock('../utils/span-ancestor-ids');
 
 import getConfig from '../utils/config/get-config';
+import filterSpans from '../utils/filter-spans';
+import spanAncestorIds from '../utils/span-ancestor-ids';
 
 describe('getInitialLayoutState()', () => {
   beforeEach(() => {
@@ -116,6 +123,17 @@ describe('getInitialLayoutState()', () => {
   });
 });
 
+const makeSpan = (overrides: Record<string, unknown> = {}) =>
+  ({
+    spanID: 'span-1',
+    depth: 0,
+    hasChildren: false,
+    childSpans: [],
+    ...overrides,
+  }) as any;
+
+const makeTrace = (traceID = 'trace-1', spans: any[] = [makeSpan()]) => ({ traceID, spans }) as any;
+
 describe('useTraceTimelineStore', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -124,7 +142,13 @@ describe('useTraceTimelineStore', () => {
       sidePanelWidth: 0.375,
       detailPanelMode: 'inline',
       timelineBarsVisible: true,
+      traceID: null,
+      childrenHiddenIDs: new Set(),
+      detailStates: new Map(),
+      shouldScrollToFirstUiFindMatch: false,
     });
+    vi.mocked(filterSpans).mockReset();
+    vi.mocked(spanAncestorIds).mockReset();
   });
 
   describe('setSpanNameColumnWidth', () => {
@@ -199,6 +223,29 @@ describe('useTraceTimelineStore', () => {
       useTraceTimelineStore.getState().setDetailPanelMode('inline');
       expect(useTraceTimelineStore.getState().spanNameColumnWidth).toBeCloseTo(0.8);
     });
+
+    it('trims detailStates to one entry upgraded to sidepanel mode when switching to sidepanel', () => {
+      const first = new DetailState();
+      const second = new DetailState();
+      useTraceTimelineStore.setState({
+        detailStates: new Map([
+          ['span-a', first],
+          ['span-b', second],
+        ]),
+      });
+      useTraceTimelineStore.getState().setDetailPanelMode('sidepanel');
+      const { detailStates } = useTraceTimelineStore.getState();
+      expect(detailStates.size).toBe(1);
+      expect(detailStates.has('span-a')).toBe(true);
+      expect(detailStates.get('span-a')!.isAttributesOpen).toBe(true);
+    });
+
+    it('does not touch detailStates when switching to inline', () => {
+      const ds = new Map([['span-a', new DetailState()]]);
+      useTraceTimelineStore.setState({ detailStates: ds, detailPanelMode: 'sidepanel' });
+      useTraceTimelineStore.getState().setDetailPanelMode('inline');
+      expect(useTraceTimelineStore.getState().detailStates).toBe(ds);
+    });
   });
 
   describe('setTimelineBarsVisible', () => {
@@ -213,5 +260,228 @@ describe('useTraceTimelineStore', () => {
       useTraceTimelineStore.getState().setTimelineBarsVisible(true);
       expect(localStorage.getItem('timelineVisible')).toBe('true');
     });
+  });
+
+  describe('setTrace', () => {
+    it('resets ephemeral state when traceID changes', () => {
+      useTraceTimelineStore.setState({
+        traceID: 'old-trace',
+        childrenHiddenIDs: new Set(['span-x']),
+        detailStates: new Map([['span-x', new DetailState()]]),
+        shouldScrollToFirstUiFindMatch: true,
+      });
+      useTraceTimelineStore.getState().setTrace(makeTrace('new-trace'));
+      const s = useTraceTimelineStore.getState();
+      expect(s.traceID).toBe('new-trace');
+      expect(s.childrenHiddenIDs.size).toBe(0);
+      expect(s.detailStates.size).toBe(0);
+      expect(s.shouldScrollToFirstUiFindMatch).toBe(false);
+    });
+
+    it('preserves layout prefs when traceID changes', () => {
+      useTraceTimelineStore.setState({ spanNameColumnWidth: 0.5, traceID: 'old' });
+      useTraceTimelineStore.getState().setTrace(makeTrace('new'));
+      expect(useTraceTimelineStore.getState().spanNameColumnWidth).toBe(0.5);
+    });
+
+    it('is a no-op when traceID is the same', () => {
+      useTraceTimelineStore.setState({
+        traceID: 'same',
+        childrenHiddenIDs: new Set(['span-x']),
+      });
+      useTraceTimelineStore.getState().setTrace(makeTrace('same'));
+      expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('span-x')).toBe(true);
+    });
+
+    it('applies uiFind filter when provided', () => {
+      vi.mocked(filterSpans).mockReturnValue(new Set(['span-1']));
+      vi.mocked(spanAncestorIds).mockReturnValue([]);
+      useTraceTimelineStore.getState().setTrace(makeTrace('t1'), 'myFind');
+      expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(true);
+    });
+  });
+
+  describe('childrenToggle', () => {
+    it('adds spanID to childrenHiddenIDs when not present', () => {
+      useTraceTimelineStore.getState().childrenToggle('span-a');
+      expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('span-a')).toBe(true);
+    });
+
+    it('removes spanID from childrenHiddenIDs when already present', () => {
+      useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['span-a']) });
+      useTraceTimelineStore.getState().childrenToggle('span-a');
+      expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('span-a')).toBe(false);
+    });
+  });
+
+  describe('expandAll', () => {
+    it('clears all collapsed children', () => {
+      useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['a', 'b', 'c']) });
+      useTraceTimelineStore.getState().expandAll();
+      expect(useTraceTimelineStore.getState().childrenHiddenIDs.size).toBe(0);
+    });
+  });
+
+  describe('collapseAll', () => {
+    it('hides all parent spans', () => {
+      const spans = [makeSpan({ spanID: 'parent', hasChildren: true }), makeSpan({ spanID: 'child' })];
+      useTraceTimelineStore.getState().collapseAll(spans);
+      expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('parent')).toBe(true);
+      expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('child')).toBe(false);
+    });
+
+    it('is a no-op when all parents are already collapsed', () => {
+      const spans = [makeSpan({ spanID: 'parent', hasChildren: true })];
+      useTraceTimelineStore.setState({ childrenHiddenIDs: new Set(['parent']) });
+      useTraceTimelineStore.getState().collapseAll(spans);
+      expect(useTraceTimelineStore.getState().childrenHiddenIDs.has('parent')).toBe(true);
+    });
+  });
+
+  describe('detailToggle', () => {
+    it('adds a DetailState for the span in inline mode', () => {
+      useTraceTimelineStore.getState().detailToggle('span-a');
+      expect(useTraceTimelineStore.getState().detailStates.has('span-a')).toBe(true);
+    });
+
+    it('removes an existing DetailState for the span in inline mode', () => {
+      useTraceTimelineStore.setState({ detailStates: new Map([['span-a', new DetailState()]]) });
+      useTraceTimelineStore.getState().detailToggle('span-a');
+      expect(useTraceTimelineStore.getState().detailStates.has('span-a')).toBe(false);
+    });
+
+    it('replaces detailStates with a single entry in sidepanel mode', () => {
+      useTraceTimelineStore.setState({
+        detailPanelMode: 'sidepanel',
+        detailStates: new Map([['span-x', new DetailState()]]),
+      });
+      useTraceTimelineStore.getState().detailToggle('span-y');
+      const { detailStates } = useTraceTimelineStore.getState();
+      expect(detailStates.size).toBe(1);
+      expect(detailStates.has('span-y')).toBe(true);
+    });
+
+    it('clears detailStates when toggling an already-open span in sidepanel mode', () => {
+      useTraceTimelineStore.setState({
+        detailPanelMode: 'sidepanel',
+        detailStates: new Map([['span-a', new DetailState()]]),
+      });
+      useTraceTimelineStore.getState().detailToggle('span-a');
+      expect(useTraceTimelineStore.getState().detailStates.size).toBe(0);
+    });
+  });
+
+  describe('detail subsection toggles', () => {
+    it('detailTagsToggle creates and toggles attributes', () => {
+      useTraceTimelineStore.getState().detailTagsToggle('span-a');
+      expect(useTraceTimelineStore.getState().detailStates.get('span-a')!.isAttributesOpen).toBe(true);
+      useTraceTimelineStore.getState().detailTagsToggle('span-a');
+      expect(useTraceTimelineStore.getState().detailStates.get('span-a')!.isAttributesOpen).toBe(false);
+    });
+
+    it('detailProcessToggle creates and toggles resource', () => {
+      useTraceTimelineStore.getState().detailProcessToggle('span-a');
+      expect(useTraceTimelineStore.getState().detailStates.get('span-a')!.isResourceOpen).toBe(true);
+    });
+
+    it('detailWarningsToggle creates and toggles warnings', () => {
+      useTraceTimelineStore.getState().detailWarningsToggle('span-a');
+      expect(useTraceTimelineStore.getState().detailStates.get('span-a')!.isWarningsOpen).toBe(true);
+    });
+
+    it('detailReferencesToggle creates and toggles links', () => {
+      useTraceTimelineStore.getState().detailReferencesToggle('span-a');
+      expect(useTraceTimelineStore.getState().detailStates.get('span-a')!.isLinksOpen).toBe(true);
+    });
+
+    it('detailLogsToggle creates and toggles events open state', () => {
+      useTraceTimelineStore.setState({
+        detailStates: new Map([['span-a', new DetailState()]]),
+      });
+      useTraceTimelineStore.getState().detailLogsToggle('span-a');
+      expect(useTraceTimelineStore.getState().detailStates.get('span-a')!.events.isOpen).toBe(false);
+    });
+  });
+
+  describe('detailLogItemToggle', () => {
+    it('opens a log item and persists to detailStates', () => {
+      const logItem = {} as any;
+      useTraceTimelineStore.getState().detailLogItemToggle('span-a', logItem);
+      expect(
+        useTraceTimelineStore.getState().detailStates.get('span-a')!.events.openedItems.has(logItem)
+      ).toBe(true);
+    });
+  });
+
+  describe('clearShouldScrollToFirstUiFindMatch', () => {
+    it('sets flag to false when it is true', () => {
+      useTraceTimelineStore.setState({ shouldScrollToFirstUiFindMatch: true });
+      useTraceTimelineStore.getState().clearShouldScrollToFirstUiFindMatch();
+      expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(false);
+    });
+
+    it('is a no-op when flag is already false', () => {
+      const stateBefore = useTraceTimelineStore.getState();
+      useTraceTimelineStore.getState().clearShouldScrollToFirstUiFindMatch();
+      expect(useTraceTimelineStore.getState()).toBe(stateBefore);
+    });
+  });
+
+  describe('focusUiFindMatches', () => {
+    it('is a no-op when uiFind is falsy', () => {
+      const stateBefore = useTraceTimelineStore.getState();
+      useTraceTimelineStore.getState().focusUiFindMatches(makeTrace(), '');
+      expect(useTraceTimelineStore.getState()).toBe(stateBefore);
+    });
+
+    it('updates childrenHiddenIDs, detailStates, shouldScrollToFirstUiFindMatch', () => {
+      vi.mocked(filterSpans).mockReturnValue(new Set(['span-1']));
+      vi.mocked(spanAncestorIds).mockReturnValue([]);
+      useTraceTimelineStore.getState().focusUiFindMatches(makeTrace(), 'myFind');
+      const s = useTraceTimelineStore.getState();
+      expect(s.shouldScrollToFirstUiFindMatch).toBe(true);
+      expect(s.detailStates.has('span-1')).toBe(true);
+    });
+  });
+});
+
+describe('calculateFocusedFindRowStates', () => {
+  beforeEach(() => {
+    vi.mocked(filterSpans).mockReset();
+    vi.mocked(spanAncestorIds).mockReset();
+  });
+
+  it('returns empty state when no spans match', () => {
+    vi.mocked(filterSpans).mockReturnValue(new Set());
+    vi.mocked(spanAncestorIds).mockReturnValue([]);
+    const spans = [makeSpan({ spanID: 'a' })];
+    const result = calculateFocusedFindRowStates('noMatch', spans);
+    expect(result.childrenHiddenIDs.size).toBe(1);
+    expect(result.detailStates.size).toBe(0);
+    expect(result.shouldScrollToFirstUiFindMatch).toBe(false);
+  });
+
+  it('expands matching spans and scrolls to first match', () => {
+    vi.mocked(filterSpans).mockReturnValue(new Set(['a']));
+    vi.mocked(spanAncestorIds).mockReturnValue(['root']);
+    const spans = [makeSpan({ spanID: 'root' }), makeSpan({ spanID: 'a' })];
+    const result = calculateFocusedFindRowStates('find', spans);
+    expect(result.shouldScrollToFirstUiFindMatch).toBe(true);
+    expect(result.detailStates.has('a')).toBe(true);
+    expect(result.childrenHiddenIDs.has('root')).toBe(false);
+  });
+});
+
+describe('getSelectedSpanID', () => {
+  it('returns null when detailStates is empty', () => {
+    expect(getSelectedSpanID(new Map())).toBeNull();
+  });
+
+  it('returns the first key when detailStates has entries', () => {
+    const map = new Map([
+      ['span-a', new DetailState()],
+      ['span-b', new DetailState()],
+    ]);
+    expect(getSelectedSpanID(map)).toBe('span-a');
   });
 });

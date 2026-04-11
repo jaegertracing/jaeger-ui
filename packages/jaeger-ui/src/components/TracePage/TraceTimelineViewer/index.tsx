@@ -5,9 +5,10 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
-import { actions, getSelectedSpanID } from './duck';
-import { useTraceTimelineStore } from '../../../stores/trace-timeline-store';
+import { actions } from './duck';
 import {
+  useTraceTimelineStore,
+  getSelectedSpanID,
   MIN_TIMELINE_COLUMN_WIDTH,
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
@@ -40,7 +41,6 @@ type TProps = TDispatchProps & {
   registerAccessors: (accessors: Accessors) => void;
   findMatchesIDs: Set<string> | TNil;
   scrollToFirstVisibleSpan: () => void;
-  selectedSpanID: string | null;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
@@ -70,7 +70,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     updateViewRangeTime,
     viewRange,
     trace,
-    selectedSpanID,
     useOtelTerms,
     ...rest
   } = props;
@@ -82,6 +81,14 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const timelineBarsVisible = useTraceTimelineStore(s => s.timelineBarsVisible);
   const zustandSetSpanNameColumnWidth = useTraceTimelineStore(s => s.setSpanNameColumnWidth);
   const zustandSetSidePanelWidth = useTraceTimelineStore(s => s.setSidePanelWidth);
+
+  const selectedSpanID = useTraceTimelineStore(s =>
+    s.detailPanelMode === 'sidepanel' ? getSelectedSpanID(s.detailStates) : null
+  );
+  const zustandCollapseAll = useTraceTimelineStore(s => s.collapseAll);
+  const zustandCollapseOne = useTraceTimelineStore(s => s.collapseOne);
+  const zustandExpandAll = useTraceTimelineStore(s => s.expandAll);
+  const zustandExpandOne = useTraceTimelineStore(s => s.expandOne);
 
   const setSpanNameColumnWidth = useCallback(
     (width: number) => {
@@ -104,19 +111,23 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 
   const collapseAll = useCallback(() => {
     collapseAllAction(trace.spans);
-  }, [collapseAllAction, trace.spans]);
+    zustandCollapseAll(trace.spans);
+  }, [collapseAllAction, trace.spans, zustandCollapseAll]);
 
   const collapseOne = useCallback(() => {
     collapseOneAction(trace.spans);
-  }, [collapseOneAction, trace.spans]);
+    zustandCollapseOne(trace.spans);
+  }, [collapseOneAction, trace.spans, zustandCollapseOne]);
 
   const expandAll = useCallback(() => {
     expandAllAction();
-  }, [expandAllAction]);
+    zustandExpandAll();
+  }, [expandAllAction, zustandExpandAll]);
 
   const expandOne = useCallback(() => {
     expandOneAction(trace.spans);
-  }, [expandOneAction, trace.spans]);
+    zustandExpandOne(trace.spans);
+  }, [expandOneAction, trace.spans, zustandExpandOne]);
 
   useEffect(() => {
     mergeShortcuts({
@@ -262,10 +273,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   );
 };
 
-function mapStateToProps(state: ReduxState) {
-  const { detailStates = new Map() } = state.traceTimeline;
-  const selectedSpanID = getSelectedSpanID(detailStates);
-  return { selectedSpanID };
+// selectedSpanID is now computed inside TraceTimelineViewerImpl from the Zustand store.
+function mapStateToProps(_state: ReduxState) {
+  return {};
 }
 
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {

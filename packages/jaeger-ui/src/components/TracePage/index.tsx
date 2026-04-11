@@ -162,6 +162,7 @@ export function TracePageImpl(props: TProps) {
   const timelineBarsVisible = useTraceTimelineStore(s => s.timelineBarsVisible);
   const zustandSetDetailPanelMode = useTraceTimelineStore(s => s.setDetailPanelMode);
   const zustandSetTimelineBarsVisible = useTraceTimelineStore(s => s.setTimelineBarsVisible);
+  const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
 
   const setDetailPanelMode = useCallback(
     (mode: SpanDetailPanelMode) => {
@@ -337,8 +338,9 @@ export function TracePageImpl(props: TProps) {
     if (trace && trace.data) {
       trackFocusMatches();
       focusUiFindMatchesProp(trace.data.asOtelTrace(), uiFind);
+      zustandFocusUiFindMatches(trace.data.asOtelTrace(), uiFind);
     }
-  }, [focusUiFindMatchesProp, trace, uiFind]);
+  }, [focusUiFindMatchesProp, zustandFocusUiFindMatches, trace, uiFind]);
 
   const nextResult = useCallback(() => {
     trackNextMatch();

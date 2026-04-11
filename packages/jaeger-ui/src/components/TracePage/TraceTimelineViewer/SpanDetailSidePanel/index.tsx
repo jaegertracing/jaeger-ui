@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
+import { useDispatch } from 'react-redux';
 import type { Location, NavigateFunction } from 'react-router-dom';
 
 import { actions, getSelectedSpanID } from '../duck';
@@ -12,8 +11,9 @@ import DetailState from '../SpanDetail/DetailState';
 import getLinks from '../../../../model/link-patterns';
 import updateUiFind from '../../../../utils/update-ui-find';
 import withRouteProps from '../../../../utils/withRouteProps';
-import { TNil, ReduxState } from '../../../../types';
+import { TNil } from '../../../../types';
 import { IAttribute, IEvent, IOtelTrace } from '../../../../types/otel';
+import { useTraceTimelineStore } from '../../../../stores/trace-timeline-store';
 
 import './index.css';
 
@@ -23,43 +23,81 @@ type TOwnProps = {
   useOtelTerms: boolean;
 };
 
-type TReduxProps = {
-  detailStates: Map<string, DetailState | TNil>;
-};
-
-type TDispatchProps = {
-  detailLogItemToggle: (spanID: string, logItem: IEvent) => void;
-  detailLogsToggle: (spanID: string) => void;
-  detailProcessToggle: (spanID: string) => void;
-  detailReferencesToggle: (spanID: string) => void;
-  detailTagsToggle: (spanID: string) => void;
-  detailWarningsToggle: (spanID: string) => void;
-  focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil, allowHide?: boolean) => void;
-};
-
 type RouteProps = {
   location: Location;
   navigate: NavigateFunction;
 };
 
-type TProps = TOwnProps & TReduxProps & TDispatchProps & RouteProps;
+type TProps = TOwnProps & RouteProps;
 
 export function SpanDetailSidePanelImpl(props: TProps) {
-  const {
-    trace,
-    currentViewRangeTime,
-    useOtelTerms,
-    detailStates,
-    detailLogItemToggle,
-    detailLogsToggle,
-    detailProcessToggle,
-    detailReferencesToggle,
-    detailTagsToggle,
-    detailWarningsToggle,
-    focusUiFindMatches,
-    location,
-    navigate,
-  } = props;
+  const { trace, currentViewRangeTime, useOtelTerms, location, navigate } = props;
+  const dispatch = useDispatch<any>();
+  const detailStates = useTraceTimelineStore(s => s.detailStates);
+  const zustandDetailLogItemToggle = useTraceTimelineStore(s => s.detailLogItemToggle);
+  const zustandDetailLogsToggle = useTraceTimelineStore(s => s.detailLogsToggle);
+  const zustandDetailProcessToggle = useTraceTimelineStore(s => s.detailProcessToggle);
+  const zustandDetailReferencesToggle = useTraceTimelineStore(s => s.detailReferencesToggle);
+  const zustandDetailTagsToggle = useTraceTimelineStore(s => s.detailTagsToggle);
+  const zustandDetailWarningsToggle = useTraceTimelineStore(s => s.detailWarningsToggle);
+  const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
+
+  // dual-write handlers (Redux first for tracking middleware, Zustand second)
+  const detailLogItemToggle = useCallback(
+    (spanID: string, logItem: IEvent) => {
+      dispatch(actions.detailLogItemToggle(spanID, logItem));
+      zustandDetailLogItemToggle(spanID, logItem);
+    },
+    [dispatch, zustandDetailLogItemToggle]
+  );
+
+  const detailLogsToggle = useCallback(
+    (spanID: string) => {
+      dispatch(actions.detailLogsToggle(spanID));
+      zustandDetailLogsToggle(spanID);
+    },
+    [dispatch, zustandDetailLogsToggle]
+  );
+
+  const detailProcessToggle = useCallback(
+    (spanID: string) => {
+      dispatch(actions.detailProcessToggle(spanID));
+      zustandDetailProcessToggle(spanID);
+    },
+    [dispatch, zustandDetailProcessToggle]
+  );
+
+  const detailReferencesToggle = useCallback(
+    (spanID: string) => {
+      dispatch(actions.detailReferencesToggle(spanID));
+      zustandDetailReferencesToggle(spanID);
+    },
+    [dispatch, zustandDetailReferencesToggle]
+  );
+
+  const detailTagsToggle = useCallback(
+    (spanID: string) => {
+      dispatch(actions.detailTagsToggle(spanID));
+      zustandDetailTagsToggle(spanID);
+    },
+    [dispatch, zustandDetailTagsToggle]
+  );
+
+  const detailWarningsToggle = useCallback(
+    (spanID: string) => {
+      dispatch(actions.detailWarningsToggle(spanID));
+      zustandDetailWarningsToggle(spanID);
+    },
+    [dispatch, zustandDetailWarningsToggle]
+  );
+
+  const focusUiFindMatches = useCallback(
+    (t: IOtelTrace, uiFind: string | TNil, allowHide?: boolean) => {
+      dispatch(actions.focusUiFindMatches(t, uiFind, allowHide));
+      zustandFocusUiFindMatches(t, uiFind, allowHide);
+    },
+    [dispatch, zustandFocusUiFindMatches]
+  );
 
   const focusSpan = useCallback(
     (uiFind: string) => {
@@ -109,35 +147,4 @@ export function SpanDetailSidePanelImpl(props: TProps) {
   );
 }
 
-/* istanbul ignore next */
-function mapStateToProps(state: ReduxState): TReduxProps {
-  const { detailStates } = state.traceTimeline;
-  return { detailStates };
-}
-
-/* istanbul ignore next */
-function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const {
-    detailLogItemToggle,
-    detailLogsToggle,
-    detailProcessToggle,
-    detailReferencesToggle,
-    detailTagsToggle,
-    detailWarningsToggle,
-    focusUiFindMatches,
-  } = bindActionCreators(actions, dispatch);
-  return {
-    detailLogItemToggle,
-    detailLogsToggle,
-    detailProcessToggle,
-    detailReferencesToggle,
-    detailTagsToggle,
-    detailWarningsToggle,
-    focusUiFindMatches,
-  };
-}
-
-export default connect<TReduxProps, TDispatchProps, TOwnProps, ReduxState>(
-  mapStateToProps,
-  mapDispatchToProps
-)(withRouteProps(SpanDetailSidePanelImpl));
+export default withRouteProps(SpanDetailSidePanelImpl) as React.ComponentType<TOwnProps>;

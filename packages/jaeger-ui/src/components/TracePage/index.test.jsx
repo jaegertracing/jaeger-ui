@@ -129,6 +129,7 @@ const { mockSubmitTraceToArchive, mockAcknowledge, mockTimelineStore } = vi.hois
     timelineBarsVisible: true,
     setDetailPanelMode: jest.fn(),
     setTimelineBarsVisible: jest.fn(),
+    focusUiFindMatches: jest.fn(),
   },
 }));
 
@@ -216,6 +217,7 @@ describe('<TracePage>', () => {
     capturedHeaderProps = {};
     capturedArchiveNotifierProps = {};
     defaultProps.focusUiFindMatches.mockClear();
+    mockTimelineStore.focusUiFindMatches.mockClear();
   });
 
   describe('clearSearch', () => {
@@ -262,11 +264,15 @@ describe('<TracePage>', () => {
         trackFocusSpy.mockReset();
       });
 
-      it('calls props.focusUiFindMatches with props.trace.data and uiFind when props.trace.data is present', () => {
+      it('dual-writes to Redux + Zustand when props.trace.data is present', () => {
         const uiFind = 'test ui find';
         render(<TracePage {...defaultProps} uiFind={uiFind} />);
         capturedHeaderProps.focusUiFindMatches();
         expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(
+          defaultProps.trace.data.asOtelTrace(),
+          uiFind
+        );
+        expect(mockTimelineStore.focusUiFindMatches).toHaveBeenCalledWith(
           defaultProps.trace.data.asOtelTrace(),
           uiFind
         );
@@ -276,6 +282,7 @@ describe('<TracePage>', () => {
       it('handles when props.trace.data is absent', () => {
         render(<TracePage {...defaultProps} trace={{}} />);
         expect(defaultProps.focusUiFindMatches).not.toHaveBeenCalled();
+        expect(mockTimelineStore.focusUiFindMatches).not.toHaveBeenCalled();
         expect(trackFocusSpy).not.toHaveBeenCalled();
       });
     });
