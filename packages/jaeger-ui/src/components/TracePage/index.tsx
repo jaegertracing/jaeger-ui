@@ -16,7 +16,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { useArchiveStore } from '../../stores/archive-store';
-import { useTraceTimelineStore } from '../../stores/trace-timeline-store';
+import { useTraceTimelineStore } from './TraceTimelineViewer/store';
 import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
 import {
   CombokeysHandler,

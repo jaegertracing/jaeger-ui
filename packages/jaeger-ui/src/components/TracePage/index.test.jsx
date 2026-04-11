@@ -139,7 +139,7 @@ vi.mock('../../stores/archive-store', () => ({
   ),
 }));
 
-vi.mock('../../stores/trace-timeline-store', () => ({
+vi.mock('./TraceTimelineViewer/store', () => ({
   useTraceTimelineStore: jest.fn(selector => selector(mockTimelineStore)),
   SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
   SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,

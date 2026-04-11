@@ -13,7 +13,7 @@ import updateUiFind from '../../../../utils/update-ui-find';
 import withRouteProps from '../../../../utils/withRouteProps';
 import { TNil } from '../../../../types';
 import { IAttribute, IEvent, IOtelTrace } from '../../../../types/otel';
-import { useTraceTimelineStore } from '../../../../stores/trace-timeline-store';
+import { useTraceTimelineStore } from '../store';
 
 import './index.css';
 

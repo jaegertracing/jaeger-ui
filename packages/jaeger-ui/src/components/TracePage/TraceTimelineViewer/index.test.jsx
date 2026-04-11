@@ -29,7 +29,7 @@ const { mockTraceTimelineStore } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('../../../stores/trace-timeline-store', () => ({
+vi.mock('./store', () => ({
   useTraceTimelineStore: vi.fn(selector => selector(mockTraceTimelineStore)),
   getSelectedSpanID: detailStatesArg =>
     detailStatesArg.size > 0 ? detailStatesArg.keys().next().value : null,

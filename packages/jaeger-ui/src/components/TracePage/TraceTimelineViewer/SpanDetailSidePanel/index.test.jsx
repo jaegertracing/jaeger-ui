@@ -38,7 +38,7 @@ const mockZustandState = vi.hoisted(() => ({
   focusUiFindMatches: jest.fn(),
 }));
 
-vi.mock('../../../../stores/trace-timeline-store', async importOriginal => {
+vi.mock('../store', async importOriginal => {
   const actual = await importOriginal();
   return {
     ...actual,

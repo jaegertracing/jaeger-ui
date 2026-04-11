@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { create } from 'zustand';
-import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/DetailState';
-import { TNil } from '../types';
-import { IOtelSpan, IOtelTrace, IEvent } from '../types/otel';
-import type { SpanDetailPanelMode } from '../types/config';
-import getConfig from '../utils/config/get-config';
-import filterSpans from '../utils/filter-spans';
-import spanAncestorIds from '../utils/span-ancestor-ids';
+import DetailState from './SpanDetail/DetailState';
+import { TNil } from '../../../types';
+import { IOtelSpan, IOtelTrace, IEvent } from '../../../types/otel';
+import type { SpanDetailPanelMode } from '../../../types/config';
+import getConfig from '../../../utils/config/get-config';
+import filterSpans from '../../../utils/filter-spans';
+import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
 export const SPAN_NAME_COLUMN_WIDTH_MIN = 0.15;
 export const SPAN_NAME_COLUMN_WIDTH_MAX = 0.85;

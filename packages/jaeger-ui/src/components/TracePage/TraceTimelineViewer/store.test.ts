@@ -3,7 +3,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/DetailState';
+import DetailState from './SpanDetail/DetailState';
 import {
   calculateFocusedFindRowStates,
   getInitialLayoutState,
@@ -13,17 +13,17 @@ import {
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SPAN_NAME_COLUMN_WIDTH_MIN,
   useTraceTimelineStore,
-} from './trace-timeline-store';
+} from './store';
 
-vi.mock('../utils/config/get-config', () => ({
+vi.mock('../../../utils/config/get-config', () => ({
   default: vi.fn(() => ({})),
 }));
-vi.mock('../utils/filter-spans');
-vi.mock('../utils/span-ancestor-ids');
+vi.mock('../../../utils/filter-spans');
+vi.mock('../../../utils/span-ancestor-ids');
 
-import getConfig from '../utils/config/get-config';
-import filterSpans from '../utils/filter-spans';
-import spanAncestorIds from '../utils/span-ancestor-ids';
+import getConfig from '../../../utils/config/get-config';
+import filterSpans from '../../../utils/filter-spans';
+import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
 describe('getInitialLayoutState()', () => {
   beforeEach(() => {

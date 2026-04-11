@@ -32,7 +32,7 @@ import { TNil, ReduxState } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IOtelTrace, IAttribute, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
-import { useTraceTimelineStore, getSelectedSpanID } from '../../../stores/trace-timeline-store';
+import { useTraceTimelineStore, getSelectedSpanID } from './store';
 
 import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';

@@ -951,7 +951,7 @@ type IArchiveState = {
 
 This is the **largest and most performance-sensitive** slice. Split across multiple PRs.
 
-**New Zustand store** (`src/stores/trace-timeline-store.ts`):
+**New Zustand store** (`src/components/TracePage/TraceTimelineViewer/store.ts`):
 
 | Field | Type | Description | Persisted to |
 | :--- | :--- | :--- | :--- |
