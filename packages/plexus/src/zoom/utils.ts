@@ -7,11 +7,6 @@ const SCALE_MAX = 10;
 const SCALE_MIN = 0.03;
 const SCALE_MARGIN = 0.05;
 
-const DEFAULT_ZOOM_STYLE = Object.freeze({
-  transform: `translate(0px, 0px) scale(1)`,
-  transformOrigin: '0 0',
-});
-
 export const DEFAULT_SCALE_EXTENT: [typeof SCALE_MIN, typeof SCALE_MAX] = [SCALE_MIN, SCALE_MAX];
 
 function boundValue(min: number, max: number, value: number) {
@@ -69,22 +64,15 @@ export function constrainZoom(
   return transform;
 }
 
-export function getZoomStyle(transform: ZoomTransform | null | void): React.CSSProperties {
-  if (transform == null) {
-    return DEFAULT_ZOOM_STYLE;
-  }
+export function getZoomStyle(transform: ZoomTransform): React.CSSProperties {
   const { x, y, k } = transform;
-  const rv: React.CSSProperties = {
+  return {
     transform: `translate(${x.toFixed()}px, ${y.toFixed()}px) scale(${k})`,
     transformOrigin: '0 0',
   };
-  return rv;
 }
 
-export function getZoomAttr(transform: ZoomTransform | null | void) {
-  if (transform == null) {
-    return undefined;
-  }
+export function getZoomAttr(transform: ZoomTransform): string {
   const { x, y, k } = transform;
   return `translate(${x.toFixed()},${y.toFixed()}) scale(${k})`;
 }

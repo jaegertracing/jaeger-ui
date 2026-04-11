@@ -119,16 +119,8 @@ describe('zoom/utils', () => {
   });
 
   describe('getZoomStyle', () => {
-    it('returns default style for null/undefined', () => {
-      expect(getZoomStyle()).toEqual({
-        transform: 'translate(0px, 0px) scale(1)',
-        transformOrigin: '0 0',
-      });
-      expect(getZoomStyle(null)).toEqual({
-        transform: 'translate(0px, 0px) scale(1)',
-        transformOrigin: '0 0',
-      });
-      expect(getZoomStyle(undefined)).toEqual({
+    it('returns CSS properties for identity transform', () => {
+      expect(getZoomStyle(zoomIdentity)).toEqual({
         transform: 'translate(0px, 0px) scale(1)',
         transformOrigin: '0 0',
       });
@@ -144,13 +136,11 @@ describe('zoom/utils', () => {
   });
 
   describe('getZoomAttr', () => {
-    it('returns undefined for null/undefined', () => {
-      expect(getZoomAttr()).toBeUndefined();
-      expect(getZoomAttr(null)).toBeUndefined();
-      expect(getZoomAttr(undefined)).toBeUndefined();
+    it('returns attr string for identity transform', () => {
+      expect(getZoomAttr(zoomIdentity)).toBe('translate(0,0) scale(1)');
     });
 
-    it('returns a string for a valid transform', () => {
+    it('returns attr string for a valid transform', () => {
       const transform = zoomIdentity.translate(10.5, 20.8).scale(2.5);
       expect(getZoomAttr(transform)).toBe('translate(11,21) scale(2.5)');
     });
