@@ -72,8 +72,8 @@ The above command will run a web server on `http://localhost:5173` that will ser
 | `npm start` | Starts development server with hot reloading and api proxy. |
 | `npm test` | Run all the tests |
 | `npm test $file` | Run tests for a specific file, e.g. `npm test src/api/jaeger.test.js` |
-| `npm run lint` | Lint the project (eslint, prettier, typescript) |
-| `npm run fmt` | Apply Prettier source code formatting |
+| `npm run lint` | Lint the project (oxlint, oxfmt, typescript) |
+| `npm run fmt` | Format source code with Oxfmt |
 | `npm run build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
 | `make bundle-stats` | Runs production build and outputs `packages/jaeger-ui/build/bundle-stats.csv` with per-package size breakdown (estimated post-minification bytes). |
 
@@ -136,11 +136,11 @@ Use the following `launch.json` configuration:
 
 Use [typescript](https://www.typescriptlang.org/) for new code. Check types via `npm run tsc-lint`.
 
-We use [`prettier`](https://prettier.io/), an "opinionated" code formatter. It can be applied to both JavaScript and CSS source files via `npm run prettier`.
+We use [Oxfmt](https://viteplus.dev) for code formatting (part of the Vite+ toolchain). It can be applied via `npm run fmt`.
 
-Then, most issues will be caught by the linter, which can be applied via `npm run eslint`.
+Most issues will be caught by the linter, which can be applied via `npm run oxlint`.
 
-Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as noted in our `.eslintrc`.
+Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as noted in our `.oxlintrc.json`.
 
 ## File Headers
 

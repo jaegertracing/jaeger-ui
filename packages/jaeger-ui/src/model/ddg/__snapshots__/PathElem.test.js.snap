@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PathElem legibility creates consumable JSON 1`] = `
+exports[`PathElem > legibility > creates consumable JSON 1`] = `
 Object {
   "memberIdx": 1,
   "memberOf": Object {

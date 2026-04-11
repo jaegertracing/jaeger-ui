@@ -15,7 +15,8 @@ import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
-import { actions as archiveActions } from './ArchiveNotifier/duck';
+import { useArchiveStore } from '../../stores/archive-store';
+import { useTraceTimelineStore } from '../../stores/trace-timeline-store';
 import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
 import {
   CombokeysHandler,
@@ -43,7 +44,6 @@ import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphU
 import { fetchedState } from '../../constants';
 import { FetchedTrace, LocationState, ReduxState, TNil } from '../../types';
 import { IOtelTrace } from '../../types/otel';
-import { TraceArchive } from '../../types/archive';
 import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
@@ -58,8 +58,6 @@ import memoizedTraceCriticalPath from './CriticalPath/index';
 import withRouteProps from '../../utils/withRouteProps';
 
 type TDispatchProps = {
-  acknowledgeArchive: (id: string) => void;
-  archiveTrace: (id: string) => void;
   fetchTrace: (id: string) => void;
   focusUiFindMatches: (trace: IOtelTrace, uiFind: string | TNil) => void;
   setDetailPanelMode: (mode: SpanDetailPanelMode) => void;
@@ -79,11 +77,8 @@ type TOwnProps = {
 };
 
 type TReduxProps = {
-  archiveTraceState: TraceArchive | TNil;
-  detailPanelMode: SpanDetailPanelMode;
   embedded: null | EmbeddedState;
   id: string;
-  timelineBarsVisible: boolean;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
 };
@@ -144,12 +139,8 @@ export function makeShortcutCallbacks(adjRange: (start: number, end: number) => 
 // export for tests
 export function TracePageImpl(props: TProps) {
   const {
-    acknowledgeArchive: acknowledgeArchiveProp,
     archiveEnabled,
-    archiveTrace: archiveTraceProp,
-    archiveTraceState,
     criticalPathEnabled,
-    detailPanelMode,
     disableJsonView,
     embedded,
     enableSidePanel,
@@ -157,17 +148,42 @@ export function TracePageImpl(props: TProps) {
     focusUiFindMatches: focusUiFindMatchesProp,
     id,
     location,
-    setDetailPanelMode,
-    setTimelineBarsVisible,
+    setDetailPanelMode: reduxSetDetailPanelMode,
+    setTimelineBarsVisible: reduxSetTimelineBarsVisible,
     storageCapabilities,
-    timelineBarsVisible,
     trace,
     traceGraphConfig,
     uiFind,
     useOtelTerms,
   } = props;
 
+  // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
+  const detailPanelMode = useTraceTimelineStore(s => s.detailPanelMode);
+  const timelineBarsVisible = useTraceTimelineStore(s => s.timelineBarsVisible);
+  const zustandSetDetailPanelMode = useTraceTimelineStore(s => s.setDetailPanelMode);
+  const zustandSetTimelineBarsVisible = useTraceTimelineStore(s => s.setTimelineBarsVisible);
+
+  const setDetailPanelMode = useCallback(
+    (mode: SpanDetailPanelMode) => {
+      zustandSetDetailPanelMode(mode);
+      reduxSetDetailPanelMode(mode);
+    },
+    [zustandSetDetailPanelMode, reduxSetDetailPanelMode]
+  );
+
+  const setTimelineBarsVisible = useCallback(
+    (visible: boolean) => {
+      zustandSetTimelineBarsVisible(visible);
+      reduxSetTimelineBarsVisible(visible);
+    },
+    [zustandSetTimelineBarsVisible, reduxSetTimelineBarsVisible]
+  );
+
   const navigate = useNavigate();
+
+  const archiveTraceState = useArchiveStore(s => (id ? (s.archives[id] ?? null) : null));
+  const submitTraceToArchiveFn = useArchiveStore(s => s.submitTraceToArchive);
+  const acknowledgeArchiveFn = useArchiveStore(s => s.acknowledge);
 
   const [headerHeight, setHeaderHeight] = useState<number | TNil>(null);
   const [slimView, setSlimView] = useState(() => Boolean(embedded && embedded.timeline.collapseTitle));
@@ -310,12 +326,12 @@ export function TracePageImpl(props: TProps) {
   }, []);
 
   const archiveTrace = useCallback(() => {
-    archiveTraceProp(id);
-  }, [archiveTraceProp, id]);
+    submitTraceToArchiveFn(id);
+  }, [submitTraceToArchiveFn, id]);
 
   const acknowledgeArchive = useCallback(() => {
-    acknowledgeArchiveProp(id);
-  }, [acknowledgeArchiveProp, id]);
+    acknowledgeArchiveFn(id);
+  }, [acknowledgeArchiveFn, id]);
 
   const focusUiFindMatches = useCallback(() => {
     if (trace && trace.data) {
@@ -470,20 +486,14 @@ export function TracePageImpl(props: TProps) {
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { id } = ownProps.params;
-  const { archive, embedded } = state;
+  const { embedded } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
-  const archiveTraceState = id ? archive[id] : null;
-
-  const { detailPanelMode, timelineBarsVisible } = state.traceTimeline;
 
   return {
     ...extractUiFindFromState(state),
-    archiveTraceState,
-    detailPanelMode,
     embedded,
     id,
-    timelineBarsVisible,
     trace,
   };
 }
@@ -491,14 +501,11 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 // export for tests
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { fetchTrace } = bindActionCreators(jaegerApiActions, dispatch);
-  const { archiveTrace, acknowledge: acknowledgeArchive } = bindActionCreators(archiveActions, dispatch);
   const { focusUiFindMatches, setDetailPanelMode, setTimelineBarsVisible } = bindActionCreators(
     timelineActions,
     dispatch
   );
   return {
-    acknowledgeArchive,
-    archiveTrace,
     fetchTrace,
     focusUiFindMatches,
     setDetailPanelMode,
