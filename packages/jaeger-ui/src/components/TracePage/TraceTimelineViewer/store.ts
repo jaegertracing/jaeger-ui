@@ -26,6 +26,21 @@ type FocusedFindRowStates = {
   shouldScrollToFirstUiFindMatch: boolean;
 };
 
+// Side-panel mode keeps at most one span in detailStates (see detailToggle / setDetailPanelMode).
+function trimFocusedDetailStatesForSidePanel(
+  focused: FocusedFindRowStates,
+  detailPanelMode: SpanDetailPanelMode
+): FocusedFindRowStates {
+  if (detailPanelMode !== 'sidepanel' || focused.detailStates.size <= 1) {
+    return focused;
+  }
+  const firstKey = focused.detailStates.keys().next().value as string;
+  return {
+    ...focused,
+    detailStates: new Map([[firstKey, DetailState.forDetailPanelMode('sidepanel')]]),
+  };
+}
+
 export function calculateFocusedFindRowStates(
   uiFind: string,
   spans: ReadonlyArray<IOtelSpan>,
@@ -47,12 +62,15 @@ export function calculateFocusedFindRowStates(
   if (matchedSpanIds && matchedSpanIds.size) {
     matchedSpanIds.forEach(spanID => {
       const span = spansMap.get(spanID);
-      detailStates.set(spanID, new DetailState());
-      if (span) {
-        spanAncestorIds(span).forEach(ancestorID => childrenHiddenIDs.delete(ancestorID));
+      if (!span) {
+        return;
       }
+      detailStates.set(spanID, new DetailState());
+      spanAncestorIds(span).forEach(ancestorID => childrenHiddenIDs.delete(ancestorID));
     });
-    shouldScrollToFirstUiFindMatch = true;
+    if (detailStates.size > 0) {
+      shouldScrollToFirstUiFindMatch = true;
+    }
   }
 
   return { childrenHiddenIDs, detailStates, shouldScrollToFirstUiFindMatch };
@@ -239,7 +257,7 @@ export const useTraceTimelineStore = create<TraceTimelineLayoutStore>()((set, ge
   },
 
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
-    const { traceID: currentTraceID } = get();
+    const { traceID: currentTraceID, detailPanelMode } = get();
     if (trace.traceID === currentTraceID) return;
 
     const base: Partial<TraceTimelineLayoutStore> = {
@@ -250,7 +268,8 @@ export const useTraceTimelineStore = create<TraceTimelineLayoutStore>()((set, ge
     };
 
     if (uiFind) {
-      const focused = calculateFocusedFindRowStates(uiFind, trace.spans);
+      let focused = calculateFocusedFindRowStates(uiFind, trace.spans);
+      focused = trimFocusedDetailStatesForSidePanel(focused, detailPanelMode);
       Object.assign(base, focused);
     }
 
@@ -386,7 +405,8 @@ export const useTraceTimelineStore = create<TraceTimelineLayoutStore>()((set, ge
 
   focusUiFindMatches: (trace: IOtelTrace, uiFind?: string | TNil, allowHide = true) => {
     if (!uiFind) return;
-    const focused = calculateFocusedFindRowStates(uiFind, trace.spans, allowHide);
+    let focused = calculateFocusedFindRowStates(uiFind, trace.spans, allowHide);
+    focused = trimFocusedDetailStatesForSidePanel(focused, get().detailPanelMode);
     set(focused);
   },
 }));

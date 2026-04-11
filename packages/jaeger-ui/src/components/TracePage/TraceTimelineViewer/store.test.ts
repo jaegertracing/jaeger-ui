@@ -299,6 +299,18 @@ describe('useTraceTimelineStore', () => {
       useTraceTimelineStore.getState().setTrace(makeTrace('t1'), 'myFind');
       expect(useTraceTimelineStore.getState().shouldScrollToFirstUiFindMatch).toBe(true);
     });
+
+    it('trims uiFind detailStates to one entry when in side-panel mode', () => {
+      vi.mocked(filterSpans).mockReturnValue(new Set(['span-a', 'span-b']));
+      vi.mocked(spanAncestorIds).mockReturnValue([]);
+      const trace = makeTrace('t1', [makeSpan({ spanID: 'span-a' }), makeSpan({ spanID: 'span-b' })]);
+      useTraceTimelineStore.setState({ detailPanelMode: 'sidepanel' });
+      useTraceTimelineStore.getState().setTrace(trace, 'myFind');
+      const s = useTraceTimelineStore.getState();
+      expect(s.detailStates.size).toBe(1);
+      expect(s.detailStates.has('span-a')).toBe(true);
+      expect(s.detailStates.get('span-a')!.isAttributesOpen).toBe(true);
+    });
   });
 
   describe('childrenToggle', () => {
@@ -518,6 +530,19 @@ describe('useTraceTimelineStore', () => {
       expect(s.shouldScrollToFirstUiFindMatch).toBe(true);
       expect(s.detailStates.has('span-1')).toBe(true);
     });
+
+    it('keeps only the first match in detailStates when in side-panel mode', () => {
+      vi.mocked(filterSpans).mockReturnValue(new Set(['span-a', 'span-b']));
+      vi.mocked(spanAncestorIds).mockReturnValue([]);
+      const trace = makeTrace('t1', [makeSpan({ spanID: 'span-a' }), makeSpan({ spanID: 'span-b' })]);
+      useTraceTimelineStore.setState({ detailPanelMode: 'sidepanel' });
+      useTraceTimelineStore.getState().focusUiFindMatches(trace, 'myFind');
+      const s = useTraceTimelineStore.getState();
+      expect(s.detailStates.size).toBe(1);
+      expect(s.detailStates.has('span-a')).toBe(true);
+      expect(s.detailStates.has('span-b')).toBe(false);
+      expect(s.detailStates.get('span-a')!.isAttributesOpen).toBe(true);
+    });
   });
 });
 
@@ -549,11 +574,22 @@ describe('calculateFocusedFindRowStates', () => {
     expect(result.childrenHiddenIDs.has('root')).toBe(false);
   });
 
-  it('does not throw when filterSpans returns an ID not in the spans array', () => {
+  it('ignores matched IDs that are not present in spans (no detailStates, no scroll flag)', () => {
     vi.mocked(filterSpans).mockReturnValue(new Set(['unknown-id']));
     vi.mocked(spanAncestorIds).mockReturnValue([]);
     const spans = [makeSpan({ spanID: 'only-span' })];
-    expect(() => calculateFocusedFindRowStates('find', spans)).not.toThrow();
+    const result = calculateFocusedFindRowStates('find', spans);
+    expect(result.detailStates.size).toBe(0);
+    expect(result.shouldScrollToFirstUiFindMatch).toBe(false);
+  });
+
+  it('allows multiple detailStates in inline mode when several spans match', () => {
+    vi.mocked(filterSpans).mockReturnValue(new Set(['a', 'b']));
+    vi.mocked(spanAncestorIds).mockReturnValue([]);
+    const spans = [makeSpan({ spanID: 'a' }), makeSpan({ spanID: 'b' })];
+    const result = calculateFocusedFindRowStates('find', spans);
+    expect(result.detailStates.size).toBe(2);
+    expect(result.shouldScrollToFirstUiFindMatch).toBe(true);
   });
 });
 
