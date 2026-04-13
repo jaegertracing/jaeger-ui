@@ -21,6 +21,7 @@ export default defineConfig({
     __APP_ENVIRONMENT__: JSON.stringify('test'),
   },
   test: {
+    pool: 'threads',
     environment: 'jsdom',
     globals: true,
     globalSetup: path.resolve(__dirname, 'test/vitest-global-setup.ts'),
