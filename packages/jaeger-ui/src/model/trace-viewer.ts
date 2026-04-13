@@ -69,6 +69,16 @@ export function getTracePageTitle(spans: ReadonlyArray<Span>): string {
   return parts ? `${parts.operationName} (${parts.serviceName})` : '';
 }
 
+export function getIncompleteTraceTooltip(orphanCount: number): string {
+  const noun = orphanCount !== 1 ? 'spans' : 'span';
+  const verb = orphanCount !== 1 ? 'have' : 'has';
+  return (
+    `This trace may be incomplete: ${orphanCount} ${noun} ${verb} missing parent ${noun}. ` +
+    `This can happen if the trace is still being collected when you view it. ` +
+    `Try again later by opening or reloading the trace to see whether more spans are available.`
+  );
+}
+
 export function getTraceEmoji(spans: ReadonlyArray<Span>): string {
   if (!spans.length) return '';
 

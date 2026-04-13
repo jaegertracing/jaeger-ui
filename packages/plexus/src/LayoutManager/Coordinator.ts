@@ -4,8 +4,6 @@
 import * as convCoord from './dot/conv-coord';
 import convInputs from './convInputs';
 
-import LayoutWorker from './layout.worker.bundled';
-
 import {
   ECoordinatorPhase,
   EWorkerErrorType,
@@ -17,6 +15,8 @@ import {
   TWorkerOutputMessage,
 } from './types';
 import { TEdge, TLayoutVertex, TSizeVertex, TLayoutEdge } from '../types';
+
+type TLayoutWorker = Worker & { id: number };
 
 type TCurrentLayout = {
   cleaned: {
@@ -37,7 +37,7 @@ type TCurrentLayout = {
   };
 };
 
-function killWorker(worker: LayoutWorker) {
+function killWorker(worker: TLayoutWorker) {
   const w = worker;
   // to make flow happy
   const noop = () => {};
@@ -48,7 +48,7 @@ function killWorker(worker: LayoutWorker) {
   w.terminate();
 }
 
-function findAndRemoveWorker(lists: LayoutWorker[][], worker: LayoutWorker) {
+function findAndRemoveWorker(lists: TLayoutWorker[][], worker: TLayoutWorker) {
   for (let i = 0; i < lists.length; i++) {
     const list = lists[i];
     const wi = list.indexOf(worker);
@@ -63,8 +63,8 @@ function findAndRemoveWorker(lists: LayoutWorker[][], worker: LayoutWorker) {
 export default class Coordinator {
   currentLayout: TCurrentLayout | null;
   nextWorkerId: number;
-  idleWorkers: LayoutWorker[];
-  busyWorkers: LayoutWorker[];
+  idleWorkers: TLayoutWorker[];
+  busyWorkers: TLayoutWorker[];
   callback: (update: TUpdate<any, any>) => void;
 
   constructor(callback: (update: TUpdate<any, any>) => void) {
@@ -106,7 +106,9 @@ export default class Coordinator {
   }
 
   _initWorker() {
-    const worker = new LayoutWorker();
+    const worker = new Worker(new URL('./layout.worker.ts', import.meta.url), {
+      type: 'module',
+    }) as TLayoutWorker;
     worker.id = this.nextWorkerId;
     this.nextWorkerId++;
     worker.onerror = this._handleVizWorkerError;
@@ -115,7 +117,7 @@ export default class Coordinator {
     return worker;
   }
 
-  _makeWorkerIdle(worker: LayoutWorker) {
+  _makeWorkerIdle(worker: TLayoutWorker) {
     const { ok } = findAndRemoveWorker([this.busyWorkers, this.idleWorkers], worker);
     if (ok) {
       this.idleWorkers.push(worker);
@@ -147,7 +149,7 @@ export default class Coordinator {
   }
 
   _handleVizWorkerError = (event: ErrorEvent) => {
-    const worker = event.target as LayoutWorker;
+    const worker = event.target as TLayoutWorker;
     const { ok } = findAndRemoveWorker([this.busyWorkers, this.idleWorkers], worker);
     if (ok) {
       console.error('Viz worker onerror');
@@ -159,7 +161,7 @@ export default class Coordinator {
     }
   };
 
-  _handleVizWorkerMessageError = (event: ErrorEvent) => {
+  _handleVizWorkerMessageError = (event: MessageEvent) => {
     // TODO(joe): something more useful
     const msg = {
       event,
@@ -170,7 +172,7 @@ export default class Coordinator {
   };
 
   _handleVizWorkerMessage = (event: MessageEvent) => {
-    const worker: LayoutWorker = event.target as LayoutWorker;
+    const worker: TLayoutWorker = event.target as TLayoutWorker;
     const workerMessage = event.data as TWorkerOutputMessage | TWorkerErrorMessage;
     const { type } = workerMessage;
     this._makeWorkerIdle(worker);

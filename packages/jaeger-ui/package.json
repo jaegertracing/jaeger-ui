@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@jaegertracing/jaeger-ui",
-  "version": "2.16.0",
+  "version": "2.17.0",
   "main": "src/index.tsx",
   "license": "Apache-2.0",
   "homepage": ".",
@@ -11,30 +11,23 @@
     "directory": "packages/jaeger-ui"
   },
   "devDependencies": {
-    "@babel/preset-env": "7.28.5",
-    "@babel/preset-react": "7.28.5",
-    "@babel/preset-typescript": "7.28.5",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.0",
     "@testing-library/user-event": "14.6.1",
     "@types/deep-freeze": "0.1.5",
-    "@types/jest": "30.0.0",
+    "@types/node": "24.12.2",
     "@types/lodash": "4.17.21",
     "@types/object-hash": "3.0.6",
     "@types/react": "19.2.7",
-    "@types/react-router-dom": "5.3.3",
     "@types/redux-actions": "2.6.5",
-    "@vitejs/plugin-legacy": "7.2.1",
-    "@vitejs/plugin-react": "5.1.1",
-    "babel-jest": "30.2.0",
-    "babel-plugin-inline-react-svg": "2.0.2",
+    "@vitejs/plugin-react": "6.0.1",
+    "@vitest/coverage-v8": "4.1.2",
     "babel-plugin-react-remove-properties": "0.3.1",
-    "jest": "30.2.0",
-    "jest-environment-jsdom": "30.2.0",
-    "jest-junit": "16.0.0",
-    "less": "4.5.1",
-    "terser": "5.44.1",
-    "vite": "7.3.0"
+    "identity-obj-proxy": "3.0.0",
+    "less": "4.6.4",
+    "terser": "5.46.1",
+    "vite": "8.0.5",
+    "vitest": "4.1.2"
   },
   "dependencies": {
     "@jaegertracing/plexus": "0.2.0",
@@ -49,9 +42,8 @@
     "dayjs": "1.11.19",
     "deep-freeze": "0.0.1",
     "drange": "2.0.1",
-    "history": "4.10.1",
     "isomorphic-fetch": "3.0.0",
-    "lodash": "4.17.23",
+    "lodash": "4.18.1",
     "logfmt": "1.4.0",
     "lru-memoize": "1.1.0",
     "match-sorter": "8.2.0",
@@ -61,59 +53,26 @@
     "react": "19.2.0",
     "react-circular-progressbar": "2.2.0",
     "react-dom": "19.2.0",
-    "react-icons": "5.5.0",
+    "react-icons": "5.6.0",
     "react-is": "19.2.0",
     "react-json-view-lite": "2.5.0",
     "react-redux": "9.2.0",
-    "react-router-dom": "5.3.4",
-    "react-router-dom-v5-compat": "6.30.3",
+    "react-router-dom": "7.14.0",
     "recharts": "3.8.0",
     "redux": "5.0.1",
     "redux-actions": "3.0.3",
-    "redux-first-history": "5.2.0",
     "redux-promise-middleware": "6.2.0",
-    "store": "2.0.12",
     "tween-functions": "1.2.0",
     "u-basscss": "2.0.1",
-    "zod": "4.3.5"
+    "zod": "4.3.5",
+    "zustand": "^5.0.12"
   },
   "scripts": {
     "build": "NODE_ENV=production REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite build",
-    "coverage": "npm run test-ci -- --coverage",
+    "coverage": "vitest run --coverage",
     "start:ga-debug": "REACT_APP_GA_DEBUG=1 REACT_APP_VSN_STATE=$(../../scripts/get-tracking-version.js) vite",
     "start": "vite",
-    "test": "jest --silent --color --maxWorkers=50%",
-    "test-ci": "CI=1 jest --silent --color --maxWorkers=4"
-  },
-  "jest": {
-    "globalSetup": "./test/jest.global-setup.js",
-    "setupFilesAfterEnv": [
-      "./test/jest-per-test-setup.js"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.{js,jsx,ts,tsx}",
-      "!src/**/*.d.ts",
-      "!src/setup*.js",
-      "!src/utils/DraggableManager/demo/*.tsx",
-      "!src/utils/test/**/*.js",
-      "!src/demo/**/*.js",
-      "!src/types/*"
-    ],
-    "reporters": [
-      "default",
-      "jest-junit"
-    ],
-    "transform": {
-      "\\.(css|png)$": "./test/generic-file-transform.js",
-      "\\.([jt]sx?|svg)$": "./test/babel-transform.js"
-    },
-    "transformIgnorePatterns": [
-      "[/\\\\\\\\]node_modules[/\\\\\\\\](?!redux-actions).+\\\\.(js|jsx|mjs|cjs|ts|tsx)$"
-    ],
-    "testEnvironment": "jsdom",
-    "snapshotFormat": {
-      "escapeString": true,
-      "printBasicPrototype": true
-    }
+    "test": "vitest run",
+    "test-ci": "CI=1 vitest run --reporter=verbose"
   }
 }

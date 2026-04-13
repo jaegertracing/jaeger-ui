@@ -1,7 +1,16 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import queryString from 'query-string';
+// vi.spyOn cannot patch ESM named exports; mock the whole module instead.
+// vi.hoisted ensures mock functions are available when the factory runs.
+const { parseMock, stringifyMock } = vi.hoisted(() => ({
+  parseMock: vi.fn(),
+  stringifyMock: vi.fn(),
+}));
+
+vi.mock('query-string', () => ({
+  default: { parse: parseMock, stringify: stringifyMock },
+}));
 
 import updateUiFind from './update-ui-find';
 
@@ -10,72 +19,67 @@ describe('updateUiFind', () => {
   const newUiFind = 'newUiFind';
   const unrelatedQueryParamName = 'unrelatedQueryParamName';
   const unrelatedQueryParamValue = 'unrelatedQueryParamValue';
-
-  const replaceMock = jest.fn();
-  const queryStringParseSpy = jest.spyOn(queryString, 'parse').mockReturnValue({
-    uiFind: existingUiFind,
-    [unrelatedQueryParamName]: unrelatedQueryParamValue,
-  });
   const queryStringStringifySpyMockReturnValue = 'queryStringStringifySpyMockReturnValue';
-  const queryStringStringifySpy = jest
-    .spyOn(queryString, 'stringify')
-    .mockReturnValue(queryStringStringifySpyMockReturnValue);
 
-  const history = {
-    replace: replaceMock,
-  };
+  const navigate = jest.fn();
+
   const location = {
     pathname: '/trace/traceID',
     search: 'location.search',
   };
-  const expectedReplaceMockArgument = {
-    ...location,
+  const expectedNavigateArg = {
+    pathname: location.pathname,
     search: `?${queryStringStringifySpyMockReturnValue}`,
   };
 
   beforeEach(() => {
-    replaceMock.mockReset();
-    queryStringParseSpy.mockClear();
-    queryStringStringifySpy.mockClear();
+    navigate.mockReset();
+    parseMock.mockClear();
+    stringifyMock.mockClear();
+    parseMock.mockReturnValue({
+      uiFind: existingUiFind,
+      [unrelatedQueryParamName]: unrelatedQueryParamValue,
+    });
+    stringifyMock.mockReturnValue(queryStringStringifySpyMockReturnValue);
   });
 
   it('adds truthy graphSearch to existing params', () => {
     updateUiFind({
-      history,
+      navigate,
       location,
       uiFind: newUiFind,
     });
-    expect(queryStringParseSpy).toHaveBeenCalledWith(location.search);
-    expect(queryStringStringifySpy).toHaveBeenCalledWith({
+    expect(parseMock).toHaveBeenCalledWith(location.search);
+    expect(stringifyMock).toHaveBeenCalledWith({
       uiFind: newUiFind,
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
+    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, { replace: true });
   });
 
   it('omits falsy graphSearch from query params', () => {
     updateUiFind({
-      history,
+      navigate,
       location,
       uiFind: '',
     });
-    expect(queryStringParseSpy).toHaveBeenCalledWith(location.search);
-    expect(queryStringStringifySpy).toHaveBeenCalledWith({
+    expect(parseMock).toHaveBeenCalledWith(location.search);
+    expect(stringifyMock).toHaveBeenCalledWith({
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
+    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, { replace: true });
   });
 
   it('omits absent graphSearch from query params', () => {
     updateUiFind({
-      history,
+      navigate,
       location,
     });
-    expect(queryStringParseSpy).toHaveBeenCalledWith(location.search);
-    expect(queryStringStringifySpy).toHaveBeenCalledWith({
+    expect(parseMock).toHaveBeenCalledWith(location.search);
+    expect(stringifyMock).toHaveBeenCalledWith({
       [unrelatedQueryParamName]: unrelatedQueryParamValue,
     });
-    expect(replaceMock).toHaveBeenCalledWith(expectedReplaceMockArgument);
+    expect(navigate).toHaveBeenCalledWith(expectedNavigateArg, { replace: true });
   });
 
   describe('trackFindFunction provided', () => {
@@ -87,7 +91,7 @@ describe('updateUiFind', () => {
 
     it('tracks undefined when uiFind value is omitted', () => {
       updateUiFind({
-        history,
+        navigate,
         location,
         trackFindFunction,
       });
@@ -96,7 +100,7 @@ describe('updateUiFind', () => {
 
     it('tracks given value', () => {
       updateUiFind({
-        history,
+        navigate,
         location,
         trackFindFunction,
         uiFind: newUiFind,

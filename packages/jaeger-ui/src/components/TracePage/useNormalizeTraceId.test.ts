@@ -1,18 +1,18 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 let mockLocation: { search: string; state: unknown } = { search: '', state: null };
 
-jest.mock('react-router-dom-v5-compat', () => ({
-  ...jest.requireActual('react-router-dom-v5-compat'),
+vi.mock('react-router-dom', async () => ({
+  ...(await vi.importActual('react-router-dom')),
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
 }));
 
 // Simplified mock sufficient for testing normalization logic;
 // URL prefix handling is tested separately in url/index.test.js
-jest.mock('./url', () => ({
+vi.mock('./url', async () => ({
   getUrl: (id: string) => `/trace/${id}`,
 }));
 

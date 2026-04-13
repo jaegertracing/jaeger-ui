@@ -12,7 +12,9 @@ function tryParseMultiLineInput(input: string): any[] {
       const traceObj = JSON.parse(jsonString.trim());
       parsedObjects.push(traceObj);
     } catch (error) {
-      throw new Error(`Error parsing JSON at line ${index + 1}: ${(error as Error).message}`);
+      throw new Error(`Error parsing JSON at line ${index + 1}: ${(error as Error).message}`, {
+        cause: error,
+      });
     }
   });
 

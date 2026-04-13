@@ -5,14 +5,14 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
+import { actions, getSelectedSpanID } from './duck';
+import { useTraceTimelineStore } from '../../../stores/trace-timeline-store';
 import {
-  actions,
-  getSelectedSpanID,
   MIN_TIMELINE_COLUMN_WIDTH,
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
-} from './duck';
+} from '../../../stores/trace-timeline-store';
 import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
 import VirtualizedTraceView from './VirtualizedTraceView';
@@ -27,6 +27,7 @@ import { CriticalPathSection } from '../../../types/critical_path';
 import './index.css';
 
 type TDispatchProps = {
+  // These Redux dispatchers are kept for the tracking middleware only.
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
   collapseAll: (spans: ReadonlyArray<IOtelSpan>) => void;
@@ -39,10 +40,6 @@ type TProps = TDispatchProps & {
   registerAccessors: (accessors: Accessors) => void;
   findMatchesIDs: Set<string> | TNil;
   scrollToFirstVisibleSpan: () => void;
-  detailPanelMode: 'inline' | 'sidepanel';
-  sidePanelWidth: number;
-  spanNameColumnWidth: number;
-  timelineBarsVisible: boolean;
   selectedSpanID: string | null;
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
@@ -67,20 +64,40 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     collapseOne: collapseOneAction,
     expandAll: expandAllAction,
     expandOne: expandOneAction,
-    setSpanNameColumnWidth,
-    setSidePanelWidth,
+    setSpanNameColumnWidth: reduxSetSpanNameColumnWidth,
+    setSidePanelWidth: reduxSetSidePanelWidth,
     updateNextViewRangeTime,
     updateViewRangeTime,
     viewRange,
     trace,
-    detailPanelMode,
-    sidePanelWidth,
-    spanNameColumnWidth,
-    timelineBarsVisible,
     selectedSpanID,
     useOtelTerms,
     ...rest
   } = props;
+
+  // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
+  const detailPanelMode = useTraceTimelineStore(s => s.detailPanelMode);
+  const sidePanelWidth = useTraceTimelineStore(s => s.sidePanelWidth);
+  const spanNameColumnWidth = useTraceTimelineStore(s => s.spanNameColumnWidth);
+  const timelineBarsVisible = useTraceTimelineStore(s => s.timelineBarsVisible);
+  const zustandSetSpanNameColumnWidth = useTraceTimelineStore(s => s.setSpanNameColumnWidth);
+  const zustandSetSidePanelWidth = useTraceTimelineStore(s => s.setSidePanelWidth);
+
+  const setSpanNameColumnWidth = useCallback(
+    (width: number) => {
+      zustandSetSpanNameColumnWidth(width);
+      reduxSetSpanNameColumnWidth(width);
+    },
+    [zustandSetSpanNameColumnWidth, reduxSetSpanNameColumnWidth]
+  );
+
+  const setSidePanelWidth = useCallback(
+    (width: number) => {
+      zustandSetSidePanelWidth(width);
+      reduxSetSidePanelWidth(width);
+    },
+    [zustandSetSidePanelWidth, reduxSetSidePanelWidth]
+  );
 
   // Side panel is permanently visible whenever side panel mode is active.
   const sidePanelActive = detailPanelMode === 'sidepanel';
@@ -246,15 +263,9 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
 };
 
 function mapStateToProps(state: ReduxState) {
-  const {
-    detailPanelMode,
-    sidePanelWidth,
-    spanNameColumnWidth,
-    timelineBarsVisible,
-    detailStates = new Map(),
-  } = state.traceTimeline;
+  const { detailStates = new Map() } = state.traceTimeline;
   const selectedSpanID = getSelectedSpanID(detailStates);
-  return { detailPanelMode, sidePanelWidth, spanNameColumnWidth, timelineBarsVisible, selectedSpanID };
+  return { selectedSpanID };
 }
 
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {

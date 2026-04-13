@@ -11,6 +11,7 @@ import reducer, {
   collapseOne,
   expandAll,
   expandOne,
+  getSelectedSpanID,
   MIN_TIMELINE_COLUMN_WIDTH,
   SPAN_NAME_COLUMN_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
@@ -24,11 +25,11 @@ import traceGenerator from '../../../demo/trace-generators';
 import filterSpansSpy from '../../../utils/filter-spans';
 import spanAncestorIdsSpy from '../../../utils/span-ancestor-ids';
 
-jest.mock('../../../utils/filter-spans');
-jest.mock('../../../utils/span-ancestor-ids');
-jest.mock('../../../utils/config/get-config', () => {
-  const actual = jest.requireActual('../../../utils/config/get-config');
-  return { __esModule: true, ...actual, default: jest.fn(() => ({})) };
+vi.mock('../../../utils/filter-spans');
+vi.mock('../../../utils/span-ancestor-ids');
+vi.mock('../../../utils/config/get-config', async () => {
+  const actual = await vi.importActual('../../../utils/config/get-config');
+  return { ...actual, default: jest.fn(() => ({})) };
 });
 
 describe('TraceTimelineViewer/duck', () => {
@@ -562,11 +563,9 @@ describe('TraceTimelineViewer/duck', () => {
       expect(retained.isResourceOpen).toBe(true);
     });
 
-    it('persists mode to localStorage', () => {
+    it('does not persist mode to localStorage (persistence moved to useTraceTimelineStore)', () => {
       store.dispatch(actions.setDetailPanelMode('sidepanel'));
-      expect(localStorage.getItem('detailPanelMode')).toBe('sidepanel');
-      store.dispatch(actions.setDetailPanelMode('inline'));
-      expect(localStorage.getItem('detailPanelMode')).toBe('inline');
+      expect(localStorage.getItem('detailPanelMode')).toBeNull();
     });
   });
 
@@ -582,11 +581,9 @@ describe('TraceTimelineViewer/duck', () => {
       expect(store.getState().timelineBarsVisible).toBe(true);
     });
 
-    it('persists visibility to localStorage', () => {
+    it('does not persist visibility to localStorage (persistence moved to useTraceTimelineStore)', () => {
       store.dispatch(actions.setTimelineBarsVisible(false));
-      expect(localStorage.getItem('timelineVisible')).toBe('false');
-      store.dispatch(actions.setTimelineBarsVisible(true));
-      expect(localStorage.getItem('timelineVisible')).toBe('true');
+      expect(localStorage.getItem('timelineVisible')).toBeNull();
     });
   });
 
@@ -596,21 +593,19 @@ describe('TraceTimelineViewer/duck', () => {
       expect(store.getState().sidePanelWidth).toBe(0.3);
     });
 
-    it('persists width to localStorage', () => {
+    it('does not persist width to localStorage (persistence moved to useTraceTimelineStore)', () => {
       store.dispatch(actions.setSidePanelWidth(0.3));
-      expect(localStorage.getItem('sidePanelWidth')).toBe('0.3');
+      expect(localStorage.getItem('sidePanelWidth')).toBeNull();
     });
 
     it('clamps to SIDE_PANEL_WIDTH_MIN when width is below range', () => {
       store.dispatch(actions.setSidePanelWidth(0));
       expect(store.getState().sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MIN);
-      expect(localStorage.getItem('sidePanelWidth')).toBe(String(SIDE_PANEL_WIDTH_MIN));
     });
 
     it('clamps to SIDE_PANEL_WIDTH_MAX when width is above range', () => {
       store.dispatch(actions.setSidePanelWidth(1));
       expect(store.getState().sidePanelWidth).toBe(SIDE_PANEL_WIDTH_MAX);
-      expect(localStorage.getItem('sidePanelWidth')).toBe(String(SIDE_PANEL_WIDTH_MAX));
     });
 
     it('clamps side panel width to leave room for the name column and timeline', () => {
@@ -789,6 +784,25 @@ describe('TraceTimelineViewer/duck', () => {
       const action = actions.removeHoverIndentGuideId(existingSpanId);
       store.dispatch(action);
       expect(store.getState().hoverIndentGuideIds).toEqual(new Set([secondExistingSpanId]));
+    });
+  });
+
+  describe('getSelectedSpanID', () => {
+    it('returns null when detailStates is empty', () => {
+      expect(getSelectedSpanID(new Map())).toBeNull();
+    });
+
+    it('returns the span ID when detailStates has one entry', () => {
+      const detailStates = new Map([['span-a', null]]);
+      expect(getSelectedSpanID(detailStates)).toBe('span-a');
+    });
+
+    it('returns the first span ID when detailStates has multiple entries', () => {
+      const detailStates = new Map([
+        ['span-a', null],
+        ['span-b', null],
+      ]);
+      expect(getSelectedSpanID(detailStates)).toBe('span-a');
     });
   });
 });

@@ -7,6 +7,7 @@ A React component for directed graphs.
 <!-- pro-tip: Generate the TOC here at https://magnetikonline.github.io/markdown-toc-generate/ -->
 
 - [About](#about)
+- [Demo](#demo)
 - [Install](#install)
 - [Quick start](#quick-start)
   - [Import](#import)
@@ -50,6 +51,10 @@ A React component for directed graphs.
 - [Recipes](#recipes)
   - [Arrow heads](#arrow-heads)
   - [UX + edges](#ux--edges)
+
+## Demo
+
+When running the Jaeger UI in development mode (`npm start` from the repository root), the Plexus demo is accessible at [http://localhost:5173/plexus-demo](http://localhost:5173/plexus-demo). The demo showcases various graph configurations and is not included in production builds.
 
 ## About
 

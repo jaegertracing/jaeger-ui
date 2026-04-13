@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { Location } from 'history';
-import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
+import { useNavigate, useLocation } from 'react-router-dom';
+import type { Location } from 'react-router-dom';
 import { useMemo } from 'react';
 import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
@@ -16,7 +16,7 @@ import SidePanel from './SidePanel';
 import { getUrl, getUrlState, sanitizeUrlState, ROUTE_PATH } from './url';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
-import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
+import { parseUiFind, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
 import { getUrl as getSearchUrl } from '../SearchTracePage/url';
 import ddgActions from '../../actions/ddg';
 import * as jaegerApiActions from '../../actions/jaeger-api';
@@ -262,7 +262,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
     const uiFindMatches = graph && graph.getVisibleUiFindMatches(uiFind, visEncoding);
     const hiddenUiFindMatches = graph && graph.getHiddenUiFindMatches(uiFind, visEncoding);
 
-    let content: React.ReactElement | null = null;
+    let content: React.ReactElement | null;
     let wrapperClassName = '';
     if (!graphState) {
       content = <h1>Enter query above</h1>;
@@ -405,7 +405,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     graphState,
     showOp,
     urlState: sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
-    ...extractUiFindFromState(state),
+    uiFind: parseUiFind(ownProps.location.search),
   };
 }
 

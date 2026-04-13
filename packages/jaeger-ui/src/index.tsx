@@ -6,14 +6,11 @@
 
 import './site-prefix';
 
-import React from 'react';
-import { Router } from 'react-router-dom';
-import { CompatRouter } from 'react-router-dom-v5-compat';
+import { BrowserRouter } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
 
 import JaegerUIApp from './components/App';
 import { context as trackingContext } from './utils/tracking';
-import { history } from './utils/configure-store';
 
 // these need to go after the App import
 
@@ -35,19 +32,15 @@ const root = createRoot(rootElement);
 if (typeof trackingContext === 'object' && trackingContext !== null) {
   (trackingContext as any).context(() => {
     root.render(
-      <Router history={history}>
-        <CompatRouter>
-          <JaegerUIApp />
-        </CompatRouter>
-      </Router>
+      <BrowserRouter>
+        <JaegerUIApp />
+      </BrowserRouter>
     );
   });
 } else {
   root.render(
-    <Router history={history}>
-      <CompatRouter>
-        <JaegerUIApp />
-      </CompatRouter>
-    </Router>
+    <BrowserRouter>
+      <JaegerUIApp />
+    </BrowserRouter>
   );
 }

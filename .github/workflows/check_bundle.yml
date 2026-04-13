@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - name: Setup Node.js
-        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: 'package.json'
           cache: 'npm'
@@ -27,16 +27,16 @@ jobs:
       - run: npm --version
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build
         run: npm run build
-        
+
       - name: Calculate bundle size
         run: |
           TOTAL_SIZE=$(du -sb packages/jaeger-ui/build | cut -f1)
           echo "$TOTAL_SIZE" > new_bundle_size.txt
           echo "Total bundle size: $TOTAL_SIZE bytes"
-          
+
       - name: Restore previous bundle size
         id: cache-bundle-size
         uses: actions/cache/restore@v5
@@ -45,15 +45,15 @@ jobs:
           key: jaeger-ui-bundle-size
           restore-keys: |
             jaeger-ui-bundle-size
-          
+
       - name: Compare bundle sizes
-        if: steps.cache-bundle-size.outputs.cache-matched-key != ''
+        if: steps.cache-bundle-size.outputs.cache-matched-key != '' && github.ref != 'refs/heads/main'
         run: |
           OLD_BUNDLE_SIZE=$(cat bundle_size.txt)
           NEW_BUNDLE_SIZE=$(cat new_bundle_size.txt)
           echo "Previous bundle size: $OLD_BUNDLE_SIZE bytes"
           echo "New bundle size: $NEW_BUNDLE_SIZE bytes"
-          
+
           SIZE_CHANGE=$(( $NEW_BUNDLE_SIZE - $OLD_BUNDLE_SIZE ))
           PERCENTAGE_CHANGE=$(( SIZE_CHANGE * 100 / $OLD_BUNDLE_SIZE ))
           echo "Size change: $PERCENTAGE_CHANGE%"
@@ -63,10 +63,10 @@ jobs:
           else
             echo "✅ Bundle size change is within acceptable range ($PERCENTAGE_CHANGE%)"
           fi
-          
+
       - name: Update bundle size file
         run: mv new_bundle_size.txt bundle_size.txt
-        
+
       - name: Save new bundle size
         if: ${{ (github.event_name == 'push') && (github.ref == 'refs/heads/main') }}
         uses: actions/cache/save@v5

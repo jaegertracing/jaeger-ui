@@ -18,6 +18,9 @@ import * as searchUrl from '../SearchTracePage/url';
 import * as diffUrl from '../TraceDiff/url';
 import * as monitorATMUrl from '../Monitor/url';
 import { ReduxState } from '../../types';
+import TTraceDiffState from '../../types/TTraceDiffState';
+import { useTraceDiffStore } from '../../stores/trace-diff-store';
+import { useShallow } from 'zustand/react/shallow';
 import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import getConfig from '../../utils/config/get-config';
 import prefixUrl from '../../utils/prefix-url';
@@ -26,6 +29,7 @@ import './TopNav.css';
 import withRouteProps, { IWithRouteProps } from '../../utils/withRouteProps';
 
 type Props = ReduxState & IWithRouteProps;
+type PropsWithTraceDiff = Props & { traceDiff: TTraceDiffState };
 
 const NAV_LINKS = [
   {
@@ -34,7 +38,7 @@ const NAV_LINKS = [
     text: 'Search',
   },
   {
-    to: (props: Props) => diffUrl.getUrl(props.traceDiff),
+    to: (props: PropsWithTraceDiff) => diffUrl.getUrl(props.traceDiff),
     matches: diffUrl.matches,
     text: 'Compare',
   },
@@ -107,6 +111,14 @@ const itemsGlobalLeft: MenuProps['items'] = [
 
 export function TopNavImpl(props: Props) {
   const { config, pathname } = props;
+  const traceDiff = useTraceDiffStore(
+    useShallow(s => ({
+      a: s.a,
+      b: s.b,
+      cohort: s.cohort,
+    }))
+  );
+  const propsWithDiff: PropsWithTraceDiff = { ...props, traceDiff };
   const menuItems = Array.isArray(config.menu) ? config.menu : [];
 
   const itemsGlobalRight: MenuProps['items'] = [
@@ -136,7 +148,7 @@ export function TopNavImpl(props: Props) {
         theme="dark"
         items={itemsGlobalLeft?.concat(
           NAV_LINKS.map(({ matches, to, text }) => {
-            const url = typeof to === 'string' ? to : to(props);
+            const url = typeof to === 'string' ? to : to(propsWithDiff);
             const key = matches(pathname) ? pathname : url;
             return {
               key,
@@ -152,7 +164,7 @@ export function TopNavImpl(props: Props) {
         mode="horizontal"
         selectable={false}
         selectedKeys={[pathname]}
-        style={{ flex: '1 1 0', minWidth: 0 }}
+        style={{ flex: '1 1 0', minWidth: '3rem' }}
       />
       <Menu
         theme="dark"

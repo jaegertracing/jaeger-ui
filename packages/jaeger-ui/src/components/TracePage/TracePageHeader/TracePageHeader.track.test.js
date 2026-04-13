@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('../../../utils/tracking');
+vi.mock('../../../utils/tracking');
 
 import * as track from './TracePageHeader.track'; /* {
   CATEGORY_ALT_VIEW,
