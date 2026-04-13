@@ -15,12 +15,20 @@ def format_command_for_display(command):
     return shlex.join([str(part) for part in command])
 
 
-def run_command(command, cwd=None, capture_stdout=True, capture_stderr=True, sensitive=False):
+def run_command(
+    command,
+    cwd=None,
+    capture_stdout=True,
+    capture_stderr=True,
+    sensitive=False,
+    print_errors=True,
+):
     if isinstance(command, str) or not isinstance(command, Sequence):
         raise TypeError(
             'run_command() requires command to be a sequence of arguments when shell=False'
         )
     formatted_command = format_command_for_display(command)
+    executable = str(command[0]) if command else None
     try:
         result = subprocess.run(
             command,
@@ -33,46 +41,60 @@ def run_command(command, cwd=None, capture_stdout=True, capture_stderr=True, sen
         )
         return result.stdout.strip() if capture_stdout and result.stdout else ""
     except subprocess.CalledProcessError as e:
-        print(f"Error running command: {formatted_command}")
-        if not sensitive and capture_stdout and e.stdout:
-            print(f"STDOUT: {e.stdout}")
-        if not sensitive and capture_stderr and e.stderr:
-            print(f"STDERR: {e.stderr}")
+        if print_errors:
+            print(f"Error running command: {formatted_command}")
+            if not sensitive and capture_stdout and e.stdout:
+                print(f"STDOUT: {e.stdout}")
+            if not sensitive and capture_stderr and e.stderr:
+                print(f"STDERR: {e.stderr}")
         raise
     except FileNotFoundError as e:
         missing_path = getattr(e, 'filename', None)
         cwd_str = str(cwd) if cwd is not None else None
-        if sensitive:
-            if cwd_str and missing_path == cwd_str:
-                print(
-                    'Error: Sensitive command could not run because the working directory '
-                    'was not found (output suppressed)'
-                )
-            elif missing_path:
-                print(
-                    'Error: Sensitive command could not run because a required path was '
-                    f'not found: {missing_path} (output suppressed)'
-                )
+        is_missing_cwd = cwd_str is not None and missing_path == cwd_str
+        is_missing_executable = executable is not None and missing_path == executable
+        if print_errors:
+            if sensitive:
+                if is_missing_cwd:
+                    print(
+                        'Error: Sensitive command could not run because the working directory '
+                        'was not found (output suppressed)'
+                    )
+                elif is_missing_executable:
+                    print(
+                        'Error: Sensitive command executable not found in PATH: '
+                        f'{executable} (output suppressed)'
+                    )
+                elif missing_path:
+                    print(
+                        'Error: Sensitive command could not run because a required path was '
+                        f'not found: {missing_path} (output suppressed)'
+                    )
+                else:
+                    print(
+                        'Error: Sensitive command could not run because a required path was '
+                        'not found (output suppressed)'
+                    )
             else:
-                print(
-                    'Error: Sensitive command could not run because a required path was '
-                    'not found (output suppressed)'
-                )
-        else:
-            if cwd_str and missing_path == cwd_str:
-                print(f"Error: Working directory not found for command {formatted_command}: {cwd_str}")
-            elif missing_path:
-                print(
-                    'Error: Required path not found while running command '
-                    f'{formatted_command}: {missing_path}'
-                )
-            else:
-                print(f"Error: Required path not found while running command: {formatted_command}")
+                if is_missing_cwd:
+                    print(f"Error: Working directory not found for command {formatted_command}: {cwd_str}")
+                elif is_missing_executable:
+                    print(
+                        'Error: Executable not found in PATH while running command '
+                        f'{formatted_command}: {executable}'
+                    )
+                elif missing_path:
+                    print(
+                        'Error: Required path not found while running command '
+                        f'{formatted_command}: {missing_path}'
+                    )
+                else:
+                    print(f"Error: Required path not found while running command: {formatted_command}")
         raise
 
 def check_dependencies():
     try:
-        run_command(["gh", "--version"])
+        run_command(["gh", "--version"], print_errors=False)
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("Error: 'gh' CLI is not installed or not in PATH.")
         sys.exit(1)
@@ -83,7 +105,8 @@ def check_gh_auth():
             ["gh", "auth", "status"],
             capture_stdout=False,
             capture_stderr=False,
-            sensitive=True
+            sensitive=True,
+            print_errors=False,
         )
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("Error: GitHub CLI is not authenticated. Please login via 'gh auth login'.")
