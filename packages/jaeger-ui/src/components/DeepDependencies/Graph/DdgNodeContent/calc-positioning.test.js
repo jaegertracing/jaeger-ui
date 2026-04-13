@@ -134,7 +134,7 @@ describe('calcPositioning', () => {
         expect(svcMarginTop).toBe(radius - radius * Math.sin(Math.acos(svcWidth / 2 / radius)));
       });
 
-      it('it handles strings without words', () => {
+      it('handles strings without words', () => {
         svcMeasurements = genWidths([3]);
         opMeasurements = genWidths([3]);
         const { opWidth, radius, svcWidth, svcMarginTop } = calcPositioning('::::', '/////');

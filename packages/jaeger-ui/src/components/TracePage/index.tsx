@@ -458,6 +458,7 @@ export function TracePageImpl(props: TProps) {
   } else if (ETraceViewType.TraceSpansView === viewType && headerHeight) {
     view = (
       <TraceSpanView
+        key={data.asOtelTrace().traceID}
         trace={data.asOtelTrace()}
         uiFindVertexKeys={spanFindMatches}
         uiFind={uiFind}
