@@ -10,37 +10,48 @@ import tempfile
 import time
 from datetime import date
 
-def run_command(command, cwd=None, capture_stdout=True, capture_stderr=True):
+def run_command(command, cwd=None, capture_stdout=True, capture_stderr=True, sensitive=False):
+    if isinstance(command, str):
+        raise TypeError(f"command must be a list of arguments, not a string: {command!r}")
     try:
         result = subprocess.run(
             command,
             cwd=cwd,
             check=True,
-            shell=True,
+            shell=False,
             text=True,
             stdout=subprocess.PIPE if capture_stdout else None,
             stderr=subprocess.PIPE if capture_stderr else None
         )
         return result.stdout.strip() if capture_stdout and result.stdout else ""
     except subprocess.CalledProcessError as e:
-        print(f"Error running command: {command}")
-        if capture_stdout and e.stdout:
-            print(f"STDOUT: {e.stdout}")
-        if capture_stderr and e.stderr:
-            print(f"STDERR: {e.stderr}")
+        if sensitive:
+            print("Error running sensitive command (output suppressed)")
+        else:
+            print(f"Error running command: {command}")
+            if capture_stdout and e.stdout:
+                print(f"STDOUT: {e.stdout}")
+            if capture_stderr and e.stderr:
+                print(f"STDERR: {e.stderr}")
+        raise
+    except FileNotFoundError:
+        if sensitive:
+            print("Error: Sensitive command binary not found (output suppressed)")
+        else:
+            print(f"Error: Command binary not found for: {command}")
         raise
 
 def check_dependencies():
     try:
-        run_command("gh --version")
-    except:
+        run_command(["gh", "--version"])
+    except (subprocess.CalledProcessError, FileNotFoundError):
         print("Error: 'gh' CLI is not installed or not in PATH.")
         sys.exit(1)
 
 def get_gh_token():
     try:
-        return run_command("gh auth token")
-    except:
+        return run_command(["gh", "auth", "token"], sensitive=True)
+    except (subprocess.CalledProcessError, FileNotFoundError):
         print("Error: Could not retrieve GitHub token using 'gh auth token'. Please login via 'gh auth login'.")
         sys.exit(1)
 
@@ -50,7 +61,7 @@ def validate_version(version):
         sys.exit(1)
 
 def check_git_status():
-    status = run_command("git status --porcelain")
+    status = run_command(["git", "status", "--porcelain"])
     if status:
         print("Error: Git working directory is not clean. Please commit or stash changes.")
         sys.exit(1)
@@ -61,14 +72,14 @@ def create_branch(version, dry_run=False):
         print(f"[Dry Run] Would create branch {branch_name}")
     else:
         print(f"Creating branch {branch_name}...")
-        run_command(f"git checkout -b {branch_name}")
+        run_command(["git", "checkout", "-b", branch_name])
     return branch_name
 
 def generate_release_notes():
     print("Generating release notes via 'make changelog'...")
     # Run make -s (silent) to suppress echoing commands, capturing only the script output
     # Stream stderr (capture_stderr=False) to show progress bars from release-notes.py
-    return run_command("make -s changelog", capture_stderr=False)
+    return run_command(["make", "-s", "changelog"], capture_stderr=False)
 
 def update_changelog(version, notes, dry_run=False):
     print("Updating CHANGELOG.md...")
@@ -129,20 +140,20 @@ def run_fmt(dry_run=False):
         print("[Dry Run] Would run 'npm run fmt'")
     else:
         print("Running fmt on the modified files to ensure correct formatting...")
-        run_command("npm run fmt -- packages/jaeger-ui/package.json")
+        run_command(["npm", "run", "fmt", "--", "packages/jaeger-ui/package.json"])
 
 def git_commit_and_pr(version, branch_name):
     print("Committing changes...")
-    run_command("git add CHANGELOG.md packages/jaeger-ui/package.json")
+    run_command(["git", "add", "CHANGELOG.md", "packages/jaeger-ui/package.json"])
     commit_msg = f"Prepare release {version}"
-    run_command(f"git commit -s -m '{commit_msg}'")
+    run_command(["git", "commit", "-s", "-m", commit_msg])
     
     print("Pushing branch...")
-    run_command(f"git push -u origin {branch_name}")
+    run_command(["git", "push", "-u", "origin", branch_name])
     
     print("Creating Pull Request...")
     pr_body = f"Prepare release {version}.\n\nAutomated release preparation."
-    run_command(f"gh pr create --title '{commit_msg}' --body '{pr_body}' --label 'changelog:skip' --head {branch_name}", capture_stdout=False, capture_stderr=False)
+    run_command(["gh", "pr", "create", "--title", commit_msg, "--body", pr_body, "--label", "changelog:skip", "--head", branch_name], capture_stdout=False, capture_stderr=False)
 
 def main():
     parser = argparse.ArgumentParser(description="Prepare Jaeger UI release")
