@@ -41,11 +41,16 @@ def check_dependencies():
         print("Error: 'gh' CLI is not installed or not in PATH.")
         sys.exit(1)
 
-def get_gh_token():
+def check_gh_auth():
     try:
-        return run_command(["gh", "auth", "token"], sensitive=True)
+        run_command(
+            ["gh", "auth", "status"],
+            capture_stdout=False,
+            capture_stderr=False,
+            sensitive=True
+        )
     except (subprocess.CalledProcessError, FileNotFoundError):
-        print("Error: Could not retrieve GitHub token using 'gh auth token'. Please login via 'gh auth login'.")
+        print("Error: GitHub CLI is not authenticated. Please login via 'gh auth login'.")
         sys.exit(1)
 
 def validate_version(version):
@@ -159,7 +164,7 @@ def main():
     check_dependencies()
     # check_git_status() # Optional: strict check, but might be annoying in dev. Uncomment if needed.
     validate_version(version)
-    get_gh_token()
+    check_gh_auth()
     
     notes = generate_release_notes()
     update_changelog(version, notes, dry_run=args.dry_run)
