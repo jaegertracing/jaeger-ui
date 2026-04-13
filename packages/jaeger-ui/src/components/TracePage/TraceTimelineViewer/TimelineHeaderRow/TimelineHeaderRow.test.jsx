@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 
 import TimelineHeaderRow from './TimelineHeaderRow';
 
-jest.mock('../TimelineRow', () => {
+vi.mock('../TimelineRow', () => {
   const TimelineRowMock = ({ children, className }) => (
     <div className={className || 'TimelineRow'}>{children}</div>
   );
@@ -17,20 +17,17 @@ jest.mock('../TimelineRow', () => {
     </div>
   );
   return {
-    __esModule: true,
     default: TimelineRowMock,
   };
 });
 
-jest.mock('../../../common/VerticalResizer', () => ({
-  __esModule: true,
+vi.mock('../../../common/VerticalResizer', () => ({
   default: ({ position, min, max }) => (
     <div data-testid="vertical-resizer" data-position={position} data-min={min} data-max={max} />
   ),
 }));
 
-jest.mock('./TimelineViewingLayer', () => ({
-  __esModule: true,
+vi.mock('./TimelineViewingLayer', () => ({
   default: ({ boundsInvalidator, viewRangeTime }) => (
     <div
       data-testid="timeline-viewing-layer"
@@ -40,8 +37,7 @@ jest.mock('./TimelineViewingLayer', () => ({
   ),
 }));
 
-jest.mock('../Ticks', () => ({
-  __esModule: true,
+vi.mock('../Ticks', () => ({
   default: ({ numTicks, startTime, endTime, showLabels }) => (
     <div
       data-testid="ticks"
@@ -53,8 +49,7 @@ jest.mock('../Ticks', () => ({
   ),
 }));
 
-jest.mock('./TimelineCollapser', () => ({
-  __esModule: true,
+vi.mock('./TimelineCollapser', () => ({
   default: () => <div data-testid="timeline-collapser" />,
 }));
 

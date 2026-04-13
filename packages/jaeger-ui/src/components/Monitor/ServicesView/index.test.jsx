@@ -22,14 +22,11 @@ import {
 } from '../../../reducers/metrics.mock';
 import * as track from './index.track';
 
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
-}));
+global.ResizeObserver = jest.fn().mockImplementation(function () {
+  return { observe: jest.fn(), unobserve: jest.fn(), disconnect: jest.fn() };
+});
 
-jest.mock('../../../utils/config/get-config', () => ({
-  __esModule: true,
+vi.mock('../../../utils/config/get-config', async () => ({
   default: jest.fn(() => ({
     monitor: {
       docsLink: 'https://www.jaegertracing.io/docs/latest/spm/',
@@ -40,8 +37,7 @@ jest.mock('../../../utils/config/get-config', () => ({
   })),
 }));
 
-jest.mock('../../../utils/storage', () => ({
-  __esModule: true,
+vi.mock('../../../utils/storage', async () => ({
   default: {
     getString: jest.fn(),
     getNumber: jest.fn(),
@@ -51,29 +47,29 @@ jest.mock('../../../utils/storage', () => ({
   },
 }));
 
-jest.mock('../../../hooks/useTraceDiscovery', () => ({
+vi.mock('../../../hooks/useTraceDiscovery', async () => ({
   useServices: jest.fn(() => ({ data: ['service1', 'service2'], isLoading: false })),
 }));
 
 // Store the default mock implementation for reset in afterEach
 const defaultUseServicesImpl = () => ({ data: ['service1', 'service2'], isLoading: false });
 
-jest.mock('lodash/debounce', () => fn => fn);
+vi.mock('lodash/debounce', async () => mockDefault(fn => fn));
 
-jest.mock('../../common/LoadingIndicator', () => {
-  return function LoadingIndicator() {
+vi.mock('../../common/LoadingIndicator', async () => {
+  return mockDefault(function LoadingIndicator() {
     return <div data-testid="loading-indicator">Loading...</div>;
-  };
+  });
 });
 
-jest.mock('../EmptyState', () => {
-  return function MonitorATMEmptyState() {
+vi.mock('../EmptyState', async () => {
+  return mockDefault(function MonitorATMEmptyState() {
     return <div data-testid="empty-state">ATM not configured</div>;
-  };
+  });
 });
 
-jest.mock('./serviceGraph', () => {
-  return function ServiceGraph({ yAxisTickFormat, name, error }) {
+vi.mock('./serviceGraph', async () => {
+  return mockDefault(function ServiceGraph({ yAxisTickFormat, name, error }) {
     const testValue = yAxisTickFormat ? yAxisTickFormat(1000) : null;
     return (
       <div data-testid={`service-graph-${name?.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
@@ -82,11 +78,11 @@ jest.mock('./serviceGraph', () => {
         {error && <span data-testid="graph-error">Error occurred</span>}
       </div>
     );
-  };
+  });
 });
 
-jest.mock('./operationDetailsTable', () => {
-  return function OperationTableDetails({ loading, error, data }) {
+vi.mock('./operationDetailsTable', async () => {
+  return mockDefault(function OperationTableDetails({ loading, error, data }) {
     return (
       <div data-testid="operation-table">
         {loading && <span data-testid="table-loading">Loading operations...</span>}
@@ -94,11 +90,18 @@ jest.mock('./operationDetailsTable', () => {
         {data && <span data-testid="table-data">Operations data loaded</span>}
       </div>
     );
-  };
+  });
 });
 
-jest.mock('../../common/SearchableSelect', () => {
-  return function SearchableSelect({ children, value, onChange, placeholder, disabled, className }) {
+vi.mock('../../common/SearchableSelect', async () => {
+  return mockDefault(function SearchableSelect({
+    children,
+    value,
+    onChange,
+    placeholder,
+    disabled,
+    className,
+  }) {
     return (
       <select
         data-testid={className}
@@ -116,11 +119,11 @@ jest.mock('../../common/SearchableSelect', () => {
         {children}
       </select>
     );
-  };
+  });
 });
 
-jest.mock('antd', () => {
-  const actualAntd = jest.requireActual('antd');
+vi.mock('antd', async () => {
+  const actualAntd = await vi.importActual('antd');
   return {
     ...actualAntd,
     Input: {

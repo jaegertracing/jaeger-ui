@@ -12,18 +12,20 @@ import { fetchedState } from '../../../constants';
 import * as getConfig from '../../../utils/config/get-config';
 import transformTraceData from '../../../model/transform-trace-data';
 
-jest.mock('../../common/UiFindInput', () => ({
-  __esModule: true,
+vi.mock('../../common/UiFindInput', async () => ({
+  ...(await vi.importActual('../../common/UiFindInput')),
   default: props => (
     <div data-testid="ui-find-input" {...props.inputProps}>
       UiFindInput {props.inputProps?.suffix}
     </div>
   ),
-  parseUiFind: jest.requireActual('../../common/UiFindInput').parseUiFind,
-  extractUiFindFromState: jest.requireActual('../../common/UiFindInput').extractUiFindFromState,
 }));
-jest.mock('../../common/ErrorMessage', () => props => <div data-testid="error-message">{props.error}</div>);
-jest.mock('../../common/LoadingIndicator', () => () => <div data-testid="loading-indicator">Loading...</div>);
+vi.mock('../../common/ErrorMessage', async () =>
+  mockDefault(props => <div data-testid="error-message">{props.error}</div>)
+);
+vi.mock('../../common/LoadingIndicator', async () =>
+  mockDefault(() => <div data-testid="loading-indicator">Loading...</div>)
+);
 
 afterEach(cleanup);
 

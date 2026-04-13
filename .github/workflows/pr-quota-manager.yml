@@ -33,7 +33,7 @@ jobs:
             https://raw.githubusercontent.com/jaegertracing/jaeger/refs/heads/main/.github/scripts/pr-quota-manager.js
 
       - name: Process PR Quota
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           # Use custom PAT if available (not available for fork PRs), otherwise use default token
           github-token: ${{ secrets.PR_QUOTA_MANAGER_PAT || github.token }}

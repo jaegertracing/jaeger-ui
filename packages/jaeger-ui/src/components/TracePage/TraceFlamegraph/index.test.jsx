@@ -9,8 +9,8 @@ import TraceFlamegraph from './index';
 import testTrace from './testTrace.json';
 
 // Mock the FlamegraphRenderer component
-jest.mock('@pyroscope/flamegraph', () => {
-  const originalModule = jest.requireActual('@pyroscope/flamegraph');
+vi.mock('@pyroscope/flamegraph', async () => {
+  const originalModule = await vi.importActual('@pyroscope/flamegraph');
   return {
     ...originalModule, // Keep original convertJaegerTraceToProfile
 

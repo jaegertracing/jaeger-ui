@@ -11,19 +11,21 @@ import DetailState from '../SpanDetail/DetailState';
 import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 
-jest.mock('../SpanDetail', () =>
-  jest.fn(({ span, focusSpan, linksGetter }) => {
-    linksGetter([], 0);
-    return (
-      <div data-testid="span-detail-mock" data-span-id={span.spanID}>
-        <button data-testid="focus-span-button" type="button" onClick={() => focusSpan('test-find')} />
-      </div>
-    );
-  })
+vi.mock('../SpanDetail', () =>
+  mockDefault(
+    jest.fn(({ span, focusSpan, linksGetter }) => {
+      linksGetter([], 0);
+      return (
+        <div data-testid="span-detail-mock" data-span-id={span.spanID}>
+          <button data-testid="focus-span-button" type="button" onClick={() => focusSpan('test-find')} />
+        </div>
+      );
+    })
+  )
 );
 
-jest.mock('../../../../model/link-patterns', () => jest.fn(() => []));
-jest.mock('../../../../utils/update-ui-find', () => jest.fn());
+vi.mock('../../../../model/link-patterns', () => mockDefault(jest.fn(() => [])));
+vi.mock('../../../../utils/update-ui-find');
 
 describe('<SpanDetailSidePanelImpl>', () => {
   let trace;

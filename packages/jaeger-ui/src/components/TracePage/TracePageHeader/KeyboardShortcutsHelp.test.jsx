@@ -8,8 +8,8 @@ import '@testing-library/jest-dom';
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import track from './KeyboardShortcutsHelp.track';
 
-jest.mock('./KeyboardShortcutsHelp.track', () => jest.fn());
-jest.mock('../keyboard-mappings', () => ({}));
+vi.mock('./KeyboardShortcutsHelp.track');
+vi.mock('../keyboard-mappings', () => mockDefault({}));
 
 describe('KeyboardShortcutsHelp', () => {
   beforeEach(() => {

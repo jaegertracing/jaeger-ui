@@ -24,7 +24,7 @@ jobs:
             https://raw.githubusercontent.com/jaegertracing/jaeger/refs/heads/main/.github/scripts/waiting-for-author.js
 
       - name: Manage Waiting for Author Label
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             const script = require('/tmp/waiting-for-author.js')

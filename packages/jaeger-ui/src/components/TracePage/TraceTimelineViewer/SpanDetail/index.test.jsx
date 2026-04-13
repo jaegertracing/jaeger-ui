@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('../utils');
+vi.mock('../utils');
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -14,8 +14,8 @@ import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 
-jest.mock('./AccordionAttributes', () => {
-  return function MockAccordionAttributes({ label, onToggle }) {
+vi.mock('./AccordionAttributes', () => {
+  return mockDefault(function MockAccordionAttributes({ label, onToggle }) {
     return (
       <div data-testid={`accordian-keyvalues-${label.toLowerCase()}`}>
         <button type="button" onClick={onToggle} data-testid={`toggle-${label.toLowerCase()}`}>
@@ -23,11 +23,11 @@ jest.mock('./AccordionAttributes', () => {
         </button>
       </div>
     );
-  };
+  });
 });
 
-jest.mock('./AccordionEvents', () => {
-  return function MockAccordionEvents({ onToggle, onItemToggle }) {
+vi.mock('./AccordionEvents', () => {
+  return mockDefault(function MockAccordionEvents({ onToggle, onItemToggle }) {
     return (
       <div data-testid="accordian-logs">
         <button type="button" onClick={onToggle} data-testid="toggle-logs">
@@ -38,11 +38,11 @@ jest.mock('./AccordionEvents', () => {
         </button>
       </div>
     );
-  };
+  });
 });
 
-jest.mock('./AccordionLinks', () => {
-  return function MockAccordionLinks({ onToggle }) {
+vi.mock('./AccordionLinks', () => {
+  return mockDefault(function MockAccordionLinks({ onToggle }) {
     return (
       <div data-testid="accordion-links">
         <button type="button" onClick={onToggle} data-testid="toggle-links">
@@ -50,11 +50,11 @@ jest.mock('./AccordionLinks', () => {
         </button>
       </div>
     );
-  };
+  });
 });
 
-jest.mock('./AccordionText', () => {
-  return function MockAccordionText({ onToggle }) {
+vi.mock('./AccordionText', () => {
+  return mockDefault(function MockAccordionText({ onToggle }) {
     return (
       <div data-testid="accordian-warnings">
         <button type="button" onClick={onToggle} data-testid="toggle-warnings">
@@ -62,11 +62,11 @@ jest.mock('./AccordionText', () => {
         </button>
       </div>
     );
-  };
+  });
 });
 
-jest.mock('../../../common/LabeledList', () => {
-  return function MockLabeledList({ items }) {
+vi.mock('../../../common/LabeledList', () => {
+  return mockDefault(function MockLabeledList({ items }) {
     return (
       <div data-testid="labeled-list">
         {items.map(item => (
@@ -76,17 +76,17 @@ jest.mock('../../../common/LabeledList', () => {
         ))}
       </div>
     );
-  };
+  });
 });
 
-jest.mock('../../../common/CopyIcon', () => {
-  return function MockCopyIcon({ copyText }) {
+vi.mock('../../../common/CopyIcon', () => {
+  return mockDefault(function MockCopyIcon({ copyText }) {
     return (
       <button type="button" data-testid="copy-icon" data-copy-text={copyText}>
         Copy
       </button>
     );
-  };
+  });
 });
 
 describe('<SpanDetail>', () => {

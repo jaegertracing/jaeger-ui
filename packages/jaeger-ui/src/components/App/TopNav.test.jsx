@@ -7,9 +7,10 @@ import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
+import { useTraceDiffStore } from '../../stores/trace-diff-store';
 
-jest.mock('antd', () => {
-  const actual = jest.requireActual('antd');
+vi.mock('antd', async () => {
+  const actual = await vi.importActual('antd');
 
   const Menu = ({ items = [], selectedKeys = [] }) => (
     <nav data-testid="mock-menu" data-selectedkeys={JSON.stringify(selectedKeys)}>
@@ -37,9 +38,8 @@ jest.mock('antd', () => {
   return { ...actual, Menu, Dropdown };
 });
 
-jest.mock('../../utils/config/get-config', () => {
+vi.mock('../../utils/config/get-config', async () => {
   return {
-    __esModule: true,
     default: jest.fn(() => ({
       dependencies: { menuEnabled: true },
       deepDependencies: { menuEnabled: true },
@@ -55,6 +55,10 @@ jest.mock('../../utils/config/get-config', () => {
 });
 
 describe('<TopNav>', () => {
+  beforeEach(() => {
+    useTraceDiffStore.setState({ a: null, b: null, cohort: [] });
+  });
+
   const labelGitHub = 'GitHub';
   const githubUrl = 'https://github.com/uber/jaeger';
   const blogUrl = 'https://medium.com/jaegertracing/';
@@ -102,7 +106,6 @@ describe('<TopNav>', () => {
       location: { pathname: '/search' },
     },
     pathname: '/search',
-    traceDiff: {},
   };
 
   describe('renders the default menu options', () => {
@@ -120,7 +123,7 @@ describe('<TopNav>', () => {
     });
 
     it('renders the "Jaeger" link', () => {
-      const items = screen.getByRole('link', { name: /jaeger logo jaeger/i });
+      const items = screen.getByRole('link', { name: /jaeger logo ?jaeger/i });
       expect(items).toBeInTheDocument();
     });
 
@@ -217,14 +220,14 @@ describe('<TopNav>', () => {
   });
 
   it('builds the Compare link using the trace diff cohort state', () => {
+    useTraceDiffStore.setState({
+      a: 'trace-a',
+      b: 'trace-b',
+      cohort: ['trace-a', 'trace-b'],
+    });
     render(
       <BrowserRouter>
-        <TopNav
-          {...{
-            ...defaultProps,
-            traceDiff: { cohort: ['trace-a', 'trace-b'] },
-          }}
-        />
+        <TopNav {...defaultProps} />
       </BrowserRouter>
     );
 

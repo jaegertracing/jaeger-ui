@@ -12,9 +12,9 @@ import traceGenerator from '../../../../demo/trace-generators';
 import transformTraceData from '../../../../model/transform-trace-data';
 import * as canvasSpanGraphModule from './CanvasSpanGraph';
 
-jest.mock('./CanvasSpanGraph', () => jest.fn(() => <div data-testid="CanvasSpanGraph" />));
-jest.mock('./TickLabels', () => jest.fn(() => <div data-testid="TickLabels" />));
-jest.mock('./ViewingLayer', () => jest.fn(() => <div data-testid="ViewingLayer" />));
+vi.mock('./CanvasSpanGraph', () => mockDefault(jest.fn(() => <div data-testid="CanvasSpanGraph" />)));
+vi.mock('./TickLabels', () => mockDefault(jest.fn(() => <div data-testid="TickLabels" />)));
+vi.mock('./ViewingLayer', () => mockDefault(jest.fn(() => <div data-testid="ViewingLayer" />)));
 
 describe('<SpanGraph>', () => {
   const trace = transformTraceData(traceGenerator.trace({})).asOtelTrace();

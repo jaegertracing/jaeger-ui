@@ -8,10 +8,10 @@ import DAGOptions from './DAGOptions';
 import * as constants from '../../utils/constants';
 
 // Mock UiFindInput and its store dependencies
-jest.mock('../common/UiFindInput', () => {
-  return function MockUiFindInput({ inputProps }) {
+vi.mock('../common/UiFindInput', () => {
+  return mockDefault(function MockUiFindInput({ inputProps }) {
     return <input data-testid="search-input" className={inputProps?.className} />;
-  };
+  });
 });
 
 const mockDependencies = [

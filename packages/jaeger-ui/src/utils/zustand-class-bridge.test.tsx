@@ -58,7 +58,7 @@ describe('createStoreConnector', () => {
   });
 
   it('does not re-render the child when an unrelated store field changes', () => {
-    const renderSpy = jest.fn();
+    const renderSpy = vi.fn();
     class SpyCounter extends React.Component<TCounterProps> {
       render() {
         renderSpy();

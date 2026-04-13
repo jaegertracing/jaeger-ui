@@ -14,32 +14,32 @@ import { getTraceName } from '../../../model/trace-viewer';
 import transformTraceData from '../../../model/transform-trace-data';
 import { ETraceViewType } from '../types';
 
-jest.mock('./AltViewOptions', () => {
-  return function MockAltViewOptions(props) {
+vi.mock('./AltViewOptions', () => {
+  return mockDefault(function MockAltViewOptions(props) {
     return <div data-testid="alt-view-options" {...props} />;
-  };
+  });
 });
 
-jest.mock('./TraceViewSettings', () => {
-  return function MockTraceViewSettings(props) {
+vi.mock('./TraceViewSettings', () => {
+  return mockDefault(function MockTraceViewSettings(props) {
     return <div data-testid="trace-view-settings" {...props} />;
-  };
+  });
 });
 
-jest.mock('./SpanGraph', () => {
-  return function MockSpanGraph(props) {
+vi.mock('./SpanGraph', () => {
+  return mockDefault(function MockSpanGraph(props) {
     return <div data-testid="span-graph" {...props} />;
-  };
+  });
 });
 
-jest.mock('./TracePageSearchBar', () => {
-  return function MockTracePageSearchBar(props) {
+vi.mock('./TracePageSearchBar', () => {
+  return mockDefault(function MockTracePageSearchBar(props) {
     return <div data-testid="trace-page-search-bar" {...props} />;
-  };
+  });
 });
 
-jest.mock('../../common/LabeledList', () => {
-  return function MockLabeledList(props) {
+vi.mock('../../common/LabeledList', () => {
+  return mockDefault(function MockLabeledList(props) {
     return (
       <div data-testid="labeled-list" className={props.className}>
         {props.items &&
@@ -51,32 +51,32 @@ jest.mock('../../common/LabeledList', () => {
           ))}
       </div>
     );
-  };
+  });
 });
 
-jest.mock('../../common/TraceName', () => {
-  return function MockTraceName({ traceName }) {
+vi.mock('../../common/TraceName', () => {
+  return mockDefault(function MockTraceName({ traceName }) {
     return (
       <span data-testid="trace-name" data-trace-name={traceName}>
         {traceName}
       </span>
     );
-  };
+  });
 });
 
-jest.mock('../../common/ExternalLinks', () => {
-  return function MockExternalLinks({ links }) {
+vi.mock('../../common/ExternalLinks', () => {
+  return mockDefault(function MockExternalLinks({ links }) {
     return <div data-testid="external-links" data-links-count={links.length} />;
-  };
+  });
 });
 
-jest.mock('../../common/NewWindowIcon', () => {
-  return function MockNewWindowIcon({ isLarge }) {
+vi.mock('../../common/NewWindowIcon', () => {
+  return mockDefault(function MockNewWindowIcon({ isLarge }) {
     return <span data-testid="new-window-icon" data-large={isLarge} />;
-  };
+  });
 });
 
-jest.mock('../../../model/link-patterns', () => ({
+vi.mock('../../../model/link-patterns', () => ({
   getTraceLinks: jest.fn(() => []),
 }));
 

@@ -45,7 +45,7 @@ describe('ResultItemTitle', () => {
     expect(screen.getByText(formatDuration(defaultProps.duration))).toBeInTheDocument();
 
     // Test that the link is rendered with the correct href and contains the title.
-    const link = screen.getByRole('link', { name: /150ms traceNameValue trace-i/i });
+    const link = screen.getByRole('link', { name: /150ms traceNameValue ?trace-i/i });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute('href', `${defaultProps.linkTo.pathname}${defaultProps.linkTo.search}`);
 

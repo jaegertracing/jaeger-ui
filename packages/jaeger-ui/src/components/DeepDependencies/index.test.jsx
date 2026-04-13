@@ -10,27 +10,29 @@ import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-jest.mock('node-fetch', () =>
-  jest.fn(() =>
-    Promise.resolve({
-      status: 200,
-      ok: true,
-      json: () => Promise.resolve({}),
-      text: () => Promise.resolve(''),
-    })
+vi.mock('isomorphic-fetch', () =>
+  mockDefault(
+    vi.fn(() =>
+      Promise.resolve({
+        status: 200,
+        ok: true,
+        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(''),
+      })
+    )
   )
 );
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => jest.fn(),
+vi.mock('react-router-dom', async () => ({
+  ...(await vi.importActual('react-router-dom')),
+  useNavigate: () => vi.fn(),
   useLocation: () => ({ search: '?service=test-service&operation=test-op' }),
   useParams: () => ({}),
 }));
 
-jest.mock('../../hooks/useTraceDiscovery', () => ({
-  useServices: jest.fn(() => ({ data: ['svc1', 'svc2'], isLoading: false })),
-  useSpanNames: jest.fn(() => ({
+vi.mock('../../hooks/useTraceDiscovery', async () => ({
+  useServices: vi.fn(() => ({ data: ['svc1', 'svc2'], isLoading: false })),
+  useSpanNames: vi.fn(() => ({
     data: [
       { name: 'op1', spanKind: 'server' },
       { name: 'op2', spanKind: 'server' },
@@ -52,44 +54,44 @@ import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 
 import { ECheckedStatus, EDirection, EDdgDensity, EViewModifier } from '../../model/ddg/types';
 
-jest.mock('./Graph', () => {
-  return function MockGraph(props) {
+vi.mock('./Graph', async () => {
+  return mockDefault(function MockGraph(props) {
     return <div data-testid="graph" {...props} />;
-  };
+  });
 });
 
-jest.mock('./Header', () => {
-  return function MockHeader(props) {
+vi.mock('./Header', async () => {
+  return mockDefault(function MockHeader(props) {
     return <div data-testid="header" {...props} />;
-  };
+  });
 });
 
-jest.mock('./SidePanel', () => {
-  return function MockSidePanel(props) {
+vi.mock('./SidePanel', async () => {
+  return mockDefault(function MockSidePanel(props) {
     return <div data-testid="side-panel" {...props} />;
-  };
+  });
 });
 
-jest.mock('../common/ErrorMessage', () => {
-  return function MockErrorMessage(props) {
+vi.mock('../common/ErrorMessage', async () => {
+  return mockDefault(function MockErrorMessage(props) {
     return <div data-testid="error-message" error={JSON.stringify(props.error)} />;
-  };
+  });
 });
 
-jest.mock('../common/LoadingIndicator', () => {
-  return function MockLoadingIndicator(props) {
+vi.mock('../common/LoadingIndicator', async () => {
+  return mockDefault(function MockLoadingIndicator(props) {
     return <div data-testid="loading-indicator" {...props} />;
-  };
+  });
 });
 
 describe('DeepDependencyGraphPage', () => {
   describe('DeepDependencyGraphPageImpl', () => {
     const vertexKey = 'test vertex key';
     const propsWithoutGraph = {
-      addViewModifier: jest.fn(),
+      addViewModifier: vi.fn(),
       fetchDeepDependencyGraph: () => {},
-      fetchServices: jest.fn(),
-      fetchServiceServerOps: jest.fn(),
+      fetchServices: vi.fn(),
+      fetchServiceServerOps: vi.fn(),
       graphState: {
         model: {
           distanceToPathElems: new Map(),
@@ -97,9 +99,9 @@ describe('DeepDependencyGraphPage', () => {
         state: fetchedState.DONE,
         viewModifiers: new Map(),
       },
-      navigate: jest.fn(),
+      navigate: vi.fn(),
       serverOpsForService: {},
-      removeViewModifierFromIndices: jest.fn(),
+      removeViewModifierFromIndices: vi.fn(),
       urlState: {
         start: 'testStart',
         end: 'testEnd',
@@ -116,12 +118,12 @@ describe('DeepDependencyGraphPage', () => {
           vertices: [],
         }),
         getHiddenUiFindMatches: () => new Set(),
-        getGenerationVisibility: jest.fn(),
-        getVertexVisiblePathElems: jest.fn(),
+        getGenerationVisibility: vi.fn(),
+        getVertexVisiblePathElems: vi.fn(),
         getVisibleUiFindMatches: () => new Set(),
-        getVisWithVertices: jest.fn(),
-        getVisWithoutVertex: jest.fn(),
-        getVisWithUpdatedGeneration: jest.fn(),
+        getVisWithVertices: vi.fn(),
+        getVisWithoutVertex: vi.fn(),
+        getVisWithUpdatedGeneration: vi.fn(),
         getDerivedViewModifiers: () => ({ edges: new Map(), vertices: new Map() }),
       },
     };
@@ -137,8 +139,8 @@ describe('DeepDependencyGraphPage', () => {
       let trackHideSpy;
 
       beforeAll(() => {
-        getUrlSpy = jest.spyOn(url, 'getUrl');
-        trackHideSpy = jest.spyOn(track, 'trackHide');
+        getUrlSpy = vi.spyOn(url, 'getUrl');
+        trackHideSpy = vi.spyOn(track, 'trackHide');
       });
 
       beforeEach(() => {
@@ -210,7 +212,7 @@ describe('DeepDependencyGraphPage', () => {
         let trackClearOperationSpy;
 
         beforeAll(() => {
-          trackClearOperationSpy = jest.spyOn(track, 'trackClearOperation');
+          trackClearOperationSpy = vi.spyOn(track, 'trackClearOperation');
         });
 
         it('removes op from urlState', () => {
@@ -224,7 +226,7 @@ describe('DeepDependencyGraphPage', () => {
         let trackFocusPathsSpy;
 
         beforeAll(() => {
-          trackFocusPathsSpy = jest.spyOn(track, 'trackFocusPaths');
+          trackFocusPathsSpy = vi.spyOn(track, 'trackFocusPaths');
         });
 
         beforeEach(() => {
@@ -330,7 +332,7 @@ describe('DeepDependencyGraphPage', () => {
         let encodeDistanceSpy;
 
         beforeAll(() => {
-          encodeDistanceSpy = jest.spyOn(codec, 'encodeDistance').mockImplementation(() => visEncoding);
+          encodeDistanceSpy = vi.spyOn(codec, 'encodeDistance').mockImplementation(() => visEncoding);
         });
 
         it('updates url with result of encodeDistance iff graph is loaded', () => {
@@ -386,7 +388,7 @@ describe('DeepDependencyGraphPage', () => {
         let trackSetServiceSpy;
 
         beforeAll(() => {
-          trackSetServiceSpy = jest.spyOn(track, 'trackSetService');
+          trackSetServiceSpy = vi.spyOn(track, 'trackSetService');
         });
 
         beforeEach(() => {
@@ -454,7 +456,7 @@ describe('DeepDependencyGraphPage', () => {
         let trackShowSpy;
 
         beforeAll(() => {
-          trackShowSpy = jest.spyOn(track, 'trackShow');
+          trackShowSpy = vi.spyOn(track, 'trackShow');
         });
 
         beforeEach(() => {
@@ -526,14 +528,14 @@ describe('DeepDependencyGraphPage', () => {
 
       it('calls setState with the selected vertex', () => {
         const ddgInstance = new DeepDependencyGraphPageImpl({ ...props, graphState: undefined });
-        const setStateSpy = jest.spyOn(ddgInstance, 'setState');
+        const setStateSpy = vi.spyOn(ddgInstance, 'setState');
         ddgInstance.selectVertex(selectedVertex);
         expect(setStateSpy).toHaveBeenCalledWith({ selectedVertex });
       });
 
       it('calls setState to clear the selected vertex', () => {
         const ddgInstance = new DeepDependencyGraphPageImpl({ ...props, graphState: undefined });
-        const setStateSpy = jest.spyOn(ddgInstance, 'setState');
+        const setStateSpy = vi.spyOn(ddgInstance, 'setState');
         ddgInstance.selectVertex();
         expect(setStateSpy).toHaveBeenCalledWith({ selectedVertex: undefined });
       });
@@ -647,7 +649,7 @@ describe('DeepDependencyGraphPage', () => {
       const vertices = [{ key: 'key0' }, { key: 'key1' }, { key: 'key2' }];
       const visibleFindCount = vertices.length - 1;
       const graph = {
-        getVisible: jest.fn(),
+        getVisible: vi.fn(),
         getDerivedViewModifiers: () => ({ edges: new Map(), vertices: new Map() }),
         getHiddenUiFindMatches: () => new Set(vertices.slice(visibleFindCount)),
         getVisibleUiFindMatches: () => new Set(vertices.slice(0, visibleFindCount)),
@@ -707,8 +709,8 @@ describe('DeepDependencyGraphPage', () => {
         let getSearchUrlSpy;
 
         beforeAll(() => {
-          getConfigValueSpy = jest.spyOn(getConfig, 'default');
-          getSearchUrlSpy = jest.spyOn(getSearchUrl, 'getUrl');
+          getConfigValueSpy = vi.spyOn(getConfig, 'default');
+          getSearchUrlSpy = vi.spyOn(getSearchUrl, 'getUrl');
         });
 
         beforeEach(() => {
@@ -912,9 +914,9 @@ describe('DeepDependencyGraphPage', () => {
     let sanitizeUrlStateSpy;
 
     beforeAll(() => {
-      getUrlStateSpy = jest.spyOn(url, 'getUrlState');
-      sanitizeUrlStateSpy = jest.spyOn(url, 'sanitizeUrlState');
-      makeGraphSpy = jest.spyOn(GraphModel, 'makeGraph').mockReturnValue(mockGraph);
+      getUrlStateSpy = vi.spyOn(url, 'getUrlState');
+      sanitizeUrlStateSpy = vi.spyOn(url, 'sanitizeUrlState');
+      makeGraphSpy = vi.spyOn(GraphModel, 'makeGraph').mockReturnValue(mockGraph);
     });
 
     beforeEach(() => {
@@ -1005,7 +1007,7 @@ describe('DeepDependencyGraphPage', () => {
 
     beforeEach(() => {
       // Restore spies from other tests (like getUrlState)
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
       useServices.mockClear();
       useSpanNames.mockClear();
     });

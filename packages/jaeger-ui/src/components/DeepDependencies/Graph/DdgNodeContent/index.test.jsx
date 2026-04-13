@@ -1,25 +1,24 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('./calc-positioning', () => () => ({
-  radius: 50,
-  svcWidth: 20,
-  opWidth: 30,
-  svcMarginTop: 10,
-}));
+vi.mock('./calc-positioning', async () =>
+  mockDefault(() => ({
+    radius: 50,
+    svcWidth: 20,
+    opWidth: 30,
+    svcMarginTop: 10,
+  }))
+);
 
 // Mutable object so individual tests can control the location without re-creating the mock.
 const mockLocation = { search: '' };
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+vi.mock('react-router-dom', async () => ({
+  ...(await vi.importActual('react-router-dom')),
   useLocation: () => mockLocation,
 }));
 
-jest.mock('../../../../model/path-agnostic-decorations', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({})),
-}));
+vi.mock('../../../../model/path-agnostic-decorations', () => mockDefault(jest.fn(() => ({}))));
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';

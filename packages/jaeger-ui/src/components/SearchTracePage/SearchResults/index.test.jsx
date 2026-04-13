@@ -17,48 +17,55 @@ import DiffSelection from './DiffSelection';
 import { StatusCode } from '../../../types/otel';
 
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => {
-  const actual = jest.requireActual('react-router-dom');
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
   };
 });
 
-jest.mock('./AltViewOptions', () =>
-  jest.fn(({ onDdgViewClicked }) => (
-    <button type="button" data-testid="alt-toggle" onClick={onDdgViewClicked}>
-      toggle
-    </button>
-  ))
+vi.mock('./AltViewOptions', () =>
+  mockDefault(
+    jest.fn(({ onDdgViewClicked }) => (
+      <button type="button" data-testid="alt-toggle" onClick={onDdgViewClicked}>
+        toggle
+      </button>
+    ))
+  )
 );
 
-jest.mock('./DiffSelection', () =>
-  jest.fn(({ traces }) => <div data-testid="diffselection">{traces.length}</div>)
+vi.mock('./DiffSelection', () =>
+  mockDefault(jest.fn(({ traces }) => <div data-testid="diffselection">{traces.length}</div>))
 );
 
-jest.mock('./ResultItem', () => jest.fn(({ trace }) => <div data-testid={`result-${trace.traceID}`} />));
-
-jest.mock('./ScatterPlot', () => jest.fn(props => <div data-testid="scatterplot" {...props} />));
-
-jest.mock('./DownloadResults', () =>
-  jest.fn(({ onDownloadResultsClicked }) => (
-    <button type="button" data-testid="download" onClick={onDownloadResultsClicked}>
-      download
-    </button>
-  ))
+vi.mock('./ResultItem', () =>
+  mockDefault(jest.fn(({ trace }) => <div data-testid={`result-${trace.traceID}`} />))
 );
 
-jest.mock('../../DeepDependencies/traces', () => jest.fn(() => <div data-testid="ddg" />));
+vi.mock('./ScatterPlot', () => mockDefault(jest.fn(props => <div data-testid="scatterplot" {...props} />)));
 
-jest.mock('../../common/LoadingIndicator', () => jest.fn(() => <div data-testid="loading" />));
+vi.mock('./DownloadResults', () =>
+  mockDefault(
+    jest.fn(({ onDownloadResultsClicked }) => (
+      <button type="button" data-testid="download" onClick={onDownloadResultsClicked}>
+        download
+      </button>
+    ))
+  )
+);
 
-jest.mock('../../common/NewWindowIcon', () => jest.fn(() => <span data-testid="new-window-icon" />));
+vi.mock('../../DeepDependencies/traces', () => mockDefault(jest.fn(() => <div data-testid="ddg" />)));
 
-jest.mock('../../common/SearchableSelect', () => {
-  const mockReact = jest.requireActual('react');
-  return function MockSearchableSelect({ value, onChange, children, ...rest }) {
-    const options = mockReact.Children.map(children, child => (
+vi.mock('../../common/LoadingIndicator', () => mockDefault(jest.fn(() => <div data-testid="loading" />)));
+
+vi.mock('../../common/NewWindowIcon', () =>
+  mockDefault(jest.fn(() => <span data-testid="new-window-icon" />))
+);
+
+vi.mock('../../common/SearchableSelect', () => {
+  return mockDefault(function MockSearchableSelect({ value, onChange, children, ...rest }) {
+    const options = React.Children.map(children, child => (
       <option key={child.props.value} value={child.props.value}>
         {child.props.children}
       </option>
@@ -73,7 +80,7 @@ jest.mock('../../common/SearchableSelect', () => {
         {options}
       </select>
     );
-  };
+  });
 });
 
 afterEach(() => {
