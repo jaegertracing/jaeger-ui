@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { createRef } from 'react';
+import { createRef } from 'react';
 import { render } from '@testing-library/react';
 import MeasurableNode from './MeasurableNode';
 import { ELayerType } from './types';
