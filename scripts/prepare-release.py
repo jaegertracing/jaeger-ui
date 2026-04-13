@@ -3,17 +3,24 @@
 import argparse
 import json
 import re
+import shlex
 import subprocess
 import sys
 import time
 from collections.abc import Sequence
 from datetime import date
 
+
+def format_command_for_display(command):
+    return shlex.join([str(part) for part in command])
+
+
 def run_command(command, cwd=None, capture_stdout=True, capture_stderr=True, sensitive=False):
     if isinstance(command, str) or not isinstance(command, Sequence):
         raise TypeError(
             'run_command() requires command to be a sequence of arguments when shell=False'
         )
+    formatted_command = format_command_for_display(command)
     try:
         result = subprocess.run(
             command,
@@ -26,17 +33,41 @@ def run_command(command, cwd=None, capture_stdout=True, capture_stderr=True, sen
         )
         return result.stdout.strip() if capture_stdout and result.stdout else ""
     except subprocess.CalledProcessError as e:
-        print(f"Error running command: {command}")
+        print(f"Error running command: {formatted_command}")
         if not sensitive and capture_stdout and e.stdout:
             print(f"STDOUT: {e.stdout}")
         if not sensitive and capture_stderr and e.stderr:
             print(f"STDERR: {e.stderr}")
         raise
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        missing_path = getattr(e, 'filename', None)
+        cwd_str = str(cwd) if cwd is not None else None
         if sensitive:
-            print("Error: Sensitive command binary not found (output suppressed)")
+            if cwd_str and missing_path == cwd_str:
+                print(
+                    'Error: Sensitive command could not run because the working directory '
+                    'was not found (output suppressed)'
+                )
+            elif missing_path:
+                print(
+                    'Error: Sensitive command could not run because a required path was '
+                    f'not found: {missing_path} (output suppressed)'
+                )
+            else:
+                print(
+                    'Error: Sensitive command could not run because a required path was '
+                    'not found (output suppressed)'
+                )
         else:
-            print(f"Error: Command binary not found for: {command}")
+            if cwd_str and missing_path == cwd_str:
+                print(f"Error: Working directory not found for command {formatted_command}: {cwd_str}")
+            elif missing_path:
+                print(
+                    'Error: Required path not found while running command '
+                    f'{formatted_command}: {missing_path}'
+                )
+            else:
+                print(f"Error: Required path not found while running command: {formatted_command}")
         raise
 
 def check_dependencies():
