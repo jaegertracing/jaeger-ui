@@ -3,16 +3,11 @@
 import argparse
 import json
 import re
-import shlex
 import subprocess
 import sys
 import time
 from collections.abc import Sequence
 from datetime import date
-
-
-def format_command_for_display(command):
-    return shlex.join([str(part) for part in command])
 
 
 def run_command(
@@ -21,14 +16,12 @@ def run_command(
     capture_stdout=True,
     capture_stderr=True,
     sensitive=False,
-    print_errors=True,
+    print_error=True,
 ):
     if isinstance(command, str) or not isinstance(command, Sequence):
         raise TypeError(
             'run_command() requires command to be a sequence of arguments when shell=False'
         )
-    formatted_command = format_command_for_display(command)
-    executable = str(command[0]) if command else None
     try:
         result = subprocess.run(
             command,
@@ -41,60 +34,21 @@ def run_command(
         )
         return result.stdout.strip() if capture_stdout and result.stdout else ""
     except subprocess.CalledProcessError as e:
-        if print_errors:
-            print(f"Error running command: {formatted_command}")
+        if print_error:
+            print(f"Error running command: {command}")
             if not sensitive and capture_stdout and e.stdout:
                 print(f"STDOUT: {e.stdout}")
             if not sensitive and capture_stderr and e.stderr:
                 print(f"STDERR: {e.stderr}")
         raise
-    except FileNotFoundError as e:
-        missing_path = getattr(e, 'filename', None)
-        cwd_str = str(cwd) if cwd is not None else None
-        is_missing_cwd = cwd_str is not None and missing_path == cwd_str
-        is_missing_executable = executable is not None and missing_path == executable
-        if print_errors:
-            if sensitive:
-                if is_missing_cwd:
-                    print(
-                        'Error: Sensitive command could not run because the working directory '
-                        'was not found (output suppressed)'
-                    )
-                elif is_missing_executable:
-                    print(
-                        'Error: Sensitive command executable not found in PATH: '
-                        f'{executable} (output suppressed)'
-                    )
-                elif missing_path:
-                    print(
-                        'Error: Sensitive command could not run because a required path was '
-                        f'not found: {missing_path} (output suppressed)'
-                    )
-                else:
-                    print(
-                        'Error: Sensitive command could not run because a required path was '
-                        'not found (output suppressed)'
-                    )
-            else:
-                if is_missing_cwd:
-                    print(f"Error: Working directory not found for command {formatted_command}: {cwd_str}")
-                elif is_missing_executable:
-                    print(
-                        'Error: Executable not found in PATH while running command '
-                        f'{formatted_command}: {executable}'
-                    )
-                elif missing_path:
-                    print(
-                        'Error: Required path not found while running command '
-                        f'{formatted_command}: {missing_path}'
-                    )
-                else:
-                    print(f"Error: Required path not found while running command: {formatted_command}")
+    except FileNotFoundError:
+        if print_error:
+            print(f"Error running command: {command}")
         raise
 
 def check_dependencies():
     try:
-        run_command(["gh", "--version"], print_errors=False)
+        run_command(["gh", "--version"], print_error=False)
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("Error: 'gh' CLI is not installed or not in PATH.")
         sys.exit(1)
@@ -106,7 +60,7 @@ def check_gh_auth():
             capture_stdout=False,
             capture_stderr=False,
             sensitive=True,
-            print_errors=False,
+            print_error=False,
         )
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("Error: GitHub CLI is not authenticated. Please login via 'gh auth login'.")
@@ -237,4 +191,7 @@ def main():
         git_commit_and_pr(version, branch_name)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        sys.exit(1)
