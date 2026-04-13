@@ -2,17 +2,18 @@
 
 import argparse
 import json
-import os
 import re
 import subprocess
 import sys
-import tempfile
 import time
+from collections.abc import Sequence
 from datetime import date
 
 def run_command(command, cwd=None, capture_stdout=True, capture_stderr=True, sensitive=False):
-    if isinstance(command, str):
-        raise TypeError(f"command must be a list of arguments, not a string: {command!r}")
+    if isinstance(command, str) or not isinstance(command, Sequence):
+        raise TypeError(
+            'run_command() requires command to be a sequence of arguments when shell=False'
+        )
     try:
         result = subprocess.run(
             command,
@@ -25,14 +26,11 @@ def run_command(command, cwd=None, capture_stdout=True, capture_stderr=True, sen
         )
         return result.stdout.strip() if capture_stdout and result.stdout else ""
     except subprocess.CalledProcessError as e:
-        if sensitive:
-            print("Error running sensitive command (output suppressed)")
-        else:
-            print(f"Error running command: {command}")
-            if capture_stdout and e.stdout:
-                print(f"STDOUT: {e.stdout}")
-            if capture_stderr and e.stderr:
-                print(f"STDERR: {e.stderr}")
+        print(f"Error running command: {command}")
+        if not sensitive and capture_stdout and e.stdout:
+            print(f"STDOUT: {e.stdout}")
+        if not sensitive and capture_stderr and e.stderr:
+            print(f"STDERR: {e.stderr}")
         raise
     except FileNotFoundError:
         if sensitive:
@@ -48,11 +46,16 @@ def check_dependencies():
         print("Error: 'gh' CLI is not installed or not in PATH.")
         sys.exit(1)
 
-def get_gh_token():
+def check_gh_auth():
     try:
-        return run_command(["gh", "auth", "token"], sensitive=True)
+        run_command(
+            ["gh", "auth", "status"],
+            capture_stdout=False,
+            capture_stderr=False,
+            sensitive=True
+        )
     except (subprocess.CalledProcessError, FileNotFoundError):
-        print("Error: Could not retrieve GitHub token using 'gh auth token'. Please login via 'gh auth login'.")
+        print("Error: GitHub CLI is not authenticated. Please login via 'gh auth login'.")
         sys.exit(1)
 
 def validate_version(version):
@@ -166,7 +169,7 @@ def main():
     check_dependencies()
     # check_git_status() # Optional: strict check, but might be annoying in dev. Uncomment if needed.
     validate_version(version)
-    token = get_gh_token()
+    check_gh_auth()
     
     notes = generate_release_notes()
     update_changelog(version, notes, dry_run=args.dry_run)
