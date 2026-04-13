@@ -62,7 +62,9 @@ const MeasurableNodeInner = <T = {}>(
     return { height, width };
   }, []);
 
-  // The layout algorithm calls measure() via ref to get node dimensions before positioning
+  // useImperativeHandle lets this functional component expose a custom interface (measure, getRef)
+  // through the forwarded ref instead of the raw DOM node. The layout algorithm calls measure()
+  // and getRef() via ref to obtain node dimensions and wrappers before computing positions.
   useImperativeHandle(
     ref,
     () => ({
