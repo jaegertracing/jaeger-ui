@@ -55,8 +55,8 @@ describe('useTraceDiscovery', () => {
       expect(result.current.data).toBeUndefined();
     });
 
-    it('successfully fetches and returns services data', async () => {
-      const mockServices = ['service-a', 'service-b', 'service-c'];
+    it('successfully fetches and returns services data (sorted)', async () => {
+      const mockServices = ['service-c', 'service-a', 'service-b'];
       (jaegerClient.fetchServices as ReturnType<typeof vi.fn>).mockResolvedValue(mockServices);
 
       const { result } = renderHook(() => useServices(), {
@@ -67,7 +67,7 @@ describe('useTraceDiscovery', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(result.current.data).toEqual(mockServices);
+      expect(result.current.data).toEqual(['service-a', 'service-b', 'service-c']);
       expect(jaegerClient.fetchServices).toHaveBeenCalledTimes(1);
     });
 
@@ -133,10 +133,10 @@ describe('useTraceDiscovery', () => {
       expect(result.current.data).toBeUndefined();
     });
 
-    it('successfully fetches span names for a given service', async () => {
+    it('successfully fetches span names for a given service (sorted)', async () => {
       const mockOperations = [
-        { name: 'GET /api/users', spanKind: 'server' },
         { name: 'POST /api/orders', spanKind: 'server' },
+        { name: 'GET /api/users', spanKind: 'server' },
       ];
       (jaegerClient.fetchSpanNames as ReturnType<typeof vi.fn>).mockResolvedValue(mockOperations);
 
@@ -148,7 +148,10 @@ describe('useTraceDiscovery', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(result.current.data).toEqual(mockOperations);
+      expect(result.current.data).toEqual([
+        { name: 'GET /api/users', spanKind: 'server' },
+        { name: 'POST /api/orders', spanKind: 'server' },
+      ]);
       expect(jaegerClient.fetchSpanNames).toHaveBeenCalledWith('my-service');
       expect(jaegerClient.fetchSpanNames).toHaveBeenCalledTimes(1);
     });
