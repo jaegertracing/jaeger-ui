@@ -366,15 +366,8 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
     resultsLimit: initialValues?.resultsLimit,
   }));
 
-  // Fetch services using React Query. The API may return them in storage
-  // order, which the search form has historically displayed alphabetically
-  // (issue #3733). Sort here rather than in useServices so other consumers
-  // (Monitor, DeepDependencies, QualityMetrics) keep the API-provided order.
-  const { data: rawServices = [], isLoading: isLoadingServices, error: servicesError } = useServices();
-  const services = useMemo(
-    () => [...rawServices].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })),
-    [rawServices]
-  );
+  // useServices returns services sorted alphabetically (see hook for rationale).
+  const { data: services = [], isLoading: isLoadingServices, error: servicesError } = useServices();
 
   // Fetch span names for the currently selected service
   const currentService = formData.service;

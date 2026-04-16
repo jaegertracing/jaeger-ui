@@ -6,6 +6,9 @@ import { jaegerClient } from '../api/v3/client';
 
 /**
  * React Query hook to fetch the list of services from the Jaeger API.
+ * Services are sorted alphabetically (case-insensitive) because the v3
+ * backend returns them in storage order, which is rarely useful for UI
+ * listings (issue #3733).
  * @returns Query result with services array
  */
 export function useServices(): UseQueryResult<string[]> {
@@ -14,6 +17,7 @@ export function useServices(): UseQueryResult<string[]> {
     queryFn: () => jaegerClient.fetchServices(),
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
+    select: data => [...data].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })),
   });
 }
 
