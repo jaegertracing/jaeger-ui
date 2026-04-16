@@ -11,7 +11,7 @@ type Props = {
   className?: string;
 };
 
-export function TraceId({ traceId, className = '' }: Props) {
+function TraceId({ traceId, className = '' }: Props) {
   if (!traceId) return null;
   const traceIdDisplayLength = getConfig().traceIdDisplayLength || 7;
   const traceIdDisplay = traceId ? traceId.slice(0, traceIdDisplayLength) : '';
@@ -23,3 +23,5 @@ export function TraceId({ traceId, className = '' }: Props) {
     </ClickToCopy>
   );
 }
+
+export default TraceId;

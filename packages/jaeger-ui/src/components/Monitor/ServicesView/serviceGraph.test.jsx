@@ -5,9 +5,8 @@ import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Legend, Tooltip } from 'recharts';
-import {
+import ServiceGraph, {
   ServiceGraphImpl,
-  ServiceGraphImpl as ServiceGraph,
   tickFormat,
   Placeholder,
   formatYAxisTick,

@@ -18,15 +18,13 @@ vi.mock('@jaegertracing/plexus', () => {
   };
 });
 
-vi.mock('../common/ActionMenu/ActionsMenu', () => ({
-  ActionsMenu: jest.fn().mockImplementation(() => null),
-}));
+vi.mock('../common/ActionMenu/ActionsMenu', () => mockDefault(jest.fn().mockImplementation(() => null)));
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Digraph, LayoutManager } from '@jaegertracing/plexus';
-import { ActionsMenu } from '../common/ActionMenu/ActionsMenu';
+import ActionsMenu from '../common/ActionMenu/ActionsMenu';
 import DAG, {
   renderNode,
   handleViewTraces,

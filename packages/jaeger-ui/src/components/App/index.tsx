@@ -12,7 +12,7 @@ import DependencyGraph from '../DependencyGraph';
 import { ROUTE_PATH as dependenciesPath } from '../DependencyGraph/url';
 import DeepDependencies from '../DeepDependencies';
 import { ROUTE_PATH as deepDependenciesPath } from '../DeepDependencies/url';
-import { QualityMetricsImpl as QualityMetrics } from '../QualityMetrics';
+import QualityMetrics from '../QualityMetrics';
 import { ROUTE_PATH as qualityMetricsPath } from '../QualityMetrics/url';
 import SearchTracePage from '../SearchTracePage';
 import { ROUTE_PATH as searchPath } from '../SearchTracePage/url';

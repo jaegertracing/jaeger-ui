@@ -12,7 +12,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 import { Link } from 'react-router-dom';
 import * as jaegerApiActions from '../../../actions/jaeger-api';
 import OperationTableDetails from './operationDetailsTable';
-import { ServiceGraphImpl as ServiceGraph } from './serviceGraph';
+import ServiceGraph from './serviceGraph';
 import LoadingIndicator from '../../common/LoadingIndicator';
 
 import { ReduxState } from '../../../types';

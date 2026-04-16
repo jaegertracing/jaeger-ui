@@ -20,7 +20,7 @@ import { TQualityMetrics } from './types';
 
 import './index.css';
 
-export function QualityMetricsImpl() {
+function QualityMetricsImpl() {
   const navigate = useNavigate();
   const location = useLocation();
   const { lookback, service } = React.useMemo(() => getUrlState(location.search), [location.search]);
@@ -134,3 +134,5 @@ export function QualityMetricsImpl() {
     </div>
   );
 }
+
+export default QualityMetricsImpl;
