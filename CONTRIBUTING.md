@@ -81,12 +81,15 @@ The above command will run a web server on `http://localhost:5173` that will ser
 
 This project uses Vitest for testing with Codecov integration for tracking.
 
-| Command                                                            | Description                        |
-| ------------------------------------------------------------------ | ---------------------------------- |
-| `npm test -- --coverage`                                           | Run all tests with coverage report |
-| `npm test -- --coverage --coverage.include="src/path/to/file.tsx"` | Coverage for specific files        |
+| Command | Description |
+| --- | --- |
+| `npm test -- --coverage` | Run all tests with full coverage report |
+| `npm test -- src/path/to/file.test.tsx` | Run a single test file |
+| `npm test -- src/path/to/file.test.tsx --coverage --coverage.include="src/path/to/file.tsx"` | Run a single test file with coverage scoped to its source file |
 
-**Example**: `npm test -- --coverage --coverage.include="src/components/DeepDependencies/Graph/DdgNodeContent/index.tsx"`
+Note: `--coverage.include` scopes which source files appear in the coverage report — it does **not** filter which tests run. To run only one test file, pass the test file path as a positional argument.
+
+**Example**: `npm test -- src/components/DeepDependencies/Graph/DdgNodeContent/index.test.tsx --coverage --coverage.include="src/components/DeepDependencies/Graph/DdgNodeContent/index.tsx"`
 
 ## Running on Windows OS
 
