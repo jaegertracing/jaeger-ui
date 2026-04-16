@@ -48,6 +48,15 @@ export default defineConfig({
       '\\.(css|less)$': 'identity-obj-proxy',
     },
   },
+  server: {
+    deps: {
+      // cookie is CJS-only; its dist file has duplicate exports.X assignments
+      // that break Node.js's static CJS named-export analysis when react-router's
+      // ESM chunks do `import { parse, serialize } from 'cookie'`.
+      // Inlining it through Vite's transform handles CJS→ESM conversion reliably.
+      inline: ['cookie'],
+    },
+  },
   resolve: {
     alias: {
       // More-specific alias must come first
