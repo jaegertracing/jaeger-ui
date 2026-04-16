@@ -239,6 +239,11 @@ See [Unknown 2](#unknown-2-oxlint-rule-coverage) for the rule mapping table.
 - Updated `lint-staged` to use `vp fmt` instead of `prettier --write`.
 - Output parity: only 1 file had a difference (trailing space in a comment line in `TraceDiff.test.js`) — fixed.
 
+**Note (vite-plus 0.1.17 / oxfmt 0.45.0):** oxfmt changed its config-loading strategy when invoked via
+`vp fmt` (i.e. when `VP_VERSION` is set): it now reads from the `fmt` field of the root `vite.config.ts`
+instead of `.oxfmtrc.json`. Accordingly, `.oxfmtrc.json` was deleted and its contents moved to a `fmt`
+named export in `vite.config.ts`. **To change formatting rules, edit the `fmt` field in `vite.config.ts`.**
+
 ---
 
 ### ✅ 5. Upgrade TypeScript (PR D — [#3688](https://github.com/jaegertracing/jaeger-ui/pull/3688))
