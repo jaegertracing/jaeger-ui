@@ -12,12 +12,14 @@ import reducer, {
   expandAll,
   expandOne,
   getSelectedSpanID,
+} from './duck';
+import {
   MIN_TIMELINE_COLUMN_WIDTH,
   SPAN_NAME_COLUMN_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SIDE_PANEL_WIDTH_MAX,
-} from './duck';
+} from './store';
 import getConfig from '../../../utils/config/get-config';
 import DetailState from './SpanDetail/DetailState';
 import transformTraceData from '../../../model/transform-trace-data';
