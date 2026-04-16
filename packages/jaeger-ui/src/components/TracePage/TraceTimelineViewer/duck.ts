@@ -20,7 +20,7 @@ import {
   SIDE_PANEL_WIDTH_MIN,
   SIDE_PANEL_WIDTH_MAX,
   MIN_TIMELINE_COLUMN_WIDTH,
-} from './store';
+} from './store.constants';
 
 // payloads
 export type TSpanIdLogValue = { logItem: IEvent; spanID: string };

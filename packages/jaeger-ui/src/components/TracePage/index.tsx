@@ -16,7 +16,11 @@ import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { useArchiveStore } from '../../stores/archive-store';
-import { useTraceTimelineStore } from './TraceTimelineViewer/store';
+import {
+  setDetailPanelMode as setDetailPanelModeZustand,
+  useLayoutPrefsStore,
+  useTraceTimelineStore,
+} from './TraceTimelineViewer/store';
 import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
 import {
   CombokeysHandler,
@@ -158,18 +162,17 @@ export function TracePageImpl(props: TProps) {
   } = props;
 
   // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
-  const detailPanelMode = useTraceTimelineStore(s => s.detailPanelMode);
-  const timelineBarsVisible = useTraceTimelineStore(s => s.timelineBarsVisible);
-  const zustandSetDetailPanelMode = useTraceTimelineStore(s => s.setDetailPanelMode);
-  const zustandSetTimelineBarsVisible = useTraceTimelineStore(s => s.setTimelineBarsVisible);
+  const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
+  const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
+  const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
 
   const setDetailPanelMode = useCallback(
     (mode: SpanDetailPanelMode) => {
-      zustandSetDetailPanelMode(mode);
+      setDetailPanelModeZustand(mode);
       reduxSetDetailPanelMode(mode);
     },
-    [zustandSetDetailPanelMode, reduxSetDetailPanelMode]
+    [reduxSetDetailPanelMode]
   );
 
   const setTimelineBarsVisible = useCallback(

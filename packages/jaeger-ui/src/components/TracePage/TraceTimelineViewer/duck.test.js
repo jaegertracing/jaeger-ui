@@ -19,7 +19,7 @@ import {
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SIDE_PANEL_WIDTH_MAX,
-} from './store';
+} from './store.constants';
 import getConfig from '../../../utils/config/get-config';
 import DetailState from './SpanDetail/DetailState';
 import transformTraceData from '../../../model/transform-trace-data';

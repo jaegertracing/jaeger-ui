@@ -11,17 +11,18 @@ import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 
-const { mockTraceTimelineStore } = vi.hoisted(() => ({
-  mockTraceTimelineStore: {
+const { mockLayoutPrefsStore, mockTraceTimelineStore } = vi.hoisted(() => ({
+  mockLayoutPrefsStore: {
     spanNameColumnWidth: 0.25,
     sidePanelWidth: 0.375,
     detailPanelMode: 'inline',
     timelineBarsVisible: true,
-    detailStates: new Map(),
     setSpanNameColumnWidth: vi.fn(),
     setSidePanelWidth: vi.fn(),
-    setDetailPanelMode: vi.fn(),
     setTimelineBarsVisible: vi.fn(),
+  },
+  mockTraceTimelineStore: {
+    detailStates: new Map(),
     collapseAll: vi.fn(),
     collapseOne: vi.fn(),
     expandAll: vi.fn(),
@@ -30,6 +31,7 @@ const { mockTraceTimelineStore } = vi.hoisted(() => ({
 }));
 
 vi.mock('./store', () => ({
+  useLayoutPrefsStore: vi.fn(selector => selector(mockLayoutPrefsStore)),
   useTraceTimelineStore: vi.fn(selector => selector(mockTraceTimelineStore)),
   getSelectedSpanID: detailStatesArg =>
     detailStatesArg.size > 0 ? detailStatesArg.keys().next().value : null,
@@ -107,16 +109,16 @@ describe('<TraceTimelineViewer>', () => {
     props.collapseOne.mockClear();
     props.setSpanNameColumnWidth.mockClear();
     props.setSidePanelWidth.mockClear();
-    mockTraceTimelineStore.setSpanNameColumnWidth.mockClear();
-    mockTraceTimelineStore.setSidePanelWidth.mockClear();
+    mockLayoutPrefsStore.setSpanNameColumnWidth.mockClear();
+    mockLayoutPrefsStore.setSidePanelWidth.mockClear();
     mockTraceTimelineStore.collapseAll.mockClear();
     mockTraceTimelineStore.collapseOne.mockClear();
     mockTraceTimelineStore.expandAll.mockClear();
     mockTraceTimelineStore.expandOne.mockClear();
-    mockTraceTimelineStore.spanNameColumnWidth = 0.25;
-    mockTraceTimelineStore.sidePanelWidth = 0.375;
-    mockTraceTimelineStore.detailPanelMode = 'inline';
-    mockTraceTimelineStore.timelineBarsVisible = true;
+    mockLayoutPrefsStore.spanNameColumnWidth = 0.25;
+    mockLayoutPrefsStore.sidePanelWidth = 0.375;
+    mockLayoutPrefsStore.detailPanelMode = 'inline';
+    mockLayoutPrefsStore.timelineBarsVisible = true;
     mockTraceTimelineStore.detailStates = new Map();
     jest.spyOn(KeyboardShortcuts, 'merge').mockClear();
   });
@@ -133,8 +135,8 @@ describe('<TraceTimelineViewer>', () => {
   it('derives selectedSpanID from Zustand detailStates', () => {
     // The root span is selected → selectedSpanID === rootSpanID → label should be 'Trace Root'.
     const spanID = trace.rootSpans[0].spanID;
-    mockTraceTimelineStore.detailPanelMode = 'sidepanel';
-    mockTraceTimelineStore.sidePanelWidth = 0.3;
+    mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+    mockLayoutPrefsStore.sidePanelWidth = 0.3;
     mockTraceTimelineStore.detailStates = new Map([[spanID, {}]]);
     render(<TraceTimelineViewerImpl {...props} />);
     // Side panel renders because detailPanelMode is 'sidepanel'.
@@ -198,8 +200,8 @@ describe('<TraceTimelineViewer>', () => {
 
     combinations.forEach(({ detailPanelMode, timelineBarsVisible }) => {
       it(`detailPanelMode=${detailPanelMode}, timelineBarsVisible=${timelineBarsVisible}`, () => {
-        mockTraceTimelineStore.detailPanelMode = detailPanelMode;
-        mockTraceTimelineStore.timelineBarsVisible = timelineBarsVisible;
+        mockLayoutPrefsStore.detailPanelMode = detailPanelMode;
+        mockLayoutPrefsStore.timelineBarsVisible = timelineBarsVisible;
         render(<TraceTimelineViewerImpl {...props} />);
 
         const sidePanelActive = detailPanelMode === 'sidepanel';
@@ -225,8 +227,8 @@ describe('<TraceTimelineViewer>', () => {
 
   describe('side panel mode', () => {
     beforeEach(() => {
-      mockTraceTimelineStore.detailPanelMode = 'sidepanel';
-      mockTraceTimelineStore.timelineBarsVisible = true;
+      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+      mockLayoutPrefsStore.timelineBarsVisible = true;
     });
 
     it('renders the side panel layout when detailPanelMode is sidepanel', () => {
@@ -241,7 +243,7 @@ describe('<TraceTimelineViewer>', () => {
     });
 
     it('does not render a VerticalResizer when timeline bars are hidden', () => {
-      mockTraceTimelineStore.timelineBarsVisible = false;
+      mockLayoutPrefsStore.timelineBarsVisible = false;
       render(<TraceTimelineViewerImpl {...props} />);
       expect(screen.queryByTestId('vertical-resizer-mock')).not.toBeInTheDocument();
     });
@@ -250,8 +252,8 @@ describe('<TraceTimelineViewer>', () => {
       render(<TraceTimelineViewerImpl {...props} />);
       fireEvent.click(screen.getByTestId('vertical-resizer-change'));
       // onChange receives newPosition=0.7 → setSidePanelWidth(1 - 0.7 ≈ 0.3)
-      expect(mockTraceTimelineStore.setSidePanelWidth).toHaveBeenCalledTimes(1);
-      expect(mockTraceTimelineStore.setSidePanelWidth.mock.calls[0][0]).toBeCloseTo(0.3);
+      expect(mockLayoutPrefsStore.setSidePanelWidth).toHaveBeenCalledTimes(1);
+      expect(mockLayoutPrefsStore.setSidePanelWidth.mock.calls[0][0]).toBeCloseTo(0.3);
       expect(props.setSidePanelWidth).toHaveBeenCalledTimes(1);
       expect(props.setSidePanelWidth.mock.calls[0][0]).toBeCloseTo(0.3);
     });

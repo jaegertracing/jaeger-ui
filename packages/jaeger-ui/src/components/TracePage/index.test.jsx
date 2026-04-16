@@ -121,14 +121,22 @@ vi.mock('./ArchiveNotifier', async () =>
   })
 );
 
-const { mockSubmitTraceToArchive, mockAcknowledge, mockTimelineStore } = vi.hoisted(() => ({
+const {
+  mockSubmitTraceToArchive,
+  mockAcknowledge,
+  mockSetDetailPanelMode,
+  mockLayoutPrefsStore,
+  mockTraceTimelineStore,
+} = vi.hoisted(() => ({
   mockSubmitTraceToArchive: jest.fn(),
   mockAcknowledge: jest.fn(),
-  mockTimelineStore: {
+  mockSetDetailPanelMode: jest.fn(),
+  mockLayoutPrefsStore: {
     detailPanelMode: 'inline',
     timelineBarsVisible: true,
-    setDetailPanelMode: jest.fn(),
     setTimelineBarsVisible: jest.fn(),
+  },
+  mockTraceTimelineStore: {
     focusUiFindMatches: jest.fn(),
   },
 }));
@@ -140,7 +148,9 @@ vi.mock('../../stores/archive-store', () => ({
 }));
 
 vi.mock('./TraceTimelineViewer/store', () => ({
-  useTraceTimelineStore: jest.fn(selector => selector(mockTimelineStore)),
+  useLayoutPrefsStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
+  useTraceTimelineStore: jest.fn(selector => selector(mockTraceTimelineStore)),
+  setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),
   SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
   SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,
   SIDE_PANEL_WIDTH_MIN: 0.2,
@@ -217,7 +227,7 @@ describe('<TracePage>', () => {
     capturedHeaderProps = {};
     capturedArchiveNotifierProps = {};
     defaultProps.focusUiFindMatches.mockClear();
-    mockTimelineStore.focusUiFindMatches.mockClear();
+    mockTraceTimelineStore.focusUiFindMatches.mockClear();
   });
 
   describe('clearSearch', () => {
@@ -272,7 +282,7 @@ describe('<TracePage>', () => {
           defaultProps.trace.data.asOtelTrace(),
           uiFind
         );
-        expect(mockTimelineStore.focusUiFindMatches).toHaveBeenCalledWith(
+        expect(mockTraceTimelineStore.focusUiFindMatches).toHaveBeenCalledWith(
           defaultProps.trace.data.asOtelTrace(),
           uiFind
         );
@@ -282,7 +292,7 @@ describe('<TracePage>', () => {
       it('handles when props.trace.data is absent', () => {
         render(<TracePage {...defaultProps} trace={{}} />);
         expect(defaultProps.focusUiFindMatches).not.toHaveBeenCalled();
-        expect(mockTimelineStore.focusUiFindMatches).not.toHaveBeenCalled();
+        expect(mockTraceTimelineStore.focusUiFindMatches).not.toHaveBeenCalled();
         expect(trackFocusSpy).not.toHaveBeenCalled();
       });
     });
@@ -834,39 +844,39 @@ describe('<TracePage>', () => {
     beforeEach(() => {
       defaultProps.setDetailPanelMode.mockClear();
       defaultProps.setTimelineBarsVisible.mockClear();
-      mockTimelineStore.setDetailPanelMode.mockClear();
-      mockTimelineStore.setTimelineBarsVisible.mockClear();
+      mockSetDetailPanelMode.mockClear();
+      mockLayoutPrefsStore.setTimelineBarsVisible.mockClear();
     });
 
     it('calls setDetailPanelMode (Zustand + Redux) with sidepanel when detailPanelMode is inline', () => {
-      mockTimelineStore.detailPanelMode = 'inline';
+      mockLayoutPrefsStore.detailPanelMode = 'inline';
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
-      expect(mockTimelineStore.setDetailPanelMode).toHaveBeenCalledWith('sidepanel');
+      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('sidepanel');
       expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('sidepanel');
     });
 
     it('calls setDetailPanelMode (Zustand + Redux) with inline when detailPanelMode is sidepanel', () => {
-      mockTimelineStore.detailPanelMode = 'sidepanel';
+      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
-      expect(mockTimelineStore.setDetailPanelMode).toHaveBeenCalledWith('inline');
+      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline');
       expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('inline');
     });
 
     it('calls setTimelineBarsVisible (Zustand + Redux) with false when timelineBarsVisible is true', () => {
-      mockTimelineStore.timelineBarsVisible = true;
+      mockLayoutPrefsStore.timelineBarsVisible = true;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
-      expect(mockTimelineStore.setTimelineBarsVisible).toHaveBeenCalledWith(false);
+      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(false);
       expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(false);
     });
 
     it('calls setTimelineBarsVisible (Zustand + Redux) with true when timelineBarsVisible is false', () => {
-      mockTimelineStore.timelineBarsVisible = false;
+      mockLayoutPrefsStore.timelineBarsVisible = false;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
-      expect(mockTimelineStore.setTimelineBarsVisible).toHaveBeenCalledWith(true);
+      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(true);
       expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(true);
     });
   });

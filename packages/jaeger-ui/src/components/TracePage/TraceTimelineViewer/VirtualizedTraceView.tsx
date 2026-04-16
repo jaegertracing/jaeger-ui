@@ -32,7 +32,7 @@ import { TNil, ReduxState } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan, IOtelTrace, IAttribute, IEvent } from '../../../types/otel';
 import TTraceTimeline from '../../../types/TTraceTimeline';
-import { useTraceTimelineStore, getSelectedSpanID } from './store';
+import { getSelectedSpanID, useLayoutPrefsStore, useTraceTimelineStore } from './store';
 
 import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
@@ -618,17 +618,15 @@ function VirtualizedTraceViewWrapper(
   const hoverIndentGuideIds = useSelector((state: ReduxState) => state.traceTimeline.hoverIndentGuideIds);
   const uiFind = useSelector((state: ReduxState) => extractUiFindFromState(state).uiFind);
 
-  const spanNameColumnWidth = useTraceTimelineStore(s => s.spanNameColumnWidth);
-  const sidePanelWidth = useTraceTimelineStore(s => s.sidePanelWidth);
-  const detailPanelMode = useTraceTimelineStore(s => s.detailPanelMode);
-  const timelineBarsVisible = useTraceTimelineStore(s => s.timelineBarsVisible);
+  const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
+  const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);
+  const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
+  const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const traceID = useTraceTimelineStore(s => s.traceID);
   const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
   const detailStates = useTraceTimelineStore(s => s.detailStates);
   const shouldScrollToFirstUiFindMatch = useTraceTimelineStore(s => s.shouldScrollToFirstUiFindMatch);
-  const selectedSpanID = useTraceTimelineStore(s =>
-    s.detailPanelMode === 'sidepanel' ? getSelectedSpanID(s.detailStates) : null
-  );
+  const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;
 
   const zustandSetTrace = useTraceTimelineStore(s => s.setTrace);
   const zustandChildrenToggle = useTraceTimelineStore(s => s.childrenToggle);

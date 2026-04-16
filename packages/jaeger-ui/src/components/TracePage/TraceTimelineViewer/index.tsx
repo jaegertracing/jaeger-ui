@@ -7,12 +7,13 @@ import { bindActionCreators, Dispatch } from 'redux';
 
 import { actions } from './duck';
 import {
-  useTraceTimelineStore,
   getSelectedSpanID,
   MIN_TIMELINE_COLUMN_WIDTH,
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
+  useLayoutPrefsStore,
+  useTraceTimelineStore,
 } from './store';
 import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
@@ -75,16 +76,15 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   } = props;
 
   // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
-  const detailPanelMode = useTraceTimelineStore(s => s.detailPanelMode);
-  const sidePanelWidth = useTraceTimelineStore(s => s.sidePanelWidth);
-  const spanNameColumnWidth = useTraceTimelineStore(s => s.spanNameColumnWidth);
-  const timelineBarsVisible = useTraceTimelineStore(s => s.timelineBarsVisible);
-  const zustandSetSpanNameColumnWidth = useTraceTimelineStore(s => s.setSpanNameColumnWidth);
-  const zustandSetSidePanelWidth = useTraceTimelineStore(s => s.setSidePanelWidth);
+  const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
+  const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);
+  const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
+  const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
+  const zustandSetSpanNameColumnWidth = useLayoutPrefsStore(s => s.setSpanNameColumnWidth);
+  const zustandSetSidePanelWidth = useLayoutPrefsStore(s => s.setSidePanelWidth);
 
-  const selectedSpanID = useTraceTimelineStore(s =>
-    s.detailPanelMode === 'sidepanel' ? getSelectedSpanID(s.detailStates) : null
-  );
+  const detailStates = useTraceTimelineStore(s => s.detailStates);
+  const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;
   const zustandCollapseAll = useTraceTimelineStore(s => s.collapseAll);
   const zustandCollapseOne = useTraceTimelineStore(s => s.collapseOne);
   const zustandExpandAll = useTraceTimelineStore(s => s.expandAll);
