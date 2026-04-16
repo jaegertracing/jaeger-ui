@@ -84,5 +84,3 @@ export const ActionsMenu: React.FC<IActionsMenuProps> = ({ items = [], className
     </div>
   );
 };
-
-export default ActionsMenu;

@@ -41,7 +41,7 @@ import extractDecorationFromState, {
   TDecorationFromState,
 } from '../../../../model/path-agnostic-decorations';
 import { ReduxState } from '../../../../types/index';
-import ActionsMenu, { IActionMenuItem } from '../../../common/ActionMenu/ActionsMenu';
+import { ActionsMenu, IActionMenuItem } from '../../../common/ActionMenu/ActionsMenu';
 
 import './index.css';
 

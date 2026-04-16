@@ -68,8 +68,8 @@ vi.mock('../EmptyState', async () => {
   });
 });
 
-vi.mock('./serviceGraph', async () => {
-  return mockDefault(function ServiceGraph({ yAxisTickFormat, name, error }) {
+vi.mock('./serviceGraph', async () => ({
+  ServiceGraphImpl: function ServiceGraph({ yAxisTickFormat, name, error }) {
     const testValue = yAxisTickFormat ? yAxisTickFormat(1000) : null;
     return (
       <div data-testid={`service-graph-${name?.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
@@ -78,8 +78,8 @@ vi.mock('./serviceGraph', async () => {
         {error && <span data-testid="graph-error">Error occurred</span>}
       </div>
     );
-  });
-});
+  },
+}));
 
 vi.mock('./operationDetailsTable', async () => {
   return mockDefault(function OperationTableDetails({ loading, error, data }) {

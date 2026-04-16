@@ -8,7 +8,7 @@ import '@testing-library/jest-dom';
 
 import JaegerAPI from '../../api/jaeger';
 import * as getUrl from './url';
-import QualityMetricsImpl from '.';
+import { QualityMetricsImpl } from '.';
 
 const queryClient = new QueryClient({
   defaultOptions: {

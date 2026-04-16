@@ -13,7 +13,7 @@ import { formatDuration } from '../../../utils/date';
 import { FetchedState, TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { ApiError } from '../../../types/api-error';
-import TraceId from '../../common/TraceId';
+import { TraceId } from '../../common/TraceId';
 
 import './TraceHeader.css';
 

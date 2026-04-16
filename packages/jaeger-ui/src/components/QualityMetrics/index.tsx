@@ -134,5 +134,3 @@ export function QualityMetricsImpl() {
     </div>
   );
 }
-
-export default QualityMetricsImpl;

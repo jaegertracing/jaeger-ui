@@ -23,5 +23,3 @@ export function TraceId({ traceId, className = '' }: Props) {
     </ClickToCopy>
   );
 }
-
-export default TraceId;

@@ -12,7 +12,6 @@ export enum ELayoutPhase {
   NoData = 'NoData',
   CalcSizes = 'CalcSizes',
   CalcPositions = 'CalcPositions',
-  CalcEdges = 'CalcEdges',
   Done = 'Done',
 }
 

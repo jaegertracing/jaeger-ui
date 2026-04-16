@@ -314,5 +314,3 @@ export function ServiceGraphImpl({
     </Placeholder>
   );
 }
-
-export default ServiceGraphImpl;

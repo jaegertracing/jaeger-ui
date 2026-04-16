@@ -7,7 +7,7 @@ import { TEdge, TVertex } from '@jaegertracing/plexus/lib/types';
 import { TLayoutOptions } from '@jaegertracing/plexus/lib/LayoutManager/types';
 import { IoLocate } from 'react-icons/io5';
 import NewWindowIcon from '../common/NewWindowIcon';
-import ActionsMenu, { IActionMenuItem } from '../common/ActionMenu/ActionsMenu';
+import { ActionsMenu, IActionMenuItem } from '../common/ActionMenu/ActionsMenu';
 import { getUrl as getSearchUrl } from '../SearchTracePage/url';
 
 import './dag.css';

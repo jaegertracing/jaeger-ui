@@ -6,7 +6,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { IoLocate } from 'react-icons/io5';
 import NewWindowIcon from '../NewWindowIcon';
-import ActionsMenu from './ActionsMenu';
+import { ActionsMenu } from './ActionsMenu';
 
 describe('<ActionsMenu>', () => {
   const mockOnClick = jest.fn();

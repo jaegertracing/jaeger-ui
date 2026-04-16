@@ -10,7 +10,7 @@ vi.mock('./NotFound', () => mockDefault(() => <div data-testid="not-found" />));
 vi.mock('./Page', () => mockDefault(({ children }) => <div data-testid="page">{children}</div>));
 vi.mock('../DependencyGraph', () => mockDefault(() => <div data-testid="dependency-graph" />));
 vi.mock('../DeepDependencies', () => mockDefault(() => <div data-testid="deep-dependencies" />));
-vi.mock('../QualityMetrics', () => mockDefault(() => <div data-testid="quality-metrics" />));
+vi.mock('../QualityMetrics', () => ({ QualityMetricsImpl: () => <div data-testid="quality-metrics" /> }));
 vi.mock('../SearchTracePage', () => mockDefault(() => <div data-testid="search-trace" />));
 vi.mock('../TraceDiff', () => mockDefault(() => <div data-testid="trace-diff" />));
 vi.mock('../TracePage', () => mockDefault(() => <div data-testid="trace-page" />));
