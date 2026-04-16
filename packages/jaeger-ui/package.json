@@ -21,13 +21,13 @@
     "@types/react": "19.2.7",
     "@types/redux-actions": "2.6.5",
     "@vitejs/plugin-react": "6.0.1",
-    "@vitest/coverage-v8": "4.1.2",
+    "@vitest/coverage-v8": "4.1.4",
     "babel-plugin-react-remove-properties": "0.3.1",
     "identity-obj-proxy": "3.0.0",
     "less": "4.6.4",
     "terser": "5.46.1",
     "vite": "8.0.5",
-    "vitest": "4.1.2"
+    "vitest": "4.1.4"
   },
   "dependencies": {
     "@jaegertracing/plexus": "0.2.0",

@@ -69,9 +69,9 @@ Runs the `lint` and `test` scripts.
 
 Oxlint configuration. Mirrors the previously active ESLint rules; see `docs/adr/0007-vite-plus-migration.md` for the rule mapping table.
 
-## `.oxfmtrc.json`
+## `vite.config.ts` — `fmt` field
 
-Oxfmt configuration. Migrated from the `prettier` config block in `package.json` using `oxfmt --migrate=prettier`.
+Oxfmt configuration lives in the `fmt` field of the root `vite.config.ts` (exported as a named `fmt` export consumed by `vp fmt`). To change formatting rules, edit that field. The file was originally generated via `oxfmt --migrate=prettier` from the `prettier` config block in `package.json` and was later moved from a standalone `.oxfmtrc.json` into `vite.config.ts` when upgrading to vite-plus 0.1.17 (oxfmt 0.45.0), which reads formatter config from the Vite config rather than a separate RC file.
 
 ## `.github/workflows`
 
