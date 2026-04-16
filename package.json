@@ -30,7 +30,9 @@
     "openapi-zod-client": "1.18.3",
     "rxjs-compat": "6.6.7",
     "typescript": "6.0.2",
-    "vite-plus": "0.1.17"
+    "vite-plus": "0.1.17",
+    "@vitest/coverage-v8": "4.1.4",
+    "vitest": "4.1.4"
   },
   "overrides": {
     "react": "19.2.0",
