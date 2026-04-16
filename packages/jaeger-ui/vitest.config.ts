@@ -50,11 +50,12 @@ export default defineConfig({
   },
   server: {
     deps: {
-      // cookie is CJS-only; its dist file has duplicate exports.X assignments
-      // that break Node.js's static CJS named-export analysis when react-router's
-      // ESM chunks do `import { parse, serialize } from 'cookie'`.
-      // Inlining it through Vite's transform handles CJS→ESM conversion reliably.
-      inline: ['cookie'],
+      // Inline all node_modules through Vite's transform pipeline.
+      // The threads pool uses SSR resolve conditions that prefer .mjs files,
+      // causing CJS/ESM named-export interop failures for packages like
+      // react-router and cookie. inline:true fixes this class of problem
+      // universally rather than playing whack-a-mole with individual packages.
+      inline: true,
     },
   },
   resolve: {

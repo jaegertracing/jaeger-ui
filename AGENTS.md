@@ -187,6 +187,7 @@ ComponentName/
 - Follow [good commit message](https://chris.beams.io/posts/git-commit/) guidelines
 - Keep subject line under 50 characters
 - Use imperative mood in subject line
+- **Capitalize the first word of the description** after the `type(scope):` prefix, e.g. `fix(test): Inline all deps…` not `fix(test): inline all deps…`
 
 ## Working with GitHub CLI (`gh`)
 
