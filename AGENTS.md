@@ -129,8 +129,8 @@ All new files must include this copyright header with the current year (e.g. 202
 To run a specific test file:
 
 ```bash
-# From repo root — preferred
-npm test -- src/components/Foo/index.test.jsx
+# -w is required; without it plexus also runs and fails (no matching file)
+npm test -w packages/jaeger-ui -- src/components/Foo/index.test.jsx
 
 # From packages/jaeger-ui — also correct
 cd packages/jaeger-ui && npx vitest run src/components/Foo/index.test.jsx
@@ -140,7 +140,7 @@ cd packages/jaeger-ui && npx vitest run src/components/Foo/index.test.jsx
 
 ```bash
 npm test -- --coverage
-npm test -- --coverage --coverage.include="src/path/to/file.tsx"
+npm test -w packages/jaeger-ui -- --coverage --coverage.include="src/path/to/file.tsx"
 ```
 
 ## Common Patterns
