@@ -72,30 +72,21 @@ The above command will run a web server on `http://localhost:5173` that will ser
 | `npm start` | Starts development server with hot reloading and api proxy. |
 | `npm test` | Run all the tests |
 | `npm test $file` | Run tests for a specific file, e.g. `npm test src/api/jaeger.test.js` |
-| `npm run lint` | Lint the project (oxlint, oxfmt, typescript) |
+| `npm run lint` | Lint the project (oxlint, oxfmt, typescript, knip) |
 | `npm run fmt` | Format source code with Oxfmt |
 | `npm run build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
 | `make bundle-stats` | Runs production build and outputs `packages/jaeger-ui/build/bundle-stats.csv` with per-package size breakdown (estimated post-minification bytes). |
 
 ## Code Coverage
 
-This project uses Jest for testing with high coverage standards and Codecov integration for tracking.
+This project uses Vitest for testing with Codecov integration for tracking.
 
-| Command | Description |
-| --- | --- |
-| `npm test -- --coverage` | Run all tests with coverage report |
-| `npm test -- --coverage --collectCoverageFrom="src/path/to/file.tsx"` | Coverage for specific files |
-| `npm test -- --testPathPattern=Component --coverage` | Coverage for specific test patterns |
-| `npm test -- --coverage --coverageReporters=text-lcov --coverageReporters=html` | Generate detailed coverage reports |
+| Command                                                            | Description                        |
+| ------------------------------------------------------------------ | ---------------------------------- |
+| `npm test -- --coverage`                                           | Run all tests with coverage report |
+| `npm test -- --coverage --coverage.include="src/path/to/file.tsx"` | Coverage for specific files        |
 
-**Coverage Metrics:**
-
-- **Statements**: % of executable statements covered by tests
-- **Branches**: % of conditional branches (if/else, switch cases) covered
-- **Functions**: % of functions called during tests
-- **Lines**: % of lines executed during tests
-
-**Example**: `npm test -- --testPathPattern=DdgNodeContent --coverage --collectCoverageFrom="src/components/DeepDependencies/Graph/DdgNodeContent/index.tsx"`
+**Example**: `npm test -- --coverage --coverage.include="src/components/DeepDependencies/Graph/DdgNodeContent/index.tsx"`
 
 ## Running on Windows OS
 
@@ -121,10 +112,10 @@ Use the following `launch.json` configuration:
     {
       "type": "node",
       "request": "launch",
-      "name": "Jest: current file",
+      "name": "Vitest: current file",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["${file}"],
+      "program": "${workspaceFolder}/node_modules/.bin/vitest",
+      "args": ["run", "${file}"],
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}/packages/jaeger-ui"
     }
@@ -140,7 +131,7 @@ We use [Oxfmt](https://viteplus.dev) for code formatting (part of the Vite+ tool
 
 Most issues will be caught by the linter, which can be applied via `npm run oxlint`.
 
-Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as noted in our `.oxlintrc.json`.
+Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as noted in our `.oxlintrc.json` (Oxlint configuration).
 
 ## File Headers
 
