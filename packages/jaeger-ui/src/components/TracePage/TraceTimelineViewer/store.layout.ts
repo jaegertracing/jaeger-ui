@@ -2,30 +2,32 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { create } from 'zustand';
-import getConfig from '../utils/config/get-config';
-import type { SpanDetailPanelMode } from '../types/config';
+import type { SpanDetailPanelMode } from '../../../types/config';
+import getConfig from '../../../utils/config/get-config';
+import {
+  MIN_TIMELINE_COLUMN_WIDTH,
+  SIDE_PANEL_WIDTH_MAX,
+  SIDE_PANEL_WIDTH_MIN,
+  SPAN_NAME_COLUMN_WIDTH_MAX,
+  SPAN_NAME_COLUMN_WIDTH_MIN,
+} from './store.constants';
 
-export const SPAN_NAME_COLUMN_WIDTH_MIN = 0.15;
-export const SPAN_NAME_COLUMN_WIDTH_MAX = 0.85;
-export const SIDE_PANEL_WIDTH_MIN = 0.2;
-export const SIDE_PANEL_WIDTH_MAX = 0.7;
-export const MIN_TIMELINE_COLUMN_WIDTH = 0.05;
-
-export type TraceTimelineLayoutStore = {
+export type TraceTimelineLayoutPrefsStore = {
   spanNameColumnWidth: number;
   sidePanelWidth: number;
   detailPanelMode: SpanDetailPanelMode;
   timelineBarsVisible: boolean;
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
-  setDetailPanelMode: (mode: SpanDetailPanelMode) => void;
+  // Updates layout fields only; use `setDetailPanelMode` from `./store` to also sync detail panel state.
+  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => void;
   setTimelineBarsVisible: (visible: boolean) => void;
 };
 
 // Reads user layout preferences from localStorage and merges them with config-driven defaults.
 // Mirrors the logic that was previously in TraceTimelineViewer/duck.ts `newInitialState()`.
 export function getInitialLayoutState(): Pick<
-  TraceTimelineLayoutStore,
+  TraceTimelineLayoutPrefsStore,
   'spanNameColumnWidth' | 'sidePanelWidth' | 'detailPanelMode' | 'timelineBarsVisible'
 > {
   const { traceTimeline } = getConfig();
@@ -51,7 +53,6 @@ export function getInitialLayoutState(): Pick<
 
   const parsedSidePanelWidth = parseFloat(localStorage.getItem('sidePanelWidth') ?? '');
   const sidePanelWidthExplicit = !Number.isNaN(parsedSidePanelWidth);
-  // Default: equal split between timeline and span details columns, clamped to allowed range.
   const rawSidePanelWidth = sidePanelWidthExplicit ? parsedSidePanelWidth : (1 - spanNameColumnWidth) / 2;
   let sidePanelWidth = Math.min(Math.max(rawSidePanelWidth, SIDE_PANEL_WIDTH_MIN), SIDE_PANEL_WIDTH_MAX);
 
@@ -88,7 +89,7 @@ export function getInitialLayoutState(): Pick<
   return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible };
 }
 
-export const useTraceTimelineStore = create<TraceTimelineLayoutStore>()((set, get) => ({
+export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set, get) => ({
   ...getInitialLayoutState(),
 
   setSpanNameColumnWidth: (width: number) => {
@@ -113,12 +114,10 @@ export const useTraceTimelineStore = create<TraceTimelineLayoutStore>()((set, ge
     set({ sidePanelWidth });
   },
 
-  setDetailPanelMode: (mode: SpanDetailPanelMode) => {
+  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => {
     localStorage.setItem('detailPanelMode', mode);
-    // When switching to sidepanel, clamp spanNameColumnWidth so the timeline column keeps its minimum.
-    let { spanNameColumnWidth } = get();
+    let { spanNameColumnWidth, sidePanelWidth } = get();
     if (mode === 'sidepanel') {
-      const { sidePanelWidth } = get();
       const maxWidth = Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH);
       spanNameColumnWidth = Math.min(spanNameColumnWidth, maxWidth);
     }

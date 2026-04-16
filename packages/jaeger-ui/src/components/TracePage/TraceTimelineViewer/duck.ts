@@ -14,22 +14,13 @@ import getConfig from '../../../utils/config/get-config';
 import guardReducer from '../../../utils/guardReducer';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';
 
-// Constants are canonical in trace-timeline-store; imported for use in this file and re-exported
-// for backward compatibility with other files that import them from duck.
-export {
-  SPAN_NAME_COLUMN_WIDTH_MIN,
-  SPAN_NAME_COLUMN_WIDTH_MAX,
-  SIDE_PANEL_WIDTH_MIN,
-  SIDE_PANEL_WIDTH_MAX,
-  MIN_TIMELINE_COLUMN_WIDTH,
-} from '../../../stores/trace-timeline-store';
 import {
   SPAN_NAME_COLUMN_WIDTH_MIN,
   SPAN_NAME_COLUMN_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
   SIDE_PANEL_WIDTH_MAX,
   MIN_TIMELINE_COLUMN_WIDTH,
-} from '../../../stores/trace-timeline-store';
+} from './store.constants';
 
 // payloads
 export type TSpanIdLogValue = { logItem: IEvent; spanID: string };
