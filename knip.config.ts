@@ -69,9 +69,8 @@ const config: KnipConfig = {
         'src/input.fixture.tsx',
       ],
       ignoreDependencies: [
-        // antd is a peerDependency of plexus (consumers must provide it). Knip sees it
-        // as unused because plexus does not list it in devDependencies, but it is
-        // imported throughout the source.
+        // antd is only used in demo/src/ which is listed in ignore above.
+        // Knip cannot see the usage because the demo files are excluded.
         'antd',
 
         // Same as packages/jaeger-ui above.
