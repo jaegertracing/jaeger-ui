@@ -5,6 +5,7 @@ import { EDdgDensity, EDirection } from '../../model/ddg/types';
 import { trackEvent } from '../../utils/tracking';
 import getTrackFilter from '../../utils/tracking/getTrackFilter';
 
+// export for tests
 export const CATEGORY_DENSITY_CHANGE = 'jaeger/ux/ddg/density-change';
 export const CATEGORY_DENSITY_SELECTION = 'jaeger/ux/ddg/density-selection';
 export const CATEGORY_DOWNSTREAM_HOPS_CHANGE = 'jaeger/ux/ddg/downstream-hops-change';
@@ -17,6 +18,7 @@ export const CATEGORY_UPSTREAM_HOPS_CHANGE = 'jaeger/ux/ddg/upstream-hops-change
 export const CATEGORY_UPSTREAM_HOPS_SELECTION = 'jaeger/ux/ddg/upstream-hops-selection';
 export const CATEGORY_VERTEX_INTERACTIONS = 'jaeger/ux/ddg/vertex-interactions';
 
+// export for tests
 export const ACTION_CLEAR_OPERATION = 'clear-operation';
 export const ACTION_DECREASE = 'decrease';
 export const ACTION_FOCUS_PATHS = 'focus-paths';
