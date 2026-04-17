@@ -5,6 +5,9 @@ vi.mock('../../utils/tracking');
 
 import {
   trackFormInput,
+  ACTION_CLEAR,
+  ACTION_DEFAULT,
+  ACTION_SET,
   CATEGORY_LIMIT,
   CATEGORY_LOOKBACK,
   CATEGORY_MAX_DURATION,
@@ -13,6 +16,7 @@ import {
   CATEGORY_SORTBY,
   CATEGORY_TAGS,
   CATEGORY_SERVICE,
+  FORM_CATEGORY_BASE,
   trackSortByChange,
 } from './SearchForm.track';
 import { trackEvent } from '../../utils/tracking';
@@ -40,5 +44,37 @@ describe('GA tracking', () => {
         CATEGORY_SERVICE,
       ].sort()
     );
+  });
+
+  it('tracks set action for non-default values', () => {
+    trackEvent.mockClear();
+    trackFormInput('100', 'non-default-op', 'tag=value', '1ms', '10ms', '1h', 'my-service');
+    const actions = trackEvent.mock.calls.map(call => call[1]);
+    expect(actions).toContain(ACTION_SET);
+  });
+
+  it('tracks clear action for absent optional values', () => {
+    trackEvent.mockClear();
+    trackFormInput('100', 'non-default-op', '', undefined, undefined, '1h', 'my-service');
+    const actions = trackEvent.mock.calls.map(call => call[1]);
+    expect(actions).toContain(ACTION_CLEAR);
+  });
+
+  it('tracks default action for default field values', () => {
+    trackEvent.mockClear();
+    // DEFAULT_OPERATION = 'all', DEFAULT_LIMIT = 20
+    trackFormInput('20', 'all', '', undefined, undefined, '1h', 'my-service');
+    const actions = trackEvent.mock.calls.map(call => call[1]);
+    expect(actions).toContain(ACTION_DEFAULT);
+  });
+
+  it('uses FORM_CATEGORY_BASE as prefix for form field categories', () => {
+    expect(CATEGORY_OPERATION).toBe(`${FORM_CATEGORY_BASE}/operation`);
+    expect(CATEGORY_LOOKBACK).toBe(`${FORM_CATEGORY_BASE}/lookback`);
+    expect(CATEGORY_TAGS).toBe(`${FORM_CATEGORY_BASE}/tags`);
+    expect(CATEGORY_MIN_DURATION).toBe(`${FORM_CATEGORY_BASE}/min_duration`);
+    expect(CATEGORY_MAX_DURATION).toBe(`${FORM_CATEGORY_BASE}/max_duration`);
+    expect(CATEGORY_LIMIT).toBe(`${FORM_CATEGORY_BASE}/limit`);
+    expect(CATEGORY_SERVICE).toBe(`${FORM_CATEGORY_BASE}/serviceName`);
   });
 });

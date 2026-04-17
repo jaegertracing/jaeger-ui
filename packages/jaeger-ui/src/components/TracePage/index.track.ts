@@ -4,10 +4,12 @@
 import { trackEvent } from '../../utils/tracking';
 import getTrackFilter from '../../utils/tracking/getTrackFilter';
 
-const CATEGORY_FILTER = 'jaeger/ux/trace/filter';
+// export for tests
+export const CATEGORY_FILTER = 'jaeger/ux/trace/filter';
 export const CATEGORY_MATCH_INTERACTIONS = 'jaeger/ux/trace/match-interactions';
 export const CATEGORY_RANGE = 'jaeger/ux/trace/range';
 
+// export for tests
 export const ACTION_FOCUS = 'focus';
 export const ACTION_NEXT = 'next';
 export const ACTION_PREV = 'previous';
