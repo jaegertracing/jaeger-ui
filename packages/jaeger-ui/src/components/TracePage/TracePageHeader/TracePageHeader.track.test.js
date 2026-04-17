@@ -77,7 +77,7 @@ describe('TracePageHeader.track', () => {
   ];
 
   cases.forEach(({ action, arg, msg, fn, category }) => {
-    it(msg, () => {
+    it(`${msg}`, () => {
       track[fn](arg);
       expect(trackEvent.mock.calls.length).toBe(1);
       expect(trackEvent.mock.calls[0]).toEqual([category, action]);

@@ -809,7 +809,7 @@ describe('<TracePage>', () => {
 
     cases.forEach(testCase => {
       const { message, timeViewRange, change, result } = testCase;
-      it(message, () => {
+      it(`${message}`, () => {
         const [start, end] = computeAdjustedRange(timeViewRange[0], timeViewRange[1], change[0], change[1]);
         expect([start, end]).toEqual(result);
       });

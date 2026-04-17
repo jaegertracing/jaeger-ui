@@ -87,7 +87,7 @@ describe('trackRange', () => {
   cases.forEach(_case => {
     const { msg, rangeType, source, from, to } = _case;
 
-    it(msg, () => {
+    it(`${msg}`, () => {
       expect(trackEvent.mock.calls.length).toBe(0);
       trackRange(source, from, to);
       expect(trackEvent.mock.calls.length).toBe(1);

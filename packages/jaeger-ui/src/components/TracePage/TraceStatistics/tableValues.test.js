@@ -540,7 +540,7 @@ describe('check self time', () => {
     expect(resultArray[4].selfTotal).toBe(1.63);
   });
 
-  it(' spans among each other and two other children', () => {
+  it('spans among each other and two other children', () => {
     let resultArray = getColumnValues(
       'Service Name',
       transformedTraceSpanAmongEachOtheGroupedAndSpans,
@@ -555,7 +555,7 @@ describe('check self time', () => {
     expect(resultArray[4].selfTotal).toBe(1.56);
   });
 
-  it(' span is longer as parent', () => {
+  it('span is longer as parent', () => {
     let resultArray = getColumnValues('Service Name', transformedTraceSpanLongerAsParent, false);
     resultArray = getColumnValuesSecondDropdown(
       resultArray,
