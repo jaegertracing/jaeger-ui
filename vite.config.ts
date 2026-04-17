@@ -121,6 +121,7 @@ export default defineConfig({
       'jest/no-focused-tests': 'error',
       'jest/no-identical-title': 'error',
       'jest/valid-title': 'error',
+      'jest/valid-expect': 'error',
       'import/extensions': 'off',
       // Disabled because dynamic computed namespace access (e.g. track[fn]())
       // in parameterised tests is a false positive this rule cannot validate.
