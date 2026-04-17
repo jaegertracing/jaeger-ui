@@ -60,7 +60,7 @@ const Option = Select.Option;
 
 const oneHourInMilliSeconds = 3600000;
 const oneMinuteInMilliSeconds = 60000;
-export const timeFrameOptions = [
+const timeFrameOptions = [
   { label: 'Last 5 minutes', value: 5 * oneMinuteInMilliSeconds },
   { label: 'Last 15 minutes', value: 15 * oneMinuteInMilliSeconds },
   { label: 'Last 30 minutes', value: 30 * oneMinuteInMilliSeconds },
@@ -71,7 +71,7 @@ export const timeFrameOptions = [
   { label: 'Last 24 hours', value: 24 * oneHourInMilliSeconds },
   { label: 'Last 2 days', value: 48 * oneHourInMilliSeconds },
 ];
-export const spanKindOptions = [
+const spanKindOptions = [
   { label: 'Client', value: 'client' },
   { label: 'Server', value: 'server' },
   { label: 'Internal', value: 'internal' },
@@ -122,8 +122,6 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 
   return { ...serviceErrorRate, metricPoints: convertedMetricsPoints };
 };
-
-// export for tests
 
 export function MonitorATMServicesViewImpl(props: TProps) {
   const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;

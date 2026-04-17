@@ -8,8 +8,6 @@ type TOneOf<A, B, C = {}, D = {}, E = {}> =
   | ({ [P in Exclude<keyof (A & B & C & E), keyof D>]?: undefined } & D)
   | ({ [P in Exclude<keyof (A & B & C & D), keyof E>]?: undefined } & E);
 
-export default TOneOf;
-
 export type TOneOfTwo<A, B> =
   | ({ [P in Exclude<keyof B, keyof A>]?: undefined } & A)
   | ({ [P in Exclude<keyof A, keyof B>]?: undefined } & B);

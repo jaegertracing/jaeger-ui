@@ -23,11 +23,7 @@ import { getAppEnvironment } from '../../utils/constants';
 import { ApiError } from '../../types/api-error';
 import { ReduxState } from '../../types';
 
-// export for tests
-export const GRAPH_TYPES = {
-  DAG: { type: 'DAG', name: 'DAG' },
-};
-export const sampleDatasetTypes = ['Backend', 'Small Graph', 'Large Graph'];
+const sampleDatasetTypes = ['Backend', 'Small Graph', 'Large Graph'];
 
 const dagMaxNumServices = getConfig().dependencies?.dagMaxNumServices ?? FALLBACK_DAG_MAX_NUM_SERVICES;
 
@@ -145,8 +141,8 @@ const formatServiceCalls = (
   };
 };
 
-// export for tests
-export const { getSampleData, loadSampleData } = createSampleDataManager();
+const { getSampleData, loadSampleData } = createSampleDataManager();
+export { loadSampleData };
 
 // export for tests
 export function DependencyGraphPageImpl(props: TProps) {

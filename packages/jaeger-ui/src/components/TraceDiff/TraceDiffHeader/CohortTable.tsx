@@ -28,7 +28,7 @@ const defaultRowSelection = {
   type: 'radio' as const,
 };
 
-export const NEED_MORE_TRACES_MESSAGE = (
+const NEED_MORE_TRACES_MESSAGE = (
   <h3 key="msg" className="CohortTable--needMoreMsg">
     Enter a Trace ID or perform a search and select from the results.
   </h3>

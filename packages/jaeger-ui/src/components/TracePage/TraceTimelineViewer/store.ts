@@ -20,12 +20,7 @@ export { getInitialLayoutState, useLayoutPrefsStore } from './store.layout';
 
 export { useTraceTimelineStore } from './store.timeline';
 
-export {
-  applyDetailSubsectionToggle,
-  calculateFocusedFindRowStates,
-  getSelectedSpanID,
-  trimFocusedDetailStatesForSidePanel,
-} from './timeline-utils';
+export { calculateFocusedFindRowStates, getSelectedSpanID } from './timeline-utils';
 
 /** Combined shape for typing/tests that span both Zustand slices. */
 type TraceTimelineLayoutStore = TraceTimelineLayoutPrefsStore & TraceTimelineInteractionStore;

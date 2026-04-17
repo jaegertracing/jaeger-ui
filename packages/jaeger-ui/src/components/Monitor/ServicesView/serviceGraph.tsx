@@ -73,7 +73,7 @@ export const Placeholder = ({
   );
 };
 
-export const HEIGHT = 242;
+const HEIGHT = 242;
 export const COLORS = ['#869ADD', '#EA9977', '#DCA3D2'];
 
 export function getData(
