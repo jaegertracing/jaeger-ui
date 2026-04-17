@@ -12,7 +12,7 @@ import {
   SPAN_NAME_COLUMN_WIDTH_MIN,
 } from './store.constants';
 
-export type TraceTimelineLayoutPrefsStore = {
+type TraceTimelineLayoutPrefsStore = {
   spanNameColumnWidth: number;
   sidePanelWidth: number;
   detailPanelMode: SpanDetailPanelMode;
