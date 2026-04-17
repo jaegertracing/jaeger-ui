@@ -19,7 +19,7 @@ describe('ExamplesLink', () => {
 
   const spanLinks = traceLinks.map(({ traceID }, i) => ({
     traceID: `${traceID}${i}`,
-    spanIDs: Array.from({ length: i + 1 }, () => 'spanID').map((str, j) => `${str}${i}${j}`),
+    spanIDs: Array.from({ length: i + 1 }, (_, j) => `spanID${i}${j}`),
   }));
 
   const expectedTraceParams = 'traceID=foo&traceID=bar';
