@@ -61,6 +61,11 @@ const config: KnipConfig = {
         // (`'\\.(css|less)$': 'identity-obj-proxy'`); not imported as a module.
         'identity-obj-proxy',
       ],
+      entry: [
+        // AUTO-GENERATED from the Jaeger OpenAPI spec (`npm run generate:api-types`).
+        // Treat as an entry point so knip considers all its exports intentionally public.
+        'src/api/v3/generated-client.ts',
+      ],
     },
     'packages/plexus': {
       ignore: [

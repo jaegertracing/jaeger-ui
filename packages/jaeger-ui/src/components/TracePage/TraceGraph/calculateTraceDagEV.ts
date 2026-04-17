@@ -64,7 +64,7 @@ function getChildOfDrange(parentID: string, trace: IOtelTrace) {
   return childrenDrange;
 }
 
-export function calculateTraceDag(trace: IOtelTrace): TraceDag<TSumSpan & TDenseSpanMembers> {
+function calculateTraceDag(trace: IOtelTrace): TraceDag<TSumSpan & TDenseSpanMembers> {
   const baseDag = TraceDag.newFromTrace(trace);
   const dag = new TraceDag<TSumSpan & TDenseSpanMembers>();
 

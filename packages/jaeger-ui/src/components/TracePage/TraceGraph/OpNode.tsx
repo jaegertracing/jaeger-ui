@@ -50,7 +50,7 @@ export const getHelpTable = (useOtelTerms: boolean) => (
   </table>
 );
 
-export function round2(percent: number) {
+function round2(percent: number) {
   return Math.round(percent * 100) / 100;
 }
 

@@ -188,7 +188,7 @@ export function traceIDsToQuery(traceIDs: string | null | undefined): string[] |
   return traceIDs.split(',');
 }
 
-export const placeholderDurationFields = 'e.g. 1.2s, 100ms, 500us';
+const placeholderDurationFields = 'e.g. 1.2s, 100ms, 500us';
 
 interface ValidationError {
   content: string;

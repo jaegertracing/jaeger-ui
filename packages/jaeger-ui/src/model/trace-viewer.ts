@@ -49,13 +49,10 @@ export function _getTracePageHeaderPartsImpl(spans: ReadonlyArray<Span>): TraceP
   };
 }
 
-export const getTracePageHeaderParts = _memoize(
-  _getTracePageHeaderPartsImpl,
-  (spans: ReadonlyArray<Span>) => {
-    if (!spans.length) return 0;
-    return spans[0].traceID;
-  }
-);
+const getTracePageHeaderParts = _memoize(_getTracePageHeaderPartsImpl, (spans: ReadonlyArray<Span>) => {
+  if (!spans.length) return 0;
+  return spans[0].traceID;
+});
 
 export function getTraceName(spans: ReadonlyArray<Span>): string {
   const parts = getTracePageHeaderParts(spans);

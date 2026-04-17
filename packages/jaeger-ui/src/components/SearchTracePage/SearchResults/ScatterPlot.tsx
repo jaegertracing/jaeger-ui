@@ -69,17 +69,7 @@ export const CustomTooltip = ({
   return null;
 };
 
-export const RenderDot = ({
-  cx,
-  cy,
-  fill,
-  size,
-}: {
-  cx?: number;
-  cy?: number;
-  fill?: string;
-  size?: number;
-}) => {
+const RenderDot = ({ cx, cy, fill, size }: { cx?: number; cy?: number; fill?: string; size?: number }) => {
   const maxSize = Math.min(300, size || 0);
   return (
     <Dot cx={cx} cy={cy} fill={fill} fillOpacity={0.5} r={maxSize * 0.035} style={{ cursor: 'pointer' }} />

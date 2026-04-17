@@ -5,6 +5,6 @@ import prefixUrl from '../../utils/prefix-url';
 
 export const ROUTE_PATH = prefixUrl('/plexus-demo');
 
-export function getUrl() {
+function getUrl() {
   return ROUTE_PATH;
 }
