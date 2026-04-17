@@ -201,7 +201,7 @@ export function calculateNumericTicks(xDomain: number[]): number[] {
   return Array.from({ length: count }, (_, i) => start + step * i);
 }
 
-export function ServiceGraphImpl({
+function ServiceGraphImpl({
   width,
   yDomain,
   showHorizontalLines,

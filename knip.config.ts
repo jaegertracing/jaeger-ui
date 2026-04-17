@@ -56,12 +56,6 @@ const config: KnipConfig = {
         'src/demo/**',
         'src/utils/DraggableManager/demo/**',
       ],
-      ignoreDuplicateExports: [
-        // serviceGraph.tsx exports ServiceGraphImpl both as a named export (used directly
-        // in tests as a function) and as the default export (used by the parent component).
-        // Both forms are intentional.
-        'src/components/Monitor/ServicesView/serviceGraph.tsx',
-      ],
       ignoreDependencies: [
         // Mapped to a CSS-modules stub in vitest.config.ts moduleNameMapper
         // (`'\\.(css|less)$': 'identity-obj-proxy'`); not imported as a module.

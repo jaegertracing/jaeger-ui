@@ -18,7 +18,7 @@ vi.mock('@jaegertracing/plexus', () => {
   };
 });
 
-vi.mock('../common/ActionMenu/ActionsMenu', () => mockDefault(jest.fn().mockImplementation(() => null)));
+vi.mock('../common/ActionMenu/ActionsMenu');
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';

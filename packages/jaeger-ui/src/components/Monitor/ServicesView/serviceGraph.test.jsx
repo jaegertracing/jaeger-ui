@@ -6,7 +6,6 @@ import { render, screen, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Legend, Tooltip } from 'recharts';
 import ServiceGraph, {
-  ServiceGraphImpl,
   tickFormat,
   Placeholder,
   formatYAxisTick,
@@ -19,6 +18,8 @@ import ServiceGraph, {
   COLORS,
 } from './serviceGraph';
 import { serviceMetrics } from '../../../reducers/metrics.mock';
+
+const ServiceGraphImpl = ServiceGraph;
 
 // Mock data with correct structure
 const mockMetricsData = {
