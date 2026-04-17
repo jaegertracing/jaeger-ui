@@ -83,7 +83,8 @@
     "preserve-caught-error": "error",
     "require-yield": "error",
     "use-isnan": "error",
-    "valid-typeof": "error"
+    "valid-typeof": "error",
+    "react/no-children-prop": "error"
   },
   "overrides": [
     {
@@ -98,7 +99,6 @@
         "no-console": "off",
         "react-x/rules-of-hooks": "error",
         "react-x/exhaustive-deps": "error",
-        "react/no-children-prop": "error",
         "jest/no-disabled-tests": "warn",
         "jest/no-focused-tests": "error",
         "jest/no-identical-title": "error",
@@ -192,7 +192,6 @@
         "no-console": "off",
         "react-x/rules-of-hooks": "error",
         "react-x/exhaustive-deps": "error",
-        "react/no-children-prop": "error",
         "jest/no-disabled-tests": "warn",
         "jest/no-focused-tests": "error",
         "jest/no-identical-title": "error",
