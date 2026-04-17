@@ -2,4 +2,3 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export { EMPTY_VIEW_MODIFIERS, useDdgViewModifiersStore } from './store.view-modifiers';
-export type { IDdgViewModifiersStore } from './store.view-modifiers';

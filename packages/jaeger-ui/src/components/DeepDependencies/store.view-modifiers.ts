@@ -12,7 +12,7 @@ import {
 } from '../../model/ddg/types';
 import { applyAddViewModifier, applyViewModifierRemoval, EMPTY_VIEW_MODIFIERS } from './view-modifiers-logic';
 
-export type IDdgViewModifiersStore = {
+type IDdgViewModifiersStore = {
   // Visibility-index view modifiers keyed like Redux `state.ddg` entries.
   byKey: Record<string, Map<number, number>>;
   getViewModifiersForKey: (graphKey: string | null) => Map<number, number>;

@@ -59,7 +59,7 @@ type TDispatchProps = {
   fetchDeepDependencyGraph?: (query: TDdgModelParams) => void;
 };
 
-export type TDdgViewModifierProps = {
+type TDdgViewModifierProps = {
   addViewModifier: (kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }) => void;
   removeViewModifierFromIndices: (
     kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }
