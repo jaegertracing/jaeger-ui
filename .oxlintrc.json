@@ -83,7 +83,8 @@
     "preserve-caught-error": "error",
     "require-yield": "error",
     "use-isnan": "error",
-    "valid-typeof": "error"
+    "valid-typeof": "error",
+    "react/no-children-prop": "error"
   },
   "overrides": [
     {
