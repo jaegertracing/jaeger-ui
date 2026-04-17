@@ -40,7 +40,7 @@ const config: KnipConfig = {
         // not imported as a module — knip does not trace shell script invocations.
         'depcheck',
 
-        // Referenced by Oxlint via the `jsPlugins` field in .oxlintrc.json to provide
+        // Referenced by Oxlint via the `jsPlugins` field in the `lint` section of vite.config.ts to provide
         // React hooks rules (react-x/rules-of-hooks, react-x/exhaustive-deps).
         // Oxlint delegates to this ESLint plugin rather than having a native implementation.
         'eslint-plugin-react-x',

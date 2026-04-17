@@ -69,15 +69,15 @@ Tests for React components in `./packages/jaeger-ui` make extensive use of Jest'
 
 Runs the `lint` and `test` scripts.
 
-## `.oxlintrc.json`
-
-Oxlint configuration. Mirrors the previously active ESLint rules; see `docs/adr/0007-vite-plus-migration.md` for the rule mapping table.
-
 ## `knip.config.ts`
 
 Dead-code analysis configuration for [Knip](https://knip.dev). Knip runs as part of `npm run lint` in warning-only mode (`knip || true` — non-zero exit is suppressed). It reports unused files, exports, and dependencies.
 
 Each `ignoreDependencies` entry in the config includes an inline comment explaining _why_ it cannot be auto-detected. Before adding a new exclusion, verify the reason is still valid; before removing one, check that knip truly reports no false positive without it.
+
+## `vite.config.ts` — `lint` field
+
+Oxlint configuration lives in the `lint` field of the root `vite.config.ts`. To change linting rules, edit that field. See `docs/adr/0007-vite-plus-migration.md` for the ESLint → Oxlint rule mapping table.
 
 ## `vite.config.ts` — `fmt` field
 

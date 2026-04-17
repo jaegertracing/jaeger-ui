@@ -155,8 +155,8 @@ export default defineConfig({
       {
         files: ['**/*.{js,jsx}'],
         rules: {
-          // JavaScript files: fully disable rules that TypeScript handles for .ts files.
-          // JS files in this repo are legacy test files only; tsc does not check them.
+          // JavaScript/JSX files: fully disable rules that TypeScript handles for .ts files.
+          // This override applies to all matched JS/JSX files in the repo, which tsc does not check.
           'no-unused-vars': 'off',
           'no-redeclare': 'off',
           'no-shadow': 'off',
