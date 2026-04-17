@@ -31,7 +31,7 @@ describe('useConfig', () => {
 
   const createWrapper = (store: ReturnType<typeof createStore>) => {
     const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-      return React.createElement(Provider, { store, children });
+      return React.createElement(Provider, { store }, children);
     };
     return Wrapper;
   };
