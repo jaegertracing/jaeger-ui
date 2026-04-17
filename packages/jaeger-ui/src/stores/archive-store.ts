@@ -6,7 +6,7 @@ import JaegerAPI from '../api/jaeger';
 import { toApiError } from '../types/api-error';
 import { ErrorTraceArchive, LoadingTraceArchive, TraceArchive } from '../types/archive';
 
-export type ArchiveStore = {
+type ArchiveStore = {
   archives: Record<string, TraceArchive>;
   submitTraceToArchive: (traceId: string) => Promise<void>;
   acknowledge: (traceId: string) => void;

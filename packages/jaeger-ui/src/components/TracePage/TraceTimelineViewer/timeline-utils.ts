@@ -15,7 +15,7 @@ export function shouldDisableCollapse(
   return allSpans.filter(s => s.hasChildren).every(p => hiddenSpansIds.has(p.spanID));
 }
 
-export type FocusedFindRowStates = {
+type FocusedFindRowStates = {
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;

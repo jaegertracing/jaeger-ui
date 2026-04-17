@@ -41,7 +41,7 @@ function diffSetBState(state: TTraceDiffState, traceID: string): TTraceDiffState
   return { ...state, b: traceID };
 }
 
-export type TraceDiffStore = TTraceDiffState & {
+type TraceDiffStore = TTraceDiffState & {
   cohortAddTrace: (traceID: string) => void;
   cohortRemoveTrace: (traceID: string) => void;
   diffSetA: (traceID: string) => void;

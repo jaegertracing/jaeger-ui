@@ -16,4 +16,4 @@ export type TraceArchive =
   | ErrorTraceArchive
   | AcknowledgedTraceArchive;
 
-export type TracesArchive = Record<string, TraceArchive>;
+type TracesArchive = Record<string, TraceArchive>;

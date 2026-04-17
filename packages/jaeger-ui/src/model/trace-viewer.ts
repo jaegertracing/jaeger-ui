@@ -5,7 +5,7 @@ import _memoize from 'lodash/memoize';
 
 import { Span } from '../types/trace';
 
-export type TracePageHeaderParts = {
+type TracePageHeaderParts = {
   serviceName: string;
   operationName: string;
 };
