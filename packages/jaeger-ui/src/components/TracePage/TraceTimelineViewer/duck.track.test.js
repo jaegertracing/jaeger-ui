@@ -207,7 +207,7 @@ describe('middlewareHooks', () => {
       extraTrackArgs = [],
       payloadCustom,
     }) => {
-      it(msg, () => {
+      it(`${msg}`, () => {
         const reduxAction = {
           type,
           payload: payloadCustom !== undefined ? payloadCustom : payload,

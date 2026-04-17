@@ -72,7 +72,7 @@ describe('getSuitableTimeUnit', () => {
     const input = 999;
     expect(getSuitableTimeUnit(input)).toBe('microseconds');
   });
-  it('time unit should be milliseconds ', () => {
+  it('time unit should be milliseconds', () => {
     const input = 5000;
     expect(getSuitableTimeUnit(input)).toBe('milliseconds');
   });
@@ -95,7 +95,7 @@ describe('getSuitableTimeUnit', () => {
 });
 
 describe('convertTimeUnitToShortTerm', () => {
-  it('convert non-existent timeUnit ', () => {
+  it('convert non-existent timeUnit', () => {
     const input = 'aaa';
     expect(convertTimeUnitToShortTerm(input)).toBe('');
   });
@@ -166,7 +166,7 @@ describe('formatRelativeDate', () => {
     currentDate = new Date(currentTimestamp);
   });
 
-  it('Displays Date MMM-DD-YYYY (Different Year) ', () => {
+  it('Displays Date MMM-DD-YYYY (Different Year)', () => {
     const input = new Date(currentTimestamp);
     input.setFullYear(currentDate.getFullYear() - 2);
     expect(formatRelativeDate(input)).toBe('Aug 19, 2021');

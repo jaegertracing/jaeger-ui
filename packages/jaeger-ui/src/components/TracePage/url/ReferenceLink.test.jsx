@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 
 import ReferenceLink from './ReferenceLink';
 
-describe(ReferenceLink, () => {
+describe('ReferenceLink', () => {
   const focusMock = jest.fn();
 
   const sameTraceLink = {

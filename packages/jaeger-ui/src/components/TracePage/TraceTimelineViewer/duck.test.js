@@ -271,7 +271,7 @@ describe('TraceTimelineViewer/duck', () => {
     tests.forEach(info => {
       const { msg, action, propName, initial, resultant } = info;
 
-      it(msg, () => {
+      it(`${msg}`, () => {
         const st0 = store.getState();
         expect(st0[propName]).toEqual(initial);
 
@@ -351,7 +351,7 @@ describe('TraceTimelineViewer/duck', () => {
     tests.forEach(info => {
       const { msg, reducerFn, initial, resultant } = info;
 
-      it(msg, () => {
+      it(`${msg}`, () => {
         const { childrenHiddenIDs } = reducerFn({ childrenHiddenIDs: initial }, { spans });
         expect(childrenHiddenIDs).toEqual(resultant);
       });
@@ -384,7 +384,7 @@ describe('TraceTimelineViewer/duck', () => {
     dispatchTests.forEach(info => {
       const { msg, action, resultant } = info;
 
-      it(msg, () => {
+      it(`${msg}`, () => {
         const st0 = store.getState();
         store.dispatch(action);
         const st1 = store.getState();
@@ -442,7 +442,7 @@ describe('TraceTimelineViewer/duck', () => {
     tests.forEach(info => {
       const { msg, action, get, unchecked, checked } = info;
 
-      it(msg, () => {
+      it(`${msg}`, () => {
         const st0 = store.getState();
         expect(get(st0)).toEqual(unchecked);
 
