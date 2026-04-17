@@ -104,7 +104,7 @@ describe('useConfig', () => {
       return { config: fullConfig } as ReduxState;
     });
 
-    const { result, rerender } = renderHook(() => useConfig(), {
+    const { result } = renderHook(() => useConfig(), {
       wrapper: createWrapper(dynamicStore),
     });
 

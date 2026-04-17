@@ -24,7 +24,7 @@ export function readStoredTheme(targetWindow?: Window | null): ThemeMode | null 
     if (stored === 'light' || stored === 'dark') {
       return stored;
     }
-  } catch (err) {
+  } catch {
     // Local storage may be blocked; ignore and fallback below.
   }
 
@@ -44,7 +44,7 @@ export function writeStoredTheme(mode: ThemeMode, targetWindow?: Window | null) 
 
   try {
     activeWindow.localStorage.setItem(THEME_STORAGE_KEY, mode);
-  } catch (err) {
+  } catch {
     // Ignore storage errors (e.g., Safari in private mode).
   }
 }

@@ -134,7 +134,6 @@ export default defineConfig({
         rules: {
           // TypeScript files: downgrade from top-level errors to warnings since
           // tsc already enforces these more precisely than the linter can.
-          'no-unused-vars': 'warn',
           'no-redeclare': 'warn',
           'no-shadow': 'warn',
           'no-use-before-define': 'warn',

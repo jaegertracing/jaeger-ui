@@ -23,7 +23,6 @@ import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useShallow } from 'zustand/react/shallow';
 import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import getConfig from '../../utils/config/get-config';
-import prefixUrl from '../../utils/prefix-url';
 
 import './TopNav.css';
 import withRouteProps, { IWithRouteProps } from '../../utils/withRouteProps';

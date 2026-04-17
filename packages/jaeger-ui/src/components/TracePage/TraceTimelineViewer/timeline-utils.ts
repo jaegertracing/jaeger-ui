@@ -3,7 +3,7 @@
 
 import DetailState from './SpanDetail/DetailState';
 import { TNil } from '../../../types';
-import { IOtelSpan, IEvent } from '../../../types/otel';
+import { IOtelSpan } from '../../../types/otel';
 import type { SpanDetailPanelMode } from '../../../types/config';
 import filterSpans from '../../../utils/filter-spans';
 import spanAncestorIds from '../../../utils/span-ancestor-ids';

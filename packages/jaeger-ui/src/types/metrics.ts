@@ -3,7 +3,6 @@
 
 import { ApiError } from './api-error';
 
-type MetricsType = 'latencies' | 'calls' | 'errors';
 type AvailableServiceMetrics = 'service_call_rate' | 'service_latencies' | 'service_error_rate';
 type AvailableOpsMetrics =
   | 'service_operation_call_rate'
