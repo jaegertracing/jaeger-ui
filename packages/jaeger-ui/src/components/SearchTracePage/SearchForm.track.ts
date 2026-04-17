@@ -4,10 +4,9 @@
 import * as constants from '../../constants/search-form';
 import { trackEvent } from '../../utils/tracking';
 
-// export for tests
-export const ACTION_SET = 'set';
-export const ACTION_CLEAR = 'clear';
-export const ACTION_DEFAULT = 'default';
+const ACTION_SET = 'set';
+const ACTION_CLEAR = 'clear';
+const ACTION_DEFAULT = 'default';
 
 export const CATEGORY_SORTBY = `jaeger/ux/search/results/sortby`;
 

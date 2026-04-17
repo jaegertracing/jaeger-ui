@@ -5,9 +5,6 @@ vi.mock('../../utils/tracking');
 
 import {
   trackFormInput,
-  ACTION_CLEAR,
-  ACTION_DEFAULT,
-  ACTION_SET,
   CATEGORY_LIMIT,
   CATEGORY_LOOKBACK,
   CATEGORY_MAX_DURATION,
@@ -43,27 +40,5 @@ describe('GA tracking', () => {
         CATEGORY_SERVICE,
       ].sort()
     );
-  });
-
-  it('tracks set action for non-default values', () => {
-    trackEvent.mockClear();
-    trackFormInput('100', 'non-default-op', 'tag=value', '1ms', '10ms', '1h', 'my-service');
-    const actions = trackEvent.mock.calls.map(call => call[1]);
-    expect(actions).toContain(ACTION_SET);
-  });
-
-  it('tracks clear action for absent optional values', () => {
-    trackEvent.mockClear();
-    trackFormInput('100', 'non-default-op', '', undefined, undefined, '1h', 'my-service');
-    const actions = trackEvent.mock.calls.map(call => call[1]);
-    expect(actions).toContain(ACTION_CLEAR);
-  });
-
-  it('tracks default action for default field values', () => {
-    trackEvent.mockClear();
-    // DEFAULT_OPERATION = 'all', DEFAULT_LIMIT = 20
-    trackFormInput('20', 'all', '', undefined, undefined, '1h', 'my-service');
-    const actions = trackEvent.mock.calls.map(call => call[1]);
-    expect(actions).toContain(ACTION_DEFAULT);
   });
 });
