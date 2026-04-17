@@ -116,6 +116,7 @@ export default defineConfig({
       'valid-typeof': 'error',
       'react/no-children-prop': 'error',
       'unicorn/no-useless-spread': 'error',
+      'unicorn/no-new-array': 'error',
       'react-x/rules-of-hooks': 'error',
       'react-x/exhaustive-deps': 'error',
       'jest/no-disabled-tests': 'warn',

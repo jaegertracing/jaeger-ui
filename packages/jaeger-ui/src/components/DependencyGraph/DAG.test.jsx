@@ -54,7 +54,7 @@ window.HTMLCanvasElement.prototype.getContext = function getContext() {
     clearRect() {},
     getImageData(x, y, w, h) {
       return {
-        data: new Array(w * h * 4),
+        data: Array.from({ length: w * h * 4 }),
       };
     },
     putImageData() {},

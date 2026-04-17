@@ -127,7 +127,7 @@ describe('SearchTracePage/url', () => {
 
         expect(
           getUrl({
-            traceID: new Array(numberOfArgs).fill(trace0),
+            traceID: Array.from({ length: numberOfArgs }, () => trace0),
           }).length
         ).toBeLessThan(MAX_LENGTH);
       });
@@ -135,7 +135,7 @@ describe('SearchTracePage/url', () => {
       it('does not over shorten', () => {
         const numberOfArgs = Math.floor(maxLengthOfArgs / lengthOfOneArg);
         const remainder = maxLengthOfArgs % lengthOfOneArg;
-        const ids = new Array(numberOfArgs).fill(trace0);
+        const ids = Array.from({ length: numberOfArgs }, () => trace0);
         ids[ids.length - 1] = `${ids[ids.length - 1]}${'x'.repeat(remainder)}`;
         ids.push(trace0);
 
