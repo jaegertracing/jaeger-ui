@@ -34,7 +34,7 @@ export interface MeasurableNodeRef {
 
 const SVG_HIDDEN_STYLE = { visibility: 'hidden' };
 
-const MeasurableNodeInner = <T = {}>(
+const MeasurableNodeInner = <T = {},>(
   { getClassName, hidden, layerType, layoutVertex, renderNode, renderUtils, setOnNode, vertex }: TProps<T>,
   ref: Ref<MeasurableNodeRef>
 ) => {
