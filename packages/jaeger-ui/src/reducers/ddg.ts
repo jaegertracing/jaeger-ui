@@ -8,14 +8,9 @@ import { fetchedState } from '../constants';
 import { ApiError } from '../types/api-error';
 import getStateEntryKey from '../model/ddg/getStateEntryKey';
 import transformDdgData from '../model/ddg/transformDdgData';
-import { TDdgActionMeta, TDdgModel, TDdgPayload } from '../model/ddg/types';
+import { TDdgActionMeta, TDdgPayload } from '../model/ddg/types';
 import TDdgState from '../types/TDdgState';
-import guardReducer, { guardReducerWithMeta } from '../utils/guardReducer';
-
-interface IDoneState {
-  state: typeof fetchedState.DONE;
-  model: TDdgModel;
-}
+import { guardReducerWithMeta } from '../utils/guardReducer';
 
 export function fetchDeepDependencyGraphStarted(state: TDdgState, { meta }: { meta: TDdgActionMeta }) {
   const { query } = meta;
