@@ -115,6 +115,7 @@ export default defineConfig({
       'use-isnan': 'error',
       'valid-typeof': 'error',
       'react/no-children-prop': 'error',
+      'unicorn/no-useless-spread': 'error',
       'react-x/rules-of-hooks': 'error',
       'react-x/exhaustive-deps': 'error',
       'jest/no-disabled-tests': 'warn',
