@@ -199,7 +199,6 @@ describe('JaegerClient', () => {
     });
 
     it('aborts and throws timeout error after default timeout (10s)', async () => {
-      let abortController: AbortController | null = null;
       mockFetch.mockImplementation((url: string, options?: { signal?: AbortSignal }) => {
         return new Promise((resolve, reject) => {
           if (options?.signal) {

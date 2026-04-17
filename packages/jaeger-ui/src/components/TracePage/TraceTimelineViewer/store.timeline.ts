@@ -13,7 +13,7 @@ import {
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
 
-export type TraceTimelineInteractionStore = {
+type TraceTimelineInteractionStore = {
   traceID: string | null;
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;

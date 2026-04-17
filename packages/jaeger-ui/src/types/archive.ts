@@ -15,5 +15,3 @@ export type TraceArchive =
   | SuccessfulTraceArchive
   | ErrorTraceArchive
   | AcknowledgedTraceArchive;
-
-type TracesArchive = Record<string, TraceArchive>;

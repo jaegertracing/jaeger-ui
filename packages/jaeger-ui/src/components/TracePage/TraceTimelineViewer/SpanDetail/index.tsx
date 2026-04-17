@@ -66,7 +66,6 @@ export default function SpanDetail(props: SpanDetailProps) {
   // Display labels based on terminology flag
   const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
   const resourceLabel = useOtelTerms ? 'Resource' : 'Process';
-  const eventsLabel = useOtelTerms ? 'Events' : 'Logs';
 
   const overviewItems = [
     {

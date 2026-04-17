@@ -32,7 +32,7 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
       let traceObj;
       try {
         traceObj = JSON.parse(reader.result);
-      } catch (error) {
+      } catch {
         try {
           traceObj = tryParseMultiLineInput(reader.result);
         } catch (error) {

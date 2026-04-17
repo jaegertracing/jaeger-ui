@@ -10,7 +10,7 @@ import dayjs from 'dayjs';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
-import { connect, ConnectedProps } from 'react-redux';
+import { connect } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getUrl as getSearchUrl } from './url';
 import { bindActionCreators, Dispatch } from 'redux';
@@ -791,7 +791,7 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     if (data) {
       try {
         tags = logfmtStringify(data);
-      } catch (_) {
+      } catch {
         tags = 'Parse Error';
       }
     } else {
@@ -803,7 +803,7 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
     try {
       data = JSON.parse(logfmtTags as string);
       tags = logfmtStringify(data);
-    } catch (_) {
+    } catch {
       tags = 'Parse Error';
     }
   }
@@ -847,7 +847,6 @@ export function mapDispatchToProps(dispatch: Dispatch) {
 }
 
 const connector = connect(mapStateToProps, mapDispatchToProps);
-type PropsFromRedux = ConnectedProps<typeof connector>;
 
 const ConnectedSearchForm = connector(SearchFormImpl);
 

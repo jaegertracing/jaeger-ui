@@ -5,8 +5,6 @@ import DetailState from './SpanDetail/DetailState';
 import type { SpanDetailPanelMode } from '../../../types/config';
 import { useLayoutPrefsStore } from './store.layout';
 import { useTraceTimelineStore } from './store.timeline';
-import type { TraceTimelineInteractionStore } from './store.timeline';
-import type { TraceTimelineLayoutPrefsStore } from './store.layout';
 
 export {
   MIN_TIMELINE_COLUMN_WIDTH,
@@ -21,9 +19,6 @@ export { getInitialLayoutState, useLayoutPrefsStore } from './store.layout';
 export { useTraceTimelineStore } from './store.timeline';
 
 export { calculateFocusedFindRowStates, getSelectedSpanID } from './timeline-utils';
-
-/** Combined shape for typing/tests that span both Zustand slices. */
-type TraceTimelineLayoutStore = TraceTimelineLayoutPrefsStore & TraceTimelineInteractionStore;
 
 export function setDetailPanelMode(mode: SpanDetailPanelMode): void {
   if (mode === 'sidepanel') {
