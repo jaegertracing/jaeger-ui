@@ -20,6 +20,11 @@ import * as transformTracesToPaths from '../../model/ddg/transformTracesToPaths'
 
 vi.mock('.', () => ({
   DeepDependencyGraphPageImpl: jest.fn(() => <div data-testid="ddg-impl" />),
+  useDdgViewModifierBridgeProps: () => ({
+    addViewModifier: jest.fn(),
+    removeViewModifierFromIndices: jest.fn(),
+    viewModifiers: new Map(),
+  }),
 }));
 
 describe('TracesDdgImpl', () => {

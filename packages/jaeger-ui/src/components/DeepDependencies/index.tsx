@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
-import { useMemo } from 'react';
 import _get from 'lodash/get';
 import { bindActionCreators, Dispatch } from 'redux';
-import { connect } from 'react-redux';
+import { connect, useSelector } from 'react-redux';
 
 import { trackClearOperation, trackFocusPaths, trackHide, trackSetService, trackShow } from './index.track';
 import Graph from './Graph';
@@ -18,7 +18,6 @@ import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { parseUiFind, TExtractUiFindFromStateReturn } from '../common/UiFindInput';
 import { getUrl as getSearchUrl } from '../SearchTracePage/url';
-import ddgActions from '../../actions/ddg';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { fetchedState } from '../../constants';
 import getStateEntryKey from '../../model/ddg/getStateEntryKey';
@@ -40,6 +39,8 @@ import { TDdgStateEntry } from '../../types/TDdgState';
 
 import { localeStringComparator } from '../../utils/sort';
 
+import { EMPTY_VIEW_MODIFIERS, useDdgViewModifiersStore } from './store';
+
 import './index.css';
 import { ApiError } from '../../types/api-error';
 import withRouteProps from '../../utils/withRouteProps';
@@ -48,7 +49,6 @@ import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 interface IDoneState {
   state: typeof fetchedState.DONE;
   model: TDdgModel;
-  viewModifiers: Map<number, number>;
 }
 interface IErrorState {
   state: typeof fetchedState.ERROR;
@@ -56,11 +56,15 @@ interface IErrorState {
 }
 
 type TDispatchProps = {
-  addViewModifier?: (kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }) => void;
   fetchDeepDependencyGraph?: (query: TDdgModelParams) => void;
-  removeViewModifierFromIndices?: (
+};
+
+export type TDdgViewModifierProps = {
+  addViewModifier: (kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }) => void;
+  removeViewModifierFromIndices: (
     kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }
   ) => void;
+  viewModifiers: Map<number, number>;
 };
 
 export type TReduxProps = TExtractUiFindFromStateReturn & {
@@ -85,7 +89,7 @@ type TOwnProps = {
 
 type TExternalProps = Partial<Omit<TOwnProps, 'navigate' | 'location'>>;
 
-type TProps = TDispatchProps & TReduxProps & TOwnProps & THookProps;
+type TProps = TDispatchProps & TReduxProps & TOwnProps & THookProps & TDdgViewModifierProps;
 
 type TState = {
   selectedVertex?: TDdgVertex;
@@ -268,7 +272,7 @@ export class DeepDependencyGraphPageImpl extends React.PureComponent<TProps, TSt
       content = <h1>Enter query above</h1>;
     } else if (graphState.state === fetchedState.DONE && graph) {
       const { edges, vertices } = graph.getVisible(visEncoding);
-      const { viewModifiers } = graphState as IDoneState;
+      const { viewModifiers } = this.props;
       const { edges: edgesViewModifiers, vertices: verticesViewModifiers } = graph.getDerivedViewModifiers(
         visEncoding,
         viewModifiers
@@ -412,18 +416,64 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
 // export for tests
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
   const { fetchDeepDependencyGraph } = bindActionCreators(jaegerApiActions, dispatch);
-  const { addViewModifier, removeViewModifierFromIndices } = bindActionCreators(ddgActions, dispatch);
 
   return {
-    addViewModifier,
     fetchDeepDependencyGraph,
-    removeViewModifierFromIndices,
   };
 }
 
 const ConnectedDeepDependencyGraphPageImpl = withRouteProps(
   connect(mapStateToProps, mapDispatchToProps)(DeepDependencyGraphPageImpl)
-) as React.ComponentType<Omit<TOwnProps, 'location' | 'navigate'> & THookProps>;
+) as React.ComponentType<Omit<TOwnProps, 'location' | 'navigate'> & THookProps & TDdgViewModifierProps>;
+
+export function useDdgViewModifierBridgeProps(): TDdgViewModifierProps {
+  const location = useLocation();
+  const urlState = getUrlState(location.search);
+  const { service, operation } = urlState;
+  const graphKey = service ? getStateEntryKey({ service, operation, start: 0, end: 0 }) : null;
+  const graphState = useSelector((state: ReduxState) =>
+    graphKey ? (_get(state.ddg, graphKey) as TDdgStateEntry | undefined) : undefined
+  );
+  const hash =
+    graphState && graphState.state === fetchedState.DONE ? (graphState as IDoneState).model.hash : undefined;
+
+  const viewModifiers = useDdgViewModifiersStore(
+    useCallback(
+      state => (graphKey ? (state.byKey[graphKey] ?? EMPTY_VIEW_MODIFIERS) : EMPTY_VIEW_MODIFIERS),
+      [graphKey]
+    )
+  );
+
+  const addViewModifier = useDdgViewModifiersStore(s => s.addViewModifier);
+  const removeViewModifierFromIndices = useDdgViewModifiersStore(s => s.removeViewModifierFromIndices);
+
+  const prevGraphRef = useRef<{ graphKey: string | null; hash: string | undefined }>({
+    graphKey: null,
+    hash: undefined,
+  });
+
+  useEffect(() => {
+    const prev = prevGraphRef.current;
+
+    if (graphKey && prev.graphKey && graphKey !== prev.graphKey) {
+      useDdgViewModifiersStore.getState().pruneViewModifiersExcept(graphKey);
+    }
+
+    if (
+      graphKey &&
+      prev.graphKey === graphKey &&
+      prev.hash !== undefined &&
+      hash !== undefined &&
+      prev.hash !== hash
+    ) {
+      useDdgViewModifiersStore.getState().clearViewModifiersForKey(graphKey);
+    }
+
+    prevGraphRef.current = { graphKey, hash };
+  }, [graphKey, hash]);
+
+  return { addViewModifier, removeViewModifierFromIndices, viewModifiers };
+}
 
 export default function DeepDependencyGraphPage({
   baseUrl = ROUTE_PATH,
@@ -440,7 +490,15 @@ export default function DeepDependencyGraphPage({
     [serverOpsData]
   );
 
+  const viewModifierProps = useDdgViewModifierBridgeProps();
   const props = { baseUrl, showSvcOpsHeader, ...restProps };
 
-  return <ConnectedDeepDependencyGraphPageImpl {...props} services={services} serverOps={serverOps} />;
+  return (
+    <ConnectedDeepDependencyGraphPageImpl
+      {...props}
+      {...viewModifierProps}
+      services={services}
+      serverOps={serverOps}
+    />
+  );
 }

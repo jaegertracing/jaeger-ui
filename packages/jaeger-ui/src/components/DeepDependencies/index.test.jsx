@@ -97,11 +97,11 @@ describe('DeepDependencyGraphPage', () => {
           distanceToPathElems: new Map(),
         },
         state: fetchedState.DONE,
-        viewModifiers: new Map(),
       },
       navigate: vi.fn(),
       serverOpsForService: {},
       removeViewModifierFromIndices: vi.fn(),
+      viewModifiers: new Map(),
       urlState: {
         start: 'testStart',
         end: 'testEnd',
@@ -860,9 +860,7 @@ describe('DeepDependencyGraphPage', () => {
   describe('mapDispatchToProps()', () => {
     it('creates the actions correctly', () => {
       expect(mapDispatchToProps(() => {})).toEqual({
-        addViewModifier: expect.any(Function),
         fetchDeepDependencyGraph: expect.any(Function),
-        removeViewModifierFromIndices: expect.any(Function),
       });
     });
   });
