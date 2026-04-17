@@ -17,10 +17,8 @@ export {
 } from './store.constants';
 
 export { getInitialLayoutState, useLayoutPrefsStore } from './store.layout';
-export type { TraceTimelineLayoutPrefsStore } from './store.layout';
 
 export { useTraceTimelineStore } from './store.timeline';
-export type { TraceTimelineInteractionStore } from './store.timeline';
 
 export {
   applyDetailSubsectionToggle,
@@ -28,10 +26,9 @@ export {
   getSelectedSpanID,
   trimFocusedDetailStatesForSidePanel,
 } from './timeline-utils';
-export type { FocusedFindRowStates } from './timeline-utils';
 
 /** Combined shape for typing/tests that span both Zustand slices. */
-export type TraceTimelineLayoutStore = TraceTimelineLayoutPrefsStore & TraceTimelineInteractionStore;
+type TraceTimelineLayoutStore = TraceTimelineLayoutPrefsStore & TraceTimelineInteractionStore;
 
 export function setDetailPanelMode(mode: SpanDetailPanelMode): void {
   if (mode === 'sidepanel') {

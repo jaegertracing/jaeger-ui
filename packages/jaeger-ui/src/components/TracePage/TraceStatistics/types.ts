@@ -24,12 +24,12 @@ export interface ITableSpan {
   traceID: string;
 }
 
-export interface ITableValues {
+interface ITableValues {
   uid: string;
   value: number;
 }
 
-export interface IColumnValue {
+interface IColumnValue {
   title: string;
   attribute: string;
   suffix: string;

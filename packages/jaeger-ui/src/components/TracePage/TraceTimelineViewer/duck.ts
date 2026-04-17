@@ -30,7 +30,7 @@ type TTraceUiFindValue = { trace: IOtelTrace; uiFind: string | TNil; allowHide?:
 export type TWidthValue = { width: number };
 export type TDetailPanelModeValue = { mode: SpanDetailPanelMode };
 export type TTimelineVisibleValue = { visible: boolean };
-export type TActionTypes =
+type TActionTypes =
   | TSpanIdLogValue
   | TSpanIdValue
   | TSpansValue

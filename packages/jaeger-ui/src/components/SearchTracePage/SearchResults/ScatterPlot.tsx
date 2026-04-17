@@ -20,7 +20,7 @@ import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
 
 import './ScatterPlot.css';
 
-export type TScatterPlotPoint = {
+type TScatterPlotPoint = {
   x: number;
   y: number;
   traceID: string;
