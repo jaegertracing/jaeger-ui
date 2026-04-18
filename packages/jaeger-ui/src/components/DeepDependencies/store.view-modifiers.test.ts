@@ -3,7 +3,7 @@
 
 import getStateEntryKey from '../../model/ddg/getStateEntryKey';
 import { EViewModifier } from '../../model/ddg/types';
-import { EMPTY_VIEW_MODIFIERS, useDdgViewModifiersStore } from './store.view-modifiers';
+import { EMPTY_VIEW_MODIFIERS, useDdgViewModifiersStore } from './store';
 
 describe('useDdgViewModifiersStore', () => {
   const query = { service: 's', operation: 'o', start: 0, end: 0 };

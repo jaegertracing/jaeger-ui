@@ -62,7 +62,7 @@ import * as getConfig from '../../utils/config/get-config';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 
 import { ECheckedStatus, EDirection, EDdgDensity, EViewModifier } from '../../model/ddg/types';
-import { useDdgViewModifiersStore } from './store.view-modifiers';
+import { useDdgViewModifiersStore } from './store';
 
 vi.mock('./Graph', async () => {
   return mockDefault(function MockGraph(props) {
