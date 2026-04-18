@@ -64,7 +64,7 @@ type TDdgViewModifierProps = {
   removeViewModifierFromIndices: (
     kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }
   ) => void;
-  viewModifiers: Map<number, number>;
+  viewModifiers: ReadonlyMap<number, number>;
 };
 
 export type TReduxProps = TExtractUiFindFromStateReturn & {
@@ -455,7 +455,9 @@ export function useDdgViewModifierBridgeProps(): TDdgViewModifierProps {
   useEffect(() => {
     const prev = prevGraphRef.current;
 
-    if (graphKey && prev.graphKey && graphKey !== prev.graphKey) {
+    if (graphKey === null && prev.graphKey !== null) {
+      useDdgViewModifiersStore.getState().pruneViewModifiersExcept(null);
+    } else if (graphKey !== null && prev.graphKey !== null && graphKey !== prev.graphKey) {
       useDdgViewModifiersStore.getState().pruneViewModifiersExcept(graphKey);
     }
 
@@ -469,7 +471,10 @@ export function useDdgViewModifierBridgeProps(): TDdgViewModifierProps {
       useDdgViewModifiersStore.getState().clearViewModifiersForKey(graphKey);
     }
 
-    prevGraphRef.current = { graphKey, hash };
+    prevGraphRef.current =
+      graphKey !== prev.graphKey
+        ? { graphKey, hash }
+        : { graphKey, hash: hash === undefined ? prev.hash : hash };
   }, [graphKey, hash]);
 
   return { addViewModifier, removeViewModifierFromIndices, viewModifiers };

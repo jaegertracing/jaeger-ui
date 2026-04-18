@@ -15,7 +15,7 @@ import { applyAddViewModifier, applyViewModifierRemoval, EMPTY_VIEW_MODIFIERS } 
 type IDdgViewModifiersStore = {
   // Visibility-index view modifiers keyed like Redux `state.ddg` entries.
   byKey: Record<string, Map<number, number>>;
-  getViewModifiersForKey: (graphKey: string | null) => Map<number, number>;
+  getViewModifiersForKey: (graphKey: string | null) => ReadonlyMap<number, number>;
   addViewModifier: (payload: TDdgAddViewModifierPayload) => void;
   removeViewModifierFromIndices: (payload: TDdgRemoveViewModifierFromIndicesPayload) => void;
   viewModifierRemoval: (payload: TDdgViewModifierRemovalPayload) => void;

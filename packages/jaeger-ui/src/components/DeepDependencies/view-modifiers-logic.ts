@@ -7,11 +7,14 @@ import {
   TDdgViewModifierRemovalPayload,
 } from '../../model/ddg/types';
 
-export const EMPTY_VIEW_MODIFIERS = new Map<number, number>();
+const _emptyViewModifiersInner = new Map<number, number>();
+Object.freeze(_emptyViewModifiersInner);
+
+export const EMPTY_VIEW_MODIFIERS: ReadonlyMap<number, number> = _emptyViewModifiersInner;
 
 // Functions to apply view modifiers to a map of view modifiers.
 export function applyAddViewModifier(
-  viewModifiers: Map<number, number>,
+  viewModifiers: ReadonlyMap<number, number>,
   payload: TDdgAddViewModifierPayload
 ): Map<number, number> {
   const { visibilityIndices, viewModifier } = payload;
@@ -23,7 +26,7 @@ export function applyAddViewModifier(
 }
 
 export function applyViewModifierRemoval(
-  viewModifiers: Map<number, number>,
+  viewModifiers: ReadonlyMap<number, number>,
   payload: TDdgViewModifierRemovalPayload
 ): Map<number, number> {
   const { visibilityIndices, viewModifier } = payload;
