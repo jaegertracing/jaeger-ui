@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 
-export interface IJaegerAssistantContextValue {
+interface IJaegerAssistantContextValue {
   panelOpen: boolean;
   setPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
   /** When set, opening the panel consumes this and appends a user message to the AG-UI thread. */
