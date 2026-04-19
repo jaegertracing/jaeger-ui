@@ -201,7 +201,7 @@ describe('GraphModel', () => {
               density: EDdgDensity.PreventPathEntanglement,
               showOp: true,
             })
-        ).toThrow();
+        ).toThrow(/Non-focal pathElem cannot be connected/);
       });
     });
   });

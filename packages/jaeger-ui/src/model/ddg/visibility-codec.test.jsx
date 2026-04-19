@@ -199,7 +199,7 @@ describe('visibility-codec', () => {
             direction: -1,
             ddgModel,
           })
-        ).toThrow();
+        ).toThrow(/Distance.*and direction.*cannot have opposite signs/);
       });
     });
   });

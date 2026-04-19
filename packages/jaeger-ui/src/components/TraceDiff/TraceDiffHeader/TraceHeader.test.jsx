@@ -43,7 +43,9 @@ describe('TraceHeader', () => {
     expect(screen.getByTestId('TraceDiffHeader--traceAttr--duration')).toBeInTheDocument();
     expect(screen.getByTestId('TraceDiffHeader--traceAttr--spans')).toBeInTheDocument();
 
-    expect(() => screen.getByTestId('TraceDiffHeader--emptyTraceAttributes')).toThrow();
+    expect(() => screen.getByTestId('TraceDiffHeader--emptyTraceAttributes')).toThrow(
+      /Unable to find an element/
+    );
   });
 
   it('renders populated EmptyAttrs component when props.state !== fetchedState.DONE', () => {
@@ -54,7 +56,7 @@ describe('TraceHeader', () => {
     });
 
     expect(screen.getByTestId('TraceDiffHeader--emptyTraceAttributes')).toBeInTheDocument();
-    expect(() => screen.getByTestId('TraceDiffHeader--traceAttributes')).toThrow();
+    expect(() => screen.getByTestId('TraceDiffHeader--traceAttributes')).toThrow(/Unable to find an element/);
   });
 
   it('renders "Select a Trace..." when props.traceID is not provided', () => {
