@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, renderHook, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import _set from 'lodash/set';
 import { MemoryRouter } from 'react-router-dom';
@@ -23,10 +23,14 @@ vi.mock('isomorphic-fetch', () =>
   )
 );
 
+const mockUseLocationValue = vi.hoisted(() => ({
+  search: '?service=test-service&operation=test-op',
+}));
+
 vi.mock('react-router-dom', async () => ({
   ...(await vi.importActual('react-router-dom')),
   useNavigate: () => vi.fn(),
-  useLocation: () => ({ search: '?service=test-service&operation=test-op' }),
+  useLocation: () => mockUseLocationValue,
   useParams: () => ({}),
 }));
 
@@ -40,7 +44,12 @@ vi.mock('../../hooks/useTraceDiscovery', async () => ({
   })),
 }));
 
-import { DeepDependencyGraphPageImpl, mapDispatchToProps, mapStateToProps } from '.';
+import {
+  DeepDependencyGraphPageImpl,
+  mapDispatchToProps,
+  mapStateToProps,
+  useDdgViewModifierBridgeProps,
+} from '.';
 import DefaultDeepDependencyGraphPage from '.';
 import * as track from './index.track';
 import * as url from './url';
@@ -53,6 +62,7 @@ import * as getConfig from '../../utils/config/get-config';
 import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
 
 import { ECheckedStatus, EDirection, EDdgDensity, EViewModifier } from '../../model/ddg/types';
+import { useDdgViewModifiersStore } from './store';
 
 vi.mock('./Graph', async () => {
   return mockDefault(function MockGraph(props) {
@@ -97,11 +107,11 @@ describe('DeepDependencyGraphPage', () => {
           distanceToPathElems: new Map(),
         },
         state: fetchedState.DONE,
-        viewModifiers: new Map(),
       },
       navigate: vi.fn(),
       serverOpsForService: {},
       removeViewModifierFromIndices: vi.fn(),
+      viewModifiers: new Map(),
       urlState: {
         start: 'testStart',
         end: 'testEnd',
@@ -860,9 +870,7 @@ describe('DeepDependencyGraphPage', () => {
   describe('mapDispatchToProps()', () => {
     it('creates the actions correctly', () => {
       expect(mapDispatchToProps(() => {})).toEqual({
-        addViewModifier: expect.any(Function),
         fetchDeepDependencyGraph: expect.any(Function),
-        removeViewModifierFromIndices: expect.any(Function),
       });
     });
   });
@@ -1023,6 +1031,105 @@ describe('DeepDependencyGraphPage', () => {
         <DefaultDeepDependencyGraphPage baseUrl="/custom-path" showSvcOpsHeader={false} />
       );
       expect(useServices).toHaveBeenCalled();
+    });
+  });
+
+  describe('useDdgViewModifierBridgeProps', () => {
+    const SET_DDG = 'SET_DDG';
+    const serviceOne = 'svc-bridge-one';
+    const serviceTwo = 'svc-bridge-two';
+    const keyOne = getStateEntryKey({ service: serviceOne, operation: '*', start: 0, end: 0 });
+    const keyTwo = getStateEntryKey({ service: serviceTwo, operation: '*', start: 0, end: 0 });
+
+    function makeDoneEntry(hash) {
+      return {
+        state: fetchedState.DONE,
+        model: {
+          hash,
+          distanceToPathElems: new Map(),
+          paths: [],
+          services: new Map(),
+          visIdxToPathElem: [],
+        },
+      };
+    }
+
+    function createDdgStore(initialDdg) {
+      return createStore(
+        (state = { ddg: initialDdg }, action) => {
+          if (action.type === SET_DDG && action.payload) {
+            return { ddg: action.payload };
+          }
+          return state;
+        },
+        { ddg: initialDdg }
+      );
+    }
+
+    function renderBridgeHook(store) {
+      const Wrapper = ({ children }) => <Provider store={store}>{children}</Provider>;
+      return renderHook(() => useDdgViewModifierBridgeProps(), { wrapper: Wrapper });
+    }
+
+    beforeEach(() => {
+      useDdgViewModifiersStore.setState({ byKey: {} });
+      mockUseLocationValue.search = `?service=${serviceOne}`;
+    });
+
+    afterEach(() => {
+      mockUseLocationValue.search = '?service=test-service&operation=test-op';
+    });
+
+    it('prunes view modifiers when the graph key changes', () => {
+      const store = createDdgStore({ [keyOne]: makeDoneEntry('h1') });
+      useDdgViewModifiersStore.getState().addViewModifier({
+        service: serviceOne,
+        operation: '*',
+        start: 0,
+        end: 0,
+        visibilityIndices: [1],
+        viewModifier: EViewModifier.Hovered,
+      });
+      useDdgViewModifiersStore.getState().addViewModifier({
+        service: serviceTwo,
+        operation: '*',
+        start: 0,
+        end: 0,
+        visibilityIndices: [2],
+        viewModifier: EViewModifier.Selected,
+      });
+
+      const { rerender } = renderBridgeHook(store);
+
+      expect(useDdgViewModifiersStore.getState().byKey[keyOne]).toBeDefined();
+      expect(useDdgViewModifiersStore.getState().byKey[keyTwo]).toBeDefined();
+
+      mockUseLocationValue.search = `?service=${serviceTwo}`;
+      store.dispatch({ type: SET_DDG, payload: { [keyTwo]: makeDoneEntry('h2') } });
+      rerender();
+
+      expect(useDdgViewModifiersStore.getState().byKey[keyOne]).toBeUndefined();
+      expect(useDdgViewModifiersStore.getState().byKey[keyTwo].get(2)).toBe(EViewModifier.Selected);
+    });
+
+    it('clears view modifiers for the current graph when model hash changes', () => {
+      const store = createDdgStore({ [keyOne]: makeDoneEntry('hash-a') });
+      useDdgViewModifiersStore.getState().addViewModifier({
+        service: serviceOne,
+        operation: '*',
+        start: 0,
+        end: 0,
+        visibilityIndices: [3],
+        viewModifier: EViewModifier.Hovered,
+      });
+
+      const { rerender } = renderBridgeHook(store);
+      expect(useDdgViewModifiersStore.getState().byKey[keyOne].get(3)).toBe(EViewModifier.Hovered);
+
+      store.dispatch({ type: SET_DDG, payload: { [keyOne]: makeDoneEntry('hash-b') } });
+      rerender();
+
+      expect(useDdgViewModifiersStore.getState().byKey[keyOne]).toBeUndefined();
     });
   });
 });

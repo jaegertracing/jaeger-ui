@@ -1,7 +1,7 @@
 # ADR 0004: State Management Strategy for Jaeger UI
 
 **Status**: Proposed  
-**Last Updated**: 2026-01-05  
+**Last Updated**: 2026-04-17 
 **Reviewed**: Pending
 
 ---
@@ -945,7 +945,7 @@ type IArchiveState = {
 
 **Components to rewire**: `ArchiveNotifier.tsx`, `TracePage` - stop dispatching Redux archive actions.
 
-#### ⬜ 1c. Trace timeline UI (`traceTimeline` duck)
+#### ✅ 1c. Trace timeline UI (`traceTimeline` duck)
 
 **Redux removed**: `src/components/TracePage/TraceTimelineViewer/duck.ts`
 
@@ -977,11 +977,12 @@ This is the **largest and most performance-sensitive** slice. Split across multi
 
 **Components to rewire**: `TraceTimelineViewer`, `SpanBarRow`, `SpanDetailRow`, `TimelineHeaderRow`.
 
-#### ⬜ 1d. Deep Dependencies view modifiers (`ddg` duck - client-only fields)
+#### ✅ 1d. Deep Dependencies view modifiers (`ddg` duck - client-only fields)
 
 **Redux removed**: view-modifier fields from `src/reducers/ddg.ts`. Leave the graph-payload fetch until Phase 2e.
 
-**New Zustand store** (`src/stores/ddg-modifiers-store.ts`):
+**New Zustand store** — `src/components/DeepDependencies/store.ts` (or split into multiple files under that directory if helpful).
+
 ```typescript
 type IDdgModifiersState = {
   showOperations: boolean;

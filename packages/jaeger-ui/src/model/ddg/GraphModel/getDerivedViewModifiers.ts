@@ -20,7 +20,7 @@ function getKeyFromVisIdx(graph: GraphModel, visIdx: number) {
 export default function getDerivedViewModifiers(
   this: GraphModel,
   visEncoding: string | undefined,
-  viewModifiers: Map<number, number>
+  viewModifiers: ReadonlyMap<number, number>
 ) {
   const edges = new Map<string, number>();
   const vertices = new Map<string, number>();
