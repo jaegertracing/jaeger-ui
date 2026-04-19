@@ -32,6 +32,10 @@ This is an amalgamation of linting scripts that run to make sure things are all-
 - `tsc-lint`
 - `oxlint`
 - `check-license`
+- `check-copyright-year`
+- `check-tsx-naming`
+- `check-overrides`
+- `knip`
 
 #### `prepare`
 
@@ -65,13 +69,19 @@ Tests for React components in `./packages/jaeger-ui` make extensive use of Jest'
 
 Runs the `lint` and `test` scripts.
 
-## `.oxlintrc.json`
+## `knip.config.ts`
 
-Oxlint configuration. Mirrors the previously active ESLint rules; see `docs/adr/0007-vite-plus-migration.md` for the rule mapping table.
+Dead-code analysis configuration for [Knip](https://knip.dev). Knip runs as part of `npm run lint` in warning-only mode (`knip || true` — non-zero exit is suppressed). It reports unused files, exports, and dependencies.
 
-## `.oxfmtrc.json`
+Each `ignoreDependencies` entry in the config includes an inline comment explaining _why_ it cannot be auto-detected. Before adding a new exclusion, verify the reason is still valid; before removing one, check that knip truly reports no false positive without it.
 
-Oxfmt configuration. Migrated from the `prettier` config block in `package.json` using `oxfmt --migrate=prettier`.
+## `vite.config.ts` — `lint` field
+
+Oxlint configuration lives in the `lint` field of the root `vite.config.ts`. To change linting rules, edit that field. See `docs/adr/0007-vite-plus-migration.md` for the ESLint → Oxlint rule mapping table.
+
+## `vite.config.ts` — `fmt` field
+
+Oxfmt configuration lives in the `fmt` field of the root `vite.config.ts` (exported as a named `fmt` export consumed by `vp fmt`). To change formatting rules, edit that field. The file was originally generated via `oxfmt --migrate=prettier` from the `prettier` config block in `package.json` and was later moved from a standalone `.oxfmtrc.json` into `vite.config.ts` when upgrading to vite-plus 0.1.17 (oxfmt 0.45.0), which reads formatter config from the Vite config rather than a separate RC file.
 
 ## `.github/workflows`
 

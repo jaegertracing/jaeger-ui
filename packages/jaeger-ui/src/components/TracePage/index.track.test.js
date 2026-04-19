@@ -9,8 +9,10 @@ import {
   ACTION_PREV,
   ACTION_RANGE_REFRAME,
   ACTION_RANGE_SHIFT,
+  CATEGORY_FILTER,
   CATEGORY_MATCH_INTERACTIONS,
   CATEGORY_RANGE,
+  trackFilter,
   trackFocusMatches,
   trackNextMatch,
   trackPrevMatch,
@@ -85,12 +87,19 @@ describe('trackRange', () => {
   cases.forEach(_case => {
     const { msg, rangeType, source, from, to } = _case;
 
-    it(msg, () => {
+    it(`${msg}`, () => {
       expect(trackEvent.mock.calls.length).toBe(0);
       trackRange(source, from, to);
       expect(trackEvent.mock.calls.length).toBe(1);
       expect(trackEvent.mock.calls[0]).toEqual([CATEGORY_RANGE, rangeType, source]);
     });
+  });
+});
+
+describe('trackFilter', () => {
+  it('uses the filter category', () => {
+    expect(CATEGORY_FILTER).toBe('jaeger/ux/trace/filter');
+    expect(trackFilter).toBeDefined();
   });
 });
 

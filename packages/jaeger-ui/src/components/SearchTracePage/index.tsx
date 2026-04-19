@@ -212,18 +212,6 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   );
 }
 
-// Type definitions
-interface ITraceMapEntry {
-  data: Trace;
-}
-
-interface ISearchState {
-  query?: SearchQuery;
-  results: string[];
-  state?: string;
-  error?: { message: string } | null;
-}
-
 interface IStateTraceDiff {
   cohort: string[];
 }

@@ -15,3 +15,4 @@ An Architecture Decision Record (ADR) is a document that captures an important a
 - [ADR-0005: Current State Management Architecture](./0005-current-state-management-architecture.md) - Documentation of the existing multi-layered state management (Redux, TanStack Query, URL, Local Storage)
 - [ADR-0006: Side Panel Span Details and Tree-Only Mode](./0006-side-panel-span-details.md) - Optional side panel layout for span details with independent scrolling, and tree-only mode to hide timeline bars
 - [ADR-0007: Migrate to Vite+ (Full Vite Toolchain)](./0007-vite-plus-migration.md) - Replace the hybrid Webpack + Babel + Jest toolchain with a unified Vite + Vitest toolchain across the monorepo
+- [ADR-0008: Target state management architecture](./0008-target-state-management-architecture.md) - Where each kind of state should live post-migration; target data flows and layer boundaries (phased migration checklist, rollback, and success criteria are in ADR-0004)

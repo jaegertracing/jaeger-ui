@@ -3,9 +3,8 @@
 
 import { ApiError } from './api-error';
 
-export type MetricsType = 'latencies' | 'calls' | 'errors';
-export type AvailableServiceMetrics = 'service_call_rate' | 'service_latencies' | 'service_error_rate';
-export type AvailableOpsMetrics =
+type AvailableServiceMetrics = 'service_call_rate' | 'service_latencies' | 'service_error_rate';
+type AvailableOpsMetrics =
   | 'service_operation_call_rate'
   | 'service_operation_latencies'
   | 'service_operation_error_rate';
@@ -115,7 +114,7 @@ export type MetricsReduxState = {
   serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
 };
 
-export enum PromiseStatus {
+enum PromiseStatus {
   fulfilled = 'fulfilled',
   rejected = 'rejected',
 }

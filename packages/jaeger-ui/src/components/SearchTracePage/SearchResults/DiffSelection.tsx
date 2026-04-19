@@ -20,8 +20,7 @@ type Props = {
   traces: FetchedTrace[];
 };
 
-// Exported for tests
-export const CTA_MESSAGE = <h2 className="ub-m0">Compare traces by selecting result items</h2>;
+const CTA_MESSAGE = <h2 className="ub-m0">Compare traces by selecting result items</h2>;
 
 export default function DiffSelection({ toggleComparison, traces }: Props) {
   const cohort = traces.filter(ft => ft.state !== fetchedState.ERROR).map(ft => ft.id);

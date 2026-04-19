@@ -41,7 +41,7 @@ vi.mock('./getNodeRenderers', () =>
 vi.mock('./getSetOnEdge', () => mockDefault(jest.fn(() => jest.fn())));
 
 describe('<Graph />', () => {
-  const vertices = new Array(10).fill().map((_, i) => ({ key: `key${i}` }));
+  const vertices = Array.from({ length: 10 }, (_, i) => ({ key: `key${i}` }));
   const edges = [
     {
       from: vertices[0].key,

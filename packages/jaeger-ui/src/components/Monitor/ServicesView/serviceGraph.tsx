@@ -73,7 +73,7 @@ export const Placeholder = ({
   );
 };
 
-export const HEIGHT = 242;
+const HEIGHT = 242;
 export const COLORS = ['#869ADD', '#EA9977', '#DCA3D2'];
 
 export function getData(
@@ -201,7 +201,7 @@ export function calculateNumericTicks(xDomain: number[]): number[] {
   return Array.from({ length: count }, (_, i) => start + step * i);
 }
 
-export function ServiceGraphImpl({
+function ServiceGraphImpl({
   width,
   yDomain,
   showHorizontalLines,

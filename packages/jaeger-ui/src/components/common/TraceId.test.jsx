@@ -4,7 +4,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { TraceId } from './TraceId';
+import TraceId from './TraceId';
 import getConfig from '../../utils/config/get-config';
 
 vi.mock('../../utils/config/get-config');

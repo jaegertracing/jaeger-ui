@@ -3,11 +3,11 @@
 
 const DEFAULT_ELAPSE = 0;
 
-export default function requestAnimationFrame(callback) {
+function requestAnimationFrame(callback) {
   return setTimeout(callback, DEFAULT_ELAPSE);
 }
 
-export function cancelAnimationFrame(id) {
+function cancelAnimationFrame(id) {
   return clearTimeout(id);
 }
 

@@ -21,6 +21,7 @@ export default defineConfig({
     __APP_ENVIRONMENT__: JSON.stringify('test'),
   },
   test: {
+    pool: 'threads',
     environment: 'jsdom',
     globals: true,
     globalSetup: path.resolve(__dirname, 'test/vitest-global-setup.ts'),
@@ -45,6 +46,16 @@ export default defineConfig({
     silent: true,
     moduleNameMapper: {
       '\\.(css|less)$': 'identity-obj-proxy',
+    },
+  },
+  server: {
+    deps: {
+      // Inline all node_modules through Vite's transform pipeline.
+      // The threads pool uses SSR resolve conditions that prefer .mjs files,
+      // causing CJS/ESM named-export interop failures for packages like
+      // react-router and cookie. inline:true fixes this class of problem
+      // universally rather than playing whack-a-mole with individual packages.
+      inline: true,
     },
   },
   resolve: {

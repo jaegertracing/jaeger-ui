@@ -38,10 +38,10 @@ describe('TraceHeader', () => {
       state: fetchedState.DONE,
     });
 
-    expect(screen.getByTestId('TraceDiffHeader--traceAttributes'));
-    expect(screen.getByTestId('TraceDiffHeader--traceAttr--date'));
-    expect(screen.getByTestId('TraceDiffHeader--traceAttr--duration'));
-    expect(screen.getByTestId('TraceDiffHeader--traceAttr--spans'));
+    expect(screen.getByTestId('TraceDiffHeader--traceAttributes')).toBeInTheDocument();
+    expect(screen.getByTestId('TraceDiffHeader--traceAttr--date')).toBeInTheDocument();
+    expect(screen.getByTestId('TraceDiffHeader--traceAttr--duration')).toBeInTheDocument();
+    expect(screen.getByTestId('TraceDiffHeader--traceAttr--spans')).toBeInTheDocument();
 
     expect(() => screen.getByTestId('TraceDiffHeader--emptyTraceAttributes')).toThrow();
   });
@@ -53,7 +53,7 @@ describe('TraceHeader', () => {
       state: fetchedState.LOADING,
     });
 
-    expect(screen.getByTestId('TraceDiffHeader--emptyTraceAttributes'));
+    expect(screen.getByTestId('TraceDiffHeader--emptyTraceAttributes')).toBeInTheDocument();
     expect(() => screen.getByTestId('TraceDiffHeader--traceAttributes')).toThrow();
   });
 
@@ -62,14 +62,14 @@ describe('TraceHeader', () => {
       traceID: null,
     });
 
-    expect(screen.getByText('Select a Trace...'));
+    expect(screen.getByText('Select a Trace...')).toBeInTheDocument();
   });
 
   describe('EmptyAttrs', () => {
     it('renders as expected', () => {
       render(<EmptyAttrs />);
 
-      expect(screen.getByTestId('TraceDiffHeader--traceAttr--empty'));
+      expect(screen.getByTestId('TraceDiffHeader--traceAttr--empty')).toBeInTheDocument();
     });
   });
 
@@ -81,7 +81,7 @@ describe('TraceHeader', () => {
       render(<Attrs duration={700} startTime={ONE_MINUTE} totalSpans={50} />);
 
       // Test that the shown values are correctly formatted
-      expect(screen.getByText('January 1, 1970, 12:01:00 am'));
+      expect(screen.getByText('January 1, 1970, 12:01:00 am')).toBeInTheDocument();
       expect(screen.getByTestId('TraceDiffHeader--traceAttr--duration').textContent).toBe('700μs');
       expect(screen.getByTestId('TraceDiffHeader--traceAttr--spans').textContent).toBe('50');
     });
@@ -90,7 +90,7 @@ describe('TraceHeader', () => {
       render(<Attrs />);
 
       // Test that the default values are correctly
-      expect(screen.getByText('January 1, 1970, 12:00:00 am'));
+      expect(screen.getByText('January 1, 1970, 12:00:00 am')).toBeInTheDocument();
       expect(screen.getByTestId('TraceDiffHeader--traceAttr--duration').textContent).toBe('0μs');
       expect(screen.getByTestId('TraceDiffHeader--traceAttr--spans').textContent).toBe('0');
     });

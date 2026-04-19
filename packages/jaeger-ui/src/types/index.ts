@@ -2,19 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ApiError } from './api-error';
-import { TracesArchive } from './archive';
 import { Config } from './config';
 import { EmbeddedState } from './embedded';
 import { SearchQuery } from './search';
 import TDdgState from './TDdgState';
 import tNil from './TNil';
-import iWebAnalytics from './tracking';
 import { Trace } from './trace';
 import TTraceTimeline from './TTraceTimeline';
 import { MetricsReduxState } from './metrics';
 
 export type TNil = tNil;
-export type IWebAnalytics = iWebAnalytics;
 
 export type FetchedState = 'FETCH_DONE' | 'FETCH_ERROR' | 'FETCH_LOADING';
 
@@ -30,7 +27,6 @@ export type LocationState = {
 };
 
 export type ReduxState = {
-  archive: TracesArchive;
   type: string;
   config: Config;
   ddg: TDdgState;

@@ -18,9 +18,7 @@ vi.mock('@jaegertracing/plexus', () => {
   };
 });
 
-vi.mock('../common/ActionMenu/ActionsMenu', () => {
-  return mockDefault(jest.fn().mockImplementation(() => null));
-});
+vi.mock('../common/ActionMenu/ActionsMenu');
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -56,7 +54,7 @@ window.HTMLCanvasElement.prototype.getContext = function getContext() {
     clearRect() {},
     getImageData(x, y, w, h) {
       return {
-        data: new Array(w * h * 4),
+        data: Array.from({ length: w * h * 4 }),
       };
     },
     putImageData() {},

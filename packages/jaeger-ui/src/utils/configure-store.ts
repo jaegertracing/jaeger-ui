@@ -3,7 +3,6 @@
 
 import { createStore, combineReducers, applyMiddleware, compose, Store, StoreEnhancer } from 'redux';
 
-import archive from '../components/TracePage/ArchiveNotifier/duck';
 import traceTimeline from '../components/TracePage/TraceTimelineViewer/duck';
 import jaegerReducers from '../reducers';
 import * as jaegerMiddlewares from '../middlewares';
@@ -29,7 +28,6 @@ export default function configureStore(): Store<any> {
   return createStore(
     combineReducers({
       ...jaegerReducers,
-      archive,
       traceTimeline,
     }) as any,
     enhancer

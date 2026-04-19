@@ -4,7 +4,6 @@
 import { renderHook } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
-import React from 'react';
 import { useConfig } from './useConfig';
 import { Config } from '../types/config';
 import { ReduxState } from '../types';
@@ -30,9 +29,9 @@ describe('useConfig', () => {
   };
 
   const createWrapper = (store: ReturnType<typeof createStore>) => {
-    const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-      return React.createElement(Provider, { store, children });
-    };
+    const Wrapper = ({ children }: { children: React.ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    );
     return Wrapper;
   };
 
@@ -105,7 +104,7 @@ describe('useConfig', () => {
       return { config: fullConfig } as ReduxState;
     });
 
-    const { result, rerender } = renderHook(() => useConfig(), {
+    const { result } = renderHook(() => useConfig(), {
       wrapper: createWrapper(dynamicStore),
     });
 

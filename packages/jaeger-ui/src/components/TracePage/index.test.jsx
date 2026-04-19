@@ -121,6 +121,43 @@ vi.mock('./ArchiveNotifier', async () =>
   })
 );
 
+const {
+  mockSubmitTraceToArchive,
+  mockAcknowledge,
+  mockSetDetailPanelMode,
+  mockLayoutPrefsStore,
+  mockTraceTimelineStore,
+} = vi.hoisted(() => ({
+  mockSubmitTraceToArchive: jest.fn(),
+  mockAcknowledge: jest.fn(),
+  mockSetDetailPanelMode: jest.fn(),
+  mockLayoutPrefsStore: {
+    detailPanelMode: 'inline',
+    timelineBarsVisible: true,
+    setTimelineBarsVisible: jest.fn(),
+  },
+  mockTraceTimelineStore: {
+    focusUiFindMatches: jest.fn(),
+  },
+}));
+
+vi.mock('../../stores/archive-store', () => ({
+  useArchiveStore: jest.fn(selector =>
+    selector({ archives: {}, submitTraceToArchive: mockSubmitTraceToArchive, acknowledge: mockAcknowledge })
+  ),
+}));
+
+vi.mock('./TraceTimelineViewer/store', () => ({
+  useLayoutPrefsStore: jest.fn(selector => selector(mockLayoutPrefsStore)),
+  useTraceTimelineStore: jest.fn(selector => selector(mockTraceTimelineStore)),
+  setDetailPanelMode: (...args) => mockSetDetailPanelMode(...args),
+  SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
+  SPAN_NAME_COLUMN_WIDTH_MAX: 0.85,
+  SIDE_PANEL_WIDTH_MIN: 0.2,
+  SIDE_PANEL_WIDTH_MAX: 0.7,
+  MIN_TIMELINE_COLUMN_WIDTH: 0.05,
+}));
+
 vi.mock('./TracePageHeader', async () => {
   const { forwardRef } = require('react');
   return {
@@ -166,9 +203,6 @@ describe('makeShortcutCallbacks()', () => {
 describe('<TracePage>', () => {
   const trace = transformTraceData(traceGenerator.trace({}));
   const defaultProps = {
-    acknowledgeArchive: jest.fn(),
-    archiveTrace: jest.fn(),
-    detailPanelMode: 'inline',
     enableSidePanel: false,
     fetchTrace: jest.fn(),
     focusUiFindMatches: jest.fn(),
@@ -179,7 +213,6 @@ describe('<TracePage>', () => {
     },
     setDetailPanelMode: jest.fn(),
     setTimelineBarsVisible: jest.fn(),
-    timelineBarsVisible: true,
     trace: { data: trace, state: fetchedState.DONE },
   };
   const notDefaultPropsId = `not ${defaultProps.id}`;
@@ -193,9 +226,8 @@ describe('<TracePage>', () => {
     ScrollManager.mockClear();
     capturedHeaderProps = {};
     capturedArchiveNotifierProps = {};
-    defaultProps.acknowledgeArchive.mockClear();
-    defaultProps.archiveTrace.mockClear();
     defaultProps.focusUiFindMatches.mockClear();
+    mockTraceTimelineStore.focusUiFindMatches.mockClear();
   });
 
   describe('clearSearch', () => {
@@ -242,11 +274,15 @@ describe('<TracePage>', () => {
         trackFocusSpy.mockReset();
       });
 
-      it('calls props.focusUiFindMatches with props.trace.data and uiFind when props.trace.data is present', () => {
+      it('dual-writes to Redux + Zustand when props.trace.data is present', () => {
         const uiFind = 'test ui find';
         render(<TracePage {...defaultProps} uiFind={uiFind} />);
         capturedHeaderProps.focusUiFindMatches();
         expect(defaultProps.focusUiFindMatches).toHaveBeenCalledWith(
+          defaultProps.trace.data.asOtelTrace(),
+          uiFind
+        );
+        expect(mockTraceTimelineStore.focusUiFindMatches).toHaveBeenCalledWith(
           defaultProps.trace.data.asOtelTrace(),
           uiFind
         );
@@ -256,6 +292,7 @@ describe('<TracePage>', () => {
       it('handles when props.trace.data is absent', () => {
         render(<TracePage {...defaultProps} trace={{}} />);
         expect(defaultProps.focusUiFindMatches).not.toHaveBeenCalled();
+        expect(mockTraceTimelineStore.focusUiFindMatches).not.toHaveBeenCalled();
         expect(trackFocusSpy).not.toHaveBeenCalled();
       });
     });
@@ -772,7 +809,7 @@ describe('<TracePage>', () => {
 
     cases.forEach(testCase => {
       const { message, timeViewRange, change, result } = testCase;
-      it(message, () => {
+      it(`${message}`, () => {
         const [start, end] = computeAdjustedRange(timeViewRange[0], timeViewRange[1], change[0], change[1]);
         expect([start, end]).toEqual(result);
       });
@@ -790,41 +827,56 @@ describe('<TracePage>', () => {
       expect(screen.queryByTestId('archive-notifier')).not.toBeInTheDocument();
     });
 
-    it('calls props.acknowledgeArchive when ArchiveNotifier acknowledges', () => {
+    it('calls store.acknowledge when ArchiveNotifier acknowledges', () => {
       render(<TracePage {...defaultProps} archiveEnabled />);
       capturedArchiveNotifierProps.acknowledge();
-      expect(defaultProps.acknowledgeArchive).toHaveBeenCalledWith(defaultProps.id);
+      expect(mockAcknowledge).toHaveBeenCalledWith(defaultProps.id);
     });
 
-    it('calls props.archiveTrace when archiveTrace is called', () => {
+    it('calls store.submitTraceToArchive when archiveTrace is called', () => {
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onArchiveClicked();
-      expect(defaultProps.archiveTrace).toHaveBeenCalledWith(defaultProps.id);
+      expect(mockSubmitTraceToArchive).toHaveBeenCalledWith(defaultProps.id);
     });
   });
 
   describe('layout toggle handlers', () => {
-    it('calls setDetailPanelMode with sidepanel when detailPanelMode is inline', () => {
-      render(<TracePage {...defaultProps} detailPanelMode="inline" />);
+    beforeEach(() => {
+      defaultProps.setDetailPanelMode.mockClear();
+      defaultProps.setTimelineBarsVisible.mockClear();
+      mockSetDetailPanelMode.mockClear();
+      mockLayoutPrefsStore.setTimelineBarsVisible.mockClear();
+    });
+
+    it('calls setDetailPanelMode (Zustand + Redux) with sidepanel when detailPanelMode is inline', () => {
+      mockLayoutPrefsStore.detailPanelMode = 'inline';
+      render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
+      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('sidepanel');
       expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('sidepanel');
     });
 
-    it('calls setDetailPanelMode with inline when detailPanelMode is sidepanel', () => {
-      render(<TracePage {...defaultProps} detailPanelMode="sidepanel" />);
+    it('calls setDetailPanelMode (Zustand + Redux) with inline when detailPanelMode is sidepanel', () => {
+      mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+      render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
+      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline');
       expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('inline');
     });
 
-    it('calls setTimelineBarsVisible with false when timelineBarsVisible is true', () => {
-      render(<TracePage {...defaultProps} timelineBarsVisible={true} />);
+    it('calls setTimelineBarsVisible (Zustand + Redux) with false when timelineBarsVisible is true', () => {
+      mockLayoutPrefsStore.timelineBarsVisible = true;
+      render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
+      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(false);
       expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(false);
     });
 
-    it('calls setTimelineBarsVisible with true when timelineBarsVisible is false', () => {
-      render(<TracePage {...defaultProps} timelineBarsVisible={false} />);
+    it('calls setTimelineBarsVisible (Zustand + Redux) with true when timelineBarsVisible is false', () => {
+      mockLayoutPrefsStore.timelineBarsVisible = false;
+      render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
+      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(true);
       expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(true);
     });
   });
@@ -993,8 +1045,6 @@ describe('<TracePage>', () => {
 describe('mapDispatchToProps()', () => {
   it('creates the actions correctly', () => {
     expect(mapDispatchToProps(() => {})).toEqual({
-      acknowledgeArchive: expect.any(Function),
-      archiveTrace: expect.any(Function),
       fetchTrace: expect.any(Function),
       focusUiFindMatches: expect.any(Function),
       setDetailPanelMode: expect.any(Function),
@@ -1028,21 +1078,14 @@ describe('mapStateToProps()', () => {
       config: {
         archiveEnabled: false,
       },
-      archive: {},
-      traceTimeline: {
-        detailPanelMode: 'inline',
-        timelineBarsVisible: true,
-      },
+      traceTimeline: {},
     };
   });
   it('maps state to props correctly', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
-      detailPanelMode: 'inline',
       embedded,
-      archiveTraceState: undefined,
-      timelineBarsVisible: true,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1055,7 +1098,6 @@ describe('mapStateToProps()', () => {
     });
     expect(props).toEqual(
       expect.objectContaining({
-        archiveTraceState: null,
         id: '',
         trace: null,
       })
@@ -1068,10 +1110,7 @@ describe('mapStateToProps()', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
-      detailPanelMode: 'inline',
       embedded,
-      archiveTraceState: undefined,
-      timelineBarsVisible: true,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
     });

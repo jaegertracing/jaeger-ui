@@ -8,7 +8,7 @@ export interface IWebAnalyticsFunc {
   (config: Config, versionShort: string, versionLong: string): IWebAnalytics;
 }
 
-export default interface IWebAnalytics {
+interface IWebAnalytics {
   init: () => void;
   context: boolean | null;
   isEnabled: () => boolean;

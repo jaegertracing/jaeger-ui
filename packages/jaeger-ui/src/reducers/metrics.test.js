@@ -45,7 +45,7 @@ describe('reducers/fetchAllServiceMetrics', () => {
   beforeEach(verifyInitialState);
   afterEach(verifyInitialState);
 
-  it('Pending state ', () => {
+  it('Pending state', () => {
     const state = metricReducer(initialState, {
       type: `${fetchAllServiceMetrics}_PENDING`,
     });
@@ -225,7 +225,7 @@ describe('reducers/fetchAggregatedServiceMetrics', () => {
   beforeEach(verifyInitialState);
   afterEach(verifyInitialState);
 
-  it('Pending state ', () => {
+  it('Pending state', () => {
     const state = metricReducer(initialState, {
       type: `${fetchAggregatedServiceMetrics}_PENDING`,
     });

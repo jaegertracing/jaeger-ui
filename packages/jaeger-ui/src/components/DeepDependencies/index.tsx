@@ -55,7 +55,7 @@ interface IErrorState {
   error: ApiError;
 }
 
-export type TDispatchProps = {
+type TDispatchProps = {
   addViewModifier?: (kwarg: TDdgModelParams & { viewModifier: number; visibilityIndices: number[] }) => void;
   fetchDeepDependencyGraph?: (query: TDdgModelParams) => void;
   removeViewModifierFromIndices?: (
@@ -70,12 +70,12 @@ export type TReduxProps = TExtractUiFindFromStateReturn & {
   urlState: TDdgSparseUrlState;
 };
 
-export type THookProps = {
+type THookProps = {
   services: string[];
   serverOps?: string[];
 };
 
-export type TOwnProps = {
+type TOwnProps = {
   baseUrl: string;
   extraUrlArgs?: { [key: string]: unknown };
   navigate: ReturnType<typeof useNavigate>;
@@ -83,9 +83,9 @@ export type TOwnProps = {
   showSvcOpsHeader: boolean;
 };
 
-export type TExternalProps = Partial<Omit<TOwnProps, 'navigate' | 'location'>>;
+type TExternalProps = Partial<Omit<TOwnProps, 'navigate' | 'location'>>;
 
-export type TProps = TDispatchProps & TReduxProps & TOwnProps & THookProps;
+type TProps = TDispatchProps & TReduxProps & TOwnProps & THookProps;
 
 type TState = {
   selectedVertex?: TDdgVertex;

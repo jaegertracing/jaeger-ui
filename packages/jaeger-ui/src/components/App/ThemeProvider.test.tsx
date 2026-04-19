@@ -3,7 +3,7 @@
 
 import React from 'react';
 import '@testing-library/jest-dom';
-import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import AppThemeProvider, { useThemeMode } from './ThemeProvider';
 import { THEME_STORAGE_KEY } from './ThemeStorage';
