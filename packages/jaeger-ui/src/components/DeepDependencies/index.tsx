@@ -426,6 +426,8 @@ const ConnectedDeepDependencyGraphPageImpl = withRouteProps(
   connect(mapStateToProps, mapDispatchToProps)(DeepDependencyGraphPageImpl)
 ) as React.ComponentType<Omit<TOwnProps, 'location' | 'navigate'> & THookProps & TDdgViewModifierProps>;
 
+// Bridges Zustand-based view modifier state into the TDdgViewModifierProps shape expected by the
+// Redux-connected DeepDependencyGraphPageImpl. Also clears stale view modifiers when the graph changes.
 export function useDdgViewModifierBridgeProps(): TDdgViewModifierProps {
   const location = useLocation();
   const urlState = getUrlState(location.search);
