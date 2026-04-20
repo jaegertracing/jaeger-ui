@@ -80,14 +80,32 @@ describe('resolveInitialFilter', () => {
   });
 
   describe('root service sanitization', () => {
-    it('removes sole root service from pruned set (URL)', () => {
+    it('removes sole root service from pruned set and cleans URL when filter becomes empty', () => {
       vi.mocked(decodeSvcFilter).mockReturnValue({
         visibleServices: new Set(['svc-b']),
         stale: false,
       });
-      // URL tries to prune svc-a (the sole root)
+      // URL tries to prune only svc-a (the sole root) — sanitization empties the filter
       const result = resolveInitialFilter('?svcFilter=abc.2', ['svc-a', 'svc-b'], new Set(['svc-a']));
       expect(result.pruned.has('svc-a')).toBe(false);
+      expect(result.pruned.size).toBe(0);
+      expect(result.cleanSearch).toBe('');
+    });
+
+    it('removes sole root service but keeps other pruned services', () => {
+      vi.mocked(decodeSvcFilter).mockReturnValue({
+        visibleServices: new Set(['svc-c']),
+        stale: false,
+      });
+      // URL prunes svc-a (root) and svc-b — sanitization keeps svc-b pruned
+      const result = resolveInitialFilter(
+        '?svcFilter=abc.4',
+        ['svc-a', 'svc-b', 'svc-c'],
+        new Set(['svc-a'])
+      );
+      expect(result.pruned.has('svc-a')).toBe(false);
+      expect(result.pruned).toEqual(new Set(['svc-b']));
+      expect(result.cleanSearch).toBeUndefined();
     });
 
     it('removes sole root service from pruned set (localStorage)', () => {
@@ -97,18 +115,19 @@ describe('resolveInitialFilter', () => {
       expect(result.pruned.has('svc-b')).toBe(true);
     });
 
-    it('discards filter when all root services would be pruned (multi-root)', () => {
+    it('discards filter and cleans URL when all root services would be pruned (multi-root)', () => {
       vi.mocked(decodeSvcFilter).mockReturnValue({
         visibleServices: new Set(['svc-c']),
         stale: false,
       });
-      // Both roots pruned
+      // Both roots pruned — sanitization empties the filter, URL should be cleaned
       const result = resolveInitialFilter(
         '?svcFilter=abc.4',
         ['svc-a', 'svc-b', 'svc-c'],
         new Set(['svc-a', 'svc-b'])
       );
       expect(result.pruned.size).toBe(0);
+      expect(result.cleanSearch).toBe('');
     });
 
     it('keeps filter when at least one root service is visible (multi-root)', () => {

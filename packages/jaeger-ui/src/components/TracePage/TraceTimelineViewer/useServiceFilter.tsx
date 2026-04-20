@@ -68,7 +68,15 @@ export function resolveInitialFilter(
       for (const name of allServices) {
         if (!decoded.visibleServices.has(name)) pruned.add(name);
       }
-      return { pruned: sanitizePrunedServices(pruned, rootServiceNames) };
+      const sanitized = sanitizePrunedServices(pruned, rootServiceNames);
+      // If sanitization emptied the filter, clean svcFilter from the URL.
+      if (sanitized.size === 0 && pruned.size > 0) {
+        const nextParams = { ...params };
+        delete nextParams.svcFilter;
+        const cleaned = queryString.stringify(nextParams);
+        return { pruned: sanitized, cleanSearch: cleaned ? `?${cleaned}` : '' };
+      }
+      return { pruned: sanitized };
     }
     // Stale or invalid: remove svcFilter from URL, then fall through to localStorage defaults.
     const nextParams = { ...params };
