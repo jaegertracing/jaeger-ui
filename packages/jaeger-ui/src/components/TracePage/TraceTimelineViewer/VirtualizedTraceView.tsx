@@ -11,6 +11,7 @@ import _groupBy from 'lodash/groupBy';
 import memoizeOne from 'memoize-one';
 import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
+import generateRowStates, { RowState } from './generateRowStates';
 import ListView from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
@@ -39,21 +40,6 @@ import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
 import withRouteProps from '../../../utils/withRouteProps';
-
-type RowState =
-  | {
-      isDetail: boolean;
-      span: IOtelSpan;
-      spanIndex: number;
-    }
-  | {
-      isDetail: false;
-      span: IOtelSpan;
-      spanIndex: number;
-      isPrunedPlaceholder: true;
-      prunedChildrenCount: number;
-      prunedErrorCount: number;
-    };
 
 type TVirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
@@ -106,131 +92,6 @@ export const DEFAULT_HEIGHTS = {
 };
 
 const NUM_TICKS = 5;
-
-function generateRowStates(
-  spans: ReadonlyArray<IOtelSpan> | TNil,
-  childrenHiddenIDs: Set<string>,
-  detailStates: Map<string, DetailState | TNil>,
-  detailPanelMode: 'inline' | 'sidepanel',
-  prunedServices: Set<string>
-): RowState[] {
-  if (!spans) {
-    return [];
-  }
-  const hasPruning = prunedServices.size > 0;
-  let collapseDepth: number | null = null;
-  const rowStates: RowState[] = [];
-
-  // Track the last emitted visible span at each depth for pruned-child counting.
-  // parentByDepth[d] = index into rowStates of the last emitted span at depth d.
-  const parentByDepth: (number | undefined)[] = [];
-  // Count of pruned spans and errors per rowStates index of the parent.
-  const prunedChildCounts: number[] = [];
-  const prunedErrorCounts: number[] = [];
-
-  for (let i = 0; i < spans.length; i++) {
-    const span = spans[i];
-    const { spanID, depth } = span;
-
-    // Exit collapsed subtree when we return to or above collapse depth.
-    if (collapseDepth != null) {
-      if (depth >= collapseDepth) {
-        continue;
-      }
-      collapseDepth = null;
-    }
-
-    // Service filter pruning: prune this span and its entire subtree in a single
-    // linear scan (no recursion). Advance `i` past the subtree to stay O(n).
-    if (hasPruning && prunedServices.has(span.resource.serviceName)) {
-      let prunedSpanCount = 1;
-      let prunedErrors = isErrorSpan(span) ? 1 : 0;
-      while (i + 1 < spans.length && spans[i + 1].depth > depth) {
-        i++;
-        prunedSpanCount++;
-        if (isErrorSpan(spans[i])) {
-          prunedErrors++;
-        }
-      }
-      // Attribute counts to the parent.
-      if (depth > 0) {
-        const parentIdx = parentByDepth[depth - 1];
-        if (parentIdx != null) {
-          prunedChildCounts[parentIdx] = (prunedChildCounts[parentIdx] || 0) + prunedSpanCount;
-          if (prunedErrors > 0) {
-            prunedErrorCounts[parentIdx] = (prunedErrorCounts[parentIdx] || 0) + prunedErrors;
-          }
-        }
-      }
-      continue;
-    }
-
-    // Manual collapse.
-    if (childrenHiddenIDs.has(spanID)) {
-      collapseDepth = depth + 1;
-    }
-
-    const rowIdx = rowStates.length;
-    parentByDepth[depth] = rowIdx;
-    rowStates.push({
-      span,
-      isDetail: false,
-      spanIndex: i,
-    });
-    // In side panel mode, detail rows are shown in the panel, not inline.
-    if (detailPanelMode !== 'sidepanel' && detailStates.has(spanID)) {
-      rowStates.push({
-        span,
-        isDetail: true,
-        spanIndex: i,
-      });
-    }
-  }
-
-  // Second pass: emit placeholder rows in a single linear pass using a depth stack.
-  // When a span row closes its subtree (next span at same or lower depth), append
-  // its placeholder before moving on. This avoids O(n²) splice operations.
-  if (hasPruning) {
-    const finalRowStates: RowState[] = [];
-    const openSpanStack: Array<{ rowIndex: number; depth: number }> = [];
-
-    const appendPlaceholderForRow = (rowIndex: number) => {
-      const count = prunedChildCounts[rowIndex];
-      if (!count) return;
-      const parentRow = rowStates[rowIndex];
-      finalRowStates.push({
-        span: parentRow.span,
-        isDetail: false,
-        spanIndex: parentRow.spanIndex,
-        isPrunedPlaceholder: true,
-        prunedChildrenCount: count,
-        prunedErrorCount: prunedErrorCounts[rowIndex] || 0,
-      });
-    };
-
-    for (let ri = 0; ri < rowStates.length; ri++) {
-      const row = rowStates[ri];
-      // When we encounter a non-detail row, close any open subtrees at the same or deeper depth.
-      if (!row.isDetail) {
-        while (openSpanStack.length && openSpanStack[openSpanStack.length - 1].depth >= row.span.depth) {
-          appendPlaceholderForRow(openSpanStack.pop()!.rowIndex);
-        }
-      }
-      finalRowStates.push(row);
-      if (!row.isDetail) {
-        openSpanStack.push({ rowIndex: ri, depth: row.span.depth });
-      }
-    }
-    // Close any remaining open subtrees.
-    while (openSpanStack.length) {
-      appendPlaceholderForRow(openSpanStack.pop()!.rowIndex);
-    }
-
-    return finalRowStates;
-  }
-
-  return rowStates;
-}
 
 function generateRowStatesFromTrace(
   trace: IOtelTrace | TNil,
