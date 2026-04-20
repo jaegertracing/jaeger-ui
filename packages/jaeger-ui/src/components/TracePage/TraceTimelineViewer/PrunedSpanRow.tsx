@@ -36,7 +36,9 @@ export default function PrunedSpanRow({
       <TimelineRow.Cell className="span-name-column" width={nameColumnWidth}>
         <div className="span-name-wrapper PrunedSpanRow--wrapper" style={{ paddingLeft: indentPx }}>
           <span className="PrunedSpanRow--dot" />
-          {prunedErrorCount > 0 && <IoAlert className="PrunedSpanRow--errorIcon" />}
+          {prunedErrorCount > 0 && (
+            <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
+          )}
           <span className="PrunedSpanRow--label">{label}</span>
         </div>
       </TimelineRow.Cell>

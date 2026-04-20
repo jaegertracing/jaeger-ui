@@ -98,7 +98,7 @@ describe('PrunedSpanRow', () => {
     expect(screen.getByText('3 spans pruned, 1 error')).toBeInTheDocument();
   });
 
-  it('renders error icon when errors are present', () => {
+  it('renders hollow error icon when errors are present', () => {
     const { container } = render(
       <PrunedSpanRow
         parentSpan={makeSpan(0)}
@@ -108,7 +108,9 @@ describe('PrunedSpanRow', () => {
         timelineBarsVisible={true}
       />
     );
-    expect(container.querySelector('.PrunedSpanRow--errorIcon')).toBeInTheDocument();
+    const icon = container.querySelector('.SpanBarRow--errorIcon');
+    expect(icon).toBeInTheDocument();
+    expect(icon).toHaveClass('SpanBarRow--errorIcon--hollow');
   });
 
   it('does not render error icon when no errors', () => {
@@ -121,6 +123,6 @@ describe('PrunedSpanRow', () => {
         timelineBarsVisible={true}
       />
     );
-    expect(container.querySelector('.PrunedSpanRow--errorIcon')).not.toBeInTheDocument();
+    expect(container.querySelector('.SpanBarRow--errorIcon')).not.toBeInTheDocument();
   });
 });
