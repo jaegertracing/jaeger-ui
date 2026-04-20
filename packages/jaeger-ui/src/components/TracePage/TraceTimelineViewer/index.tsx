@@ -1,14 +1,11 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
-import { useLocation, useNavigate } from 'react-router-dom';
-import queryString from 'query-string';
 
 import { actions } from './duck';
-import ServiceFilter from './ServiceFilter';
 import {
   getSelectedSpanID,
   MIN_TIMELINE_COLUMN_WIDTH,
@@ -20,6 +17,7 @@ import {
 } from './store';
 import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
+import { useServiceFilter } from './useServiceFilter';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import VerticalResizer from '../../common/VerticalResizer';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
@@ -28,7 +26,6 @@ import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate } from '.
 import { TNil, ReduxState } from '../../../types';
 import { IOtelSpan, IOtelTrace } from '../../../types/otel';
 import { CriticalPathSection } from '../../../types/critical_path';
-import { decodeSvcFilter, encodeSvcFilter, getSortedServiceNames } from '../url/svcFilter';
 
 import './index.css';
 
@@ -88,8 +85,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
   const zustandSetSidePanelWidth = useLayoutPrefsStore(s => s.setSidePanelWidth);
 
   const detailStates = useTraceTimelineStore(s => s.detailStates);
-  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
-  const zustandSetPrunedServices = useTraceTimelineStore(s => s.setPrunedServices);
   const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;
   const zustandCollapseAll = useTraceTimelineStore(s => s.collapseAll);
   const zustandCollapseOne = useTraceTimelineStore(s => s.collapseOne);
@@ -144,101 +139,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     });
   }, [collapseAll, expandAll, collapseOne, expandOne]);
 
-  // --- Service filter: URL sync ---
-  const location = useLocation();
-  const navigate = useNavigate();
-  const sortedServiceNames = useMemo(() => getSortedServiceNames(trace.services), [trace.services]);
-
-  // On mount (or trace change): read svcFilter from URL, fall back to localStorage defaults.
-  useEffect(() => {
-    const params = queryString.parse(location.search);
-    const svcFilterParam = typeof params.svcFilter === 'string' ? params.svcFilter : null;
-    if (svcFilterParam) {
-      const decoded = decodeSvcFilter(sortedServiceNames, svcFilterParam);
-      if (decoded && !decoded.stale) {
-        const allServices = new Set(sortedServiceNames);
-        const pruned = new Set<string>();
-        for (const name of allServices) {
-          if (!decoded.visibleServices.has(name)) pruned.add(name);
-        }
-        zustandSetPrunedServices(pruned);
-        return;
-      }
-      // Stale or invalid: clear the URL param.
-      const nextParams = { ...params };
-      delete nextParams.svcFilter;
-      const search = queryString.stringify(nextParams);
-      navigate({ pathname: location.pathname, search: search ? `?${search}` : '' }, { replace: true });
-    }
-    // No URL param: try localStorage defaults.
-    try {
-      const stored = localStorage.getItem('svcFilter.defaults');
-      if (stored) {
-        const defaults = JSON.parse(stored) as { prunedServices?: string[] };
-        if (Array.isArray(defaults.prunedServices)) {
-          const traceServiceSet = new Set(sortedServiceNames);
-          const pruned = new Set(defaults.prunedServices.filter(name => traceServiceSet.has(name)));
-          if (pruned.size > 0 && pruned.size < sortedServiceNames.length) {
-            zustandSetPrunedServices(pruned);
-            return;
-          }
-        }
-      }
-    } catch {
-      // Ignore localStorage errors.
-    }
-    zustandSetPrunedServices(new Set());
-    // Intentionally only re-run when the trace identity changes, not on URL/navigate changes.
-    // oxlint-disable-next-line react-x/exhaustive-deps
-  }, [trace.traceID]);
-
-  const handleServiceFilterApply = useCallback(
-    (nextPruned: Set<string>) => {
-      zustandSetPrunedServices(nextPruned);
-
-      // If the currently selected span (side panel) belongs to a pruned service, deselect it.
-      if (nextPruned.size > 0 && detailPanelMode === 'sidepanel') {
-        const currentDetailStates = useTraceTimelineStore.getState().detailStates;
-        const currentSelectedID = getSelectedSpanID(currentDetailStates);
-        if (currentSelectedID) {
-          const selectedSpan = trace.spanMap.get(currentSelectedID);
-          if (selectedSpan && nextPruned.has(selectedSpan.resource.serviceName)) {
-            useTraceTimelineStore.setState({ detailStates: new Map() });
-          }
-        }
-      }
-
-      // Update URL.
-      const params = queryString.parse(location.search);
-      if (nextPruned.size === 0) {
-        delete params.svcFilter;
-      } else {
-        const visible = new Set(sortedServiceNames.filter(name => !nextPruned.has(name)));
-        const encoded = encodeSvcFilter(sortedServiceNames, visible);
-        if (encoded) {
-          params.svcFilter = encoded;
-        } else {
-          delete params.svcFilter;
-        }
-      }
-      const search = queryString.stringify(params);
-      navigate({ pathname: location.pathname, search: search ? `?${search}` : '' }, { replace: true });
-    },
-    [
-      zustandSetPrunedServices,
-      detailPanelMode,
-      trace.spanMap,
-      location.pathname,
-      location.search,
-      sortedServiceNames,
-      navigate,
-    ]
-  );
-
-  const serviceFilterNode = useMemo(
-    () => <ServiceFilter trace={trace} prunedServices={prunedServices} onApply={handleServiceFilterApply} />,
-    [trace, prunedServices, handleServiceFilterApply]
-  );
+  const { prunedServices, serviceFilterNode } = useServiceFilter(trace, detailPanelMode);
 
   // When timeline bars are hidden with the side panel active, the side panel expands to absorb
   // the timeline column so the Service/Operation column keeps its pixel width unchanged.

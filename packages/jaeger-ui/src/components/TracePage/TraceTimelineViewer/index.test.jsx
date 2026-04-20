@@ -6,9 +6,6 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { legacy_createStore as createStore } from 'redux';
 import { Provider } from 'react-redux';
 
-import { useLocation, useNavigate } from 'react-router-dom';
-import { decodeSvcFilter, encodeSvcFilter, getSortedServiceNames } from '../url/svcFilter';
-
 import TraceTimelineViewer, { TraceTimelineViewerImpl } from './index';
 import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
@@ -58,25 +55,12 @@ vi.mock('./store', () => ({
   MIN_TIMELINE_COLUMN_WIDTH: 0.05,
 }));
 
-vi.mock('react-router-dom', () => ({
-  useLocation: vi.fn(() => ({ search: '', pathname: '/trace/abc' })),
-  useNavigate: vi.fn(() => vi.fn()),
+const mockUseServiceFilter = vi.hoisted(() => ({
+  prunedServices: new Set(),
+  serviceFilterNode: null,
 }));
-vi.mock('./ServiceFilter', () =>
-  mockDefault(({ onApply }) => (
-    <div data-testid="service-filter-mock">
-      <button
-        data-testid="service-filter-apply"
-        type="button"
-        onClick={() => onApply(new Set(['svc-to-prune']))}
-      />
-    </div>
-  ))
-);
-vi.mock('../url/svcFilter', () => ({
-  decodeSvcFilter: vi.fn(() => null),
-  encodeSvcFilter: vi.fn(() => null),
-  getSortedServiceNames: vi.fn(() => []),
+vi.mock('./useServiceFilter', () => ({
+  useServiceFilter: vi.fn(() => mockUseServiceFilter),
 }));
 vi.mock('./VirtualizedTraceView', () => mockDefault(() => <div data-testid="virtualized-trace-view-mock" />));
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
@@ -157,15 +141,9 @@ describe('<TraceTimelineViewer>', () => {
     mockLayoutPrefsStore.detailPanelMode = 'inline';
     mockLayoutPrefsStore.timelineBarsVisible = true;
     mockTraceTimelineStore.detailStates = new Map();
-    mockTraceTimelineStore.prunedServices = new Set();
-    mockTraceTimelineStore.setPrunedServices.mockClear();
     mockUseTraceTimelineStore.setState.mockClear();
-    vi.mocked(useLocation).mockReturnValue({ search: '', pathname: '/trace/abc' });
-    vi.mocked(useNavigate).mockReturnValue(vi.fn());
-    vi.mocked(decodeSvcFilter).mockReturnValue(null);
-    vi.mocked(encodeSvcFilter).mockReturnValue(null);
-    vi.mocked(getSortedServiceNames).mockReturnValue([]);
-    localStorage.clear();
+    mockUseServiceFilter.prunedServices = new Set();
+    mockUseServiceFilter.serviceFilterNode = null;
     jest.spyOn(KeyboardShortcuts, 'merge').mockClear();
   });
 
@@ -271,70 +249,6 @@ describe('<TraceTimelineViewer>', () => {
     });
   });
 
-  describe('service filter URL sync', () => {
-    it('decodes svcFilter from URL and sets prunedServices on mount', () => {
-      vi.mocked(useLocation).mockReturnValue({ search: '?svcFilter=abc.3', pathname: '/trace/abc' });
-      vi.mocked(getSortedServiceNames).mockReturnValue(['svc-a', 'svc-b']);
-      vi.mocked(decodeSvcFilter).mockReturnValue({
-        visibleServices: new Set(['svc-a']),
-        stale: false,
-      });
-      render(<TraceTimelineViewerImpl {...props} />);
-      expect(mockTraceTimelineStore.setPrunedServices).toHaveBeenCalledWith(new Set(['svc-b']));
-    });
-
-    it('clears stale svcFilter from URL and navigates', () => {
-      const navigateMock = vi.fn();
-      vi.mocked(useLocation).mockReturnValue({ search: '?svcFilter=stale.ff', pathname: '/trace/abc' });
-      vi.mocked(useNavigate).mockReturnValue(navigateMock);
-      vi.mocked(decodeSvcFilter).mockReturnValue({ visibleServices: new Set(), stale: true });
-      render(<TraceTimelineViewerImpl {...props} />);
-      expect(navigateMock).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/trace/abc' }), {
-        replace: true,
-      });
-    });
-
-    it('reads localStorage defaults when no svcFilter in URL', () => {
-      vi.mocked(getSortedServiceNames).mockReturnValue(['svc-a', 'svc-b', 'svc-c']);
-      localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
-      render(<TraceTimelineViewerImpl {...props} />);
-      expect(mockTraceTimelineStore.setPrunedServices).toHaveBeenCalledWith(new Set(['svc-b']));
-    });
-
-    it('calls encodeSvcFilter and navigates when filter is applied', () => {
-      const navigateMock = vi.fn();
-      vi.mocked(useNavigate).mockReturnValue(navigateMock);
-      vi.mocked(getSortedServiceNames).mockReturnValue(['svc-a', 'svc-b']);
-      vi.mocked(encodeSvcFilter).mockReturnValue('abc.1');
-      render(<TraceTimelineViewerImpl {...props} />);
-      // Fire the service filter apply (mocked button prunes 'svc-to-prune')
-      fireEvent.click(screen.getByTestId('service-filter-apply'));
-      expect(navigateMock).toHaveBeenCalledWith(
-        expect.objectContaining({ search: expect.stringContaining('svcFilter') }),
-        { replace: true }
-      );
-    });
-
-    it('removes svcFilter from URL when all services are visible', () => {
-      const navigateMock = vi.fn();
-      vi.mocked(useNavigate).mockReturnValue(navigateMock);
-      // ServiceFilter mock calls onApply(new Set(['svc-to-prune'])), but
-      // we need to test the "clear" path — set up a mock that applies empty set.
-      // Instead, test that encodeSvcFilter returning null removes the param.
-      vi.mocked(useLocation).mockReturnValue({
-        search: '?svcFilter=old.1',
-        pathname: '/trace/abc',
-      });
-      vi.mocked(encodeSvcFilter).mockReturnValue(null);
-      render(<TraceTimelineViewerImpl {...props} />);
-      fireEvent.click(screen.getByTestId('service-filter-apply'));
-      expect(navigateMock).toHaveBeenCalledWith(
-        expect.objectContaining({ search: expect.not.stringContaining('svcFilter') }),
-        { replace: true }
-      );
-    });
-  });
-
   describe('side panel mode', () => {
     beforeEach(() => {
       mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
@@ -380,38 +294,7 @@ describe('<TraceTimelineViewer>', () => {
       expect(screen.getByTestId('timeline-header-row-mock').dataset.sidePanelLabel).toBe('Span Details');
     });
 
-    it('clears selected span when its service is pruned via the service filter', () => {
-      // Select a non-root span in sidepanel mode.
-      const selectedSpan = trace.spans[1];
-      const selectedSpanID = selectedSpan.spanID;
-      const selectedService = selectedSpan.resource.serviceName;
-      mockTraceTimelineStore.detailStates = new Map([[selectedSpanID, {}]]);
-
-      render(<TraceTimelineViewerImpl {...props} />);
-      expect(mockTraceTimelineStore.detailStates.size).toBe(1);
-
-      // Simulate pruning the selected span's service via the ServiceFilter mock's Apply button.
-      // The mock always calls onApply(new Set(['svc-to-prune'])), so set up trace.spanMap
-      // to resolve the selected span when looked up by its ID, and make the pruned service match.
-      // We need to call onApply with the actual service name, so re-mock the button click.
-      // Instead, directly invoke the approach: override the mock's onClick to prune the actual service.
-      // The simplest approach: verify that setState was called to clear detailStates
-      // when we fire the apply button (which prunes 'svc-to-prune').
-      // First, make the selected span's service match 'svc-to-prune'.
-      const mockSpan = { resource: { serviceName: 'svc-to-prune' } };
-      const originalGet = trace.spanMap.get.bind(trace.spanMap);
-      vi.spyOn(trace.spanMap, 'get').mockImplementation(id =>
-        id === selectedSpanID ? mockSpan : originalGet(id)
-      );
-
-      fireEvent.click(screen.getByTestId('service-filter-apply'));
-
-      // The handler should have cleared detailStates because the selected span's service was pruned.
-      expect(mockUseTraceTimelineStore.setState).toHaveBeenCalledWith(
-        expect.objectContaining({ detailStates: new Map() })
-      );
-
-      trace.spanMap.get.mockRestore();
-    });
+    // Side panel cleanup when a selected span's service is pruned is tested
+    // in useServiceFilter.test.ts (the hook owns that logic now).
   });
 });
