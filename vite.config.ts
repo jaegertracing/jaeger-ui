@@ -133,8 +133,10 @@ export default defineConfig({
       {
         files: ['**/*.{ts,tsx,mts}'],
         rules: {
-          // TypeScript files: downgrade from top-level errors to warnings since
-          // tsc already enforces these more precisely than the linter can.
+          // TypeScript files: most rules here are downgraded from top-level
+          // errors to warnings since tsc already enforces them more precisely
+          // than the linter can. no-use-before-define is kept as an error
+          // because tsc does not flag every case the rule catches.
           'no-redeclare': 'warn',
           'no-shadow': 'warn',
           'no-use-before-define': 'error',
