@@ -23,6 +23,7 @@ describe('PrunedSpanRow', () => {
       <PrunedSpanRow
         parentSpan={makeSpan(2)}
         prunedChildrenCount={1}
+        prunedErrorCount={0}
         nameColumnWidth={0.5}
         timelineBarsVisible={true}
       />
@@ -35,6 +36,7 @@ describe('PrunedSpanRow', () => {
       <PrunedSpanRow
         parentSpan={makeSpan(1)}
         prunedChildrenCount={5}
+        prunedErrorCount={0}
         nameColumnWidth={0.5}
         timelineBarsVisible={true}
       />
@@ -47,6 +49,7 @@ describe('PrunedSpanRow', () => {
       <PrunedSpanRow
         parentSpan={makeSpan(3)}
         prunedChildrenCount={2}
+        prunedErrorCount={0}
         nameColumnWidth={0.5}
         timelineBarsVisible={true}
       />
@@ -61,10 +64,63 @@ describe('PrunedSpanRow', () => {
       <PrunedSpanRow
         parentSpan={makeSpan(0)}
         prunedChildrenCount={3}
+        prunedErrorCount={0}
         nameColumnWidth={0.5}
         timelineBarsVisible={true}
       />
     );
     expect(container.querySelector('.PrunedSpanRow--dot')).toBeInTheDocument();
+  });
+
+  it('includes error count in label when errors are present', () => {
+    render(
+      <PrunedSpanRow
+        parentSpan={makeSpan(0)}
+        prunedChildrenCount={5}
+        prunedErrorCount={2}
+        nameColumnWidth={0.5}
+        timelineBarsVisible={true}
+      />
+    );
+    expect(screen.getByText('5 spans pruned, 2 errors')).toBeInTheDocument();
+  });
+
+  it('uses singular "error" for 1 error', () => {
+    render(
+      <PrunedSpanRow
+        parentSpan={makeSpan(0)}
+        prunedChildrenCount={3}
+        prunedErrorCount={1}
+        nameColumnWidth={0.5}
+        timelineBarsVisible={true}
+      />
+    );
+    expect(screen.getByText('3 spans pruned, 1 error')).toBeInTheDocument();
+  });
+
+  it('renders error icon when errors are present', () => {
+    const { container } = render(
+      <PrunedSpanRow
+        parentSpan={makeSpan(0)}
+        prunedChildrenCount={5}
+        prunedErrorCount={2}
+        nameColumnWidth={0.5}
+        timelineBarsVisible={true}
+      />
+    );
+    expect(container.querySelector('.PrunedSpanRow--errorIcon')).toBeInTheDocument();
+  });
+
+  it('does not render error icon when no errors', () => {
+    const { container } = render(
+      <PrunedSpanRow
+        parentSpan={makeSpan(0)}
+        prunedChildrenCount={5}
+        prunedErrorCount={0}
+        nameColumnWidth={0.5}
+        timelineBarsVisible={true}
+      />
+    );
+    expect(container.querySelector('.PrunedSpanRow--errorIcon')).not.toBeInTheDocument();
   });
 });

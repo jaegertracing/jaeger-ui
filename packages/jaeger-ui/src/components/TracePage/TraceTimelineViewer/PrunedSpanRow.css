@@ -18,6 +18,13 @@ SPDX-License-Identifier: Apache-2.0
   flex-shrink: 0;
 }
 
+.PrunedSpanRow--errorIcon {
+  color: var(--feedback-error);
+  font-size: 0.85em;
+  margin-left: 0.35rem;
+  flex-shrink: 0;
+}
+
 .PrunedSpanRow--label {
   font-style: italic;
   color: var(--text-secondary);

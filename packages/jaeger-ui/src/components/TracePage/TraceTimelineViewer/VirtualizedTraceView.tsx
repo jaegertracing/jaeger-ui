@@ -53,6 +53,7 @@ type RowState =
       spanIndex: number;
       isPrunedPlaceholder: true;
       prunedChildrenCount: number;
+      prunedErrorCount: number;
     };
 
 type TVirtualizedTraceViewOwnProps = {
@@ -107,6 +108,14 @@ export const DEFAULT_HEIGHTS = {
 
 const NUM_TICKS = 5;
 
+function countSubtreeErrors(span: IOtelSpan): number {
+  let count = isErrorSpan(span) ? 1 : 0;
+  for (const child of span.childSpans) {
+    count += countSubtreeErrors(child);
+  }
+  return count;
+}
+
 function generateRowStates(
   spans: ReadonlyArray<IOtelSpan> | TNil,
   childrenHiddenIDs: Set<string>,
@@ -125,8 +134,9 @@ function generateRowStates(
   // Track the last emitted visible span at each depth for pruned-child counting.
   // parentByDepth[d] = index into rowStates of the last emitted span at depth d.
   const parentByDepth: (number | undefined)[] = [];
-  // Count of pruned direct children per rowStates index.
+  // Count of pruned direct children and errors per rowStates index.
   const prunedChildCounts: number[] = [];
+  const prunedErrorCounts: number[] = [];
 
   for (let i = 0; i < spans.length; i++) {
     const span = spans[i];
@@ -153,11 +163,16 @@ function generateRowStates(
     // Service filter pruning: prune this span and its entire subtree.
     if (hasPruning && prunedServices.has(span.resource.serviceName)) {
       pruneDepth = depth;
-      // Attribute pruned child to its parent.
+      // Attribute pruned child and its subtree errors to the parent.
       if (depth > 0) {
         const parentIdx = parentByDepth[depth - 1];
         if (parentIdx != null) {
           prunedChildCounts[parentIdx] = (prunedChildCounts[parentIdx] || 0) + 1;
+          // Count errors in the pruned span and its entire subtree.
+          const errors = countSubtreeErrors(span);
+          if (errors > 0) {
+            prunedErrorCounts[parentIdx] = (prunedErrorCounts[parentIdx] || 0) + errors;
+          }
         }
       }
       continue;
@@ -202,6 +217,7 @@ function generateRowStates(
         spanIndex: parentRow.spanIndex,
         isPrunedPlaceholder: true,
         prunedChildrenCount: count,
+        prunedErrorCount: prunedErrorCounts[ri] || 0,
       });
     }
   }
@@ -499,7 +515,14 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   renderRow = (key: string, style: React.CSSProperties, index: number, attrs: object) => {
     const row = this.getRowStates()[index];
     if (row.isPrunedPlaceholder) {
-      return this.renderPrunedSpanRow(row.span, row.prunedChildrenCount, key, style, attrs);
+      return this.renderPrunedSpanRow(
+        row.span,
+        row.prunedChildrenCount,
+        row.prunedErrorCount,
+        key,
+        style,
+        attrs
+      );
     }
     const { isDetail, span, spanIndex } = row;
     return isDetail
@@ -524,6 +547,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   renderPrunedSpanRow(
     parentSpan: IOtelSpan,
     prunedChildrenCount: number,
+    prunedErrorCount: number,
     key: string,
     style: React.CSSProperties,
     attrs: object
@@ -534,6 +558,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
         <PrunedSpanRow
           parentSpan={parentSpan}
           prunedChildrenCount={prunedChildrenCount}
+          prunedErrorCount={prunedErrorCount}
           nameColumnWidth={nameColumnWidth}
           timelineBarsVisible={timelineBarsVisible}
         />

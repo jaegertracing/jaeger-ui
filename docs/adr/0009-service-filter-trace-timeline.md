@@ -233,6 +233,7 @@ type RowState = {
   isDetail: false;
   isPrunedPlaceholder: true;    // synthetic row: "N spans pruned"
   prunedChildrenCount: number;  // number of direct children pruned
+  prunedErrorCount: number;     // number of error spans in pruned subtrees
   spanIndex: number;
 };
 ```
@@ -242,6 +243,7 @@ The `isPrunedPlaceholder` flag marks a **synthetic placeholder row** inserted af
 Rendered as a `PrunedSpanRow` component:
 - Indented to `depth + 1` of the parent span (same as where children would appear).
 - Shows a **gray dot** (instead of a colored service dot) and **italic text**: _"N spans pruned"_ (where N is the count of direct children pruned, not the total subtree size — this keeps the number meaningful and small).
+- **Error bubbling**: if any spans in the pruned subtrees had error status, the placeholder shows an error icon and appends _", M errors"_ to the label. This preserves the error visibility that would otherwise be lost — normally, collapsed parents show a hollow error icon when descendants have errors, but pruned children are not collapsed, they are removed entirely.
 - No expand/collapse control, no timeline bar, no click interaction.
 - Uses a muted/secondary text color (`var(--text-secondary)` or similar design token).
 
