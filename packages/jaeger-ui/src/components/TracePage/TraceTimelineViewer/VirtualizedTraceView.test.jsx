@@ -837,5 +837,19 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const rows = inst.getRowStates();
       expect(rows.filter(r => r.isPrunedPlaceholder)).toHaveLength(0);
     });
+
+    it('renderRow dispatches to renderPrunedSpanRow for pruned placeholders', () => {
+      const customTrace = makeSpansWithServices();
+      const component = new VirtualizedTraceViewImpl({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+      });
+      const rows = component.getRowStates();
+      const prunedIdx = rows.findIndex(r => r.isPrunedPlaceholder);
+      // renderRow should not throw for pruned placeholder
+      const result = component.renderRow('key', {}, prunedIdx, {});
+      expect(result).toBeTruthy();
+    });
   });
 });

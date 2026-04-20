@@ -176,6 +176,63 @@ describe('ServiceFilter', () => {
     expect(onApply).toHaveBeenCalledWith(new Set(['svc-b']));
   });
 
+  it('can toggle a service off then back on', async () => {
+    render(
+      <ServiceFilter
+        trace={makeTrace(['svc-a', 'svc-b', 'svc-c'])}
+        prunedServices={new Set()}
+        onApply={onApply}
+      />
+    );
+    fireEvent.click(screen.getByTestId('service-filter-button'));
+    await waitFor(() => screen.getByText('svc-b'));
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    fireEvent.click(checkboxes[1]); // uncheck svc-b
+    fireEvent.click(checkboxes[1]); // re-check svc-b
+
+    fireEvent.click(screen.getByText('Apply'));
+    expect(onApply).toHaveBeenCalledWith(new Set()); // no services pruned
+  });
+
+  it('shows warning when all services are unchecked', async () => {
+    render(
+      <ServiceFilter
+        trace={makeTrace(['svc-a', 'svc-b'], ['svc-a', 'svc-b'])}
+        prunedServices={new Set()}
+        onApply={onApply}
+      />
+    );
+    fireEvent.click(screen.getByTestId('service-filter-button'));
+    await waitFor(() => screen.getByText('svc-a'));
+
+    fireEvent.click(screen.getByText('Select None'));
+    await waitFor(() => {
+      expect(screen.getByText('At least one service must be visible')).toBeInTheDocument();
+    });
+  });
+
+  it('shows warning when all root services would be pruned (multi-root)', async () => {
+    // Both svc-a and svc-b are roots; uncheck both
+    render(
+      <ServiceFilter
+        trace={makeTrace(['svc-a', 'svc-b', 'svc-c'], ['svc-a', 'svc-b'])}
+        prunedServices={new Set()}
+        onApply={onApply}
+      />
+    );
+    fireEvent.click(screen.getByTestId('service-filter-button'));
+    await waitFor(() => screen.getByText('svc-a'));
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    fireEvent.click(checkboxes[0]); // uncheck svc-a
+    fireEvent.click(checkboxes[1]); // uncheck svc-b
+
+    await waitFor(() => {
+      expect(screen.getByText('At least one root span service must remain visible')).toBeInTheDocument();
+    });
+  });
+
   describe('single root service locking', () => {
     it('disables the checkbox for the sole root service', async () => {
       // svc-a is the only root service
