@@ -89,6 +89,74 @@ describe('ServiceFilter', () => {
     });
   });
 
+  it('renders Save as Default button', async () => {
+    render(
+      <ServiceFilter trace={makeTrace(['svc-a', 'svc-b'])} prunedServices={new Set()} onApply={onApply} />
+    );
+    fireEvent.click(screen.getByTestId('service-filter-button'));
+    await waitFor(() => {
+      expect(screen.getByText('Save as Default')).toBeInTheDocument();
+    });
+  });
+
+  it('saves to localStorage and calls onApply when Save as Default is clicked', async () => {
+    localStorage.clear();
+    render(
+      <ServiceFilter
+        trace={makeTrace(['svc-a', 'svc-b', 'svc-c'])}
+        prunedServices={new Set()}
+        onApply={onApply}
+      />
+    );
+    fireEvent.click(screen.getByTestId('service-filter-button'));
+    await waitFor(() => screen.getByText('svc-b'));
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    fireEvent.click(checkboxes[1]); // toggle svc-b off
+
+    fireEvent.click(screen.getByText('Save as Default'));
+    expect(onApply).toHaveBeenCalledWith(new Set(['svc-b']));
+    const stored = JSON.parse(localStorage.getItem('svcFilter.defaults') ?? '{}');
+    expect(stored.prunedServices).toEqual(['svc-b']);
+  });
+
+  it('opens popover via keyboard (Enter)', async () => {
+    render(
+      <ServiceFilter trace={makeTrace(['svc-a', 'svc-b'])} prunedServices={new Set()} onApply={onApply} />
+    );
+    const button = screen.getByTestId('service-filter-button');
+    fireEvent.keyDown(button, { key: 'Enter' });
+    await waitFor(() => {
+      expect(screen.getByText('Filter Services')).toBeInTheDocument();
+    });
+  });
+
+  it('has aria-pressed on the filter button', () => {
+    render(
+      <ServiceFilter
+        trace={makeTrace(['svc-a', 'svc-b'])}
+        prunedServices={new Set(['svc-b'])}
+        onApply={onApply}
+      />
+    );
+    expect(screen.getByTestId('service-filter-button')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('sets title attribute on service names for truncation tooltip', async () => {
+    render(
+      <ServiceFilter
+        trace={makeTrace(['very-long-service-name-that-should-be-truncated', 'svc-b'])}
+        prunedServices={new Set()}
+        onApply={onApply}
+      />
+    );
+    fireEvent.click(screen.getByTestId('service-filter-button'));
+    await waitFor(() => {
+      const el = screen.getByText('very-long-service-name-that-should-be-truncated');
+      expect(el).toHaveAttribute('title', 'very-long-service-name-that-should-be-truncated');
+    });
+  });
+
   it('calls onApply with pruned services when Apply is clicked', async () => {
     render(
       <ServiceFilter

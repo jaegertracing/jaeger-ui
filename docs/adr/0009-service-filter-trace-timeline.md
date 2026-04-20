@@ -1,6 +1,6 @@
 # ADR-0009: Service Filter for Trace Timeline View
 
-* **Status**: In progress
+* **Status**: Implemented
 * **Date**: 2026-04-20
 
 ## Context
@@ -99,11 +99,11 @@ When a selected span's service is pruned (in side panel mode), `detailStates` is
 - `TraceTimelineViewer/index.tsx` — URL sync (read `svcFilter` on mount, write on change), localStorage fallback, side panel cleanup on prune
 - Root service locking for single-root traces
 
-### Phase 4: Polish
+### ✅ Phase 4: Polish
 
-10. **"Save as default" button** in the popover.
-11. **Accessibility** — keyboard navigation in the popover, ARIA labels on the filter button.
-12. **Responsive design** — popover positioning for narrow viewports, long service name truncation.
+- "Save as Default" button — applies filter and persists `prunedServices` to `localStorage` under `svcFilter.defaults`
+- Accessibility — `role`, `aria-label`, `aria-pressed` on filter button; keyboard open via Enter/Space; `role="dialog"` and `role="group"` on popover; `role="alert"` on warnings
+- Responsive design — `min-width`/`max-width` on popover; `text-overflow: ellipsis` + `title` attribute on service names; `focus-visible` outline on filter button
 
 ## Consequences
 

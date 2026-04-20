@@ -16,6 +16,14 @@ type ServiceFilterProps = {
   onApply: (prunedServices: Set<string>) => void;
 };
 
+function saveDefaults(prunedServices: Set<string>) {
+  try {
+    localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: [...prunedServices] }));
+  } catch {
+    // Ignore localStorage errors (quota, private mode).
+  }
+}
+
 export default function ServiceFilter({ trace, prunedServices, onApply }: ServiceFilterProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Set<string>>(new Set());
@@ -80,6 +88,12 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
     setOpen(false);
   }, [draft, onApply]);
 
+  const handleSaveAsDefault = useCallback(() => {
+    saveDefaults(draft);
+    onApply(draft);
+    setOpen(false);
+  }, [draft, onApply]);
+
   // Validation: at least one root span must remain visible.
   const wouldRemoveAllRoots = useMemo(() => {
     for (const name of rootServices) {
@@ -99,7 +113,7 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
   }
 
   const content = (
-    <div className="ServiceFilter--popover">
+    <div className="ServiceFilter--popover" role="dialog" aria-label="Filter services">
       <div className="ServiceFilter--description">
         Select which services are visible. Unselected services will be pruned along with their full subtrees.
       </div>
@@ -111,7 +125,7 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
           Select None
         </Button>
       </div>
-      <div className="ServiceFilter--list">
+      <div className="ServiceFilter--list" role="group" aria-label="Service visibility">
         {serviceEntries.map(({ name, numberOfSpans }) => {
           const isVisible = !draft.has(name);
           const color = colorGenerator.getColorByKey(name);
@@ -119,9 +133,16 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
           const isLocked = name === lockedService;
           return (
             <label key={name} className="ServiceFilter--item">
-              <Checkbox checked={isVisible} disabled={isLocked} onChange={() => handleToggle(name)} />
+              <Checkbox
+                checked={isVisible}
+                disabled={isLocked}
+                onChange={() => handleToggle(name)}
+                aria-label={`${isVisible ? 'Hide' : 'Show'} ${name}`}
+              />
               <span className="ServiceFilter--colorDot" style={{ backgroundColor: color }} />
-              <span className="ServiceFilter--serviceName">{name}</span>
+              <span className="ServiceFilter--serviceName" title={name}>
+                {name}
+              </span>
               {isRoot && <span className="ServiceFilter--rootBadge">root</span>}
               <span className="ServiceFilter--spanCount">
                 ({numberOfSpans} {numberOfSpans === 1 ? 'span' : 'spans'})
@@ -130,8 +151,20 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
           );
         })}
       </div>
-      {applyWarning && <div className="ServiceFilter--warning">{applyWarning}</div>}
+      {applyWarning && (
+        <div className="ServiceFilter--warning" role="alert">
+          {applyWarning}
+        </div>
+      )}
       <div className="ServiceFilter--footer">
+        <Button
+          size="small"
+          disabled={applyDisabled}
+          onClick={handleSaveAsDefault}
+          title="Apply and save as default for future traces"
+        >
+          Save as Default
+        </Button>
         <Button type="primary" size="small" disabled={applyDisabled} onClick={handleApply}>
           Apply
         </Button>
@@ -158,7 +191,15 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
           className={`ServiceFilter--button ${isFilterActive ? 'is-active' : ''}`}
           role="button"
           tabIndex={0}
+          aria-label={isFilterActive ? 'Service filter active' : 'Filter services'}
+          aria-pressed={isFilterActive}
           data-testid="service-filter-button"
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleOpenChange(!open);
+            }
+          }}
         >
           {isFilterActive ? <IoFunnel /> : <IoFunnelOutline />}
         </span>
