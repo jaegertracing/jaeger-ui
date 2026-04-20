@@ -21,6 +21,5 @@ SPDX-License-Identifier: Apache-2.0
 .PrunedSpanRow--label {
   font-style: italic;
   color: var(--text-secondary);
-  padding-left: 0.5rem;
   font-size: 0.9em;
 }
