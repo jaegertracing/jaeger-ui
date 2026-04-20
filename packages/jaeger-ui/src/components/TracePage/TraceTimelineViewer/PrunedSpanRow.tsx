@@ -33,20 +33,26 @@ export default function PrunedSpanRow({
     prunedErrorCount > 0 ? `, ${prunedErrorCount} ${prunedErrorCount === 1 ? 'error' : 'errors'}` : '';
   const label = `${prunedChildrenCount} ${spanWord} pruned${errorSuffix}`;
 
-  // Create a minimal fake span so SpanTreeOffset renders proper tree lines and a dot
-  // at depth = parentSpan.depth + 1, as if this were a leaf child of parentSpan.
-  const fakeSpan = useMemo(
-    () =>
-      ({
-        spanID: `${parentSpan.spanID}--pruned`,
-        depth: parentSpan.depth + 1,
-        hasChildren: false,
-        childSpans: [],
-        parentSpan,
-        resource: parentSpan.resource,
-      }) as unknown as IOtelSpan,
-    [parentSpan]
-  );
+  // Create a fake span so SpanTreeOffset renders proper tree lines and a dot
+  // at depth = parentSpan.depth + 1. The fake span must appear as the last child
+  // of a proxy parent so SpanTreeOffset terminates the vertical line correctly.
+  const fakeSpan = useMemo(() => {
+    const spanID = `${parentSpan.spanID}--pruned`;
+    const fake = {
+      spanID,
+      depth: parentSpan.depth + 1,
+      hasChildren: false,
+      childSpans: [],
+      parentSpan: undefined as unknown as IOtelSpan,
+      resource: parentSpan.resource,
+    } as unknown as IOtelSpan;
+    // Proxy parent with the fake span appended to childSpans so SpanTreeOffset
+    // sees it as the last child and terminates the vertical tree line.
+    const proxyParent = Object.create(parentSpan) as IOtelSpan;
+    (proxyParent as unknown as { childSpans: IOtelSpan[] }).childSpans = [...parentSpan.childSpans, fake];
+    (fake as { parentSpan: IOtelSpan }).parentSpan = proxyParent;
+    return fake;
+  }, [parentSpan]);
 
   return (
     <TimelineRow className="span-row PrunedSpanRow">
@@ -54,12 +60,12 @@ export default function PrunedSpanRow({
         <div className="span-name-wrapper">
           <SpanTreeOffset span={fakeSpan} color={PRUNED_DOT_COLOR} />
           <span className="span-name PrunedSpanRow--name">
-            <small className="endpoint-name">
+            <span className="span-svc-name">
               {prunedErrorCount > 0 && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
-              {label}
-            </small>
+            </span>
+            <small className="endpoint-name">{label}</small>
           </span>
         </div>
       </TimelineRow.Cell>
