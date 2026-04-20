@@ -301,7 +301,6 @@ describe('mapStateToProps()', () => {
     expect(diffCohort[0].data.traceID).toBe(trace.traceID);
 
     expect(rest).toEqual({
-      embedded: undefined,
       queryOfResults: undefined,
       isHomepage: true,
       sortedTracesXformer: expect.any(Function),

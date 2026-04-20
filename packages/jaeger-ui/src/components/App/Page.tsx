@@ -4,12 +4,11 @@
 import * as React from 'react';
 import { Layout } from 'antd';
 import cx from 'classnames';
-import { connect } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 
 import TopNav from './TopNav';
-import { ReduxState } from '../../types';
 import { EmbeddedState } from '../../types/embedded';
+import { getEmbeddedFromUrl } from '../../stores/embedded-store';
 import { trackPageView } from '../../utils/tracking';
 import DocumentTitle from '../../utils/documentTitle';
 
@@ -18,13 +17,15 @@ import withRouteProps from '../../utils/withRouteProps';
 
 type TProps = {
   children: React.ReactNode;
-  embedded: EmbeddedState;
+  embedded?: EmbeddedState | null;
 };
 
 const { Header, Content } = Layout;
 
 // export for tests
-export const PageImpl: React.FC<TProps> = ({ children, embedded }) => {
+export const PageImpl: React.FC<TProps> = props => {
+  const embedded = 'embedded' in props ? (props.embedded ?? null) : getEmbeddedFromUrl();
+  const { children } = props;
   const { pathname, search } = useLocation();
   React.useEffect(() => {
     trackPageView(pathname, search);
@@ -47,10 +48,4 @@ export const PageImpl: React.FC<TProps> = ({ children, embedded }) => {
   );
 };
 
-// export for tests
-export function mapStateToProps(state: ReduxState) {
-  const { embedded } = state;
-  return { embedded };
-}
-
-export default connect(mapStateToProps)(withRouteProps(PageImpl));
+export default withRouteProps(PageImpl);

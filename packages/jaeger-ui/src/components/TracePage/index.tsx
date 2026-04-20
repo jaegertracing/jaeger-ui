@@ -16,6 +16,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { useArchiveStore } from '../../stores/archive-store';
+import { getEmbeddedFromUrl } from '../../stores/embedded-store';
 import {
   setDetailPanelMode as setDetailPanelModeZustand,
   useLayoutPrefsStore,
@@ -80,13 +81,16 @@ type TOwnProps = {
 };
 
 type TReduxProps = {
-  embedded: null | EmbeddedState;
   id: string;
   trace: FetchedTrace | TNil;
   uiFind: string | TNil;
 };
 
-type TProps = TDispatchProps & TOwnProps & TReduxProps;
+type TProps = TDispatchProps &
+  TOwnProps &
+  TReduxProps & {
+    embedded?: EmbeddedState | null;
+  };
 
 // export for tests
 export const VIEW_MIN_RANGE = 0.01;
@@ -141,11 +145,11 @@ export function makeShortcutCallbacks(adjRange: (start: number, end: number) => 
 
 // export for tests
 export function TracePageImpl(props: TProps) {
+  const embedded = 'embedded' in props ? (props.embedded ?? null) : getEmbeddedFromUrl();
   const {
     archiveEnabled,
     criticalPathEnabled,
     disableJsonView,
-    embedded,
     enableSidePanel,
     fetchTrace,
     focusUiFindMatches: focusUiFindMatchesProp,
@@ -189,7 +193,7 @@ export function TracePageImpl(props: TProps) {
   const acknowledgeArchiveFn = useArchiveStore(s => s.acknowledge);
 
   const [headerHeight, setHeaderHeight] = useState<number | TNil>(null);
-  const [slimView, setSlimView] = useState(() => Boolean(embedded && embedded.timeline.collapseTitle));
+  const [slimView, setSlimView] = useState(() => Boolean(embedded?.timeline?.collapseTitle));
   const [viewType, setViewType] = useState<ETraceViewType>(ETraceViewType.TraceTimelineViewer);
   const [viewRange, setViewRange] = useState<IViewRange>({ time: { current: [0, 1] } });
 
@@ -392,14 +396,14 @@ export function TracePageImpl(props: TProps) {
     textFilter: uiFind,
     viewType,
     viewRange,
-    canCollapse: !embedded || !embedded.timeline.hideSummary || !embedded.timeline.hideMinimap,
+    canCollapse: !embedded || !embedded.timeline?.hideSummary || !embedded.timeline?.hideMinimap,
     clearSearch,
     detailPanelMode,
     enableSidePanel,
     hideMap: Boolean(
-      viewType !== ETraceViewType.TraceTimelineViewer || (embedded && embedded.timeline.hideMinimap)
+      viewType !== ETraceViewType.TraceTimelineViewer || Boolean(embedded?.timeline?.hideMinimap)
     ),
-    hideSummary: Boolean(embedded && embedded.timeline.hideSummary),
+    hideSummary: Boolean(embedded?.timeline?.hideSummary),
     linkToStandalone: getUrl(id),
     nextResult,
     onArchiveClicked: archiveTrace,
@@ -491,13 +495,11 @@ export function TracePageImpl(props: TProps) {
 // export for tests
 export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const { id } = ownProps.params;
-  const { embedded } = state;
   const { traces } = state.trace;
   const trace = id ? traces[id] : null;
 
   return {
     ...extractUiFindFromState(state),
-    embedded,
     id,
     trace,
   };

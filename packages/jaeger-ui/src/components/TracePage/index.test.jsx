@@ -1056,14 +1056,12 @@ describe('mapDispatchToProps()', () => {
 describe('mapStateToProps()', () => {
   const traceID = 'trace-id';
   const trace = {};
-  const embedded = 'a-faux-embedded-config';
   const ownProps = {
     params: { id: traceID },
   };
   let state;
   beforeEach(() => {
     state = {
-      embedded,
       trace: {
         traces: {
           [traceID]: { data: trace, state: fetchedState.DONE },
@@ -1085,7 +1083,6 @@ describe('mapStateToProps()', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
-      embedded,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1110,7 +1107,6 @@ describe('mapStateToProps()', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
-      embedded,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
     });

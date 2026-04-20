@@ -9,7 +9,7 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
-import { mapStateToProps, PageImpl as Page } from './Page';
+import { PageImpl as Page } from './Page';
 import { trackPageView } from '../../utils/tracking';
 
 const renderWithPath = (props, path = '/test?search=value') =>
@@ -19,18 +19,15 @@ const renderWithPath = (props, path = '/test?search=value') =>
     </MemoryRouter>
   );
 
-describe('mapStateToProps()', () => {
-  it('maps embedded state to props', () => {
-    const state = { embedded: true };
-    expect(mapStateToProps(state)).toEqual({ embedded: true });
-  });
-
-  it('does not include pathname or search (now from useLocation)', () => {
-    const result = mapStateToProps({ embedded: false });
-    expect(result).not.toHaveProperty('pathname');
-    expect(result).not.toHaveProperty('search');
-  });
-});
+const embeddedV0 = {
+  version: 'v0',
+  searchHideGraph: false,
+  timeline: {
+    collapseTitle: false,
+    hideMinimap: false,
+    hideSummary: false,
+  },
+};
 
 describe('<Page>', () => {
   beforeEach(() => {
@@ -73,7 +70,7 @@ describe('<Page>', () => {
   describe('Page embedded', () => {
     beforeEach(() => {
       trackPageView.mockReset();
-      renderWithPath({ embedded: true });
+      renderWithPath({ embedded: embeddedV0 });
     });
 
     it('renders without exploding', () => {
