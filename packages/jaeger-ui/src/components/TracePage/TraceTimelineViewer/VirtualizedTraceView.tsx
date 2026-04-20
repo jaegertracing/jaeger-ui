@@ -45,7 +45,6 @@ type RowState =
       isDetail: boolean;
       span: IOtelSpan;
       spanIndex: number;
-      isPrunedPlaceholder?: undefined;
     }
   | {
       isDetail: false;
@@ -467,7 +466,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   // https://github.com/facebook/flow/issues/3076#issuecomment-290944051
   getKeyFromIndex = (index: number) => {
     const row = this.getRowStates()[index];
-    if (row.isPrunedPlaceholder) {
+    if ('isPrunedPlaceholder' in row) {
       return `${row.span.spanID}--pruned`;
     }
     return `${row.span.spanID}--${row.isDetail ? 'detail' : 'bar'}`;
@@ -481,16 +480,16 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       if (row.span.spanID !== _spanID) continue;
-      if (_type === 'pruned' && row.isPrunedPlaceholder) return i;
-      if (_type === 'detail' && row.isDetail && !row.isPrunedPlaceholder) return i;
-      if (_type === 'bar' && !row.isDetail && !row.isPrunedPlaceholder) return i;
+      if (_type === 'pruned' && 'isPrunedPlaceholder' in row) return i;
+      if (_type === 'detail' && row.isDetail && !('isPrunedPlaceholder' in row)) return i;
+      if (_type === 'bar' && !row.isDetail && !('isPrunedPlaceholder' in row)) return i;
     }
     return -1;
   };
 
   getRowHeight = (index: number) => {
     const row = this.getRowStates()[index];
-    if (row.isPrunedPlaceholder) {
+    if ('isPrunedPlaceholder' in row) {
       return DEFAULT_HEIGHTS.bar;
     }
     if (!row.isDetail) {
@@ -522,7 +521,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   renderRow = (key: string, style: React.CSSProperties, index: number, attrs: object) => {
     const row = this.getRowStates()[index];
-    if (row.isPrunedPlaceholder) {
+    if ('isPrunedPlaceholder' in row) {
       return this.renderPrunedSpanRow(
         row.span,
         row.prunedChildrenCount,
