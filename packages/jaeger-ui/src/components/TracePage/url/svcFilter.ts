@@ -42,6 +42,9 @@ export function encodeSvcFilter(
     }
   }
 
+  // Empty mask means no services visible — invalid state, return null.
+  if (mask === BigInt(0)) return null;
+
   const checksum = svcChecksum(sortedServiceNames);
   return `${checksum}.${mask.toString(16)}`;
 }

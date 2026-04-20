@@ -196,11 +196,11 @@ function generateRowStates(
       if (!count) continue;
       const parentRow = rowStates[ri];
       const parentDepth = parentRow.span.depth;
-      // Find the end of the parent's visible subtree: advance past all rows with depth > parentDepth.
+      // Find the end of the parent's visible subtree: advance past all rows
+      // (including descendant placeholders) that belong to this subtree.
       let insertAt = ri + 1;
       while (
         insertAt < rowStates.length &&
-        !rowStates[insertAt].isPrunedPlaceholder &&
         (rowStates[insertAt].isDetail || rowStates[insertAt].span.depth > parentDepth)
       ) {
         insertAt++;

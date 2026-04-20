@@ -789,7 +789,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       });
       const rows = inst.getRowStates();
       const placeholder = rows.find(r => r.isPrunedPlaceholder);
-      // span-2 has error status (code 2), it's in svc-b subtree
+      // span-2 has error status ('ERROR' / StatusCode.ERROR), it's in svc-b subtree
       expect(placeholder.prunedErrorCount).toBe(1);
     });
 

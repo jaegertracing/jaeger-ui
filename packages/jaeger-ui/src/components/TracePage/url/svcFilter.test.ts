@@ -57,6 +57,10 @@ describe('encodeSvcFilter', () => {
     expect(bitmask).toBe('9');
   });
 
+  it('returns null when no services are visible (empty set)', () => {
+    expect(encodeSvcFilter(names, new Set())).toBeNull();
+  });
+
   it('encodes only first service visible', () => {
     const visible = new Set(['api']); // index 0
     const result = encodeSvcFilter(names, visible);

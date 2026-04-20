@@ -12,13 +12,41 @@ import { IOtelTrace } from '../../../types/otel';
 import type { SpanDetailPanelMode } from '../../../types/config';
 
 /**
+ * Sanitize a pruned set against root service protection rules:
+ * - If there's a single root service, it must not be pruned.
+ * - If all root services would be pruned, discard the filter entirely.
+ */
+function sanitizePrunedServices(pruned: Set<string>, rootServiceNames: Set<string>): Set<string> {
+  if (pruned.size === 0) return pruned;
+  if (rootServiceNames.size === 1) {
+    const rootName = rootServiceNames.values().next().value as string;
+    if (pruned.has(rootName)) {
+      const sanitized = new Set(pruned);
+      sanitized.delete(rootName);
+      return sanitized;
+    }
+    return pruned;
+  }
+  // Multiple roots: ensure at least one root remains visible.
+  let anyRootVisible = false;
+  for (const name of rootServiceNames) {
+    if (!pruned.has(name)) {
+      anyRootVisible = true;
+      break;
+    }
+  }
+  return anyRootVisible ? pruned : new Set();
+}
+
+/**
  * Resolves the initial prunedServices set for a trace.
  * Priority: URL svcFilter param > localStorage defaults > empty (no filter).
  * Returns the pruned set and, if the URL param was stale/invalid, the cleaned params to navigate to.
  */
 export function resolveInitialFilter(
   search: string,
-  sortedServiceNames: string[]
+  sortedServiceNames: string[],
+  rootServiceNames: Set<string>
 ): { pruned: Set<string>; cleanSearch?: string } {
   const params = queryString.parse(search);
   const svcFilterParam = typeof params.svcFilter === 'string' ? params.svcFilter : null;
@@ -31,7 +59,7 @@ export function resolveInitialFilter(
       for (const name of allServices) {
         if (!decoded.visibleServices.has(name)) pruned.add(name);
       }
-      return { pruned };
+      return { pruned: sanitizePrunedServices(pruned, rootServiceNames) };
     }
     // Stale or invalid: build cleaned search string without svcFilter.
     const nextParams = { ...params };
@@ -49,7 +77,7 @@ export function resolveInitialFilter(
         const traceServiceSet = new Set(sortedServiceNames);
         const pruned = new Set(defaults.prunedServices.filter(name => traceServiceSet.has(name)));
         if (pruned.size > 0 && pruned.size < sortedServiceNames.length) {
-          return { pruned };
+          return { pruned: sanitizePrunedServices(pruned, rootServiceNames) };
         }
       }
     }
@@ -102,13 +130,24 @@ export function useServiceFilter(
   const location = useLocation();
   const navigate = useNavigate();
   const sortedServiceNames = useMemo(() => getSortedServiceNames(trace.services), [trace.services]);
+  const rootServiceNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const span of trace.rootSpans) {
+      names.add(span.resource.serviceName);
+    }
+    return names;
+  }, [trace.rootSpans]);
 
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
   const zustandSetPrunedServices = useTraceTimelineStore(s => s.setPrunedServices);
 
   // On mount (or trace change): resolve initial filter from URL or localStorage.
   useEffect(() => {
-    const { pruned, cleanSearch } = resolveInitialFilter(location.search, sortedServiceNames);
+    const { pruned, cleanSearch } = resolveInitialFilter(
+      location.search,
+      sortedServiceNames,
+      rootServiceNames
+    );
     zustandSetPrunedServices(pruned);
     if (cleanSearch != null) {
       navigate({ pathname: location.pathname, search: cleanSearch }, { replace: true });
