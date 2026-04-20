@@ -68,6 +68,15 @@ describe('encodeSvcFilter', () => {
     const visible = new Set(['api', 'auth', 'cache', 'db', 'extra']);
     expect(encodeSvcFilter(names, visible)).toBeNull();
   });
+
+  it('encodes when visible set has same size but different names than sorted list', () => {
+    // visibleServices.size (4) >= sortedServiceNames.length (4) but 'extra' replaces 'db'
+    const visible = new Set(['api', 'auth', 'cache', 'extra']);
+    const result = encodeSvcFilter(names, visible);
+    expect(result).not.toBeNull();
+    // api=0, auth=1, cache=2 are visible (bits 0,1,2 = 0b0111 = 7), db=3 is not
+    expect(result!.split('.')[1]).toBe('7');
+  });
 });
 
 describe('decodeSvcFilter', () => {

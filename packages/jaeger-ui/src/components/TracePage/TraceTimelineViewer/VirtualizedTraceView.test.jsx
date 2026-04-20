@@ -694,4 +694,148 @@ describe('<VirtualizedTraceViewImpl>', () => {
       expect(() => component._handleDetailMeasure(event)).not.toThrow();
     });
   });
+
+  describe('service filter pruning', () => {
+    function makeSpansWithServices() {
+      // Build a small trace with known services:
+      //   span-0: svc-a (depth 0, root)
+      //     span-1: svc-b (depth 1)
+      //       span-2: svc-b (depth 2)
+      //     span-3: svc-c (depth 1)
+      const base = trace.spans[0];
+      const spans = [
+        {
+          ...base,
+          spanID: 'span-0',
+          depth: 0,
+          hasChildren: true,
+          childSpans: [],
+          resource: { ...base.resource, serviceName: 'svc-a' },
+          status: { code: 0 },
+        },
+        {
+          ...base,
+          spanID: 'span-1',
+          depth: 1,
+          hasChildren: true,
+          childSpans: [],
+          parentSpan: null,
+          resource: { ...base.resource, serviceName: 'svc-b' },
+          status: { code: 0 },
+        },
+        {
+          ...base,
+          spanID: 'span-2',
+          depth: 2,
+          hasChildren: false,
+          childSpans: [],
+          parentSpan: null,
+          resource: { ...base.resource, serviceName: 'svc-b' },
+          status: { code: 'ERROR' },
+        },
+        {
+          ...base,
+          spanID: 'span-3',
+          depth: 1,
+          hasChildren: false,
+          childSpans: [],
+          parentSpan: null,
+          resource: { ...base.resource, serviceName: 'svc-c' },
+          status: { code: 0 },
+        },
+      ];
+      // Wire up childSpans for error counting
+      spans[1].childSpans = [spans[2]];
+      spans[0].childSpans = [spans[1], spans[3]];
+      spans[1].parentSpan = spans[0];
+      spans[2].parentSpan = spans[1];
+      spans[3].parentSpan = spans[0];
+      return { ...trace, spans };
+    }
+
+    it('prunes spans of a pruned service and their subtrees', () => {
+      const customTrace = makeSpansWithServices();
+      const inst = createTestInstance({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+      });
+      const rows = inst.getRowStates();
+      const spanIDs = rows.filter(r => !r.isPrunedPlaceholder).map(r => r.span.spanID);
+      // svc-b spans (span-1, span-2) should be pruned; span-0, span-3 remain
+      expect(spanIDs).toEqual(['span-0', 'span-3']);
+    });
+
+    it('inserts a pruned placeholder row with correct count', () => {
+      const customTrace = makeSpansWithServices();
+      const inst = createTestInstance({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+      });
+      const rows = inst.getRowStates();
+      const placeholders = rows.filter(r => r.isPrunedPlaceholder);
+      expect(placeholders).toHaveLength(1);
+      expect(placeholders[0].prunedChildrenCount).toBe(1); // span-1 is the direct child pruned
+      expect(placeholders[0].span.spanID).toBe('span-0'); // parent
+    });
+
+    it('counts errors in pruned subtrees', () => {
+      const customTrace = makeSpansWithServices();
+      const inst = createTestInstance({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+      });
+      const rows = inst.getRowStates();
+      const placeholder = rows.find(r => r.isPrunedPlaceholder);
+      // span-2 has error status (code 2), it's in svc-b subtree
+      expect(placeholder.prunedErrorCount).toBe(1);
+    });
+
+    it('generates correct keys for pruned placeholder rows', () => {
+      const customTrace = makeSpansWithServices();
+      const inst = createTestInstance({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+      });
+      const rows = inst.getRowStates();
+      const prunedIdx = rows.findIndex(r => r.isPrunedPlaceholder);
+      expect(inst.getKeyFromIndex(prunedIdx)).toBe('span-0--pruned');
+    });
+
+    it('returns correct index from pruned key', () => {
+      const customTrace = makeSpansWithServices();
+      const inst = createTestInstance({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+      });
+      const rows = inst.getRowStates();
+      const prunedIdx = rows.findIndex(r => r.isPrunedPlaceholder);
+      expect(inst.getIndexFromKey('span-0--pruned')).toBe(prunedIdx);
+    });
+
+    it('returns bar height for pruned placeholder rows', () => {
+      const customTrace = makeSpansWithServices();
+      const inst = createTestInstance({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+      });
+      const rows = inst.getRowStates();
+      const prunedIdx = rows.findIndex(r => r.isPrunedPlaceholder);
+      expect(inst.getRowHeight(prunedIdx)).toBe(DEFAULT_HEIGHTS.bar);
+    });
+
+    it('produces no placeholders when prunedServices is empty', () => {
+      const inst = createTestInstance({
+        ...mockProps,
+        prunedServices: new Set(),
+      });
+      const rows = inst.getRowStates();
+      expect(rows.filter(r => r.isPrunedPlaceholder)).toHaveLength(0);
+    });
+  });
 });

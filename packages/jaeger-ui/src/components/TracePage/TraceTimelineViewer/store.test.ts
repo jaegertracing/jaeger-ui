@@ -524,6 +524,23 @@ describe('trace timeline zustand stores', () => {
       });
     });
 
+    describe('setPrunedServices', () => {
+      it('sets the pruned services', () => {
+        const pruned = new Set(['svc-a', 'svc-b']);
+        useTraceTimelineStore.getState().setPrunedServices(pruned);
+        expect(useTraceTimelineStore.getState().prunedServices).toBe(pruned);
+      });
+    });
+
+    describe('clearServiceFilter', () => {
+      it('resets prunedServices to empty set', () => {
+        useTraceTimelineStore.getState().setPrunedServices(new Set(['svc-a']));
+        expect(useTraceTimelineStore.getState().prunedServices.size).toBe(1);
+        useTraceTimelineStore.getState().clearServiceFilter();
+        expect(useTraceTimelineStore.getState().prunedServices.size).toBe(0);
+      });
+    });
+
     describe('focusUiFindMatches', () => {
       it('is a no-op when uiFind is falsy', () => {
         const stateBefore = useTraceTimelineStore.getState();
