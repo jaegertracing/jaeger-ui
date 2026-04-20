@@ -59,6 +59,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       shouldScrollToFirstUiFindMatch: false,
       spanNameColumnWidth: 0.5,
       nameColumnWidth: 0.5,
+      prunedServices: new Set(),
       trace,
       criticalPath,
       uiFind: 'uiFind',

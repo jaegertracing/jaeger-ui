@@ -11,28 +11,41 @@ import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 
-const { mockLayoutPrefsStore, mockTraceTimelineStore } = vi.hoisted(() => ({
-  mockLayoutPrefsStore: {
-    spanNameColumnWidth: 0.25,
-    sidePanelWidth: 0.375,
-    detailPanelMode: 'inline',
-    timelineBarsVisible: true,
-    setSpanNameColumnWidth: vi.fn(),
-    setSidePanelWidth: vi.fn(),
-    setTimelineBarsVisible: vi.fn(),
-  },
-  mockTraceTimelineStore: {
+const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore } = vi.hoisted(() => {
+  const mockTraceTimelineStore = {
     detailStates: new Map(),
+    prunedServices: new Set(),
+    setPrunedServices: vi.fn(),
     collapseAll: vi.fn(),
     collapseOne: vi.fn(),
     expandAll: vi.fn(),
     expandOne: vi.fn(),
-  },
-}));
+  };
+  const mockUseTraceTimelineStore = Object.assign(
+    vi.fn(selector => selector(mockTraceTimelineStore)),
+    {
+      getState: () => mockTraceTimelineStore,
+      setState: vi.fn(partial => Object.assign(mockTraceTimelineStore, partial)),
+    }
+  );
+  return {
+    mockLayoutPrefsStore: {
+      spanNameColumnWidth: 0.25,
+      sidePanelWidth: 0.375,
+      detailPanelMode: 'inline',
+      timelineBarsVisible: true,
+      setSpanNameColumnWidth: vi.fn(),
+      setSidePanelWidth: vi.fn(),
+      setTimelineBarsVisible: vi.fn(),
+    },
+    mockTraceTimelineStore,
+    mockUseTraceTimelineStore,
+  };
+});
 
 vi.mock('./store', () => ({
   useLayoutPrefsStore: vi.fn(selector => selector(mockLayoutPrefsStore)),
-  useTraceTimelineStore: vi.fn(selector => selector(mockTraceTimelineStore)),
+  useTraceTimelineStore: mockUseTraceTimelineStore,
   getSelectedSpanID: detailStatesArg =>
     detailStatesArg.size > 0 ? detailStatesArg.keys().next().value : null,
   SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
@@ -42,6 +55,26 @@ vi.mock('./store', () => ({
   MIN_TIMELINE_COLUMN_WIDTH: 0.05,
 }));
 
+vi.mock('react-router-dom', () => ({
+  useLocation: vi.fn(() => ({ search: '', pathname: '/trace/abc' })),
+  useNavigate: vi.fn(() => vi.fn()),
+}));
+vi.mock('./ServiceFilter', () =>
+  mockDefault(({ onApply }) => (
+    <div data-testid="service-filter-mock">
+      <button
+        data-testid="service-filter-apply"
+        type="button"
+        onClick={() => onApply(new Set(['svc-to-prune']))}
+      />
+    </div>
+  ))
+);
+vi.mock('../url/svcFilter', () => ({
+  decodeSvcFilter: vi.fn(() => null),
+  encodeSvcFilter: vi.fn(() => null),
+  getSortedServiceNames: vi.fn(() => []),
+}));
 vi.mock('./VirtualizedTraceView', () => mockDefault(() => <div data-testid="virtualized-trace-view-mock" />));
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
 vi.mock('../../common/VerticalResizer', () => ({
@@ -54,6 +87,7 @@ vi.mock('../../common/VerticalResizer', () => ({
 vi.mock('./TimelineHeaderRow', () =>
   mockDefault(props => (
     <div data-testid="timeline-header-row-mock" data-side-panel-label={props.sidePanelLabel}>
+      {props.serviceFilterNode}
       <button data-testid="collapse-all-button" type="button" onClick={props.onCollapseAll}>
         Collapse All
       </button>
@@ -120,6 +154,9 @@ describe('<TraceTimelineViewer>', () => {
     mockLayoutPrefsStore.detailPanelMode = 'inline';
     mockLayoutPrefsStore.timelineBarsVisible = true;
     mockTraceTimelineStore.detailStates = new Map();
+    mockTraceTimelineStore.prunedServices = new Set();
+    mockTraceTimelineStore.setPrunedServices.mockClear();
+    mockUseTraceTimelineStore.setState.mockClear();
     jest.spyOn(KeyboardShortcuts, 'merge').mockClear();
   });
 
@@ -268,6 +305,40 @@ describe('<TraceTimelineViewer>', () => {
       mockTraceTimelineStore.detailStates = new Map([[nonRootSpanID, {}]]);
       render(<TraceTimelineViewerImpl {...props} />);
       expect(screen.getByTestId('timeline-header-row-mock').dataset.sidePanelLabel).toBe('Span Details');
+    });
+
+    it('clears selected span when its service is pruned via the service filter', () => {
+      // Select a non-root span in sidepanel mode.
+      const selectedSpan = trace.spans[1];
+      const selectedSpanID = selectedSpan.spanID;
+      const selectedService = selectedSpan.resource.serviceName;
+      mockTraceTimelineStore.detailStates = new Map([[selectedSpanID, {}]]);
+
+      render(<TraceTimelineViewerImpl {...props} />);
+      expect(mockTraceTimelineStore.detailStates.size).toBe(1);
+
+      // Simulate pruning the selected span's service via the ServiceFilter mock's Apply button.
+      // The mock always calls onApply(new Set(['svc-to-prune'])), so set up trace.spanMap
+      // to resolve the selected span when looked up by its ID, and make the pruned service match.
+      // We need to call onApply with the actual service name, so re-mock the button click.
+      // Instead, directly invoke the approach: override the mock's onClick to prune the actual service.
+      // The simplest approach: verify that setState was called to clear detailStates
+      // when we fire the apply button (which prunes 'svc-to-prune').
+      // First, make the selected span's service match 'svc-to-prune'.
+      const mockSpan = { resource: { serviceName: 'svc-to-prune' } };
+      const originalGet = trace.spanMap.get.bind(trace.spanMap);
+      vi.spyOn(trace.spanMap, 'get').mockImplementation(id =>
+        id === selectedSpanID ? mockSpan : originalGet(id)
+      );
+
+      fireEvent.click(screen.getByTestId('service-filter-apply'));
+
+      // The handler should have cleared detailStates because the selected span's service was pruned.
+      expect(mockUseTraceTimelineStore.setState).toHaveBeenCalledWith(
+        expect.objectContaining({ detailStates: new Map() })
+      );
+
+      trace.spanMap.get.mockRestore();
     });
   });
 });

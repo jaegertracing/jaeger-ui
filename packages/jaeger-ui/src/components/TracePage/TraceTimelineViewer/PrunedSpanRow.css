@@ -1,0 +1,26 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.PrunedSpanRow--wrapper {
+  display: flex;
+  align-items: center;
+  line-height: 27px;
+}
+
+.PrunedSpanRow--dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.PrunedSpanRow--label {
+  font-style: italic;
+  color: var(--text-secondary);
+  padding-left: 0.5rem;
+  font-size: 0.9em;
+}
