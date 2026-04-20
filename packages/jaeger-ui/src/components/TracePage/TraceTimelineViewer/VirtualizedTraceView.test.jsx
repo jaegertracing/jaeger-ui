@@ -753,45 +753,8 @@ describe('<VirtualizedTraceViewImpl>', () => {
       return { ...trace, spans };
     }
 
-    it('prunes spans of a pruned service and their subtrees', () => {
-      const customTrace = makeSpansWithServices();
-      const inst = createTestInstance({
-        ...mockProps,
-        trace: customTrace,
-        prunedServices: new Set(['svc-b']),
-      });
-      const rows = inst.getRowStates();
-      const spanIDs = rows.filter(r => !r.isPrunedPlaceholder).map(r => r.span.spanID);
-      // svc-b spans (span-1, span-2) should be pruned; span-0, span-3 remain
-      expect(spanIDs).toEqual(['span-0', 'span-3']);
-    });
-
-    it('inserts a pruned placeholder row with correct count', () => {
-      const customTrace = makeSpansWithServices();
-      const inst = createTestInstance({
-        ...mockProps,
-        trace: customTrace,
-        prunedServices: new Set(['svc-b']),
-      });
-      const rows = inst.getRowStates();
-      const placeholders = rows.filter(r => r.isPrunedPlaceholder);
-      expect(placeholders).toHaveLength(1);
-      expect(placeholders[0].prunedChildrenCount).toBe(2); // span-1 + span-2 (entire subtree)
-      expect(placeholders[0].span.spanID).toBe('span-0'); // parent
-    });
-
-    it('counts errors in pruned subtrees', () => {
-      const customTrace = makeSpansWithServices();
-      const inst = createTestInstance({
-        ...mockProps,
-        trace: customTrace,
-        prunedServices: new Set(['svc-b']),
-      });
-      const rows = inst.getRowStates();
-      const placeholder = rows.find(r => r.isPrunedPlaceholder);
-      // span-2 has error status ('ERROR' / StatusCode.ERROR), it's in svc-b subtree
-      expect(placeholder.prunedErrorCount).toBe(1);
-    });
+    // Pure pruning logic (subtree removal, placeholder counts, error counting)
+    // is tested in generateRowStates.test.ts.
 
     it('generates correct keys for pruned placeholder rows', () => {
       const customTrace = makeSpansWithServices();
