@@ -49,4 +49,17 @@ describe('getEmbeddedFromUrl', () => {
     expect(getEmbeddedFromUrl()).toBe(embeddedState);
     expect(mockGetEmbeddedState).toHaveBeenCalledWith('?uiEmbed=v0');
   });
+
+  it('returns null when window is undefined (SSR)', () => {
+    resetEmbeddedFromUrlCacheForTests();
+    vi.stubGlobal('window', undefined);
+    try {
+      expect(getEmbeddedFromUrl()).toBeNull();
+      expect(getEmbeddedFromUrl()).toBeNull();
+      expect(mockGetEmbeddedState).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+      resetEmbeddedFromUrlCacheForTests();
+    }
+  });
 });
