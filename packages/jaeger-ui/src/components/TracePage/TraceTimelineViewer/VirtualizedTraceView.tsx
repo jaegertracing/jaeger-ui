@@ -65,7 +65,6 @@ type TVirtualizedTraceViewOwnProps = {
   trace: IOtelTrace;
   criticalPath: CriticalPathSection[];
   useOtelTerms: boolean;
-  prunedServices: Set<string>;
 };
 
 type TDispatchProps = {
@@ -90,6 +89,7 @@ type RouteProps = {
 
 type TDerivedStateProps = {
   selectedSpanID: string | null;
+  prunedServices: Set<string>;
 };
 
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &

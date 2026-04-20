@@ -139,7 +139,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     });
   }, [collapseAll, expandAll, collapseOne, expandOne]);
 
-  const { prunedServices, serviceFilterNode } = useServiceFilter(trace, detailPanelMode);
+  const { serviceFilterNode } = useServiceFilter(trace, detailPanelMode);
 
   // When timeline bars are hidden with the side panel active, the side panel expands to absorb
   // the timeline column so the Service/Operation column keeps its pixel width unchanged.
@@ -230,7 +230,6 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       useOtelTerms={useOtelTerms}
       currentViewRangeTime={viewRange.time.current}
       nameColumnWidth={nameColumnWidth}
-      prunedServices={prunedServices}
     />
   );
 

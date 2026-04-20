@@ -34,25 +34,21 @@ export default function PrunedSpanRow({
   const label = `${prunedChildrenCount} ${spanWord} pruned${errorSuffix}`;
 
   // Create a fake span so SpanTreeOffset renders proper tree lines and a dot
-  // at depth = parentSpan.depth + 1. The fake span must appear as the last child
-  // of a proxy parent so SpanTreeOffset terminates the vertical line correctly.
-  const fakeSpan = useMemo(() => {
-    const spanID = `${parentSpan.spanID}--pruned`;
-    const fake = {
-      spanID,
-      depth: parentSpan.depth + 1,
-      hasChildren: false,
-      childSpans: [],
-      parentSpan: undefined as unknown as IOtelSpan,
-      resource: parentSpan.resource,
-    } as unknown as IOtelSpan;
-    // Proxy parent with the fake span appended to childSpans so SpanTreeOffset
-    // sees it as the last child and terminates the vertical tree line.
-    const proxyParent = Object.create(parentSpan) as IOtelSpan;
-    (proxyParent as unknown as { childSpans: IOtelSpan[] }).childSpans = [...parentSpan.childSpans, fake];
-    (fake as { parentSpan: IOtelSpan }).parentSpan = proxyParent;
-    return fake;
-  }, [parentSpan]);
+  // at depth = parentSpan.depth + 1. We keep the real parentSpan reference so
+  // the placeholder and its visible siblings compute tree offsets from the same
+  // child ordering.
+  const fakeSpan = useMemo(
+    () =>
+      ({
+        spanID: `${parentSpan.spanID}--pruned`,
+        depth: parentSpan.depth + 1,
+        hasChildren: false,
+        childSpans: [],
+        parentSpan,
+        resource: parentSpan.resource,
+      }) as unknown as IOtelSpan,
+    [parentSpan]
+  );
 
   return (
     <TimelineRow className="span-row PrunedSpanRow">
