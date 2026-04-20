@@ -105,3 +105,11 @@ export function getSortedServiceNames(
 ): string[] {
   return services.map(s => s.name).sort();
 }
+
+/** localStorage key for persisted service filter defaults. */
+export const SVC_FILTER_DEFAULTS_KEY = 'svcFilter.defaults';
+
+/** Shape of the persisted service filter defaults. */
+export type SvcFilterDefaults = {
+  prunedServices: string[];
+};

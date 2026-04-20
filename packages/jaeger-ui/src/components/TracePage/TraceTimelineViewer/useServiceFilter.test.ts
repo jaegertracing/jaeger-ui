@@ -3,11 +3,15 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../url/svcFilter', () => ({
-  decodeSvcFilter: vi.fn(() => null),
-  encodeSvcFilter: vi.fn(() => null),
-  getSortedServiceNames: vi.fn(() => []),
-}));
+vi.mock('../url/svcFilter', async importOriginal => {
+  const actual = await importOriginal<typeof import('../url/svcFilter')>();
+  return {
+    ...actual,
+    decodeSvcFilter: vi.fn(() => null),
+    encodeSvcFilter: vi.fn(() => null),
+    getSortedServiceNames: vi.fn(() => []),
+  };
+});
 
 import { decodeSvcFilter, encodeSvcFilter } from '../url/svcFilter';
 import { resolveInitialFilter, buildFilterSearch } from './useServiceFilter';

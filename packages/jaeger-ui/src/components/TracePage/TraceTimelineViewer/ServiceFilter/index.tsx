@@ -7,6 +7,7 @@ import { IoFunnel, IoFunnelOutline } from 'react-icons/io5';
 
 import colorGenerator from '../../../../utils/color-generator';
 import { IOtelTrace } from '../../../../types/otel';
+import { SVC_FILTER_DEFAULTS_KEY, SvcFilterDefaults } from '../../url/svcFilter';
 
 import './ServiceFilter.css';
 
@@ -18,7 +19,8 @@ type ServiceFilterProps = {
 
 function saveDefaults(prunedServices: Set<string>) {
   try {
-    localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: [...prunedServices] }));
+    const defaults: SvcFilterDefaults = { prunedServices: [...prunedServices] };
+    localStorage.setItem(SVC_FILTER_DEFAULTS_KEY, JSON.stringify(defaults));
   } catch {
     // Ignore localStorage errors (quota, private mode).
   }

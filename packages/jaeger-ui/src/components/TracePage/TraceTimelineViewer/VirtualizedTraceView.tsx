@@ -188,32 +188,46 @@ function generateRowStates(
     }
   }
 
-  // Second pass: insert pruned placeholder rows after each parent's visible subtree.
-  // Iterate backwards so splice indices remain stable.
+  // Second pass: emit placeholder rows in a single linear pass using a depth stack.
+  // When a span row closes its subtree (next span at same or lower depth), append
+  // its placeholder before moving on. This avoids O(n²) splice operations.
   if (hasPruning) {
-    for (let ri = prunedChildCounts.length - 1; ri >= 0; ri--) {
-      const count = prunedChildCounts[ri];
-      if (!count) continue;
-      const parentRow = rowStates[ri];
-      const parentDepth = parentRow.span.depth;
-      // Find the end of the parent's visible subtree: advance past all rows
-      // (including descendant placeholders) that belong to this subtree.
-      let insertAt = ri + 1;
-      while (
-        insertAt < rowStates.length &&
-        (rowStates[insertAt].isDetail || rowStates[insertAt].span.depth > parentDepth)
-      ) {
-        insertAt++;
-      }
-      rowStates.splice(insertAt, 0, {
+    const finalRowStates: RowState[] = [];
+    const openSpanStack: Array<{ rowIndex: number; depth: number }> = [];
+
+    const appendPlaceholderForRow = (rowIndex: number) => {
+      const count = prunedChildCounts[rowIndex];
+      if (!count) return;
+      const parentRow = rowStates[rowIndex];
+      finalRowStates.push({
         span: parentRow.span,
         isDetail: false,
         spanIndex: parentRow.spanIndex,
         isPrunedPlaceholder: true,
         prunedChildrenCount: count,
-        prunedErrorCount: prunedErrorCounts[ri] || 0,
+        prunedErrorCount: prunedErrorCounts[rowIndex] || 0,
       });
+    };
+
+    for (let ri = 0; ri < rowStates.length; ri++) {
+      const row = rowStates[ri];
+      // When we encounter a non-detail row, close any open subtrees at the same or deeper depth.
+      if (!row.isDetail) {
+        while (openSpanStack.length && openSpanStack[openSpanStack.length - 1].depth >= row.span.depth) {
+          appendPlaceholderForRow(openSpanStack.pop()!.rowIndex);
+        }
+      }
+      finalRowStates.push(row);
+      if (!row.isDetail) {
+        openSpanStack.push({ rowIndex: ri, depth: row.span.depth });
+      }
     }
+    // Close any remaining open subtrees.
+    while (openSpanStack.length) {
+      appendPlaceholderForRow(openSpanStack.pop()!.rowIndex);
+    }
+
+    return finalRowStates;
   }
 
   return rowStates;
@@ -463,9 +477,9 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const parts = key.split('--');
     const _spanID = parts[0];
     const _type = parts[1];
-    const max = this.getRowStates().length;
-    for (let i = 0; i < max; i++) {
-      const row = this.getRowStates()[i];
+    const rows = this.getRowStates();
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
       if (row.span.spanID !== _spanID) continue;
       if (_type === 'pruned' && row.isPrunedPlaceholder) return i;
       if (_type === 'detail' && row.isDetail && !row.isPrunedPlaceholder) return i;

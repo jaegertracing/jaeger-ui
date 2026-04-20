@@ -7,7 +7,13 @@ import queryString from 'query-string';
 
 import ServiceFilter from './ServiceFilter';
 import { getSelectedSpanID, useTraceTimelineStore } from './store';
-import { decodeSvcFilter, encodeSvcFilter, getSortedServiceNames } from '../url/svcFilter';
+import {
+  decodeSvcFilter,
+  encodeSvcFilter,
+  getSortedServiceNames,
+  SVC_FILTER_DEFAULTS_KEY,
+  SvcFilterDefaults,
+} from '../url/svcFilter';
 import { IOtelTrace } from '../../../types/otel';
 import type { SpanDetailPanelMode } from '../../../types/config';
 
@@ -70,9 +76,9 @@ export function resolveInitialFilter(
 
   // No URL param: try localStorage defaults.
   try {
-    const stored = localStorage.getItem('svcFilter.defaults');
+    const stored = localStorage.getItem(SVC_FILTER_DEFAULTS_KEY);
     if (stored) {
-      const defaults = JSON.parse(stored) as { prunedServices?: string[] };
+      const defaults = JSON.parse(stored) as Partial<SvcFilterDefaults>;
       if (Array.isArray(defaults.prunedServices)) {
         const traceServiceSet = new Set(sortedServiceNames);
         const pruned = new Set(defaults.prunedServices.filter(name => traceServiceSet.has(name)));
