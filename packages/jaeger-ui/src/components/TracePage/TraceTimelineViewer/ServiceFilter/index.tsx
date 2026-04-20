@@ -34,6 +34,11 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
     return names;
   }, [trace.rootSpans]);
 
+  // When there's exactly one root service name (even across multiple root spans),
+  // that service is locked — it cannot be deselected.
+  const singleRootService = rootServices.size === 1;
+  const lockedService = singleRootService ? [...rootServices][0] : null;
+
   const isFilterActive = prunedServices.size > 0;
 
   const handleOpenChange = useCallback(
@@ -47,23 +52,28 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
     [prunedServices]
   );
 
-  const handleToggle = useCallback((serviceName: string) => {
-    setDraft(prev => {
-      const next = new Set(prev);
-      if (next.has(serviceName)) {
-        next.delete(serviceName);
-      } else {
-        next.add(serviceName);
-      }
-      return next;
-    });
-  }, []);
+  const handleToggle = useCallback(
+    (serviceName: string) => {
+      if (serviceName === lockedService) return;
+      setDraft(prev => {
+        const next = new Set(prev);
+        if (next.has(serviceName)) {
+          next.delete(serviceName);
+        } else {
+          next.add(serviceName);
+        }
+        return next;
+      });
+    },
+    [lockedService]
+  );
 
   const handleSelectAll = useCallback(() => setDraft(new Set()), []);
 
   const handleSelectNone = useCallback(() => {
-    setDraft(new Set(serviceEntries.map(s => s.name)));
-  }, [serviceEntries]);
+    const allExceptLocked = serviceEntries.filter(s => s.name !== lockedService).map(s => s.name);
+    setDraft(new Set(allExceptLocked));
+  }, [serviceEntries, lockedService]);
 
   const handleApply = useCallback(() => {
     onApply(draft);
@@ -106,9 +116,10 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
           const isVisible = !draft.has(name);
           const color = colorGenerator.getColorByKey(name);
           const isRoot = rootServices.has(name);
+          const isLocked = name === lockedService;
           return (
             <label key={name} className="ServiceFilter--item">
-              <Checkbox checked={isVisible} onChange={() => handleToggle(name)} />
+              <Checkbox checked={isVisible} disabled={isLocked} onChange={() => handleToggle(name)} />
               <span className="ServiceFilter--colorDot" style={{ backgroundColor: color }} />
               <span className="ServiceFilter--serviceName">{name}</span>
               {isRoot && <span className="ServiceFilter--rootBadge">root</span>}

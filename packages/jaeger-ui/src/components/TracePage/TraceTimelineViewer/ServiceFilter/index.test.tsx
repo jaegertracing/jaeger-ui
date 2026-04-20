@@ -9,11 +9,13 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import ServiceFilter from './index';
 import { IOtelTrace, IOtelSpan } from '../../../../types/otel';
 
-function makeTrace(serviceNames: string[]): IOtelTrace {
+function makeTrace(serviceNames: string[], rootServiceNames?: string[]): IOtelTrace {
   const services = serviceNames.map(name => ({ name, numberOfSpans: 3 }));
-  const rootSpans = [
-    { spanID: 'root-1', resource: { serviceName: serviceNames[0], attributes: [] } } as unknown as IOtelSpan,
-  ];
+  const roots = rootServiceNames ?? [serviceNames[0]];
+  const rootSpans = roots.map((name, i) => ({
+    spanID: `root-${i}`,
+    resource: { serviceName: name, attributes: [] },
+  })) as unknown as IOtelSpan[];
   return {
     services,
     rootSpans,
@@ -104,5 +106,77 @@ describe('ServiceFilter', () => {
 
     fireEvent.click(screen.getByText('Apply'));
     expect(onApply).toHaveBeenCalledWith(new Set(['svc-b']));
+  });
+
+  describe('single root service locking', () => {
+    it('disables the checkbox for the sole root service', async () => {
+      // svc-a is the only root service
+      render(
+        <ServiceFilter
+          trace={makeTrace(['svc-a', 'svc-b', 'svc-c'])}
+          prunedServices={new Set()}
+          onApply={onApply}
+        />
+      );
+      fireEvent.click(screen.getByTestId('service-filter-button'));
+      await waitFor(() => screen.getByText('svc-a'));
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      // svc-a is first (sorted), and should be disabled
+      expect(checkboxes[0]).toBeDisabled();
+      expect(checkboxes[1]).not.toBeDisabled();
+      expect(checkboxes[2]).not.toBeDisabled();
+    });
+
+    it('Select None keeps the sole root service selected', async () => {
+      render(
+        <ServiceFilter
+          trace={makeTrace(['svc-a', 'svc-b', 'svc-c'])}
+          prunedServices={new Set()}
+          onApply={onApply}
+        />
+      );
+      fireEvent.click(screen.getByTestId('service-filter-button'));
+      await waitFor(() => screen.getByText('svc-a'));
+
+      fireEvent.click(screen.getByText('Select None'));
+      fireEvent.click(screen.getByText('Apply'));
+      // svc-a should NOT be in the pruned set
+      expect(onApply).toHaveBeenCalledWith(new Set(['svc-b', 'svc-c']));
+    });
+
+    it('does not lock root services when multiple root service names exist', async () => {
+      // Both svc-a and svc-b are root services
+      render(
+        <ServiceFilter
+          trace={makeTrace(['svc-a', 'svc-b', 'svc-c'], ['svc-a', 'svc-b'])}
+          prunedServices={new Set()}
+          onApply={onApply}
+        />
+      );
+      fireEvent.click(screen.getByTestId('service-filter-button'));
+      await waitFor(() => screen.getByText('svc-a'));
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      // All checkboxes should be enabled
+      expect(checkboxes[0]).not.toBeDisabled();
+      expect(checkboxes[1]).not.toBeDisabled();
+      expect(checkboxes[2]).not.toBeDisabled();
+    });
+
+    it('shows root badge on all root services when multiple exist', async () => {
+      render(
+        <ServiceFilter
+          trace={makeTrace(['svc-a', 'svc-b', 'svc-c'], ['svc-a', 'svc-b'])}
+          prunedServices={new Set()}
+          onApply={onApply}
+        />
+      );
+      fireEvent.click(screen.getByTestId('service-filter-button'));
+      await waitFor(() => screen.getByText('svc-a'));
+
+      const badges = screen.getAllByText('root');
+      expect(badges).toHaveLength(2);
+    });
   });
 });
