@@ -145,7 +145,7 @@ export function makeShortcutCallbacks(adjRange: (start: number, end: number) => 
 
 // export for tests
 export function TracePageImpl(props: TProps) {
-  const embedded = 'embedded' in props ? (props.embedded ?? null) : getEmbeddedFromUrl();
+  const embedded = props.embedded === undefined ? getEmbeddedFromUrl() : props.embedded;
   const {
     archiveEnabled,
     criticalPathEnabled,

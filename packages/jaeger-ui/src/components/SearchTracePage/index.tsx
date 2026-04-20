@@ -70,7 +70,7 @@ type SearchTracePageImplProps = ISearchTracePageImplOwnProps & IStateProps & IDi
 
 // export for tests
 export function SearchTracePageImpl(props: SearchTracePageImplProps) {
-  const embedded = 'embedded' in props ? (props.embedded ?? null) : getEmbeddedFromUrl();
+  const embedded = props.embedded === undefined ? getEmbeddedFromUrl() : props.embedded;
   const {
     tracesInRedux,
     errors,

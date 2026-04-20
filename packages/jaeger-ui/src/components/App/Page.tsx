@@ -24,7 +24,7 @@ const { Header, Content } = Layout;
 
 // export for tests
 export const PageImpl: React.FC<TProps> = props => {
-  const embedded = 'embedded' in props ? (props.embedded ?? null) : getEmbeddedFromUrl();
+  const embedded = props.embedded === undefined ? getEmbeddedFromUrl() : props.embedded;
   const { children } = props;
   const { pathname, search } = useLocation();
   React.useEffect(() => {
