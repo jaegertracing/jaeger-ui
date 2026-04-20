@@ -525,10 +525,12 @@ describe('trace timeline zustand stores', () => {
     });
 
     describe('setPrunedServices', () => {
-      it('sets the pruned services', () => {
+      it('sets the pruned services (cloned, not by reference)', () => {
         const pruned = new Set(['svc-a', 'svc-b']);
         useTraceTimelineStore.getState().setPrunedServices(pruned);
-        expect(useTraceTimelineStore.getState().prunedServices).toBe(pruned);
+        const stored = useTraceTimelineStore.getState().prunedServices;
+        expect(stored).toEqual(pruned);
+        expect(stored).not.toBe(pruned);
       });
     });
 

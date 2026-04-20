@@ -108,14 +108,6 @@ export const DEFAULT_HEIGHTS = {
 
 const NUM_TICKS = 5;
 
-function countSubtreeErrors(span: IOtelSpan): number {
-  let count = isErrorSpan(span) ? 1 : 0;
-  for (const child of span.childSpans) {
-    count += countSubtreeErrors(child);
-  }
-  return count;
-}
-
 function generateRowStates(
   spans: ReadonlyArray<IOtelSpan> | TNil,
   childrenHiddenIDs: Set<string>,
@@ -128,24 +120,18 @@ function generateRowStates(
   }
   const hasPruning = prunedServices.size > 0;
   let collapseDepth: number | null = null;
-  let pruneDepth: number | null = null;
   const rowStates: RowState[] = [];
 
   // Track the last emitted visible span at each depth for pruned-child counting.
   // parentByDepth[d] = index into rowStates of the last emitted span at depth d.
   const parentByDepth: (number | undefined)[] = [];
-  // Count of pruned direct children and errors per rowStates index.
+  // Count of pruned spans and errors per rowStates index of the parent.
   const prunedChildCounts: number[] = [];
   const prunedErrorCounts: number[] = [];
 
   for (let i = 0; i < spans.length; i++) {
     const span = spans[i];
     const { spanID, depth } = span;
-
-    // Exit pruned subtree when we return to or above prune depth.
-    if (pruneDepth != null && depth <= pruneDepth) {
-      pruneDepth = null;
-    }
 
     // Exit collapsed subtree when we return to or above collapse depth.
     if (collapseDepth != null) {
@@ -155,28 +141,25 @@ function generateRowStates(
       collapseDepth = null;
     }
 
-    // Inside a pruned subtree — skip.
-    if (pruneDepth != null) {
-      continue;
-    }
-
-    // Service filter pruning: prune this span and its entire subtree.
+    // Service filter pruning: prune this span and its entire subtree in a single
+    // linear scan (no recursion). Advance `i` past the subtree to stay O(n).
     if (hasPruning && prunedServices.has(span.resource.serviceName)) {
-      pruneDepth = depth;
-      // Attribute all pruned spans in this subtree and their errors to the parent.
+      let prunedSpanCount = 1;
+      let prunedErrors = isErrorSpan(span) ? 1 : 0;
+      while (i + 1 < spans.length && spans[i + 1].depth > depth) {
+        i++;
+        prunedSpanCount++;
+        if (isErrorSpan(spans[i])) {
+          prunedErrors++;
+        }
+      }
+      // Attribute counts to the parent.
       if (depth > 0) {
         const parentIdx = parentByDepth[depth - 1];
         if (parentIdx != null) {
-          // Count total spans in the pruned subtree (the span itself + all descendants).
-          let prunedSpanCount = 1;
-          for (let j = i + 1; j < spans.length && spans[j].depth > depth; j++) {
-            prunedSpanCount++;
-          }
           prunedChildCounts[parentIdx] = (prunedChildCounts[parentIdx] || 0) + prunedSpanCount;
-          // Count errors in the pruned span and its entire subtree.
-          const errors = countSubtreeErrors(span);
-          if (errors > 0) {
-            prunedErrorCounts[parentIdx] = (prunedErrorCounts[parentIdx] || 0) + errors;
+          if (prunedErrors > 0) {
+            prunedErrorCounts[parentIdx] = (prunedErrorCounts[parentIdx] || 0) + prunedErrors;
           }
         }
       }
@@ -205,15 +188,21 @@ function generateRowStates(
     }
   }
 
-  // Second pass: insert pruned placeholder rows (iterate backwards to keep indices stable).
+  // Second pass: insert pruned placeholder rows after each parent's visible subtree.
+  // Iterate backwards so splice indices remain stable.
   if (hasPruning) {
     for (let ri = prunedChildCounts.length - 1; ri >= 0; ri--) {
       const count = prunedChildCounts[ri];
       if (!count) continue;
       const parentRow = rowStates[ri];
-      // Find the insertion point: after the parent's span row (and its detail row if present).
+      const parentDepth = parentRow.span.depth;
+      // Find the end of the parent's visible subtree: advance past all rows with depth > parentDepth.
       let insertAt = ri + 1;
-      while (insertAt < rowStates.length && rowStates[insertAt].isDetail) {
+      while (
+        insertAt < rowStates.length &&
+        !rowStates[insertAt].isPrunedPlaceholder &&
+        (rowStates[insertAt].isDetail || rowStates[insertAt].span.depth > parentDepth)
+      ) {
         insertAt++;
       }
       rowStates.splice(insertAt, 0, {

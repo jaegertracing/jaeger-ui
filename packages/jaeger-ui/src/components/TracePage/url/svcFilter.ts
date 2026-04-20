@@ -65,7 +65,7 @@ export function decodeSvcFilter(
   if (!bitmaskHex) return null;
 
   const currentChecksum = svcChecksum(sortedServiceNames);
-  if (checksumHex !== currentChecksum) {
+  if (checksumHex.toLowerCase() !== currentChecksum.toLowerCase()) {
     return { visibleServices: new Set(sortedServiceNames), stale: true };
   }
 

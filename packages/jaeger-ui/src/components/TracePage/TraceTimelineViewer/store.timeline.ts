@@ -46,7 +46,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   shouldScrollToFirstUiFindMatch: false,
   prunedServices: new Set<string>(),
 
-  setPrunedServices: (pruned: Set<string>) => set({ prunedServices: pruned }),
+  setPrunedServices: (pruned: Set<string>) => set({ prunedServices: new Set(pruned) }),
 
   clearServiceFilter: () => set({ prunedServices: new Set<string>() }),
 

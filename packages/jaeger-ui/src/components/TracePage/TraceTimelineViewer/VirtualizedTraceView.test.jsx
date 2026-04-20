@@ -731,7 +731,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
           childSpans: [],
           parentSpan: null,
           resource: { ...base.resource, serviceName: 'svc-b' },
-          status: { code: 'ERROR' },
+          status: { code: 'ERROR' }, // StatusCode.ERROR is the string 'ERROR' (see types/otel.ts)
         },
         {
           ...base,

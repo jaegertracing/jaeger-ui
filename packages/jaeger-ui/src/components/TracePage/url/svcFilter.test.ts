@@ -108,6 +108,13 @@ describe('decodeSvcFilter', () => {
     expect(decodeSvcFilter(names, `${checksum}.0`)).toBeNull();
   });
 
+  it('accepts uppercase checksum (case-insensitive comparison)', () => {
+    const checksum = svcChecksum(names).toUpperCase();
+    const result = decodeSvcFilter(names, `${checksum}.9`)!;
+    expect(result.stale).toBe(false);
+    expect(result.visibleServices).toEqual(new Set(['api', 'db']));
+  });
+
   it('returns stale=true when checksum does not match', () => {
     const result = decodeSvcFilter(names, 'ffff.9');
     expect(result).not.toBeNull();
