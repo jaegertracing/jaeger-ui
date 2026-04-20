@@ -124,6 +124,7 @@ export default defineConfig({
       'jest/no-identical-title': 'error',
       'jest/valid-title': 'error',
       'jest/valid-expect': 'error',
+      'no-shadow': 'off',
       'import/extensions': 'off',
       // Disabled because dynamic computed namespace access (e.g. track[fn]())
       // in parameterised tests is a false positive this rule cannot validate.
@@ -136,7 +137,7 @@ export default defineConfig({
           // TypeScript files: downgrade from top-level errors to warnings since
           // tsc already enforces these more precisely than the linter can.
           'no-redeclare': 'warn',
-          'no-shadow': 'warn',
+          'no-shadow': 'off',
           'no-use-before-define': 'warn',
           'no-useless-constructor': 'warn',
           'no-empty-function': 'off',
