@@ -11,7 +11,7 @@ export function svcChecksum(sortedNames: ReadonlyArray<string>): string {
   for (let i = 0; i < input.length; i++) {
     h = Math.imul(h ^ input.charCodeAt(i), 0x0101) & 0xffff;
   }
-  return h.toString(16);
+  return h.toString(16).padStart(4, '0');
 }
 
 /**

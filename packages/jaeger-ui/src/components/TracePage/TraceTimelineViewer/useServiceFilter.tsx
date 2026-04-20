@@ -57,9 +57,6 @@ export function resolveInitialFilter(
   const params = queryString.parse(search);
   const svcFilterParam = typeof params.svcFilter === 'string' ? params.svcFilter : null;
 
-  // Track whether we need to clean a stale/invalid svcFilter from the URL.
-  let cleanSearch: string | undefined;
-
   if (svcFilterParam) {
     const decoded = decodeSvcFilter(sortedServiceNames, svcFilterParam);
     if (decoded && !decoded.stale) {
@@ -78,11 +75,13 @@ export function resolveInitialFilter(
       }
       return { pruned: sanitized };
     }
-    // Stale or invalid: remove svcFilter from URL, then fall through to localStorage defaults.
+    // Stale or invalid: discard the filter and show all services.
+    // Don't fall through to localStorage defaults — the user opened a shared link
+    // that no longer applies, so all-visible is the safest default.
     const nextParams = { ...params };
     delete nextParams.svcFilter;
     const cleaned = queryString.stringify(nextParams);
-    cleanSearch = cleaned ? `?${cleaned}` : '';
+    return { pruned: new Set(), cleanSearch: cleaned ? `?${cleaned}` : '' };
   }
 
   // No valid URL param: try localStorage defaults.
@@ -94,7 +93,7 @@ export function resolveInitialFilter(
         const traceServiceSet = new Set(sortedServiceNames);
         const pruned = new Set(defaults.prunedServices.filter(name => traceServiceSet.has(name)));
         if (pruned.size > 0 && pruned.size < sortedServiceNames.length) {
-          return { pruned: sanitizePrunedServices(pruned, rootServiceNames), cleanSearch };
+          return { pruned: sanitizePrunedServices(pruned, rootServiceNames) };
         }
       }
     }
@@ -102,7 +101,7 @@ export function resolveInitialFilter(
     // Ignore localStorage errors.
   }
 
-  return { pruned: new Set(), cleanSearch };
+  return { pruned: new Set() };
 }
 
 /**

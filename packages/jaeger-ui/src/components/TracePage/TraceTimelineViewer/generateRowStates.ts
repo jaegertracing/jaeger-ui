@@ -59,6 +59,10 @@ function buildVisibleRows(
     }
 
     // Service filter pruning: skip this span and its entire subtree.
+    // TODO: uiFind (calculateFocusedFindRowStates) still matches against all spans
+    // including pruned ones, which can affect childrenHiddenIDs/detailStates for
+    // invisible spans. This has no visual effect (pruned rows are removed here),
+    // but ideally uiFind should exclude pruned services upstream.
     if (hasPruning && prunedServices.has(span.resource.serviceName)) {
       let prunedSpanCount = 1;
       let prunedErrors = isErrorSpan(span) ? 1 : 0;

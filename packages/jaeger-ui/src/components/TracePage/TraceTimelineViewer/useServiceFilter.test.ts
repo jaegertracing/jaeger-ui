@@ -40,15 +40,15 @@ describe('resolveInitialFilter', () => {
     expect(result.cleanSearch).toBeUndefined();
   });
 
-  it('falls through to localStorage defaults when svcFilter is stale', () => {
+  it('discards stale svcFilter and returns all-visible (ignores localStorage)', () => {
     vi.mocked(decodeSvcFilter).mockReturnValue({ visibleServices: new Set(), stale: true });
     localStorage.setItem('svcFilter.defaults', JSON.stringify({ prunedServices: ['svc-b'] }));
     const result = resolveInitialFilter('?svcFilter=stale.ff&uiFind=foo', ['svc-a', 'svc-b', 'svc-c'], roots);
-    expect(result.pruned).toEqual(new Set(['svc-b']));
+    expect(result.pruned.size).toBe(0);
     expect(result.cleanSearch).toBe('?uiFind=foo');
   });
 
-  it('returns empty pruned with cleanSearch when stale and no localStorage defaults', () => {
+  it('returns empty cleanSearch when stale svcFilter is the only param', () => {
     vi.mocked(decodeSvcFilter).mockReturnValue({ visibleServices: new Set(), stale: true });
     const result = resolveInitialFilter('?svcFilter=stale.ff', ['svc-a'], roots);
     expect(result.pruned.size).toBe(0);
