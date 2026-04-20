@@ -25,6 +25,22 @@ const defaultProps: Partial<TProps> = {
   inputProps: {},
 };
 
+export type TExtractUiFindFromStateReturn = {
+  uiFind: string | undefined;
+};
+
+export function parseUiFind(search: string): string | undefined {
+  const { uiFind } = parseQuery(search);
+  return Array.isArray(uiFind) ? uiFind.join(' ') : uiFind;
+}
+
+// This is used by various components to extract uiFind from the URL.
+// The "fromState" part of the name is a legacy leftover from when
+// this was reading from Redux state.
+export function extractUiFindFromState(_unused: any = null): TExtractUiFindFromStateReturn {
+  return { uiFind: parseUiFind(window.location.search) };
+}
+
 export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props, ref) => {
   const {
     allowClear,
@@ -107,21 +123,5 @@ export const UnconnectedUiFindInput = React.forwardRef<InputRef, TProps>((props,
 });
 
 UnconnectedUiFindInput.displayName = 'UnconnectedUiFindInput';
-
-export type TExtractUiFindFromStateReturn = {
-  uiFind: string | undefined;
-};
-
-export function parseUiFind(search: string): string | undefined {
-  const { uiFind } = parseQuery(search);
-  return Array.isArray(uiFind) ? uiFind.join(' ') : uiFind;
-}
-
-// This is used by various components to extract uiFind from the URL.
-// The "fromState" part of the name is a legacy leftover from when
-// this was reading from Redux state.
-export function extractUiFindFromState(_unused: any = null): TExtractUiFindFromStateReturn {
-  return { uiFind: parseUiFind(window.location.search) };
-}
 
 export default UnconnectedUiFindInput as any;

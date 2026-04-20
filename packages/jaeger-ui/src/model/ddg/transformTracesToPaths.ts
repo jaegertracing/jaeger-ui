@@ -21,21 +21,6 @@ function transformTracesToPaths(
       const rootSpans = data.rootSpans;
       const { traceID } = data;
 
-      // Helper function to walk all paths through the tree, building IOtelSpan[] paths directly
-      const walkPaths = (span: IOtelSpan, currentPath: IOtelSpan[]) => {
-        const pathWithCurrent = [...currentPath, span];
-
-        if (span.childSpans.length === 0) {
-          // Leaf node - process the complete path
-          processPath(pathWithCurrent);
-        } else {
-          // Continue walking through children
-          span.childSpans.forEach(child => {
-            walkPaths(child, pathWithCurrent);
-          });
-        }
-      };
-
       const processPath = (pathSpans: IOtelSpan[]) => {
         if (pathSpans.length === 0) return;
 
@@ -78,6 +63,21 @@ function transformTracesToPaths(
               value: traceID,
             });
           }
+        }
+      };
+
+      // Helper function to walk all paths through the tree, building IOtelSpan[] paths directly
+      const walkPaths = (span: IOtelSpan, currentPath: IOtelSpan[]) => {
+        const pathWithCurrent = [...currentPath, span];
+
+        if (span.childSpans.length === 0) {
+          // Leaf node - process the complete path
+          processPath(pathWithCurrent);
+        } else {
+          // Continue walking through children
+          span.childSpans.forEach(child => {
+            walkPaths(child, pathWithCurrent);
+          });
         }
       };
 

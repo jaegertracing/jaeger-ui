@@ -70,6 +70,18 @@ interface IDispatchProps {
 
 type SearchTracePageImplProps = ISearchTracePageImplOwnProps & IStateProps & IDispatchProps;
 
+interface IStateTraceDiff {
+  cohort: string[];
+}
+
+export const stateTraceDiffXformer = memoizeOne(
+  (stateTrace: ReduxState['trace'], stateTraceDiff: IStateTraceDiff) => {
+    const { traces } = stateTrace;
+    const { cohort } = stateTraceDiff;
+    return cohort.map(id => traces[id] || { id, state: null });
+  }
+);
+
 // export for tests
 export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   const {
@@ -212,10 +224,6 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
   );
 }
 
-interface IStateTraceDiff {
-  cohort: string[];
-}
-
 const stateTraceXformer = memoizeOne((stateTrace: ReduxState['trace']) => {
   const { traces: traceMap, search } = stateTrace;
   const { query, results, state, error: traceError } = search;
@@ -227,14 +235,6 @@ const stateTraceXformer = memoizeOne((stateTrace: ReduxState['trace']) => {
   const maxDuration = Math.max(0, ...traces.map(tr => tr.duration || 0));
   return { traces, rawTraces, maxDuration, traceError, loadingTraces, query };
 });
-
-export const stateTraceDiffXformer = memoizeOne(
-  (stateTrace: ReduxState['trace'], stateTraceDiff: IStateTraceDiff) => {
-    const { traces } = stateTrace;
-    const { cohort } = stateTraceDiff;
-    return cohort.map(id => traces[id] || { id, state: null });
-  }
-);
 
 const sortedTracesXformer = memoizeOne((traces: Trace[], sortBy: string) => {
   const traceResults = traces.slice();

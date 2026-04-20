@@ -26,24 +26,18 @@ global.ResizeObserver = vi.fn().mockImplementation(function () {
 // Ant Design v6 uses MessageChannel which is not available in jsdom.
 // Must use a regular function (not arrow) because it is called with `new`.
 (global as any).MessageChannel = vi.fn().mockImplementation(function () {
-  const port1: any = {
-    onmessage: null,
-    postMessage: vi.fn((data: unknown) => {
-      if (port2.onmessage) {
-        setTimeout(() => port2.onmessage({ data }), 0);
-      }
-    }),
-    close: vi.fn(),
-  };
-  const port2: any = {
-    onmessage: null,
-    postMessage: vi.fn((data: unknown) => {
-      if (port1.onmessage) {
-        setTimeout(() => port1.onmessage({ data }), 0);
-      }
-    }),
-    close: vi.fn(),
-  };
+  const port1: any = { onmessage: null, close: vi.fn() };
+  const port2: any = { onmessage: null, close: vi.fn() };
+  port1.postMessage = vi.fn((data: unknown) => {
+    if (port2.onmessage) {
+      setTimeout(() => port2.onmessage({ data }), 0);
+    }
+  });
+  port2.postMessage = vi.fn((data: unknown) => {
+    if (port1.onmessage) {
+      setTimeout(() => port1.onmessage({ data }), 0);
+    }
+  });
   return { port1, port2 };
 });
 
