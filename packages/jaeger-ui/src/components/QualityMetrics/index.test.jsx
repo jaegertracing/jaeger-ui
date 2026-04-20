@@ -316,6 +316,7 @@ describe('QualityMetrics', () => {
         );
 
         headerMock.setLookback('test-service');
+        expect(mockNavigate).not.toHaveBeenCalled();
       });
 
       it('ignores less than one lookback', () => {
