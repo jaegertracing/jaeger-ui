@@ -137,7 +137,7 @@ export default defineConfig({
           // tsc already enforces these more precisely than the linter can.
           'no-redeclare': 'warn',
           'no-shadow': 'warn',
-          'no-use-before-define': 'warn',
+          'no-use-before-define': 'off',
           'no-useless-constructor': 'warn',
           'no-empty-function': 'off',
           'typescript/no-this-alias': 'off',
