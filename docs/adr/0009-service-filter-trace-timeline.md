@@ -54,7 +54,7 @@ No filter (all services visible)
 ### Pruning Rules
 
 1. Subtree-based: if a span's service is pruned, the span **and its entire subtree** are removed — even children belonging to visible services.
-2. A synthetic **pruned placeholder row** is inserted after visible parents that had direct children pruned, showing "N spans pruned" with a gray dot.
+2. A synthetic **pruned placeholder row** is inserted after visible parents that had children pruned, showing "N spans pruned" (total spans in pruned subtrees, not just direct children) with a gray dot.
 3. **Error bubbling**: errors in pruned subtrees are counted and displayed on the placeholder row with a hollow error icon (matching the existing convention: solid = own error, hollow = descendant error).
 4. The placeholder row reuses `SpanTreeOffset` for proper tree line rendering and always appears as the last child (terminated vertical line).
 

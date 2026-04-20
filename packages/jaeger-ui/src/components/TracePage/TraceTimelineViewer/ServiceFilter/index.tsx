@@ -132,7 +132,7 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
           const isRoot = rootServices.has(name);
           const isLocked = name === lockedService;
           return (
-            <label key={name} className="ServiceFilter--item">
+            <div key={name} className="ServiceFilter--item">
               <Checkbox
                 checked={isVisible}
                 disabled={isLocked}
@@ -147,7 +147,7 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
               <span className="ServiceFilter--spanCount">
                 ({numberOfSpans} {numberOfSpans === 1 ? 'span' : 'spans'})
               </span>
-            </label>
+            </div>
           );
         })}
       </div>

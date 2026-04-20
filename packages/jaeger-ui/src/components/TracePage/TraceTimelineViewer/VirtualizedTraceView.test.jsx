@@ -776,7 +776,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       const rows = inst.getRowStates();
       const placeholders = rows.filter(r => r.isPrunedPlaceholder);
       expect(placeholders).toHaveLength(1);
-      expect(placeholders[0].prunedChildrenCount).toBe(1); // span-1 is the direct child pruned
+      expect(placeholders[0].prunedChildrenCount).toBe(2); // span-1 + span-2 (entire subtree)
       expect(placeholders[0].span.spanID).toBe('span-0'); // parent
     });
 

@@ -168,7 +168,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       const nextParams = { ...params };
       delete nextParams.svcFilter;
       const search = queryString.stringify(nextParams);
-      navigate({ search }, { replace: true });
+      navigate({ pathname: location.pathname, search: search ? `?${search}` : '' }, { replace: true });
     }
     // No URL param: try localStorage defaults.
     try {
@@ -222,9 +222,17 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
         }
       }
       const search = queryString.stringify(params);
-      navigate({ search }, { replace: true });
+      navigate({ pathname: location.pathname, search: search ? `?${search}` : '' }, { replace: true });
     },
-    [zustandSetPrunedServices, detailPanelMode, trace.spanMap, location.search, sortedServiceNames, navigate]
+    [
+      zustandSetPrunedServices,
+      detailPanelMode,
+      trace.spanMap,
+      location.pathname,
+      location.search,
+      sortedServiceNames,
+      navigate,
+    ]
   );
 
   const serviceFilterNode = useMemo(

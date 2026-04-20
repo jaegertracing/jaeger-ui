@@ -129,6 +129,12 @@ describe('decodeSvcFilter', () => {
     expect(decodeSvcFilter(names, `${checksum}.f`)).toBeNull();
   });
 
+  it('returns null when bitmask has only out-of-range bits set', () => {
+    const checksum = svcChecksum(names);
+    // 0b10000 = 0x10 — only bit 4 set, but there are only 4 services (indices 0-3)
+    expect(decodeSvcFilter(names, `${checksum}.10`)).toBeNull();
+  });
+
   it('ignores extra bits beyond service count', () => {
     const checksum = svcChecksum(names);
     // 0b11111001 = f9 — bits 0,3,4,5,6,7 set, but only 4 services

@@ -163,11 +163,16 @@ function generateRowStates(
     // Service filter pruning: prune this span and its entire subtree.
     if (hasPruning && prunedServices.has(span.resource.serviceName)) {
       pruneDepth = depth;
-      // Attribute pruned child and its subtree errors to the parent.
+      // Attribute all pruned spans in this subtree and their errors to the parent.
       if (depth > 0) {
         const parentIdx = parentByDepth[depth - 1];
         if (parentIdx != null) {
-          prunedChildCounts[parentIdx] = (prunedChildCounts[parentIdx] || 0) + 1;
+          // Count total spans in the pruned subtree (the span itself + all descendants).
+          let prunedSpanCount = 1;
+          for (let j = i + 1; j < spans.length && spans[j].depth > depth; j++) {
+            prunedSpanCount++;
+          }
+          prunedChildCounts[parentIdx] = (prunedChildCounts[parentIdx] || 0) + prunedSpanCount;
           // Count errors in the pruned span and its entire subtree.
           const errors = countSubtreeErrors(span);
           if (errors > 0) {

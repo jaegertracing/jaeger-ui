@@ -85,6 +85,9 @@ export function decodeSvcFilter(
     }
   }
 
+  // No in-range bits set → invalid filter (would prune everything)
+  if (visibleServices.size === 0) return null;
+
   // All visible → no filter
   if (visibleServices.size === sortedServiceNames.length) return null;
 
