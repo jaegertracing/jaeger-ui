@@ -4,15 +4,23 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import PrunedSpanRow from './PrunedSpanRow';
 import { IOtelSpan } from '../../../types/otel';
 
+vi.mock('./SpanTreeOffset', () =>
+  mockDefault(({ span, color }: { span: IOtelSpan; color: string }) => (
+    <span data-testid="span-tree-offset" data-depth={span.depth} data-color={color} />
+  ))
+);
+
 function makeSpan(depth: number): IOtelSpan {
   return {
-    depth,
     spanID: 'span-1',
+    depth,
+    hasChildren: true,
+    childSpans: [],
     resource: { serviceName: 'svc-a', attributes: [] },
   } as unknown as IOtelSpan;
 }
@@ -44,8 +52,8 @@ describe('PrunedSpanRow', () => {
     expect(screen.getByText('5 spans pruned')).toBeInTheDocument();
   });
 
-  it('applies indentation based on parent depth + 1', () => {
-    const { container } = render(
+  it('renders SpanTreeOffset at parent depth + 1 with gray color', () => {
+    render(
       <PrunedSpanRow
         parentSpan={makeSpan(3)}
         prunedChildrenCount={2}
@@ -54,12 +62,12 @@ describe('PrunedSpanRow', () => {
         timelineBarsVisible={true}
       />
     );
-    const wrapper = container.querySelector('.PrunedSpanRow--wrapper') as HTMLElement;
-    // depth 3 + 1 = 4, 4 * 20 + 16 = 96
-    expect(wrapper.style.paddingLeft).toBe('96px');
+    const offset = screen.getByTestId('span-tree-offset');
+    expect(offset).toHaveAttribute('data-depth', '4');
+    expect(offset).toHaveAttribute('data-color', '#bbb');
   });
 
-  it('renders the gray dot', () => {
+  it('renders label inside endpoint-name (operation name font size)', () => {
     const { container } = render(
       <PrunedSpanRow
         parentSpan={makeSpan(0)}
@@ -69,7 +77,9 @@ describe('PrunedSpanRow', () => {
         timelineBarsVisible={true}
       />
     );
-    expect(container.querySelector('.PrunedSpanRow--dot')).toBeInTheDocument();
+    const small = container.querySelector('.endpoint-name');
+    expect(small).toBeInTheDocument();
+    expect(small).toHaveTextContent('3 spans pruned');
   });
 
   it('includes error count in label when errors are present', () => {

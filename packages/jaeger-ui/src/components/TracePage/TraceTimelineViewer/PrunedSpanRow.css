@@ -3,23 +3,7 @@ Copyright (c) 2026 The Jaeger Authors.
 SPDX-License-Identifier: Apache-2.0
 */
 
-.PrunedSpanRow--wrapper {
-  display: flex;
-  align-items: center;
-  line-height: 27px;
-}
-
-.PrunedSpanRow--dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: var(--text-secondary);
-  flex-shrink: 0;
-}
-
-.PrunedSpanRow--label {
+.PrunedSpanRow--name {
   font-style: italic;
-  color: var(--text-secondary);
-  font-size: 0.9em;
+  cursor: default;
 }
