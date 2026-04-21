@@ -87,7 +87,8 @@ describe('transform ddg data', () => {
   it('checks only service when calculating focalIdx when only service is provided', () => {
     const { almostDoubleFocalPath } = testResources;
     expect(
-      outputValidator({ paths: [almostDoubleFocalPath], focalIndices: [2], ignoreFocalOperation: true }).length
+      outputValidator({ paths: [almostDoubleFocalPath], focalIndices: [2], ignoreFocalOperation: true })
+        .length
     ).toBeGreaterThan(0);
   });
 
