@@ -17,6 +17,14 @@ import {
 import { IOtelTrace } from '../../../types/otel';
 import type { SpanDetailPanelMode } from '../../../types/config';
 
+function setsEqual(a: Set<string>, b: Set<string>): boolean {
+  if (a.size !== b.size) return false;
+  for (const v of a) {
+    if (!b.has(v)) return false;
+  }
+  return true;
+}
+
 /**
  * Sanitize a pruned set against root service protection rules:
  * - If there's a single root service, it must not be pruned.
@@ -157,20 +165,33 @@ export function useServiceFilter(
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
   const zustandSetPrunedServices = useTraceTimelineStore(s => s.setPrunedServices);
 
-  // On mount (or trace change): resolve initial filter from URL or localStorage.
+  // Resolve filter from URL or localStorage whenever relevant inputs change
+  // (trace identity, URL search string). Guards against loops by comparing the
+  // resolved pruned set to the current state before writing.
   useEffect(() => {
     const { pruned, cleanSearch } = resolveInitialFilter(
       location.search,
       sortedServiceNames,
       rootServiceNames
     );
-    zustandSetPrunedServices(pruned);
-    if (cleanSearch != null) {
+
+    // Avoid unnecessary Zustand writes (and re-renders) when the resolved set matches.
+    const current = useTraceTimelineStore.getState().prunedServices;
+    if (!setsEqual(current, pruned)) {
+      zustandSetPrunedServices(pruned);
+    }
+    if (cleanSearch != null && cleanSearch !== location.search) {
       navigate({ pathname: location.pathname, search: cleanSearch }, { replace: true });
     }
-    // Intentionally only re-run when the trace identity changes, not on URL/navigate changes.
-    // oxlint-disable-next-line react-x/exhaustive-deps
-  }, [trace.traceID]);
+  }, [
+    location.pathname,
+    location.search,
+    navigate,
+    rootServiceNames,
+    sortedServiceNames,
+    trace.traceID,
+    zustandSetPrunedServices,
+  ]);
 
   const handleServiceFilterApply = useCallback(
     (nextPruned: Set<string>) => {

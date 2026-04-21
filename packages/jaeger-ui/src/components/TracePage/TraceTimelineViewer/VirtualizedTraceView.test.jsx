@@ -712,7 +712,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
           hasChildren: true,
           childSpans: [],
           resource: { ...base.resource, serviceName: 'svc-a' },
-          status: { code: 0 },
+          status: { code: 'UNSET' },
         },
         {
           ...base,
@@ -722,7 +722,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
           childSpans: [],
           parentSpan: null,
           resource: { ...base.resource, serviceName: 'svc-b' },
-          status: { code: 0 },
+          status: { code: 'UNSET' },
         },
         {
           ...base,
@@ -742,7 +742,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
           childSpans: [],
           parentSpan: null,
           resource: { ...base.resource, serviceName: 'svc-c' },
-          status: { code: 0 },
+          status: { code: 'UNSET' },
         },
       ];
       // Wire up childSpans for error counting
