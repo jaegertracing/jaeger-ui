@@ -140,15 +140,16 @@ export default function ServiceFilter({ trace, prunedServices, onApply }: Servic
                 disabled={isLocked}
                 onChange={() => handleToggle(name)}
                 aria-label={`${isVisible ? 'Hide' : 'Show'} ${name}`}
-              />
-              <span className="ServiceFilter--colorDot" style={{ backgroundColor: color }} />
-              <span className="ServiceFilter--serviceName" title={name}>
-                {name}
-              </span>
-              {isRoot && <span className="ServiceFilter--rootBadge">root</span>}
-              <span className="ServiceFilter--spanCount">
-                ({numberOfSpans} {numberOfSpans === 1 ? 'span' : 'spans'})
-              </span>
+              >
+                <span className="ServiceFilter--colorDot" style={{ backgroundColor: color }} />
+                <span className="ServiceFilter--serviceName" title={name}>
+                  {name}
+                </span>
+                {isRoot && <span className="ServiceFilter--rootBadge">root</span>}
+                <span className="ServiceFilter--spanCount">
+                  ({numberOfSpans} {numberOfSpans === 1 ? 'span' : 'spans'})
+                </span>
+              </Checkbox>
             </div>
           );
         })}

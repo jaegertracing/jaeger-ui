@@ -108,19 +108,21 @@ function buildVisibleRows(
 function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowState[] {
   const { childCounts, errorCounts } = stats;
   const result: RowState[] = [];
-  const openStack: Array<{ rowIndex: number; depth: number }> = [];
+  // Track the max spanIndex seen within each open subtree so placeholders
+  // get a non-decreasing spanIndex (avoids confusing ScrollManager navigation).
+  const openStack: Array<{ rowIndex: number; depth: number; maxSpanIndex: number }> = [];
 
-  const maybeAppendPlaceholder = (rowIndex: number) => {
-    const count = childCounts[rowIndex];
+  const maybeAppendPlaceholder = (entry: { rowIndex: number; maxSpanIndex: number }) => {
+    const count = childCounts[entry.rowIndex];
     if (!count) return;
-    const parentRow = rows[rowIndex];
+    const parentRow = rows[entry.rowIndex];
     result.push({
       span: parentRow.span,
       isDetail: false,
-      spanIndex: parentRow.spanIndex,
+      spanIndex: entry.maxSpanIndex,
       isPrunedPlaceholder: true,
       prunedChildrenCount: count,
-      prunedErrorCount: errorCounts[rowIndex] || 0,
+      prunedErrorCount: errorCounts[entry.rowIndex] || 0,
     });
   };
 
@@ -128,16 +130,33 @@ function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowStat
     const row = rows[i];
     if (!row.isDetail) {
       while (openStack.length && openStack[openStack.length - 1].depth >= row.span.depth) {
-        maybeAppendPlaceholder(openStack.pop()!.rowIndex);
+        const closed = openStack.pop()!;
+        maybeAppendPlaceholder(closed);
+        // Propagate max spanIndex to the parent entry on the stack.
+        if (openStack.length) {
+          const parent = openStack[openStack.length - 1];
+          parent.maxSpanIndex = Math.max(parent.maxSpanIndex, closed.maxSpanIndex);
+        }
       }
     }
     result.push(row);
     if (!row.isDetail) {
-      openStack.push({ rowIndex: i, depth: row.span.depth });
+      const spanIndex = row.spanIndex;
+      // Update the current top-of-stack's max with this row's spanIndex.
+      if (openStack.length) {
+        const top = openStack[openStack.length - 1];
+        top.maxSpanIndex = Math.max(top.maxSpanIndex, spanIndex);
+      }
+      openStack.push({ rowIndex: i, depth: row.span.depth, maxSpanIndex: spanIndex });
     }
   }
   while (openStack.length) {
-    maybeAppendPlaceholder(openStack.pop()!.rowIndex);
+    const closed = openStack.pop()!;
+    maybeAppendPlaceholder(closed);
+    if (openStack.length) {
+      const parent = openStack[openStack.length - 1];
+      parent.maxSpanIndex = Math.max(parent.maxSpanIndex, closed.maxSpanIndex);
+    }
   }
 
   return result;
