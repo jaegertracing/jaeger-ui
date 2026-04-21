@@ -47,10 +47,6 @@ describe('error-capture', () => {
       expect(window.fetch).not.toBe(initialFetch);
     });
 
-    it('uses attachEvent if addEventListener is missing', () => {
-      // Removed invalid IE8 test
-    });
-
     it('formatStackTrace returns empty string for undefined', () => {
       expect(formatStackTrace(undefined)).toBe('');
       expect(formatStackTrace(null as any)).toBe('');
@@ -103,17 +99,19 @@ describe('error-capture', () => {
     });
 
     it('sets up global error handlers', () => {
-      // Simulate global error
+      const mockOnError = vi.fn();
+      init({ onError: mockOnError as any });
       const errorEvent = new ErrorEvent('error', {
         error: new Error('Global error'),
         message: 'Global error message',
       });
       window.dispatchEvent(errorEvent);
-      // We need to spy on captureException, but it is exported.
-      // Instead, we check if onErrorCallback was called (if init was called)
+      expect(mockOnError).toHaveBeenCalled();
     });
 
     it('sets up unhandled rejection handler', () => {
+      const mockOnError = vi.fn();
+      init({ onError: mockOnError as any });
       class MockPromiseRejectionEvent extends Event {
         promise: Promise<any>;
         reason: any;
@@ -128,6 +126,7 @@ describe('error-capture', () => {
         reason: new Error('Unhandled rejection'),
       });
       window.dispatchEvent(rejectionEvent);
+      expect(mockOnError).toHaveBeenCalled();
     });
   });
 
@@ -155,8 +154,7 @@ describe('error-capture', () => {
 
     it('does nothing if no callback', () => {
       init({ onError: undefined });
-      // Should not throw
-      captureException(new Error('foo'));
+      expect(() => captureException(new Error('foo'))).not.toThrow();
     });
 
     it('ignores 501 errors from metrics API', () => {

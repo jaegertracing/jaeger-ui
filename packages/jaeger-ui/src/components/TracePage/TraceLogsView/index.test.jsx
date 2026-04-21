@@ -256,9 +256,9 @@ describe('<TraceLogsView>', () => {
     const trace = transformTraceData(baseTrace).asOtelTrace();
     render(<TraceLogsView trace={trace} useOtelTerms={false} />);
 
-    // Click service name column header to trigger sorter
     const serviceHeader = screen.getByText('Service');
     fireEvent.click(serviceHeader);
+    expect(serviceHeader.closest('th')).toHaveClass('ant-table-column-sort');
   });
 
   it('handles column sorting for operation/span name', () => {
@@ -267,6 +267,7 @@ describe('<TraceLogsView>', () => {
 
     const opHeader = screen.getByText('Operation');
     fireEvent.click(opHeader);
+    expect(opHeader.closest('th')).toHaveClass('ant-table-column-sort');
   });
 
   it('handles column sorting for event/log name', () => {
@@ -275,5 +276,6 @@ describe('<TraceLogsView>', () => {
 
     const logHeader = screen.getByText('Log');
     fireEvent.click(logHeader);
+    expect(logHeader.closest('th')).toHaveClass('ant-table-column-sort');
   });
 });
