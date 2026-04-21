@@ -124,6 +124,7 @@ export default defineConfig({
       'jest/no-identical-title': 'error',
       'jest/valid-title': 'error',
       'jest/valid-expect': 'error',
+      // many data-driven tests use conditionals, this linter makes them unreadable
       'jest/no-conditional-expect': 'off',
       // no-shadow forces awkward renaming even when there's no real shadowing, e.g.,
       //     const { a, b } = () => { something that prepares a, b }
