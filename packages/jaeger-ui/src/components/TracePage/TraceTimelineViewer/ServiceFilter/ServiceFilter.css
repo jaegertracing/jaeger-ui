@@ -57,10 +57,25 @@ SPDX-License-Identifier: Apache-2.0
 }
 
 .ServiceFilter--item {
+  padding: 2px 0;
+}
+
+/* Make the antd Checkbox label span the full width with children laid out in a row.
+   Checkbox renders: <label class="ant-checkbox-wrapper"><span class="ant-checkbox">…</span><span>children</span></label>
+   Both the wrapper and the children span need flex to spread the row content. */
+.ServiceFilter--item .ant-checkbox-wrapper {
   display: flex;
   align-items: center;
-  padding: 2px 0;
+  width: 100%;
+  gap: 0.35rem;
   cursor: pointer;
+}
+
+.ServiceFilter--item .ant-checkbox-wrapper > span:last-child {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
   gap: 0.35rem;
 }
 
