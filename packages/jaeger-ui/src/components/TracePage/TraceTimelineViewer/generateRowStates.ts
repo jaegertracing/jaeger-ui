@@ -59,10 +59,6 @@ function buildVisibleRows(
     }
 
     // Service filter pruning: skip this span and its entire subtree.
-    // TODO: uiFind (calculateFocusedFindRowStates) still matches against all spans
-    // including pruned ones, which can affect childrenHiddenIDs/detailStates for
-    // invisible spans. This has no visual effect (pruned rows are removed here),
-    // but ideally uiFind should exclude pruned services upstream.
     if (hasPruning && prunedServices.has(span.resource.serviceName)) {
       let prunedSpanCount = 1;
       let prunedErrors = isErrorSpan(span) ? 1 : 0;
@@ -169,4 +165,38 @@ export default function generateRowStates(
     prunedServices
   );
   return prunedStats ? insertPrunedPlaceholders(rows, prunedStats) : rows;
+}
+
+/**
+ * Returns true if a span would be pruned by the service filter.
+ * A span is pruned if its own service or any ancestor's service is in prunedServices.
+ */
+export function isSpanPruned(span: IOtelSpan, prunedServices: Set<string>): boolean {
+  if (prunedServices.size === 0) return false;
+  let current: IOtelSpan | undefined = span;
+  while (current) {
+    if (prunedServices.has(current.resource.serviceName)) return true;
+    current = current.parentSpan;
+  }
+  return false;
+}
+
+/**
+ * Filter a set of span IDs to exclude spans that would be pruned by the service filter.
+ * Used to ensure uiFind match counts and highlighting exclude invisible pruned spans.
+ */
+export function filterPrunedSpanIDs(
+  spanIDs: Set<string> | TNil,
+  spanMap: ReadonlyMap<string, IOtelSpan>,
+  prunedServices: Set<string>
+): Set<string> | TNil {
+  if (!spanIDs || prunedServices.size === 0) return spanIDs;
+  const filtered = new Set<string>();
+  for (const id of spanIDs) {
+    const span = spanMap.get(id);
+    if (span && !isSpanPruned(span, prunedServices)) {
+      filtered.add(id);
+    }
+  }
+  return filtered.size > 0 ? filtered : null;
 }

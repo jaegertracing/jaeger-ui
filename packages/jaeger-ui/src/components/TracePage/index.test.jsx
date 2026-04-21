@@ -138,6 +138,7 @@ const {
   },
   mockTraceTimelineStore: {
     focusUiFindMatches: jest.fn(),
+    prunedServices: new Set(),
   },
 }));
 

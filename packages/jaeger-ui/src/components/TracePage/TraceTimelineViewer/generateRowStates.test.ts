@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import generateRowStates from './generateRowStates';
+import generateRowStates, { isSpanPruned, filterPrunedSpanIDs } from './generateRowStates';
 import DetailState from './SpanDetail/DetailState';
 import { IOtelSpan, StatusCode } from '../../../types/otel';
 
@@ -118,5 +118,81 @@ describe('generateRowStates', () => {
       expect('isPrunedPlaceholder' in lastRow).toBe(true);
       expect(lastRow.span.spanID).toBe('span-0');
     });
+  });
+});
+
+describe('isSpanPruned', () => {
+  it('returns false when prunedServices is empty', () => {
+    const span = makeSpan({ spanID: 's1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } });
+    expect(isSpanPruned(span, new Set())).toBe(false);
+  });
+
+  it('returns true when span service is pruned', () => {
+    const span = makeSpan({ spanID: 's1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } });
+    expect(isSpanPruned(span, new Set(['svc-a']))).toBe(true);
+  });
+
+  it('returns true when an ancestor service is pruned', () => {
+    const parent = makeSpan({ spanID: 'p1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } });
+    const child = makeSpan({
+      spanID: 'c1',
+      depth: 1,
+      resource: { serviceName: 'svc-b', attributes: [] },
+      parentSpan: parent,
+    });
+    expect(isSpanPruned(child, new Set(['svc-a']))).toBe(true);
+  });
+
+  it('returns false when neither span nor ancestors are pruned', () => {
+    const parent = makeSpan({ spanID: 'p1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } });
+    const child = makeSpan({
+      spanID: 'c1',
+      depth: 1,
+      resource: { serviceName: 'svc-b', attributes: [] },
+      parentSpan: parent,
+    });
+    expect(isSpanPruned(child, new Set(['svc-c']))).toBe(false);
+  });
+});
+
+describe('filterPrunedSpanIDs', () => {
+  function buildSpanMap(spans: IOtelSpan[]): ReadonlyMap<string, IOtelSpan> {
+    return new Map(spans.map(s => [s.spanID, s]));
+  }
+
+  it('returns input unchanged when prunedServices is empty', () => {
+    const ids = new Set(['s1']);
+    expect(filterPrunedSpanIDs(ids, new Map(), new Set())).toBe(ids);
+  });
+
+  it('returns input unchanged when spanIDs is null', () => {
+    expect(filterPrunedSpanIDs(null, new Map(), new Set(['svc-a']))).toBeNull();
+  });
+
+  it('filters out spans whose service is pruned', () => {
+    const spans = [
+      makeSpan({ spanID: 's1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } }),
+      makeSpan({ spanID: 's2', depth: 0, resource: { serviceName: 'svc-b', attributes: [] } }),
+    ];
+    const result = filterPrunedSpanIDs(new Set(['s1', 's2']), buildSpanMap(spans), new Set(['svc-a']));
+    expect(result).toEqual(new Set(['s2']));
+  });
+
+  it('filters out spans whose ancestor service is pruned', () => {
+    const parent = makeSpan({ spanID: 'p1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } });
+    const child = makeSpan({
+      spanID: 'c1',
+      depth: 1,
+      resource: { serviceName: 'svc-b', attributes: [] },
+      parentSpan: parent,
+    });
+    const result = filterPrunedSpanIDs(new Set(['c1']), buildSpanMap([parent, child]), new Set(['svc-a']));
+    expect(result).toBeNull();
+  });
+
+  it('returns null when all matches are pruned', () => {
+    const spans = [makeSpan({ spanID: 's1', depth: 0, resource: { serviceName: 'svc-a', attributes: [] } })];
+    const result = filterPrunedSpanIDs(new Set(['s1']), buildSpanMap(spans), new Set(['svc-a']));
+    expect(result).toBeNull();
   });
 });
