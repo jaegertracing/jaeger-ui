@@ -72,6 +72,10 @@ export function decodeSvcFilter(
     return { visibleServices: new Set(sortedServiceNames), stale: true };
   }
 
+  // Reject overly long bitmasks to avoid expensive BigInt parsing from crafted URLs.
+  const maxHexLen = Math.ceil(sortedServiceNames.length / 4) + 1;
+  if (bitmaskHex.length > maxHexLen || !/^[\da-f]+$/i.test(bitmaskHex)) return null;
+
   let mask: bigint;
   try {
     mask = BigInt(`0x${bitmaskHex}`);

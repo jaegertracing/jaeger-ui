@@ -166,6 +166,49 @@ const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: CriticalPathSect
   _groupBy(criticalPath, x => x.spanID)
 );
 
+/**
+ * Precompute bubbled critical path sections for all parents with pruned children.
+ * Returns a map from parent spanID → merged critical path sections from pruned subtrees.
+ * Memoized so it runs once per render cycle (when criticalPath/prunedServices/spans change).
+ */
+const memoizedPrunedCriticalPaths = memoizeOne(
+  (
+    criticalPath: CriticalPathSection[],
+    prunedServices: Set<string>,
+    spans: ReadonlyArray<IOtelSpan>
+  ): Map<string, CriticalPathSection[]> => {
+    if (prunedServices.size === 0) return new Map();
+    const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
+    const result = new Map<string, CriticalPathSection[]>();
+
+    const collectFromSubtree = (s: IOtelSpan, sections: CriticalPathSection[]) => {
+      const spanSections = pathBySpanID[s.spanID];
+      if (spanSections) {
+        for (const section of spanSections) {
+          sections.push({ ...section });
+        }
+      }
+      for (const child of s.childSpans) {
+        collectFromSubtree(child, sections);
+      }
+    };
+
+    for (const span of spans) {
+      if (!span.hasChildren) continue;
+      const prunedSections: CriticalPathSection[] = [];
+      for (const child of span.childSpans) {
+        if (prunedServices.has(child.resource.serviceName)) {
+          collectFromSubtree(child, prunedSections);
+        }
+      }
+      if (prunedSections.length > 0) {
+        result.set(span.spanID, prunedSections);
+      }
+    }
+    return result;
+  }
+);
+
 // export from tests
 export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
   listView: ListView | TNil;
@@ -406,7 +449,6 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     criticalPath: CriticalPathSection[]
   ) {
     if (isCollapsed) {
-      // Collapsed: merge ALL descendant critical path sections onto the parent.
       return mergeChildrenCriticalPath(trace, span.spanID, criticalPath);
     }
 
@@ -414,29 +456,13 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const ownSections = span.spanID in pathBySpanID ? pathBySpanID[span.spanID] : [];
 
     if (hasPrunedChildren) {
-      // Expanded with pruned children: collect critical path sections from ONLY the
-      // pruned subtrees via pathBySpanID map lookups (O(pruned descendants), not O(criticalPath)).
+      // Precomputed map of parent spanID → critical path sections from pruned subtrees.
       const { prunedServices } = this.props;
-      const prunedSections: CriticalPathSection[] = [];
-      const collectFromPrunedSubtree = (s: IOtelSpan) => {
-        const sections = pathBySpanID[s.spanID];
-        if (sections) {
-          for (const section of sections) {
-            prunedSections.push({ ...section });
-          }
-        }
-        for (const child of s.childSpans) {
-          collectFromPrunedSubtree(child);
-        }
-      };
-      for (const child of span.childSpans) {
-        if (prunedServices.has(child.resource.serviceName)) {
-          collectFromPrunedSubtree(child);
-        }
+      const prunedPaths = memoizedPrunedCriticalPaths(criticalPath, prunedServices, trace.spans);
+      const prunedSections = prunedPaths.get(span.spanID);
+      if (prunedSections && prunedSections.length > 0) {
+        return [...ownSections, ...prunedSections];
       }
-
-      if (prunedSections.length === 0) return ownSections;
-      return [...ownSections, ...prunedSections];
     }
 
     return ownSections;
