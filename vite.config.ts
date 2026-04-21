@@ -125,6 +125,11 @@ export default defineConfig({
       'jest/valid-title': 'error',
       'jest/valid-expect': 'error',
       'jest/expect-expect': 'error',
+      // many data-driven tests use conditionals, this linter makes them unreadable
+      'jest/no-conditional-expect': 'off',
+      // no-shadow forces awkward renaming even when there's no real shadowing, e.g.,
+      //     const { a, b } = () => { something that prepares a, b }
+      'no-shadow': 'off',
       'import/extensions': 'off',
       // Disabled because dynamic computed namespace access (e.g. track[fn]())
       // in parameterised tests is a false positive this rule cannot validate.
@@ -137,7 +142,6 @@ export default defineConfig({
           // TypeScript files: downgrade from top-level errors to warnings since
           // tsc already enforces these more precisely than the linter can.
           'no-redeclare': 'warn',
-          'no-shadow': 'warn',
           'no-use-before-define': 'warn',
           'no-useless-constructor': 'warn',
           'no-empty-function': 'off',
