@@ -118,6 +118,22 @@ describe('generateRowStates', () => {
       expect('isPrunedPlaceholder' in lastRow).toBe(true);
       expect(lastRow.span.spanID).toBe('span-0');
     });
+
+    it('assigns non-decreasing spanIndex to placeholder rows', () => {
+      const spans = makeTestSpans();
+      // Prune svc-c (span-3, index 3 in the spans array)
+      const rows = generateRowStates(spans, new Set(), new Map(), 'inline', new Set(['svc-c']));
+      // Collect spanIndex values from non-detail rows (span bars + placeholders).
+      const spanIndices = rows.filter(r => !r.isDetail).map(r => r.spanIndex);
+      // Verify monotonically non-decreasing.
+      const isSorted = spanIndices.every((val, i) => i === 0 || val >= spanIndices[i - 1]);
+      expect(isSorted).toBe(true);
+      // The placeholder's spanIndex should be >= the last visible child's spanIndex.
+      const placeholder = rows.find(r => 'isPrunedPlaceholder' in r)!;
+      const visibleSpanRows = rows.filter(r => !r.isDetail && !('isPrunedPlaceholder' in r));
+      const lastVisible = visibleSpanRows[visibleSpanRows.length - 1];
+      expect(placeholder.spanIndex).toBeGreaterThanOrEqual(lastVisible.spanIndex);
+    });
   });
 });
 

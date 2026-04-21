@@ -534,6 +534,44 @@ describe('<VirtualizedTraceViewImpl>', () => {
       );
       expect(result).toEqual([]);
     });
+
+    it('merges only pruned subtree critical path when hasPrunedChildren is true', () => {
+      // Build a span with a pruned child that has a critical path section.
+      const parentSpan = {
+        ...trace.spans[0],
+        spanID: 'parent',
+        childSpans: [
+          {
+            spanID: 'pruned-child',
+            resource: { serviceName: 'svc-pruned' },
+            childSpans: [],
+          },
+          {
+            spanID: 'visible-child',
+            resource: { serviceName: 'svc-visible' },
+            childSpans: [],
+          },
+        ],
+      };
+      const fakeCriticalPath = [
+        { spanID: 'parent', sectionStart: 0, sectionEnd: 10 },
+        { spanID: 'pruned-child', sectionStart: 10, sectionEnd: 20 },
+        { spanID: 'visible-child', sectionStart: 20, sectionEnd: 30 },
+      ];
+      const result = VirtualizedTraceViewImpl.prototype.getCriticalPathSections.call(
+        { props: { ...mockProps, trace, prunedServices: new Set(['svc-pruned']) } },
+        false,
+        true,
+        trace,
+        parentSpan,
+        fakeCriticalPath
+      );
+      // Should include parent's own section + pruned child's section, but NOT visible child's.
+      const spanIDs = result.map(s => s.spanID);
+      expect(spanIDs).toContain('parent');
+      expect(spanIDs).toContain('pruned-child');
+      expect(spanIDs).not.toContain('visible-child');
+    });
   });
 
   describe('shouldScrollToFirstUiFindMatch', () => {
