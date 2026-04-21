@@ -287,52 +287,44 @@ describe('<VirtualizedTraceViewImpl>', () => {
   });
 
   describe('getKeyFromIndex() generates a "key" from a row index', () => {
-    function verify(input, output) {
-      expect(instance.getKeyFromIndex(input)).toBe(output);
-    }
-
     it('works when nothing is expanded or collapsed', () => {
-      verify(0, `${trace.spans[0].spanID}--bar`);
+      expect(instance.getKeyFromIndex(0)).toBe(`${trace.spans[0].spanID}--bar`);
     });
 
     it('works when rows are expanded', () => {
       const { props, detailState } = expandRow(1);
       instance = createTestInstance(props);
-      verify(1, `${trace.spans[1].spanID}--bar`);
-      verify(2, `${trace.spans[1].spanID}--detail`);
-      verify(3, `${trace.spans[2].spanID}--bar`);
+      expect(instance.getKeyFromIndex(1)).toBe(`${trace.spans[1].spanID}--bar`);
+      expect(instance.getKeyFromIndex(2)).toBe(`${trace.spans[1].spanID}--detail`);
+      expect(instance.getKeyFromIndex(3)).toBe(`${trace.spans[2].spanID}--bar`);
     });
 
     it('works when a parent span is collapsed', () => {
       const { props, spans } = addSpansAndCollapseTheirParent();
       instance = createTestInstance(props);
-      verify(1, `${spans[1].spanID}--bar`);
-      verify(2, `${spans[4].spanID}--bar`);
+      expect(instance.getKeyFromIndex(1)).toBe(`${spans[1].spanID}--bar`);
+      expect(instance.getKeyFromIndex(2)).toBe(`${spans[4].spanID}--bar`);
     });
   });
 
   describe('getIndexFromKey() converts a "key" to the corresponding row index', () => {
-    function verify(input, output) {
-      expect(instance.getIndexFromKey(input)).toBe(output);
-    }
-
     it('works when nothing is expanded or collapsed', () => {
-      verify(`${trace.spans[0].spanID}--bar`, 0);
+      expect(instance.getIndexFromKey(`${trace.spans[0].spanID}--bar`)).toBe(0);
     });
 
     it('works when rows are expanded', () => {
       const { props, detailState } = expandRow(1);
       instance = createTestInstance(props);
-      verify(`${trace.spans[1].spanID}--bar`, 1);
-      verify(`${trace.spans[1].spanID}--detail`, 2);
-      verify(`${trace.spans[2].spanID}--bar`, 3);
+      expect(instance.getIndexFromKey(`${trace.spans[1].spanID}--bar`)).toBe(1);
+      expect(instance.getIndexFromKey(`${trace.spans[1].spanID}--detail`)).toBe(2);
+      expect(instance.getIndexFromKey(`${trace.spans[2].spanID}--bar`)).toBe(3);
     });
 
     it('works when a parent span is collapsed', () => {
       const { props, spans } = addSpansAndCollapseTheirParent();
       instance = createTestInstance(props);
-      verify(`${spans[1].spanID}--bar`, 1);
-      verify(`${spans[4].spanID}--bar`, 2);
+      expect(instance.getIndexFromKey(`${spans[1].spanID}--bar`)).toBe(1);
+      expect(instance.getIndexFromKey(`${spans[4].spanID}--bar`)).toBe(2);
     });
 
     it('returns -1 for unmatched span key', () => {

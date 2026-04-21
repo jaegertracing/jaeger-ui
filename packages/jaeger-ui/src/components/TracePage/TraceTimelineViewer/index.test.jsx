@@ -153,7 +153,11 @@ describe('<TraceTimelineViewer>', () => {
 
   it('does not explode', () => {
     render(<TraceTimelineViewerImpl {...props} />);
+    expect(screen.getByTestId('virtualized-trace-view-mock')).toBeInTheDocument();
+    expect(screen.getByTestId('timeline-header-row-mock')).toBeInTheDocument();
+    const initialCount = screen.getAllByTestId('virtualized-trace-view-mock').length;
     renderWithRedux(<TraceTimelineViewer {...props} />);
+    expect(screen.getAllByTestId('virtualized-trace-view-mock')).toHaveLength(initialCount + 1);
   });
 
   it('derives selectedSpanID from Zustand detailStates', () => {
