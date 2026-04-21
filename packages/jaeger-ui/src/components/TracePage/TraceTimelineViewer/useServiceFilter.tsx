@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import queryString from 'query-string';
 
+import { isSpanPruned } from './generateRowStates';
 import ServiceFilter from './ServiceFilter';
 import { getSelectedSpanID, useTraceTimelineStore } from './store';
 import {
@@ -203,7 +204,7 @@ export function useServiceFilter(
         const currentSelectedID = getSelectedSpanID(currentDetailStates);
         if (currentSelectedID) {
           const selectedSpan = trace.spanMap.get(currentSelectedID);
-          if (selectedSpan && nextPruned.has(selectedSpan.resource.serviceName)) {
+          if (selectedSpan && isSpanPruned(selectedSpan, nextPruned)) {
             useTraceTimelineStore.setState({ detailStates: new Map() });
           }
         }

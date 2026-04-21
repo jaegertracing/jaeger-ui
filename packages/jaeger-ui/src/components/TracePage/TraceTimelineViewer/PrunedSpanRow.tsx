@@ -47,8 +47,9 @@ export default function PrunedSpanRow({
       parentSpan: null as unknown as IOtelSpan,
       resource: parentSpan.resource,
     } as unknown as IOtelSpan;
-    // Shallow copy parent with fake appended to childSpans so the last-child
-    // check in SpanTreeOffset sees the placeholder as the terminating child.
+    // Prototype-based copy: syntheticParent delegates all properties (including
+    // parentSpan for ancestor walks) to the real parentSpan, with only childSpans
+    // overridden. This lets SpanTreeOffset see the placeholder as the last child.
     const syntheticParent = Object.create(parentSpan) as IOtelSpan;
     (syntheticParent as unknown as { childSpans: IOtelSpan[] }).childSpans = [...parentSpan.childSpans, fake];
     (fake as { parentSpan: IOtelSpan }).parentSpan = syntheticParent;
