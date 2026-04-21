@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import queryString from 'query-string';
 
@@ -61,7 +61,8 @@ function sanitizePrunedServices(pruned: Set<string>, rootServiceNames: Set<strin
 export function resolveInitialFilter(
   search: string,
   sortedServiceNames: string[],
-  rootServiceNames: Set<string>
+  rootServiceNames: Set<string>,
+  skipDefaults = false
 ): { pruned: Set<string>; cleanSearch?: string } {
   const params = queryString.parse(search);
   const svcFilterParam = typeof params.svcFilter === 'string' ? params.svcFilter : null;
@@ -75,10 +76,15 @@ export function resolveInitialFilter(
         if (!decoded.visibleServices.has(name)) pruned.add(name);
       }
       const sanitized = sanitizePrunedServices(pruned, rootServiceNames);
-      // If sanitization emptied the filter, clean svcFilter from the URL.
-      if (sanitized.size === 0 && pruned.size > 0) {
+      // If sanitization changed the filter, normalize svcFilter in the URL.
+      if (!setsEqual(sanitized, pruned)) {
         const nextParams = { ...params };
-        delete nextParams.svcFilter;
+        if (sanitized.size === 0) {
+          delete nextParams.svcFilter;
+        } else {
+          const visible = new Set(sortedServiceNames.filter(n => !sanitized.has(n)));
+          nextParams.svcFilter = encodeSvcFilter(sortedServiceNames, visible);
+        }
         const cleaned = queryString.stringify(nextParams);
         return { pruned: sanitized, cleanSearch: cleaned ? `?${cleaned}` : '' };
       }
@@ -93,7 +99,8 @@ export function resolveInitialFilter(
     return { pruned: new Set(), cleanSearch: cleaned ? `?${cleaned}` : '' };
   }
 
-  // No valid URL param: try localStorage defaults.
+  // No valid URL param: try localStorage defaults (unless we just cleaned a stale URL).
+  if (skipDefaults) return { pruned: new Set() };
   try {
     const stored = localStorage.getItem(SVC_FILTER_DEFAULTS_KEY);
     if (stored) {
@@ -166,14 +173,22 @@ export function useServiceFilter(
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
   const zustandSetPrunedServices = useTraceTimelineStore(s => s.setPrunedServices);
 
+  // After cleaning a stale/sanitized URL, the effect re-runs because location.search changes.
+  // This ref prevents that re-run from falling through to localStorage defaults.
+  const skipDefaultsRef = useRef(false);
+
   // Resolve filter from URL or localStorage whenever relevant inputs change
   // (trace identity, URL search string). Guards against loops by comparing the
   // resolved pruned set to the current state before writing.
   useEffect(() => {
+    const skipDefaults = skipDefaultsRef.current;
+    skipDefaultsRef.current = false;
+
     const { pruned, cleanSearch } = resolveInitialFilter(
       location.search,
       sortedServiceNames,
-      rootServiceNames
+      rootServiceNames,
+      skipDefaults
     );
 
     // Avoid unnecessary Zustand writes (and re-renders) when the resolved set matches.
@@ -182,6 +197,7 @@ export function useServiceFilter(
       zustandSetPrunedServices(pruned);
     }
     if (cleanSearch != null && cleanSearch !== location.search) {
+      skipDefaultsRef.current = true;
       navigate({ pathname: location.pathname, search: cleanSearch }, { replace: true });
     }
   }, [

@@ -136,12 +136,13 @@ describe('resolveInitialFilter', () => {
       expect(result.cleanSearch).toBe('');
     });
 
-    it('removes sole root service but keeps other pruned services', () => {
+    it('removes sole root service but keeps other pruned services and normalizes URL', () => {
       vi.mocked(decodeSvcFilter).mockReturnValue({
         visibleServices: new Set(['svc-c']),
         stale: false,
       });
       // URL prunes svc-a (root) and svc-b — sanitization keeps svc-b pruned
+      // and normalizes the URL since the filter changed
       const result = resolveInitialFilter(
         '?svcFilter=abc.4',
         ['svc-a', 'svc-b', 'svc-c'],
@@ -149,7 +150,7 @@ describe('resolveInitialFilter', () => {
       );
       expect(result.pruned.has('svc-a')).toBe(false);
       expect(result.pruned).toEqual(new Set(['svc-b']));
-      expect(result.cleanSearch).toBeUndefined();
+      expect(result.cleanSearch).toBeDefined();
     });
 
     it('removes sole root service from pruned set (localStorage)', () => {

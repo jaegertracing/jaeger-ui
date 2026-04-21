@@ -67,6 +67,10 @@ export function decodeSvcFilter(
   const bitmaskHex = encoded.slice(dotIndex + 1);
   if (!bitmaskHex) return null;
 
+  // svcChecksum() always produces exactly 4 hex chars.
+  // Reject malformed checksum segments as invalid rather than stale.
+  if (checksumHex.length !== 4 || !/^[\da-f]{4}$/i.test(checksumHex)) return null;
+
   const currentChecksum = svcChecksum(sortedServiceNames);
   if (checksumHex.toLowerCase() !== currentChecksum.toLowerCase()) {
     return { visibleServices: new Set(sortedServiceNames), stale: true };
