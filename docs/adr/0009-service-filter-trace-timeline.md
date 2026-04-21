@@ -58,6 +58,8 @@ No filter (all services visible)
 3. **Error bubbling**: errors in pruned subtrees are counted and displayed on the placeholder row with a hollow error icon (matching the existing convention: solid = own error, hollow = descendant error).
 4. The placeholder row reuses `SpanTreeOffset` for proper tree line rendering and always appears as the last child (terminated vertical line).
 
+5. **Critical path bubbling**: when a span has pruned children, critical path segments from the pruned subtrees are merged onto the parent span bar — analogous to how collapsed spans bubble up their children's critical path. Only sections from pruned descendants are merged; visible children retain their own critical path rendering.
+
 ### Root Service Protection
 
 - **Single root service name** (even across multiple root spans): that service's checkbox is disabled — it cannot be pruned. Select None keeps it selected.

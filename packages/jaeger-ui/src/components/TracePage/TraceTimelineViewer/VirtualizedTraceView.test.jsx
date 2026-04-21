@@ -523,12 +523,13 @@ describe('<VirtualizedTraceViewImpl>', () => {
     });
 
     it('returns [] from mergeChildrenCriticalPath when criticalPath is falsy', () => {
-      const spanID = trace.spans[0].spanID;
+      const span = trace.spans[0];
       const result = VirtualizedTraceViewImpl.prototype.getCriticalPathSections.call(
         { props: { ...mockProps, trace } },
         true,
+        false,
         trace,
-        spanID,
+        span,
         undefined
       );
       expect(result).toEqual([]);

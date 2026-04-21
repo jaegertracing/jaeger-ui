@@ -400,16 +400,57 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   getCriticalPathSections(
     isCollapsed: boolean,
+    hasPrunedChildren: boolean,
     trace: IOtelTrace,
-    spanID: string,
+    span: IOtelSpan,
     criticalPath: CriticalPathSection[]
   ) {
     if (isCollapsed) {
-      return mergeChildrenCriticalPath(trace, spanID, criticalPath);
+      // Collapsed: merge ALL descendant critical path sections onto the parent.
+      return mergeChildrenCriticalPath(trace, span.spanID, criticalPath);
     }
 
     const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
-    return spanID in pathBySpanID ? pathBySpanID[spanID] : [];
+    const ownSections = span.spanID in pathBySpanID ? pathBySpanID[span.spanID] : [];
+
+    if (hasPrunedChildren) {
+      // Expanded with pruned children: merge critical path sections from ONLY the
+      // pruned subtrees onto the parent, in addition to the parent's own sections.
+      const { prunedServices } = this.props;
+      const prunedDescendantIDs = new Set<string>();
+      const collectPrunedDescendants = (s: IOtelSpan) => {
+        for (const child of s.childSpans) {
+          if (prunedServices.has(child.resource.serviceName)) {
+            prunedDescendantIDs.add(child.spanID);
+            const addAll = (c: IOtelSpan) => {
+              for (const gc of c.childSpans) {
+                prunedDescendantIDs.add(gc.spanID);
+                addAll(gc);
+              }
+            };
+            addAll(child);
+          }
+        }
+      };
+      collectPrunedDescendants(span);
+
+      if (prunedDescendantIDs.size === 0) return ownSections;
+
+      const prunedSections: CriticalPathSection[] = [];
+      criticalPath.forEach(each => {
+        if (prunedDescendantIDs.has(each.spanID)) {
+          if (prunedSections.length !== 0 && each.sectionEnd === prunedSections[0].sectionStart) {
+            prunedSections[0].sectionStart = each.sectionStart;
+          } else {
+            prunedSections.unshift({ ...each });
+          }
+        }
+      });
+
+      return [...ownSections, ...prunedSections];
+    }
+
+    return ownSections;
   }
 
   renderPrunedSpanRow(
@@ -450,6 +491,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailToggle,
       findMatchesIDs,
       nameColumnWidth,
+      prunedServices,
       selectedSpanID,
       timelineBarsVisible,
       trace,
@@ -470,7 +512,16 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isSelected = selectedSpanID === spanID;
     const hasOwnError = isErrorSpan(span);
     const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
-    const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
+    const hasPrunedChildren =
+      prunedServices.size > 0 &&
+      span.childSpans.some(child => prunedServices.has(child.resource.serviceName));
+    const criticalPathSections = this.getCriticalPathSections(
+      isCollapsed,
+      hasPrunedChildren,
+      trace,
+      span,
+      criticalPath
+    );
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
