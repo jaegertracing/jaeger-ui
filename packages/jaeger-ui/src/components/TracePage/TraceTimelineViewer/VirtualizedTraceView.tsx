@@ -414,39 +414,28 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const ownSections = span.spanID in pathBySpanID ? pathBySpanID[span.spanID] : [];
 
     if (hasPrunedChildren) {
-      // Expanded with pruned children: merge critical path sections from ONLY the
-      // pruned subtrees onto the parent, in addition to the parent's own sections.
+      // Expanded with pruned children: collect critical path sections from ONLY the
+      // pruned subtrees via pathBySpanID map lookups (O(pruned descendants), not O(criticalPath)).
       const { prunedServices } = this.props;
-      const prunedDescendantIDs = new Set<string>();
-      const collectPrunedDescendants = (s: IOtelSpan) => {
-        for (const child of s.childSpans) {
-          if (prunedServices.has(child.resource.serviceName)) {
-            prunedDescendantIDs.add(child.spanID);
-            const addAll = (c: IOtelSpan) => {
-              for (const gc of c.childSpans) {
-                prunedDescendantIDs.add(gc.spanID);
-                addAll(gc);
-              }
-            };
-            addAll(child);
+      const prunedSections: CriticalPathSection[] = [];
+      const collectFromPrunedSubtree = (s: IOtelSpan) => {
+        const sections = pathBySpanID[s.spanID];
+        if (sections) {
+          for (const section of sections) {
+            prunedSections.push({ ...section });
           }
+        }
+        for (const child of s.childSpans) {
+          collectFromPrunedSubtree(child);
         }
       };
-      collectPrunedDescendants(span);
-
-      if (prunedDescendantIDs.size === 0) return ownSections;
-
-      const prunedSections: CriticalPathSection[] = [];
-      criticalPath.forEach(each => {
-        if (prunedDescendantIDs.has(each.spanID)) {
-          if (prunedSections.length !== 0 && each.sectionEnd === prunedSections[0].sectionStart) {
-            prunedSections[0].sectionStart = each.sectionStart;
-          } else {
-            prunedSections.unshift({ ...each });
-          }
+      for (const child of span.childSpans) {
+        if (prunedServices.has(child.resource.serviceName)) {
+          collectFromPrunedSubtree(child);
         }
-      });
+      }
 
+      if (prunedSections.length === 0) return ownSections;
       return [...ownSections, ...prunedSections];
     }
 

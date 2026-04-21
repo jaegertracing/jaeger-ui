@@ -195,7 +195,9 @@ export function useServiceFilter(
   ]);
 
   const handleServiceFilterApply = useCallback(
-    (nextPruned: Set<string>) => {
+    (requested: Set<string>) => {
+      // Enforce root service protection even if the UI somehow allows it.
+      const nextPruned = sanitizePrunedServices(requested, rootServiceNames);
       zustandSetPrunedServices(nextPruned);
 
       // If the currently selected span (side panel) belongs to a pruned service, deselect it.
@@ -216,6 +218,7 @@ export function useServiceFilter(
     [
       zustandSetPrunedServices,
       detailPanelMode,
+      rootServiceNames,
       trace.spanMap,
       location.pathname,
       location.search,

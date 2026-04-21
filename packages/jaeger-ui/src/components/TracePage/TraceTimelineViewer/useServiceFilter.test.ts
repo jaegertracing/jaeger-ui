@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import React from 'react';
+import { render } from '@testing-library/react';
 import { renderHook } from '@testing-library/react';
 
 const mockNavigate = vi.fn();
@@ -34,8 +36,12 @@ vi.mock('./generateRowStates', async importOriginal => {
   return actual;
 });
 
+let capturedOnApply: ((pruned: Set<string>) => void) | null = null;
 vi.mock('./ServiceFilter', () => ({
-  default: () => null,
+  default: (props: { onApply: (pruned: Set<string>) => void }) => {
+    capturedOnApply = props.onApply;
+    return null;
+  },
 }));
 
 vi.mock('../url/svcFilter', async importOriginal => {
@@ -241,6 +247,7 @@ describe('useServiceFilter hook', () => {
     mockSetPrunedServices.mockClear();
     mockStoreState.prunedServices = new Set();
     mockStoreState.detailStates = new Map();
+    capturedOnApply = null;
     vi.mocked(useLocation).mockReturnValue({ search: '', pathname: '/trace/abc' } as ReturnType<
       typeof useLocation
     >);
@@ -294,24 +301,52 @@ describe('useServiceFilter hook', () => {
     expect(mockSetPrunedServices).toHaveBeenCalledWith(new Set(['svc-b']));
   });
 
+  function HookRenderer({ trace, mode }: { trace: IOtelTrace; mode: 'inline' | 'sidepanel' }) {
+    const { serviceFilterNode } = useServiceFilter(trace, mode);
+    return React.createElement('div', null, serviceFilterNode);
+  }
+
   it('clears selected span in sidepanel mode when its service is pruned via onApply', () => {
     const selectedSpanID = 'span-x';
-    const selectedSpan = { resource: { serviceName: 'svc-b' } } as unknown as IOtelSpan;
+    const selectedSpan = {
+      resource: { serviceName: 'svc-b' },
+      parentSpan: undefined,
+    } as unknown as IOtelSpan;
     mockStoreState.detailStates = new Map([[selectedSpanID, {}]]) as typeof mockStoreState.detailStates;
     const trace = makeTrace(['svc-a', 'svc-b']);
     (trace as unknown as { spanMap: Map<string, IOtelSpan> }).spanMap = new Map([
       [selectedSpanID, selectedSpan],
     ]);
 
-    const { result } = renderHook(() => useServiceFilter(trace, 'sidepanel'));
+    render(React.createElement(HookRenderer, { trace, mode: 'sidepanel' }));
 
-    // Extract onApply from the serviceFilterNode props indirectly by calling the hook's apply handler.
-    // The hook exposes prunedServices; we need to trigger the apply callback.
-    // Since ServiceFilter is mocked, we access handleServiceFilterApply via a re-render trick:
-    // Instead, directly test via the store mock. The hook's apply handler is in a useCallback
-    // that we can't call directly from renderHook. We verify the side panel cleanup logic by
-    // checking that setState was called when we simulate the apply through the mocked ServiceFilter.
-    // For now, verify the hook initializes correctly in sidepanel mode.
-    expect(result.current.prunedServices).toBeInstanceOf(Set);
+    expect(capturedOnApply).not.toBeNull();
+    capturedOnApply!(new Set(['svc-b']));
+
+    const storeSetState = (useTraceTimelineStore as unknown as { setState: ReturnType<typeof vi.fn> })
+      .setState;
+    expect(storeSetState).toHaveBeenCalledWith(expect.objectContaining({ detailStates: new Map() }));
+  });
+
+  it('does not clear detailStates in inline mode when service is pruned via onApply', () => {
+    const selectedSpanID = 'span-x';
+    const selectedSpan = {
+      resource: { serviceName: 'svc-b' },
+      parentSpan: undefined,
+    } as unknown as IOtelSpan;
+    mockStoreState.detailStates = new Map([[selectedSpanID, {}]]) as typeof mockStoreState.detailStates;
+    const trace = makeTrace(['svc-a', 'svc-b']);
+    (trace as unknown as { spanMap: Map<string, IOtelSpan> }).spanMap = new Map([
+      [selectedSpanID, selectedSpan],
+    ]);
+
+    render(React.createElement(HookRenderer, { trace, mode: 'inline' }));
+
+    expect(capturedOnApply).not.toBeNull();
+    capturedOnApply!(new Set(['svc-b']));
+
+    const storeSetState = (useTraceTimelineStore as unknown as { setState: ReturnType<typeof vi.fn> })
+      .setState;
+    expect(storeSetState).not.toHaveBeenCalled();
   });
 });
