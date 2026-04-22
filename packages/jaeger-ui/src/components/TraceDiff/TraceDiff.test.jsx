@@ -16,10 +16,14 @@ import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { fetchedState, TOP_NAV_HEIGHT } from '../../constants';
 
 const mockNavigate = jest.fn();
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual('react-router-dom')),
-  useNavigate: () => mockNavigate,
-}));
+
+vi.mock('react-router-dom', async () => {
+  const { BrowserRouter: ActualBrowserRouter } = await vi.importActual('react-router-dom');
+  return {
+    BrowserRouter: ActualBrowserRouter,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 // Mock redux so its exports are configurable and can be spied on with vi.spyOn.
 vi.mock('redux', async () => ({ ...(await vi.importActual('redux')) }));
