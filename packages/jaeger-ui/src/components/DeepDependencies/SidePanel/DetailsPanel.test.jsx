@@ -4,13 +4,12 @@
 // Mutable object so individual tests can control the location without re-creating the mock.
 const mockLocation = { search: '' };
 
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual('react-router-dom')),
-  useLocation: () => mockLocation,
-}));
-
 vi.mock('../../../model/path-agnostic-decorations', async () => ({
   default: jest.fn(() => ({})),
+}));
+
+vi.mock('react-router-dom', () => ({
+  useLocation: () => mockLocation,
 }));
 
 import React from 'react';

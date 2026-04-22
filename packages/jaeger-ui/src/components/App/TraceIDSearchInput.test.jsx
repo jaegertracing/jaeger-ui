@@ -11,8 +11,9 @@ import TraceIDSearchInput from './TraceIDSearchInput';
 
 const mockNavigate = jest.fn();
 vi.mock('react-router-dom', async () => {
+  const { MemoryRouter: ActualMemoryRouter } = await vi.importActual('react-router-dom');
   return {
-    ...(await vi.importActual('react-router-dom')),
+    MemoryRouter: ActualMemoryRouter,
     useNavigate: () => mockNavigate,
   };
 });

@@ -7,7 +7,7 @@ import queryString from 'query-string';
 import '@testing-library/jest-dom';
 
 vi.mock('react-router-dom', () => ({
-  useNavigate: () => jest.fn(),
+  useNavigate: () => vi.fn(),
 }));
 
 import { DeepDependencyGraphPageImpl } from '.';
