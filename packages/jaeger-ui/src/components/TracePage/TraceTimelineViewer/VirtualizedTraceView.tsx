@@ -6,11 +6,11 @@ import { useCallback } from 'react';
 import cx from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 import _isEqual from 'lodash/isEqual';
-import _groupBy from 'lodash/groupBy';
 
 import memoizeOne from 'memoize-one';
 import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
+import { getCriticalPathSections } from './criticalPath';
 import generateRowStates, { RowState } from './generateRowStates';
 import ListView from './ListView';
 import PrunedSpanRow from './PrunedSpanRow';
@@ -114,100 +114,9 @@ function getCssClasses(currentViewRange: [number, number]) {
   });
 }
 
-function mergeChildrenCriticalPath(
-  trace: IOtelTrace,
-  spanID: string,
-  criticalPath: CriticalPathSection[]
-): CriticalPathSection[] {
-  if (!criticalPath) {
-    return [];
-  }
-  // Define an array to store the IDs of the span and its descendants (if the span is collapsed)
-  const allRequiredSpanIds = new Set<string>([spanID]);
-
-  // Use pre-built spanMap
-  const spanMap = trace.spanMap;
-
-  // If the span is collapsed, recursively find all of its descendants.
-  const findAllDescendants = (span: IOtelSpan) => {
-    if (span.hasChildren && span.childSpans.length > 0) {
-      span.childSpans.forEach(child => {
-        allRequiredSpanIds.add(child.spanID);
-        findAllDescendants(child);
-      });
-    }
-  };
-
-  // Start from the initially selected span
-  const startingSpan = spanMap.get(spanID);
-  if (startingSpan) {
-    findAllDescendants(startingSpan);
-  }
-
-  const criticalPathSections: CriticalPathSection[] = [];
-  criticalPath.forEach(each => {
-    if (allRequiredSpanIds.has(each.spanID)) {
-      if (criticalPathSections.length !== 0 && each.sectionEnd === criticalPathSections[0].sectionStart) {
-        // Merge Critical Paths if they are consecutive
-        criticalPathSections[0].sectionStart = each.sectionStart;
-      } else {
-        criticalPathSections.unshift({ ...each });
-      }
-    }
-  });
-
-  return criticalPathSections;
-}
-
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
 const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
-const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: CriticalPathSection[]) =>
-  _groupBy(criticalPath, x => x.spanID)
-);
-
-/**
- * Precompute bubbled critical path sections for all parents with pruned children.
- * Returns a map from parent spanID → merged critical path sections from pruned subtrees.
- * Memoized so it runs once per render cycle (when criticalPath/prunedServices/spans change).
- */
-const memoizedPrunedCriticalPaths = memoizeOne(
-  (
-    criticalPath: CriticalPathSection[],
-    prunedServices: Set<string>,
-    spans: ReadonlyArray<IOtelSpan>
-  ): Map<string, CriticalPathSection[]> => {
-    if (prunedServices.size === 0) return new Map();
-    const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
-    const result = new Map<string, CriticalPathSection[]>();
-
-    const collectFromSubtree = (s: IOtelSpan, sections: CriticalPathSection[]) => {
-      const spanSections = pathBySpanID[s.spanID];
-      if (spanSections) {
-        for (const section of spanSections) {
-          sections.push({ ...section });
-        }
-      }
-      for (const child of s.childSpans) {
-        collectFromSubtree(child, sections);
-      }
-    };
-
-    for (const span of spans) {
-      if (!span.hasChildren) continue;
-      const prunedSections: CriticalPathSection[] = [];
-      for (const child of span.childSpans) {
-        if (prunedServices.has(child.resource.serviceName)) {
-          collectFromSubtree(child, prunedSections);
-        }
-      }
-      if (prunedSections.length > 0) {
-        result.set(span.spanID, prunedSections);
-      }
-    }
-    return result;
-  }
-);
 
 // export from tests
 export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
@@ -441,43 +350,6 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
   };
 
-  /**
-   * Critical path display invariant: a span's bar shows the critical path sections of
-   * itself and all spans hidden beneath it, whether hidden by collapse or service filter.
-   * - Collapsed: mergeChildrenCriticalPath collects the full subtree (pruning-unaware,
-   *   which is correct — a collapsed subtree is entirely hidden regardless of filter).
-   * - Expanded with pruned direct children: own sections + pruned subtree sections bubbled
-   *   up via memoizedPrunedCriticalPaths. Only direct-child pruning needs handling because
-   *   the service filter prunes entire subtrees, so the direct parent is always the nearest
-   *   visible ancestor of a pruned span.
-   */
-  getCriticalPathSections(
-    isCollapsed: boolean,
-    hasPrunedChildren: boolean,
-    trace: IOtelTrace,
-    span: IOtelSpan,
-    criticalPath: CriticalPathSection[]
-  ) {
-    if (isCollapsed) {
-      return mergeChildrenCriticalPath(trace, span.spanID, criticalPath);
-    }
-
-    const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
-    const ownSections = span.spanID in pathBySpanID ? pathBySpanID[span.spanID] : [];
-
-    if (hasPrunedChildren) {
-      // Precomputed map of parent spanID → critical path sections from pruned subtrees.
-      const { prunedServices } = this.props;
-      const prunedPaths = memoizedPrunedCriticalPaths(criticalPath, prunedServices, trace.spans);
-      const prunedSections = prunedPaths.get(span.spanID);
-      if (prunedSections && prunedSections.length > 0) {
-        return [...ownSections, ...prunedSections];
-      }
-    }
-
-    return ownSections;
-  }
-
   renderPrunedSpanRow(
     parentSpan: IOtelSpan,
     prunedChildrenCount: number,
@@ -540,12 +412,13 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const hasPrunedChildren =
       prunedServices.size > 0 &&
       span.childSpans.some(child => prunedServices.has(child.resource.serviceName));
-    const criticalPathSections = this.getCriticalPathSections(
+    const criticalPathSections = getCriticalPathSections(
+      span,
       isCollapsed,
       hasPrunedChildren,
       trace,
-      span,
-      criticalPath
+      criticalPath,
+      prunedServices
     );
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
