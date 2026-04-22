@@ -606,13 +606,18 @@ describe('<TracePage>', () => {
         expect(spanGraph).not.toBeInTheDocument();
       });
 
-      it('is true when timeline bars are hidden', () => {
-        mockLayoutPrefsStore.timelineBarsVisible = false;
-        renderWithRouter(<TracePage {...defaultProps} />);
+      describe('when timeline bars are hidden', () => {
+        afterEach(() => {
+          mockLayoutPrefsStore.timelineBarsVisible = true;
+        });
 
-        const spanGraph = screen.queryByTestId('span-graph');
-        expect(spanGraph).not.toBeInTheDocument();
-        mockLayoutPrefsStore.timelineBarsVisible = true;
+        it('is true when timeline bars are hidden', () => {
+          mockLayoutPrefsStore.timelineBarsVisible = false;
+          renderWithRouter(<TracePage {...defaultProps} />);
+
+          const spanGraph = screen.queryByTestId('span-graph');
+          expect(spanGraph).not.toBeInTheDocument();
+        });
       });
     });
 
