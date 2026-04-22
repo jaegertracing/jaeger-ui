@@ -23,16 +23,19 @@ vi.mock('isomorphic-fetch', () =>
   )
 );
 
-const mockUseLocationValue = vi.hoisted(() => ({
+const mockUseLocationValue = {
   search: '?service=test-service&operation=test-op',
-}));
+};
 
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual('react-router-dom')),
-  useNavigate: () => vi.fn(),
-  useLocation: () => mockUseLocationValue,
-  useParams: () => ({}),
-}));
+vi.mock('react-router-dom', async () => {
+  const { MemoryRouter: ActualMemoryRouter } = await vi.importActual('react-router-dom');
+  return {
+    MemoryRouter: ActualMemoryRouter,
+    useNavigate: () => vi.fn(),
+    useLocation: () => mockUseLocationValue,
+    useParams: () => ({}),
+  };
+});
 
 vi.mock('../../hooks/useTraceDiscovery', async () => ({
   useServices: vi.fn(() => ({ data: ['svc1', 'svc2'], isLoading: false })),
