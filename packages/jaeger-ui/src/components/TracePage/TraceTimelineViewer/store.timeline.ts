@@ -18,6 +18,9 @@ type TraceTimelineInteractionStore = {
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
   shouldScrollToFirstUiFindMatch: boolean;
+  prunedServices: Set<string>;
+  setPrunedServices: (pruned: Set<string>) => void;
+  clearServiceFilter: () => void;
   // Resets ephemeral fields for a new trace and optionally pre-apply a uiFind filter
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => void;
   childrenToggle: (spanID: string) => void;
@@ -41,6 +44,11 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
   childrenHiddenIDs: new Set<string>(),
   detailStates: new Map<string, DetailState>(),
   shouldScrollToFirstUiFindMatch: false,
+  prunedServices: new Set<string>(),
+
+  setPrunedServices: (pruned: Set<string>) => set({ prunedServices: new Set(pruned) }),
+
+  clearServiceFilter: () => set({ prunedServices: new Set<string>() }),
 
   setTrace: (trace: IOtelTrace, uiFind?: string | TNil) => {
     const { traceID: currentTraceID } = get();
@@ -53,6 +61,7 @@ export const useTraceTimelineStore = create<TraceTimelineInteractionStore>()((se
       childrenHiddenIDs: new Set<string>(),
       detailStates: new Map<string, DetailState>(),
       shouldScrollToFirstUiFindMatch: false,
+      prunedServices: new Set<string>(),
     };
 
     if (uiFind) {

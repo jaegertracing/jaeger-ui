@@ -17,6 +17,7 @@ import {
 } from './store';
 import SpanDetailSidePanel from './SpanDetailSidePanel';
 import TimelineHeaderRow from './TimelineHeaderRow';
+import { useServiceFilter } from './useServiceFilter';
 import VirtualizedTraceView from './VirtualizedTraceView';
 import VerticalResizer from '../../common/VerticalResizer';
 import { merge as mergeShortcuts } from '../keyboard-shortcuts';
@@ -138,6 +139,8 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
     });
   }, [collapseAll, expandAll, collapseOne, expandOne]);
 
+  const { serviceFilterNode } = useServiceFilter(trace, detailPanelMode);
+
   // When timeline bars are hidden with the side panel active, the side panel expands to absorb
   // the timeline column so the Service/Operation column keeps its pixel width unchanged.
   const effectiveSidePanelWidth =
@@ -208,6 +211,7 @@ export const TraceTimelineViewerImpl = (props: TProps) => {
       onExpandAll={expandAll}
       onExpandOne={expandOne}
       resizerMax={resizerMax}
+      serviceFilterNode={serviceFilterNode}
       sidePanelVisible={sidePanelActive}
       sidePanelWidth={effectiveSidePanelWidth}
       sidePanelLabel={sidePanelLabel}

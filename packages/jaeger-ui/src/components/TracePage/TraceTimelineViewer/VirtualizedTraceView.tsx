@@ -11,7 +11,9 @@ import _groupBy from 'lodash/groupBy';
 import memoizeOne from 'memoize-one';
 import type { Location, NavigateFunction } from 'react-router-dom';
 import { actions } from './duck';
+import generateRowStates, { RowState } from './generateRowStates';
 import ListView from './ListView';
+import PrunedSpanRow from './PrunedSpanRow';
 import SpanBarRow from './SpanBarRow';
 import DetailState from './SpanDetail/DetailState';
 import SpanDetailRow from './SpanDetailRow';
@@ -38,12 +40,6 @@ import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
 import withRouteProps from '../../../utils/withRouteProps';
-
-type RowState = {
-  isDetail: boolean;
-  span: IOtelSpan;
-  spanIndex: number;
-};
 
 type TVirtualizedTraceViewOwnProps = {
   currentViewRangeTime: [number, number];
@@ -78,6 +74,7 @@ type RouteProps = {
 
 type TDerivedStateProps = {
   selectedSpanID: string | null;
+  prunedServices: Set<string>;
 };
 
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
@@ -96,61 +93,17 @@ export const DEFAULT_HEIGHTS = {
 
 const NUM_TICKS = 5;
 
-function generateRowStates(
-  spans: ReadonlyArray<IOtelSpan> | TNil,
-  childrenHiddenIDs: Set<string>,
-  detailStates: Map<string, DetailState | TNil>,
-  detailPanelMode: 'inline' | 'sidepanel'
-): RowState[] {
-  if (!spans) {
-    return [];
-  }
-  let collapseDepth = null;
-  const rowStates = [];
-  for (let i = 0; i < spans.length; i++) {
-    const span = spans[i];
-    const { spanID, depth } = span;
-    let hidden = false;
-    if (collapseDepth != null) {
-      if (depth >= collapseDepth) {
-        hidden = true;
-      } else {
-        collapseDepth = null;
-      }
-    }
-    if (hidden) {
-      continue;
-    }
-    if (childrenHiddenIDs.has(spanID)) {
-      collapseDepth = depth + 1;
-    }
-    rowStates.push({
-      span,
-      isDetail: false,
-      spanIndex: i,
-    });
-    // In side panel mode, detail rows are shown in the panel, not inline.
-    if (detailPanelMode !== 'sidepanel' && detailStates.has(spanID)) {
-      rowStates.push({
-        span,
-        isDetail: true,
-        spanIndex: i,
-      });
-    }
-  }
-  return rowStates;
-}
-
 function generateRowStatesFromTrace(
   trace: IOtelTrace | TNil,
   childrenHiddenIDs: Set<string>,
   detailStates: Map<string, DetailState | TNil>,
-  detailPanelMode: 'inline' | 'sidepanel'
+  detailPanelMode: 'inline' | 'sidepanel',
+  prunedServices: Set<string>
 ): RowState[] {
   if (!trace) {
     return [];
   }
-  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates, detailPanelMode);
+  return generateRowStates(trace.spans, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
 }
 
 function getCssClasses(currentViewRange: [number, number]) {
@@ -211,6 +164,49 @@ const memoizedViewBoundsFunc = memoizeOne(createViewedBoundsFunc, _isEqual);
 const memoizedGetCssClasses = memoizeOne(getCssClasses, _isEqual);
 const memoizedCriticalPathsBySpanID = memoizeOne((criticalPath: CriticalPathSection[]) =>
   _groupBy(criticalPath, x => x.spanID)
+);
+
+/**
+ * Precompute bubbled critical path sections for all parents with pruned children.
+ * Returns a map from parent spanID → merged critical path sections from pruned subtrees.
+ * Memoized so it runs once per render cycle (when criticalPath/prunedServices/spans change).
+ */
+const memoizedPrunedCriticalPaths = memoizeOne(
+  (
+    criticalPath: CriticalPathSection[],
+    prunedServices: Set<string>,
+    spans: ReadonlyArray<IOtelSpan>
+  ): Map<string, CriticalPathSection[]> => {
+    if (prunedServices.size === 0) return new Map();
+    const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
+    const result = new Map<string, CriticalPathSection[]>();
+
+    const collectFromSubtree = (s: IOtelSpan, sections: CriticalPathSection[]) => {
+      const spanSections = pathBySpanID[s.spanID];
+      if (spanSections) {
+        for (const section of spanSections) {
+          sections.push({ ...section });
+        }
+      }
+      for (const child of s.childSpans) {
+        collectFromSubtree(child, sections);
+      }
+    };
+
+    for (const span of spans) {
+      if (!span.hasChildren) continue;
+      const prunedSections: CriticalPathSection[] = [];
+      for (const child of span.childSpans) {
+        if (prunedServices.has(child.resource.serviceName)) {
+          collectFromSubtree(child, prunedSections);
+        }
+      }
+      if (prunedSections.length > 0) {
+        result.set(span.spanID, prunedSections);
+      }
+    }
+    return result;
+  }
 );
 
 // export from tests
@@ -292,8 +288,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   };
 
   getRowStates(): RowState[] {
-    const { childrenHiddenIDs, detailStates, detailPanelMode, trace } = this.props;
-    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode);
+    const { childrenHiddenIDs, detailStates, detailPanelMode, prunedServices, trace } = this.props;
+    return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
   }
 
   getClippingCssClasses(): string {
@@ -373,30 +369,37 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   // use long form syntax to avert flow error
   // https://github.com/facebook/flow/issues/3076#issuecomment-290944051
   getKeyFromIndex = (index: number) => {
-    const { isDetail, span } = this.getRowStates()[index];
-    return `${span.spanID}--${isDetail ? 'detail' : 'bar'}`;
+    const row = this.getRowStates()[index];
+    if ('isPrunedPlaceholder' in row) {
+      return `${row.span.spanID}--pruned`;
+    }
+    return `${row.span.spanID}--${row.isDetail ? 'detail' : 'bar'}`;
   };
 
   getIndexFromKey = (key: string) => {
     const parts = key.split('--');
     const _spanID = parts[0];
-    const _isDetail = parts[1] === 'detail';
-    const max = this.getRowStates().length;
-    for (let i = 0; i < max; i++) {
-      const { span, isDetail } = this.getRowStates()[i];
-      if (span.spanID === _spanID && isDetail === _isDetail) {
-        return i;
-      }
+    const _type = parts[1];
+    const rows = this.getRowStates();
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (row.span.spanID !== _spanID) continue;
+      if (_type === 'pruned' && 'isPrunedPlaceholder' in row) return i;
+      if (_type === 'detail' && row.isDetail && !('isPrunedPlaceholder' in row)) return i;
+      if (_type === 'bar' && !row.isDetail && !('isPrunedPlaceholder' in row)) return i;
     }
     return -1;
   };
 
   getRowHeight = (index: number) => {
-    const { span, isDetail } = this.getRowStates()[index];
-    if (!isDetail) {
+    const row = this.getRowStates()[index];
+    if ('isPrunedPlaceholder' in row) {
       return DEFAULT_HEIGHTS.bar;
     }
-    if (Array.isArray(span.events) && span.events.length) {
+    if (!row.isDetail) {
+      return DEFAULT_HEIGHTS.bar;
+    }
+    if (Array.isArray(row.span.events) && row.span.events.length) {
       return DEFAULT_HEIGHTS.detailWithLogs;
     }
     return DEFAULT_HEIGHTS.detail;
@@ -421,24 +424,80 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     };
 
   renderRow = (key: string, style: React.CSSProperties, index: number, attrs: object) => {
-    const { isDetail, span, spanIndex } = this.getRowStates()[index];
+    const row = this.getRowStates()[index];
+    if ('isPrunedPlaceholder' in row) {
+      return this.renderPrunedSpanRow(
+        row.span,
+        row.prunedChildrenCount,
+        row.prunedErrorCount,
+        key,
+        style,
+        attrs
+      );
+    }
+    const { isDetail, span, spanIndex } = row;
     return isDetail
       ? this.renderSpanDetailRow(span, key, style, attrs)
       : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
   };
 
+  /**
+   * Critical path display invariant: a span's bar shows the critical path sections of
+   * itself and all spans hidden beneath it, whether hidden by collapse or service filter.
+   * - Collapsed: mergeChildrenCriticalPath collects the full subtree (pruning-unaware,
+   *   which is correct — a collapsed subtree is entirely hidden regardless of filter).
+   * - Expanded with pruned direct children: own sections + pruned subtree sections bubbled
+   *   up via memoizedPrunedCriticalPaths. Only direct-child pruning needs handling because
+   *   the service filter prunes entire subtrees, so the direct parent is always the nearest
+   *   visible ancestor of a pruned span.
+   */
   getCriticalPathSections(
     isCollapsed: boolean,
+    hasPrunedChildren: boolean,
     trace: IOtelTrace,
-    spanID: string,
+    span: IOtelSpan,
     criticalPath: CriticalPathSection[]
   ) {
     if (isCollapsed) {
-      return mergeChildrenCriticalPath(trace, spanID, criticalPath);
+      return mergeChildrenCriticalPath(trace, span.spanID, criticalPath);
     }
 
     const pathBySpanID = memoizedCriticalPathsBySpanID(criticalPath);
-    return spanID in pathBySpanID ? pathBySpanID[spanID] : [];
+    const ownSections = span.spanID in pathBySpanID ? pathBySpanID[span.spanID] : [];
+
+    if (hasPrunedChildren) {
+      // Precomputed map of parent spanID → critical path sections from pruned subtrees.
+      const { prunedServices } = this.props;
+      const prunedPaths = memoizedPrunedCriticalPaths(criticalPath, prunedServices, trace.spans);
+      const prunedSections = prunedPaths.get(span.spanID);
+      if (prunedSections && prunedSections.length > 0) {
+        return [...ownSections, ...prunedSections];
+      }
+    }
+
+    return ownSections;
+  }
+
+  renderPrunedSpanRow(
+    parentSpan: IOtelSpan,
+    prunedChildrenCount: number,
+    prunedErrorCount: number,
+    key: string,
+    style: React.CSSProperties,
+    attrs: object
+  ) {
+    const { nameColumnWidth, timelineBarsVisible } = this.props;
+    return (
+      <div className="VirtualizedTraceView--row" key={key} style={style} {...attrs}>
+        <PrunedSpanRow
+          parentSpan={parentSpan}
+          prunedChildrenCount={prunedChildrenCount}
+          prunedErrorCount={prunedErrorCount}
+          nameColumnWidth={nameColumnWidth}
+          timelineBarsVisible={timelineBarsVisible}
+        />
+      </div>
+    );
   }
 
   renderSpanBarRow(
@@ -457,6 +516,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailToggle,
       findMatchesIDs,
       nameColumnWidth,
+      prunedServices,
       selectedSpanID,
       timelineBarsVisible,
       trace,
@@ -477,7 +537,16 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isSelected = selectedSpanID === spanID;
     const hasOwnError = isErrorSpan(span);
     const hasChildError = isCollapsed && spanContainsErredSpan(spans, spanIndex);
-    const criticalPathSections = this.getCriticalPathSections(isCollapsed, trace, spanID, criticalPath);
+    const hasPrunedChildren =
+      prunedServices.size > 0 &&
+      span.childSpans.some(child => prunedServices.has(child.resource.serviceName));
+    const criticalPathSections = this.getCriticalPathSections(
+      isCollapsed,
+      hasPrunedChildren,
+      trace,
+      span,
+      criticalPath
+    );
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
@@ -626,6 +695,7 @@ function VirtualizedTraceViewWrapper(
   const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
   const detailStates = useTraceTimelineStore(s => s.detailStates);
   const shouldScrollToFirstUiFindMatch = useTraceTimelineStore(s => s.shouldScrollToFirstUiFindMatch);
+  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
   const selectedSpanID = detailPanelMode === 'sidepanel' ? getSelectedSpanID(detailStates) : null;
 
   const zustandSetTrace = useTraceTimelineStore(s => s.setTrace);
@@ -746,6 +816,7 @@ function VirtualizedTraceViewWrapper(
     childrenHiddenIDs,
     detailStates,
     shouldScrollToFirstUiFindMatch,
+    prunedServices,
     selectedSpanID,
     setTrace,
     childrenToggle,

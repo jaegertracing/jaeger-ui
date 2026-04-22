@@ -36,6 +36,7 @@ import { trackSlimHeaderToggle } from './TracePageHeader/TracePageHeader.track';
 import { useConfig } from '../../hooks/useConfig';
 import TracePageHeader from './TracePageHeader';
 import TraceTimelineViewer from './TraceTimelineViewer';
+import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
 import { getUrl } from './url';
@@ -165,6 +166,7 @@ export function TracePageImpl(props: TProps) {
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
+  const prunedServices = useTraceTimelineStore(s => s.prunedServices);
 
   const setDetailPanelMode = useCallback(
     (mode: SpanDetailPanelMode) => {
@@ -378,7 +380,12 @@ export function TracePageImpl(props: TProps) {
       graphFindMatches = getUiFindVertexKeys(uiFind, _get(traceDagEV, 'vertices', []));
       findCount = graphFindMatches ? graphFindMatches.size : 0;
     } else {
-      spanFindMatches = filterSpansMemo(uiFind, _get(trace, 'data.spans'));
+      const allMatches = filterSpansMemo(uiFind, _get(trace, 'data.spans'));
+      const otelTrace = trace?.data?.asOtelTrace?.();
+      spanFindMatches =
+        otelTrace && prunedServices.size > 0
+          ? filterPrunedSpanIDs(allMatches, otelTrace.spanMap, prunedServices)
+          : allMatches;
       findCount = spanFindMatches ? spanFindMatches.size : 0;
     }
   }
