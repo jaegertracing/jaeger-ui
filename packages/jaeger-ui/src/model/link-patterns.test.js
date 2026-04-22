@@ -54,7 +54,7 @@ describe('processTemplate()', () => {
         },
         a => a
       )
-    ).toThrow();
+    ).toThrow('Invalid template');
     expect(() =>
       processTemplate(
         {
@@ -62,8 +62,8 @@ describe('processTemplate()', () => {
         },
         a => a
       )
-    ).toThrow();
-    expect(() => processTemplate({}, a => a)).toThrow();
+    ).toThrow('Invalid template');
+    expect(() => processTemplate({}, a => a)).toThrow('Invalid template');
   });
 });
 
@@ -123,11 +123,11 @@ describe('createTestFunction()', () => {
   });
 
   it('rejects unknown values', () => {
-    expect(() => createTestFunction({})).toThrow();
-    expect(() => createTestFunction(true)).toThrow();
-    expect(() => createTestFunction(false)).toThrow();
-    expect(() => createTestFunction(0)).toThrow();
-    expect(() => createTestFunction(5)).toThrow();
+    expect(() => createTestFunction({})).toThrow(/Invalid value/);
+    expect(() => createTestFunction(true)).toThrow(/Invalid value/);
+    expect(() => createTestFunction(false)).toThrow(/Invalid value/);
+    expect(() => createTestFunction(0)).toThrow(/Invalid value/);
+    expect(() => createTestFunction(5)).toThrow(/Invalid value/);
   });
 });
 

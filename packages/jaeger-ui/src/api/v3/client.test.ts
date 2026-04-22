@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { JaegerClient, jaegerClient } from './client';
+import { ZodError } from 'zod';
 
 describe('JaegerClient', () => {
   let client: JaegerClient;
@@ -62,7 +63,7 @@ describe('JaegerClient', () => {
       const promise = client.fetchServices();
       vi.runAllTimers();
 
-      await expect(promise).rejects.toThrow(); // ZodError
+      await expect(promise).rejects.toBeInstanceOf(ZodError);
     });
 
     it('throws error when response is not OK', async () => {
@@ -154,7 +155,7 @@ describe('JaegerClient', () => {
       const promise = client.fetchSpanNames('test-service');
       vi.runAllTimers();
 
-      await expect(promise).rejects.toThrow(); // ZodError
+      await expect(promise).rejects.toBeInstanceOf(ZodError);
     });
 
     it('throws error when response is not OK with service name in message', async () => {
@@ -195,7 +196,7 @@ describe('JaegerClient', () => {
       const promise = client.fetchServices();
       vi.runAllTimers();
 
-      await expect(promise).rejects.toThrow(); // ZodError
+      await expect(promise).rejects.toBeInstanceOf(ZodError);
     });
 
     it('aborts and throws timeout error after default timeout (10s)', async () => {
