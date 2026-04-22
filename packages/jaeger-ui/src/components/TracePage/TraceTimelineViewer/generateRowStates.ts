@@ -29,6 +29,9 @@ type PrunedStats = {
 /**
  * First pass: build visible rows by applying manual collapse and service filter pruning.
  * Returns the visible rows and, when pruning is active, per-row pruned span/error counts.
+ *
+ * Assumes spans are in pre-order DFS order (parent before its children, siblings sorted by
+ * startTime). This is guaranteed by the trace transformation in transform-trace-data.ts.
  */
 function buildVisibleRows(
   spans: ReadonlyArray<IOtelSpan>,
@@ -69,6 +72,10 @@ function buildVisibleRows(
           prunedErrors++;
         }
       }
+      // depth == 0 means this is a root span. Root services are protected by
+      // sanitizePrunedServices, so a pruned root can only occur if the caller bypasses
+      // that guard. In that case we intentionally drop the stats — there is no parent
+      // row to attach a placeholder to.
       if (depth > 0) {
         const parentIdx = parentByDepth[depth - 1];
         if (parentIdx != null) {
@@ -104,6 +111,10 @@ function buildVisibleRows(
 /**
  * Second pass: interleave pruned placeholder rows at the end of each parent's
  * visible subtree using a depth stack (single linear scan, no splicing).
+ *
+ * Placeholders are always appended after all visible siblings of the pruned spans,
+ * not at the original position of the first pruned child. This is intentional:
+ * it keeps the visible children contiguous and avoids mid-list synthetic rows.
  */
 function insertPrunedPlaceholders(rows: RowState[], stats: PrunedStats): RowState[] {
   const { childCounts, errorCounts } = stats;

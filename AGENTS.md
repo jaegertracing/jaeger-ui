@@ -201,6 +201,10 @@ Use the GitHub API with pagination to retrieve all comments in a raw JSON format
 gh api repos/jaegertracing/jaeger-ui/pulls/:number/comments --paginate --jq '.[].body'
 ```
 
+## Performance Considerations
+
+- Jaeger UI has been tested with traces up to 80k spans. Large row counts in the trace timeline are realistic, not hypothetical. Flag O(n) per-interaction algorithms in `VirtualizedTraceView`, `generateRowStates`, and `ListView` as a real concern, not a theoretical one.
+
 ## Additional Notes
 
 - The `plexus` package is a directed graph visualization library used by jaeger-ui

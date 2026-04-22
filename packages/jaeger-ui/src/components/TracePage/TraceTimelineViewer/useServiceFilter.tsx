@@ -175,6 +175,9 @@ export function useServiceFilter(
 
   // After cleaning a stale/sanitized URL, the effect re-runs because location.search changes.
   // This ref prevents that re-run from falling through to localStorage defaults.
+  // One hop is sufficient: the cleaned URL either decodes to a valid filter (handled by the
+  // URL branch) or has no svcFilter param at all (pruned = empty, no further navigation).
+  // In neither case does resolveInitialFilter produce another cleanSearch.
   const skipDefaultsRef = useRef(false);
 
   // Resolve filter from URL or localStorage whenever relevant inputs change
@@ -223,6 +226,9 @@ export function useServiceFilter(
         if (currentSelectedID) {
           const selectedSpan = trace.spanMap.get(currentSelectedID);
           if (selectedSpan && isSpanPruned(selectedSpan, nextPruned)) {
+            // In sidepanel mode detailStates holds at most one entry (the selected span).
+            // The Map shape is a leftover from inline mode where multiple spans can be
+            // expanded simultaneously. Clearing the whole map is correct here.
             useTraceTimelineStore.setState({ detailStates: new Map() });
           }
         }

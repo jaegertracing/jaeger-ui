@@ -441,6 +441,16 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
   };
 
+  /**
+   * Critical path display invariant: a span's bar shows the critical path sections of
+   * itself and all spans hidden beneath it, whether hidden by collapse or service filter.
+   * - Collapsed: mergeChildrenCriticalPath collects the full subtree (pruning-unaware,
+   *   which is correct — a collapsed subtree is entirely hidden regardless of filter).
+   * - Expanded with pruned direct children: own sections + pruned subtree sections bubbled
+   *   up via memoizedPrunedCriticalPaths. Only direct-child pruning needs handling because
+   *   the service filter prunes entire subtrees, so the direct parent is always the nearest
+   *   visible ancestor of a pruned span.
+   */
   getCriticalPathSections(
     isCollapsed: boolean,
     hasPrunedChildren: boolean,
