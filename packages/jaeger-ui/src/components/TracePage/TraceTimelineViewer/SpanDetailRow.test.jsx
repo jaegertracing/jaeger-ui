@@ -30,6 +30,8 @@ describe('<SpanDetailRow>', () => {
     durationMicros: 100n,
     attributes: [],
     events: [],
+    hasChildren: false,
+    childSpans: [],
     resource: {
       serviceName: 'service',
       attributes: [],
@@ -91,7 +93,7 @@ describe('<SpanDetailRow>', () => {
     expect(MockSpanTreeOffset).toHaveBeenCalledTimes(1);
     expect(MockSpanTreeOffset).toHaveBeenCalledWith(
       expect.objectContaining({
-        span: props.span,
+        spanID: props.span.spanID,
         isDetailRow: true,
       })
     );

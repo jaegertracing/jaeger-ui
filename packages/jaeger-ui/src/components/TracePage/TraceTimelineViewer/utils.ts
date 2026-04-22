@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { IOtelSpan, SpanKind, StatusCode } from '../../../types/otel';
+import colorGenerator from '../../../utils/color-generator';
+import { SpanTreeOffsetAncestor } from './SpanTreeOffset';
 
 export type ViewedBoundsFunctionType = (start: number, end: number) => { start: number; end: number };
 /**
@@ -97,5 +99,51 @@ export function findServerChildSpan(spans: ReadonlyArray<IOtelSpan>): IOtelSpan 
 export const isKindClient = (span: IOtelSpan): boolean => span.kind === SpanKind.CLIENT;
 
 export const isKindProducer = (span: IOtelSpan): boolean => span.kind === SpanKind.PRODUCER;
+
+type SpanTreeOffsetState = {
+  ancestors: SpanTreeOffsetAncestor[];
+  isLastChild: boolean;
+  parentColor: string | null;
+};
+
+export function buildSpanTreeOffsetState(span: IOtelSpan): SpanTreeOffsetState {
+  const ancestorsArr: IOtelSpan[] = [];
+  let current = span.parentSpan;
+  while (current) {
+    ancestorsArr.unshift(current);
+    current = current.parentSpan;
+  }
+
+  const isLastChild = span.parentSpan
+    ? span.parentSpan.childSpans[span.parentSpan.childSpans.length - 1]?.spanID === span.spanID
+    : false;
+
+  const parentColor = span.parentSpan
+    ? colorGenerator.getColorByKey(span.parentSpan.resource.serviceName)
+    : null;
+
+  const ancestors = ancestorsArr.map((ancestor, index) => {
+    const isLastAncestor = index === ancestorsArr.length - 1;
+    let shouldTerminate = false;
+
+    if (isLastAncestor) {
+      shouldTerminate = isLastChild;
+    } else {
+      const descendantInChain = ancestorsArr[index + 1];
+      if (descendantInChain && descendantInChain.parentSpan) {
+        const parentChildren = descendantInChain.parentSpan.childSpans;
+        shouldTerminate = parentChildren[parentChildren.length - 1]?.spanID === descendantInChain.spanID;
+      }
+    }
+
+    return {
+      spanID: ancestor.spanID,
+      color: colorGenerator.getColorByKey(ancestor.resource.serviceName),
+      isTerminated: shouldTerminate,
+    };
+  });
+
+  return { ancestors, isLastChild, parentColor };
+}
 
 export { formatDuration } from '../../../utils/date';
