@@ -15,19 +15,36 @@ export class JaegerClient {
   private apiRoot = prefixUrl('/api/v3');
 
   /**
+   * Helper to handle Jaeger v3 specific error arrays in 200 OK responses.
+   * Throws an Error when the response body contains a non-empty `errors` array,
+   * surfacing the raw concatenated error messages so public methods can wrap them with context.
+   */
+  private throwIfBodyHasErrors(data: any): void {
+    if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+      const messages = data.errors.map((e: { msg: string }) => e.msg).join(', ');
+      throw new Error(messages);
+    }
+  }
+
+  /**
    * Fetch the list of services from the Jaeger API.
    * @returns Promise<string[]> - Array of service names
    */
   async fetchServices(): Promise<string[]> {
-    const response = await this.fetchWithTimeout(`${this.apiRoot}/services`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch services: ${response.status} ${response.statusText}`);
-    }
-    const data = await response.json();
+    const context = 'Failed to fetch services';
+    try {
+      const response = await this.fetchWithTimeout(`${this.apiRoot}/services`);
+      const data = await response.json();
 
-    // Runtime validation with Zod
-    const validated = ServicesResponseSchema.parse(data);
-    return validated.services;
+      this.throwIfBodyHasErrors(data);
+
+      const validated = ServicesResponseSchema.parse(data);
+      return validated.services;
+    } catch (error) {
+      // Copilot Fix: Preserve original error as cause and avoid undefined messages
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`${context}: ${message}`);
+    }
   }
 
   /**
@@ -36,19 +53,21 @@ export class JaegerClient {
    * @returns Promise<{ name: string; spanKind: string }[]> - Array of span name objects
    */
   async fetchSpanNames(service: string): Promise<{ name: string; spanKind: string }[]> {
-    const response = await this.fetchWithTimeout(
-      `${this.apiRoot}/operations?service=${encodeURIComponent(service)}`
-    );
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch span names for service "${service}": ${response.status} ${response.statusText}`
+    const context = `Failed to fetch span names for service "${service}"`;
+    try {
+      const response = await this.fetchWithTimeout(
+        `${this.apiRoot}/operations?service=${encodeURIComponent(service)}`
       );
-    }
-    const data = await response.json();
+      const data = await response.json();
 
-    // Runtime validation with Zod
-    const validated = OperationsResponseSchema.parse(data);
-    return validated.operations;
+      this.throwIfBodyHasErrors(data);
+
+      const validated = OperationsResponseSchema.parse(data);
+      return validated.operations;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`${context}: ${message}`);
+    }
   }
 
   /**
@@ -64,6 +83,22 @@ export class JaegerClient {
 
     try {
       const response = await fetch(url, { signal: controller.signal });
+
+      if (!response.ok) {
+        let errorDetail = response.statusText;
+        try {
+          const errorBody: any = await response.json();
+          if (Array.isArray(errorBody?.errors) && errorBody.errors.length > 0) {
+            errorDetail = errorBody.errors.map((e: { msg: string }) => e.msg).join(', ');
+          }
+        } catch {
+          /* Fallback to statusText if body isn't JSON */
+        }
+
+        // Copilot Fix: Richer error including URL as requested
+        throw new Error(`${response.status} (${url}) ${errorDetail}`);
+      }
+
       return response;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
