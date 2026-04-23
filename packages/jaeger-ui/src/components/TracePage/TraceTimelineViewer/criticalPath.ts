@@ -93,21 +93,13 @@ const memoizedBuildPrunedCriticalPaths = memoizeOne(buildPrunedCriticalPaths);
 
 // Display invariant: a span's bar shows critical path sections for itself and all spans
 // hidden beneath it — whether hidden by collapse or service filter.
-// Collapsed: mergeChildrenCriticalPath collects the full subtree.
 // Expanded with pruned direct children: own sections + bubbled sections from prunedPathsCache.
 function getVisibleCriticalPathSections(
   span: IOtelSpan,
-  isCollapsed: boolean,
   hasPrunedChildren: boolean,
-  trace: IOtelTrace,
-  criticalPath: CriticalPathSection[],
   pathBySpanID: Record<string, CriticalPathSection[]>,
   prunedPathsCache: Map<string, CriticalPathSection[]>
 ): CriticalPathSection[] {
-  if (isCollapsed) {
-    return mergeChildrenCriticalPath(trace, span.spanID, criticalPath);
-  }
-
   const ownSections = span.spanID in pathBySpanID ? pathBySpanID[span.spanID] : [];
 
   if (hasPrunedChildren) {
@@ -135,13 +127,5 @@ export function getCriticalPathSections(
   const prunedPathsCache = hasPrunedChildren
     ? memoizedBuildPrunedCriticalPaths(criticalPath ?? [], prunedServices, trace.spans)
     : EMPTY_MAP;
-  return getVisibleCriticalPathSections(
-    span,
-    false,
-    hasPrunedChildren,
-    trace,
-    criticalPath,
-    pathBySpanID,
-    prunedPathsCache
-  );
+  return getVisibleCriticalPathSections(span, hasPrunedChildren, pathBySpanID, prunedPathsCache);
 }
