@@ -7,7 +7,7 @@ import { IoAlert } from 'react-icons/io5';
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
 import { IOtelSpan } from '../../../types/otel';
-import colorGenerator from '../../../utils/color-generator';
+import { buildSpanTreeOffsetStateForChild } from './utils';
 
 import './PrunedSpanRow.css';
 
@@ -34,37 +34,8 @@ export default function PrunedSpanRow({
     prunedErrorCount > 0 ? `, ${prunedErrorCount} ${prunedErrorCount === 1 ? 'error' : 'errors'}` : '';
   const label = `${prunedChildrenCount} ${spanWord} pruned${errorSuffix}`;
 
-  // computes two things by walking span.parentSpan directly — no fake span, no prototype hacks.
   const treeOffsetState = useMemo(() => {
-    const ancestorsArr: IOtelSpan[] = [];
-    let current: IOtelSpan | undefined = parentSpan;
-    while (current) {
-      ancestorsArr.unshift(current);
-      current = current.parentSpan;
-    }
-
-    const parentColor = colorGenerator.getColorByKey(parentSpan.resource.serviceName);
-
-    const ancestors = ancestorsArr.map((ancestor, index) => {
-      const isLastAncestor = index === ancestorsArr.length - 1;
-      let shouldTerminate = false;
-      if (isLastAncestor) {
-        shouldTerminate = true;
-      } else {
-        const descendantInChain = ancestorsArr[index + 1];
-        if (descendantInChain && descendantInChain.parentSpan) {
-          const parentChildren = descendantInChain.parentSpan.childSpans;
-          shouldTerminate = parentChildren[parentChildren.length - 1]?.spanID === descendantInChain.spanID;
-        }
-      }
-      return {
-        spanID: ancestor.spanID,
-        color: colorGenerator.getColorByKey(ancestor.resource.serviceName),
-        isTerminated: shouldTerminate,
-      };
-    });
-
-    return { ancestors, isLastChild: true, parentColor };
+    return buildSpanTreeOffsetStateForChild(parentSpan, true);
   }, [parentSpan]);
 
   return (

@@ -3,7 +3,7 @@
 
 import { IOtelSpan, SpanKind, StatusCode } from '../../../types/otel';
 import colorGenerator from '../../../utils/color-generator';
-import { SpanTreeOffsetAncestor } from './SpanTreeOffset';
+import type { SpanTreeOffsetAncestor } from './SpanTreeOffset';
 
 export type ViewedBoundsFunctionType = (start: number, end: number) => { start: number; end: number };
 /**
@@ -106,21 +106,18 @@ type SpanTreeOffsetState = {
   parentColor: string | null;
 };
 
-export function buildSpanTreeOffsetState(span: IOtelSpan): SpanTreeOffsetState {
+export function buildSpanTreeOffsetStateForChild(
+  parentSpan: IOtelSpan,
+  isLastChild: boolean
+): SpanTreeOffsetState {
   const ancestorsArr: IOtelSpan[] = [];
-  let current = span.parentSpan;
+  let current: IOtelSpan | undefined = parentSpan;
   while (current) {
     ancestorsArr.unshift(current);
     current = current.parentSpan;
   }
 
-  const isLastChild = span.parentSpan
-    ? span.parentSpan.childSpans[span.parentSpan.childSpans.length - 1]?.spanID === span.spanID
-    : false;
-
-  const parentColor = span.parentSpan
-    ? colorGenerator.getColorByKey(span.parentSpan.resource.serviceName)
-    : null;
+  const parentColor = colorGenerator.getColorByKey(parentSpan.resource.serviceName);
 
   const ancestors = ancestorsArr.map((ancestor, index) => {
     const isLastAncestor = index === ancestorsArr.length - 1;
@@ -144,6 +141,15 @@ export function buildSpanTreeOffsetState(span: IOtelSpan): SpanTreeOffsetState {
   });
 
   return { ancestors, isLastChild, parentColor };
+}
+
+export function buildSpanTreeOffsetState(span: IOtelSpan): SpanTreeOffsetState {
+  if (!span.parentSpan) {
+    return { ancestors: [], isLastChild: false, parentColor: null };
+  }
+  const isLastChild =
+    span.parentSpan.childSpans[span.parentSpan.childSpans.length - 1]?.spanID === span.spanID;
+  return buildSpanTreeOffsetStateForChild(span.parentSpan, isLastChild);
 }
 
 export { formatDuration } from '../../../utils/date';

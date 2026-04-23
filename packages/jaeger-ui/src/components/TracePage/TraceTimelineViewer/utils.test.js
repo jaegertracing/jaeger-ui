@@ -162,26 +162,32 @@ describe('TraceTimelineViewer/utils', () => {
   });
 
   describe('buildSpanTreeOffsetState()', () => {
-    const rootSpan = {
-      spanID: 'root',
-      resource: { serviceName: 'root-svc' },
-      parentSpan: null,
-      childSpans: [],
-    };
-    const childSpan = {
-      spanID: 'child',
-      resource: { serviceName: 'child-svc' },
-      parentSpan: rootSpan,
-      childSpans: [],
-    };
-    const grandchildSpan = {
-      spanID: 'grandchild',
-      resource: { serviceName: 'grandchild-svc' },
-      parentSpan: childSpan,
-      childSpans: [],
-    };
-    rootSpan.childSpans = [childSpan];
-    childSpan.childSpans = [grandchildSpan];
+    let rootSpan;
+    let childSpan;
+    let grandchildSpan;
+
+    beforeEach(() => {
+      rootSpan = {
+        spanID: 'root',
+        resource: { serviceName: 'root-svc' },
+        parentSpan: null,
+        childSpans: [],
+      };
+      childSpan = {
+        spanID: 'child',
+        resource: { serviceName: 'child-svc' },
+        parentSpan: rootSpan,
+        childSpans: [],
+      };
+      grandchildSpan = {
+        spanID: 'grandchild',
+        resource: { serviceName: 'grandchild-svc' },
+        parentSpan: childSpan,
+        childSpans: [],
+      };
+      rootSpan.childSpans = [childSpan];
+      childSpan.childSpans = [grandchildSpan];
+    });
 
     it('handles root span correctly', () => {
       const result = buildSpanTreeOffsetState(rootSpan);
