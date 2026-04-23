@@ -133,7 +133,7 @@ export function getCriticalPathSections(
   }
   const pathBySpanID = memoizedBuildCriticalPathIndex(criticalPath ?? []);
   const prunedPathsCache = hasPrunedChildren
-    ? memoizedBuildPrunedCriticalPaths(criticalPath, prunedServices, trace.spans)
+    ? memoizedBuildPrunedCriticalPaths(criticalPath ?? [], prunedServices, trace.spans)
     : EMPTY_MAP;
   return getVisibleCriticalPathSections(
     span,
