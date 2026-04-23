@@ -90,13 +90,6 @@ vi.mock('./keyboard-shortcuts');
 vi.mock('./scroll-page');
 vi.mock('../../utils/filter-spans');
 vi.mock('../../utils/update-ui-find');
-vi.mock('react-router-dom', async () => {
-  const navigate = jest.fn();
-  return {
-    ...(await vi.importActual('react-router-dom')),
-    useNavigate: () => navigate,
-  };
-});
 vi.mock('./TracePageHeader/SpanGraph', async () =>
   mockDefault(() => <div data-testid="span-graph">SpanGraph</div>)
 );
@@ -138,6 +131,7 @@ const {
   },
   mockTraceTimelineStore: {
     focusUiFindMatches: jest.fn(),
+    prunedServices: new Set(),
   },
 }));
 
@@ -170,6 +164,15 @@ vi.mock('./TracePageHeader', async () => {
         </div>
       );
     }),
+  };
+});
+
+const mockNavigate = jest.fn();
+vi.mock('react-router-dom', async () => {
+  const { MemoryRouter: ActualMemoryRouter } = await vi.importActual('react-router-dom');
+  return {
+    MemoryRouter: ActualMemoryRouter,
+    useNavigate: () => mockNavigate,
   };
 });
 

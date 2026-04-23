@@ -1,13 +1,13 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as reactRouterDomCompat from 'react-router-dom';
+import * as ReactRouterDom from 'react-router-dom';
 
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 import { ROUTE_PATH, getUrl, getUrlState, isSameQuery, matches } from './url';
 
 vi.mock('react-router-dom', () => ({
-  matchPath: jest.fn(),
+  matchPath: vi.fn(),
 }));
 
 describe('SearchTracePage/url', () => {
@@ -20,21 +20,20 @@ describe('SearchTracePage/url', () => {
 
   describe('matches', () => {
     const path = 'path argument';
-    let matchPathSpy;
 
-    beforeAll(() => {
-      matchPathSpy = jest.spyOn(reactRouterDomCompat, 'matchPath');
+    beforeEach(() => {
+      ReactRouterDom.matchPath.mockReset();
     });
 
     it('calls matchPath with expected arguments', () => {
       matches(path);
-      expect(matchPathSpy).toHaveBeenLastCalledWith(ROUTE_PATH, path);
+      expect(ReactRouterDom.matchPath).toHaveBeenLastCalledWith(ROUTE_PATH, path);
     });
 
     it("returns truthiness of matchPath's return value", () => {
-      matchPathSpy.mockReturnValueOnce(null);
+      ReactRouterDom.matchPath.mockReturnValueOnce(null);
       expect(matches(path)).toBe(false);
-      matchPathSpy.mockReturnValueOnce({});
+      ReactRouterDom.matchPath.mockReturnValueOnce({});
       expect(matches(path)).toBe(true);
     });
   });

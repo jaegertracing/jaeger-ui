@@ -11,28 +11,41 @@ import * as KeyboardShortcuts from '../keyboard-shortcuts';
 import traceGenerator from '../../../demo/trace-generators';
 import transformTraceData from '../../../model/transform-trace-data';
 
-const { mockLayoutPrefsStore, mockTraceTimelineStore } = vi.hoisted(() => ({
-  mockLayoutPrefsStore: {
-    spanNameColumnWidth: 0.25,
-    sidePanelWidth: 0.375,
-    detailPanelMode: 'inline',
-    timelineBarsVisible: true,
-    setSpanNameColumnWidth: vi.fn(),
-    setSidePanelWidth: vi.fn(),
-    setTimelineBarsVisible: vi.fn(),
-  },
-  mockTraceTimelineStore: {
+const { mockLayoutPrefsStore, mockTraceTimelineStore, mockUseTraceTimelineStore } = vi.hoisted(() => {
+  const mockTraceTimelineStore = {
     detailStates: new Map(),
+    prunedServices: new Set(),
+    setPrunedServices: vi.fn(),
     collapseAll: vi.fn(),
     collapseOne: vi.fn(),
     expandAll: vi.fn(),
     expandOne: vi.fn(),
-  },
-}));
+  };
+  const mockUseTraceTimelineStore = Object.assign(
+    vi.fn(selector => selector(mockTraceTimelineStore)),
+    {
+      getState: () => mockTraceTimelineStore,
+      setState: vi.fn(partial => Object.assign(mockTraceTimelineStore, partial)),
+    }
+  );
+  return {
+    mockLayoutPrefsStore: {
+      spanNameColumnWidth: 0.25,
+      sidePanelWidth: 0.375,
+      detailPanelMode: 'inline',
+      timelineBarsVisible: true,
+      setSpanNameColumnWidth: vi.fn(),
+      setSidePanelWidth: vi.fn(),
+      setTimelineBarsVisible: vi.fn(),
+    },
+    mockTraceTimelineStore,
+    mockUseTraceTimelineStore,
+  };
+});
 
 vi.mock('./store', () => ({
   useLayoutPrefsStore: vi.fn(selector => selector(mockLayoutPrefsStore)),
-  useTraceTimelineStore: vi.fn(selector => selector(mockTraceTimelineStore)),
+  useTraceTimelineStore: mockUseTraceTimelineStore,
   getSelectedSpanID: detailStatesArg =>
     detailStatesArg.size > 0 ? detailStatesArg.keys().next().value : null,
   SPAN_NAME_COLUMN_WIDTH_MIN: 0.15,
@@ -42,6 +55,13 @@ vi.mock('./store', () => ({
   MIN_TIMELINE_COLUMN_WIDTH: 0.05,
 }));
 
+const mockUseServiceFilter = vi.hoisted(() => ({
+  prunedServices: new Set(),
+  serviceFilterNode: null,
+}));
+vi.mock('./useServiceFilter', () => ({
+  useServiceFilter: vi.fn(() => mockUseServiceFilter),
+}));
 vi.mock('./VirtualizedTraceView', () => mockDefault(() => <div data-testid="virtualized-trace-view-mock" />));
 vi.mock('./SpanDetailSidePanel', () => mockDefault(() => <div data-testid="span-detail-side-panel-mock" />));
 vi.mock('../../common/VerticalResizer', () => ({
@@ -54,6 +74,7 @@ vi.mock('../../common/VerticalResizer', () => ({
 vi.mock('./TimelineHeaderRow', () =>
   mockDefault(props => (
     <div data-testid="timeline-header-row-mock" data-side-panel-label={props.sidePanelLabel}>
+      {props.serviceFilterNode}
       <button data-testid="collapse-all-button" type="button" onClick={props.onCollapseAll}>
         Collapse All
       </button>
@@ -120,6 +141,9 @@ describe('<TraceTimelineViewer>', () => {
     mockLayoutPrefsStore.detailPanelMode = 'inline';
     mockLayoutPrefsStore.timelineBarsVisible = true;
     mockTraceTimelineStore.detailStates = new Map();
+    mockUseTraceTimelineStore.setState.mockClear();
+    mockUseServiceFilter.prunedServices = new Set();
+    mockUseServiceFilter.serviceFilterNode = null;
     jest.spyOn(KeyboardShortcuts, 'merge').mockClear();
   });
 
@@ -129,7 +153,11 @@ describe('<TraceTimelineViewer>', () => {
 
   it('does not explode', () => {
     render(<TraceTimelineViewerImpl {...props} />);
+    expect(screen.getByTestId('virtualized-trace-view-mock')).toBeInTheDocument();
+    expect(screen.getByTestId('timeline-header-row-mock')).toBeInTheDocument();
+    const initialCount = screen.getAllByTestId('virtualized-trace-view-mock').length;
     renderWithRedux(<TraceTimelineViewer {...props} />);
+    expect(screen.getAllByTestId('virtualized-trace-view-mock')).toHaveLength(initialCount + 1);
   });
 
   it('derives selectedSpanID from Zustand detailStates', () => {
@@ -269,5 +297,8 @@ describe('<TraceTimelineViewer>', () => {
       render(<TraceTimelineViewerImpl {...props} />);
       expect(screen.getByTestId('timeline-header-row-mock').dataset.sidePanelLabel).toBe('Span Details');
     });
+
+    // Side panel cleanup when a selected span's service is pruned is tested
+    // in useServiceFilter.test.ts (the hook owns that logic now).
   });
 });

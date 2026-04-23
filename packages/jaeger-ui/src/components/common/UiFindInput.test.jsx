@@ -18,8 +18,7 @@ vi.mock('../../utils/update-ui-find');
 const mockNavigate = jest.fn();
 const mockLocation = { search: '', pathname: '/test' };
 
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual('react-router-dom')),
+vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
 }));

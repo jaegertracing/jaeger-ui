@@ -18,8 +18,7 @@ const queryClient = new QueryClient({
 
 const mockNavigate = jest.fn();
 const mockLocation = { search: '?service=test-service&lookback=48' };
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual('react-router-dom')),
+vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
 }));
@@ -316,6 +315,7 @@ describe('QualityMetrics', () => {
         );
 
         headerMock.setLookback('test-service');
+        expect(mockNavigate).not.toHaveBeenCalled();
       });
 
       it('ignores less than one lookback', () => {

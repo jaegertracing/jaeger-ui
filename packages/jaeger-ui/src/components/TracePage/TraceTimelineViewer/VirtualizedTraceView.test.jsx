@@ -59,6 +59,7 @@ describe('<VirtualizedTraceViewImpl>', () => {
       shouldScrollToFirstUiFindMatch: false,
       spanNameColumnWidth: 0.5,
       nameColumnWidth: 0.5,
+      prunedServices: new Set(),
       trace,
       criticalPath,
       uiFind: 'uiFind',
@@ -279,59 +280,51 @@ describe('<VirtualizedTraceViewImpl>', () => {
       instance = createTestInstance(props);
       expect(instance.mapSpanIndexToRowIndex(0)).toBe(0);
       expect(instance.mapSpanIndexToRowIndex(1)).toBe(1);
-      expect(() => instance.mapSpanIndexToRowIndex(2)).toThrow();
-      expect(() => instance.mapSpanIndexToRowIndex(3)).toThrow();
+      expect(() => instance.mapSpanIndexToRowIndex(2)).toThrow(/unable to find row for span index/);
+      expect(() => instance.mapSpanIndexToRowIndex(3)).toThrow(/unable to find row for span index/);
       expect(instance.mapSpanIndexToRowIndex(4)).toBe(2);
     });
   });
 
   describe('getKeyFromIndex() generates a "key" from a row index', () => {
-    function verify(input, output) {
-      expect(instance.getKeyFromIndex(input)).toBe(output);
-    }
-
     it('works when nothing is expanded or collapsed', () => {
-      verify(0, `${trace.spans[0].spanID}--bar`);
+      expect(instance.getKeyFromIndex(0)).toBe(`${trace.spans[0].spanID}--bar`);
     });
 
     it('works when rows are expanded', () => {
       const { props, detailState } = expandRow(1);
       instance = createTestInstance(props);
-      verify(1, `${trace.spans[1].spanID}--bar`);
-      verify(2, `${trace.spans[1].spanID}--detail`);
-      verify(3, `${trace.spans[2].spanID}--bar`);
+      expect(instance.getKeyFromIndex(1)).toBe(`${trace.spans[1].spanID}--bar`);
+      expect(instance.getKeyFromIndex(2)).toBe(`${trace.spans[1].spanID}--detail`);
+      expect(instance.getKeyFromIndex(3)).toBe(`${trace.spans[2].spanID}--bar`);
     });
 
     it('works when a parent span is collapsed', () => {
       const { props, spans } = addSpansAndCollapseTheirParent();
       instance = createTestInstance(props);
-      verify(1, `${spans[1].spanID}--bar`);
-      verify(2, `${spans[4].spanID}--bar`);
+      expect(instance.getKeyFromIndex(1)).toBe(`${spans[1].spanID}--bar`);
+      expect(instance.getKeyFromIndex(2)).toBe(`${spans[4].spanID}--bar`);
     });
   });
 
   describe('getIndexFromKey() converts a "key" to the corresponding row index', () => {
-    function verify(input, output) {
-      expect(instance.getIndexFromKey(input)).toBe(output);
-    }
-
     it('works when nothing is expanded or collapsed', () => {
-      verify(`${trace.spans[0].spanID}--bar`, 0);
+      expect(instance.getIndexFromKey(`${trace.spans[0].spanID}--bar`)).toBe(0);
     });
 
     it('works when rows are expanded', () => {
       const { props, detailState } = expandRow(1);
       instance = createTestInstance(props);
-      verify(`${trace.spans[1].spanID}--bar`, 1);
-      verify(`${trace.spans[1].spanID}--detail`, 2);
-      verify(`${trace.spans[2].spanID}--bar`, 3);
+      expect(instance.getIndexFromKey(`${trace.spans[1].spanID}--bar`)).toBe(1);
+      expect(instance.getIndexFromKey(`${trace.spans[1].spanID}--detail`)).toBe(2);
+      expect(instance.getIndexFromKey(`${trace.spans[2].spanID}--bar`)).toBe(3);
     });
 
     it('works when a parent span is collapsed', () => {
       const { props, spans } = addSpansAndCollapseTheirParent();
       instance = createTestInstance(props);
-      verify(`${spans[1].spanID}--bar`, 1);
-      verify(`${spans[4].spanID}--bar`, 2);
+      expect(instance.getIndexFromKey(`${spans[1].spanID}--bar`)).toBe(1);
+      expect(instance.getIndexFromKey(`${spans[4].spanID}--bar`)).toBe(2);
     });
 
     it('returns -1 for unmatched span key', () => {
@@ -522,15 +515,57 @@ describe('<VirtualizedTraceViewImpl>', () => {
     });
 
     it('returns [] from mergeChildrenCriticalPath when criticalPath is falsy', () => {
-      const spanID = trace.spans[0].spanID;
+      const span = trace.spans[0];
       const result = VirtualizedTraceViewImpl.prototype.getCriticalPathSections.call(
         { props: { ...mockProps, trace } },
         true,
+        false,
         trace,
-        spanID,
+        span,
         undefined
       );
       expect(result).toEqual([]);
+    });
+
+    it('merges only pruned subtree critical path when hasPrunedChildren is true', () => {
+      const prunedChild = {
+        spanID: 'pruned-child',
+        hasChildren: false,
+        resource: { serviceName: 'svc-pruned' },
+        childSpans: [],
+      };
+      const visibleChild = {
+        spanID: 'visible-child',
+        hasChildren: false,
+        resource: { serviceName: 'svc-visible' },
+        childSpans: [],
+      };
+      const parentSpan = {
+        ...trace.spans[0],
+        spanID: 'parent',
+        hasChildren: true,
+        childSpans: [prunedChild, visibleChild],
+      };
+      // Create a trace whose spans array includes the parent so the memoized
+      // precomputation can find it.
+      const customTrace = { ...trace, spans: [parentSpan, prunedChild, visibleChild] };
+      const fakeCriticalPath = [
+        { spanID: 'parent', sectionStart: 0, sectionEnd: 10 },
+        { spanID: 'pruned-child', sectionStart: 10, sectionEnd: 20 },
+        { spanID: 'visible-child', sectionStart: 20, sectionEnd: 30 },
+      ];
+      const result = VirtualizedTraceViewImpl.prototype.getCriticalPathSections.call(
+        { props: { ...mockProps, trace: customTrace, prunedServices: new Set(['svc-pruned']) } },
+        false,
+        true,
+        customTrace,
+        parentSpan,
+        fakeCriticalPath
+      );
+      const spanIDs = result.map(s => s.spanID);
+      expect(spanIDs).toContain('parent');
+      expect(spanIDs).toContain('pruned-child');
+      expect(spanIDs).not.toContain('visible-child');
     });
   });
 
@@ -691,6 +726,127 @@ describe('<VirtualizedTraceViewImpl>', () => {
 
       const event = { detail: { spanID: 'test-span-123' } };
       expect(() => component._handleDetailMeasure(event)).not.toThrow();
+    });
+  });
+
+  describe('service filter pruning', () => {
+    function makeSpansWithServices() {
+      // Build a small trace with known services:
+      //   span-0: svc-a (depth 0, root)
+      //     span-1: svc-b (depth 1)
+      //       span-2: svc-b (depth 2)
+      //     span-3: svc-c (depth 1)
+      const base = trace.spans[0];
+      const spans = [
+        {
+          ...base,
+          spanID: 'span-0',
+          depth: 0,
+          hasChildren: true,
+          childSpans: [],
+          resource: { ...base.resource, serviceName: 'svc-a' },
+          status: { code: 'UNSET' },
+        },
+        {
+          ...base,
+          spanID: 'span-1',
+          depth: 1,
+          hasChildren: true,
+          childSpans: [],
+          parentSpan: null,
+          resource: { ...base.resource, serviceName: 'svc-b' },
+          status: { code: 'UNSET' },
+        },
+        {
+          ...base,
+          spanID: 'span-2',
+          depth: 2,
+          hasChildren: false,
+          childSpans: [],
+          parentSpan: null,
+          resource: { ...base.resource, serviceName: 'svc-b' },
+          status: { code: 'ERROR' }, // StatusCode.ERROR is the string 'ERROR' (see types/otel.ts)
+        },
+        {
+          ...base,
+          spanID: 'span-3',
+          depth: 1,
+          hasChildren: false,
+          childSpans: [],
+          parentSpan: null,
+          resource: { ...base.resource, serviceName: 'svc-c' },
+          status: { code: 'UNSET' },
+        },
+      ];
+      // Wire up childSpans for error counting
+      spans[1].childSpans = [spans[2]];
+      spans[0].childSpans = [spans[1], spans[3]];
+      spans[1].parentSpan = spans[0];
+      spans[2].parentSpan = spans[1];
+      spans[3].parentSpan = spans[0];
+      return { ...trace, spans };
+    }
+
+    // Pure pruning logic (subtree removal, placeholder counts, error counting)
+    // is tested in generateRowStates.test.ts.
+
+    it('generates correct keys for pruned placeholder rows', () => {
+      const customTrace = makeSpansWithServices();
+      const inst = createTestInstance({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+      });
+      const rows = inst.getRowStates();
+      const prunedIdx = rows.findIndex(r => r.isPrunedPlaceholder);
+      expect(inst.getKeyFromIndex(prunedIdx)).toBe('span-0--pruned');
+    });
+
+    it('returns correct index from pruned key', () => {
+      const customTrace = makeSpansWithServices();
+      const inst = createTestInstance({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+      });
+      const rows = inst.getRowStates();
+      const prunedIdx = rows.findIndex(r => r.isPrunedPlaceholder);
+      expect(inst.getIndexFromKey('span-0--pruned')).toBe(prunedIdx);
+    });
+
+    it('returns bar height for pruned placeholder rows', () => {
+      const customTrace = makeSpansWithServices();
+      const inst = createTestInstance({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+      });
+      const rows = inst.getRowStates();
+      const prunedIdx = rows.findIndex(r => r.isPrunedPlaceholder);
+      expect(inst.getRowHeight(prunedIdx)).toBe(DEFAULT_HEIGHTS.bar);
+    });
+
+    it('produces no placeholders when prunedServices is empty', () => {
+      const inst = createTestInstance({
+        ...mockProps,
+        prunedServices: new Set(),
+      });
+      const rows = inst.getRowStates();
+      expect(rows.filter(r => r.isPrunedPlaceholder)).toHaveLength(0);
+    });
+
+    it('renderRow dispatches to renderPrunedSpanRow for pruned placeholders', () => {
+      const customTrace = makeSpansWithServices();
+      const component = new VirtualizedTraceViewImpl({
+        ...mockProps,
+        trace: customTrace,
+        prunedServices: new Set(['svc-b']),
+      });
+      const rows = component.getRowStates();
+      const prunedIdx = rows.findIndex(r => r.isPrunedPlaceholder);
+      // renderRow should not throw for pruned placeholder
+      const result = component.renderRow('key', {}, prunedIdx, {});
+      expect(result).toBeTruthy();
     });
   });
 });

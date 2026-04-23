@@ -94,7 +94,7 @@ describe('getPathElemHasher()', () => {
         density: `${EDdgDensity.MostConcise} ${EDdgDensity.MostConcise}`,
         showOp: true,
       });
-    expect(invalidDensity).toThrow();
+    expect(invalidDensity).toThrow(/Density.*has not been implemented/);
 
     const missingDensity = () => new GraphModel({ ddgModel, density: undefined, showOp: true });
     expect(missingDensity).toThrow(/has not been implemented/);
