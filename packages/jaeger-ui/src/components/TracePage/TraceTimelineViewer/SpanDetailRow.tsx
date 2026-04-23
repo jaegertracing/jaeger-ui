@@ -1,13 +1,12 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
-import { computeSpanAncestors } from './spanAncestors';
 
 import { IOtelSpan, IAttribute, IEvent } from '../../../types/otel';
 import { Hyperlink } from '../../../types/hyperlink';
@@ -42,12 +41,6 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
 
   const { span } = props;
 
-  const ancestors = useMemo(() => (span.parentSpan ? computeSpanAncestors(span.parentSpan) : []), [span]);
-  const isLastChild = useMemo(() => {
-    const parent = span.parentSpan;
-    return parent ? parent.childSpans[parent.childSpans.length - 1]?.spanID === span.spanID : false;
-  }, [span]);
-
   const {
     color,
     nameColumnWidth,
@@ -70,16 +63,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     <TimelineRow className="detail-row">
       {timelineBarsVisible && (
         <TimelineRow.Cell width={nameColumnWidth}>
-          <SpanTreeOffset
-            spanID={span.spanID}
-            hasChildren={span.hasChildren}
-            childCount={span.childSpans.length}
-            ancestors={ancestors}
-            isLastChild={isLastChild}
-            showChildrenIcon={false}
-            isDetailRow
-            color={color}
-          />
+          <SpanTreeOffset span={span} showChildrenIcon={false} isDetailRow color={color} />
           <span>
             <span
               className="detail-row-expanded-accent"

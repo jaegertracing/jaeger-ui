@@ -87,6 +87,7 @@ function mergeChildrenCriticalPath(
   return criticalPathSections;
 }
 
+const EMPTY_CRITICAL_PATH: CriticalPathSection[] = [];
 const EMPTY_MAP: Map<string, CriticalPathSection[]> = new Map();
 const memoizedBuildCriticalPathIndex = memoizeOne(buildCriticalPathIndex);
 const memoizedBuildPrunedCriticalPaths = memoizeOne(buildPrunedCriticalPaths);
@@ -123,9 +124,10 @@ export function getCriticalPathSections(
   if (isCollapsed) {
     return mergeChildrenCriticalPath(trace, span.spanID, criticalPath);
   }
-  const pathBySpanID = memoizedBuildCriticalPathIndex(criticalPath ?? []);
+  const resolvedPath = criticalPath ?? EMPTY_CRITICAL_PATH;
+  const pathBySpanID = memoizedBuildCriticalPathIndex(resolvedPath);
   const prunedPathsCache = hasPrunedChildren
-    ? memoizedBuildPrunedCriticalPaths(criticalPath ?? [], prunedServices, trace.spans)
+    ? memoizedBuildPrunedCriticalPaths(resolvedPath, prunedServices, trace.spans)
     : EMPTY_MAP;
   return getVisibleCriticalPathSections(span, hasPrunedChildren, pathBySpanID, prunedPathsCache);
 }
