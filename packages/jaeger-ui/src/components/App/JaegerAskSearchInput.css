@@ -1,0 +1,58 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.JaegerAskSearchInput--form {
+  line-height: inherit;
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+/* Dark styling for header search - nav is always dark */
+.JaegerAskSearchInput--input.ant-input-affix-wrapper {
+  width: 10.5rem;
+  max-width: 100%;
+  transition:
+    width 0.2s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.JaegerAskSearchInput--form:focus-within .JaegerAskSearchInput--input.ant-input-affix-wrapper,
+.JaegerAskSearchInput--input.ant-input-affix-wrapper:hover,
+.JaegerAskSearchInput--input.ant-input-affix-wrapper:focus,
+.JaegerAskSearchInput--input.ant-input-affix-wrapper-focused {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.JaegerAskSearchInput--form:focus-within .JaegerAskSearchInput--input.ant-input-affix-wrapper,
+.JaegerAskSearchInput--input.ant-input-affix-wrapper-focused {
+  width: min(26rem, 85vw);
+}
+
+.JaegerAskSearchInput--input .ant-input {
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.JaegerAskSearchInput--input .ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.JaegerAskSearchInput--input .ant-input-prefix {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.JaegerAskSearchInput--input .ant-input-clear-icon {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.JaegerAskSearchInput--input .ant-input-clear-icon:hover {
+  color: rgba(255, 255, 255, 0.85);
+}

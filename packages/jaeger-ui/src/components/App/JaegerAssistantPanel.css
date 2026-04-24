@@ -1,0 +1,161 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.JaegerAssistantPanel {
+  flex: 0 0 min(100%, 26rem);
+  max-width: 26rem;
+  min-width: 20rem;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border-default);
+  background-color: var(--surface-primary);
+  align-self: flex-start;
+  position: sticky;
+  top: var(--nav-height);
+  height: calc(100vh - var(--nav-height));
+  max-height: calc(100vh - var(--nav-height));
+  min-height: 0;
+  overflow: hidden;
+}
+
+.JaegerAssistantPanel-topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid var(--border-default);
+  background-color: var(--surface-secondary);
+  flex-shrink: 0;
+}
+
+.JaegerAssistantPanel-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.JaegerAssistantPanel-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.JaegerAssistantPanel-close:hover {
+  background-color: var(--surface-component-background);
+  color: var(--text-primary);
+}
+
+.JaegerAssistantPanel-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.JaegerAssistantPanel-thread {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.JaegerAssistantPanel-viewport {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.65rem;
+}
+
+.JaegerAssistantPanel-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.JaegerAssistantPanel-row {
+  margin-bottom: 0.65rem;
+}
+
+.JaegerAssistantPanel-message {
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.JaegerAssistantPanel-message--user {
+  background-color: var(--interactive-primary-light);
+  color: var(--text-primary);
+  margin-left: 1.25rem;
+}
+
+.JaegerAssistantPanel-message--assistant {
+  background-color: var(--surface-tertiary);
+  color: var(--text-primary);
+  margin-right: 1.25rem;
+}
+
+.JaegerAssistantPanel-messageText {
+  white-space: pre-wrap;
+}
+
+.JaegerAssistantPanel-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.5rem 0.65rem 0.65rem;
+  border-top: 1px solid var(--border-default);
+  background-color: var(--surface-secondary);
+  flex-shrink: 0;
+}
+
+.JaegerAssistantPanel-composerInput {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  background-color: var(--surface-primary);
+  resize: none;
+}
+
+.JaegerAssistantPanel-composerInput:focus {
+  outline: 2px solid var(--interactive-primary);
+  outline-offset: 1px;
+}
+
+.JaegerAssistantPanel-send {
+  align-self: flex-end;
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  background-color: var(--interactive-primary);
+  color: var(--text-inverse);
+}
+
+.JaegerAssistantPanel-send:hover:not(:disabled) {
+  background-color: var(--interactive-primary-hover);
+}
+
+.JaegerAssistantPanel-send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

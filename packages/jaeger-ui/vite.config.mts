@@ -228,6 +228,13 @@ export default defineConfig({
       '/analytics': proxyConfig,
       '/serviceedges': proxyConfig,
       '/qualitymetrics-v2': proxyConfig,
+      // AG-UI assistant backend (set VITE_JAEGER_AG_UI_URL=/jaeger-ag-ui in .env.local).
+      '/jaeger-ag-ui': {
+        target: process.env.VITE_JAEGER_AG_UI_PROXY_TARGET || 'http://localhost:8090',
+        secure: false,
+        changeOrigin: true,
+        ws: true,
+      },
     },
   },
   base: './',
