@@ -18,9 +18,14 @@ import { StatusCode } from '../../../types/otel';
 
 const mockNavigate = jest.fn();
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+  const { MemoryRouter: ActualMemoryRouter } = await vi.importActual('react-router-dom');
   return {
-    ...actual,
+    MemoryRouter: ActualMemoryRouter,
+    Link: ({ to, children, className, ...rest }) => (
+      <a href={typeof to === 'string' ? to : '#'} className={className} {...rest}>
+        {children}
+      </a>
+    ),
     useNavigate: () => mockNavigate,
   };
 });
@@ -85,7 +90,7 @@ vi.mock('../../common/SearchableSelect', () => {
 
 afterEach(() => {
   cleanup();
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 const baseTraces = [

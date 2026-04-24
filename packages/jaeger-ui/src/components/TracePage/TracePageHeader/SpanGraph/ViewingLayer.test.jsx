@@ -40,7 +40,7 @@ describe('<SpanGraph>', () => {
 
     it('throws if _root is not set', () => {
       ref.current._root = null;
-      expect(() => ref.current._getDraggingBounds(dragTypes.REFRAME)).toThrow();
+      expect(() => ref.current._getDraggingBounds(dragTypes.REFRAME)).toThrow('invalid state');
     });
 
     it('returns the correct bounds for reframe', () => {
