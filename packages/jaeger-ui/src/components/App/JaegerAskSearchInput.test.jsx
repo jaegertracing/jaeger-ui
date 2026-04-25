@@ -27,19 +27,35 @@ vi.mock('./jaegerAgUi', () => ({
   isJaegerAssistantConfigured: () => agUiMock.configured,
 }));
 
+function openTextarea() {
+  fireEvent.click(screen.getByTestId('JaegerAskSearchInput--input'));
+  return screen.getByTestId('JaegerAskSearchInput--textarea');
+}
+
 describe('<JaegerAskSearchInput />', () => {
   beforeEach(() => {
     mockNavigate.mockReset();
     agUiMock.configured = false;
   });
 
-  it('renders as expected', () => {
+  it('renders the trigger button', () => {
     render(
       <MemoryRouter>
         <JaegerAskSearchInput />
       </MemoryRouter>
     );
     expect(screen.getByTestId('JaegerAskSearchInput--input')).toBeInTheDocument();
+  });
+
+  it('opens the floating textarea when trigger is clicked', () => {
+    render(
+      <MemoryRouter>
+        <JaegerAskSearchInput />
+      </MemoryRouter>
+    );
+    expect(screen.queryByTestId('JaegerAskSearchInput--textarea')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('JaegerAskSearchInput--input'));
+    expect(screen.getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
   });
 
   it('navigates to trace page when assistant is not configured', () => {
@@ -49,10 +65,9 @@ describe('<JaegerAskSearchInput />', () => {
       </MemoryRouter>
     );
     const traceId = 'MOCK-TRACE-ID';
-    fireEvent.change(screen.getByPlaceholderText('Lookup by Trace ID…'), {
-      target: { value: traceId },
-    });
-    fireEvent.submit(screen.getByTestId('JaegerAskSearchInput--form'));
+    const textarea = openTextarea();
+    fireEvent.change(textarea, { target: { value: traceId } });
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
     expect(mockNavigate).toHaveBeenCalledTimes(1);
     expect(mockNavigate).toHaveBeenCalledWith(`/trace/${traceId.toLowerCase()}`);
@@ -64,8 +79,20 @@ describe('<JaegerAskSearchInput />', () => {
         <JaegerAskSearchInput />
       </MemoryRouter>
     );
-    fireEvent.submit(screen.getByTestId('JaegerAskSearchInput--form'));
+    const textarea = openTextarea();
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
     expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('closes the textarea on Escape', () => {
+    render(
+      <MemoryRouter>
+        <JaegerAskSearchInput />
+      </MemoryRouter>
+    );
+    const textarea = openTextarea();
+    fireEvent.keyDown(textarea, { key: 'Escape' });
+    expect(screen.queryByTestId('JaegerAskSearchInput--textarea')).not.toBeInTheDocument();
   });
 
   it('opens assistant for natural language when configured instead of navigating', () => {
@@ -78,10 +105,9 @@ describe('<JaegerAskSearchInput />', () => {
       </MemoryRouter>
     );
 
-    fireEvent.change(screen.getByPlaceholderText('Ask Jaeger or lookup trace ID…'), {
-      target: { value: 'What is a trace?' },
-    });
-    fireEvent.submit(screen.getByTestId('JaegerAskSearchInput--form'));
+    const textarea = openTextarea();
+    fireEvent.change(textarea, { target: { value: 'What is a trace?' } });
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
     expect(mockNavigate).not.toHaveBeenCalled();
   });
@@ -97,11 +123,23 @@ describe('<JaegerAskSearchInput />', () => {
     );
 
     const traceId = 'a1b2c3d4e5f67890';
-    fireEvent.change(screen.getByTestId('JaegerAskSearchInput--input'), {
-      target: { value: traceId },
-    });
-    fireEvent.submit(screen.getByTestId('JaegerAskSearchInput--form'));
+    const textarea = openTextarea();
+    fireEvent.change(textarea, { target: { value: traceId } });
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
 
     expect(mockNavigate).toHaveBeenCalledWith(`/trace/${traceId.toLowerCase()}`);
+  });
+
+  it('Shift+Enter does not submit', () => {
+    render(
+      <MemoryRouter>
+        <JaegerAskSearchInput />
+      </MemoryRouter>
+    );
+    const textarea = openTextarea();
+    fireEvent.change(textarea, { target: { value: 'some query' } });
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: true });
+    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(screen.getByTestId('JaegerAskSearchInput--textarea')).toBeInTheDocument();
   });
 });
