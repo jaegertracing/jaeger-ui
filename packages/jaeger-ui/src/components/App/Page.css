@@ -22,6 +22,28 @@ SPDX-License-Identifier: Apache-2.0
   background-color: var(--surface-primary);
 }
 
+.Page--assistantShell {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.Page--assistantMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* When the assistant dock is open, confine trace fixed layers to the main column (see CSS spec: fixed + transform containing block). */
+.Page--assistantShell--open .Page--assistantMain {
+  transform: translateZ(0);
+}
+
 .Page--content--no-embedded {
   top: var(--nav-height);
 }

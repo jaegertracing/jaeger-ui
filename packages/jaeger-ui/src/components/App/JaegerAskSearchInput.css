@@ -1,0 +1,110 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+/* Trigger bar */
+.JaegerAskSearchInput--trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.75rem;
+  height: 32px;
+  width: 10.5rem;
+  max-width: 100%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  cursor: text;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+  vertical-align: middle;
+}
+
+.JaegerAskSearchInput--trigger:hover,
+.JaegerAskSearchInput--trigger:focus,
+.JaegerAskSearchInput--trigger[aria-expanded='true'] {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  outline: none;
+}
+
+.JaegerAskSearchInput--triggerIcon {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.JaegerAskSearchInput--triggerLabel {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+}
+
+/* Floating textarea panel */
+.JaegerAskSearchInput--float {
+  position: fixed;
+  z-index: 1060;
+  width: min(26rem, 92vw);
+  background-color: #1b2438;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.JaegerAskSearchInput--textarea {
+  display: block;
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  line-height: 1.55;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+}
+
+.JaegerAskSearchInput--textarea::placeholder {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+/* Toggle button */
+.JaegerAssistantToggle--btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.65);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+  vertical-align: middle;
+}
+
+.JaegerAssistantToggle--btn:hover,
+.JaegerAssistantToggle--btn:focus {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.95);
+  outline: none;
+}
+
+.JaegerAssistantToggle--btn--active {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+}

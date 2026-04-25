@@ -228,6 +228,17 @@ export default defineConfig({
       '/analytics': proxyConfig,
       '/serviceedges': proxyConfig,
       '/qualitymetrics-v2': proxyConfig,
+      // Optional proxy for AG-UI backends that run on a separate port.
+      // The assistant defaults to /api/ai/chat (covered by the /api proxy above).
+      // Override with VITE_JAEGER_AG_UI_URL=/jaeger-ag-ui and
+      // VITE_JAEGER_AG_UI_PROXY_TARGET=http://host:port only when your AG-UI
+      // backend is not co-located with the Jaeger query service.
+      '/jaeger-ag-ui': {
+        target: process.env.VITE_JAEGER_AG_UI_PROXY_TARGET || 'http://localhost:8090',
+        secure: false,
+        changeOrigin: true,
+        ws: true,
+      },
     },
   },
   base: './',

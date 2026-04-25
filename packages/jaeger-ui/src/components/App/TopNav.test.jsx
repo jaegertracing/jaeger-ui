@@ -254,7 +254,7 @@ describe('<TopNav>', () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
+    expect(screen.getByTestId('JaegerAskSearchInput--input')).toBeInTheDocument();
   });
 });
 

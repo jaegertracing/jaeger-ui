@@ -8,7 +8,7 @@ import _has from 'lodash/has';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 
-import TraceIDSearchInput from './TraceIDSearchInput';
+import JaegerAskSearchInput, { JaegerAssistantToggle } from './JaegerAskSearchInput';
 import ThemeToggleButton from './ThemeToggleButton';
 import Branding from './Branding';
 import * as dependencyGraph from '../DependencyGraph/url';
@@ -122,8 +122,13 @@ export function TopNavImpl(props: Props) {
 
   const itemsGlobalRight: MenuProps['items'] = [
     {
-      label: <TraceIDSearchInput />,
-      key: 'TraceIDSearchInput',
+      label: (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <JaegerAssistantToggle />
+          <JaegerAskSearchInput />
+        </span>
+      ),
+      key: 'JaegerAskArea',
     },
     ...menuItems.map(m => {
       if (isItem(m)) {
