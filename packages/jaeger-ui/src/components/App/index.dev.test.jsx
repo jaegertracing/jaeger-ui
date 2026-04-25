@@ -12,7 +12,10 @@ import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('./NotFound', () => mockDefault(() => <div data-testid="not-found" />));
-vi.mock('./Page', () => mockDefault(({ children }) => <div data-testid="page">{children}</div>));
+vi.mock('./Page', () => {
+  const PageImpl = ({ children }) => <div data-testid="page">{children}</div>;
+  return { PageImpl };
+});
 vi.mock('../DependencyGraph', () => mockDefault(() => <div data-testid="dependency-graph" />));
 vi.mock('../DeepDependencies', () => mockDefault(() => <div data-testid="deep-dependencies" />));
 vi.mock('../QualityMetrics', () => mockDefault(() => <div data-testid="quality-metrics" />));
