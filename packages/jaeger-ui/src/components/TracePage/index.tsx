@@ -48,7 +48,6 @@ import { getUiFindVertexKeys } from '../TraceDiff/TraceDiffGraph/traceDiffGraphU
 import { fetchedState } from '../../constants';
 import { FetchedTrace, LocationState, ReduxState, TNil } from '../../types';
 import { IOtelTrace } from '../../types/otel';
-import { EmbeddedState } from '../../types/embedded';
 import filterSpans from '../../utils/filter-spans';
 import updateUiFind from '../../utils/update-ui-find';
 import TraceStatistics from './TraceStatistics/index';
@@ -86,11 +85,7 @@ type TReduxProps = {
   uiFind: string | TNil;
 };
 
-type TProps = TDispatchProps &
-  TOwnProps &
-  TReduxProps & {
-    embedded?: EmbeddedState | null;
-  };
+type TProps = TDispatchProps & TOwnProps & TReduxProps;
 
 // export for tests
 export const VIEW_MIN_RANGE = 0.01;
@@ -145,7 +140,7 @@ export function makeShortcutCallbacks(adjRange: (start: number, end: number) => 
 
 // export for tests
 export function TracePageImpl(props: TProps) {
-  const embedded = props.embedded === undefined ? getEmbeddedFromUrl() : props.embedded;
+  const embedded = getEmbeddedFromUrl();
   const {
     archiveEnabled,
     criticalPathEnabled,

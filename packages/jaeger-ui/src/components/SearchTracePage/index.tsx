@@ -29,7 +29,6 @@ import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { getEmbeddedFromUrl } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
 import { ReduxState } from '../../types';
-import { EmbeddedState } from '../../types/embedded';
 import { SearchQuery } from '../../types/search';
 import { Trace } from '../../types/trace';
 import { IOtelTrace } from '../../types/otel';
@@ -49,7 +48,6 @@ interface IStateProps {
   queryOfResults: IQueryOfResults | null;
   // passed as-is from Redux; cohort lookup happens in the component where Zustand is accessible
   tracesInRedux: ReduxState['trace'];
-  embedded?: EmbeddedState | null;
   loadingTraces: boolean;
   traces: Trace[];
   traceResultsToDownload: unknown[];
@@ -70,7 +68,7 @@ type SearchTracePageImplProps = ISearchTracePageImplOwnProps & IStateProps & IDi
 
 // export for tests
 export function SearchTracePageImpl(props: SearchTracePageImplProps) {
-  const embedded = props.embedded === undefined ? getEmbeddedFromUrl() : props.embedded;
+  const embedded = getEmbeddedFromUrl();
   const {
     tracesInRedux,
     errors,

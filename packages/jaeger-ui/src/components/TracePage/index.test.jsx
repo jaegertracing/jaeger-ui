@@ -127,6 +127,7 @@ const {
   mockSetDetailPanelMode,
   mockLayoutPrefsStore,
   mockTraceTimelineStore,
+  getEmbeddedFromUrlMock,
 } = vi.hoisted(() => ({
   mockSubmitTraceToArchive: jest.fn(),
   mockAcknowledge: jest.fn(),
@@ -139,12 +140,17 @@ const {
   mockTraceTimelineStore: {
     focusUiFindMatches: jest.fn(),
   },
+  getEmbeddedFromUrlMock: jest.fn().mockReturnValue(null),
 }));
 
 vi.mock('../../stores/archive-store', () => ({
   useArchiveStore: jest.fn(selector =>
     selector({ archives: {}, submitTraceToArchive: mockSubmitTraceToArchive, acknowledge: mockAcknowledge })
   ),
+}));
+
+vi.mock('../../stores/embedded-store', () => ({
+  getEmbeddedFromUrl: (...args) => getEmbeddedFromUrlMock(...args),
 }));
 
 vi.mock('./TraceTimelineViewer/store', () => ({
@@ -223,6 +229,7 @@ describe('<TracePage>', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    getEmbeddedFromUrlMock.mockReturnValue(null);
     ScrollManager.mockClear();
     capturedHeaderProps = {};
     capturedArchiveNotifierProps = {};
@@ -600,7 +607,12 @@ describe('<TracePage>', () => {
       });
 
       it('is true if embedded indicates it should be', () => {
-        renderWithRouter(<TracePage {...defaultProps} embedded={{ timeline: { hideMinimap: true } }} />);
+        getEmbeddedFromUrlMock.mockReturnValue({
+          version: 'v0',
+          searchHideGraph: false,
+          timeline: { collapseTitle: false, hideMinimap: true, hideSummary: false },
+        });
+        renderWithRouter(<TracePage {...defaultProps} />);
 
         const spanGraph = screen.queryByTestId('span-graph');
         expect(spanGraph).not.toBeInTheDocument();
@@ -616,7 +628,12 @@ describe('<TracePage>', () => {
       });
 
       it('hides summary if embedded indicates it should be', () => {
-        renderWithRouter(<TracePage {...defaultProps} embedded={{ timeline: { hideSummary: true } }} />);
+        getEmbeddedFromUrlMock.mockReturnValue({
+          version: 'v0',
+          searchHideGraph: false,
+          timeline: { collapseTitle: false, hideMinimap: false, hideSummary: true },
+        });
+        renderWithRouter(<TracePage {...defaultProps} />);
 
         expect(capturedHeaderProps.hideSummary).toBe(true);
       });
@@ -902,7 +919,12 @@ describe('<TracePage>', () => {
       expect(capturedHeaderProps.slimView).toBe(false);
       unmount();
 
-      render(<TracePage {...defaultProps} embedded={{ timeline: { collapseTitle: true } }} />);
+      getEmbeddedFromUrlMock.mockReturnValue({
+        version: 'v0',
+        searchHideGraph: false,
+        timeline: { collapseTitle: true, hideMinimap: false, hideSummary: false },
+      });
+      render(<TracePage {...defaultProps} />);
       expect(capturedHeaderProps.slimView).toBe(true);
     });
 
