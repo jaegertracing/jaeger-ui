@@ -12,7 +12,6 @@ import { trackPageView } from '../../utils/tracking';
 import DocumentTitle from '../../utils/documentTitle';
 
 import './Page.css';
-import withRouteProps from '../../utils/withRouteProps';
 
 type TProps = {
   children: React.ReactNode;
@@ -45,5 +44,3 @@ export const PageImpl: React.FC<TProps> = props => {
     </div>
   );
 };
-
-export default withRouteProps(PageImpl);
