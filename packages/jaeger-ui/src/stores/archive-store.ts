@@ -4,7 +4,12 @@
 import { create } from 'zustand';
 import JaegerAPI from '../api/jaeger';
 import { toApiError } from '../types/api-error';
-import { ErrorTraceArchive, LoadingTraceArchive, TraceArchive } from '../types/archive';
+import {
+  ErrorTraceArchive,
+  LoadingTraceArchive,
+  SuccessfulTraceArchive,
+  TraceArchive,
+} from '../types/archive';
 
 type ArchiveStore = {
   archives: Record<string, TraceArchive>;
@@ -22,7 +27,10 @@ export const useArchiveStore = create<ArchiveStore>((set, _get) => ({
     try {
       await JaegerAPI.archiveTrace(traceId);
       set(s => ({
-        archives: { ...s.archives, [traceId]: { isArchived: true, isAcknowledged: false } },
+        archives: {
+          ...s.archives,
+          [traceId]: { isArchived: true, isAcknowledged: false } satisfies SuccessfulTraceArchive,
+        },
       }));
     } catch (caught) {
       set(s => ({
