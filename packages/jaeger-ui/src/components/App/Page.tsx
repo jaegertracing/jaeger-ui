@@ -4,27 +4,25 @@
 import * as React from 'react';
 import { Layout } from 'antd';
 import cx from 'classnames';
-import { connect } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 
 import TopNav from './TopNav';
-import { ReduxState } from '../../types';
-import { EmbeddedState } from '../../types/embedded';
+import { useEmbeddedState } from '../../stores/embedded-store';
 import { trackPageView } from '../../utils/tracking';
 import DocumentTitle from '../../utils/documentTitle';
 
 import './Page.css';
-import withRouteProps from '../../utils/withRouteProps';
 
 type TProps = {
   children: React.ReactNode;
-  embedded: EmbeddedState;
 };
 
 const { Header, Content } = Layout;
 
 // export for tests
-export const PageImpl: React.FC<TProps> = ({ children, embedded }) => {
+export const PageImpl: React.FC<TProps> = props => {
+  const embedded = useEmbeddedState();
+  const { children } = props;
   const { pathname, search } = useLocation();
   React.useEffect(() => {
     trackPageView(pathname, search);
@@ -46,11 +44,3 @@ export const PageImpl: React.FC<TProps> = ({ children, embedded }) => {
     </div>
   );
 };
-
-// export for tests
-export function mapStateToProps(state: ReduxState) {
-  const { embedded } = state;
-  return { embedded };
-}
-
-export default connect(mapStateToProps)(withRouteProps(PageImpl));

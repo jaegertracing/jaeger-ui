@@ -120,6 +120,7 @@ const {
   mockSetDetailPanelMode,
   mockLayoutPrefsStore,
   mockTraceTimelineStore,
+  useEmbeddedStateMock,
 } = vi.hoisted(() => ({
   mockSubmitTraceToArchive: jest.fn(),
   mockAcknowledge: jest.fn(),
@@ -133,12 +134,17 @@ const {
     focusUiFindMatches: jest.fn(),
     prunedServices: new Set(),
   },
+  useEmbeddedStateMock: jest.fn().mockReturnValue(null),
 }));
 
 vi.mock('../../stores/archive-store', () => ({
   useArchiveStore: jest.fn(selector =>
     selector({ archives: {}, submitTraceToArchive: mockSubmitTraceToArchive, acknowledge: mockAcknowledge })
   ),
+}));
+
+vi.mock('../../stores/embedded-store', () => ({
+  useEmbeddedState: (...args) => useEmbeddedStateMock(...args),
 }));
 
 vi.mock('./TraceTimelineViewer/store', () => ({
@@ -226,6 +232,7 @@ describe('<TracePage>', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    useEmbeddedStateMock.mockReturnValue(null);
     ScrollManager.mockClear();
     capturedHeaderProps = {};
     capturedArchiveNotifierProps = {};
@@ -603,7 +610,12 @@ describe('<TracePage>', () => {
       });
 
       it('is true if embedded indicates it should be', () => {
-        renderWithRouter(<TracePage {...defaultProps} embedded={{ timeline: { hideMinimap: true } }} />);
+        useEmbeddedStateMock.mockReturnValue({
+          version: 'v0',
+          searchHideGraph: false,
+          timeline: { collapseTitle: false, hideMinimap: true, hideSummary: false },
+        });
+        renderWithRouter(<TracePage {...defaultProps} />);
 
         const spanGraph = screen.queryByTestId('span-graph');
         expect(spanGraph).not.toBeInTheDocument();
@@ -619,7 +631,12 @@ describe('<TracePage>', () => {
       });
 
       it('hides summary if embedded indicates it should be', () => {
-        renderWithRouter(<TracePage {...defaultProps} embedded={{ timeline: { hideSummary: true } }} />);
+        useEmbeddedStateMock.mockReturnValue({
+          version: 'v0',
+          searchHideGraph: false,
+          timeline: { collapseTitle: false, hideMinimap: false, hideSummary: true },
+        });
+        renderWithRouter(<TracePage {...defaultProps} />);
 
         expect(capturedHeaderProps.hideSummary).toBe(true);
       });
@@ -905,7 +922,12 @@ describe('<TracePage>', () => {
       expect(capturedHeaderProps.slimView).toBe(false);
       unmount();
 
-      render(<TracePage {...defaultProps} embedded={{ timeline: { collapseTitle: true } }} />);
+      useEmbeddedStateMock.mockReturnValue({
+        version: 'v0',
+        searchHideGraph: false,
+        timeline: { collapseTitle: true, hideMinimap: false, hideSummary: false },
+      });
+      render(<TracePage {...defaultProps} />);
       expect(capturedHeaderProps.slimView).toBe(true);
     });
 
@@ -1059,14 +1081,12 @@ describe('mapDispatchToProps()', () => {
 describe('mapStateToProps()', () => {
   const traceID = 'trace-id';
   const trace = {};
-  const embedded = 'a-faux-embedded-config';
   const ownProps = {
     params: { id: traceID },
   };
   let state;
   beforeEach(() => {
     state = {
-      embedded,
       trace: {
         traces: {
           [traceID]: { data: trace, state: fetchedState.DONE },
@@ -1088,7 +1108,6 @@ describe('mapStateToProps()', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
-      embedded,
       trace: { data: {}, state: fetchedState.DONE },
     });
   });
@@ -1113,7 +1132,6 @@ describe('mapStateToProps()', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
-      embedded,
       uiFind: undefined,
       trace: { data: {}, state: fetchedState.DONE },
     });

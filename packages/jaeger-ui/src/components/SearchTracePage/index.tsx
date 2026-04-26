@@ -26,6 +26,7 @@ import JaegerLogo from '../../img/jaeger-logo.svg';
 import withRouteProps from '../../utils/withRouteProps';
 import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
+import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
@@ -38,10 +39,6 @@ interface IQueryOfResults extends Partial<SearchQuery> {
   limit?: string | number;
 }
 
-interface IEmbeddedConfig {
-  searchHideGraph?: boolean;
-}
-
 interface ISearchTracePageImplOwnProps {
   isHomepage?: boolean;
 }
@@ -51,7 +48,6 @@ interface IStateProps {
   queryOfResults: IQueryOfResults | null;
   // passed as-is from Redux; cohort lookup happens in the component where Zustand is accessible
   tracesInRedux: ReduxState['trace'];
-  embedded?: IEmbeddedConfig;
   loadingTraces: boolean;
   traces: Trace[];
   traceResultsToDownload: unknown[];
@@ -72,9 +68,9 @@ type SearchTracePageImplProps = ISearchTracePageImplOwnProps & IStateProps & IDi
 
 // export for tests
 export function SearchTracePageImpl(props: SearchTracePageImplProps) {
+  const embedded = useEmbeddedState();
   const {
     tracesInRedux,
-    embedded,
     errors,
     fetchMultipleTraces,
     isHomepage,
@@ -185,7 +181,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
               cohortRemoveTrace,
               diffCohort,
               disableComparisons: !!embedded,
-              hideGraph: embedded && embedded.searchHideGraph,
+              hideGraph: Boolean(embedded?.searchHideGraph),
               loading: loadingTraces,
               maxTraceDuration,
               queryOfResults,
@@ -247,7 +243,6 @@ export function mapStateToProps(
   state: ReduxState,
   ownProps: { search?: string }
 ): IStateProps & { isHomepage: boolean } {
-  const { embedded } = state;
   const query = getUrlState(ownProps.search || '');
   const isHomepage = !Object.keys(query).length;
   const {
@@ -267,7 +262,6 @@ export function mapStateToProps(
   return {
     queryOfResults: queryOfResults as IQueryOfResults | null,
     tracesInRedux: state.trace,
-    embedded,
     isHomepage,
     loadingTraces,
     traces,
