@@ -21,8 +21,8 @@ const { Header, Content } = Layout;
 
 // export for tests
 export const PageImpl: React.FC<TProps> = props => {
-  const embedded = getEmbeddedFromUrl();
   const { children } = props;
+  const embedded = getEmbeddedFromUrl();
   const { pathname, search } = useLocation();
   React.useEffect(() => {
     trackPageView(pathname, search);
