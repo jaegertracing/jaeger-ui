@@ -7,6 +7,7 @@ import SpanDetail from './SpanDetail';
 import DetailState from './SpanDetail/DetailState';
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
+import { buildSpanTreeOffsetState } from './utils';
 
 import { IOtelSpan, IAttribute, IEvent } from '../../../types/otel';
 import { Hyperlink } from '../../../types/hyperlink';
@@ -62,7 +63,15 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     <TimelineRow className="detail-row">
       {timelineBarsVisible && (
         <TimelineRow.Cell width={nameColumnWidth}>
-          <SpanTreeOffset span={span} showChildrenIcon={false} isDetailRow color={color} />
+          <SpanTreeOffset
+            spanID={span.spanID}
+            hasChildren={span.hasChildren}
+            childCount={span.childSpans.length}
+            showChildrenIcon={false}
+            isDetailRow
+            color={color}
+            {...buildSpanTreeOffsetState(span)}
+          />
           <span>
             <span
               className="detail-row-expanded-accent"

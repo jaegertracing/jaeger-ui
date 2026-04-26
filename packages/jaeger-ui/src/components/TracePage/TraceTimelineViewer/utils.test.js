@@ -8,6 +8,7 @@ import {
   spanContainsErredSpan,
   isKindClient,
   isKindProducer,
+  buildSpanTreeOffsetState,
 } from './utils';
 
 import traceGenerator from '../../../demo/trace-generators';
@@ -157,6 +158,122 @@ describe('TraceTimelineViewer/utils', () => {
     it('returns false when span kind is not PRODUCER', () => {
       const span = { kind: SpanKind.CLIENT };
       expect(isKindProducer(span)).toBe(false);
+    });
+  });
+
+  describe('buildSpanTreeOffsetState()', () => {
+    let rootSpan;
+    let childSpan;
+    let grandchildSpan;
+
+    beforeEach(() => {
+      rootSpan = {
+        spanID: 'root',
+        resource: { serviceName: 'root-svc' },
+        parentSpan: null,
+        childSpans: [],
+      };
+      childSpan = {
+        spanID: 'child',
+        resource: { serviceName: 'child-svc' },
+        parentSpan: rootSpan,
+        childSpans: [],
+      };
+      grandchildSpan = {
+        spanID: 'grandchild',
+        resource: { serviceName: 'grandchild-svc' },
+        parentSpan: childSpan,
+        childSpans: [],
+      };
+      rootSpan.childSpans = [childSpan];
+      childSpan.childSpans = [grandchildSpan];
+    });
+
+    it('handles root span correctly', () => {
+      const result = buildSpanTreeOffsetState(rootSpan);
+      expect(result).toEqual({
+        ancestors: [],
+        isLastChild: false,
+        parentColor: null,
+      });
+    });
+
+    it('handles child span correctly', () => {
+      const result = buildSpanTreeOffsetState(childSpan);
+      expect(result.ancestors.length).toBe(1);
+      expect(result.ancestors[0]).toEqual({
+        spanID: 'root',
+        color: expect.any(String),
+        isTerminated: true,
+      });
+      expect(result.isLastChild).toBe(true);
+      expect(result.parentColor).toEqual(expect.any(String));
+    });
+
+    it('handles grandchild span correctly', () => {
+      const result = buildSpanTreeOffsetState(grandchildSpan);
+      expect(result.ancestors.length).toBe(2);
+      expect(result.ancestors[0].spanID).toBe('root');
+      expect(result.ancestors[1].spanID).toBe('child');
+      expect(result.isLastChild).toBe(true);
+    });
+
+    it('handles multiple siblings correctly (not last child)', () => {
+      const siblingSpan = {
+        spanID: 'sibling',
+        resource: { serviceName: 'child-svc' },
+        parentSpan: rootSpan,
+        childSpans: [],
+      };
+      rootSpan.childSpans = [childSpan, siblingSpan];
+      const result = buildSpanTreeOffsetState(childSpan);
+      expect(result.isLastChild).toBe(false);
+      expect(result.ancestors[0].isTerminated).toBe(false);
+    });
+
+    it('handles multiple siblings correctly (last child)', () => {
+      const siblingSpan = {
+        spanID: 'sibling',
+        resource: { serviceName: 'child-svc' },
+        parentSpan: rootSpan,
+        childSpans: [],
+      };
+      rootSpan.childSpans = [childSpan, siblingSpan];
+      const result = buildSpanTreeOffsetState(siblingSpan);
+      expect(result.isLastChild).toBe(true);
+      expect(result.ancestors[0].isTerminated).toBe(true);
+    });
+
+    it('handles nested non-last child correctly', () => {
+      const root = {
+        spanID: 'r',
+        resource: { serviceName: 's1' },
+        parentSpan: null,
+      };
+      const c1 = {
+        spanID: 'c1',
+        resource: { serviceName: 's2' },
+        parentSpan: root,
+      };
+      const c2 = {
+        spanID: 'c2',
+        resource: { serviceName: 's3' },
+        parentSpan: root,
+      };
+      root.childSpans = [c1, c2];
+      const gc1 = {
+        spanID: 'gc1',
+        resource: { serviceName: 's4' },
+        parentSpan: c1,
+      };
+      c1.childSpans = [gc1];
+
+      const result = buildSpanTreeOffsetState(gc1);
+      // gc1 is last child of c1, but c1 is NOT last child of root.
+      // So ancestor 'root' should NOT be terminated for gc1's row.
+      expect(result.ancestors[0].spanID).toBe('r');
+      expect(result.ancestors[0].isTerminated).toBe(false);
+      expect(result.isLastChild).toBe(true);
     });
   });
 });

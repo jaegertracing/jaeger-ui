@@ -9,19 +9,33 @@ import { describe, expect, it, vi } from 'vitest';
 import PrunedSpanRow from './PrunedSpanRow';
 import { IOtelSpan } from '../../../types/otel';
 
-vi.mock('./SpanTreeOffset', () =>
-  mockDefault(({ span, color }: { span: IOtelSpan; color: string }) => (
-    <span data-testid="span-tree-offset" data-depth={span.depth} data-color={color} />
-  ))
-);
+vi.mock('./SpanTreeOffset', () => {
+  return {
+    default: ({ ancestors, color }: { ancestors: any[]; color: string }) => (
+      <span data-testid="span-tree-offset" data-depth={ancestors ? ancestors.length : 0} data-color={color} />
+    ),
+  };
+});
 
 function makeSpan(depth: number): IOtelSpan {
+  let current: IOtelSpan | undefined;
+  for (let i = 0; i < depth; i++) {
+    current = {
+      spanID: `span-${i}`,
+      depth: i,
+      hasChildren: true,
+      childSpans: [],
+      resource: { serviceName: 'svc-a', attributes: [] },
+      parentSpan: current as any,
+    } as unknown as IOtelSpan;
+  }
   return {
-    spanID: 'span-1',
+    spanID: 'span-target',
     depth,
     hasChildren: true,
     childSpans: [],
     resource: { serviceName: 'svc-a', attributes: [] },
+    parentSpan: current as any,
   } as unknown as IOtelSpan;
 }
 

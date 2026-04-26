@@ -7,6 +7,7 @@ import { IoAlert } from 'react-icons/io5';
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
 import { IOtelSpan } from '../../../types/otel';
+import { buildSpanTreeOffsetStateForChild } from './utils';
 
 import './PrunedSpanRow.css';
 
@@ -33,34 +34,21 @@ export default function PrunedSpanRow({
     prunedErrorCount > 0 ? `, ${prunedErrorCount} ${prunedErrorCount === 1 ? 'error' : 'errors'}` : '';
   const label = `${prunedChildrenCount} ${spanWord} pruned${errorSuffix}`;
 
-  // Create a fake span so SpanTreeOffset renders proper tree lines and a dot
-  // at depth = parentSpan.depth + 1. Use a synthetic parent that appends the
-  // fake span as the last child so SpanTreeOffset correctly terminates the
-  // vertical tree line (it checks parentSpan.childSpans[last].spanID === spanID).
-  const fakeSpan = useMemo(() => {
-    const spanID = `${parentSpan.spanID}--pruned`;
-    const fake = {
-      spanID,
-      depth: parentSpan.depth + 1,
-      hasChildren: false,
-      childSpans: [],
-      parentSpan: null as unknown as IOtelSpan,
-      resource: parentSpan.resource,
-    } as unknown as IOtelSpan;
-    // Prototype-based copy: syntheticParent delegates all properties (including
-    // parentSpan for ancestor walks) to the real parentSpan, with only childSpans
-    // overridden. This lets SpanTreeOffset see the placeholder as the last child.
-    const syntheticParent = Object.create(parentSpan) as IOtelSpan;
-    (syntheticParent as unknown as { childSpans: IOtelSpan[] }).childSpans = [...parentSpan.childSpans, fake];
-    (fake as { parentSpan: IOtelSpan }).parentSpan = syntheticParent;
-    return fake;
+  const treeOffsetState = useMemo(() => {
+    return buildSpanTreeOffsetStateForChild(parentSpan, true);
   }, [parentSpan]);
 
   return (
     <TimelineRow className="span-row PrunedSpanRow">
       <TimelineRow.Cell className="span-name-column" width={nameColumnWidth}>
         <div className="span-name-wrapper">
-          <SpanTreeOffset span={fakeSpan} color={PRUNED_DOT_COLOR} />
+          <SpanTreeOffset
+            spanID={`${parentSpan.spanID}--pruned`}
+            hasChildren={false}
+            childCount={0}
+            color={PRUNED_DOT_COLOR}
+            {...treeOffsetState}
+          />
           <span className="span-name PrunedSpanRow--name">
             <span className="span-svc-name">
               {prunedErrorCount > 0 && (

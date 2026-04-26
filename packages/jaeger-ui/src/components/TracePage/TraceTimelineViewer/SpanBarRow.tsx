@@ -9,6 +9,7 @@ import { formatDuration, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
+import { buildSpanTreeOffsetState } from './utils';
 
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
@@ -135,9 +136,12 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
         <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
-            span={span}
+            spanID={span.spanID}
+            hasChildren={isParent}
+            childCount={span.childSpans.length}
             onClick={isParent ? _childrenToggle : undefined}
             color={color}
+            {...buildSpanTreeOffsetState(span)}
           />
           <a
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
