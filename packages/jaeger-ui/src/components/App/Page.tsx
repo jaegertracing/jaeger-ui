@@ -7,7 +7,7 @@ import cx from 'classnames';
 import { useLocation } from 'react-router-dom';
 
 import TopNav from './TopNav';
-import { getEmbeddedFromUrl } from '../../stores/embedded-store';
+import { useEmbeddedState } from '../../stores/embedded-store';
 import { trackPageView } from '../../utils/tracking';
 import DocumentTitle from '../../utils/documentTitle';
 
@@ -21,8 +21,8 @@ const { Header, Content } = Layout;
 
 // export for tests
 export const PageImpl: React.FC<TProps> = props => {
+  const embedded = useEmbeddedState();
   const { children } = props;
-  const embedded = getEmbeddedFromUrl();
   const { pathname, search } = useLocation();
   React.useEffect(() => {
     trackPageView(pathname, search);

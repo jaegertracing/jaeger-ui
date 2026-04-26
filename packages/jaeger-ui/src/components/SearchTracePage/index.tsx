@@ -26,7 +26,7 @@ import JaegerLogo from '../../img/jaeger-logo.svg';
 import withRouteProps from '../../utils/withRouteProps';
 import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
-import { getEmbeddedFromUrl } from '../../stores/embedded-store';
+import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
 import { ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
@@ -68,7 +68,7 @@ type SearchTracePageImplProps = ISearchTracePageImplOwnProps & IStateProps & IDi
 
 // export for tests
 export function SearchTracePageImpl(props: SearchTracePageImplProps) {
-  const embedded = getEmbeddedFromUrl();
+  const embedded = useEmbeddedState();
   const {
     tracesInRedux,
     errors,

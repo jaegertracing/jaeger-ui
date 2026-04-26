@@ -16,7 +16,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 
 import ArchiveNotifier from './ArchiveNotifier';
 import { useArchiveStore } from '../../stores/archive-store';
-import { getEmbeddedFromUrl } from '../../stores/embedded-store';
+import { useEmbeddedState } from '../../stores/embedded-store';
 import {
   setDetailPanelMode as setDetailPanelModeZustand,
   useLayoutPrefsStore,
@@ -140,7 +140,7 @@ export function makeShortcutCallbacks(adjRange: (start: number, end: number) => 
 
 // export for tests
 export function TracePageImpl(props: TProps) {
-  const embedded = getEmbeddedFromUrl();
+  const embedded = useEmbeddedState();
   const {
     archiveEnabled,
     criticalPathEnabled,

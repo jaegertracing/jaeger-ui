@@ -127,7 +127,7 @@ const {
   mockSetDetailPanelMode,
   mockLayoutPrefsStore,
   mockTraceTimelineStore,
-  getEmbeddedFromUrlMock,
+  useEmbeddedStateMock,
 } = vi.hoisted(() => ({
   mockSubmitTraceToArchive: jest.fn(),
   mockAcknowledge: jest.fn(),
@@ -140,7 +140,7 @@ const {
   mockTraceTimelineStore: {
     focusUiFindMatches: jest.fn(),
   },
-  getEmbeddedFromUrlMock: jest.fn().mockReturnValue(null),
+  useEmbeddedStateMock: jest.fn().mockReturnValue(null),
 }));
 
 vi.mock('../../stores/archive-store', () => ({
@@ -150,7 +150,7 @@ vi.mock('../../stores/archive-store', () => ({
 }));
 
 vi.mock('../../stores/embedded-store', () => ({
-  getEmbeddedFromUrl: (...args) => getEmbeddedFromUrlMock(...args),
+  useEmbeddedState: (...args) => useEmbeddedStateMock(...args),
 }));
 
 vi.mock('./TraceTimelineViewer/store', () => ({
@@ -229,7 +229,7 @@ describe('<TracePage>', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    getEmbeddedFromUrlMock.mockReturnValue(null);
+    useEmbeddedStateMock.mockReturnValue(null);
     ScrollManager.mockClear();
     capturedHeaderProps = {};
     capturedArchiveNotifierProps = {};
@@ -607,7 +607,7 @@ describe('<TracePage>', () => {
       });
 
       it('is true if embedded indicates it should be', () => {
-        getEmbeddedFromUrlMock.mockReturnValue({
+        useEmbeddedStateMock.mockReturnValue({
           version: 'v0',
           searchHideGraph: false,
           timeline: { collapseTitle: false, hideMinimap: true, hideSummary: false },
@@ -628,7 +628,7 @@ describe('<TracePage>', () => {
       });
 
       it('hides summary if embedded indicates it should be', () => {
-        getEmbeddedFromUrlMock.mockReturnValue({
+        useEmbeddedStateMock.mockReturnValue({
           version: 'v0',
           searchHideGraph: false,
           timeline: { collapseTitle: false, hideMinimap: false, hideSummary: true },
@@ -919,7 +919,7 @@ describe('<TracePage>', () => {
       expect(capturedHeaderProps.slimView).toBe(false);
       unmount();
 
-      getEmbeddedFromUrlMock.mockReturnValue({
+      useEmbeddedStateMock.mockReturnValue({
         version: 'v0',
         searchHideGraph: false,
         timeline: { collapseTitle: true, hideMinimap: false, hideSummary: false },

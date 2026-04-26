@@ -4,12 +4,12 @@
 vi.mock('./TopNav', () => mockDefault(() => <div />));
 vi.mock('../../utils/tracking');
 
-const { getEmbeddedFromUrlMock } = vi.hoisted(() => ({
-  getEmbeddedFromUrlMock: jest.fn().mockReturnValue(null),
+const { useEmbeddedStateMock } = vi.hoisted(() => ({
+  useEmbeddedStateMock: jest.fn().mockReturnValue(null),
 }));
 
 vi.mock('../../stores/embedded-store', () => ({
-  getEmbeddedFromUrl: (...args) => getEmbeddedFromUrlMock(...args),
+  useEmbeddedState: (...args) => useEmbeddedStateMock(...args),
 }));
 
 import React from 'react';
@@ -40,7 +40,7 @@ const embeddedV0 = {
 describe('<Page>', () => {
   beforeEach(() => {
     trackPageView.mockReset();
-    getEmbeddedFromUrlMock.mockReturnValue(null);
+    useEmbeddedStateMock.mockReturnValue(null);
   });
 
   it('renders without exploding', () => {
@@ -78,7 +78,7 @@ describe('<Page>', () => {
 
   describe('Page embedded', () => {
     beforeEach(() => {
-      getEmbeddedFromUrlMock.mockReturnValue(embeddedV0);
+      useEmbeddedStateMock.mockReturnValue(embeddedV0);
       trackPageView.mockReset();
       renderWithPath();
     });

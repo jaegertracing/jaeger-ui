@@ -12,7 +12,7 @@ import { getEmbeddedState } from '../utils/embedded-url';
 // EmbeddedState -> initialized; embedded mode on.
 let cached: EmbeddedState | null | undefined;
 
-export function getEmbeddedFromUrl(): EmbeddedState | null {
+export function useEmbeddedState(): EmbeddedState | null {
   if (cached !== undefined) {
     return cached;
   }

@@ -4,12 +4,12 @@
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-const { getEmbeddedFromUrlMock } = vi.hoisted(() => ({
-  getEmbeddedFromUrlMock: jest.fn().mockReturnValue(null),
+const { useEmbeddedStateMock } = vi.hoisted(() => ({
+  useEmbeddedStateMock: jest.fn().mockReturnValue(null),
 }));
 
 vi.mock('../../stores/embedded-store', () => ({
-  getEmbeddedFromUrl: (...args) => getEmbeddedFromUrlMock(...args),
+  useEmbeddedState: (...args) => useEmbeddedStateMock(...args),
 }));
 
 vi.mock('../../api/v3/client', () => ({
@@ -90,7 +90,7 @@ describe('<SearchTracePage>', () => {
     props = getDefaultProps();
     traces = props.traces;
     traceResultsToDownload = props.traceResultsToDownload;
-    getEmbeddedFromUrlMock.mockReturnValue(null);
+    useEmbeddedStateMock.mockReturnValue(null);
   });
 
   it('searches for traces if `service` or `traceID` are in the query string', () => {
@@ -209,7 +209,7 @@ describe('<SearchTracePage>', () => {
   });
 
   it('hides SearchForm if is embed', () => {
-    getEmbeddedFromUrlMock.mockReturnValue({
+    useEmbeddedStateMock.mockReturnValue({
       version: 'v0',
       searchHideGraph: false,
       timeline: { collapseTitle: false, hideMinimap: false, hideSummary: false },
@@ -223,7 +223,7 @@ describe('<SearchTracePage>', () => {
   });
 
   it('hides logo if is embed', () => {
-    getEmbeddedFromUrlMock.mockReturnValue({
+    useEmbeddedStateMock.mockReturnValue({
       version: 'v0',
       searchHideGraph: false,
       timeline: { collapseTitle: false, hideMinimap: false, hideSummary: false },

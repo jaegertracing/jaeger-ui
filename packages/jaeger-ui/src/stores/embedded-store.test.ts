@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getEmbeddedState } from '../utils/embedded-url';
-import { getEmbeddedFromUrl, resetEmbeddedFromUrlCacheForTests } from './embedded-store';
+import { resetEmbeddedFromUrlCacheForTests, useEmbeddedState } from './embedded-store';
 
 vi.mock('../utils/embedded-url', () => ({
   getEmbeddedState: vi.fn(),
@@ -10,7 +10,7 @@ vi.mock('../utils/embedded-url', () => ({
 
 const mockGetEmbeddedState = vi.mocked(getEmbeddedState);
 
-describe('getEmbeddedFromUrl', () => {
+describe('useEmbeddedState', () => {
   beforeEach(() => {
     resetEmbeddedFromUrlCacheForTests();
     mockGetEmbeddedState.mockReset();
@@ -20,8 +20,8 @@ describe('getEmbeddedFromUrl', () => {
     window.history.replaceState({}, '', '/?uiEmbed=v0');
     resetEmbeddedFromUrlCacheForTests();
     mockGetEmbeddedState.mockReturnValue(null);
-    const a = getEmbeddedFromUrl();
-    const b = getEmbeddedFromUrl();
+    const a = useEmbeddedState();
+    const b = useEmbeddedState();
     expect(a).toBe(b);
     expect(mockGetEmbeddedState).toHaveBeenCalledTimes(1);
   });
@@ -29,7 +29,7 @@ describe('getEmbeddedFromUrl', () => {
   it('returns null when window.location.search is empty', () => {
     window.history.replaceState({}, '', '/');
     resetEmbeddedFromUrlCacheForTests();
-    expect(getEmbeddedFromUrl()).toBeNull();
+    expect(useEmbeddedState()).toBeNull();
     expect(mockGetEmbeddedState).not.toHaveBeenCalled();
   });
 
@@ -46,7 +46,7 @@ describe('getEmbeddedFromUrl', () => {
     mockGetEmbeddedState.mockReturnValue(embeddedState);
     window.history.replaceState({}, '', '/?uiEmbed=v0');
     resetEmbeddedFromUrlCacheForTests();
-    expect(getEmbeddedFromUrl()).toBe(embeddedState);
+    expect(useEmbeddedState()).toBe(embeddedState);
     expect(mockGetEmbeddedState).toHaveBeenCalledWith('?uiEmbed=v0');
   });
 
@@ -54,8 +54,8 @@ describe('getEmbeddedFromUrl', () => {
     resetEmbeddedFromUrlCacheForTests();
     vi.stubGlobal('window', undefined);
     try {
-      expect(getEmbeddedFromUrl()).toBeNull();
-      expect(getEmbeddedFromUrl()).toBeNull();
+      expect(useEmbeddedState()).toBeNull();
+      expect(useEmbeddedState()).toBeNull();
       expect(mockGetEmbeddedState).not.toHaveBeenCalled();
     } finally {
       vi.unstubAllGlobals();
