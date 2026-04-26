@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { act } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import copy from 'copy-to-clipboard';
@@ -67,8 +67,8 @@ describe('<CopyIcon />', () => {
     fireEvent.mouseEnter(copyButton);
     expect(screen.getByRole('tooltip')).toHaveTextContent(props.tooltipTitle);
 
-    fireEvent.click(copyButton);
-    await screen.findByText('Copied');
+    // act() drains all pending promises and React state updates before returning
+    await act(async () => fireEvent.click(copyButton));
 
     expect(copy).toHaveBeenCalledWith(props.copyText);
     expect(screen.getByRole('tooltip')).toHaveTextContent('Copied');
@@ -79,11 +79,10 @@ describe('<CopyIcon />', () => {
     const copyButton = screen.getByRole('button', { name: props.buttonText });
 
     fireEvent.mouseEnter(copyButton);
-    fireEvent.click(copyButton);
+    // act() drains all pending promises and React state updates before returning
+    await act(async () => fireEvent.click(copyButton));
 
-    // Give any microtasks a chance to run
-    await new Promise(r => setTimeout(r, 0));
-
+    expect(copy).toHaveBeenCalledWith(props.copyText);
     expect(screen.getByRole('tooltip')).toHaveTextContent(props.tooltipTitle);
   });
 
@@ -94,11 +93,11 @@ describe('<CopyIcon />', () => {
     fireEvent.mouseEnter(copyButton);
     expect(screen.getByRole('tooltip')).toHaveTextContent(props.tooltipTitle);
 
-    // 2. Click the button
-    fireEvent.click(copyButton);
+    // 2. Click the button; act() drains all pending promises and React state updates before returning
+    await act(async () => fireEvent.click(copyButton));
 
     // 3. Tooltip now shows "Copied"
-    await screen.findByText('Copied');
+    expect(screen.getByRole('tooltip')).toHaveTextContent('Copied');
 
     // 4. Move the mouse away — MockTooltip hides synchronously and calls onOpenChange(false)
     fireEvent.mouseLeave(copyButton);
@@ -120,11 +119,11 @@ describe('<CopyIcon />', () => {
     fireEvent.mouseEnter(copyButton);
     expect(screen.getByRole('tooltip')).toHaveTextContent(props.tooltipTitle);
 
-    // 2. Click the button (while implicitly still hovered)
-    fireEvent.click(copyButton);
+    // 2. Click the button; act() drains all pending promises and React state updates before returning
+    await act(async () => fireEvent.click(copyButton));
 
     // 3. Tooltip content changes to "Copied"
-    await screen.findByText('Copied');
+    expect(screen.getByRole('tooltip')).toHaveTextContent('Copied');
 
     // 4. Move the mouse away
     fireEvent.mouseLeave(copyButton);
