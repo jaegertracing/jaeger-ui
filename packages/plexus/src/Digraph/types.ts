@@ -74,13 +74,13 @@ export type TRenderNodeFn<T = Record<string, unknown>> = (
   utils: TRendererUtils
 ) => React.ReactNode;
 
-export type TRenderMeasurableNodeFn<T = Record<string, unknown>> = (
+type TRenderMeasurableNodeFn<T = Record<string, unknown>> = (
   vertex: TVertex<T>,
   utils: TRendererUtils,
   layoutVertex: TLayoutVertex<T> | null
 ) => React.ReactNode;
 
-export type TMeasureNodeUtils = {
+type TMeasureNodeUtils = {
   layerType: 'html' | 'svg';
   getWrapperSize: () => { height: number; width: number };
   getWrapper: () => TOneOfTwo<{ htmlWrapper: HTMLDivElement | null }, { svgWrapper: SVGGElement | null }>;
@@ -113,7 +113,7 @@ type TStandaloneNodesLayer<T = Record<string, unknown>, U = Record<string, unkno
       }
   );
 
-export type TEdgesLayer<T = Record<string, unknown>, U = Record<string, unknown>> = TKeyed &
+type TEdgesLayer<T = Record<string, unknown>, U = Record<string, unknown>> = TKeyed &
   TSetOnContainer<T, U> & {
     edges: true;
     markerEndId?: string;
