@@ -7,6 +7,9 @@
 import { EmbeddedState } from '../types/embedded';
 import { getEmbeddedState } from '../utils/embedded-url';
 
+// undefined -> cache not initialize yet (first call).
+// null -> initialized; URL says we are not in uiEmbed=v0
+// EmbeddedState -> initialized; embedded mode on.
 let cached: EmbeddedState | null | undefined;
 
 export function getEmbeddedFromUrl(): EmbeddedState | null {
