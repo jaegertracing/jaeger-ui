@@ -31,9 +31,9 @@ const CopyIcon: React.FC<PropsType> = ({
 }) => {
   const [hasCopied, setHasCopied] = useState(false);
 
-  const handleClick = () => {
-    setHasCopied(true);
-    copy(copyText);
+  const handleClick = async () => {
+    const success = await copy(copyText);
+    if (success) setHasCopied(true);
   };
 
   const handleTooltipVisibilityChange = (visible: boolean) => {
