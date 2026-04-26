@@ -19,7 +19,7 @@
     "@noble/hashes": "2.2.0",
     "@testing-library/dom": "^10.4.1",
     "depcheck": "1.4.7",
-    "knip": "6.4.1",
+    "knip": "6.7.0",
     "eslint-plugin-react-x": "4.2.3",
     "husky": "9.1.0",
     "jsdom": "29.0.1",
