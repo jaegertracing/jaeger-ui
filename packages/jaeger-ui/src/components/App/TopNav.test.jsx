@@ -6,7 +6,7 @@ import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
-import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
+import { TopNavImpl as TopNav } from './TopNav';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 
 vi.mock('antd', async () => {
@@ -89,6 +89,7 @@ describe('<TopNav>', () => {
 
   const defaultProps = {
     config: {
+      themes: { enabled: true },
       menu: [
         {
           label: labelGitHub,
@@ -265,12 +266,5 @@ describe('<TopNav>', () => {
     );
 
     expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
-  });
-});
-
-describe('mapStateToProps', () => {
-  it('returns entire state', () => {
-    const testState = {};
-    expect(mapStateToProps(testState)).toBe(testState);
   });
 });

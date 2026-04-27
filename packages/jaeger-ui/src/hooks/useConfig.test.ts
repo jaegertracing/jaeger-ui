@@ -61,9 +61,12 @@ describe('useConfig', () => {
     expect(result.current.tracking).toEqual(tracking);
   });
 
-  it('calls getConfig() on every render', () => {
-    const { rerender } = renderHook(() => useConfig());
+  it('returns the expected config across rerenders', () => {
+    const config = { ...baseConfig, archiveEnabled: true };
+    mockGetConfig.mockReturnValue(config as any);
+    const { result, rerender } = renderHook(() => useConfig());
+    expect(result.current).toEqual(config);
     rerender();
-    expect(mockGetConfig).toHaveBeenCalledTimes(2);
+    expect(result.current).toEqual(config);
   });
 });

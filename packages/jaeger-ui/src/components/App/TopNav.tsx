@@ -5,7 +5,6 @@ import React from 'react';
 import { Dropdown, Menu, MenuProps } from 'antd';
 import { IoChevronDown } from 'react-icons/io5';
 import _has from 'lodash/has';
-import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 
 import TraceIDSearchInput from './TraceIDSearchInput';
@@ -17,7 +16,6 @@ import * as qualityMetrics from '../QualityMetrics/url';
 import * as searchUrl from '../SearchTracePage/url';
 import * as diffUrl from '../TraceDiff/url';
 import * as monitorATMUrl from '../Monitor/url';
-import { ReduxState } from '../../types';
 import TTraceDiffState from '../../types/TTraceDiffState';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useShallow } from 'zustand/react/shallow';
@@ -28,7 +26,7 @@ import { useConfig } from '../../hooks/useConfig';
 import './TopNav.css';
 import withRouteProps, { IWithRouteProps } from '../../utils/withRouteProps';
 
-type Props = ReduxState & IWithRouteProps;
+type Props = IWithRouteProps;
 type PropsWithTraceDiff = Props & { traceDiff: TTraceDiffState };
 
 const NAV_LINKS = [
@@ -133,7 +131,7 @@ export function TopNavImpl(props: Props) {
       }
       return { label: <CustomNavDropdown key={m.label} {...m} />, key: m.label };
     }),
-    ...(getConfig().themes?.enabled
+    ...(config.themes?.enabled
       ? [
           {
             label: <ThemeToggleButton />,
@@ -183,9 +181,4 @@ export function TopNavImpl(props: Props) {
 
 TopNavImpl.CustomNavDropdown = CustomNavDropdown;
 
-// export for tests
-export function mapStateToProps(state: ReduxState) {
-  return state;
-}
-
-export default connect(mapStateToProps)(withRouteProps(TopNavImpl));
+export default withRouteProps(TopNavImpl);
