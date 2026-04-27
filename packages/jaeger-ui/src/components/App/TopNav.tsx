@@ -23,6 +23,7 @@ import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useShallow } from 'zustand/react/shallow';
 import { ConfigMenuItem, ConfigMenuGroup } from '../../types/config';
 import getConfig from '../../utils/config/get-config';
+import { useConfig } from '../../hooks/useConfig';
 
 import './TopNav.css';
 import withRouteProps, { IWithRouteProps } from '../../utils/withRouteProps';
@@ -109,7 +110,8 @@ const itemsGlobalLeft: MenuProps['items'] = [
 ];
 
 export function TopNavImpl(props: Props) {
-  const { config, pathname } = props;
+  const { pathname } = props;
+  const config = useConfig();
   const traceDiff = useTraceDiffStore(
     useShallow(s => ({
       a: s.a,
@@ -125,7 +127,7 @@ export function TopNavImpl(props: Props) {
       label: <TraceIDSearchInput />,
       key: 'TraceIDSearchInput',
     },
-    ...menuItems.map(m => {
+    ...menuItems.map((m: ConfigMenuItem | ConfigMenuGroup) => {
       if (isItem(m)) {
         return { label: getItem(m).label, key: getItem(m).key };
       }

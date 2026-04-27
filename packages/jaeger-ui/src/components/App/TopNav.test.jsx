@@ -38,6 +38,14 @@ vi.mock('antd', async () => {
   return { ...actual, Menu, Dropdown };
 });
 
+const { useConfigMock } = vi.hoisted(() => ({
+  useConfigMock: jest.fn(),
+}));
+
+vi.mock('../../hooks/useConfig', () => ({
+  useConfig: (...args) => useConfigMock(...args),
+}));
+
 vi.mock('../../utils/config/get-config', async () => {
   return {
     default: jest.fn(() => ({
@@ -55,10 +63,6 @@ vi.mock('../../utils/config/get-config', async () => {
 });
 
 describe('<TopNav>', () => {
-  beforeEach(() => {
-    useTraceDiffStore.setState({ a: null, b: null, cohort: [] });
-  });
-
   const labelGitHub = 'GitHub';
   const githubUrl = 'https://github.com/uber/jaeger';
   const blogUrl = 'https://medium.com/jaegertracing/';
@@ -107,6 +111,12 @@ describe('<TopNav>', () => {
     },
     pathname: '/search',
   };
+
+  beforeEach(() => {
+    useTraceDiffStore.setState({ a: null, b: null, cohort: [] });
+    useConfigMock.mockReset();
+    useConfigMock.mockReturnValue(defaultProps.config);
+  });
 
   describe('renders the default menu options', () => {
     let component;

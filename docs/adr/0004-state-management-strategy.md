@@ -996,7 +996,7 @@ type IDdgModifiersState = {
 
 **Components to rewire**: `DeepDependenciesPage`, `DdgNodeContent`, `HopsSelector`.
 
-#### ⬜ 1e. Embedded / `Page` / `TopNav` flags
+#### ✅ 1e. Embedded / `Page` / `TopNav` flags
 
 **Redux removed**: `src/reducers/embedded.ts`
 
@@ -1015,7 +1015,7 @@ Initialize from the `?embed` URL param at startup; keep URL as the source of tru
 
 **Components to rewire**: `TopNav`, `Page`, `SearchTracePage` - all currently read `embedded` from Redux.
 
-#### ⬜ 1f. `config` Redux slice
+#### ✅ 1f. `config` Redux slice
 
 **Redux removed**: `src/reducers/config.ts`
 
