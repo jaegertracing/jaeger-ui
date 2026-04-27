@@ -165,6 +165,9 @@ export type Config = {
     // which allows passing functions to the configuration.
     // See https://github.com/jaegertracing/jaeger-ui/issues/652 for background.
     customWebAnalytics: IWebAnalyticsFunc | TNil;
+
+    // cookiesToDimensions maps cookie names to Google Analytics custom dimensions.
+    cookiesToDimensions?: readonly { cookie: string; dimension: string }[];
   };
 
   // linkPatterns allow customizing the display of traces with external links.
