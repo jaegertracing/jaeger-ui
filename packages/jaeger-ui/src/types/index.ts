@@ -6,6 +6,7 @@ import { SearchQuery } from './search';
 import TDdgState from './TDdgState';
 import tNil from './TNil';
 import { IOtelTrace } from './otel';
+import TPathAgnosticDecorationsState from './TPathAgnosticDecorationsState';
 import TTraceTimeline from './TTraceTimeline';
 import { MetricsReduxState } from './metrics';
 
@@ -37,6 +38,7 @@ export type ReduxState = {
     loading: boolean;
     error: ApiError | TNil;
   };
+  pathAgnosticDecorations: TPathAgnosticDecorationsState;
   trace: {
     search: {
       error?: ApiError;
