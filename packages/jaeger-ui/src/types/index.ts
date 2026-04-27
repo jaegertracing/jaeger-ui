@@ -7,6 +7,7 @@ import { SearchQuery } from './search';
 import TDdgState from './TDdgState';
 import tNil from './TNil';
 import { Trace } from './trace';
+import TPathAgnosticDecorationsState from './TPathAgnosticDecorationsState';
 import TTraceTimeline from './TTraceTimeline';
 import { MetricsReduxState } from './metrics';
 
@@ -34,6 +35,7 @@ export type ReduxState = {
     loading: boolean;
     error: ApiError | TNil;
   };
+  pathAgnosticDecorations: TPathAgnosticDecorationsState;
   trace: {
     traces: Record<string, FetchedTrace>;
     search: {
