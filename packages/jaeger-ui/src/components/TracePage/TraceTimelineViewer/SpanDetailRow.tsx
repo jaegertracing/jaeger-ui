@@ -39,8 +39,6 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     props.onDetailToggled(props.span.spanID);
   };
 
-  const { span } = props;
-
   const {
     color,
     nameColumnWidth,
@@ -50,6 +48,7 @@ const SpanDetailRow = React.memo((props: SpanDetailRowProps) => {
     resourceToggle,
     linksToggle,
     warningsToggle,
+    span,
     attributesToggle,
     traceStartTime,
     focusSpan,
