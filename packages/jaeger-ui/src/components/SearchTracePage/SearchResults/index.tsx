@@ -22,7 +22,7 @@ import SearchResultsDDG from '../../DeepDependencies/traces';
 import { getLocation } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
-import { stripEmbeddedState } from '../../../utils/embedded-url';
+import { stripEmbeddedState } from '../../../stores/embedded-store';
 
 import { FetchedTrace } from '../../../types';
 import { SearchQuery } from '../../../types/search';
@@ -32,6 +32,7 @@ import './index.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
 import withRouteProps from '../../../utils/withRouteProps';
 import SearchableSelect from '../../common/SearchableSelect';
+import { useConfig } from '../../../hooks/useConfig';
 
 type SearchResultsProps = {
   cohortAddTrace: (traceId: string) => void;
@@ -142,6 +143,7 @@ export function UnconnectedSearchResults({
   cohortRemoveTrace,
 }: SearchResultsProps) {
   const navigate = useNavigate();
+  const config = useConfig();
 
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
@@ -156,8 +158,8 @@ export function UnconnectedSearchResults({
 
   const goToTrace = useCallback(
     (traceID: string) => {
-      const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
-      const locationObj = getLocation(traceID, { fromSearch: searchUrl });
+      const backNavUrl = queryOfResults ? getUrl(queryOfResults) : getUrl();
+      const locationObj = getLocation(traceID, { fromSearch: backNavUrl });
       navigate(locationObj.pathname + (locationObj.search ? `?${locationObj.search}` : ''), {
         state: locationObj.state,
       });
@@ -209,7 +211,8 @@ export function UnconnectedSearchResults({
     );
   }
   const cohortIds = new Set(diffCohort.map(datum => datum.id));
-  const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
+  const backNavUrl = queryOfResults ? getUrl(queryOfResults) : getUrl();
+  const standaloneUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
   return (
     <div className="SearchResults">
       <div className="SearchResults--header">
@@ -240,10 +243,10 @@ export function UnconnectedSearchResults({
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
           {traceResultsView && <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />}
           <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
-          {showStandaloneLink && (
+          {showStandaloneLink && !config.forbidNewPage && (
             <Link
               className="u-tx-inherit ub-nowrap ub-ml3"
-              to={searchUrl}
+              to={standaloneUrl}
               target={getTargetEmptyOrBlank()}
               rel="noopener noreferrer"
             >
@@ -267,7 +270,7 @@ export function UnconnectedSearchResults({
                 isInDiffCohort={cohortIds.has(trace.traceID)}
                 linkTo={getLocation(
                   trace.traceID,
-                  { fromSearch: searchUrl },
+                  { fromSearch: backNavUrl },
                   spanLinks && (spanLinks[trace.traceID] || spanLinks[trace.traceID.replace(/^0*/, '')])
                 )}
                 toggleComparison={toggleComparison}

@@ -88,6 +88,12 @@ vi.mock('../../common/SearchableSelect', () => {
   });
 });
 
+const mockUseConfigFn = vi.hoisted(() => vi.fn(() => ({ forbidNewPage: false })));
+
+vi.mock('../../../hooks/useConfig', () => ({
+  useConfig: mockUseConfigFn,
+}));
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -530,7 +536,8 @@ describe('<SearchResults>', () => {
   });
 
   describe('showStandaloneLink', () => {
-    it('renders Link when showStandaloneLink is true', () => {
+    it('renders Link when showStandaloneLink is true and forbidNewPage is false', () => {
+      mockUseConfigFn.mockReturnValue({ forbidNewPage: false });
       renderWithRouter(<SearchResults {...baseProps} showStandaloneLink />);
       const link = screen.getByRole('link');
       expect(link).toBeInTheDocument();
@@ -539,6 +546,13 @@ describe('<SearchResults>', () => {
 
     it('does not render Link when showStandaloneLink is false', () => {
       renderWithRouter(<SearchResults {...baseProps} showStandaloneLink={false} />);
+      expect(screen.queryByRole('link')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
+    });
+
+    it('does not render Link when forbidNewPage is true', () => {
+      mockUseConfigFn.mockReturnValue({ forbidNewPage: true });
+      renderWithRouter(<SearchResults {...baseProps} showStandaloneLink />);
       expect(screen.queryByRole('link')).not.toBeInTheDocument();
       expect(screen.queryByTestId('new-window-icon')).not.toBeInTheDocument();
     });
