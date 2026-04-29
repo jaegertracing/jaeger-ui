@@ -1,12 +1,13 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
+import { computeAncestorEntries, computeIsLastChild } from './span-tree-utils';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
 
@@ -121,6 +122,10 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   const hasLinks = span.links && span.links.length > 0;
   const hasInboundLinks = span.inboundLinks && span.inboundLinks.length > 0;
 
+  // Precompute ancestor data for SpanTreeOffset
+  const ancestorEntries = useMemo(() => computeAncestorEntries(span), [span]);
+  const isLastChild = useMemo(() => computeIsLastChild(span), [span]);
+
   return (
     <TimelineRow
       className={`
@@ -135,7 +140,11 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
         <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
-            span={span}
+            spanID={span.spanID}
+            hasChildren={isParent}
+            childCount={span.childSpans.length}
+            ancestorEntries={ancestorEntries}
+            isLastChild={isLastChild}
             onClick={isParent ? _childrenToggle : undefined}
             color={color}
           />

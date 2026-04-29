@@ -37,6 +37,7 @@ describe('<SpanDetailRow> icon behavior', () => {
     depth: 0,
     hasChildren: true,
     childSpans: [{ spanID: 'child-1' }],
+    parentSpan: null,
     attributes: [],
     events: [],
     links: [],
@@ -56,6 +57,7 @@ describe('<SpanDetailRow> icon behavior', () => {
   const props = {
     color: 'some-color',
     nameColumnWidth: 0.5,
+    timelineBarsVisible: true,
     detailState: new DetailState(),
     onDetailToggled: jest.fn(),
     linksGetter: jest.fn(),
