@@ -19,6 +19,7 @@ import { formatRelativeDate } from '../../../utils/date';
 import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
 import { IOtelTrace, StatusCode } from '../../../types/otel';
+import { TraceLocation } from '../../TracePage/url';
 
 import './ResultItem.css';
 
@@ -27,7 +28,7 @@ dayjs.extend(relativeTime);
 type Props = {
   durationPercent: number;
   isInDiffCohort: boolean;
-  linkTo: string | { pathname: string; search?: string | false; state?: Record<string, string> | null };
+  linkTo: string | TraceLocation;
   toggleComparison: (traceID: string) => void;
   trace: IOtelTrace;
   disableComparision: boolean;

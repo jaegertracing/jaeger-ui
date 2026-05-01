@@ -4,7 +4,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
+import userEvent from '@testing-library/user-event';
 
 import ResultItem from './ResultItem';
 import * as markers from './ResultItem.markers';
@@ -112,6 +113,43 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error ta
   // Assert that the specific service tag is found and has the error icon
   expect(errorTag).toBeDefined();
   expect(errorTag.querySelector('.ResultItem--errorIcon')).toBeInTheDocument();
+});
+
+it('passes router state to destination route when linkTo is a TraceLocation object', async () => {
+  function Destination() {
+    const location = useLocation();
+    return <div data-testid="state">{JSON.stringify(location.state)}</div>;
+  }
+
+  const router = createMemoryRouter(
+    [
+      {
+        path: '/',
+        element: (
+          <ResultItem
+            trace={otelTrace}
+            durationPercent={50}
+            linkTo={{ pathname: '/trace/abc', state: { fromSearch: '/search?service=foo' } }}
+            toggleComparison={() => {}}
+            isInDiffCohort={false}
+            disableComparision={false}
+          />
+        ),
+      },
+      { path: '/trace/:id', element: <Destination /> },
+    ],
+    { initialEntries: ['/'] }
+  );
+
+  const user = userEvent.setup();
+  render(<RouterProvider router={router} />);
+
+  // ResultItem renders two Links (ResultItemTitle + the body row); click the first one
+  await user.click(screen.getAllByRole('link')[0]);
+
+  expect(screen.getByTestId('state')).toHaveTextContent(
+    JSON.stringify({ fromSearch: '/search?service=foo' })
+  );
 });
 
 it('calls trackConversions on click', () => {

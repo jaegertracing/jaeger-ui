@@ -4,7 +4,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import ResultItemTitle from './ResultItemTitle';
@@ -129,6 +129,41 @@ describe('ResultItemTitle', () => {
       const link = screen.getByRole('link');
       expect(link).toBeInTheDocument();
       expect(link).toHaveAttribute('href', `${defaultProps.linkTo.pathname}${defaultProps.linkTo.search}`);
+    });
+  });
+
+  describe('router state propagation', () => {
+    it('passes state to the destination route when linkTo is a TraceLocation object', async () => {
+      // Destination route reads location.state and renders it for assertion
+      function Destination() {
+        const location = useLocation();
+        return <div data-testid="state">{JSON.stringify(location.state)}</div>;
+      }
+
+      const router = createMemoryRouter(
+        [
+          {
+            path: '/',
+            element: (
+              <ResultItemTitle
+                {...defaultProps}
+                linkTo={{ pathname: '/trace/abc', state: { fromSearch: '/search?service=foo' } }}
+              />
+            ),
+          },
+          { path: '/trace/:id', element: <Destination /> },
+        ],
+        { initialEntries: ['/'] }
+      );
+
+      const user = userEvent.setup();
+      render(<RouterProvider router={router} />);
+
+      await user.click(screen.getByRole('link'));
+
+      expect(screen.getByTestId('state')).toHaveTextContent(
+        JSON.stringify({ fromSearch: '/search?service=foo' })
+      );
     });
   });
 
