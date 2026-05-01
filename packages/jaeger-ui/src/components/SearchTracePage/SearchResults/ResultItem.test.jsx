@@ -115,7 +115,7 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error ta
   expect(errorTag.querySelector('.ResultItem--errorIcon')).toBeInTheDocument();
 });
 
-it('passes router state to destination route when linkTo is a TraceLocation object', async () => {
+it('passes router state to destination route when linkTo is a TracePageLink', async () => {
   function Destination() {
     const location = useLocation();
     return <div data-testid="state">{JSON.stringify(location.state)}</div>;

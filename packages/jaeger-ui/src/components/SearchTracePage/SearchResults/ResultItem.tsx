@@ -19,7 +19,7 @@ import { formatRelativeDate } from '../../../utils/date';
 import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
 import { IOtelTrace, StatusCode } from '../../../types/otel';
-import { TracePageLink } from '../../TracePage/url';
+import type { TracePageLink } from '../../TracePage/url';
 
 import './ResultItem.css';
 
@@ -81,7 +81,7 @@ export default function ResultItem({
         traceName={traceName}
         disableComparision={disableComparision}
       />
-      <Link to={{ pathname: linkTo.pathname, search: linkTo.search || undefined }} state={linkTo.state}>
+      <Link to={{ pathname: linkTo.pathname, search: linkTo.search }} state={linkTo.state}>
         <Row>
           <Col xs={24} sm={4} className="ub-p2">
             <Tag className="ub-m1" data-testid={markers.NUM_SPANS} variant="outlined">

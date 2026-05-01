@@ -13,7 +13,7 @@ import { formatDuration } from '../../../utils/date';
 import { FetchedState, TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { ApiError } from '../../../types/api-error';
-import { TracePageLink } from '../../TracePage/url';
+import type { TracePageLink } from '../../TracePage/url';
 
 import './ResultItemTitle.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -82,7 +82,7 @@ export default function ResultItemTitle({
       {!disableComparision && <Checkbox {...checkboxProps} />}
       {linkTo ? (
         <Link
-          to={{ pathname: linkTo.pathname, search: linkTo.search || undefined }}
+          to={{ pathname: linkTo.pathname, search: linkTo.search }}
           state={linkTo.state}
           className={wrapperClassName}
           target={targetBlank ? getTargetEmptyOrBlank() : undefined}
