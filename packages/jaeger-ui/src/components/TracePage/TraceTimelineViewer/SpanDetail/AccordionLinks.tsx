@@ -79,7 +79,20 @@ function AccordionLinks({
       'aria-checked': isOpen,
       onClick: isEmpty ? null : onToggle,
       onKeyDown: (e: React.KeyboardEvent) => {
-        if (!isEmpty && onToggle && (e.key === 'Enter' || e.key === ' ')) {
+        if (isEmpty || !onToggle) {
+          return;
+        }
+        if (e.key === ' ') {
+          e.preventDefault();
+          return;
+        }
+        if (e.key === 'Enter' && !e.repeat) {
+          e.preventDefault();
+          onToggle();
+        }
+      },
+      onKeyUp: (e: React.KeyboardEvent) => {
+        if (!isEmpty && onToggle && e.key === ' ' && !e.repeat) {
           e.preventDefault();
           onToggle();
         }
