@@ -6,7 +6,7 @@ import { IoAlert } from 'react-icons/io5';
 
 import SpanTreeOffset from './SpanTreeOffset';
 import { computeAncestorEntries } from './span-tree-utils';
-import { AncestorEntry } from './SpanTreeOffset';
+import type { AncestorEntry } from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
 import { IOtelSpan } from '../../../types/otel';
 import colorGenerator from '../../../utils/color-generator';
