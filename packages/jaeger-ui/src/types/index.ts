@@ -21,7 +21,12 @@ export type FetchedTrace<T = Trace> = {
   state?: FetchedState;
 };
 
+// Router state carried in history entries when navigating to the trace page.
+// Not visible in the URL — survives back/forward navigation but is lost on a hard reload.
 export type LocationState = {
+  // The full search-results URL (pathname + query string) the user came from,
+  // e.g. '/search?service=frontend&operation=GET%20%2F'.
+  // When present, TracePageHeader renders a back button that returns to this URL.
   fromSearch?: string;
 };
 
