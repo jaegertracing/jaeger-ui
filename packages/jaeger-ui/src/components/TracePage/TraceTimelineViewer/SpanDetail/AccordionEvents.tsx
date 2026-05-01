@@ -54,23 +54,19 @@ export default function AccordionEvents({
   const contentRef = React.useRef<HTMLDivElement | null>(null);
 
   const notifyListReflow = React.useCallback(() => {
-    const emit = () => {
+    if (typeof window === 'undefined') return;
+
+    window.requestAnimationFrame(() => {
       try {
         if (spanID) {
           window.dispatchEvent(new CustomEvent('jaeger:detail-measure', { detail: { spanID } }));
         } else {
           window.dispatchEvent(new Event('jaeger:list-resize'));
         }
-      } catch (error) {
-        void error;
+      } catch {
+        // Ignore dispatch errors
       }
-    };
-
-    setTimeout(emit);
-    if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
-      window.requestAnimationFrame(emit);
-    }
-    setTimeout(emit, 50);
+    });
   }, [spanID]);
 
   // Observe height changes in the content area to notify virtualized list to reflow
@@ -199,6 +195,7 @@ export default function AccordionEvents({
                   label={labelContent}
                   linksGetter={linksGetter}
                   onToggle={interactive && onItemToggle ? () => onItemToggle(event) : null}
+                  spanID={spanID}
                 />
               );
             });

@@ -105,6 +105,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             linksGetter={linksGetter}
             isOpen={isAttributesOpen}
             onToggle={() => attributesToggle(span.spanID)}
+            spanID={span.spanID}
           />
           {span.resource.attributes && span.resource.attributes.length > 0 && (
             <AccordionAttributes
@@ -114,6 +115,7 @@ export default function SpanDetail(props: SpanDetailProps) {
               linksGetter={linksGetter}
               isOpen={isResourceOpen}
               onToggle={() => resourceToggle(span.spanID)}
+              spanID={span.spanID}
             />
           )}
         </div>
@@ -141,6 +143,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             data={warnings}
             isOpen={isWarningsOpen}
             onToggle={() => warningsToggle(span.spanID)}
+            spanID={span.spanID}
           />
         )}
         {links && links.length > 0 && (
@@ -150,6 +153,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             onToggle={() => linksToggle(span.spanID)}
             focusSpan={focusSpan}
             useOtelTerms={useOtelTerms}
+            spanID={span.spanID}
           />
         )}
         <small className="SpanDetail--debugInfo">

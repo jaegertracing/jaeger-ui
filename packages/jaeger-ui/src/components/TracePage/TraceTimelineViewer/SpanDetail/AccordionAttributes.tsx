@@ -42,6 +42,7 @@ export default function AccordionAttributes({
   label,
   linksGetter,
   onToggle = null,
+  spanID,
 }: {
   className?: string | TNil;
   data: ReadonlyArray<IAttribute>;
@@ -51,7 +52,51 @@ export default function AccordionAttributes({
   label: string;
   linksGetter: ((pairs: ReadonlyArray<IAttribute>, index: number) => Hyperlink[]) | TNil;
   onToggle?: null | (() => void);
+  spanID?: string;
 }) {
+  const contentRef = React.useRef<HTMLDivElement | null>(null);
+
+  const notifyListReflow = React.useCallback(() => {
+    if (typeof window === 'undefined') return;
+
+    window.requestAnimationFrame(() => {
+      try {
+        if (spanID) {
+          window.dispatchEvent(new CustomEvent('jaeger:detail-measure', { detail: { spanID } }));
+        } else {
+          window.dispatchEvent(new Event('jaeger:list-resize'));
+        }
+      } catch {
+        // Ignore dispatch errors
+      }
+    });
+  }, [spanID]);
+
+  // Observe height changes in the content area to notify virtualized list to reflow
+  React.useEffect(() => {
+    if (!interactive || !isOpen) return;
+    const target = contentRef.current;
+    if (!target) return;
+
+    let ro: ResizeObserver | null = null;
+    const callback = () => notifyListReflow();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(callback as ResizeObserverCallback);
+      if (ro) ro.observe(target);
+    }
+
+    return () => {
+      if (ro) {
+        try {
+          ro.disconnect();
+        } catch {
+          // Ignore
+        }
+      }
+    };
+  }, [interactive, isOpen, notifyListReflow]);
+
   const isEmpty = !Array.isArray(data) || !data.length;
   const iconCls = cx('u-align-icon', { 'AccordionAttributes--emptyIcon': isEmpty });
   let arrow: React.ReactNode | null = null;
@@ -81,7 +126,11 @@ export default function AccordionAttributes({
         </strong>
         {!isOpen && <AttributesSummary data={data} />}
       </div>
-      {isOpen && <AttributesTable data={data} linksGetter={linksGetter} />}
+      {isOpen && (
+        <div ref={contentRef}>
+          <AttributesTable data={data} linksGetter={linksGetter} />
+        </div>
+      )}
     </div>
   );
 }

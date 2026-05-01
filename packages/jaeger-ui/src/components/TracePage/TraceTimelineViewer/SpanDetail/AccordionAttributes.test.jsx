@@ -123,4 +123,46 @@ describe('<AccordionAttributes />', () => {
     fireEvent.click(header);
     expect(defaultProps.onToggle).toHaveBeenCalledTimes(1);
   });
+
+  it('dispatches reflow events when expanded', () => {
+    jest.useFakeTimers();
+    const mockDispatchEvent = jest.fn();
+    window.dispatchEvent = mockDispatchEvent;
+
+    let observerCallback;
+    const mockObserve = jest.fn();
+    const mockDisconnect = jest.fn();
+
+    class MockResizeObserver {
+      constructor(cb) {
+        observerCallback = cb;
+      }
+
+      observe = mockObserve;
+      disconnect = mockDisconnect;
+      unobserve = vi.fn();
+    }
+
+    vi.stubGlobal('ResizeObserver', MockResizeObserver);
+
+    render(<AccordionAttributes {...defaultProps} isOpen spanID="test-span" />);
+
+    expect(mockObserve).toHaveBeenCalled();
+    // Manually trigger the ResizeObserver callback
+    if (observerCallback) {
+      observerCallback();
+    }
+
+    jest.runAllTimers();
+
+    expect(mockDispatchEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'jaeger:detail-measure',
+        detail: { spanID: 'test-span' },
+      })
+    );
+
+    jest.useRealTimers();
+    vi.unstubAllGlobals();
+  });
 });
