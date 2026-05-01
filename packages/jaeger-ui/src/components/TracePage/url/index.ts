@@ -16,17 +16,19 @@ export function getUrl(id: string, uiFind?: string): string {
   return `${traceUrl}?${queryString.stringify({ uiFind })}`;
 }
 
-export type TraceLocation = {
+// Navigation descriptor passed to <Link to={...} state={...}> or navigate().
+// Distinct from React Router's Location, which represents where you currently are.
+export type TraceLink = {
+  // URL path to the trace page, e.g. /trace/abc123
   pathname: string;
+  // Optional query string, e.g. ?uiFind=foo. False/undefined when absent.
   search: string | false | undefined;
+  // Out-of-band router state, not visible in the URL.
+  // Currently carries fromSearch so TracePageHeader can render the back button.
   state: Record<string, string> | TNil;
 };
 
-export function getLocation(
-  id: string,
-  state: Record<string, string> | TNil,
-  uiFind?: string
-): TraceLocation {
+export function getLocation(id: string, state: Record<string, string> | TNil, uiFind?: string): TraceLink {
   return {
     state,
     pathname: getUrl(id),
