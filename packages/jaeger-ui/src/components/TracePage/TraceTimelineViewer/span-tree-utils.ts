@@ -39,17 +39,12 @@ export function computeAncestorEntries(span: IOtelSpan): AncestorEntry[] {
     return [];
   }
 
-  const isLast = computeIsLastChild(span);
-
   return ancestors.map((ancestor, index) => {
     const guideColor = colorGenerator.getColorByKey(ancestor.resource.serviceName);
     const isLastAncestor = index === ancestors.length - 1;
 
     let shouldTerminate = false;
-    if (isLastAncestor) {
-      // For immediate parent, check if current span is the last child
-      shouldTerminate = isLast;
-    } else {
+    if (!isLastAncestor) {
       // For non-immediate ancestors, check if their descendant in the chain is the last child
       const descendantInChain = ancestors[index + 1];
       if (descendantInChain && descendantInChain.parentSpan) {
