@@ -25,10 +25,10 @@ export type TracePageLink = {
   search?: string;
   // Out-of-band router state, not visible in the URL.
   // Currently carries fromSearch so TracePageHeader can render the back-to-search button.
-  state: LocationState | null;
+  state?: LocationState;
 };
 
-export function getTracePageLink(id: string, state: LocationState | null, uiFind?: string): TracePageLink {
+export function getTracePageLink(id: string, state?: LocationState, uiFind?: string): TracePageLink {
   const link: TracePageLink = { state, pathname: getUrl(id) };
   if (uiFind) link.search = queryString.stringify({ uiFind });
   return link;

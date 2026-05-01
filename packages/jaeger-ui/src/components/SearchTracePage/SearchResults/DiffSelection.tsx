@@ -45,7 +45,7 @@ export default function DiffSelection({ toggleComparison, traces }: Props) {
                 duration={data && (data.duration as IOtelTrace['duration'])}
                 error={error}
                 isInDiffCohort
-                linkTo={getTracePageLink(id, null)}
+                linkTo={getTracePageLink(id)}
                 state={state}
                 targetBlank
                 toggleComparison={toggleComparison}
