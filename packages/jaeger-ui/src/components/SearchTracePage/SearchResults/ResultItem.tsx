@@ -27,7 +27,7 @@ dayjs.extend(relativeTime);
 type Props = {
   durationPercent: number;
   isInDiffCohort: boolean;
-  linkTo: React.ComponentProps<typeof Link>['to'];
+  linkTo: string | { pathname: string; search?: string | false; state?: Record<string, string> | null };
   toggleComparison: (traceID: string) => void;
   trace: IOtelTrace;
   disableComparision: boolean;
@@ -80,7 +80,14 @@ export default function ResultItem({
         traceName={traceName}
         disableComparision={disableComparision}
       />
-      <Link to={linkTo}>
+      <Link
+        to={
+          typeof linkTo === 'string'
+            ? linkTo
+            : { pathname: linkTo.pathname, search: linkTo.search || undefined }
+        }
+        state={typeof linkTo === 'string' ? undefined : linkTo.state}
+      >
         <Row>
           <Col xs={24} sm={4} className="ub-p2">
             <Tag className="ub-m1" data-testid={markers.NUM_SPANS} variant="outlined">

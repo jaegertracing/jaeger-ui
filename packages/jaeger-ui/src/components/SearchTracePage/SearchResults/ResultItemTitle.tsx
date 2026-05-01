@@ -22,7 +22,10 @@ type Props = {
   durationPercent?: number;
   error?: ApiError;
   isInDiffCohort: boolean;
-  linkTo: React.ComponentProps<typeof Link>['to'] | TNil;
+  linkTo:
+    | string
+    | { pathname: string; search?: string | false; state?: Record<string, string> | TNil }
+    | TNil;
   state?: FetchedState | TNil;
   targetBlank?: boolean;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
@@ -81,7 +84,12 @@ export default function ResultItemTitle({
       {!disableComparision && <Checkbox {...checkboxProps} />}
       {linkTo ? (
         <Link
-          to={linkTo}
+          to={
+            typeof linkTo === 'string'
+              ? linkTo
+              : { pathname: linkTo.pathname, search: linkTo.search || undefined }
+          }
+          state={typeof linkTo === 'string' ? undefined : linkTo.state}
           className={wrapperClassName}
           target={targetBlank ? getTargetEmptyOrBlank() : undefined}
           rel={targetBlank ? 'noopener noreferrer' : undefined}
