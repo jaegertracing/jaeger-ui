@@ -22,7 +22,7 @@ export type TracePageLink = {
   // URL path to the trace page, e.g. /trace/abc123
   pathname: string;
   // Serialized query string passed verbatim to <Link to={{ search }}>. Always encodes ?uiFind=<text> when present.
-  search: string | false | undefined;
+  search: string | undefined;
   // Out-of-band router state, not visible in the URL.
   // Currently carries fromSearch so TracePageHeader can render the back-to-search button.
   state: Record<string, string> | TNil;
