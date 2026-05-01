@@ -28,7 +28,7 @@ describe('ResultItemTitle', () => {
     duration: 150000, // Using microseconds is more realistic for formatDuration
     durationPercent: 10,
     isInDiffCohort: true,
-    linkTo: { pathname: '/search', search: `?traceID=trace-id-longer-than-8`, state: null },
+    linkTo: { pathname: '/trace/trace-id-longer-than-8' },
     state: fetchedState.DONE,
     toggleComparison: jest.fn(),
     traceID: 'trace-id-longer-than-8',
@@ -47,7 +47,7 @@ describe('ResultItemTitle', () => {
     // Test that the link is rendered with the correct href and contains the title.
     const link = screen.getByRole('link', { name: /150ms traceNameValue ?trace-i/i });
     expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', `${defaultProps.linkTo.pathname}${defaultProps.linkTo.search}`);
+    expect(link).toHaveAttribute('href', defaultProps.linkTo.pathname);
 
     // Test that the checkbox is rendered and checked by default.
     const checkbox = screen.getByRole('checkbox');
@@ -128,7 +128,7 @@ describe('ResultItemTitle', () => {
       // Verify the link is still clickable and present
       const link = screen.getByRole('link');
       expect(link).toBeInTheDocument();
-      expect(link).toHaveAttribute('href', `${defaultProps.linkTo.pathname}${defaultProps.linkTo.search}`);
+      expect(link).toHaveAttribute('href', defaultProps.linkTo.pathname);
     });
   });
 
