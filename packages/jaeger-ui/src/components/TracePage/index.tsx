@@ -40,7 +40,8 @@ import TraceTimelineViewer from './TraceTimelineViewer';
 import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
-import { getUrl } from './url';
+import { getUrl, parseSettingsFromUrl } from './url';
+import { useLayoutSettings } from './useLayoutSettings';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
 import { extractUiFindFromState } from '../common/UiFindInput';
@@ -166,6 +167,22 @@ export function TracePageImpl(props: TProps) {
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
+
+  const {
+    timelineBarsVisible: resolvedTimeline,
+    detailPanelMode: resolvedDetailPanel,
+    saveAsDefault,
+  } = useLayoutSettings(location.search);
+
+  useEffect(() => {
+    const urlSettings = parseSettingsFromUrl(location.search);
+    if (urlSettings.timelineBarsVisible !== null) {
+      zustandSetTimelineBarsVisible(urlSettings.timelineBarsVisible, false);
+    }
+    if (urlSettings.detailPanelMode !== null) {
+      useLayoutPrefsStore.getState().applyDetailPanelModeToLayout(urlSettings.detailPanelMode, false);
+    }
+  }, [location.search, zustandSetTimelineBarsVisible]);
 
   const setDetailPanelMode = useCallback(
     (mode: SpanDetailPanelMode) => {
@@ -400,7 +417,7 @@ export function TracePageImpl(props: TProps) {
     viewRange,
     canCollapse: !embedded || !embedded.timeline?.hideSummary || !embedded.timeline?.hideMinimap,
     clearSearch,
-    detailPanelMode,
+    detailPanelMode: resolvedDetailPanel.value,
     enableSidePanel,
     hideMap: Boolean(
       viewType !== ETraceViewType.TraceTimelineViewer || Boolean(embedded?.timeline?.hideMinimap)
@@ -420,12 +437,17 @@ export function TracePageImpl(props: TProps) {
     showArchiveButton: !isEmbedded && archiveEnabled && hasArchiveStorage,
     showStandaloneLink: isEmbedded,
     showViewOptions: !isEmbedded,
-    timelineBarsVisible,
+    timelineBarsVisible: resolvedTimeline.value,
     toSearch: (locationState && locationState.fromSearch) || null,
     trace: data.asOtelTrace(),
     updateNextViewRangeTime,
     updateViewRangeTime,
     useOtelTerms,
+    settingSources: {
+      timelineBarsVisible: resolvedTimeline,
+      detailPanelMode: resolvedDetailPanel,
+    },
+    saveSettingAsDefault: saveAsDefault,
   };
 
   const sm = scrollManagerRef.current;

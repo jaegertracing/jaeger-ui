@@ -19,13 +19,10 @@ type TraceTimelineLayoutPrefsStore = {
   timelineBarsVisible: boolean;
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
-  // Updates layout fields only; use `setDetailPanelMode` from `./store` to also sync detail panel state.
-  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => void;
-  setTimelineBarsVisible: (visible: boolean) => void;
+  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode, persist?: boolean) => void;
+  setTimelineBarsVisible: (visible: boolean, persist?: boolean) => void;
 };
 
-// Reads user layout preferences from localStorage and merges them with config-driven defaults.
-// Mirrors the logic that was previously in TraceTimelineViewer/duck.ts `newInitialState()`.
 export function getInitialLayoutState(): Pick<
   TraceTimelineLayoutPrefsStore,
   'spanNameColumnWidth' | 'sidePanelWidth' | 'detailPanelMode' | 'timelineBarsVisible'
@@ -114,8 +111,8 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
     set({ sidePanelWidth });
   },
 
-  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => {
-    localStorage.setItem('detailPanelMode', mode);
+  applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode, persist = true) => {
+    if (persist) localStorage.setItem('detailPanelMode', mode);
     let { spanNameColumnWidth, sidePanelWidth } = get();
     if (mode === 'sidepanel') {
       const maxWidth = Math.min(SPAN_NAME_COLUMN_WIDTH_MAX, 1 - sidePanelWidth - MIN_TIMELINE_COLUMN_WIDTH);
@@ -124,8 +121,8 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
     set({ detailPanelMode: mode, spanNameColumnWidth });
   },
 
-  setTimelineBarsVisible: (visible: boolean) => {
-    localStorage.setItem('timelineVisible', String(visible));
+  setTimelineBarsVisible: (visible: boolean, persist = true) => {
+    if (persist) localStorage.setItem('timelineVisible', String(visible));
     set({ timelineBarsVisible: visible });
   },
 }));
