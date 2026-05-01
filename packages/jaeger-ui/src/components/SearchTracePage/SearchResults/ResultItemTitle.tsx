@@ -13,7 +13,7 @@ import { formatDuration } from '../../../utils/date';
 import { FetchedState, TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { ApiError } from '../../../types/api-error';
-import { TraceLink } from '../../TracePage/url';
+import { TracePageLink } from '../../TracePage/url';
 
 import './ResultItemTitle.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -23,7 +23,7 @@ type Props = {
   durationPercent?: number;
   error?: ApiError;
   isInDiffCohort: boolean;
-  linkTo: TraceLink | TNil;
+  linkTo: TracePageLink | TNil;
   state?: FetchedState | TNil;
   targetBlank?: boolean;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
