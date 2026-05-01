@@ -19,7 +19,7 @@ describe('TracePage/url', () => {
 
   describe('getTracePageLink', () => {
     const state = {
-      from: 'some-url',
+      fromSearch: 'some-url',
     };
 
     it('passes provided state with correct pathname, without uiFind', () => {
