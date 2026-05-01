@@ -100,7 +100,8 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
     }
   };
 
-  const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
+  const wrapperProps =
+    hasChildren && onClick ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
 
   // The last ancestor entry is the immediate parent; its color is used for the horizontal connector.
   const lastEntry = ancestorEntries.length > 0 ? ancestorEntries[ancestorEntries.length - 1] : null;
