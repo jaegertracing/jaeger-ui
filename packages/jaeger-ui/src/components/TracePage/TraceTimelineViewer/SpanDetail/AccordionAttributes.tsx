@@ -11,6 +11,8 @@ import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
 import { IAttribute } from '../../../../types/otel';
 
+import { formatAttributeValue } from './utils';
+
 import './AccordionAttributes.css';
 
 // export for tests
@@ -26,7 +28,7 @@ export function AttributesSummary({ data }: { data: ReadonlyArray<IAttribute> })
         <li className="AccordionAttributes--summaryItem" key={`${item.key}-${i}`}>
           <span className="AccordionAttributes--summaryLabel">{item.key}</span>
           <span className="AccordionAttributes--summaryDelim">=</span>
-          {String(item.value)}
+          {formatAttributeValue(item.value)}
         </li>
       ))}
     </ul>

@@ -211,7 +211,11 @@ describe('<AttributesTable>', () => {
     copyIcons.forEach((copyIcon, i) => {
       const datum = data[Math.floor(i / 2)];
       if (i % 2 === 0) {
-        expect(copyIcon).toHaveAttribute('data-copy-text', String(datum.value));
+        const expectedCopyText =
+          datum.value && typeof datum.value === 'object' && !(datum.value instanceof Uint8Array)
+            ? JSON.stringify(datum.value, null, 2)
+            : String(datum.value);
+        expect(copyIcon).toHaveAttribute('data-copy-text', expectedCopyText);
         expect(copyIcon).toHaveAttribute('data-tooltip-title', 'Copy value');
       } else {
         expect(copyIcon).toHaveAttribute('data-copy-text', JSON.stringify(datum, null, 2));

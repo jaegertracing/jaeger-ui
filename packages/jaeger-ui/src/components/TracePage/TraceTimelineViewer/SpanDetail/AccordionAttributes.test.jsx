@@ -47,6 +47,17 @@ describe('<AttributesSummary />', () => {
     const expectedTexts = tags.map(tag => `${tag.key}=${tag.value}`);
     expect(texts).toEqual(expectedTexts);
   });
+
+  it('formats complex attributes correctly in the summary', () => {
+    const complexTags = [
+      { key: 'array', value: [1, 2, 3] },
+      { key: 'object', value: { a: 1 } },
+    ];
+    const { container } = render(<AttributesSummary data={complexTags} />);
+    const listItems = container.querySelectorAll('li');
+    expect(listItems[0].textContent).toBe('array=[3 items]');
+    expect(listItems[1].textContent).toBe('object={...}');
+  });
 });
 
 describe('<AccordionAttributes />', () => {
