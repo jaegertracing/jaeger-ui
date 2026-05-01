@@ -28,7 +28,7 @@ describe('ResultItemTitle', () => {
     duration: 150000, // Using microseconds is more realistic for formatDuration
     durationPercent: 10,
     isInDiffCohort: true,
-    linkTo: { pathname: '/search', search: `?traceID=trace-id-longer-than-8` }, // Use LocationDescriptor object
+    linkTo: { pathname: '/search', search: `?traceID=trace-id-longer-than-8`, state: null },
     state: fetchedState.DONE,
     toggleComparison: jest.fn(),
     traceID: 'trace-id-longer-than-8',
@@ -133,7 +133,7 @@ describe('ResultItemTitle', () => {
   });
 
   describe('router state propagation', () => {
-    it('passes state to the destination route when linkTo is a TraceLocation object', async () => {
+    it('passes state to the destination route', async () => {
       // Destination route reads location.state and renders it for assertion
       function Destination() {
         const location = useLocation();
