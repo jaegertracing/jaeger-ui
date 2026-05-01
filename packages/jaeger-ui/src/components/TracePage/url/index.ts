@@ -21,14 +21,14 @@ export function getUrl(id: string, uiFind?: string): string {
 export type TracePageLink = {
   // URL path to the trace page, e.g. /trace/abc123
   pathname: string;
-  // Optional query string, e.g. ?uiFind=foo. False/undefined when absent.
+  // Optional ?uiFind=<text> query string for pre-filtering spans. False/undefined when absent.
   search: string | false | undefined;
   // Out-of-band router state, not visible in the URL.
   // Currently carries fromSearch so TracePageHeader can render the back-to-search button.
   state: Record<string, string> | TNil;
 };
 
-export function getLocation(
+export function getTracePageLink(
   id: string,
   state: Record<string, string> | TNil,
   uiFind?: string
