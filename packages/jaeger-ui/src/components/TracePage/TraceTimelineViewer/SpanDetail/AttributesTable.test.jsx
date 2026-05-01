@@ -40,6 +40,7 @@ describe('LinkValue', () => {
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', href);
     expect(link).toHaveAttribute('title', title);
+    expect(link).toHaveAttribute('aria-label', title);
     expect(link).toHaveTextContent(childrenText);
   });
 
@@ -185,6 +186,7 @@ describe('<AttributesTable>', () => {
 
     const dropdownTrigger = container.querySelector('a');
     expect(dropdownTrigger).toBeInTheDocument();
+    expect(dropdownTrigger).toHaveAttribute('aria-label', 'View multiple links');
 
     const row = dropdownTrigger.closest('tr');
     const keyCell = row.querySelector('.KeyValueTable--keyColumn');
