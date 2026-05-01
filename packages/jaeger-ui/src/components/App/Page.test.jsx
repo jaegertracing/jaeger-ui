@@ -43,9 +43,27 @@ describe('<Page>', () => {
     useEmbeddedStateMock.mockReturnValue(null);
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('renders without exploding', () => {
     renderWithPath();
     expect(screen.getByRole('banner')).toBeInTheDocument();
+  });
+
+  it('sets nav height from the rendered header', () => {
+    const getBoundingClientRect = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockImplementation(function mockGetBoundingClientRect() {
+        const height = this.classList.contains('Page--topNav') ? 91.2 : 0;
+        return { height };
+      });
+
+    const { container } = renderWithPath();
+
+    expect(getBoundingClientRect).toHaveBeenCalled();
+    expect(container.firstChild).toHaveStyle('--nav-height: 92px');
   });
 
   it('tracks an initial page-view using location from useLocation()', () => {
