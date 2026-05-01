@@ -10,8 +10,6 @@ import TopNav from './TopNav';
 import { JaegerAssistantDock } from './JaegerAssistantPanel';
 import { useJaegerAssistantOptional } from './JaegerAssistantContext';
 import { isJaegerAssistantConfigured } from './jaegerAgUi';
-import { ReduxState } from '../../types';
-import { EmbeddedState } from '../../types/embedded';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { trackPageView } from '../../utils/tracking';
 import DocumentTitle from '../../utils/documentTitle';
