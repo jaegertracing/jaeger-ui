@@ -34,7 +34,7 @@ it('<ResultItem /> should render base case correctly', () => {
     <ResultItem
       trace={otelTrace}
       durationPercent={50}
-      linkTo={{ pathname: '/trace/abc' }}
+      linkTo={{ pathname: '/' }}
       toggleComparison={() => {}}
       isInDiffCohort={false}
       disableComparision={false}
@@ -57,7 +57,7 @@ it('<ResultItem /> should not render any ServiceTags when there are no services'
     <ResultItem
       trace={otelTraceWithoutServices}
       durationPercent={50}
-      linkTo={{ pathname: '/trace/abc' }}
+      linkTo={{ pathname: '/' }}
       toggleComparison={() => {}}
       isInDiffCohort={false}
       disableComparision={false}
@@ -97,7 +97,7 @@ it('<ResultItem /> should render error icon on ServiceTags that have an error ta
     <ResultItem
       trace={updatedOtelTrace}
       durationPercent={50}
-      linkTo={{ pathname: '/trace/abc' }}
+      linkTo={{ pathname: '/' }}
       toggleComparison={() => {}}
       isInDiffCohort={false}
       disableComparision={false}
@@ -158,7 +158,7 @@ it('calls trackConversions on click', () => {
     <ResultItem
       trace={otelTrace}
       durationPercent={50}
-      linkTo={{ pathname: '/trace/abc' }}
+      linkTo={{ pathname: '/' }}
       toggleComparison={() => {}}
       isInDiffCohort={false}
       disableComparision={false}
