@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { HttpAgent } from '@ag-ui/client';
-import { useAgUiRuntime } from '@assistant-ui/react-ag-ui';
 import {
-  AssistantRuntimeProvider,
   ComposerPrimitive,
   MessagePartPrimitive,
   MessagePrimitive,
@@ -16,7 +13,7 @@ import {
 import { IoClose } from 'react-icons/io5';
 
 import { useJaegerAssistant, useJaegerAssistantOptional } from './JaegerAssistantContext';
-import { getJaegerAgUiUrl, isJaegerAssistantConfigured } from './jaegerAgUi';
+import { isJaegerAssistantConfigured } from './jaegerAgUi';
 
 import './JaegerAssistantPanel.css';
 
@@ -99,51 +96,43 @@ function JaegerAssistantThreadView() {
   );
 }
 
-function JaegerAssistantRuntimeRoot({ children }: { children: React.ReactNode }) {
-  const url = getJaegerAgUiUrl();
-  const agent = React.useMemo(() => new HttpAgent({ url }), [url]);
-  const runtime = useAgUiRuntime({
-    agent,
-    showThinking: true,
-    onError: e => {
-      console.error('[jaeger-assistant] AG-UI error', e);
-    },
-  });
-
-  return <AssistantRuntimeProvider runtime={runtime}>{children}</AssistantRuntimeProvider>;
-}
-
-/** Right dock for Ask Jaeger when `VITE_JAEGER_AG_UI_URL` is set and the panel is open. */
+/**
+ * Right dock for Ask Jaeger.
+ *
+ * The <aside> stays mounted whenever the feature is configured so that the
+ * thread history (held by the runtime in JaegerAssistantContext) is preserved
+ * across open/close cycles. Visibility is toggled with CSS only.
+ */
 export function JaegerAssistantDock() {
   const assistant = useJaegerAssistantOptional();
-  if (!assistant) {
+  if (!assistant || !isJaegerAssistantConfigured()) {
     return null;
   }
+
   const { panelOpen, setPanelOpen } = assistant;
 
-  if (!isJaegerAssistantConfigured() || !panelOpen) {
-    return null;
-  }
-
   return (
-    <aside className="JaegerAssistantPanel" aria-label="Ask Jaeger assistant">
-      <JaegerAssistantRuntimeRoot>
-        <JaegerAssistantBootstrap />
-        <header className="JaegerAssistantPanel-topBar">
-          <h2 className="JaegerAssistantPanel-title">Ask Jaeger</h2>
-          <button
-            type="button"
-            className="JaegerAssistantPanel-close"
-            aria-label="Close assistant panel"
-            onClick={() => setPanelOpen(false)}
-          >
-            <IoClose size={22} />
-          </button>
-        </header>
-        <div className="JaegerAssistantPanel-body">
-          <JaegerAssistantThreadView />
-        </div>
-      </JaegerAssistantRuntimeRoot>
+    <aside
+      className="JaegerAssistantPanel"
+      aria-label="Ask Jaeger assistant"
+      aria-hidden={!panelOpen}
+      style={{ display: panelOpen ? undefined : 'none' }}
+    >
+      <JaegerAssistantBootstrap />
+      <header className="JaegerAssistantPanel-topBar">
+        <h2 className="JaegerAssistantPanel-title">Ask Jaeger</h2>
+        <button
+          type="button"
+          className="JaegerAssistantPanel-close"
+          aria-label="Close assistant panel"
+          onClick={() => setPanelOpen(false)}
+        >
+          <IoClose size={22} />
+        </button>
+      </header>
+      <div className="JaegerAssistantPanel-body">
+        <JaegerAssistantThreadView />
+      </div>
     </aside>
   );
 }
