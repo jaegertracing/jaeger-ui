@@ -8,7 +8,7 @@ import SpanTreeOffset from './SpanTreeOffset';
 import { computeAncestorEntries } from './span-tree-utils';
 import type { AncestorEntry } from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
-import { IOtelSpan } from '../../../types/otel';
+import type { IOtelSpan } from '../../../types/otel';
 import colorGenerator from '../../../utils/color-generator';
 
 import './PrunedSpanRow.css';
