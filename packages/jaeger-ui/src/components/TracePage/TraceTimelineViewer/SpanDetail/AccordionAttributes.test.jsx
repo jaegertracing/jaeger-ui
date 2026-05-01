@@ -123,4 +123,18 @@ describe('<AccordionAttributes />', () => {
     fireEvent.click(header);
     expect(defaultProps.onToggle).toHaveBeenCalledTimes(1);
   });
+
+  it('calls onToggle when Enter key is pressed', () => {
+    render(<AccordionAttributes {...defaultProps} />);
+    const header = screen.getByText('le-label:').closest('div');
+    fireEvent.keyDown(header, { key: 'Enter' });
+    expect(defaultProps.onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls onToggle when Space key is pressed', () => {
+    render(<AccordionAttributes {...defaultProps} />);
+    const header = screen.getByText('le-label:').closest('div');
+    fireEvent.keyDown(header, { key: ' ' });
+    expect(defaultProps.onToggle).toHaveBeenCalledTimes(1);
+  });
 });

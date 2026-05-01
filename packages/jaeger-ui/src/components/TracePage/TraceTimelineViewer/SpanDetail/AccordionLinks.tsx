@@ -78,7 +78,14 @@ function AccordionLinks({
     headerProps = {
       'aria-checked': isOpen,
       onClick: isEmpty ? null : onToggle,
+      onKeyDown: (e: React.KeyboardEvent) => {
+        if (!isEmpty && onToggle && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onToggle();
+        }
+      },
       role: 'switch',
+      tabIndex: isEmpty ? -1 : 0,
     };
   }
 

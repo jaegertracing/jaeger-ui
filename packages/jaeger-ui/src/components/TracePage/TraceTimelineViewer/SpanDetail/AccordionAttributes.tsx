@@ -61,7 +61,14 @@ export default function AccordionAttributes({
     headerProps = {
       'aria-checked': isOpen,
       onClick: onToggle,
+      onKeyDown: (e: React.KeyboardEvent) => {
+        if (onToggle && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onToggle();
+        }
+      },
       role: 'switch',
+      tabIndex: 0,
     };
   }
 

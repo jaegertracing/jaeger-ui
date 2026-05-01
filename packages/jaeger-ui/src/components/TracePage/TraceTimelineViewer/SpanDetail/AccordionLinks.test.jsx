@@ -110,6 +110,24 @@ describe('<AccordionLinks /> – functional component', () => {
     expect(baseProps.onToggle).toHaveBeenCalledTimes(1);
   });
 
+  it('calls onToggle when Enter key is pressed', () => {
+    render(<AccordionLinks {...baseProps} />);
+    const header = screen.getByText('References').closest('.AccordionLinks--header');
+    if (header) {
+      fireEvent.keyDown(header, { key: 'Enter' });
+    }
+    expect(baseProps.onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls onToggle when Space key is pressed', () => {
+    render(<AccordionLinks {...baseProps} />);
+    const header = screen.getByText('References').closest('.AccordionLinks--header');
+    if (header) {
+      fireEvent.keyDown(header, { key: ' ' });
+    }
+    expect(baseProps.onToggle).toHaveBeenCalledTimes(1);
+  });
+
   it('applies high contrast class when highContrast is true', () => {
     render(<AccordionLinks {...baseProps} highContrast={true} />);
 

@@ -63,4 +63,20 @@ describe('<AccordionText>', () => {
     expect(header.getAttribute('role')).toBeNull();
     expect(header.querySelector('.u-align-icon')).not.toBeInTheDocument();
   });
+
+  it('calls onToggle when Enter key is pressed', () => {
+    const mockToggle = jest.fn();
+    render(<AccordionText {...baseProps} onToggle={mockToggle} />);
+    const header = screen.getByRole('switch');
+    fireEvent.keyDown(header, { key: 'Enter' });
+    expect(mockToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls onToggle when Space key is pressed', () => {
+    const mockToggle = jest.fn();
+    render(<AccordionText {...baseProps} onToggle={mockToggle} />);
+    const header = screen.getByRole('switch');
+    fireEvent.keyDown(header, { key: ' ' });
+    expect(mockToggle).toHaveBeenCalledTimes(1);
+  });
 });

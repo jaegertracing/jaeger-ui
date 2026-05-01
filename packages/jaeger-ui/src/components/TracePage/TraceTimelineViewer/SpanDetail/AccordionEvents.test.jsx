@@ -100,6 +100,18 @@ describe('<AccordionEvents>', () => {
     expect(defaultProps.onToggle).toHaveBeenCalled();
   });
 
+  it('calls onToggle when Enter key is pressed', () => {
+    render(<AccordionEvents {...defaultProps} />);
+    fireEvent.keyDown(screen.getByRole('switch'), { key: 'Enter' });
+    expect(defaultProps.onToggle).toHaveBeenCalled();
+  });
+
+  it('calls onToggle when Space key is pressed', () => {
+    render(<AccordionEvents {...defaultProps} />);
+    fireEvent.keyDown(screen.getByRole('switch'), { key: ' ' });
+    expect(defaultProps.onToggle).toHaveBeenCalled();
+  });
+
   it('shows all events when "show all" is clicked', () => {
     render(<AccordionEvents {...defaultProps} isOpen />);
     fireEvent.click(screen.getByRole('button', { name: /show all/i }));

@@ -165,8 +165,18 @@ export default function AccordionEvents({
     HeaderComponent = 'a';
     headerProps = {
       'aria-checked': isOpen,
-      onClick: onToggle,
+      onClick: (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (onToggle) onToggle();
+      },
+      onKeyDown: (e: React.KeyboardEvent) => {
+        if (onToggle && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onToggle();
+        }
+      },
       role: 'switch',
+      tabIndex: 0,
     };
   }
 
