@@ -4,51 +4,57 @@
 vi.mock('./TopNav', () => mockDefault(() => <div />));
 vi.mock('../../utils/tracking');
 
+const { useEmbeddedStateMock } = vi.hoisted(() => ({
+  useEmbeddedStateMock: jest.fn().mockReturnValue(null),
+}));
+
+vi.mock('../../stores/embedded-store', () => ({
+  useEmbeddedState: (...args) => useEmbeddedStateMock(...args),
+}));
+
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 
-import { mapStateToProps, PageImpl as Page } from './Page';
+import { PageImpl as Page } from './Page';
 import { trackPageView } from '../../utils/tracking';
 
-const renderWithPath = (props, path = '/test?search=value') =>
+const renderWithPath = (path = '/test?search=value') =>
   render(
     <MemoryRouter initialEntries={[path]}>
-      <Page {...props} />
+      <Page />
     </MemoryRouter>
   );
 
-describe('mapStateToProps()', () => {
-  it('maps embedded state to props', () => {
-    const state = { embedded: true };
-    expect(mapStateToProps(state)).toEqual({ embedded: true });
-  });
-
-  it('does not include pathname or search (now from useLocation)', () => {
-    const result = mapStateToProps({ embedded: false });
-    expect(result).not.toHaveProperty('pathname');
-    expect(result).not.toHaveProperty('search');
-  });
-});
+const embeddedV0 = {
+  version: 'v0',
+  searchHideGraph: false,
+  timeline: {
+    collapseTitle: false,
+    hideMinimap: false,
+    hideSummary: false,
+  },
+};
 
 describe('<Page>', () => {
   beforeEach(() => {
     trackPageView.mockReset();
+    useEmbeddedStateMock.mockReturnValue(null);
   });
 
   it('renders without exploding', () => {
-    renderWithPath({});
+    renderWithPath();
     expect(screen.getByRole('banner')).toBeInTheDocument();
   });
 
   it('tracks an initial page-view using location from useLocation()', () => {
-    renderWithPath({}, '/my-path?q=1');
+    renderWithPath('/my-path?q=1');
     expect(trackPageView).toHaveBeenCalledWith('/my-path', '?q=1');
   });
 
   it('tracks a pageView when the location changes', () => {
-    const { rerender } = renderWithPath({}, '/first?a=1');
+    const { rerender } = renderWithPath('/first?a=1');
     trackPageView.mockReset();
     // Use a different key to force the MemoryRouter to remount with the new initialEntries.
     rerender(
@@ -60,7 +66,7 @@ describe('<Page>', () => {
   });
 
   it('tracks a pageView when the search changes but pathname is same', () => {
-    const { rerender } = renderWithPath({}, '/same-path?a=1');
+    const { rerender } = renderWithPath('/same-path?a=1');
     trackPageView.mockReset();
     rerender(
       <MemoryRouter key="router-2" initialEntries={['/same-path?a=2']}>
@@ -72,8 +78,9 @@ describe('<Page>', () => {
 
   describe('Page embedded', () => {
     beforeEach(() => {
+      useEmbeddedStateMock.mockReturnValue(embeddedV0);
       trackPageView.mockReset();
-      renderWithPath({ embedded: true });
+      renderWithPath();
     });
 
     it('renders without exploding', () => {

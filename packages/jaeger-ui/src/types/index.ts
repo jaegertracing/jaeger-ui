@@ -3,7 +3,6 @@
 
 import { ApiError } from './api-error';
 import { Config } from './config';
-import { EmbeddedState } from './embedded';
 import { SearchQuery } from './search';
 import TDdgState from './TDdgState';
 import tNil from './TNil';
@@ -35,7 +34,6 @@ export type ReduxState = {
     loading: boolean;
     error: ApiError | TNil;
   };
-  embedded: EmbeddedState;
   trace: {
     traces: Record<string, FetchedTrace>;
     search: {
