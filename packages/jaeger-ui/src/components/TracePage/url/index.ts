@@ -5,7 +5,7 @@ import queryString from 'query-string';
 
 import prefixUrl from '../../../utils/prefix-url';
 
-import { LocationState } from '../../../types';
+import type { LocationState } from '../../../types';
 
 export const ROUTE_PATH = prefixUrl('/trace/:id');
 
