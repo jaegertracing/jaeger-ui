@@ -1,11 +1,12 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { SpanDetailPanelMode } from '../../types/config';
 import { parseSettingsFromUrl } from './url';
 import type { UrlLayoutSettings } from './url';
 import { getInitialLayoutState, useLayoutPrefsStore } from './TraceTimelineViewer/store.layout';
+import { setDetailPanelMode } from './TraceTimelineViewer/store';
 
 export type SettingSource = 'url' | 'heuristic' | 'localstorage';
 
@@ -30,9 +31,9 @@ export function useLayoutSettings(locationSearch: string): ResolvedLayoutSetting
   const storeTimelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const storeDetailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
-  const zustandApplyDetailPanelMode = useLayoutPrefsStore(s => s.applyDetailPanelModeToLayout);
 
-  const lsDefaults = useMemo(() => getInitialLayoutState(), []);
+  // Read localStorage state on mount, and update it manually when saveAsDefault is called.
+  const [lsDefaults, setLsDefaults] = useState(() => getInitialLayoutState());
   const urlSettings = useMemo(() => parseSettingsFromUrl(locationSearch), [locationSearch]);
   const heuristicOverrides = useMemo(() => computeHeuristicOverrides(), []);
 
@@ -95,15 +96,11 @@ export function useLayoutSettings(locationSearch: string): ResolvedLayoutSetting
       if (key === 'timelineBarsVisible') {
         zustandSetTimelineBarsVisible(timelineBarsVisible.value, true);
       } else {
-        zustandApplyDetailPanelMode(detailPanelMode.value, true);
+        setDetailPanelMode(detailPanelMode.value, true);
       }
+      setLsDefaults(getInitialLayoutState());
     },
-    [
-      zustandSetTimelineBarsVisible,
-      zustandApplyDetailPanelMode,
-      timelineBarsVisible.value,
-      detailPanelMode.value,
-    ]
+    [zustandSetTimelineBarsVisible, timelineBarsVisible.value, detailPanelMode.value]
   );
 
   return { timelineBarsVisible, detailPanelMode, saveAsDefault };

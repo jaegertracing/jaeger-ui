@@ -117,7 +117,7 @@ export default function TraceViewSettings(props: Props) {
   const [popoverOpen, setPopoverOpen] = React.useState(false);
 
   const panelContent = (
-    <div className="TraceViewSettings--panel" role="menu" aria-label="Trace view settings panel">
+    <div className="TraceViewSettings--panel" aria-label="Trace view settings panel">
       <div className="TraceViewSettings--panelHeader">
         <span className="TraceViewSettings--panelTitle">View Settings</span>
       </div>
@@ -142,7 +142,7 @@ export default function TraceViewSettings(props: Props) {
             description="Show span details in a side panel instead of inline"
             checked={detailPanelMode === 'sidepanel'}
             onChange={onDetailPanelModeToggle}
-            resolved={settingSources?.detailPanelMode as ResolvedSetting<string> | undefined}
+            resolved={settingSources?.detailPanelMode}
             onSaveAsDefault={saveSettingAsDefault ? () => saveSettingAsDefault('detailPanelMode') : undefined}
           />
         )}
@@ -157,7 +157,6 @@ export default function TraceViewSettings(props: Props) {
           setKbdModalVisible(true);
           setPopoverOpen(false);
         }}
-        role="menuitem"
       >
         Keyboard Shortcuts
       </button>

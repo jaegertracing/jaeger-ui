@@ -180,7 +180,7 @@ export function TracePageImpl(props: TProps) {
       zustandSetTimelineBarsVisible(urlSettings.timelineBarsVisible, false);
     }
     if (urlSettings.detailPanelMode !== null) {
-      useLayoutPrefsStore.getState().applyDetailPanelModeToLayout(urlSettings.detailPanelMode, false);
+      setDetailPanelModeZustand(urlSettings.detailPanelMode, false);
     }
   }, [location.search, zustandSetTimelineBarsVisible]);
 
