@@ -21,7 +21,7 @@ export type MetricsAPIQueryParams = {
   spanKind: spanKinds;
 };
 
-export type LableObject = {
+type LableObject = {
   name: string;
   value: string;
 };
@@ -38,7 +38,7 @@ export type MetricObject = {
   metricPoints: MetricPointObject[];
 };
 
-export type MetricsAPIServiceResponseData<T = AvailableServiceMetrics, U = 0.95> = {
+type MetricsAPIServiceResponseData<T = AvailableServiceMetrics, U = 0.95> = {
   name: T;
   type: 'GAUGE';
   help: string;
@@ -46,7 +46,7 @@ export type MetricsAPIServiceResponseData<T = AvailableServiceMetrics, U = 0.95>
   quantile: U;
 };
 
-export type MetricsAPIOpsResponseData<T = AvailableOpsMetrics> = {
+type MetricsAPIOpsResponseData<T = AvailableOpsMetrics> = {
   name: T;
   type: 'GAUGE';
   help: string;
@@ -59,7 +59,7 @@ export type Points = {
   y: number | null;
 };
 
-export type DataAvg = {
+type DataAvg = {
   service_operation_call_rate: null | number;
   service_operation_error_rate: null | number;
   service_operation_latencies: null | number;
@@ -119,7 +119,7 @@ enum PromiseStatus {
   rejected = 'rejected',
 }
 
-export type PromiseFulfilledResult<T> = {
+type PromiseFulfilledResult<T> = {
   status: PromiseStatus.fulfilled;
   value: T;
 };

@@ -7,7 +7,7 @@ import { Route, Routes, Navigate } from 'react-router-dom';
 import { AppQueryClientProvider } from '../../query/app-query-client';
 
 import NotFound from './NotFound';
-import Page from './Page';
+import { PageImpl as Page } from './Page';
 import DependencyGraph from '../DependencyGraph';
 import { ROUTE_PATH as dependenciesPath } from '../DependencyGraph/url';
 import DeepDependencies from '../DeepDependencies';
@@ -49,13 +49,6 @@ export default function JaegerUIApp() {
       <ThemeProvider>
         <Provider store={store as any}>
           <JaegerAssistantProvider>
-            {
-              // the Page component is a connected component (wrapped by Redux's connect HOC)
-              // that is also wrapped by a custom withRouteProps HOC.
-              // The @ts-ignore was added because of a specific TypeScript error that occurs
-              // when mixing Redux 5/9, React 19, and complex HOCs.
-            }
-            {/* @ts-expect-error - TypeScript error with Redux 5/9, React 19, and complex HOCs */}
             <Page>
               <Routes>
                 <Route path={searchPath} element={<SearchTracePage />} />
@@ -78,7 +71,6 @@ export default function JaegerUIApp() {
                 <Route path="/" element={<Navigate to={searchPath} replace />} />
                 <Route path={prefixUrl()} element={<Navigate to={searchPath} replace />} />
                 <Route path={prefixUrl('/')} element={<Navigate to={searchPath} replace />} />
-
                 <Route path="*" element={<NotFound error="Page not found" />} />
               </Routes>
             </Page>

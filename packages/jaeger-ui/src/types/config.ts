@@ -23,7 +23,7 @@ export type TScript = {
   type: 'inline';
 };
 
-export type LinkPatternsConfig = {
+type LinkPatternsConfig = {
   // type defines the entity that the pattern applies to.
   // 'traces' patterns apply to the whole trace, and have access to 'traceID' value.
   // Other patterns apply to tags at different levels. They have access to the value
@@ -58,7 +58,7 @@ export type MonitorEmptyStateConfig = {
   };
 };
 
-export type MonitorConfig = {
+type MonitorConfig = {
   menuEnabled?: boolean;
   emptyState?: MonitorEmptyStateConfig;
   docsLink?: string;
