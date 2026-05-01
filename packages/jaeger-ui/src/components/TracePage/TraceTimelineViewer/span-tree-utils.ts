@@ -26,13 +26,14 @@ export function computeIsLastChild(span: IOtelSpan): boolean {
 }
 
 export function computeAncestorEntries(span: IOtelSpan): AncestorEntry[] {
-  // Build ancestor chain (outermost first)
+  // Build ancestor chain, then reverse once to get outermost first
   const ancestors: IOtelSpan[] = [];
   let current = span.parentSpan;
   while (current) {
-    ancestors.unshift(current);
+    ancestors.push(current);
     current = current.parentSpan;
   }
+  ancestors.reverse();
 
   if (ancestors.length === 0) {
     return [];
