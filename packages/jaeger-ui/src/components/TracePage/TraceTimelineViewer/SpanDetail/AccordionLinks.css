@@ -48,3 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 .SpanReference--debugLabel {
   margin: 0 5px 0 5px;
 }
+
+.AccordionLinks--emptyIcon {
+  color: var(--text-muted);
+}

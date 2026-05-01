@@ -30,25 +30,25 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-primary);
 }
 
-.AccordianWarnings {
+.AccordionWarnings {
   background: var(--surface-tertiary);
   border: 1px solid var(--border-default);
   margin-bottom: 0.25rem;
 }
 
-.AccordianWarnings--header {
+.AccordionWarnings--header {
   background: var(--ant-color-warning-bg);
   padding: 0.25rem 0.5rem;
 }
 
-.AccordianWarnings--header:hover {
+.AccordionWarnings--header:hover {
   background: var(--ant-color-warning-bg-hover);
 }
 
-.AccordianWarnings--header.is-open {
+.AccordionWarnings--header.is-open {
   border-bottom: 1px solid var(--border-default);
 }
 
-.AccordianWarnings--label {
+.AccordionWarnings--label {
   color: var(--feedback-warning);
 }

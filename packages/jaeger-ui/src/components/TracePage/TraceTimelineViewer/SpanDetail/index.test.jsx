@@ -17,7 +17,7 @@ import OtelSpanFacade from '../../../../model/OtelSpanFacade';
 vi.mock('./AccordionAttributes', () => {
   return mockDefault(function MockAccordionAttributes({ label, onToggle }) {
     return (
-      <div data-testid={`accordian-keyvalues-${label.toLowerCase()}`}>
+      <div data-testid={`accordion-keyvalues-${label.toLowerCase()}`}>
         <button type="button" onClick={onToggle} data-testid={`toggle-${label.toLowerCase()}`}>
           Toggle {label}
         </button>
@@ -29,7 +29,7 @@ vi.mock('./AccordionAttributes', () => {
 vi.mock('./AccordionEvents', () => {
   return mockDefault(function MockAccordionEvents({ onToggle, onItemToggle }) {
     return (
-      <div data-testid="accordian-logs">
+      <div data-testid="accordion-logs">
         <button type="button" onClick={onToggle} data-testid="toggle-logs">
           Toggle Logs
         </button>
@@ -56,7 +56,7 @@ vi.mock('./AccordionLinks', () => {
 vi.mock('./AccordionText', () => {
   return mockDefault(function MockAccordionText({ onToggle }) {
     return (
-      <div data-testid="accordian-warnings">
+      <div data-testid="accordion-warnings">
         <button type="button" onClick={onToggle} data-testid="toggle-warnings">
           Toggle Warnings
         </button>
@@ -213,11 +213,11 @@ describe('<SpanDetail>', () => {
     expect(screen.getByTestId('item-start')).toHaveTextContent('Start Time:');
   });
 
-  it('renders span tags accordian and triggers toggle callback with span ID', () => {
+  it('renders span tags accordion and triggers toggle callback with span ID', () => {
     render(<SpanDetail {...props} />);
 
-    const tagsAccordian = screen.getByTestId('accordian-keyvalues-tags');
-    expect(tagsAccordian).toBeInTheDocument();
+    const tagsAccordion = screen.getByTestId('accordion-keyvalues-tags');
+    expect(tagsAccordion).toBeInTheDocument();
 
     const toggleButton = screen.getByTestId('toggle-tags');
     fireEvent.click(toggleButton);
@@ -225,11 +225,11 @@ describe('<SpanDetail>', () => {
     expect(props.attributesToggle).toHaveBeenCalledWith(span.spanID);
   });
 
-  it('renders process tags accordian and triggers toggle callback with span ID', () => {
+  it('renders process tags accordion and triggers toggle callback with span ID', () => {
     render(<SpanDetail {...props} />);
 
-    const processAccordian = screen.getByTestId('accordian-keyvalues-process');
-    expect(processAccordian).toBeInTheDocument();
+    const processAccordion = screen.getByTestId('accordion-keyvalues-process');
+    expect(processAccordion).toBeInTheDocument();
 
     const toggleButton = screen.getByTestId('toggle-process');
     fireEvent.click(toggleButton);
@@ -237,11 +237,11 @@ describe('<SpanDetail>', () => {
     expect(props.resourceToggle).toHaveBeenCalledWith(span.spanID);
   });
 
-  it('renders logs accordian and triggers both main toggle and item toggle callbacks', () => {
+  it('renders logs accordion and triggers both main toggle and item toggle callbacks', () => {
     render(<SpanDetail {...props} />);
 
-    const logsAccordian = screen.getByTestId('accordian-logs');
-    expect(logsAccordian).toBeInTheDocument();
+    const logsAccordion = screen.getByTestId('accordion-logs');
+    expect(logsAccordion).toBeInTheDocument();
 
     const toggleButton = screen.getByTestId('toggle-logs');
     fireEvent.click(toggleButton);
@@ -252,11 +252,11 @@ describe('<SpanDetail>', () => {
     expect(props.eventItemToggle).toHaveBeenCalledWith(span.spanID, 'test-log');
   });
 
-  it('renders warnings accordian and triggers toggle callback with span ID', () => {
+  it('renders warnings accordion and triggers toggle callback with span ID', () => {
     render(<SpanDetail {...props} />);
 
-    const warningsAccordian = screen.getByTestId('accordian-warnings');
-    expect(warningsAccordian).toBeInTheDocument();
+    const warningsAccordion = screen.getByTestId('accordion-warnings');
+    expect(warningsAccordion).toBeInTheDocument();
 
     const toggleButton = screen.getByTestId('toggle-warnings');
     fireEvent.click(toggleButton);
