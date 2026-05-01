@@ -21,7 +21,7 @@ export function getUrl(id: string, uiFind?: string): string {
 export type TracePageLink = {
   // URL path to the trace page, e.g. /trace/abc123
   pathname: string;
-  // Optional ?uiFind=<text> query string for pre-filtering spans. False/undefined when absent.
+  // Serialized query string passed verbatim to <Link to={{ search }}>. Always encodes ?uiFind=<text> when present.
   search: string | false | undefined;
   // Out-of-band router state, not visible in the URL.
   // Currently carries fromSearch so TracePageHeader can render the back-to-search button.
@@ -37,5 +37,5 @@ export function getTracePageLink(
     state,
     pathname: getUrl(id),
     search: uiFind && queryString.stringify({ uiFind }),
-  };
+  } satisfies TracePageLink;
 }
