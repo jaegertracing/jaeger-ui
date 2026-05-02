@@ -92,7 +92,7 @@ function formatValue(key: string, value: any) {
           nullValue: 'json-markup-null',
           undefinedValue: 'json-markup-undefined',
           basicChildStyle: 'json-markup-child',
-          punctuation: 'json-markup-puncuation',
+          punctuation: 'json-markup-punctuation',
           otherValue: 'json-markup-other',
         }}
       />
