@@ -8,9 +8,10 @@ import ClickToCopy from './ClickToCopy';
 import { act } from '@testing-library/react';
 
 beforeAll(() => {
-  Object.defineProperty(document, 'execCommand', {
-    value: jest.fn(),
+  Object.defineProperty(navigator, 'clipboard', {
+    value: { writeText: jest.fn().mockResolvedValue(undefined) },
     writable: true,
+    configurable: true,
   });
 });
 
@@ -42,7 +43,8 @@ describe('<ClickToCopy />', () => {
     render(<ClickToCopy text={textToCopy}>{childText}</ClickToCopy>);
     const span = screen.getByRole('button', { name: /Copy to clipboard/i });
     fireEvent.click(span);
-    expect(document.execCommand).toHaveBeenCalledWith('copy');
+    await act(async () => {});
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(textToCopy);
   });
 
   it('shows "Copied to clipboard" when clicked and resets after timeout', async () => {
@@ -55,6 +57,8 @@ describe('<ClickToCopy />', () => {
     const copyButton = screen.getByRole('button', { name: /Copy to clipboard/i });
 
     fireEvent.click(copyButton);
+    await act(async () => {});
+
     await waitFor(() => {
       expect(copyButton).toHaveAttribute('aria-label', 'Copied to clipboard');
     });
@@ -69,25 +73,21 @@ describe('<ClickToCopy />', () => {
     jest.useRealTimers();
   });
 
-  it('triggers copy on Enter and Space key press', () => {
-    const copySpy = jest.spyOn(document, 'execCommand').mockImplementation(() => true);
-
+  it('triggers copy on Enter and Space key press', async () => {
     render(<ClickToCopy text="copied!">Click me</ClickToCopy>);
     const button = screen.getByRole('button');
 
     button.focus();
     fireEvent.keyDown(button, { key: 'Enter', code: 'Enter' });
-    expect(copySpy).toHaveBeenCalledWith('copy');
+    await act(async () => {});
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('copied!');
 
     fireEvent.keyDown(button, { key: ' ', code: 'Space' });
-    expect(copySpy).toHaveBeenCalledWith('copy');
-
-    copySpy.mockRestore();
+    await act(async () => {});
+    expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(2);
   });
 
-  it('does not trigger copy on other key presses', () => {
-    const copySpy = jest.spyOn(document, 'execCommand').mockImplementation(() => true);
-
+  it('does not trigger copy on other key presses', async () => {
     render(<ClickToCopy text="test">Click me</ClickToCopy>);
     const button = screen.getByRole('button');
 
@@ -96,13 +96,12 @@ describe('<ClickToCopy />', () => {
     fireEvent.keyDown(button, { key: 'Tab', code: 'Tab' });
     fireEvent.keyDown(button, { key: 'a', code: 'KeyA' });
 
+    await act(async () => {});
     expect(button).toHaveAttribute('aria-label', 'Copy to clipboard');
-    expect(copySpy).not.toHaveBeenCalled();
-
-    copySpy.mockRestore();
+    expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
   });
 
-  it('clears timeout on unmount', () => {
+  it('clears timeout on unmount', async () => {
     jest.useFakeTimers();
     const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
 
@@ -110,6 +109,7 @@ describe('<ClickToCopy />', () => {
     const button = screen.getByRole('button');
 
     fireEvent.click(button);
+    await act(async () => {});
     unmount();
 
     expect(clearTimeoutSpy).toHaveBeenCalled();
@@ -119,7 +119,6 @@ describe('<ClickToCopy />', () => {
   it('clears timeout on second click while isCopied is true', async () => {
     jest.useRealTimers();
     const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
-    const clearTimeoutWindowSpy = typeof window !== 'undefined' ? jest.spyOn(window, 'clearTimeout') : null;
 
     const { getByRole } = render(
       <ClickToCopy text="double click test">
@@ -130,16 +129,11 @@ describe('<ClickToCopy />', () => {
     const button = getByRole('button', { name: /copy to clipboard/i });
 
     fireEvent.click(button);
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await act(async () => {});
     fireEvent.click(button);
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await act(async () => {});
 
-    expect(
-      clearTimeoutSpy.mock.calls.length +
-        (clearTimeoutWindowSpy ? clearTimeoutWindowSpy.mock.calls.length : 0)
-    ).toBeGreaterThan(0);
-
-    if (clearTimeoutWindowSpy) clearTimeoutWindowSpy.mockRestore();
+    expect(clearTimeoutSpy).toHaveBeenCalled();
     clearTimeoutSpy.mockRestore();
   });
 });

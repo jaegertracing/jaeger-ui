@@ -3,15 +3,26 @@
 
 import React, { useState } from 'react';
 import { Input, Popover } from 'antd';
+import type { InputProps } from 'antd';
 import cx from 'classnames';
 
 import './ValidatedFormField.css';
 
-export default function ValidatedFormField(props: any) {
+type ValidationResult = {
+  content: React.ReactNode;
+  title: React.ReactNode;
+};
+
+type ValidatedFormFieldProps = Omit<InputProps, 'onChange'> & {
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  validate: (value: string | undefined) => ValidationResult | null | undefined;
+};
+
+export default function ValidatedFormField(props: ValidatedFormFieldProps) {
   const [blur, setOnBlur] = useState(false);
   const { onChange: handleChange, validate, ...rest } = props;
 
-  const validationResult = validate(rest.value);
+  const validationResult = validate(rest.value as string | undefined);
   const isInvalid = blur && Boolean(validationResult);
 
   return (

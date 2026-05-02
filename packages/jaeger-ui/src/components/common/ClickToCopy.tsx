@@ -10,43 +10,28 @@ type Props = {
   children: React.ReactNode;
 };
 
-function copy(text: string) {
-  const textArea = document.createElement('textarea');
-  textArea.value = text;
-  document.body.appendChild(textArea);
-  textArea.select();
-  document.execCommand('copy');
-  document.body.removeChild(textArea);
-}
-
 function ClickToCopy({ text, className = '', children }: Props) {
   const [isCopied, setIsCopied] = useState(false);
-  const [previousClick, setPreviousClick] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (isCopied) {
-      const checkDeadline = () => {
-        if (Date.now() >= previousClick + 1800) {
-          setIsCopied(false);
-        } else {
-          timeoutRef.current = setTimeout(checkDeadline, 100);
-        }
-      };
-      timeoutRef.current = setTimeout(checkDeadline, 100);
-    }
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
     };
-  }, [isCopied, previousClick]);
+  }, []);
 
-  const whenClicked = () => {
-    copy(text);
-    setIsCopied(true);
-    setPreviousClick(Date.now());
+  const whenClicked = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setIsCopied(true);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setIsCopied(false), 1800);
+    } catch {
+      // clipboard write failed (e.g. permission denied in insecure context)
+    }
   };
 
   return (
