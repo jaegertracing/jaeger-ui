@@ -186,7 +186,7 @@ export function TracePageImpl(props: TProps) {
 
   const setDetailPanelMode = useCallback(
     (mode: SpanDetailPanelMode) => {
-      setDetailPanelModeZustand(mode);
+      setDetailPanelModeZustand(mode, false);
       reduxSetDetailPanelMode(mode);
     },
     [reduxSetDetailPanelMode]
@@ -194,7 +194,7 @@ export function TracePageImpl(props: TProps) {
 
   const setTimelineBarsVisible = useCallback(
     (visible: boolean) => {
-      zustandSetTimelineBarsVisible(visible);
+      zustandSetTimelineBarsVisible(visible, false);
       reduxSetTimelineBarsVisible(visible);
     },
     [zustandSetTimelineBarsVisible, reduxSetTimelineBarsVisible]

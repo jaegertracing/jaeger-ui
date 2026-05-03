@@ -5,7 +5,7 @@ import queryString from 'query-string';
 
 import prefixUrl from '../../../utils/prefix-url';
 
-import { TNil, LocationState } from '../../../types';
+import type { LocationState } from '../../../types';
 import type { SpanDetailPanelMode } from '../../../types/config';
 
 export const ROUTE_PATH = prefixUrl('/trace/:id');

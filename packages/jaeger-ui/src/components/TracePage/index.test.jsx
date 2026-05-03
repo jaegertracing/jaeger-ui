@@ -872,7 +872,7 @@ describe('<TracePage>', () => {
       mockLayoutPrefsStore.detailPanelMode = 'inline';
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
-      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('sidepanel');
+      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('sidepanel', false);
       expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('sidepanel');
     });
 
@@ -880,7 +880,7 @@ describe('<TracePage>', () => {
       mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
-      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline');
+      expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline', false);
       expect(defaultProps.setDetailPanelMode).toHaveBeenCalledWith('inline');
     });
 
@@ -888,7 +888,7 @@ describe('<TracePage>', () => {
       mockLayoutPrefsStore.timelineBarsVisible = true;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
-      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(false);
+      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(false, false);
       expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(false);
     });
 
@@ -896,7 +896,7 @@ describe('<TracePage>', () => {
       mockLayoutPrefsStore.timelineBarsVisible = false;
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
-      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(true);
+      expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(true, false);
       expect(defaultProps.setTimelineBarsVisible).toHaveBeenCalledWith(true);
     });
   });
