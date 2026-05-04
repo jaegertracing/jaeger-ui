@@ -32,4 +32,15 @@ describe('<TextList>', () => {
     const listItems = screen.queryAllByRole('listitem');
     expect(listItems).toHaveLength(0);
   });
+
+  it('renders long strings and embedded newlines correctly', () => {
+    const longString = 'a'.repeat(300);
+    const newlineString = 'Line 1\nLine 2\nLine 3';
+    render(<TextList data={[longString, newlineString]} />);
+    const listItems = screen.getAllByRole('listitem');
+    expect(listItems).toHaveLength(2);
+    expect(listItems[0]).toHaveTextContent(longString);
+    // toHaveTextContent normalizes whitespace, so newlines become spaces
+    expect(listItems[1]).toHaveTextContent('Line 1 Line 2 Line 3');
+  });
 });

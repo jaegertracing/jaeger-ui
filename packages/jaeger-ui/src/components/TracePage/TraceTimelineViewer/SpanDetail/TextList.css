@@ -22,4 +22,7 @@ SPDX-License-Identifier: Apache-2.0
 .TextList--List > li {
   padding: 0.25rem 0.5rem;
   vertical-align: top;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
 }
