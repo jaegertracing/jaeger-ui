@@ -1,44 +1,77 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { IAttribute, GenAISpanKind } from '../../types/otel';
-import { GEN_AI_NAMESPACE, GEN_AI_OPERATION_NAME } from '../../constants/span-attributes';
+import type { IAttribute, IOtelSpan, IOtelTrace } from '../../types/otel';
 
-type SpanAttrs = { attributes: ReadonlyArray<IAttribute> };
+/**
+ * Span classification based on OTel GenAI semantic conventions.
+ * https://opentelemetry.io/docs/specs/semconv/gen-ai/
+ */
+export type GenAISpanKind = 'LLM_CALL' | 'TOOL_CALL' | 'AGENT' | 'RETRIEVAL' | 'UNKNOWN_GENAI' | 'STANDARD';
 
-const OPERATION_TO_KIND: Partial<Record<string, GenAISpanKind>> = {
-  chat: 'LLM_CALL',
-  text_completion: 'LLM_CALL',
-  generate_content: 'LLM_CALL',
-  embeddings: 'LLM_CALL',
-  execute_tool: 'TOOL_CALL',
-  invoke_agent: 'AGENT',
-  create_agent: 'AGENT',
-  invoke_workflow: 'AGENT',
-  retrieval: 'RETRIEVAL',
-};
+const LLM_OPS = new Set(['chat', 'text_completion', 'generate_content', 'embeddings']);
+const TOOL_OPS = new Set(['execute_tool']);
+const AGENT_OPS = new Set(['invoke_agent', 'create_agent', 'invoke_workflow']);
+const RETRIEVAL_OPS = new Set(['retrieval']);
 
-// Single pass over attributes: looks for gen_ai.operation.name while also
-// tracking whether any gen_ai.* attribute was seen, so a span with GenAI
-// attributes but an unrecognized (or missing) operation name still maps to
-// UNKNOWN_GENAI instead of undefined.
-export function classifySpan(span: SpanAttrs): GenAISpanKind | undefined {
-  let hasGenAI = false;
-  for (const { key, value } of span.attributes) {
-    if (key === GEN_AI_OPERATION_NAME && typeof value === 'string') {
-      return OPERATION_TO_KIND[value] ?? 'UNKNOWN_GENAI';
-    }
-    if (!hasGenAI && key.startsWith(GEN_AI_NAMESPACE)) {
-      hasGenAI = true;
-    }
+function getStringAttribute(attributes: ReadonlyArray<IAttribute>, key: string): string | undefined {
+  const attr = attributes.find(a => a.key === key);
+  return attr !== undefined && typeof attr.value === 'string' ? attr.value : undefined;
+}
+
+export function hasGenAIAttributes(attributes: ReadonlyArray<IAttribute>): boolean {
+  return attributes.some(a => a.key.startsWith('gen_ai.'));
+}
+
+/**
+ * Classifies a single span by its gen_ai.operation.name attribute.
+ * Returns 'STANDARD' for any span with no gen_ai.* attributes.
+ */
+export function classifySpan(span: IOtelSpan): GenAISpanKind {
+  if (!hasGenAIAttributes(span.attributes)) {
+    return 'STANDARD';
   }
-  return hasGenAI ? 'UNKNOWN_GENAI' : undefined;
+  const op = getStringAttribute(span.attributes, 'gen_ai.operation.name');
+  if (op === undefined) {
+    return 'UNKNOWN_GENAI';
+  }
+  if (LLM_OPS.has(op)) return 'LLM_CALL';
+  if (TOOL_OPS.has(op)) return 'TOOL_CALL';
+  if (AGENT_OPS.has(op)) return 'AGENT';
+  if (RETRIEVAL_OPS.has(op)) return 'RETRIEVAL';
+  return 'UNKNOWN_GENAI';
 }
 
-export function isGenAISpan(span: SpanAttrs): boolean {
-  return classifySpan(span) !== undefined;
+/**
+ * Returns true if the span carries any gen_ai.* attributes, i.e. it is not
+ * classified as 'STANDARD'. Used to decide whether to show GenAI-specific UI
+ * (the GenAI detail tab, rich-media attribute rendering) for a given span.
+ */
+export function isGenAISpan(span: IOtelSpan): boolean {
+  return classifySpan(span) !== 'STANDARD';
 }
 
-export function isGenAITrace(spans: ReadonlyArray<SpanAttrs>): boolean {
-  return spans.some(s => classifySpan(s) !== undefined);
+/**
+ * Returns true if any span in the trace carries gen_ai.* attributes.
+ * Result is O(n*attrs) on first call; callers should cache it.
+ */
+export function isGenAITrace(trace: IOtelTrace): boolean {
+  return trace.spans.some(span => hasGenAIAttributes(span.attributes));
 }
+
+/**
+ * Attribute keys defined by OTel GenAI semconv that carry rich content
+ * (structured JSON or human-readable text) and need specialized rendering.
+ *
+ * 'json'     - render with react-json-view-lite
+ * 'markdown' - render as preformatted text (Markdown-like prompts/completions)
+ */
+export const RICH_MEDIA_ATTRIBUTE_KEYS: Readonly<Record<string, 'json' | 'markdown'>> = {
+  'gen_ai.input.messages': 'markdown',
+  'gen_ai.output.messages': 'markdown',
+  'gen_ai.system_instructions': 'markdown',
+  'gen_ai.tool.call.arguments': 'json',
+  'gen_ai.tool.call.result': 'json',
+  'gen_ai.tool.definitions': 'json',
+  'gen_ai.retrieval.documents': 'json',
+};
