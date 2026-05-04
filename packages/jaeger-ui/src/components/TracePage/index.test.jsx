@@ -1098,9 +1098,6 @@ describe('mapStateToProps()', () => {
           state: null,
         },
       },
-      config: {
-        archiveEnabled: false,
-      },
       traceTimeline: {},
     };
   });
@@ -1126,9 +1123,7 @@ describe('mapStateToProps()', () => {
     );
   });
 
-  it('propagates layoutManagerMemory correctly', () => {
-    const fakeMemory = 123;
-    state.config.traceGraph = { layoutManagerMemory: fakeMemory };
+  it('returns the correct props shape', () => {
     const props = mapStateToProps(state, ownProps);
     expect(props).toEqual({
       id: traceID,
