@@ -64,7 +64,7 @@
     "redux-promise-middleware": "6.2.0",
     "tween-functions": "1.2.0",
     "u-basscss": "2.0.1",
-    "zod": "4.3.5",
+    "zod": "4.4.2",
     "zustand": "^5.0.12"
   },
   "scripts": {
