@@ -10,6 +10,7 @@ import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
 import AccordionText from './AccordionText';
 import DetailState from './DetailState';
+import GenAIAttributeRenderer from './GenAIAttributeRenderer';
 import { formatDuration, formatDurationCompact } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
 import LabeledList from '../../../common/LabeledList';
@@ -17,6 +18,7 @@ import LabeledList from '../../../common/LabeledList';
 import { TNil } from '../../../../types';
 import { Hyperlink } from '../../../../types/hyperlink';
 import { IOtelSpan, IAttribute, IEvent } from '../../../../types/otel';
+import { RICH_MEDIA_ATTRIBUTE_KEYS } from '../../../../utils/genai/detect';
 
 import './index.css';
 
@@ -63,6 +65,11 @@ export default function SpanDetail(props: SpanDetailProps) {
   // Get links for display in AccordionLinks
   const links = span.links || [];
 
+  // Split attributes: rich-media GenAI attributes rendered by GenAIAttributeRenderer;
+  // all others passed to AccordionAttributes unchanged.
+  const richMediaAttrs = span.attributes.filter(a => a.key in RICH_MEDIA_ATTRIBUTE_KEYS);
+  const standardAttrs = span.attributes.filter(a => !(a.key in RICH_MEDIA_ATTRIBUTE_KEYS));
+
   // Display labels based on terminology flag
   const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
   const resourceLabel = useOtelTerms ? 'Resource' : 'Process';
@@ -100,12 +107,19 @@ export default function SpanDetail(props: SpanDetailProps) {
       <div>
         <div>
           <AccordionAttributes
-            data={span.attributes}
+            data={standardAttrs}
             label={attributesLabel}
             linksGetter={linksGetter}
             isOpen={isAttributesOpen}
             onToggle={() => attributesToggle(span.spanID)}
           />
+          {richMediaAttrs.length > 0 && (
+            <div className="SpanDetail--genAISection">
+              {richMediaAttrs.map(attr => (
+                <GenAIAttributeRenderer key={attr.key} attribute={attr} isOpen={isAttributesOpen} />
+              ))}
+            </div>
+          )}
           {span.resource.attributes && span.resource.attributes.length > 0 && (
             <AccordionAttributes
               className="ub-mb1"
