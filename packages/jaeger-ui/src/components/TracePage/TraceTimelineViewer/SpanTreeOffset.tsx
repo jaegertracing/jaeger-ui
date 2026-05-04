@@ -95,9 +95,18 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   };
 
   const wrapperProps = hasChildren
-    ? { onClick, onKeyDown: _childrenToggleKeyDown, role: 'switch', 'aria-checked': childrenVisible, tabIndex: 0 }
-    : null;
-    
+    ? {
+      onClick,
+      ...(onClick && {
+        onKeyDown: _childrenToggleKeyDown,
+        tabIndex: 0,
+      }),
+      role: 'switch',
+      'aria-checked': childrenVisible,
+      'aria-label': 'Expand or collapse child spans',
+    }
+  : null;
+
   // Get parent color for horizontal line
   const parentSpan = span.parentSpan;
   const parentColor = parentSpan ? colorGenerator.getColorByKey(parentSpan.resource.serviceName) : color;
