@@ -232,6 +232,98 @@ describe('transformTraceData()', () => {
     expect(result.orphanSpanCount).toBe(1);
   });
 
+  it('should prefer CHILD_OF over earlier FOLLOWS_FROM references for tree parent', () => {
+    const followed = {
+      traceID,
+      spanID: 'followed',
+      operationName: 'followedOp',
+      startTime,
+      duration,
+      tags: [],
+      processID: 'p1',
+    };
+    const parent = {
+      traceID,
+      spanID: 'parent',
+      operationName: 'parentOp',
+      startTime: startTime + 100,
+      duration,
+      tags: [],
+      processID: 'p1',
+    };
+    const child = {
+      traceID,
+      spanID: 'child',
+      operationName: 'childOp',
+      references: [
+        { refType: 'FOLLOWS_FROM', traceID, spanID: followed.spanID },
+        { refType: 'CHILD_OF', traceID, spanID: parent.spanID },
+      ],
+      startTime: startTime + 200,
+      duration,
+      tags: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [followed, parent, child],
+    });
+
+    const followedSpan = result.spanMap.get(followed.spanID);
+    const parentSpan = result.spanMap.get(parent.spanID);
+    const childSpan = result.spanMap.get(child.spanID);
+
+    expect(parentSpan.childSpans.map(({ spanID }) => spanID)).toEqual([child.spanID]);
+    expect(followedSpan.childSpans).toEqual([]);
+    expect(childSpan.depth).toBe(parentSpan.depth + 1);
+    expect(followedSpan.subsidiarilyReferencedBy).toEqual([
+      expect.objectContaining({
+        spanID: child.spanID,
+        traceID,
+        span: childSpan,
+        refType: 'FOLLOWS_FROM',
+      }),
+    ]);
+    expect(parentSpan.subsidiarilyReferencedBy).toEqual([]);
+  });
+
+  it('should use FOLLOWS_FROM as tree parent when no valid CHILD_OF reference exists', () => {
+    const followed = {
+      traceID,
+      spanID: 'followed',
+      operationName: 'followedOp',
+      startTime,
+      duration,
+      tags: [],
+      processID: 'p1',
+    };
+    const follower = {
+      traceID,
+      spanID: 'follower',
+      operationName: 'followerOp',
+      references: [{ refType: 'FOLLOWS_FROM', traceID, spanID: followed.spanID }],
+      startTime: startTime + 100,
+      duration,
+      tags: [],
+      processID: 'p1',
+    };
+
+    const result = transformTraceData({
+      traceID,
+      processes,
+      spans: [followed, follower],
+    });
+
+    const followedSpan = result.spanMap.get(followed.spanID);
+    const followerSpan = result.spanMap.get(follower.spanID);
+
+    expect(followedSpan.childSpans.map(({ spanID }) => spanID)).toEqual([follower.spanID]);
+    expect(followedSpan.subsidiarilyReferencedBy).toEqual([]);
+    expect(followerSpan.depth).toBe(followedSpan.depth + 1);
+  });
+
   describe('asOtelTrace()', () => {
     it('should implement IOtelTrace interface and memoize the instance', () => {
       const traceData = {
