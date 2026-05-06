@@ -6,7 +6,7 @@ import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
-import { mapStateToProps, TopNavImpl as TopNav } from './TopNav';
+import { TopNavImpl as TopNav } from './TopNav';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 
 vi.mock('antd', async () => {
@@ -38,6 +38,14 @@ vi.mock('antd', async () => {
   return { ...actual, Menu, Dropdown };
 });
 
+const { useConfigMock } = vi.hoisted(() => ({
+  useConfigMock: jest.fn(),
+}));
+
+vi.mock('../../hooks/useConfig', () => ({
+  useConfig: (...args) => useConfigMock(...args),
+}));
+
 vi.mock('../../utils/config/get-config', async () => {
   return {
     default: jest.fn(() => ({
@@ -55,10 +63,6 @@ vi.mock('../../utils/config/get-config', async () => {
 });
 
 describe('<TopNav>', () => {
-  beforeEach(() => {
-    useTraceDiffStore.setState({ a: null, b: null, cohort: [] });
-  });
-
   const labelGitHub = 'GitHub';
   const githubUrl = 'https://github.com/uber/jaeger';
   const blogUrl = 'https://medium.com/jaegertracing/';
@@ -85,6 +89,7 @@ describe('<TopNav>', () => {
 
   const defaultProps = {
     config: {
+      themes: { enabled: true },
       menu: [
         {
           label: labelGitHub,
@@ -107,6 +112,12 @@ describe('<TopNav>', () => {
     },
     pathname: '/search',
   };
+
+  beforeEach(() => {
+    useTraceDiffStore.setState({ a: null, b: null, cohort: [] });
+    useConfigMock.mockReset();
+    useConfigMock.mockReturnValue(defaultProps.config);
+  });
 
   describe('renders the default menu options', () => {
     let component;
@@ -255,12 +266,5 @@ describe('<TopNav>', () => {
     );
 
     expect(screen.getByTestId('TraceIDSearchInput--form')).toBeInTheDocument();
-  });
-});
-
-describe('mapStateToProps', () => {
-  it('returns entire state', () => {
-    const testState = {};
-    expect(mapStateToProps(testState)).toBe(testState);
   });
 });

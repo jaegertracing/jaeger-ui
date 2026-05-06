@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ApiError } from './api-error';
-import { Config } from './config';
 import { SearchQuery } from './search';
 import TDdgState from './TDdgState';
 import tNil from './TNil';
@@ -32,7 +31,6 @@ export type LocationState = {
 
 export type ReduxState = {
   type: string;
-  config: Config;
   ddg: TDdgState;
   dependencies: {
     dependencies: { parent: string; child: string; callCount: number }[];
