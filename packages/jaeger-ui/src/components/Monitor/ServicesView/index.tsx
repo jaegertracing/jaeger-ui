@@ -1,7 +1,7 @@
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Row, Col, Input, Alert, Select } from 'antd';
 import { ActionFunctionAny, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
@@ -127,9 +127,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, metrics } = props;
   const { data: services = [], isLoading: servicesLoading } = useServices();
   const docsLink = getConfig().monitor?.docsLink;
-  const graphDivWrapper = useRef<HTMLDivElement>(null);
   const [endTime, setEndTime] = useState<number>(Date.now());
-  const [graphWidth, setGraphWidth] = useState<number>(300);
   const [serviceOpsMetrics, setServiceOpsMetrics] = useState<ServiceOpsMetrics[] | undefined>(undefined);
   const [searchOps, setSearchOps] = useState<string>('');
   const [graphXDomain, setGraphXDomain] = useState<number[]>([]);
@@ -148,12 +146,6 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     const currentTime = Date.now();
     setGraphXDomain([currentTime - selectedTimeFrame, currentTime]);
   }, [selectedTimeFrame]);
-
-  const updateDimensions = useCallback(() => {
-    if (graphDivWrapper.current) {
-      setGraphWidth(graphDivWrapper.current.offsetWidth - 24);
-    }
-  }, []);
 
   const getSelectedService = useCallback(() => {
     return selectedService || store.getString('lastAtmSearchService') || services[0];
@@ -210,16 +202,10 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     selectedTimeFrame,
   ]);
 
-  // componentDidMount equivalent
+ // componentDidMount equivalent
   useEffect(() => {
-    window.addEventListener('resize', updateDimensions);
-    updateDimensions();
     calcGraphXDomain();
-
-    return () => {
-      window.removeEventListener('resize', updateDimensions);
-    };
-  }, [updateDimensions, calcGraphXDomain]);
+  }, [calcGraphXDomain]);
 
   // componentDidUpdate equivalent
   useEffect(() => {
@@ -332,7 +318,6 @@ export function MonitorATMServicesViewImpl(props: TProps) {
         </Row>
         <Row>
           <Col span={8}>
-            <div ref={graphDivWrapper} />
             <ServiceGraph
               key="latency"
               error={
@@ -342,7 +327,6 @@ export function MonitorATMServicesViewImpl(props: TProps) {
               }
               loading={metrics.loading}
               name={`Latency (${convertTimeUnitToShortTerm(displayTimeUnit)})`}
-              width={graphWidth}
               metricsData={serviceLatencies}
               showLegend
               marginClassName="latency-margins"
@@ -357,7 +341,6 @@ export function MonitorATMServicesViewImpl(props: TProps) {
               error={metrics.serviceError.service_error_rate}
               loading={metrics.loading}
               name="Error rate (%)"
-              width={graphWidth}
               metricsData={convertServiceErrorRateToPercentages(serviceErrorRate)}
               marginClassName="error-rate-margins"
               color="#CD513A"
@@ -371,7 +354,6 @@ export function MonitorATMServicesViewImpl(props: TProps) {
               loading={metrics.loading}
               error={metrics.serviceError.service_call_rate}
               name="Request rate (req/s)"
-              width={graphWidth}
               metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_call_rate : null}
               showHorizontalLines
               color="#4795BA"

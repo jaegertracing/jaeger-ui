@@ -9,7 +9,6 @@ import './serviceGraph.css';
 import { ApiError } from '../../../types/api-error';
 
 type TProps = {
-  width: number;
   error: null | ApiError;
   name: string;
   metricsData: ServiceMetricsObject | ServiceMetricsObject[] | null;
@@ -39,7 +38,6 @@ export const tickFormat = (v: number): string => {
 type TPlaceholder = {
   name: string;
   marginClassName?: string;
-  width: number;
   height: number;
   children: React.ReactNode;
 };
@@ -47,7 +45,6 @@ type TPlaceholder = {
 export const Placeholder = ({
   name,
   marginClassName,
-  width,
   height,
   children,
 }: TPlaceholder): React.JSX.Element => {
@@ -63,7 +60,7 @@ export const Placeholder = ({
       <div
         className="center-placeholder"
         style={{
-          width,
+          width: '100%',
           height: height - 74,
         }}
       >
@@ -202,7 +199,6 @@ export function calculateNumericTicks(xDomain: number[]): number[] {
 }
 
 function ServiceGraphImpl({
-  width,
   yDomain,
   showHorizontalLines,
   showLegend,
@@ -217,21 +213,21 @@ function ServiceGraphImpl({
 }: TProps): React.JSX.Element {
   if (loading || !xDomain || xDomain[0] === undefined || xDomain[1] === undefined)
     return (
-      <Placeholder name={name} marginClassName={marginClassName} width={width} height={HEIGHT}>
+      <Placeholder name={name} marginClassName={marginClassName} height={HEIGHT}>
         <LoadingIndicator centered />
       </Placeholder>
     );
 
   if (error)
     return (
-      <Placeholder name={name} marginClassName={marginClassName} width={width} height={HEIGHT}>
+      <Placeholder name={name} marginClassName={marginClassName} height={HEIGHT}>
         Could not fetch data
       </Placeholder>
     );
 
   if (metricsData === null)
     return (
-      <Placeholder name={name} marginClassName={marginClassName} width={width} height={HEIGHT}>
+      <Placeholder name={name} marginClassName={marginClassName} height={HEIGHT}>
         No Data
       </Placeholder>
     );
@@ -263,7 +259,7 @@ function ServiceGraphImpl({
   };
 
   return (
-    <Placeholder name={name} marginClassName={marginClassName} width={width} height={HEIGHT}>
+    <Placeholder name={name} marginClassName={marginClassName} height={HEIGHT}>
       <ResponsiveContainer width="100%" height={HEIGHT}>
         <AreaChart data={data} margin={{ top: 20, bottom: 55, left: 0, right: 0 }}>
           <XAxis
