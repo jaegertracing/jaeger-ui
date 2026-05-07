@@ -210,6 +210,49 @@ describe('<SpanBarRow>', () => {
     expect(container.querySelector('.SpanBarRow--decorationIcon')).toBeInTheDocument();
   });
 
+  it('handles empty spanDecorations gracefully', () => {
+    getConfig.mockReturnValueOnce({ spanDecorations: [] });
+    const props = {
+      ...defaultProps,
+      span: {
+        ...defaultProps.span,
+        attributes: [{ key: 'db.system', value: 'postgresql' }],
+      },
+    };
+    const { container } = render(<SpanBarRow {...props} />);
+    expect(container.querySelector('.SpanBarRow--decorationIcon')).not.toBeInTheDocument();
+  });
+
+  it('handles invalid regex patterns gracefully', () => {
+    getConfig.mockReturnValueOnce({
+      spanDecorations: [{ entries: [{ key: 'db.system', value: '[' }], icon: 'IoServer' }],
+    });
+    const props = {
+      ...defaultProps,
+      span: {
+        ...defaultProps.span,
+        attributes: [{ key: 'db.system', value: 'postgresql' }],
+      },
+    };
+    const { container } = render(<SpanBarRow {...props} />);
+    expect(container.querySelector('.SpanBarRow--decorationIcon')).not.toBeInTheDocument();
+  });
+
+  it('handles unknown icon names gracefully', () => {
+    getConfig.mockReturnValueOnce({
+      spanDecorations: [{ entries: [{ key: 'db.system', value: '.*' }], icon: 'UnknownIcon' }],
+    });
+    const props = {
+      ...defaultProps,
+      span: {
+        ...defaultProps.span,
+        attributes: [{ key: 'db.system', value: 'postgresql' }],
+      },
+    };
+    const { container } = render(<SpanBarRow {...props} />);
+    expect(container.querySelector('.SpanBarRow--decorationIcon')).not.toBeInTheDocument();
+  });
+
   it('renders with error icon when hasOwnError is true', () => {
     const props = {
       ...defaultProps,

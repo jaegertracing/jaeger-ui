@@ -37,6 +37,20 @@ const ICON_MAP: Record<string, React.ElementType> = {
   IoHardwareChip,
 };
 
+const REGEX_CACHE = new Map<string, RegExp>();
+
+function getRegex(pattern: string): RegExp | null {
+  let regex = REGEX_CACHE.get(pattern);
+  if (regex) return regex;
+  try {
+    regex = new RegExp(pattern);
+    REGEX_CACHE.set(pattern, regex);
+    return regex;
+  } catch {
+    return null;
+  }
+}
+
 type SpanBarRowProps = {
   className?: string;
   color: string;
@@ -146,12 +160,8 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
       const allMatched = decoration.entries.every(entry => {
         const attribute = span.attributes.find(attr => attr.key === entry.key);
         if (!attribute) return false;
-        try {
-          const regex = new RegExp(entry.value);
-          return regex.test(String(attribute.value));
-        } catch {
-          return false;
-        }
+        const regex = getRegex(entry.value);
+        return regex ? regex.test(String(attribute.value)) : false;
       });
       if (allMatched) {
         const IconComponent = ICON_MAP[decoration.icon];
