@@ -16,6 +16,17 @@
       "text": "Information about Jaeger SDK release #{jaeger.version}"
     }
   ],
+  "spanDecorations": [
+    {
+      "entries": [
+        {
+          "key": "db.system",
+          "value": ".*"
+        }
+      ],
+      "icon": "IoServer"
+    }
+  ],
   "storageCapabilities": {
     "archiveStorage": false,
     "metricsStorage": true

@@ -7,6 +7,13 @@ import '@testing-library/jest-dom';
 
 import SpanBarRow from './SpanBarRow';
 import SpanBar from './SpanBar';
+import getConfig from '../../../utils/config/get-config';
+
+vi.mock('../../../utils/config/get-config', () => ({
+  default: jest.fn(() => ({
+    spanDecorations: [{ entries: [{ key: 'db.system', value: '.*' }], icon: 'IoServer' }],
+  })),
+}));
 
 vi.mock('./SpanTreeOffset', () => ({
   default: jest.fn(({ span, childrenVisible, onClick }) => (
@@ -189,6 +196,18 @@ describe('<SpanBarRow>', () => {
     };
     render(<SpanBarRow {...props} />);
     expect(screen.getByText('no-instrumented-service')).toBeVisible();
+  });
+
+  it('renders decoration icon based on span attributes', () => {
+    const props = {
+      ...defaultProps,
+      span: {
+        ...defaultProps.span,
+        attributes: [{ key: 'db.system', value: 'postgresql' }],
+      },
+    };
+    const { container } = render(<SpanBarRow {...props} />);
+    expect(container.querySelector('.SpanBarRow--decorationIcon')).toBeInTheDocument();
   });
 
   it('renders with error icon when hasOwnError is true', () => {

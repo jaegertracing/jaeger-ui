@@ -77,6 +77,13 @@ const defaultConfig: Config = {
     customWebAnalytics: null,
   },
   linkPatterns: [],
+  spanDecorations: [
+    { entries: [{ key: 'db.system', value: '.*' }], icon: 'IoServer' },
+    { entries: [{ key: 'messaging.system', value: '.*' }], icon: 'IoPaperPlane' },
+    { entries: [{ key: 'rpc.system', value: '.*' }], icon: 'IoSwapHorizontal' },
+    { entries: [{ key: 'http.method', value: '.*' }], icon: 'IoGlobeOutline' },
+    { entries: [{ key: 'gen_ai.system', value: '.*' }], icon: 'IoHardwareChip' },
+  ],
   monitor: {
     menuEnabled: true,
     emptyState: {

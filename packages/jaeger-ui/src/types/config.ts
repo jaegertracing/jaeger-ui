@@ -80,6 +80,13 @@ export type StorageCapabilities = {
   metricsStorage?: boolean;
 };
 
+export type SpanDecorationConfig = {
+  // A set of tag key/value regular expressions. A span matches if all entries match.
+  entries: { key: string; value: string }[];
+  // Name of the icon to render (from react-icons/io5)
+  icon: string;
+};
+
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
 export type Config = {
   //
@@ -89,6 +96,9 @@ export type Config = {
 
   // criticalPath enables to show the criticalPath of each span in a trace view.
   criticalPathEnabled: boolean;
+
+  // spanDecorations defines icons to be shown next to spans based on their tags/attributes.
+  spanDecorations?: readonly SpanDecorationConfig[];
 
   // dependencies controls the behavior of System Architecture tab.
   dependencies?: {
