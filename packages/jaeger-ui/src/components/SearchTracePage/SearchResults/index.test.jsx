@@ -14,6 +14,7 @@ import { getUrl } from '../url';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
 import DiffSelection from './DiffSelection';
+import TraceTable from './TraceTable';
 import { StatusCode } from '../../../types/otel';
 
 const mockNavigate = jest.fn();
@@ -49,6 +50,8 @@ vi.mock('./ResultItem', () =>
 );
 
 vi.mock('./ScatterPlot', () => mockDefault(jest.fn(props => <div data-testid="scatterplot" {...props} />)));
+
+vi.mock('./TraceTable', () => mockDefault(jest.fn(() => <div data-testid="trace-table" />)));
 
 vi.mock('./DownloadResults', () =>
   mockDefault(
@@ -314,6 +317,20 @@ describe('<SearchResults>', () => {
     it('shows a result entry for each trace', () => {
       renderWithRouter(<SearchResults {...baseProps} />);
       expect(ResultItem.mock.calls).toHaveLength(baseTraces.length);
+    });
+
+    it('switches between list and table rendering', () => {
+      renderWithRouter(<SearchResults {...baseProps} />);
+
+      expect(ResultItem.mock.calls).toHaveLength(baseTraces.length);
+      expect(screen.queryByTestId('trace-table')).not.toBeInTheDocument();
+
+      ResultItem.mockClear();
+      fireEvent.click(screen.getByText('Table'));
+
+      expect(screen.getByTestId('trace-table')).toBeInTheDocument();
+      expect(ResultItem).not.toHaveBeenCalled();
+      expect(TraceTable.mock.calls[0][0].handleSortChange).toBe(baseProps.handleSortChange);
     });
 
     it('deep links traces', () => {

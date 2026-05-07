@@ -1,0 +1,36 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.TraceTable {
+  margin-bottom: 1rem;
+}
+
+.TraceTable--row {
+  cursor: pointer;
+}
+
+.TraceTable--traceLink {
+  color: inherit;
+  display: inline-flex;
+  flex-direction: column;
+  max-width: 28rem;
+}
+
+.TraceTable--traceLink:hover {
+  color: inherit;
+}
+
+.TraceTable--traceName {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.TraceTable--traceID {
+  color: var(--text-muted);
+  font-family: monospace;
+  font-size: 0.85em;
+}

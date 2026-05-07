@@ -42,3 +42,9 @@ SPDX-License-Identifier: Apache-2.0
   flex-grow: 1;
   position: relative;
 }
+
+.SearchResults--viewOption {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.25rem;
+}

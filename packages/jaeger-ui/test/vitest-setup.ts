@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { vi } from 'vitest';
-import { TextEncoder } from 'util';
+import { TextEncoder } from 'node:util';
 import { polyfill as rafPolyfill } from '../src/utils/test/requestAnimationFrame';
 import '@testing-library/jest-dom/vitest';
 
@@ -10,7 +10,8 @@ import '@testing-library/jest-dom/vitest';
 rafPolyfill();
 
 // TextEncoder is not provided by JSDOM
-global.TextEncoder = TextEncoder as typeof global.TextEncoder;
+globalThis.TextEncoder = TextEncoder as typeof globalThis.TextEncoder;
+window.TextEncoder = TextEncoder as typeof window.TextEncoder;
 
 // Alias jest → vi so existing test files work without modification.
 // Note: jest.mock() calls are NOT covered by this alias — they are renamed to

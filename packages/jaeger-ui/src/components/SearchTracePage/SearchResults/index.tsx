@@ -3,10 +3,11 @@
 
 import * as React from 'react';
 import { useCallback } from 'react';
-import { Select } from 'antd';
+import { Segmented, Select } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import queryString from 'query-string';
+import { IoGridOutline, IoListOutline } from 'react-icons/io5';
 
 import AltViewOptions from './AltViewOptions';
 import DownloadResults from './DownloadResults';
@@ -15,6 +16,7 @@ import * as markers from './index.markers';
 import { EAltViewActions, trackAltView } from './index.track';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
+import TraceTable from './TraceTable';
 import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
@@ -58,6 +60,7 @@ type SelectSortProps = {
 };
 
 const Option = Select.Option;
+type ViewMode = 'list' | 'table';
 
 /**
  * Contains the dropdown to sort and filter trace search results
@@ -142,6 +145,7 @@ export function UnconnectedSearchResults({
   cohortRemoveTrace,
 }: SearchResultsProps) {
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = React.useState<ViewMode>('list');
 
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
@@ -184,6 +188,16 @@ export function UnconnectedSearchResults({
   }, [rawTraces]);
 
   const traceResultsView = queryString.parse(location.search).view !== 'ddg';
+  const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
+  const getTraceLink = useCallback(
+    (trace: IOtelTrace) =>
+      getTracePageLink(
+        trace.traceID,
+        { fromSearch: searchUrl },
+        spanLinks && (spanLinks[trace.traceID] || spanLinks[trace.traceID.replace(/^0*/, '')])
+      ),
+    [searchUrl, spanLinks]
+  );
 
   const diffSelection = !disableComparisons && (
     <DiffSelection toggleComparison={toggleComparison} traces={diffCohort} />
@@ -209,7 +223,6 @@ export function UnconnectedSearchResults({
     );
   }
   const cohortIds = new Set(diffCohort.map(datum => datum.id));
-  const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
   return (
     <div className="SearchResults">
       <div className="SearchResults--header">
@@ -238,6 +251,31 @@ export function UnconnectedSearchResults({
             {traces.length} Trace{traces.length > 1 && 's'}
           </h2>
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
+          {traceResultsView && (
+            <Segmented
+              aria-label="Search results view"
+              options={[
+                {
+                  label: (
+                    <span className="SearchResults--viewOption">
+                      <IoListOutline /> List
+                    </span>
+                  ),
+                  value: 'list',
+                },
+                {
+                  label: (
+                    <span className="SearchResults--viewOption">
+                      <IoGridOutline /> Table
+                    </span>
+                  ),
+                  value: 'table',
+                },
+              ]}
+              onChange={value => setViewMode(value as ViewMode)}
+              value={viewMode}
+            />
+          )}
           {traceResultsView && <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />}
           <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
           {showStandaloneLink && (
@@ -258,18 +296,23 @@ export function UnconnectedSearchResults({
         </div>
       )}
       {traceResultsView && diffSelection}
-      {traceResultsView && (
+      {traceResultsView && viewMode === 'table' && (
+        <TraceTable
+          getTracePageLink={getTraceLink}
+          handleSortChange={handleSortChange}
+          onRowClick={goToTrace}
+          sortBy={sortBy}
+          traces={traces}
+        />
+      )}
+      {traceResultsView && viewMode === 'list' && (
         <ul className="ub-list-reset">
           {traces.map(trace => (
             <li className="ub-my3" key={trace.traceID}>
               <ResultItem
                 durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
                 isInDiffCohort={cohortIds.has(trace.traceID)}
-                linkTo={getTracePageLink(
-                  trace.traceID,
-                  { fromSearch: searchUrl },
-                  spanLinks && (spanLinks[trace.traceID] || spanLinks[trace.traceID.replace(/^0*/, '')])
-                )}
+                linkTo={getTraceLink(trace)}
                 toggleComparison={toggleComparison}
                 trace={trace}
                 disableComparision={disableComparisons}
