@@ -1,8 +1,18 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback } from 'react';
-import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
+import React, { useCallback, useMemo } from 'react';
+import {
+  IoAlert,
+  IoGitNetwork,
+  IoCloudUploadOutline,
+  IoArrowForward,
+  IoServer,
+  IoPaperPlane,
+  IoSwapHorizontal,
+  IoGlobeOutline,
+  IoHardwareChip,
+} from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
@@ -13,10 +23,19 @@ import Ticks from './Ticks';
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
+import getConfig from '../../../utils/config/get-config';
 
 import { getSpanIconComponent } from './span-icons';
 
 import './SpanBarRow.css';
+
+const ICON_MAP: Record<string, React.ElementType> = {
+  IoServer,
+  IoPaperPlane,
+  IoSwapHorizontal,
+  IoGlobeOutline,
+  IoHardwareChip,
+};
 
 type SpanBarRowProps = {
   className?: string;
@@ -118,6 +137,32 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
 
+  const decorationIcon = useMemo(() => {
+    const { spanDecorations } = getConfig();
+    if (!spanDecorations || spanDecorations.length === 0) {
+      return null;
+    }
+    for (const decoration of spanDecorations) {
+      const allMatched = decoration.entries.every(entry => {
+        const attribute = span.attributes.find(attr => attr.key === entry.key);
+        if (!attribute) return false;
+        try {
+          const regex = new RegExp(entry.value);
+          return regex.test(String(attribute.value));
+        } catch {
+          return false;
+        }
+      });
+      if (allMatched) {
+        const IconComponent = ICON_MAP[decoration.icon];
+        if (IconComponent) {
+          return <IconComponent className="SpanBarRow--decorationIcon" />;
+        }
+      }
+    }
+    return null;
+  }, [span.attributes]);
+
   const labelDetail = `${serviceName}::${operationName}`;
   let longLabel;
   let hintSide;
@@ -169,6 +214,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
+              {decorationIcon}
               {serviceName}{' '}
               {rpc && (
                 <span>
