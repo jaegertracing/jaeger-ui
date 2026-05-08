@@ -56,7 +56,7 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
           })
           .catch((err: unknown) => {
             const cause = err instanceof Error ? `: ${err.message}` : '';
-            reject(new Error(`Error converting traces to OTLP${cause}`));
+            reject(new Error(`Error converting OTLP trace to Jaeger${cause}`, { cause: err }));
           });
       } else {
         resolve(traceObj);

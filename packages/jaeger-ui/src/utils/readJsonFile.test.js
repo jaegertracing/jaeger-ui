@@ -73,7 +73,7 @@ describe('fileReader.readJsonFile', () => {
     );
     const file = new File([JSON.stringify(inObj)], 'foo.json');
     const p = readJsonFile({ file });
-    return expect(p).rejects.toThrow(/Error converting traces to OTLP: backend transform failed/);
+    return expect(p).rejects.toThrow(/Error converting OTLP trace to Jaeger: backend transform failed/);
   });
 
   it('rejects malformed JSON', () => {
