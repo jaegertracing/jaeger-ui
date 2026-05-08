@@ -13,6 +13,7 @@ import Ticks from './Ticks';
 import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
+import { GenAISpanIcon } from './GenAISpanIcon';
 
 import './SpanBarRow.css';
 
@@ -154,6 +155,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
+              <GenAISpanIcon span={span} size={14} />
               {serviceName}{' '}
               {rpc && (
                 <span>

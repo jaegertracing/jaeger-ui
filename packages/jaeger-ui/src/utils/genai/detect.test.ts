@@ -29,7 +29,7 @@ function makeSpan(attrs: Record<string, string> = {}): IOtelSpan {
 }
 
 function makeTrace(spans: IOtelSpan[]): IOtelTrace {
-  return {
+  const trace: Omit<IOtelTrace, 'isGenAITrace'> & { isGenAITrace: boolean } = {
     traceID: 'trace-1',
     spans,
     duration: 1 as IOtelTrace['duration'],
@@ -42,8 +42,10 @@ function makeTrace(spans: IOtelSpan[]): IOtelTrace {
     spanMap: new Map(spans.map(s => [s.spanID, s])),
     rootSpans: spans.slice(0, 1),
     orphanSpanCount: 0,
+    isGenAITrace: false,
     hasErrors: () => false,
   };
+  return trace;
 }
 
 describe('classifySpan', () => {
