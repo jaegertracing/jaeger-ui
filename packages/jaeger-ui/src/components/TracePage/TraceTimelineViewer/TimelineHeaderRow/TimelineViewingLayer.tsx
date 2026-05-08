@@ -16,7 +16,7 @@ type TimelineViewingLayerProps = {
    * bounds for dragging need to be recalculated. In practice, the name column
    * width serves fine for this.
    */
-  boundsInvalidator: any | null | undefined;
+  boundsInvalidator: unknown;
   updateNextViewRangeTime: (update: ViewRangeTimeUpdate) => void;
   updateViewRangeTime: TUpdateViewRangeTimeFunction;
   viewRangeTime: IViewRangeTime;
@@ -109,98 +109,109 @@ function getMarkers(
  * labels; it handles showing the current view range and handles mouse UX for
  * modifying it.
  */
-export default class TimelineViewingLayer extends React.PureComponent<TimelineViewingLayerProps> {
-  _draggerReframe: DraggableManager;
-  _root = React.createRef<HTMLDivElement>();
+function TimelineViewingLayer(props: TimelineViewingLayerProps) {
+  const { boundsInvalidator, viewRangeTime } = props;
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const propsRef = React.useRef(props);
+  propsRef.current = props;
 
-  constructor(props: TimelineViewingLayerProps) {
-    super(props);
-    this._draggerReframe = new DraggableManager({
-      getBounds: this._getDraggingBounds,
-      onDragEnd: this._handleReframeDragEnd,
-      onDragMove: this._handleReframeDragUpdate,
-      onDragStart: this._handleReframeDragUpdate,
-      onMouseLeave: this._handleReframeMouseLeave,
-      onMouseMove: this._handleReframeMouseMove,
-    });
-  }
-
-  componentDidUpdate(prevProps: Readonly<TimelineViewingLayerProps>) {
-    const { boundsInvalidator } = this.props;
-    if (prevProps.boundsInvalidator !== boundsInvalidator) {
-      this._draggerReframe.resetBounds();
-    }
-  }
-
-  componentWillUnmount() {
-    this._draggerReframe.dispose();
-  }
-
-  _getDraggingBounds = (): DraggableBounds => {
-    const current = this._root.current;
+  const getDraggingBounds = React.useCallback((): DraggableBounds => {
+    const current = rootRef.current;
     if (!current) {
       throw new Error('Component must be mounted in order to determine DraggableBounds');
     }
     const { left: clientXLeft, width } = current.getBoundingClientRect();
     return { clientXLeft, width };
-  };
+  }, []);
 
-  _handleReframeMouseMove = ({ value }: DraggingUpdate) => {
-    const [viewStart, viewEnd] = this.props.viewRangeTime.current;
-    const cursor = mapFromViewSubRange(viewStart, viewEnd, value);
-    this.props.updateNextViewRangeTime({ cursor });
-  };
-
-  _handleReframeMouseLeave = () => {
-    this.props.updateNextViewRangeTime({ cursor: undefined });
-  };
-
-  _getAnchorAndShift = (value: number) => {
-    const { current, reframe } = this.props.viewRangeTime;
+  const getAnchorAndShift = React.useCallback((value: number) => {
+    const { current, reframe } = propsRef.current.viewRangeTime;
     const [viewStart, viewEnd] = current;
     const shift = mapFromViewSubRange(viewStart, viewEnd, value);
     const anchor = reframe ? reframe.anchor : shift;
     return { anchor, shift };
-  };
+  }, []);
 
-  _handleReframeDragUpdate = ({ value }: DraggingUpdate) => {
-    const { anchor, shift } = this._getAnchorAndShift(value);
-    const update = { reframe: { anchor, shift } };
-    this.props.updateNextViewRangeTime(update);
-  };
+  const handleReframeMouseMove = React.useCallback(({ value }: DraggingUpdate) => {
+    const [viewStart, viewEnd] = propsRef.current.viewRangeTime.current;
+    const cursor = mapFromViewSubRange(viewStart, viewEnd, value);
+    propsRef.current.updateNextViewRangeTime({ cursor });
+  }, []);
 
-  _handleReframeDragEnd = ({ manager, value }: DraggingUpdate) => {
-    const { anchor, shift } = this._getAnchorAndShift(value);
-    const [start, end] = shift < anchor ? [shift, anchor] : [anchor, shift];
-    manager.resetBounds();
-    this.props.updateViewRangeTime(start, end, 'timeline-header');
-  };
+  const handleReframeMouseLeave = React.useCallback(() => {
+    propsRef.current.updateNextViewRangeTime({ cursor: undefined });
+  }, []);
 
-  render() {
-    const { viewRangeTime } = this.props;
-    const { current, cursor, reframe, shiftEnd, shiftStart } = viewRangeTime;
-    const [viewStart, viewEnd] = current;
-    const haveNextTimeRange = reframe != null || shiftEnd != null || shiftStart != null;
-    let cusrorPosition: string | TNil;
-    if (!haveNextTimeRange && cursor != null && cursor >= viewStart && cursor <= viewEnd) {
-      cusrorPosition = `${mapToViewSubRange(viewStart, viewEnd, cursor) * 100}%`;
-    }
-    return (
-      <div
-        aria-hidden
-        className="TimelineViewingLayer"
-        ref={this._root}
-        onMouseDown={this._draggerReframe.handleMouseDown}
-        onMouseLeave={this._draggerReframe.handleMouseLeave}
-        onMouseMove={this._draggerReframe.handleMouseMove}
-      >
-        {cusrorPosition != null && (
-          <div className="TimelineViewingLayer--cursorGuide" style={{ left: cusrorPosition }} />
-        )}
-        {reframe != null && getMarkers(viewStart, viewEnd, reframe.anchor, reframe.shift, false)}
-        {shiftEnd != null && getMarkers(viewStart, viewEnd, viewEnd, shiftEnd, true)}
-        {shiftStart != null && getMarkers(viewStart, viewEnd, viewStart, shiftStart, true)}
-      </div>
-    );
+  const handleReframeDragUpdate = React.useCallback(
+    ({ value }: DraggingUpdate) => {
+      const { anchor, shift } = getAnchorAndShift(value);
+      const update = { reframe: { anchor, shift } };
+      propsRef.current.updateNextViewRangeTime(update);
+    },
+    [getAnchorAndShift]
+  );
+
+  const handleReframeDragEnd = React.useCallback(
+    ({ manager, value }: DraggingUpdate) => {
+      const { anchor, shift } = getAnchorAndShift(value);
+      const [start, end] = shift < anchor ? [shift, anchor] : [anchor, shift];
+      manager.resetBounds();
+      propsRef.current.updateViewRangeTime(start, end, 'timeline-header');
+    },
+    [getAnchorAndShift]
+  );
+
+  const draggerReframeRef = React.useRef<DraggableManager | null>(null);
+  if (!draggerReframeRef.current) {
+    draggerReframeRef.current = new DraggableManager({
+      getBounds: getDraggingBounds,
+      onDragEnd: handleReframeDragEnd,
+      onDragMove: handleReframeDragUpdate,
+      onDragStart: handleReframeDragUpdate,
+      onMouseLeave: handleReframeMouseLeave,
+      onMouseMove: handleReframeMouseMove,
+    });
   }
+
+  const previousBoundsInvalidatorRef = React.useRef(boundsInvalidator);
+  React.useEffect(() => {
+    if (previousBoundsInvalidatorRef.current !== boundsInvalidator) {
+      draggerReframeRef.current?.resetBounds();
+      previousBoundsInvalidatorRef.current = boundsInvalidator;
+    }
+  }, [boundsInvalidator]);
+
+  React.useEffect(() => {
+    return () => {
+      draggerReframeRef.current?.dispose();
+    };
+  }, []);
+
+  const { current, cursor, reframe, shiftEnd, shiftStart } = viewRangeTime;
+  const [viewStart, viewEnd] = current;
+  const haveNextTimeRange = reframe != null || shiftEnd != null || shiftStart != null;
+  let cursorPosition: string | TNil;
+  if (!haveNextTimeRange && cursor != null && cursor >= viewStart && cursor <= viewEnd) {
+    cursorPosition = `${mapToViewSubRange(viewStart, viewEnd, cursor) * 100}%`;
+  }
+
+  return (
+    <div
+      aria-hidden
+      className="TimelineViewingLayer"
+      ref={rootRef}
+      onMouseDown={draggerReframeRef.current.handleMouseDown}
+      onMouseLeave={draggerReframeRef.current.handleMouseLeave}
+      onMouseMove={draggerReframeRef.current.handleMouseMove}
+    >
+      {cursorPosition != null && (
+        <div className="TimelineViewingLayer--cursorGuide" style={{ left: cursorPosition }} />
+      )}
+      {reframe != null && getMarkers(viewStart, viewEnd, reframe.anchor, reframe.shift, false)}
+      {shiftEnd != null && getMarkers(viewStart, viewEnd, viewEnd, shiftEnd, true)}
+      {shiftStart != null && getMarkers(viewStart, viewEnd, viewStart, shiftStart, true)}
+    </div>
+  );
 }
+
+export default React.memo(TimelineViewingLayer);

@@ -5,29 +5,60 @@ import React from 'react';
 import { render, fireEvent, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
+const { draggerInstances } = vi.hoisted(() => {
+  const draggerInstances = [];
+  return { draggerInstances };
+});
+
+vi.mock('../../../../utils/DraggableManager', async () => {
+  const actual = await vi.importActual('../../../../utils/DraggableManager');
+
+  class MockDraggableManager {
+    constructor(opts) {
+      this._opts = opts;
+      this.getBounds = opts.getBounds;
+      this.handleMouseDown = vi.fn();
+      this.handleMouseLeave = vi.fn();
+      this.handleMouseMove = vi.fn();
+      this.resetBounds = vi.fn();
+      this.dispose = vi.fn();
+      draggerInstances.push(this);
+    }
+  }
+
+  return {
+    ...actual,
+    default: MockDraggableManager,
+  };
+});
+
 import TimelineViewingLayer from './TimelineViewingLayer';
 
 function mapFromSubRange(viewStart, viewEnd, value) {
   return viewStart + value * (viewEnd - viewStart);
 }
 
+function getDragger() {
+  return draggerInstances[0];
+}
+
 describe('<TimelineViewingLayer>', () => {
   const viewStart = 0.25;
   const viewEnd = 0.9;
-  const props = {
-    boundsInvalidator: Math.random(),
-    updateNextViewRangeTime: jest.fn(),
-    updateViewRangeTime: jest.fn(),
-    viewRangeTime: {
-      current: [viewStart, viewEnd],
-    },
-  };
+  let props;
 
   beforeEach(() => {
-    props.updateNextViewRangeTime.mockReset();
-    props.updateViewRangeTime.mockReset();
+    draggerInstances.length = 0;
+    props = {
+      boundsInvalidator: Math.random(),
+      updateNextViewRangeTime: vi.fn(),
+      updateViewRangeTime: vi.fn(),
+      viewRangeTime: {
+        current: [viewStart, viewEnd],
+      },
+    };
 
-    Element.prototype.getBoundingClientRect = jest.fn(() => ({
+    Element.prototype.getBoundingClientRect = vi.fn(() => ({
       left: 10,
       width: 100,
       top: 0,
@@ -39,7 +70,7 @@ describe('<TimelineViewingLayer>', () => {
 
   afterEach(() => {
     cleanup();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('renders without exploding', () => {
@@ -47,84 +78,106 @@ describe('<TimelineViewingLayer>', () => {
     expect(container.querySelector('.TimelineViewingLayer')).toBeInTheDocument();
   });
 
-  it('sets _root to the root DOM node', () => {
+  it('wires DOM mouse events to the DraggableManager handlers', () => {
     const { container } = render(<TimelineViewingLayer {...props} />);
     const timelineLayer = container.querySelector('.TimelineViewingLayer');
-    expect(timelineLayer).toBeDefined();
+    const dragger = getDragger();
+
+    fireEvent.mouseDown(timelineLayer);
+    fireEvent.mouseLeave(timelineLayer);
+    fireEvent.mouseMove(timelineLayer);
+
+    expect(dragger.handleMouseDown).toHaveBeenCalled();
+    expect(dragger.handleMouseLeave).toHaveBeenCalled();
+    expect(dragger.handleMouseMove).toHaveBeenCalled();
   });
 
-  describe('uses DraggableManager', () => {
-    it('initializes the DraggableManager', () => {
-      const comp = new TimelineViewingLayer(props);
-      expect(comp._draggerReframe).toBeDefined();
+  describe('DraggableManager callbacks', () => {
+    it('returns the dragging bounds from the root DOM node', () => {
+      render(<TimelineViewingLayer {...props} />);
+      expect(getDragger().getBounds()).toEqual({ clientXLeft: 10, width: 100 });
     });
 
-    it('returns the dragging bounds from _getDraggingBounds()', () => {
-      const comp = new TimelineViewingLayer(props);
-      comp._root.current = document.createElement('div');
-      comp._root.current.getBoundingClientRect = () => ({ left: 10, width: 100 });
-      expect(comp._getDraggingBounds()).toEqual({ clientXLeft: 10, width: 100 });
-    });
+    it('throws error when dragging bounds are requested after unmount', () => {
+      const { unmount } = render(<TimelineViewingLayer {...props} />);
+      const dragger = getDragger();
 
-    it('throws error on call to _getDraggingBounds() on unmounted component', () => {
-      const comp = new TimelineViewingLayer(props);
-      comp._root.current = null;
-      expect(() => comp._getDraggingBounds()).toThrow(
+      unmount();
+
+      expect(() => dragger.getBounds()).toThrow(
         'Component must be mounted in order to determine DraggableBounds'
       );
     });
 
-    it('updates viewRange.time.cursor via _draggerReframe._onMouseMove', () => {
-      const { container } = render(<TimelineViewingLayer {...props} />);
-      fireEvent.mouseMove(container.querySelector('.TimelineViewingLayer'), { clientX: 60 });
-      expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({ cursor: expect.any(Number) });
+    it('updates viewRangeTime.cursor on mouse move', () => {
+      render(<TimelineViewingLayer {...props} />);
+      getDragger()._opts.onMouseMove({ value: 0.5 });
+      expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({
+        cursor: mapFromSubRange(viewStart, viewEnd, 0.5),
+      });
     });
 
-    it('resets viewRange.time.cursor via _draggerReframe._onMouseLeave', () => {
-      const { container } = render(<TimelineViewingLayer {...props} />);
-      fireEvent.mouseLeave(container.querySelector('.TimelineViewingLayer'));
+    it('clears viewRangeTime.cursor on mouse leave', () => {
+      render(<TimelineViewingLayer {...props} />);
+      getDragger()._opts.onMouseLeave();
       expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({ cursor: undefined });
     });
 
-    it('handles drag start via _draggerReframe._onDragStart', () => {
-      const { container } = render(<TimelineViewingLayer {...props} />);
-      fireEvent.mouseDown(container.querySelector('.TimelineViewingLayer'), { clientX: 60 });
+    it('handles drag start without an existing anchor', () => {
+      render(<TimelineViewingLayer {...props} />);
+      getDragger()._opts.onDragStart({ value: 0.5 });
+      const shift = mapFromSubRange(viewStart, viewEnd, 0.5);
+
       expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({
-        reframe: {
-          anchor: expect.any(Number),
-          shift: expect.any(Number),
-        },
+        reframe: { anchor: shift, shift },
       });
     });
 
-    it('handles drag move via _draggerReframe._onDragMove', () => {
-      const anchor = 0.25;
-      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: 0.5 } };
-      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
-      fireEvent.mouseDown(container.querySelector('.TimelineViewingLayer'), { clientX: 60 });
-      expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({
-        reframe: {
-          anchor: expect.any(Number),
-          shift: expect.any(Number),
-        },
-      });
-    });
-
-    it('handles drag end via _draggerReframe._onDragEnd', () => {
+    it('uses the latest reframe anchor after props update', () => {
+      const { rerender } = render(<TimelineViewingLayer {...props} />);
       const anchor = 0.75;
       const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: 0.5 } };
-      const { container } = render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
-      fireEvent.mouseDown(container.querySelector('.TimelineViewingLayer'), { clientX: 60 });
-      fireEvent.mouseUp(container.querySelector('.TimelineViewingLayer'), { clientX: 40 });
-      const [start, end, source] = props.updateViewRangeTime.mock.calls.at(-1);
-      expect(start).toBeLessThanOrEqual(end);
-      expect(source).toBe('timeline-header');
+
+      rerender(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
+      getDragger()._opts.onDragMove({ value: 0.5 });
+
+      expect(props.updateNextViewRangeTime).toHaveBeenCalledWith({
+        reframe: { anchor, shift: mapFromSubRange(viewStart, viewEnd, 0.5) },
+      });
     });
 
-    it('resets draggable bounds on boundsInvalidator update', () => {
-      const { rerender, container } = render(<TimelineViewingLayer {...props} />);
+    it('handles drag end and orders the resulting range', () => {
+      const anchor = 0.75;
+      const manager = { resetBounds: vi.fn() };
+      const viewRangeTime = { ...props.viewRangeTime, reframe: { anchor, shift: 0.5 } };
+
+      render(<TimelineViewingLayer {...props} viewRangeTime={viewRangeTime} />);
+      getDragger()._opts.onDragEnd({ manager, value: 0.25 });
+
+      expect(manager.resetBounds).toHaveBeenCalled();
+      expect(props.updateViewRangeTime).toHaveBeenCalledWith(
+        mapFromSubRange(viewStart, viewEnd, 0.25),
+        anchor,
+        'timeline-header'
+      );
+    });
+
+    it('resets draggable bounds when boundsInvalidator changes', () => {
+      const { rerender } = render(<TimelineViewingLayer {...props} />);
+      const dragger = getDragger();
+
       rerender(<TimelineViewingLayer {...props} boundsInvalidator={Math.random()} />);
-      expect(container.firstChild).toBeInTheDocument();
+
+      expect(dragger.resetBounds).toHaveBeenCalled();
+    });
+
+    it('disposes the DraggableManager on unmount', () => {
+      const { unmount } = render(<TimelineViewingLayer {...props} />);
+      const dragger = getDragger();
+
+      unmount();
+
+      expect(dragger.dispose).toHaveBeenCalled();
     });
   });
 
