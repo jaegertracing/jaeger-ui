@@ -3,10 +3,13 @@
 
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Table } from 'antd';
+import { Table, Tag } from 'antd';
 import { ColumnProps } from 'antd/es/table';
+import _sortBy from 'lodash/sortBy';
+import { IoAlert } from 'react-icons/io5';
 
 import * as orderBy from '../../../model/order-by';
+import colorGenerator from '../../../utils/color-generator';
 import { formatDatetime, formatDuration } from '../../../utils/date';
 
 import { IOtelTrace, StatusCode } from '../../../types/otel';
@@ -28,6 +31,12 @@ function getErrorCount(trace: IOtelTrace) {
   return trace.spans.filter(span => span.status?.code === StatusCode.ERROR).length;
 }
 
+function getErroredServices(trace: IOtelTrace) {
+  return new Set(
+    trace.spans.filter(span => span.status?.code === StatusCode.ERROR).map(span => span.resource.serviceName)
+  );
+}
+
 function getSortOrder(sortBy: string, columnKey: string): SortOrder {
   if (columnKey === 'duration') {
     if (sortBy === orderBy.LONGEST_FIRST) return 'descend';
@@ -43,7 +52,10 @@ function getSortOrder(sortBy: string, columnKey: string): SortOrder {
   return null;
 }
 
-function getSortBy(columnKey: React.Key | undefined, order: SortOrder) {
+export function getSortBy(columnKey: React.Key | undefined, order: SortOrder) {
+  if (!order) {
+    return null;
+  }
   if (columnKey === 'duration') {
     return order === 'ascend' ? orderBy.SHORTEST_FIRST : orderBy.LONGEST_FIRST;
   }
@@ -67,6 +79,7 @@ export default function TraceTable({
     {
       key: 'traceName',
       title: 'Trace Name',
+      width: 320,
       render: (_value, trace) => {
         const linkTo = getTracePageLink(trace);
         return (
@@ -85,7 +98,30 @@ export default function TraceTable({
     {
       key: 'services',
       title: 'Services',
-      render: (_value, trace) => (trace.services || []).map(service => service.name).join(', '),
+      width: 360,
+      render: (_value, trace) => {
+        const erroredServices = getErroredServices(trace);
+        return (
+          <ul className="TraceTable--serviceTags ub-list-reset">
+            {_sortBy(trace.services || [], service => service.name).map(service => {
+              const { name, numberOfSpans: count } = service;
+              return (
+                <li key={name} className="TraceTable--serviceTagItem">
+                  <Tag
+                    className="TraceTable--serviceTag"
+                    style={{ borderLeftColor: colorGenerator.getColorByKey(name) }}
+                    title={`${name} (${count})`}
+                    variant="outlined"
+                  >
+                    {erroredServices.has(name) && <IoAlert className="TraceTable--errorIcon" />}
+                    {name} ({count})
+                  </Tag>
+                </li>
+              );
+            })}
+          </ul>
+        );
+      },
     },
     {
       key: 'spanCount',
@@ -93,12 +129,14 @@ export default function TraceTable({
       align: 'right',
       sorter: true,
       sortOrder: getSortOrder(sortBy, 'spanCount'),
+      width: 95,
       render: (_value, trace) => trace.spans.length,
     },
     {
       key: 'errorCount',
       title: 'Errors',
       align: 'right',
+      width: 95,
       render: (_value, trace) => getErrorCount(trace),
     },
     {
@@ -107,6 +145,7 @@ export default function TraceTable({
       align: 'right',
       sorter: true,
       sortOrder: getSortOrder(sortBy, 'duration'),
+      width: 120,
       render: (_value, trace) => formatDuration(trace.duration),
     },
     {
@@ -115,6 +154,7 @@ export default function TraceTable({
       sorter: true,
       sortDirections: ['descend'],
       sortOrder: getSortOrder(sortBy, 'startTime'),
+      width: 190,
       render: (_value, trace) => formatDatetime(trace.startTime),
     },
   ];
@@ -140,6 +180,7 @@ export default function TraceTable({
       pagination={false}
       rowClassName="TraceTable--row"
       rowKey="traceID"
+      scroll={{ x: 1080 }}
       size="small"
     />
   );

@@ -15,7 +15,8 @@ SPDX-License-Identifier: Apache-2.0
   color: inherit;
   display: inline-flex;
   flex-direction: column;
-  max-width: 28rem;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .TraceTable--traceLink:hover {
@@ -33,4 +34,42 @@ SPDX-License-Identifier: Apache-2.0
   color: var(--text-muted);
   font-family: monospace;
   font-size: 0.85em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.TraceTable--serviceTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  max-height: 4.5rem;
+  overflow: auto;
+}
+
+.TraceTable--serviceTagItem {
+  display: inline-flex;
+}
+
+.TraceTable--serviceTag {
+  align-items: center;
+  border-left-width: 15px;
+  display: flex;
+  margin: 0;
+  max-width: 18rem;
+}
+
+.TraceTable--serviceTag .ant-tag-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.TraceTable--errorIcon {
+  background: var(--feedback-error);
+  border-radius: 6.5px;
+  color: var(--text-inverse);
+  font-size: 0.85em;
+  margin-right: 0.25rem;
+  padding: 1px;
 }

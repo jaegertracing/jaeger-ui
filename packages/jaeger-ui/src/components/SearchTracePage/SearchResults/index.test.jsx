@@ -324,11 +324,13 @@ describe('<SearchResults>', () => {
 
       expect(ResultItem.mock.calls).toHaveLength(baseTraces.length);
       expect(screen.queryByTestId('trace-table')).not.toBeInTheDocument();
+      expect(screen.getByTestId('searchable-select')).toBeInTheDocument();
 
       ResultItem.mockClear();
       fireEvent.click(screen.getByText('Table'));
 
       expect(screen.getByTestId('trace-table')).toBeInTheDocument();
+      expect(screen.queryByTestId('searchable-select')).not.toBeInTheDocument();
       expect(ResultItem).not.toHaveBeenCalled();
       expect(TraceTable.mock.calls[0][0].handleSortChange).toBe(baseProps.handleSortChange);
     });
