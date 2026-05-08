@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useCallback } from 'react';
-import { Select } from 'antd';
+import { Radio, Select } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import queryString from 'query-string';
@@ -15,6 +15,7 @@ import * as markers from './index.markers';
 import { EAltViewActions, trackAltView } from './index.track';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
+import TraceTable from './TraceTable';
 import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
@@ -142,6 +143,7 @@ export function UnconnectedSearchResults({
   cohortRemoveTrace,
 }: SearchResultsProps) {
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = React.useState<'list' | 'table'>('list');
 
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
@@ -238,6 +240,17 @@ export function UnconnectedSearchResults({
             {traces.length} Trace{traces.length > 1 && 's'}
           </h2>
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
+          {traceResultsView && (
+            <Radio.Group
+              className="ub-ml2"
+              value={viewMode}
+              onChange={e => setViewMode(e.target.value as 'list' | 'table')}
+              size="small"
+            >
+              <Radio.Button value="list">List</Radio.Button>
+              <Radio.Button value="table">Table</Radio.Button>
+            </Radio.Group>
+          )}
           {traceResultsView && <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />}
           <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
           {showStandaloneLink && (
@@ -258,7 +271,16 @@ export function UnconnectedSearchResults({
         </div>
       )}
       {traceResultsView && diffSelection}
-      {traceResultsView && (
+      {traceResultsView && viewMode === 'table' && (
+        <TraceTable
+          traces={traces}
+          maxTraceDuration={maxTraceDuration}
+          onRowClick={goToTrace}
+          sortBy={sortBy}
+          handleSortChange={handleSortChange}
+        />
+      )}
+      {traceResultsView && viewMode === 'list' && (
         <ul className="ub-list-reset">
           {traces.map(trace => (
             <li className="ub-my3" key={trace.traceID}>
