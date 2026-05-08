@@ -33,6 +33,10 @@ type TracePageHeaderEmbedProps = {
   clearSearch: () => void;
   detailPanelMode: 'inline' | 'sidepanel';
   enableSidePanel: boolean;
+  enableGenAIMode: boolean;
+  genAIModeActive: boolean;
+  autoDetectedGenAI: boolean;
+  onGenAIModeToggle: () => void;
   focusUiFindMatches: () => void;
   hideMap: boolean;
   hideSummary: boolean;
@@ -123,6 +127,10 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
     clearSearch,
     detailPanelMode,
     enableSidePanel,
+    enableGenAIMode,
+    genAIModeActive,
+    autoDetectedGenAI,
+    onGenAIModeToggle,
     focusUiFindMatches,
     forwardedRef,
     hideMap,
@@ -212,8 +220,12 @@ export function TracePageHeaderFn(props: TracePageHeaderEmbedProps & { forwarded
           className="ub-m2"
           detailPanelMode={detailPanelMode}
           enableSidePanel={enableSidePanel}
+          enableGenAIMode={enableGenAIMode}
+          genAIModeActive={genAIModeActive}
+          autoDetectedGenAI={autoDetectedGenAI}
           onDetailPanelModeToggle={onDetailPanelModeToggle}
           onTimelineToggle={onTimelineToggle}
+          onGenAIModeToggle={onGenAIModeToggle}
           timelineBarsVisible={timelineBarsVisible}
         />
         {showViewOptions && (

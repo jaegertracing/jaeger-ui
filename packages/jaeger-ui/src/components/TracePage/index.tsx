@@ -19,9 +19,11 @@ import { useArchiveStore } from '../../stores/archive-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import {
   setDetailPanelMode as setDetailPanelModeZustand,
+  setGenAIMode,
   useLayoutPrefsStore,
   useTraceTimelineStore,
 } from './TraceTimelineViewer/store';
+import { isGenAITrace } from '../../utils/gen-ai';
 import { trackFilter, trackFocusMatches, trackNextMatch, trackPrevMatch, trackRange } from './index.track';
 import {
   CombokeysHandler,
@@ -73,6 +75,7 @@ type TOwnProps = {
   params: { id: string };
   archiveEnabled: boolean;
   enableSidePanel: boolean;
+  enableGenAIMode: boolean;
   storageCapabilities: StorageCapabilities | TNil;
   criticalPathEnabled: boolean;
   disableJsonView: boolean;
@@ -147,6 +150,7 @@ export function TracePageImpl(props: TProps) {
     criticalPathEnabled,
     disableJsonView,
     enableSidePanel,
+    enableGenAIMode,
     fetchTrace,
     focusUiFindMatches: focusUiFindMatchesProp,
     id,
@@ -163,6 +167,9 @@ export function TracePageImpl(props: TProps) {
   // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
+  const genAIModeActive = useLayoutPrefsStore(s => s.genAIModeActive);
+  const autoDetectedGenAI = useLayoutPrefsStore(s => s.autoDetectedGenAI);
+  const setAutoDetectedGenAI = useLayoutPrefsStore(s => s.setAutoDetectedGenAI);
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
@@ -296,6 +303,18 @@ export function TracePageImpl(props: TProps) {
     }
   }, [id, trace, fetchTrace, updateViewRangeTime, clearSearch]);
 
+  // Auto-detect GenAI spans on trace load; activate mode when no stored preference exists.
+  useEffect(() => {
+    if (!enableGenAIMode || !trace?.data) return;
+    const otelTrace = trace.data.asOtelTrace?.();
+    if (!otelTrace) return;
+    const detected = isGenAITrace(otelTrace);
+    setAutoDetectedGenAI(detected);
+    if (detected && localStorage.getItem('genAIMode') === null) {
+      setGenAIMode(true);
+    }
+  }, [enableGenAIMode, trace, setAutoDetectedGenAI]);
+
   const headerResizeObserverRef = useRef<ResizeObserver | TNil>(null);
 
   const headerRefCallback = useCallback((elm: HTMLElement | TNil) => {
@@ -363,6 +382,10 @@ export function TracePageImpl(props: TProps) {
     setTimelineBarsVisible(!timelineBarsVisible);
   }, [setTimelineBarsVisible, timelineBarsVisible]);
 
+  const onGenAIModeToggle = useCallback(() => {
+    setGenAIMode(!genAIModeActive);
+  }, [genAIModeActive]);
+
   if (!trace || trace.state === fetchedState.LOADING) {
     return <LoadingIndicator className="u-mt-vast" centered />;
   }
@@ -402,6 +425,10 @@ export function TracePageImpl(props: TProps) {
     clearSearch,
     detailPanelMode,
     enableSidePanel,
+    enableGenAIMode,
+    genAIModeActive,
+    autoDetectedGenAI,
+    onGenAIModeToggle,
     hideMap: Boolean(
       viewType !== ETraceViewType.TraceTimelineViewer || Boolean(embedded?.timeline?.hideMinimap)
     ),
@@ -540,6 +567,7 @@ const TracePage = (props: TracePageProps) => {
       params={{ ...props.params, id: normalizedTraceID }}
       archiveEnabled={Boolean(config.archiveEnabled)}
       enableSidePanel={Boolean(config.traceTimeline?.enableSidePanel)}
+      enableGenAIMode={Boolean(config.traceTimeline?.enableGenAIMode)}
       storageCapabilities={config.storageCapabilities}
       criticalPathEnabled={config.criticalPathEnabled}
       disableJsonView={config.disableJsonView}

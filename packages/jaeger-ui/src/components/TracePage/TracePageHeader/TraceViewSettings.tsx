@@ -14,8 +14,12 @@ type Props = {
   className?: string;
   detailPanelMode: 'inline' | 'sidepanel';
   enableSidePanel: boolean;
+  enableGenAIMode: boolean;
+  genAIModeActive: boolean;
+  autoDetectedGenAI: boolean;
   onDetailPanelModeToggle: () => void;
   onTimelineToggle: () => void;
+  onGenAIModeToggle: () => void;
   timelineBarsVisible: boolean;
 };
 
@@ -27,8 +31,12 @@ export default function TraceViewSettings(props: Props) {
     className,
     detailPanelMode,
     enableSidePanel,
+    enableGenAIMode,
+    genAIModeActive,
+    autoDetectedGenAI,
     onDetailPanelModeToggle,
     onTimelineToggle,
+    onGenAIModeToggle,
     timelineBarsVisible,
   } = props;
 
@@ -50,6 +58,33 @@ export default function TraceViewSettings(props: Props) {
       icon: isSidePanel ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
       label: 'Show Span in Sidebar',
       onClick: onDetailPanelModeToggle,
+    });
+  }
+
+  if (enableGenAIMode && autoDetectedGenAI) {
+    items.push({
+      key: 'genai-mode',
+      icon: genAIModeActive ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
+      label: (
+        <span>
+          GenAI Mode{' '}
+          {autoDetectedGenAI && !genAIModeActive && (
+            <span
+              style={{
+                fontSize: 10,
+                background: '#1890ff',
+                color: '#fff',
+                borderRadius: 4,
+                padding: '1px 5px',
+                marginLeft: 4,
+              }}
+            >
+              AUTO
+            </span>
+          )}
+        </span>
+      ),
+      onClick: onGenAIModeToggle,
     });
   }
 
