@@ -120,6 +120,7 @@ const defaultConfig: Config = {
   traceTimeline: {
     enableSidePanel: true,
     defaultDetailPanelMode: 'inline',
+    enableGenAIMode: false,
   },
   useOpenTelemetryTerms: false,
 };

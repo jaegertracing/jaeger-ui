@@ -221,6 +221,11 @@ export type Config = {
     // 'sidepanel' makes the side panel the default experience for new users.
     // Default: 'inline'.
     defaultDetailPanelMode?: SpanDetailPanelMode;
+
+    // enableGenAIMode enables the GenAI observability mode option in the trace timeline.
+    // When true, the GenAI Mode toggle is shown and auto-detection runs on trace load.
+    // Default: false (opt-in until feature stabilises).
+    enableGenAIMode?: boolean;
   };
 
   // useOpenTelemetryTerms determines whether the UI uses legacy Jaeger terminology

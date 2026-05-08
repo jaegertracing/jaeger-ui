@@ -17,18 +17,22 @@ type TraceTimelineLayoutPrefsStore = {
   sidePanelWidth: number;
   detailPanelMode: SpanDetailPanelMode;
   timelineBarsVisible: boolean;
+  genAIModeActive: boolean;
+  autoDetectedGenAI: boolean;
   setSpanNameColumnWidth: (width: number) => void;
   setSidePanelWidth: (width: number) => void;
   // Updates layout fields only; use `setDetailPanelMode` from `./store` to also sync detail panel state.
   applyDetailPanelModeToLayout: (mode: SpanDetailPanelMode) => void;
   setTimelineBarsVisible: (visible: boolean) => void;
+  setGenAIModeActive: (active: boolean) => void;
+  setAutoDetectedGenAI: (detected: boolean) => void;
 };
 
 // Reads user layout preferences from localStorage and merges them with config-driven defaults.
 // Mirrors the logic that was previously in TraceTimelineViewer/duck.ts `newInitialState()`.
 export function getInitialLayoutState(): Pick<
   TraceTimelineLayoutPrefsStore,
-  'spanNameColumnWidth' | 'sidePanelWidth' | 'detailPanelMode' | 'timelineBarsVisible'
+  'spanNameColumnWidth' | 'sidePanelWidth' | 'detailPanelMode' | 'timelineBarsVisible' | 'genAIModeActive'
 > {
   const { traceTimeline } = getConfig();
 
@@ -86,7 +90,11 @@ export function getInitialLayoutState(): Pick<
     }
   }
 
-  return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible };
+  // 'on'/'off' honour an explicit user choice; absent = auto (detection runs at trace load)
+  const storedGenAIMode = localStorage.getItem('genAIMode');
+  const genAIModeActive = storedGenAIMode === 'on';
+
+  return { spanNameColumnWidth, sidePanelWidth, detailPanelMode, timelineBarsVisible, genAIModeActive };
 }
 
 export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set, get) => ({
@@ -127,5 +135,16 @@ export const useLayoutPrefsStore = create<TraceTimelineLayoutPrefsStore>()((set,
   setTimelineBarsVisible: (visible: boolean) => {
     localStorage.setItem('timelineVisible', String(visible));
     set({ timelineBarsVisible: visible });
+  },
+
+  autoDetectedGenAI: false,
+
+  setGenAIModeActive: (active: boolean) => {
+    localStorage.setItem('genAIMode', active ? 'on' : 'off');
+    set({ genAIModeActive: active });
+  },
+
+  setAutoDetectedGenAI: (detected: boolean) => {
+    set({ autoDetectedGenAI: detected });
   },
 }));
