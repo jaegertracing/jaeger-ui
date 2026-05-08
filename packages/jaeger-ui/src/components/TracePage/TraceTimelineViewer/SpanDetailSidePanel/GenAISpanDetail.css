@@ -1,0 +1,122 @@
+/* Copyright (c) 2026 The Jaeger Authors. */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+.GenAISpanDetail {
+  padding: 12px 16px;
+  overflow-y: auto;
+  height: 100%;
+  font-size: 13px;
+}
+
+.GenAISpanDetail--header {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border, #e8e8e8);
+}
+
+.GenAISpanDetail--title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.GenAISpanDetail--meta {
+  color: var(--color-text-secondary, #888);
+  font-size: 12px;
+}
+
+.GenAISpanDetail--section {
+  margin-bottom: 16px;
+}
+
+.GenAISpanDetail--sectionLabel {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary, #888);
+  margin-bottom: 4px;
+}
+
+.GenAISpanDetail--pre {
+  background: var(--color-bg-secondary, #f5f5f5);
+  border: 1px solid var(--color-border, #e8e8e8);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.GenAISpanDetail--showMore {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--color-primary, #1890ff);
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.GenAISpanDetail--tokenRow {
+  display: flex;
+  gap: 24px;
+}
+
+.GenAISpanDetail--tokenStat {
+  display: flex;
+  flex-direction: column;
+}
+
+.GenAISpanDetail--tokenValue {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.GenAISpanDetail--tokenLabel {
+  font-size: 11px;
+  color: var(--color-text-secondary, #888);
+  text-transform: uppercase;
+}
+
+.GenAISpanDetail--media {
+  max-width: 100%;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.GenAISpanDetail--scoreBadge {
+  display: inline-block;
+  background: var(--color-primary, #1890ff);
+  color: #fff;
+  border-radius: 12px;
+  padding: 1px 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.GenAISpanDetail--attrTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.GenAISpanDetail--attrTable td {
+  padding: 3px 6px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-border, #e8e8e8);
+}
+
+.GenAISpanDetail--attrTable td:first-child {
+  font-weight: 500;
+  color: var(--color-text-secondary, #888);
+  white-space: nowrap;
+  width: 40%;
+}

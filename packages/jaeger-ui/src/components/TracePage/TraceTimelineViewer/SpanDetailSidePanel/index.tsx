@@ -1,11 +1,14 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import type { Location, NavigateFunction } from 'react-router-dom';
 
 import { actions, getSelectedSpanID } from '../duck';
+import GenAISpanDetail from './GenAISpanDetail';
+import { detectGenAISpan } from '../../../../utils/gen-ai';
+import { useLayoutPrefsStore } from '../store';
 import SpanDetail from '../SpanDetail';
 import DetailState from '../SpanDetail/DetailState';
 import getLinks from '../../../../model/link-patterns';
@@ -107,20 +110,35 @@ export function SpanDetailSidePanelImpl(props: TProps) {
     [location, navigate, trace, focusUiFindMatches]
   );
 
+  // Hooks must all be called before any early return (Rules of Hooks).
+  const genAIModeActive = useLayoutPrefsStore(s => s.genAIModeActive);
+
   // Show the explicitly selected span, falling back to the root span when nothing is selected.
   // When the user first interacts with an accordion in fallback mode, the reducer creates a
   // detailStates entry for the root span (since detailSubsectionToggle auto-initialises). This
   // is intentional: the root span then becomes explicitly selected and gains selection highlight,
   // while the panel label stays "Trace Root" because selectedSpanID === rootSpanID.
   const spanID = getSelectedSpanID(detailStates) ?? trace.rootSpans?.[0]?.spanID;
+  const span = spanID ? trace.spanMap.get(spanID) : undefined;
+  const genAIKind = useMemo(() => (span ? detectGenAISpan(span) : null), [span]);
+
   if (!spanID) return null;
 
   const detailState = detailStates.get(spanID) ?? DetailState.forDetailPanelMode('sidepanel');
-  const span = trace.spanMap.get(spanID);
   if (!span) return null;
 
   const linksGetter = (attributes: ReadonlyArray<IAttribute>, index: number) =>
     getLinks(span, attributes, index, trace);
+
+  if (genAIModeActive && genAIKind != null) {
+    return (
+      <div className="SpanDetailSidePanel">
+        <div className="SpanDetailSidePanel--body">
+          <GenAISpanDetail span={span} kind={genAIKind} useOtelTerms={useOtelTerms} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="SpanDetailSidePanel">
