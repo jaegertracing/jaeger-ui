@@ -14,6 +14,8 @@ import { TNil } from '../../../types';
 import { CriticalPathSection } from '../../../types/critical_path';
 import { IOtelSpan } from '../../../types/otel';
 
+import { getSpanTypeIcon } from '../../../utils/span-icons';
+
 import './SpanBarRow.css';
 
 type SpanBarRowProps = {
@@ -109,6 +111,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     name: operationName,
     resource: { serviceName },
   } = span;
+  const SpanTypeIcon = getSpanTypeIcon(span);
   const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
@@ -164,6 +167,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
+              {SpanTypeIcon && <SpanTypeIcon className="SpanBarRow--spanTypeIcon" />}
               {serviceName}{' '}
               {rpc && (
                 <span>
