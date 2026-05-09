@@ -38,13 +38,13 @@ export type ReduxState = {
     error: ApiError | TNil;
   };
   trace: {
-    traces: Record<string, FetchedTrace>;
     search: {
       error?: ApiError;
       results: string[];
       state?: FetchedState;
       query?: SearchQuery;
     };
+    rawTraces?: any[];
   };
   traceTimeline: TTraceTimeline;
   metrics: MetricsReduxState;

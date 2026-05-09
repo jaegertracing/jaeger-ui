@@ -83,7 +83,7 @@ describe('<SearchTracePage>', () => {
       queryOfResults: null, // null on initial page load
       traces,
       traceResultsToDownload,
-      tracesInRedux: { traces: {}, search: { results: [], query: null } },
+      tracesInRedux: { search: { results: [], query: null } },
       isHomepage: false,
       maxTraceDuration: 100,
       numberOfTraceResults: traces.length,
@@ -288,15 +288,14 @@ describe('mapStateToProps()', () => {
 
   it('converts state to the necessary props', () => {
     const trace = transformTraceData(traceGenerator.trace({}));
+    // rawTraces holds the untransformed API payload; results holds IDs.
+    const rawTracePayload = { traceID: trace.traceID, spans: trace.spans, processes: trace.processes };
     const stateTrace = {
       search: {
         results: [trace.traceID],
         state: fetchedState.DONE,
       },
-      traces: {
-        [trace.traceID]: { id: trace.traceID, data: trace, state: fetchedState.DONE },
-      },
-      rawTraces: [trace],
+      rawTraces: [rawTracePayload],
     };
     const stateServices = {
       loading: false,
@@ -322,13 +321,12 @@ describe('mapStateToProps()', () => {
     );
     expect(traces).toHaveLength(stateTrace.search.results.length);
     expect(traces[0].traceID).toBe(trace.traceID);
-    expect(traceResultsToDownload[0].traceID).toBe(trace.traceID);
+    expect(traceResultsToDownload[0].traceID).toBe(rawTracePayload.traceID);
     expect(maxTraceDuration).toBe(trace.duration);
     expect(tracesInRedux).toEqual(stateTrace);
     const diffCohort = stateTraceDiffXformer(stateTrace, { cohort: useTraceDiffStore.getState().cohort });
     expect(diffCohort).toHaveLength(1);
     expect(diffCohort[0].id).toBe(trace.traceID);
-    expect(diffCohort[0].data.traceID).toBe(trace.traceID);
 
     expect(rest).toEqual({
       queryOfResults: undefined,

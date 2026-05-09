@@ -28,10 +28,12 @@ import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
-import { ReduxState } from '../../types';
+import { FetchedTrace, ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
 import { Trace } from '../../types/trace';
 import { IOtelTrace } from '../../types/otel';
+import transformTraceData from '../../model/transform-trace-data';
+import { queryClient } from '../../query/app-query-client';
 import type { TUrlState } from './url';
 
 interface IQueryOfResults extends Partial<SearchQuery> {
@@ -213,22 +215,35 @@ interface IStateTraceDiff {
 }
 
 const stateTraceXformer = memoizeOne((stateTrace: ReduxState['trace']) => {
-  const { traces: traceMap, search } = stateTrace;
+  const { search } = stateTrace;
   const { query, results, state, error: traceError } = search;
 
   const loadingTraces = state === fetchedState.LOADING;
-  const traces = results.map(id => traceMap[id].data).filter((t): t is Trace => t !== undefined);
-  // rawTraces is populated by the trace reducer when search results are returned
-  const rawTraces = (stateTrace as any).rawTraces || [];
-  const maxDuration = Math.max(0, ...traces.map(tr => tr.duration || 0));
-  return { traces, rawTraces, maxDuration, traceError, loadingTraces, query };
+  // rawTraces holds the untransformed API payload stored by the reducer on search completion.
+  const rawTraces = stateTrace.rawTraces || [];
+  // Re-transform for display (memoized, so only runs when rawTraces reference changes).
+  const traces = rawTraces.map((raw: any) => transformTraceData(raw)).filter((t): t is Trace => t != null);
+  const maxDuration = Math.max(0, ...traces.map((tr: Trace) => tr.duration || 0));
+  return { traces, rawTraces, maxDuration, traceError, loadingTraces, query, results };
 });
 
 export const stateTraceDiffXformer = memoizeOne(
   (stateTrace: ReduxState['trace'], stateTraceDiff: IStateTraceDiff) => {
-    const { traces } = stateTrace;
     const { cohort } = stateTraceDiff;
-    return cohort.map(id => traces[id] || { id, state: null });
+    const rawTraces = stateTrace.rawTraces || [];
+    const searchTraceMap = new Map<string, Trace>(
+      rawTraces
+        .map((raw: any) => transformTraceData(raw))
+        .filter((t): t is Trace => t != null)
+        .map(t => [t.traceID, t])
+    );
+    return cohort.map(id => {
+      // Prefer search-result data, then fall back to the React Query cache
+      // (covers traces added via the TraceIdInput on the compare page).
+      const data = searchTraceMap.get(id) ?? queryClient.getQueryData<Trace>(['trace', id]);
+      if (data) return { id, data, state: fetchedState.DONE } as FetchedTrace;
+      return { id, state: null as any } as FetchedTrace;
+    });
   }
 );
 

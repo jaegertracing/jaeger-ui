@@ -14,7 +14,7 @@ import { getUrlState, sanitizeUrlState } from './url';
 import { ROUTE_PATH } from '../SearchTracePage/url';
 import GraphModel, { makeGraph } from '../../model/ddg/GraphModel';
 import { fetchedState } from '../../constants';
-import { extractUiFindFromState } from '../common/UiFindInput';
+import { parseUiFind } from '../common/UiFindInput';
 import transformDdgData from '../../model/ddg/transformDdgData';
 import transformTracesToPaths from '../../model/ddg/transformTracesToPaths';
 
@@ -22,6 +22,7 @@ import { TDdgStateEntry } from '../../types/TDdgState';
 import { FetchedTrace, ReduxState } from '../../types';
 import { Trace } from '../../types/trace';
 import { IOtelTrace } from '../../types/otel';
+import { queryClient } from '../../query/app-query-client';
 
 // Required for proper memoization of subsequent function calls
 const svcOp = memoizeOne((service, operation) => ({ service, operation }));
@@ -40,14 +41,21 @@ const mapTracesToOtel = memoizeOne(
 );
 
 // export for tests
-export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxProps {
+export function mapStateToProps(_state: ReduxState, ownProps: TOwnProps): TReduxProps {
   const urlState = getUrlState(ownProps.location.search);
   const { density, operation, service, showOp: urlStateShowOp } = urlState;
   const showOp = urlStateShowOp !== undefined ? urlStateShowOp : operation !== undefined;
   let graphState: TDdgStateEntry | undefined;
   let graph: GraphModel | undefined;
   if (service) {
-    const payload = transformTracesToPaths(mapTracesToOtel(state.trace.traces), service, operation);
+    // Build a traces map from the React Query cache (traces are keyed by ['trace', id]).
+    const tracesFromCache: Record<string, FetchedTrace<Trace>> = {};
+    queryClient.getQueriesData<Trace>({ queryKey: ['trace'] }).forEach(([_key, traceData]) => {
+      if (traceData) {
+        tracesFromCache[traceData.traceID] = { id: traceData.traceID, data: traceData, state: 'FETCH_DONE' };
+      }
+    });
+    const payload = transformTracesToPaths(mapTracesToOtel(tracesFromCache), service, operation);
     graphState = {
       model: transformDdgData(payload, svcOp(service, operation)),
       state: fetchedState.DONE,
@@ -60,7 +68,7 @@ export function mapStateToProps(state: ReduxState, ownProps: TOwnProps): TReduxP
     graphState,
     showOp,
     urlState: sanitizeUrlState(urlState, _get(graphState, 'model.hash')),
-    ...extractUiFindFromState(state),
+    uiFind: parseUiFind(ownProps.location.search),
   };
 }
 

@@ -14,6 +14,8 @@ import {
 } from './duck';
 import DetailState from './SpanDetail/DetailState';
 import { ReduxState } from '../../../types';
+import { Trace } from '../../../types/trace';
+import { queryClient } from '../../../query/app-query-client';
 import { trackEvent } from '../../../utils/tracking';
 import { getToggleValue } from '../../../utils/tracking/common';
 
@@ -66,11 +68,13 @@ function trackParent(store: Store<ReduxState>, { payload }: Action<TSpanIdValue>
   }
   const { spanID } = payload;
   const isHidden = st.traceTimeline.childrenHiddenIDs.has(spanID);
-  const trace = st.trace.traces[traceID] || st.trace.traces[traceID.replace(/^0*/, '')];
-  if (!trace || !trace.data) {
+  const traceData =
+    queryClient.getQueryData<Trace>(['trace', traceID]) ||
+    queryClient.getQueryData<Trace>(['trace', traceID.replace(/^0*/, '')]);
+  if (!traceData) {
     return;
   }
-  const span = trace.data.spans.find(sp => sp.spanID === spanID);
+  const span = traceData.spans.find(sp => sp.spanID === spanID);
   if (span) {
     trackEvent(CATEGORY_PARENT, getToggleValue(!isHidden), span.depth);
   }

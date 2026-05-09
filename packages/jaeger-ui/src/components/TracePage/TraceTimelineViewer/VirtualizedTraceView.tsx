@@ -27,7 +27,7 @@ import {
   spanContainsErredSpan,
 } from './utils';
 import { Accessors } from '../ScrollManager';
-import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
+import { parseUiFind, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
@@ -681,11 +681,15 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
  */
 /* istanbul ignore next */
 function VirtualizedTraceViewWrapper(
-  ownProps: TVirtualizedTraceViewOwnProps & { location: Location; navigate: NavigateFunction }
+  ownProps: TVirtualizedTraceViewOwnProps & {
+    location: Location;
+    navigate: NavigateFunction;
+    search?: string;
+  }
 ) {
   const dispatch = useDispatch<any>();
   const hoverIndentGuideIds = useSelector((state: ReduxState) => state.traceTimeline.hoverIndentGuideIds);
-  const uiFind = useSelector((state: ReduxState) => extractUiFindFromState(state).uiFind);
+  const uiFind = parseUiFind(ownProps.search ?? ownProps.location.search ?? '');
 
   const spanNameColumnWidth = useLayoutPrefsStore(s => s.spanNameColumnWidth);
   const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);

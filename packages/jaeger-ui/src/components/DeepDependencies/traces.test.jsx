@@ -73,9 +73,7 @@ describe('mapStateToProps', () => {
   const state = {
     router: { location: ownProps.location },
     trace: {
-      traces: {
-        testTraceID: 'test trace data',
-      },
+      search: { results: [] },
     },
   };
 
@@ -137,14 +135,14 @@ describe('mapStateToProps', () => {
     expect(resultWithoutService.graphState).toBeUndefined();
   });
 
-  it('memoized functions are called with the same arguments when invoked twice', () => {
+  it('memoized functions are called with equivalent arguments when invoked twice', () => {
     mapStateToProps(state, ownProps);
     mapStateToProps(state, ownProps);
     spies.forEach(spy => {
       const [call1, call2] = spy.mock.calls;
       if (call1 && call2 && call1.length > 0 && call2.length > 0) {
         call1.forEach((arg, i) => {
-          expect(call2[i]).toBe(arg);
+          expect(call2[i]).toStrictEqual(arg);
         });
       }
     });

@@ -17,7 +17,7 @@ function createAppQueryClient(): QueryClient {
   });
 }
 
-const queryClient = createAppQueryClient();
+export const queryClient = createAppQueryClient();
 
 interface IAppQueryClientProviderProps {
   children: React.ReactNode;
