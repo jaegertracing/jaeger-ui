@@ -24,3 +24,8 @@ npm-debug.log
 # scripts
 scripts/release-notes.py
 scripts/draft-release.py
+
+# Local development notes
+CLAUDE.md
+STRUCTURED_BRIEF.md
+ARCHITECTURE_PLAN.md
