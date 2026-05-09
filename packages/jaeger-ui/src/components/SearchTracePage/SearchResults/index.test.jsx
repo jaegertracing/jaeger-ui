@@ -178,13 +178,29 @@ describe('<SearchResults>', () => {
   });
 
   it('renders only error rows when no successful traces are present', () => {
-    const traceErrors = [
-      { id: 'only-error', error: new Error('trace not found - only-error'), state: 'FETCH_ERROR' },
-    ];
+    const traceErrors = [{ id: 'only-error', error: new Error('trace not found'), state: 'FETCH_ERROR' }];
     renderWithRouter(<SearchResults {...baseProps} traces={[]} traceErrors={traceErrors} />);
     expect(screen.getByTestId('ResultItemError')).toBeInTheDocument();
     expect(screen.getByText('only-error')).toBeInTheDocument();
     expect(screen.queryByText(/No trace results\. Try another query\./i)).not.toBeInTheDocument();
+  });
+
+  it('keeps error rows visible in DDG view alongside successful traces', () => {
+    const traceErrors = [{ id: 'missing-1', error: new Error('trace not found'), state: 'FETCH_ERROR' }];
+    renderWithRouter(
+      <SearchResults {...baseProps} traceErrors={traceErrors} location={{ search: '?view=ddg' }} />
+    );
+    expect(screen.getByTestId('ResultItemError')).toBeInTheDocument();
+    expect(screen.getByTestId('ddg')).toBeInTheDocument();
+  });
+
+  it('shows a failed count in the header when errors are present', () => {
+    const traceErrors = [
+      { id: 'missing-1', error: new Error('trace not found'), state: 'FETCH_ERROR' },
+      { id: 'missing-2', error: new Error('trace not found'), state: 'FETCH_ERROR' },
+    ];
+    renderWithRouter(<SearchResults {...baseProps} traceErrors={traceErrors} />);
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toContain('2 failed');
   });
 
   it('hide scatter plot if queryparam hideGraph', () => {

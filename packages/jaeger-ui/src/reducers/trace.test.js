@@ -254,8 +254,7 @@ describe('search traces', () => {
       error: expect.any(Error),
       state: fetchedState.ERROR,
     });
-    expect(state.traces[erroredID].error.message).toContain(msg);
-    expect(state.traces[erroredID].error.message).toContain(erroredID);
+    expect(state.traces[erroredID].error.message).toBe(msg);
     expect(state.rawTraces).toEqual([trace]);
   });
 

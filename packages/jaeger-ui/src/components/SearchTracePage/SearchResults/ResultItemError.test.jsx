@@ -10,7 +10,7 @@ import ResultItemError from './ResultItemError';
 describe('<ResultItemError>', () => {
   it('renders the trace ID and error label', () => {
     render(<ResultItemError traceID="abc123" message="trace not found" />);
-    expect(screen.getByText('Trace not found:')).toBeInTheDocument();
+    expect(screen.getByText('Trace fetch failed:')).toBeInTheDocument();
     expect(screen.getByText('abc123')).toBeInTheDocument();
     expect(screen.getByText('trace not found')).toBeInTheDocument();
   });

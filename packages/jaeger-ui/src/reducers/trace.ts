@@ -116,7 +116,7 @@ function searchDone(state: TraceState, { meta, payload }: any): TraceState {
   if (payload.errors) {
     payload.errors.forEach((err: any) => {
       const { msg, traceID } = err;
-      const error = new Error(`Error: ${msg} - ${traceID}`);
+      const error = new Error(msg);
       resultTraces[traceID] = { error, id: traceID, state: fetchedState.ERROR };
       results.push(traceID);
     });

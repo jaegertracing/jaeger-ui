@@ -260,6 +260,7 @@ export function UnconnectedSearchResults({
         <div className="SearchResults--headerOverview">
           <h2 className="ub-m0 u-flex-1">
             {traces.length} Trace{traces.length > 1 && 's'}
+            {hasErrors && ` (${errorList.length} failed)`}
           </h2>
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
           {traceResultsView && <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />}
@@ -276,6 +277,15 @@ export function UnconnectedSearchResults({
           )}
         </div>
       </div>
+      {hasErrors && (
+        <ul className="ub-list-reset">
+          {errorList.map(err => (
+            <li className="ub-my3" key={`error-${err.id}`}>
+              <ResultItemError traceID={err.id} message={errorMessage(err)} />
+            </li>
+          ))}
+        </ul>
+      )}
       {!traceResultsView && (
         <div className="SearchResults--ddg-container">
           <SearchResultsDDG location={location as any} />
@@ -284,11 +294,6 @@ export function UnconnectedSearchResults({
       {traceResultsView && diffSelection}
       {traceResultsView && (
         <ul className="ub-list-reset">
-          {errorList.map(err => (
-            <li className="ub-my3" key={`error-${err.id}`}>
-              <ResultItemError traceID={err.id} message={errorMessage(err)} />
-            </li>
-          ))}
           {traces.map(trace => (
             <li className="ub-my3" key={trace.traceID}>
               <ResultItem
