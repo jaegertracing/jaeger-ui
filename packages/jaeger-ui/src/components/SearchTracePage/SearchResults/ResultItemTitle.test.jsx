@@ -4,7 +4,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 import ResultItemTitle from './ResultItemTitle';
@@ -28,7 +28,7 @@ describe('ResultItemTitle', () => {
     duration: 150000, // Using microseconds is more realistic for formatDuration
     durationPercent: 10,
     isInDiffCohort: true,
-    linkTo: { pathname: '/search', search: `?traceID=trace-id-longer-than-8` }, // Use LocationDescriptor object
+    linkTo: { pathname: '/trace/trace-id-longer-than-8' },
     state: fetchedState.DONE,
     toggleComparison: jest.fn(),
     traceID: 'trace-id-longer-than-8',
@@ -47,7 +47,7 @@ describe('ResultItemTitle', () => {
     // Test that the link is rendered with the correct href and contains the title.
     const link = screen.getByRole('link', { name: /150ms traceNameValue ?trace-i/i });
     expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', `${defaultProps.linkTo.pathname}${defaultProps.linkTo.search}`);
+    expect(link).toHaveAttribute('href', defaultProps.linkTo.pathname);
 
     // Test that the checkbox is rendered and checked by default.
     const checkbox = screen.getByRole('checkbox');
@@ -128,7 +128,42 @@ describe('ResultItemTitle', () => {
       // Verify the link is still clickable and present
       const link = screen.getByRole('link');
       expect(link).toBeInTheDocument();
-      expect(link).toHaveAttribute('href', `${defaultProps.linkTo.pathname}${defaultProps.linkTo.search}`);
+      expect(link).toHaveAttribute('href', defaultProps.linkTo.pathname);
+    });
+  });
+
+  describe('router state propagation', () => {
+    it('passes state to the destination route', async () => {
+      // Destination route reads location.state and renders it for assertion
+      function Destination() {
+        const location = useLocation();
+        return <div data-testid="state">{JSON.stringify(location.state)}</div>;
+      }
+
+      const router = createMemoryRouter(
+        [
+          {
+            path: '/',
+            element: (
+              <ResultItemTitle
+                {...defaultProps}
+                linkTo={{ pathname: '/trace/abc', state: { fromSearch: '/search?service=foo' } }}
+              />
+            ),
+          },
+          { path: '/trace/:id', element: <Destination /> },
+        ],
+        { initialEntries: ['/'] }
+      );
+
+      const user = userEvent.setup();
+      render(<RouterProvider router={router} />);
+
+      await user.click(screen.getByRole('link'));
+
+      expect(screen.getByTestId('state')).toHaveTextContent(
+        JSON.stringify({ fromSearch: '/search?service=foo' })
+      );
     });
   });
 

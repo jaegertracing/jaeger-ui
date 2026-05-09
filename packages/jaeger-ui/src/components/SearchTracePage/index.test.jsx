@@ -4,12 +4,24 @@
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-const { useEmbeddedStateMock } = vi.hoisted(() => ({
+const { useEmbeddedStateMock, getConfigMock } = vi.hoisted(() => ({
   useEmbeddedStateMock: jest.fn().mockReturnValue(null),
+  getConfigMock: jest.fn(() => ({
+    disableFileUploadControl: false,
+    tracking: {
+      gaID: null,
+      trackErrors: false,
+      customWebAnalytics: null,
+    },
+  })),
 }));
 
 vi.mock('../../stores/embedded-store', () => ({
   useEmbeddedState: (...args) => useEmbeddedStateMock(...args),
+}));
+
+vi.mock('../../utils/config/get-config', () => ({
+  default: (...args) => getConfigMock(...args),
 }));
 
 vi.mock('../../api/v3/client', () => ({
@@ -25,18 +37,16 @@ vi.mock('../../hooks/useTraceDiscovery', () => ({
 }));
 
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
-import { createStore } from 'redux';
 import { SearchTracePageImpl as SearchTracePage, mapStateToProps, stateTraceDiffXformer } from './index';
 import { fetchedState } from '../../constants';
 import traceGenerator from '../../demo/trace-generators';
 import { MOST_RECENT, MOST_SPANS } from '../../model/order-by';
 import transformTraceData from '../../model/transform-trace-data';
 import { store as globalStore } from '../../utils/configure-store';
-import { jaegerClient } from '../../api/v3/client';
-import { useServices, useSpanNames } from '../../hooks/useTraceDiscovery';
+import { useServices } from '../../hooks/useTraceDiscovery';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 
 const queryClient = new QueryClient({
@@ -56,7 +66,6 @@ const AllProvider = ({ children }) => (
 );
 
 describe('<SearchTracePage>', () => {
-  const queryOfResults = {};
   let traces;
   let traceResultsToDownload;
   let props;
@@ -91,6 +100,15 @@ describe('<SearchTracePage>', () => {
     traces = props.traces;
     traceResultsToDownload = props.traceResultsToDownload;
     useEmbeddedStateMock.mockReturnValue(null);
+    getConfigMock.mockReset();
+    getConfigMock.mockReturnValue({
+      disableFileUploadControl: false,
+      tracking: {
+        gaID: null,
+        trackErrors: false,
+        customWebAnalytics: null,
+      },
+    });
   });
 
   it('searches for traces if `service` or `traceID` are in the query string', () => {
@@ -246,23 +264,18 @@ describe('<SearchTracePage>', () => {
   });
 
   it('hides Upload tab if it is disabled via config', () => {
-    // Create a custom store with disableFileUploadControl: true
-    const customStore = createStore(() => ({
-      ...globalStore.getState(),
-      config: {
-        ...globalStore.getState().config,
-        disableFileUploadControl: true,
+    getConfigMock.mockReturnValue({
+      disableFileUploadControl: true,
+      tracking: {
+        gaID: null,
+        trackErrors: false,
+        customWebAnalytics: null,
       },
-    }));
-
+    });
     const { container } = render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <Provider store={customStore}>
-            <SearchTracePage {...props} />
-          </Provider>
-        </MemoryRouter>
-      </QueryClientProvider>
+      <AllProvider>
+        <SearchTracePage {...props} />
+      </AllProvider>
     );
     expect(container.querySelector('[data-node-key="fileLoader"]')).not.toBeInTheDocument();
   });

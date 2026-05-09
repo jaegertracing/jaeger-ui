@@ -19,6 +19,7 @@ import { formatRelativeDate } from '../../../utils/date';
 import { getIncompleteTraceTooltip } from '../../../model/trace-viewer';
 
 import { IOtelTrace, StatusCode } from '../../../types/otel';
+import type { TracePageLink } from '../../TracePage/url';
 
 import './ResultItem.css';
 
@@ -27,7 +28,7 @@ dayjs.extend(relativeTime);
 type Props = {
   durationPercent: number;
   isInDiffCohort: boolean;
-  linkTo: React.ComponentProps<typeof Link>['to'];
+  linkTo: TracePageLink;
   toggleComparison: (traceID: string) => void;
   trace: IOtelTrace;
   disableComparision: boolean;
@@ -80,7 +81,7 @@ export default function ResultItem({
         traceName={traceName}
         disableComparision={disableComparision}
       />
-      <Link to={linkTo}>
+      <Link to={{ pathname: linkTo.pathname, search: linkTo.search }} state={linkTo.state}>
         <Row>
           <Col xs={24} sm={4} className="ub-p2">
             <Tag className="ub-m1" data-testid={markers.NUM_SPANS} variant="outlined">

@@ -45,6 +45,18 @@ describe('<ClickToCopy />', () => {
     expect(document.execCommand).toHaveBeenCalledWith('copy');
   });
 
+  it('stops click event propagation to prevent parent handlers from firing', () => {
+    const parentClickHandler = jest.fn();
+    render(
+      <div onClick={parentClickHandler}>
+        <ClickToCopy text={textToCopy}>{childText}</ClickToCopy>
+      </div>
+    );
+    const span = screen.getByRole('button', { name: /Copy to clipboard/i });
+    fireEvent.click(span);
+    expect(parentClickHandler).not.toHaveBeenCalled();
+  });
+
   it('shows "Copied to clipboard" when clicked and resets after timeout', async () => {
     jest.useFakeTimers();
     render(

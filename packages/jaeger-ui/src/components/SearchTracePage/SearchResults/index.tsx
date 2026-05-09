@@ -19,7 +19,7 @@ import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
 import SearchResultsDDG from '../../DeepDependencies/traces';
-import { getLocation } from '../../TracePage/url';
+import { getTracePageLink } from '../../TracePage/url';
 import * as orderBy from '../../../model/order-by';
 import { getPercentageOfDuration } from '../../../utils/date';
 import { stripEmbeddedState } from '../../../utils/embedded-url';
@@ -157,7 +157,7 @@ export function UnconnectedSearchResults({
   const goToTrace = useCallback(
     (traceID: string) => {
       const searchUrl = queryOfResults ? getUrl(stripEmbeddedState(queryOfResults)) : getUrl();
-      const locationObj = getLocation(traceID, { fromSearch: searchUrl });
+      const locationObj = getTracePageLink(traceID, { fromSearch: searchUrl });
       navigate(locationObj.pathname + (locationObj.search ? `?${locationObj.search}` : ''), {
         state: locationObj.state,
       });
@@ -265,7 +265,7 @@ export function UnconnectedSearchResults({
               <ResultItem
                 durationPercent={getPercentageOfDuration(trace.duration, maxTraceDuration)}
                 isInDiffCohort={cohortIds.has(trace.traceID)}
-                linkTo={getLocation(
+                linkTo={getTracePageLink(
                   trace.traceID,
                   { fromSearch: searchUrl },
                   spanLinks && (spanLinks[trace.traceID] || spanLinks[trace.traceID.replace(/^0*/, '')])
