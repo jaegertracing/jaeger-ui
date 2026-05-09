@@ -11,7 +11,9 @@ import {
   GEN_AI_REQUEST_MODEL,
   GEN_AI_SYSTEM,
   GEN_AI_TOOL_CALL_ID,
+  GEN_AI_TOOL_INPUT,
   GEN_AI_TOOL_NAME,
+  GEN_AI_TOOL_OUTPUT,
   GEN_AI_USAGE_INPUT_TOKENS,
   GEN_AI_USAGE_OUTPUT_TOKENS,
   getAttr,
@@ -124,8 +126,8 @@ function LLMDetail({ span }: { span: IOtelSpan }) {
 function ToolDetail({ span }: { span: IOtelSpan }) {
   const toolName = getAttr(span, GEN_AI_TOOL_NAME);
   const callId = getAttr(span, GEN_AI_TOOL_CALL_ID);
-  const inputAttr = getAttr(span, 'gen_ai.tool.input');
-  const outputAttr = getAttr(span, 'gen_ai.tool.output');
+  const inputAttr = getAttr(span, GEN_AI_TOOL_INPUT);
+  const outputAttr = getAttr(span, GEN_AI_TOOL_OUTPUT);
 
   function prettyJSON(value: unknown): string {
     try {
