@@ -7,7 +7,7 @@
     "jsx": "react-jsx",
     "isolatedModules": false,
     "noEmit": true,
-    "types": ["vitest/globals", "node"],
+    "types": ["vitest/globals", "node", "@testing-library/jest-dom/vitest"],
     "paths": {
       "@jaegertracing/plexus": ["../plexus/src/index.ts"],
       "@jaegertracing/plexus/lib/*": ["../plexus/src/*"]

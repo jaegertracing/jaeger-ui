@@ -364,11 +364,18 @@ export function TracePageImpl(props: TProps) {
   }, [setTimelineBarsVisible, timelineBarsVisible]);
 
   if (!trace || trace.state === fetchedState.LOADING) {
-    return <LoadingIndicator className="u-mt-vast" centered />;
+    return <LoadingIndicator className='u-mt-vast' centered message='Loading trace...' />;
   }
   const { data } = trace;
   if (trace.state === fetchedState.ERROR || !data) {
-    return <ErrorMessage className="ub-m3" error={trace.error || 'Unknown error'} />;
+    return (
+      <ErrorMessage
+        className='ub-m3'
+        error={trace.error || 'Unknown error'}
+        title='Failed to load trace'
+        onRetry={() => fetchTrace(id)}
+      />
+    );
   }
 
   let findCount = 0;
@@ -486,7 +493,7 @@ export function TracePageImpl(props: TProps) {
       {archiveEnabled && (
         <ArchiveNotifier acknowledge={acknowledgeArchive} archivedState={archiveTraceState} />
       )}
-      <div className="Tracepage--headerSection" ref={headerRefCallback}>
+      <div className='Tracepage--headerSection' ref={headerRefCallback}>
         <TracePageHeader {...headerProps} />
       </div>
       {headerHeight ? <section style={{ paddingTop: headerHeight }}>{view}</section> : null}

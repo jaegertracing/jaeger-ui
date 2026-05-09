@@ -9,30 +9,92 @@ SPDX-License-Identifier: Apache-2.0
   word-wrap: break-word;
 }
 
-.ErrorMessage--msg {
+.ErrorMessage--card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-default);
+  border-left: 4px solid var(--feedback-error);
+  border-radius: 8px;
+  background-color: var(--surface-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+
+.ErrorMessage--header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.ErrorMessage--icon {
+  font-size: 2rem;
   color: var(--feedback-error);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ErrorMessage--headerContent {
+  flex: 1;
+}
+
+.ErrorMessage--title {
+  margin: 0 0 0.25rem 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.ErrorMessage--msg {
+  color: var(--text-secondary);
   margin: 0;
-  padding-bottom: 1rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.ErrorMessage--detailsWrapper {
+  border-top: 1px solid var(--border-default);
+  padding-top: 1rem;
+}
+
+.ErrorMessage--detailsToggle {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  transition: color 0.2s;
+  margin-bottom: 0.75rem;
+}
+
+.ErrorMessage--detailsToggle:hover {
+  color: var(--text-primary);
 }
 
 .ErrorMessage--details {
   background: var(--surface-secondary);
   border: 1px solid var(--border-default);
+  border-radius: 4px;
   overflow: auto;
+  max-height: 300px;
 }
 
 .ErrorMessage--detailsTable {
   min-width: 100%;
+  border-collapse: collapse;
 }
 
-.ErrorMessage--detailItem:nth-child(2n) > .ErrorMessage--attr,
-.ErrorMessage--detailItem:nth-child(2n) > .ErrorMessage--value {
-  background-color: var(--surface-tertiary);
+.ErrorMessage--detailItem > .ErrorMessage--attr,
+.ErrorMessage--detailItem > .ErrorMessage--value {
+  padding: 0.75rem;
   border-bottom: 1px solid var(--border-default);
-  border-top: 1px solid var(--border-default);
 }
 
-/* dont have extra borders on the bottom row */
 .ErrorMessage--detailItem:last-child > .ErrorMessage--attr,
 .ErrorMessage--detailItem:last-child > .ErrorMessage--value {
   border-bottom: none;
@@ -40,14 +102,29 @@ SPDX-License-Identifier: Apache-2.0
 
 .ErrorMessage--attr {
   color: var(--text-muted);
-  padding: 0.5em;
+  font-weight: 500;
   vertical-align: top;
   white-space: nowrap;
+  width: 150px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .ErrorMessage--value {
   color: var(--text-primary);
-  font-family: monospace;
-  padding: 0.5em;
-  white-space: pre;
+  font-family: var(--ant-code-family, monospace);
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+}
+
+.ErrorMessage--actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 0.5rem;
+}
+
+.ErrorMessage--retryBtn {
+  height: 36px;
+  padding: 0 20px;
 }

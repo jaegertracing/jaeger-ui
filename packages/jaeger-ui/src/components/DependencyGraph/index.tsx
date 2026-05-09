@@ -242,20 +242,27 @@ export function DependencyGraphPageImpl(props: TProps) {
   };
 
   if (loading) {
-    return <LoadingIndicator className="u-mt-vast" centered />;
+    return <LoadingIndicator className='u-mt-vast' centered message='Loading dependencies...' />;
   }
   if (error) {
-    return <ErrorMessage className="ub-m3" error={error} />;
+    return (
+      <ErrorMessage
+        className='ub-m3'
+        error={error}
+        title='Failed to load dependencies'
+        onRetry={fetchDependencies}
+      />
+    );
   }
 
   if (!nodes || !links) {
     return (
-      <div className="u-simple-card ub-m3">
+      <div className='u-simple-card ub-m3'>
         No service dependencies found.{' '}
         <a
-          href="https://www.jaegertracing.io/docs/latest/faq/#why-is-the-dependencies-page-empty"
-          rel="noopener noreferrer"
-          target="_blank"
+          href='https://www.jaegertracing.io/docs/latest/faq/#why-is-the-dependencies-page-empty'
+          rel='noopener noreferrer'
+          target='_blank'
         >
           See FAQ
         </a>
@@ -270,7 +277,7 @@ export function DependencyGraphPageImpl(props: TProps) {
 
   return (
     <div>
-      <div className="ub-m3">
+      <div className='ub-m3'>
         <DAGOptions
           dependencies={dependencies}
           onServiceSelect={handleServiceSelect}
@@ -288,7 +295,7 @@ export function DependencyGraphPageImpl(props: TProps) {
           matchCount={matchCount}
         />
       </div>
-      <div className="DependencyGraph--graphWrapper">
+      <div className='DependencyGraph--graphWrapper'>
         <DAG
           data={graphData}
           selectedLayout={selectedLayout ?? 'dot'}
