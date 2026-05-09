@@ -114,6 +114,11 @@ vi.mock('./ArchiveNotifier', async () =>
   })
 );
 
+const mockUseLayoutSettings = jest.fn();
+vi.mock('./useLayoutSettings', () => ({
+  useLayoutSettings: (...args) => mockUseLayoutSettings(...args),
+}));
+
 const {
   mockSubmitTraceToArchive,
   mockAcknowledge,
@@ -238,6 +243,19 @@ describe('<TracePage>', () => {
     capturedArchiveNotifierProps = {};
     defaultProps.focusUiFindMatches.mockClear();
     mockTraceTimelineStore.focusUiFindMatches.mockClear();
+    mockUseLayoutSettings.mockReturnValue({
+      timelineBarsVisible: {
+        value: mockLayoutPrefsStore.timelineBarsVisible,
+        source: 'localstorage',
+        isOverridden: false,
+      },
+      detailPanelMode: {
+        value: mockLayoutPrefsStore.detailPanelMode,
+        source: 'localstorage',
+        isOverridden: false,
+      },
+      saveAsDefault: jest.fn(),
+    });
   });
 
   describe('clearSearch', () => {
@@ -870,6 +888,11 @@ describe('<TracePage>', () => {
 
     it('calls setDetailPanelMode (Zustand + Redux) with sidepanel when detailPanelMode is inline', () => {
       mockLayoutPrefsStore.detailPanelMode = 'inline';
+      mockUseLayoutSettings.mockReturnValue({
+        timelineBarsVisible: { value: true, source: 'localstorage', isOverridden: false },
+        detailPanelMode: { value: 'inline', source: 'localstorage', isOverridden: false },
+        saveAsDefault: jest.fn(),
+      });
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
       expect(mockSetDetailPanelMode).toHaveBeenCalledWith('sidepanel', false);
@@ -878,6 +901,11 @@ describe('<TracePage>', () => {
 
     it('calls setDetailPanelMode (Zustand + Redux) with inline when detailPanelMode is sidepanel', () => {
       mockLayoutPrefsStore.detailPanelMode = 'sidepanel';
+      mockUseLayoutSettings.mockReturnValue({
+        timelineBarsVisible: { value: true, source: 'localstorage', isOverridden: false },
+        detailPanelMode: { value: 'sidepanel', source: 'localstorage', isOverridden: false },
+        saveAsDefault: jest.fn(),
+      });
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onDetailPanelModeToggle();
       expect(mockSetDetailPanelMode).toHaveBeenCalledWith('inline', false);
@@ -886,6 +914,11 @@ describe('<TracePage>', () => {
 
     it('calls setTimelineBarsVisible (Zustand + Redux) with false when timelineBarsVisible is true', () => {
       mockLayoutPrefsStore.timelineBarsVisible = true;
+      mockUseLayoutSettings.mockReturnValue({
+        timelineBarsVisible: { value: true, source: 'localstorage', isOverridden: false },
+        detailPanelMode: { value: 'inline', source: 'localstorage', isOverridden: false },
+        saveAsDefault: jest.fn(),
+      });
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
       expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(false, false);
@@ -894,6 +927,11 @@ describe('<TracePage>', () => {
 
     it('calls setTimelineBarsVisible (Zustand + Redux) with true when timelineBarsVisible is false', () => {
       mockLayoutPrefsStore.timelineBarsVisible = false;
+      mockUseLayoutSettings.mockReturnValue({
+        timelineBarsVisible: { value: false, source: 'localstorage', isOverridden: false },
+        detailPanelMode: { value: 'inline', source: 'localstorage', isOverridden: false },
+        saveAsDefault: jest.fn(),
+      });
       render(<TracePage {...defaultProps} />);
       capturedHeaderProps.onTimelineToggle();
       expect(mockLayoutPrefsStore.setTimelineBarsVisible).toHaveBeenCalledWith(true, false);

@@ -76,12 +76,14 @@ function SettingRow<T>({
         />
       </div>
 
-      {isOverridden && source !== 'localstorage' && (
+      {isOverridden && (
         <div className="TraceViewSettings--overrideRow">
-          <span className={`TraceViewSettings--sourceBadge TraceViewSettings--sourceBadge--${source}`}>
-            {SOURCE_ICONS[source]}
-            {SOURCE_LABELS[source]}
-          </span>
+          {source !== 'localstorage' && (
+            <span className={`TraceViewSettings--sourceBadge TraceViewSettings--sourceBadge--${source}`}>
+              {SOURCE_ICONS[source]}
+              {SOURCE_LABELS[source]}
+            </span>
+          )}
           {onSaveAsDefault && (
             <Tooltip title="Save this as your personal default for future traces">
               <button

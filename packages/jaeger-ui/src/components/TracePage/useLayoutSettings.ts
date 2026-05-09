@@ -1,12 +1,12 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { SpanDetailPanelMode } from '../../types/config';
 import { parseSettingsFromUrl } from './url';
 import type { UrlLayoutSettings } from './url';
 import { getInitialLayoutState, useLayoutPrefsStore } from './TraceTimelineViewer/store.layout';
-import { setDetailPanelMode } from './TraceTimelineViewer/store';
+import { setDetailPanelMode as setDetailPanelModeZustand } from './TraceTimelineViewer/store';
 
 export type SettingSource = 'url' | 'heuristic' | 'localstorage';
 
@@ -55,7 +55,7 @@ export function useLayoutSettings(locationSearch: string): ResolvedLayoutSetting
     return {
       value: storeTimelineBarsVisible,
       source: 'localstorage',
-      isOverridden: false,
+      isOverridden: storeTimelineBarsVisible !== lsDefaults.timelineBarsVisible,
     };
   }, [
     urlSettings.timelineBarsVisible,
@@ -82,7 +82,7 @@ export function useLayoutSettings(locationSearch: string): ResolvedLayoutSetting
     return {
       value: storeDetailPanelMode,
       source: 'localstorage',
-      isOverridden: false,
+      isOverridden: storeDetailPanelMode !== lsDefaults.detailPanelMode,
     };
   }, [
     urlSettings.detailPanelMode,
@@ -91,12 +91,32 @@ export function useLayoutSettings(locationSearch: string): ResolvedLayoutSetting
     storeDetailPanelMode,
   ]);
 
+  const prevUrlSettingsRef = useRef<UrlLayoutSettings>(urlSettings);
+
+  useLayoutEffect(() => {
+    // Sync Timeline Bars
+    if (urlSettings.timelineBarsVisible !== null) {
+      zustandSetTimelineBarsVisible(urlSettings.timelineBarsVisible, false);
+    } else if (prevUrlSettingsRef.current.timelineBarsVisible !== null) {
+      zustandSetTimelineBarsVisible(lsDefaults.timelineBarsVisible, false);
+    }
+
+    // Sync Detail Panel Mode
+    if (urlSettings.detailPanelMode !== null) {
+      setDetailPanelModeZustand(urlSettings.detailPanelMode, false);
+    } else if (prevUrlSettingsRef.current.detailPanelMode !== null) {
+      setDetailPanelModeZustand(lsDefaults.detailPanelMode, false);
+    }
+
+    prevUrlSettingsRef.current = urlSettings;
+  }, [urlSettings, lsDefaults, zustandSetTimelineBarsVisible]);
+
   const saveAsDefault = useCallback(
     (key: 'timelineBarsVisible' | 'detailPanelMode') => {
       if (key === 'timelineBarsVisible') {
         zustandSetTimelineBarsVisible(timelineBarsVisible.value, true);
       } else {
-        setDetailPanelMode(detailPanelMode.value, true);
+        setDetailPanelModeZustand(detailPanelMode.value, true);
       }
       setLsDefaults(getInitialLayoutState());
     },

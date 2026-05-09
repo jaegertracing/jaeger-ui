@@ -61,6 +61,8 @@ describe('URL parameter overrides', () => {
 
 describe('localStorage fallback', () => {
   it('falls back to localStorage when no URL params present', () => {
+    localStorage.setItem('timelineVisible', 'false');
+    localStorage.setItem('detailPanelMode', 'sidepanel');
     resetStore({ timelineBarsVisible: false, detailPanelMode: 'sidepanel' });
     const { result } = renderHook(() => useLayoutSettings(''));
     expect(result.current.timelineBarsVisible.value).toBe(false);
@@ -70,10 +72,20 @@ describe('localStorage fallback', () => {
     expect(result.current.detailPanelMode.source).toBe('localstorage');
   });
 
-  it('returns isOverridden=false for localstorage source', () => {
+  it('returns isOverridden=false for localstorage source when it matches localStorage', () => {
+    localStorage.setItem('timelineVisible', 'true');
     resetStore({ timelineBarsVisible: true });
     const { result } = renderHook(() => useLayoutSettings(''));
     expect(result.current.timelineBarsVisible.isOverridden).toBe(false);
+  });
+
+  it('detects manual session overrides (isOverridden=true) when store diverges from localStorage', () => {
+    localStorage.setItem('timelineVisible', 'true');
+    resetStore({ timelineBarsVisible: false });
+    const { result } = renderHook(() => useLayoutSettings(''));
+    expect(result.current.timelineBarsVisible.value).toBe(false);
+    expect(result.current.timelineBarsVisible.source).toBe('localstorage');
+    expect(result.current.timelineBarsVisible.isOverridden).toBe(true);
   });
 });
 
@@ -133,5 +145,49 @@ describe('URL param edge cases', () => {
     expect(result.current.timelineBarsVisible.source).toBe('url');
     expect(result.current.detailPanelMode.value).toBe('sidepanel');
     expect(result.current.detailPanelMode.source).toBe('url');
+  });
+});
+
+describe('URL parameter removal and store synchronization', () => {
+  it('synchronizes the Zustand store when URL parameters are present', () => {
+    resetStore({ timelineBarsVisible: true });
+    renderHook(() => useLayoutSettings('?timeline=off'));
+    expect(useLayoutPrefsStore.getState().timelineBarsVisible).toBe(false);
+  });
+
+  it('reverts the Zustand store to localStorage defaults when URL parameters are removed', () => {
+    localStorage.setItem('timelineVisible', 'true');
+    resetStore({ timelineBarsVisible: true });
+
+    const { rerender } = renderHook(({ search }) => useLayoutSettings(search), {
+      initialProps: { search: '?timeline=off' },
+    });
+
+    // Verify it synced to URL initially
+    expect(useLayoutPrefsStore.getState().timelineBarsVisible).toBe(false);
+
+    // Change search to empty (removal)
+    rerender({ search: '' });
+
+    // Verify it reverted to localStorage default (true)
+    expect(useLayoutPrefsStore.getState().timelineBarsVisible).toBe(true);
+  });
+
+  it('reverts detailPanelMode to localStorage defaults when URL parameters are removed', () => {
+    localStorage.setItem('detailPanelMode', 'inline');
+    resetStore({ detailPanelMode: 'inline' });
+
+    const { rerender } = renderHook(({ search }) => useLayoutSettings(search), {
+      initialProps: { search: '?sidebar=sidepanel' },
+    });
+
+    // Verify it synced to URL initially
+    expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+
+    // Change search to empty (removal)
+    rerender({ search: '' });
+
+    // Verify it reverted to localStorage default (inline)
+    expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('inline');
   });
 });

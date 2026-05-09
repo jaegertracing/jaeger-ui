@@ -40,7 +40,7 @@ import TraceTimelineViewer from './TraceTimelineViewer';
 import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
-import { getUrl, parseSettingsFromUrl } from './url';
+import { getUrl } from './url';
 import { useLayoutSettings } from './useLayoutSettings';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -162,8 +162,6 @@ export function TracePageImpl(props: TProps) {
   } = props;
 
   // Layout preferences are owned by Zustand; Redux setters are also called for the tracking middleware.
-  const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
-  const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
   const zustandSetTimelineBarsVisible = useLayoutPrefsStore(s => s.setTimelineBarsVisible);
   const zustandFocusUiFindMatches = useTraceTimelineStore(s => s.focusUiFindMatches);
   const prunedServices = useTraceTimelineStore(s => s.prunedServices);
@@ -173,16 +171,6 @@ export function TracePageImpl(props: TProps) {
     detailPanelMode: resolvedDetailPanel,
     saveAsDefault,
   } = useLayoutSettings(location.search);
-
-  useEffect(() => {
-    const urlSettings = parseSettingsFromUrl(location.search);
-    if (urlSettings.timelineBarsVisible !== null) {
-      zustandSetTimelineBarsVisible(urlSettings.timelineBarsVisible, false);
-    }
-    if (urlSettings.detailPanelMode !== null) {
-      setDetailPanelModeZustand(urlSettings.detailPanelMode, false);
-    }
-  }, [location.search, zustandSetTimelineBarsVisible]);
 
   const setDetailPanelMode = useCallback(
     (mode: SpanDetailPanelMode) => {
@@ -373,12 +361,12 @@ export function TracePageImpl(props: TProps) {
   }, []);
 
   const onDetailPanelModeToggle = useCallback(() => {
-    setDetailPanelMode(detailPanelMode === 'inline' ? 'sidepanel' : 'inline');
-  }, [detailPanelMode, setDetailPanelMode]);
+    setDetailPanelMode(resolvedDetailPanel.value === 'inline' ? 'sidepanel' : 'inline');
+  }, [resolvedDetailPanel.value, setDetailPanelMode]);
 
   const onTimelineToggle = useCallback(() => {
-    setTimelineBarsVisible(!timelineBarsVisible);
-  }, [setTimelineBarsVisible, timelineBarsVisible]);
+    setTimelineBarsVisible(!resolvedTimeline.value);
+  }, [setTimelineBarsVisible, resolvedTimeline.value]);
 
   if (!trace || trace.state === fetchedState.LOADING) {
     return <LoadingIndicator className="u-mt-vast" centered />;
