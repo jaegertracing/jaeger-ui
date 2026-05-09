@@ -4,20 +4,9 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import '@testing-library/jest-dom';
 
 import { TraceTable } from './TraceTable';
 import { SpanKind, StatusCode, IOtelTrace, IOtelSpan } from '../../../types/otel';
-
-vi.mock('react-router-dom', async () => {
-  const { MemoryRouter: ActualMemoryRouter } = await vi.importActual('react-router-dom');
-  return {
-    MemoryRouter: ActualMemoryRouter,
-    Link: ({ to, children }: { to: string | object; children: React.ReactNode }) => (
-      <a href={typeof to === 'string' ? to : '#'}>{children}</a>
-    ),
-  };
-});
 
 function makeSpan(id: string, traceID: string, serviceName: string, opName: string): IOtelSpan {
   return {
@@ -72,18 +61,18 @@ describe('<TraceTable>', () => {
     const traces = [makeTrace('abc123456789'), makeTrace('def456789012')];
     render(
       <MemoryRouter>
-        <TraceTable traces={traces} />
+        <TraceTable traces={traces} searchUrl="/search" />
       </MemoryRouter>
     );
-    expect(screen.getByText('abc123456789')).toBeInTheDocument();
-    expect(screen.getByText('def456789012')).toBeInTheDocument();
+    expect(screen.getByText('root-svc-abc123456789')).toBeInTheDocument();
+    expect(screen.getByText('root-svc-def456789012')).toBeInTheDocument();
   });
 
   it('shows root service and operation from rootSpans', () => {
     const traces = [makeTrace('aaa111222333')];
     render(
       <MemoryRouter>
-        <TraceTable traces={traces} />
+        <TraceTable traces={traces} searchUrl="/search" />
       </MemoryRouter>
     );
     expect(screen.getByText('root-svc-aaa111222333')).toBeInTheDocument();
@@ -94,7 +83,7 @@ describe('<TraceTable>', () => {
     const traces = [makeTrace('bbb222333444', 7)];
     render(
       <MemoryRouter>
-        <TraceTable traces={traces} />
+        <TraceTable traces={traces} searchUrl="/search" />
       </MemoryRouter>
     );
     expect(screen.getByText('7')).toBeInTheDocument();
@@ -103,21 +92,21 @@ describe('<TraceTable>', () => {
   it('renders empty state when no traces provided', () => {
     render(
       <MemoryRouter>
-        <TraceTable traces={[]} />
+        <TraceTable traces={[]} searchUrl="/search" />
       </MemoryRouter>
     );
     const noDataEls = screen.getAllByText(/no data/i);
     expect(noDataEls.length).toBeGreaterThan(0);
   });
 
-  it('links trace ID to the trace page', () => {
+  it('links trace ID to the trace page with fromSearch state', () => {
     const traces = [makeTrace('abc123456789')];
     render(
       <MemoryRouter>
-        <TraceTable traces={traces} />
+        <TraceTable traces={traces} searchUrl="/search" />
       </MemoryRouter>
     );
-    const link = screen.getByRole('link', { name: 'abc123456789' });
-    expect(link).toBeInTheDocument();
+    const link = screen.getByRole('link', { name: /abc/i });
+    expect(link).toHaveAttribute('href', '/trace/abc123456789');
   });
 });

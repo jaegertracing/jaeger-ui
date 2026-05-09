@@ -292,7 +292,7 @@ export function UnconnectedSearchResults({
           ))}
         </ul>
       )}
-      {traceResultsView && resultView === 'table' && <TraceTable traces={traces} />}
+      {traceResultsView && resultView === 'table' && <TraceTable traces={traces} searchUrl={searchUrl} />}
     </div>
   );
 }
