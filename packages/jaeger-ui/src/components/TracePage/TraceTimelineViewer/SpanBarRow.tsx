@@ -1,8 +1,10 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
+import { BulbOutlined, DatabaseOutlined, ToolOutlined } from '@ant-design/icons';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
+import { detectGenAISpan } from '../../../utils/gen-ai';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
@@ -52,7 +54,18 @@ type SpanBarRowProps = {
   focusSpan: (spanID: string) => void;
   traceDuration: number;
   useOtelTerms: boolean;
+  genAIModeActive?: boolean;
 };
+
+function GenAISpanIcon({ span }: { span: IOtelSpan }) {
+  const kind = useMemo(() => detectGenAISpan(span), [span]);
+  if (!kind) return null;
+  const style = { fontSize: '0.85rem', marginRight: 4, verticalAlign: 'middle' };
+  if (kind === 'llm') return <BulbOutlined style={style} />;
+  if (kind === 'tool') return <ToolOutlined style={style} />;
+  if (kind === 'retrieval') return <DatabaseOutlined style={style} />;
+  return null;
+}
 
 /**
  * This was originally a stateless function, but changing to a PureComponent
@@ -85,6 +98,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   onDetailToggled,
   onChildrenToggled,
   useOtelTerms,
+  genAIModeActive = false,
 }) => {
   const _detailToggle = useCallback(() => {
     onDetailToggled(span.spanID);
@@ -154,6 +168,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
               {!hasOwnError && hasChildError && (
                 <IoAlert className="SpanBarRow--errorIcon SpanBarRow--errorIcon--hollow" />
               )}
+              {genAIModeActive && <GenAISpanIcon span={span} />}
               {serviceName}{' '}
               {rpc && (
                 <span>

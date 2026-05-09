@@ -75,6 +75,7 @@ type RouteProps = {
 type TDerivedStateProps = {
   selectedSpanID: string | null;
   prunedServices: Set<string>;
+  genAIModeActive: boolean;
 };
 
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
@@ -289,6 +290,11 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   getRowStates(): RowState[] {
     const { childrenHiddenIDs, detailStates, detailPanelMode, prunedServices, trace } = this.props;
+    // TODO_PHASE2_LOGICAL_VIEW: Add `logicalViewActive: boolean` parameter to
+    // generateRowStates() here. When true, filter out spans where
+    // detectGenAISpan(span) === null AND the span has no GenAI ancestors.
+    // State field: useLayoutPrefsStore(s => s.logicalViewActive)
+    // TraceViewSettings menu item: "Logical View" (checked = active)
     return memoizedGenerateRowStates(trace, childrenHiddenIDs, detailStates, detailPanelMode, prunedServices);
   }
 
@@ -515,6 +521,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       detailStates,
       detailToggle,
       findMatchesIDs,
+      genAIModeActive,
       nameColumnWidth,
       prunedServices,
       selectedSpanID,
@@ -598,6 +605,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           focusSpan={this.focusSpan}
           traceDuration={trace.duration}
           useOtelTerms={useOtelTerms}
+          genAIModeActive={genAIModeActive}
         />
       </div>
     );
@@ -691,6 +699,7 @@ function VirtualizedTraceViewWrapper(
   const sidePanelWidth = useLayoutPrefsStore(s => s.sidePanelWidth);
   const detailPanelMode = useLayoutPrefsStore(s => s.detailPanelMode);
   const timelineBarsVisible = useLayoutPrefsStore(s => s.timelineBarsVisible);
+  const genAIModeActive = useLayoutPrefsStore(s => s.genAIModeActive);
   const traceID = useTraceTimelineStore(s => s.traceID);
   const childrenHiddenIDs = useTraceTimelineStore(s => s.childrenHiddenIDs);
   const detailStates = useTraceTimelineStore(s => s.detailStates);
@@ -812,6 +821,7 @@ function VirtualizedTraceViewWrapper(
     sidePanelWidth,
     detailPanelMode,
     timelineBarsVisible,
+    genAIModeActive,
     traceID,
     childrenHiddenIDs,
     detailStates,
