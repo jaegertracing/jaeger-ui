@@ -3,7 +3,8 @@
 
 import * as React from 'react';
 import { useCallback } from 'react';
-import { Select } from 'antd';
+import { Radio, Select } from 'antd';
+import type { RadioChangeEvent } from 'antd/es/radio';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import queryString from 'query-string';
@@ -11,6 +12,7 @@ import queryString from 'query-string';
 import AltViewOptions from './AltViewOptions';
 import DownloadResults from './DownloadResults';
 import DiffSelection from './DiffSelection';
+import { TraceTable } from './TraceTable';
 import * as markers from './index.markers';
 import { EAltViewActions, trackAltView } from './index.track';
 import ResultItem from './ResultItem';
@@ -143,6 +145,12 @@ export function UnconnectedSearchResults({
 }: SearchResultsProps) {
   const navigate = useNavigate();
 
+  const [resultView, setResultView] = React.useState<'cards' | 'table'>('cards');
+
+  const onResultViewChange = useCallback((e: RadioChangeEvent) => {
+    setResultView(e.target.value);
+  }, []);
+
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
       if (remove) {
@@ -239,6 +247,12 @@ export function UnconnectedSearchResults({
           </h2>
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
           {traceResultsView && <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />}
+          {traceResultsView && (
+            <Radio.Group value={resultView} onChange={onResultViewChange} size="small">
+              <Radio.Button value="cards">Cards</Radio.Button>
+              <Radio.Button value="table">Table</Radio.Button>
+            </Radio.Group>
+          )}
           <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
           {showStandaloneLink && (
             <Link
@@ -257,8 +271,8 @@ export function UnconnectedSearchResults({
           <SearchResultsDDG location={location as any} />
         </div>
       )}
-      {traceResultsView && diffSelection}
-      {traceResultsView && (
+      {traceResultsView && resultView === 'cards' && diffSelection}
+      {traceResultsView && resultView === 'cards' && (
         <ul className="ub-list-reset">
           {traces.map(trace => (
             <li className="ub-my3" key={trace.traceID}>
@@ -278,6 +292,7 @@ export function UnconnectedSearchResults({
           ))}
         </ul>
       )}
+      {traceResultsView && resultView === 'table' && <TraceTable traces={traces} />}
     </div>
   );
 }
