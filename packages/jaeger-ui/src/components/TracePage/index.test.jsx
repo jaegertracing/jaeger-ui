@@ -114,7 +114,6 @@ vi.mock('./ArchiveNotifier', async () =>
   })
 );
 
-const mockUseLayoutSettings = jest.fn();
 vi.mock('./useLayoutSettings', () => ({
   useLayoutSettings: (...args) => mockUseLayoutSettings(...args),
 }));
@@ -126,7 +125,9 @@ const {
   mockLayoutPrefsStore,
   mockTraceTimelineStore,
   useEmbeddedStateMock,
+  mockUseLayoutSettings,
 } = vi.hoisted(() => ({
+  mockUseLayoutSettings: jest.fn(),
   mockSubmitTraceToArchive: jest.fn(),
   mockAcknowledge: jest.fn(),
   mockSetDetailPanelMode: jest.fn(),
