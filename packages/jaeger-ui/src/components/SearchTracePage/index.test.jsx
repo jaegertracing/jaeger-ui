@@ -337,6 +337,35 @@ describe('mapStateToProps()', () => {
       urlQueryParams: null,
       loadingTraces: false,
       errors: null,
+      traceErrors: [],
     });
+  });
+
+  it('splits successful and errored traces in stateTraceXformer', () => {
+    const trace = transformTraceData(traceGenerator.trace({}));
+    const erroredID = 'errored-id';
+    const erroredEntry = { id: erroredID, error: new Error('trace not found'), state: fetchedState.ERROR };
+    const stateTrace = {
+      search: {
+        results: [trace.traceID, erroredID],
+        state: fetchedState.DONE,
+      },
+      traces: {
+        [trace.traceID]: { id: trace.traceID, data: trace, state: fetchedState.DONE },
+        [erroredID]: erroredEntry,
+      },
+      rawTraces: [trace],
+    };
+    const state = {
+      trace: stateTrace,
+      services: { loading: false, services: [], operationsForService: {}, error: null },
+      config: { disableFileUploadControl: false },
+    };
+
+    const { traces, traceErrors } = mapStateToProps(state, { search: '' });
+
+    expect(traces).toHaveLength(1);
+    expect(traces[0].traceID).toBe(trace.traceID);
+    expect(traceErrors).toEqual([erroredEntry]);
   });
 });

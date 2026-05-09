@@ -235,6 +235,30 @@ describe('search traces', () => {
     expect(state.search).toEqual(outcome);
   });
 
+  it('preserves per-trace errors from the response', () => {
+    const erroredID = 'missing-trace-id';
+    const msg = 'trace not found';
+    const state = traceReducer(
+      { search: { query } },
+      {
+        type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_FULFILLED}`,
+        payload: { data: [trace], errors: [{ msg, traceID: erroredID }] },
+        meta: { query },
+      }
+    );
+
+    expect(state.search.results).toEqual([id, erroredID]);
+    expect(state.traces[id].state).toBe(fetchedState.DONE);
+    expect(state.traces[erroredID]).toEqual({
+      id: erroredID,
+      error: expect.any(Error),
+      state: fetchedState.ERROR,
+    });
+    expect(state.traces[erroredID].error.message).toContain(msg);
+    expect(state.traces[erroredID].error.message).toContain(erroredID);
+    expect(state.rawTraces).toEqual([trace]);
+  });
+
   it('ignores the results with the wrong query', () => {
     const otherQuery = 'some-other-query';
     [ACTION_POSTFIX_FULFILLED, ACTION_POSTFIX_REJECTED].forEach(postfix => {

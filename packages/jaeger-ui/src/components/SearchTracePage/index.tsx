@@ -28,7 +28,7 @@ import { trackSortByChange } from './SearchForm.track';
 import { useTraceDiffStore } from '../../stores/trace-diff-store';
 import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
-import { ReduxState } from '../../types';
+import { FetchedTrace, ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
 import { Trace } from '../../types/trace';
 import { IOtelTrace } from '../../types/otel';
@@ -50,6 +50,7 @@ interface IStateProps {
   tracesInRedux: ReduxState['trace'];
   loadingTraces: boolean;
   traces: Trace[];
+  traceErrors: FetchedTrace[];
   traceResultsToDownload: unknown[];
   errors: Array<{ message: string }> | null;
   maxTraceDuration: number;
@@ -83,6 +84,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
     urlQueryParams,
     sortedTracesXformer,
     traces,
+    traceErrors,
   } = props;
 
   // On Search: when we click “add to compare” / remove, we write that list
@@ -189,6 +191,7 @@ export function SearchTracePageImpl(props: SearchTracePageImplProps) {
               skipMessage: isHomepage,
               spanLinks: urlQueryParams && urlQueryParams.spanLinks,
               traces: traceResults,
+              traceErrors,
               rawTraces: traceResultsToDownload,
               sortBy,
               handleSortChange,
@@ -217,11 +220,21 @@ const stateTraceXformer = memoizeOne((stateTrace: ReduxState['trace']) => {
   const { query, results, state, error: traceError } = search;
 
   const loadingTraces = state === fetchedState.LOADING;
-  const traces = results.map(id => traceMap[id].data).filter((t): t is Trace => t !== undefined);
+  const traces: Trace[] = [];
+  const traceErrors: FetchedTrace[] = [];
+  results.forEach(id => {
+    const entry = traceMap[id];
+    if (!entry) return;
+    if (entry.state === fetchedState.ERROR) {
+      traceErrors.push(entry);
+    } else if (entry.data) {
+      traces.push(entry.data);
+    }
+  });
   // rawTraces is populated by the trace reducer when search results are returned
   const rawTraces = (stateTrace as any).rawTraces || [];
   const maxDuration = Math.max(0, ...traces.map(tr => tr.duration || 0));
-  return { traces, rawTraces, maxDuration, traceError, loadingTraces, query };
+  return { traces, traceErrors, rawTraces, maxDuration, traceError, loadingTraces, query };
 });
 
 export const stateTraceDiffXformer = memoizeOne(
@@ -248,6 +261,7 @@ export function mapStateToProps(
   const {
     query: queryOfResults,
     traces,
+    traceErrors,
     rawTraces,
     maxDuration,
     traceError,
@@ -265,6 +279,7 @@ export function mapStateToProps(
     isHomepage,
     loadingTraces,
     traces,
+    traceErrors,
     traceResultsToDownload: rawTraces,
     errors: errors.length ? errors : null,
     maxTraceDuration: maxDuration,

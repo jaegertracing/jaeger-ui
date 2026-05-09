@@ -165,6 +165,28 @@ describe('<SearchResults>', () => {
     expect(screen.getByTestId('loading')).toBeInTheDocument();
   });
 
+  it('renders error rows for traces that could not be fetched', () => {
+    const traceErrors = [
+      { id: 'missing-1', error: new Error('trace not found - missing-1'), state: 'FETCH_ERROR' },
+      { id: 'missing-2', error: new Error('trace not found - missing-2'), state: 'FETCH_ERROR' },
+    ];
+    renderWithRouter(<SearchResults {...baseProps} traceErrors={traceErrors} />);
+    const errorCards = screen.getAllByTestId('ResultItemError');
+    expect(errorCards).toHaveLength(2);
+    expect(screen.getByText('missing-1')).toBeInTheDocument();
+    expect(screen.getByText('missing-2')).toBeInTheDocument();
+  });
+
+  it('renders only error rows when no successful traces are present', () => {
+    const traceErrors = [
+      { id: 'only-error', error: new Error('trace not found - only-error'), state: 'FETCH_ERROR' },
+    ];
+    renderWithRouter(<SearchResults {...baseProps} traces={[]} traceErrors={traceErrors} />);
+    expect(screen.getByTestId('ResultItemError')).toBeInTheDocument();
+    expect(screen.getByText('only-error')).toBeInTheDocument();
+    expect(screen.queryByText(/No trace results\. Try another query\./i)).not.toBeInTheDocument();
+  });
+
   it('hide scatter plot if queryparam hideGraph', () => {
     const { rerender } = renderWithRouter(<SearchResults {...baseProps} hideGraph={false} />);
     expect(screen.getByTestId('scatterplot')).toBeInTheDocument();
