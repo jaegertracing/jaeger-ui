@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getTracePageLink, getUrl, stringifySettings, rebaseSettings, parseSettingsFromUrl } from '.';
+import prefixUrl from '../../../utils/prefix-url';
 
 describe('TracePage/url', () => {
   const traceID = 'trace-id';
@@ -51,15 +52,17 @@ describe('TracePage/url', () => {
 
   describe('getUrl', () => {
     it('includes traceID without uiFind', () => {
-      expect(getUrl(traceID)).toBe(`/trace/${traceID}`);
+      expect(getUrl(traceID)).toBe(prefixUrl(`/trace/${traceID}`));
     });
 
     it('includes traceID and uiFind', () => {
-      expect(getUrl(traceID, uiFind)).toBe(`/trace/${traceID}?uiFind=${uiFind}`);
+      expect(getUrl(traceID, uiFind)).toBe(prefixUrl(`/trace/${traceID}?uiFind=${uiFind}`));
     });
 
     it('includes settings', () => {
-      expect(getUrl(traceID, undefined, { timelineBarsVisible: true })).toBe(`/trace/${traceID}?timeline=on`);
+      expect(getUrl(traceID, undefined, { timelineBarsVisible: true })).toBe(
+        prefixUrl(`/trace/${traceID}?timeline=on`)
+      );
     });
 
     it('includes both uiFind and settings', () => {
@@ -77,14 +80,14 @@ describe('TracePage/url', () => {
     it('passes provided state with correct pathname, without uiFind', () => {
       expect(getTracePageLink(traceID, state)).toEqual({
         state,
-        pathname: `/trace/${traceID}`,
+        pathname: prefixUrl(`/trace/${traceID}`),
       });
     });
 
     it('passes provided state with correct pathname with uiFind', () => {
       expect(getTracePageLink(traceID, state, uiFind)).toEqual({
         state,
-        pathname: `/trace/${traceID}`,
+        pathname: prefixUrl(`/trace/${traceID}`),
         search: `uiFind=${uiFind}`,
       });
     });
@@ -92,7 +95,7 @@ describe('TracePage/url', () => {
     it('includes settings', () => {
       expect(getTracePageLink(traceID, state, undefined, { timelineBarsVisible: false })).toEqual({
         state,
-        pathname: `/trace/${traceID}`,
+        pathname: prefixUrl(`/trace/${traceID}`),
         search: 'timeline=off',
       });
     });

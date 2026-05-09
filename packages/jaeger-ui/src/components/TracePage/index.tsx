@@ -40,7 +40,7 @@ import TraceTimelineViewer from './TraceTimelineViewer';
 import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
-import { getUrl } from './url';
+import { getUrl, rebaseSettings } from './url';
 import { useLayoutSettings } from './useLayoutSettings';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -172,23 +172,33 @@ export function TracePageImpl(props: TProps) {
     saveAsDefault,
   } = useLayoutSettings(location.search);
 
+  const navigate = useNavigate();
+
   const setDetailPanelMode = useCallback(
     (mode: SpanDetailPanelMode) => {
       setDetailPanelModeZustand(mode, false);
       reduxSetDetailPanelMode(mode);
+
+      const nextSearch = rebaseSettings(location.search);
+      if (nextSearch !== location.search) {
+        navigate({ search: nextSearch }, { replace: true });
+      }
     },
-    [reduxSetDetailPanelMode]
+    [reduxSetDetailPanelMode, location.search, navigate]
   );
 
   const setTimelineBarsVisible = useCallback(
     (visible: boolean) => {
       zustandSetTimelineBarsVisible(visible, false);
       reduxSetTimelineBarsVisible(visible);
-    },
-    [zustandSetTimelineBarsVisible, reduxSetTimelineBarsVisible]
-  );
 
-  const navigate = useNavigate();
+      const nextSearch = rebaseSettings(location.search);
+      if (nextSearch !== location.search) {
+        navigate({ search: nextSearch }, { replace: true });
+      }
+    },
+    [zustandSetTimelineBarsVisible, reduxSetTimelineBarsVisible, location.search, navigate]
+  );
 
   const archiveTraceState = useArchiveStore(s => (id ? (s.archives[id] ?? null) : null));
   const submitTraceToArchiveFn = useArchiveStore(s => s.submitTraceToArchive);
