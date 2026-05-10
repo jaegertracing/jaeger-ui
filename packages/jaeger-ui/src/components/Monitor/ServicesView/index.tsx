@@ -213,7 +213,6 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   // componentDidMount equivalent
   useEffect(() => {
     window.addEventListener('resize', updateDimensions);
-    updateDimensions();
     calcGraphXDomain();
 
     return () => {
@@ -221,8 +220,12 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     };
   }, [updateDimensions, calcGraphXDomain]);
 
-  // Recalculate graph width once services finish loading, since the graph
-  // container ref is not mounted while the loading spinner is shown (#3539).
+  // Measure the graph container width after every servicesLoading → false
+  // transition. useLayoutEffect ensures the measurement happens before paint,
+  // avoiding a visible half-width flash. The mount effect above no longer calls
+  // updateDimensions() directly because the ref is null while the loading
+  // spinner is shown; this effect handles both the initial render (when
+  // servicesLoading is already false) and the transition from true → false.
   useLayoutEffect(() => {
     if (!servicesLoading) {
       updateDimensions();
