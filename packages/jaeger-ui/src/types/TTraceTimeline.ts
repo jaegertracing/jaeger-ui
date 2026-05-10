@@ -3,13 +3,17 @@
 
 import DetailState from '../components/TracePage/TraceTimelineViewer/SpanDetail/DetailState';
 import TNil from './TNil';
+import type { SpanDetailPanelMode } from './config';
 
 type TTraceTimeline = {
   childrenHiddenIDs: Set<string>;
   detailStates: Map<string, DetailState>;
+  detailPanelMode: SpanDetailPanelMode;
   hoverIndentGuideIds: Set<string>;
   shouldScrollToFirstUiFindMatch: boolean;
+  sidePanelWidth: number;
   spanNameColumnWidth: number;
+  timelineBarsVisible: boolean;
   traceID: string | TNil;
 };
 

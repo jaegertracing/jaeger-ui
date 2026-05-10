@@ -69,14 +69,14 @@ export type TWorkerErrorMessage = {
   type: EWorkerErrorType.Error;
 };
 
-export type TNodesUpdate<T = Record<string, unknown>> = {
+type TNodesUpdate<T = Record<string, unknown>> = {
   type: ECoordinatorPhase.Positions;
   layoutId: number;
   graph: TLayoutGraph;
   vertices: TLayoutVertex<T>[];
 };
 
-export type TLayoutUpdate<T = Record<string, unknown>, U = Record<string, unknown>> = {
+type TLayoutUpdate<T = Record<string, unknown>, U = Record<string, unknown>> = {
   type: ECoordinatorPhase.Done;
   layoutId: number;
   graph: TLayoutGraph;

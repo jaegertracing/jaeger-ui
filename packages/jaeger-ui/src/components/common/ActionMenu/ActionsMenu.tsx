@@ -24,7 +24,7 @@ interface IActionsMenuProps {
   style?: React.CSSProperties;
 }
 
-export const ActionsMenu: React.FC<IActionsMenuProps> = ({ items = [], className, style }) => {
+const ActionsMenu: React.FC<IActionsMenuProps> = ({ items = [], className, style }) => {
   const handleKeyDown = (item: IActionMenuItem) => (event: React.KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();

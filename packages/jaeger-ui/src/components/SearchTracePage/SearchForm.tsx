@@ -1,25 +1,25 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { Input, Button, Popover, Select, Row, Col, Form, Switch } from 'antd';
-import _get from 'lodash/get';
+import React, { useState, useCallback, useMemo, ComponentProps } from 'react';
+import { Input, Button, Tooltip, Select, Row, Col, Form, Switch } from 'antd';
 import logfmtParser from 'logfmt/lib/logfmt_parser';
 import { stringify as logfmtStringify } from 'logfmt/lib/stringify';
 import dayjs from 'dayjs';
 import memoizeOne from 'memoize-one';
 import queryString from 'query-string';
 import { IoHelp } from 'react-icons/io5';
-import { connect, ConnectedProps } from 'react-redux';
+import { connect } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getUrl as getSearchUrl } from './url';
 import { bindActionCreators, Dispatch } from 'redux';
-import store from 'store';
+import store from '../../utils/storage';
 
 import * as markers from './SearchForm.markers';
 import { trackFormInput } from './SearchForm.track';
 import * as jaegerApiActions from '../../actions/jaeger-api';
 import { formatDate, formatTime } from '../../utils/date';
 import { DEFAULT_OPERATION, DEFAULT_LIMIT, DEFAULT_LOOKBACK } from '../../constants/search-form';
-import { getConfigValue } from '../../utils/config/get-config';
 import SearchableSelect from '../common/SearchableSelect';
 import './SearchForm.css';
 import ValidatedFormField from '../../utils/ValidatedFormField';
@@ -186,7 +186,7 @@ export function traceIDsToQuery(traceIDs: string | null | undefined): string[] |
   return traceIDs.split(',');
 }
 
-export const placeholderDurationFields = 'e.g. 1.2s, 100ms, 500us';
+const placeholderDurationFields = 'e.g. 1.2s, 100ms, 500us';
 
 interface ValidationError {
   content: string;
@@ -270,7 +270,7 @@ export function submitForm(
   searchTraces: SearchTracesFunction,
   adjustTime: string | null | undefined,
   adjustTimeEnabled: boolean
-): void {
+): string {
   const {
     resultsLimit,
     service,
@@ -311,7 +311,7 @@ export function submitForm(
 
   trackFormInput(resultsLimit, operation, tags || '', minDuration, maxDuration, lookback, service);
 
-  searchTraces({
+  const query: SearchQuery = {
     service,
     operation: operation !== DEFAULT_OPERATION ? operation : undefined,
     limit: resultsLimit,
@@ -321,32 +321,33 @@ export function submitForm(
     tags: convTagsLogfmt(tags) || undefined,
     minDuration: minDuration || null,
     maxDuration: maxDuration || null,
-  } as SearchQuery);
+  };
+  searchTraces(query);
+  return getSearchUrl(query as Parameters<typeof getSearchUrl>[0]);
 }
 
 interface ISearchFormImplProps {
   invalid?: boolean;
   submitting?: boolean;
-  searchMaxLookback?: ILookbackOption;
-  searchAdjustEndTime?: string;
   initialValues?: Partial<ISearchFormFields> & { traceIDs?: string | null };
   searchTraces: SearchTracesFunction;
   submitFormHandler: (
     fields: ISearchFormFields,
     adjustEndTime: string | null | undefined,
     adjustTimeEnabled: boolean
-  ) => void;
+  ) => string;
 }
 
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   invalid = false,
   submitting = false,
-  searchMaxLookback,
-  searchAdjustEndTime,
   initialValues,
   submitFormHandler,
 }) => {
-  const { useOpenTelemetryTerms: useOtelTerms } = useConfig();
+  const navigate = useNavigate();
+  const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
+  const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
+  const searchAdjustEndTime: string | undefined = search?.adjustEndTime;
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
     operation: initialValues?.operation,
@@ -381,8 +382,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 
   const [adjustTimeEnabled, setAdjustTimeEnabled] = useState<boolean>(() => {
-    const storedAdjustTimeEnabled = store.get(ADJUST_TIME_ENABLED_KEY);
-    return storedAdjustTimeEnabled !== undefined ? storedAdjustTimeEnabled : Boolean(searchAdjustEndTime);
+    return store.getBool(ADJUST_TIME_ENABLED_KEY, Boolean(searchAdjustEndTime));
   });
 
   const handleChange = useCallback((fieldData: Partial<ISearchFormFields>) => {
@@ -403,9 +403,10 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      submitFormHandler(formData as ISearchFormFields, searchAdjustEndTime, adjustTimeEnabled);
+      const url = submitFormHandler(formData as ISearchFormFields, searchAdjustEndTime, adjustTimeEnabled);
+      navigate(url);
     },
-    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler]
+    [formData, searchAdjustEndTime, adjustTimeEnabled, submitFormHandler, navigate]
   );
 
   const { service: selectedService, lookback: selectedLookback } = formData;
@@ -474,20 +475,18 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
         label={
           <div>
             {useOtelTerms ? 'Attributes' : 'Tags'}{' '}
-            <Popover
+            <Tooltip
               placement="topLeft"
-              trigger="click"
+              styles={{ root: { maxWidth: 450 } }}
               title={
-                <h3 key="title" className="SearchForm--tagsHintTitle">
-                  Values should be in the{' '}
-                  <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
-                    logfmt
-                  </a>{' '}
-                  format.
-                </h3>
-              }
-              content={
                 <div>
+                  <h3 key="title" className="SearchForm--tagsHintTitle">
+                    Values should be in the{' '}
+                    <a href="https://brandur.org/logfmt" rel="noopener noreferrer" target="_blank">
+                      logfmt
+                    </a>{' '}
+                    format.
+                  </h3>
                   <ul key="info" className="SearchForm--tagsHintInfo">
                     <li>Use space for AND conjunctions.</li>
                     <li>
@@ -520,7 +519,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
                         http.url=&quot;http://0.0.0.0:8081/customer\\?customer=123&quot;
                       </code>
                       <div>
-                        Note: when using Elasticsearch/OpenSearch the{' '}
+                        Note ^: when using Elasticsearch or OpenSearch storage the{' '}
                         <a
                           href="https://lucene.apache.org/core/9_0_0/core/org/apache/lucene/util/automaton/RegExp.html"
                           rel="noopener noreferrer"
@@ -529,7 +528,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
                           regex-reserved
                         </a>{' '}
                         character <code className="SearchForm--tagsHintEg">&quot;?&quot;</code> must be
-                        escaped with <code className="SearchForm--tagsHintEg">&quot;\\&quot;</code>.
+                        escaped with <code className="SearchForm--tagsHintEg">&quot;\\?&quot;</code>.
                       </div>
                     </li>
                   </ul>
@@ -537,7 +536,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               }
             >
               <IoHelp className="SearchForm--hintTrigger" />
-            </Popover>
+            </Tooltip>
           </div>
         }
       >
@@ -562,10 +561,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               onChange={handleAdjustTimeToggle}
               disabled={submitting}
             />
-            <Popover
+            <Tooltip
               placement="topLeft"
-              trigger="click"
-              content={
+              title={
                 <div className="SearchForm--lookbackHint">
                   When enabled, search end time is adjusted back by {searchAdjustEndTime} to exclude very
                   recent traces that may still be receiving spans.
@@ -573,7 +571,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
               }
             >
               <IoHelp className="SearchForm--hintTrigger" />
-            </Popover>
+            </Tooltip>
           </div>
         )}
       </div>
@@ -596,17 +594,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           label={
             <div>
               Start Time{' '}
-              <Popover
-                placement="topLeft"
-                trigger="click"
-                content={
-                  <h3 key="title" className="SearchForm--tagsHintTitle">
-                    Times are expressed in {tz}
-                  </h3>
-                }
-              >
+              <Tooltip placement="topLeft" title={`Times are expressed in ${tz}`}>
                 <IoHelp className="SearchForm--hintTrigger" />
-              </Popover>
+              </Tooltip>
             </div>
           }
         >
@@ -639,17 +629,9 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           label={
             <div>
               End Time{' '}
-              <Popover
-                placement="topLeft"
-                trigger="click"
-                content={
-                  <h3 key="title" className="SearchForm--tagsHintTitle">
-                    Times are expressed in {tz}
-                  </h3>
-                }
-              >
+              <Tooltip placement="topLeft" title={`Times are expressed in ${tz}`}>
                 <IoHelp className="SearchForm--hintTrigger" />
-              </Popover>
+              </Tooltip>
             </div>
           }
         >
@@ -718,7 +700,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
           placeholder="Limit Results"
           type="number"
           min={1}
-          max={getConfigValue('search.maxLimit')}
+          max={search?.maxLimit}
           onChange={e => handleChange({ resultsLimit: e.target.value })}
         />
       </FormItem>
@@ -735,7 +717,7 @@ export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   );
 };
 
-export function mapStateToProps(state: ReduxState) {
+export function mapStateToProps(state: ReduxState, ownProps: { search?: string }) {
   const {
     service,
     limit,
@@ -748,12 +730,12 @@ export function mapStateToProps(state: ReduxState) {
     minDuration,
     lookback,
     traceID: traceIDParams,
-  } = queryString.parse(state.router.location.search);
+  } = queryString.parse(ownProps.search || '');
 
   const nowInMicroseconds = dayjs().valueOf() * 1000;
   const today = formatDate(nowInMicroseconds);
   const currentTime = formatTime(nowInMicroseconds);
-  const lastSearch = store.get('lastSearch') as { service?: string; operation?: string } | undefined;
+  const lastSearch = store.getJSON<{ service?: string; operation?: string }>('lastSearch');
   let lastSearchService: string | undefined;
   let lastSearchOperation: string | undefined;
 
@@ -805,7 +787,7 @@ export function mapStateToProps(state: ReduxState) {
     if (data) {
       try {
         tags = logfmtStringify(data);
-      } catch (_) {
+      } catch {
         tags = 'Parse Error';
       }
     } else {
@@ -817,7 +799,7 @@ export function mapStateToProps(state: ReduxState) {
     try {
       data = JSON.parse(logfmtTags as string);
       tags = logfmtStringify(data);
-    } catch (_) {
+    } catch {
       tags = 'Parse Error';
     }
   }
@@ -842,8 +824,6 @@ export function mapStateToProps(state: ReduxState) {
       maxDuration: (maxDuration as string | undefined) || undefined,
       traceIDs: traceIDs || null,
     },
-    searchMaxLookback: _get(state, 'config.search.maxLookback'),
-    searchAdjustEndTime: _get(state, 'config.search.adjustEndTime'),
     submitting: state.trace?.search?.state === fetchedState.LOADING,
   };
 }
@@ -856,11 +836,18 @@ export function mapDispatchToProps(dispatch: Dispatch) {
       fields: ISearchFormFields,
       adjustEndTime: string | null | undefined,
       adjustTimeEnabled: boolean
-    ) => submitForm(fields, searchTraces, adjustEndTime || null, adjustTimeEnabled),
+    ) => submitForm(fields, searchTraces, adjustEndTime || null, adjustTimeEnabled) as string,
   };
 }
 
 const connector = connect(mapStateToProps, mapDispatchToProps);
-type PropsFromRedux = ConnectedProps<typeof connector>;
 
-export default connector(SearchFormImpl);
+const ConnectedSearchForm = connector(SearchFormImpl);
+
+// search is always injected from useLocation(); callers cannot supply it.
+function SearchFormWithLocation(props: Omit<ComponentProps<typeof ConnectedSearchForm>, 'search'>) {
+  const { search } = useLocation();
+  return <ConnectedSearchForm {...props} search={search} />;
+}
+
+export default SearchFormWithLocation;

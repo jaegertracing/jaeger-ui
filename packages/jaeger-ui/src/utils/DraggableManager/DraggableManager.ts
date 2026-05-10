@@ -136,7 +136,7 @@ export default class DraggableManager {
     if (this._isDragging || button !== LEFT_MOUSE_BUTTON) {
       return;
     }
-    let type: EUpdateTypes | null = null;
+    let type: EUpdateTypes;
     let handler: ((update: DraggingUpdate) => void) | TNil;
     if (eventType === 'mouseenter') {
       type = EUpdateTypes.MouseEnter;
@@ -166,7 +166,7 @@ export default class DraggableManager {
 
   _handleDragEvent = (event: MouseEvent | React.MouseEvent<HTMLDivElement | SVGSVGElement, MouseEvent>) => {
     const { button, clientX, type: eventType } = event;
-    let type: EUpdateTypes | null = null;
+    let type: EUpdateTypes;
     let handler: ((update: DraggingUpdate) => void) | TNil;
     if (eventType === 'mousedown') {
       if (this._isDragging || button !== LEFT_MOUSE_BUTTON) {

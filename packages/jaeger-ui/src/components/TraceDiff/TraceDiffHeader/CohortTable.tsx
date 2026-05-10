@@ -8,7 +8,7 @@ import TraceTimelineLink from './TraceTimelineLink';
 import RelativeDate from '../../common/RelativeDate';
 import TraceName from '../../common/TraceName';
 import { fetchedState } from '../../../constants';
-import { formatDuration } from '../../../utils/date';
+import { formatDurationCompact } from '../../../utils/date';
 
 import { FetchedTrace, TNil } from '../../../types';
 
@@ -28,7 +28,7 @@ const defaultRowSelection = {
   type: 'radio' as const,
 };
 
-export const NEED_MORE_TRACES_MESSAGE = (
+const NEED_MORE_TRACES_MESSAGE = (
   <h3 key="msg" className="CohortTable--needMoreMsg">
     Enter a Trace ID or perform a search and select from the results.
   </h3>
@@ -112,7 +112,7 @@ const CohortTable: React.FC<Props> = ({ cohort, current, selection, selectTrace 
           data-testid="duration"
           key="duration"
           render={(value, record: FetchedTrace) =>
-            record.state === fetchedState.DONE && formatDuration(value)
+            record.state === fetchedState.DONE && formatDurationCompact(value)
           }
         />
         <Column title="Spans" dataIndex={['data', 'spans', 'length']} key="spans" />

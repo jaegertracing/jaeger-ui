@@ -67,34 +67,29 @@ The above command will run a web server on `http://localhost:5173` that will ser
 
 ## Development Commands
 
-| Command          | Description                                                           |
-| ---------------- | --------------------------------------------------------------------- |
-| `npm start`      | Starts development server with hot reloading and api proxy.           |
-| `npm test`       | Run all the tests                                                     |
-| `npm test $file` | Run tests for a specific file, e.g. `npm test src/api/jaeger.test.js` |
-| `npm run lint`   | Lint the project (eslint, prettier, typescript)                       |
-| `npm run fmt`    | Apply Prettier source code formatting                                 |
-| `npm run build`  | Runs production build. Outputs files to `packages/jaeger-ui/build`.   |
+| Command | Description |
+| --- | --- |
+| `npm start` | Starts development server with hot reloading and api proxy. |
+| `npm test` | Run all the tests |
+| `npm test -w packages/jaeger-ui -- $file` | Run tests for a specific file, e.g. `npm test -w packages/jaeger-ui -- src/api/jaeger.test.js` |
+| `npm run lint` | Lint the project (oxlint, oxfmt, typescript, knip) |
+| `npm run fmt` | Format source code with Oxfmt |
+| `npm run build` | Runs production build. Outputs files to `packages/jaeger-ui/build`. |
+| `make bundle-stats` | Runs production build and outputs `packages/jaeger-ui/build/bundle-stats.csv` with per-package size breakdown (estimated post-minification bytes). |
 
 ## Code Coverage
 
-This project uses Jest for testing with high coverage standards and Codecov integration for tracking.
+This project uses Vitest for testing with Codecov integration for tracking.
 
 | Command | Description |
 | --- | --- |
-| `npm test -- --coverage` | Run all tests with coverage report |
-| `npm test -- --coverage --collectCoverageFrom="src/path/to/file.tsx"` | Coverage for specific files |
-| `npm test -- --testPathPattern=Component --coverage` | Coverage for specific test patterns |
-| `npm test -- --coverage --coverageReporters=text-lcov --coverageReporters=html` | Generate detailed coverage reports |
+| `npm test -- --coverage` | Run all tests with full coverage report |
+| `npm test -w packages/jaeger-ui -- src/path/to/file.test.tsx` | Run a single test file |
+| `npm test -w packages/jaeger-ui -- src/path/to/file.test.tsx --coverage --coverage.include="src/path/to/file.tsx"` | Run a single test file with coverage scoped to its source file |
 
-**Coverage Metrics:**
+Note: `-w packages/jaeger-ui` is required when passing a file pattern — without it, the root `npm test` also runs Vitest in `packages/plexus`, which finds no matching file and exits with an error. `--coverage.include` scopes which source files appear in the coverage report; it does **not** filter which tests run.
 
-- **Statements**: % of executable statements covered by tests
-- **Branches**: % of conditional branches (if/else, switch cases) covered
-- **Functions**: % of functions called during tests
-- **Lines**: % of lines executed during tests
-
-**Example**: `npm test -- --testPathPattern=DdgNodeContent --coverage --collectCoverageFrom="src/components/DeepDependencies/Graph/DdgNodeContent/index.tsx"`
+**Example**: `npm test -w packages/jaeger-ui -- src/components/DeepDependencies/Graph/DdgNodeContent/index.test.tsx --coverage --coverage.include="src/components/DeepDependencies/Graph/DdgNodeContent/index.tsx"`
 
 ## Running on Windows OS
 
@@ -120,10 +115,10 @@ Use the following `launch.json` configuration:
     {
       "type": "node",
       "request": "launch",
-      "name": "Jest: current file",
+      "name": "Vitest: current file",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["${file}"],
+      "program": "${workspaceFolder}/node_modules/.bin/vitest",
+      "args": ["run", "${file}"],
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}/packages/jaeger-ui"
     }
@@ -135,11 +130,11 @@ Use the following `launch.json` configuration:
 
 Use [typescript](https://www.typescriptlang.org/) for new code. Check types via `npm run tsc-lint`.
 
-We use [`prettier`](https://prettier.io/), an "opinionated" code formatter. It can be applied to both JavaScript and CSS source files via `npm run prettier`.
+We use [Oxfmt](https://viteplus.dev) for code formatting (part of the Vite+ toolchain). It can be applied via `npm run fmt`.
 
-Then, most issues will be caught by the linter, which can be applied via `npm run eslint`.
+Most issues will be caught by the linter, which can be applied via `npm run oxlint`.
 
-Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as noted in our `.eslintrc`.
+Finally, we generally adhere to the [Airbnb Style Guide](https://github.com/airbnb/javascript), with exceptions as noted in our `.oxlintrc.json` (Oxlint configuration).
 
 ## File Headers
 

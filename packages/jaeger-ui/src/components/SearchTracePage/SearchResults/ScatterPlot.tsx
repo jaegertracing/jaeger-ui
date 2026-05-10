@@ -16,11 +16,11 @@ import {
 } from 'recharts';
 
 import { FALLBACK_TRACE_NAME } from '../../../constants';
-import { ONE_MILLISECOND, formatDuration } from '../../../utils/date';
+import { ONE_MILLISECOND, formatDurationCompact } from '../../../utils/date';
 
 import './ScatterPlot.css';
 
-export type TScatterPlotPoint = {
+type TScatterPlotPoint = {
   x: number;
   y: number;
   traceID: string;
@@ -69,17 +69,7 @@ export const CustomTooltip = ({
   return null;
 };
 
-export const RenderDot = ({
-  cx,
-  cy,
-  fill,
-  size,
-}: {
-  cx?: number;
-  cy?: number;
-  fill?: string;
-  size?: number;
-}) => {
+const RenderDot = ({ cx, cy, fill, size }: { cx?: number; cy?: number; fill?: string; size?: number }) => {
   const maxSize = Math.min(300, size || 0);
   return (
     <Dot cx={cx} cy={cy} fill={fill} fillOpacity={0.5} r={maxSize * 0.035} style={{ cursor: 'pointer' }} />
@@ -174,7 +164,7 @@ export default function ScatterPlot({
               type="number"
               dataKey="y"
               name="Duration"
-              tickFormatter={t => formatDuration(t)}
+              tickFormatter={t => formatDurationCompact(t)}
               tick={{ fontSize: 11, dx: -5 }}
               axisLine={{ stroke: '#e6e6e9', strokeWidth: 2 }}
               tickLine={{ stroke: '#e6e6e9', strokeWidth: 1 }}

@@ -13,7 +13,7 @@ function getStrings(value: string | object): string | string[] {
 }
 
 const VALUE_ENABLED = '1';
-export const VERSION_0 = 'v0';
+const VERSION_0 = 'v0';
 
 // uiEmbed=v0
 // uiSearchHideGraph=1

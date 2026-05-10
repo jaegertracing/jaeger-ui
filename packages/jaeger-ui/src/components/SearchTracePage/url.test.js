@@ -1,13 +1,13 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as reactRouterDom from 'react-router-dom';
+import * as ReactRouterDom from 'react-router-dom';
 
 import { MAX_LENGTH } from '../DeepDependencies/Graph/DdgNodeContent/constants';
 import { ROUTE_PATH, getUrl, getUrlState, isSameQuery, matches } from './url';
 
-jest.mock('react-router-dom', () => ({
-  matchPath: jest.fn(),
+vi.mock('react-router-dom', () => ({
+  matchPath: vi.fn(),
 }));
 
 describe('SearchTracePage/url', () => {
@@ -20,25 +20,20 @@ describe('SearchTracePage/url', () => {
 
   describe('matches', () => {
     const path = 'path argument';
-    let matchPathSpy;
 
-    beforeAll(() => {
-      matchPathSpy = jest.spyOn(reactRouterDom, 'matchPath');
+    beforeEach(() => {
+      ReactRouterDom.matchPath.mockReset();
     });
 
     it('calls matchPath with expected arguments', () => {
       matches(path);
-      expect(matchPathSpy).toHaveBeenLastCalledWith(path, {
-        path: ROUTE_PATH,
-        strict: true,
-        exact: true,
-      });
+      expect(ReactRouterDom.matchPath).toHaveBeenLastCalledWith(ROUTE_PATH, path);
     });
 
     it("returns truthiness of matchPath's return value", () => {
-      matchPathSpy.mockReturnValueOnce(null);
+      ReactRouterDom.matchPath.mockReturnValueOnce(null);
       expect(matches(path)).toBe(false);
-      matchPathSpy.mockReturnValueOnce({});
+      ReactRouterDom.matchPath.mockReturnValueOnce({});
       expect(matches(path)).toBe(true);
     });
   });
@@ -131,7 +126,7 @@ describe('SearchTracePage/url', () => {
 
         expect(
           getUrl({
-            traceID: new Array(numberOfArgs).fill(trace0),
+            traceID: Array.from({ length: numberOfArgs }, () => trace0),
           }).length
         ).toBeLessThan(MAX_LENGTH);
       });
@@ -139,7 +134,7 @@ describe('SearchTracePage/url', () => {
       it('does not over shorten', () => {
         const numberOfArgs = Math.floor(maxLengthOfArgs / lengthOfOneArg);
         const remainder = maxLengthOfArgs % lengthOfOneArg;
-        const ids = new Array(numberOfArgs).fill(trace0);
+        const ids = Array.from({ length: numberOfArgs }, () => trace0);
         ids[ids.length - 1] = `${ids[ids.length - 1]}${'x'.repeat(remainder)}`;
         ids.push(trace0);
 

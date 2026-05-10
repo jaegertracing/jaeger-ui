@@ -10,7 +10,7 @@ import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
 import AccordionText from './AccordionText';
 import DetailState from './DetailState';
-import { formatDuration } from '../utils';
+import { formatDuration, formatDurationCompact } from '../utils';
 import CopyIcon from '../../../common/CopyIcon';
 import LabeledList from '../../../common/LabeledList';
 
@@ -35,6 +35,7 @@ type SpanDetailProps = {
   currentViewRangeTime: [number, number];
   traceDuration: number;
   useOtelTerms: boolean;
+  eventsInitialVisibleCount?: number;
 };
 
 export default function SpanDetail(props: SpanDetailProps) {
@@ -53,6 +54,7 @@ export default function SpanDetail(props: SpanDetailProps) {
     currentViewRangeTime,
     traceDuration,
     useOtelTerms,
+    eventsInitialVisibleCount,
   } = props;
 
   const { isAttributesOpen, isResourceOpen, events: eventsState, isWarningsOpen, isLinksOpen } = detailState;
@@ -64,7 +66,6 @@ export default function SpanDetail(props: SpanDetailProps) {
   // Display labels based on terminology flag
   const attributesLabel = useOtelTerms ? 'Attributes' : 'Tags';
   const resourceLabel = useOtelTerms ? 'Resource' : 'Process';
-  const eventsLabel = useOtelTerms ? 'Events' : 'Logs';
 
   const overviewItems = [
     {
@@ -75,7 +76,7 @@ export default function SpanDetail(props: SpanDetailProps) {
     {
       key: 'duration',
       label: 'Duration:',
-      value: formatDuration(span.duration),
+      value: formatDurationCompact(span.duration),
     },
     {
       key: 'start',
@@ -129,6 +130,7 @@ export default function SpanDetail(props: SpanDetailProps) {
             traceDuration={traceDuration}
             spanID={span.spanID}
             useOtelTerms={useOtelTerms}
+            initialVisibleCount={eventsInitialVisibleCount}
           />
         )}
         {warnings && warnings.length > 0 && (

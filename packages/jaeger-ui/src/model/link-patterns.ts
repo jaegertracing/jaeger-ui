@@ -4,7 +4,7 @@
 import _uniq from 'lodash/uniq';
 import memoize from 'lru-memoize';
 
-import { getConfigValue } from '../utils/config/get-config';
+import getConfig from '../utils/config/get-config';
 import { encodedStringSupplant, getParamNames } from '../utils/stringSupplant';
 import { getParameterAndFormatter } from '../utils/link-formatting';
 import { TNil } from '../types';
@@ -290,9 +290,9 @@ export function createGetLinks(
   };
 }
 
-export const processedLinks: ProcessedLinkPattern[] = (getConfigValue('linkPatterns') || [])
+export const processedLinks: ProcessedLinkPattern[] = (getConfig().linkPatterns || [])
   .map(processLinkPattern)
-  .filter(Boolean);
+  .filter((link): link is ProcessedLinkPattern => Boolean(link));
 
 export const getTraceLinks: (trace: IOtelTrace) => Hyperlink[] = memoize(10)((trace: IOtelTrace) => {
   return computeTraceLink(processedLinks, trace);

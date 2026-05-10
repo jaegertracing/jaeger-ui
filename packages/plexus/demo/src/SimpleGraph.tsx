@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { LayoutManager } from '../../src';
 import Digraph from '../../src/Digraph';
@@ -53,4 +53,4 @@ const simpleGraph = (
   />
 );
 
-render(simpleGraph, document.querySelector('#root'));
+createRoot(document.querySelector('#root')!).render(simpleGraph);

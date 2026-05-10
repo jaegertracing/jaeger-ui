@@ -21,7 +21,7 @@ function tryParseJson(value: string) {
   // otherwise just return as is
   try {
     return jsonObjectOrArrayStartRegex.test(value) ? JSON.parse(value) : value;
-  } catch (_) {
+  } catch {
     return value;
   }
 }

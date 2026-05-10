@@ -3,6 +3,7 @@
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { jaegerClient } from '../api/v3/client';
+import { localeStringComparator } from '../utils/sort';
 
 /**
  * React Query hook to fetch the list of services from the Jaeger API.
@@ -14,6 +15,7 @@ export function useServices(): UseQueryResult<string[]> {
     queryFn: () => jaegerClient.fetchServices(),
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
+    select: data => [...data].sort(localeStringComparator),
   });
 }
 
@@ -34,11 +36,12 @@ export function useSpanNames(
     staleTime: 60 * 1000, // 1 minute
     refetchOnWindowFocus: true,
     select: data => {
+      let filtered = data;
       if (spanKind) {
         const normalizedKind = spanKind.toLowerCase();
-        return data.filter(op => op.spanKind === normalizedKind);
+        filtered = data.filter(op => op.spanKind === normalizedKind);
       }
-      return data;
+      return [...filtered].sort((a, b) => localeStringComparator(a.name, b.name));
     },
   });
 }

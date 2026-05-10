@@ -15,6 +15,7 @@ export const ACTION_JSON = 'json';
 export const ACTION_RAW_JSON = 'rawJson';
 export const ACTION_STATISTICS = 'traceStatistics';
 export const ACTION_TRACE_SPANS_VIEW = 'tracesSpansView';
+export const ACTION_TRACE_LOGS_VIEW = 'traceLogsView';
 
 // use a closure instead of bind to prevent forwarding any arguments to trackEvent()
 export const trackGanttView = () => trackEvent(CATEGORY_ALT_VIEW, ACTION_GANTT);
@@ -23,6 +24,7 @@ export const trackJsonView = () => trackEvent(CATEGORY_ALT_VIEW, ACTION_JSON);
 export const trackRawJsonView = () => trackEvent(CATEGORY_ALT_VIEW, ACTION_RAW_JSON);
 export const trackStatisticsView = () => trackEvent(CATEGORY_ALT_VIEW, ACTION_STATISTICS);
 export const trackTraceSpansView = () => trackEvent(CATEGORY_ALT_VIEW, ACTION_TRACE_SPANS_VIEW);
+export const trackTraceLogsView = () => trackEvent(CATEGORY_ALT_VIEW, ACTION_TRACE_LOGS_VIEW);
 
 export const trackSlimHeaderToggle = (isOpen: boolean) =>
   trackEvent(CATEGORY_SLIM_HEADER, getToggleValue(isOpen));

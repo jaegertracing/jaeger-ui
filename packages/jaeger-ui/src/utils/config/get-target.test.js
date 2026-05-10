@@ -1,33 +1,33 @@
 // Copyright (c) 2023 The Jaeger Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import * as getConfig from './get-config';
+import * as getConfigModule from './get-config';
 import { getTargetBlankOrTop, getTargetEmptyOrBlank } from './get-target';
 
-let getConfigValueSpy;
+let getConfigSpy;
 
 beforeAll(() => {
-  getConfigValueSpy = jest.spyOn(getConfig, 'getConfigValue');
+  getConfigSpy = jest.spyOn(getConfigModule, 'default');
 });
 
 describe('getTarget', () => {
   it('getTargetEmptyOrBlank returns empty because forbidNewPage is true', () => {
-    getConfigValueSpy.mockReturnValue(true);
+    getConfigSpy.mockReturnValue({ forbidNewPage: true });
     const target = getTargetEmptyOrBlank();
     expect(target).toBe('');
   });
   it('getTargetEmptyOrBlank returns _blank because forbidNewPage is true', () => {
-    getConfigValueSpy.mockReturnValue(false);
+    getConfigSpy.mockReturnValue({ forbidNewPage: false });
     const target = getTargetEmptyOrBlank();
     expect(target).toBe('_blank');
   });
   it('getTargetBlankOrTop returns _top because forbidNewPage is true', () => {
-    getConfigValueSpy.mockReturnValue(true);
+    getConfigSpy.mockReturnValue({ forbidNewPage: true });
     const target = getTargetBlankOrTop();
     expect(target).toBe('_top');
   });
   it('getTargetBlankOrTop returns _blank because forbidNewPage is true', () => {
-    getConfigValueSpy.mockReturnValue(false);
+    getConfigSpy.mockReturnValue({ forbidNewPage: false });
     const target = getTargetBlankOrTop();
     expect(target).toBe('_blank');
   });

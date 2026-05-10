@@ -4,14 +4,12 @@
 import React, { useMemo } from 'react';
 import cx from 'classnames';
 import _get from 'lodash/get';
-import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 
 import { actions } from './duck';
 import { ReduxState } from '../../../types';
 import { IOtelSpan } from '../../../types/otel';
-import spanAncestorIds from '../../../utils/span-ancestor-ids';
 import colorGenerator from '../../../utils/color-generator';
 
 import './SpanTreeOffset.css';
@@ -28,6 +26,7 @@ type TProps = {
   childrenVisible?: boolean;
   onClick?: () => void;
   showChildrenIcon?: boolean;
+  isDetailRow?: boolean;
   span: IOtelSpan;
   color: string;
 };
@@ -36,8 +35,8 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   childrenVisible = false,
   onClick = undefined,
   showChildrenIcon = true,
+  isDetailRow = false,
   span,
-  hoverIndentGuideIds,
   addHoverIndentGuideId,
   removeHoverIndentGuideId,
   color,
@@ -88,14 +87,29 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
   };
 
   const { hasChildren, spanID, childSpans } = span;
-  const wrapperProps = hasChildren ? { onClick, role: 'switch', 'aria-checked': childrenVisible } : null;
+  const _childrenToggleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.key === 'Enter' || e.key === ' ') && onClick) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
+  const wrapperProps = hasChildren
+    ? {
+        onClick,
+        ...(onClick && {
+          onKeyDown: _childrenToggleKeyDown,
+          tabIndex: 0,
+        }),
+        role: 'switch',
+        'aria-checked': childrenVisible,
+        'aria-label': 'Expand or collapse child spans',
+      }
+    : null;
 
   // Get parent color for horizontal line
   const parentSpan = span.parentSpan;
   const parentColor = parentSpan ? colorGenerator.getColorByKey(parentSpan.resource.serviceName) : color;
-
-  // Check if this is a root span (no parent)
-  const isRootSpan = !parentSpan;
 
   // Check if this span is the last child of its parent
   const isLastChild = parentSpan
@@ -131,8 +145,12 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
           <span
             key={ancestor.spanID}
             className={cx('SpanTreeOffset--indentGuide', {
-              'is-last': isLastAncestor && isLastChild,
-              'is-terminated': !isLastAncestor && shouldTerminate,
+              // In a span bar row: show top-half line to connect to the horizontal bar
+              // In a detail row: treat the same case as terminated (no line) since the
+              // branch already terminated at the span row above
+              'is-last': !isDetailRow && isLastAncestor && isLastChild,
+              'is-terminated':
+                (!isLastAncestor && shouldTerminate) || (isDetailRow && isLastAncestor && isLastChild),
             })}
             style={{
               color: guideColor,
@@ -142,12 +160,15 @@ export const UnconnectedSpanTreeOffset: React.FC<TProps> = ({
             onMouseEnter={event => handleMouseEnter(event, ancestor.spanID)}
             onMouseLeave={event => handleMouseLeave(event, ancestor.spanID)}
           >
-            {isLastAncestor && (
+            {isLastAncestor && !isDetailRow && (
               <span className="SpanTreeOffset--horizontalLine" style={{ backgroundColor: parentColor }} />
             )}
           </span>
         );
       })}
+      {isDetailRow && hasChildren && (
+        <span className="SpanTreeOffset--indentGuide" style={{ color }} data-testid="detail-row-self-guide" />
+      )}
       {showChildrenIcon && (
         <span
           className={cx('SpanTreeOffset--iconWrapper', {

@@ -7,7 +7,7 @@ import { IoExitOutline, IoInformationCircleOutline } from 'react-icons/io5';
 
 import { TDdgVertex } from '../../../model/ddg/types';
 import { TPathAgnosticDecorationSchema } from '../../../model/path-agnostic-decorations/types';
-import { getConfigValue } from '../../../utils/config/get-config';
+import getConfig from '../../../utils/config/get-config';
 import DetailsPanel from './DetailsPanel';
 import * as track from './index.track';
 
@@ -23,10 +23,7 @@ type TProps = {
 const SidePanel: React.FC<TProps> = props => {
   const { clearSelected, selectDecoration, selectedDecoration, selectedVertex } = props;
 
-  const decorations: TPathAgnosticDecorationSchema[] | undefined = useMemo(
-    () => getConfigValue('pathAgnosticDecorations'),
-    []
-  );
+  const decorations = useMemo(() => getConfig().pathAgnosticDecorations, []);
 
   useEffect(() => {
     track.trackDecorationSelected(selectedDecoration);

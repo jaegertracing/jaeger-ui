@@ -708,7 +708,6 @@ const originInitialState = {
     opsCalls: null,
     opsErrors: null,
   },
-  isATMActivated: null,
   loading: false,
   operationMetricsLoading: undefined,
   serviceMetrics: null,

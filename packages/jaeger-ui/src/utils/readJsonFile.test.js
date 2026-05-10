@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from 'fs';
+import path from 'path';
 import lodash from 'lodash';
 import readJsonFile from './readJsonFile';
 import JaegerAPI from '../api/jaeger';
@@ -11,13 +12,13 @@ let jaegerTrace;
 let OTLPTraceMulti;
 let jaegerTraceMulti;
 
+const fixturesDir = path.resolve(import.meta.dirname, 'fixtures');
+
 beforeAll(() => {
-  OTLPTrace = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-in.json', 'utf-8'));
-  jaegerTrace = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-out.json', 'utf-8'));
-  OTLPTraceMulti = JSON.parse(
-    fs.readFileSync('src/utils/fixtures/otlp2jaeger-multi-in-combined.json', 'utf-8')
-  );
-  jaegerTraceMulti = JSON.parse(fs.readFileSync('src/utils/fixtures/oltp2jaeger-multi-out.json', 'utf-8'));
+  OTLPTrace = JSON.parse(fs.readFileSync(`${fixturesDir}/otlp2jaeger-in.json`, 'utf-8'));
+  jaegerTrace = JSON.parse(fs.readFileSync(`${fixturesDir}/otlp2jaeger-out.json`, 'utf-8'));
+  OTLPTraceMulti = JSON.parse(fs.readFileSync(`${fixturesDir}/otlp2jaeger-multi-in-combined.json`, 'utf-8'));
+  jaegerTraceMulti = JSON.parse(fs.readFileSync(`${fixturesDir}/oltp2jaeger-multi-out.json`, 'utf-8'));
 });
 
 jest.spyOn(JaegerAPI, 'transformOTLP').mockImplementation(APICallRequest => {
@@ -30,7 +31,7 @@ jest.spyOn(JaegerAPI, 'transformOTLP').mockImplementation(APICallRequest => {
   }
 
   // This defines case where API call errors out even after detecting a `resourceSpan` in the request
-  return Promise.reject();
+  return Promise.reject(new Error('backend transform failed'));
 });
 
 describe('fileReader.readJsonFile', () => {
@@ -66,11 +67,13 @@ describe('fileReader.readJsonFile', () => {
     return expect(p).resolves.toMatchObject(outObj);
   });
 
-  it('rejects an OTLP trace', () => {
-    const inObj = JSON.parse(fs.readFileSync('src/utils/fixtures/otlp2jaeger-in-error.json', 'utf-8'));
+  it('rejects an OTLP trace with a message that includes the backend error', () => {
+    const inObj = JSON.parse(
+      fs.readFileSync(path.resolve(fixturesDir, 'otlp2jaeger-in-error.json'), 'utf-8')
+    );
     const file = new File([JSON.stringify(inObj)], 'foo.json');
     const p = readJsonFile({ file });
-    return expect(p).rejects.toMatchObject(expect.any(Error));
+    return expect(p).rejects.toThrow(/Error converting OTLP trace to Jaeger: backend transform failed/);
   });
 
   it('rejects malformed JSON', () => {
@@ -81,45 +84,66 @@ describe('fileReader.readJsonFile', () => {
 
   it('loads JSON-per-line data', () => {
     const expectedOutput = jaegerTraceMulti;
-    const fileContent = fs.readFileSync('src/utils/fixtures/otlp2jaeger-multi-in.json.txt', 'utf-8');
+    const fileContent = fs.readFileSync(path.resolve(fixturesDir, 'otlp2jaeger-multi-in.json.txt'), 'utf-8');
     const file = new File([fileContent], 'multi.json', { type: 'application/json' });
     const p = readJsonFile({ file });
     return expect(p).resolves.toMatchObject(expectedOutput);
   });
 
-  it('handles FileReader error', () => {
-    const file = new File([''], 'error.json');
-    const mockReader = { readAsText: jest.fn(), onerror: null, error: new Error('Read error') };
-
-    jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
-    const promise = readJsonFile({ file });
-
-    mockReader.onerror();
-
-    return expect(promise).rejects.toThrow(/Read error/);
+  it('rejects multi-line JSON with a malformed line', () => {
+    const fileContent = '{"a":1}\n{"b":';
+    const file = new File([fileContent], 'multi-error.json', { type: 'application/json' });
+    const p = readJsonFile({ file });
+    return expect(p).rejects.toThrow(/Error parsing JSON at line 2:/);
   });
 
-  it('handles FileReader abort', () => {
-    const file = new File([''], 'abort.json');
-    const mockReader = { readAsText: jest.fn(), onabort: null };
+  describe('FileReader mocking', () => {
+    let fileReaderSpy;
 
-    jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
-    const promise = readJsonFile({ file });
+    afterEach(() => {
+      fileReaderSpy.mockRestore();
+    });
 
-    mockReader.onabort();
+    it('handles FileReader error', () => {
+      const file = new File([''], 'error.json');
+      const mockReader = { readAsText: jest.fn(), onerror: null, error: new Error('Read error') };
 
-    return expect(promise).rejects.toThrow(/aborted/);
-  });
+      fileReaderSpy = jest.spyOn(window, 'FileReader').mockImplementation(function () {
+        return mockReader;
+      });
+      const promise = readJsonFile({ file });
 
-  it('rejects if FileReader result is not a string', () => {
-    const file = new File(['{ "test": true }'], 'dummy.json');
-    const mockReader = { readAsText: jest.fn(), onload: null, result: {} };
+      mockReader.onerror();
 
-    jest.spyOn(window, 'FileReader').mockImplementation(() => mockReader);
-    const promise = readJsonFile({ file });
+      return expect(promise).rejects.toThrow(/Read error/);
+    });
 
-    mockReader.onload();
+    it('handles FileReader abort', () => {
+      const file = new File([''], 'abort.json');
+      const mockReader = { readAsText: jest.fn(), onabort: null };
 
-    return expect(promise).rejects.toThrow(/Invalid result type/);
+      fileReaderSpy = jest.spyOn(window, 'FileReader').mockImplementation(function () {
+        return mockReader;
+      });
+      const promise = readJsonFile({ file });
+
+      mockReader.onabort();
+
+      return expect(promise).rejects.toThrow(/aborted/);
+    });
+
+    it('rejects if FileReader result is not a string', () => {
+      const file = new File(['{ "test": true }'], 'dummy.json');
+      const mockReader = { readAsText: jest.fn(), onload: null, result: {} };
+
+      fileReaderSpy = jest.spyOn(window, 'FileReader').mockImplementation(function () {
+        return mockReader;
+      });
+      const promise = readJsonFile({ file });
+
+      mockReader.onload();
+
+      return expect(promise).rejects.toThrow(/Invalid result type/);
+    });
   });
 });

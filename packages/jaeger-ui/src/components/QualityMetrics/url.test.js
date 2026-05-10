@@ -1,12 +1,12 @@
 // Copyright (c) 2020 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as reactRouterDom from 'react-router-dom';
+import * as ReactRouterDom from 'react-router-dom';
 
 import { ROUTE_PATH, matches, getUrl, getUrlState } from './url';
 
-jest.mock('react-router-dom', () => ({
-  matchPath: jest.fn(),
+vi.mock('react-router-dom', () => ({
+  matchPath: vi.fn(),
 }));
 
 describe('TraceDiff/url', () => {
@@ -15,25 +15,20 @@ describe('TraceDiff/url', () => {
 
   describe('matches', () => {
     const path = 'path argument';
-    let matchPathSpy;
 
-    beforeAll(() => {
-      matchPathSpy = jest.spyOn(reactRouterDom, 'matchPath');
+    beforeEach(() => {
+      ReactRouterDom.matchPath.mockReset();
     });
 
     it('calls matchPath with expected arguments', () => {
       matches(path);
-      expect(matchPathSpy).toHaveBeenLastCalledWith(path, {
-        path: ROUTE_PATH,
-        strict: true,
-        exact: true,
-      });
+      expect(ReactRouterDom.matchPath).toHaveBeenLastCalledWith(ROUTE_PATH, path);
     });
 
     it("returns truthiness of matchPath's return value", () => {
-      matchPathSpy.mockReturnValueOnce(null);
+      ReactRouterDom.matchPath.mockReturnValueOnce(null);
       expect(matches(path)).toBe(false);
-      matchPathSpy.mockReturnValueOnce({});
+      ReactRouterDom.matchPath.mockReturnValueOnce({});
       expect(matches(path)).toBe(true);
     });
   });

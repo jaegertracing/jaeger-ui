@@ -4,7 +4,7 @@
 import * as fileReaderActions from './file-reader-api';
 import readJsonFile from '../utils/readJsonFile';
 
-jest.mock('../utils/readJsonFile');
+vi.mock('../utils/readJsonFile');
 
 describe('actions/file-reader-api', () => {
   beforeEach(() => {

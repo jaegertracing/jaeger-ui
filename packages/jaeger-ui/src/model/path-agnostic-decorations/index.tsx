@@ -20,9 +20,13 @@ export type TDecorationFromState = {
 
 export default function extractDecorationFromState(
   state: ReduxState,
-  { service, operation }: { service: string; operation?: string | string[] | null }
+  {
+    service,
+    operation,
+    search = '',
+  }: { service: string; operation?: string | string[] | null; search?: string }
 ): TDecorationFromState {
-  const { decoration } = queryString.parse(state.router.location.search);
+  const { decoration } = queryString.parse(search);
   const decorationID = Array.isArray(decoration) ? decoration[0] : decoration;
 
   if (!decorationID) return {};

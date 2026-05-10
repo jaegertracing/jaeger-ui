@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('./scroll-page');
+vi.mock('./scroll-page');
 
 import { scrollBy, scrollTo } from './scroll-page';
 import ScrollManager from './ScrollManager';
@@ -63,7 +63,7 @@ describe('ScrollManager', () => {
   describe('_scrollPast()', () => {
     it('throws if accessors is not set', () => {
       manager.setAccessors(null);
-      expect(() => manager._scrollPast(0, 1)).toThrow();
+      expect(() => manager._scrollPast(0, 1)).toThrow('Accessors not set');
     });
 
     it('is a noop if an invalid rowPosition is returned by the accessors', () => {
@@ -110,7 +110,7 @@ describe('ScrollManager', () => {
     });
     it('throws if accessors is not set', () => {
       manager.setAccessors(null);
-      expect(() => manager._scrollToVisibleSpan(1)).toThrow();
+      expect(() => manager._scrollToVisibleSpan(1)).toThrow('Accessors not set');
     });
     it('exits if the trace is not set', () => {
       manager.setTrace(null);

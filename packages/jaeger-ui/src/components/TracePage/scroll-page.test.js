@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('./Tween');
+vi.mock('./Tween');
 
 import { scrollBy, scrollTo, cancel } from './scroll-page';
 import Tween from './Tween';
@@ -15,7 +15,7 @@ describe('scroll-by', () => {
     window.scrollY = 100;
     tweenInstances.length = 0;
     Tween.mockClear();
-    Tween.mockImplementation(opts => {
+    Tween.mockImplementation(function (opts) {
       const rv = { to: opts.to, onUpdate: opts.onUpdate };
       Object.keys(Tween.prototype).forEach(name => {
         if (name !== 'constructor') {

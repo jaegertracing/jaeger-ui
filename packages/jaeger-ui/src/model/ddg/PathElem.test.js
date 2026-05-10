@@ -59,14 +59,14 @@ describe('PathElem', () => {
   });
 
   it('errors when trying to access unset visibilityIdx', () => {
-    expect(() => pathElem.visibilityIdx).toThrow();
+    expect(() => pathElem.visibilityIdx).toThrow('Visibility Index was never set for this PathElem');
   });
 
   it('errors when trying to override visibilityIdx', () => {
     pathElem.visibilityIdx = testVisibilityIdx;
     expect(() => {
       pathElem.visibilityIdx = testVisibilityIdx;
-    }).toThrow();
+    }).toThrow('Visibility Index cannot be changed once set');
   });
 
   it('has externalSideNeighbor if distance is not 0 and it is not external', () => {

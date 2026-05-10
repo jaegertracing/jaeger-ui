@@ -6,7 +6,7 @@ import { TLayoutOptions } from '../types';
 
 const round = Math.round;
 
-export function getDpi(options?: TLayoutOptions | void): number {
+function getDpi(options?: TLayoutOptions | void): number {
   const DEFAULT_DPI = 72;
   const dpi = options?.dpi ?? DEFAULT_DPI;
   return dpi;

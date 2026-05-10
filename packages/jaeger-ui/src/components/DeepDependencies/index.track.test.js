@@ -6,11 +6,14 @@ import {
   CATEGORY_DENSITY_SELECTION,
   CATEGORY_DOWNSTREAM_HOPS_CHANGE,
   CATEGORY_DOWNSTREAM_HOPS_SELECTION,
+  CATEGORY_FILTER,
   CATEGORY_MATCH_INTERACTIONS,
+  CATEGORY_SEARCH,
   CATEGORY_TOGGLE_SHOW_OP,
   CATEGORY_UPSTREAM_HOPS_CHANGE,
   CATEGORY_UPSTREAM_HOPS_SELECTION,
   CATEGORY_VERTEX_INTERACTIONS,
+  ACTION_CLEAR_OPERATION,
   ACTION_DECREASE,
   ACTION_FOCUS_PATHS,
   ACTION_HIDE,
@@ -19,14 +22,19 @@ import {
   ACTION_INCREASE,
   ACTION_SET_FOCUS,
   ACTION_SET_OPERATION,
+  ACTION_SET_SERVICE,
   ACTION_SHOW,
   ACTION_SHOW_CHILDREN,
   ACTION_SHOW_PARENTS,
   ACTION_VIEW_TRACES,
+  trackClearOperation,
   trackDensityChange,
+  trackFilter,
   trackFocusPaths,
+  trackHeaderSetOperation,
   trackHide,
   trackHopChange,
+  trackSetService,
   trackShow,
   trackSetFocus,
   trackShowMatches,
@@ -240,6 +248,34 @@ describe('DeepDependencies tracking', () => {
     it('calls trackViewTraces with the vertex category and view traces action', () => {
       trackViewTraces();
       expect(trackEvent).toHaveBeenCalledWith(CATEGORY_VERTEX_INTERACTIONS, ACTION_VIEW_TRACES);
+    });
+  });
+
+  describe('trackClearOperation', () => {
+    it('calls trackEvent with the search category and clear-operation action', () => {
+      trackClearOperation();
+      expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SEARCH, ACTION_CLEAR_OPERATION);
+    });
+  });
+
+  describe('trackHeaderSetOperation', () => {
+    it('calls trackEvent with the search category and set-operation action', () => {
+      trackHeaderSetOperation();
+      expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SEARCH, ACTION_SET_OPERATION);
+    });
+  });
+
+  describe('trackSetService', () => {
+    it('calls trackEvent with the search category and set-service action', () => {
+      trackSetService();
+      expect(trackEvent).toHaveBeenCalledWith(CATEGORY_SEARCH, ACTION_SET_SERVICE);
+    });
+  });
+
+  describe('trackFilter', () => {
+    it('uses the filter category', () => {
+      expect(CATEGORY_FILTER).toBe('jaeger/ux/ddg/filter');
+      expect(trackFilter).toBeDefined();
     });
   });
 });

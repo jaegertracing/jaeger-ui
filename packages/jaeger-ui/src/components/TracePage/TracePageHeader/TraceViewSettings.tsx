@@ -1,0 +1,81 @@
+// Copyright (c) 2026 The Jaeger Authors.
+// SPDX-License-Identifier: Apache-2.0
+
+import * as React from 'react';
+import { Button, Dropdown } from 'antd';
+import type { MenuProps } from 'antd';
+import { IoSettingsOutline, IoCheckmark } from 'react-icons/io5';
+
+import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
+
+import './TraceViewSettings.css';
+
+type Props = {
+  className?: string;
+  detailPanelMode: 'inline' | 'sidepanel';
+  enableSidePanel: boolean;
+  onDetailPanelModeToggle: () => void;
+  onTimelineToggle: () => void;
+  timelineBarsVisible: boolean;
+};
+
+const CHECK_STYLE = { marginRight: 8, fontSize: 14 };
+const CHECK_PLACEHOLDER = <span style={{ display: 'inline-block', width: 22 }} />;
+
+export default function TraceViewSettings(props: Props) {
+  const {
+    className,
+    detailPanelMode,
+    enableSidePanel,
+    onDetailPanelModeToggle,
+    onTimelineToggle,
+    timelineBarsVisible,
+  } = props;
+
+  const [kbdModalVisible, setKbdModalVisible] = React.useState(false);
+
+  const items: MenuProps['items'] = [
+    {
+      key: 'timeline',
+      icon: timelineBarsVisible ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
+      label: 'Show Timeline',
+      onClick: onTimelineToggle,
+    },
+  ];
+
+  if (enableSidePanel) {
+    const isSidePanel = detailPanelMode === 'sidepanel';
+    items.push({
+      key: 'detail-panel-mode',
+      icon: isSidePanel ? <IoCheckmark style={CHECK_STYLE} /> : CHECK_PLACEHOLDER,
+      label: 'Show Span in Sidebar',
+      onClick: onDetailPanelModeToggle,
+    });
+  }
+
+  items.push(
+    { type: 'divider' },
+    {
+      key: 'keyboard-shortcuts',
+      icon: CHECK_PLACEHOLDER,
+      label: 'Keyboard Shortcuts',
+      onClick: () => setKbdModalVisible(true),
+    }
+  );
+
+  return (
+    <>
+      <Dropdown menu={{ items }} trigger={['click']}>
+        <Button
+          className={`TraceViewSettings ${className || ''}`}
+          htmlType="button"
+          aria-label="Trace view settings"
+          title="Trace view settings"
+        >
+          <IoSettingsOutline className="TraceViewSettings--icon" />
+        </Button>
+      </Dropdown>
+      <KeyboardShortcutsHelp open={kbdModalVisible} onClose={() => setKbdModalVisible(false)} />
+    </>
+  );
+}

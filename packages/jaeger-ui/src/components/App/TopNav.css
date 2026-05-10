@@ -36,3 +36,10 @@ SPDX-License-Identifier: Apache-2.0
 .Menu--item.ant-menu-item-selected .ant-menu-title-content a {
   color: #fff;
 }
+
+.Menu--item.ant-menu-horizontal > .ant-menu-overflow-item-rest > .ant-menu-submenu-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}

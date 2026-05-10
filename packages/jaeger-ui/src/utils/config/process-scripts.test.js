@@ -5,7 +5,7 @@ import * as config from './get-config';
 import processScripts from './process-scripts';
 
 describe('processScripts', () => {
-  const getConfigValueSpy = jest.spyOn(config, 'getConfigValue');
+  const getConfigSpy = jest.spyOn(config, 'default');
   const createTextNodeSpy = jest.spyOn(document, 'createTextNode');
   const createElementSpy = jest.spyOn(document, 'createElement');
   const appendScriptSpy = jest.spyOn(document.body, 'appendChild');
@@ -15,7 +15,9 @@ describe('processScripts', () => {
   const configScripts = texts.map(text => ({ text, type: 'inline' }));
   let scriptElems;
 
-  beforeAll(() => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    scriptElems = [];
     createTextNodeSpy.mockImplementation(text => mockValue(text, createTextNodeSpy.mock.calls.length));
     createElementSpy.mockImplementation(text => {
       const script = {
@@ -25,16 +27,11 @@ describe('processScripts', () => {
       scriptElems.push(script);
       return script;
     });
-    appendScriptSpy.mockImplementation();
-  });
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    scriptElems = [];
+    appendScriptSpy.mockImplementation(() => {});
   });
 
   it('adds inline scripts', () => {
-    getConfigValueSpy.mockReturnValue(configScripts);
+    getConfigSpy.mockReturnValue({ scripts: configScripts });
 
     processScripts();
     texts.forEach((text, i) => {
@@ -47,14 +44,14 @@ describe('processScripts', () => {
   });
 
   it('ignores other script types', () => {
-    getConfigValueSpy.mockReturnValue([...configScripts, { type: 'not-inline' }]);
+    getConfigSpy.mockReturnValue({ scripts: [...configScripts, { type: 'not-inline' }] });
 
     processScripts();
     expect(createElementSpy).toHaveBeenCalledTimes(texts.length);
   });
 
   it('handles no scripts', () => {
-    getConfigValueSpy.mockReturnValue(undefined);
+    getConfigSpy.mockReturnValue({});
     expect(processScripts).not.toThrow();
   });
 });

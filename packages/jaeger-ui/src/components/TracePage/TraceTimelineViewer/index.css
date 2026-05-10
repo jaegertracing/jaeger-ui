@@ -4,7 +4,33 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 .TraceTimelineViewer {
-  border-bottom: 1px solid #bbb;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.TraceTimelineViewer--sidePanelLayout {
+  align-items: flex-start;
+  display: flex;
+  position: relative;
+}
+
+.TraceTimelineViewer--main {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.TraceTimelineViewer--sidePanel {
+  /* Fixed so the panel never scrolls with the timeline.
+     top and height are set via inline style after measuring the container offset. */
+  border-left: 1px solid var(--border-default);
+  overflow-y: auto;
+  position: fixed;
+  right: 0;
+}
+
+/* Show a permanent column divider for all VerticalResizers within the trace timeline,
+   scoped to avoid affecting other VerticalResizer usages (e.g. Deep Dependencies panel). */
+.TraceTimelineViewer .VerticalResizer--dragger {
+  border-left-color: var(--border-default);
 }
 
 .json-markup {

@@ -5,7 +5,7 @@ import _memoize from 'lodash/memoize';
 
 import { Span } from '../types/trace';
 
-export type TracePageHeaderParts = {
+type TracePageHeaderParts = {
   serviceName: string;
   operationName: string;
 };
@@ -49,13 +49,10 @@ export function _getTracePageHeaderPartsImpl(spans: ReadonlyArray<Span>): TraceP
   };
 }
 
-export const getTracePageHeaderParts = _memoize(
-  _getTracePageHeaderPartsImpl,
-  (spans: ReadonlyArray<Span>) => {
-    if (!spans.length) return 0;
-    return spans[0].traceID;
-  }
-);
+const getTracePageHeaderParts = _memoize(_getTracePageHeaderPartsImpl, (spans: ReadonlyArray<Span>) => {
+  if (!spans.length) return 0;
+  return spans[0].traceID;
+});
 
 export function getTraceName(spans: ReadonlyArray<Span>): string {
   const parts = getTracePageHeaderParts(spans);
@@ -67,6 +64,16 @@ export function getTracePageTitle(spans: ReadonlyArray<Span>): string {
   const parts = getTracePageHeaderParts(spans);
 
   return parts ? `${parts.operationName} (${parts.serviceName})` : '';
+}
+
+export function getIncompleteTraceTooltip(orphanCount: number): string {
+  const noun = orphanCount !== 1 ? 'spans' : 'span';
+  const verb = orphanCount !== 1 ? 'have' : 'has';
+  return (
+    `This trace may be incomplete: ${orphanCount} ${noun} ${verb} missing parent ${noun}. ` +
+    `This can happen if the trace is still being collected when you view it. ` +
+    `Try again later by opening or reloading the trace to see whether more spans are available.`
+  );
 }
 
 export function getTraceEmoji(spans: ReadonlyArray<Span>): string {

@@ -25,7 +25,7 @@ export const filterOptionsFuzzy = (input: string, option?: DefaultOptionType) =>
   return matchSorter([label], input).length > 0;
 };
 
-export type SearchableSelectProps = SelectProps & {
+type SearchableSelectProps = SelectProps & {
   /**
    * Enable fuzzy matching instead of simple substring matching.
    * Uses match-sorter library for more forgiving search.

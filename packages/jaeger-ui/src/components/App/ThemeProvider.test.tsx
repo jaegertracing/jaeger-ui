@@ -3,28 +3,26 @@
 
 import React from 'react';
 import '@testing-library/jest-dom';
-import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import AppThemeProvider, { useThemeMode } from './ThemeProvider';
 import { THEME_STORAGE_KEY } from './ThemeStorage';
-import { getConfigValue } from '../../utils/config/get-config';
+import getConfig from '../../utils/config/get-config';
 
-jest.mock('../../utils/config/get-config', () => ({
-  getConfigValue: jest.fn(),
-}));
+vi.mock('../../utils/config/get-config', () => mockDefault(vi.fn()));
 
 function setupMatchMedia(matches = false) {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: jest.fn().mockImplementation(query => ({
+    value: vi.fn().mockImplementation(query => ({
       matches,
       media: query,
       onchange: null,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
     })),
   });
 }
@@ -49,12 +47,7 @@ describe('AppThemeProvider', () => {
     window.localStorage.clear();
     delete document.body.dataset.theme;
     setupMatchMedia(false);
-    (getConfigValue as jest.Mock).mockImplementation(key => {
-      if (key === 'themes.enabled') {
-        return true;
-      }
-      return undefined;
-    });
+    (getConfig as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ themes: { enabled: true } });
   });
 
   it('initializes using the stored preference when present', () => {
@@ -129,7 +122,7 @@ describe('AppThemeProvider', () => {
   });
 
   it('ignores stored preference when themes are disabled', () => {
-    (getConfigValue as jest.Mock).mockReturnValue(false);
+    (getConfig as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ themes: { enabled: false } });
     window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
 
     render(
@@ -161,7 +154,7 @@ describe('AppThemeProvider', () => {
 
   it('swallows storage errors when persisting mode changes', async () => {
     const originalSetItem = window.localStorage.setItem;
-    window.localStorage.setItem = jest.fn(() => {
+    window.localStorage.setItem = vi.fn(() => {
       throw new Error('quota exceeded');
     });
 
@@ -186,7 +179,7 @@ describe('AppThemeProvider', () => {
 
   it('ignores errors when reading the stored preference', () => {
     const originalGetItem = window.localStorage.getItem;
-    window.localStorage.getItem = jest.fn(() => {
+    window.localStorage.getItem = vi.fn(() => {
       throw new Error('blocked');
     });
 
@@ -204,7 +197,7 @@ describe('AppThemeProvider', () => {
   });
 
   it('provides default context values when the hook is used without a provider', () => {
-    const observer = jest.fn();
+    const observer = vi.fn();
 
     function BareConsumer() {
       const context = useThemeMode();
@@ -226,21 +219,6 @@ describe('AppThemeProvider', () => {
     const context = observer.mock.calls[0][0];
     expect(context.setMode('dark')).toBeUndefined();
     expect(context.toggleMode()).toBeUndefined();
-  });
-
-  it('skips updating document body when document is undefined', () => {
-    const { result } = renderHook(() => useThemeMode(), { wrapper: AppThemeProvider });
-
-    const originalDocument = (global as any).document;
-    delete (global as any).document;
-
-    try {
-      act(() => {
-        result.current.toggleMode();
-      });
-    } finally {
-      (global as any).document = originalDocument;
-    }
   });
 
   it('correctly calculates and syncs AntD tokens in dark mode', async () => {

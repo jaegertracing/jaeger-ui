@@ -139,9 +139,9 @@ function calcWidth(lengths: number[], lines: number, longestThusFar = 0): number
  */
 const calcRects = _memoize(
   function calcRects(str: string | string[], span: HTMLSpanElement): TRect[] {
-    const lengths = (Array.isArray(str) ? [`${str.length} Operations}`] : str.match(WORD_RX) || [str]).map(
+    const lengths = (Array.isArray(str) ? [`${str.length} Operations`] : str.match(WORD_RX) || [str]).map(
       s => {
-        span.innerHTML = s;
+        span.textContent = s;
         return span.getClientRects()[0].width;
       }
     );

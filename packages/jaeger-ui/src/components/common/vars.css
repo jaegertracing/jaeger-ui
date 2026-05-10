@@ -63,7 +63,7 @@ SPDX-License-Identifier: Apache-2.0
     ============================================ */
 
   --feedback-error: var(--ant-color-error);
-  --feedback-warning: var(--ant-color-warning);
+  --feedback-warning: var(--ant-color-warning-active);
   --feedback-success: var(--ant-color-success);
   --feedback-info: var(--ant-color-info);
 
@@ -85,6 +85,7 @@ SPDX-License-Identifier: Apache-2.0
 
   /* Layout Variables */
   --nav-height: 48px;
+  --timeline-header-row-height: 38px;
 
   /* 
      Span categorical colors (IBM Carbon Sequence)
@@ -177,6 +178,12 @@ SPDX-License-Identifier: Apache-2.0
     ============================================ */
 
   --text-inverse: var(--ant-color-black);
+
+  /* ============================================
+    FEEDBACK TOKENS - Dark Mode
+    ============================================ */
+
+  --feedback-warning: var(--ant-color-warning);
 
   /* ============================================
     INTERACTIVE TOKENS - Dark Mode

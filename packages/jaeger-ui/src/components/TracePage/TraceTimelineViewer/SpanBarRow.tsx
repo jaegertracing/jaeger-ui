@@ -5,7 +5,7 @@ import React, { useCallback } from 'react';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
-import { formatDuration, ViewedBoundsFunctionType } from './utils';
+import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
@@ -20,10 +20,12 @@ type SpanBarRowProps = {
   className?: string;
   color: string;
   criticalPath: CriticalPathSection[];
-  columnDivision: number;
+  nameColumnWidth: number;
   isChildrenExpanded: boolean;
   isDetailExpanded: boolean;
   isMatchingFilter: boolean;
+  isSelected?: boolean;
+  timelineBarsVisible: boolean;
   onDetailToggled: (spanID: string) => void;
   onChildrenToggled: (spanID: string) => void;
   numTicks: number;
@@ -64,10 +66,12 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
   className = '',
   color,
   criticalPath,
-  columnDivision,
+  nameColumnWidth,
   isChildrenExpanded,
   isDetailExpanded,
   isMatchingFilter,
+  isSelected,
+  timelineBarsVisible,
   numTicks,
   rpc = null,
   noInstrumentedServer,
@@ -90,13 +94,22 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     onChildrenToggled(span.spanID);
   }, [onChildrenToggled, span.spanID]);
 
+  const _detailToggleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onDetailToggled(span.spanID);
+      }
+    },
+    [onDetailToggled, span.spanID]
+  );
   const {
     duration,
     hasChildren: isParent,
     name: operationName,
     resource: { serviceName },
   } = span;
-  const label = formatDuration(duration);
+  const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
@@ -124,9 +137,10 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           ${className || ''}
           ${isDetailExpanded ? 'is-expanded' : ''}
           ${isMatchingFilter ? 'is-matching-filter' : ''}
+          ${isSelected ? 'is-selected' : ''}
         `}
     >
-      <TimelineRow.Cell className="span-name-column" width={columnDivision}>
+      <TimelineRow.Cell className="span-name-column" width={nameColumnWidth}>
         <div className={`span-name-wrapper ${isMatchingFilter ? 'is-matching-filter' : ''}`}>
           <SpanTreeOffset
             childrenVisible={isChildrenExpanded}
@@ -138,6 +152,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
             aria-checked={isDetailExpanded}
             onClick={_detailToggle}
+            onKeyDown={_detailToggleKeyDown}
             role="switch"
             style={{ borderColor: color }}
             tabIndex={0}
@@ -193,29 +208,31 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
           )}
         </div>
       </TimelineRow.Cell>
-      <TimelineRow.Cell
-        className="span-view"
-        style={{ cursor: 'pointer' }}
-        width={1 - columnDivision}
-        onClick={_detailToggle}
-      >
-        <Ticks numTicks={numTicks} />
-        <SpanBar
-          criticalPath={criticalPath}
-          rpc={rpc}
-          viewStart={viewStart}
-          viewEnd={viewEnd}
-          getViewedBounds={getViewedBounds}
-          color={color}
-          shortLabel={label}
-          longLabel={longLabel}
-          hintSide={hintSide}
-          traceStartTime={traceStartTime}
-          span={span}
-          traceDuration={traceDuration}
-          useOtelTerms={useOtelTerms}
-        />
-      </TimelineRow.Cell>
+      {timelineBarsVisible && (
+        <TimelineRow.Cell
+          className="span-view"
+          style={{ cursor: 'pointer' }}
+          width={1 - nameColumnWidth}
+          onClick={_detailToggle}
+        >
+          <Ticks numTicks={numTicks} />
+          <SpanBar
+            criticalPath={criticalPath}
+            rpc={rpc}
+            viewStart={viewStart}
+            viewEnd={viewEnd}
+            getViewedBounds={getViewedBounds}
+            color={color}
+            shortLabel={label}
+            longLabel={longLabel}
+            hintSide={hintSide}
+            traceStartTime={traceStartTime}
+            span={span}
+            traceDuration={traceDuration}
+            useOtelTerms={useOtelTerms}
+          />
+        </TimelineRow.Cell>
+      )}
     </TimelineRow>
   );
 };
