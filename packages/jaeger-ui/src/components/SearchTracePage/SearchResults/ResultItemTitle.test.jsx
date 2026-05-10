@@ -9,7 +9,7 @@ import '@testing-library/jest-dom';
 
 import ResultItemTitle from './ResultItemTitle';
 import { fetchedState } from '../../../constants';
-import { formatDuration } from '../../../utils/date';
+import { formatDurationCompact } from '../../../utils/date';
 
 const RouterWrapper = ({ children }) => <MemoryRouter>{children}</MemoryRouter>;
 
@@ -42,7 +42,7 @@ describe('ResultItemTitle', () => {
   it('renders as expected', () => {
     const { container } = setup(defaultProps);
     // Test that the formatted duration is displayed correctly.
-    expect(screen.getByText(formatDuration(defaultProps.duration))).toBeInTheDocument();
+    expect(screen.getByText(formatDurationCompact(defaultProps.duration))).toBeInTheDocument();
 
     // Test that the link is rendered with the correct href and contains the title.
     const link = screen.getByRole('link', { name: /150ms traceNameValue ?trace-i/i });
@@ -201,11 +201,11 @@ describe('ResultItemTitle', () => {
     it('hides formated duration when duration is not provided', () => {
       const { rerender, container } = setup(defaultProps);
       // Duration text is visible initially.
-      expect(screen.getByText(formatDuration(defaultProps.duration))).toBeInTheDocument();
+      expect(screen.getByText(formatDurationCompact(defaultProps.duration))).toBeInTheDocument();
 
       rerender(<ResultItemTitle {...defaultProps} duration={null} />);
       // Duration text is now hidden.
-      expect(screen.queryByText(formatDuration(defaultProps.duration))).not.toBeInTheDocument();
+      expect(screen.queryByText(formatDurationCompact(defaultProps.duration))).not.toBeInTheDocument();
 
       // Verify the rest of the component structure remains intact.
       // The link, title, and trace ID should still be rendered.

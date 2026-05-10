@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import TraceId from '../../common/TraceId';
 import TraceName from '../../common/TraceName';
 import { fetchedState } from '../../../constants';
-import { formatDuration } from '../../../utils/date';
+import { formatDurationCompact } from '../../../utils/date';
 
 import { FetchedState, TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
@@ -69,7 +69,7 @@ export default function ResultItemTitle({
   const content = (
     <>
       <span className="ResultItemTitle--durationBar" style={{ width: `${durationPercent}%` }} />
-      {duration != null && <span className="ub-right ub-relative">{formatDuration(duration)}</span>}
+      {duration != null && <span className="ub-right ub-relative">{formatDurationCompact(duration)}</span>}
       <h3 className="ResultItemTitle--title">
         <TraceName error={error} state={state} traceName={traceName} />
         <TraceId traceId={traceID} className="ResultItemTitle--idExcerpt" />
