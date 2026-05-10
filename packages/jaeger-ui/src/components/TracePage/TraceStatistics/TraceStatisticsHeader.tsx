@@ -3,7 +3,7 @@
 
 import { Checkbox, Select } from 'antd';
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { IOtelTrace } from '../../../types/otel';
 import { ITableSpan } from './types';
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
@@ -46,9 +46,11 @@ export default function TraceStatisticsHeader(props: Props) {
   const [valueNameSelector3, setValueNameSelector3State] = useState<string>('Count');
   const [checkboxStatus, setCheckboxStatus] = useState<boolean>(false);
 
-  // Mirrors the constructor's one-shot handler call. Mount-only on purpose:
-  // the class component only invoked this in its constructor and never again.
-  useEffect(() => {
+  // Mirrors the constructor's one-shot handler call. useLayoutEffect (rather
+  // than useEffect) preserves the original timing: the class constructor ran
+  // before first paint, so the parent could populate the table state before
+  // the user saw an empty view. Mount-only on purpose, matching the class.
+  useLayoutEffect(() => {
     handler(
       getColumnValues(initialServiceName, trace, useOtelTerms),
       getColumnValues(initialServiceName, trace, useOtelTerms),
