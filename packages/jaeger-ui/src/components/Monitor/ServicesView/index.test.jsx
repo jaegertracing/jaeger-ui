@@ -69,10 +69,10 @@ vi.mock('../EmptyState', async () => {
 });
 
 vi.mock('./serviceGraph', async () => {
-  return mockDefault(function ServiceGraph({ yAxisTickFormat, name, error }) {
+  return mockDefault(function ServiceGraph({ yAxisTickFormat, name, error, width }) {
     const testValue = yAxisTickFormat ? yAxisTickFormat(1000) : null;
     return (
-      <div data-testid={`service-graph-${name?.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
+      <div data-testid={`service-graph-${name?.toLowerCase().replace(/[^a-z0-9]/g, '-')}`} data-width={width}>
         Service Graph: {name}
         {testValue && <span data-testid="tick-format-result">{testValue}</span>}
         {error && <span data-testid="graph-error">Error occurred</span>}
@@ -219,6 +219,49 @@ describe('<MonitorATMServicesView>', () => {
     renderWithRouter(<MonitorATMServicesView {...loadedProps} />);
     expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
     expect(screen.getByText('Service')).toBeInTheDocument();
+  });
+
+  it('recalculates graph width when services finish loading (#3539)', async () => {
+    cleanup();
+    // jsdom always reports offsetWidth as 0, so give the wrapper div a non-zero value.
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+      configurable: true,
+      get() {
+        return this.className?.includes('TraceStatisticsHeader') ? 0 : 800;
+      },
+    });
+
+    useServices.mockReturnValue({ data: [], isLoading: true });
+    const loadingProps = {
+      ...props,
+      metrics: { ...originInitialState, serviceMetrics, serviceOpsMetrics, loading: false },
+      fetchAllServiceMetrics: mockFetchAllServiceMetrics,
+      fetchAggregatedServiceMetrics: mockFetchAggregatedServiceMetrics,
+    };
+    const { rerender } = renderWithRouter(<MonitorATMServicesView {...loadingProps} />);
+    expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
+
+    useServices.mockReturnValue({ data: ['apple'], isLoading: false });
+    rerender(
+      <MemoryRouter>
+        <MonitorATMServicesView {...loadingProps} />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      // graphWidth = offsetWidth - 24 = 800 - 24 = 776; the fallback is 300
+      const graphs = screen.getAllByTestId(/^service-graph-/);
+      expect(graphs.length).toBeGreaterThan(0);
+      expect(Number(graphs[0].getAttribute('data-width'))).toBeGreaterThan(300);
+    });
+
+    // Restore default offsetWidth behaviour
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+      configurable: true,
+      get() {
+        return 0;
+      },
+    });
   });
 
   it('renders with one service latency', () => {
