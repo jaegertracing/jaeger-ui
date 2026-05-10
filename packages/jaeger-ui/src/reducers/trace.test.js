@@ -251,11 +251,52 @@ describe('search traces', () => {
     expect(state.traces[id].state).toBe(fetchedState.DONE);
     expect(state.traces[erroredID]).toEqual({
       id: erroredID,
-      error: expect.any(Error),
+      error: { message: msg },
       state: fetchedState.ERROR,
     });
-    expect(state.traces[erroredID].error.message).toBe(msg);
     expect(state.rawTraces).toEqual([trace]);
+  });
+
+  it('skips error entries that have no traceID', () => {
+    const validID = 'valid-id';
+    const state = traceReducer(
+      { search: { query } },
+      {
+        type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_FULFILLED}`,
+        payload: {
+          data: [],
+          errors: [
+            { msg: 'orphaned error', traceID: '' },
+            { msg: 'no id at all' },
+            null,
+            { msg: 'real failure', traceID: validID },
+          ],
+        },
+        meta: { query },
+      }
+    );
+
+    expect(state.search.results).toEqual([validID]);
+    expect(state.traces[validID]).toEqual({
+      id: validID,
+      error: { message: 'real failure' },
+      state: fetchedState.ERROR,
+    });
+    expect(Object.keys(state.traces)).toEqual([validID]);
+  });
+
+  it('falls back to a default message when the error entry has no msg', () => {
+    const erroredID = 'err-no-msg';
+    const state = traceReducer(
+      { search: { query } },
+      {
+        type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_FULFILLED}`,
+        payload: { data: [], errors: [{ traceID: erroredID }] },
+        meta: { query },
+      }
+    );
+
+    expect(state.traces[erroredID].error.message).toBe('unknown error');
   });
 
   it('ignores the results with the wrong query', () => {
