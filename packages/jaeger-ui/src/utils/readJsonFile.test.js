@@ -31,7 +31,7 @@ jest.spyOn(JaegerAPI, 'transformOTLP').mockImplementation(APICallRequest => {
   }
 
   // This defines case where API call errors out even after detecting a `resourceSpan` in the request
-  return Promise.reject();
+  return Promise.reject(new Error('backend transform failed'));
 });
 
 describe('fileReader.readJsonFile', () => {
@@ -67,13 +67,13 @@ describe('fileReader.readJsonFile', () => {
     return expect(p).resolves.toMatchObject(outObj);
   });
 
-  it('rejects an OTLP trace', () => {
+  it('rejects an OTLP trace with a message that includes the backend error', () => {
     const inObj = JSON.parse(
       fs.readFileSync(path.resolve(fixturesDir, 'otlp2jaeger-in-error.json'), 'utf-8')
     );
     const file = new File([JSON.stringify(inObj)], 'foo.json');
     const p = readJsonFile({ file });
-    return expect(p).rejects.toMatchObject(expect.any(Error));
+    return expect(p).rejects.toThrow(/Error converting OTLP trace to Jaeger: backend transform failed/);
   });
 
   it('rejects malformed JSON', () => {
