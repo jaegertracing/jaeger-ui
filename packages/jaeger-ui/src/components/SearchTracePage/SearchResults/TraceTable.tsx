@@ -101,7 +101,7 @@ export default function TraceTable({ traces, onRowClick, sortBy, handleSortChang
       dataSource={traces}
       rowKey="traceID"
       size="small"
-      pagination={{ pageSize: 20 }}
+      pagination={false}
       onChange={onChange}
       onRow={(trace: IOtelTrace) => ({
         onClick: () => onRowClick(trace.traceID),
