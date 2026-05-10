@@ -151,6 +151,15 @@ export function UnconnectedSearchResults({
     if (!error) return undefined;
     return typeof error === 'string' ? error : error.message;
   };
+  const errorRows = hasErrors ? (
+    <ul className="ub-list-reset">
+      {errorList.map(err => (
+        <li className="ub-my3" key={err.id}>
+          <ResultItemError traceID={err.id} message={errorMessage(err)} />
+        </li>
+      ))}
+    </ul>
+  ) : null;
   const navigate = useNavigate();
 
   const toggleComparison = useCallback(
@@ -211,13 +220,7 @@ export function UnconnectedSearchResults({
       return (
         <React.Fragment key="errors-only">
           {diffCohort.length > 0 && diffSelection}
-          <ul className="ub-list-reset">
-            {errorList.map(err => (
-              <li className="ub-my3" key={err.id}>
-                <ResultItemError traceID={err.id} message={errorMessage(err)} />
-              </li>
-            ))}
-          </ul>
+          {errorRows}
         </React.Fragment>
       );
     }
@@ -277,15 +280,7 @@ export function UnconnectedSearchResults({
           )}
         </div>
       </div>
-      {hasErrors && (
-        <ul className="ub-list-reset">
-          {errorList.map(err => (
-            <li className="ub-my3" key={`error-${err.id}`}>
-              <ResultItemError traceID={err.id} message={errorMessage(err)} />
-            </li>
-          ))}
-        </ul>
-      )}
+      {errorRows}
       {!traceResultsView && (
         <div className="SearchResults--ddg-container">
           <SearchResultsDDG location={location as any} />
