@@ -94,6 +94,15 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     onChildrenToggled(span.spanID);
   }, [onChildrenToggled, span.spanID]);
 
+  const _detailToggleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onDetailToggled(span.spanID);
+      }
+    },
+    [onDetailToggled, span.spanID]
+  );
   const {
     duration,
     hasChildren: isParent,
@@ -143,6 +152,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
             className={`span-name ${isDetailExpanded ? 'is-detail-expanded' : ''}`}
             aria-checked={isDetailExpanded}
             onClick={_detailToggle}
+            onKeyDown={_detailToggleKeyDown}
             role="switch"
             style={{ borderColor: color }}
             tabIndex={0}
