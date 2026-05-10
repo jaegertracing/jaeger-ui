@@ -158,10 +158,17 @@ describe('<TraceStatisticsHeader>', () => {
     fireEvent.mouseDown(clearIcons[0]);
     fireEvent.click(clearIcons[0]);
 
-    // antd's allowClear fires both onChange(undefined) and onClear; clearValue
-    // is the onClear branch and is the only path that re-fetches getColumnValues
-    // for the first selector and passes null for the sub-group.
-    expect(props.handler).toHaveBeenCalledWith(expect.any(Array), expect.any(Array), 'service.name', null);
+    // antd's allowClear fires onChange(undefined) and onClear back-to-back.
+    // setValueNameSelector2 ignores the undefined and clearValue handles the
+    // reset, so handler must only see null (never undefined) for the sub-group.
+    expect(props.handler).toHaveBeenLastCalledWith(
+      expect.any(Array),
+      expect.any(Array),
+      'service.name',
+      null
+    );
+    const subGroupArgs = props.handler.mock.calls.map(call => call[3]);
+    expect(subGroupArgs).not.toContain(undefined);
     expect(getColumnValues).toHaveBeenCalledWith('service.name', props.trace, props.useOtelTerms);
   });
 });

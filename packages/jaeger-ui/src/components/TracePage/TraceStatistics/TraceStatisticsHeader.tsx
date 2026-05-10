@@ -92,8 +92,16 @@ export default function TraceStatisticsHeader(props: Props) {
 
   /**
    * Is called after a value from the second dropdown is selected.
+   *
+   * antd's `allowClear` fires `onChange(undefined)` when the clear icon is
+   * clicked, just before `onClear`. Forwarding that undefined into
+   * `getColumnValuesSecondDropdown(...)` would corrupt the row keys and
+   * leave `handler(...)` called with an undefined sub-group, violating its
+   * `string | null` contract. Let `onClear`/`clearValue` own the reset path
+   * and ignore the undefined onChange.
    */
-  const setValueNameSelector2 = (value: string) => {
+  const setValueNameSelector2 = (value: string | null | undefined) => {
+    if (value == null) return;
     setValueNameSelector2State(value);
     const newTableValue = generateColor(
       getColumnValuesSecondDropdown(tableValue, valueNameSelector1, value, trace, useOtelTerms),
