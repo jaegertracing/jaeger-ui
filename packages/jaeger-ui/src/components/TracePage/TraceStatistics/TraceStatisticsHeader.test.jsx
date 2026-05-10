@@ -23,6 +23,7 @@ vi.mock('./generateDropdownValue', () => ({
 
 import TraceStatisticsHeader from './TraceStatisticsHeader';
 import { getColumnValues, getColumnValuesSecondDropdown } from './tableValues';
+import generateColor from './generateColor';
 
 const baseProps = () => ({
   trace: { traceID: 't', spans: [] },
@@ -111,11 +112,14 @@ describe('<TraceStatisticsHeader>', () => {
     const props = baseProps();
     render(<TraceStatisticsHeader {...props} />);
     props.handler.mockClear();
+    generateColor.mockClear();
 
     const colorBy = screen.getAllByRole('combobox')[2];
     await userEvent.click(colorBy);
-    fireEvent.click(await screen.findByText('Total'));
+    fireEvent.click(await screen.findByText('ST in Duration'));
 
+    expect(generateColor).toHaveBeenCalledWith(props.tableValue, 'percent', false);
+    expect(generateColor).toHaveBeenCalledWith(props.wholeTable, 'percent', false);
     expect(props.handler).toHaveBeenLastCalledWith(
       expect.any(Array),
       expect.any(Array),
@@ -152,21 +156,13 @@ describe('<TraceStatisticsHeader>', () => {
 
     props.handler.mockClear();
 
-    // antd renders the clear icon as .ant-select-clear next to the populated select
     const clearIcons = container.querySelectorAll('.ant-select-clear');
     expect(clearIcons.length).toBeGreaterThan(0);
     fireEvent.mouseDown(clearIcons[0]);
     fireEvent.click(clearIcons[0]);
 
-    // antd's allowClear fires onChange(undefined) and onClear back-to-back.
-    // setValueNameSelector2 ignores the undefined and clearValue handles the
-    // reset, so handler must only see null (never undefined) for the sub-group.
-    expect(props.handler).toHaveBeenLastCalledWith(
-      expect.any(Array),
-      expect.any(Array),
-      'service.name',
-      null
-    );
+    expect(props.handler).toHaveBeenCalledTimes(1);
+    expect(props.handler).toHaveBeenCalledWith(expect.any(Array), expect.any(Array), 'service.name', null);
     const subGroupArgs = props.handler.mock.calls.map(call => call[3]);
     expect(subGroupArgs).not.toContain(undefined);
     expect(getColumnValues).toHaveBeenCalledWith('service.name', props.trace, props.useOtelTerms);

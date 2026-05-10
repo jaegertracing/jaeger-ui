@@ -3,7 +3,7 @@
 
 import { Checkbox, Select } from 'antd';
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
-import { useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IOtelTrace } from '../../../types/otel';
 import { ITableSpan } from './types';
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
@@ -40,21 +40,16 @@ const optionsNameSelector3 = new Map([
 
 export default function TraceStatisticsHeader(props: Props) {
   const { trace, tableValue, wholeTable, handler, useOtelTerms } = props;
-  const [initialServiceName] = useState(() => getServiceName());
-  const [valueNameSelector1, setValueNameSelector1State] = useState<string>(initialServiceName);
+  const [valueNameSelector1, setValueNameSelector1State] = useState<string>(getServiceName);
   const [valueNameSelector2, setValueNameSelector2State] = useState<string | null>(null);
   const [valueNameSelector3, setValueNameSelector3State] = useState<string>('Count');
   const [checkboxStatus, setCheckboxStatus] = useState<boolean>(false);
 
-  // Mirrors the constructor's one-shot handler call. useLayoutEffect (rather
-  // than useEffect) preserves the original timing: the class constructor ran
-  // before first paint, so the parent could populate the table state before
-  // the user saw an empty view. Mount-only on purpose, matching the class.
-  useLayoutEffect(() => {
+  useEffect(() => {
     handler(
-      getColumnValues(initialServiceName, trace, useOtelTerms),
-      getColumnValues(initialServiceName, trace, useOtelTerms),
-      initialServiceName,
+      getColumnValues(valueNameSelector1, trace, useOtelTerms),
+      getColumnValues(valueNameSelector1, trace, useOtelTerms),
+      valueNameSelector1,
       null
     );
     // eslint-disable-next-line react-x/exhaustive-deps
@@ -82,25 +77,20 @@ export default function TraceStatisticsHeader(props: Props) {
       getValue(),
       checkboxStatus
     );
-    const newWohleTable = generateColor(
+    const newWholeTable = generateColor(
       getColumnValues(value, trace, useOtelTerms),
       getValue(),
       checkboxStatus
     );
-    handler(newTableValue, newWohleTable, value, null);
+    handler(newTableValue, newWholeTable, value, null);
   };
 
   /**
    * Is called after a value from the second dropdown is selected.
-   *
-   * antd's `allowClear` fires `onChange(undefined)` when the clear icon is
-   * clicked, just before `onClear`. Forwarding that undefined into
-   * `getColumnValuesSecondDropdown(...)` would corrupt the row keys and
-   * leave `handler(...)` called with an undefined sub-group, violating its
-   * `string | null` contract. Let `onClear`/`clearValue` own the reset path
-   * and ignore the undefined onChange.
    */
   const setValueNameSelector2 = (value: string | null | undefined) => {
+    // antd's allowClear fires onChange(undefined) before onClear; ignore it
+    // and let clearValue own the reset path.
     if (value == null) return;
     setValueNameSelector2State(value);
     const newTableValue = generateColor(
@@ -108,12 +98,12 @@ export default function TraceStatisticsHeader(props: Props) {
       getValue(),
       checkboxStatus
     );
-    const newWohleTable = generateColor(
+    const newWholeTable = generateColor(
       getColumnValuesSecondDropdown(wholeTable, valueNameSelector1, value, trace, useOtelTerms),
       getValue(),
       checkboxStatus
     );
-    handler(newTableValue, newWohleTable, valueNameSelector1, value);
+    handler(newTableValue, newWholeTable, valueNameSelector1, value);
   };
 
   /**
@@ -127,8 +117,8 @@ export default function TraceStatisticsHeader(props: Props) {
       toColor = '';
     }
     const newTableValue = generateColor(tableValue, toColor, checkboxStatus);
-    const newWohleTable = generateColor(wholeTable, toColor, checkboxStatus);
-    handler(newTableValue, newWohleTable, valueNameSelector1, valueNameSelector2);
+    const newWholeTable = generateColor(wholeTable, toColor, checkboxStatus);
+    handler(newTableValue, newWholeTable, valueNameSelector1, valueNameSelector2);
   };
 
   /**
