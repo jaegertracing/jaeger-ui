@@ -65,7 +65,6 @@ describe('TraceTable', () => {
     fireEvent.click(screen.getByText('Trace a'));
     expect(onRowClick).toHaveBeenCalledWith('a');
   });
-
 });
 
 describe('toOrderBy', () => {
