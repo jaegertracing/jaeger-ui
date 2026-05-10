@@ -37,7 +37,7 @@ describe('<SpanDetailRow>', () => {
     warnings: null,
   };
   const props = {
-    color: 'some-color',
+    color: '#aabbcc',
     nameColumnWidth: 0.5,
     timelineBarsVisible: true,
     detailState: new DetailState(),
