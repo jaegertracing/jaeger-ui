@@ -48,6 +48,11 @@ describe('<Page>', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument();
   });
 
+  it('applies non-embedded content class when not embedded', () => {
+    const { container } = renderWithPath();
+    expect(container.querySelector('.Page--content--no-embedded')).toBeInTheDocument();
+  });
+
   it('tracks an initial page-view using location from useLocation()', () => {
     renderWithPath('/my-path?q=1');
     expect(trackPageView).toHaveBeenCalledWith('/my-path', '?q=1');
@@ -90,6 +95,11 @@ describe('<Page>', () => {
 
     it('does not render Header', () => {
       expect(screen.queryByRole('banner')).not.toBeInTheDocument();
+    });
+
+    it('does not apply non-embedded content class', () => {
+      const content = screen.getByRole('main');
+      expect(content).not.toHaveClass('Page--content--no-embedded');
     });
   });
 });
