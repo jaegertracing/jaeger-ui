@@ -44,7 +44,7 @@ const ReferencesButton: React.FC<TReferencesButtonProps> = memo(function ({
   }, [links, focusSpan]);
 
   const tooltipProps = {
-    arrowPointAtCenter: true,
+    arrow: { pointAtCenter: true },
     mouseLeaveDelay: 0.5,
     placement: 'bottom' as TooltipPlacement,
     title: tooltipText,

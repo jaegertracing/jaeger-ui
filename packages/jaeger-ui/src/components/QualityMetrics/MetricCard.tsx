@@ -13,7 +13,7 @@ import { TQualityMetrics } from './types';
 
 import './MetricCard.css';
 
-export type TProps = {
+type TProps = {
   metric: TQualityMetrics['metrics'][0];
 };
 

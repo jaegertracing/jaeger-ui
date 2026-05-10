@@ -27,7 +27,7 @@ type TProps = {
   value: Set<string> | string | null;
 };
 
-export interface IFilteredListRef {
+interface IFilteredListRef {
   focusInput: () => void;
 }
 

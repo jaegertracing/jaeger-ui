@@ -61,47 +61,55 @@ describe('transform ddg data', () => {
 
       expect(visIdxToPathElem[orderedIdx].visibilityIdx).toBe(orderedIdx);
     });
+    return paths;
   }
 
   it('transforms an extremely simple payload', () => {
     const { simplePath } = testResources;
-    outputValidator({ paths: [simplePath], focalIndices: [2] });
+    expect(outputValidator({ paths: [simplePath], focalIndices: [2] }).length).toBeGreaterThan(0);
   });
 
   it('transforms a path with multiple operations per service and multiple services per operation', () => {
     const { longSimplePath } = testResources;
-    outputValidator({ paths: [longSimplePath], focalIndices: [6] });
+    expect(outputValidator({ paths: [longSimplePath], focalIndices: [6] }).length).toBeGreaterThan(0);
   });
 
   it('transforms a path that contains the focal path elem twice', () => {
     const { doubleFocalPath } = testResources;
-    outputValidator({ paths: [doubleFocalPath], focalIndices: [2] });
+    expect(outputValidator({ paths: [doubleFocalPath], focalIndices: [2] }).length).toBeGreaterThan(0);
   });
 
   it('checks both operation and service when calculating focalIdx when both are provided', () => {
     const { almostDoubleFocalPath } = testResources;
-    outputValidator({ paths: [almostDoubleFocalPath], focalIndices: [4] });
+    expect(outputValidator({ paths: [almostDoubleFocalPath], focalIndices: [4] }).length).toBeGreaterThan(0);
   });
 
   it('checks only service when calculating focalIdx when only service is provided', () => {
     const { almostDoubleFocalPath } = testResources;
-    outputValidator({ paths: [almostDoubleFocalPath], focalIndices: [2], ignoreFocalOperation: true });
+    expect(
+      outputValidator({ paths: [almostDoubleFocalPath], focalIndices: [2], ignoreFocalOperation: true })
+        .length
+    ).toBeGreaterThan(0);
   });
 
   it('transforms a payload with significant overlap between paths', () => {
     const { simplePath, longSimplePath, doubleFocalPath, almostDoubleFocalPath } = testResources;
-    outputValidator({
-      paths: [simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath],
-      focalIndices: [2, 2, 4, 6],
-    });
+    expect(
+      outputValidator({
+        paths: [simplePath, doubleFocalPath, almostDoubleFocalPath, longSimplePath],
+        focalIndices: [2, 2, 4, 6],
+      }).length
+    ).toBeGreaterThan(0);
   });
 
   it('handles duplicate paths', () => {
     const { simplePath } = testResources;
-    outputValidator({
-      paths: [simplePath, simplePath],
-      focalIndices: [2, 2],
-    });
+    expect(
+      outputValidator({
+        paths: [simplePath, simplePath],
+        focalIndices: [2, 2],
+      }).length
+    ).toBeGreaterThan(0);
   });
 
   it('sorts payload paths to ensure stable visibilityIndices', () => {

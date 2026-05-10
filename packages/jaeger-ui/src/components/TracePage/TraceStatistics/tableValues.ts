@@ -8,7 +8,7 @@ import colorGenerator from '../../../utils/color-generator';
 
 export const getServiceName = () => 'Service Name';
 export const getOperationName = (useOtelTerms: boolean) => (useOtelTerms ? 'Span Name' : 'Operation Name');
-export const getAttributeName = (useOtelTerms: boolean) => (useOtelTerms ? 'Attribute' : 'Tag');
+const getAttributeName = (useOtelTerms: boolean) => (useOtelTerms ? 'Attribute' : 'Tag');
 
 function parentChildOfMap(allSpans: ReadonlyArray<IOtelSpan>): Record<string, IOtelSpan[]> {
   const parentChildOfMap: Record<string, IOtelSpan[]> = {};

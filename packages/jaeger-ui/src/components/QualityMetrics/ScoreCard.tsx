@@ -10,7 +10,7 @@ import { TQualityMetrics } from './types';
 
 import './ScoreCard.css';
 
-export type TProps = {
+type TProps = {
   link: string;
   score: TQualityMetrics['scores'][0];
 };

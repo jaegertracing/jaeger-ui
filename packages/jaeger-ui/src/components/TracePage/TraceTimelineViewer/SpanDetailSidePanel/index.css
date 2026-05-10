@@ -1,0 +1,21 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.SpanDetailSidePanel {
+  display: flex;
+  flex-direction: column;
+}
+
+.SpanDetailSidePanel--body {
+  padding: 8px 12px;
+}
+
+/* In the side panel the whole panel scrolls, so accordion sections must not cap their own height. */
+.SpanDetailSidePanel .KeyValueTable,
+.SpanDetailSidePanel .ReferencesList,
+.SpanDetailSidePanel .TextList {
+  max-height: none;
+  overflow: visible;
+}

@@ -11,3 +11,21 @@ export type ApiError =
       httpQuery?: string;
       httpBody?: string;
     };
+
+export function toApiError(caught: unknown): ApiError {
+  if (typeof caught === 'string') {
+    return caught;
+  }
+  if (caught instanceof Error) {
+    return { message: caught.message };
+  }
+  if (
+    caught !== null &&
+    typeof caught === 'object' &&
+    'message' in caught &&
+    typeof (caught as { message: unknown }).message === 'string'
+  ) {
+    return caught as ApiError;
+  }
+  return { message: String(caught) };
+}

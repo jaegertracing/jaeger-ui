@@ -67,7 +67,7 @@ function getClassNames(className: string, classNamePrefix: string) {
   };
 }
 
-export function MiniMap({ className = '', classNamePrefix = 'plexus', ...props }: TProps) {
+function MiniMap({ className = '', classNamePrefix = 'plexus', ...props }: TProps) {
   const css = getClassNames(className, classNamePrefix);
   const mapSize = getMapSize(props);
   const activeXform = getViewTransform(props, mapSize);

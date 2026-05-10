@@ -4,7 +4,17 @@
   "labels": ["changelog:dependencies"],
   "suppressNotifications": ["prEditedNotification"],
   "schedule": ["on sunday"],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"]
+  },
   "packageRules": [
+    {
+      "groupName": "vite-plus and bundled vitest",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["vite-plus", "vitest", "@vitest/coverage-v8"],
+      "description": "vite-plus bundles a specific vitest version internally; these must be bumped together to avoid peer-dependency version mismatches"
+    },
     {
       "groupName": "do not apply patch upgrades to dependencies",
       "matchManagers": ["npm"],

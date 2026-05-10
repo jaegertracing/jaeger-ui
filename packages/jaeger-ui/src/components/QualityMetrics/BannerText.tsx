@@ -7,7 +7,7 @@ import { TQualityMetrics } from './types';
 
 import './BannerText.css';
 
-export type TProps = {
+type TProps = {
   bannerText: TQualityMetrics['bannerText'];
 };
 

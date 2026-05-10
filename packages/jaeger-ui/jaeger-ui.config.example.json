@@ -15,5 +15,9 @@
       "url": "https://github.com/jaegertracing/jaeger-client-java/releases/tag/#{jaeger.version}",
       "text": "Information about Jaeger SDK release #{jaeger.version}"
     }
-  ]
+  ],
+  "storageCapabilities": {
+    "archiveStorage": false,
+    "metricsStorage": true
+  }
 }

@@ -23,15 +23,3 @@ export interface ITableSpan {
   colorToPercent: string; // Color created by percent
   traceID: string;
 }
-
-export interface ITableValues {
-  uid: string;
-  value: number;
-}
-
-export interface IColumnValue {
-  title: string;
-  attribute: string;
-  suffix: string;
-  isDecimal: boolean;
-}

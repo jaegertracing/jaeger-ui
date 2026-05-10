@@ -35,8 +35,8 @@ const copyrightHeader = `// Copyright (c) 2026 The Jaeger Authors.
 `;
 
 if (!content.includes('Copyright (c)')) {
-    content = copyrightHeader + '\n' + content;
-    console.log('✅ Added copyright header');
+  content = copyrightHeader + '\n' + content;
+  console.log('✅ Added copyright header');
 }
 
 // 2. Remove .partial() calls
@@ -47,23 +47,20 @@ const afterCountPartial = (content.match(/\.partial\(\)/g) || []).length;
 // 3. Comment out Zodios imports
 const zodiosImportRegex = /import\s+\{\s*makeApi,\s*Zodios.*?\} from '@zodios\/core';/g;
 if (zodiosImportRegex.test(content)) {
-    content = content.replace(zodiosImportRegex, "// import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';");
-    console.log('✅ Commented out Zodios imports');
+  content = content.replace(
+    zodiosImportRegex,
+    "// import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';"
+  );
+  console.log('✅ Commented out Zodios imports');
 }
 
 // 4. Comment out Zodios usage
-content = content.replace(
-    /(const endpoints = makeApi\(\[[\s\S]*?\]\);)/, 
-    "/*\n$1\n*/"
-);
+content = content.replace(/(const endpoints = makeApi\(\[[\s\S]*?\]\);)/, '/*\n$1\n*/');
 
+content = content.replace(/(export const api = new Zodios\(endpoints\);)/, '// $1');
 content = content.replace(
-    /(export const api = new Zodios\(endpoints\);)/, 
-    "// $1"
-);
-content = content.replace(
-    /(export function createApiClient\(baseUrl: string, options\?: ZodiosOptions\) \{[\s\S]*?\})/, 
-    "/*\n$1\n*/"
+  /(export function createApiClient\(baseUrl: string, options\?: ZodiosOptions\) \{[\s\S]*?\})/,
+  '/*\n$1\n*/'
 );
 
 // 5. Append convenience exports
@@ -75,8 +72,8 @@ export { Operation as OperationSchema };
 `;
 
 if (!content.includes('export { GetServicesResponse as ServicesResponseSchema }')) {
-    content += extraExports;
-    console.log('✅ Added convenience exports');
+  content += extraExports;
+  console.log('✅ Added convenience exports');
 }
 
 fs.writeFileSync(filePath, content, 'utf8');

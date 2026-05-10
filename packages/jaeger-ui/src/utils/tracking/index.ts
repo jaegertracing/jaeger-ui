@@ -24,7 +24,7 @@ const TrackingImplementation = () => {
       }
       versionShort = joiner.join(' ');
       versionLong = data.pretty;
-    } catch (_) {
+    } catch {
       versionShort = versionInfo;
       versionLong = versionInfo;
     }

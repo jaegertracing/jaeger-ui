@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import calcPositioning, { _initSvcSpan, _initOpSpan } from './calc-positioning';
-import { FONT_SIZE, LINE_HEIGHT, OP_PADDING_TOP } from './constants';
+import { FONT_SIZE, LINE_HEIGHT, OP_PADDING_TOP, WORD_RX } from './constants';
 
 describe('initializing measuring spans', () => {
   afterEach(() => {
@@ -31,7 +31,7 @@ describe('calcPositioning', () => {
   let svcMeasurements;
   let opMeasurements;
   let genStrCalls = 0;
-  const genStr = n => `${new Array(n).fill('foo').join(':')}${genStrCalls++}`;
+  const genStr = n => `${Array.from({ length: n }, () => 'foo').join(':')}${genStrCalls++}`;
   const lineHeight = LINE_HEIGHT * FONT_SIZE;
   const measureSvc = jest.fn().mockImplementation(() => [svcMeasurements[measureSvc.mock.calls.length - 1]]);
   const measureOp = jest.fn().mockImplementation(() => [opMeasurements[measureOp.mock.calls.length - 1]]);
@@ -134,7 +134,7 @@ describe('calcPositioning', () => {
         expect(svcMarginTop).toBe(radius - radius * Math.sin(Math.acos(svcWidth / 2 / radius)));
       });
 
-      it('it handles strings without words', () => {
+      it('handles strings without words', () => {
         svcMeasurements = genWidths([3]);
         opMeasurements = genWidths([3]);
         const { opWidth, radius, svcWidth, svcMarginTop } = calcPositioning('::::', '/////');
@@ -150,11 +150,12 @@ describe('calcPositioning', () => {
       it('treats multiple operations as a single word', () => {
         const maxSvcLines = 2;
         const operationCount = 10;
-        svcMeasurements = genWidths(new Array(maxSvcLines).fill(0.5));
-        opMeasurements = genWidths(new Array(operationCount).fill(3));
+        svcMeasurements = genWidths(Array.from({ length: maxSvcLines }, () => 0.5));
+        opMeasurements = genWidths(Array.from({ length: operationCount }, () => 3));
+        const filler = genStr(1);
         const { opWidth, radius, svcWidth, svcMarginTop } = calcPositioning(
           genStr(maxSvcLines),
-          new Array(operationCount).fill(genStr(1))
+          Array.from({ length: operationCount }, () => filler)
         );
         expect(measureSvc).toHaveBeenCalledTimes(maxSvcLines);
         expect(measureOp).toHaveBeenCalledTimes(1);
@@ -225,6 +226,34 @@ describe('calcPositioning', () => {
       calcPositioning(secondService, operation);
       expect(measureSvc).toHaveBeenCalledTimes(5);
       expect(measureOp).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('security', () => {
+    it('treats input strings containing HTML tags as plain text', () => {
+      const svcSpan = _initSvcSpan();
+      const xssString = '<img src=x onerror=alert(1)>';
+      const wordCount = xssString.match(WORD_RX)?.length || 1;
+      const capturedHtml = [];
+      const originalImplementation = measureSvc.getMockImplementation();
+      svcMeasurements = genWidths(Array.from({ length: wordCount }, () => 1));
+
+      measureSvc.mockImplementation(() => {
+        capturedHtml.push(svcSpan.innerHTML);
+        return originalImplementation();
+      });
+
+      try {
+        calcPositioning(xssString);
+      } finally {
+        measureSvc.mockImplementation(originalImplementation);
+      }
+
+      expect(capturedHtml).toHaveLength(wordCount);
+      capturedHtml.forEach(html => {
+        expect(html).not.toContain('<img');
+      });
+      expect(capturedHtml.some(html => html.includes('&lt;img'))).toBe(true);
     });
   });
 });

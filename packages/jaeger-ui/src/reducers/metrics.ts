@@ -30,7 +30,6 @@ const initialState: MetricsReduxState = {
     opsCalls: null,
     opsErrors: null,
   },
-  isATMActivated: null,
   loading: false,
   operationMetricsLoading: undefined,
   serviceMetrics: null,
@@ -61,8 +60,6 @@ function fetchServiceMetricsDone(
     service_call_rate: null,
     service_error_rate: null,
   };
-  let isATMActivated = true;
-
   if (payload) {
     payload.forEach((promiseResult, i) => {
       if (promiseResult.status === 'fulfilled') {
@@ -78,7 +75,7 @@ function fetchServiceMetricsDone(
               try {
                 y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
                 max = y > max ? y : max;
-              } catch (e) {
+              } catch {
                 y = null;
               }
               return {
@@ -101,10 +98,6 @@ function fetchServiceMetricsDone(
       } else {
         const reason = (promiseResult as PromiseRejectedResult).reason;
 
-        if (typeof reason === 'object' && reason.httpStatus === 501) {
-          isATMActivated = false;
-        }
-
         switch (i) {
           case 0:
             serviceError.service_latencies_50 = reason;
@@ -125,7 +118,7 @@ function fetchServiceMetricsDone(
       }
     });
   }
-  return { ...state, serviceMetrics, serviceError, loading: false, isATMActivated };
+  return { ...state, serviceMetrics, serviceError, loading: false };
 }
 
 function fetchOpsMetricsStarted(state: MetricsReduxState) {
@@ -215,7 +208,7 @@ function fetchOpsMetricsDone(
                   y = parseFloat(p.gaugeValue.doubleValue.toFixed(2));
                   avg[metric.name] += y;
                   count[metric.name] += 1; // Increment count for non-NaN values
-                } catch (e) {
+                } catch {
                   y = null;
                 }
 

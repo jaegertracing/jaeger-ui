@@ -7,7 +7,7 @@ import ExamplesLink, { TExample } from '../common/ExamplesLink';
 
 import './CountCard.css';
 
-export type TProps = {
+type TProps = {
   count?: number;
   title?: string;
   examples?: TExample[];

@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { Button, Input, InputRef, Tooltip } from 'antd';
 import cx from 'classnames';
-import { IoLocate, IoHelp, IoClose, IoChevronDown, IoChevronUp } from 'react-icons/io5';
+import { IoLocate, IoHelp, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 
 import * as markers from './TracePageSearchBar.markers';
 import { trackFilter } from '../index.track';
@@ -76,11 +76,7 @@ export function TracePageSearchBarFn(props: TracePageSearchBarProps & { forwarde
     <div className="TracePageSearchBar">
       {/* style inline because compact overwrites the display */}
       <Input.Group className="ub-justify-end" compact style={{ display: 'flex' }}>
-        <UiFindInput
-          inputProps={uiFindInputInputProps}
-          forwardedRef={forwardedRef}
-          trackFindFunction={trackFilter}
-        />
+        <UiFindInput inputProps={uiFindInputInputProps} ref={forwardedRef} trackFindFunction={trackFilter} />
         <Tooltip
           arrow={{ pointAtCenter: true }}
           placement="bottomLeft"

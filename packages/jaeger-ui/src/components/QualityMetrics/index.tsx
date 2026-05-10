@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import { useServices } from '../../hooks/useTraceDiscovery';
 
@@ -20,7 +20,7 @@ import { TQualityMetrics } from './types';
 
 import './index.css';
 
-export function QualityMetricsImpl() {
+function QualityMetricsImpl() {
   const navigate = useNavigate();
   const location = useLocation();
   const { lookback, service } = React.useMemo(() => getUrlState(location.search), [location.search]);

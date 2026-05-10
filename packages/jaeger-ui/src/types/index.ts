@@ -1,24 +1,15 @@
 // Copyright (c) 2017 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Router } from 'react-router-dom';
-import { Location } from 'history';
-
 import { ApiError } from './api-error';
-import { TracesArchive } from './archive';
-import { Config } from './config';
-import { EmbeddedState } from './embedded';
 import { SearchQuery } from './search';
 import TDdgState from './TDdgState';
 import tNil from './TNil';
-import iWebAnalytics from './tracking';
 import { Trace } from './trace';
-import TTraceDiffState from './TTraceDiffState';
 import TTraceTimeline from './TTraceTimeline';
 import { MetricsReduxState } from './metrics';
 
 export type TNil = tNil;
-export type IWebAnalytics = iWebAnalytics;
 
 export type FetchedState = 'FETCH_DONE' | 'FETCH_ERROR' | 'FETCH_LOADING';
 
@@ -29,28 +20,20 @@ export type FetchedTrace<T = Trace> = {
   state?: FetchedState;
 };
 
+// Router state carried in history entries when navigating to the trace page.
+// Not visible in the URL — survives back/forward navigation but is lost on a hard reload.
 export type LocationState = {
+  // The full search-results URL (pathname + query string) the user came from,
+  // e.g. '/search?service=frontend&operation=GET%20%2F'.
+  // When present, TracePageHeader renders a back button that returns to this URL.
   fromSearch?: string;
 };
 
 export type ReduxState = {
-  archive: TracesArchive;
   type: string;
-  config: Config;
   ddg: TDdgState;
   dependencies: {
     dependencies: { parent: string; child: string; callCount: number }[];
-    loading: boolean;
-    error: ApiError | TNil;
-  };
-  embedded: EmbeddedState;
-  router: Router & {
-    location: Location<LocationState>;
-  };
-  services: {
-    services: string[] | TNil;
-    serverOpsForService: Record<string, string[]>;
-    operationsForService: Record<string, string[]>;
     loading: boolean;
     error: ApiError | TNil;
   };
@@ -63,7 +46,6 @@ export type ReduxState = {
       query?: SearchQuery;
     };
   };
-  traceDiff: TTraceDiffState;
   traceTimeline: TTraceTimeline;
   metrics: MetricsReduxState;
 };

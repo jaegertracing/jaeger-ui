@@ -4,12 +4,13 @@
 import * as constants from '../../constants/search-form';
 import { trackEvent } from '../../utils/tracking';
 
-export const ACTION_SET = 'set';
-export const ACTION_CLEAR = 'clear';
-export const ACTION_DEFAULT = 'default';
+const ACTION_SET = 'set';
+const ACTION_CLEAR = 'clear';
+const ACTION_DEFAULT = 'default';
 
 export const CATEGORY_SORTBY = `jaeger/ux/search/results/sortby`;
-export const FORM_CATEGORY_BASE = 'jaeger/ux/search/form';
+
+const FORM_CATEGORY_BASE = 'jaeger/ux/search/form';
 export const CATEGORY_OPERATION = `${FORM_CATEGORY_BASE}/operation`;
 export const CATEGORY_LOOKBACK = `${FORM_CATEGORY_BASE}/lookback`;
 export const CATEGORY_TAGS = `${FORM_CATEGORY_BASE}/tags`;

@@ -18,7 +18,6 @@ describe('extractDecorationFromState', () => {
     const state = {};
     const deco = Array.isArray(decoration) ? decoration[0] : decoration;
 
-    _set(state, 'router.location.search', decoration ? queryString.stringify({ decoration }) : '');
     if (opValue !== undefined)
       _set(state, `pathAgnosticDecorations.${deco}.withOp.${service}.${operation}`, opValue);
     if (opMax !== undefined) _set(state, `pathAgnosticDecorations.${deco}.withOpMax`, opMax);
@@ -30,7 +29,10 @@ describe('extractDecorationFromState', () => {
   }
 
   function extractWrapper(stateArgs, svpOp = { service, operation }) {
-    return extractDecorationFromState(makeState(stateArgs), svpOp);
+    const state = makeState(stateArgs);
+    const deco = stateArgs.decoration !== undefined ? stateArgs.decoration : decorationID;
+    const search = deco ? queryString.stringify({ decoration: deco }) : '';
+    return extractDecorationFromState(state, { ...svpOp, search });
   }
 
   it('returns an empty object if url lacks a decorationID', () => {
@@ -100,6 +102,11 @@ describe('extractDecorationFromState', () => {
       decorationValue: withoutOpValue,
       decorationProgressbar: undefined,
     });
+  });
+
+  it('defaults search to empty string when not provided, returning empty object', () => {
+    const state = makeState({ opValue: decorationValue, opMax: decorationMax });
+    expect(extractDecorationFromState(state, { service, operation })).toEqual({});
   });
 
   it('uses first decoration if multiple exist in url', () => {

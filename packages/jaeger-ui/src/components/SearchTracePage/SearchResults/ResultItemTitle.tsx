@@ -13,6 +13,7 @@ import { formatDuration } from '../../../utils/date';
 import { FetchedState, TNil } from '../../../types';
 import { IOtelTrace } from '../../../types/otel';
 import { ApiError } from '../../../types/api-error';
+import type { TracePageLink } from '../../TracePage/url';
 
 import './ResultItemTitle.css';
 import { getTargetEmptyOrBlank } from '../../../utils/config/get-target';
@@ -22,7 +23,7 @@ type Props = {
   durationPercent?: number;
   error?: ApiError;
   isInDiffCohort: boolean;
-  linkTo: React.ComponentProps<typeof Link>['to'] | TNil;
+  linkTo: TracePageLink | TNil;
   state?: FetchedState | TNil;
   targetBlank?: boolean;
   toggleComparison: (traceID: string, isInDiffCohort: boolean) => void;
@@ -81,7 +82,8 @@ export default function ResultItemTitle({
       {!disableComparision && <Checkbox {...checkboxProps} />}
       {linkTo ? (
         <Link
-          to={linkTo}
+          to={{ pathname: linkTo.pathname, search: linkTo.search }}
+          state={linkTo.state}
           className={wrapperClassName}
           target={targetBlank ? getTargetEmptyOrBlank() : undefined}
           rel={targetBlank ? 'noopener noreferrer' : undefined}

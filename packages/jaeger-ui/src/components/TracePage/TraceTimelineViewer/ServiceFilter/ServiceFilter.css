@@ -1,0 +1,128 @@
+/*
+Copyright (c) 2026 The Jaeger Authors.
+SPDX-License-Identifier: Apache-2.0
+*/
+
+.ServiceFilter--button {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1em;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.25rem;
+  vertical-align: middle;
+}
+
+.ServiceFilter--button:hover,
+.ServiceFilter--button:focus-visible {
+  color: var(--text-primary);
+  outline: none;
+}
+
+.ServiceFilter--button:focus-visible {
+  box-shadow: 0 0 0 2px var(--interactive-primary);
+  border-radius: 3px;
+}
+
+.ServiceFilter--button.is-active {
+  color: var(--interactive-primary);
+}
+
+.ServiceFilter--popover {
+  min-width: 260px;
+  max-width: 400px;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ServiceFilter--description {
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  margin-bottom: 0.5rem;
+}
+
+.ServiceFilter--actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.ServiceFilter--list {
+  overflow-y: auto;
+  max-height: 250px;
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
+  padding: 0.25rem 0;
+}
+
+.ServiceFilter--item {
+  padding: 2px 0;
+}
+
+/* Make the antd Checkbox label span the full width with children laid out in a row.
+   Checkbox renders: <label class="ant-checkbox-wrapper"><span class="ant-checkbox">…</span><span>children</span></label>
+   Both the wrapper and the children span need flex to spread the row content. */
+.ServiceFilter--item .ant-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.ServiceFilter--item .ant-checkbox-wrapper > span:last-child {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 0.35rem;
+}
+
+.ServiceFilter--item:hover {
+  background-color: var(--surface-component-background-hover);
+}
+
+.ServiceFilter--colorDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ServiceFilter--serviceName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ServiceFilter--rootBadge {
+  font-size: 0.7em;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  padding: 0 3px;
+  flex-shrink: 0;
+}
+
+.ServiceFilter--spanCount {
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  flex-shrink: 0;
+}
+
+.ServiceFilter--warning {
+  color: var(--feedback-error);
+  font-size: 0.85em;
+  margin-top: 0.5rem;
+}
+
+.ServiceFilter--footer {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

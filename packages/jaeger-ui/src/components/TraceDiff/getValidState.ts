@@ -12,7 +12,7 @@ export default function getValidState(state: TTraceDiffState) {
       .filter((str: string | TNil): str is string => Boolean(str))
   );
   const cohort: string[] = Array.from(cohortSet);
-  const a = cohort[0];
-  const b = cohort[1];
+  const a = stA ?? cohort.find(id => id !== stB);
+  const b = stB ?? cohort.find(id => id !== a);
   return { a, b, cohort };
 }

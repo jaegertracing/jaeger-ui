@@ -8,16 +8,16 @@ codecov:
   notify:
     require_ci_to_pass: yes
     wait_for_ci: yes
-  strict_yaml_branch: main  # only use the latest copy on the main branch
+  strict_yaml_branch: main # only use the latest copy on the main branch
 
 coverage:
   precision: 2
   round: down
-  range: "95...100"
+  range: '95...100'
   status:
     project:
       default:
-        target: auto  # Prevents Plexus from tanking the global status
+        target: auto # Prevents Plexus from tanking the global status
 
         # RELATIVE PROTECTION: This is the maximum allowed drop *below* the base commit's coverage.
         # Setting this to 0% means the project coverage cannot drop at all,
@@ -33,13 +33,13 @@ coverage:
       jaeger-ui:
         flags:
           - jaeger-ui
-        target: 95%  # The "Absolute Floor" for main UI
+        target: 95% # The "Absolute Floor" for main UI
         threshold: 0%
 
       plexus:
         flags:
           - plexus
-        target: auto  # Allows Plexus to start at 0% and grow
+        target: auto # Allows Plexus to start at 0% and grow
         threshold: 0%
 
     patch:
@@ -57,13 +57,13 @@ coverage:
 flags:
   jaeger-ui:
     paths:
-      - "packages/jaeger-ui/src/"
-    carryforward: true  # see the breakdown in the PR
+      - 'packages/jaeger-ui/src/'
+    carryforward: true # see the breakdown in the PR
 
   plexus:
     paths:
-      - "packages/plexus/src/"
+      - 'packages/plexus/src/'
     carryforward: true
 
 ignore:
-  - "packages/jaeger-ui/src/utils/helpers/ReactShallowRenderer.js"
+  - 'packages/jaeger-ui/src/utils/helpers/ReactShallowRenderer.js'

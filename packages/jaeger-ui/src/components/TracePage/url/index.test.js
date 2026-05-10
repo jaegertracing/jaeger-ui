@@ -1,7 +1,7 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { getLocation, getUrl } from '.';
+import { getTracePageLink, getUrl } from '.';
 
 describe('TracePage/url', () => {
   const traceID = 'trace-id';
@@ -17,20 +17,20 @@ describe('TracePage/url', () => {
     });
   });
 
-  describe('getLocation', () => {
+  describe('getTracePageLink', () => {
     const state = {
-      from: 'some-url',
+      fromSearch: 'some-url',
     };
 
     it('passes provided state with correct pathname, without uiFind', () => {
-      expect(getLocation(traceID, state)).toEqual({
+      expect(getTracePageLink(traceID, state)).toEqual({
         state,
         pathname: getUrl(traceID),
       });
     });
 
     it('passes provided state with correct pathname with uiFind', () => {
-      expect(getLocation(traceID, state, uiFind)).toEqual({
+      expect(getTracePageLink(traceID, state, uiFind)).toEqual({
         state,
         pathname: getUrl(traceID),
         search: `uiFind=${uiFind}`,

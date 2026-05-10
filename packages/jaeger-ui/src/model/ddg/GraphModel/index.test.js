@@ -63,6 +63,7 @@ describe('GraphModel', () => {
       // Validate that there aren't any rogue vertices nor edges
       expect(graph.vertices.size).toBe(expectedVertices.length);
       expect(new Set(graph.pathElemToEdge.values()).size).toBe(expectedEdgeCount);
+      return graph.vertices.size;
     }
 
     it('creates five vertices and four edges for one-path ddg', () => {
@@ -71,27 +72,29 @@ describe('GraphModel', () => {
         density: EDdgDensity.PreventPathEntanglement,
         showOp: true,
       });
-      validateGraph(testGraph, [
-        {
-          visIndices: [0],
-        },
-        {
-          visIndices: [1],
-          focalSideNeighbors: [0],
-        },
-        {
-          visIndices: [2],
-          focalSideNeighbors: [0],
-        },
-        {
-          visIndices: [3],
-          focalSideNeighbors: [1],
-        },
-        {
-          visIndices: [4],
-          focalSideNeighbors: [2],
-        },
-      ]);
+      expect(
+        validateGraph(testGraph, [
+          {
+            visIndices: [0],
+          },
+          {
+            visIndices: [1],
+            focalSideNeighbors: [0],
+          },
+          {
+            visIndices: [2],
+            focalSideNeighbors: [0],
+          },
+          {
+            visIndices: [3],
+            focalSideNeighbors: [1],
+          },
+          {
+            visIndices: [4],
+            focalSideNeighbors: [2],
+          },
+        ])
+      ).toBeGreaterThan(0);
     });
 
     it('adds separate vertices for equal PathElems that have different focalPaths, even those with equal focalSideNeighbors', () => {
@@ -100,39 +103,41 @@ describe('GraphModel', () => {
         density: EDdgDensity.PreventPathEntanglement,
         showOp: true,
       });
-      validateGraph(convergentGraph, [
-        {
-          visIndices: [0, 1],
-        },
-        {
-          visIndices: [2],
-          focalSideNeighbors: [0],
-        },
-        {
-          visIndices: [3],
-          focalSideNeighbors: [0],
-        },
-        {
-          visIndices: [4, 5],
-          focalSideNeighbors: [0],
-        },
-        {
-          visIndices: [6],
-          focalSideNeighbors: [2],
-        },
-        {
-          visIndices: [7],
-          focalSideNeighbors: [3],
-        },
-        {
-          visIndices: [8],
-          focalSideNeighbors: [6],
-        },
-        {
-          visIndices: [9],
-          focalSideNeighbors: [7],
-        },
-      ]);
+      expect(
+        validateGraph(convergentGraph, [
+          {
+            visIndices: [0, 1],
+          },
+          {
+            visIndices: [2],
+            focalSideNeighbors: [0],
+          },
+          {
+            visIndices: [3],
+            focalSideNeighbors: [0],
+          },
+          {
+            visIndices: [4, 5],
+            focalSideNeighbors: [0],
+          },
+          {
+            visIndices: [6],
+            focalSideNeighbors: [2],
+          },
+          {
+            visIndices: [7],
+            focalSideNeighbors: [3],
+          },
+          {
+            visIndices: [8],
+            focalSideNeighbors: [6],
+          },
+          {
+            visIndices: [9],
+            focalSideNeighbors: [7],
+          },
+        ])
+      ).toBeGreaterThan(0);
     });
 
     it('reuses edge when possible', () => {
@@ -201,7 +206,7 @@ describe('GraphModel', () => {
               density: EDdgDensity.PreventPathEntanglement,
               showOp: true,
             })
-        ).toThrow();
+        ).toThrow(/Non-focal pathElem cannot be connected/);
       });
     });
   });

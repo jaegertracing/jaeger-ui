@@ -43,7 +43,7 @@ export function setOnEdgePath(e: any) {
   return e.isNonBlocking ? { strokeDasharray: 4 } : {};
 }
 
-export const getHelpContent = (useOtelTerms: boolean) => (
+const getHelpContent = (useOtelTerms: boolean) => (
   <div className="TraceGraph--help-content" data-testid="help-content">
     {getHelpTable(useOtelTerms)}
     <div>

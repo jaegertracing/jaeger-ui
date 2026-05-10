@@ -13,12 +13,9 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "declaration": true,
-    "emitDeclarationOnly": true,
-    "jsx": "preserve",
-    "outDir": "lib",
-    "rootDir": "src",
-    "composite": true
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["vitest/globals"]
   },
   "include": [
     "src",

@@ -5,6 +5,8 @@ import { TPathAgnosticDecorationSchema } from '../model/path-agnostic-decoration
 import { IWebAnalyticsFunc } from './tracking';
 import { TNil } from '.';
 
+export type SpanDetailPanelMode = 'inline' | 'sidepanel';
+
 export type ConfigMenuItem = {
   label: string;
   url?: string;
@@ -21,7 +23,7 @@ export type TScript = {
   type: 'inline';
 };
 
-export type LinkPatternsConfig = {
+type LinkPatternsConfig = {
   // type defines the entity that the pattern applies to.
   // 'traces' patterns apply to the whole trace, and have access to 'traceID' value.
   // Other patterns apply to tags at different levels. They have access to the value
@@ -56,7 +58,7 @@ export type MonitorEmptyStateConfig = {
   };
 };
 
-export type MonitorConfig = {
+type MonitorConfig = {
   menuEnabled?: boolean;
   emptyState?: MonitorEmptyStateConfig;
   docsLink?: string;
@@ -74,6 +76,8 @@ export type TraceGraphConfig = {
 export type StorageCapabilities = {
   // archiveStorage indicates whether the query service supports archive storage.
   archiveStorage?: boolean;
+  // metricsStorage indicates whether the query service supports metrics storage (for Monitor/SPM tab).
+  metricsStorage?: boolean;
 };
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx
@@ -204,6 +208,21 @@ export type Config = {
   themes: {
     enabled: boolean;
   };
+  // traceTimeline controls the trace timeline viewer layout options.
+  traceTimeline?: {
+    // enableSidePanel enables the side panel layout option in the trace timeline.
+    // When false, the side panel toggle is hidden and only inline detail mode is available.
+    // Default: true (experimental, opt-out).
+    enableSidePanel?: boolean;
+
+    // defaultDetailPanelMode sets the initial detail panel mode when enableSidePanel is true
+    // and the user has not yet stored a preference in localStorage.
+    // 'inline' preserves the current behavior as the default.
+    // 'sidepanel' makes the side panel the default experience for new users.
+    // Default: 'inline'.
+    defaultDetailPanelMode?: SpanDetailPanelMode;
+  };
+
   // useOpenTelemetryTerms determines whether the UI uses legacy Jaeger terminology
   // (tags, logs, process, operation name) or OpenTelemetry terminology
   // (attributes, events, resource, name).

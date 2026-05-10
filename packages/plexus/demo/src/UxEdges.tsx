@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { LayoutManager } from '../../src';
 import Digraph from '../../src/Digraph';
@@ -75,4 +75,4 @@ const UxEdges = () => (
   />
 );
 
-render(<UxEdges />, document.querySelector('#root'));
+createRoot(document.querySelector('#root')!).render(<UxEdges />);

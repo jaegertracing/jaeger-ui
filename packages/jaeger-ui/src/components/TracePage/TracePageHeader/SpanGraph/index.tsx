@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import memoizeOne from 'memoize-one';
 
 import CanvasSpanGraph from './CanvasSpanGraph';
 import TickLabels from './TickLabels';
@@ -41,20 +40,14 @@ function getItems(trace: IOtelTrace): SpanItem[] {
   return trace.spans.map(getItem);
 }
 
-const memoizedGetItems = memoizeOne(getItems);
+const SpanGraph: React.FC<SpanGraphProps> = React.memo(
+  ({ height = DEFAULT_HEIGHT, trace, viewRange, updateNextViewRangeTime, updateViewRangeTime }) => {
+    const items = React.useMemo(() => (trace ? getItems(trace) : []), [trace]);
 
-export default class SpanGraph extends React.PureComponent<SpanGraphProps> {
-  static defaultProps = {
-    height: DEFAULT_HEIGHT,
-  };
-
-  render() {
-    const { height, trace, viewRange, updateNextViewRangeTime, updateViewRangeTime } = this.props;
     if (!trace) {
       return <div />;
     }
 
-    const items = memoizedGetItems(trace);
     return (
       <div className="SpanGraph ub-pb2 ub-px2">
         <TickLabels numTicks={TIMELINE_TICK_INTERVAL} duration={trace.duration} />
@@ -71,4 +64,8 @@ export default class SpanGraph extends React.PureComponent<SpanGraphProps> {
       </div>
     );
   }
-}
+);
+
+SpanGraph.displayName = 'SpanGraph';
+
+export default SpanGraph;

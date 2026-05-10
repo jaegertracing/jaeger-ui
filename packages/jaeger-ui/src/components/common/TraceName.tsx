@@ -24,7 +24,7 @@ export default function TraceName(props: Props) {
 
   const isErred = state === fetchedState.ERROR;
 
-  let title: string | React.ReactNode = traceName || FALLBACK_TRACE_NAME;
+  let title: string | React.ReactNode;
 
   if (isErred) {
     let titleStr = '';

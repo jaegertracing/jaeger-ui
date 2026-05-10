@@ -4,8 +4,8 @@
 import * as GA from './ga';
 import { getAppEnvironment } from '../constants';
 
-jest.mock('../constants');
-jest.mock('../../site-prefix', () => 'test-prefix');
+vi.mock('../constants');
+vi.mock('../../site-prefix', () => ({ default: 'test-prefix' }));
 
 let longStr = '---';
 

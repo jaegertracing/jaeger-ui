@@ -19,7 +19,7 @@ export function strToRgb(s: string): [number, number, number] {
   return [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16)];
 }
 
-export class ColorGenerator {
+class ColorGenerator {
   colors: string[];
   cache: Map<string, number>;
   currentIdx: number;

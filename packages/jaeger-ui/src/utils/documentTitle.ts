@@ -26,7 +26,7 @@ const DocumentTitle: React.FC<Props> = ({ title }) => {
       if (prevTitle != null) {
         try {
           document.title = prevTitle;
-        } catch (e) {
+        } catch {
           // ignore in weird test envs
         }
       }

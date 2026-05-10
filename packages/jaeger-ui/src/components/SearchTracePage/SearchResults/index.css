@@ -19,6 +19,9 @@ SPDX-License-Identifier: Apache-2.0
   align-items: center;
   background-color: var(--surface-secondary);
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
   padding: 1rem;
 }
 

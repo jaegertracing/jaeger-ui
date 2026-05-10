@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Uber Technologies, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-jest.mock('../../../utils/tracking');
+vi.mock('../../../utils/tracking');
 
 import * as track from './TracePageHeader.track'; /* {
   CATEGORY_ALT_VIEW,
@@ -55,6 +55,12 @@ describe('TracePageHeader.track', () => {
       fn: 'trackTraceSpansView',
     },
     {
+      action: track.ACTION_TRACE_LOGS_VIEW,
+      category: track.CATEGORY_ALT_VIEW,
+      msg: 'tracks a GA event for viewing trace logs',
+      fn: 'trackTraceLogsView',
+    },
+    {
       action: OPEN,
       arg: false,
       category: track.CATEGORY_SLIM_HEADER,
@@ -71,7 +77,7 @@ describe('TracePageHeader.track', () => {
   ];
 
   cases.forEach(({ action, arg, msg, fn, category }) => {
-    it(msg, () => {
+    it(`${msg}`, () => {
       track[fn](arg);
       expect(trackEvent.mock.calls.length).toBe(1);
       expect(trackEvent.mock.calls[0]).toEqual([category, action]);

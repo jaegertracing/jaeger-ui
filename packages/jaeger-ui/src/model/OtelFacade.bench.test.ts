@@ -67,5 +67,8 @@ describe('OtelFacade Benchmarks', () => {
     console.log(
       `Accessing kind, parentSpanId, and attributes for ${numSpans} spans: ${accessTime.toFixed(4)}ms`
     );
+
+    expect(creationTime).toBeGreaterThanOrEqual(0);
+    expect(accessTime).toBeGreaterThanOrEqual(0);
   });
 });

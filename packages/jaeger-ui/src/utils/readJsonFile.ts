@@ -12,7 +12,9 @@ function tryParseMultiLineInput(input: string): any[] {
       const traceObj = JSON.parse(jsonString.trim());
       parsedObjects.push(traceObj);
     } catch (error) {
-      throw new Error(`Error parsing JSON at line ${index + 1}: ${(error as Error).message}`);
+      throw new Error(`Error parsing JSON at line ${index + 1}: ${(error as Error).message}`, {
+        cause: error,
+      });
     }
   });
 
@@ -30,7 +32,7 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
       let traceObj;
       try {
         traceObj = JSON.parse(reader.result);
-      } catch (error) {
+      } catch {
         try {
           traceObj = tryParseMultiLineInput(reader.result);
         } catch (error) {
@@ -52,8 +54,9 @@ export default function readJsonFile(fileList: { file: File }): Promise<string> 
           .then((result: string) => {
             resolve(result);
           })
-          .catch(() => {
-            reject(new Error('Error converting traces to OTLP'));
+          .catch((err: unknown) => {
+            const cause = err instanceof Error ? `: ${err.message}` : '';
+            reject(new Error(`Error converting OTLP trace to Jaeger${cause}`, { cause: err }));
           });
       } else {
         resolve(traceObj);

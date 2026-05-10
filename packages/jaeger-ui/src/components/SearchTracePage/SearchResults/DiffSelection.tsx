@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 
 import ResultItemTitle from './ResultItemTitle';
 import { getUrl } from '../../TraceDiff/url';
-import { getUrl as getTracePageUrl } from '../../TracePage/url';
+import { getTracePageLink } from '../../TracePage/url';
 import { fetchedState } from '../../../constants';
 
 import { FetchedTrace } from '../../../types';
@@ -20,8 +20,7 @@ type Props = {
   traces: FetchedTrace[];
 };
 
-// Exported for tests
-export const CTA_MESSAGE = <h2 className="ub-m0">Compare traces by selecting result items</h2>;
+const CTA_MESSAGE = <h2 className="ub-m0">Compare traces by selecting result items</h2>;
 
 export default function DiffSelection({ toggleComparison, traces }: Props) {
   const cohort = traces.filter(ft => ft.state !== fetchedState.ERROR).map(ft => ft.id);
@@ -46,7 +45,7 @@ export default function DiffSelection({ toggleComparison, traces }: Props) {
                 duration={data && (data.duration as IOtelTrace['duration'])}
                 error={error}
                 isInDiffCohort
-                linkTo={getTracePageUrl(id)}
+                linkTo={getTracePageLink(id)}
                 state={state}
                 targetBlank
                 toggleComparison={toggleComparison}

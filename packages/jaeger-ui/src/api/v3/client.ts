@@ -8,10 +8,11 @@
  * and returns native OTLP data structures.
  */
 
+import prefixUrl from '../../utils/prefix-url';
 import { ServicesResponseSchema, OperationsResponseSchema } from './schemas';
 
 export class JaegerClient {
-  private apiRoot = '/api/v3';
+  private apiRoot = prefixUrl('/api/v3');
 
   /**
    * Fetch the list of services from the Jaeger API.
@@ -66,7 +67,7 @@ export class JaegerClient {
       return response;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error(`Request timeout after ${timeout}ms`);
+        throw new Error(`Request timeout after ${timeout}ms`, { cause: error });
       }
       throw error;
     } finally {
