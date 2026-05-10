@@ -1,7 +1,7 @@
 // Copyright (c) 2021 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useLayoutEffect } from 'react';
 import { Row, Col, Input, Alert, Select } from 'antd';
 import { ActionFunctionAny, Action } from 'redux-actions';
 import _debounce from 'lodash/debounce';
@@ -213,13 +213,24 @@ export function MonitorATMServicesViewImpl(props: TProps) {
   // componentDidMount equivalent
   useEffect(() => {
     window.addEventListener('resize', updateDimensions);
-    updateDimensions();
     calcGraphXDomain();
 
     return () => {
       window.removeEventListener('resize', updateDimensions);
     };
   }, [updateDimensions, calcGraphXDomain]);
+
+  // Measure the graph container width after every servicesLoading → false
+  // transition. useLayoutEffect ensures the measurement happens before paint,
+  // avoiding a visible half-width flash. The mount effect above no longer calls
+  // updateDimensions() directly because the ref is null while the loading
+  // spinner is shown; this effect handles both the initial render (when
+  // servicesLoading is already false) and the transition from true → false.
+  useLayoutEffect(() => {
+    if (!servicesLoading) {
+      updateDimensions();
+    }
+  }, [servicesLoading, updateDimensions]);
 
   // componentDidUpdate equivalent
   useEffect(() => {
