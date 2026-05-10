@@ -140,4 +140,28 @@ describe('<TraceStatisticsHeader>', () => {
       null
     );
   });
+
+  it('calls handler with a null sub-group when the second dropdown is cleared', async () => {
+    const props = baseProps();
+    const { container } = render(<TraceStatisticsHeader {...props} />);
+
+    // populate the second dropdown so the clear icon appears
+    const subGroup = screen.getAllByRole('combobox')[1];
+    await userEvent.click(subGroup);
+    fireEvent.click(await screen.findByText('kind'));
+
+    props.handler.mockClear();
+
+    // antd renders the clear icon as .ant-select-clear next to the populated select
+    const clearIcons = container.querySelectorAll('.ant-select-clear');
+    expect(clearIcons.length).toBeGreaterThan(0);
+    fireEvent.mouseDown(clearIcons[0]);
+    fireEvent.click(clearIcons[0]);
+
+    // antd's allowClear fires both onChange(undefined) and onClear; clearValue
+    // is the onClear branch and is the only path that re-fetches getColumnValues
+    // for the first selector and passes null for the sub-group.
+    expect(props.handler).toHaveBeenCalledWith(expect.any(Array), expect.any(Array), 'service.name', null);
+    expect(getColumnValues).toHaveBeenCalledWith('service.name', props.trace, props.useOtelTerms);
+  });
 });
