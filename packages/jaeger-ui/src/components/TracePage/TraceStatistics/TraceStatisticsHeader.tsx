@@ -1,7 +1,8 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkbox, CheckboxChangeEvent, Select } from 'antd';
+import { Checkbox, Select } from 'antd';
+import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { useLayoutEffect, useState } from 'react';
 import { IOtelTrace } from '../../../types/otel';
 import { ITableSpan } from './types';
