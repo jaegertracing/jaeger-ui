@@ -4,6 +4,7 @@
 import * as React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import TraceTable, { toOrderBy, fromOrderBy } from './TraceTable';
 import * as orderBy from '../../../model/order-by';
 
@@ -25,14 +26,14 @@ const mockTraces = [makeTrace('a'), makeTrace('b'), makeTrace('c'), makeTrace('d
 const defaultProps = {
   traces: mockTraces as any,
   maxTraceDuration: 5000,
-  onRowClick: jest.fn(),
+  onRowClick: vi.fn(),
   sortBy: 'MOST_RECENT',
-  handleSortChange: jest.fn(),
+  handleSortChange: vi.fn(),
 };
 
 describe('TraceTable', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders correct row count for a 5-trace fixture', () => {
@@ -55,7 +56,7 @@ describe('TraceTable', () => {
   });
 
   it('calls onRowClick when a row is clicked', () => {
-    const onRowClick = jest.fn();
+    const onRowClick = vi.fn();
     render(
       <MemoryRouter>
         <TraceTable {...defaultProps} onRowClick={onRowClick} />
