@@ -108,6 +108,29 @@ describe('<SpanBarRow>', () => {
     expect(defaultProps.onDetailToggled).toHaveBeenCalledWith(spanID);
   });
 
+  it('triggers onDetailToggled when Enter is pressed on span name', () => {
+    render(<SpanBarRow {...defaultProps} />);
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'Enter' });
+    expect(defaultProps.onDetailToggled).toHaveBeenCalledTimes(1);
+    expect(defaultProps.onDetailToggled).toHaveBeenCalledWith(spanID);
+  });
+
+  it('triggers onDetailToggled when Space is pressed on span name', () => {
+    render(<SpanBarRow {...defaultProps} />);
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: ' ' });
+    expect(defaultProps.onDetailToggled).toHaveBeenCalledTimes(1);
+    expect(defaultProps.onDetailToggled).toHaveBeenCalledWith(spanID);
+  });
+
+  it('does not trigger onDetailToggled for other keys on span name', () => {
+    render(<SpanBarRow {...defaultProps} />);
+    const spanName = screen.getByRole('switch');
+    fireEvent.keyDown(spanName, { key: 'Tab' });
+    expect(defaultProps.onDetailToggled).not.toHaveBeenCalled();
+  });
+
   it('triggers onChildrenToggled when SpanTreeOffset is clicked', () => {
     render(<SpanBarRow {...defaultProps} />);
     const treeOffset = screen.getByTestId('span-tree-offset');
