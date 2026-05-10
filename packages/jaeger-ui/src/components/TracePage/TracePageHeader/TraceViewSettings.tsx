@@ -181,6 +181,7 @@ export default function TraceViewSettings(props: Props) {
           htmlType="button"
           aria-label="Trace view settings"
           title="Trace view settings"
+          data-testid="trace-view-settings"
         >
           <IoSettingsOutline className="TraceViewSettings--icon" />
         </Button>
