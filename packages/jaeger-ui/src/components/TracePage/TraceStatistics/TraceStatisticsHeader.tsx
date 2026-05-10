@@ -1,8 +1,7 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkbox, Select } from 'antd';
-import * as React from 'react';
+import { Checkbox, CheckboxChangeEvent, Select } from 'antd';
 import { useLayoutEffect, useState } from 'react';
 import { IOtelTrace } from '../../../types/otel';
 import { ITableSpan } from './types';
@@ -40,7 +39,7 @@ const optionsNameSelector3 = new Map([
 
 export default function TraceStatisticsHeader(props: Props) {
   const { trace, tableValue, wholeTable, handler, useOtelTerms } = props;
-  const initialServiceName = React.useMemo(() => getServiceName(), []);
+  const [initialServiceName] = useState(() => getServiceName());
   const [valueNameSelector1, setValueNameSelector1State] = useState<string>(initialServiceName);
   const [valueNameSelector2, setValueNameSelector2State] = useState<string | null>(null);
   const [valueNameSelector3, setValueNameSelector3State] = useState<string>('Count');
@@ -134,7 +133,7 @@ export default function TraceStatisticsHeader(props: Props) {
   /**
    * Is called after the checkbox changes its status.
    */
-  const checkboxButton = (e: any) => {
+  const checkboxButton = (e: CheckboxChangeEvent) => {
     setCheckboxStatus(e.target.checked);
 
     const newTableValue = generateColor(tableValue, getValue(), e.target.checked);
