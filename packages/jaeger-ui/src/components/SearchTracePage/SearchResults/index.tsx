@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { useCallback } from 'react';
-import { Select } from 'antd';
+import { useCallback, useState } from 'react';
+import { Select, Button } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import queryString from 'query-string';
@@ -15,6 +15,7 @@ import * as markers from './index.markers';
 import { EAltViewActions, trackAltView } from './index.track';
 import ResultItem from './ResultItem';
 import ScatterPlot from './ScatterPlot';
+import TraceTable from './TraceTable';
 import { getUrl } from '../url';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import NewWindowIcon from '../../common/NewWindowIcon';
@@ -142,6 +143,7 @@ export function UnconnectedSearchResults({
   cohortRemoveTrace,
 }: SearchResultsProps) {
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState<'list' | 'table'>('list');
 
   const toggleComparison = useCallback(
     (traceID: string, remove?: boolean) => {
@@ -238,6 +240,24 @@ export function UnconnectedSearchResults({
             {traces.length} Trace{traces.length > 1 && 's'}
           </h2>
           {traceResultsView && <SelectSort sortBy={sortBy} handleSortChange={handleSortChange} />}
+          {traceResultsView && (
+            <Button.Group className="ub-ml2">
+              <Button
+                size="small"
+                type={viewMode === 'list' ? 'primary' : 'default'}
+                onClick={() => setViewMode('list')}
+              >
+                List
+              </Button>
+              <Button
+                size="small"
+                type={viewMode === 'table' ? 'primary' : 'default'}
+                onClick={() => setViewMode('table')}
+              >
+                Table
+              </Button>
+            </Button.Group>
+          )}
           {traceResultsView && <DownloadResults onDownloadResultsClicked={onDownloadResultsClicked} />}
           <AltViewOptions traceResultsView={traceResultsView} onDdgViewClicked={onDdgViewClicked} />
           {showStandaloneLink && (
@@ -258,7 +278,19 @@ export function UnconnectedSearchResults({
         </div>
       )}
       {traceResultsView && diffSelection}
-      {traceResultsView && (
+      {traceResultsView && viewMode === 'table' && (
+        <TraceTable
+          traces={traces}
+          getTraceLink={traceID =>
+            getTracePageLink(
+              traceID,
+              { fromSearch: searchUrl },
+              spanLinks && (spanLinks[traceID] || spanLinks[traceID.replace(/^0*/, '')])
+            )
+          }
+        />
+      )}
+      {traceResultsView && viewMode === 'list' && (
         <ul className="ub-list-reset">
           {traces.map(trace => (
             <li className="ub-my3" key={trace.traceID}>
