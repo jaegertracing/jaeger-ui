@@ -3,10 +3,12 @@
 
 import * as React from 'react';
 import { Table } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { Link } from 'react-router-dom';
-import { getTracePageLink } from '../../TracePage/url';
+import type { ColumnsType, TableProps } from 'antd/es/table';
+import type { SorterResult } from 'antd/es/table/interface';
 import { IOtelTrace } from '../../../types/otel';
+import { StatusCode } from '../../../types/otel';
+import { formatDuration, formatDatetime } from '../../../utils/date';
+import * as orderBy from '../../../model/order-by';
 
 type TraceTableProps = {
   traces: IOtelTrace[];
@@ -16,50 +18,82 @@ type TraceTableProps = {
   handleSortChange: (sortBy: string) => void;
 };
 
-export default function TraceTable({ traces, onRowClick }: TraceTableProps) {
+function toOrderBy(columnKey: string | undefined, order: string | undefined): string {
+  if (columnKey === 'spans') {
+    return order === 'ascend' ? orderBy.LEAST_SPANS : orderBy.MOST_SPANS;
+  }
+  if (columnKey === 'duration') {
+    return order === 'ascend' ? orderBy.SHORTEST_FIRST : orderBy.LONGEST_FIRST;
+  }
+  return orderBy.MOST_RECENT;
+}
+
+function fromOrderBy(sort: string): { key: string; order: 'ascend' | 'descend' } {
+  switch (sort) {
+    case orderBy.MOST_SPANS:
+      return { key: 'spans', order: 'descend' };
+    case orderBy.LEAST_SPANS:
+      return { key: 'spans', order: 'ascend' };
+    case orderBy.LONGEST_FIRST:
+      return { key: 'duration', order: 'descend' };
+    case orderBy.SHORTEST_FIRST:
+      return { key: 'duration', order: 'ascend' };
+    default:
+      return { key: 'startTime', order: 'descend' };
+  }
+}
+
+export { toOrderBy, fromOrderBy };
+
+export default function TraceTable({ traces, onRowClick, sortBy, handleSortChange }: TraceTableProps) {
+  const { key: sortKey, order: sortOrder } = fromOrderBy(sortBy);
+
   const columns: ColumnsType<IOtelTrace> = [
     {
       title: 'Trace Name',
       dataIndex: 'traceName',
       key: 'traceName',
-      render: (name: string, trace: IOtelTrace) => {
-        const link = getTracePageLink(trace.traceID);
-        return (
-          <Link to={link.pathname + (link.search ? `?${link.search}` : '')}>{name || trace.traceID}</Link>
-        );
-      },
+      render: (name: string, trace: IOtelTrace) => name || trace.traceID,
     },
     {
       title: 'Services',
       key: 'services',
-      render: (_: any, trace: IOtelTrace) =>
-        trace.services ? trace.services.map((s: any) => s.name).join(', ') : '-',
+      render: (_: unknown, trace: IOtelTrace) =>
+        trace.services ? trace.services.map(s => s.name).join(', ') : '-',
     },
     {
       title: 'Spans',
       key: 'spans',
-      render: (_: any, trace: IOtelTrace) => trace.spans.length,
-      sorter: (a: IOtelTrace, b: IOtelTrace) => a.spans.length - b.spans.length,
+      render: (_: unknown, trace: IOtelTrace) => trace.spans.length,
+      sorter: true,
+      sortOrder: sortKey === 'spans' ? sortOrder : undefined,
     },
     {
       title: 'Errors',
       key: 'errors',
-      render: (_: any, trace: IOtelTrace) =>
-        trace.spans.filter((s: any) => s.status?.code === 'ERROR').length,
+      render: (_: unknown, trace: IOtelTrace) =>
+        trace.spans.filter(s => s.status?.code === StatusCode.ERROR).length,
     },
     {
       title: 'Duration',
       key: 'duration',
-      render: (_: any, trace: IOtelTrace) => `${(trace.duration / 1000).toFixed(2)}ms`,
-      sorter: (a: IOtelTrace, b: IOtelTrace) => a.duration - b.duration,
+      render: (_: unknown, trace: IOtelTrace) => formatDuration(trace.duration),
+      sorter: true,
+      sortOrder: sortKey === 'duration' ? sortOrder : undefined,
     },
     {
       title: 'Start Time',
       key: 'startTime',
-      render: (_: any, trace: IOtelTrace) => new Date(trace.startTime / 1000).toLocaleString(),
-      sorter: (a: IOtelTrace, b: IOtelTrace) => a.startTime - b.startTime,
+      render: (_: unknown, trace: IOtelTrace) => formatDatetime(trace.startTime),
+      sorter: true,
+      sortOrder: sortKey === 'startTime' ? sortOrder : undefined,
     },
   ];
+
+  const onChange: TableProps<IOtelTrace>['onChange'] = (_pagination, _filters, sorter) => {
+    const s = Array.isArray(sorter) ? sorter[0] : (sorter as SorterResult<IOtelTrace>);
+    handleSortChange(toOrderBy(s.columnKey as string | undefined, s.order ?? undefined));
+  };
 
   return (
     <Table<IOtelTrace>
@@ -68,6 +102,7 @@ export default function TraceTable({ traces, onRowClick }: TraceTableProps) {
       rowKey="traceID"
       size="small"
       pagination={{ pageSize: 20 }}
+      onChange={onChange}
       onRow={(trace: IOtelTrace) => ({
         onClick: () => onRowClick(trace.traceID),
         style: { cursor: 'pointer' },

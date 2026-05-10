@@ -4,7 +4,8 @@
 import * as React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import TraceTable from './TraceTable';
+import TraceTable, { toOrderBy, fromOrderBy } from './TraceTable';
+import * as orderBy from '../../../model/order-by';
 
 const makeTrace = (id: string, errorCount = 0) => ({
   traceID: id,
@@ -30,6 +31,10 @@ const defaultProps = {
 };
 
 describe('TraceTable', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('renders correct row count for a 5-trace fixture', () => {
     render(
       <MemoryRouter>
@@ -46,7 +51,6 @@ describe('TraceTable', () => {
         <TraceTable {...defaultProps} />
       </MemoryRouter>
     );
-    // trace 'd' has 2 errors
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 
@@ -59,5 +63,50 @@ describe('TraceTable', () => {
     );
     fireEvent.click(screen.getByText('Trace a'));
     expect(onRowClick).toHaveBeenCalledWith('a');
+  });
+});
+
+describe('toOrderBy', () => {
+  it('maps spans+descend to MOST_SPANS', () => {
+    expect(toOrderBy('spans', 'descend')).toBe(orderBy.MOST_SPANS);
+  });
+
+  it('maps spans+ascend to LEAST_SPANS', () => {
+    expect(toOrderBy('spans', 'ascend')).toBe(orderBy.LEAST_SPANS);
+  });
+
+  it('maps duration+descend to LONGEST_FIRST', () => {
+    expect(toOrderBy('duration', 'descend')).toBe(orderBy.LONGEST_FIRST);
+  });
+
+  it('maps duration+ascend to SHORTEST_FIRST', () => {
+    expect(toOrderBy('duration', 'ascend')).toBe(orderBy.SHORTEST_FIRST);
+  });
+
+  it('defaults to MOST_RECENT for unknown column', () => {
+    expect(toOrderBy('startTime', 'descend')).toBe(orderBy.MOST_RECENT);
+    expect(toOrderBy(undefined, undefined)).toBe(orderBy.MOST_RECENT);
+  });
+});
+
+describe('fromOrderBy', () => {
+  it('maps MOST_SPANS to spans+descend', () => {
+    expect(fromOrderBy(orderBy.MOST_SPANS)).toEqual({ key: 'spans', order: 'descend' });
+  });
+
+  it('maps LEAST_SPANS to spans+ascend', () => {
+    expect(fromOrderBy(orderBy.LEAST_SPANS)).toEqual({ key: 'spans', order: 'ascend' });
+  });
+
+  it('maps LONGEST_FIRST to duration+descend', () => {
+    expect(fromOrderBy(orderBy.LONGEST_FIRST)).toEqual({ key: 'duration', order: 'descend' });
+  });
+
+  it('maps SHORTEST_FIRST to duration+ascend', () => {
+    expect(fromOrderBy(orderBy.SHORTEST_FIRST)).toEqual({ key: 'duration', order: 'ascend' });
+  });
+
+  it('maps MOST_RECENT to startTime+descend', () => {
+    expect(fromOrderBy(orderBy.MOST_RECENT)).toEqual({ key: 'startTime', order: 'descend' });
   });
 });
