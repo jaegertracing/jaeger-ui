@@ -3,7 +3,7 @@
 
 import { Checkbox, Select } from 'antd';
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { IOtelTrace } from '../../../types/otel';
 import { ITableSpan } from './types';
 import { generateDropdownValue, generateSecondDropdownValue } from './generateDropdownValue';
@@ -45,7 +45,7 @@ export default function TraceStatisticsHeader(props: Props) {
   const [valueNameSelector3, setValueNameSelector3State] = useState<string>('Count');
   const [checkboxStatus, setCheckboxStatus] = useState<boolean>(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     handler(
       getColumnValues(valueNameSelector1, trace, useOtelTerms),
       getColumnValues(valueNameSelector1, trace, useOtelTerms),
