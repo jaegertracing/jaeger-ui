@@ -202,7 +202,7 @@ export function MonitorATMServicesViewImpl(props: TProps) {
     selectedTimeFrame,
   ]);
 
- // componentDidMount equivalent
+  // componentDidMount equivalent
   useEffect(() => {
     calcGraphXDomain();
   }, [calcGraphXDomain]);
