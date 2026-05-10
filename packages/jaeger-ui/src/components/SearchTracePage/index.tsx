@@ -30,7 +30,7 @@ import { useEmbeddedState } from '../../stores/embedded-store';
 import { useShallow } from 'zustand/react/shallow';
 import { FetchedTrace, ReduxState } from '../../types';
 import { SearchQuery } from '../../types/search';
-import { Trace } from '../../types/trace';
+import { SpanData, Trace, TraceData } from '../../types/trace';
 import { IOtelTrace } from '../../types/otel';
 import transformTraceData from '../../model/transform-trace-data';
 import { queryClient } from '../../query/app-query-client';
@@ -233,7 +233,7 @@ export const stateTraceDiffXformer = memoizeOne(
     const rawTraces = stateTrace.rawTraces || [];
     const searchTraceMap = new Map<string, Trace>(
       rawTraces
-        .map((raw: any) => transformTraceData(raw))
+        .map((raw: unknown) => transformTraceData(raw as TraceData & { spans: SpanData[] }))
         .filter((t): t is Trace => t != null)
         .map(t => [t.traceID, t])
     );
@@ -242,7 +242,7 @@ export const stateTraceDiffXformer = memoizeOne(
       // (covers traces added via the TraceIdInput on the compare page).
       const data = searchTraceMap.get(id) ?? queryClient.getQueryData<Trace>(['trace', id]);
       if (data) return { id, data, state: fetchedState.DONE } as FetchedTrace;
-      return { id, state: null as any } as FetchedTrace;
+      return { id } as FetchedTrace;
     });
   }
 );

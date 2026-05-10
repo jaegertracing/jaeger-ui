@@ -19,7 +19,7 @@ import transformDdgData from '../../model/ddg/transformDdgData';
 import transformTracesToPaths from '../../model/ddg/transformTracesToPaths';
 
 import { TDdgStateEntry } from '../../types/TDdgState';
-import { FetchedTrace, ReduxState } from '../../types';
+import { FetchedTrace, FetchedState, ReduxState } from '../../types';
 import { Trace } from '../../types/trace';
 import { IOtelTrace } from '../../types/otel';
 import { queryClient } from '../../query/app-query-client';
@@ -52,7 +52,11 @@ export function mapStateToProps(_state: ReduxState, ownProps: TOwnProps): TRedux
     const tracesFromCache: Record<string, FetchedTrace<Trace>> = {};
     queryClient.getQueriesData<Trace>({ queryKey: ['trace'] }).forEach(([_key, traceData]) => {
       if (traceData) {
-        tracesFromCache[traceData.traceID] = { id: traceData.traceID, data: traceData, state: 'FETCH_DONE' };
+        tracesFromCache[traceData.traceID] = {
+          id: traceData.traceID,
+          data: traceData,
+          state: fetchedState.DONE as FetchedState,
+        };
       }
     });
     const payload = transformTracesToPaths(mapTracesToOtel(tracesFromCache), service, operation);

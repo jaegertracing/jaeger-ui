@@ -16,7 +16,7 @@ type TraceState = {
     state?: string;
     error?: any;
   };
-  rawTraces?: any[];
+  rawTraces?: unknown[];
 };
 
 const initialState: TraceState = {
@@ -73,7 +73,7 @@ function loadJsonDone(state: TraceState, { payload }: any): TraceState {
       results.add(data.traceID);
     }
     const search = { ...state.search, results: Array.from(results), state: fetchedState.DONE };
-    return { ...state, search };
+    return { ...state, search, rawTraces: payload.data };
   } catch (error) {
     const search = { ...state.search, error, results: [], state: fetchedState.ERROR };
     return { ...state, search };

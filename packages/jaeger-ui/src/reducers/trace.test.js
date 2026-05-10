@@ -111,6 +111,7 @@ describe('load json traces', () => {
       state: fetchedState.DONE,
       results: [id],
     });
+    expect(state.rawTraces).toEqual([trace]);
   });
 
   it('handles a failed load json request', () => {

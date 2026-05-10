@@ -44,7 +44,7 @@ export type ReduxState = {
       state?: FetchedState;
       query?: SearchQuery;
     };
-    rawTraces?: any[];
+    rawTraces?: unknown[];
   };
   traceTimeline: TTraceTimeline;
   metrics: MetricsReduxState;
