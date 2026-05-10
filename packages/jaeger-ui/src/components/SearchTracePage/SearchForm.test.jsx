@@ -18,6 +18,10 @@ vi.mock('../common/SearchableSelect', () => {
 vi.mock('../../hooks/useConfig', () => ({
   useConfig: () => ({
     useOpenTelemetryTerms: false,
+    search: {
+      maxLookback: { label: '2 Days', value: '2d' },
+      adjustEndTime: '1m',
+    },
   }),
 }));
 vi.mock('../../hooks/useTraceDiscovery', () => ({
@@ -83,10 +87,6 @@ function makeDateParams(dateOffset = 0) {
 const defaultProps = {
   dataCenters: ['dc1'],
   handleSubmit: () => {},
-  searchMaxLookback: {
-    label: '2 Days',
-    value: '2d',
-  },
   submitFormHandler: jest.fn().mockReturnValue('/search'),
 };
 
@@ -560,9 +560,7 @@ describe('<SearchForm>', () => {
   });
 
   it('prevents default form submission behavior', async () => {
-    const { container } = renderForm(
-      <SearchForm {...defaultProps} searchAdjustEndTime="1m" initialValues={{ service: 'svcA' }} />
-    );
+    const { container } = renderForm(<SearchForm {...defaultProps} initialValues={{ service: 'svcA' }} />);
     const form = container.querySelector('form');
 
     await waitFor(() =>

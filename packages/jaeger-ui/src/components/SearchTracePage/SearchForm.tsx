@@ -331,8 +331,6 @@ export function submitForm(
 interface ISearchFormImplProps {
   invalid?: boolean;
   submitting?: boolean;
-  searchMaxLookback?: ILookbackOption;
-  searchAdjustEndTime?: string;
   initialValues?: Partial<ISearchFormFields> & { traceIDs?: string | null };
   searchTraces: SearchTracesFunction;
   submitFormHandler: (
@@ -345,13 +343,13 @@ interface ISearchFormImplProps {
 export const SearchFormImpl: React.FC<ISearchFormImplProps> = ({
   invalid = false,
   submitting = false,
-  searchMaxLookback,
-  searchAdjustEndTime,
   initialValues,
   submitFormHandler,
 }) => {
   const navigate = useNavigate();
-  const { useOpenTelemetryTerms: useOtelTerms } = useConfig();
+  const { useOpenTelemetryTerms: useOtelTerms, search } = useConfig();
+  const searchMaxLookback: ILookbackOption | undefined = search?.maxLookback;
+  const searchAdjustEndTime: string | undefined = search?.adjustEndTime;
   const [formData, setFormData] = useState<Partial<ISearchFormFields>>(() => ({
     service: initialValues?.service,
     operation: initialValues?.operation,
@@ -828,8 +826,6 @@ export function mapStateToProps(state: ReduxState, ownProps: { search?: string }
       maxDuration: (maxDuration as string | undefined) || undefined,
       traceIDs: traceIDs || null,
     },
-    searchMaxLookback: _get(state, 'config.search.maxLookback'),
-    searchAdjustEndTime: _get(state, 'config.search.adjustEndTime'),
     submitting: state.trace?.search?.state === fetchedState.LOADING,
   };
 }
