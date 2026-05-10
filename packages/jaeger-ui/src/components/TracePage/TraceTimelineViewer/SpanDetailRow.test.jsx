@@ -8,7 +8,6 @@ import userEvent from '@testing-library/user-event';
 
 import SpanDetailRow from './SpanDetailRow';
 import DetailState from './SpanDetail/DetailState';
-import SpanTreeOffset from './SpanTreeOffset';
 
 const MockSpanDetail = jest.fn(() => <div data-testid="mocked-span-detail" />);
 vi.mock('./SpanDetail', () => ({
@@ -20,6 +19,11 @@ vi.mock('./SpanTreeOffset', () => ({
   default: props => MockSpanTreeOffset(props),
 }));
 
+vi.mock('./span-tree-utils', () => ({
+  computeAncestorEntries: jest.fn(() => []),
+  computeIsLastChild: jest.fn(() => false),
+}));
+
 describe('<SpanDetailRow>', () => {
   const spanID = 'some-id';
   const span = {
@@ -28,6 +32,8 @@ describe('<SpanDetailRow>', () => {
     name: 'op-name',
     startTimeUnixMicro: 1000n,
     durationMicros: 100n,
+    hasChildren: false,
+    childSpans: [],
     attributes: [],
     events: [],
     resource: {
@@ -86,12 +92,13 @@ describe('<SpanDetailRow>', () => {
     expect(props.onDetailToggled).toHaveBeenCalledWith(props.span.spanID);
   });
 
-  it('renders the span tree offset with isDetailRow=true', () => {
+  it('renders the span tree offset with isDetailRow=true and precomputed data', () => {
     render(<SpanDetailRow {...props} />);
     expect(MockSpanTreeOffset).toHaveBeenCalledTimes(1);
     expect(MockSpanTreeOffset).toHaveBeenCalledWith(
       expect.objectContaining({
-        span: props.span,
+        spanID: props.span.spanID,
+        hasChildren: props.span.hasChildren,
         isDetailRow: true,
       })
     );

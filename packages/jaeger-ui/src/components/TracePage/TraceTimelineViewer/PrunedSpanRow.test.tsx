@@ -10,10 +10,44 @@ import PrunedSpanRow from './PrunedSpanRow';
 import { IOtelSpan } from '../../../types/otel';
 
 vi.mock('./SpanTreeOffset', () =>
-  mockDefault(({ span, color }: { span: IOtelSpan; color: string }) => (
-    <span data-testid="span-tree-offset" data-depth={span.depth} data-color={color} />
-  ))
+  mockDefault(
+    ({
+      spanID,
+      hasChildren,
+      childCount,
+      ancestorEntries,
+      isLastChild,
+      color,
+    }: {
+      spanID: string;
+      hasChildren: boolean;
+      childCount: number;
+      ancestorEntries: { ancestorId: string; color: string | null }[];
+      isLastChild: boolean;
+      color: string;
+    }) => (
+      <span
+        data-testid="span-tree-offset"
+        data-span-id={spanID}
+        data-has-children={String(hasChildren)}
+        data-child-count={childCount}
+        data-ancestor-count={ancestorEntries.length}
+        data-is-last-child={String(isLastChild)}
+        data-color={color}
+      />
+    )
+  )
 );
+
+vi.mock('./span-tree-utils', () => ({
+  computeAncestorEntries: vi.fn(() => [{ ancestorId: 'grandparent', color: '#aaa' }]),
+}));
+
+vi.mock('../../../utils/color-generator', () => ({
+  default: {
+    getColorByKey: vi.fn(() => '#svc-color'),
+  },
+}));
 
 function makeSpan(depth: number): IOtelSpan {
   return {
@@ -52,7 +86,7 @@ describe('PrunedSpanRow', () => {
     expect(screen.getByText('5 spans pruned')).toBeInTheDocument();
   });
 
-  it('renders SpanTreeOffset at parent depth + 1 with gray color', () => {
+  it('renders SpanTreeOffset with precomputed data and gray color', () => {
     render(
       <PrunedSpanRow
         parentSpan={makeSpan(3)}
@@ -63,8 +97,13 @@ describe('PrunedSpanRow', () => {
       />
     );
     const offset = screen.getByTestId('span-tree-offset');
-    expect(offset).toHaveAttribute('data-depth', '4');
+    // spanID should be parentSpanID--pruned
+    expect(offset).toHaveAttribute('data-span-id', 'span-1--pruned');
+    expect(offset).toHaveAttribute('data-has-children', 'false');
+    expect(offset).toHaveAttribute('data-is-last-child', 'true');
     expect(offset).toHaveAttribute('data-color', '#bbb');
+    // ancestorEntries: parent's ancestors (mocked as 1) + parent itself = 2
+    expect(offset).toHaveAttribute('data-ancestor-count', '2');
   });
 
   it('renders label inside endpoint-name (operation name font size)', () => {
