@@ -21,6 +21,7 @@ vi.mock('../../hooks/useConfig', () => ({
     search: {
       maxLookback: { label: '2 Days', value: '2d' },
       adjustEndTime: '1m',
+      maxLimit: 1500,
     },
   }),
 }));
@@ -532,22 +533,9 @@ describe('<SearchForm>', () => {
   });
 
   it('uses config.search.maxLimit', () => {
-    const maxLimit = 6789;
-    const config = {
-      search: {
-        maxLimit,
-      },
-    };
-
-    const originalGetConfig = window.getJaegerUiConfig;
-    window.getJaegerUiConfig = jest.fn(() => config);
-
     const { container } = renderForm(<SearchForm {...defaultProps} />);
-
     const limitInput = container.querySelector('input[name="resultsLimit"]');
-    expect(limitInput).toHaveAttribute('max');
-
-    window.getJaegerUiConfig = originalGetConfig;
+    expect(limitInput).toHaveAttribute('max', '1500');
   });
 
   it('updates state when tags input changes', () => {
