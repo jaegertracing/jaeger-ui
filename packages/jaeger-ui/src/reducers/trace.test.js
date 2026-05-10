@@ -299,6 +299,42 @@ describe('search traces', () => {
     expect(state.traces[erroredID].error.message).toBe('unknown error');
   });
 
+  it('does not overwrite a DONE entry when an error appears for the same traceID', () => {
+    const state = traceReducer(
+      { search: { query } },
+      {
+        type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_FULFILLED}`,
+        payload: { data: [trace], errors: [{ msg: 'should be ignored', traceID: id }] },
+        meta: { query },
+      }
+    );
+
+    expect(state.search.results).toEqual([id]);
+    expect(state.traces[id].state).toBe(fetchedState.DONE);
+    expect(state.traces[id].error).toBeUndefined();
+  });
+
+  it('deduplicates repeated error entries for the same traceID', () => {
+    const erroredID = 'dup-error';
+    const state = traceReducer(
+      { search: { query } },
+      {
+        type: `${jaegerApiActions.searchTraces}${ACTION_POSTFIX_FULFILLED}`,
+        payload: {
+          data: [],
+          errors: [
+            { msg: 'first', traceID: erroredID },
+            { msg: 'second', traceID: erroredID },
+          ],
+        },
+        meta: { query },
+      }
+    );
+
+    expect(state.search.results).toEqual([erroredID]);
+    expect(state.traces[erroredID].error).toEqual({ message: 'first' });
+  });
+
   it('ignores the results with the wrong query', () => {
     const otherQuery = 'some-other-query';
     [ACTION_POSTFIX_FULFILLED, ACTION_POSTFIX_REJECTED].forEach(postfix => {

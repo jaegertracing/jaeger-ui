@@ -106,10 +106,13 @@ function searchDone(state: TraceState, { meta, payload }: any): TraceState {
   const payloadData = payload.data;
   const processed = payloadData.map(transformTraceData);
   const resultTraces: Record<string, any> = {};
+  const seen = new Set<string>();
   const results: string[] = [];
   for (let i = 0; i < processed.length; i++) {
     const data = processed[i];
     const id = data.traceID;
+    if (seen.has(id)) continue;
+    seen.add(id);
     resultTraces[id] = { data, id, state: fetchedState.DONE };
     results.push(id);
   }
@@ -117,6 +120,11 @@ function searchDone(state: TraceState, { meta, payload }: any): TraceState {
     payload.errors.forEach((err: any) => {
       const { msg, traceID } = err || {};
       if (typeof traceID !== 'string' || !traceID) return;
+      // Don't overwrite a successfully transformed entry if the backend
+      // returns the same traceID in both data and errors.
+      if (resultTraces[traceID]?.state === fetchedState.DONE) return;
+      if (seen.has(traceID)) return;
+      seen.add(traceID);
       const error = { message: typeof msg === 'string' && msg ? msg : 'unknown error' };
       resultTraces[traceID] = { error, id: traceID, state: fetchedState.ERROR };
       results.push(traceID);
