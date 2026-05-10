@@ -5,7 +5,7 @@ import React, { useCallback } from 'react';
 import { IoAlert, IoGitNetwork, IoCloudUploadOutline, IoArrowForward } from 'react-icons/io5';
 import ReferencesButton from './ReferencesButton';
 import TimelineRow from './TimelineRow';
-import { formatDuration, ViewedBoundsFunctionType } from './utils';
+import { formatDurationCompact, ViewedBoundsFunctionType } from './utils';
 import SpanTreeOffset from './SpanTreeOffset';
 import SpanBar from './SpanBar';
 import Ticks from './Ticks';
@@ -109,7 +109,7 @@ const SpanBarRow: React.FC<SpanBarRowProps> = ({
     name: operationName,
     resource: { serviceName },
   } = span;
-  const label = formatDuration(duration);
+  const label = formatDurationCompact(duration);
   const viewBounds = getViewedBounds(span.startTime, span.endTime);
   const viewStart = viewBounds.start;
   const viewEnd = viewBounds.end;
