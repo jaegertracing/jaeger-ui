@@ -181,10 +181,10 @@ export function TracePageImpl(props: TProps) {
 
       const nextSearch = rebaseSettings(location.search);
       if (nextSearch !== location.search) {
-        navigate({ search: nextSearch }, { replace: true });
+        navigate({ pathname: location.pathname, search: nextSearch }, { replace: true });
       }
     },
-    [reduxSetDetailPanelMode, location.search, navigate]
+    [reduxSetDetailPanelMode, location.search, location.pathname, navigate]
   );
 
   const setTimelineBarsVisible = useCallback(
@@ -194,10 +194,10 @@ export function TracePageImpl(props: TProps) {
 
       const nextSearch = rebaseSettings(location.search);
       if (nextSearch !== location.search) {
-        navigate({ search: nextSearch }, { replace: true });
+        navigate({ pathname: location.pathname, search: nextSearch }, { replace: true });
       }
     },
-    [zustandSetTimelineBarsVisible, reduxSetTimelineBarsVisible, location.search, navigate]
+    [zustandSetTimelineBarsVisible, reduxSetTimelineBarsVisible, location.search, location.pathname, navigate]
   );
 
   const archiveTraceState = useArchiveStore(s => (id ? (s.archives[id] ?? null) : null));

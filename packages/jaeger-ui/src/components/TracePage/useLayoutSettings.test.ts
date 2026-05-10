@@ -190,4 +190,28 @@ describe('URL parameter removal and store synchronization', () => {
     // Verify it reverted to localStorage default (inline)
     expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('inline');
   });
+
+  it('does NOT revert to defaults when URL param is removed if user has already changed the value', () => {
+    // lsDefault is 'sidepanel', URL overrides to 'inline'
+    localStorage.setItem('detailPanelMode', 'sidepanel');
+    resetStore({ detailPanelMode: 'sidepanel' });
+
+    const { rerender } = renderHook(({ search }) => useLayoutSettings(search), {
+      initialProps: { search: '?sidebar=inline' },
+    });
+
+    // URL forced store to 'inline'
+    expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('inline');
+
+    // User manually changes it back to 'sidepanel' (different from what URL set)
+    act(() => {
+      useLayoutPrefsStore.setState({ detailPanelMode: 'sidepanel' });
+    });
+
+    // Remove URL param — because store ('sidepanel') !== prevUrlValue ('inline'),
+    // the revert guard should NOT fire, preserving the user's choice.
+    rerender({ search: '' });
+
+    expect(useLayoutPrefsStore.getState().detailPanelMode).toBe('sidepanel');
+  });
 });

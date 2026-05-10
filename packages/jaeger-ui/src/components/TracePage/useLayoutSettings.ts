@@ -92,24 +92,36 @@ export function useLayoutSettings(locationSearch: string): ResolvedLayoutSetting
   ]);
 
   const prevUrlSettingsRef = useRef<UrlLayoutSettings>(urlSettings);
-
   useLayoutEffect(() => {
+    const prevUrlSettings = prevUrlSettingsRef.current;
     // Sync Timeline Bars
     if (urlSettings.timelineBarsVisible !== null) {
       zustandSetTimelineBarsVisible(urlSettings.timelineBarsVisible, false);
-    } else if (prevUrlSettingsRef.current.timelineBarsVisible !== null) {
+    } else if (
+      prevUrlSettings.timelineBarsVisible !== null &&
+      storeTimelineBarsVisible === prevUrlSettings.timelineBarsVisible
+    ) {
       zustandSetTimelineBarsVisible(lsDefaults.timelineBarsVisible, false);
     }
 
     // Sync Detail Panel Mode
     if (urlSettings.detailPanelMode !== null) {
       setDetailPanelModeZustand(urlSettings.detailPanelMode, false);
-    } else if (prevUrlSettingsRef.current.detailPanelMode !== null) {
+    } else if (
+      prevUrlSettings.detailPanelMode !== null &&
+      storeDetailPanelMode === prevUrlSettings.detailPanelMode
+    ) {
       setDetailPanelModeZustand(lsDefaults.detailPanelMode, false);
     }
 
     prevUrlSettingsRef.current = urlSettings;
-  }, [urlSettings, lsDefaults, zustandSetTimelineBarsVisible]);
+  }, [
+    urlSettings,
+    lsDefaults,
+    zustandSetTimelineBarsVisible,
+    storeTimelineBarsVisible,
+    storeDetailPanelMode,
+  ]);
 
   const saveAsDefault = useCallback(
     (key: 'timelineBarsVisible' | 'detailPanelMode') => {
