@@ -89,9 +89,13 @@ export type BackendCapabilities = {
 
 export type SpanDecorationConfig = {
   // A set of tag key/value regular expressions. A span matches if all entries match.
-  entries: { key: string; value: string }[];
-  // Name of the icon to render (from react-icons/io5)
+  // Both 'key' and 'value' are treated as regular expressions.
+  entries: readonly { key: string; value: string }[];
+  // Name of the icon to render. This can be a built-in token (e.g. 'io.Server')
+  // or a full URL to an external image.
   icon: string;
+  // Optional tooltip text to show on hover.
+  tooltip?: string;
 };
 
 // Default values are provided in packages/jaeger-ui/src/constants/default-config.tsx

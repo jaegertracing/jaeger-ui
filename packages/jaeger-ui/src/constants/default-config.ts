@@ -79,15 +79,41 @@ const defaultConfig: Config = {
   },
   linkPatterns: [],
   spanDecorations: [
-    { entries: [{ key: 'db.system', value: '.*' }], icon: 'IoServer' },
-    { entries: [{ key: 'db.type', value: '.*' }], icon: 'IoServer' },
-    { entries: [{ key: 'otel.scope.name', value: 'mysql|redis|mongodb|postgres|sql' }], icon: 'IoServer' },
-    { entries: [{ key: 'http.method', value: '.*' }], icon: 'IoGlobeOutline' },
-    { entries: [{ key: 'http.request.method', value: '.*' }], icon: 'IoGlobeOutline' },
-    { entries: [{ key: 'messaging.system', value: '.*' }], icon: 'IoPaperPlane' },
-    { entries: [{ key: 'rpc.system', value: '.*' }], icon: 'IoSwapHorizontal' },
-    { entries: [{ key: 'rpc.system.name', value: '.*' }], icon: 'IoSwapHorizontal' },
-    { entries: [{ key: 'gen_ai.system', value: '.*' }], icon: 'IoHardwareChip' },
+    {
+      entries: [{ key: 'db.system', value: '.*' }],
+      icon: 'io.Database',
+      tooltip: 'Database Call',
+    },
+    {
+      entries: [{ key: 'db.type', value: '.*' }],
+      icon: 'io.Database',
+      tooltip: 'Database Call',
+    },
+    {
+      entries: [{ key: 'otel.scope.name', value: 'mysql|redis|mongodb|postgres|sql' }],
+      icon: 'io.Database',
+      tooltip: 'Database Call',
+    },
+    {
+      entries: [{ key: 'http.method|http.request.method', value: '.*' }],
+      icon: 'io.Globe',
+      tooltip: 'HTTP Request',
+    },
+    {
+      entries: [{ key: 'messaging.system', value: '.*' }],
+      icon: 'io.PaperPlane',
+      tooltip: 'Messaging',
+    },
+    {
+      entries: [{ key: 'rpc.system|rpc.system.name', value: '.*' }],
+      icon: 'io.Swap',
+      tooltip: 'RPC Call',
+    },
+    {
+      entries: [{ key: 'gen_ai.system', value: '.*' }],
+      icon: 'io.HardwareChip',
+      tooltip: 'AI/ML Operation',
+    },
   ],
   monitor: {
     menuEnabled: true,
