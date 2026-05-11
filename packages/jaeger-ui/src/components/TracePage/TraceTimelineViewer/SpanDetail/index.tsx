@@ -6,6 +6,7 @@ import { Divider } from 'antd';
 
 import { IoLinkOutline } from 'react-icons/io5';
 import AccordionAttributes from './AccordionAttributes';
+import AccordionGenAIAttributes, { GENAI_RICH_ATTRIBUTE_KEYS } from './AccordionGenAIAttributes';
 import AccordionEvents from './AccordionEvents';
 import AccordionLinks from './AccordionLinks';
 import AccordionText from './AccordionText';
@@ -99,13 +100,22 @@ export default function SpanDetail(props: SpanDetailProps) {
       <Divider className="SpanDetail--divider ub-my1" />
       <div>
         <div>
-          <AccordionAttributes
-            data={span.attributes}
-            label={attributesLabel}
-            linksGetter={linksGetter}
-            isOpen={isAttributesOpen}
-            onToggle={() => attributesToggle(span.spanID)}
-          />
+          {(() => {
+            const richAttrs = span.attributes.filter(a => GENAI_RICH_ATTRIBUTE_KEYS.has(a.key));
+            const standardAttrs = span.attributes.filter(a => !GENAI_RICH_ATTRIBUTE_KEYS.has(a.key));
+            return (
+              <>
+                {richAttrs.length > 0 && <AccordionGenAIAttributes data={richAttrs} />}
+                <AccordionAttributes
+                  data={standardAttrs}
+                  label={attributesLabel}
+                  linksGetter={linksGetter}
+                  isOpen={isAttributesOpen}
+                  onToggle={() => attributesToggle(span.spanID)}
+                />
+              </>
+            );
+          })()}
           {span.resource.attributes && span.resource.attributes.length > 0 && (
             <AccordionAttributes
               className="ub-mb1"
