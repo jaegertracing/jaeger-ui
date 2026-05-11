@@ -1,15 +1,7 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  forwardRef,
-  useImperativeHandle,
-  useMemo,
-} from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import './index.css';
 import { Table } from 'antd';
 import { ColumnProps } from 'antd/es/table';
@@ -26,31 +18,6 @@ type Props = {
   uiFind: string | null | undefined;
   useOtelTerms: boolean;
 };
-
-type State = {
-  tableValue: ITableSpan[];
-  sortIndex: number;
-  sortAsc: boolean;
-  showPopup: boolean;
-  popupContent: string;
-  wholeTable: ITableSpan[];
-  valueNameSelector1: string;
-  valueNameSelector2: string | null;
-};
-
-// Interface for imperative handle methods exposed via ref
-interface TraceStatisticsHandle {
-  state: State;
-  setState: (newState: Partial<State> | ((prev: State) => Partial<State>)) => void;
-  handler: (
-    newTableValue: ITableSpan[],
-    newWholeTable: ITableSpan[],
-    newValueNameSelector1: string,
-    newValueNameSelector2: string | null
-  ) => void;
-  togglePopup: (content: string) => void;
-  searchInTable: typeof searchInTable;
-}
 
 const columnsArray: {
   title: string;
@@ -138,7 +105,7 @@ const DEFAULT_GRAY_COLOR = 'rgb(248,248,248)';
  * @param allTableSpans entries that are shown (will be mutated)
  * @param uiFind search string
  */
-const searchInTable = (
+export const searchInTable = (
   uiFindVertexKeys: Set<string> | undefined,
   allTableSpans: ITableSpan[],
   uiFind: string | null | undefined
@@ -202,65 +169,25 @@ const searchInTable = (
 /**
  * Trace Statistics Component
  */
-const TraceStatistics = forwardRef<TraceStatisticsHandle, Props>(function TraceStatistics(props, ref) {
+export default function TraceStatistics(props: Props) {
   const { trace, uiFindVertexKeys, uiFind, useOtelTerms } = props;
 
   const [tableValue, setTableValue] = useState<ITableSpan[]>([]);
-  const [sortIndex, setSortIndex] = useState<number>(1);
-  const [sortAsc, setSortAsc] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [popupContent, setPopupContent] = useState<string>('');
   const [wholeTable, setWholeTable] = useState<ITableSpan[]>([]);
   const [valueNameSelector1, setValueNameSelector1] = useState<string>(() => getServiceName());
-  const [valueNameSelector2, setValueNameSelector2] = useState<string | null>(null);
-
-  // Ref to track current state for imperative handle
-  const stateRef = useRef<State>({
-    tableValue,
-    sortIndex,
-    sortAsc,
-    showPopup,
-    popupContent,
-    wholeTable,
-    valueNameSelector1,
-    valueNameSelector2,
-  });
-
-  // Keep stateRef in sync
-  stateRef.current = {
-    tableValue,
-    sortIndex,
-    sortAsc,
-    showPopup,
-    popupContent,
-    wholeTable,
-    valueNameSelector1,
-    valueNameSelector2,
-  };
 
   /**
-   * Is called from the child to change the state of the parent.
-   * @param newTableValue the values of the column
-   * @param newWholeTable the whole table
-   * @param newValueNameSelector1 first selector value
-   * @param newValueNameSelector2 second selector value
+   * Replaces the parent table state from the Header child.
+   * The fourth (sub-group) value is owned by the Header and not read here.
    */
   const handler = useCallback(
-    (
-      newTableValue: ITableSpan[],
-      newWholeTable: ITableSpan[],
-      newValueNameSelector1: string,
-      newValueNameSelector2: string | null
-    ) => {
-      // Clone array to avoid mutating caller's data
-      // searchInTable modifies array in-place for performance
+    (newTableValue: ITableSpan[], newWholeTable: ITableSpan[], newValueNameSelector1: string) => {
+      // Clone before searchInTable, which mutates rows in place for speed.
       const tableValueCopy = newTableValue.map(item => ({ ...item }));
-      const searchedTableValue = searchInTable(uiFindVertexKeys ?? undefined, tableValueCopy, uiFind);
-      setTableValue(searchedTableValue);
-      setSortIndex(1);
-      setSortAsc(false);
+      setTableValue(searchInTable(uiFindVertexKeys ?? undefined, tableValueCopy, uiFind));
       setValueNameSelector1(newValueNameSelector1);
-      setValueNameSelector2(newValueNameSelector2);
       setWholeTable(newWholeTable);
     },
     [uiFindVertexKeys, uiFind]
@@ -275,86 +202,21 @@ const TraceStatistics = forwardRef<TraceStatisticsHandle, Props>(function TraceS
     setPopupContent(content);
   }, []);
 
-  // Refs to access current values in useEffect without triggering re-runs
+  // Refs let the search effect read the latest tableValue/uiFind without
+  // forcing it to re-run on every change of either.
   const tableValueRef = useRef(tableValue);
   const uiFindRef = useRef(uiFind);
   tableValueRef.current = tableValue;
   uiFindRef.current = uiFind;
 
-  // Track previous uiFindVertexKeys for comparison
-  const prevUiFindVertexKeysRef = useRef<Set<string> | TNil | undefined>(undefined);
-
-  // componentDidUpdate equivalent - respond ONLY to uiFindVertexKeys changes
-  // This matches the original class component behavior which only checked uiFindVertexKeys
+  // Mirror the class component's componentDidUpdate, which only re-applied
+  // the search when uiFindVertexKeys changed. The empty-tableValue check
+  // makes the initial mount a no-op without needing to track a previous value.
   useEffect(() => {
-    // Skip initial mount (prevRef is undefined) - tableValue is empty so search has no effect
-    // Only update when uiFindVertexKeys actually changes after initial mount
-    if (
-      prevUiFindVertexKeysRef.current !== undefined &&
-      uiFindVertexKeys !== prevUiFindVertexKeysRef.current
-    ) {
-      // Clone array to avoid mutating React state directly
-      // searchInTable modifies the array in-place for performance
-      const tableValueCopy = tableValueRef.current.map(item => ({ ...item }));
-      const searchedTableValue = searchInTable(
-        uiFindVertexKeys ?? undefined,
-        tableValueCopy,
-        uiFindRef.current
-      );
-      setTableValue(searchedTableValue);
-    }
-    prevUiFindVertexKeysRef.current = uiFindVertexKeys;
+    if (tableValueRef.current.length === 0) return;
+    const tableValueCopy = tableValueRef.current.map(item => ({ ...item }));
+    setTableValue(searchInTable(uiFindVertexKeys ?? undefined, tableValueCopy, uiFindRef.current));
   }, [uiFindVertexKeys]);
-
-  // Expose methods and state for tests
-  useImperativeHandle(ref, () => {
-    const handle = {
-      get state(): State {
-        return stateRef.current;
-      },
-      setState: (newState: Partial<State> | ((prev: State) => Partial<State>)) => {
-        const updates = typeof newState === 'function' ? newState(stateRef.current) : newState;
-        // Update stateRef immediately to handle sequential calls before re-render
-        // This prevents race conditions when using function updater pattern
-        if (updates.tableValue !== undefined) {
-          stateRef.current.tableValue = updates.tableValue;
-          setTableValue(updates.tableValue);
-        }
-        if (updates.sortIndex !== undefined) {
-          stateRef.current.sortIndex = updates.sortIndex;
-          setSortIndex(updates.sortIndex);
-        }
-        if (updates.sortAsc !== undefined) {
-          stateRef.current.sortAsc = updates.sortAsc;
-          setSortAsc(updates.sortAsc);
-        }
-        if (updates.showPopup !== undefined) {
-          stateRef.current.showPopup = updates.showPopup;
-          setShowPopup(updates.showPopup);
-        }
-        if (updates.popupContent !== undefined) {
-          stateRef.current.popupContent = updates.popupContent;
-          setPopupContent(updates.popupContent);
-        }
-        if (updates.wholeTable !== undefined) {
-          stateRef.current.wholeTable = updates.wholeTable;
-          setWholeTable(updates.wholeTable);
-        }
-        if (updates.valueNameSelector1 !== undefined) {
-          stateRef.current.valueNameSelector1 = updates.valueNameSelector1;
-          setValueNameSelector1(updates.valueNameSelector1);
-        }
-        if (updates.valueNameSelector2 !== undefined) {
-          stateRef.current.valueNameSelector2 = updates.valueNameSelector2;
-          setValueNameSelector2(updates.valueNameSelector2);
-        }
-      },
-      handler,
-      togglePopup,
-      searchInTable,
-    };
-    return handle;
-  }, [handler, togglePopup]);
 
   const onClickOption = useCallback(
     (hasSubgroupValue: boolean, name: string) => {
@@ -539,8 +401,4 @@ const TraceStatistics = forwardRef<TraceStatisticsHandle, Props>(function TraceS
       />
     </div>
   );
-});
-
-TraceStatistics.displayName = 'TraceStatistics';
-
-export default TraceStatistics;
+}
