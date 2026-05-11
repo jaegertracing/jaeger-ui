@@ -3,6 +3,7 @@
 **Status**: In Progress / Partially Implemented
 **Last Updated**: 2025-12-29  
 **Reviewed**: 2025-12-29
+**Tracking Issue**: https://github.com/jaegertracing/jaeger-ui/issues/3265
 
 ---
 
@@ -110,7 +111,8 @@ interface OtelSpan {
 
   // Naming & Classification
   name: string;                 // was: operationName
-  kind: SpanKind;               // was: derived from tags['span.kind']
+  kind: SpanKind;               // was: derived from tags['span.kind'] (lowercase, e.g. "server")
+                                // in OTLP-JSON wire format: "SPAN_KIND_SERVER" (strip prefix when parsing)
 
   // Timing
   startTime: Microseconds;      // was: startTime
@@ -468,33 +470,38 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 
 #### Milestone 3.1: Metadata Exploration (Search Page)
 **Goal**: Implement the simplest OTLP endpoints and integrate them into the Search page.
-- [ ] Implement `fetchServices()` and `fetchSpanNames(service)` in `OtlpApiClient`.
-- [ ] Setup `QueryClient` and `QueryClientProvider`.
-- [ ] Create `useServices()` and `useSpanNames(service)` hooks.
-- [ ] Update `SearchForm.jsx` to use these hooks instead of Redux/JaegerAPI.
+
+> **Note**: The `/api/v3/operations` endpoint returns `span_kind` as a **lowercase** string (e.g. `"server"`, `"client"`). This is a Jaeger-specific serialization, not the OTLP-JSON proto enum name. `useSpanNames` already normalizes with `.toLowerCase()` when filtering.
+
+- [x] Implement `fetchServices()` and `fetchSpanNames(service)` in `JaegerClient` (`src/api/v3/client.ts`).
+- [x] Setup `QueryClient` and `QueryClientProvider` (`src/query/app-query-client.tsx`).
+- [x] Create `useServices()` and `useSpanNames(service)` hooks (`src/hooks/useTraceDiscovery.ts`).
+- [x] Update `SearchForm` to use these hooks instead of Redux/JaegerAPI.
+- [ ] Wire `app-query-client` into the root `App` component so all pages benefit.
 - **Verification**: Search page dropdowns are populated from `/api/v3/`.
 
 #### Milestone 3.2: Single Trace Loading
 **Goal**: Load a full trace by ID using the new OTLP parser.
-- [ ] Implement `getTrace(traceId)` in `OtlpApiClient`.
-- [ ] Implement the OTLP Parser (`src/api/v3/parser.ts`) to convert OTLP JSON to `IOtelTrace`.
-- [ ] Create `useTrace(traceId)` hook.
+- [ ] Implement `getTrace(traceId)` in `JaegerClient` (`src/api/v3/client.ts`) with unit tests.
+- [ ] Implement the OTLP parser (`src/api/v3/parser.ts`) converting OTLP wire JSON → enriched `IOtelTrace` (depth, parent/child refs, relative timing, critical path — equivalent of `transformTraceData` for the v3 route).
+- [ ] Create `useTrace(traceId)` hook (React Query) in `src/hooks/useTraceDiscovery.ts`.
 - [ ] Update `TracePage` to use the new hook.
-- [ ] Use `OtelTraceFacade` to wrap the new data, ensuring visual parity in components.
+- [ ] Verify visual parity (trace loaded from `/api/v3/` looks identical to legacy).
 - **Verification**: Opening a trace (e.g., via direct URL) loads data from `/api/v3/`.
 
 #### Milestone 3.3: Trace Search
 **Goal**: Implement full search functionality, including input parameter conversion.
-- [ ] Implement `findTraces(query)` in `OtlpApiClient`.
+- [ ] Implement `findTraces(query)` in `JaegerClient`.
 - [ ] Map Search UI parameters to OTLP query parameters.
 - [ ] Update `SearchPage` results to use the new client via React Query.
 - **Verification**: Searching for traces from the UI returns results from `/api/v3/`.
 
-#### Milestone 3.4: Extended Operations & Cleanup
+#### Milestone 3.4: Extended Operations & Legacy Decommission
 **Goal**: Migrate remaining operations and decommission legacy code.
-- [ ] Implement `archiveTrace`, `fetchDependencies`, and `fetchMetrics`.
-- [ ] Update unmigrated components to use the new client.
+- [ ] Implement `archiveTrace`, `fetchDependencies`, and `fetchMetrics` in `JaegerClient`.
+- [ ] Update remaining components to use the new client.
 - [ ] Gradually decommission Redux actions/reducers for trace data.
+- [ ] Remove legacy `src/api/jaeger.ts`.
 - [ ] Transition to Phase 4 (Cleanup).
 
 ---
@@ -513,7 +520,7 @@ To maintain a clean separation between the backend's wire format and the UI's do
 
 #### 3.6 OTLP Parser & Enrichment
 
-The new `OtlpParser` replaces the role of `transformTraceData` for the OTLP route.
+The new parser replaces the role of `transformTraceData` for the OTLP route. Covered by Milestone 3.2.
 
 - [ ] Create `src/api/v3/parser.ts`:
   ```typescript
@@ -524,6 +531,8 @@ The new `OtlpParser` replaces the role of `transformTraceData` for the OTLP rout
   export function parseOtlpTrace(wireData: IOtlpTraceData): IOtelTrace {
     // 1. Validate wireData (optionally with Zod)
     // 2. Map OTLP properties to IOtelTrace
+    //    - span.kind arrives as "SPAN_KIND_SERVER" (protojson enum name);
+    //      strip the "SPAN_KIND_" prefix to map to the SpanKind enum.
     // 3. ENRICH: Calculate derived properties (depth, parent/child refs, etc.)
     // 4. Return enriched IOtelTrace
   }
@@ -710,7 +719,7 @@ export class JaegerClient {
 
 ##### Code Generation Workflow
 
-Add to `package.json` (root):
+- [ ] Add `generate:api-types` script to `package.json` (root) to regenerate `src/api/v3/generated-client.ts` from the OpenAPI spec:
 ```json
 {
   "scripts": {
@@ -744,19 +753,22 @@ describe('ID Validation', () => {
 
 #### 3.7 Integration Testing Strategy
 
-To ensure `OtlpApiClient` successfully interfaces with the Jaeger backend before UI integration, a multi-layered testing approach will be adopted:
+To ensure `JaegerClient` successfully interfaces with the Jaeger backend before UI integration, a multi-layered testing approach will be adopted:
 
 ##### 1. Service-Level Mocking (MSW)
 Instead of mocking `fetch` directly, use **Mock Service Worker (MSW)** to intercept network requests at the service layer.
 - **Goal**: Test parsing logic, error handling, and URL construction using the real `fetch` API against realistic mocked OTLP payloads.
+- [ ] Add MSW harness and integration tests for all `JaegerClient` methods (can be done as a standalone PR independently of other milestones).
 
 ##### 2. Contract Validation (Zod)
 Use a runtime validation library (e.g., `zod`) in the parser to validate the incoming OTLP JSON.
 - **Goal**: Catch backend breaking changes at the network boundary. Ensures `wireData` strictly matches our generated types.
+- [ ] Extend Zod schema coverage to full trace/span wire types (currently only services and operations endpoints are validated).
 
 ##### 3. Backend Smoke Tests (Real Jaeger)
 A standalone integration test script that runs against a live Jaeger instance.
 - **Workflow**: Start `jaegertracing/jaeger` via Docker, send sample OTLP data, and verify the client can fetch and parse it correctly.
+- [ ] Create smoke-test script.
 
 #### 3.8 Facade Coexistence & Cache Transition
 

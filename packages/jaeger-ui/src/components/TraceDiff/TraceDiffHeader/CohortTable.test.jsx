@@ -88,7 +88,7 @@ describe('CohortTable', () => {
   let formatDurationSpy;
 
   beforeAll(() => {
-    formatDurationSpy = jest.spyOn(dateUtils, 'formatDuration');
+    formatDurationSpy = jest.spyOn(dateUtils, 'formatDurationCompact');
     formatDurationSpy.mockImplementation(value => `${value}ms`);
   });
 

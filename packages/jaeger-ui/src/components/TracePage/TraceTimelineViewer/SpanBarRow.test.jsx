@@ -34,7 +34,7 @@ vi.mock('./SpanBar', () => ({
 }));
 
 vi.mock('./utils', () => ({
-  formatDuration: jest.fn(d => `formatted-${d}`),
+  formatDurationCompact: jest.fn(d => `formatted-${d}`),
   ViewedBoundsFunctionType: {},
 }));
 
