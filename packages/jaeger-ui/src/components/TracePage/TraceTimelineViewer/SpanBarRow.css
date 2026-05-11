@@ -200,6 +200,12 @@ SPDX-License-Identifier: Apache-2.0
   vertical-align: middle;
 }
 
+.SpanBarRow--decorationIcon img {
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+}
+
 .SpanBarRow--rpcColorMarker {
   border-radius: 6.5px;
   display: inline-block;

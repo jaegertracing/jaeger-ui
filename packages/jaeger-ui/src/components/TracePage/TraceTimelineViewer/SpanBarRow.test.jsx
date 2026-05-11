@@ -8,10 +8,11 @@ import '@testing-library/jest-dom';
 import SpanBarRow from './SpanBarRow';
 import SpanBar from './SpanBar';
 import getConfig from '../../../utils/config/get-config';
+import { _clearCache } from '../../../model/span-decorations';
 
 vi.mock('../../../utils/config/get-config', () => ({
   default: jest.fn(() => ({
-    spanDecorations: [{ entries: [{ key: 'db.system', value: '.*' }], icon: 'IoServer' }],
+    spanDecorations: [{ attributes: [{ key: 'db.system', value: '.*' }], icon: 'io.Database' }],
   })),
 }));
 
@@ -97,6 +98,7 @@ describe('<SpanBarRow>', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    _clearCache();
     defaultProps.onDetailToggled.mockReset();
     defaultProps.onChildrenToggled.mockReset();
   });
@@ -225,7 +227,7 @@ describe('<SpanBarRow>', () => {
 
   it('handles invalid regex patterns gracefully', () => {
     getConfig.mockReturnValueOnce({
-      spanDecorations: [{ entries: [{ key: 'db.system', value: '[' }], icon: 'IoServer' }],
+      spanDecorations: [{ attributes: [{ key: 'db.system', value: '[' }], icon: 'io.Database' }],
     });
     const props = {
       ...defaultProps,
@@ -240,7 +242,7 @@ describe('<SpanBarRow>', () => {
 
   it('handles unknown icon names gracefully', () => {
     getConfig.mockReturnValueOnce({
-      spanDecorations: [{ entries: [{ key: 'db.system', value: '.*' }], icon: 'UnknownIcon' }],
+      spanDecorations: [{ attributes: [{ key: 'db.system', value: '.*' }], icon: 'UnknownIcon' }],
     });
     const props = {
       ...defaultProps,
