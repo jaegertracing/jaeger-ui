@@ -49,6 +49,7 @@ export function rebaseSettings(search: string): string {
 export function stripSettingParam(search: string, key: keyof UrlLayoutSettings): string {
   const paramName = key === 'timelineBarsVisible' ? URL_PARAM_TIMELINE : URL_PARAM_SIDEBAR;
   const params = queryString.parse(search);
+  if (!(paramName in params)) return search; // param absent — no change, no stringify churn
   delete params[paramName];
   const newSearch = queryString.stringify(params);
   return newSearch ? `?${newSearch}` : '';

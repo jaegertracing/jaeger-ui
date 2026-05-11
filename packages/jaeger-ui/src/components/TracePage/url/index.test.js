@@ -74,8 +74,9 @@ describe('TracePage/url', () => {
       expect(stripSettingParam('?timeline=on', 'timelineBarsVisible')).toBe('');
     });
 
-    it('is a no-op when the targeted param is absent', () => {
-      expect(stripSettingParam('?uiFind=foo', 'timelineBarsVisible')).toBe('?uiFind=foo');
+    it('returns the original search unchanged when the targeted param is absent', () => {
+      const search = '?uiFind=foo';
+      expect(stripSettingParam(search, 'timelineBarsVisible')).toBe(search);
     });
   });
 

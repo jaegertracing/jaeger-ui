@@ -76,7 +76,7 @@ function SettingRow<T>({
 
       {isOverridden && (
         <div className="TraceViewSettings--overrideRow">
-          {source !== 'localstorage' && (
+          {(SOURCE_LABELS[source] || SOURCE_ICONS[source]) && (
             <span className={`TraceViewSettings--sourceBadge TraceViewSettings--sourceBadge--${source}`}>
               {SOURCE_ICONS[source]}
               {SOURCE_LABELS[source]}
