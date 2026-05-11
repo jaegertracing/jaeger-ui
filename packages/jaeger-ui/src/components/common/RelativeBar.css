@@ -15,11 +15,6 @@ SPDX-License-Identifier: Apache-2.0
   border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.1));
 }
 
-[data-theme='dark'] .RelativeBar {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
 .RelativeBar--fill {
   height: 100%;
   background: var(--interactive-primary, #1890ff);
