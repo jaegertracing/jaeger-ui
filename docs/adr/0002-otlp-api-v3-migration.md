@@ -111,7 +111,8 @@ interface OtelSpan {
 
   // Naming & Classification
   name: string;                 // was: operationName
-  kind: SpanKind;               // was: derived from tags['span.kind']
+  kind: SpanKind;               // was: derived from tags['span.kind'] (lowercase, e.g. "server")
+                                // in OTLP-JSON wire format: "SPAN_KIND_SERVER" (strip prefix when parsing)
 
   // Timing
   startTime: Microseconds;      // was: startTime
@@ -469,6 +470,9 @@ Introduce a top-level configuration flag `useOpenTelemetryTerms` (defaulting to 
 
 #### Milestone 3.1: Metadata Exploration (Search Page)
 **Goal**: Implement the simplest OTLP endpoints and integrate them into the Search page.
+
+> **Note**: The `/api/v3/operations` endpoint returns `span_kind` as a **lowercase** string (e.g. `"server"`, `"client"`). This is a Jaeger-specific serialization, not the OTLP-JSON proto enum name. `useSpanNames` already normalizes with `.toLowerCase()` when filtering.
+
 - [x] Implement `fetchServices()` and `fetchSpanNames(service)` in `JaegerClient` (`src/api/v3/client.ts`).
 - [x] Setup `QueryClient` and `QueryClientProvider` (`src/query/app-query-client.tsx`).
 - [x] Create `useServices()` and `useSpanNames(service)` hooks (`src/hooks/useTraceDiscovery.ts`).
@@ -527,6 +531,8 @@ The new parser replaces the role of `transformTraceData` for the OTLP route. Cov
   export function parseOtlpTrace(wireData: IOtlpTraceData): IOtelTrace {
     // 1. Validate wireData (optionally with Zod)
     // 2. Map OTLP properties to IOtelTrace
+    //    - span.kind arrives as "SPAN_KIND_SERVER" (protojson enum name);
+    //      strip the "SPAN_KIND_" prefix to map to the SpanKind enum.
     // 3. ENRICH: Calculate derived properties (depth, parent/child refs, etc.)
     // 4. Return enriched IOtelTrace
   }
