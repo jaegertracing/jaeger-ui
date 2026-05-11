@@ -1,12 +1,14 @@
 // Copyright (c) 2026 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { IoAlert } from 'react-icons/io5';
 
 import SpanTreeOffset from './SpanTreeOffset';
 import TimelineRow from './TimelineRow';
 import { IOtelSpan } from '../../../types/otel';
+import { SpanTreeOffsetState } from './utils';
+import colorGenerator from '../../../utils/color-generator';
 
 import './PrunedSpanRow.css';
 
@@ -16,6 +18,7 @@ type PrunedSpanRowProps = {
   prunedErrorCount: number;
   nameColumnWidth: number;
   timelineBarsVisible: boolean;
+  treeOffsetMap: Map<string, SpanTreeOffsetState>;
 };
 
 // Gray color for the pruned placeholder dot (not tied to any service).
@@ -27,40 +30,47 @@ export default function PrunedSpanRow({
   prunedErrorCount,
   nameColumnWidth,
   timelineBarsVisible,
+  treeOffsetMap,
 }: PrunedSpanRowProps) {
   const spanWord = prunedChildrenCount === 1 ? 'span' : 'spans';
   const errorSuffix =
     prunedErrorCount > 0 ? `, ${prunedErrorCount} ${prunedErrorCount === 1 ? 'error' : 'errors'}` : '';
   const label = `${prunedChildrenCount} ${spanWord} pruned${errorSuffix}`;
 
-  // Create a fake span so SpanTreeOffset renders proper tree lines and a dot
-  // at depth = parentSpan.depth + 1. Use a synthetic parent that appends the
-  // fake span as the last child so SpanTreeOffset correctly terminates the
-  // vertical tree line (it checks parentSpan.childSpans[last].spanID === spanID).
-  const fakeSpan = useMemo(() => {
-    const spanID = `${parentSpan.spanID}--pruned`;
-    const fake = {
-      spanID,
-      depth: parentSpan.depth + 1,
-      hasChildren: false,
-      childSpans: [],
-      parentSpan: null as unknown as IOtelSpan,
-      resource: parentSpan.resource,
-    } as unknown as IOtelSpan;
-    // Prototype-based copy: syntheticParent delegates all properties (including
-    // parentSpan for ancestor walks) to the real parentSpan, with only childSpans
-    // overridden. This lets SpanTreeOffset see the placeholder as the last child.
-    const syntheticParent = Object.create(parentSpan) as IOtelSpan;
-    (syntheticParent as unknown as { childSpans: IOtelSpan[] }).childSpans = [...parentSpan.childSpans, fake];
-    (fake as { parentSpan: IOtelSpan }).parentSpan = syntheticParent;
-    return fake;
-  }, [parentSpan]);
+  // The pruned placeholder renders at the same depth as a real child of parentSpan.
+  // Look up parentSpan's own state from the map (O(1)) and derive the child's view:
+  // ancestors = parentSpan's ancestors + parentSpan itself; isLastChild = true since
+  // the placeholder is always rendered last after all visible siblings.
+  const parentState = treeOffsetMap.get(parentSpan.spanID) ?? {
+    ancestors: [],
+    isLastChild: false,
+  };
+
+  // Derive the color from parentSpan's own service name — NOT from
+  // parentState.parentColor, which is the *grandparent's* color.
+  const parentSpanColor = colorGenerator.getColorByKey(parentSpan.resource.serviceName);
+
+  const selfAncestorEntry = {
+    spanID: parentSpan.spanID,
+    color: parentSpanColor, // the stripe for parentSpan itself
+    isTerminated: true, // placeholder is always last — bar terminates here
+  };
+  const treeOffsetState: SpanTreeOffsetState = {
+    ancestors: [...parentState.ancestors, selfAncestorEntry],
+    isLastChild: true,
+  };
 
   return (
     <TimelineRow className="span-row PrunedSpanRow">
       <TimelineRow.Cell className="span-name-column" width={nameColumnWidth}>
         <div className="span-name-wrapper">
-          <SpanTreeOffset span={fakeSpan} color={PRUNED_DOT_COLOR} />
+          <SpanTreeOffset
+            spanID={`${parentSpan.spanID}--pruned`}
+            hasChildren={false}
+            childCount={0}
+            color={PRUNED_DOT_COLOR}
+            {...treeOffsetState}
+          />
           <span className="span-name PrunedSpanRow--name">
             <span className="span-svc-name">
               {prunedErrorCount > 0 && (

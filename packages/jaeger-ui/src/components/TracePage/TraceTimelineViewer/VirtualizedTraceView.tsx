@@ -25,6 +25,8 @@ import {
   isKindClient,
   isKindProducer,
   spanContainsErredSpan,
+  buildTreeOffsetMap,
+  SpanTreeOffsetState,
 } from './utils';
 import { Accessors } from '../ScrollManager';
 import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../common/UiFindInput';
@@ -212,10 +214,26 @@ const memoizedPrunedCriticalPaths = memoizeOne(
 // export from tests
 export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceViewProps> {
   listView: ListView | TNil;
+
+  // Instance-level cache for the tree-offset map. Scoped per instance so
+  // multiple mounted VirtualizedTraceViews don't thrash a shared module-level
+  // memoization slot. Rebuilt only when trace.spans reference changes.
+  private _treeOffsetMap: Map<string, SpanTreeOffsetState> | null = null;
+  private _treeOffsetMapSpans: IOtelTrace['spans'] | null = null;
+
   constructor(props: VirtualizedTraceViewProps) {
     super(props);
     const { setTrace, trace, uiFind } = props;
     setTrace(trace, uiFind);
+  }
+
+  getTreeOffsetMap(): Map<string, SpanTreeOffsetState> {
+    const { spans } = this.props.trace;
+    if (this._treeOffsetMapSpans !== spans || this._treeOffsetMap === null) {
+      this._treeOffsetMapSpans = spans;
+      this._treeOffsetMap = buildTreeOffsetMap(spans);
+    }
+    return this._treeOffsetMap;
   }
 
   componentDidMount(): void {
@@ -425,11 +443,13 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
 
   renderRow = (key: string, style: React.CSSProperties, index: number, attrs: object) => {
     const row = this.getRowStates()[index];
+    const treeOffsetMap = this.getTreeOffsetMap();
     if ('isPrunedPlaceholder' in row) {
       return this.renderPrunedSpanRow(
         row.span,
         row.prunedChildrenCount,
         row.prunedErrorCount,
+        treeOffsetMap,
         key,
         style,
         attrs
@@ -437,8 +457,8 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     }
     const { isDetail, span, spanIndex } = row;
     return isDetail
-      ? this.renderSpanDetailRow(span, key, style, attrs)
-      : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
+      ? this.renderSpanDetailRow(span, treeOffsetMap, key, style, attrs)
+      : this.renderSpanBarRow(span, spanIndex, treeOffsetMap, key, style, attrs);
   };
 
   /**
@@ -482,6 +502,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     parentSpan: IOtelSpan,
     prunedChildrenCount: number,
     prunedErrorCount: number,
+    treeOffsetMap: Map<string, SpanTreeOffsetState>,
     key: string,
     style: React.CSSProperties,
     attrs: object
@@ -495,6 +516,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           prunedErrorCount={prunedErrorCount}
           nameColumnWidth={nameColumnWidth}
           timelineBarsVisible={timelineBarsVisible}
+          treeOffsetMap={treeOffsetMap}
         />
       </div>
     );
@@ -503,6 +525,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
   renderSpanBarRow(
     span: IOtelSpan,
     spanIndex: number,
+    treeOffsetMap: Map<string, SpanTreeOffsetState>,
     key: string,
     style: React.CSSProperties,
     attrs: object
@@ -595,6 +618,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           getViewedBounds={this.getViewedBounds()}
           traceStartTime={trace.startTime}
           span={span}
+          treeOffsetMap={treeOffsetMap}
           focusSpan={this.focusSpan}
           traceDuration={trace.duration}
           useOtelTerms={useOtelTerms}
@@ -603,7 +627,13 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     );
   }
 
-  renderSpanDetailRow(span: IOtelSpan, key: string, style: React.CSSProperties, attrs: object) {
+  renderSpanDetailRow(
+    span: IOtelSpan,
+    treeOffsetMap: Map<string, SpanTreeOffsetState>,
+    key: string,
+    style: React.CSSProperties,
+    attrs: object
+  ) {
     const { spanID } = span;
     const { serviceName } = span.resource;
     const {
@@ -648,6 +678,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
           currentViewRangeTime={currentViewRangeTime}
           traceDuration={trace.duration}
           useOtelTerms={useOtelTerms}
+          treeOffsetMap={treeOffsetMap}
         />
       </div>
     );
