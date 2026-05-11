@@ -127,20 +127,20 @@ const {
   useEmbeddedStateMock,
   mockUseLayoutSettings,
 } = vi.hoisted(() => ({
-  mockUseLayoutSettings: jest.fn(),
-  mockSubmitTraceToArchive: jest.fn(),
-  mockAcknowledge: jest.fn(),
-  mockSetDetailPanelMode: jest.fn(),
+  mockUseLayoutSettings: vi.fn(),
+  mockSubmitTraceToArchive: vi.fn(),
+  mockAcknowledge: vi.fn(),
+  mockSetDetailPanelMode: vi.fn(),
   mockLayoutPrefsStore: {
     detailPanelMode: 'inline',
     timelineBarsVisible: true,
-    setTimelineBarsVisible: jest.fn(),
+    setTimelineBarsVisible: vi.fn(),
   },
   mockTraceTimelineStore: {
-    focusUiFindMatches: jest.fn(),
+    focusUiFindMatches: vi.fn(),
     prunedServices: new Set(),
   },
-  useEmbeddedStateMock: jest.fn().mockReturnValue(null),
+  useEmbeddedStateMock: vi.fn().mockReturnValue(null),
 }));
 
 vi.mock('../../stores/archive-store', () => ({

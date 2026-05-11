@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { Button, Popover, Switch, Tooltip } from 'antd';
-import { IoSettingsOutline, IoLink, IoSparkles, IoCheckmarkCircle } from 'react-icons/io5';
+import { IoSettingsOutline, IoLink, IoCheckmarkCircle } from 'react-icons/io5';
 
 import KeyboardShortcutsHelp from './KeyboardShortcutsHelp';
 import type { ResolvedLayoutSettings, ResolvedSetting, SettingSource } from '../useLayoutSettings';
@@ -23,15 +23,13 @@ type Props = {
 
 const SOURCE_LABELS: Record<SettingSource, string> = {
   url: 'Set by shared link',
-  heuristic: 'Optimized for this trace',
+  heuristic: '',
   localstorage: '',
 };
 
 const SOURCE_ICONS: Record<SettingSource, React.ReactNode> = {
   url: <IoLink className="TraceViewSettings--sourceIcon TraceViewSettings--sourceIcon--url" />,
-  heuristic: (
-    <IoSparkles className="TraceViewSettings--sourceIcon TraceViewSettings--sourceIcon--heuristic" />
-  ),
+  heuristic: null,
   localstorage: null,
 };
 

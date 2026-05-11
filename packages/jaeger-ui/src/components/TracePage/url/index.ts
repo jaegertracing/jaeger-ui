@@ -13,8 +13,6 @@ export const ROUTE_PATH = prefixUrl('/trace/:id');
 const URL_PARAM_TIMELINE = 'timeline';
 const URL_PARAM_SIDEBAR = 'sidebar';
 
-const SETTINGS_URL_PARAMS = [URL_PARAM_TIMELINE, URL_PARAM_SIDEBAR];
-
 export type UrlLayoutSettings = {
   timelineBarsVisible: boolean | null;
   detailPanelMode: SpanDetailPanelMode | null;
@@ -32,12 +30,26 @@ export function stringifySettings(settings: Partial<UrlLayoutSettings>): Record<
 }
 
 /**
- * Removes layout settings from a search string.
- * This is used to "rebase" the URL back to its base state (preserving other params like uiFind).
+ * Removes all layout setting params from a search string, preserving others (e.g. uiFind).
+ * Used when closing/navigating away from a trace to produce a clean base URL.
  */
 export function rebaseSettings(search: string): string {
   const params = queryString.parse(search);
-  SETTINGS_URL_PARAMS.forEach(p => delete params[p]);
+  delete params[URL_PARAM_TIMELINE];
+  delete params[URL_PARAM_SIDEBAR];
+  const newSearch = queryString.stringify(params);
+  return newSearch ? `?${newSearch}` : '';
+}
+
+/**
+ * Removes a single layout setting param from a search string, preserving all others.
+ * Used when the user toggles a setting — only the acted-on param is stripped,
+ * so other URL overrides (e.g. ?sidebar=sidepanel) remain intact.
+ */
+export function stripSettingParam(search: string, key: keyof UrlLayoutSettings): string {
+  const paramName = key === 'timelineBarsVisible' ? URL_PARAM_TIMELINE : URL_PARAM_SIDEBAR;
+  const params = queryString.parse(search);
+  delete params[paramName];
   const newSearch = queryString.stringify(params);
   return newSearch ? `?${newSearch}` : '';
 }

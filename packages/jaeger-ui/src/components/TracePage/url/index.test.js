@@ -1,7 +1,14 @@
 // Copyright (c) 2020 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { getTracePageLink, getUrl, stringifySettings, rebaseSettings, parseSettingsFromUrl } from '.';
+import {
+  getTracePageLink,
+  getUrl,
+  stringifySettings,
+  rebaseSettings,
+  stripSettingParam,
+  parseSettingsFromUrl,
+} from '.';
 import prefixUrl from '../../../utils/prefix-url';
 
 describe('TracePage/url', () => {
@@ -47,6 +54,28 @@ describe('TracePage/url', () => {
     it('handles search without settings', () => {
       const search = '?uiFind=foo';
       expect(rebaseSettings(search)).toBe('?uiFind=foo');
+    });
+  });
+
+  describe('stripSettingParam', () => {
+    it('strips only the timeline param, leaving sidebar intact', () => {
+      expect(stripSettingParam('?uiFind=foo&timeline=on&sidebar=sidepanel', 'timelineBarsVisible')).toBe(
+        '?sidebar=sidepanel&uiFind=foo'
+      );
+    });
+
+    it('strips only the sidebar param, leaving timeline intact', () => {
+      expect(stripSettingParam('?uiFind=foo&timeline=on&sidebar=sidepanel', 'detailPanelMode')).toBe(
+        '?timeline=on&uiFind=foo'
+      );
+    });
+
+    it('returns empty string if only that param was present', () => {
+      expect(stripSettingParam('?timeline=on', 'timelineBarsVisible')).toBe('');
+    });
+
+    it('is a no-op when the targeted param is absent', () => {
+      expect(stripSettingParam('?uiFind=foo', 'timelineBarsVisible')).toBe('?uiFind=foo');
     });
   });
 

@@ -40,7 +40,7 @@ import TraceTimelineViewer from './TraceTimelineViewer';
 import { filterPrunedSpanIDs } from './TraceTimelineViewer/generateRowStates';
 import { actions as timelineActions } from './TraceTimelineViewer/duck';
 import { TUpdateViewRangeTimeFunction, IViewRange, ViewRangeTimeUpdate, ETraceViewType } from './types';
-import { getUrl, rebaseSettings } from './url';
+import { getUrl, stripSettingParam } from './url';
 import { useLayoutSettings } from './useLayoutSettings';
 import ErrorMessage from '../common/ErrorMessage';
 import LoadingIndicator from '../common/LoadingIndicator';
@@ -179,7 +179,7 @@ export function TracePageImpl(props: TProps) {
       setDetailPanelModeZustand(mode, false);
       reduxSetDetailPanelMode(mode);
 
-      const nextSearch = rebaseSettings(location.search);
+      const nextSearch = stripSettingParam(location.search, 'detailPanelMode');
       if (nextSearch !== location.search) {
         navigate({ pathname: location.pathname, search: nextSearch }, { replace: true });
       }
@@ -192,7 +192,7 @@ export function TracePageImpl(props: TProps) {
       zustandSetTimelineBarsVisible(visible, false);
       reduxSetTimelineBarsVisible(visible);
 
-      const nextSearch = rebaseSettings(location.search);
+      const nextSearch = stripSettingParam(location.search, 'timelineBarsVisible');
       if (nextSearch !== location.search) {
         navigate({ pathname: location.pathname, search: nextSearch }, { replace: true });
       }

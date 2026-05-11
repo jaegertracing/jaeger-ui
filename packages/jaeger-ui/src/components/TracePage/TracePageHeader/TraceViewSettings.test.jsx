@@ -98,18 +98,6 @@ describe('<TraceViewSettings>', () => {
     expect(screen.getByText('Set by shared link')).toBeInTheDocument();
   });
 
-  it('shows "Optimized for this trace" badge when timeline source is "heuristic"', async () => {
-    const settingSources = {
-      timelineBarsVisible: { value: false, source: 'heuristic', isOverridden: true },
-      detailPanelMode: { value: 'inline', source: 'localstorage', isOverridden: false },
-    };
-    render(
-      <TraceViewSettings {...defaultProps} timelineBarsVisible={false} settingSources={settingSources} />
-    );
-    await openPanel();
-    expect(screen.getByText('Optimized for this trace')).toBeInTheDocument();
-  });
-
   it('does not show a source badge when source is "localstorage"', async () => {
     const settingSources = {
       timelineBarsVisible: { value: true, source: 'localstorage', isOverridden: false },
@@ -118,7 +106,6 @@ describe('<TraceViewSettings>', () => {
     render(<TraceViewSettings {...defaultProps} settingSources={settingSources} />);
     await openPanel();
     expect(screen.queryByText('Set by shared link')).not.toBeInTheDocument();
-    expect(screen.queryByText('Optimized for this trace')).not.toBeInTheDocument();
   });
 
   it('shows "Set as my default" link when a setting is overridden', async () => {
