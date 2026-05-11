@@ -12,10 +12,8 @@ import {
 } from './types';
 
 type TMessageErrorTarget = {
-  onmessageerror: ((this: DedicatedWorkerGlobalScope, ev: ErrorEvent) => any | void) | null;
+  onmessageerror: ((this: DedicatedWorkerGlobalScope, ev: MessageEvent) => any | void) | null;
 };
-
-// TODO: Use WorkerGlobalScope instead of Worker
 
 const ctx: DedicatedWorkerGlobalScope & TMessageErrorTarget = self as any;
 
