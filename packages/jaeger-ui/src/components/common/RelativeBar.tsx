@@ -11,7 +11,8 @@ type Props = {
 
 const RelativeBar: React.FC<Props> = ({ value, maxValue }) => {
   const safeMax = Number.isFinite(maxValue) && maxValue > 0 ? maxValue : 1;
-  const percentage = Math.min(100, Math.max(0, (value / safeMax) * 100));
+  const safeValue = Number.isFinite(value) ? value : 0;
+  const percentage = Math.min(100, Math.max(0, (safeValue / safeMax) * 100));
 
   return (
     <div className="RelativeBar">

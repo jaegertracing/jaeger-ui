@@ -44,4 +44,9 @@ describe('RelativeBar', () => {
     const { container } = render(<RelativeBar value={-10} maxValue={100} />);
     expect(getFillWidth(container)).toBe('2%');
   });
+
+  it('handles NaN value without producing invalid CSS', () => {
+    const { container } = render(<RelativeBar value={NaN} maxValue={100} />);
+    expect(getFillWidth(container)).toBe('2%');
+  });
 });
