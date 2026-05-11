@@ -274,6 +274,45 @@ describe('SpanTreeOffset', () => {
       expect(props.removeHoverIndentGuideId).toHaveBeenCalledTimes(1);
       expect(props.removeHoverIndentGuideId).toHaveBeenCalledWith(ownSpanID);
     });
+
+    it('calls onClick when Enter is pressed on the span wrapper', () => {
+      const onClick = jest.fn();
+      const { container } = render(
+        <UnconnectedSpanTreeOffset {...props} span={spanWithChildren} onClick={onClick} />
+      );
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      fireEvent.keyDown(wrapper, { key: 'Enter' });
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls onClick when Space is pressed on the span wrapper', () => {
+      const onClick = jest.fn();
+      const { container } = render(
+        <UnconnectedSpanTreeOffset {...props} span={spanWithChildren} onClick={onClick} />
+      );
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      fireEvent.keyDown(wrapper, { key: ' ' });
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call onClick for other keys on the span wrapper', () => {
+      const onClick = jest.fn();
+      const { container } = render(
+        <UnconnectedSpanTreeOffset {...props} span={spanWithChildren} onClick={onClick} />
+      );
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      fireEvent.keyDown(wrapper, { key: 'Tab' });
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it('sets tabIndex on the span wrapper when onClick is provided', () => {
+      const onClick = jest.fn();
+      const { container } = render(
+        <UnconnectedSpanTreeOffset {...props} span={spanWithChildren} onClick={onClick} />
+      );
+      const wrapper = container.querySelector('.SpanTreeOffset');
+      expect(wrapper).toHaveAttribute('tabindex', '0');
+    });
   });
 
   describe('mapDispatchToProps()', () => {

@@ -98,4 +98,4 @@ export const isKindClient = (span: IOtelSpan): boolean => span.kind === SpanKind
 
 export const isKindProducer = (span: IOtelSpan): boolean => span.kind === SpanKind.PRODUCER;
 
-export { formatDuration } from '../../../utils/date';
+export { formatDuration, formatDurationCompact } from '../../../utils/date';
