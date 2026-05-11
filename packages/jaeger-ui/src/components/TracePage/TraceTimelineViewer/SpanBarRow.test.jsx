@@ -270,4 +270,26 @@ describe('<SpanBarRow>', () => {
       undefined
     );
   });
+
+  describe('GenAI icon', () => {
+    it('shows no GenAI icon for a standard span', () => {
+      render(<SpanBarRow {...defaultProps} />);
+      expect(screen.queryByTitle(/LLM call|Tool call|Agent|Retrieval|GenAI span/)).not.toBeInTheDocument();
+    });
+
+    it('shows an LLM call icon when span has gen_ai.operation.name=chat', () => {
+      const span = { ...defaultProps.span, attributes: [{ key: 'gen_ai.operation.name', value: 'chat' }] };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByTitle('LLM call')).toBeInTheDocument();
+    });
+
+    it('shows a tool call icon when span has gen_ai.operation.name=execute_tool', () => {
+      const span = {
+        ...defaultProps.span,
+        attributes: [{ key: 'gen_ai.operation.name', value: 'execute_tool' }],
+      };
+      render(<SpanBarRow {...defaultProps} span={span} />);
+      expect(screen.getByTitle('Tool call')).toBeInTheDocument();
+    });
+  });
 });
