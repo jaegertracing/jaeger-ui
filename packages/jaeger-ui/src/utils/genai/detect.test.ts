@@ -1,7 +1,7 @@
 // Copyright (c) 2025 The Jaeger Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-import { classifySpan, isGenAITrace, GenAISpanKind } from './detect';
+import { classifySpan, isGenAITrace, getGenAIServiceNames, GenAISpanKind } from './detect';
 import { IOtelSpan, IOtelTrace, SpanKind, StatusCode } from '../../types/otel';
 
 function makeSpan(attrs: Record<string, string> = {}): IOtelSpan {
@@ -91,5 +91,41 @@ describe('isGenAITrace', () => {
 
   it('returns false for an empty trace', () => {
     expect(isGenAITrace(makeTrace([]))).toBe(false);
+  });
+});
+
+describe('getGenAIServiceNames', () => {
+  function makeSpanForService(serviceName: string, attrs: Record<string, string> = {}): IOtelSpan {
+    return { ...makeSpan(attrs), resource: { attributes: [], serviceName } };
+  }
+
+  it('returns service names of spans with GenAI attributes', () => {
+    const spans = [
+      makeSpanForService('llm-svc', { 'gen_ai.operation.name': 'chat' }),
+      makeSpanForService('api-svc', { 'http.method': 'GET' }),
+    ];
+    expect(getGenAIServiceNames(makeTrace(spans))).toEqual(new Set(['llm-svc']));
+  });
+
+  it('returns empty set when no GenAI spans exist', () => {
+    const spans = [
+      makeSpanForService('api-svc', { 'http.method': 'GET' }),
+      makeSpanForService('db-svc', { 'db.system': 'postgresql' }),
+    ];
+    expect(getGenAIServiceNames(makeTrace(spans))).toEqual(new Set());
+  });
+
+  it('deduplicates services when multiple spans share a GenAI service', () => {
+    const spans = [
+      makeSpanForService('llm-svc', { 'gen_ai.operation.name': 'chat' }),
+      makeSpanForService('llm-svc', { 'gen_ai.operation.name': 'text_completion' }),
+      makeSpanForService('tool-svc', { 'gen_ai.operation.name': 'execute_tool' }),
+    ];
+    expect(getGenAIServiceNames(makeTrace(spans))).toEqual(new Set(['llm-svc', 'tool-svc']));
+  });
+
+  it('includes services with any gen_ai.* attribute even without operation.name', () => {
+    const spans = [makeSpanForService('inference-svc', { 'gen_ai.provider.name': 'openai' })];
+    expect(getGenAIServiceNames(makeTrace(spans))).toEqual(new Set(['inference-svc']));
   });
 });

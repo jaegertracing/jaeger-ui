@@ -25,6 +25,16 @@ export function isGenAITrace(trace: IOtelTrace): boolean {
   return trace.spans.some(s => classifySpan(s) !== 'STANDARD');
 }
 
+export function getGenAIServiceNames(trace: IOtelTrace): Set<string> {
+  const services = new Set<string>();
+  for (const span of trace.spans) {
+    if (classifySpan(span) !== 'STANDARD') {
+      services.add(span.resource.serviceName);
+    }
+  }
+  return services;
+}
+
 // Attribute keys that carry structured GenAI content and deserve richer rendering.
 export const RICH_MEDIA_ATTRIBUTE_KEYS: Readonly<Record<string, 'markdown' | 'json'>> = {
   'gen_ai.input.messages': 'markdown',
