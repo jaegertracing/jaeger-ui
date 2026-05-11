@@ -5,7 +5,8 @@ import { classifySpan, isGenAITrace } from './detect';
 import type { IOtelSpan } from '../../types/otel';
 
 function makeSpan(attrs: { key: string; value: string }[]): IOtelSpan {
-  return { attributes: attrs } as unknown as IOtelSpan;
+  const span = { attributes: attrs } satisfies IOtelSpan;
+  return span;
 }
 
 describe('classifySpan', () => {
