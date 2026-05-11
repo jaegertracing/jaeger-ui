@@ -180,7 +180,6 @@ export default function TraceStatistics(props: Props) {
 
   /**
    * Replaces the parent table state from the Header child.
-   * The fourth (sub-group) value is owned by the Header and not read here.
    */
   const handler = useCallback(
     (newTableValue: ITableSpan[], newWholeTable: ITableSpan[], newValueNameSelector1: string) => {
